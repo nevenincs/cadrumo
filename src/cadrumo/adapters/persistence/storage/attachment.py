@@ -336,16 +336,13 @@ class AttachmentStore(BaseModel):
         objects = self._objects_repo()
 
         # Two distinct jobs, not two spellings of one. The mapping is keyed by
-        # digest, so it collapses the WRITE for a repeated payload. The
-        # membership guard below skips the redundant existence QUERY for that
-        # same repeat — without it a digest appearing twice costs two SQL
-        # round-trips to learn the same answer.
+        # digest, so it collapses the WRITE for a repeated payload; the batch
+        # existence read answers the stored-side membership question for every
+        # digest in one indexed query instead of one session per digest.
+        stored = objects.exists_many(_ATTACHMENT_BLOB_NAMESPACE, digests)
         pending: dict[str, bytes] = {}
         for digest, data in zip(digests, payloads, strict=True):
-            if digest in pending:
-                continue
-            if objects.exists(_ATTACHMENT_BLOB_NAMESPACE, digest):
-                _LOGGER.debug("reusing existing attachment object for %s", digest)
+            if digest in pending or digest in stored:
                 continue
             pending[digest] = data
 

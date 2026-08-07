@@ -55,7 +55,11 @@ from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, validated_casilla_id
 from ._ledger_binding_resolution import (
+    UnroutedLedgerQuantity,
+    assert_quantity_readers_cover_independent_facts,
+    independent_quantity_facts,
     resolve_ledger_family_binding_values,
+    unrouted_ledger_family_quantities,
     unsupported_ledger_family_observations,
 )
 from ._schema import DataBindingDefinition, ModeloRevision
@@ -462,6 +466,15 @@ class IvaLedgerObservation(BaseModel):
         return self
 
 
+#: The closed fact vocabulary a ``ledger_iva_aggregation`` selector may declare.
+#: Named rather than inlined at each check so the quantity screen below can
+#: derive its screened set from the same vocabulary the validator enforces and
+#: :func:`_iva_aggregate` dispatches on.
+_IVA_SUPPORTED_FACTS: frozenset[str] = frozenset(
+    {"iva_amount_sum", "base_amount_sum", "recargo_amount_sum"},
+)
+
+
 class _IvaLedgerSelector(BaseModel):
     """Validated form of a ledger_iva_aggregation binding selector."""
 
@@ -567,10 +580,10 @@ def validate_ledger_iva_aggregation_binding_definition(
                 f"binding {binding.id!r} ledger_iva_aggregation supports only aggregation op 'sum', got {op.value!r}",
             )
 
-    if selector.fact not in {"iva_amount_sum", "base_amount_sum", "recargo_amount_sum"}:
+    if selector.fact not in _IVA_SUPPORTED_FACTS:
         raise RegistryValidationError(
             f"binding {binding.id!r} ledger_iva_aggregation supports only "
-            f"facts {{iva_amount_sum, base_amount_sum, recargo_amount_sum}}, got {selector.fact!r}",
+            f"facts {sorted(_IVA_SUPPORTED_FACTS)!r}, got {selector.fact!r}",
         )
 
     try:
@@ -820,6 +833,87 @@ def unsupported_ledger_iva_observations(
         build_matcher=_iva_build_matcher,
         is_declarable=lambda observation: True,
         extra_exclusion=lambda observation: observation.category in CUOTA_LESS_M303_IVA_CATEGORIES,
+    )
+
+
+# The IVA facts that measure the SAME quantity by different rules. There are
+# NONE: ``base_amount_sum``, ``iva_amount_sum`` and ``recargo_amount_sum`` are
+# three INDEPENDENT quantities carried on one line -- the taxable base, the
+# cuota charged on it, and the recargo de equivalencia charged alongside. No
+# one of them stands in for another, so every undrawn one is a real gap and the
+# exclusion set stays empty.
+#
+# Contrast the renta side, where three income measures ARE alternatives
+# (:data:`_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS`) and screening all three
+# would fire on every revision. The empty set here is a measured property of
+# this family, not an unfilled placeholder.
+_IVA_ALTERNATIVE_MEASURE_FACTS: frozenset[str] = frozenset()
+
+#: DERIVED as the complement, exactly as the renta side derives its own, so the
+#: two sets cannot drift apart.
+_IVA_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = independent_quantity_facts(
+    _IVA_SUPPORTED_FACTS,
+    _IVA_ALTERNATIVE_MEASURE_FACTS,
+)
+
+#: Per-fact readers for the independent quantities. Keyed on the same
+#: selector-fact vocabulary :func:`_iva_aggregate` dispatches on, so a fact
+#: cannot be screened under one reading and resolved under another.
+_IVA_INDEPENDENT_QUANTITY_READERS: dict[str, Callable[[IvaLedgerObservation], Decimal]] = {
+    "base_amount_sum": lambda observation: observation.base_amount,
+    "iva_amount_sum": lambda observation: observation.iva_amount,
+    "recargo_amount_sum": lambda observation: observation.recargo_amount,
+}
+
+assert_quantity_readers_cover_independent_facts(
+    "ledger-IVA",
+    _IVA_INDEPENDENT_QUANTITY_FACTS,
+    _IVA_INDEPENDENT_QUANTITY_READERS,
+)
+
+
+def unrouted_ledger_iva_quantities(
+    revision: ModeloRevision,
+    observations: Iterable[IvaLedgerObservation],
+) -> tuple[UnroutedLedgerQuantity[IvaLedgerObservation], ...]:
+    """Return IVA quantities the rows carry that no binding on ``revision`` draws.
+
+    The quantity-keyed sibling of :func:`unsupported_ledger_iva_observations`,
+    and it watches the axis that screen cannot. That one asks whether a ROW is
+    selected by some binding; every IVA row carries three independent
+    quantities, so a row selected for its cuota reads as consumed while its
+    base imponible reaches nothing at all.
+
+    The gap this closes is live, not hypothetical. Modelo 303 declares eight
+    ``base_amount_sum`` bindings; Modelo 390, the annual return, declares none
+    while declaring ``iva_amount_sum`` and ``recargo_amount_sum``. Every IVA
+    observation folded into the annual return therefore carries a base imponible
+    that no binding draws, and — because those same rows ARE consumed for their
+    cuota — the row screen is silent on it by construction. The official annual
+    form does carry base boxes paired with each cuota box, so the silence hides
+    real under-modelling rather than a form that does not ask.
+
+    This function does not close that gap; it makes it visible. Adding the
+    missing Modelo 390 bindings needs casillas the revision does not declare,
+    which is the annual-form campaign's work.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose IVA bindings decide which
+            facts are drawn.
+        observations: Ledger IVA observations to screen.
+
+    Returns:
+        One :class:`UnroutedLedgerQuantity` per uncovered non-zero quantity,
+        ordered by fact name. Empty when every quantity the rows carry is drawn.
+    """
+    return unrouted_ledger_family_quantities(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        parse_selector=_iva_ledger_selector,
+        read_fact=lambda selector: selector.fact,
+        independent_facts=_IVA_INDEPENDENT_QUANTITY_FACTS,
+        readers=_IVA_INDEPENDENT_QUANTITY_READERS,
     )
 
 
@@ -1420,8 +1514,9 @@ _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS: frozenset[str] = frozenset(
 #: must be classified deliberately as an alternative measure to be excluded --
 #: the safe direction, since forgetting to classify one surfaces an advisory
 #: rather than silently dropping a quantity.
-_RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = (
-    _RENTA_INCOME_SUPPORTED_FACTS - _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS
+_RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = independent_quantity_facts(
+    _RENTA_INCOME_SUPPORTED_FACTS,
+    _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS,
 )
 
 
@@ -1433,23 +1528,17 @@ _RENTA_INDEPENDENT_QUANTITY_READERS: dict[str, Callable[[RentaIncomeObservationP
     "withheld_amount_sum": lambda observation: observation.withheld_amount,
 }
 
-
-class UnroutedRentaQuantity(NamedTuple):
-    """An independent renta quantity the observations carry that no binding draws.
-
-    ``fact`` is the selector fact that would have drawn it, ``total`` the sum
-    the rows carry, and ``observations`` the contributing rows in input order.
-    """
-
-    fact: str
-    total: Decimal
-    observations: tuple[RentaIncomeObservationProtocol, ...]
+assert_quantity_readers_cover_independent_facts(
+    "renta-income",
+    _RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS,
+    _RENTA_INDEPENDENT_QUANTITY_READERS,
+)
 
 
 def unrouted_ledger_renta_income_quantities(
     revision: ModeloRevision,
     observations: Iterable[RentaIncomeObservationProtocol],
-) -> tuple[UnroutedRentaQuantity, ...]:
+) -> tuple[UnroutedLedgerQuantity[RentaIncomeObservationProtocol], ...]:
     """Return independent quantities the rows carry that no binding on ``revision`` draws.
 
     The third renta-income screen, and it watches an axis the other two cannot
@@ -1485,40 +1574,18 @@ def unrouted_ledger_renta_income_quantities(
         observations: Actividad-económica income observations to screen.
 
     Returns:
-        One :class:`UnroutedRentaQuantity` per uncovered non-zero quantity,
+        One :class:`UnroutedLedgerQuantity` per uncovered non-zero quantity,
         ordered by fact name. Empty when every quantity the rows carry is drawn.
     """
-    drawn = {
-        _renta_ledger_income_selector(binding).fact
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
-    }
-    rows = tuple(observations)
-    unrouted: list[UnroutedRentaQuantity] = []
-    for fact in sorted(_RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS):
-        if fact in drawn:
-            continue
-        read = _RENTA_INDEPENDENT_QUANTITY_READERS.get(fact)
-        if read is None:
-            # A fact classified as independent with no reader is a partition
-            # break, not a silent skip: the build-time gate below pins the two
-            # together, so reaching here means that gate was bypassed.
-            raise RegistryValidationError(
-                f"renta-income fact {fact!r} is screened as an independent quantity but declares no reader; "
-                "add it to _RENTA_INDEPENDENT_QUANTITY_READERS or classify it in "
-                "_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS",
-            )
-        carrying = tuple(row for row in rows if read(row) != Decimal("0"))
-        if not carrying:
-            continue
-        unrouted.append(
-            UnroutedRentaQuantity(
-                fact=fact,
-                total=sum((read(row) for row in carrying), Decimal("0")),
-                observations=carrying,
-            ),
-        )
-    return tuple(sorted(unrouted, key=lambda entry: entry.fact))
+    return unrouted_ledger_family_quantities(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        parse_selector=_renta_ledger_income_selector,
+        read_fact=lambda selector: selector.fact,
+        independent_facts=_RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS,
+        readers=_RENTA_INDEPENDENT_QUANTITY_READERS,
+    )
 
 
 # Casilla IDs that the M130 gastos cumulative aggregation may feed. Validated at

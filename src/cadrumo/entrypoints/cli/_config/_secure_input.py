@@ -28,6 +28,7 @@ import warnings
 
 from pydantic import BaseModel, ValidationError
 
+from ....core.tty import stdin_is_tty
 from ....core.external_constants import UTF_8_ENCODING
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
@@ -151,7 +152,7 @@ def terminal_can_prompt_for_secrets() -> bool:
     for the caller choosing between the hardened prompt and a different
     channel entirely.
     """
-    return sys.stdin.isatty() and _stdin_is_a_real_console()
+    return stdin_is_tty() and _stdin_is_a_real_console()
 
 
 def write_to_controlling_terminal(text: str) -> None:

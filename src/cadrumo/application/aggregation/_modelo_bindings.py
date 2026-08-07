@@ -54,6 +54,7 @@ from ...domain.calculations.registry import (
     resolve_ledger_renta_income_aggregation_binding_values,
     resolve_retenciones_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
+    unrouted_ledger_iva_quantities,
     unrouted_ledger_renta_income_quantities,
     unsupported_ledger_impatriado_income_observations,
     unsupported_ledger_irnr_income_observations,
@@ -243,6 +244,14 @@ class LedgerIvaAggregationSourceResolver:
         # (no-silent-under-declaration). The category/rate/flow axes are the
         # observation's own provenance — no legal_ref is fabricated.
         unconsumed = unsupported_ledger_iva_observations(context.revision, aggregation.observations)
+        # Second, distinct screen, on the axis the one above cannot see. That one
+        # keys on the ROW, and every IVA row carries three independent quantities
+        # -- base, cuota, recargo -- so a row consumed for its cuota reads as
+        # routed while its base imponible reaches no binding at all. Modelo 390
+        # is the live instance: it draws cuota and recargo and declares no base
+        # binding, so without this the annual return's missing base boxes are
+        # silent with the row screen clean.
+        unrouted_quantities = unrouted_ledger_iva_quantities(context.revision, aggregation.observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -282,6 +291,21 @@ class LedgerIvaAggregationSourceResolver:
                     ),
                 )
                 for observation in unconsumed
+            )
+            + tuple(
+                CalculationSourceDiagnostic(
+                    reason="unrouted_declarable_iva_quantity",
+                    source_kind="ledger_iva_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=(
+                        f"{len(quantity.observations)} IVA row(s) carry {quantity.total} EUR of "
+                        f"{quantity.fact!r}, which no ledger_iva_aggregation binding on revision "
+                        f"{context.revision.id!r} draws; that amount is not declared on this calculation. "
+                        f"The rows themselves ARE consumed for their other quantities, so no other screen "
+                        f"reports them"
+                    ),
+                )
+                for quantity in unrouted_quantities
             ),
             provenance=(
                 tuple(

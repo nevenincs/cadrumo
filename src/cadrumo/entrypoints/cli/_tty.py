@@ -19,11 +19,10 @@ into the process environment directly.
 
 from __future__ import annotations
 
-import sys
-
 from ...core.click_context import current_cli_flag
 from ...core.config import Settings
 from ...core.errors import CadrumoError
+from ...core.tty import stderr_is_tty, stdin_is_tty, stdout_is_tty
 
 
 class NonTtyRefusedError(CadrumoError):
@@ -52,30 +51,19 @@ class NonTtyRefusedError(CadrumoError):
         self.suggestion = suggestion
 
 
-def _isatty(stream: object) -> bool:
-    """Return ``True`` when ``stream`` exposes a truthy ``isatty()``."""
-    isatty = getattr(stream, "isatty", None)
-    if not callable(isatty):
-        return False
-    try:
-        return bool(isatty())
-    except OSError:
-        return False
-
-
 def is_stdout_tty() -> bool:
     """Return whether stdout is attached to an interactive terminal."""
-    return _isatty(sys.stdout)
+    return stdout_is_tty()
 
 
 def is_stderr_tty() -> bool:
     """Return whether stderr is attached to an interactive terminal."""
-    return _isatty(sys.stderr)
+    return stderr_is_tty()
 
 
 def is_stdin_tty() -> bool:
     """Return whether stdin is attached to an interactive terminal."""
-    return _isatty(sys.stdin)
+    return stdin_is_tty()
 
 
 def should_use_color(*, no_color: bool | None = None) -> bool:

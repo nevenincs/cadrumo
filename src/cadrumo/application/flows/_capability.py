@@ -19,6 +19,7 @@ import sys
 
 from ...core.flows import FrontendCapability
 from ...core.logging import get_logger
+from ...core.tty import stdin_is_tty, stdout_is_tty
 
 _log = get_logger(__name__)
 
@@ -65,7 +66,7 @@ def detect_frontend_capability(*, override: FrontendCapability | None = None) ->
         return override
     if os.environ.get("TERM", "").strip().lower() == "dumb":
         return FrontendCapability.NON_INTERACTIVE
-    if not sys.stdin.isatty() or not sys.stdout.isatty():
+    if not (stdin_is_tty() and stdout_is_tty()):
         return FrontendCapability.NON_INTERACTIVE
     try:
         from prompt_toolkit.output.defaults import create_output

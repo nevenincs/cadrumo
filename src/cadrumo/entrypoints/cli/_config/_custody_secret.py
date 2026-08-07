@@ -24,11 +24,10 @@ unguarded read.
 
 from __future__ import annotations
 
-import sys
-
 import typer
 from pydantic import BaseModel, ConfigDict, SecretStr
 
+from ....core.tty import stdin_is_tty
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from .._common import _emit_envelope
@@ -413,7 +412,7 @@ def _run_recovery_enrollment(
     # on the controlling terminal and must be fully retyped with echo
     # suppressed before anything commits. Refuse cleanly before any custody
     # read when no terminal is attached.
-    if not sys.stdin.isatty():
+    if not stdin_is_tty():
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.recovery.errors.interactive_terminal_required",
         )

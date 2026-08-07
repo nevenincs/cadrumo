@@ -18,19 +18,32 @@ rebuilt once per observation — a fact-dispatch ``aggregate``, and, for the
 fail-closed sibling, an ``is_declarable`` false-fire guard plus an optional
 ``extra_exclusion`` for a documented family-specific carve-out (the IVA
 family's cuota-less-category exclusion is the sole instance).
+
+Both of those key on the ROW. :func:`unrouted_ledger_family_quantities` is the
+third shape and keys on the QUANTITY: a row a binding DOES consume can carry a
+second, independent quantity that no binding draws, and the two row-keyed
+screens are silent on it by construction. Its family adapters supply a fact
+vocabulary, the subset of that vocabulary that measures one quantity by
+different rules, and a per-fact reader.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from decimal import Decimal
+from typing import NamedTuple
 
 from ....core.aggregation import BindingSourceKind
+from ._errors import RegistryValidationError
 from ._ids import BindingId
 from ._schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [
+    "UnroutedLedgerQuantity",
+    "assert_quantity_readers_cover_independent_facts",
+    "independent_quantity_facts",
     "resolve_ledger_family_binding_values",
+    "unrouted_ledger_family_quantities",
     "unsupported_ledger_family_observations",
 ]
 
@@ -136,3 +149,159 @@ def unsupported_ledger_family_observations[ObservationT, SelectorT](
         if not any(matcher(observation) for matcher in matchers):
             unsupported.append(observation)
     return tuple(unsupported)
+
+
+class UnroutedLedgerQuantity[ObservationT](NamedTuple):
+    """An independent quantity the observations carry that no binding draws.
+
+    ``fact`` is the selector fact that would have drawn it, ``total`` the sum
+    the rows carry, and ``observations`` the contributing rows in input order.
+    """
+
+    fact: str
+    total: Decimal
+    observations: tuple[ObservationT, ...]
+
+
+def independent_quantity_facts(
+    supported_facts: frozenset[str],
+    alternative_measure_facts: frozenset[str],
+) -> frozenset[str]:
+    """Return the facts that are genuinely independent quantities.
+
+    DERIVED as the complement of the family's alternative-measure set so the
+    two cannot drift apart. A fact added to a family's supported vocabulary is
+    screened by default and must be classified deliberately as an alternative
+    measure to be excluded — the safe direction, since forgetting to classify
+    one surfaces an advisory rather than silently dropping a quantity.
+
+    Args:
+        supported_facts: Every fact the family's selector accepts.
+        alternative_measure_facts: The subset measuring the SAME quantity by
+            different rules, where a revision declaring one deliberately omits
+            the others. Empty for a family whose facts are all independent.
+
+    Returns:
+        The screened set.
+
+    Raises:
+        RegistryValidationError: If ``alternative_measure_facts`` names a fact
+            outside ``supported_facts`` — a stale classification that would
+            silently exclude nothing.
+    """
+    unknown = alternative_measure_facts - supported_facts
+    if unknown:
+        raise RegistryValidationError(
+            f"alternative-measure facts {sorted(unknown)!r} are not in the family's supported fact set "
+            f"{sorted(supported_facts)!r}; the classification is stale and excludes nothing",
+        )
+    return supported_facts - alternative_measure_facts
+
+
+def assert_quantity_readers_cover_independent_facts[ObservationT](
+    family: str,
+    independent_facts: frozenset[str],
+    readers: Mapping[str, Callable[[ObservationT], Decimal]],
+) -> None:
+    """Assert every screened fact declares a reader, at import time.
+
+    Called at module scope by each family adapter so a partition break — a fact
+    classified as an independent quantity with nothing able to read it off an
+    observation — fails the registry build rather than waiting for a taxpayer
+    whose rows carry that quantity.
+
+    Args:
+        family: The family name, for the diagnostic.
+        independent_facts: The screened set from :func:`independent_quantity_facts`.
+        readers: The family's per-fact readers.
+
+    Raises:
+        RegistryValidationError: If a screened fact declares no reader, or a
+            reader is declared for a fact that is not screened.
+    """
+    missing = independent_facts - set(readers)
+    if missing:
+        raise RegistryValidationError(
+            f"{family} facts {sorted(missing)!r} are screened as independent quantities but declare no reader; "
+            "add a reader or classify them as alternative measures",
+        )
+    extra = set(readers) - independent_facts
+    if extra:
+        raise RegistryValidationError(
+            f"{family} declares quantity readers for {sorted(extra)!r}, which are not screened as independent "
+            "quantities; the reader is dead and its fact's classification is inconsistent",
+        )
+
+
+def unrouted_ledger_family_quantities[ObservationT, SelectorT](
+    revision: ModeloRevision,
+    observations: Iterable[ObservationT],
+    *,
+    source_kind: BindingSourceKind,
+    parse_selector: Callable[[DataBindingDefinition], SelectorT],
+    read_fact: Callable[[SelectorT], str],
+    independent_facts: frozenset[str],
+    readers: Mapping[str, Callable[[ObservationT], Decimal]],
+) -> tuple[UnroutedLedgerQuantity[ObservationT], ...]:
+    """Return independent quantities the rows carry that no binding on ``revision`` draws.
+
+    The third ledger-family screen, watching an axis the two row-keyed screens
+    cannot see. :func:`unsupported_ledger_family_observations` asks whether a
+    ROW is selected by some binding; this one asks whether a QUANTITY is drawn
+    by some binding, whatever happens to the rows carrying it.
+
+    The distinction is load-bearing wherever one observation carries several
+    quantities: a row consumed for one of them reads as routed while a second,
+    independent quantity it carries reaches nothing at all, so the row-keyed
+    screens stay clean while the value disappears from the filing
+    (``no-silent-under-declaration``).
+
+    Reports nothing when the rows carry nothing: a zero total is a legitimate
+    zero rather than a modelling gap, and this screen must not manufacture a
+    finding from it.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose bindings decide which facts
+            are drawn.
+        observations: The family's typed ledger observations to screen.
+        source_kind: The :class:`BindingSourceKind` this family's bindings declare.
+        parse_selector: The family's selector parser.
+        read_fact: Reads the declared fact off a parsed selector.
+        independent_facts: The screened set, from
+            :func:`independent_quantity_facts`.
+        readers: Per-fact readers, keyed on the same selector-fact vocabulary
+            the family's resolver dispatches on so a fact cannot be screened
+            under one reading and resolved under another.
+
+    Returns:
+        One :class:`UnroutedLedgerQuantity` per uncovered non-zero quantity,
+        ordered by fact name. Empty when every quantity the rows carry is drawn.
+
+    Raises:
+        RegistryValidationError: If a screened fact declares no reader. The
+            import-time gate
+            (:func:`assert_quantity_readers_cover_independent_facts`) pins the
+            two together, so reaching here means that gate was bypassed.
+    """
+    drawn = {read_fact(parse_selector(binding)) for binding in revision.bindings if binding.source == source_kind}
+    rows = tuple(observations)
+    unrouted: list[UnroutedLedgerQuantity[ObservationT]] = []
+    for fact in sorted(independent_facts):
+        if fact in drawn:
+            continue
+        read = readers.get(fact)
+        if read is None:
+            raise RegistryValidationError(
+                f"fact {fact!r} is screened as an independent quantity but declares no reader",
+            )
+        carrying = tuple(row for row in rows if read(row) != Decimal("0"))
+        if not carrying:
+            continue
+        unrouted.append(
+            UnroutedLedgerQuantity(
+                fact=fact,
+                total=sum((read(row) for row in carrying), Decimal("0")),
+                observations=carrying,
+            ),
+        )
+    return tuple(unrouted)

@@ -171,9 +171,10 @@ def aggregate_renta_gasto_ledger_from_repositories(
     Derives the activity's IVA-deduction ratio through
     :func:`~._renta_ledger._resolve_iva_deduction_ratio` -- the SAME resolver the
     M100 annual first slice uses, for the SAME ejercicio (``period.filing_year``),
-    so the two filings cannot diverge on it. ``profile_record`` and
-    ``prorrata_register_repository`` supply the profile and register directly
-    (tests); otherwise both are loaded from the bucket.
+    so the two filings cannot diverge on it. ``profile_record`` (a
+    :class:`UserProfileRecord`) and ``prorrata_register_repository`` supply the
+    profile and register directly (tests); otherwise both are loaded from the
+    bucket.
 
     Returns a :class:`RentaGastoLedgerAggregation`.
     """

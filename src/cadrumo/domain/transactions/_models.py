@@ -22,7 +22,7 @@ from pydantic import (
 )
 from pydantic_core import core_schema
 
-from ...core import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion, fold_diacritics
+from ...core import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, TipoActividad, Art104TresExclusion, fold_diacritics
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
@@ -650,6 +650,18 @@ class Transaction(BaseModel):
             especial; the regime-aware aggregation routes the deducible cuota by
             this classification. ``None`` for rows that are not under especial or
             carry no per-input use declaration.
+        tipo_actividad: Operator-declared Modelo 036 tipo de actividad
+            (:class:`~core.TipoActividad`) the row's activity income belongs to.
+            Present so a return that splits casillas by activity can route each
+            row to the right one -- Modelo 131 carries the estimación-objetiva
+            volume in casilla 01 and the agrarian volume in casilla 08, and
+            without this axis the same rows would feed both and double-count. It
+            also selects the RIRPF art. 95 retención partition through the
+            registry correspondence in
+            :mod:`~domain.transactions._tipo_actividad_partitions`. ``None`` for a
+            row whose activity is undeclared or that carries no activity income at
+            all; an aggregation that needs the split must treat ``None`` as
+            unknown rather than as any particular activity.
         prorrata_sector_id: Operator-declared LIVA arts. 9.1.c / 101 differentiated
             sector this input belongs to. References a ``sector_id`` declared in
             the bucket's prorrata register sector definitions; the sector-aware
@@ -779,6 +791,7 @@ class Transaction(BaseModel):
     prorrata_reference: str | None = None
     art_104_tres_exclusion: Art104TresExclusion | None = None
     input_classification: InputClassification | None = None
+    tipo_actividad: TipoActividad | None = None
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     purchase_invoice_evidence_id: str | None = None
     attachment_ids: tuple[str, ...] = ()
@@ -856,6 +869,7 @@ class Transaction(BaseModel):
         "cash_accounting_treatment",
         "art_104_tres_exclusion",
         "input_classification",
+        "tipo_actividad",
         mode="before",
     )
     @classmethod
@@ -879,6 +893,7 @@ class Transaction(BaseModel):
             "cash_accounting_treatment": IvaCashAccountingTreatment,
             "art_104_tres_exclusion": Art104TresExclusion,
             "input_classification": InputClassification,
+            "tipo_actividad": TipoActividad,
         }
         return enum_by_field[info.field_name or ""](value)
 

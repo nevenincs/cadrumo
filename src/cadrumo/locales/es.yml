@@ -68780,6 +68780,9 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
               help: null
               label: Cuota IVA repercutido al tipo general (21%) - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8.label
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
               help: null
               label: Recargo de equivalencia tipo 5.2pct - Cuota devengada anual
@@ -68792,9 +68795,15 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: null
               label: Cuota IVA repercutido al tipo reducido (10%) - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5.label
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
               label: Cuota IVA repercutido al tipo super-reducido (4%) - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck.label
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
               label: Resultado anual del regimen general (cuota devengada - cuota
@@ -68806,6 +68815,9 @@ modelo:
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: null
               label: Cuota IVA soportado en operaciones interiores corrientes - anual
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5.label
           construct:
             modelo-390-iva-resumen-anual:
               field:
@@ -69247,6 +69259,8 @@ profile:
         tax_id:
           label: NIF/NIE/CIF de identificación
       irpf:
+        activity_kind:
+          label: profile.schema.field.irpf.activity_kind.label
         art109_activity_income_withholding_ge_70pct:
           label: Cumple la excepción del 70 % del art. 109 RIRPF
         estimation_regime:

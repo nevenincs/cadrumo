@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:914f9e821edddfaf6ddf889e32ab910f7cd3db99f92fd251025715a7bc8f7ca7'
+body_hash: 'sha256:13b2526eb39ebcdc2559f1c0967d7a044d2f7b2c88a6e9dd208413524cae31b7'
 related:
   - "[[2026-08-06-llm-package-split-plan]]"
 ---
@@ -133,3 +133,69 @@ checking a box because the code looks present, which makes "delivered as
 specified", "delivered narrower" and "recorded but not implemented" wear the same
 mark. Three of the categories above would have been invisible under that
 treatment.
+
+
+## Session outcome (2026-08-07, after this audit was first written)
+
+Four of the items above were closed in the same session that classified them.
+
+`S05` and `S66` were the two "not delivered" items with self-contained scope, and
+both turned up something the Step had not anticipated. `S05` assumed an absent
+`llm` extra is reachable by installing without it; it is not, because Pillow is
+deliberately declared in the BASE dependencies as well, so the extra is nominal
+today and its guard is dormant. The absent state has to be constructed with a
+meta-path block rather than installed. `S05` also assumed a lazily-loaded
+command group with a placeholder to degrade to; the inference verbs have no such
+group, and the real mechanism is the verb-level guard, so the test lives with the
+guard rather than at the CLI path the Step names.
+
+`S66` produced the sharper result. The gate it asks for -- every module importing
+PIL rests on a declared dependency -- cannot see the reliance that motivated it,
+because nothing imports PIL by name anywhere in production; the rasteriser
+reaches it through `pypdfium2`'s `to_pil()`. An import-statement gate would have
+reported the inference path clean while the original defect stood. Pillow is
+therefore asserted directly, beside the general scan, and that asymmetry is
+recorded in the module rather than papered over.
+
+`S11` was not actionable as written. There is no hand-rolled embedded-file walker
+to extract: the sanitiser and the e-invoice probe are both thin uses of pikepdf's
+own `Pdf.attachments` mapping, one deleting and one reading. Extracting a shared
+walk would have added an indirection over a third-party API that already is the
+shared reader. The Step's red condition was the part with substance, and it is
+now pinned -- reading a payload must not soften the stripping.
+
+`S72` is closed by recording, per gate, whether it discovers its subject or is
+told it. That distinction is what makes a coverage claim about a new directory
+checkable, and it is invisible from the gates' names.
+
+### One assertion was written and then withdrawn
+
+The `S11` module briefly asserted that reading an embedded payload leaves the
+input bytes unchanged. It passed. It could not have failed: the probe takes
+`bytes`, and `bytes` are immutable, so the comparison holds whatever the function
+does. It was replaced by the property that can break -- that no file is left on
+disk, since pikepdf opens from paths as readily as from buffers and a temp-file
+implementation would return the right payload while spilling evidence bytes.
+Recorded here because a tautology that survives review is worse than an absent
+test, and this one survived writing.
+
+### `W02.P03.S12` remains open, and is the campaign's last coding item
+
+The read-time media-kind derivation is still live at 39 sites across 15 files.
+It is not deferred for difficulty: `_evidence_draft.py`, `_evidence_input.py` and
+`_llm_classification.py` are all carrying another campaign's uncommitted
+media-type work at the time of writing, and a 39-site sweep through them would
+collide with a peer mid-edit. The sweep wants a tree where those three files are
+quiet.
+
+Note also that `S11` and `S12` were paired in the original reading of this
+campaign -- `S12` blocked behind `S11` leaving a second walker in the tree. That
+pairing dissolves with the finding above: there is no second walker, so `S12` is
+blocked only on peer contention, not on `S11`.
+
+### Standing count
+
+Seventy-six of eighty-three Steps closed. Open: `S12` (coding, contended),
+`S29` and `S69`/`S71` (verification of claims not confirmed in this pass), and
+`S70`/`S81`/`S83` (cross-campaign carry-forward with a named dependency).
+

@@ -184,6 +184,11 @@ from ._prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from ._refund_election import RefundElection
+from ._tipos_actividad import (
+    IAE_SUBJECT_TIPOS_ACTIVIDAD,
+    NON_IAE_SUBJECT_TIPOS_ACTIVIDAD,
+    TipoActividad,
+)
 from ._rescate_type import RescateType
 from ._result_disposition import (
     ResultDisposition,
@@ -305,6 +310,7 @@ __all__: list[str] = [
     "HEX_PATTERN_16",
     "HEX_PATTERN_64",
     "HEX_PATTERN_128",
+    "IAE_SUBJECT_TIPOS_ACTIVIDAD",
     "IBAN_SHAPE_RE",
     "LENGTH_ALONE_IS_STRONG",
     "LENGTH_FAIR_FLOOR",
@@ -316,6 +322,7 @@ __all__: list[str] = [
     "MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX",
     "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
     "NIST_PASSPHRASE_MIN_LENGTH",
+    "NON_IAE_SUBJECT_TIPOS_ACTIVIDAD",
     "NON_REGISTRY_MODELOS",
     "OFFICIAL_M210_TIPO_RENTA_CODES",
     "OFX_EXTRA",
@@ -332,6 +339,7 @@ __all__: list[str] = [
     "STORAGE_TAXONOMY",
     "STRICT_FROZEN_CONFIG",
     "STRUCTURED_DOCUMENT_SHAPES",
+    "TipoActividad",
     "UNMODELED_OBLIGATIONS",
     "AmendmentKindRegime",
     "AmendmentLiabilityDirection",

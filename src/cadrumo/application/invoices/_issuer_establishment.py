@@ -91,7 +91,7 @@ def issuer_established_in_tai(profile: TaxpayerProfile) -> bool:
     (:attr:`~cadrumo.domain.deadlines.TaxpayerProfile.fiscal_residency`).
 
     Args:
-        profile: The bucket's taxpayer profile.
+        profile: The bucket's :class:`TaxpayerProfile`.
 
     Returns:
         ``True`` unless the profile declares ``NON_RESIDENT_IRNR``. See the
@@ -107,7 +107,8 @@ def simplificada_requires_tax_id_for_domestic_issuer(invoice: Invoice, profile: 
     """Return whether RD 1619/2012 art. 6.1.d case 3.º makes ``invoice`` need a tax id.
 
     Case 3.º applies to a domestic operation (``counterparty_country ==
-    "ES"``) whose issuer is established in the TAI. Scoped to
+    "ES"``) whose issuer -- the :class:`TaxpayerProfile` holder passed as
+    ``profile`` -- is established in the TAI. Scoped to
     :attr:`~cadrumo.domain.invoices.Invoice.kind` ``ISSUED`` only: case 3.º
     asks about the DESTINATARIO's NIF, which on an ISSUED invoice is the
     counterparty this predicate can evaluate; on a RECEIVED invoice the

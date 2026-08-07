@@ -47,6 +47,11 @@ if TYPE_CHECKING:
     # "not callable" at construction and "not allowed in a parameter
     # annotation" wherever one is declared. This block never executes, so the
     # import cycle the lazy resolution exists to break stays broken.
+    from ._evidence_draft_text import (
+        TextInvoiceFieldExtractor,
+        build_text_field_extraction_prompt,
+        extract_invoice_fields_from_text,
+    )
     from ._evidence_draft_vision import extract_invoice_fields_from_images
     from ._suggestions import (
         ExtractionPayload,
@@ -118,10 +123,13 @@ __all__ = [
     "OperatorIvaDerivationResult",
     "PromptDefinition",
     "PromptRegistry",
+    "TextInvoiceFieldExtractor",
     "Translation",
     "UsageRecord",
     "UsageSummary",
+    "build_text_field_extraction_prompt",
     "extract_invoice_fields_from_images",
+    "extract_invoice_fields_from_text",
     "rasterise_pdf_pages_to_base64_png",
     "select_retention_removal_keys",
 ]
@@ -148,6 +156,20 @@ close the loop at import time.
 """
 
 
+_TEXT_EXTRACTION_EXPORTS = frozenset({
+    "TextInvoiceFieldExtractor",
+    "build_text_field_extraction_prompt",
+    "extract_invoice_fields_from_text",
+})
+"""Text-to-fields reader surface resolved lazily from :mod:`._evidence_draft_text`.
+
+Lazy for the same reason as the vision reader beside it: the module imports
+``application.ledger`` for the draft shape it returns, while the ledger's own
+paths import this package, so an eager binding would close that loop at import
+time.
+"""
+
+
 def __getattr__(name: str) -> object:
     """Resolve the application-facing readers and interchange DTOs lazily.
 
@@ -171,4 +193,8 @@ def __getattr__(name: str) -> object:
         from ._evidence_draft_vision import extract_invoice_fields_from_images
 
         return extract_invoice_fields_from_images
+    if name in _TEXT_EXTRACTION_EXPORTS:
+        from . import _evidence_draft_text
+
+        return getattr(_evidence_draft_text, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

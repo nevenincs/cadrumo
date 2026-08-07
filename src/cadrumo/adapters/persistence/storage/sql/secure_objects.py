@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator
+import json
+from collections.abc import Iterable, Iterator, Sequence
 from datetime import datetime
-from typing import Protocol, cast
+from typing import NamedTuple, Protocol, cast
 
-from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
+from sqlalchemy import Engine, bindparam, delete, insert, inspect, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .....core import ABSENT_SECURE_OBJECT_REVISION_ID, DEFAULT_WRITE_PROVENANCE, SecureObjectWrite
 from .....core.classification import SensitivityClass
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import coerce_utc_aware, validate_utc_aware
@@ -38,6 +40,7 @@ from ..errors import (
     StorageValidationError,
 )
 from . import _orm
+from ._secure_object_crypto import derive_revision_id
 from ._secure_object_integrity import (
     iter_namespace_decryptability as _iter_namespace_decryptability,
 )
@@ -61,7 +64,6 @@ from ._secure_object_records import (
 from ._secure_object_row_codec import (
     secure_object_list_item_from_raw_row,
     secure_object_record_from_row,
-    write_revision_metadata,
 )
 from ._secure_object_schema import (
     build_revision_ancestor_ids,
@@ -76,6 +78,35 @@ _log = get_logger(__name__)
 
 _DEFAULT_WRITE_PROVENANCE = DEFAULT_WRITE_PROVENANCE
 _DEFAULT_CONFLICT_POLICY = "last-write-wins"
+_CAS_CONFLICT_POLICY = "compare-and-swap"
+
+#: Digests per ``IN (...)`` slice of a batched object-key read (previous-write
+#: metadata, batch existence). Well under SQLite's bound-variable ceiling, and
+#: large enough that a 20k-row batch costs ~40 reads instead of 20k.
+_OBJECT_KEY_SELECT_CHUNK = 500
+
+
+class _PreviousRowMetadata(NamedTuple):
+    """Revision lineage of the stored row a write supersedes."""
+
+    row_id: int
+    revision_id: str | None
+    revision_ancestor_ids: tuple[str, ...]
+    payload_hash: str | None
+
+
+class _PendingSecureObjectWrite(NamedTuple):
+    """One normalised write: UTC-validated instant plus its pre-computed key digest."""
+
+    namespace: str
+    object_key_digest: bytes
+    classification: SensitivityClass
+    schema_version: int
+    written_at: datetime
+    payload: bytes
+    write_provenance: str
+    source_event_id: str | None
+    expected_revision_id: str | None
 
 
 class _RowcountResult(Protocol):
@@ -303,15 +334,42 @@ class SecureObjectRepository:
 
     def exists(self, namespace: str, object_key: str) -> bool:
         """Return whether ``namespace`` / ``object_key`` is present."""
+        return object_key in self.exists_many(namespace, (object_key,))
+
+    def exists_many(self, namespace: str, object_keys: Iterable[str]) -> frozenset[str]:
+        """Return the subset of ``object_keys`` present in ``namespace``.
+
+        The set-based companion of :meth:`exists`, and the implementation
+        behind it: one indexed ``IN (...)`` read per key slice answers the
+        whole membership question, where per-key :meth:`exists` calls cost
+        one session and one statement each — the dominant cost of a bulk
+        content-addressed ingest that deduplicates against what is already
+        stored. Natural keys are HMAC-digested exactly as the ``object_key``
+        column stores them, so membership is decided on the digest and
+        reported back as the caller's natural keys. Nothing is decrypted.
+        """
         self._check_session_freshness(namespace)
+        digest_to_key = {secure_object_key_digest(key): key for key in object_keys}
+        if not digest_to_key:
+            return frozenset()
+        present: set[str] = set()
+        digests = tuple(digest_to_key)
         with session_scope(self._engine) as session:
-            row_id = session.execute(
-                select(_orm.SecureObjectRow.id).where(
-                    _orm.SecureObjectRow.namespace == namespace,
-                    _orm.SecureObjectRow.object_key == object_key,
-                ),
-            ).scalar_one_or_none()
-            return row_id is not None
+            for start in range(0, len(digests), _OBJECT_KEY_SELECT_CHUNK):
+                rows = session.execute(
+                    select(_orm.SecureObjectRow.object_key).where(
+                        _orm.SecureObjectRow.namespace == namespace,
+                        _orm.SecureObjectRow.object_key.in_(
+                            digests[start : start + _OBJECT_KEY_SELECT_CHUNK],
+                        ),
+                    ),
+                ).scalars()
+                for stored in rows:
+                    digest = stored if isinstance(stored, bytes) else bytes(stored)
+                    key = digest_to_key.get(digest)
+                    if key is not None:
+                        present.add(key)
+        return frozenset(present)
 
     def exists_by_raw_key(self, namespace: str, hashed_object_key: bytes) -> bool:
         """Return whether ``namespace`` carries a row with this raw HMAC digest.
@@ -845,30 +903,7 @@ class SecureObjectRepository:
 
     def save_many(self, writes: tuple[SecureObjectWrite, ...]) -> None:
         """Encrypt and upsert several payloads in one SQL unit of work."""
-        if not writes:
-            return
-        for write in writes:
-            self._enforce_registered_write_policy(
-                namespace=write.namespace,
-                classification=write.classification,
-                schema_version=write.schema_version,
-                object_key=write.object_key,
-            )
-        self._check_session_freshness()
-        with session_scope(self._engine) as session:
-            for write in writes:
-                self._save_internal_in_session(
-                    session,
-                    namespace=write.namespace,
-                    key=write.object_key,
-                    classification=write.classification,
-                    schema_version=write.schema_version,
-                    written_at=write.written_at,
-                    payload=write.payload,
-                    write_provenance=write.write_provenance,
-                    source_event_id=write.source_event_id,
-                    expected_revision_id=write.expected_revision_id,
-                )
+        self.apply_batch(writes)
 
     def namespace_payload_hashes(self, namespace: str) -> dict[bytes, str | None]:
         """Return ``{object_key_digest: payload_hash}`` for every row in ``namespace``.
@@ -926,20 +961,22 @@ class SecureObjectRepository:
         for removal in deletions:
             self._registered_namespace_definition(removal.namespace)
         self._check_session_freshness()
+        pending = tuple(
+            self._pending_write(
+                namespace=write.namespace,
+                key=write.object_key,
+                classification=write.classification,
+                schema_version=write.schema_version,
+                written_at=write.written_at,
+                payload=write.payload,
+                write_provenance=write.write_provenance,
+                source_event_id=write.source_event_id,
+                expected_revision_id=write.expected_revision_id,
+            )
+            for write in writes
+        )
         with session_scope(self._engine) as session:
-            for write in writes:
-                self._save_internal_in_session(
-                    session,
-                    namespace=write.namespace,
-                    key=write.object_key,
-                    classification=write.classification,
-                    schema_version=write.schema_version,
-                    written_at=write.written_at,
-                    payload=write.payload,
-                    write_provenance=write.write_provenance,
-                    source_event_id=write.source_event_id,
-                    expected_revision_id=write.expected_revision_id,
-                )
+            self._write_pending_in_session(session, pending)
             for removal in deletions:
                 session.execute(
                     delete(_orm.SecureObjectRow).where(
@@ -1043,23 +1080,22 @@ class SecureObjectRepository:
             # left to check against the namespace's declared grammar.
             object_key=key if isinstance(key, str) else None,
         )
+        pending = self._pending_write(
+            namespace=namespace,
+            key=key,
+            classification=classification,
+            schema_version=schema_version,
+            written_at=written_at,
+            payload=payload,
+            write_provenance=write_provenance,
+            source_event_id=source_event_id,
+            expected_revision_id=expected_revision_id,
+        )
         with session_scope(self._engine) as session:
-            self._save_internal_in_session(
-                session,
-                namespace=namespace,
-                key=key,
-                classification=classification,
-                schema_version=schema_version,
-                written_at=written_at,
-                payload=payload,
-                write_provenance=write_provenance,
-                source_event_id=source_event_id,
-                expected_revision_id=expected_revision_id,
-            )
+            self._write_pending_in_session(session, (pending,))
 
-    def _save_internal_in_session(
+    def _pending_write(
         self,
-        session: Session,
         *,
         namespace: str,
         key: str | bytes,
@@ -1070,184 +1106,331 @@ class SecureObjectRepository:
         write_provenance: str,
         source_event_id: str | None,
         expected_revision_id: str | None,
-    ) -> None:
-        # Single write funnel for save, save_many, apply_batch, and
-        # save_with_raw_key. ``written_at`` is gated here rather than only on
-        # the ``SecureObjectWrite`` DTO because the direct ``save`` and
-        # ``save_with_raw_key`` boundaries take a bare ``datetime`` and never
-        # construct that model. An offset-bearing instant loses its ``tzinfo``
-        # in the SQLite column while the revision id was derived from the UTC
-        # instant, so the row would commit and then fail its own read-time
-        # self-consistency gate for good; refusing it keeps write and read
-        # deriving one revision from one spelling.
-        written_at = validate_utc_aware(written_at)
-        (
-            row_id,
-            previous_revision_id,
-            previous_revision_ancestor_ids,
-            previous_payload_hash,
-        ) = self._load_previous_secure_object_metadata(
-            session,
+    ) -> _PendingSecureObjectWrite:
+        """Normalise one write for the shared funnel.
+
+        ``written_at`` is gated here rather than only on the
+        ``SecureObjectWrite`` DTO because the direct ``save`` and
+        ``save_with_raw_key`` boundaries take a bare ``datetime`` and never
+        construct that model. An offset-bearing instant loses its ``tzinfo``
+        in the SQLite column while the revision id was derived from the UTC
+        instant, so the row would commit and then fail its own read-time
+        self-consistency gate for good; refusing it keeps write and read
+        deriving one revision from one spelling.
+
+        The natural key is digested once here; the digest is what the
+        ``object_key`` HashedLookup column persists, what the previous-row
+        read matches on, and what the AEAD associated data binds, so all
+        three surfaces provably share one spelling of the row identity.
+        """
+        return _PendingSecureObjectWrite(
             namespace=namespace,
-            key=key,
+            object_key_digest=secure_object_key_digest(key),
+            classification=classification,
+            schema_version=schema_version,
+            written_at=validate_utc_aware(written_at),
+            payload=payload,
+            write_provenance=write_provenance,
+            source_event_id=source_event_id,
             expected_revision_id=expected_revision_id,
         )
-        # Encrypt the payload explicitly, binding the row identity into the AEAD
-        # associated data so the ciphertext is valid only for this exact
-        # (namespace, object_key, schema_version) row. ``key`` matches the value
-        # the ``object_key`` HashedLookup column persists, so the digest used here
-        # reconstructs identically on read.
-        object_key_digest = secure_object_key_digest(key)
-        payload_wire = encrypt_secure_object_payload(
-            payload,
-            associated_data=secure_object_payload_aad(namespace, object_key_digest, schema_version),
-        )
-        try:
-            row_id = self._upsert_secure_object_row(
-                session,
-                row_id,
-                namespace=namespace,
-                key=key,
-                classification=classification,
-                schema_version=schema_version,
-                written_at=written_at,
-                payload_wire=payload_wire,
-                expected_revision_id=expected_revision_id,
+
+    def _write_pending_in_session(
+        self,
+        session: Session,
+        pending: Sequence[_PendingSecureObjectWrite],
+    ) -> None:
+        """Single write funnel for save, save_many, apply_batch, and save_with_raw_key.
+
+        Writes execute in caller order with set-based SQL: one previous-
+        metadata read per namespace slice, then one ``INSERT`` executemany for
+        rows the read proved absent and one lineage-guarded ``UPDATE``
+        executemany for rows it proved present. Revision lineage is derived in
+        Python from the plaintext and ciphertext this funnel already holds,
+        so no per-row round-trip remains.
+
+        A batch that writes the same ``(namespace, object_key)`` twice is
+        split at the repeat, so the later write's previous-metadata read runs
+        after the earlier write flushed inside the same transaction and the
+        revision chain links write to write exactly as sequential saves would.
+        """
+        chunk: list[_PendingSecureObjectWrite] = []
+        seen: set[tuple[str, bytes]] = set()
+        for write in pending:
+            identity = (write.namespace, write.object_key_digest)
+            if identity in seen:
+                self._flush_pending_chunk(session, chunk)
+                chunk = []
+                seen = set()
+            chunk.append(write)
+            seen.add(identity)
+        self._flush_pending_chunk(session, chunk)
+
+    def _flush_pending_chunk(
+        self,
+        session: Session,
+        chunk: Sequence[_PendingSecureObjectWrite],
+    ) -> None:
+        """Resolve lineage for one duplicate-free chunk and execute its DML."""
+        if not chunk:
+            return
+        previous = self._load_previous_metadata_for_chunk(session, chunk)
+        insert_rows: list[dict[str, object]] = []
+        update_rows: list[dict[str, object]] = []
+        for write in chunk:
+            prior = previous.get((write.namespace, write.object_key_digest))
+            self._assert_expected_revision(write, prior)
+            # Encrypt the payload explicitly, binding the row identity into
+            # the AEAD associated data so the ciphertext is valid only for
+            # this exact (namespace, object_key, schema_version) row.
+            payload_hash = sha256_hex(write.payload)
+            payload_wire = encrypt_secure_object_payload(
+                write.payload,
+                associated_data=secure_object_payload_aad(
+                    write.namespace,
+                    write.object_key_digest,
+                    write.schema_version,
+                ),
             )
-            write_revision_metadata(
-                session,
-                row_id=int(row_id),
-                namespace=namespace,
-                schema_version=schema_version,
-                written_at=written_at,
-                payload=payload,
+            ciphertext_hash = sha256_hex(payload_wire)
+            previous_revision_id = prior.revision_id if prior is not None else None
+            previous_payload_hash = prior.payload_hash if prior is not None else None
+            revision_id = derive_revision_id(
+                namespace=write.namespace,
+                object_key=write.object_key_digest,
+                schema_version=write.schema_version,
+                written_at=write.written_at,
+                payload_hash=payload_hash,
+                ciphertext_hash=ciphertext_hash,
                 previous_revision_id=previous_revision_id,
-                previous_revision_ancestor_ids=previous_revision_ancestor_ids,
                 previous_payload_hash=previous_payload_hash,
-                write_provenance=write_provenance,
-                source_event_id=source_event_id,
-                conflict_policy=("compare-and-swap" if expected_revision_id is not None else _DEFAULT_CONFLICT_POLICY),
             )
-            session.flush()
-        except IntegrityError as exc:
-            if expected_revision_id is not None and expected_revision_id == ABSENT_SECURE_OBJECT_REVISION_ID:
+            revision_ancestor_ids = self._build_revision_ancestor_ids(
+                previous_revision_id,
+                prior.revision_ancestor_ids if prior is not None else (),
+            )
+            values: dict[str, object] = {
+                "namespace": write.namespace,
+                "classification": write.classification.value,
+                "schema_version": write.schema_version,
+                "written_at": write.written_at,
+                "payload": payload_wire,
+                "revision_id": revision_id,
+                "previous_revision_id": previous_revision_id,
+                "revision_ancestor_ids": json.dumps(revision_ancestor_ids),
+                "previous_payload_hash": previous_payload_hash,
+                "payload_hash": payload_hash,
+                "ciphertext_hash": ciphertext_hash,
+                "revision_written_at": write.written_at,
+                "write_provenance": write.write_provenance,
+                "source_event_id": write.source_event_id,
+                "conflict_policy": (
+                    _CAS_CONFLICT_POLICY if write.expected_revision_id is not None else _DEFAULT_CONFLICT_POLICY
+                ),
+            }
+            if prior is None:
+                insert_rows.append({**values, "object_key": write.object_key_digest})
+            else:
+                update_rows.append(
+                    {
+                        "b_id": prior.row_id,
+                        "b_guard_revision_id": previous_revision_id,
+                        **{f"v_{name}": value for name, value in values.items()},
+                    },
+                )
+        self._execute_insert_rows(session, insert_rows)
+        self._execute_update_rows(session, update_rows)
+
+    def _load_previous_metadata_for_chunk(
+        self,
+        session: Session,
+        chunk: Sequence[_PendingSecureObjectWrite],
+    ) -> dict[tuple[str, bytes], _PreviousRowMetadata]:
+        """Read the revision lineage of every row this chunk supersedes.
+
+        One indexed ``IN (...)`` read per namespace slice replaces the two
+        SELECTs the retired per-row funnel issued per write. The stored
+        plaintext hash is always present from birth; the payload column is
+        AEAD wire bytes, so there is no plaintext to fall back on (and
+        hashing the ciphertext would be meaningless).
+        """
+        by_namespace: dict[str, list[bytes]] = {}
+        for write in chunk:
+            by_namespace.setdefault(write.namespace, []).append(write.object_key_digest)
+        previous: dict[tuple[str, bytes], _PreviousRowMetadata] = {}
+        for namespace, digests in by_namespace.items():
+            for start in range(0, len(digests), _OBJECT_KEY_SELECT_CHUNK):
+                rows = session.execute(
+                    select(
+                        _orm.SecureObjectRow.id,
+                        _orm.SecureObjectRow.object_key,
+                        _orm.SecureObjectRow.revision_id,
+                        _orm.SecureObjectRow.revision_ancestor_ids,
+                        _orm.SecureObjectRow.payload_hash,
+                    ).where(
+                        _orm.SecureObjectRow.namespace == namespace,
+                        _orm.SecureObjectRow.object_key.in_(
+                            digests[start : start + _OBJECT_KEY_SELECT_CHUNK],
+                        ),
+                    ),
+                ).all()
+                for row in rows:
+                    digest = row.object_key if isinstance(row.object_key, bytes) else bytes(row.object_key)
+                    previous[(namespace, digest)] = _PreviousRowMetadata(
+                        row_id=int(row.id),
+                        revision_id=row.revision_id,
+                        revision_ancestor_ids=self._parse_revision_ancestor_ids(row.revision_ancestor_ids),
+                        payload_hash=row.payload_hash,
+                    )
+        return previous
+
+    def _assert_expected_revision(
+        self,
+        write: _PendingSecureObjectWrite,
+        prior: _PreviousRowMetadata | None,
+    ) -> None:
+        """Refuse a compare-and-swap write whose expectation the stored row breaks."""
+        expected = write.expected_revision_id
+        if expected is None:
+            return
+        if prior is None:
+            if expected != ABSENT_SECURE_OBJECT_REVISION_ID:
                 raise self._revision_conflict(
-                    namespace=namespace,
-                    expected_revision_id=expected_revision_id,
+                    namespace=write.namespace,
+                    expected_revision_id=expected,
                     current_revision_id=None,
-                ) from exc
+                )
+            return
+        if expected == ABSENT_SECURE_OBJECT_REVISION_ID or expected != prior.revision_id:
+            raise self._revision_conflict(
+                namespace=write.namespace,
+                expected_revision_id=expected,
+                current_revision_id=prior.revision_id,
+            )
+
+    def _execute_insert_rows(
+        self,
+        session: Session,
+        insert_rows: Sequence[dict[str, object]],
+    ) -> None:
+        """Insert every row the previous-metadata read proved absent.
+
+        A UNIQUE violation here means the row appeared after that read — a
+        concurrent writer on the same bucket. A single-row batch attributes
+        it exactly as the retired per-row funnel did (a compare-and-swap
+        insert becomes a revision conflict); a multi-row batch cannot name
+        the colliding row after the failed statement poisons the session, so
+        it reports every namespace the batch touched and the whole unit rolls
+        back re-runnable.
+        """
+        if not insert_rows:
+            return
+        try:
+            session.execute(insert(_orm.SecureObjectRow.__table__), list(insert_rows))
+        except IntegrityError as exc:
+            if len(insert_rows) == 1:
+                # CAST-RATIONALE-SECURE-OBJECTS-INSERT-ROW-SHAPE: this funnel
+                # built the row dicts above; the two fields read back here are
+                # always present with these types.
+                namespace = cast(str, insert_rows[0]["namespace"])
+                conflict_policy = insert_rows[0]["conflict_policy"]
+                if conflict_policy == _CAS_CONFLICT_POLICY:
+                    raise self._revision_conflict(
+                        namespace=namespace,
+                        expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+                        current_revision_id=None,
+                    ) from exc
+                namespaces = namespace
+            else:
+                namespaces = ", ".join(sorted({cast(str, row["namespace"]) for row in insert_rows}))
             raise RepositoryError(
                 context={
-                    "namespace": namespace,
+                    "namespace": namespaces,
                     "error_type": type(exc.orig).__name__,
                 },
                 translated_message="errors.fail.fail_storage_secure_object_upsert",
             ) from exc
 
-    def _load_previous_secure_object_metadata(
+    def _execute_update_rows(
         self,
         session: Session,
-        *,
-        namespace: str,
-        key: str | bytes,
-        expected_revision_id: str | None,
-    ) -> tuple[int | None, str | None, tuple[str, ...], str | None]:
-        """Load the existing row's revision metadata for a save.
+        update_rows: Sequence[dict[str, object]],
+    ) -> None:
+        """Update every superseded row, guarded on the lineage the batch read.
 
-        Returns ``(row_id, previous_revision_id, previous_revision_ancestor_ids,
-        previous_payload_hash)``; ``row_id`` is ``None`` when no row exists.
-        Raises a revision conflict when a compare-and-swap write expects an
-        existing revision but the row is absent.
+        Each update matches only while the stored ``revision_id`` still equals
+        the one this batch derived its lineage from, so a concurrent writer
+        landing between the read and this statement can never be silently
+        orphaned from the revision chain — the guarded update misses, the
+        shortfall is detected, and the whole unit rolls back with a revision
+        conflict naming the row that moved. This is strictly stronger than
+        the retired per-row funnel, which only guarded compare-and-swap
+        writes and stamped last-write-wins lineage from a potentially stale
+        read.
         """
-        row_id = session.execute(
-            select(_orm.SecureObjectRow.id).where(
-                _orm.SecureObjectRow.namespace == namespace,
-                _orm.SecureObjectRow.object_key == key,
-            ),
-        ).scalar_one_or_none()
-        if row_id is not None:
-            previous_metadata = session.execute(
-                select(
-                    _orm.SecureObjectRow.revision_id,
-                    _orm.SecureObjectRow.revision_ancestor_ids,
-                    _orm.SecureObjectRow.payload_hash,
-                ).where(_orm.SecureObjectRow.id == row_id),
-            ).one()
-            previous_revision_ancestor_ids = self._parse_revision_ancestor_ids(previous_metadata.revision_ancestor_ids)
-            # The stored plaintext hash is always present from birth; the payload
-            # column is now AEAD wire bytes, so there is no plaintext to fall back
-            # on (and hashing the ciphertext would be meaningless).
-            return (
-                row_id,
-                previous_metadata.revision_id,
-                previous_revision_ancestor_ids,
-                previous_metadata.payload_hash,
+        if not update_rows:
+            return
+        table = _orm.SecureObjectRow.__table__
+        guarded = [row for row in update_rows if row["b_guard_revision_id"] is not None]
+        # A stored row without a revision id cannot be lineage-guarded; the
+        # write path has stamped every row from birth, so such a row is
+        # pre-existing corruption the read path refuses. Overwriting it keyed
+        # on id alone matches the retired funnel's behaviour.
+        unguarded = [row for row in update_rows if row["b_guard_revision_id"] is None]
+        value_names = [name.removeprefix("v_") for name in update_rows[0] if name.startswith("v_")]
+        values = {name: bindparam(f"v_{name}") for name in value_names}
+        if guarded:
+            stmt = (
+                update(table)
+                .where(
+                    table.c.id == bindparam("b_id"),
+                    table.c.revision_id == bindparam("b_guard_revision_id"),
+                )
+                .values(**values)
             )
-        if expected_revision_id is not None and expected_revision_id != ABSENT_SECURE_OBJECT_REVISION_ID:
-            raise self._revision_conflict(
-                namespace=namespace,
-                expected_revision_id=expected_revision_id,
-                current_revision_id=None,
-            )
-        return None, None, (), None
+            # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-UPDATE:
+            # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``; a DML
+            # UPDATE always yields a rowcount-bearing result, and pysqlite
+            # accumulates executemany rowcounts across parameter sets.
+            result = cast(_RowcountResult, session.execute(stmt, guarded))
+            if result.rowcount != len(guarded):
+                self._raise_stale_guarded_update(session, guarded)
+        if unguarded:
+            stmt = update(table).where(table.c.id == bindparam("b_id")).values(**values)
+            session.execute(stmt, unguarded)
 
-    def _upsert_secure_object_row(
+    def _raise_stale_guarded_update(
         self,
         session: Session,
-        row_id: int | None,
-        *,
-        namespace: str,
-        key: str | bytes,
-        classification: SensitivityClass,
-        schema_version: int,
-        written_at: datetime,
-        payload_wire: bytes,
-        expected_revision_id: str | None,
-    ) -> int:
-        """Insert a new secure-object row or update the existing one, returning its id.
-
-        Raises a revision conflict when a compare-and-swap update matches no row.
-        """
-        if row_id is None:
-            row = _orm.SecureObjectRow(
-                namespace=namespace,
-                object_key=key,
-                classification=classification.value,
-                schema_version=schema_version,
-                written_at=written_at,
-                payload=payload_wire,
-            )
-            session.add(row)
-            session.flush()
-            return row.id
-        update_stmt = update(_orm.SecureObjectRow).where(_orm.SecureObjectRow.id == row_id)
-        if expected_revision_id is not None:
-            update_stmt = update_stmt.where(_orm.SecureObjectRow.revision_id == expected_revision_id)
-        # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-UPDATE:
-        # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``;
-        # a DML UPDATE always yields a rowcount-bearing result.
-        result = cast(
-            _RowcountResult,
+        guarded: Sequence[dict[str, object]],
+    ) -> None:
+        """Name the row whose stored revision moved under a guarded update."""
+        row_ids = [cast(int, row["b_id"]) for row in guarded]
+        stored = dict(
             session.execute(
-                update_stmt.values(
-                    classification=classification.value,
-                    schema_version=schema_version,
-                    written_at=written_at,
-                    payload=payload_wire,
+                select(_orm.SecureObjectRow.id, _orm.SecureObjectRow.revision_id).where(
+                    _orm.SecureObjectRow.id.in_(row_ids),
                 ),
-            ),
+            ).all(),
         )
-        if expected_revision_id is not None and result.rowcount != 1:
-            current_revision_id = session.execute(
-                select(_orm.SecureObjectRow.revision_id).where(_orm.SecureObjectRow.id == row_id),
-            ).scalar_one_or_none()
-            raise self._revision_conflict(
-                namespace=namespace,
-                expected_revision_id=expected_revision_id,
-                current_revision_id=current_revision_id,
-            )
-        session.flush()
-        return row_id
+        for row in guarded:
+            row_id = cast(int, row["b_id"])
+            current = stored.get(row_id)
+            if current != row["v_revision_id"]:
+                raise self._revision_conflict(
+                    namespace=cast(str, row["v_namespace"]),
+                    expected_revision_id=cast(str, row["b_guard_revision_id"]),
+                    current_revision_id=current,
+                )
+        # The rowcount disagreed but every row now carries the revision this
+        # batch wrote — an inconsistency this funnel cannot attribute.
+        raise RepositoryError(
+            context={
+                "namespace": ", ".join(sorted({cast(str, row["v_namespace"]) for row in guarded})),
+                "error_type": "GuardedUpdateRowcountMismatch",
+            },
+            translated_message="errors.fail.fail_storage_secure_object_upsert",
+        )
 
     def _revision_conflict(
         self,

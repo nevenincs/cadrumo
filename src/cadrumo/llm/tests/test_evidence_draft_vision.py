@@ -9,10 +9,10 @@ classification vision path.
 See Also:
     :class:`~llm._evidence_draft_vision.LocalVisionInvoiceFieldExtractor`
         On-host Ollama transport exercised through the loopback server.
-    :func:`~llm._evidence_draft_vision.parse_vision_extraction_response`
+    :func:`~llm._invoice_field_grounding.parse_invoice_extraction_response`
         JSON-object recovery and strict schema boundary covered by adversarial
         response cases.
-    :func:`~llm._evidence_draft_vision._ground_extracted_fields`
+    :func:`~llm._invoice_field_grounding.ground_extracted_fields`
         Grounded re-validation step that rejects hallucinated identifiers and
         unparsable values.
     :func:`~application.ledger.extract_invoice_draft_from_evidence`
@@ -42,10 +42,12 @@ from ...core.decimal import coerce_finite_european_decimal
 from ...tests.secure_sql import TestRuntimeProfile
 from .._evidence_draft_vision import (
     LocalVisionInvoiceFieldExtractor,
-    _ground_extracted_fields,
-    _VisionExtractedFields,
     extract_invoice_fields_from_images,
-    parse_vision_extraction_response,
+)
+from .._invoice_field_grounding import (
+    ExtractedInvoiceFields,
+    ground_extracted_fields,
+    parse_invoice_extraction_response,
 )
 from .._models import MultimodalImageInput
 
@@ -75,32 +77,32 @@ class TestParseVisionExtractionResponse:
     """Unit tests for the JSON-object recovery and schema validation step."""
 
     def test_parses_a_clean_json_object(self) -> None:
-        parsed = parse_vision_extraction_response(_extraction_json())
+        parsed = parse_invoice_extraction_response(_extraction_json())
         assert parsed.supplier_tax_id == _SUPPLIER_CIF
         assert parsed.taxable_base == "100,00"
 
     def test_tolerates_surrounding_prose(self) -> None:
         """A chatty local model wrapping the JSON in prose still parses."""
         wrapped = f"Here is the extracted data:\n{_extraction_json()}\nLet me know if you need more."
-        parsed = parse_vision_extraction_response(wrapped)
+        parsed = parse_invoice_extraction_response(wrapped)
         assert parsed.invoice_number == "2026-0142"
 
     def test_no_json_object_refuses(self) -> None:
         with pytest.raises(PurchaseInvoiceEvidenceInputError, match="no parsable JSON object"):
-            parse_vision_extraction_response("I could not read the image clearly.")
+            parse_invoice_extraction_response("I could not read the image clearly.")
 
     def test_schema_violation_refuses(self) -> None:
         """A non-string field value (e.g. a nested object) fails strict schema validation."""
         with pytest.raises(PurchaseInvoiceEvidenceInputError, match="schema validation"):
-            parse_vision_extraction_response('{"supplier_tax_id": {"nested": "object"}}')
+            parse_invoice_extraction_response('{"supplier_tax_id": {"nested": "object"}}')
 
 
 class TestGroundExtractedFields:
     """Unit tests for the re-validation step: every field must pass its grounded validator."""
 
     def test_valid_fields_all_ground(self) -> None:
-        fields = _VisionExtractedFields.model_validate_json(_extraction_json())
-        draft = _ground_extracted_fields(fields, raw_text_length=42)
+        fields = ExtractedInvoiceFields.model_validate_json(_extraction_json())
+        draft = ground_extracted_fields(fields, raw_text_length=42)
         assert draft.supplier_tax_id == _SUPPLIER_CIF
         assert draft.invoice_number == "2026-0142"
         assert draft.invoice_date == "2026-03-10"
@@ -112,24 +114,24 @@ class TestGroundExtractedFields:
 
     def test_hallucinated_tax_id_is_dropped_not_trusted(self) -> None:
         """A checksum-invalid tax id the model 'read' is rejected, never passed through."""
-        fields = _VisionExtractedFields.model_validate_json(_extraction_json(supplier_tax_id="A0000000A"))
-        draft = _ground_extracted_fields(fields, raw_text_length=10)
+        fields = ExtractedInvoiceFields.model_validate_json(_extraction_json(supplier_tax_id="A0000000A"))
+        draft = ground_extracted_fields(fields, raw_text_length=10)
         assert draft.supplier_tax_id is None
 
     def test_unparsable_date_is_dropped(self) -> None:
-        fields = _VisionExtractedFields.model_validate_json(_extraction_json(invoice_date="not-a-date"))
-        draft = _ground_extracted_fields(fields, raw_text_length=10)
+        fields = ExtractedInvoiceFields.model_validate_json(_extraction_json(invoice_date="not-a-date"))
+        draft = ground_extracted_fields(fields, raw_text_length=10)
         assert draft.invoice_date is None
 
     def test_iso8601_date_also_grounds(self) -> None:
         """A model that normalises the printed day-first date to ISO-8601 still grounds."""
-        fields = _VisionExtractedFields.model_validate_json(_extraction_json(invoice_date="2026-03-10"))
-        draft = _ground_extracted_fields(fields, raw_text_length=10)
+        fields = ExtractedInvoiceFields.model_validate_json(_extraction_json(invoice_date="2026-03-10"))
+        draft = ground_extracted_fields(fields, raw_text_length=10)
         assert draft.invoice_date == "2026-03-10"
 
     def test_unparsable_amount_is_dropped(self) -> None:
-        fields = _VisionExtractedFields.model_validate_json(_extraction_json(taxable_base="lots of money"))
-        draft = _ground_extracted_fields(fields, raw_text_length=10)
+        fields = ExtractedInvoiceFields.model_validate_json(_extraction_json(taxable_base="lots of money"))
+        draft = ground_extracted_fields(fields, raw_text_length=10)
         assert draft.taxable_base is None
 
     @pytest.mark.parametrize(
@@ -154,9 +156,9 @@ class TestGroundExtractedFields:
         confirm re-extracts and uses the extracted value for every field the
         operator did not explicitly override.
         """
-        fields = _VisionExtractedFields.model_validate_json(_extraction_json(taxable_base=printed))
+        fields = ExtractedInvoiceFields.model_validate_json(_extraction_json(taxable_base=printed))
 
-        draft = _ground_extracted_fields(fields, raw_text_length=10)
+        draft = ground_extracted_fields(fields, raw_text_length=10)
 
         assert draft.taxable_base is None
 
@@ -178,15 +180,15 @@ class TestGroundExtractedFields:
         and are asserted alongside the dropped cases rather than instead of
         them.
         """
-        fields = _VisionExtractedFields.model_validate_json(_extraction_json(taxable_base=printed))
+        fields = ExtractedInvoiceFields.model_validate_json(_extraction_json(taxable_base=printed))
 
-        draft = _ground_extracted_fields(fields, raw_text_length=10)
+        draft = ground_extracted_fields(fields, raw_text_length=10)
 
         assert draft.taxable_base == expected
 
     def test_all_null_fields_ground_to_an_empty_draft(self) -> None:
-        fields = _VisionExtractedFields()
-        draft = _ground_extracted_fields(fields, raw_text_length=0)
+        fields = ExtractedInvoiceFields()
+        draft = ground_extracted_fields(fields, raw_text_length=0)
         assert draft.supplier_tax_id is None
         assert draft.invoice_number is None
         assert draft.invoice_date is None
@@ -197,21 +199,21 @@ class TestGroundExtractedFields:
         assert draft.currency is None
 
     def test_printed_currency_code_grounds(self) -> None:
-        fields = _VisionExtractedFields.model_validate_json(_extraction_json(currency="usd"))
-        draft = _ground_extracted_fields(fields, raw_text_length=10)
+        fields = ExtractedInvoiceFields.model_validate_json(_extraction_json(currency="usd"))
+        draft = ground_extracted_fields(fields, raw_text_length=10)
         assert draft.currency == "USD"
 
     def test_currency_symbol_is_dropped_not_guessed(self) -> None:
         """A bare symbol cannot ground a currency: '$' is USD, CAD, AUD and MXN."""
-        fields = _VisionExtractedFields.model_validate_json(_extraction_json(currency="$"))
-        draft = _ground_extracted_fields(fields, raw_text_length=10)
+        fields = ExtractedInvoiceFields.model_validate_json(_extraction_json(currency="$"))
+        draft = ground_extracted_fields(fields, raw_text_length=10)
         assert draft.currency is None
 
     def test_absent_currency_stays_none_rather_than_defaulting_to_euro(self) -> None:
         # The draft must not assert a currency the document never showed; euro
         # is applied (if at all) at confirm time, where the operator can override.
-        fields = _VisionExtractedFields.model_validate_json(_extraction_json(currency=None))
-        draft = _ground_extracted_fields(fields, raw_text_length=10)
+        fields = ExtractedInvoiceFields.model_validate_json(_extraction_json(currency=None))
+        draft = ground_extracted_fields(fields, raw_text_length=10)
         assert draft.currency is None
 
 
@@ -294,16 +296,16 @@ class TestGroundedAmountsShareTheCanonicalDecimalAuthority:
         ids=["dot-decimal", "dot-decimal-small", "dot-decimal-total", "es-thousands", "comma", "canonical"],
     )
     def test_dot_and_comma_decimals_keep_their_scale(self, transcribed: str, expected: Decimal) -> None:
-        fields = _VisionExtractedFields.model_validate_json(_extraction_json(taxable_base=transcribed))
-        draft = _ground_extracted_fields(fields, raw_text_length=42)
+        fields = ExtractedInvoiceFields.model_validate_json(_extraction_json(taxable_base=transcribed))
+        draft = ground_extracted_fields(fields, raw_text_length=42)
 
         assert draft.taxable_base == expected
         assert draft.taxable_base == coerce_finite_european_decimal(transcribed)
 
     @pytest.mark.parametrize("transcribed", ["NaN", "Infinity", "-Infinity", "nan"])
     def test_non_finite_amounts_are_dropped_not_grounded(self, transcribed: str) -> None:
-        fields = _VisionExtractedFields.model_validate_json(_extraction_json(grand_total=transcribed))
-        draft = _ground_extracted_fields(fields, raw_text_length=42)
+        fields = ExtractedInvoiceFields.model_validate_json(_extraction_json(grand_total=transcribed))
+        draft = ground_extracted_fields(fields, raw_text_length=42)
 
         assert draft.grand_total is None
 
@@ -313,14 +315,14 @@ class TestGroundedAmountsShareTheCanonicalDecimalAuthority:
     )
     def test_every_amount_field_agrees_with_the_canonical_helper(self, transcribed: str) -> None:
         """No amount field may read a transcription differently from any other."""
-        fields = _VisionExtractedFields.model_validate_json(
+        fields = ExtractedInvoiceFields.model_validate_json(
             _extraction_json(
                 taxable_base=transcribed,
                 iva_amount=transcribed,
                 grand_total=transcribed,
             ),
         )
-        draft = _ground_extracted_fields(fields, raw_text_length=42)
+        draft = ground_extracted_fields(fields, raw_text_length=42)
 
         expected = coerce_finite_european_decimal(transcribed)
         assert draft.taxable_base == expected

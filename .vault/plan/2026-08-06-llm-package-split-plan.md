@@ -4,7 +4,7 @@ tags:
   - '#llm-package-split'
 date: '2026-08-06'
 modified: '2026-08-07'
-body_hash: 'sha256:99dabc61a9cd4266532d5797c36e8185a167a74f0037a3c9da522ff5c11b813e'
+body_hash: 'sha256:4f7646969ad01d8e9b95544eec6261760704ae36f39b21ce0ecda324983552bd'
 tier: L3
 related:
   - '[[2026-08-06-llm-package-split-adr]]'
@@ -119,8 +119,8 @@ Registers the extra in the shared classifier and forces the undeclared runtime p
 - [x] `W01.P01.S65` - Declare Pillow as a direct project dependency carrying the lxml comment's incidental-transitive rationale, since the extra alone leaves the direct reliance undeclared in the base closure; `pyproject.toml`.
 - [x] `W01.P01.S03` - Guard the rasterisation path with require_optional_extra immediately before its lazy import, red if the import raises ModuleNotFoundError instead of the typed refusal when the extra is absent; `src/cadrumo/adapters/outbound/llm/_providers/local.py`.
 - [x] `W01.P01.S04` - Replace the misdiagnosed Ollama remediation raised on a missing-Pillow failure with the extra's install hint, red if the rasteriser still reports a missing PIL as a broken PDF; `src/cadrumo/application/ledger/_evidence_draft.py`.
-- [ ] `W01.P01.S05` - Assert an absent llm extra degrades the command group to the install-hint placeholder, red if any inference verb raises ModuleNotFoundError on a clean install; `src/cadrumo/entrypoints/cli/tests/`.
-- [ ] `W01.P01.S66` - Assert every module importing PIL is reachable only through a declared dependency, red if a direct import rests on an undeclared incidental transitive; `dev/packaging/`.
+- [x] `W01.P01.S05` - Assert an absent llm extra degrades the command group to the install-hint placeholder, red if any inference verb raises ModuleNotFoundError on a clean install; `src/cadrumo/entrypoints/cli/tests/`.
+- [x] `W01.P01.S66` - Assert every module importing PIL is reachable only through a declared dependency, red if a direct import rests on an undeclared incidental transitive; `dev/packaging/`.
 
 ### Phase `W01.P02` - Harden the enforcement instruments and add the capable axis
 
@@ -128,7 +128,7 @@ Closes the fail-open hole in the strictest gate tier before any Step relies on i
 
 - [x] `W01.P02.S08` - Add a non-vacuity assertion to the sensitive-surface list so every entry must resolve to at least one non-test module or the gate fails naming the entry, closing the fail-open hole for all eighteen surfaces; `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
 - [x] `W01.P02.S09` - Prove the non-vacuity assertion by pointing one entry at a nonexistent path and observing the gate red, then reverting, red if a nonexistent surface still reports success; `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
-- [ ] `W01.P02.S72` - Record per check which of the five secure-storage gates scans by whole-tree rglob, which enumerates a fixed surface list, and which is test-side only, so a coverage claim about any new directory is checkable rather than asserted; `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
+- [x] `W01.P02.S72` - Record per check which of the five secure-storage gates scans by whole-tree rglob, which enumerates a fixed surface list, and which is test-side only, so a coverage claim about any new directory is checkable rather than asserted; `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
 - [x] `W01.P02.S06` - Add a hardware-floor probe for the model runtime reporting through the existing DependencyStatus shape, named for the floor it measures rather than the overloaded word capability which already denotes four unrelated concepts in this tree, red if an under-specified machine reports capable; `src/cadrumo/application/provisioning.py`.
 - [x] `W01.P02.S07` - Surface the hardware probe as a typed refusal naming the shortfall in the config doctor, red if the refusal omits the accepted floor; `src/cadrumo/entrypoints/cli/_check_cli.py`.
 
@@ -141,7 +141,7 @@ Implements D7. Adds a content-shape probe and deterministic EN16931 (CII and UBL
 Replaces a two-member media kind derived from a declared MIME with a typed shape derived from content bytes, so an embedded XML payload inside a PDF is visible rather than invisible.
 
 - [x] `W02.P03.S10` - Add a typed DocumentShape probe deriving shape from content bytes rather than from a declared MIME, red if a ZUGFeRD PDF whose MIME says application/pdf resolves to a shape carrying no embedded XML; `src/cadrumo/adapters/inbound/einvoice/`.
-- [ ] `W02.P03.S11` - Extract the sanitizer's embedded-file walker into a reusable reader so an embedded XML payload is visible, red if the walker's stripping behaviour changes for the sanitizer's own callers; `src/cadrumo/adapters/inbound/sanitizer/_dynamic.py`.
+- [x] `W02.P03.S11` - Extract the sanitizer's embedded-file walker into a reusable reader so an embedded XML payload is visible, red if the walker's stripping behaviour changes for the sanitizer's own callers; `src/cadrumo/adapters/inbound/sanitizer/_dynamic.py`.
 - [ ] `W02.P03.S12` - Route read-time evidence resolution through DocumentShape and retire the read-time media-kind derivation, red if any caller still branches on the two-member media kind; `src/cadrumo/application/ledger/_evidence_input.py`.
 
 ### Phase `W02.P04` - Parse the structured formats exactly, in the inbound adapter layer

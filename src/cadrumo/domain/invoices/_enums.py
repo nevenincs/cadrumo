@@ -18,27 +18,37 @@ from decimal import Decimal
 from enum import StrEnum
 
 from ...core.time import today_madrid
-from ..iva import EUMemberState, IvaRateKind, IvaRateNotFoundError, lookup_rate
+from ..iva import EUMemberState, IvaRateKind, IvaRateNotFoundError, rate_kinds_for_declared_rate
 
 
 class IvaRate(StrEnum):
     """Closed taxonomy of Spanish IVA rate slots used on invoice lines.
 
     The slot names map to substrate :class:`cadrumo.domain.iva.IvaRateKind`
-    tiers and the percentage backing each slot is resolved against
-    :func:`cadrumo.domain.iva.lookup_rate` for Spain at a given date. This
-    module no longer stores rate percentages as Python literals; if the
-    legal rate changes, the substrate's TOML registry is the single
-    source of truth.
+    tiers, and each numeric slot NAMES its own percentage: the number is read
+    off the member and then confirmed in force against the registry for Spain
+    at the invoice's date. The registry stays the single source of truth for
+    whether a rate was legal on a date -- it just is not asked what a tier
+    means, because that is a different question from what a line was charged.
 
-    ``RATE_5`` (a transient 2022-2024 rate) is intentionally absent
-    from this slot taxonomy. If a future workflow ingests pre-2025
-    data this enum and the slot mapping below must be extended in
-    sync with a corresponding registry rate entry.
+    The taxonomy carries the transitional food rates alongside the standing
+    ones. ``RATE_2``, ``RATE_5`` and ``RATE_7_5`` back the RD-ley 4/2024
+    phase-out of the RD-ley 20/2022 relief on basic foodstuffs and olive oil:
+    the registry serves all three inside 2024, so an invoice dated in that
+    window resolves to one of them and the slot must exist to record it.
+    They are not dead members kept for history -- a 2024 filing is still
+    amendable, and a rate the enum cannot name is a line that cannot be
+    entered truthfully.
 
     Attributes:
         RATE_0: Zero-rated supply.
+        RATE_2: Super-reduced transitional slot for basic foodstuffs
+            (RD-ley 4/2024; served 2024-10-01 to 2024-12-31).
         RATE_4: Super-reduced rate slot (LIVA art. 91 Dos).
+        RATE_5: Reduced transitional slot for olive oil and foodstuffs
+            (RD-ley 20/2022 as continued; served 2024-07-01 to 2024-09-30).
+        RATE_7_5: Reduced transitional slot on the way back to 10%
+            (RD-ley 4/2024; served 2024-10-01 to 2024-12-31).
         RATE_10: Reduced rate slot (LIVA art. 91 Uno).
         RATE_21: General rate slot (LIVA art. 90 Uno).
         EXEMPT: Exempt operation; no numeric percentage.
@@ -47,7 +57,14 @@ class IvaRate(StrEnum):
     """
 
     RATE_0 = "RATE_0"
+    RATE_2 = "RATE_2"
     RATE_4 = "RATE_4"
+    # The VALUE carries a decimal point, not an underscore: the slot mapping
+    # derives its percentage by stripping the prefix and parsing the rest, and
+    # Decimal("7_5") parses as seventy-five rather than failing. The member NAME
+    # keeps the underscore because an identifier cannot hold a dot.
+    RATE_5 = "RATE_5"
+    RATE_7_5 = "RATE_7.5"
     RATE_10 = "RATE_10"
     RATE_21 = "RATE_21"
     EXEMPT = "EXEMPT"
@@ -183,9 +200,29 @@ def invoice_legal_mention_text(mention: InvoiceLegalMention) -> str:
     return _INVOICE_LEGAL_MENTION_TEXT[mention]
 
 
+_NUMERIC_RATE_PREFIX = "RATE_"
+
+
+def _slot_declared_percentage(rate: IvaRate) -> Decimal | None:
+    """Return the integer percentage a numeric slot names, or ``None`` for the non-numeric slots.
+
+    The one derivation of a slot's own number, structural rather than listed:
+    the ``RATE_`` prefix is stripped from the member VALUE and the remainder
+    parsed. Both :func:`numeric_iva_rate_slots` and :func:`iva_rate_percentage`
+    read it here, so the percentage a slot resolves to and the percentage the
+    accepted-rate set advertises cannot disagree.
+    """
+    if not rate.value.startswith(_NUMERIC_RATE_PREFIX):
+        return None
+    return Decimal(rate.value[len(_NUMERIC_RATE_PREFIX) :])
+
+
 _IVA_RATE_TO_IVA_KIND: dict[IvaRate, IvaRateKind] = {
     IvaRate.RATE_0: IvaRateKind.ZERO,
+    IvaRate.RATE_2: IvaRateKind.SUPER_REDUCED,
     IvaRate.RATE_4: IvaRateKind.SUPER_REDUCED,
+    IvaRate.RATE_5: IvaRateKind.REDUCED,
+    IvaRate.RATE_7_5: IvaRateKind.REDUCED,
     IvaRate.RATE_10: IvaRateKind.REDUCED,
     IvaRate.RATE_21: IvaRateKind.GENERAL,
     IvaRate.EXEMPT: IvaRateKind.EXEMPT,
@@ -193,36 +230,56 @@ _IVA_RATE_TO_IVA_KIND: dict[IvaRate, IvaRateKind] = {
 
 
 def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal | None:
-    """Return the fractional percentage backing ``rate`` at ``on_date``.
+    """Return the fractional percentage ``rate`` names, confirmed in force at ``on_date``.
 
-    Slot membership in :class:`IvaRate` is structural; the actual
-    percentage is resolved against
-    :func:`cadrumo.domain.iva.lookup_rate` for Spain at ``on_date``. When
-    ``on_date`` is omitted the lookup uses the current Europe/Madrid civil date
-    (:func:`cadrumo.core.time.today_madrid`), the date the IVA devengo rate binds
-    to (LIVA art. 90.Dos with art. 75).
+    A numeric slot carries its own percentage in its name, and that number --
+    not its tier's ordinary rate -- is what the line was charged. The registry
+    is consulted to confirm the rate was legally in force for Spain on
+    ``on_date`` and belonged to the slot's tier; it is not asked to supply the
+    number. When ``on_date`` is omitted the check uses the current
+    Europe/Madrid civil date (:func:`cadrumo.core.time.today_madrid`), the date
+    the IVA devengo rate binds to (LIVA art. 90.Dos with art. 75).
+
+    Resolving through :func:`cadrumo.domain.iva.lookup_rate` instead would
+    answer a different question and silently return a different number. That
+    function deliberately skips ``supersedes_tier_default`` records, because a
+    rate applying to only part of a tier's supplies cannot say what the tier
+    means -- so it answers ``RATE_2`` with the ordinary super-reducido 4 %, and
+    a 2 % foodstuffs line would compute twice the IVA it carried.
+    :func:`cadrumo.domain.iva.rate_kinds_for_declared_rate` is the inverse
+    authority built for this direction and does see those records.
 
     Args:
         rate: IVA rate slot.
-        on_date: Date at which to resolve the rate percentage.
+        on_date: Date at which the slot's rate must have been in force.
             Defaults to the Europe/Madrid civil date (``today_madrid()``).
 
     Returns:
-        ``Decimal("0")`` for :attr:`IvaRate.RATE_0`; the substrate's
-        rate as a fractional Decimal (``pct/100``) for the
-        ``RATE_4`` / ``RATE_10`` / ``RATE_21`` slots; ``None`` for
-        :attr:`IvaRate.EXEMPT` and :attr:`IvaRate.NOT_SUBJECT`.
+        The slot's own percentage as a fractional Decimal (``Decimal("0.02")``
+        for :attr:`IvaRate.RATE_2`, ``Decimal("0")`` for
+        :attr:`IvaRate.RATE_0`); ``None`` for :attr:`IvaRate.EXEMPT` and
+        :attr:`IvaRate.NOT_SUBJECT`, which carry no percentage.
 
+    Raises:
+        IvaRateNotFoundError: If the slot's rate was not in force for its tier
+            on ``on_date`` -- a transitional slot used outside its statutory
+            window, or a standing slot the registry no longer serves. Refusing
+            is the point: substituting whatever the tier happens to mean that
+            day would record a number the invoice never carried.
     """
-    if rate is IvaRate.RATE_0:
-        return Decimal("0")
-    if rate in {IvaRate.EXEMPT, IvaRate.NOT_SUBJECT}:
+    declared_percentage = _slot_declared_percentage(rate)
+    if declared_percentage is None:
         return None
 
     kind = _IVA_RATE_TO_IVA_KIND[rate]
     effective_date = on_date or today_madrid()
-    rate_record = lookup_rate(EUMemberState.ES, kind, effective_date)
-    return rate_record.pct / Decimal("100")
+    fraction = declared_percentage / Decimal("100")
+    if kind not in rate_kinds_for_declared_rate(EUMemberState.ES, fraction, effective_date):
+        raise IvaRateNotFoundError(
+            f"IVA rate slot {rate.name} ({declared_percentage}%) was not in force for "
+            f"kind={kind.value!r} in Spain on {effective_date.isoformat()}",
+        )
+    return fraction
 
 
 def iva_rate_kind(rate: IvaRate) -> IvaRateKind | None:
@@ -236,35 +293,34 @@ def iva_rate_kind(rate: IvaRate) -> IvaRateKind | None:
     return _IVA_RATE_TO_IVA_KIND.get(rate)
 
 
-_NUMERIC_RATE_PREFIX = "RATE_"
-
-
 def numeric_iva_rate_slots() -> dict[Decimal, IvaRate]:
     """Return the integer percentage to :class:`IvaRate` slot mapping.
 
-    The one canonical percentage-to-slot resolution, and the only place the
-    ``0 / 4 / 10 / 21`` correspondence is expressed. The derivation is
-    structural — the ``RATE_`` prefix is stripped from each member name and the
-    remainder parsed as an integer — so the mapping tracks :class:`IvaRate`
-    membership rather than re-listing literals beside it.
-    :attr:`IvaRate.EXEMPT` and :attr:`IvaRate.NOT_SUBJECT` carry no numeric
-    percentage and are excluded.
+    The one canonical percentage-to-slot resolution, inverting the same
+    :func:`_slot_declared_percentage` derivation :func:`iva_rate_percentage`
+    reads, so the rates this advertises as acceptable are exactly the rates a
+    slot resolves to. :attr:`IvaRate.EXEMPT` and :attr:`IvaRate.NOT_SUBJECT`
+    carry no numeric percentage and are excluded.
 
     Deriving rather than listing is what keeps the accepted rate set consistent
-    across surfaces as the taxonomy changes, and the trigger is already named in
-    :class:`IvaRate`'s own docstring: ``RATE_5``, the transient 2022-2024 rate,
-    is deliberately absent, and ingesting pre-2025 data would require adding it.
-    An invoice-creation path holding a hand-written copy of this table would
-    keep rejecting the new slot while a sibling that derived it accepted one —
-    creation and editing disagreeing about what a valid rate is.
+    across surfaces as the taxonomy changes: the RD-ley 4/2024 food rates were
+    added to :class:`IvaRate` and appeared here without this function being
+    touched. An invoice-creation path holding a hand-written copy of this table
+    would keep rejecting a new slot while a sibling that derived it accepted
+    one — creation and editing disagreeing about what a valid rate is.
+
+    Membership is not the same as availability: a slot appears here whenever it
+    exists, while :func:`iva_rate_percentage` refuses it on a date its rate was
+    not in force. This answers "which rates can a line name", not "which rates
+    may this invoice charge today".
 
     Returns:
         A fresh mutable mapping, so a caller cannot mutate the shared taxonomy.
     """
     return {
-        Decimal(member.value[len(_NUMERIC_RATE_PREFIX) :]): member
+        percentage: member
         for member in IvaRate
-        if member.value.startswith(_NUMERIC_RATE_PREFIX)
+        if (percentage := _slot_declared_percentage(member)) is not None
     }
 
 

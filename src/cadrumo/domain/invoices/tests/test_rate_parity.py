@@ -19,8 +19,14 @@ from decimal import Decimal
 
 import pytest
 
-from ...iva import EUMemberState, IvaRateKind, load_iva_rate_table
-from .._enums import IvaRate, iva_rate_kind, numeric_iva_rate_percentages
+from ...iva import EUMemberState, IvaRateKind, IvaRateNotFoundError, load_iva_rate_table, lookup_rate
+from .._enums import (
+    IvaRate,
+    iva_rate_kind,
+    iva_rate_percentage,
+    numeric_iva_rate_percentages,
+    numeric_iva_rate_slots,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -111,19 +117,129 @@ def test_iva_rate_numeric_kinds_match_registry_served_window() -> None:
     )
 
 
-def test_iva_rate_5_stays_intentionally_absent() -> None:
-    """The transient 2022-2024 5% rate has no registry coverage in the served window, and no enum slot.
+def test_the_transitional_food_rates_have_slots_because_the_registry_serves_them() -> None:
+    """The RD-ley 4/2024 phase-out rates are nameable, and for the stated reason.
 
-    Pins the governing decision's stated invariant: ``RATE_5`` is absent from
-    :class:`IvaRate` *because* the registry carries no ES rate window
-    reaching :data:`_SERVED_WINDOW_START` at 5%. If a future registry
-    ingestion adds pre-2025 ES coverage that reaches the served window at
-    5%, ``test_iva_rate_numeric_members_match_registry_served_window`` fails
-    first and this test documents why a new enum member would then be
-    warranted.
+    This assertion previously held the opposite: ``RATE_5`` was absent
+    *because* no ES window reached the served window at 5%. Registry coverage
+    for 2024 changed that premise -- 2%, 5% and 7.5% are all served inside the
+    window -- so the enum gained the slots rather than the gate being relaxed.
+
+    Kept rather than deleted, and inverted, because the reasoning is the part
+    worth pinning: a rate the registry can resolve for a dated invoice must
+    have a slot, or that line cannot be recorded truthfully. A 2024 filing is
+    still amendable, so these are live slots, not historical decoration.
+
+    Each is checked against the tier it modifies, not merely for presence: the
+    RD-ley reduces specific foodstuffs within the existing LIVA tiers, so a
+    transitional rate that mapped to the wrong kind would resolve a different
+    percentage for the same date.
     """
-    assert Decimal("5") not in _registry_numeric_percentages_for_served_window()
-    assert not hasattr(IvaRate, "RATE_5")
+    served = _registry_numeric_percentages_for_served_window()
+    slots = numeric_iva_rate_slots()
+
+    for pct, expected_kind in (
+        (Decimal("2"), IvaRateKind.SUPER_REDUCED),
+        (Decimal("5"), IvaRateKind.REDUCED),
+        (Decimal("7.5"), IvaRateKind.REDUCED),
+    ):
+        assert pct in served, f"{pct}% is no longer served; this test's premise has moved again"
+        assert pct in slots, f"the registry serves {pct}% but no IvaRate slot can name it"
+        assert iva_rate_kind(slots[pct]) is expected_kind, (
+            f"{pct}% must map to {expected_kind.value}: it is a transitional reduction WITHIN that "
+            "LIVA tier, and a wrong kind resolves a different percentage for the same date"
+        )
+
+
+def test_every_numeric_slot_resolves_to_the_percentage_it_names() -> None:
+    """A slot's resolved percentage equals its own name, never its tier's ordinary rate.
+
+    The gap this closes let a green suite ship a silent over-declaration.
+    Membership parity and tier parity above both passed while
+    :func:`iva_rate_percentage` resolved ``RATE_2`` to 4 % and ``RATE_7_5`` to
+    10 %: it asked :func:`~cadrumo.domain.iva.lookup_rate` what the slot's TIER
+    meant, and that function skips ``supersedes_tier_default`` records by
+    design, so it answered with the ordinary rate the transitional one
+    coexists with. A 2 % foodstuffs line computed twice the IVA it carried.
+
+    Nothing above can catch that, because both existing gates compare SETS --
+    of percentages and of tiers -- and never resolve a slot. This asserts the
+    resolution itself, per slot, on a date each is in force.
+    """
+    for slot_date in (date(2024, 8, 15), date(2024, 11, 15), date(2025, 6, 1)):
+        for percentage, member in numeric_iva_rate_slots().items():
+            try:
+                resolved = iva_rate_percentage(member, slot_date)
+            except IvaRateNotFoundError:
+                # Correct for a transitional slot outside its window; the
+                # refusal itself is pinned by the window test below.
+                continue
+            assert resolved == percentage / Decimal("100"), (
+                f"{member.name} resolved to {resolved} on {slot_date.isoformat()}, but the slot names "
+                f"{percentage}%. A slot must resolve its OWN rate -- resolving its tier's ordinary rate "
+                "records a number the line never carried."
+            )
+
+
+def test_transitional_slots_refuse_outside_their_statutory_window() -> None:
+    """The RD-ley 4/2024 slots resolve inside their window and are refused outside it.
+
+    The window is the whole reason these slots can carry their own number
+    safely: 2 % and 4 % were both correct super-reducido rates in late 2024, so
+    a slot that resolved regardless of date would let a 2025 invoice claim a
+    rate the statute had already withdrawn. Refusal is the honest answer --
+    substituting the tier's ordinary rate would silently record 4 % on a line
+    the operator marked 2 %.
+    """
+    inside = date(2024, 11, 15)
+    outside = date(2025, 6, 1)
+
+    assert iva_rate_percentage(IvaRate.RATE_2, inside) == Decimal("0.02")
+    assert iva_rate_percentage(IvaRate.RATE_7_5, inside) == Decimal("0.075")
+    # 5 % ran to 2024-09-30 and was already superseded by 7,5 % in November.
+    assert iva_rate_percentage(IvaRate.RATE_5, date(2024, 8, 15)) == Decimal("0.05")
+
+    for member in (IvaRate.RATE_2, IvaRate.RATE_5, IvaRate.RATE_7_5):
+        with pytest.raises(IvaRateNotFoundError):
+            iva_rate_percentage(member, outside)
+
+    # The standing slots are unaffected by the window and keep resolving.
+    assert iva_rate_percentage(IvaRate.RATE_21, outside) == Decimal("0.21")
+    assert iva_rate_percentage(IvaRate.RATE_4, outside) == Decimal("0.04")
+
+
+def test_slot_resolution_gate_would_catch_a_tier_default_substitution() -> None:
+    """Mutation proof for the resolution gate: it fails when a slot resolves its tier's rate.
+
+    Re-derives what the pre-fix implementation returned -- the tier's ordinary
+    rate via :func:`~cadrumo.domain.iva.lookup_rate` -- and confirms the
+    assertion above rejects it. Without this, a future refactor that quietly
+    routed resolution back through the tier would pass a gate that only ever
+    compared each slot against itself.
+    """
+    on_date = date(2024, 11, 15)
+    slots = numeric_iva_rate_slots()
+
+    tier_substituted = {
+        member: lookup_rate(EUMemberState.ES, kind, on_date).pct / Decimal("100")
+        for percentage, member in slots.items()
+        if (kind := iva_rate_kind(member)) is not None
+    }
+
+    disagreeing = {
+        member.name
+        for percentage, member in slots.items()
+        if member in tier_substituted and tier_substituted[member] != percentage / Decimal("100")
+    }
+    # Every coexisting slot disagrees, including RATE_5, whose window had
+    # already closed by this date -- the tier lookup answers regardless of the
+    # slot's own window, which is the second half of why it cannot be trusted
+    # to supply the number. The standing slots agree, so the substitution was
+    # invisible until a coexisting rate existed.
+    assert disagreeing == {"RATE_2", "RATE_5", "RATE_7_5"}, (
+        "the tier-substitution the fix removed must still be observable and still wrong for exactly the "
+        f"coexisting slots; got {sorted(disagreeing)}"
+    )
 
 
 def test_parity_gate_discriminates_on_either_side() -> None:
@@ -141,7 +257,12 @@ def test_parity_gate_discriminates_on_either_side() -> None:
 
     assert enum_percentages == registry_percentages, "baseline agreement must hold before mutating either side"
 
-    registry_side_gains_a_rate = registry_percentages | {Decimal("5")}
+    # Perturb with a percentage no Spanish IVA tier has ever carried. Using a
+    # real rate would silently stop mutating the moment the registry gained it,
+    # which is exactly what happened when this line used 5%.
+    absent_rate = Decimal("3")
+    assert absent_rate not in registry_percentages, "pick a rate outside the taxonomy, or this proves nothing"
+    registry_side_gains_a_rate = registry_percentages | {absent_rate}
     assert registry_side_gains_a_rate != enum_percentages
 
     enum_side_loses_a_rate = enum_percentages - {Decimal("21")}

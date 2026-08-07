@@ -66603,6 +66603,9 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
               help: null
               label: Általános kulcs (21%) szerint felszámított ÁFA - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8.label
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
               help: null
               label: 5,2%-os egyenértékűségi pótlék - éves keletkezett ÁFA
@@ -66615,9 +66618,15 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: null
               label: Csökkentett kulcs (10%) szerint felszámított ÁFA - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5.label
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
               label: Szuperkedvezményes kulcs (4%) szerint felszámított ÁFA - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck.label
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
               label: Az általános rendszer éves eredménye (keletkezett ÁFA mínusz
@@ -66628,6 +66637,9 @@ modelo:
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: null
               label: Folyó belföldi ügyletek után viselt ÁFA - éves
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5.label
           construct:
             modelo-390-iva-resumen-anual:
               field:
@@ -67049,6 +67061,8 @@ profile:
         tax_id:
           label: Adóazonosító (NIF/NIE/CIF)
       irpf:
+        activity_kind:
+          label: profile.schema.field.irpf.activity_kind.label
         art109_activity_income_withholding_ge_70pct:
           label: Megfelel a RIRPF 109. cikk 70%-os kivételének
         estimation_regime:

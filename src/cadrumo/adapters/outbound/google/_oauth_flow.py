@@ -27,7 +27,6 @@ See Also:
 
 from __future__ import annotations
 
-import sys
 from datetime import datetime
 from typing import NoReturn
 
@@ -35,6 +34,7 @@ from ....adapters.persistence.storage.master_key import looks_like_real_tax_id
 from ....core.config import SecretStoreBackend, load_settings
 from ....core.i18n import tr
 from ....core.time import now
+from ....core.tty import stdin_is_tty
 from ....domain.user_profile import ProfileNotFoundError
 from ._errors import (
     GoogleAuthBrowserOpenError,
@@ -70,9 +70,7 @@ def require_interactive_terminal() -> None:
             When ``sys.stdin`` is not attached to a terminal. The exception
             carries the interactive-terminal prerequisite as a suggestion.
     """
-    stdin = sys.stdin
-    isatty = getattr(stdin, "isatty", None)
-    if stdin is None or isatty is None or not isatty():
+    if not stdin_is_tty():
         raise GoogleAuthNonInteractiveError(
             "google OAuth refused: interactive browser consent requires a controlling terminal",
             context={"reason": "stdin_not_a_tty"},

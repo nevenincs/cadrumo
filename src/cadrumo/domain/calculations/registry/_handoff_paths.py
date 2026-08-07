@@ -93,8 +93,9 @@ class RegistryHandoffPathAudit(BaseModel):
 def audit_registry_handoff_paths(authority: ValidatedRegistryAuthority) -> RegistryHandoffPathAudit:
     """Classify validated relation paths without inventing semantic repairs.
 
-    The registry validator remains the authority for rejecting a non-canonical
-    relation/previous-filing collision. This audit only projects the validated
+    The :class:`ValidatedRegistryAuthority` passed as ``authority`` validates the
+    registry before any path is read, and remains the authority for rejecting a
+    non-canonical relation/previous-filing collision. This audit only projects the validated
     topology and records the one accepted M303 IVA-wallet exception. A parallel
     path is also reported when a target casilla carries a second direct
     ``previous_filing`` binding.

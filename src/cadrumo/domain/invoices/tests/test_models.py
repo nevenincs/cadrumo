@@ -520,10 +520,23 @@ def test_numeric_iva_rate_percentages_tracks_rate_members_only() -> None:
     result = numeric_iva_rate_percentages()
     rate_members = [m for m in IvaRate if m.value.startswith("RATE_")]
 
-    assert result == frozenset({Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")})
+    # One percentage per RATE_ member, and nothing else. Pinning the literal set
+    # here would contradict this test's own premise: it claims a new slot is
+    # picked up without code changes, and a hardcoded set makes every new slot a
+    # code change. It did exactly that when the transitional food rates landed.
     assert len(result) == len(rate_members)
     assert len(result) < len(IvaRate)
     assert [m for m in IvaRate if not m.value.startswith("RATE_")] == [IvaRate.EXEMPT, IvaRate.NOT_SUBJECT]
+
+    # Anchors, so the length check above cannot pass over a set of the right
+    # size but the wrong values -- the standing LIVA tiers must always resolve.
+    assert {Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")} <= result
+
+    # And the parse is by value, not by member name: RATE_7_5 names a slot whose
+    # percentage is seven and a half, not seventy-five.
+    if hasattr(IvaRate, "RATE_7_5"):
+        assert Decimal("7.5") in result
+        assert Decimal("75") not in result
 
 
 @pytest.mark.parametrize(

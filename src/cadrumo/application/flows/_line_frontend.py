@@ -24,7 +24,6 @@ Windows no-console refusal before any progress.
 
 from __future__ import annotations
 
-import sys
 from typing import TYPE_CHECKING
 
 import questionary
@@ -33,6 +32,7 @@ from pydantic import TypeAdapter
 from ...core.flows import DEFER_TOKEN, FlowMode, FlowWidgetKind, PageStatus
 from ...core.i18n import tr
 from ...core.parsing import parse_bool
+from ...core.tty import stdin_is_tty
 from ._capability import NO_CONSOLE_ERRORS as _NO_CONSOLE_ERRORS
 from ._checkpoint import CheckpointStore, checkpoint_available, save_checkpoint
 from ._copy import (
@@ -105,7 +105,7 @@ class LineFlowFrontend:
         """
         if self._input is not None or self._output is not None:
             return
-        if not sys.stdin.isatty():
+        if not stdin_is_tty():
             raise FlowUnsupportedConsoleError(
                 translated_message="flows.errors.unsupported_console",
             )

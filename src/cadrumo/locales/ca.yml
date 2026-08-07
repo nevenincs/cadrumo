@@ -66491,6 +66491,9 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
               help: null
               label: Quota d'IVA repercutit al tipus general (21%) - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8.label
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
               help: null
               label: Recàrrec d'equivalència tipus 5,2% - Quota meritada anual
@@ -66503,9 +66506,15 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: null
               label: Quota d'IVA repercutit al tipus reduït (10%) - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5.label
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
               label: Quota d'IVA repercutit al tipus superreduït (4%) - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck.label
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
               label: Resultat anual del règim general (quota meritada - quota deduïble)
@@ -66516,6 +66525,9 @@ modelo:
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: null
               label: Quota d'IVA suportat en operacions interiors corrents - anual
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5.label
           construct:
             modelo-390-iva-resumen-anual:
               field:
@@ -66936,6 +66948,8 @@ profile:
         tax_id:
           label: NIF/NIE/CIF d'identificació
       irpf:
+        activity_kind:
+          label: profile.schema.field.irpf.activity_kind.label
         art109_activity_income_withholding_ge_70pct:
           label: Compleix l'excepció del 70 % de l'art. 109 RIRPF
         estimation_regime:
