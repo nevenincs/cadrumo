@@ -4,7 +4,7 @@ tags:
   - '#dehu-notification-legal-effect'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:a3809cdcab09d9760d896bd8dbd23d460a7ab40f6bdcd99687aab2f9289cefb7'
+body_hash: 'sha256:1624087ed55601582e904594a5af68df3b95c3428a0ab2533cdb3bf181054dc3'
 tier: L2
 related:
   - '[[2026-08-07-dehu-notification-legal-effect-adr]]'
@@ -45,8 +45,8 @@ authorization is not live-traffic authorization.
 
 Fetch and commit the Ley 39/2015 art. 43.2 corpus and enroll it in the legal catalogue under human sign-off; every downstream Phase is blocked on this Phase's closing Step.
 
-- [ ] `P01.S01` - Reuse the campaign's already-primary-sourced BOE consolidated PDF for Ley 39/2015 at boe.es buscar pdf 2015 BOE-A-2015-10565-consolidado.pdf, art. 43 at page 35, rather than re-deriving it, taking the LAST version if the payload bundles historical redactions, never passing the text through a shell since a truncating heredoc silently loses text, and reading the committed file back before trusting it. The consolidated PDF does not annotate which articles were amended, confirmed by positive control against art. 28, so absence of a marker on art. 43 establishes only that this is todays operative text, and no unamended-since-2015 claim may be made anywhere downstream. Commit the HTML plus its extracted sidecars, verified by resolve_anchored_extracted_unit resolving the target anchor with no CorpusAnchorResolutionError; `src/cadrumo/_data/corpus/normatives/html/`.
-- [ ] `P01.S02` - Draft the candidate ley-39-2015-notificaciones.toml LegalReference entry (id, kind=ley, corpus_ref, required_text carrying the diez-dias-naturales phrase verbatim) as a proposal recorded only in this Step's execution record, and do NOT commit it to the registry, since LegalReference.review_status is typed Literal reviewed and cannot represent an unreviewed draft on disk; `src/cadrumo/_data/registry/aeat/legal/ley-39-2015-notificaciones.toml (proposed, not written)`.
+- [x] `P01.S01` - Reuse the campaign's already-primary-sourced BOE consolidated PDF for Ley 39/2015 at boe.es buscar pdf 2015 BOE-A-2015-10565-consolidado.pdf, art. 43 at page 35, rather than re-deriving it, taking the LAST version if the payload bundles historical redactions, never passing the text through a shell since a truncating heredoc silently loses text, and reading the committed file back before trusting it. The consolidated PDF does not annotate which articles were amended, confirmed by positive control against art. 28, so absence of a marker on art. 43 establishes only that this is todays operative text, and no unamended-since-2015 claim may be made anywhere downstream. Commit the HTML plus its extracted sidecars, verified by resolve_anchored_extracted_unit resolving the target anchor with no CorpusAnchorResolutionError; `src/cadrumo/_data/corpus/normatives/html/`.
+- [x] `P01.S02` - Draft the candidate ley-39-2015-notificaciones.toml LegalReference entry (id, kind=ley, corpus_ref, required_text carrying the diez-dias-naturales phrase verbatim) as a proposal recorded only in this Step's execution record, and do NOT commit it to the registry, since LegalReference.review_status is typed Literal reviewed and cannot represent an unreviewed draft on disk; `src/cadrumo/_data/registry/aeat/legal/ley-39-2015-notificaciones.toml (proposed, not written)`.
 - [ ] `P01.S03` - HUMAN GATE, owner: operator, no agent may self-stamp review_status. Operator reviews the S02 draft against the committed corpus and personally commits the entry with review_status=reviewed, confirmed by the legal-catalogue verification suite (verify_legal_reference / registry build validation) passing green against the merged entry. This Step blocks every Step in Phases P02 through P04; `src/cadrumo/_data/registry/aeat/legal/ley-39-2015-notificaciones.toml`.
 
 ### Phase `P02` - core typed axis
