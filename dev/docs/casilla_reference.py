@@ -60,6 +60,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
+from ._locale_chrome import docs_chrome
 from .legal_reference import legal_reference_target, load_legal_provisions
 from .terminology import CasillaSearchRecord, project_casilla_search_records
 from .terminology._casilla_anchor import CASILLA_REFERENCE_DIR, casilla_page_anchor, casilla_page_relpath
@@ -235,20 +236,6 @@ _ACRONYMS: Final[frozenset[str]] = frozenset(
 )
 
 
-def _text(key: str, language: OutputLanguage, /, **values: object) -> str:
-    """Resolve one display string for the build language, refusing a gap.
-
-    A thin namespace-scoped adapter over the shared resolver: this surface names
-    its strings by their suffix (``chrome.legal_basis``), while
-    :func:`~dev.docs._locale_chrome.docs_chrome` owns the strictness contract -
-    a missing string raises rather than falling back to another language, which
-    is the whole point of the correction this vocabulary came from.
-    """
-    from ._locale_chrome import docs_chrome
-
-    return docs_chrome(f"{_DISPLAY_PREFIX}.{key}", language, **values)
-
-
 #: Display keys with no enumeration behind them: page chrome and the
 #: constraint phrasings. Everything else is derived from the schema's own closed
 #: value sets by :func:`display_locale_keys`, so a new enum member surfaces as a
@@ -364,7 +351,9 @@ def _token_display(token: str) -> str:
 
 def _section_display(section: tuple[str, ...], language: OutputLanguage) -> str:
     """The human display for a registry section path, token by token."""
-    return " › ".join(_token_display(part) for part in section if part) or _text("chrome.general_section", language)
+    return " › ".join(_token_display(part) for part in section if part) or docs_chrome(
+        "docs.casilla.chrome.general_section", language
+    )
 
 
 def _section_anchor(section: tuple[str, ...]) -> str:
@@ -407,7 +396,9 @@ def _legal_provision_display(legal_id: str, provision: LegalProvisionRecord, lan
     qualifier = separator.join(token.upper() if len(token) <= 4 else _humanise_token(token) for token in remainder)
 
     instrument = _LEGAL_INSTRUMENT_NAMES.get(provision.kind)
-    kind_display = instrument if instrument is not None else _text(f"legal_kind.{provision.kind}", language)
+    kind_display = (
+        instrument if instrument is not None else docs_chrome(f"docs.casilla.legal_kind.{provision.kind}", language)
+    )
     name = " ".join(part for part in (kind_display, qualifier) if part)
     if numeral:
         name = f"{name}{separator if qualifier else ' '}{numeral}"
@@ -641,7 +632,7 @@ def _join_references(references: list[str], language: OutputLanguage) -> str:
     """Join rendered box links as a readable list ("01, 02 and 05")."""
     if len(references) <= 1:
         return "".join(references)
-    return f"{', '.join(references[:-1])} {_text('chrome.list_and', language)} {references[-1]}"
+    return f"{', '.join(references[:-1])} {docs_chrome('docs.casilla.chrome.list_and', language)} {references[-1]}"
 
 
 def _fill_explanation(
@@ -657,7 +648,7 @@ def _fill_explanation(
     schema can give. Bound casillas name the source that fills them.
     """
     input_kind = record.input_kind.value
-    headline = _text(f"input_kind.{input_kind}", language)
+    headline = docs_chrome(f"docs.casilla.input_kind.{input_kind}", language)
     lines = [
         f'<div class="casilla-fill casilla-fill--{html.escape(input_kind, quote=True)}">',
         f'<span class="casilla-fill__kind">{html.escape(headline)}</span>',
@@ -665,8 +656,8 @@ def _fill_explanation(
 
     detail: str | None = None
     if facts is not None and facts.binding_sources:
-        phrases = [_text(f"binding_source.{source}", language) for source in facts.binding_sources]
-        alternative = _text("chrome.alternative_join", language)
+        phrases = [docs_chrome(f"docs.casilla.binding_source.{source}", language) for source in facts.binding_sources]
+        alternative = docs_chrome("docs.casilla.chrome.alternative_join", language)
         detail = phrases[0] if len(phrases) == 1 else alternative.join(phrases)
     if detail is not None:
         lines.append(f'<span class="casilla-fill__detail">{html.escape(detail)}</span>')
@@ -681,7 +672,7 @@ def _fill_explanation(
                 f'<a class="casilla-derives-from__ref" href="#{html.escape(anchor, quote=True)}"'
                 f' title="{html.escape(casilla_id, quote=True)}">{html.escape(text)}</a>',
             )
-        derived = _text("chrome.derived_from", language)
+        derived = docs_chrome("docs.casilla.chrome.derived_from", language)
         lines.append(f'<span class="casilla-fill__detail">{html.escape(derived)}</span>')
         lines.append(f'<span class="casilla-derives-from">{_join_references(references, language)}</span>')
     lines.append("</div>")
@@ -708,40 +699,45 @@ def _constraint_phrases(constraints: CasillaConstraints | None, language: Output
     phrases: list[str] = []
     minimum, maximum = constraints.min_value, constraints.max_value
     if minimum is not None and maximum is not None:
-        phrases.append(_text("value_range.between", language, min=minimum, max=maximum))
+        phrases.append(docs_chrome("docs.casilla.value_range.between", language, min=minimum, max=maximum))
     elif minimum is not None:
-        phrases.append(_text("value_range.at_least", language, min=minimum))
+        phrases.append(docs_chrome("docs.casilla.value_range.at_least", language, min=minimum))
     elif maximum is not None:
-        phrases.append(_text("value_range.at_most", language, max=maximum))
+        phrases.append(docs_chrome("docs.casilla.value_range.at_most", language, max=maximum))
     elif constraints.sign != "any":
-        phrases.append(_text(f"value_range.{constraints.sign}", language))
+        phrases.append(docs_chrome(f"docs.casilla.value_range.{constraints.sign}", language))
 
     if constraints.min_length is not None and constraints.max_length is not None:
-        phrases.append(_text("length.between", language, min=constraints.min_length, max=constraints.max_length))
+        phrases.append(
+            docs_chrome("docs.casilla.length.between", language, min=constraints.min_length, max=constraints.max_length)
+        )
     elif constraints.max_length is not None:
-        phrases.append(_text("length.at_most", language, max=constraints.max_length))
+        phrases.append(docs_chrome("docs.casilla.length.at_most", language, max=constraints.max_length))
     elif constraints.min_length is not None:
-        phrases.append(_text("length.at_least", language, min=constraints.min_length))
+        phrases.append(docs_chrome("docs.casilla.length.at_least", language, min=constraints.min_length))
 
     if constraints.enum:
-        phrases.append(_text("value_enum", language, values=", ".join(str(value) for value in constraints.enum)))
+        phrases.append(
+            docs_chrome("docs.casilla.value_enum", language, values=", ".join(str(value) for value in constraints.enum))
+        )
     return phrases
 
 
 def _fact_chips(record: CasillaSearchRecord, facts: CasillaFacts | None, language: OutputLanguage) -> list[str]:
     """The scannable filing facts: what to type, whether it is required, where it sits."""
     chips: list[str] = []
-    chips.append(f'<li class="casilla-fact">{html.escape(_text(f"data_type.{record.data_type}", language))}</li>')
+    data_type = docs_chrome(f"docs.casilla.data_type.{record.data_type}", language)
+    chips.append(f'<li class="casilla-fact">{html.escape(data_type)}</li>')
     if record.required:
-        required = _text("chrome.required", language)
+        required = docs_chrome("docs.casilla.chrome.required", language)
         chips.append(f'<li class="casilla-fact casilla-fact--required">{html.escape(required)}</li>')
     for phrase in _constraint_phrases(facts.constraints if facts else None, language):
         chips.append(f'<li class="casilla-fact">{html.escape(phrase)}</li>')
     if record.segmento:
-        segmento = _text("chrome.segmento", language, segmento=record.segmento)
+        segmento = docs_chrome("docs.casilla.chrome.segmento", language, segmento=record.segmento)
         chips.append(f'<li class="casilla-fact">{html.escape(segmento)}</li>')
     if facts is not None and facts.internal_only:
-        internal = _text("chrome.not_on_official_form", language)
+        internal = docs_chrome("docs.casilla.chrome.not_on_official_form", language)
         chips.append(f'<li class="casilla-fact casilla-fact--internal">{html.escape(internal)}</li>')
     return chips
 
@@ -753,27 +749,49 @@ def _internals_block(record: CasillaSearchRecord, box_number: str, language: Out
     operator debugging a value needs the exact ids the registry carries.
     """
     rows: list[tuple[str, str]] = [
-        (_text("chrome.casilla_id", language), f"<code>{html.escape(str(record.casilla_id))}</code>"),
+        (
+            docs_chrome("docs.casilla.chrome.casilla_id", language),
+            f"<code>{html.escape(str(record.casilla_id))}</code>",
+        ),
     ]
     if record.number != box_number:
-        rows.append((_text("chrome.record_design_number", language), f"<code>{html.escape(record.number)}</code>"))
+        rows.append(
+            (
+                docs_chrome("docs.casilla.chrome.record_design_number", language),
+                f"<code>{html.escape(record.number)}</code>",
+            )
+        )
     if record.semantic_role:
-        rows.append((_text("chrome.semantic_role", language), f"<code>{html.escape(record.semantic_role)}</code>"))
+        rows.append(
+            (
+                docs_chrome("docs.casilla.chrome.semantic_role", language),
+                f"<code>{html.escape(record.semantic_role)}</code>",
+            )
+        )
     if record.binding is not None:
-        rows.append((_text("chrome.binding", language), f"<code>{html.escape(str(record.binding))}</code>"))
+        rows.append(
+            (docs_chrome("docs.casilla.chrome.binding", language), f"<code>{html.escape(str(record.binding))}</code>")
+        )
     if record.formula_id is not None:
-        rows.append((_text("chrome.formula", language), f"<code>{html.escape(str(record.formula_id))}</code>"))
+        rows.append(
+            (
+                docs_chrome("docs.casilla.chrome.formula", language),
+                f"<code>{html.escape(str(record.formula_id))}</code>",
+            )
+        )
     registry_section = ".".join(record.section) or "general"
-    rows.append((_text("chrome.registry_section", language), f"<code>{html.escape(registry_section)}</code>"))
+    rows.append(
+        (docs_chrome("docs.casilla.chrome.registry_section", language), f"<code>{html.escape(registry_section)}</code>")
+    )
     if record.source_refs:
         joined = " ".join(f"<code>{html.escape(ref)}</code>" for ref in record.source_refs)
-        rows.append((_text("chrome.sources", language), joined))
+        rows.append((docs_chrome("docs.casilla.chrome.sources", language), joined))
     if record.source_revisions:
         joined = " ".join(f"<code>{html.escape(rev)}</code>" for rev in record.source_revisions)
-        rows.append((_text("chrome.revisions", language), joined))
+        rows.append((docs_chrome("docs.casilla.chrome.revisions", language), joined))
     lines = [
         '<details class="casilla-card__internals">',
-        f"<summary>{html.escape(_text('chrome.registry_identifiers', language))}</summary>",
+        f"<summary>{html.escape(docs_chrome('docs.casilla.chrome.registry_identifiers', language))}</summary>",
         '<dl class="casilla-internals">',
     ]
     lines.extend(f"<dt>{html.escape(term)}</dt><dd>{value}</dd>" for term, value in rows)
@@ -815,7 +833,7 @@ def _render_entry(
     legal_lines, resolved = (
         ([], 0)
         if not record.legal_refs
-        else _legal_list(record.legal_refs, links, _text("chrome.legal_basis", language))
+        else _legal_list(record.legal_refs, links, docs_chrome("docs.casilla.chrome.legal_basis", language))
     )
     lines.extend(legal_lines)
     lines.extend(_internals_block(record, box_number, language))
@@ -848,20 +866,27 @@ def _page_header(
     facts: list[str] = []
     if overview is not None:
         facts.append(_token_display(overview.tax_domain))
-        facts.append(_text(f"cadence.{overview.cadence}", language))
-    facts.append(_text("chrome.casilla_count", language, casillas=len(records), sections=len(sections)))
-    facts.extend(f"{count} {_text(f'input_kind_count.{kind}', language)}" for kind, count in sorted(counted.items()))
+        facts.append(docs_chrome(f"docs.casilla.cadence.{overview.cadence}", language))
+    facts.append(
+        docs_chrome("docs.casilla.chrome.casilla_count", language, casillas=len(records), sections=len(sections))
+    )
+    facts.extend(
+        f"{count} {docs_chrome(f'docs.casilla.input_kind_count.{kind}', language)}"
+        for kind, count in sorted(counted.items())
+    )
     lines.append('<ul class="modelo-overview__facts">')
     lines.extend(f'<li class="casilla-fact">{html.escape(fact)}</li>' for fact in facts)
     lines.append("</ul>")
 
     if overview is not None and overview.legal_refs:
-        legal_lines, resolved = _legal_list(overview.legal_refs, links, _text("chrome.established_by", language))
+        legal_lines, resolved = _legal_list(
+            overview.legal_refs, links, docs_chrome("docs.casilla.chrome.established_by", language)
+        )
         lines.extend(legal_lines)
     lines.append("</div>")
 
     if len(sections) > 1:
-        nav_label = html.escape(_text("chrome.sections_nav", language), quote=True)
+        nav_label = html.escape(docs_chrome("docs.casilla.chrome.sections_nav", language), quote=True)
         lines.append(f'<nav class="casilla-section-nav" aria-label="{nav_label}">')
         lines.append("<ul>")
         for section, count in sections:
@@ -949,8 +974,8 @@ def _render_modelo_page(
 def _render_index(pages: tuple[CasillaPage, ...], schema: CompiledSchema, language: OutputLanguage) -> str:
     """Render the casilla reference toctree index over the per-modelo pages."""
     header = "..\n   Generated by dev/docs/casilla_reference.py. Do not edit by hand; regenerate.\n\n"
-    title = _rst_heading(_rst_escape(_text("chrome.index_title", language)), "=")
-    intro = _rst_escape(_text("chrome.index_intro", language)) + "\n\n"
+    title = _rst_heading(_rst_escape(docs_chrome("docs.casilla.chrome.index_title", language)), "=")
+    intro = _rst_escape(docs_chrome("docs.casilla.chrome.index_intro", language)) + "\n\n"
     lines = [".. toctree::", "   :maxdepth: 1", ""]
     for page in pages:
         overview = schema.modelos.get(page.modelo)
