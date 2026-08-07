@@ -48,7 +48,7 @@ from ...core.errors import ProfileAnswerTypeError
 from .family import GuarderiaMonthSpend
 
 #: Separator between entries. Not ``,``: the ``--descendiente`` flag owns that.
-_ENTRY_SEPARATOR = ";"
+ENTRY_SEPARATOR = ";"
 
 #: Separator binding a month specification to its amount.
 _AMOUNT_SEPARATOR = ":"
@@ -86,7 +86,7 @@ def parse_guarderia_mensual(raw: str, *, field: str) -> tuple[GuarderiaMonthSpen
     if not raw.strip():
         return ()
     by_month: dict[int, int] = {}
-    for chunk in raw.split(_ENTRY_SEPARATOR):
+    for chunk in raw.split(ENTRY_SEPARATOR):
         entry = chunk.strip()
         if not entry:
             # An empty entry is a stray or doubled separator. It is refused
@@ -117,20 +117,28 @@ def _parse_entry(entry: str, *, field: str) -> tuple[Sequence[int], int]:
             f"{field} entry {entry!r} has no ':' binding a month to an amount; "
             f"write {GUARDERIA_MENSUAL_ACCEPTED_FORM}.",
         )
-    return _parse_month_spec(month_spec.strip(), entry=entry, field=field), _parse_amount(
+    return parse_month_spec(month_spec.strip(), entry=entry, field=field), _parse_amount(
         amount_raw.strip(),
         entry=entry,
         field=field,
     )
 
 
-def _parse_month_spec(spec: str, *, entry: str, field: str) -> Sequence[int]:
-    """Read a bare month or an inclusive range into the months it names."""
+def parse_month_spec(
+    spec: str, *, entry: str, field: str, accepted_form: str = GUARDERIA_MENSUAL_ACCEPTED_FORM
+) -> Sequence[int]:
+    """Read a bare month or an inclusive range into the months it names.
+
+    Shared with :mod:`._meses_trabajo`, which carries the Art. 81.1 month set
+    through the same doors. *accepted_form* is the caller's own grammar, quoted
+    in refusals so an operator is told the form of the surface they used rather
+    than this module's.
+    """
     start_raw, separator, end_raw = spec.partition(_RANGE_SEPARATOR)
-    start = _parse_month(start_raw.strip(), entry=entry, field=field)
+    start = _parse_month(start_raw.strip(), entry=entry, field=field, accepted_form=accepted_form)
     if not separator:
         return (start,)
-    end = _parse_month(end_raw.strip(), entry=entry, field=field)
+    end = _parse_month(end_raw.strip(), entry=entry, field=field, accepted_form=accepted_form)
     if end < start:
         # Refused rather than reordered. A reversed range is as likely to be a
         # mistyped bound as an inverted one, and silently reading '12-9' as
@@ -166,11 +174,10 @@ def is_plain_whole_number(text: str) -> bool:
     return text.isascii() and text.isdecimal()
 
 
-def _parse_month(raw: str, *, entry: str, field: str) -> int:
+def _parse_month(raw: str, *, entry: str, field: str, accepted_form: str = GUARDERIA_MENSUAL_ACCEPTED_FORM) -> int:
     if not is_plain_whole_number(raw):
         raise ProfileAnswerTypeError(
-            f"{field} entry {entry!r} names month {raw!r}, which is not a number; "
-            f"write {GUARDERIA_MENSUAL_ACCEPTED_FORM}.",
+            f"{field} entry {entry!r} names month {raw!r}, which is not a number; write {accepted_form}.",
         )
     month = int(raw)
     if not (_MIN_MONTH <= month <= _MAX_MONTH):
@@ -201,15 +208,17 @@ def serialise_guarderia_mensual(entries: Iterable[GuarderiaMonthSpend]) -> str:
     wizard's resume projection, and the CLI payload round-trip byte-for-byte
     whichever form the operator originally typed.
     """
-    return _ENTRY_SEPARATOR.join(
+    return ENTRY_SEPARATOR.join(
         f"{entry.month:02d}{_AMOUNT_SEPARATOR}{entry.amount_euros}"
         for entry in sorted(entries, key=lambda entry: entry.month)
     )
 
 
 __all__ = [
+    "ENTRY_SEPARATOR",
     "GUARDERIA_MENSUAL_ACCEPTED_FORM",
     "is_plain_whole_number",
     "parse_guarderia_mensual",
+    "parse_month_spec",
     "serialise_guarderia_mensual",
 ]
