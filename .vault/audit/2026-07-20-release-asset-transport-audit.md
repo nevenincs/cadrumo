@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#release-asset-transport'
 date: '2026-07-20'
-modified: '2026-07-20'
-body_hash: 'sha256:b9d0a8fb49755bfcd6cc3dd65a483cfd5e08e53ee4dfd7831bfdc6c3a8b4ebf1'
+modified: '2026-08-07'
+body_hash: 'sha256:32bcd097db3c6d9abdba7a972e2be8cceaca2bc9d6104f4e0fa77a7e7b1ddecb'
 related:
   - "[[2026-07-20-release-asset-transport-adr]]"
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
@@ -106,3 +106,40 @@ routed to the pipeline implementation owner, not edited here.
   product-packaging ADR owns the cohort shape, ecosystem-packaging ADR owns the
   plugin/split, harness-identity ADR owns naming parity, mcpb ADR owns the
   unsigned posture.
+
+### public-repo-voids-transport-premise | high | The private-Free-plan constraint the transport was built for no longer exists
+
+The transport ADR's problem statement rests on one load-bearing fact: the
+repository is private on a GitHub Free User plan, where Actions artifact storage
+caps near 500 MB and the multi-hundred-MB cohort hard-fails every upload. That
+fact no longer holds — the repository is public, and public repositories get
+free, effectively unlimited Actions artifact storage. Option 7 of the ADR
+(cargo-dist-style Actions-artifact scratch transport with a transactional final
+release) was rejected solely as "structurally unavailable" under that plan, and
+the ADR itself names it the industry-preferred shape. It is now available.
+
+Two further ADR clauses were written against the same pending event and are now
+due: build-provenance attestation via `actions/attest-build-provenance` was
+deferred by operator ruling and "revisited when the repo is public"; and the
+draft-over-prerelease choice was justified by prereleases being "publicly
+visible if the repo goes public", a risk that has now materialised for any
+container that is not a draft.
+
+Measured at this HEAD, 2026-08-07: the reserved namespace held 71 containers,
+all `isDraft: true`, none published, and `git ls-remote --tags origin` returned
+zero refs — the drafts leaked nothing, exactly as D1 and the Consequences
+section claim. They were deleted at operator instruction; the producing
+workflows will repopulate the namespace on the next packaging run, which is the
+designed behaviour, not a regression.
+
+The operator reviewed the reversal and elected to keep the mechanism for now.
+This finding is the standing record that the justification is spent, so a future
+reader does not mistake the private-plan rationale for current.
+
+## Recommendations (2026-08-07 addendum)
+
+- Treat the transport ADR's storage rationale as expired, not wrong: any future
+  work in this family should weigh reverting to `actions/upload-artifact` per
+  option 7 rather than extending the draft-release substrate.
+- The deferred attestation ruling has met its stated trigger; it is now
+  actionable rather than blocked.
