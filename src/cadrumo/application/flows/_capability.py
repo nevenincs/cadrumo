@@ -33,8 +33,12 @@ def _resolve_no_console_error_types() -> tuple[type[BaseException], ...]:
     except ImportError as exc:
         _log.debug("flows capability: win32 console probe unavailable: %s", exc)
         return tuple(error_types)
-    error_types.insert(0, _Win32NoConsole)
-    return tuple(error_types)
+    else:
+        # Bound in the else branch so the success scope is explicit: on a non-Windows
+        # host the module does not exist at all, and a checker analysing that platform
+        # otherwise reads the name as never bound.
+        error_types.insert(0, _Win32NoConsole)
+        return tuple(error_types)
 
 
 NO_CONSOLE_ERRORS: tuple[type[BaseException], ...] = _resolve_no_console_error_types()
