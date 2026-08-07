@@ -13,13 +13,38 @@ satisfied by a runner that refuses everything, and that would be worse.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
+from ....application.user_profile import profile_create_storage_span
+from ....application.workflow import workflow_state_repository
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_PROFILE_ID = "11111111-1111-4111-8111-111111111111"
+
+
+@pytest.fixture(autouse=True)
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    """Give every case an active profile.
+
+    Without it the command refuses on "no active profile" and exits before the
+    folder loop runs at all -- so each test decides its outcome before the code
+    under test executes, which is how all four passed and said nothing.
+    """
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span(_PROFILE_ID),
+    ):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(state, profile_id=_PROFILE_ID),
+        )
+        yield
 
 _GOOD_STATEMENT = (
     "Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda\n"
