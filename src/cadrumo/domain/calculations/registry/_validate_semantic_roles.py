@@ -144,6 +144,32 @@ def _validate_semantic_role_consistency(
     return tuple(failures)
 
 
+def _co_applying_role_breadth(observations: Iterable[_RoleObservation]) -> tuple[int, int]:
+    """Return ``(widest bearer count inside one revision, distinct modelo count)``.
+
+    Cardinality asks whether a role is SHARED, and sharing only means something
+    between casillas that can appear in the same filing. AEAT binds every
+    ``(modelo, filing_year, period)`` to exactly one revision by publishing
+    orden, and the non-overlap window gate makes that resolution unique, so two
+    revisions of one modelo are mutually exclusive by law and no filing ever
+    sees both.
+
+    Counting raw observations therefore measures the wrong denominator: it
+    cannot separate a role duplicated inside one filing context -- the real
+    defect this axis exists to catch -- from a role carried by two revisions
+    that can never co-apply, which is the unavoidable consequence of splitting
+    a revision at an AEAT design re-layout. Splitting clones every casilla, so
+    a raw count turns correct authoring into a validation failure, and the cost
+    grows with every further split rather than being paid once.
+    """
+    per_revision: dict[tuple[str, str], int] = defaultdict(int)
+    modelo_ids: set[str] = set()
+    for obs in observations:
+        per_revision[(obs.modelo_id, obs.revision_id)] += 1
+        modelo_ids.add(obs.modelo_id)
+    return max(per_revision.values(), default=0), len(modelo_ids)
+
+
 def _validate_semantic_role_cardinality(
     modelos: Iterable[ModeloDefinition],
 ) -> tuple[str, ...]:
@@ -154,10 +180,17 @@ def _validate_semantic_role_cardinality(
     older sibling, but that must be declared explicitly on the casilla.
     If the role later becomes shared, the singleton marker becomes
     stale and validation fails until the marker is removed.
+
+    "Shared" is judged over casillas that can CO-APPLY: more than one bearer
+    inside a single revision, or bearers in more than one modelo. A marker is
+    not stale merely because a revision was split at a design re-layout, which
+    clones every casilla into a sibling revision no filing can also select --
+    see :func:`_co_applying_role_breadth`.
     """
     failures: list[str] = []
     for role, observations in _collect_role_observations(modelos).items():
-        if len(observations) == 1:
+        widest_in_one_revision, distinct_modelos = _co_applying_role_breadth(observations)
+        if widest_in_one_revision <= 1 and distinct_modelos <= 1:
             continue
         for obs in observations:
             if obs.semantic_role_cardinality != "intentional_singleton":
@@ -165,8 +198,9 @@ def _validate_semantic_role_cardinality(
             failures.append(
                 f"semantic_role {role!r}: casilla "
                 f"{obs.modelo_id}.{obs.revision_id}.{obs.casilla_id} declares "
-                "semantic_role_cardinality 'intentional_singleton' but role appears "
-                f"{len(observations)} times",
+                "semantic_role_cardinality 'intentional_singleton' but role is shared by "
+                f"co-applying casillas ({widest_in_one_revision} in one revision, "
+                f"{distinct_modelos} modelo(s))",
             )
     return tuple(failures)
 
