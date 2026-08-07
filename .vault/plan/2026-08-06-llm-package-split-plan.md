@@ -4,7 +4,7 @@ tags:
   - '#llm-package-split'
 date: '2026-08-06'
 modified: '2026-08-07'
-body_hash: 'sha256:5a87ecf9d02c93873fcb637d2191a2de579f26ccb1bcc0dce734fc2bc5d2a7b2'
+body_hash: 'sha256:99dabc61a9cd4266532d5797c36e8185a167a74f0037a3c9da522ff5c11b813e'
 tier: L3
 related:
   - '[[2026-08-06-llm-package-split-adr]]'
@@ -153,12 +153,12 @@ Adds hardened deterministic parsers for both EN16931 syntaxes and for Facturae, 
 - [x] `W02.P04.S13` - Add a deterministic EN16931 CII parser mapping to the line-carrying extraction draft, red if a CII document with two tax rates yields fewer than two per-rate entries; `src/cadrumo/adapters/inbound/einvoice/`.
 - [x] `W02.P04.S14` - Add a deterministic EN16931 UBL parser, since a CII-only reader silently returns nothing for half the standard, red if a UBL document yields no record where the CII path yields one; `src/cadrumo/adapters/inbound/einvoice/`.
 - [x] `W02.P04.S15` - Add a deterministic Facturae 3.2.x parser mapping to the same line-carrying draft, red if a Facturae document maps to a shape the CII and UBL parsers do not also produce; `src/cadrumo/adapters/inbound/einvoice/`.
-- [ ] `W02.P04.S80` - Map the parsed percentage onto the closed IvaRate slot enum and refuse loudly when no slot matches, never rounding to the nearest member, red if a 5 percent pre-2025 line resolves to any slot rather than refusing; `src/cadrumo/adapters/inbound/einvoice/`.
+- [x] `W02.P04.S80` - Map the parsed percentage onto the closed IvaRate slot enum and refuse loudly when no slot matches, never rounding to the nearest member, red if a 5 percent pre-2025 line resolves to any slot rather than refusing; `src/cadrumo/adapters/inbound/einvoice/`.
 - [x] `W02.P04.S82` - Map the document's own tax-category code onto the IvaCategory enum including the intra-community service members, leaving it unset with a visible advisory only where the document states no category, never guessing, red if a services invoice is left unset when the document does state its category; `src/cadrumo/adapters/inbound/einvoice/`.
 - [x] `W02.P04.S16` - Harden every XML read with entity resolution and external DTD loading disabled and with size and depth bounds, red if an XXE probe document resolves an external entity or a billion-laughs payload is not refused; `src/cadrumo/adapters/inbound/einvoice/`.
 - [x] `W02.P04.S17` - Select the VAT number as the party tax identifier rather than a French SIRET or German Steuernummer, red if a ZUGFeRD fixture carrying both still yields the SIRET; `src/cadrumo/adapters/inbound/einvoice/`.
-- [ ] `W02.P04.S56` - Map emisor and destinatario the right way round on received-invoice SII records, red if a received-invoice fixture still reports the taxpayer as the issuer; `src/cadrumo/adapters/inbound/einvoice/`.
-- [ ] `W02.P04.S57` - Read the invoice number from the document identifier element rather than the first identifier in the tree, red if a document whose first identifier is a guideline identifier still yields that guideline string as the invoice number; `src/cadrumo/adapters/inbound/einvoice/`.
+- [x] `W02.P04.S56` - Map emisor and destinatario the right way round on received-invoice SII records, red if a received-invoice fixture still reports the taxpayer as the issuer; `src/cadrumo/adapters/inbound/einvoice/`.
+- [x] `W02.P04.S57` - Read the invoice number from the document identifier element rather than the first identifier in the tree, red if a document whose first identifier is a guideline identifier still yields that guideline string as the invoice number; `src/cadrumo/adapters/inbound/einvoice/`.
 
 ### Phase `W02.P05` - Replace the vacuous assertions, open the front door, and enrol the parsers
 
@@ -197,8 +197,8 @@ Declares the strict closed payload the core accepts, with its shape grounding an
 
 Implements D9's carve-out list. Every artefact the inference path is under pressure to write is storage rather than processing and returns to the core's encrypted bucket-scoped repository. The controls that name the subpackage itself moved to W04.P12, because a control naming a directory that does not yet exist checks nothing.
 
-- [ ] `W03.P07.S59` - Persist the extracted-document cache through the core's content-addressed encrypted secure object repository, deliberately not named a normalization cache since that name presupposes the two-stage shape the ADR leaves open, red if any cache byte reaches disk unencrypted; `src/cadrumo/adapters/persistence/storage/attachment.py`.
-- [ ] `W03.P07.S62` - Route persisted extracted field drafts through the core, since derived financial data is storage rather than processing, red if a draft is written by anything other than the core's secure repository; `src/cadrumo/application/ledger/`.
+- [x] `W03.P07.S59` - Persist the extracted-document cache through the core's content-addressed encrypted secure object repository, deliberately not named a normalization cache since that name presupposes the two-stage shape the ADR leaves open, red if any cache byte reaches disk unencrypted; `src/cadrumo/adapters/persistence/storage/attachment.py`.
+- [x] `W03.P07.S62` - Route persisted extracted field drafts through the core, since derived financial data is storage rather than processing, red if a draft is written by anything other than the core's secure repository; `src/cadrumo/application/ledger/`.
 - [x] `W03.P07.S64` - Pin by test that in-memory reading, rasterising and inference require no encryption and no consent gate, red if a later change reintroduces a consent prompt or a custody wrapper on the in-flight path; `src/cadrumo/application/ledger/tests/`.
 
 ## Wave `W04` - Relocate pure inference and divide the mixed module
@@ -211,27 +211,27 @@ Relocates the modules that carry no core writes, each with an enrolment gate.
 
 - [x] `W04.P08.S32` - Create the gated subpackage and move the vision field extractor into it in one atomic explicit-path commit that also carries its sensitive-surface enumeration, red if the extractor is deleted and the core corpus test still passes; `src/cadrumo/application/ledger/_evidence_draft_vision.py`.
 - [x] `W04.P08.S33` - Move the local vision classifier under the gated subpackage and prove the core call site reaches it, red if the moved module is deleted and the classify test still passes; `src/cadrumo/application/ledger/_vision_classifier.py`.
-- [ ] `W04.P08.S34` - Move the outbound LLM client under the gated subpackage and prove the core call site reaches it, red if the moved module is deleted and the classify test still passes; `src/cadrumo/adapters/outbound/llm/_client.py`.
-- [ ] `W04.P08.S35` - Move the outbound LLM models, errors and pricing modules under the gated subpackage, red if any error qualname in the registry still resolves to the vacated path; `src/cadrumo/adapters/outbound/llm/_models.py, src/cadrumo/adapters/outbound/llm/_errors.py, src/cadrumo/adapters/outbound/llm/_pricing.py`.
-- [ ] `W04.P08.S36` - Move the outbound provider adapters under the gated subpackage, red if a provider is deleted and its integration test still passes; `src/cadrumo/adapters/outbound/llm/_providers/`.
-- [ ] `W04.P08.S37` - Move the pure retention selection function under the gated subpackage, red if the core still imports it from the vacated path; `src/cadrumo/adapters/outbound/llm/_retention.py`.
-- [ ] `W04.P08.S38` - Re-point the owner labels and error-registry qualnames that name the moved modules by string, red if any string owner label still names a path that no longer exists; `src/cadrumo/core/paths.py, src/cadrumo/core/_namespace_registry.py, src/cadrumo/core/errors/registry/_adapters_part2.py`.
+- [x] `W04.P08.S34` - Move the outbound LLM client under the gated subpackage and prove the core call site reaches it, red if the moved module is deleted and the classify test still passes; `src/cadrumo/adapters/outbound/llm/_client.py`.
+- [x] `W04.P08.S35` - Move the outbound LLM models, errors and pricing modules under the gated subpackage, red if any error qualname in the registry still resolves to the vacated path; `src/cadrumo/adapters/outbound/llm/_models.py, src/cadrumo/adapters/outbound/llm/_errors.py, src/cadrumo/adapters/outbound/llm/_pricing.py`.
+- [x] `W04.P08.S36` - Move the outbound provider adapters under the gated subpackage, red if a provider is deleted and its integration test still passes; `src/cadrumo/adapters/outbound/llm/_providers/`.
+- [x] `W04.P08.S37` - Move the pure retention selection function under the gated subpackage, red if the core still imports it from the vacated path; `src/cadrumo/adapters/outbound/llm/_retention.py`.
+- [x] `W04.P08.S38` - Re-point the owner labels and error-registry qualnames that name the moved modules by string, red if any string owner label still names a path that no longer exists; `src/cadrumo/core/paths.py, src/cadrumo/core/_namespace_registry.py, src/cadrumo/core/errors/registry/_adapters_part2.py`.
 
 ### Phase `W04.P09` - Divide the mixed classification module
 
 Splits the module that holds both inference call sites and core writes, leaving persistence on the core side.
 
-- [ ] `W04.P09.S39` - Extract the inference call sites from the mixed classification module into the gated subpackage, red if any extracted call site still performs a core write; `src/cadrumo/application/ledger/_llm_classification.py`.
+- [x] `W04.P09.S39` - Extract the inference call sites from the mixed classification module into the gated subpackage, red if any extracted call site still performs a core write; `src/cadrumo/application/ledger/_llm_classification.py`.
 - [x] `W04.P09.S40` - Keep classification writes, bucket-event history and split persistence on the core side of the division, red if a bucket event is emitted from inside the subpackage; `src/cadrumo/application/ledger/_llm_classification.py`.
-- [ ] `W04.P09.S41` - Leave the cache, run-telemetry and usage stores on the core side so the non-ledger diagnostics consumer stays unconditional, red if any of the three resolves secure storage from inside the subpackage; `src/cadrumo/adapters/outbound/llm/_cache.py, src/cadrumo/adapters/outbound/llm/_run_telemetry.py, src/cadrumo/adapters/outbound/llm/_usage.py`.
-- [ ] `W04.P09.S42` - Settle the review workflow's dependency on the apply and reject functions once the division lands, red if the workflow imports across the boundary in the forbidden direction; `src/cadrumo/application/ledger/_llm_review_workflow.py`.
+- [x] `W04.P09.S41` - Leave the cache, run-telemetry and usage stores on the core side so the non-ledger diagnostics consumer stays unconditional, red if any of the three resolves secure storage from inside the subpackage; `src/cadrumo/adapters/outbound/llm/_cache.py, src/cadrumo/adapters/outbound/llm/_run_telemetry.py, src/cadrumo/adapters/outbound/llm/_usage.py`.
+- [x] `W04.P09.S42` - Settle the review workflow's dependency on the apply and reject functions once the division lands, red if the workflow imports across the boundary in the forbidden direction; `src/cadrumo/application/ledger/_llm_review_workflow.py`.
 - [x] `W04.P09.S43` - Prove the core diagnostics run-health verbs still resolve without the llm extra installed, red if the verb raises rather than reporting run health on a clean install; `src/cadrumo/application/diagnostics_run_health.py`.
 
 ### Phase `W04.P12` - Enrol the relocated subpackage under every enforcement control
 
 Runs only after the subpackage exists, because every control here names it. Enumerates it in the sensitive-surface list, enrols it in the layering contract, forbids its reach into persistence, and proves each control by mutation rather than by inspection. An earlier plan scheduled this work two waves before the directory existed, where each check passed against nothing.
 
-- [ ] `W04.P12.S63` - Enumerate the new subpackage in the sensitive-surface list in the same change that creates it, never earlier, red if the entry is added while the directory is absent since the non-vacuity assertion must refuse it; `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
+- [x] `W04.P12.S63` - Enumerate the new subpackage in the sensitive-surface list in the same change that creates it, never earlier, red if the entry is added while the directory is absent since the non-vacuity assertion must refuse it; `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
 - [x] `W04.P12.S30` - Add an import contract forbidding any persistence import from the inference subpackage, red if a deliberate adapters.persistence import inside the subpackage does not fail import-linter; `.importlinter`.
 - [x] `W04.P12.S31` - Assert no module under the inference subpackage constructs an attachment store or resolves secure storage, red if the assertion passes against a module that does; `src/cadrumo/tests/`.
 - [x] `W04.P12.S60` - Assert no rasterised page image reaches disk in the clear including as an intermediate, red if a deliberate page-image write inside the subpackage is not refused; `src/cadrumo/tests/`.
@@ -257,17 +257,17 @@ Closes the capability gap that the cloud deletion would otherwise open.
 
 Removes the off-host transport and everything it alone kept alive.
 
-- [ ] `W05.P11.S47` - Delete the subprocess classifier family and its codex and claude provider builders by symbol name, never by sweeping for the word subprocess, red if the MCP call runtime or any other unrelated subprocess transport is caught in the sweep; `src/cadrumo/domain/transactions/_llm.py`.
+- [x] `W05.P11.S47` - Delete the subprocess classifier family and its codex and claude provider builders by symbol name, never by sweeping for the word subprocess, red if the MCP call runtime or any other unrelated subprocess transport is caught in the sweep; `src/cadrumo/domain/transactions/_llm.py`.
 - [x] `W05.P11.S48` - Delete the cloud consent gate and its service capability branch across the evidence input, core capabilities and profile capabilities, red if any capability resolver still returns a cloud-upload branch; `src/cadrumo/application/ledger/_evidence_input.py`.
 - [x] `W05.P11.S49` - Delete the gestor-mode and cloud-upload settings left orphaned by the consent gate, red if any settings field survives with no reader; `src/cadrumo/core/config.py`.
-- [ ] `W05.P11.S50` - Delete the provider selection flag and the evidence acknowledgement flag from the classify verb, red if either flag still parses; `src/cadrumo/entrypoints/cli/_ledger.py`.
+- [x] `W05.P11.S50` - Delete the provider selection flag and the evidence acknowledgement flag from the classify verb, red if either flag still parses; `src/cadrumo/entrypoints/cli/_ledger.py`.
 - [x] `W05.P11.S51` - Delete the subprocess provider probe and its config-check branch, red if config check still reports a subprocess provider; `src/cadrumo/application/provisioning.py`.
 - [x] `W05.P11.S52` - Delete the providers listing command left with nothing to list, red if the verb still registers in the operator surface manifest; `src/cadrumo/entrypoints/cli/_ledger_read_cli.py`.
 - [x] `W05.P11.S53` - Delete the cloud-only test modules wholesale, counting them against a fresh sweep rather than against the ADR's unverified estimate of nine; `src/cadrumo/application/ledger/tests/`.
 - [x] `W05.P11.S54` - Edit the remaining mixed test modules case by case since the evidence resolver branches internally, red if a case is deleted rather than re-pointed and its coverage silently disappears; `src/cadrumo/application/ledger/tests/`.
-- [ ] `W05.P11.S55` - Prove by tree-wide search that no cloud transport reference survives dormant anywhere in the tree, red if the search pattern is narrowed until it returns clean rather than the tree being cleaned; `src/cadrumo/`.
-- [ ] `W05.P11.S77` - Amend the superseded ADR's status to record that its cloud-read ruling is narrowed by this campaign, landing in the same change as the deletion so the corpus never carries two accepted records sanctioning opposite postures; `.vault/adr/`.
-- [ ] `W05.P11.S78` - Update the provenance stamp's documentation to record that the provider axis collapses to the local runtime after the deletion, without rewriting any pre-existing stamped record; `src/cadrumo/application/ledger/`.
+- [x] `W05.P11.S55` - Prove by tree-wide search that no cloud transport reference survives dormant anywhere in the tree, red if the search pattern is narrowed until it returns clean rather than the tree being cleaned; `src/cadrumo/`.
+- [x] `W05.P11.S77` - Amend the superseded ADR's status to record that its cloud-read ruling is narrowed by this campaign, landing in the same change as the deletion so the corpus never carries two accepted records sanctioning opposite postures; `.vault/adr/`.
+- [x] `W05.P11.S78` - Update the provenance stamp's documentation to record that the provider axis collapses to the local runtime after the deletion, without rewriting any pre-existing stamped record; `src/cadrumo/application/ledger/`.
 
 ## Parallelization
 

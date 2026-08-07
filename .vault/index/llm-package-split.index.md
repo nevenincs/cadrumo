@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:7e3362b9d46c8f3099ca838b987d03fce5a4ce888ef5bfea7495457a069bd498'
+body_hash: 'sha256:0ce9f3ebdf50f3b5aca0dbb9e75557ad5274018cb412a41d70d5a9583a777cf8'
 related:
   - '[[2026-08-06-llm-package-split-W01-P01-S01]]'
   - '[[2026-08-06-llm-package-split-W01-P01-S02]]'
@@ -67,6 +67,7 @@ related:
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
   - '[[2026-08-06-llm-package-split-plan]]'
   - '[[2026-08-06-llm-package-split-research]]'
+  - '[[2026-08-07-llm-package-split-close-honesty-audit]]'
   - '[[2026-08-07-llm-package-split-plan-tracker-reconciliation-audit]]'
 ---
 
@@ -83,6 +84,7 @@ Auto-generated index of all documents tagged with `#llm-package-split`.
 ### audit
 
 - `2026-08-06-llm-package-split-enforcement-and-disposition-audit` - `llm-package-split` audit: `Enforcement gaps, the vacuous-green defect class, and the disposition register`
+- `2026-08-07-llm-package-split-close-honesty-audit` - `llm-package-split` audit: `llm-package-split close: what the unchecked steps actually are`
 - `2026-08-07-llm-package-split-plan-tracker-reconciliation-audit` - `llm-package-split` audit: `Plan-to-code reconciliation: 50 steps landed against a tracker reading zero`
 
 ### exec
