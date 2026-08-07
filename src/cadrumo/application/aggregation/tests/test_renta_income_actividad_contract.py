@@ -25,7 +25,7 @@ from ....domain.transactions import (
 )
 from .._modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from .._renta_income_ledger import RentaIncomeLedgerAggregationIssueReason, aggregate_renta_income_ledger
-from .._source_mesh import CalculationSourceContext
+from .._source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceResolution
 from ._renta_income_aggregation_support import (
     _M130_INGRESOS_CASILLA,
     _M130_RETENCIONES_BINDING,
@@ -424,12 +424,12 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
 
 
 def _ungrounded_diagnostics(
-    resolution: object,
-) -> tuple[object, ...]:
+    resolution: CalculationSourceResolution,
+) -> tuple[CalculationSourceDiagnostic, ...]:
     """Every ungrounded-substrate advisory on a resolution, keyed on the reason code."""
     return tuple(
         diagnostic
-        for diagnostic in resolution.diagnostics  # type: ignore[attr-defined]
+        for diagnostic in resolution.diagnostics
         if diagnostic.reason == "ungrounded_income_substrate"
     )
 
