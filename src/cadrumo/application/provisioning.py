@@ -25,7 +25,7 @@ import os
 import sys
 from collections.abc import Mapping
 from pathlib import Path
-from typing import cast
+from typing import TypedDict, cast
 
 import httpx
 from pydantic import BaseModel, Field
@@ -765,6 +765,23 @@ class ModelSelection(BaseModel):
         )
 
 
+class _SelectionContext(TypedDict):
+    """The fields every :class:`ModelSelection` branch shares.
+
+    A TypedDict rather than a bare mapping so the splat below stays checked:
+    every return path in this surface builds one ``ModelSelection`` from a
+    common context plus its own outcome fields, and an untyped splat would let a
+    renamed or mistyped shared field through to runtime.
+    """
+
+    role: ModelRole
+    posture: DeploymentLicencePosture
+    tier: HardwareTier
+    binding_free_bytes: int | None
+    required_context_tokens: int
+    safety_margin_bytes: int
+
+
 def select_model_for_role(
     role: ModelRole,
     *,
@@ -820,14 +837,14 @@ def select_model_for_role(
     tier = hardware_tier_for_free_bytes(free)
     required_context = resolved.cadrumo_llm_ollama_num_ctx
     margin = resolved.cadrumo_llm_contention_safety_margin_bytes
-    base = {
-        "role": role,
-        "posture": posture,
-        "tier": tier,
-        "binding_free_bytes": free,
-        "required_context_tokens": required_context,
-        "safety_margin_bytes": margin,
-    }
+    base = _SelectionContext(
+        role=role,
+        posture=posture,
+        tier=tier,
+        binding_free_bytes=free,
+        required_context_tokens=required_context,
+        safety_margin_bytes=margin,
+    )
 
     if override is not None:
         return _selection_from_override(
@@ -907,7 +924,7 @@ def select_model_for_role(
 def _selection_from_override(
     override: str,
     *,
-    base: dict[str, object],
+    base: _SelectionContext,
     posture: DeploymentLicencePosture,
     free: int | None,
     margin: int,
