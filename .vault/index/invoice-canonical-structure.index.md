@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:3dd59c87a8dafb384faa1c293ded691cadab9cf98a5aaf533d754f4dbbbc7c9d'
+body_hash: 'sha256:41977fa7cf17dd9342eb078e194fd673a762afacb2f39c0dad1eeffd5c06c8a0'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -24,6 +24,8 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S35]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S36]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S37]]'
+  - '[[2026-08-06-invoice-canonical-structure-P02-S04]]'
+  - '[[2026-08-06-invoice-canonical-structure-P02-S05]]'
   - '[[2026-08-06-invoice-canonical-structure-P02-S07]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-audit]]'
@@ -66,6 +68,8 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 - `2026-08-06-invoice-canonical-structure-P01-S32` - Enrol the invoice decomposition contract as a capability-inventory row with both production consumers and the modelos each serves, the renta sales-evidence gate running the full grounded check and the M349 gate narrowed to the two self-contradiction defects, and record which record classes each would exclude after the fold
 - `2026-08-06-invoice-canonical-structure-P01-S33` - Prove decomposition parity, that an ex-slim record and a natively rich record carrying identical economic facts decompose to identical components and land on the same partition side, and decide per unmigratable class whether it decomposes correctly, refuses loudly or is flagged defective
 - `2026-08-06-invoice-canonical-structure-P01-S34` - Re-decide the M349 treatment of an absent iva_category now that its stated justification is stale, the enum having gained intra-community service members in 7502ee65ed while the resolver docstring still says services map to no member, and either correct the reasoning while keeping the behaviour or change the behaviour, never leaving a filing-path guard resting on a false premise
+- `2026-08-06-invoice-canonical-structure-P02-S04` - Prove the already-landed retention-rate and retention-amount writer options persist through the real encrypted namespace with a strict save-load-equality roundtrip plus an anti-tautology proof, the CLI and builder code having landed in ef0438561d and only the roundtrip gate remaining
+- `2026-08-06-invoice-canonical-structure-P02-S05` - Add explicit recargo, iva-category, invoice-class and series options to the canonical writer and both entry verbs so every regime is expressible without inferring one from operation-type, holding the peer totals identity grand_total equals base_total plus iva_total plus recargo_amount with retencion outside it
 
 ### plan
 
