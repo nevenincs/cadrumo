@@ -8,8 +8,8 @@ grounding links to BOE permalinks.
 
 Testing contract for this generated, localized page: assert only what stays
 true when every localized string in the source changes. Legitimate to lock are
-(a) the generator's emitted schema (``.. glossary::``, the ``Legal basis:``
-label, the 3-space term-line / 6-space body indentation, the output path),
+(a) the generator's emitted schema (``.. glossary::``, the grounding-line
+shape, the 3-space term-line / 6-space body indentation, the output path),
 (b) structural shape (one entry per approved concept, term-line count, a body
 paragraph under the term lines), and (c) cross-artifact invariants (every
 rendered ``:term:`` target is an approved headword, every rendered term
@@ -160,7 +160,7 @@ def test_legal_grounding_links_resolve_to_permalinks() -> None:
     """Concepts with legal_refs render resolved BOE permalink grounding links.
 
     Count-parity plus membership against an independently read permalink map:
-    the number of rendered ``Legal basis:`` links equals the generator's own
+    the number of rendered grounding links equals the generator's own
     ``legal_links`` tally, and every rendered URL is one the legal catalogue
     actually maps. ``_legal_permalinks`` reads the catalogue TOMLs directly, not
     the render path, so it is an independent oracle -- no URL is hardcoded.
@@ -169,10 +169,10 @@ def test_legal_grounding_links_resolve_to_permalinks() -> None:
 
     rst, result = render_glossary(_REPO_ROOT, _load_handbook())
     assert result.legal_links > 0
-    assert "Legal basis:" in rst
 
     catalogue_permalinks = {grounding.permalink for grounding in _legal_permalinks(_REPO_ROOT).values()}
-    rendered_links = re.findall(r"Legal basis: `[^`]+ <([^>]+)>`__", rst)
+    # Matched on the line's shape, not its label: the label is localized.
+    rendered_links = re.findall(r"^ +\* [^:]+: `[^`]+ <([^>]+)>`__ \(``[^`]+``\)$", rst, re.MULTILINE)
     assert len(rendered_links) == result.legal_links
     assert all(url in catalogue_permalinks for url in rendered_links)
 
@@ -268,9 +268,13 @@ def test_a_concept_without_build_language_prose_never_borrows_another_language()
     assert not leaked, f"other-language prose leaked onto a ca build: {leaked[:2]}"
 
     # It degrades visibly rather than rendering an empty shell, and the
-    # language-safe compiled structure still carries the entry.
-    assert "No definition is available in this language yet." in rst
-    assert "Legal basis:" in rst
+    # language-safe compiled structure still carries the entry. The expected
+    # marker is read from the catalogue, never from the renderer, and never
+    # written here as prose.
+    from .._locale_chrome import docs_chrome
+
+    assert docs_chrome("docs.glossary.entry.undefined", OutputLanguage.CA) in rst
+    assert docs_chrome("docs.glossary.entry.legal_basis", OutputLanguage.CA) in rst
 
 
 def test_broader_related_relations_render_as_term_cross_references() -> None:
@@ -299,10 +303,12 @@ def test_broader_related_relations_render_as_term_cross_references() -> None:
 
     # No dangling relation: every :term: target rendered in a relation line is an
     # approved concept's surface (drafts never become a :term: anchor).
-    for line in rst.splitlines():
-        if "Related:" in line or "Broader:" in line:
-            for ref in re.findall(r":term:`([^`]+)`", line):
-                assert ref in approved_surfaces, f"relation links to non-approved/unknown term: {ref!r}"
+    # A relation line is identified by its shape -- an indented bullet carrying
+    # :term: references -- never by its label, which is localized.
+    relation_lines = [line for line in rst.splitlines() if line.lstrip().startswith("*") and ":term:`" in line]
+    for line in relation_lines:
+        for ref in re.findall(r":term:`([^`]+)`", line):
+            assert ref in approved_surfaces, f"relation links to non-approved/unknown term: {ref!r}"
 
     # Edge-count parity: rendered relation links == approved->approved relations
     # the source declares.
@@ -313,9 +319,7 @@ def test_broader_related_relations_render_as_term_cross_references() -> None:
         for ref in (*concept.broader, *concept.related)
         if ref != concept.concept_id and ref in approved_ids
     )
-    rendered_edges = sum(
-        len(re.findall(r":term:`[^`]+`", line)) for line in rst.splitlines() if "Related:" in line or "Broader:" in line
-    )
+    rendered_edges = sum(len(re.findall(r":term:`[^`]+`", line)) for line in relation_lines)
     assert expected_edges > 0, "no approved->approved relation exists to exercise the renderer"
     assert rendered_edges == expected_edges
 
