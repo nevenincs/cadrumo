@@ -18,7 +18,7 @@ certificate serial suffixes. Per-run JSONL handlers are attached with
 
 Encoded document payloads are contained at two seams, because the diagnostic
 log is plaintext on disk and a scanned invoice that reaches it has left secure
-storage. :class:`_ThirdPartyDebugFilter` holds non-Cadrumo loggers below DEBUG
+storage. ``_ThirdPartyDebugFilter`` holds non-Cadrumo loggers below DEBUG
 at every sink, so a model or HTTP client never gets to dump a request body
 carrying an image; :class:`SecretScrubbingFilter` then redacts base64 payloads
 out of the records that remain, including a payload reachable only by rendering
