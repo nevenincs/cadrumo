@@ -50,6 +50,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._app_live_auth_preflight import _emit_live_auth_preflight
 from ._app_live_borrador_cli import borrador_100_app, borrador_app, register_borrador_commands
+from ._app_live_deudas_cli import register_deudas_commands
 from ._app_live_expedientes_cli import expedientes_app, register_expedientes_commands
 from ._app_live_justificante_cli import justificante_app, register_justificante_commands
 from ._app_live_notifications_cli import notifications_app, register_notifications_commands
@@ -1457,6 +1458,9 @@ register_notifications_commands(
 # ─────────────────────────────────────────────────────────────────────────
 
 register_portals_commands(app)
+
+
+register_deudas_commands(app, active_bucket_id=active_bucket_id_or_refuse)
 
 
 register_expedientes_commands(

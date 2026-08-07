@@ -215,8 +215,9 @@ def test_a_ubl_document_carries_the_postal_zone(
         1,
     )
     # Assert the document really took both edits before reading it, so a fixture
-    # whose anchors silently failed to match cannot pass this vacuously.
-    assert xml.count("PostalZone") == 2
+    # whose anchors silently failed to match cannot pass this vacuously. Counted
+    # on the opening tag: the element name alone appears twice per block.
+    assert xml.count("<cbc:PostalZone>") == 2
 
     evidence_id = _stored(
         xml,
@@ -229,3 +230,41 @@ def test_a_ubl_document_carries_the_postal_zone(
 
     assert draft.supplier_postal_code == "35001"
     assert draft.customer_postal_code == "28001"
+
+
+def test_a_cii_document_carries_the_postcode_code(
+    isolated_settings: Settings,
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+) -> None:
+    """CII states the code in its own element too, and the branch is reached.
+
+    The corpus bundles no Cross Industry Invoice at all -- only a malformed
+    fragment used to prove the parser refuses one. So this specimen is
+    hand-built from the EN16931 mapping rather than taken from a real document,
+    which is a weaker footing than the Facturae and UBL cases: it proves the CII
+    branch is reached and correctly scoped, and it cannot prove a real-world CII
+    invoice states its address the way this one does.
+
+    It is here rather than omitted because the alternative is a reader that
+    exists and is never exercised, which is the shape this campaign has shipped
+    repeatedly. Both codes name excluded territories -- Santa Cruz de Tenerife
+    and Ceuta -- so a reader that silently produced the mainland would fail.
+    """
+    evidence_id = _stored(
+        _CII_SPECIMEN,
+        settings=isolated_settings,
+        objects=secure_objects,
+        tmp_path=tmp_path,
+        name="cii.xml",
+    )
+
+    draft = _draft(evidence_id, isolated_settings)
+
+    assert draft.supplier_postal_code == "38001"
+    assert draft.customer_postal_code == "51001"
+    assert territorial_scope_for_spanish_postal_code(draft.supplier_postal_code) is IvaTerritorialScope.ES_CANARIAS
+    assert (
+        territorial_scope_for_spanish_postal_code(draft.customer_postal_code)
+        is IvaTerritorialScope.ES_CEUTA_MELILLA
+    )

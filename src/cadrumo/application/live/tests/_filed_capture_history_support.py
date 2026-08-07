@@ -201,16 +201,61 @@ def _stored_130_justificante_observation(
     *,
     authenticated_identity: str = "00000000T",
     expediente_id: str = "13020260410ABCD1234EFGH5678",
+    captured_csv: str = _MODELO_130_FIXTURE_CSV,
 ) -> FiledDeclaracionObservation:
-    pdf_bytes = _modelo_130_justificante_pdf_bytes()
+    return _stored_justificante_observation(
+        store,
+        modelo="130",
+        pdf_bytes=_modelo_130_justificante_pdf_bytes(),
+        authenticated_identity=authenticated_identity,
+        expediente_id=expediente_id,
+        captured_csv=captured_csv,
+    )
+
+
+def _stored_303_justificante_observation(
+    store: FiledDeclaracionObservationStore,
+    *,
+    authenticated_identity: str = "00000000T",
+    # Register-shaped, and deliberately NOT the receipt's Número de justificante.
+    # The 130 helper's default happens to equal its receipt's identifier, which
+    # is what let the old conflated comparison pass in tests while failing on
+    # every real capture; this default does not repeat that.
+    expediente_id: str = "202630300000411A",
+    captured_csv: str = _MODELO_303_FIXTURE_CSV,
+) -> FiledDeclaracionObservation:
+    return _stored_justificante_observation(
+        store,
+        modelo="303",
+        pdf_bytes=_modelo_303_justificante_pdf_bytes(),
+        authenticated_identity=authenticated_identity,
+        expediente_id=expediente_id,
+        captured_csv=captured_csv,
+    )
+
+
+def _stored_justificante_observation(
+    store: FiledDeclaracionObservationStore,
+    *,
+    modelo: str,
+    pdf_bytes: bytes,
+    authenticated_identity: str,
+    expediente_id: str,
+    captured_csv: str,
+) -> FiledDeclaracionObservation:
+    """Store one receipt PDF under a cotejo-document artefact URL.
+
+    ``captured_csv`` is the csv the capture would have resolved from AEAT's
+    cotejo redirect, and it is a separate argument from the PDF bytes on
+    purpose: passing a csv other than the one printed in those bytes is how a
+    caller reproduces an artefact paired with the wrong filing's receipt.
+    """
     period = Period.from_year_and_code(2026, "1T")
-    external = _aeat_external_constants()
-    declarations_url = f"{external.domains.www6}{external.sede_paths.declarations_listing}"
     artefact = store.persist_artefact(
-        ("130", 2026, period, expediente_id),
+        (modelo, 2026, period, expediente_id),
         FiledDeclaracionArtefact(
             kind="justificante_pdf",
-            source_url=AnyHttpUrl(declarations_url),
+            source_url=AnyHttpUrl(_cotejo_document_source_url(captured_csv)),
             content_type="application/pdf",
             byte_count=len(pdf_bytes),
             sha256=hashlib.sha256(pdf_bytes).hexdigest(),
@@ -219,7 +264,7 @@ def _stored_130_justificante_observation(
         pdf_bytes,
     )
     return FiledDeclaracionObservation(
-        modelo="130",
+        modelo=modelo,
         ejercicio=2026,
         period=period,
         expediente_id=expediente_id,
@@ -236,11 +281,40 @@ def _seed_current_130_filing(
     aeat_accepted: bool = False,
     external_evidence: ExternalEvidence | None = None,
 ) -> ModeloRecord:
-    period = Period.from_year_and_code(2026, "1T")
-    revision_id = hashlib.sha256(f"{bucket_id}:130:2026:1T".encode()).hexdigest()
-    work_unit_id = derive_work_unit_id(
+    return _seed_current_filing(
         bucket_id=bucket_id,
         modelo="130",
+        aeat_accepted=aeat_accepted,
+        external_evidence=external_evidence,
+    )
+
+
+def _seed_current_303_filing(
+    *,
+    bucket_id: str,
+    aeat_accepted: bool = False,
+    external_evidence: ExternalEvidence | None = None,
+) -> ModeloRecord:
+    return _seed_current_filing(
+        bucket_id=bucket_id,
+        modelo="303",
+        aeat_accepted=aeat_accepted,
+        external_evidence=external_evidence,
+    )
+
+
+def _seed_current_filing(
+    *,
+    bucket_id: str,
+    modelo: str,
+    aeat_accepted: bool = False,
+    external_evidence: ExternalEvidence | None = None,
+) -> ModeloRecord:
+    period = Period.from_year_and_code(2026, "1T")
+    revision_id = hashlib.sha256(f"{bucket_id}:{modelo}:2026:1T".encode()).hexdigest()
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo=modelo,
         filing_year=2026,
         period=period,
         revision_id=revision_id,
@@ -248,11 +322,11 @@ def _seed_current_130_filing(
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
         bucket_id=bucket_id,
-        modelo=ModeloCode("130"),
+        modelo=ModeloCode(modelo),
         filing_year=2026,
         period=period,
         revision_id=revision_id,
-        name="130-2026-1T",
+        name=f"{modelo}-2026-1T",
         created_at=_CAPTURED_AT,
         updated_at=_CAPTURED_AT,
     )
@@ -268,7 +342,7 @@ def _seed_current_130_filing(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
         bucket_id=bucket_id,
-        modelo=ModeloCode("130"),
+        modelo=ModeloCode(modelo),
         filing_year=2026,
         period=period,
         filed_at=_CAPTURED_AT,

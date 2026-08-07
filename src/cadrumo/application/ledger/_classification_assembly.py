@@ -55,6 +55,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ...domain.iva import (
+    SPAIN_COUNTRY_CODE,
     CustomerTaxStatus,
     EUMemberState,
     IvaCategory,
@@ -64,6 +65,7 @@ from ...domain.iva import (
     TransactionKind,
     classify_iva,
     territorial_scope_for_country,
+    territorial_scope_for_spanish_postal_code,
 )
 
 if TYPE_CHECKING:
@@ -177,29 +179,82 @@ def _customer_tax_status_gap(inputs: ClassifierInputs) -> MissingClassifierInput
     )
 
 
+def _names_spain(country_code: str | None) -> bool:
+    """Whether the printed country evidence POSITIVELY names Spain.
+
+    Asked instead of reading the country resolver's ``None`` as "Spanish",
+    because that return collapses three different situations: an absent code, a
+    code too malformed to be one, and Spain. Measured against the live resolver,
+    every one of ``None``, ``''``, ``'ESP'``, ``'E1'`` and ``'ES'`` yields
+    ``None``, so a caller branching on it cannot tell "the operator must supply a
+    country" from "the operator must supply a postal code".
+
+    That distinction is load-bearing here rather than cosmetic: a postal code is
+    consulted only when Spain was named, so reading absence as Spain would feed
+    a foreign five-digit code to the Spanish province lookup.
+
+    Compares against the shipped ``SPAIN_COUNTRY_CODE`` after the same trim and
+    case fold the resolver applies, and deliberately re-derives no shape check —
+    only ``ES`` can equal the constant, so the well-formedness question never
+    arises and there is no second copy of it to drift.
+    """
+    return (country_code or "").strip().upper() == SPAIN_COUNTRY_CODE
+
+
 def _scope(
     country_code: str | None,
+    postal_code: str | None,
     *,
     field: str,
     asserted: IvaTerritorialScope | None,
 ) -> tuple[IvaTerritorialScope | None, MissingClassifierInput | None]:
-    """Resolve one party's territorial scope from its printed country code."""
+    """Resolve one party's territorial scope from its printed establishment evidence.
+
+    Two halves, asked in order. The country code answers for a foreign party and
+    stops at the border for a Spanish one, because Spain holds three IVA
+    territories the law treats differently and a country code cannot separate
+    them. The postal code answers the sub-national half: its first two digits are
+    the province.
+
+    **The postal half is gated on Spain having been NAMED**, never on the country
+    half merely having returned nothing. Five-digit postal codes are not unique to
+    Spain, so consulting the Spanish province lookup without country evidence
+    would read a French or German code as a Spanish province — the restrictive
+    default one level below the country axis that already refuses it.
+
+    **An unreadable postal code refuses rather than resolving to the mainland.**
+    The peninsula is the majority population, so that default would be invisible
+    in testing while placing Canarian and Ceutan parties inside a territory their
+    operations are not subject to. The resolver already refuses it; the refusal is
+    repeated here because a caller is free to substitute its own default for the
+    resolver's ``None``, and this is the caller.
+    """
     if asserted is not None:
         return asserted, None
     resolved = territorial_scope_for_country(country_code)
     if resolved is not None:
         return resolved, None
-    reason = (
-        f"the printed country code {country_code!r} names Spain, whose three IVA territories are "
-        "treated differently by law and cannot be told apart from a country code"
-        if country_code
-        else "no country code was established for this party"
-    )
-    return None, MissingClassifierInput(
-        field=field,
-        reason=reason,
-        settled_by="sub-national establishment evidence, or an explicit operator assertion of the territory",
-    )
+
+    if _names_spain(country_code):
+        territory = territorial_scope_for_spanish_postal_code(postal_code)
+        if territory is not None:
+            return territory, None
+        reason = (
+            "the printed country code names Spain, whose three IVA territories are treated "
+            "differently by law, and no readable postal code established which one"
+        )
+        settled_by = "a printed postal code for this party, or an explicit operator assertion of the territory"
+    elif (country_code or "").strip():
+        reason = (
+            f"the printed country code {country_code!r} is not a well-formed two-letter country code, "
+            "so it established nothing about where this party is"
+        )
+        settled_by = "a printed two-letter country code for this party, or an explicit operator assertion"
+    else:
+        reason = "no country code was established for this party"
+        settled_by = "a printed country code for this party, or an explicit operator assertion of the territory"
+
+    return None, MissingClassifierInput(field=field, reason=reason, settled_by=settled_by)
 
 
 def _member_state(
@@ -367,6 +422,8 @@ def assemble_classification_criteria(
     declared: DeclaredFacts,
     issuer_country_code: str | None = None,
     customer_country_code: str | None = None,
+    issuer_postal_code: str | None = None,
+    customer_postal_code: str | None = None,
     rate_tier: IvaRateKind | None = None,
 ) -> ClassificationAssembly:
     """Assemble the rule table's criteria, or return every input that stopped it.
@@ -383,6 +440,13 @@ def assemble_classification_criteria(
             could carry a value but not its attribution.
         issuer_country_code: The issuer's printed country code, if any.
         customer_country_code: The customer's printed country code, if any.
+        issuer_postal_code: The issuer's printed postal code, if any. Consulted
+            only when the country evidence names Spain, to separate the three
+            Spanish IVA territories a country code cannot tell apart.
+        customer_postal_code: The same for the customer. Asked of each party
+            independently, because an issuer in Las Palmas invoicing a customer
+            in Madrid crosses a territorial boundary one shared code could not
+            express.
         rate_tier: The rate tier, required by the criteria model for ES-to-ES
             domestic operations.
 
@@ -396,6 +460,7 @@ def assemble_classification_criteria(
 
     issuer_scope, issuer_gap = _scope(
         issuer_country_code,
+        issuer_postal_code,
         field="issuer_residency",
         asserted=_value_of(declared.issuer_scope),
     )
@@ -404,6 +469,7 @@ def assemble_classification_criteria(
 
     customer_scope, customer_gap = _scope(
         customer_country_code,
+        customer_postal_code,
         field="customer_residency",
         asserted=_value_of(declared.customer_scope),
     )

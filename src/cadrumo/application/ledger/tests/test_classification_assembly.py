@@ -428,6 +428,146 @@ def test_the_domestic_rate_tier_axis_is_carried_through() -> None:
     assert assembly.criteria.rate_tier is IvaRateKind.GENERAL
 
 
+def test_a_spanish_postal_code_settles_the_territory_the_country_code_cannot() -> None:
+    """The join this Step exists to make: the sub-national half of establishment.
+
+    A country code names Spain and stops there, because the three Spanish IVA
+    territories are treated differently by law. The postal code's first two
+    digits are the province, so it is the deterministic evidence that separates
+    them — and until it was joined, the resolver existed and nothing consulted
+    it.
+    """
+    assembly = _assemble_with_declared(
+        transaction_date=_DATE,
+        direction=InvoiceKind.ISSUED,
+        inputs=_inputs(),
+        supply_nature=SupplyNature.GOODS,
+        issuer_country_code="ES",
+        issuer_postal_code="35001",
+        customer_country_code="ES",
+        customer_postal_code="28013",
+        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+        rate_tier=IvaRateKind.GENERAL,
+    )
+
+    assert assembly.assembled, [m.field for m in assembly.missing]
+    assert assembly.criteria is not None
+    assert assembly.criteria.issuer_residency is IvaTerritorialScope.ES_CANARIAS
+    assert assembly.criteria.customer_residency is IvaTerritorialScope.ES_MAINLAND
+
+
+def test_a_spanish_party_with_no_postal_code_refuses_rather_than_assuming_mainland() -> None:
+    """The safety asymmetry carried through the join, and the whole point of the row.
+
+    The peninsula is the majority population, so defaulting to it would be
+    invisible in testing while silently placing Canarian and Ceutan parties
+    inside a territory their operations are not subject to. The refusal must
+    survive at the JOIN and not only inside the resolver: a caller is free to
+    substitute its own default for the resolver's ``None``, which is exactly the
+    failure this asserts against.
+    """
+    assembly = _assemble_with_declared(
+        transaction_date=_DATE,
+        direction=InvoiceKind.ISSUED,
+        inputs=_inputs(),
+        supply_nature=SupplyNature.GOODS,
+        issuer_country_code="ES",
+        issuer_postal_code=None,
+        customer_country_code="ES",
+        customer_postal_code="   ",
+        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+    )
+
+    assert not assembly.assembled
+    assert {m.field for m in assembly.missing} == {"issuer_residency", "customer_residency"}
+    assert all(m.settled_by.strip() for m in assembly.missing)
+
+
+def test_a_postal_code_alone_never_establishes_a_spanish_territory() -> None:
+    """A bare postal code is not evidence of Spain, and reading it as such is the trap.
+
+    Five-digit postal codes are not unique to Spain, so consulting the Spanish
+    resolver without country evidence would map a French or German code onto a
+    Spanish province — the restrictive default one level below the country axis
+    that already refuses it. The join is gated on the country evidence
+    POSITIVELY naming Spain, never on the country resolver merely returning
+    nothing.
+    """
+    assembly = _assemble_with_declared(
+        transaction_date=_DATE,
+        direction=InvoiceKind.ISSUED,
+        inputs=_inputs(),
+        supply_nature=SupplyNature.GOODS,
+        issuer_country_code=None,
+        issuer_postal_code="35001",
+        customer_country_code=None,
+        customer_postal_code="28013",
+        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+    )
+
+    assert not assembly.assembled
+    assert {m.field for m in assembly.missing} == {"issuer_residency", "customer_residency"}
+    assert all("no country code" in m.reason for m in assembly.missing)
+
+
+def test_a_malformed_country_code_is_not_reported_as_naming_spain() -> None:
+    """The collapsed-outcome defect: three different situations wore one answer.
+
+    The country resolver returns nothing for an absent code, a malformed one AND
+    a Spanish one alike, so a refusal that branched on the code merely being
+    present told the operator that a malformed code named Spain. It becomes
+    load-bearing the moment anything gates the postal join on whether the
+    country evidence named Spain, which is what this Step does.
+
+    ``ESP`` rather than ``XX``: a well-formed but unlisted alpha-2 code resolves
+    to THIRD_COUNTRY and never reaches this branch, so it would prove nothing.
+    """
+    assembly = _assemble_with_declared(
+        transaction_date=_DATE,
+        direction=InvoiceKind.ISSUED,
+        inputs=_inputs(),
+        supply_nature=SupplyNature.GOODS,
+        issuer_country_code="ESP",
+        issuer_postal_code="28013",
+        customer_country_code="FR",
+        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+    )
+
+    assert not assembly.assembled
+    gap = next(m for m in assembly.missing if m.field == "issuer_residency")
+    assert "names Spain" not in gap.reason, gap.reason
+    assert "ESP" in gap.reason
+
+
+def test_each_refusal_distinguishes_why_the_country_evidence_failed() -> None:
+    """Absent, malformed and Spanish must read as three different refusals.
+
+    An operator fixes what the refusal names. One shared message for three
+    causes sends them to correct a country code that was already correct, or to
+    supply a postal code for a party whose country was never established.
+    """
+    reasons = {}
+    for label, country, postal in (
+        ("absent", None, "28013"),
+        ("malformed", "ESP", "28013"),
+        ("spanish", "ES", None),
+    ):
+        assembly = _assemble_with_declared(
+            transaction_date=_DATE,
+            direction=InvoiceKind.ISSUED,
+            inputs=_inputs(),
+            supply_nature=SupplyNature.GOODS,
+            issuer_country_code=country,
+            issuer_postal_code=postal,
+            customer_country_code="FR",
+            asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+        )
+        reasons[label] = next(m for m in assembly.missing if m.field == "issuer_residency").reason
+
+    assert len(set(reasons.values())) == 3, reasons
+    assert "three IVA territories" in reasons["spanish"]
+
+
 def _domestic(**overrides: object):
     """An ES-to-ES operation, which is the shape the customer-status demand blocked."""
     kwargs: dict[str, object] = {

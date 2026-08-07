@@ -51,10 +51,10 @@ def _child(
     )
 
 
-def _total(*descendientes: DescendantInfo) -> Decimal:
+def _total(*descendientes: DescendantInfo, year: int = _YEAR) -> Decimal:
     return RentaFamilyProfile(descendientes=descendientes).incremento_guarderia_0613(
-        _YEAR,
-        thresholds=_THRESHOLDS,
+        year,
+        thresholds=_THRESHOLDS if year == _YEAR else registry_thresholds(year),
         cap_anual=_CAP_ANUAL,
     )
 
@@ -77,6 +77,27 @@ class TestManualWorkedOracles:
         """1.000 ÷ 12 × 6 = 500 exactly."""
         child = _child(date(2022, 3, 1), mensual="1-6:400", meses_madre=12)
 
+        assert _total(child) == Decimal("500.00")
+
+    def test_the_manuals_own_turning_three_child_prorates_to_500(self) -> None:
+        """The manual's REAL facts for the 500 figure, not a convenient substitute.
+
+        The case above reproduces the arithmetic with a child who is TWO all
+        year, so it routes through the under-three branch. The manual's own
+        child is not that child: "tendrá derecho a la citada deducción hasta el
+        mes de agosto incluido, pues en septiembre cumple 3 años" — born
+        September 2021, turning three IN the filing period, and granted the
+        increment over "6 meses completos (de enero a junio)", every one of them
+        BEFORE the birthday.
+
+        Substituting the younger child is what kept a real defect invisible:
+        the right number was reproduced through a branch the real case never
+        takes, and the real case returned 0,00 against the manual's 500. Do not
+        re-substitute convenient facts here — the birth date is the point.
+        """
+        child = _child(date(2021, 9, 15), mensual="1-6:500", meses_madre=12)
+
+        assert child.age_at_year_end(_YEAR) == 3
         assert _total(child) == Decimal("500.00")
 
     def test_the_flat_cap_would_have_produced_1000_for_the_first_case(self) -> None:
@@ -139,10 +160,55 @@ class TestSimultaneityBound:
         assert _total(child) == Decimal("250.00")
 
     def test_a_mother_with_no_qualifying_months_contributes_nothing(self) -> None:
-        """No Art. 81.1 entitlement means no increment to increase."""
+        """No Art. 81.1 entitlement means no increment to increase.
+
+        Still correct after the increment was decoupled from the deducción's
+        age ceiling: what was removed there is the CHILD's age limb, not the
+        mother's own requirement. A mother who never met it has no simultaneous
+        months whatever the child's age.
+        """
         child = _child(date(2022, 3, 1), mensual="1-12:500", meses_madre=0)
 
         assert _total(child) == Decimal("0")
+
+
+class TestMaternidadLapsesWhileTheIncrementContinues:
+    """Capítulo 18's two named cases, where the deducción stops and the increment does not.
+
+    "en el supuesto de que el descendiente cumpla los tres años en el mes de
+    enero o en el caso de que la madre comience a trabajar en el año en el que
+    el hijo cumple esa edad, pero después de haberla cumplido, no se podrá
+    aplicar la deducción por maternidad, si bien ello no impedirá aplicar el
+    incremento de gastos de guardería".
+
+    Both once returned 0,00, because the increment was prorated by the
+    deducción's own month count and that count carries the child's under-three
+    ceiling. The direction of the error is an under-grant, which is a taxpayer
+    paying more than they owe.
+    """
+
+    def test_a_child_turning_three_in_january_still_carries_the_increment(self) -> None:
+        """The deducción window is empty, and the increment is not.
+
+        Turning three in January leaves no under-three month in the period, so
+        the Art. 81.1 deducción has zero months. Five declared nursery months
+        from February still prorate: 1.000 ÷ 12 × 5 = 416,67.
+        """
+        child = _child(date(2022, 1, 20), mensual="2-6:500", meses_madre=12)
+
+        assert child.maternidad_contributing_meses(_YEAR + 1, thresholds=registry_thresholds(_YEAR + 1)) == 0
+        assert _total(child, year=_YEAR + 1) == Decimal("416.67")
+
+    def test_a_mother_starting_work_after_the_birthday_still_carries_the_increment(self) -> None:
+        """Work begins in April, the child turned three in March.
+
+        The deducción's own months are the two before the birthday, which the
+        mother did not work; the increment prorates by her nine worked months
+        bounded by the five declared nursery months: 1.000 ÷ 12 × 5 = 416,67.
+        """
+        child = _child(date(2022, 3, 10), mensual="4-8:500", meses_madre=9)
+
+        assert _total(child, year=_YEAR + 1) == Decimal("416.67")
 
 
 class TestMidYearBirthIsTheCommonCase:

@@ -73,15 +73,32 @@ _DRAFT_ATTRIBUTE_CANONICAL_WIDTHS: Mapping[str, int | None] = {
     # identification number of a mercantile group's ultimate parent company, and
     # binding the declarant there declares the filer to be its own parent.
     "profile_tax_id": SPANISH_TAX_ID_WIDTH,
-    # Not width-gated: these carry no single canonical width to check against.
-    # AEAT sizes each slot per record design -- a modelo code, a filing year, and
-    # a period token each reach slots of more than one width across the published
-    # diseños -- so a width assertion here would refuse correct declarations.
-    # Gating any of them requires establishing its width against the diseño
-    # first; until then the honest state is an explicit abstention.
+    # The remaining attributes abstain, and each abstention has its own reason
+    # rather than a shared "these vary" claim. Recorded per attribute because an
+    # abstention that cites the wrong reason is worse than none: it reads as a
+    # ruling that the slot widths are legitimately diverse when at least one of
+    # them is not.
+    #
+    # No declaration in the registry binds either of these, so no width is
+    # observable to gate against and any value chosen here would be invented.
     "modelo": None,
     "period": None,
+    # ABSTAINS OVER A KNOWN DIVERGENCE, not over legitimate variability. The
+    # source is str(period.filing_year), always 4 characters, and the registry
+    # binds 4 in every declaration but one: Modelo 200's page-000 envelope-open
+    # record binds it to a 17-character slot. 17 is the width of the whole
+    # envelope-open tag, which the sibling modelos compose from a literal "<T",
+    # the modelo code, a page digit, the year, the period token and a literal
+    # "0000>" -- six or seven fields, not one. That declaration is suspected
+    # wrong, and gating this attribute at 4 would refuse the registry build until
+    # it is restructured, which needs its own decision and its own byte-level
+    # verification of the emitted tag. Until then the gate is deliberately
+    # silent HERE, so the divergence must stay recorded elsewhere to be found.
     "filing_year": None,
+    # Uniform at 2 across every declaration, so this one is gateable on the
+    # evidence; it abstains only because the token's width has not been
+    # established against the published diseños, and a period token is the axis
+    # where a per-period-kind width difference would be plausible.
     "period_code": None,
 }
 

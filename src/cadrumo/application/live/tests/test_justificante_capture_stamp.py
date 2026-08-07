@@ -191,23 +191,40 @@ def test_stamp_refuses_when_snapshot_csv_disagrees_with_parsed_receipt() -> None
     assert filing.aeat_accepted is False
 
 
-def test_stamp_refuses_when_snapshot_expediente_disagrees_with_receipt_presentation_id() -> None:
-    """A presentation identifier on the receipt must match the live expediente."""
-    from .._errors import LiveApplicationInputError
+def test_stamp_accepts_a_capture_whose_expediente_is_not_the_receipt_presentation_id() -> None:
+    """A divergent register expediente id does not block a stamp; the csv is the axis.
 
+    This test previously pinned the opposite: it asserted a refusal when the
+    snapshot's expediente id disagreed with the receipt's Número de justificante.
+    Those are different AEAT identifier namespaces and a receipt body never
+    carries the register's expediente id, so that comparison rejected every real
+    receipt rather than only mis-paired ones.
+
+    What guards this site is the csv equality check the caller runs before the
+    predicate, and
+    ``test_stamp_refuses_when_snapshot_csv_disagrees_with_parsed_receipt``
+    exercises it. So this test now holds the other direction: with the csv
+    agreeing, a divergent expediente id is not grounds for refusal.
+    """
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
-    snapshot = _persist_capture(
+    captured = _persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
         modelo=Modelo.M130.value,
         filing_year=2026,
         period="1T",
-    ).model_copy(update={"expediente_id": "13020260410DIFFERENTIDENT"})
+    )
+    snapshot = captured.model_copy(update={"expediente_id": "13020260410DIFFERENTIDENT"})
+    assert snapshot.expediente_id != captured.expediente_id, (
+        "the expediente id was not actually changed, so nothing diverges here"
+    )
 
-    with pytest.raises(LiveApplicationInputError, match="does not match current filing record"):
-        register_capture_as_filing_evidence(snapshot=snapshot)
+    stamped = register_capture_as_filing_evidence(snapshot=snapshot)
 
-    assert JustificanteRepository().load("ABCD1234EFGH5678") is None
+    assert stamped.aeat_accepted is True
+    assert stamped.external_evidence is not None
+    assert stamped.external_evidence.reference_id == "ABCD1234EFGH5678"
+    assert JustificanteRepository().load("ABCD1234EFGH5678") is not None
 
 
 def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_modelo() -> None:

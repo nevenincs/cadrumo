@@ -921,6 +921,14 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
         supplier_name=parsed.supplier_name,
         customer_tax_id=parsed.customer_tax_id,
         customer_name=parsed.customer_name,
+        # Both sides, because which party is the counterparty is not decided
+        # until confirm. A country code cannot separate Spain's three IVA
+        # territories, so these codes are the only thing that settles where
+        # either party is established -- and the exact reader was the one path
+        # that recovered neither, leaving the most machine-readable documents in
+        # the corpus unable to answer a question a text-read document could.
+        supplier_postal_code=parsed.supplier_postal_code,
+        customer_postal_code=parsed.customer_postal_code,
         invoice_number=parsed.invoice_number,
         invoice_series=parsed.invoice_series,
         invoice_date=parsed.invoice_date,

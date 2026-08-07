@@ -23,6 +23,7 @@ from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import CasillaValueKind, Period
 from ....core.config import Settings
+from ....core.json_contract import NoticeSeverity
 from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import (
     RegistryModeloObservation,
@@ -44,6 +45,8 @@ from ...calculations import (
     resolve_bindings_from_local_store,
 )
 from .. import (
+    FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
+    FiledJustificanteUnreachedReason,
     enroll_filed_justificante_evidence,
     list_iva_compensation_history,
     load_iva_remote_state,
@@ -62,17 +65,23 @@ from ._filed_capture_history_support import (
     _M303_DISPONIBLE_CASILLA,
     _M303_GENERADA_CASILLA,
     _M303_POSTERIOR_CASILLA,
+    _MODELO_130_FIXTURE_CSV,
+    _MODELO_303_FIXTURE_CSV,
     _SYNTHETIC_EXPEDIENTE_ID,
     _SYNTHETIC_PROFILE_ID,
     _declaration,
     _modelo_130_justificante_pdf_bytes,
+    _modelo_303_justificante_pdf_bytes,
     _parsed_303_submitted_file_observation,
     _prior_303_observation,
     _profile_backend,
     _registry_snapshot,
     _secure_backend,
     _seed_current_130_filing,
+    _seed_current_303_filing,
     _stored_130_justificante_observation,
+    _stored_303_justificante_observation,
+    _stored_justificante_observation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -386,7 +395,7 @@ def test_filed_observation_capture_enrolls_matching_justificante_metadata(tmp_pa
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
         observation = _stored_130_justificante_observation(store)
 
-        csvs = persist_filed_justificante_metadata(observation, store=store)
+        csvs = persist_filed_justificante_metadata(observation, store=store).justificante_csvs
 
         assert csvs == ("ABCD1234EFGH5678",)
         loaded = JustificanteRepository().load("ABCD1234EFGH5678")
@@ -396,9 +405,56 @@ def test_filed_observation_capture_enrolls_matching_justificante_metadata(tmp_pa
         assert loaded.tax_id == "00000000T"
 
 
+#: Each case diverges on exactly one axis and holds the rest at the values the
+#: enrolling case uses, so a refusal is attributable to the named axis. The
+#: second case used to diverge on the register expediente id, which is not an
+#: axis the predicate consults; it now diverges on the csv the artefact's bytes
+#: were fetched under, which is.
+def test_a_committed_modelo_303_receipt_is_enrolled_from_the_register_path(tmp_path: Path) -> None:
+    """A Modelo 303 receipt fixture enrolls through the register-reconciliation path.
+
+    Modelo 303 is the case this path used to drop silently: the receipt agreed on
+    modelo, ejercicio, period and taxpayer identity, so it plainly belonged to
+    the filing, and it was still refused because a register expediente id was
+    being compared against the receipt's own Número de justificante. The two
+    values below are asserted to diverge first, so this fixture reproduces that
+    divergence rather than sidestepping it, and the enrollment that follows is
+    what the divergence used to prevent.
+    """
+    receipt = parse_justificante_bytes(_modelo_303_justificante_pdf_bytes())
+    expediente_id = "202630300000411A"
+    assert receipt.presentation_id is not None
+    assert receipt.presentation_id.strip().casefold() != expediente_id.strip().casefold(), (
+        "the receipt identifier and the register expediente id agree, so this fixture cannot "
+        "show the divergence being tolerated"
+    )
+
+    with _secure_backend(tmp_path):
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        observation = _stored_303_justificante_observation(store, expediente_id=expediente_id)
+
+        csvs = persist_filed_justificante_metadata(observation, store=store).justificante_csvs
+
+        assert csvs == (_MODELO_303_FIXTURE_CSV,)
+        loaded = JustificanteRepository().load(_MODELO_303_FIXTURE_CSV)
+        assert loaded is not None
+        assert loaded.modelo == "303"
+        assert loaded.ejercicio == "2026"
+        assert loaded.period == Period.from_year_and_code(2026, "1T")
+        assert loaded.tax_id == "00000000T"
+        # The receipt's own identifier survives onto the persisted record; it is
+        # no longer a matching axis, which is not the same as being discarded.
+        assert loaded.presentation_id == receipt.presentation_id
+
+
+#: Each case diverges on exactly one axis and holds the rest at the values the
+#: enrolling case uses, so a refusal is attributable to the named axis. The
+#: second case used to diverge on the register expediente id, which is not an
+#: axis the predicate consults; it now diverges on the csv the artefact's bytes
+#: were fetched under, which is.
 _REFUSED_JUSTIFICANTE_METADATA_CASES = (
-    ("wrong-taxpayer", "X1234567L", "13020260410ABCD1234EFGH5678"),
-    ("mismatched-presentation-id", "00000000T", "13020260410ZZZZ1234EFGH5678"),
+    ("wrong-taxpayer", "X1234567L", _MODELO_130_FIXTURE_CSV),
+    ("csv-is-another-filings", "00000000T", "QQQQ7777WWWW3333"),
 )
 
 
@@ -406,18 +462,18 @@ def test_filed_observation_capture_refuses_invalid_justificante_metadata(
     tmp_path: Path,
 ) -> None:
     with _secure_backend(tmp_path):
-        for case_id, authenticated_identity, expediente_id in _REFUSED_JUSTIFICANTE_METADATA_CASES:
+        for case_id, authenticated_identity, captured_csv in _REFUSED_JUSTIFICANTE_METADATA_CASES:
             store = FiledDeclaracionObservationStore(tmp_path / f"filed-declarations-{case_id}")
             observation = _stored_130_justificante_observation(
                 store,
                 authenticated_identity=authenticated_identity,
-                expediente_id=expediente_id,
+                captured_csv=captured_csv,
             )
 
-            csvs = persist_filed_justificante_metadata(observation, store=store)
+            csvs = persist_filed_justificante_metadata(observation, store=store).justificante_csvs
 
             assert csvs == (), case_id
-            assert JustificanteRepository().load("ABCD1234EFGH5678") is None, case_id
+            assert JustificanteRepository().load(_MODELO_130_FIXTURE_CSV) is None, case_id
 
 
 def test_filed_observation_capture_stamps_matching_current_filing_record(tmp_path: Path) -> None:
@@ -456,34 +512,6 @@ def test_filed_observation_capture_stamps_matching_current_filing_record(tmp_pat
         assert events[0].object_id == filing.filing_record_id
         assert events[0].payload["evidence_reference_id"] == "ABCD1234EFGH5678"
         assert events[0].payload["expediente_id"] == observation.expediente_id
-
-
-def test_filed_observation_capture_rejects_mismatched_presentation_id_before_stamping(
-    tmp_path: Path,
-) -> None:
-    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
-        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
-        observation = _stored_130_justificante_observation(store, expediente_id="13020260410ZZZZ1234EFGH5678")
-        _seed_current_130_filing(bucket_id=bucket_id)
-
-        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
-        current = (
-            ModeloRecordCatalogueRepository()
-            .load()
-            .current_for(
-                bucket_id=bucket_id,
-                modelo="130",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-            )
-        )
-
-    assert result.justificante_csvs == ()
-    assert result.filing_record_ids == ()
-    assert result.conflicting_filing_record_ids == ()
-    assert current is not None
-    assert current.external_evidence is None
-    assert current.aeat_accepted is False
 
 
 def test_filed_observation_capture_keeps_existing_justificante_pdf_evidence_for_same_csv(tmp_path: Path) -> None:
@@ -1145,31 +1173,32 @@ def test_the_request_type_signal_survives_a_strict_persistence_roundtrip(tmp_pat
     }
 
 
-def test_receipt_presentation_identifier_is_rejected_against_a_register_expediente_id(tmp_path: Path) -> None:
-    """The match predicate refuses a receipt that belongs to the filing, so nothing is stamped.
+def test_a_receipt_stamps_its_filing_even_though_its_identifier_is_not_the_register_expediente_id(
+    tmp_path: Path,
+) -> None:
+    """A receipt that belongs to the filing is enrolled, and its own identifier is not consulted.
 
-    A justificante carries its own presentation identifier, and the register row
-    carries an expediente id. Those are differently shaped identifiers for the
-    same filing, and the production comparison feeds the expediente id into the
-    receipt's presentation-identifier check. So a receipt agreeing on modelo,
-    ejercicio, period and taxpayer identity -- every axis that establishes it IS
-    this filing's receipt -- is still rejected, and no evidence is stamped onto
-    the filing record.
+    This test previously pinned the OPPOSITE. A justificante carries AEAT's
+    Número de justificante and the register row carries an expediente id; those
+    are different AEAT identifier namespaces for the same filing, and the
+    production comparison fed the expediente id into the receipt's
+    presentation-identifier check. Since no receipt body ever carries the
+    register's expediente id, that comparison could never agree, so a receipt
+    agreeing on modelo, ejercicio, period and taxpayer identity was still
+    rejected and nothing was stamped. Its docstring said to reverse it once the
+    comparison was settled, and this is that reversal -- the rejection
+    assertions are gone rather than relaxed.
 
-    The first assertion is what makes this a false rejection rather than an
-    ordinary one: the same predicate accepts the receipt on every other axis
-    when the presentation identifier is not supplied.
-
-    The predicate is deliberately left as it is. Which identifier the comparison
-    should use is unsettled, and dropping the comparison would trade a visible
-    refusal for silent mis-stamping. REVERSE THIS TEST once that is decided:
-    assert the receipt stamps, and delete the rejection assertions below.
+    What replaced the broken axis is a csv comparison the caller performs
+    itself, against a csv recovered from the URL the bytes were fetched under.
+    That axis is exercised in both directions by
+    ``test_a_receipt_is_refused_when_its_csv_is_not_the_csv_its_bytes_were_fetched_under``
+    and the two-filings discrimination test below, so this test's job is
+    narrower: the divergent identifiers no longer block a legitimate stamp.
     """
-    # DO NOT "tidy" these two into agreement. Their divergence IS the subject of
-    # this test: making them equal turns it into a test that a matching receipt
-    # matches, which nothing needs. The guard below refuses that edit, and it
-    # compares the way the predicate itself does -- case-folded -- so a
-    # case-variant of the same identifier cannot slip past a naive `!=`.
+    # DO NOT "tidy" these two into agreement. Their divergence is still the
+    # premise: it is what makes the stamp below evidence that the identifier is
+    # no longer consulted, rather than evidence that two equal values agreed.
     register_expediente_id = "202613000000101A"
     receipt = parse_justificante_bytes(_modelo_130_justificante_pdf_bytes())
     assert receipt.presentation_id is not None
@@ -1177,27 +1206,52 @@ def test_receipt_presentation_identifier_is_rejected_against_a_register_expedien
         "the receipt's presentation identifier and the register expediente id no longer diverge, "
         "so this fixture pair cannot exercise the divergence"
     )
-    assert receipt.matches_filing_target(
-        modelo="130",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        tax_id="00000000T",
-    ), "the receipt does not belong to this filing on the other axes, so its rejection is not a false one"
-
-    assert (
-        receipt.matches_filing_target(
-            modelo="130",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            tax_id="00000000T",
-            presentation_id=register_expediente_id,
-        )
-        is False
-    )
 
     with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
         observation = _stored_130_justificante_observation(store, expediente_id=register_expediente_id)
+        filing = _seed_current_130_filing(bucket_id=bucket_id)
+
+        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+        current = (
+            ModeloRecordCatalogueRepository()
+            .load()
+            .current_for(
+                bucket_id=bucket_id,
+                modelo="130",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+            )
+        )
+
+    assert result.justificante_csvs == (receipt.csv,)
+    assert result.filing_record_ids == (filing.filing_record_id,)
+    assert result.conflicting_filing_record_ids == ()
+    assert current is not None
+    assert current.aeat_accepted is True
+    assert current.external_evidence is not None
+    assert current.external_evidence.kind is ExternalEvidenceKind.AEAT_LIVE_CAPTURE
+    assert current.external_evidence.reference_id == receipt.csv
+
+
+def test_a_receipt_is_refused_when_its_csv_is_not_the_csv_its_bytes_were_fetched_under(
+    tmp_path: Path,
+) -> None:
+    """The csv check is what refuses a mis-paired artefact, now that the identifier axis is gone.
+
+    The stored artefact records the cotejo document URL its bytes were fetched
+    under, and that csv came from AEAT's own cotejo redirect rather than from
+    the PDF. Here the URL names one filing's csv while the stored bytes are the
+    receipt of another, which is the shape a storage or selection defect
+    re-associating an artefact after capture would produce.
+
+    Everything else agrees, so this refusal is attributable to the csv axis
+    alone: same modelo, ejercicio, period and taxpayer identity, and a filing
+    record present and ready to be stamped.
+    """
+    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        observation = _stored_130_justificante_observation(store, captured_csv="QQQQ7777WWWW3333")
         _seed_current_130_filing(bucket_id=bucket_id)
 
         result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
@@ -1218,6 +1272,244 @@ def test_receipt_presentation_identifier_is_rejected_against_a_register_expedien
     assert current is not None
     assert current.external_evidence is None
     assert current.aeat_accepted is False
+
+
+def test_a_receipt_is_refused_when_no_csv_can_be_recovered_from_the_artefact_url(
+    tmp_path: Path,
+) -> None:
+    """A source URL carrying no csv is reported as a non-match, never an exception.
+
+    The recovery helper raises on a URL with no usable ``CSV`` query, and this
+    function runs inside an enrollment loop over every artefact. Letting that
+    propagate would abort the whole enrollment over one malformed URL, so it
+    joins the other swallowed outcomes instead.
+    """
+    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        observation = _stored_130_justificante_observation(store)
+        artefact = observation.artefacts[0]
+        observation = observation.model_copy(
+            update={
+                "artefacts": (
+                    artefact.model_copy(
+                        update={"source_url": AnyHttpUrl(str(artefact.source_url).split("?", 1)[0])},
+                    ),
+                ),
+            },
+        )
+        _seed_current_130_filing(bucket_id=bucket_id)
+
+        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+
+    assert result.justificante_csvs == ()
+    assert result.filing_record_ids == ()
+
+
+def test_the_csv_check_tells_two_same_period_filings_apart_where_the_other_axes_cannot(
+    tmp_path: Path,
+) -> None:
+    """Two Modelo 303 filings for one period are discriminated by csv alone.
+
+    A period can carry more than one filing -- an original and a substitutive,
+    say -- and they share modelo, ejercicio, period and taxpayer identity. Those
+    are every axis the match predicate consults, so the predicate cannot tell
+    the two apart; the first block below asserts exactly that, which is what
+    makes the csv axis load-bearing rather than redundant.
+
+    So the same receipt bytes are enrolled twice against two register rows that
+    differ only in expediente id. The row whose artefact URL names the csv
+    printed on those bytes stamps its filing. The row whose URL names the other
+    filing's csv is refused, and its filing is left unstamped.
+    """
+    receipt = parse_justificante_bytes(_modelo_303_justificante_pdf_bytes())
+    other_filing_csv = "QQQQ7777WWWW3333"
+    assert receipt.csv.strip().upper() != other_filing_csv, (
+        "the two filings' csvs no longer diverge, so nothing here can be discriminated"
+    )
+
+    # The four surviving axes are identical for both filings, so the predicate
+    # returns True for each. Only the csv separates them.
+    for expediente_id in ("202630300000411A", "202630300000412B"):
+        assert receipt.matches_filing_target(
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            tax_id="00000000T",
+        ), f"the predicate must accept the receipt for {expediente_id}, or the two are already separable"
+
+    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        filing = _seed_current_303_filing(bucket_id=bucket_id)
+
+        wrong_filing = _stored_303_justificante_observation(
+            store,
+            expediente_id="202630300000412B",
+            captured_csv=other_filing_csv,
+        )
+        refused = enroll_filed_justificante_evidence(wrong_filing, store=store, bucket_id=bucket_id)
+        after_refusal = (
+            ModeloRecordCatalogueRepository()
+            .load()
+            .current_for(
+                bucket_id=bucket_id,
+                modelo="303",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+            )
+        )
+
+        right_filing = _stored_303_justificante_observation(store)
+        accepted = enroll_filed_justificante_evidence(right_filing, store=store, bucket_id=bucket_id)
+        after_acceptance = (
+            ModeloRecordCatalogueRepository()
+            .load()
+            .current_for(
+                bucket_id=bucket_id,
+                modelo="303",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+            )
+        )
+
+    assert refused.justificante_csvs == ()
+    assert refused.filing_record_ids == ()
+    assert after_refusal is not None
+    assert after_refusal.external_evidence is None
+    assert after_refusal.aeat_accepted is False
+
+    assert accepted.justificante_csvs == (receipt.csv,)
+    assert accepted.filing_record_ids == (filing.filing_record_id,)
+    assert after_acceptance is not None
+    assert after_acceptance.aeat_accepted is True
+    assert after_acceptance.external_evidence is not None
+    assert after_acceptance.external_evidence.reference_id == receipt.csv
+
+
+def _artefact_replaced(
+    observation: FiledDeclaracionObservation,
+    **updates: object,
+) -> FiledDeclaracionObservation:
+    artefact = observation.artefacts[0]
+    return observation.model_copy(update={"artefacts": (artefact.model_copy(update=updates),)})
+
+
+def _manifest_mismatch_observation(store: FiledDeclaracionObservationStore) -> FiledDeclaracionObservation:
+    observation = _stored_130_justificante_observation(store)
+    return _artefact_replaced(observation, byte_count=observation.artefacts[0].byte_count + 1)
+
+
+def _unparsable_pdf_observation(store: FiledDeclaracionObservationStore) -> FiledDeclaracionObservation:
+    return _stored_justificante_observation(
+        store,
+        modelo="130",
+        pdf_bytes=b"%PDF-1.4 not a receipt",
+        authenticated_identity="00000000T",
+        expediente_id="202613000000199Z",
+        captured_csv=_MODELO_130_FIXTURE_CSV,
+    )
+
+
+def _csv_unresolvable_observation(store: FiledDeclaracionObservationStore) -> FiledDeclaracionObservation:
+    observation = _stored_130_justificante_observation(store)
+    stripped = str(observation.artefacts[0].source_url).split("?", 1)[0]
+    return _artefact_replaced(observation, source_url=AnyHttpUrl(stripped))
+
+
+def _csv_mismatch_observation(store: FiledDeclaracionObservationStore) -> FiledDeclaracionObservation:
+    return _stored_130_justificante_observation(store, captured_csv="QQQQ7777WWWW3333")
+
+
+def _filing_target_mismatch_observation(store: FiledDeclaracionObservationStore) -> FiledDeclaracionObservation:
+    # The csv agrees, so this reaches the filing-target axis rather than stopping
+    # at the csv one: a Modelo 130 receipt filed under a Modelo 303 register row.
+    return _stored_justificante_observation(
+        store,
+        modelo="303",
+        pdf_bytes=_modelo_130_justificante_pdf_bytes(),
+        authenticated_identity="00000000T",
+        expediente_id="202630300000199Z",
+        captured_csv=_MODELO_130_FIXTURE_CSV,
+    )
+
+
+_UNREACHED_JUSTIFICANTE_CASES = (
+    ("manifest-mismatch", _manifest_mismatch_observation),
+    ("unparsable-pdf", _unparsable_pdf_observation),
+    ("csv-unresolvable", _csv_unresolvable_observation),
+    ("csv-mismatch", _csv_mismatch_observation),
+    ("filing-target-mismatch", _filing_target_mismatch_observation),
+)
+
+
+def test_each_unreached_justificante_outcome_reports_its_own_reason(tmp_path: Path) -> None:
+    """Five dead ends that used to share one shape now name themselves.
+
+    A capture that extracted casillas while enrolling nothing reported an
+    unexplained zero, indistinguishable from a period with no receipt. Each case
+    below reaches the same "no evidence" outcome by a different route, and the
+    assertion is that the reasons are DISTINCT -- a branch that collapsed any two
+    of them back together would still produce five notices and still pass a
+    count-only check, so the set of reasons is what is compared.
+    """
+    reasons: dict[str, str] = {}
+    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+        for case_id, mutate in _UNREACHED_JUSTIFICANTE_CASES:
+            store = FiledDeclaracionObservationStore(tmp_path / f"unreached-{case_id}")
+            observation = mutate(store)
+            _seed_current_130_filing(bucket_id=bucket_id)
+
+            result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+
+            assert result.justificante_csvs == (), case_id
+            assert len(result.notices) == 1, case_id
+            notice = result.notices[0]
+            assert notice.severity is NoticeSeverity.WARNING, case_id
+            assert notice.code == FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE, case_id
+            assert notice.context is not None
+            assert notice.context["expediente_id"] == observation.expediente_id, case_id
+            reasons[case_id] = notice.context["reason"]
+
+    assert set(reasons.values()) == {
+        FiledJustificanteUnreachedReason.MANIFEST_MISMATCH.value,
+        FiledJustificanteUnreachedReason.UNPARSABLE_PDF.value,
+        FiledJustificanteUnreachedReason.CSV_UNRESOLVABLE.value,
+        FiledJustificanteUnreachedReason.CSV_MISMATCH.value,
+        FiledJustificanteUnreachedReason.FILING_TARGET_MISMATCH.value,
+    }, reasons
+    assert len(set(reasons.values())) == len(reasons), (
+        f"two cases reported the same reason, so the outcomes are not distinguished: {reasons}"
+    )
+
+
+def test_an_enrollment_that_saves_evidence_raises_no_unreached_notice(tmp_path: Path) -> None:
+    """The notice channel stays empty on the success path.
+
+    Without this, a change emitting the notice unconditionally would still pass
+    every case above while telling an operator that a successful enrollment
+    reached no evidence.
+    """
+    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        observation = _stored_130_justificante_observation(store)
+        _seed_current_130_filing(bucket_id=bucket_id)
+
+        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+
+    assert result.justificante_csvs == (_MODELO_130_FIXTURE_CSV,)
+    assert result.notices == ()
+
+
+def test_fixture_csv_constants_still_match_the_receipts() -> None:
+    """The csvs the support helpers state independently are the csvs AEAT printed.
+
+    The helpers deliberately do not read these out of the PDFs, because a URL
+    built from the receipt's own csv would make every csv comparison in this
+    module compare one value against itself. That independence costs a way to
+    drift, and this is the anchor that catches the drift: replace a fixture and
+    the constants stop describing it.
+    """
+    assert parse_justificante_bytes(_modelo_130_justificante_pdf_bytes()).csv == _MODELO_130_FIXTURE_CSV
+    assert parse_justificante_bytes(_modelo_303_justificante_pdf_bytes()).csv == _MODELO_303_FIXTURE_CSV
 
 
 def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: Path) -> None:

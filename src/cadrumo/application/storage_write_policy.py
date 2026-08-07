@@ -189,6 +189,7 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     # encrypted live-IVA namespace and needs its own entry.
     "app live iva-wallet pull-evidence",
     "app live filed pull",
+    "app live filed pull-all",
     "app live filed pull-sources",
     "app live notifications pull",
     "app live expedientes pull",

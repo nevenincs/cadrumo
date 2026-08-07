@@ -1994,7 +1994,9 @@ cli:
         extract_off_host_provider_is_local: Az --off-host-provider local az alapértelmezés,
           és semmit nem küld el a gépről. Hagyja el a kapcsolót, vagy adjon meg távoli
           szolgáltatót.
-        extract_provider_without_acknowledge: cli.app.ledger.evidence.extract_provider_without_acknowledge
+        extract_provider_without_acknowledge: A dokumentum gépen kívüli beolvasása
+          a tartalmát harmadik félnek küldi el. Adja hozzá az --acknowledge-off-host
+          kapcsolót ennek az egy beolvasásnak a megerősítéséhez.
         extract_reference_required: 'Adja meg pontosan az egyiket: --evidence-id vagy
           --attachment-id.'
         extract_review_hint_message: Ez egy hozzávetőleges piszkozat; minden mezőt

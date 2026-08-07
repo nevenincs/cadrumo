@@ -88,6 +88,7 @@ class ParsedEInvoice:
     __slots__ = (
         "currency",
         "customer_name",
+        "customer_postal_code",
         "customer_tax_id",
         "grand_total",
         "invoice_date",
@@ -101,6 +102,7 @@ class ParsedEInvoice:
         "regime_legend",
         "shape",
         "supplier_name",
+        "supplier_postal_code",
         "supplier_tax_id",
         "taxable_base",
     )
@@ -111,6 +113,16 @@ class ParsedEInvoice:
         self.customer_tax_id: str | None = None
         self.supplier_name: str | None = None
         self.customer_name: str | None = None
+        # The sub-national half of the establishment question. A country code
+        # cannot separate Spain's three IVA territories, so a Spanish party's
+        # territory is settled by its postal code or not at all. Read from the
+        # format's own dedicated element in every case -- never split out of a
+        # composite address string, which would be an inference rather than a
+        # read. Absent stays None: the mainland is the majority population, so
+        # defaulting to it would be invisible in testing while silently placing
+        # Canarian and Ceutan parties outside the territory they belong to.
+        self.supplier_postal_code: str | None = None
+        self.customer_postal_code: str | None = None
         self.invoice_number: str | None = None
         self.invoice_series: str | None = None
         self.invoice_date: str | None = None
@@ -202,6 +214,48 @@ def _facturae_party_name(party: Element) -> str | None:
     return None
 
 
+def _facturae_postal_code(party: Element) -> str | None:
+    """Return a Facturae party's Spanish postal code, or nothing.
+
+    Scoped to ``AddressInSpain/PostCode``, the element Facturae dedicates to the
+    code. The sibling ``OverseasAddress`` block is deliberately not read: a party
+    established abroad has no Spanish IVA territory to resolve, so recovering
+    anything from it would produce a value the resolver must then discard, and
+    that block states its code jointly with the town rather than on its own.
+    """
+    for address in _find_all(party, "AddressInSpain"):
+        found = _direct_child_text(address, "PostCode")
+        if found:
+            return found
+    return None
+
+
+def _ubl_postal_code(party: Element) -> str | None:
+    """Return a UBL party's post code (EN16931 BT-38 / BT-53).
+
+    UBL carries it in ``cac:PostalAddress/cbc:PostalZone``, its own element, so
+    this is a lookup rather than a parse of the address's free-text lines.
+    """
+    for address in _find_all(party, "PostalAddress"):
+        found = _direct_child_text(address, "PostalZone")
+        if found:
+            return found
+    return None
+
+
+def _cii_postal_code(party: Element) -> str | None:
+    """Return a CII party's post code (EN16931 BT-38 / BT-53).
+
+    CII carries it in ``ram:PostalTradeAddress/ram:PostcodeCode``, again its own
+    element beside the free-text address lines rather than inside them.
+    """
+    for address in _find_all(party, "PostalTradeAddress"):
+        found = _direct_child_text(address, "PostcodeCode")
+        if found:
+            return found
+    return None
+
+
 def _decimal(raw: str | None) -> Decimal | None:
     """Parse a fixed-point amount from machine-produced e-invoice XML text.
 
@@ -281,6 +335,7 @@ def _parse_cii(root: Element) -> ParsedEInvoice:
             # PersonName and may carry a SpecifiedLegalOrganization trading
             # name, neither of which is the party's own stated name.
             setattr(parsed, f"{target}_name", _direct_child_text(found[0], "Name"))
+            setattr(parsed, f"{target}_postal_code", _cii_postal_code(found[0]))
     for settlement in _find_all(root, "ApplicableHeaderTradeSettlement"):
         parsed.currency = _first_text(settlement, "InvoiceCurrencyCode")
         for total in _find_all(settlement, "SpecifiedTradeSettlementHeaderMonetarySummation"):
@@ -344,6 +399,7 @@ def _parse_ubl(root: Element) -> ParsedEInvoice:
         if found:
             setattr(parsed, f"{target}_tax_id", _vat_id(found[0]))
             setattr(parsed, f"{target}_name", _ubl_party_name(found[0]))
+            setattr(parsed, f"{target}_postal_code", _ubl_postal_code(found[0]))
     for total in _find_all(root, "LegalMonetaryTotal"):
         parsed.taxable_base = _decimal(_first_text(total, "TaxExclusiveAmount"))
         parsed.grand_total = _decimal(_first_text(total, "TaxInclusiveAmount"))
@@ -392,6 +448,7 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
             # which IS the VAT number; no SIRET/Steuernummer ambiguity here.
             setattr(parsed, f"{target}_tax_id", _first_text(found[0], "TaxIdentificationNumber"))
             setattr(parsed, f"{target}_name", _facturae_party_name(found[0]))
+            setattr(parsed, f"{target}_postal_code", _facturae_postal_code(found[0]))
     invoices = _find_all(root, "Invoice")
     if not invoices:
         return parsed
