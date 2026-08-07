@@ -93,6 +93,13 @@ from ._cross_period_clean_state import (
     partition_cross_period_requirements_by_activity_start,
 )
 from ._cross_period_models import period_strictly_before_activity_start
+from ._foreign_asset_redeclaration import (
+    modelo_720_declared_observation,
+    modelo_720_evidence_observation,
+    modelo_720_prior_baseline_observation,
+    modelo_720_redeclaration_advisory_findings,
+    modelo_721_redeclaration_advisory_findings,
+)
 from ._iva_compensation_annual_partition import (
     IvaCompensationAnnualPartitionSourceResolver,
     resolve_iva_compensation_annual_partition_binding_values,
@@ -247,6 +254,11 @@ __all__ = [
     "iva_wallet_decision_key",
     "m111_no_retenciones_periods_for_bucket",
     "member_observation_key",
+    "modelo_720_declared_observation",
+    "modelo_720_evidence_observation",
+    "modelo_720_prior_baseline_observation",
+    "modelo_720_redeclaration_advisory_findings",
+    "modelo_721_redeclaration_advisory_findings",
     "observation_key",
     "observation_key_for_token",
     "partition_cross_period_requirements_by_activity_start",

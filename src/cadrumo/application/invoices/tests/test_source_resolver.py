@@ -929,13 +929,13 @@ def test_an_invoice_naming_another_bucket_is_still_excluded(
 
 
 # ---------------------------------------------------------------------------
-# Capability-parity proof (invoice-canonical-structure P01.S31)
+# Capability-parity proof
 #
 # One bucket exercising the capabilities that reach a declaration, projected
 # through the canonical path, asserted at MODELO-OUTPUT level rather than at
-# fact level (which P01.S01 already covers).
+# fact level (already covered elsewhere).
 #
-# The Step's criterion also named M303 and M390. Measured at HEAD, neither
+# The criterion also named M303 and M390. Measured at HEAD, neither
 # modelo declares a single invoice-sourced binding -- only M347 (one fragment)
 # and M349 (three) do. An equality assertion on those two modelos would
 # therefore compare zero against zero and pass by construction, proving
@@ -1149,7 +1149,7 @@ def test_the_intra_community_service_categories_exist_and_map_to_their_claves() 
 
 
 # ---------------------------------------------------------------------------
-# Decomposition parity across the fold (invoice-canonical-structure P01.S33)
+# Decomposition parity across the fold
 #
 # The decomposition contract is calc-facing and has only ever seen natively
 # rich records. The fold routes a new population into it, so what happens to a

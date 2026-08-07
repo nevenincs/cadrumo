@@ -1,0 +1,12 @@
+{
+  "provenance": "synthetic_generated",
+  "kind": "image_invoice",
+  "source": "cadrumo-evidence-corpus",
+  "corpus_doc_id": "OP-PUR-COM-2026-0005_camera-photo",
+  "corpus_path": "operator/corpus/purchase/image/COM-2026-0005_camera-photo.jpg",
+  "corpus_manifest_sha256": "e2db6a499f6f0ffafa4cf44084f433962dd3f8a0f6f0a65facaf7df07bb38593",
+  "licence": "CC0-1.0",
+  "notes": "The same deliberately-defective control document as the layout-minimal PDF sidecar, rendered as a camera photograph -- one document in two renderings, which is why both are bundled: they share the defects, so a reader that only fails on one is failing on the rendering rather than on the content. No /Producer is recorded because this is a JPEG and carries no PDF DocInfo; the content address is the physical evidence binding this claim to these bytes. Declared synthetic_generated on the corpus manifest's attestation of origin=generated, synthetic=true. THE DEFECTS ARE DELIBERATE and must never be repaired: invalid CIF control character on B1234567X, invoice number SIN-NUMERO, no per-rate breakdown printed, and printed total 890,00 against base 766,30 plus cuota 160,92 = 927,22. Reporting this document clean is a gap, not a pass.",
+  "sha256": "f2232b52dbb16d1534fef56ffd88edfe33d75779e29fdfe0a48385267777d121",
+  "bytes": 31075
+}

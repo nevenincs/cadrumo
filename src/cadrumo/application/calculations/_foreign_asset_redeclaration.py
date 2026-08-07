@@ -227,7 +227,205 @@ def _decimal_text(value: Decimal) -> str:
     return format(value, "f")
 
 
+def modelo_720_declared_observation(
+    *,
+    revision: CalculationRevision,
+    modelo_revision: ModeloRevision,
+    filing_year: int,
+    period: str,
+) -> RegistryModeloObservation:
+    """Project what the operator actually DECLARED on a Modelo 720 draft.
+
+    The declared set is read from
+    :attr:`~domain.modelos.CalculationRevision.input_values_by_casilla_id` —
+    the operator-supplied inputs — and deliberately NOT from
+    ``casilla_values``. The engine materialises every declared casilla in
+    ``casilla_values``, emitting ``0`` for a valuation the operator never
+    supplied; a declared set derived from that mapping would therefore always
+    contain all three obligation blocks, and the omitted-position test in
+    :func:`modelo_720_redeclaration_advisory_findings` could never be
+    satisfied. An operator-entered zero remains a genuine declaration and is
+    kept.
+
+    Returns a :class:`RegistryModeloObservation` carrying only the valuation
+    casillas present in the operator's input set.
+
+    See Also:
+        :func:`modelo_720_evidence_observation`
+            The independent valuation counterpart this declaration is tested
+            against.
+    """
+    refs_by_casilla = {
+        casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas
+    }
+    observations: list[CasillaObservation] = []
+    for casilla_id in _M720_VALUATION_CASILLA_GROUPS:
+        raw = revision.input_values_by_casilla_id.get(casilla_id)
+        refs = refs_by_casilla.get(casilla_id)
+        if raw is None or refs is None:
+            continue
+        value = _decimal_or_none(raw)
+        if value is None:
+            continue
+        observations.append(
+            CasillaObservation(
+                casilla_id=casilla_id,
+                value=value,
+                legal_refs=refs[0],
+                source_refs=refs[1],
+            ),
+        )
+    return RegistryModeloObservation(
+        modelo=Modelo.M720.value,
+        filing_year=filing_year,
+        period=period,
+        observations=tuple(observations),
+    )
+
+
+def modelo_720_evidence_observation(
+    *,
+    revision: CalculationRevision,
+    modelo_revision: ModeloRevision,
+    filing_year: int,
+    period: str,
+) -> RegistryModeloObservation:
+    """Project the per-asset-row valuation EVIDENCE on a Modelo 720 draft.
+
+    Joins the revision's persisted ``row_binding_values`` for the two
+    ``foreign_asset`` row bindings that carry the asset class clave and the
+    row valuation, resolves each clave to its RGAT obligation bloque, and sums
+    the rows per bloque onto that bloque's valuation casilla.
+
+    This is independent of what the operator typed into the declaration: the
+    rows come from the foreign-asset source mesh, the declaration comes from
+    the operator's manual inputs. That independence is what makes the omitted
+    position detectable at all.
+
+    The two binding ids are discovered from ``modelo_revision`` by their
+    selector ``row_field`` rather than hardcoded, so a registry rename does not
+    silently empty the evidence side.
+
+    Returns an empty observation when the revision carries no asset rows.
+    """
+    class_binding = _foreign_asset_row_binding_id(modelo_revision, row_field=_ASSET_CLASS_ROW_FIELD)
+    valuation_binding = _foreign_asset_row_binding_id(modelo_revision, row_field=_VALUATION_ROW_FIELD)
+    totals: dict[ForeignAssetObligationGroup, Decimal] = {}
+    if class_binding is not None and valuation_binding is not None:
+        class_rows = revision.row_binding_values.get(class_binding, {})
+        valuation_rows = revision.row_binding_values.get(valuation_binding, {})
+        for row_index, raw_code in class_rows.items():
+            asset_class = _M720_ASSET_CLASS_BY_CODE.get(raw_code.strip().upper())
+            raw_valuation = valuation_rows.get(row_index)
+            if asset_class is None or raw_valuation is None:
+                continue
+            value = _decimal_or_none(raw_valuation)
+            if value is None:
+                continue
+            group = foreign_asset_obligation_group(asset_class)
+            totals[group] = totals.get(group, Decimal("0")) + value
+
+    refs_by_casilla = {
+        casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas
+    }
+    observations: list[CasillaObservation] = []
+    for group, total in totals.items():
+        casilla_id = _M720_GROUP_VALUATION_CASILLAS.get(group)
+        refs = refs_by_casilla.get(casilla_id) if casilla_id is not None else None
+        if casilla_id is None or refs is None:
+            continue
+        observations.append(
+            CasillaObservation(
+                casilla_id=casilla_id,
+                value=total,
+                legal_refs=refs[0],
+                source_refs=refs[1],
+            ),
+        )
+    return RegistryModeloObservation(
+        modelo=Modelo.M720.value,
+        filing_year=filing_year,
+        period=period,
+        observations=tuple(observations),
+    )
+
+
+def modelo_720_prior_baseline_observation(
+    *,
+    binding_values: Mapping[str, Decimal],
+    modelo_revision: ModeloRevision,
+    filing_year: int,
+    period: str,
+) -> RegistryModeloObservation:
+    """Project the prior-year declared baseline resolved by the previous-filing carry.
+
+    ``binding_values`` is the resolved mapping produced by
+    :func:`~._binding_prefill.resolve_bindings_from_local_store`, which has
+    already re-confirmed each carried observation's stamped revision against
+    the law-determined revision for its source context. Only the
+    ``previous_filing`` bindings whose selector names a Modelo 720 valuation
+    casilla are projected; every other resolved binding is ignored.
+
+    Returns an empty observation when no prior baseline resolved, which leaves
+    the re-declaration advisory silent rather than comparing against a
+    fabricated zero baseline.
+    """
+    refs_by_casilla = {
+        casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas
+    }
+    observations: list[CasillaObservation] = []
+    for binding in modelo_revision.bindings:
+        if binding.source != BindingSourceKind.PREVIOUS_FILING:
+            continue
+        value = binding_values.get(binding.id)
+        if value is None:
+            continue
+        source_casilla_id = selector_as_dict(binding).get("source_casilla_id")
+        if not isinstance(source_casilla_id, str):
+            continue
+        if source_casilla_id not in _M720_VALUATION_CASILLA_GROUPS:
+            continue
+        refs = refs_by_casilla.get(source_casilla_id)
+        if refs is None:
+            continue
+        observations.append(
+            CasillaObservation(
+                casilla_id=source_casilla_id,
+                value=value,
+                legal_refs=refs[0],
+                source_refs=refs[1],
+            ),
+        )
+    return RegistryModeloObservation(
+        modelo=Modelo.M720.value,
+        filing_year=filing_year,
+        period=period,
+        observations=tuple(observations),
+    )
+
+
+def _foreign_asset_row_binding_id(revision: ModeloRevision, *, row_field: str) -> str | None:
+    for binding in revision.bindings:
+        if binding.source != BindingSourceKind.FOREIGN_ASSET:
+            continue
+        if selector_as_dict(binding).get("row_field") == row_field:
+            return binding.id
+    return None
+
+
+def _decimal_or_none(raw: object) -> Decimal | None:
+    if isinstance(raw, Decimal):
+        return raw
+    try:
+        return Decimal(str(raw).strip())
+    except (InvalidOperation, ValueError):
+        return None
+
+
 __all__ = [
+    "modelo_720_declared_observation",
+    "modelo_720_evidence_observation",
+    "modelo_720_prior_baseline_observation",
     "modelo_720_redeclaration_advisory_findings",
     "modelo_721_redeclaration_advisory_findings",
 ]

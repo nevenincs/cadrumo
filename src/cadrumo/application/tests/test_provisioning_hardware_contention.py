@@ -72,7 +72,7 @@ def _device(index: int, *, total: int | None, free: int | None) -> AcceleratorDe
 
 
 # ---------------------------------------------------------------------------
-# S45 -- the hardware profile
+# the hardware profile
 # ---------------------------------------------------------------------------
 
 
@@ -155,7 +155,7 @@ def test_diagnostic_row_renders_measured_figures_as_numbers() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S45/S59 -- acting fails closed where reporting fails open
+# acting fails closed where reporting fails open
 # ---------------------------------------------------------------------------
 
 

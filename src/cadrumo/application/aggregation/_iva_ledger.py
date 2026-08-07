@@ -1390,6 +1390,14 @@ def _cash_accounting_observations(
     full_iva_amount: Decimal,
     linked_prorrata_id: str | None,
 ) -> tuple[IvaLedgerObservation, ...]:
+    # Carried onto every observation this producer emits, exactly as the
+    # ordinary path carries it. ``applied_rate is None`` is a claim that the
+    # rate is genuinely UNKNOWN, and it makes an observation match no
+    # rate-specific binding at all -- but a cash-accounting row knows its rate
+    # as well as any other, having just had ``rate_kind`` resolved FROM it.
+    # Omitting it filed a criterio-de-caja return whose tier totals were
+    # populated while every official rate box beneath them was blank.
+    applied_rate = transaction.iva_rate
     observations: list[IvaLedgerObservation] = []
     for payment_date, base_amount, iva_amount, recargo_amount in _cash_accounting_settlement_parts(transaction):
         if not resolved_period.contains(payment_date):
@@ -1408,6 +1416,7 @@ def _cash_accounting_observations(
                 prorrata_reference_id=linked_prorrata_id,
                 input_classification=transaction.input_classification,
                 prorrata_sector_id=transaction.prorrata_sector_id,
+                applied_rate=applied_rate,
             ),
         )
     if resolved_period.contains(operation_date):
@@ -1424,6 +1433,7 @@ def _cash_accounting_observations(
                 cash_accounting_treatment=transaction.cash_accounting_treatment,
                 input_classification=transaction.input_classification,
                 prorrata_sector_id=transaction.prorrata_sector_id,
+                applied_rate=applied_rate,
             ),
         )
     return tuple(observations)

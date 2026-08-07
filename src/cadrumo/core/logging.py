@@ -16,6 +16,15 @@ logging-specific key-paired placeholders such as cookies, passphrases, and
 certificate serial suffixes. Per-run JSONL handlers are attached with
 :func:`attach_run_sink` so the same filter protects observability output.
 
+Encoded document payloads are contained at two seams, because the diagnostic
+log is plaintext on disk and a scanned invoice that reaches it has left secure
+storage. :class:`_ThirdPartyDebugFilter` holds non-Cadrumo loggers below DEBUG
+at every sink, so a model or HTTP client never gets to dump a request body
+carrying an image; :class:`SecretScrubbingFilter` then redacts base64 payloads
+out of the records that remain, including a payload reachable only by rendering
+an opaque ``%s`` argument. The first seam needs no knowledge of the payload's
+shape, and the second covers first-party records the first seam admits.
+
 Logging is a diagnostic channel, not the CLI result contract. Operator-facing
 success payloads and typed :class:`~cadrumo.core.json_contract.Notice` values are
 rendered through the JSON/text output stack; this module only prepares redacted
@@ -39,7 +48,7 @@ from pydantic import ConfigDict, RootModel
 if TYPE_CHECKING:
     from .observability import RunContextInfo
 from .cli_metadata import is_metadata_invocation
-from .redaction import redact_for_log
+from .redaction import ALWAYS_REDACT_KEY_TERMS, redact_for_log
 
 _CONFIGURED = False
 _FACTORY_INSTALLED = False
@@ -47,31 +56,25 @@ _STANDARD_LOG_RECORD_FIELDS = frozenset(logging.makeLogRecord({}).__dict__)
 _EXCEPTION_FORMATTER = logging.Formatter()
 
 SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
+    *sorted(ALWAYS_REDACT_KEY_TERMS),
     "access_token",
     "api_key",
-    "authorization",
-    "bearer",
     "bearer_header",
     "cert_password",
     "certificate_password",
     "certificate_serial",
     "cif",
-    "cookie",
-    "credential",
     "llm_api_key",
-    "nif",
-    "nie",
     "oauth_access_token",
     "oauth_refresh_token",
-    "passphrase",
-    "pkcs12",
     "profile_tax_id",
     "refresh_token",
-    "secret",
     "session_cookie",
-    "tax_id",
-    "token",
 )
+"""Log-message KEY-NAME redaction vocabulary: :data:`ALWAYS_REDACT_KEY_TERMS`
+(the tree-wide shared base) plus this module's own generic logging-domain
+additions. See :data:`cadrumo.core.redaction.ALWAYS_REDACT_KEY_TERMS` for why
+the base is never redeclared independently."""
 
 
 LogExtraValue = str | int | float | bool | None
@@ -136,6 +139,45 @@ _LLM_KEY_RE = re.compile(r"\b(?:sk-ant-|sk-proj-|sk-live-|sk-test-|sk-)[A-Za-z0-
 _PERCENT_PLACEHOLDER_VALUE_RE = re.compile(r"^%[-#+ 0-9.]*[a-zA-Z]$")
 _PERCENT_PLACEHOLDER_RE = re.compile(r"(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>%[-#+ 0-9.]*[a-zA-Z])")
 
+#: Base64 payload embedded in a ``data:`` URI, the shape a vision request uses
+#: when the image travels inline rather than as a bare field.
+_DATA_URI_PAYLOAD_RE = re.compile(r"data:[A-Za-z0-9.+-]+/[A-Za-z0-9.+-]+;base64,[A-Za-z0-9+/=]+")
+
+#: Base64 renderings of the file magics a scanned or photographed document
+#: arrives as. Matched without a word boundary because several magics begin
+#: with ``/``, which is not a word character.
+_BINARY_MAGIC_PAYLOAD_RE = re.compile(
+    r"(?:iVBORw0KGg|/9j/4AAQ|R0lGODdh|R0lGODlh|UklGR|JVBERi0|SUkqA|TU0AK)[A-Za-z0-9+/]{16,}={0,2}",
+)
+
+#: Any sufficiently long unbroken base64 run, whatever produced it. Diagnostic
+#: prose never contains one; an encoded document always does. This is the rule
+#: that does not need to recognise the payload's shape, so a format the magic
+#: alternation above has never heard of is still contained.
+_OPAQUE_PAYLOAD_RE = re.compile(r"[A-Za-z0-9+/]{256,}={0,2}")
+
+#: Ceiling on a ``bytes`` log argument before it is treated as a payload rather
+#: than a diagnostic value. Decrypted document bytes must never be formatted
+#: into a log line, and a %s-rendered ``bytes`` object writes them verbatim.
+_MAX_LOGGED_BYTES = 256
+
+_PAYLOAD_REDACTION_MARKER = "<redacted:payload>"
+
+
+def _redact_payloads(value: str) -> str:
+    """Redact encoded document payloads from ``value``.
+
+    Sensitive financial documents may exist only transiently in process
+    memory; a diagnostic log file is an on-disk plaintext store, so an image
+    or PDF that reaches a log record has left its only sanctioned home. The
+    three patterns run widest-last: a ``data:`` URI and a recognised file
+    magic name the payload precisely, and the length rule then catches
+    whatever neither recognised.
+    """
+    redacted = _DATA_URI_PAYLOAD_RE.sub(_PAYLOAD_REDACTION_MARKER, value)
+    redacted = _BINARY_MAGIC_PAYLOAD_RE.sub(_PAYLOAD_REDACTION_MARKER, redacted)
+    return _OPAQUE_PAYLOAD_RE.sub(_PAYLOAD_REDACTION_MARKER, redacted)
+
 
 def _normalise_log_key(key: str) -> str:
     """Return a canonical, separator-stable representation of ``key``."""
@@ -164,7 +206,8 @@ def _scrub_text(value: str, *, key: str | None = None) -> str:
     if _looks_sensitive_key(key):
         return _redacted_value(key, value)
 
-    scrubbed = redact_for_log(value)
+    scrubbed = _redact_payloads(value)
+    scrubbed = redact_for_log(scrubbed)
     scrubbed = _SENSITIVE_ASSIGNMENT_RE.sub(
         lambda match: (
             match.group(0)
@@ -212,6 +255,8 @@ def _scrub_value(value: object, *, key: str | None = None) -> Any:  # ANY-RETURN
     """Recursively scrub sensitive values in common logging payload shapes."""
     if isinstance(value, str):
         return _scrub_text(value, key=key)
+    if isinstance(value, bytes | bytearray):
+        return _PAYLOAD_REDACTION_MARKER if len(value) > _MAX_LOGGED_BYTES else value
     if isinstance(value, Mapping):
         return {item_key: _scrub_value(item_value, key=str(item_key)) for item_key, item_value in value.items()}
     if isinstance(value, tuple):
@@ -222,7 +267,30 @@ def _scrub_value(value: object, *, key: str | None = None) -> Any:  # ANY-RETURN
         return {_scrub_value(item, key=key) for item in value}
     if _looks_sensitive_key(key):
         return _redacted_value(key, str(value))
-    return value
+    return _scrub_opaque_object(value)
+
+
+# ANY-RETURN-RATIONALE-OPAQUE-LOG-ARGUMENT: the parameter and return mirror an
+# arbitrary %-formatting operand, which the stdlib types as ``object``.
+def _scrub_opaque_object(value: object) -> Any:  # ANY-RETURN-RATIONALE-OPAQUE-LOG-ARGUMENT
+    """Redact a payload carried inside a non-string logging argument.
+
+    Scrubbing the record's structured shapes is not enough on its own: a
+    third-party client logs its whole request object with ``%s``, so the
+    payload is never a ``str``, a ``Mapping`` or a sequence the recursive
+    walk above descends into -- it is a field of an opaque object that only
+    becomes text when the handler formats the record, downstream of every
+    filter. Rendering the object here is what lets the payload rules see it.
+
+    The original object is returned untouched when it holds no payload, so
+    the formatted record is unchanged for the overwhelming majority of
+    arguments; only a rendering that actually matched is substituted.
+    """
+    if value is None or isinstance(value, int | float | complex):
+        return value
+    rendered = str(value)
+    redacted = _redact_payloads(rendered)
+    return redacted if redacted != rendered else value
 
 
 # ANY-RETURN-RATIONALE-LOGGING-POSITIONAL-ARGS: args/return mirror the stdlib
@@ -353,6 +421,48 @@ class _DropRunEventFilter(logging.Filter):
         return getattr(record, "run_event", None) is None
 
 
+#: Import root of every first-party logger. ``get_logger(__name__)`` is seeded
+#: from the module path, so a Cadrumo record's ``name`` always starts here.
+FIRST_PARTY_LOGGER_ROOT = "cadrumo"
+
+
+class _ThirdPartyDebugFilter(logging.Filter):
+    """Hold third-party loggers below DEBUG at every sink that writes to disk.
+
+    The root logger runs at DEBUG so Cadrumo's own diagnostics are complete,
+    and that level is inherited by every third-party library in the process.
+    An HTTP or model client at DEBUG dumps its full request object, and for a
+    vision request that object carries the document itself -- so the record is
+    written to the plaintext diagnostic log before any payload rule has to be
+    right about its shape.
+
+    Dropping the record at the handler is the categorical half of the defence:
+    the record is never formatted, so nothing depends on recognising what the
+    library chose to log, and the log stops accruing request-body volume it
+    was never meant to hold. :class:`SecretScrubbingFilter` remains the other
+    half, covering first-party records this filter deliberately lets through.
+
+    Named libraries are not enumerated. A list would have to be extended for
+    every dependency added later, and the one that leaks is the one nobody
+    remembered to add.
+    """
+
+    @override
+    def filter(self, record: logging.LogRecord) -> bool:
+        """Return whether ``record`` may reach the handler.
+
+        Args:
+            record: The candidate log record.
+
+        Returns:
+            ``True`` for any record at INFO or above, and for DEBUG records
+            emitted by a first-party ``cadrumo`` logger.
+        """
+        if record.levelno >= logging.INFO:
+            return True
+        return record.name == FIRST_PARTY_LOGGER_ROOT or record.name.startswith(f"{FIRST_PARTY_LOGGER_ROOT}.")
+
+
 #: Extra key marking a record whose content the emitter has ALREADY written to
 #: the operator's stream as a structured document. Pass it through ``extra`` on
 #: any log call that accompanies such a write.
@@ -481,7 +591,7 @@ def configure_logging() -> None:
             "formatter": "standard",
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stderr",
-            "filters": ["drop_run_event", "drop_operator_document"],
+            "filters": ["drop_run_event", "drop_operator_document", "third_party_debug"],
         },
     }
     root_handlers = ["stderr"]
@@ -494,7 +604,7 @@ def configure_logging() -> None:
             "maxBytes": settings.cadrumo_log_file_max_bytes,
             "backupCount": settings.cadrumo_log_file_backup_count,
             "encoding": "utf-8",
-            "filters": ["drop_run_event"],
+            "filters": ["drop_run_event", "third_party_debug"],
         }
         root_handlers.append("file")
     logging.config.dictConfig(
@@ -507,6 +617,7 @@ def configure_logging() -> None:
             "filters": {
                 "drop_run_event": {"()": f"{__name__}._DropRunEventFilter"},
                 "drop_operator_document": {"()": f"{__name__}._DropOperatorDocumentEchoFilter"},
+                "third_party_debug": {"()": f"{__name__}._ThirdPartyDebugFilter"},
             },
             "handlers": configured_handlers,
             "root": {
@@ -625,7 +736,7 @@ def detach_run_sink(sink: logging.Handler) -> None:
             :func:`attach_run_sink`.
     """
     logging.getLogger().removeHandler(sink)
-    sink.filters = [f for f in sink.filters if not isinstance(f, SecretScrubbingFilter)]
+    sink.filters = [f for f in sink.filters if not isinstance(f, SecretScrubbingFilter | _ThirdPartyDebugFilter)]
     sink.flush()
 
 

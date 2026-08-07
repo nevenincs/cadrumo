@@ -138,6 +138,11 @@ if TYPE_CHECKING:
         describe_aeat_party_identifier,
         project_aeat_record_counterparty,
     )
+    from ._closure_findings import (
+        ROUNDING_ALLOWANCE_PER_TERM,
+        closure_findings,
+        within_rounding_allowance,
+    )
     from ._document_transcription import DocumentTranscription, TranscriberIdentity
     from ._evidence import (
         MediaKind,
@@ -164,11 +169,24 @@ if TYPE_CHECKING:
         printed_total_discrepancy,
     )
     from ._evidence_input import EvidenceInput
+    from ._grounding_anchor import (
+        AnchorEvaluation,
+        evaluate_anchor,
+        ground_ambiguous_candidates,
+        ground_anchored_value,
+        normalise_for_anchor_search,
+    )
     from ._id_resolution import (
         MINIMUM_DISPLAY_ID_WIDTH,
         compute_display_id_width,
         resolve_lineage_transaction_id,
         resolve_transaction_id,
+    )
+    from ._identity_roles import (
+        IdentityCandidate,
+        IdentityRoleResolution,
+        canonical_identity_token,
+        resolve_counterparty_identity,
     )
     from ._llm_classification import (
         apply_evidence_classification,
@@ -266,6 +284,18 @@ _LAZY_EXPORTS: dict[str, str] = {
     "BulkClassifyRow": "._models",
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD": "._llm_diagnostics",
     "AeatRecordProjectionError": "._aeat_record_projection",
+    "ROUNDING_ALLOWANCE_PER_TERM": "._closure_findings",
+    "closure_findings": "._closure_findings",
+    "within_rounding_allowance": "._closure_findings",
+    "AnchorEvaluation": "._grounding_anchor",
+    "evaluate_anchor": "._grounding_anchor",
+    "ground_ambiguous_candidates": "._grounding_anchor",
+    "ground_anchored_value": "._grounding_anchor",
+    "normalise_for_anchor_search": "._grounding_anchor",
+    "IdentityCandidate": "._identity_roles",
+    "IdentityRoleResolution": "._identity_roles",
+    "canonical_identity_token": "._identity_roles",
+    "resolve_counterparty_identity": "._identity_roles",
     "describe_aeat_party_identifier": "._aeat_record_projection",
     "project_aeat_record_counterparty": "._aeat_record_projection",
     "DocumentTranscription": "._document_transcription",
@@ -430,7 +460,9 @@ __all__ = [
     "CLASSIFIED_BY_MANUAL",
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD",
     "MINIMUM_DISPLAY_ID_WIDTH",
+    "ROUNDING_ALLOWANCE_PER_TERM",
     "AeatRecordProjectionError",
+    "AnchorEvaluation",
     "ApplyRulesAppliedRow",
     "ApplyRulesResult",
     "BulkClassifyFailure",
@@ -443,6 +475,8 @@ __all__ = [
     "ExportSerializationFormat",
     "FieldAmbiguityCandidate",
     "FieldProvenance",
+    "IdentityCandidate",
+    "IdentityRoleResolution",
     "InvoiceConfirmationResult",
     "InvoiceDraft",
     "InvoiceDraftLine",
@@ -509,20 +543,25 @@ __all__ = [
     "attach_manual_transaction_evidence",
     "build_llm_diagnostics_report",
     "bulk_classify_from_csv",
+    "canonical_identity_token",
     "censo_business_pct_for",
     "censo_override_warning",
+    "closure_findings",
     "compute_display_id_width",
     "confirm_invoice_draft_from_evidence",
     "create_manual_transaction",
     "derive_operator_iva_substrate",
     "describe_aeat_party_identifier",
     "eligible_ratio_categories",
+    "evaluate_anchor",
     "execute_reviewed_decision",
     "export_ledger_transactions",
     "extract_invoice_draft_from_evidence",
     "extract_invoice_fields",
     "get_manual_transaction",
     "get_transaction_participation",
+    "ground_ambiguous_candidates",
+    "ground_anchored_value",
     "import_ledger_source",
     "import_ledger_transactions",
     "ledger_transaction_payload",
@@ -535,6 +574,7 @@ __all__ = [
     "list_manual_transactions",
     "mark_transaction_reviewed_excluded",
     "merge_transactions",
+    "normalise_for_anchor_search",
     "preflight_ledger_tax_readiness",
     "preflight_transaction_catalogue",
     "printed_total_discrepancy",
@@ -543,6 +583,7 @@ __all__ = [
     "reject_llm_suggestion",
     "remove_manual_transaction",
     "reset_ledger_catalogue",
+    "resolve_counterparty_identity",
     "resolve_lineage_transaction_id",
     "resolve_transaction_id",
     "restore_manual_transaction",
@@ -559,4 +600,5 @@ __all__ = [
     "update_manual_transaction_fields",
     "validate_ratios_for_bucket",
     "validate_ratios_profile",
+    "within_rounding_allowance",
 ]

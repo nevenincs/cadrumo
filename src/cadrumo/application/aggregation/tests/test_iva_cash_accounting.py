@@ -324,3 +324,61 @@ def test_a_not_subject_row_outside_the_regime_is_not_refused_by_this_gate() -> N
     )
 
     assert "cash_accounting_excluded_category" not in _gate_reasons(transaction)
+
+
+def _m390_repercutido_values(transaction: Transaction) -> dict[str, Decimal]:
+    """Resolve the real M390 repercutido bindings for one transaction."""
+    aggregation = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=Period.from_year_and_code(2026, "0A"),
+    )
+    assert aggregation.issues == ()
+    resolved = resolve_ledger_iva_aggregation_binding_values(
+        resources().modelos.get("390").revisions["2010-y-siguientes"],
+        aggregation.observations,
+    )
+    return {key: value for key, value in resolved.items() if value and "repercutido" in key}
+
+
+def test_cash_accounting_row_reaches_the_same_rate_boxes_as_an_ordinary_row() -> None:
+    """A criterio-de-caja sale must fill the official rate boxes, not only its tier total.
+
+    ``applied_rate is None`` is a claim that the rate is genuinely unknown, and
+    it makes an observation match no rate-specific binding. A cash-accounting
+    row knows its rate as well as any other -- ``rate_kind`` is resolved FROM
+    it -- so omitting it filed an M390 whose tier totals were populated while
+    every rate box beneath them was blank, a return that contradicts itself.
+
+    Asserted as an equality between the two producers on economically identical
+    sales, so it cannot be satisfied by both going blank, and pinned to the
+    declared rate's own boxes.
+    """
+    common = {
+        "direction": TransactionDirection.INCOMING,
+        "taxable_base": Decimal("1000.00"),
+        "iva_amount": Decimal("210.00"),
+    }
+    ordinary = _transaction("ordinary-rate-box", booked_date=date(2026, 4, 20), **common)
+    cash = _transaction(
+        "cash-rate-box",
+        booked_date=date(2026, 4, 15),
+        cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
+        operation_date=date(2026, 4, 10),
+        cash_accounting_payment_evidence=(
+            IvaCashAccountingPaymentEvidence(
+                payment_date=date(2026, 4, 15),
+                taxable_base=Decimal("1000.00"),
+                iva_amount=Decimal("210.00"),
+            ),
+        ),
+        **common,
+    )
+
+    ordinary_values = _m390_repercutido_values(ordinary)
+    cash_values = _m390_repercutido_values(cash)
+
+    assert cash_values == ordinary_values
+    # Pins the shared result to the declared 21 % boxes, so the equality above
+    # cannot be satisfied by both filings losing the rate breakdown.
+    assert ordinary_values["modelo-390-iva-repercutido-tipo-21-base"] == Decimal("1000.00")
+    assert ordinary_values["modelo-390-iva-repercutido-tipo-21-cuota"] == Decimal("210.00")

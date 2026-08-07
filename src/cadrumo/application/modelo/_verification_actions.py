@@ -138,6 +138,7 @@ from ._iva_wallet_gate import (
 )
 from ._ledger_drift_gate import ledger_drift_findings
 from ._m210_agrupacion_renta import m210_agrupacion_renta_verification_findings
+from ._m720_redeclaration_gate import modelo_720_redeclaration_findings
 from ._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
 from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
@@ -640,6 +641,7 @@ def _append_model_specific_findings(
     target: CalculationRevision,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    observation_repository: CalculationObservationRepository,
 ) -> None:
     """Append cross-model and detail-row verification findings in one place."""
     findings.extend(
@@ -651,6 +653,13 @@ def _append_model_specific_findings(
         ),
     )
     findings.extend(m210_agrupacion_renta_verification_findings(work_unit=work_unit, revision=target))
+    findings.extend(
+        modelo_720_redeclaration_findings(
+            work_unit=work_unit,
+            revision=target,
+            observation_repository=observation_repository,
+        ),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -849,6 +858,7 @@ def verify_modelo_revision(
         target=target,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        observation_repository=repos.observation,
     )
     completeness, granted = _classify_verification_outcome(
         findings=findings,

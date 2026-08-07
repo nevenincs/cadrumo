@@ -12,6 +12,7 @@ fall back from a text-layer-free document to rasterisation, and fail *loudly*
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 from decimal import Decimal
 from io import BytesIO
@@ -28,6 +29,12 @@ from ....adapters.inbound.einvoice import (
 from ....adapters.inbound.pdf import extract_pages_text_from_bytes
 from ....core import STRUCTURED_DOCUMENT_SHAPES
 from ....llm import LLMPdfRasterisationError, rasterise_pdf_pages_to_base64_png
+from ....tests.fixtures import (
+    FIXTURE_PROVENANCE_REAL,
+    RECOGNISED_FIXTURE_PROVENANCES,
+    SYNTHETIC_FIXTURE_PRODUCER,
+    producer_field,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -112,20 +119,105 @@ def test_empty_pdf_raises_not_crashes() -> None:
         rasterise_pdf_pages_to_base64_png(data)
 
 
+def _corpus_fixtures() -> list[Path]:
+    return [p for p in _CORPUS.iterdir() if not p.name.endswith(".provenance.json")]
+
+
+def _sidecar_of(fixture: Path) -> dict[str, object]:
+    sidecar = fixture.with_suffix(fixture.suffix + ".provenance.json")
+    assert sidecar.exists(), f"missing provenance sidecar for {fixture.name}"
+    return json.loads(sidecar.read_text(encoding="utf-8"))
+
+
+def _readable_producer(fixture: Path) -> str | None:
+    """Return the fixture's ``/Producer``, or ``None`` when it has no readable DocInfo.
+
+    Measured rather than assumed. Several fixtures here are adversarial by
+    design -- a zero-byte ``.pdf``, a PDF header followed by garbage -- and
+    images and XML carry no PDF DocInfo at all, so "unreadable" is a property of
+    the bytes and never a list of exempt filenames.
+    """
+    try:
+        return producer_field(fixture)
+    except Exception:  # noqa: BLE001 - any open failure means no readable DocInfo
+        return None
+
+
 def test_every_corpus_fixture_declares_provenance() -> None:
     """Every corpus fixture carries a provenance sidecar (fixture-provenance rule)."""
-    fixtures = [p for p in _CORPUS.iterdir() if not p.name.endswith(".provenance.json")]
+    fixtures = _corpus_fixtures()
     assert fixtures, "corpus must not be empty"
     for fixture in fixtures:
-        sidecar = fixture.with_suffix(fixture.suffix + ".provenance.json")
-        assert sidecar.exists(), f"missing provenance sidecar for {fixture.name}"
-        meta = json.loads(sidecar.read_text(encoding="utf-8"))
-        assert meta["provenance"] in {"real_corpus", "synthetic_generated"}
+        meta = _sidecar_of(fixture)
+        assert meta["provenance"] in RECOGNISED_FIXTURE_PROVENANCES
         # Real-corpus fixtures must name a licence and a source; adversarial ones
         # are honestly declared synthetic.
-        if meta["provenance"] == "real_corpus":
+        if meta["provenance"] == FIXTURE_PROVENANCE_REAL:
             assert meta.get("licence")
             assert meta.get("source")
+
+
+def test_every_sidecar_content_address_matches_the_committed_bytes() -> None:
+    """The declared content address and size must equal the file actually committed.
+
+    The sidecar is a claim about bytes, so the bytes are what settles it. This is
+    the cross-check that survives for every fixture kind: a swapped, truncated or
+    re-rendered file diverges here even when its DocInfo does not, and a fixture
+    copied in from an external corpus is only as trustworthy as the byte identity
+    of that copy.
+    """
+    for fixture in _corpus_fixtures():
+        meta = _sidecar_of(fixture)
+        data = fixture.read_bytes()
+        assert meta["sha256"] == hashlib.sha256(data).hexdigest(), (
+            f"{fixture.name}: declared sha256 does not match the committed bytes"
+        )
+        assert meta["bytes"] == len(data), f"{fixture.name}: declared size does not match the committed bytes"
+
+
+def test_no_fixture_claims_real_origin_while_carrying_the_generator_signature() -> None:
+    """A synthetic fixture may never pass itself off as externally-authored evidence.
+
+    The direction that matters for honesty. The mirror rule -- that every
+    ``synthetic_generated`` fixture carries the in-tree generator signature --
+    holds only for fixtures an in-tree generator wrote, and this corpus also
+    bundles documents rendered by external tooling under a generic producer. So
+    the claim each of those makes is bound by its own declared ``producer``
+    instead, asserted below; forcing the signature rule onto them would push an
+    author toward stamping ``real_corpus`` on synthetic bytes, which is the exact
+    lie this gate exists to prevent.
+    """
+    for fixture in _corpus_fixtures():
+        meta = _sidecar_of(fixture)
+        if meta["provenance"] != FIXTURE_PROVENANCE_REAL:
+            continue
+        producer = _readable_producer(fixture)
+        assert SYNTHETIC_FIXTURE_PRODUCER not in (producer or "").lower(), (
+            f"{fixture.name}: declares {FIXTURE_PROVENANCE_REAL} but /Producer={producer!r} "
+            f"carries the {SYNTHETIC_FIXTURE_PRODUCER!r} signature"
+        )
+
+
+def test_every_declared_producer_matches_the_documents_own_docinfo() -> None:
+    """A sidecar naming a ``/Producer`` is checked against the document's DocInfo.
+
+    Binds the declaration to the physical bytes for fixtures whose provenance
+    rests on an external attestation rather than on the in-tree signature. The
+    readability assertion is what stops this from degrading into a silent skip:
+    a fixture that declares a producer and then cannot be opened fails here
+    rather than passing vacuously.
+    """
+    declared = [(f, _sidecar_of(f)) for f in _corpus_fixtures()]
+    checked = [(f, m) for f, m in declared if m.get("producer")]
+    assert checked, "no fixture declares a producer; this gate would be vacuous"
+    for fixture, meta in checked:
+        producer = _readable_producer(fixture)
+        assert producer is not None, (
+            f"{fixture.name}: sidecar declares producer {meta['producer']!r} but the file has no readable DocInfo"
+        )
+        assert producer == meta["producer"], (
+            f"{fixture.name}: declared producer {meta['producer']!r} but the document reports {producer!r}"
+        )
 
 
 def test_zugferd_structured_record_parses_to_its_exact_printed_values() -> None:
@@ -197,13 +289,13 @@ def test_malformed_structured_document_refuses_rather_than_partially_reading() -
 
 
 def test_the_core_draft_path_routes_a_structured_document_to_the_exact_reader() -> None:
-    """S21: the core evidence path REACHES the parsers rather than routing around them.
+    """The core evidence path REACHES the parsers rather than routing around them.
 
     An enrolment gate, not a unit test. Every parser assertion elsewhere in this
     module would keep passing if the draft path never called them -- which is
-    precisely the failure this campaign's own research records: three
-    deliverables that shipped correct, tested and unreferenced, because a unit
-    test passes whether or not anything calls the code.
+    precisely the failure this guards against: a deliverable that ships correct,
+    tested and unreferenced, because a unit test passes whether or not anything
+    calls the code.
 
     The routing decision is asserted on DocumentShape rather than on the stored
     MIME type, because that is the whole point. The same fixture answers ``pdf``
@@ -243,7 +335,7 @@ def test_the_core_draft_path_routes_a_structured_document_to_the_exact_reader() 
 
 
 def test_the_ubl_fixture_parses_both_rates_and_selects_the_vat_identifier() -> None:
-    """S19: EN16931 UBL, the half of the standard a CII-only reader returns nothing for.
+    """EN16931 UBL, the half of the standard a CII-only reader returns nothing for.
 
     Nothing in the bundled corpus exercised UBL before this fixture, so the UBL
     parser shipped unread against any real document. Two rates on purpose: a
@@ -275,7 +367,7 @@ def test_the_ubl_fixture_parses_both_rates_and_selects_the_vat_identifier() -> N
 
 
 def test_the_facturae_fixture_reads_recargo_and_does_not_double_count_its_taxes() -> None:
-    """S20: Facturae 3.2.x, plus the double-count this fixture caught on arrival.
+    """Facturae 3.2.x, plus the double-count this fixture caught on arrival.
 
     Facturae states taxes TWICE -- once at invoice level and again per line --
     so a descendant walk collects both and reports every band twice. A

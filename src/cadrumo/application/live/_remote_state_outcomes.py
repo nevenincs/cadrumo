@@ -14,7 +14,7 @@ from pydantic import TypeAdapter
 from ...application.auth import AuthenticatedAeatSessionResult
 from ...core.classification import SensitivityClass
 from ...core.hashing import sha256_hex
-from ...core.redaction import default_rules_for_class, redact
+from ...core.redaction import ALWAYS_REDACT_KEY_TERMS, default_rules_for_class, redact
 from ._errors import LiveIvaAcquisitionFailureMode, classify_live_iva_acquisition_failure
 from ._remote_state_models import (
     IvaCompensationHistoryCaptureReport,
@@ -189,47 +189,31 @@ def _redacted_context_value(value: object, *, key: str) -> object | None:
 
 
 _DIAGNOSTIC_CONTEXT_REDACTION_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
-_SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS = frozenset(
+_SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS = ALWAYS_REDACT_KEY_TERMS | frozenset(
     {
         "active_profile_id",
         "active_profile_ref",
-        "authorization",
         "bucket_id",
         "certificate_nif",
-        "credential",
         "diagnostic_id",
         "dni_nie",
         "identity_nif",
-        "nif",
-        "nie",
         "num_soporte",
         "object_key",
         "profile_id",
         "profile_ref",
         "secure_object_key",
         "storage_object_key",
-        "tax_id",
     },
 )
-_SENSITIVE_FAILURE_CONTEXT_KEY_PARTS = frozenset(
+_SENSITIVE_FAILURE_CONTEXT_KEY_PARTS = ALWAYS_REDACT_KEY_TERMS | frozenset(
     {
-        "authorization",
-        "bearer",
         "bucket",
-        "certificate",
-        "cookie",
-        "credential",
         "dni",
-        "nif",
-        "nie",
         "object",
-        "passphrase",
-        "pkcs12",
         "profile",
-        "secret",
         "soporte",
         "support",
-        "token",
     },
 )
 _SAFE_FAILURE_CONTEXT_KEYS = frozenset(

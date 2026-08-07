@@ -83,6 +83,40 @@ from ..classification import (
 )
 from ..hashing import sha256_hex as _sha256_hex
 
+ALWAYS_REDACT_KEY_TERMS: frozenset[str] = frozenset(
+    {
+        "authorization",
+        "bearer",
+        "certificate",
+        "cookie",
+        "credential",
+        "nie",
+        "nif",
+        "passphrase",
+        "pkcs12",
+        "secret",
+        "tax_id",
+        "token",
+    },
+)
+"""Key-name fragments every key-name redaction predicate in this tree must treat
+as sensitive, regardless of the domain the predicate otherwise scopes to.
+
+This module owns the SHAPE-based redaction rules (:func:`redact_for_log`,
+:func:`default_rules_for_class`); it also owns this minimal NAME-based base
+because a key-name predicate is a second, complementary layer over shape-based
+redaction wherever one exists (see :mod:`cadrumo.core.logging` and
+:mod:`cadrumo.application.live._remote_state_outcomes`), and a base that lives
+in only one of those consuming sites is a base only until someone edits the
+other one.
+
+Each consuming predicate composes its own set as ``ALWAYS_REDACT_KEY_TERMS |
+{domain-specific-additions}`` — never redeclares an overlapping term
+independently. A term wrongly added here costs an extra scrubbed log line; a
+term silently missing from one composing site can leak a NIF the other site
+already knew to redact.
+"""
+
 # NIF / NIE — Spanish personal identity numbers. Eight digits + check letter
 # with optional leading X / Y / Z for foreigners. Matched on shape alone: a
 # digit-led run this long rarely collides with ordinary text, so the rule errs
@@ -740,6 +774,7 @@ def redact_structured_for_cli_output(value: object, *, reveal_identifiers: bool 
 
 
 __all__ = [
+    "ALWAYS_REDACT_KEY_TERMS",
     "CLI_BUCKET_ID_PLACEHOLDER",
     "CLI_OBJECT_KEY_PLACEHOLDER",
     "CLI_PROFILE_ID_PLACEHOLDER",

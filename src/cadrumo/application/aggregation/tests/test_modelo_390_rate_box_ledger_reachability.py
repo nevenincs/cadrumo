@@ -25,6 +25,29 @@ and a distinct cuota, so a row routed to a neighbouring rate's box fails on
 value. The transaction model independently enforces that base + cuota
 reconstitutes the gross cash movement, so these triples are internally
 consistent rather than arbitrary.
+
+Mutation evidence, recorded here rather than in a commit message because catch-all
+sweeps in this tree routinely land work under an unrelated message, and evidence
+that lives only in a commit nobody can find is evidence nobody has. Both
+mutations were applied as runtime monkeypatches from outside the repository, so
+nothing under ``src`` changed and no window existed for a sweep to capture.
+
+Dropping ``applied_rate`` from every observation empties ``tipo-7-5`` and
+``tipo-5`` — 1600.00 and 1400.00 both fall to 0 — while the rate-blind
+``modelo-390-iva-repercutido-reducido-base`` holds 5500.00 unchanged. That is the
+silent-drop signature the two-layer split exists to expose: the rate boxes go
+empty, the declared total stays whole, and nothing raises. It is also the exact
+regression this producer once shipped, when it left ``applied_rate`` unset on the
+reasoning that an invoice line carries a rate slot rather than a number.
+
+Mis-deriving the tier for the 7,5 % row reddens the derivation test alone. The
+unmutated aggregation passes as control, so both bites are attributable to the
+mutation rather than to the patching.
+
+The window dates are load-bearing, not decorative: 0 % and 5 % are transitional
+food rates confined to 1 July - 30 September 2024, and a 0 % sale booked in Q1 is
+refused. That refusal is correct, and this fixture follows the statute rather
+than pinning a date it once accepted.
 """
 
 from __future__ import annotations

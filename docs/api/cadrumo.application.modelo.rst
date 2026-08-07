@@ -58,6 +58,7 @@ Submodules
    cadrumo.application.modelo._m210_rate
    cadrumo.application.modelo._m303_m349_reconcile
    cadrumo.application.modelo._m349_ledger_guard
+   cadrumo.application.modelo._m720_redeclaration_gate
    cadrumo.application.modelo._maritime_preview
    cadrumo.application.modelo._minimo_descendientes_advisory
    cadrumo.application.modelo._objective_estimation_advisory
