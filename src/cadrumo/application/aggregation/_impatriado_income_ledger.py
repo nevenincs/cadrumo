@@ -326,8 +326,8 @@ def _classify_impatriado_income_transaction(
             rejected_source_jurisdiction=normalized_jurisdiction,
         )
 
-    gross_amount = _impatriado_income_amount(transaction)
-    if gross_amount is None:
+    proportion = _impatriado_income_proportion(transaction)
+    if proportion is None:
         reason = (
             ImpatriadoIncomeLedgerAggregationIssueReason.PERSONAL_TRANSACTION
             if transaction.business_classification is BusinessClassification.PERSONAL
@@ -340,6 +340,7 @@ def _classify_impatriado_income_transaction(
                 f"business classification {transaction.business_classification.value!r} cannot feed the impatriado base"
             ),
         )
+    gross_amount = abs(transaction.raw.amount) * proportion
 
     filing_date = transaction.raw.value_date or transaction.raw.booked_date
     if not (window_start <= filing_date <= window_end):
@@ -349,13 +350,14 @@ def _classify_impatriado_income_transaction(
             detail=f"filing date {filing_date} is outside the annual impatriado income window",
         )
 
-    taxable_base_amount: Decimal | None = None
-    if transaction.taxable_base is not None:
-        raw_tb = transaction.taxable_base
-        if transaction.business_classification is BusinessClassification.MIXED and transaction.business_pct is not None:
-            taxable_base_amount = raw_tb * transaction.business_pct
-        else:
-            taxable_base_amount = raw_tb
+    # Scaled by the SAME proportion the gross above carries, never a second
+    # decision. The two figures describe one receipt, and since
+    # ``_computable_impatriado_income_amount`` PREFERS the base when it is
+    # present, a rule that divided the base alone would silently declare a
+    # fraction of an income the gross reported whole.
+    taxable_base_amount: Decimal | None = (
+        None if transaction.taxable_base is None else transaction.taxable_base * proportion
+    )
 
     return ImpatriadoIncomeObservation(
         transaction_id=transaction_id,
@@ -367,27 +369,41 @@ def _classify_impatriado_income_transaction(
     )
 
 
-def _impatriado_income_amount(transaction: Transaction) -> Decimal | None:
-    """Return the income amount that folds into the impatriado base, or None if ineligible.
+def _impatriado_income_proportion(transaction: Transaction) -> Decimal | None:
+    """Return the share of one row that folds into the impatriado base, or ``None``.
+
+    The single proportion decision for the row: every money figure the
+    observation carries is scaled by this one value, so the gross and the
+    taxable base cannot disagree about how much of the receipt the base admits.
 
     The impatriado base admits both ``trabajo`` (rendimientos del trabajo — the
     predominant Beckham base, the class the M130 income pipeline routes OUT) and
     ``actividad_economica`` income at their full magnitude; any other row is
     admitted only through its business proportion, so a genuinely personal
     transfer contributes nothing.
+
+    Admitting a categorised row whole is the legally correct answer to a MIXED
+    classification, not merely a convenience. Art. 93.2 LIRPF determines the
+    impatriado's deuda tributaria "con arreglo a las normas establecidas en el
+    texto refundido de la Ley del Impuesto sobre la Renta de no Residentes,
+    para las rentas obtenidas sin mediación de establecimiento permanente", and
+    TRLIRNR art. 24.1 (RDLeg 5/2004, BOE-A-2004-4527) fixes that base as "su
+    importe íntegro ... sin que sean de aplicación los porcentajes
+    multiplicadores ni las reducciones". A usage percentage applied to an
+    ingreso is exactly such a porcentaje multiplicador, so the impatriado base
+    admits the receipt undivided. Resident IRPF agrees from the other side:
+    LIRPF art. 29.2 confines partial affectation to "elementos patrimoniales",
+    reaching the rendimiento through those assets' gastos (art. 28.1), and
+    nothing in arts. 27-30 divides an INGRESO by a usage percentage.
     """
-    amount = abs(transaction.raw.amount)
     if has_employment_irpf_category(
         transaction.irpf_category,
         direction=transaction.direction,
     ) or has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
         # The explicit IRPF income category is the authoritative eligibility gate
         # for the impatriado base.
-        return amount
-    proportion = business_proportion(transaction.business_classification, transaction.business_pct)
-    if proportion is None:
-        return None
-    return amount * proportion
+        return Decimal("1")
+    return business_proportion(transaction.business_classification, transaction.business_pct)
 
 
 def _computable_impatriado_income_amount(observation: ImpatriadoIncomeObservation) -> Decimal:
