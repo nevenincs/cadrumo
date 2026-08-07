@@ -1982,7 +1982,9 @@ cli:
           az adatokat ki kell nyerni.
         extract_help: A számla PDF mezőinek helyi (on-host) beolvasása áttekinthető
           piszkozatba.
-        extract_off_host_needs_content_address: cli.app.ledger.evidence.extract_off_host_needs_content_address
+        extract_off_host_needs_content_address: Ennek a bizonylatnak nincs tartalmi
+          lenyomata, ezért a gépen kívüli beolvasás nem rögzíthető az elküldendő bájtokhoz
+          kötve.
         extract_off_host_needs_evidence_id: 'A gépen kívüli beolvasáshoz meg kell
           adni az --evidence-id értéket: a hozzájárulás a dokumentum tartalmi lenyomatához
           kötődik, amelyet a melléklet azonosítója nem hordoz.'

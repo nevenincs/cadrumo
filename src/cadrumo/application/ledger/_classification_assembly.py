@@ -486,7 +486,9 @@ def assemble_classification_criteria(
         (_NATURE_TO_KIND[supply_nature],) if supply_nature is not None else tuple(_NATURE_TO_KIND.values())
     )
 
-    if status is None and _axis_forks_the_law(_probe, slices=[(_STATUS_CANDIDATES, (kind,)) for kind in kind_candidates]):
+    if status is None and _axis_forks_the_law(
+        _probe, slices=[(_STATUS_CANDIDATES, (kind,)) for kind in kind_candidates]
+    ):
         missing.append(_customer_tax_status_gap(inputs))
 
     if supply_nature is None and _axis_forks_the_law(

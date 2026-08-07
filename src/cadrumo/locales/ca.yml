@@ -864,7 +864,7 @@ application:
   live:
     deudas:
       errors:
-        bucket_id_blank: application.live.deudas.errors.bucket_id_blank
+        bucket_id_blank: L'identificador del bucket de deudas no pot estar buit.
         snapshot_id_blank: L'identificador de la instantània de deutes no pot estar
           buit.
         snapshot_not_found: No hi ha cap instantània de deutes que coincideixi amb
@@ -6788,7 +6788,8 @@ errors:
       amb l'identificador indicat.
     refused_live_borrador_snapshot_not_found: No existeix cap instantània de l'esborrany
       del Model 100 amb l'identificador indicat.
-    refused_live_deudas_snapshot_not_found: errors.refused.refused_live_deudas_snapshot_not_found
+    refused_live_deudas_snapshot_not_found: No existeix cap instantània de deudas
+      amb l'identificador indicat.
     refused_live_expedientes_snapshot_not_found: No existeix cap instantània d'expedients
       amb l'identificador indicat.
     refused_live_justificante_capture_snapshot_not_found: No existeix cap captura

@@ -63,6 +63,22 @@ def _territory_records() -> list[dict[str, object]]:
     return list(records)
 
 
+def _string_list(record: dict[str, object], field: str) -> list[str]:
+    """Return ``field`` as a list of strings, refusing anything else.
+
+    TOML hands back ``object``, and narrowing it with a cast would assert the
+    shape rather than check it. A malformed table is a real failure mode here --
+    a prefix written as a bare integer would silently never match a string
+    comparison -- so the shape is verified rather than declared.
+    """
+    value = record[field]
+
+    assert isinstance(value, list), f"{field} is not a list: {value!r}"
+    for item in value:
+        assert isinstance(item, str), f"{field} carries a non-string entry: {item!r}"
+    return list(value)
+
+
 def _catalogue_text() -> str:
     return "".join((bundled_path() / name).read_text(encoding="utf-8", errors="replace") for name in _CATALOGUE_FILES)
 
@@ -75,7 +91,7 @@ def test_every_cited_provision_resolves_in_the_legal_catalogue() -> None:
     nothing checked it against the statute.
     """
     defined = _catalogue_text()
-    cited = {ref for record in _territory_records() for ref in record["legal_refs"]}
+    cited = {ref for record in _territory_records() for ref in _string_list(record, "legal_refs")}
 
     assert cited, "no territory row cites a provision; this case would pass vacuously"
     for reference in cited:
@@ -125,6 +141,8 @@ def test_the_balears_are_inside_by_non_exclusion_and_the_statute_never_names_the
     assert normalise_corpus_text("Baleares") not in _LIVA
     assert normalise_corpus_text("Balears") not in _LIVA
 
-    excluded_prefixes = {str(prefix) for record in _territory_records() for prefix in record["postal_prefixes"]}
+    excluded_prefixes = {
+        prefix for record in _territory_records() for prefix in _string_list(record, "postal_prefixes")
+    }
 
     assert "07" not in excluded_prefixes, "the Balears are excluded from the TAI, which art. 3 does not do"

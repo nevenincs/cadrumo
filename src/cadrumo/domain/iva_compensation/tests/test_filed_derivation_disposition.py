@@ -72,6 +72,7 @@ def test_a_refunded_period_carries_only_the_posterior_on_the_resultado_basis() -
 
     assert derivation is not None
     assert derivation.available == _POSTERIOR, "a refunded credit was carried into the next period"
+    assert derivation.generated == Decimal("0"), "a refunded period reported a generated credit it does not carry"
 
 
 def test_a_refunded_period_carries_only_the_posterior_on_the_generated_basis() -> None:
@@ -89,6 +90,7 @@ def test_a_refunded_period_carries_only_the_posterior_on_the_generated_basis() -
 
     assert derivation is not None
     assert derivation.available == _POSTERIOR
+    assert derivation.generated == Decimal("0"), "a refunded period reported a generated credit it does not carry"
     assert derivation.operand_refs == (), "a refunded carry must not project the generated operand"
 
 
@@ -110,6 +112,34 @@ def test_a_carried_period_still_includes_the_generated_credit(extra: dict[Casill
 
     assert derivation is not None
     assert derivation.available > _POSTERIOR
+    assert derivation.generated == _GENERATED
+
+
+@pytest.mark.parametrize("refunded", [True, False])
+@pytest.mark.parametrize(
+    "extra",
+    [
+        {M303_COMPENSATION_RESULTADO_CASILLA: _NEGATIVE_RESULTADO},
+        {M303_COMPENSATION_GENERADA_CASILLA: _GENERATED},
+    ],
+)
+def test_the_available_carry_decomposes_into_the_posterior_and_the_generated_credit(
+    extra: dict[CasillaId, Decimal],
+    refunded: bool,
+) -> None:
+    """The two amounts are one decomposition, so they cannot disagree about a refund.
+
+    ``generated_amount`` and ``available_end_amount`` are written into one
+    period state by one constructor. Both depend on the disposition, so a
+    consumer reading one from this derivation and computing the other itself
+    produces a record that is internally inconsistent rather than uniformly
+    wrong -- and nothing downstream can then tell which field to believe. This
+    holds the pair to the identity on every basis and both dispositions.
+    """
+    derivation = derive_m303_compensation_available_from_casillas(_values(**extra), refunded=refunded)
+
+    assert derivation is not None
+    assert derivation.available == _POSTERIOR + derivation.generated
 
 
 def test_the_refund_disposition_is_required_rather_than_defaulted() -> None:

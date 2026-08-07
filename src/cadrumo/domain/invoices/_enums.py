@@ -25,7 +25,13 @@ from decimal import Decimal
 from enum import StrEnum
 
 from ...core.time import today_madrid
-from ..iva import EUMemberState, IvaRateKind, IvaRateNotFoundError, rate_kinds_for_declared_rate
+from ..iva import (
+    EUMemberState,
+    IvaRateKind,
+    IvaRateNotFoundError,
+    rate_kinds_for_declared_rate,
+    rate_table_covers,
+)
 
 
 class IvaRate(StrEnum):
@@ -299,7 +305,10 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
             on ``on_date`` -- a transitional slot used outside its statutory
             window, or a standing slot the registry no longer serves. Refusing
             is the point: substituting whatever the tier happens to mean that
-            day would record a number the invoice never carried.
+            day would record a number the invoice never carried. When the rate
+            table does not REACH ``on_date`` at all the refusal says so instead,
+            because "not in force" would be a false claim about the law rather
+            than a true one about our coverage.
             :attr:`IvaRate.RATE_0` is never refused, because
             :func:`~cadrumo.domain.iva.rate_kinds_for_declared_rate` answers
             ZERO on every date -- Spain zero-rates on three permanent grounds
@@ -312,6 +321,19 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
     kind = _IVA_RATE_TO_IVA_KIND[rate]
     effective_date = on_date or today_madrid()
     if kind not in rate_kinds_for_declared_rate(EUMemberState.ES, fraction, effective_date):
+        # Coverage and legality are different facts and must not share a
+        # message. The registry is a current-rates table with no record before
+        # 2024, so a 2023 line fails on OUR reach, not on the law -- Spain's
+        # 21 % has stood since 2012. Saying "not in force" there sends a filer
+        # to correct a figure that was right, and invites widening the table
+        # with a guessed value rather than an authored, corpus-backed one.
+        if not rate_table_covers(EUMemberState.ES, effective_date):
+            raise IvaRateNotFoundError(
+                f"no IVA rate is on record for {effective_date.isoformat()}: the rate registry "
+                f"carries no rates for Spain on that date, so IVA rate slot {rate.name} "
+                f"({fraction * Decimal('100')}%) cannot be confirmed. This is a limit of the "
+                "bundled registry, not a statement that the rate was unlawful.",
+            )
         raise IvaRateNotFoundError(
             f"IVA rate slot {rate.name} ({fraction * Decimal('100')}%) was not in force for "
             f"kind={kind.value!r} in Spain on {effective_date.isoformat()}",

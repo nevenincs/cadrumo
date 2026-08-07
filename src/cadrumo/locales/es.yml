@@ -868,7 +868,8 @@ application:
     deudas:
       errors:
         bucket_id_blank: El identificador del bucket de deudas no puede estar vacío.
-        snapshot_id_blank: application.live.deudas.errors.snapshot_id_blank
+        snapshot_id_blank: El identificador de la instantánea de deudas no puede estar
+          vacío.
         snapshot_not_found: No hay ninguna instantánea de deudas que coincida con
           el identificador solicitado.
         snapshot_prefix_ambiguous: El prefijo de la instantánea de deudas coincide
@@ -69034,61 +69035,80 @@ modelo:
               label: Tipo de declaracion (originaria / sustitutiva / complementaria)
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo general, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo reducido, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo superreducido, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.label
+              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
+                del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.label
+              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
+                del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.label
+              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
+                del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.label
+              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
+                del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.label
+              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
+                del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.label
+              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
+                del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.label
+              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
+                del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo cero, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.label
+              label: Base imponible de adquisiciones intracomunitarias de servicios
+                al tipo general, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.help
               label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.label

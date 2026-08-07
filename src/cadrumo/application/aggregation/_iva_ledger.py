@@ -67,16 +67,17 @@ from ...domain.iva import (
     IvaCategory,
     IvaExemptionArticle,
     IvaFlowDirection,
+    IvaKindApplicability,
     IvaRateKind,
-    IvaRateNotFoundError,
     ProrrataInputError,
     ProrrataReference,
     category_cuota_is_zero_by_law,
     deductible_percentage_for,
     derive_flow_for_classification,
     domestic_categories_by_rate_kind,
-    lookup_rate,
+    iva_category_components,
     rate_kinds_for_declared_rate,
+    rate_table_covers,
     validate_prorrata_reference,
 )
 from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterRepositoryProtocol
@@ -149,6 +150,23 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     # for this same legal fact, and a second list beside it is how the two paths
     # came to disagree in the first place.
     NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY = "non_zero_rate_on_zero_cuota_category"
+    # The declared category is directional by law and the row is on the side it
+    # cannot occur on -- an entrega intracomunitaria the taxpayer RECEIVED, an
+    # exportación they received, an adquisición they issued. The Axis-A table
+    # declares this per pair, and reading it is the whole check.
+    #
+    # A SIBLING of the screen above, not an extension of it. "This operation has
+    # no cuota" and "this operation does not exist" are different questions: a
+    # non-arising pair declares every component UNKNOWN rather than ZERO_BY_LAW,
+    # so the zero-cuota predicate correctly answers False here. Merging the two
+    # would have made the cuota screen fire on operations that legitimately bear
+    # no cuota.
+    #
+    # The error direction is OVER-deduction: an intra-community supply mis-sided
+    # to received routes its cuota to soportado and claims input IVA on an
+    # operation LIVA art. 25 does not permit a received side of. Nothing else in
+    # this apparatus watches that direction.
+    NON_ARISING_CATEGORY_FOR_INVOICE_SIDE = "non_arising_category_for_invoice_side"
     MISSING_EUR_TAX_SUBSTRATE = "missing_eur_tax_substrate"
     INVALID_PRORRATA_REFERENCE = "invalid_prorrata_reference"
     UNSUPPORTED_IVA_CATEGORY = "unsupported_iva_category"
@@ -1297,6 +1315,22 @@ def _classify_iva_transaction(
         )
         if d5_issue is not None:
             return _IvaTransactionOutcome(gate_issue=d5_issue)
+        components = iva_category_components(explicit_category, invoice_kind)
+        if components.applicability is IvaKindApplicability.DOES_NOT_ARISE:
+            # The row's own note names the category that IS this side's
+            # counterpart, so the refusal can say what the operator probably
+            # meant. Told only "this cannot arise", they would guess.
+            return _IvaTransactionOutcome(
+                gate_issue=IvaLedgerAggregationIssue(
+                    transaction_id=transaction_id,
+                    reason=IvaLedgerAggregationIssueReason.NON_ARISING_CATEGORY_FOR_INVOICE_SIDE,
+                    detail=(
+                        f"row declares iva_category {explicit_category.value!r} on a "
+                        f"{invoice_kind.value!r} invoice, a combination that describes no operation. "
+                        f"{components.retencion_note}"
+                    ),
+                ),
+            )
         # Scoped to the DECLARED category deliberately. The derived branch below
         # reads its category off the rate, so it cannot contradict the rate; a
         # screen written across both would be vacuous on half its population
@@ -1718,29 +1752,14 @@ def _prorrata_reference_for(
 def _rate_table_covers(on_date: date) -> bool:
     """Return whether ANY Spanish rate record covers ``on_date``.
 
-    Separates the two ways :func:`_iva_rate_kind_for` returns ``None``. The
-    rate table is a CURRENT-rates table refreshed in bulk, not a historical
-    one -- no record for any member state starts before 2024 -- so a
-    transaction dated earlier cannot be classified whatever rate it carries,
-    and telling its filer that their rate is unsupported sends them to correct
-    a figure that was right.
-
-    Asks the registry rather than restating a floor constant that could drift
-    from it. It reads only TIER-DEFINING rates, via :func:`lookup_rate`, while
-    :func:`_iva_rate_kind_for` reads every rate including the coexisting
-    temporary ones -- so a date covered solely by a temporary record would
-    report uncovered here. That cannot arise today, because every temporary
-    window sits inside a year the tier-defining records already span, and it is
-    the safe direction anyway: the worst outcome is an unsupported-rate refusal
-    naming the rate instead of one naming the year.
+    Separates the two ways :func:`_iva_rate_kind_for` returns ``None``, so a
+    date the registry simply does not reach is not reported as an unsupported
+    rate. Delegates to :func:`~cadrumo.domain.iva.rate_table_covers`, which
+    lives beside the table it reads and answers the same question for the
+    invoice path -- one authority consulted from both layers, rather than two
+    predicates that can drift into disagreeing about the same date.
     """
-    for kind in domestic_categories_by_rate_kind():
-        try:
-            lookup_rate(EUMemberState.ES, kind, on_date)
-        except IvaRateNotFoundError:
-            continue
-        return True
-    return False
+    return rate_table_covers(EUMemberState.ES, on_date)
 
 
 def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:

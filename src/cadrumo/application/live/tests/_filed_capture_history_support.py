@@ -78,6 +78,33 @@ def _modelo_130_justificante_pdf_bytes() -> bytes:
 
 
 @cache
+def _modelo_303_justificante_pdf_bytes() -> bytes:
+    return (FIXTURES_DIR / "justificantes" / "modelo_303_2026Q1.pdf").read_bytes()
+
+
+#: The csv AEAT printed on each receipt fixture, stated independently of the
+#: PDF rather than parsed back out of it. A capture stores the cotejo document
+#: URL it fetched the bytes under, and production recovers the csv from that
+#: URL to check it against the csv in the body. Deriving these from the fixture
+#: would make both sides of that comparison one value and every check here
+#: would pass for free. ``test_fixture_csv_constants_still_match_the_receipts``
+#: keeps them honest.
+_MODELO_130_FIXTURE_CSV = "ABCD1234EFGH5678"
+_MODELO_303_FIXTURE_CSV = "ZZZZ9999YYYY8888"
+
+
+def _cotejo_document_source_url(csv: str) -> str:
+    """Build the cotejo document URL a capture records as an artefact source.
+
+    Mirrors the production shape: the fetch resolves the csv from the cotejo
+    popup AEAT redirected it to, builds the document URL around that csv, and
+    persists the URL verbatim.
+    """
+    external = _aeat_external_constants()
+    return f"{external.domains.www6}{external.sede_paths.cotejo_document}?CSV={csv}"
+
+
+@cache
 def _aeat_external_constants():
     return load_external_constants().aeat
 

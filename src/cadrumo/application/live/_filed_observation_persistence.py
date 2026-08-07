@@ -33,6 +33,7 @@ from ...adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore,
     ObservedCasillaValue,
     SedeParseError,
+    extract_csv_from_url,
     registry_observation_from_filed_declaration,
 )
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -169,9 +170,10 @@ def persist_filed_justificante_metadata(
 
     The observation store owns encrypted artefact bytes. This function reads
     those bytes into memory, verifies the artefact manifest, parses the PDF
-    without creating a plaintext temp file, and saves only justificantes that
-    match the observation's modelo, ejercicio, typed period, and authenticated
-    taxpayer identity.
+    without creating a plaintext temp file, and saves only justificantes whose
+    csv agrees with the csv their bytes were fetched under and that match the
+    observation's modelo, ejercicio, typed period, and authenticated taxpayer
+    identity.
     """
     if not _is_active_filed_observation(observation):
         return ()
@@ -402,6 +404,19 @@ def _parse_matching_filed_justificante(
     artefact: FiledDeclaracionArtefact,
     store: FiledDeclaracionObservationStore,
 ) -> Justificante | None:
+    """Parse one stored justificante artefact, or return ``None`` on any mismatch.
+
+    The csv equality check compares two independently-sourced values, which is
+    the only reason it means anything: ``artefact.source_url`` is the cotejo
+    document URL the capture built around the csv AEAT's own cotejo redirect
+    supplied, while ``justificante.csv`` is read from the PDF body. Recovering
+    the first from that URL keeps the two channels distinct at no
+    persistence cost.
+
+    Building ``source_url`` from the receipt's own csv, or from a period-level
+    template, would collapse the comparison into a value checked against itself
+    and it would pass unconditionally while still reading as a real check.
+    """
     storage_ref = artefact.storage_ref
     if storage_ref is None:
         return None
@@ -429,6 +444,24 @@ def _parse_matching_filed_justificante(
             exc_info=True,
         )
         return None
+    try:
+        captured_csv = extract_csv_from_url(str(artefact.source_url))
+    except SedeParseError:
+        logger.warning(
+            "filed observation: ignored justificante artefact %s whose source URL carries no recoverable csv",
+            storage_ref,
+            exc_info=True,
+        )
+        return None
+    if captured_csv.strip().upper() != justificante.csv.strip().upper():
+        logger.warning(
+            "filed observation: ignored justificante artefact %s whose receipt csv %s "
+            "disagrees with the csv %s its bytes were fetched under",
+            storage_ref,
+            justificante.csv,
+            captured_csv,
+        )
+        return None
     if not _justificante_matches_filed_observation(justificante, observation):
         logger.warning(
             "filed observation: ignored justificante artefact %s that does not match %s/%s/%s",
@@ -450,7 +483,6 @@ def _justificante_matches_filed_observation(
         filing_year=observation.ejercicio,
         period=observation.period,
         tax_id=observation.authenticated_identity,
-        presentation_id=observation.expediente_id,
     )
 
 
