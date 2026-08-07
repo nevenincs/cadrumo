@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:b57c5e89c29b35253dbce80662b91cf8417555ee29f3e6bba375026889190e97'
+body_hash: 'sha256:68d25d68e32720f6c6062adcabe0fa7ffef6cbacaddf53c92aa0fcd18d340d90'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -31,6 +31,7 @@ Give the renta-income binding family a real output-casilla declaration so the re
 - [ ] `W01.P01.S03` - Retire the hardcoded backend-inputs override once the registry declares the destination, removing the parallel write path around the registry authority; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
 - [ ] `W01.P01.S04` - Prove the retencion still reaches casilla 06 end to end after the override is retired, asserting the value not merely the wiring; `src/cadrumo/application/aggregation/tests/`.
 - [ ] `W01.P01.S19` - Confirm no peer holds the retencion backend-inputs function before the first edit, the live over-claim and this structural fix are the same code site; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
+- [ ] `W01.P01.S45` - Propose a superseding ADR if the registry should declare where an aggregate lands, the sweep found two opposite declaration conventions and the IVA families cannot express a match-output divergence at all, which is a gap the current pattern cannot close; `.vault/adr/`.
 
 ## Wave `W02` - Detection gates for the silent-zero class
 
@@ -50,6 +51,7 @@ Implement the decided mechanism with a mutation proof and an explicit statement 
 
 - [ ] `W02.P03.S07` - Implement the reachability probe per binding source family, hung on the existing per-family module seam; `src/cadrumo/domain/calculations/registry/`.
 - [ ] `W02.P03.S08` - Mutation-prove the gate reddens on a binding retargeted to match nothing, and state in code what it cannot catch; `src/cadrumo/domain/calculations/registry/tests/`.
+- [ ] `W02.P03.S40` - Gate that both sides of every reconciliation pair select the same category set, enumerated from both declaration sites, so a periodic-line change that skips its annual or aggregate counterpart reddens instead of shipping; `src/cadrumo/domain/calculations/registry/tests/`.
 
 ## Wave `W03` - The activity-type classification axis
 
@@ -70,6 +72,8 @@ Implement the canonical placement, then unblock the retencion regimen filter and
 - [ ] `W03.P05.S11` - Implement the canonical activity-type placement with its persistence roundtrip and anti-tautology proof; `src/cadrumo/domain/transactions/`.
 - [ ] `W03.P05.S12` - Narrow the statutory-rate advisory to the rates a taxpayer can lawfully be subject to, restoring the flat-fee catch measured lost; `src/cadrumo/application/aggregation/_retencion_rate_advisory.py`.
 - [ ] `W03.P05.S13` - Aggregate M130 casilla 08 agrarian volume from the ledger, currently manual and silently zero for an agrarian-objetiva filer; `src/cadrumo/application/aggregation/`.
+- [ ] `W03.P05.S37` - Refresh the corpus to bundle the M036 tipo-de-actividad code table the diseno points at, the field is declared but its value set is absent and the mapping cannot be authored against what ships; `src/cadrumo/_data/corpus/aeat_official/`.
+- [ ] `W03.P05.S38` - Ground the code-to-art-95-partition mapping in the registry with its own legal refs once the table lands, never inferred in code, and plan for the refreshed table proving unable to serve at all; `src/cadrumo/_data/registry/aeat/legal/`.
 
 ## Wave `W04` - Decision-blocked dispositions
 
@@ -108,12 +112,22 @@ Operator directive 2026-08-07: RAG semantic search is exercised extensively and 
 
 Run the sweep over the surfaces this campaign touches, where three parallel-authority findings already landed tonight.
 
-- [ ] `W06.P08.S24` - Sweep the retencion derivation surface by meaning for parallel authorities, the advisory the binding and the hardcoded write path each encode part of one concept; `src/cadrumo/application/aggregation/`.
-- [ ] `W06.P08.S25` - Sweep the IVA category and clave surfaces by meaning, subjection and operation-type are separate axes and a third encoding of either is the failure to find; `src/cadrumo/domain/iva/`.
-- [ ] `W06.P08.S26` - Sweep the observation-to-casilla routing surface by meaning, a binding declares its match key in the registry while its destination lives in application code; `src/cadrumo/domain/calculations/registry/`.
-- [ ] `W06.P08.S27` - Record each sweep as a near-neighbour proven not to cover the case or a fragmented authority named, never as a bare no-duplicates-found; `.vault/audit/`.
+- [x] `W06.P08.S24` - Sweep the retencion derivation surface by meaning for parallel authorities, the advisory the binding and the hardcoded write path each encode part of one concept; `src/cadrumo/application/aggregation/`.
+- [x] `W06.P08.S25` - Sweep the IVA category and clave surfaces by meaning, subjection and operation-type are separate axes and a third encoding of either is the failure to find; `src/cadrumo/domain/iva/`.
+- [x] `W06.P08.S26` - Sweep the observation-to-casilla routing surface by meaning, a binding declares its match key in the registry while its destination lives in application code; `src/cadrumo/domain/calculations/registry/`.
+- [x] `W06.P08.S27` - Record each sweep as a near-neighbour proven not to cover the case or a fragmented authority named, never as a bare no-duplicates-found; `.vault/audit/`.
 - [ ] `W06.P08.S28` - Collapse the three hand-maintained rate-to-IVA-category tables onto one canonical rate-kind table plus the existing accessor, after the adjacent retencion work clears the shared module; `src/cadrumo/domain/iva/_classification.py`.
 - [ ] `W06.P08.S29` - Promote the canonical rate-kind mapping or an accessor onto the domain iva facade before any application-layer consumer reads it, it is private today and cross-package code must not dot into it; `src/cadrumo/domain/iva/__init__.py`.
 - [ ] `W06.P08.S33` - Rule whether the cash-accounting exclusion set is scoped by the LIVA art 163 duodecies Uno territorial clause or enumerates only its Dos carve-outs, six members are Dos letters and one is a Uno scope case with nothing distinguishing them; `src/cadrumo/application/aggregation/_iva_ledger.py`.
 - [ ] `W06.P08.S34` - Check the OSS declaration path before adding the second not-subject member to the cash-accounting exclusion, doing so newly refuses OSS rows for a taxpayer who also uses cash accounting and that combination is live; `src/cadrumo/application/aggregation/`.
 - [ ] `W06.P08.S35` - Answer whether an invoice with no declared operation type can legitimately need the five claves the category fallback cannot emit, if not the fallback is correct by scope and must say so; `src/cadrumo/application/invoices/_source_resolver.py`.
+- [ ] `W06.P08.S39` - Query both declaration sites when enumerating reconciliation pairs, annual-summary relations and reconciliation casillas with their blocking-rule formulas, the first alone misses the grupo pair; `src/cadrumo/domain/calculations/registry/`.
+- [ ] `W06.P08.S41` - Refuse rather than guess when an intra-community supply carries no operation type, the fallback emits the one clave the official table expressly carves post-importation supplies out of and cannot distinguish them from the category it reads; `src/cadrumo/application/invoices/_source_resolver.py`.
+- [ ] `W06.P08.S42` - Document the call-off stock claves as unreachable by scope from an invoice-sourced path so the next reader does not refile the subset as a defect; `src/cadrumo/application/invoices/_source_resolver.py`.
+- [ ] `W06.P08.S43` - Add the second not-subject member to the cash-accounting exclusion set now the OSS scope refusal is confirmed correct, with a mutation proof since a set-membership edit that reddens nothing has not been shown to bite; `src/cadrumo/application/aggregation/_iva_ledger.py`.
+- [ ] `W06.P08.S44` - Require the intracom operation type at invoice creation where the operator holds the fact, rather than inferring a clave at calculate time where nobody does, closing the ambiguity upstream instead of screening it downstream; `src/cadrumo/application/invoices/_creation.py`.
+- [ ] `W06.P08.S46` - Establish whether M390 modelling only twenty-two casillas with no counterpart for four categories the quarterly return carries is a registry-completeness gap or correct by the annual form's own design; `src/cadrumo/_data/registry/aeat/modelos/390/`.
+- [ ] `W06.P08.S47` - Scope the M390 annual under-modelling as its own campaign, the registry carries twenty-two casillas against three hundred and seventy-five official boxes and splits neither goods from services nor by rate tier where the diseno does both; `.vault/research/`.
+- [ ] `W06.P08.S49` - Extend the rate-kind enum to carry the temporary reduced tiers before any annual registry authoring, each member grounded in its own BOE instrument with a registry-versus-enum parity gate, since a binding whose tier cannot be named matches nothing silently; `src/cadrumo/domain/iva/_schema.py`.
+- [ ] `W06.P08.S48` - Note that splitting the annual casilla per leg will require per-leg semantic roles in the reconciliation parity gate, since the quarterly side carries one combined role where the annual side will carry two; `src/cadrumo/domain/calculations/registry/tests/`.
+- [ ] `W06.P08.S50` - Assert the intracom concept is still compared after the annual split, the shared-role intersection shrinks silently so the parity gate stops covering it without ever reddening; `src/cadrumo/domain/calculations/registry/tests/`.
