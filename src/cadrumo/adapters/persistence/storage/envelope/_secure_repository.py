@@ -517,7 +517,7 @@ class SecureBoundRepository[T: BaseModel]:
         # covariant usage at call sites. Safe at runtime because Pydantic enforces
         # the concrete type during model_validate_json.
         # CAST-RATIONALE-SECURE-REPOSITORY-ENVCLS (future: eliminate via generic ClassVar alias)
-        return Envelope.for_payload_type(self.payload_model())  # type: ignore[return-value]
+        return Envelope.for_payload_type(self.payload_model())  # type: ignore[return-value]  # reason: The widening to Envelope[BaseModel] is the only remaining escape hatch here. Envelope.for_payload_type returns type[Envelope[self.payload_model()]]...
 
 
 __all__ = ["SecureBoundRepository"]

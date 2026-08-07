@@ -150,7 +150,7 @@ def _copy_committed_modelo(path: Path) -> None:
 
 
 @pytest.fixture(scope="module")
-def _modelo_130_snapshot():  # type: ignore[no-untyped-def]
+def _modelo_130_snapshot():  # type: ignore[no-untyped-def]  # reason: a pytest module fixture whose return type is the private snapshot the helpers below consume; annotating it would export that internal type from a test-support module
     """Validate + build the committed Modelo 130 / 2024 3T snapshot once per module.
 
     Module scope is safe — both validation and snapshot construction
