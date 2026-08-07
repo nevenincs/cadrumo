@@ -157,11 +157,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "self.path.open",
     ): "payload-free local session telemetry; appends per-call trajectory metadata JSON lines, no sensitive/user data",
     (
-        "src/cadrumo/agent/eval/_flywheel.py",
-        "write_promoted_scenario",
-        "path.write_text",
-    ): "agent-harness eval flywheel; writes promoted eval scenario definitions, no sensitive/user data",
-    (
         "src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_writer.py",
         "write_sealed_archive",
         "tarfile.open",
