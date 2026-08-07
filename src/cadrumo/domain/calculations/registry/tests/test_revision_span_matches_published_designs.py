@@ -41,13 +41,23 @@ No count is hardcoded. The number of designs, boundaries and shared boxes all
 vary as the corpus grows; gating on any of them would encode today and detect
 nothing tomorrow.
 
-TWO INDEPENDENT SIGNALS, neither subsuming the other. The box-offset diff sees
-which boxes moved but needs bracketed box markers. The page-length diff sees only
-that a page changed size, but reads designs the box table cannot -- several older
-PDF extractions publish their page totals while yielding no box markers -- so it
-measures years that would otherwise be blind. A re-layout preserving every page
-length is caught by the first; a year only the second can read is caught by the
-second. A year is reported UNMEASURED only when BOTH are blind.
+TWO INDEPENDENT SIGNALS, ONE VERDICT. The box-offset diff sees which boxes moved
+but needs bracketed box markers. The page-length diff sees only that a page
+changed size, but reads designs the box table cannot -- several older PDF
+extractions publish their page totals while yielding no box markers -- so it
+measures years that would otherwise be blind. Neither subsumes the other: a
+re-layout preserving every page length is caught by the first, a year only the
+second can read is caught by the second. A year is reported UNMEASURED only when
+BOTH are blind.
+
+They report through ONE assertion rather than two, because reporting separately
+was the instrument's own defect. The two see overlapping but DIFFERENT boundary
+sets, so a fix owner acting on either list alone splits a revision at some of its
+boundaries and leaves the rest standing -- a gate still red, reading as an
+incomplete fix rather than a wrong one. Modelo 303 is the live case: two of its
+six boundaries are visible only to the page-length signal. The failure text is
+therefore the split specification, naming per revision every boundary, which
+signal saw it, and how many revisions the span actually needs.
 
 THIS MODULE IS LANDED RED, DELIBERATELY, AND THE FAILURES ARE THE FINDING RATHER
 THAN A REGRESSION. It names two confirmed live defects: Modelo 390's single
@@ -259,60 +269,68 @@ def test_the_design_parser_reads_every_markdown_design_it_claims() -> None:
     )
 
 
+def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]]:  # noqa: ANN001
+    """Every re-layout boundary inside one revision's span, keyed year-pair to evidence.
+
+    Both signals contribute to ONE verdict rather than reporting separately,
+    because they see overlapping-but-different boundary sets and a reader
+    unioning two lists by hand will miss the ones only the weaker signal saw.
+    """
+    boundaries: dict[tuple[int, int], list[str]] = {}
+
+    designs, _ = _designs_for(modelo_id)
+    box_years = sorted(_claimed_years(revision, set(designs)))
+    for earlier, later in zip(box_years, box_years[1:]):
+        before, after = designs[earlier], designs[later]
+        shared = set(before) & set(after)
+        moved = sorted(box for box in shared if before[box] != after[box])
+        if moved:
+            sample = ", ".join(f"[{box}] {before[box]}->{after[box]}" for box in moved[:3])
+            boundaries.setdefault((earlier, later), []).append(
+                f"{len(moved)} of {len(shared)} shared boxes moved (e.g. {sample})"
+            )
+
+    lengths = _page_lengths_for(modelo_id)
+    page_years = sorted(_claimed_years(revision, set(lengths)))
+    for earlier, later in zip(page_years, page_years[1:]):
+        if lengths[earlier] != lengths[later]:
+            boundaries.setdefault((earlier, later), []).append(
+                f"page lengths differ: {lengths[earlier]} vs {lengths[later]}"
+            )
+
+    return boundaries
+
+
 def test_no_revision_spans_a_design_relayout() -> None:
     """One revision, one byte layout — so its span must not cross a re-layout.
 
-    Compares every pair of published designs inside a revision's claimed span and
-    requires them to agree on the offset of every box they share. A disagreement
-    means the revision's single layout cannot be correct for both years, and the
-    failure names the revision, the two years, and the boxes that moved.
+    ONE verdict from BOTH signals, deliberately. Reporting them as separate
+    failures was the instrument's own defect: the offset diff and the page-length
+    diff see overlapping but different boundary sets, so a fix owner reading
+    either list alone splits a revision at some of its boundaries and leaves the
+    rest standing — a gate still red, looking like an incomplete fix rather than
+    a wrong one. Modelo 303 is the live case: two of its boundaries are visible
+    only to the page-length signal.
+
+    The failure text is therefore the split specification. For each revision it
+    names every boundary, which signal saw it, and how many revisions the span
+    actually needs, so nobody has to union two lists by hand to act on it.
     """
     violations: list[str] = []
     for modelo, revision_id, revision in _exporting_revisions():
-        designs, _ = _designs_for(modelo.id)
-        years = sorted(_claimed_years(revision, set(designs)))
-        for earlier, later in zip(years, years[1:]):
-            before, after = designs[earlier], designs[later]
-            shared = set(before) & set(after)
-            moved = sorted(box for box in shared if before[box] != after[box])
-            if moved:
-                sample = ", ".join(f"[{box}] {before[box]}->{after[box]}" for box in moved[:3])
-                violations.append(
-                    f"modelo {modelo.id} revision {revision_id!r} claims {earlier} and {later}, "
-                    f"but {len(moved)} of {len(shared)} shared boxes moved between those designs "
-                    f"(e.g. {sample})"
-                )
+        boundaries = _boundaries_for(modelo.id, revision)
+        if not boundaries:
+            continue
+        detail = "; ".join(
+            f"{earlier}/{later} ({' + '.join(evidence)})"
+            for (earlier, later), evidence in sorted(boundaries.items())
+        )
+        violations.append(
+            f"modelo {modelo.id} revision {revision_id!r} spans {len(boundaries)} re-layout(s) "
+            f"and needs {len(boundaries) + 1} revisions -- {detail}"
+        )
     assert not violations, (
         "a revision carries ONE export layout, so a span crossing a re-layout writes prior-year "
-        "filings at the wrong byte offsets:\n  " + "\n  ".join(violations)
-    )
-
-
-def test_no_revision_spans_a_page_length_change() -> None:
-    """Second signal: a page whose byte length changed had something move inside it.
-
-    Independent of box numbers entirely, which is what makes it worth having
-    beside the offset diff. It reaches designs the box table cannot — several
-    older PDF extractions publish their ``TOTAL n POSICIONES`` rows while yielding
-    no bracketed box markers — so it converts years that would otherwise be
-    unmeasured into measured ones.
-
-    It is also strictly coarser: it sees that a page changed size, not which
-    boxes moved. A re-layout that preserves every page's length would pass here
-    and be caught by the offset diff, and the reverse holds for a year only this
-    signal can read. Neither subsumes the other.
-    """
-    violations: list[str] = []
-    for modelo, revision_id, revision in _exporting_revisions():
-        lengths = _page_lengths_for(modelo.id)
-        years = sorted(_claimed_years(revision, set(lengths)))
-        for earlier, later in zip(years, years[1:]):
-            if lengths[earlier] != lengths[later]:
-                violations.append(
-                    f"modelo {modelo.id} revision {revision_id!r} claims {earlier} and {later}, "
-                    f"but the published page lengths differ: {lengths[earlier]} vs {lengths[later]}"
-                )
-    assert not violations, (
-        "a page whose byte length changed between two years a single revision claims cannot be "
-        "written by one layout:\n  " + "\n  ".join(violations)
+        "filings at the wrong byte offsets. Split each revision at every boundary listed; "
+        "splitting at only the ones one signal saw leaves the rest live:\n  " + "\n  ".join(violations)
     )
