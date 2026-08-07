@@ -211,7 +211,7 @@ def test_reachability_probe_is_not_tautological_against_a_mistyped_casilla_id() 
     matcher = _renta_gastos_pago_fraccionado_build_matcher(selector)
 
     mistyped = _GastoObservation(
-        target_casilla_id=int(selector.target_casilla_id),  # type: ignore[arg-type]
+        target_casilla_id=int(selector.target_casilla_id),  # ty: ignore[invalid-argument-type]  # reason: the wrong type IS the subject under test
         deductible_amount=Decimal("1.00"),
     )
     assert not matcher(mistyped), (

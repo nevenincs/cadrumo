@@ -23,6 +23,7 @@ import functools
 import multiprocessing
 import os
 import stat
+import subprocess
 import threading
 import time
 from collections.abc import Callable
@@ -542,3 +543,48 @@ class TestHardenedTier:
 
         assert target.read_bytes() == b"OLD-SECRET"
         assert _tmp_leftovers(tmp_path) == []
+
+    def test_hardened_tier_restricts_the_target_to_the_operator_on_this_platform(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """The hardened tier leaves a secret-bearing target unreadable by others.
+
+        Asserts the OBSERVABLE permission state, per platform, because the
+        contract is confidentiality rather than "a helper was invoked".
+
+        This is a regression proof, not a new claim. The durable writers once
+        called ``restrict_file_permissions`` -- POSIX ``chmod 0o600`` AND a
+        Windows ``icacls /inheritance:r`` ACL strip -- and were later routed
+        through this tier instead. The tier carried only the POSIX half: its
+        ``mode`` argument reaches ``os.open``, which on NTFS sets little beyond
+        the read-only bit while the target keeps inheriting its parent
+        directory's ACL. Every POSIX test stayed green throughout, so the lost
+        Windows half was invisible to the suite that was supposed to cover it.
+        """
+        target = tmp_path / "secret.bin"
+        atomic_write_hardened_bytes(target, b"\x00master-key-material\xff")
+
+        if os.name == "posix":
+            assert target.stat().st_mode & 0o077 == 0, (
+                "hardened-tier target must grant no group/other permission bits"
+            )
+            return
+
+        if os.name != "nt":  # pragma: no cover - neither POSIX nor Windows
+            pytest.fail(f"unsupported platform for this assertion: {os.name!r}")
+
+        icacls = Path(os.environ.get("SYSTEMROOT", r"C:\Windows")) / "System32" / "icacls.exe"
+        listing = subprocess.run(  # noqa: S603 - fixed absolute path, no shell, test-local target
+            [str(icacls), str(target)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        assert listing.returncode == 0, f"icacls could not read the ACL: {listing.stderr.strip()}"
+        inherited = [line for line in listing.stdout.splitlines() if "(I)" in line]
+        assert inherited == [], (
+            "hardened-tier target still carries INHERITED ACEs, so the parent "
+            f"directory's ACL governs a secret-bearing file: {inherited}"
+        )

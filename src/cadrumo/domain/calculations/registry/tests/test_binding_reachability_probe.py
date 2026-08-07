@@ -122,12 +122,17 @@ class _StubIvaObservation:
         flow_direction: IvaFlowDirection,
         cash_accounting_treatment: IvaCashAccountingTreatment,
         exemption_article: IvaExemptionArticle | None,
+        applied_rate: Decimal | None = None,
     ) -> None:
         self.category = category
         self.rate_kind = rate_kind
         self.flow_direction = flow_direction
         self.cash_accounting_treatment = cash_accounting_treatment
         self.exemption_article = exemption_article
+        # Defaults to the genuinely-unknown rate, which is the shape these
+        # tests exercise: they vary the cash-accounting axis and must not
+        # accidentally also constrain the rate filter.
+        self.applied_rate = applied_rate
 
 
 def test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail() -> None:

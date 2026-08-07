@@ -265,6 +265,12 @@ def test_the_ubl_fixture_parses_both_rates_and_selects_the_vat_identifier() -> N
     cuotas = sum((c for _r, _b, c in parsed.iva_breakdown if c is not None), Decimal(0))
     assert bases == parsed.taxable_base
     assert cuotas == parsed.iva_amount
+    # Asserted rather than assumed: all three are optional on the parsed record,
+    # so without this a document that parsed none of them would reach the sum
+    # below and fail there on a TypeError instead of here on the real claim.
+    assert parsed.taxable_base is not None
+    assert parsed.iva_amount is not None
+    assert parsed.grand_total is not None
     assert parsed.taxable_base + parsed.iva_amount == parsed.grand_total
 
 

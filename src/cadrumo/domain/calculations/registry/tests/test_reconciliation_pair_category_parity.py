@@ -119,7 +119,12 @@ def _ledger_categories_by_semantic_role(revision: ModeloRevision) -> Mapping[str
         binding = bindings_by_id.get(str(binding_id))
         if binding is None or binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
             continue
-        categories = selector_as_dict(binding).get("categories") or ()
+        raw_categories = selector_as_dict(binding).get("categories")
+        # ``or ()`` alone leaves the element type unknown, so the
+        # comprehension below reads as iterating something that may not be
+        # iterable. Declaring the fallback keeps the same behaviour and
+        # states what a missing selector key yields.
+        categories: tuple[object, ...] = tuple(raw_categories) if raw_categories else ()
         roles[str(role)] = frozenset(str(category) for category in categories)
     return roles
 
