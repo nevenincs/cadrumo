@@ -16,7 +16,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final, Self, cast, override
+from typing import TYPE_CHECKING, Final, Self, override
 
 from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
@@ -236,7 +236,7 @@ def _normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, obje
             # Deserialisation boundary: the payload is a raw mapping, so the
             # narrowed sequence carries no element type. Each entry is inspected
             # by isinstance below before anything is read off it.
-            entries = cast("Sequence[object]", raw_mentions)
+            entries: Sequence[object] = raw_mentions  # pyright: ignore[reportUnknownVariableType]  # reason: deserialisation boundary, the payload sequence carries no element type and every entry is isinstance-checked below
             for entry in entries:
                 if isinstance(entry, InvoiceLegalMention):
                     coerced.append(entry)

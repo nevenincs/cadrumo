@@ -46,7 +46,7 @@ import typing
 from collections.abc import Iterable, Iterator
 from functools import cache
 from pathlib import Path
-from typing import Final, NamedTuple, TypeGuard, cast
+from typing import Final, NamedTuple, TypeGuard
 
 from pydantic import BaseModel
 
@@ -515,7 +515,7 @@ def _is_two_object_tuple(value: object) -> TypeGuard[tuple[object, object]]:
         return False
     # Narrowing an object to tuple yields no element type; the guard only asks how
     # many items the envelope carries, so the elements stay opaque by design.
-    items = cast("tuple[object, ...]", value)
+    items: tuple[object, ...] = value  # pyright: ignore[reportUnknownVariableType]  # reason: narrowing an object to tuple yields no element type, and this guard only asks how many items the envelope carries
     return len(items) == 2
 
 

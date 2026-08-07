@@ -1145,8 +1145,8 @@ def _detect_excel_com_clsid() -> str | None:
     try:
         import winreg
 
-        with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, r"Excel.Application\CLSID") as key:  # pyrefly: ignore[missing-attribute]
-            value, _kind = winreg.QueryValueEx(key, "")  # pyrefly: ignore[missing-attribute]
+        with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, r"Excel.Application\CLSID") as key:  # pyrefly: ignore[missing-attribute]  # reason: winreg attributes are platform-gated in typeshed and the function returns early off-Windows, so this block is unreachable there
+            value, _kind = winreg.QueryValueEx(key, "")  # pyrefly: ignore[missing-attribute]  # reason: same platform gate as the OpenKey call above
         return str(value)
     except (FileNotFoundError, OSError, ImportError):
         return None
