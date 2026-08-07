@@ -103,7 +103,7 @@ carry semantics.
 - Division of labour: tooling prepares the dossier and suggests a
   classification; the identity judgment is TAX REVIEW against official
   sources (AEAT dictionary/XSD, Manual Práctico, BOE-published form), never
-  text similarity. Ground per `aeat-safety-legal-gates`; record honest
+  text similarity. Ground per `aeat-calculation-grounding`; record honest
   reviewer provenance. Governing decision:
   `2026-05-27-schema-hardening-casilla-continuity-contract-adr`.
 
