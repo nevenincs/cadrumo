@@ -261,3 +261,69 @@ def test_catalogue_create_still_accepts_an_explicit_domestic_country_code() -> N
 
     assert result.exit_code == 0, result.output
     assert len(_line_value(result.output, "invoice_id")) == 64
+
+
+def test_catalogue_create_accepts_every_regime_option_and_holds_the_totals_identity() -> None:
+    """All four regime axes are expressible from the CLI, and the identity holds.
+
+    Before these options existed every canonically-written invoice was
+    ORDINARIA with no series and no recargo by construction, and a
+    rectificativa could not be entered at all -- so an operator could not
+    express a regime the aggregate had always modelled.
+
+    The identity asserted here is the one the decomposition ADR pins:
+    grand_total equals base plus cuota plus recargo, with the retención
+    OUTSIDE it. A recargo is charged on top of the cuota and is collected from
+    the customer; a retención is withheld from the payment. Putting the
+    retención inside the total would overstate what the customer owes, and
+    putting the recargo outside it would understate the invoice.
+    """
+    result = invoke_cached_cli(
+        [
+            "app", "ledger", "invoice", "catalogue", "create",
+            "--kind", "issued",
+            "--counterparty-nif", "B12345674",
+            "--counterparty-name", "Minorista Recargo SL",
+            "--invoice-number", "2026-REG-001",
+            "--invoice-date", "2026-05-04",
+            "--country-code", "ES",
+            "--taxable-base", "1000.00", "--iva-rate", "21",
+            "--invoice-class", "RECTIFICATIVA",
+            "--series", "R",
+            "--rectifies-invoice-number", "2026-0044",
+            "--recargo", "52.00",
+            "--iva-category", "domestic_general_21",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code == 0, result.output
+    assert _line_value(result.output, "invoice_class") == "RECTIFICATIVA"
+    assert _line_value(result.output, "series") == "R"
+    assert _line_value(result.output, "recargo_amount") == "52.00"
+    # 1000 base + 210 cuota + 52 recargo, the recargo INSIDE the total.
+    assert _line_value(result.output, "grand_total") == "1262.00"
+
+
+def test_catalogue_create_refuses_an_unknown_invoice_class_naming_the_accepted_set() -> None:
+    """A closed axis must instruct on parse failure, never fail bare.
+
+    The option is typed on the enum so click renders the accepted set rather
+    than leaving the operator to guess, which is the CLI boundary's job for
+    every closed value set.
+    """
+    result = invoke_cached_cli(
+        [
+            "app", "ledger", "invoice", "catalogue", "create",
+            "--kind", "issued",
+            "--counterparty-nif", "B12345674",
+            "--counterparty-name", "Cliente SL",
+            "--invoice-number", "2026-REG-002",
+            "--invoice-date", "2026-05-04",
+            "--country-code", "ES",
+            "--taxable-base", "1000.00", "--iva-rate", "21",
+            "--invoice-class", "no-such-class",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0
+    assert "RECTIFICATIVA" in result.output

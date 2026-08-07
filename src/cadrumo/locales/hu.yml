@@ -1993,6 +1993,11 @@ cli:
             elérhető.
           wizard_idempotent_noop: 'Idempotens no-op: már létezik ilyen azonosságú
             számla (%{invoice_id}); semmi sem jött létre.'
+          invoice_class_help: 'A számla osztálya. A rectificativa emellett a --rectifies-invoice-number megadását is megköveteli, amely a javított számlát nevezi meg.'
+          series_help: 'A számla sorozatjele, ha a kibocsátó használ ilyet.'
+          rectifies_help: 'Annak a számlának a száma, amelyet ez a rectificativa javít.'
+          recargo_help: 'Az adótételre felszámított recargo de equivalencia (LIVA 161. cikk). A retencióval ellentétben a számla végösszegén belül szerepel.'
+          iva_category_help: 'Az ügylet áfakezelése. Szükséges ahhoz, hogy egy renta-számítás megalapozhassa.'
         country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
           műveletek).
         eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
