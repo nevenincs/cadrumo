@@ -73,6 +73,7 @@ from ._schema import DataBindingDefinition, ModeloRevision
 __all__ = [
     "LEDGER_BINDING_SOURCE_KINDS",
     "IvaLedgerObservation",
+    "IvaSelectorAxesProtocol",
     "OssIossLedgerObservation",
     "RentaGastosEstimacionDirectaObservationProtocol",
     "RentaGastosPagoFraccionadoObservationProtocol",
@@ -542,6 +543,36 @@ def validate_ledger_iva_aggregation_binding_definition(
         raise RegistryValidationError(f"binding {binding.id!r} {exc}") from exc
 
 
+class IvaSelectorAxesProtocol(Protocol):
+    """The five axes the IVA selector matcher reads off an observation.
+
+    Declared so the matcher can state the shape it actually needs instead of
+    naming the full :class:`IvaLedgerObservation` record. Both that record and
+    the reachability probe below satisfy it structurally, which is what makes
+    the probe a legitimate stand-in rather than an unchecked substitution --
+    previously the probe was passed where the concrete record was declared and
+    only the absence of a checked seam kept that quiet.
+
+    Same shape as :class:`RentaIncomeObservationProtocol` serves for the renta
+    side of this module.
+    """
+
+    @property
+    def category(self) -> IvaCategory: ...
+
+    @property
+    def rate_kind(self) -> IvaRateKind: ...
+
+    @property
+    def flow_direction(self) -> IvaFlowDirection: ...
+
+    @property
+    def cash_accounting_treatment(self) -> IvaCashAccountingTreatment: ...
+
+    @property
+    def exemption_article(self) -> IvaExemptionArticle | None: ...
+
+
 class _IvaReachabilityProbeObservation(NamedTuple):
     """Minimal shape carrying only the five axes the IVA matcher reads.
 
@@ -616,7 +647,7 @@ def _iva_reachability_probe(selector: _IvaLedgerSelector) -> None:
 
 
 def _iva_ledger_observation_matches_selector(
-    observation: IvaLedgerObservation,
+    observation: IvaSelectorAxesProtocol,
     selector: _IvaLedgerSelector,
     *,
     categories: set[IvaCategory],
@@ -635,11 +666,11 @@ def _iva_ledger_observation_matches_selector(
     return observation.exemption_article in set(selector.exemption_articles)
 
 
-def _iva_build_matcher(selector: _IvaLedgerSelector) -> Callable[[IvaLedgerObservation], bool]:
+def _iva_build_matcher(selector: _IvaLedgerSelector) -> Callable[[IvaSelectorAxesProtocol], bool]:
     categories = set(selector.categories)
     rate_kinds = set(selector.rate_kinds)
 
-    def matcher(observation: IvaLedgerObservation) -> bool:
+    def matcher(observation: IvaSelectorAxesProtocol) -> bool:
         return _iva_ledger_observation_matches_selector(
             observation,
             selector,
@@ -1529,6 +1560,27 @@ def _renta_gastos_pago_fraccionado_reachability_probe(
     match, and it cannot catch a matcher that accepts the wrong rows or a
     resolver that aggregates matched rows incorrectly -- both are outside
     what a build-time, data-free check can observe.
+
+    **It also cannot fail as this family is currently matched, and saying so
+    is the point.** The matcher tests
+    ``observation.target_casilla_id == selector.target_casilla_id`` while the
+    probe builds the observation from that same field, so the comparison is
+    ``x == x`` for every selector, including a nonsense casilla id. Read
+    without this paragraph the probe looks like coverage of a defect class it
+    cannot reach, which is worse than no probe at all.
+
+    It is kept rather than deleted because it costs nothing and becomes live
+    the moment this family's matcher tests anything the selector declares as a
+    SET -- the shape that makes the sibling
+    :func:`_iva_reachability_probe` genuinely bite. The tautology is pinned by
+    ``test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail``,
+    which reddens if the match rule changes, forcing this paragraph to be
+    rewritten instead of quietly outliving its truth.
+
+    The reachability guarantee this family actually has is elsewhere and is
+    real: ``target_casilla_id`` is validated against
+    :data:`_RENTA_130_GASTO_CASILLAS` by the caller below, and the revision's
+    own casilla set is cross-checked at snapshot build.
     """
     matcher = _renta_gastos_pago_fraccionado_build_matcher(selector)
     probe = _ReachabilityProbeObservation(

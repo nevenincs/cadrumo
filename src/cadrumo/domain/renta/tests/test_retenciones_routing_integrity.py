@@ -13,6 +13,7 @@ import pytest
 from ....core import Modelo
 from ....core.resources import resources
 from .._retenciones_routing_integrity import (
+    RENTA_130_RETENCIONES_BINDING_ID,
     RENTA_130_RETENCIONES_OUTPUT_CASILLA,
     check_m130_retenciones_output_casilla,
 )
@@ -39,28 +40,50 @@ def test_retenciones_check_is_registered_with_the_registry_validator() -> None:
     assert check_m130_retenciones_output_casilla in _CROSS_DOMAIN_SNAPSHOT_CHECKS
 
 
-def test_check_fires_only_for_m130_and_only_when_the_casilla_is_absent() -> None:
-    """The check function's own logic, exercised directly without a real snapshot.
+def test_check_fires_only_when_the_declared_binding_has_nowhere_to_report() -> None:
+    """The check's own logic, exercised directly without a real snapshot.
+
+    Three conditions must hold together for a failure, and each is tested
+    alone so a change that drops one cannot pass: the modelo is 130, the
+    revision DECLARES the retenciones binding, and its output casilla is
+    absent.
+
+    The binding condition is the load-bearing one. The requirement exists
+    only because a binding redirects its resolved value onto casilla 06, so
+    a revision declaring no such binding has nothing to protect. Asserting
+    it for every modelo-130 revision fired on synthetic revisions built to
+    exercise unrelated referential-integrity properties, which legitimately
+    carry a minimal casilla set.
 
     The third Protocol parameter (the first-slice check's own concern) is
-    passed through unused by this check -- both an empty and a populated
-    value must produce the same result, since this check reads only
-    ``modelo_id`` and ``casilla_ids``.
+    passed through unused, so an empty and a populated value must produce
+    the same result.
     """
     unrelated_targets = frozenset({"0183"})
+    declared = frozenset({RENTA_130_RETENCIONES_BINDING_ID})
 
-    # Casilla present -- no failure.
-    assert check_m130_retenciones_output_casilla("130", frozenset({"06"}), unrelated_targets) == []
-    assert check_m130_retenciones_output_casilla("130", frozenset({"06"}), frozenset()) == []
-
-    # Casilla absent -- exactly one failure naming the casilla.
-    failures = check_m130_retenciones_output_casilla("130", frozenset(), unrelated_targets)
+    # All three conditions hold -- exactly one failure, naming both halves.
+    failures = check_m130_retenciones_output_casilla("130", frozenset(), unrelated_targets, declared)
     assert len(failures) == 1
-    assert "06" in failures[0]
+    assert RENTA_130_RETENCIONES_OUTPUT_CASILLA in failures[0]
+    assert RENTA_130_RETENCIONES_BINDING_ID in failures[0]
 
-    # A non-130 modelo is outside this check's scope, even with no casilla 06.
-    assert check_m130_retenciones_output_casilla("100", frozenset(), unrelated_targets) == []
-    assert check_m130_retenciones_output_casilla("303", frozenset(), unrelated_targets) == []
+    # The first-slice parameter is genuinely unused: same verdict either way.
+    assert check_m130_retenciones_output_casilla("130", frozenset(), frozenset(), declared) == failures
+
+    # Casilla present -- the binding has somewhere to report.
+    assert check_m130_retenciones_output_casilla("130", frozenset({"06"}), unrelated_targets, declared) == []
+
+    # Binding absent -- no redirect runs, so casilla 06 is not required.
+    assert check_m130_retenciones_output_casilla("130", frozenset(), unrelated_targets, frozenset()) == []
+    assert (
+        check_m130_retenciones_output_casilla("130", frozenset(), unrelated_targets, frozenset({"some-other-binding"}))
+        == []
+    )
+
+    # A non-130 modelo is outside this check's scope even when both hold.
+    assert check_m130_retenciones_output_casilla("100", frozenset(), unrelated_targets, declared) == []
+    assert check_m130_retenciones_output_casilla("303", frozenset(), unrelated_targets, declared) == []
 
 
 def test_modelo_130_revisions_declare_the_output_casilla() -> None:

@@ -1382,7 +1382,7 @@ def _empty_source_resolution(
 #: BOTH the live calculate mesh (:meth:`RetencionesAggregationSourceResolver.resolve`)
 #: and the per-modelo aggregation service (:func:`~._service.aggregate_per_modelo`,
 #: the CLI ``aggregate`` / pull surface), so the two paths cannot drift
-#: (``one-aggregation-path-pull-equals-calculate``).
+#: (``aeat-calculation-aggregation``).
 #:
 #: The calculate path is scoped to the modelos whose registry declares a
 #: ``retenciones_aggregation`` binding (111/115/180/193 today) by the resolver's
@@ -1438,7 +1438,7 @@ class RetencionesAggregationSourceResolver:
         ``aggregate`` / pull surface) route through this single method over the
         shared :data:`_RETENCIONES_AGGREGATORS` dispatch, so the calculate and
         pull surfaces produce byte-identical aggregation and cannot drift
-        (``one-aggregation-path-pull-equals-calculate``). Raises ``KeyError``
+        (``aeat-calculation-aggregation``). Raises ``KeyError``
         for a non-retenciones modelo, matching the prior service dispatch.
         """
         return _RETENCIONES_AGGREGATORS[modelo](tuple(observations), period=period)
