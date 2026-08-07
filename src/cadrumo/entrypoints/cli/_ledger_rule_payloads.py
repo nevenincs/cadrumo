@@ -148,9 +148,7 @@ class RuleApplyResult(OutputSchema):
 class LLMProviderAvailabilityPayload(OutputSchema):
     """One subprocess LLM provider's PATH availability.
 
-    Nested in
-    :class:`LedgerProvidersResult`
-    and mirrors
+    Mirrors
     :class:`LLMProviderAvailability` from
     :func:`available_llm_providers`. The probe uses PATH lookup only; it does
     not spawn the provider CLI or send transaction data to a cloud service.
@@ -160,38 +158,6 @@ class LLMProviderAvailabilityPayload(OutputSchema):
     cli_binary: str = Field(min_length=1)
     available: bool
     resolved_path: str | None = None
-
-
-class VisionProviderPayload(OutputSchema):
-    """The on-host Ollama vision model's availability.
-
-    Nested in
-    :class:`LedgerProvidersResult`
-    and carries the
-    :class:`DependencyStatus` fields surfaced
-    beside subprocess LLM providers, including operator remediation text when
-    the local model or service is unavailable.
-    """
-
-    service: str
-    available: bool
-    detail: str = ""
-    remediation: str = ""
-
-
-@register_schema("ledger.providers")
-class LedgerProvidersResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger providers``.
-
-    Reports subprocess cloud-provider CLIs from
-    :func:`available_llm_providers` and the on-host Ollama vision model probed
-    by :func:`probe_ollama_vision`, so the operator sees every classification
-    backend - cloud and local - in one place before running LLM-assisted
-    classification.
-    """
-
-    providers: list[LLMProviderAvailabilityPayload]
-    vision: VisionProviderPayload | None = None
 
 
 class LlmUsageProviderPayload(OutputSchema):

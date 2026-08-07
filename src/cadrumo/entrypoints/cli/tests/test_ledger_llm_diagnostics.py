@@ -23,7 +23,6 @@ from click.testing import Result
 from pydantic import ValidationError
 
 from ....adapters.outbound.llm import UsageRecorder
-from ....llm import LLMProvider, LLMResponse
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
@@ -38,6 +37,7 @@ from ....domain.transactions import (
     TransactionDirection,
     set_classification,
 )
+from ....llm import LLMProvider, LLMResponse
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile

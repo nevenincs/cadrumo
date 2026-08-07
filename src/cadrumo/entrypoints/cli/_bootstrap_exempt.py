@@ -144,7 +144,6 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # a bucket or touches the secure store, so none can answer differently for
     # a logged-in operator — refusing them taught the operator to log in to
     # read a constant.
-    "app ledger providers",
     "app ledger categories",
     "app live portals list",
     "app live portals view",

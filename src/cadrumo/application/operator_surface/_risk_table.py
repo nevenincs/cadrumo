@@ -268,7 +268,6 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "ledger.prorrata.elect_especial": CommandRiskDeclaration(),
     "ledger.prorrata.elect_general": CommandRiskDeclaration(),
     "ledger.prorrata.list": CommandRiskDeclaration(),
-    "ledger.providers": CommandRiskDeclaration(),
     "ledger.pull_folder": CommandRiskDeclaration(),
     "ledger.ratios.eligible": CommandRiskDeclaration(),
     "ledger.ratios.list": CommandRiskDeclaration(),

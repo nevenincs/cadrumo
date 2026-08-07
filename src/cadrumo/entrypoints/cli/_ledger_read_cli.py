@@ -25,7 +25,6 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
     LedgerExportCommand,
-    available_llm_providers,
     export_ledger_transactions,
     get_manual_transaction,
     ledger_transaction_payload,
@@ -94,7 +93,6 @@ _LEDGER_EVIDENCE_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
 
 def register_read_commands(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
     """Register ledger read/discovery/reporting commands."""
-    _register_ledger_providers_command(app)
     _register_ledger_llm_diagnostics_command(app)
     _register_ledger_categories_command(app)
     _register_ledger_check_command(app)
@@ -120,45 +118,6 @@ def _ledger_list_pairing_error_year(filters: list[str], option_year: int | None)
             if stripped.isdecimal():
                 return int(stripped)
     return None
-
-
-def _register_ledger_providers_command(app: typer.Typer) -> None:
-    @app.command("providers", help=tr("cli.ledger.providers.help"))
-    def ledger_providers(ctx: typer.Context) -> None:
-        """List the cloud-provider CLIs on PATH and the on-host vision model."""
-        from ...application.provisioning import probe_ollama_vision
-        from ._ledger_payloads import LedgerProvidersResult
-
-        listings = available_llm_providers()
-        vision = probe_ollama_vision()
-        result = LedgerProvidersResult.model_validate(
-            {
-                "providers": [
-                    {
-                        "provider": item.provider,
-                        "cli_binary": item.cli_binary,
-                        "available": item.available,
-                        "resolved_path": item.resolved_path,
-                    }
-                    for item in listings
-                ],
-                "vision": {
-                    "service": vision.service,
-                    "available": vision.available,
-                    "detail": vision.detail,
-                    "remediation": vision.remediation,
-                },
-            },
-        )
-        lines: list[str] = []
-        for item in listings:
-            status = "available" if item.available else "unavailable"
-            location = item.resolved_path or item.cli_binary
-            lines.append(f"{item.provider.value}\t{status}\t{location}")
-        vision_status = "available" if vision.available else "unavailable"
-        vision_tail = f"\t{vision.remediation}" if vision.remediation else ""
-        lines.append(f"{vision.service}\t{vision_status}\t{vision.detail}{vision_tail}")
-        _emit_envelope(ctx, command="ledger.providers", result=result, lines=lines)
 
 
 def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
