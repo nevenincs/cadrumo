@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:6ae588ab8d82d0a101ae92a576f434280389095a347c645516e2ebf9ed9c4e60'
+body_hash: 'sha256:a7888b1b47362cfa2b4d351ca1c725525feba461009f99575c851d5c10171089'
 related:
   - '[[2026-08-07-calculation-chain-integrity-W01-P01-S01]]'
   - '[[2026-08-07-calculation-chain-integrity-W01-P01-S02]]'
@@ -52,6 +52,7 @@ related:
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S41]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S42]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S43]]'
+  - '[[2026-08-07-calculation-chain-integrity-W06-P08-S44]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S46]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S47]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S48]]'
@@ -67,6 +68,7 @@ related:
   - '[[2026-08-07-calculation-chain-integrity-activity-type-placement-adr]]'
   - '[[2026-08-07-calculation-chain-integrity-adr]]'
   - '[[2026-08-07-calculation-chain-integrity-binding-output-casilla-declaration-adr]]'
+  - '[[2026-08-07-calculation-chain-integrity-close-honesty-review-audit]]'
   - '[[2026-08-07-calculation-chain-integrity-iva-regimen-surface-boundaries-audit]]'
   - '[[2026-08-07-calculation-chain-integrity-iva-subjection-clave-authorities-audit]]'
   - '[[2026-08-07-calculation-chain-integrity-m390-annual-under-modelling-research]]'
@@ -88,6 +90,7 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 
 ### audit
 
+- `2026-08-07-calculation-chain-integrity-close-honesty-review-audit` - `calculation-chain-integrity` audit: close honesty review
 - `2026-08-07-calculation-chain-integrity-iva-regimen-surface-boundaries-audit` - `calculation-chain-integrity` audit: what is a modelled IVA settlement regimen, and what only looks like one
 - `2026-08-07-calculation-chain-integrity-iva-subjection-clave-authorities-audit` - `calculation-chain-integrity` audit: `IVA subjection and M349 clave: two fragmented authorities`
 
@@ -137,6 +140,7 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 - `2026-08-07-calculation-chain-integrity-W06-P08-S41` - `calculation-chain-integrity` exec W06.P08.S41
 - `2026-08-07-calculation-chain-integrity-W06-P08-S42` - `calculation-chain-integrity` exec W06.P08.S42
 - `2026-08-07-calculation-chain-integrity-W06-P08-S43` - `calculation-chain-integrity` exec W06.P08.S43
+- `2026-08-07-calculation-chain-integrity-W06-P08-S44` - `calculation-chain-integrity` exec W06.P08.S44
 - `2026-08-07-calculation-chain-integrity-W06-P08-S46` - `calculation-chain-integrity` exec W06.P08.S46
 - `2026-08-07-calculation-chain-integrity-W06-P08-S47` - `calculation-chain-integrity` exec W06.P08.S47
 - `2026-08-07-calculation-chain-integrity-W06-P08-S48` - `calculation-chain-integrity` exec W06.P08.S48

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:8a9b7a58bda52ff4ad5cf51cd9fff8c6e4106b740df064fab42085e549345d2d'
+body_hash: 'sha256:7619f078095a1a7ac1443cf736add25d8bdc27111c2f994da5623fb6bb67b4e3'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
   - "[[2026-07-26-multi-activity-profile-reference]]"
@@ -174,3 +174,50 @@ Until the AEAT code-set mapping is grounded, the rate partition cannot be
 derived and the advisory keeps its current full-set behaviour. That is the
 correct interim state: it is visible, non-blocking, and never suppresses a
 finding on an unverified fact.
+
+## Amendment 2026-08-07: the grounding constraint is closed, and the placement was not honoured
+
+Recorded by the campaign's close honesty review rather than left for a reader to
+rediscover.
+
+**The Constraints paragraph above is satisfied.** It required establishing, before
+any rate mapping, whether AEAT's *Tipo de actividad* code set discriminates at the
+granularity art. 95 needs. `W03.P05.S37` located the code table -- published in the
+Modelo 036 instrucciones, not with the diseño, which is why sweeps of the diseño
+corpus kept coming back empty -- and bundled it with provenance. `W03.P05.S38`
+answered the question: the set discriminates three of the four boundaries and
+**not** the art. 95.4.1.º engorde de porcino y avicultura carve-out, because the
+table's finest livestock grain is `B02 Ganadera`.
+
+The fallback this paragraph specifies therefore applies, and was taken: the mapping
+is grounded and declared in the registry as the `rirpf-art-95:selector-m036-*`
+parameters, each with its own `legal_refs`, never inferred in code. The engorde
+partition carries a deliberately EMPTY code set so the gap is legible where the
+mapping is read.
+
+**The placement ruling was NOT honoured, and that is a defect in the execution, not
+a revision of this ruling.** `W03.P05.S11` shipped `tipo_actividad: TipoActividad`
+on `Transaction` -- the activity type VALUE on the row -- which option B above
+rejects in exactly those words. The step was implemented without reading this
+record; its own exec note argues the per-row placement from first principles and
+never mentions that a decision already existed. The campaign applied its discovery
+discipline to code and skipped it for decisions.
+
+The mitigation is real but partial: this ADR and the multi-activity ADR it depends
+on are both `proposed`, no per-activity profile row exists in the tree, and waiting
+would have blocked the Modelo 131 agrarian aggregation behind two unaccepted
+records. Nothing is duplicated today because there is no upstream declaration to
+duplicate.
+
+The hazard is dated rather than absent. When the per-activity profile row lands
+carrying its own tipo de actividad, `Transaction.tipo_actividad` becomes a second
+home for one fact and the drift this ruling predicted begins, invisibly -- both
+fields individually correct, diverging only for a taxpayer who edits one. A
+tripwire now fails at that moment: `src/cadrumo/tests/test_tipo_actividad_single_home.py`
+asserts exactly one stored home and its refusal names this record and the readers to
+repoint. It was mutation-proven by adding a second stored field and observing the
+red, then reverted.
+
+So this ruling stands unamended in substance. What changed is that its constraint is
+discharged, its violation is recorded rather than quietly carried, and the moment it
+starts costing something is now guarded.
