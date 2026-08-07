@@ -58,6 +58,7 @@ from ._prior_payment_advisory import (
     collect_prior_payment_not_deducted_diagnostics,
 )
 from ._prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
+from ._rate_box_advisory import collect_rate_box_coverage_diagnostics
 from ._settlement_grade_advisory import collect_settlement_not_computed_diagnostics
 
 __all__ = ["collect_bucket_aggregation_advisory_diagnostics"]
@@ -200,6 +201,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             filing_year=filing_year,
             bucket_id=bucket_id,
         )
+        + collect_rate_box_coverage_diagnostics(revision, casilla_values)
         + collect_prorrata_regularizacion_diagnostics(
             revision,
             casilla_values,

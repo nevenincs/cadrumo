@@ -8,7 +8,9 @@ a stored, literal, or operator-supplied ``revision_id`` into
 law-determined period-to-revision resolver.  The ``revision_id`` parameter on
 ``snapshot()`` / ``select_revision()`` is reclassified as an *assertion
 parameter*: legitimate only for (i) registry-derived enumeration and
-(ii) fixture / scenario replay pinning.
+(ii) fixture / scenario replay pinning.  Only (i) has production members —
+scenario replay is exercised by the test harness, which the scan skips along
+with every other module under a ``tests/`` directory.
 
 The three benign exemptions confirmed by the registry call-site sweep are pinned
 here as named constants.  Any new call site passing a ``revision_id`` into
@@ -45,11 +47,7 @@ _BENIGN_EXEMPTIONS: frozenset[str] = frozenset(
         #    narrows to that same revision; consistent-by-construction, and NOT
         #    a calculation-on-a-filing path.
         "application/filing/runtime.py",
-        # 3. Fixture / scenario replay: pins the revision a fixture declares;
-        #    by the structural non-overlap property the pin either equals the
-        #    law-determined revision or the run refuses.
-        "domain/calculations/registry/tests/_scenarios.py",
-        # 4. Registry-derived enumeration: the referential-integrity preflight
+        # 3. Registry-derived enumeration: the referential-integrity preflight
         #    probe builds a snapshot for EVERY revision of EVERY bundled modelo,
         #    pinning each revision.id to itself while iterating
         #    authority.modelos / modelo.revisions.values() directly. The pin is

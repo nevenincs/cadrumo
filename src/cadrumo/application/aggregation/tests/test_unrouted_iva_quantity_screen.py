@@ -257,7 +257,7 @@ def test_the_advisory_reaches_the_resolver_envelope(tmp_path: Path) -> None:
         )
 
     advisories = [
-        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_iva_quantity"
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
     ]
     assert len(advisories) == 1, "a revision drawing no base must surface exactly one advisory"
     assert "base_amount_sum" in advisories[0].message
@@ -288,5 +288,100 @@ def test_the_committed_revision_raises_no_advisory_in_the_envelope(tmp_path: Pat
         )
 
     assert not [
-        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_iva_quantity"
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
     ]
+
+
+def _reverse_charge_purchase() -> Transaction:
+    """An intra-community acquisition: cuota self-assessed, base imponible carried.
+
+    The flow direction is NOT set here. ``derive_flow_for_classification``
+    routes every reverse-charge category to ``INVERSION_SUJETO_PASIVO``
+    regardless of invoice direction, and the projection applies it — a fixture
+    that hand-set ``SOPORTADO`` would screen a shape production never emits and
+    manufacture findings from its own error.
+    """
+    raw = RawTransaction(
+        provider_transaction_id="aic-1",
+        booked_date=date(2025, 2, 10),
+        value_date=date(2025, 2, 10),
+        amount=Decimal("1000.00"),
+        currency="EUR",
+        counterparty="Proveedor UE",
+        description="adquisicion intracomunitaria",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="c" * 64,
+            source_row_index=2,
+            source_format=SourceFormat.MANUAL,
+            ingested_at=_NOW,
+            provider_name="manual",
+        ),
+        raw_fields={"row": "aic-1"},
+    )
+    return Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.BUSINESS,
+            "taxable_base": Decimal("1000.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("210.00"),
+            "iva_category": IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            "lifecycle_state": TransactionLifecycleState.ACTIVE,
+            "classified_at": _NOW,
+            "classified_by": "manual",
+        },
+    )
+
+
+def test_a_partitioned_fact_is_screened_per_row_not_per_revision() -> None:
+    """The live Modelo 303 gap a flat coverage set cannot see.
+
+    Modelo 303 declares eight ``base_amount_sum`` bindings, so "is this fact
+    drawn" answers yes for every row. But those bindings select the domestic
+    tiers, intra-community supplies and exports, while the cuota bindings ALSO
+    reach the reverse-charge and import categories. An intra-community
+    acquisition's base imponible is therefore reached by no base binding at all,
+    on the COMMITTED revision, with no fact stripped by this test.
+
+    A flat drawn-set is silent here, which is the same defect the quantity
+    screen exists to catch, one level in: coverage must be asked per row and per
+    fact, never per fact alone.
+    """
+    rows = _observations(_reverse_charge_purchase())
+
+    unrouted = unrouted_ledger_iva_quantities(_m303_revision(), rows)
+
+    assert [entry.fact for entry in unrouted] == ["base_amount_sum"]
+    assert unrouted[0].total == Decimal("1000.00")
+    # The cuota IS reached, by a binding selecting this row's category. Asserted
+    # so the test cannot pass by reporting everything.
+    assert "iva_amount_sum" not in {entry.fact for entry in unrouted}
+
+
+def test_the_row_screen_is_silent_on_the_partitioned_gap() -> None:
+    """Proved, not asserted: the row screen cannot report the case above.
+
+    The reverse-charge row IS consumed -- by the cuota bindings that select its
+    category -- so the row-keyed screen sees nothing wrong while its base
+    imponible reaches no binding.
+    """
+    rows = _observations(_reverse_charge_purchase())
+
+    assert unsupported_ledger_iva_observations(_m303_revision(), rows) == ()
+    assert unrouted_ledger_iva_quantities(_m303_revision(), rows) != ()
+
+
+def test_an_ordinary_domestic_row_stays_silent_on_the_committed_revision() -> None:
+    """Anti-false-fire control for the per-row coverage change.
+
+    Per-row screening is strictly more sensitive than the flat set it replaced,
+    so the risk it introduces is firing on the ordinary case and training
+    operators to ignore the advisory. A domestic sale and a domestic purchase
+    are both fully covered on the committed revision and must stay silent.
+    """
+    sale = _observations(_sale("dom-sale", base="1000.00", iva="210.00"))
+    assert unrouted_ledger_iva_quantities(_m303_revision(), sale) == ()

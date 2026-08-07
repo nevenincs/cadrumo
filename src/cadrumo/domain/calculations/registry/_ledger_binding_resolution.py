@@ -281,6 +281,7 @@ def unrouted_ledger_family_quantities[ObservationT, SelectorT](
     *,
     source_kind: BindingSourceKind,
     parse_selector: Callable[[DataBindingDefinition], SelectorT],
+    build_matcher: Callable[[SelectorT], Callable[[ObservationT], bool]],
     read_fact: Callable[[SelectorT], str],
     independent_facts: frozenset[str],
     readers: Mapping[str, Callable[[ObservationT], Decimal]],
@@ -289,8 +290,9 @@ def unrouted_ledger_family_quantities[ObservationT, SelectorT](
 
     The third ledger-family screen, watching an axis the two row-keyed screens
     cannot see. :func:`unsupported_ledger_family_observations` asks whether a
-    ROW is selected by some binding; this one asks whether a QUANTITY is drawn
-    by some binding, whatever happens to the rows carrying it.
+    ROW is selected by some binding; this one asks, PER ROW AND PER FACT,
+    whether the quantity that row carries is drawn by a binding that actually
+    reaches it.
 
     The distinction is load-bearing wherever one observation carries several
     quantities: a row consumed for one of them reads as routed while a second,
@@ -298,16 +300,33 @@ def unrouted_ledger_family_quantities[ObservationT, SelectorT](
     screens stay clean while the value disappears from the filing
     (``no-silent-under-declaration``).
 
+    The coverage question is asked per (row, fact) rather than per fact, and
+    that is the whole of the difference between this screen working and this
+    screen being decorative. A flat "does any binding declare this fact" set
+    passes the PARTITIONED case: a fact declared by bindings whose selectors
+    reach only OTHER rows counts as drawn for every row, so a quantity carried
+    by the rows those bindings do not select vanishes with both screens clean —
+    the same defect this screen exists to catch, one level in. Modelo 303 is a
+    live instance: its base bindings cover the domestic tiers, intra-community
+    supplies and exports, while its cuota bindings additionally cover the
+    reverse-charge and import categories, so an intra-community acquisition's
+    base imponible is reached by no base binding at all.
+
     Reports nothing when the rows carry nothing: a zero total is a legitimate
     zero rather than a modelling gap, and this screen must not manufacture a
     finding from it.
 
     Args:
         revision: The :class:`ModeloRevision` whose bindings decide which facts
-            are drawn.
+            are drawn, and which rows each drawing binding reaches.
         observations: The family's typed ledger observations to screen.
         source_kind: The :class:`BindingSourceKind` this family's bindings declare.
         parse_selector: The family's selector parser.
+        build_matcher: Builds a per-observation match predicate from a parsed
+            selector — the same collaborator the other two shapes take, so
+            "does this binding reach this row" has one definition across all
+            three screens. Matchers are built once per binding, never per
+            (observation, binding) pair.
         read_fact: Reads the declared fact off a parsed selector.
         independent_facts: The screened set, from
             :func:`independent_quantity_facts`.
@@ -316,8 +335,10 @@ def unrouted_ledger_family_quantities[ObservationT, SelectorT](
             under one reading and resolved under another.
 
     Returns:
-        One :class:`UnroutedLedgerQuantity` per uncovered non-zero quantity,
-        ordered by fact name. Empty when every quantity the rows carry is drawn.
+        One :class:`UnroutedLedgerQuantity` per fact with uncovered non-zero
+        rows, ordered by fact name, each carrying only the rows that fact's
+        bindings fail to reach. Empty when every quantity the rows carry is
+        drawn by a binding selecting them.
 
     Raises:
         RegistryValidationError: If a screened fact declares no reader. The
@@ -325,18 +346,24 @@ def unrouted_ledger_family_quantities[ObservationT, SelectorT](
             (:func:`assert_quantity_readers_cover_independent_facts`) pins the
             two together, so reaching here means that gate was bypassed.
     """
-    drawn = {read_fact(parse_selector(binding)) for binding in revision.bindings if binding.source == source_kind}
+    matchers_by_fact: dict[str, list[Callable[[ObservationT], bool]]] = {}
+    for binding in revision.bindings:
+        if binding.source != source_kind:
+            continue
+        selector = parse_selector(binding)
+        matchers_by_fact.setdefault(read_fact(selector), []).append(build_matcher(selector))
     rows = tuple(observations)
     unrouted: list[UnroutedLedgerQuantity[ObservationT]] = []
     for fact in sorted(independent_facts):
-        if fact in drawn:
-            continue
         read = readers.get(fact)
         if read is None:
             raise RegistryValidationError(
                 f"fact {fact!r} is screened as an independent quantity but declares no reader",
             )
-        carrying = tuple(row for row in rows if read(row) != Decimal("0"))
+        matchers = matchers_by_fact.get(fact, [])
+        carrying = tuple(
+            row for row in rows if read(row) != Decimal("0") and not any(matcher(row) for matcher in matchers)
+        )
         if not carrying:
             continue
         unrouted.append(

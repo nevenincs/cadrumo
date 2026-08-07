@@ -87,25 +87,25 @@ CalculationSourceDiagnosticReason = Literal[
     "unhandled_binding_source",
     "unresolved_derived_binding",
     "unrouted_observation",
-    # An independent QUANTITY the consumed rows carry that no binding draws --
-    # today the retención suffered, which rides on a row the income bindings
-    # consume. Distinct from "unrouted_observation" on the axis that matters to
-    # a reader: there, no binding consumes the row and every screen agrees it is
-    # unrouted; here the row IS consumed, so the row-keyed screens are silent by
-    # construction and their silence must not read as confirmation. Collapsing
-    # the two would leave an operator unable to tell "this row reaches nothing"
-    # from "this row reaches a casilla but its withholding does not".
+    # An independent QUANTITY consumed rows carry that no binding drawing that
+    # quantity reaches -- the retención suffered on the renta side, a base
+    # imponible or recargo on the IVA side. Distinct from "unrouted_observation"
+    # on the axis that matters to a reader: there, no binding consumes the row
+    # and every screen agrees it is unrouted; here the row IS consumed, so the
+    # row-keyed screens are silent by construction and their silence must not
+    # read as confirmation. Collapsing THOSE two would leave an operator unable
+    # to tell "this row reaches nothing" from "this row reaches a casilla but
+    # its withholding does not".
+    #
+    # Deliberately ONE member across every ledger family. Which family raised it
+    # is already on the diagnostic as source_kind (and binding_source derived
+    # from it), so a per-family member would carry nothing a consumer cannot
+    # already read while growing this Literal once per family -- the opposite
+    # gradient to the one the shared screen exists to produce. The consequence
+    # differs by family (a vanishing retención credit is a settlement error, a
+    # missing base imponible is a completeness error) and that belongs in the
+    # message, not in a routing key nothing routes on.
     "unrouted_declarable_quantity",
-    # The same row-versus-quantity axis on the IVA family: an IVA quantity every
-    # consumed row carries -- base imponible, cuota, or recargo -- that no
-    # ledger_iva_aggregation binding on the revision draws. Kept a separate
-    # member rather than folded into "unrouted_declarable_quantity" because the
-    # consequence class differs and an operator must route on it: there a
-    # taxpayer's suffered-retención CREDIT disappears from the settlement, here a
-    # base imponible the official form asks for is absent from a return whose
-    # cuota boxes are populated. Modelo 390 is the standing instance -- it draws
-    # cuota and recargo while declaring no base binding at all.
-    "unrouted_declarable_iva_quantity",
     # A row a binding DOES consume, but without the invoice substrate the
     # binding's fact assumes: its contribution rests on bank cash (or is
     # absent). Distinct from "unrouted_observation", which is a row no binding
@@ -153,6 +153,13 @@ CalculationSourceDiagnosticReason = Literal[
     "dt12_regime_window_closed",
     "dt12_regime_window_unverified",
     "dt12_parcial_rescate_guidance",
+    # A rate-keyed official box layer that accounts for LESS than the rate-blind
+    # total it breaks down. Not an unrouted quantity: the money IS routed, into
+    # the total, and the return declares it in full. What is missing is a rate
+    # for it, so no box may claim one -- which makes this the one advisory whose
+    # remedy is a ledger edit rather than a registry or resolver gap, and the one
+    # the export gate later refuses on.
+    "rate_boxes_underaccount_total",
 ]
 
 

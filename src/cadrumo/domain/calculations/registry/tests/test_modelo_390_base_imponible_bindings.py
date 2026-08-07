@@ -131,7 +131,10 @@ def test_annual_base_binding_draws_its_tier_base_amount(binding_id: str, expecte
 def test_annual_base_bindings_resolve_non_zero() -> None:
     """A binding that can only ever resolve zero is dormant capacity, not a draw."""
     resolved = _resolved()
-    base_bindings = {key: value for key, value in resolved.items() if key.endswith("-base")}
+    # Scoped to the four rate-blind total-layer bindings this module owns. The
+    # rate-specific box layer also ends in "-base" and legitimately resolves zero
+    # for any rate absent from a given fixture.
+    base_bindings = {key: value for key, value in resolved.items() if key.endswith("-base") and "-tipo-" not in key}
     assert base_bindings, "the annual revision declares no ledger base binding at all"
     assert all(value > 0 for value in base_bindings.values()), base_bindings
 

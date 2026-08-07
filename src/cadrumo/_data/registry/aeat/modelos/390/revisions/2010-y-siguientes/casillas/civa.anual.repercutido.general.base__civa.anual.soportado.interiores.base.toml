@@ -19,7 +19,7 @@
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.repercutido.general.base"
-number = "05"
+number = "iva.anual.repercutido.general.base"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_base_imponible_repercutida_general"
@@ -31,7 +31,7 @@ source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.repercutido.reducido.base"
-number = "03"
+number = "iva.anual.repercutido.reducido.base"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_base_imponible_repercutida_reducido"
@@ -45,7 +45,7 @@ source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.repercutido.super-reducido.base"
-number = "01"
+number = "iva.anual.repercutido.super-reducido.base"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_base_imponible_repercutida_super_reducido"

@@ -31,7 +31,7 @@ def test_a_producer_validates_with_a_field_origin() -> None:
     assert producer.source_kind is FieldOrigin.EXACT_STRUCTURED
 
 
-@pytest.mark.parametrize("origin", sorted(FieldOrigin, key=lambda member: member.value))
+@pytest.mark.parametrize("origin", list(FieldOrigin))
 def test_every_declared_origin_is_accepted(origin: FieldOrigin) -> None:
     """No member is admissible in the enum but rejected at this boundary."""
     producer = ExtractionProducer(source_kind=origin, identity="qwen2.5vl:3b", revision="sha256:ab")

@@ -33,18 +33,18 @@ requested modelo and returns the binding values as a
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, NamedTuple, Self
+from typing import Annotated, Final, NamedTuple, Self
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ElidedProse, Modelo, Period, PeriodKind
+from ...core import ElidedProse, Modelo, Period, PeriodKind, TipoActividad
 from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ...core.money import round_to_cents
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
@@ -58,9 +58,11 @@ from ...domain.transactions import (
     TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,
+    counts_toward_volumen_de_ingresos,
     has_activity_irpf_category,
     has_employment_irpf_category,
     maximum_supported_activity_retencion_rate,
+    tipo_actividad_code_set,
 )
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
@@ -504,26 +506,18 @@ def aggregate_renta_m100_income_ledger(
     window_end = date(period.filing_year, 12, 31)
     resolved_invoices = invoices if invoices is not None else InvoiceCatalogue()
 
-    observations: list[RentaIncomeObservation] = []
-    issues: list[RentaIncomeLedgerAggregationIssue] = []
-    for transaction in transactions.values():
-        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-            continue
-        outcome = _classify_income_transaction(
-            transaction,
-            invoices=resolved_invoices,
-            bucket_id=bucket_id,
-            cumulative_start=window_start,
-            cumulative_end=window_end,
-        )
-        if outcome is None:
-            continue
-        if isinstance(outcome, RentaIncomeLedgerAggregationIssue):
-            issues.append(outcome)
-        else:
-            # The classifier targets the M130 casilla 01; re-target the same
-            # eligible observation to the M100 income leaf 0171.
-            observations.append(outcome.model_copy(update={"target_casilla_id": _TARGET_CASILLA_M100_INGRESOS}))
+    # The classifier targets the M130 casilla 01; every eligible observation is
+    # re-targeted to the M100 income leaf 0171.
+    projected = _project_income_onto_casilla(
+        transactions,
+        invoices=resolved_invoices,
+        bucket_id=bucket_id,
+        window_start=window_start,
+        window_end=window_end,
+        target_casilla_id=_TARGET_CASILLA_M100_INGRESOS,
+    )
+    observations = list(projected.observations)
+    issues = list(projected.issues)
 
     casilla_aggregation = _m100_income_casilla_aggregation(period, observations)
     return RentaIncomeLedgerAggregation(
@@ -545,6 +539,200 @@ def _m100_income_casilla_aggregation(
         period=period,
         amount_fn=_computable_income_amount,
     )
+
+
+_TARGET_CASILLA_M131_AGRARIO: CasillaId = validated_casilla_id(
+    "05",
+    surface="_TARGET_CASILLA_M131_AGRARIO",
+)
+
+_M131_AGRARIO_ACTIVITY_SELECTOR: Final[str] = (
+    "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva"
+)
+
+
+def _m131_agrarian_activity_codes() -> frozenset[TipoActividad]:
+    """Return the Modelo 036 codes whose income feeds Modelo 131 casilla 05.
+
+    Delegates to the one reader for ``m036-tipo-actividad-code-set`` parameters
+    rather than splitting the string here. Several unrelated selectors share that
+    unit -- the four art. 95 partitions and this art. 110.1.c) set -- and a second
+    parser is a second place the unit check and the unknown-token refusal drift.
+
+    The set is NOT the art. 95 agrícola/ganadera one: that carries no forestal code,
+    so borrowing it would drop a forestal filer's entire quarterly volume.
+
+    Raises:
+        TransactionValidationError: If the selector parameter is absent or malformed.
+    """
+    return tipo_actividad_code_set(_M131_AGRARIO_ACTIVITY_SELECTOR)
+
+
+def aggregate_renta_m131_agrario_income_ledger_from_repositories(
+    *,
+    bucket_id: str,
+    period: Period,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+) -> RentaIncomeLedgerAggregation:
+    """Load the catalogue and aggregate the Modelo 131 agrarian quarterly volume.
+
+    Returns:
+        The :class:`RentaIncomeLedgerAggregation` for the requested quarter.
+    """
+    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
+    if repository.bucket_id != bucket_id:
+        raise AggregationValidationError(
+            t("aggregation.renta_ledger.errors.bucket_mismatch"),
+            context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
+        )
+    invoices = _load_income_invoices(bucket_id=bucket_id, invoice_repository=invoice_repository)
+    return aggregate_renta_m131_agrario_income_ledger(
+        repository.load(),
+        invoices,
+        bucket_id=bucket_id,
+        period=period,
+    )
+
+
+def aggregate_renta_m131_agrario_income_ledger(
+    transactions: TransactionCatalogue,
+    invoices: InvoiceCatalogue | None = None,
+    *,
+    bucket_id: str,
+    period: Period,
+) -> RentaIncomeLedgerAggregation:
+    """Aggregate the agrarian volumen de ingresos into Modelo 131 casilla 05.
+
+    Two filters separate this from the Modelo 130 path, and both are legal rather
+    than incidental:
+
+    * **Activity.** Only rows whose declared :class:`~core.TipoActividad` is in the
+      registry's art. 110.1.c) selector contribute. A row with no declared activity
+      contributes NOTHING here — the opposite of the concept default below, and
+      deliberately so. Silence about activity cannot mean "agrarian": routing an
+      undeclared row into casilla 05 would put a non-agrarian filer's income into an
+      agrarian box, and the same row is already claimed by the estimación-objetiva
+      side of the form. Under-filling a box the operator can still complete by hand
+      is recoverable; mis-routing income between two boxes of one return is not.
+    * **Concept.** Rows whose :class:`~core.ConceptoIngreso` art. 110.1.c) excludes —
+      subvenciones de capital and indemnizaciones — are dropped. An undeclared
+      concept IS included, because an unmarked receipt is far more likely to be
+      ordinary income than an exceptional one.
+
+    The window is the quarter itself rather than the cumulative year-to-date the
+    Modelo 130 path uses: art. 110.1.c) fixes the payment on *el volumen de ingresos
+    del trimestre*, and the AEAT Modelo 131 instrucciones for casilla 05 repeat it —
+    *el volumen de ingresos del trimestre por el que se realiza el pago fraccionado*.
+    Modelo 131 carries no cross-quarter cumulative on this leg.
+
+    Args:
+        transactions: The catalogue to project.
+        invoices: Consulted when classifying; an empty catalogue when omitted.
+        bucket_id: The active profile bucket.
+        period: The quarter being filed.
+
+    Returns:
+        The :class:`RentaIncomeLedgerAggregation` for casilla 05.
+
+    Raises:
+        AggregationPeriodError: If ``period`` is not a quarter.
+    """
+    if period.kind is not PeriodKind.QUARTERLY:
+        raise AggregationPeriodError(
+            t("aggregation.renta_ledger.errors.unsupported_period"),
+            context={"period": str(period)},
+        )
+    resolved_invoices = invoices if invoices is not None else InvoiceCatalogue()
+    agrarian_codes = _m131_agrarian_activity_codes()
+
+    projected = _project_income_onto_casilla(
+        transactions,
+        invoices=resolved_invoices,
+        bucket_id=bucket_id,
+        window_start=period.start_date,
+        window_end=period.end_date,
+        target_casilla_id=_TARGET_CASILLA_M131_AGRARIO,
+        admits=lambda transaction: (
+            transaction.tipo_actividad in agrarian_codes
+            and counts_toward_volumen_de_ingresos(transaction.concepto_ingreso)
+        ),
+    )
+
+    return RentaIncomeLedgerAggregation(
+        modelo=Modelo.M131.value,
+        period=period,
+        observations=projected.observations,
+        issues=projected.issues,
+        casilla_aggregation=fold_casilla_observations(
+            projected.observations,
+            modelo=Modelo.M131.value,
+            period=period,
+            amount_fn=_computable_income_amount,
+        ),
+    )
+
+
+class _ProjectedIncome(NamedTuple):
+    """Observations and issues from one pass over a catalogue."""
+
+    observations: tuple[RentaIncomeObservation, ...]
+    issues: tuple[RentaIncomeLedgerAggregationIssue, ...]
+
+
+def _project_income_onto_casilla(
+    transactions: TransactionCatalogue,
+    *,
+    invoices: InvoiceCatalogue,
+    bucket_id: str,
+    window_start: date,
+    window_end: date,
+    target_casilla_id: CasillaId,
+    admits: Callable[[Transaction], bool] | None = None,
+) -> _ProjectedIncome:
+    """Classify a catalogue once and re-target every eligible observation.
+
+    The Modelo 100 and Modelo 131 aggregations differ from the Modelo 130 one in
+    three ways and no more: the window, the casilla, and whether rows are narrowed
+    before classification. Everything else -- the lifecycle skip, the classifier
+    call, the issue/observation split -- was written out identically in each, so a
+    change to the eligibility contract had to be made in every copy or silently
+    hold in only some.
+
+    Args:
+        transactions: The catalogue to project.
+        invoices: Consulted when classifying each transaction.
+        bucket_id: The active profile bucket.
+        window_start: First day the classifier treats as in-window.
+        window_end: Last day the classifier treats as in-window.
+        target_casilla_id: The casilla every eligible observation is re-targeted to.
+        admits: Optional row filter applied BEFORE classification. ``None`` admits
+            every active row, which is what the M100 and M130 paths want.
+
+    Returns:
+        The projected observations and the issues raised along the way.
+    """
+    observations: list[RentaIncomeObservation] = []
+    issues: list[RentaIncomeLedgerAggregationIssue] = []
+    for transaction in transactions.values():
+        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            continue
+        if admits is not None and not admits(transaction):
+            continue
+        outcome = _classify_income_transaction(
+            transaction,
+            invoices=invoices,
+            bucket_id=bucket_id,
+            cumulative_start=window_start,
+            cumulative_end=window_end,
+        )
+        if outcome is None:
+            continue
+        if isinstance(outcome, RentaIncomeLedgerAggregationIssue):
+            issues.append(outcome)
+        else:
+            observations.append(outcome.model_copy(update={"target_casilla_id": target_casilla_id}))
+    return _ProjectedIncome(tuple(observations), tuple(issues))
 
 
 def _classify_income_transaction(

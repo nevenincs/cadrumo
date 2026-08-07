@@ -5877,7 +5877,6 @@ errors:
       límit MAX_PATH de Windows.
     error_pdf_import_pdf_modelo_import: Ha fallat la importació de la declaració des
       del PDF.
-    error_pdf_import_scrub: No s'ha pogut produir una versió segura del PDF.
     error_period: S'ha produït un error relacionat amb el període.
     error_period_validation: El token de període indicat no té un format vàlid.
     error_portals_portal_registry: S'ha produït un error en el registre de portals
@@ -6666,6 +6665,7 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    refused_aeat_record_multi_recipient: 'El registre declarat anomena més d''un destinatari, de manera que no pot convertir-se en un assentament de contrapart única. Concilieu-lo per destinatari.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -66515,6 +66515,49 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck.help
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 4% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma.help
+              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 0% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8.help
+              label: Quota d’IVA meritat - Règim ordinari - Tipus 0% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8.help
+              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 10% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31.help
+              label: Quota d’IVA meritat - Règim ordinari - Tipus 10% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma.help
+              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 2% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8.help
+              label: Quota d’IVA meritat - Règim ordinari - Tipus 2% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8.help
+              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 21% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31.help
+              label: Quota d’IVA meritat - Règim ordinari - Tipus 21% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma.help
+              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 4% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8.help
+              label: Quota d’IVA meritat - Règim ordinari - Tipus 4% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma.help
+              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 5% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8.help
+              label: Quota d’IVA meritat - Règim ordinari - Tipus 5% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5.help
+              label: Base imposable d’IVA meritat - Règim ordinari - Tipus 7,5% -
+                anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4.help
+              label: Quota d’IVA meritat - Règim ordinari - Tipus 7,5% - anual
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
               label: Resultat anual del règim general (quota meritada - quota deduïble)

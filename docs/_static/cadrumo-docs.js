@@ -896,7 +896,7 @@
       var kind = rung2RequiredString(record, "kind", "Rung-2 record");
       if (["concept", "casilla", "cli", "page", "legal"].indexOf(kind) < 0) throw new Error("Rung-2 record has an invalid kind");
       var displayClass = rung2RequiredString(record, "display_class", "Rung-2 record");
-      if (["casilla", "modelo", "cli", "technical", "doc"].indexOf(displayClass) < 0) throw new Error("Rung-2 record has an invalid display class");
+      if (["casilla", "modelo", "legal", "cli", "technical", "doc"].indexOf(displayClass) < 0) throw new Error("Rung-2 record has an invalid display class");
       rung2Bounded(record.ranking_weight, 0, 1, "Rung-2 record.ranking_weight");
       if (index && rung2Utf8Compare(manifest.records[index - 1].record_id, id) >= 0) {
         throw new Error("Rung-2 manifest records are not UTF-8 ordered");
@@ -1474,6 +1474,7 @@
     var DISPLAY_CLASS_LABEL = {
       casilla: "Casilla",
       modelo: "Modelo",
+      legal: "Legal",
       cli: "Command",
       technical: "Reference",
       doc: "Docs",
@@ -1497,6 +1498,7 @@
       doc: 0.4,
       modelo: 0.35,
       casilla: 0.3,
+      legal: 0.28,
       cli: 0.25,
       technical: 0.2,
     };

@@ -912,6 +912,7 @@ def unrouted_ledger_iva_quantities(
         observations,
         source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
         parse_selector=_iva_ledger_selector,
+        build_matcher=_iva_build_matcher,
         read_fact=lambda selector: selector.fact,
         independent_facts=_IVA_INDEPENDENT_QUANTITY_FACTS,
         readers=_IVA_INDEPENDENT_QUANTITY_READERS,
@@ -1223,9 +1224,15 @@ class _RentaLedgerIncomeSelector(BaseModel):
 # load so a binding targeting any other casilla surfaces before any calculation.
 _RENTA_130_INCOME_CASILLAS: frozenset[CasillaId] = _casilla_id_set("_RENTA_130_INCOME_CASILLAS", "01", "03")
 _RENTA_100_INCOME_CASILLAS: frozenset[CasillaId] = _casilla_id_set("_RENTA_100_INCOME_CASILLAS", "0171")
+# One casilla, and the narrowness is the point. Modelo 131 casilla 01 is the sum
+# of modulos-computed rendimientos -- derived from signos and indices correctores,
+# not from receipts -- so no ledger sum may target it. Only casilla 05, the
+# agrarian volumen de ingresos del trimestre, is a real ledger aggregation.
+_RENTA_131_INCOME_CASILLAS: frozenset[CasillaId] = _casilla_id_set("_RENTA_131_INCOME_CASILLAS", "05")
 _RENTA_INCOME_CASILLAS_BY_MODELO: dict[Modelo, frozenset[CasillaId]] = {
     Modelo.M130: _RENTA_130_INCOME_CASILLAS,
     Modelo.M100: _RENTA_100_INCOME_CASILLAS,
+    Modelo.M131: _RENTA_131_INCOME_CASILLAS,
 }
 
 
@@ -1600,6 +1607,7 @@ def unrouted_ledger_renta_income_quantities(
         observations,
         source_kind=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
         parse_selector=_renta_ledger_income_selector,
+        build_matcher=_renta_income_build_matcher,
         read_fact=lambda selector: selector.fact,
         independent_facts=_RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS,
         readers=_RENTA_INDEPENDENT_QUANTITY_READERS,

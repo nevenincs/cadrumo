@@ -102,6 +102,7 @@ from ._renta_income_ledger import (
     SalesInvoiceEvidenceRefusal,
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger_from_repositories,
+    aggregate_renta_m131_agrario_income_ledger_from_repositories,
 )
 from ._renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from ._retencion_observations_repository import RetencionObservationRepository
@@ -294,7 +295,7 @@ class LedgerIvaAggregationSourceResolver:
             )
             + tuple(
                 CalculationSourceDiagnostic(
-                    reason="unrouted_declarable_iva_quantity",
+                    reason="unrouted_declarable_quantity",
                     source_kind="ledger_iva_aggregation",
                     resolver_id=self.resolver_id,
                     message=(
@@ -431,6 +432,15 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         )
 
 
+#: Which projection a renta-income binding's modelo routes to. Absent means the
+#: Modelo 130 cumulative-quarter path, which is the shape every other consumer of
+#: this source kind has.
+_RENTA_INCOME_AGGREGATOR_BY_MODELO = {
+    Modelo.M100.value: aggregate_renta_m100_income_ledger_from_repositories,
+    Modelo.M131.value: aggregate_renta_m131_agrario_income_ledger_from_repositories,
+}
+
+
 class LedgerRentaIncomeAggregationSourceResolver:
     """Resolve ``ledger_renta_income_aggregation`` actividad-income bindings.
 
@@ -459,13 +469,15 @@ class LedgerRentaIncomeAggregationSourceResolver:
             filing_year=context.filing_year,
             code=context.period.registry_token,
         )
-        # Modelo 100 (annual IRPF) aggregates actividad income over the full
-        # ejercicio into casilla 0171; Modelo 130 uses the cumulative-quarter path.
-        # Same source kind, same actividad eligibility, different window/target.
-        income_aggregator = (
-            aggregate_renta_m100_income_ledger_from_repositories
-            if str(context.modelo) == Modelo.M100.value
-            else aggregate_renta_income_ledger_from_repositories
+        # One source kind, three windows and three targets. Modelo 100 (annual
+        # IRPF) folds actividad income over the full ejercicio into casilla 0171;
+        # Modelo 130 uses the cumulative-quarter path into casilla 01; Modelo 131
+        # takes the quarter alone into casilla 05 and, unlike the other two,
+        # narrows the rows first -- to the art. 110.1.c activity set, and away from
+        # the subvenciones de capital and indemnizaciones that article excludes.
+        income_aggregator = _RENTA_INCOME_AGGREGATOR_BY_MODELO.get(
+            str(context.modelo),
+            aggregate_renta_income_ledger_from_repositories,
         )
         try:
             aggregation = income_aggregator(

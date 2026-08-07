@@ -96,7 +96,9 @@ import re
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel
+from typing import Self
+
+from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.inbound.einvoice import EInvoiceXmlParseError, parse_einvoice_document
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -105,6 +107,9 @@ from ...application.invoices import build_catalogue_invoice, create_catalogue_in
 from ...core import (
     STRICT_FROZEN_CONFIG,
     STRUCTURED_DOCUMENT_SHAPES,
+    DraftDiscrepancyKind,
+    FieldGroundingOutcome,
+    FieldOrigin,
     ImageMediaType,
     MissingOptionalExtraError,
     ServiceCapability,
@@ -143,6 +148,9 @@ from ._evidence_reference import (
 from ._evidence_textlayer import extract_evidence_text
 
 __all__ = [
+    "DraftDiscrepancyFinding",
+    "FieldAmbiguityCandidate",
+    "FieldProvenance",
     "InvoiceConfirmationResult",
     "InvoiceDraft",
     "InvoiceDraftLine",
@@ -264,6 +272,128 @@ class InvoiceDraftRateBreakdown(BaseModel):
     recargo_amount: Decimal | None = None
 
 
+class FieldAmbiguityCandidate(BaseModel):
+    """One competing reading a grounding pass could not decide between.
+
+    Recorded rather than resolved. An ambiguity collapsed by taking the first
+    match is indistinguishable downstream from a fact, so the candidates travel
+    to the operator, who is the only party with the document in front of them.
+
+    Attributes:
+        value: The candidate reading, as a string. Deliberately not the field's
+            own type: a candidate exists precisely because the value could not
+            be established, and coercing an undecided reading into a
+            ``Decimal`` or a ``date`` would assert the parse that was in
+            question.
+        anchor: The verbatim printed form this candidate was read from, or
+            ``None`` when the candidate is a normalisation of another reading
+            rather than a distinct occurrence.
+        note: Why this candidate competed, in operator-facing terms.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: str
+    anchor: str | None = None
+    note: str = ""
+
+
+class FieldProvenance(BaseModel):
+    """The provenance envelope for exactly one field of a draft.
+
+    Per FIELD, not per document. A draft is routinely assembled from several
+    readers -- a structured record for the parties, an arithmetic derivation for
+    a cuota, an operator correction at confirm -- so a single document-level
+    stamp would claim one origin for values that did not share one. That is the
+    laundering this record exists to prevent: an exactly-read value must stay
+    distinguishable from a model-read one all the way to the operator's screen.
+
+    Carries no numeric confidence, deliberately and permanently. See
+    :class:`~core.FieldOrigin` and :class:`~core.FieldGroundingOutcome` for the
+    two axes that are facts: how the value was obtained, and what checking it
+    survived.
+
+    Attributes:
+        field: Name of the :class:`InvoiceDraft` field this envelope describes.
+            Validated against the draft's own fields rather than a hand-listed
+            enum, so a renamed or removed draft field invalidates its stale
+            envelopes instead of leaving them pointing at nothing.
+        origin: How the value was obtained.
+        grounding: What verification the value passed, or failed.
+        anchor: The verbatim printed form the value was read from, exactly as it
+            appears in the source -- ``"1.234,56 €"``, not ``1234.56``. This is
+            the whole anti-fabrication mechanism: a value nobody can point at in
+            the document has ``None`` here and an ``UNANCHORED`` outcome, and
+            the operator sees both.
+        candidates: Competing readings, when the grounding outcome is
+            ``AMBIGUOUS``. Empty otherwise.
+        note: Operator-facing explanation, e.g. which identity contradicted the
+            value.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    field: str = Field(min_length=1)
+    origin: FieldOrigin
+    grounding: FieldGroundingOutcome
+    anchor: str | None = None
+    candidates: tuple[FieldAmbiguityCandidate, ...] = ()
+    note: str = ""
+
+    @model_validator(mode="after")
+    def _ambiguity_carries_its_candidates(self) -> Self:
+        """Tie the ``AMBIGUOUS`` outcome to the candidates that justify it.
+
+        Both directions are enforced. An ``AMBIGUOUS`` envelope with fewer than
+        two candidates asserts an ambiguity it cannot show, and candidates under
+        any other outcome record competing readings while claiming the field was
+        decided -- each is a stamp that says something the record does not
+        support.
+        """
+        if self.grounding is FieldGroundingOutcome.AMBIGUOUS:
+            if len(self.candidates) < 2:
+                raise ValueError("an ambiguous field must record at least two competing candidates")
+        elif self.candidates:
+            raise ValueError(
+                f"candidates are only meaningful for an ambiguous field; got grounding={self.grounding.value!r}",
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _anchor_matches_the_outcome(self) -> Self:
+        """Refuse an ``ANCHORED`` claim with no anchor to show for it."""
+        if self.grounding is FieldGroundingOutcome.ANCHORED and self.anchor is None:
+            raise ValueError("an anchored field must carry the verbatim anchor it was anchored to")
+        return self
+
+
+class DraftDiscrepancyFinding(BaseModel):
+    """One deterministic check the read document failed.
+
+    Distinct from :class:`PrintedTotalDiscrepancy`, which compares the document
+    against the invoice that was actually WRITTEN and therefore only exists at
+    confirm. This record is a finding about the document alone, available the
+    moment it is read, so the operator meets it during review rather than after
+    a record has been minted from it.
+
+    Attributes:
+        kind: Which identity failed.
+        field: The draft field the finding is about, or ``None`` when the
+            finding is about a relationship between several.
+        detail: Operator-facing explanation naming the figures involved.
+        expected: What the identity required, when the check is arithmetic.
+        observed: What the document stated instead.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    kind: DraftDiscrepancyKind
+    field: str | None = None
+    detail: str = ""
+    expected: Decimal | None = None
+    observed: Decimal | None = None
+
+
 class InvoiceDraft(BaseModel):
     """Best-effort invoice fields extracted from an on-host PDF text layer.
 
@@ -303,6 +433,32 @@ class InvoiceDraft(BaseModel):
             invoice silently read as euro would carry its face value into a
             filing unconverted, so an absent marker must stay absent and be
             resolved by the operator.
+        retencion_rate: IRPF retención percentage as a whole-number Decimal, or
+            ``None``. Carried beside the amount rather than derived from it: a
+            document may print either, and deriving the missing half would
+            manufacture a figure the document does not state.
+        retencion_amount: IRPF withheld at source. Subtracted from the total to
+            reach the cash actually paid, so a draft that drops it reconciles
+            against the wrong figure.
+        suplidos_amount: Sums advanced on the customer's behalf. Outside the
+            base imponible by law, so folding them into the base over-declares
+            IVA on money that was never the issuer's revenue.
+        suggested_kind: Which side of the invoice the filer is on, as the
+            reading path SUGGESTS it. Never the decision: the draft is
+            deliberately pre-direction data and the direction is decided by the
+            operator at confirm, where ``--kind`` selects the counterparty side.
+            A suggestion the operator does not act on has no effect.
+        transcription_sha256: Content address of the stage-one transcription
+            this draft was read from, tying the draft to the exact artefact that
+            produced it. The address, never the text: a transcription holds the
+            document's readable contents and has exactly one sanctioned durable
+            route (:class:`~application.ledger.DocumentTranscription`), so
+            embedding it here would open a second one.
+        provenance: One :class:`FieldProvenance` envelope per field the reading
+            path established. Absent for a field means no envelope was recorded,
+            which is itself reviewable -- it never means the value was exact.
+        discrepancies: Deterministic checks the document failed, available at
+            read time rather than at confirm.
         raw_text_length: Length of the on-host extracted text, kept as an
             honest signal of how much source material the heuristics had to
             work with (zero means the PDF carried no usable text layer for
@@ -325,10 +481,43 @@ class InvoiceDraft(BaseModel):
     grand_total: Decimal | None = None
     currency: str | None = None
     recargo_amount: Decimal | None = None
+    retencion_rate: Decimal | None = None
+    retencion_amount: Decimal | None = None
+    suplidos_amount: Decimal | None = None
     lines: tuple[InvoiceDraftLine, ...] = ()
     iva_breakdown: tuple[InvoiceDraftRateBreakdown, ...] = ()
     iva_category: str | None = None
+    suggested_kind: InvoiceKind | None = None
+    transcription_sha256: str | None = Field(default=None, min_length=64, max_length=64)
+    provenance: tuple[FieldProvenance, ...] = ()
+    discrepancies: tuple[DraftDiscrepancyFinding, ...] = ()
     raw_text_length: int = 0
+
+    @model_validator(mode="after")
+    def _provenance_names_real_fields(self) -> Self:
+        """Refuse an envelope naming a field this draft does not have.
+
+        The provenance tuple is keyed by field NAME rather than by a parallel
+        enum on purpose: an enum would be a second declaration of the draft's
+        own shape and would drift the first time a field is renamed, leaving
+        envelopes that validate while describing nothing. Validating against
+        ``model_fields`` cannot drift, because there is only one declaration.
+
+        Duplicates are refused for the same reason an ambiguity is: two
+        envelopes for one field are two provenance claims, and nothing
+        downstream can say which is the record's answer.
+        """
+        seen: set[str] = set()
+        for envelope in self.provenance:
+            if envelope.field not in type(self).model_fields:
+                known = ", ".join(sorted(type(self).model_fields))
+                raise ValueError(
+                    f"provenance names unknown draft field {envelope.field!r}; known fields are: {known}",
+                )
+            if envelope.field in seen:
+                raise ValueError(f"provenance carries two envelopes for field {envelope.field!r}")
+            seen.add(envelope.field)
+        return self
 
 
 def _find_currency(text: str) -> str | None:

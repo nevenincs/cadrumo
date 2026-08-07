@@ -179,6 +179,7 @@ from ._renta_income_ledger import (
     RentaIncomeObservation,
     aggregate_renta_income_ledger,
     aggregate_renta_m100_income_ledger,
+    aggregate_renta_m131_agrario_income_ledger,
 )
 from ._renta_ledger import (
     RentaLedgerAggregationIssue,
@@ -345,6 +346,7 @@ __all__ = [
     "aggregate_renta_ledger_expenses",
     "aggregate_renta_ledger_expenses_from_repositories",
     "aggregate_renta_m100_income_ledger",
+    "aggregate_renta_m131_agrario_income_ledger",
     "aggregate_retenciones_111",
     "aggregate_retenciones_115",
     "aggregate_retenciones_123",

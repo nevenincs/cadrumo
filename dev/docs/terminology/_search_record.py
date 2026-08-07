@@ -63,6 +63,7 @@ class ResultDisplayClass(StrEnum):
 
     CASILLA = "casilla"
     MODELO = "modelo"
+    LEGAL = "legal"
     CLI = "cli"
     TECHNICAL = "technical"
     DOC = "doc"

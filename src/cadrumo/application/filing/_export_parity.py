@@ -54,6 +54,9 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from decimal import Decimal
+
 from ...core import ExportLayoutFormat, ResultDisposition, result_disposition_is_refund
 from ...domain.calculations.registry import (
     CalculationCompletenessManifest,
@@ -61,6 +64,8 @@ from ...domain.calculations.registry import (
     CasillaId,
     ExportLayoutDefinition,
     ExportRecordDefinition,
+    RateBoxPartition,
+    rate_box_coverage_shortfalls,
     xml_dictionary_entries,
 )
 from ...domain.filing import CasillaCollection, FilingExportError, ModeloDraft
@@ -308,6 +313,71 @@ def assert_export_mirrors_manifest(
     )
 
 
+def assert_rate_boxes_account_for_total(
+    partitions: Sequence[RateBoxPartition],
+    *,
+    draft: ModeloDraft,
+) -> None:
+    """Panic if the draft's rate boxes account for less than their declared total.
+
+    A rate-specific official box asserts a rate, so a ledger row recording a
+    cuota without recording the rate charged reaches the rate-blind total layer
+    and no box. The return keeps the money and the breakdown keeps its integrity;
+    what it loses is the property that the parts sum to the whole, and AEAT
+    reconciles those boxes against that total.
+
+    The refusal sits at the write door for the same reason the completeness gate
+    does: the application never files, so the artefact leaves here for a human to
+    submit with nothing behind it. A blank computed slot and a breakdown that
+    does not reach its own total are the same class of defect -- a return whose
+    structure contradicts what the calculation determined -- and both cost the
+    taxpayer a correction they cannot make, where the refusal costs them a ledger
+    repair they can.
+
+    Unlike the completeness gate this applies to every transport. That gate is
+    fixed-width-only because its subject is a blank BYTE SLOT, which the xml
+    transport does not write; this one's subject is an arithmetic relation
+    between values, which is equally false in either encoding. A box the xml
+    transport legitimately omits reads as zero here, which is what it declares.
+
+    The condition is never the operator's first notice of it: the calculate path
+    raises the same shortfall as a non-blocking advisory, computed by the same
+    :func:`~domain.calculations.registry.rate_box_coverage_shortfalls` over the
+    same partitions.
+
+    Args:
+        partitions: The revision's derived rate-box partitions, from
+            :attr:`~application.filing.runtime.RegistryModeloSubview.rate_box_partitions`.
+            Empty for every revision declaring no rate-specific binding, which
+            makes this a no-op there.
+        draft: The :class:`ModeloDraft` about to be written.
+
+    Raises:
+        FilingExportError: A partition's boxes account for less than its total,
+            naming each shortfall with its tier, its total casilla and its boxes.
+    """
+    if not partitions:
+        return
+    values = {value.casilla_id: value.value for value in draft.values if value.value is not None}
+    numeric = {casilla_id: value for casilla_id, value in values.items() if isinstance(value, Decimal)}
+    shortfalls = rate_box_coverage_shortfalls(partitions, numeric)
+    if not shortfalls:
+        return
+    rendered = "; ".join(
+        f"{shortfall.partition.total_casilla_id} ({'/'.join(shortfall.partition.rate_kinds)} "
+        f"{shortfall.partition.fact}) declares {shortfall.total} but rate boxes "
+        f"{', '.join(shortfall.partition.box_casilla_ids)} account for {shortfall.boxes_total}, "
+        f"leaving {shortfall.shortfall} unaccounted"
+        for shortfall in shortfalls
+    )
+    raise FilingExportError(
+        f"export for modelo {draft.modelo!r} would file a rate breakdown that does not account for its "
+        f"own declared total in {len(shortfalls)} tier(s): {rendered}. Those amounts come from ledger rows "
+        f"recording a cuota without the rate charged, so no official box may assert a rate for them. "
+        f"Record the rate on those rows and recalculate before exporting.",
+    )
+
+
 def _segmento_phrase(segmento: str | None) -> str:
     """Render a segmento clause for a fidelity-drift enumeration, blank when unset."""
     return "" if segmento is None else f" within segmento {segmento!r}"
@@ -475,6 +545,7 @@ def assert_xml_declaration_aux_declared(layout: ExportLayoutDefinition) -> None:
 
 __all__ = [
     "assert_export_mirrors_manifest",
+    "assert_rate_boxes_account_for_total",
     "assert_xml_declaration_aux_declared",
     "boe_representable_casilla_ids",
     "did_page_suppressed",

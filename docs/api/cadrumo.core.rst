@@ -44,6 +44,7 @@ Submodules
    cadrumo.core._casilla_id
    cadrumo.core._casilla_value_kind
    cadrumo.core._concept_lifecycle
+   cadrumo.core._concepto_ingreso
    cadrumo.core._config_integration_fields
    cadrumo.core._config_live_tests
    cadrumo.core._config_llm_fields
@@ -57,8 +58,12 @@ Submodules
    cadrumo.core._declaracion_idioma
    cadrumo.core._descendant_relacion
    cadrumo.core._document_shape
+   cadrumo.core._draft_discrepancy
    cadrumo.core._export_layout_format
    cadrumo.core._external_oracle_corpus
+   cadrumo.core._field_grounding
+   cadrumo.core._field_origin
+   cadrumo.core._field_role
    cadrumo.core._foreign_asset_obligation
    cadrumo.core._fsync
    cadrumo.core._fts_query

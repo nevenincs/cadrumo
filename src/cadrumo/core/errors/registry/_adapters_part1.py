@@ -8,17 +8,6 @@ from .._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "cadrumo.adapters.inbound.pdf._scrub.ScrubError",
-        ErrorCode(
-            code="ERROR_PDF_IMPORT_SCRUB",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_pdf_import_scrub",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.outbound.aeat.auth._authenticator_types._PersistedSessionInvalidError",
         ErrorCode(
             code="AUTH_AUTH_AUTHENTICATOR_PERSISTED_SESSION_INVALID",

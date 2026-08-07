@@ -5813,7 +5813,6 @@ errors:
     error_outbound_storage_path_too_long: A feloldott tárhelyi elérési út meghaladja
       a Windows MAX_PATH korlátját.
     error_pdf_import_pdf_modelo_import: A bevallás PDF-ből való importálása meghiúsult.
-    error_pdf_import_scrub: Nem sikerült a PDF biztonságos verzióját előállítani.
     error_period: Időszakkal kapcsolatos hiba történt.
     error_period_validation: A megadott időszak-jelzés hibás formátumú.
     error_portals_portal_registry: Hiba történt az AEAT portál-nyilvántartásban.
@@ -6554,6 +6553,7 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
+    refused_aeat_record_multi_recipient: 'A bejelentett rekord több címzettet is megnevez, ezért nem alakítható egyetlen partnerhez tartozó tételsorrá. Egyeztesse címzettenként.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
@@ -66629,6 +66629,62 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck.help
               label: Fizetendő áfa adóalapja - általános szabályozás - 4%-os kulcs
+                - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma.help
+              label: Fizetendő áfa adóalapja - általános szabályozás - 0%-os kulcs
+                - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8.help
+              label: Fizetendő áfa összege - általános szabályozás - 0%-os kulcs -
+                éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8.help
+              label: Fizetendő áfa adóalapja - általános szabályozás - 10%-os kulcs
+                - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31.help
+              label: Fizetendő áfa összege - általános szabályozás - 10%-os kulcs
+                - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma.help
+              label: Fizetendő áfa adóalapja - általános szabályozás - 2%-os kulcs
+                - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8.help
+              label: Fizetendő áfa összege - általános szabályozás - 2%-os kulcs -
+                éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8.help
+              label: Fizetendő áfa adóalapja - általános szabályozás - 21%-os kulcs
+                - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31.help
+              label: Fizetendő áfa összege - általános szabályozás - 21%-os kulcs
+                - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma.help
+              label: Fizetendő áfa adóalapja - általános szabályozás - 4%-os kulcs
+                - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8.help
+              label: Fizetendő áfa összege - általános szabályozás - 4%-os kulcs -
+                éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma.help
+              label: Fizetendő áfa adóalapja - általános szabályozás - 5%-os kulcs
+                - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8.help
+              label: Fizetendő áfa összege - általános szabályozás - 5%-os kulcs -
+                éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5.help
+              label: Fizetendő áfa adóalapja - általános szabályozás - 7,5%-os kulcs
+                - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4.help
+              label: Fizetendő áfa összege - általános szabályozás - 7,5%-os kulcs
                 - éves
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
