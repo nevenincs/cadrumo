@@ -1170,7 +1170,9 @@ def test_the_screen_now_catches_a_recargo_absent_from_the_ledger(
             ),
         )
 
-    excess = exc_info.value.context["invoice_domestic_iva_excess_by_binding"]
+    context = exc_info.value.context
+    assert context is not None, "the refusal must carry its diagnostic context"
+    excess = context["invoice_domestic_iva_excess_by_binding"]
     assert isinstance(excess, dict)
     # The recargo tier is named specifically, so the refusal tells the operator
     # which figure is missing rather than only that something is.
