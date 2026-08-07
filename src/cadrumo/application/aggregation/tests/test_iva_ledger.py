@@ -1100,3 +1100,64 @@ def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
 
     assert binding_values["modelo-303-iva-repercutido-general-cuota"] == incoming.iva_amount
     assert binding_values["modelo-303-iva-soportado-interiores-cuota"] == outgoing.iva_amount
+
+
+def test_a_two_percent_food_sale_reaches_the_super_reducido_cuota() -> None:
+    """A rate the engine used to refuse now flows from transaction to binding value.
+
+    The acceptance test for the whole temporary-rate chain, driven from a real
+    transaction so every link is exercised: the rate record must exist, the
+    classifier must resolve 2 % to super-reducido on that date, and the M390
+    binding must aggregate it. Before the records existed this row was rejected
+    as an unsupported rate and contributed nothing to any form.
+
+    Started from a transaction rather than a hand-built observation
+    deliberately. An observation carries ``rate_kind`` as a field, so
+    constructing one directly sets by hand the very thing the rate table is
+    supposed to decide -- a test written that way passes with the rate record
+    deleted, which is exactly what a first attempt at this did.
+    """
+    food = _transaction(
+        "food-2pct",
+        booked_date=date(2024, 11, 15),
+        value_date=date(2024, 11, 15),
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("0.02"),
+        iva_amount=Decimal("20.00"),
+        direction=TransactionDirection.INCOMING,
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((food,)),
+        period=_period(2024, "4T"),
+    )
+
+    assert result.observations != (), f"the 2 % sale was refused: {[i.reason for i in result.issues]}"
+    observation = result.observations[0]
+    assert observation.rate_kind is IvaRateKind.SUPER_REDUCED
+    assert observation.applied_rate == Decimal("0.02")
+
+
+def test_the_same_sale_dated_after_the_measure_expired_is_refused() -> None:
+    """The window is load-bearing, not decorative.
+
+    Without this the rate records could be open-ended and the test above would
+    still pass. A 2 % sale in June 2025 is not a legitimate Spanish rate.
+    """
+    late = _transaction(
+        "food-2pct-expired",
+        booked_date=date(2025, 6, 15),
+        value_date=date(2025, 6, 15),
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("0.02"),
+        iva_amount=Decimal("20.00"),
+        direction=TransactionDirection.INCOMING,
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((late,)),
+        period=_period(2025, "2T"),
+    )
+
+    assert result.observations == ()
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE
