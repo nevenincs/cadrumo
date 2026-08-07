@@ -5,12 +5,11 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:9e0372f0c1e324e8d00fba4caf7b83637b6022cadedb7ff9dc6df0a683b14ff0'
+body_hash: 'sha256:72241ef85002c1b810595fbb51430e58d9921ad4c983ca5315de05ca7fb0a0de'
 step_id: 'S29'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
 # Enrol the mapping lane as statement-import fallback strictly after the exact fixed-layout providers, gated by a known-bank fixture still taking the exact provider and an unknown-format fixture reaching the mapping lane
 
 ## Scope
@@ -61,12 +60,28 @@ The whole owning package, confirming no regression in the exact providers:
     uv run --no-sync pytest src/cadrumo/adapters/inbound/financial/ -p no:randomly -n0
     142 passed in 5.71s
 
-One mutation proved the ordering bites, applied from a throwaway plugin outside
-the repository so no tracked file changed. Placing the fallback ahead of the
-exact providers, with a resolver good enough to claim a bank export, reddened
-seven tests — among them the assertion that the known bank export still takes
-its exact parser, which is the gate this Step exists to install. Restored and
-re-run green.
+Mutations applied from a throwaway plugin outside the repository, so no tracked
+file changed. Placing the fallback ahead of the exact providers, with a resolver
+good enough to claim a bank export, reddened seven tests.
+
+**Corrected after a later review pass.** That mutation supplied a resolver the
+lane could act on, and the claim originally recorded here — that it reddened the
+known-bank outcome test, "the gate this Step exists to install" — held only
+because of that supply. Re-run with the PRODUCTION resolver ordered first, the
+outcome test stays **green**: under test the resolver reaches a model and a
+profile-bound cache that are unavailable, so the lane declines every file
+wherever it sits in the order, and the export keeps its exact parser because the
+fallback cannot act rather than because the ordering protects it. The shadowing
+regression was therefore unguarded by that test.
+
+The guarantee now rests on a structural assertion instead: the matching
+provider's position in the candidate order is compared against the mapping
+lane's. That reddens when the lane is ordered first whether or not its resolver
+could have answered, and it is proved in both directions — the production lane
+ordered first **reds** it, and a genuinely capable lane ordered last leaves it
+**green**, so it measures position rather than incapacity. The outcome test is
+kept, restated as an outcome check that does not on its own establish the
+ordering.
 
 ## Notes
 
