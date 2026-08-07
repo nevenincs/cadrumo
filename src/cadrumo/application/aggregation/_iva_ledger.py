@@ -1217,6 +1217,20 @@ def _classify_iva_transaction(
     assert transaction.iva_amount is not None
     assert transaction.iva_rate is not None
     if transaction.iva_rate == Decimal("0") and transaction.iva_amount != Decimal("0"):
+        # This refusal is also what keeps Modelo 390's zero-rate cuota box
+        # consistent with its own total, so do NOT "fix" that box by adding a
+        # term to the total instead.
+        #
+        # Measured: ``iva.anual.repercutido.tipo-0.cuota`` is official box 701
+        # and carries an export ref, but it is NOT one of the seven operands of
+        # ``modelo-390-iva-anual-cuota-devengada-total``. That exclusion is
+        # correct -- a zero tipo yields a zero cuota, so the term would be zero
+        # on every legitimate row and adding it edits a money-bearing total for
+        # no benefit. It is only a problem for a row that contradicts itself,
+        # where the amount would be exported to 701 while absent from the
+        # declared total, and the filed return would disagree with itself
+        # visibly. Refusing the row at ingest closes that: 701 can then only
+        # ever carry zero, which is what the design expects.
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
