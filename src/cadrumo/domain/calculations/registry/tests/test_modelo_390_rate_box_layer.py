@@ -195,18 +195,27 @@ def test_a_non_zero_rate_cuota_implies_a_non_zero_base() -> None:
             assert base > 0, f"tipo-{suffix} declares cuota {cuota} on base {base}"
 
 
-def test_the_box_layer_is_not_exported_yet() -> None:
-    """Declaring an export field before it populates would render a false nil.
+def test_the_box_layer_exports_and_the_total_layer_does_not() -> None:
+    """Exactly one layer reaches the record, and it is the rate-specific one.
 
-    An omitted money field leaves buffer bytes; a declared one renders ``0,00``,
-    which asserts a figure rather than staying silent. The flip belongs with the
-    gate that refuses an inconsistent return.
+    The split's whole point: a casilla may total OR assert a rate, never both.
+    The box layer owns the official boxes because each admits exactly one rate;
+    the tier casillas stay silent in the record because a tier figure written to
+    a rate box declares a rate the taxpayer's rows do not all carry.
+
+    Both directions are asserted. Dropping a box casilla's ``export_refs`` would
+    delete that rate's money from the fichero; restoring a tier casilla's would
+    reinstate the merged mis-declaration this layer exists to end.
     """
     revision = _m390_revision()
     box_layer = [c for c in revision.casillas if c.id.startswith("iva.anual.repercutido.tipo-")]
     assert len(box_layer) == 14
     for casilla in box_layer:
-        assert not casilla.export_refs, f"{casilla.id} is exported before the refusal gate exists"
+        assert casilla.export_refs, f"{casilla.id} reaches no official box"
+    for tier in ("general", "reducido", "super-reducido"):
+        for suffix in ("", ".base"):
+            total = next(c for c in revision.casillas if c.id == f"iva.anual.repercutido.{tier}{suffix}")
+            assert not total.export_refs, f"{total.id} both totals and asserts a rate"
 
 
 def test_no_box_layer_casilla_enters_an_annual_total_formula() -> None:
@@ -259,9 +268,7 @@ def _with_applied_rates(
     """
     revision = _m390_revision()
     mutated = tuple(
-        binding.model_copy(
-            update={"selector": binding.selector.model_copy(update={"applied_rates": applied_rates})}
-        )
+        binding.model_copy(update={"selector": binding.selector.model_copy(update={"applied_rates": applied_rates})})
         if binding.id == binding_id
         else binding
         for binding in revision.bindings
@@ -325,9 +332,7 @@ def test_mutation_widening_a_box_binding_re_creates_the_tier_merge() -> None:
     widened = dict(resolve_ledger_iva_aggregation_binding_values(mutated, rows))[
         "modelo-390-iva-repercutido-tipo-10-cuota"
     ]
-    assert widened != Decimal("250.00"), (
-        "the mutation changed nothing; the rate axis is not load-bearing"
-    )
+    assert widened != Decimal("250.00"), "the mutation changed nothing; the rate axis is not load-bearing"
     assert widened == Decimal("250.00") + Decimal("120.00") + Decimal("70.00") + _UNRATED_CUOTA
 
 

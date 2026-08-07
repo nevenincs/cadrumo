@@ -460,7 +460,7 @@ source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".export_layouts.records.fields]]
 id = "modelo-390-page-02-casilla-tipo-2-cuota"
-offset = 98
+offset = 64
 length = 17
 kind = "casilla"
 casilla_id = "iva.anual.repercutido.tipo-2.cuota"
@@ -488,7 +488,7 @@ source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".export_layouts.records.fields]]
 id = "modelo-390-page-02-casilla-tipo-4-cuota"
-offset = 64
+offset = 98
 length = 17
 kind = "casilla"
 casilla_id = "iva.anual.repercutido.tipo-4.cuota"
