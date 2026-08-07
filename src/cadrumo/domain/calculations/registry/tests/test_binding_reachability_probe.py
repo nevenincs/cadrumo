@@ -16,8 +16,11 @@ like coverage.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
+from .....core import Modelo
 from ....iva import (
     IvaCashAccountingTreatment,
     IvaCategory,
@@ -149,7 +152,7 @@ def test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail() -> None
     """
     for casilla_id in ("02", "9999", "definitely-not-a-real-casilla"):
         selector = _RentaLedgerGastosPagoFraccionadoSelector(
-            modelo="130",
+            modelo=Modelo.M130,
             target_casilla_id=casilla_id,
             fact="deductible_amount_sum",
         )
@@ -164,7 +167,14 @@ def test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail() -> None
 
 
 class _StubCasillaObservation:
-    """Minimal stand-in for the one attribute the casilla-keyed matcher reads."""
+    """Minimal stand-in for the attributes the casilla-keyed matcher reads.
 
-    def __init__(self, *, target_casilla_id: str) -> None:
+    Carries ``deductible_amount`` as well as the casilla id: the matcher only
+    reads the id, but the protocol declares both, and a stub that satisfies
+    the protocol only by accident is the kind of stand-in that stops being
+    valid the moment the matcher reads its second field.
+    """
+
+    def __init__(self, *, target_casilla_id: str, deductible_amount: Decimal = Decimal("0")) -> None:
         self.target_casilla_id = target_casilla_id
+        self.deductible_amount = deductible_amount

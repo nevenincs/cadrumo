@@ -388,6 +388,26 @@ class IvaLedgerObservation(BaseModel):
     flow_direction: IvaFlowDirection
     base_amount: Decimal
     iva_amount: Decimal
+    applied_rate: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
+    """The numeric IVA rate this line was charged at, as a fraction, when known.
+
+    Carried ALONGSIDE :attr:`rate_kind` rather than instead of it, because the
+    two answer different questions and the annual return asks both. ``rate_kind``
+    is the semantic tier (general / reducido / super-reducido / zero); this is the
+    rate that tier resolved to on this line's date. One tier can produce several
+    rates within a single filing year: the anti-inflation food measures stepped
+    the super-reducido tier 4 % to 2 % to 0 % and the reducido tier 10 % to 5 %
+    to 7.5 % across successive extensions, which is why Modelo 390 carries one box
+    per rate per window where Modelo 303 carries one per tier. Resolving to the
+    tier and discarding the value made those boxes unpopulatable, because two
+    lines at 4 % and 2 % arrived downstream indistinguishable.
+
+    ``None`` where the rate is genuinely unknown rather than zero — a
+    pre-classified candidate supplied without one, or an exempt line that carries
+    no rate at all. A caller MUST NOT read ``None`` as 0 %: zero-rated and
+    rate-less are different declarations, and :class:`IvaRateKind` already
+    distinguishes ``ZERO`` from ``EXEMPT`` for exactly that reason.
+    """
     recargo_amount: Decimal = Decimal("0")
     """Recargo de equivalencia cuota the supplier charged on a repercutido sale to
     a recargo-regime retailer, in EUR. ``Decimal("0")`` on every line that carries
