@@ -61,6 +61,12 @@ def _wait_for_pid_exit(pid: int, timeout: float) -> bool:
     Uses ``OpenProcess``/``WaitForSingleObject`` rather than ``os.kill``, which
     on Windows terminates the target instead of probing it.
     """
+    if sys.platform != "win32":  # pragma: no cover - callers gate on the platform
+        # Narrowed here as well as at the call sites: the ctypes Windows API below
+        # is absent from the POSIX stubs, so a checker running on Linux reports
+        # every reference unresolved unless the platform is established in-body.
+        raise RuntimeError("the Windows process-wait probe is not available on this platform")
+
     import ctypes
 
     kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
