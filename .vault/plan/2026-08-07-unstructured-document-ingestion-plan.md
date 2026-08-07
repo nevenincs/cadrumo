@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:d928f4b7b60fe2b3deda4f71d4413c6d9490ad5707a44ced65dfb81d249e26fd'
+body_hash: 'sha256:1e223fc1332b5c4488d6f08b98c48042153d8301e87b14b23bd5298551a6b99d'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -129,7 +129,7 @@ Delivers the two measurement lanes the ADR D9 mandates: the in-repo CI gate lane
 Bundles the licence-clean fixtures and lands the injection regression gate and the mutation-proof pass.
 
 - [x] `W04.P09.S31` - Bundle the licence-clean fixture subset with provenance sidecars, including both COM-2026-0005 entries, gated by the fixture-provenance gate cross-checking sidecar against physical evidence; `src/cadrumo/application/ledger/tests`.
-- [ ] `W04.P09.S32` - Add the injection regression gate: an instruction-shaped transcription must cross the S2-S3 boundary with no unanchored value and no out-of-schema key, proven by mutation; `src/cadrumo/llm/tests`.
+- [x] `W04.P09.S32` - Add the injection regression gate: an instruction-shaped transcription must cross the S2-S3 boundary with no unanchored value and no out-of-schema key, proven by mutation; `src/cadrumo/llm/tests`.
 - [ ] `W04.P09.S33` - Run the mutation-proof pass over every W01 through W03 gate, breaking from outside the repo, observing red, restoring, and recording each red signature; `src/cadrumo`.
 
 ### Phase `W04.P10` - The measured harness lane
@@ -199,8 +199,8 @@ Lands the cadrumo[llm] boundary the provisioning ADR D8 and D9 decide: uniform r
 Lands the uniform extra guards, the import contracts, the completed extra closure, and the artifact-level absent-extra proof.
 
 - [ ] `W07.P15.S54` - Guard every cadrumo.llm entry point with require_optional_extra on the llm extra and enrol cadrumo.llm in the import-linter layers and forbidden contracts, proven by a deliberate violating import observing red; `src/cadrumo/llm/__init__.py`.
-- [ ] `W07.P15.S55` - Complete the llm extra dependency closure (Pillow, pynvml) in the packaging metadata with the boundary rationale recorded, gated by deptry and the packaging smoke lanes; `pyproject.toml`.
-- [ ] `W07.P15.S56` - Add the absent-llm packaging smoke lane: install the core cohort without the extra, drive every inference-adjacent surface, and assert each refusal is the declared install guidance rather than a ModuleNotFoundError; `dev/packaging`.
+- [x] `W07.P15.S55` - Complete the llm extra dependency closure (Pillow, pynvml) in the packaging metadata with the boundary rationale recorded, gated by deptry and the packaging smoke lanes; `pyproject.toml`.
+- [x] `W07.P15.S56` - Add the absent-llm packaging smoke lane: install the core cohort without the extra, drive every inference-adjacent surface, and assert each refusal is the declared install guidance rather than a ModuleNotFoundError; `dev/packaging`.
 - [ ] `W07.P15.S57` - Prove the tabular split behaviour: a known fixed-layout file imports fully on a core-only install while an unknown vocabulary refuses at the mapping call with the install hint, gated by fixtures on both sides; `src/cadrumo/adapters/inbound/financial`.
 
 ## Wave `W08` - Batch ingestion
