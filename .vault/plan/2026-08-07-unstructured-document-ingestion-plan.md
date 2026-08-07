@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:8ca06d0717245207e86ea43f8118f8b8f54bb9d3dccae84386c0000cc67498be'
+body_hash: 'sha256:37d37d763ede52ea58e7f5a4459310b87b9850e2e448dfe7aebe45086a43801b'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -264,8 +264,8 @@ Delivers the consent ledger, the per-profile eligibility bar, the honest withdra
 
 Lands the consent ledger and eligibility bar, the withdrawal and re-derivation verbs, model removal with partial-state detection, the uninstall proof, and the verb conformance sweep.
 
-- [ ] `W10.P18.S71` - Append a consent-ledger entry at the dispatch choke point in the same path that honours a token, refusing transmission when the append fails, gated by mutation: break the append and the dispatch must refuse; `src/cadrumo/llm/_client.py`.
-- [ ] `W10.P18.S72` - Complete the per-profile cloud-consent eligibility bar. The resolver already exists at application/user_profile/_capabilities.py, is exported, keyword-only, defaults off as the one capability that does, and is gestor-barred outright, with its own test file covering the bar. Do NOT rebuild it. What remains is the config check row surfacing the capability state to the operator, which does not exist on any CLI surface, and the surface sweep proving no consent gate is offered anywhere while the capability is off. Derive that surface set from the production mechanism that offers the acknowledgement rather than from a list written while building, and log anything excluded, since a silent cap reads as covered everything; `src/cadrumo/application/user_profile, src/cadrumo/entrypoints/cli`.
+- [x] `W10.P18.S71` - Append a consent-ledger entry at the dispatch choke point in the same path that honours a token, refusing transmission when the append fails, gated by mutation: break the append and the dispatch must refuse; `src/cadrumo/llm/_client.py`.
+- [x] `W10.P18.S72` - Complete the per-profile cloud-consent eligibility bar. The resolver already exists at application/user_profile/_capabilities.py, is exported, keyword-only, defaults off as the one capability that does, and is gestor-barred outright, with its own test file covering the bar. Do NOT rebuild it. What remains is the config check row surfacing the capability state to the operator, which does not exist on any CLI surface, and the surface sweep proving no consent gate is offered anywhere while the capability is off. Derive that surface set from the production mechanism that offers the acknowledgement rather than from a list written while building, and log anything excluded, since a silent cap reads as covered everything; `src/cadrumo/application/user_profile, src/cadrumo/entrypoints/cli`.
 - [ ] `W10.P18.S73` - Add the withdrawal verb: list consent-ledger entries, state plainly that transmitted bytes cannot be recalled, mark cloud-derived artefacts, and offer local re-derivation from the cached transcription that re-stamps provenance without rewriting history, gated by a re-derivation test; `src/cadrumo/entrypoints/cli`.
 - [x] `W10.P18.S74` - Add the model remove action reporting freed bytes and the doctor row detecting partially-installed states in both directions (extra without models, models without extra), gated by doctor row tests; `src/cadrumo/application/provisioning.py`.
 - [ ] `W10.P18.S75` - Extend the packaging smoke lane with the uninstall step proving every guarded surface returns to the instructive install refusal after the extra is removed; `dev/packaging`.
