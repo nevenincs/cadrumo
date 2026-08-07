@@ -125,6 +125,12 @@ from ._oss import (
     RegimePeriodicity,
     regime_allows_deduction,
 )
+from ._place_of_supply import (
+    IvaPlaceOfSupplyRule,
+    load_place_of_supply_rules,
+    place_of_supply_rule,
+    required_supply_nature_for_rule,
+)
 from ._prorrata import (
     EspecialMandatoryRule,
     InputClassification,
@@ -245,6 +251,7 @@ __all__ = [
     "IvaInvoiceClassification",
     "IvaInvoiceClassificationCriteria",
     "IvaKindApplicability",
+    "IvaPlaceOfSupplyRule",
     "IvaRateKind",
     "IvaRateNotFoundError",
     "IvaRateOverlapError",
@@ -312,6 +319,7 @@ __all__ = [
     "load_iva_catalogues",
     "load_iva_rate_table",
     "load_iva_rules_from_manual",
+    "load_place_of_supply_rules",
     "load_recargo_rates",
     "lookup_rate",
     "m303_annual_settlement_order_key",
@@ -319,6 +327,7 @@ __all__ = [
     "m303_annual_settlement_period_tokens",
     "match_regime_legend",
     "match_statutory_citations",
+    "place_of_supply_rule",
     "rate_kind_for_domestic_category",
     "rate_kinds_for_declared_rate",
     "recargo_rate_for",
@@ -326,6 +335,7 @@ __all__ = [
     "refund_eligibility_reason",
     "regime_allows_deduction",
     "regime_legend_phrases",
+    "required_supply_nature_for_rule",
     "requires_sectoral_separation",
     "resolve_catalogue",
     "resolve_category_rate",
