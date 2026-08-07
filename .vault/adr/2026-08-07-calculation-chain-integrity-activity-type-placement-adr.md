@@ -214,8 +214,11 @@ carrying its own tipo de actividad, `Transaction.tipo_actividad` becomes a secon
 home for one fact and the drift this ruling predicted begins, invisibly -- both
 fields individually correct, diverging only for a taxpayer who edits one. A
 tripwire now fails at that moment: `src/cadrumo/tests/test_tipo_actividad_single_home.py`
-asserts exactly one stored home and its refusal names this record and the readers to
-repoint. It was mutation-proven by adding a second stored field and observing the
+asserts exactly one stored home and its refusal states the rule and names the readers
+to repoint. The refusal deliberately does NOT name this record: code never cites the
+vault, and the remedy text is self-contained without the citation, so an author who
+trips the tripwire learns what to do from the message itself. It was mutation-proven
+by adding a second stored field and observing the
 red, then reverted.
 
 So this ruling stands unamended in substance. What changed is that its constraint is
