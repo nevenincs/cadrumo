@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:68d25d68e32720f6c6062adcabe0fa7ffef6cbacaddf53c92aa0fcd18d340d90'
+body_hash: 'sha256:24922b75db3c877c5d15bad79de80778d684a13c7b534be072a70043bfaaf658'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -26,12 +26,12 @@ A binding must declare where its aggregate lands. The M130 retenciones binding's
 
 Give the renta-income binding family a real output-casilla declaration so the registry states where an aggregate lands, then retire the hardcoded application-layer write path.
 
-- [ ] `W01.P01.S01` - Read the linkage-design-audit T-05 hard-coded-constants prior art before designing anything, it may already prescribe this fix; `.vault/reference/2026-05-15-linkage-design-audit-reference.md`.
-- [ ] `W01.P01.S02` - Give the renta-income binding family a declared output casilla so the registry states where an aggregate lands, distinct from the observation-match key; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
-- [ ] `W01.P01.S03` - Retire the hardcoded backend-inputs override once the registry declares the destination, removing the parallel write path around the registry authority; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
-- [ ] `W01.P01.S04` - Prove the retencion still reaches casilla 06 end to end after the override is retired, asserting the value not merely the wiring; `src/cadrumo/application/aggregation/tests/`.
-- [ ] `W01.P01.S19` - Confirm no peer holds the retencion backend-inputs function before the first edit, the live over-claim and this structural fix are the same code site; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
-- [ ] `W01.P01.S45` - Propose a superseding ADR if the registry should declare where an aggregate lands, the sweep found two opposite declaration conventions and the IVA families cannot express a match-output divergence at all, which is a gap the current pattern cannot close; `.vault/adr/`.
+- [x] `W01.P01.S01` - Read the linkage-design-audit T-05 hard-coded-constants prior art before designing anything, it may already prescribe this fix; `.vault/reference/2026-05-15-linkage-design-audit-reference.md`.
+- [ ] `W01.P01.S02` - SUPERSEDED, do not execute as written - the registry output_casilla_id selector field was implemented and deliberately reverted in fc0d0353b2 because it reopens the cross-domain routing design T-05 governs, the shipped answer is T-05's own remedy of a domain-owned constant cross-checked against the snapshot, and the residual structural question is carried by the binding-output-casilla-declaration ADR; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
+- [ ] `W01.P01.S03` - SUPERSEDED, do not execute as written - the hardcoded backend-inputs redirect is deliberately KEPT rather than retired, made T-05 conformant by moving its constant to domain.renta and registering a CrossDomainSnapshotCheck that runs at every snapshot build, and retiring it would remove the routing the M130 retencion depends on; `src/cadrumo/domain/renta/_retenciones_routing_integrity.py`.
+- [x] `W01.P01.S04` - Prove the retencion still reaches casilla 06 end to end after the override is retired, asserting the value not merely the wiring; `src/cadrumo/application/aggregation/tests/`.
+- [x] `W01.P01.S19` - Confirm no peer holds the retencion backend-inputs function before the first edit, the live over-claim and this structural fix are the same code site; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
+- [x] `W01.P01.S45` - Propose a superseding ADR if the registry should declare where an aggregate lands, the sweep found two opposite declaration conventions and the IVA families cannot express a match-output divergence at all, which is a gap the current pattern cannot close; `.vault/adr/`.
 
 ## Wave `W02` - Detection gates for the silent-zero class
 
