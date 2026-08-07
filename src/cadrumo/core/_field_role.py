@@ -18,8 +18,17 @@ Member values are byte-identical to the column tokens the tabular importers
 already accept, so a role resolves against an existing importer column without a
 second translation table in between. The set is deliberately WIDER than those
 importers: retención and the suplido/recargo/total terms of the arithmetic
-closure are roles the product must be able to recognise in a source table even
-where no importer column exists for them yet.
+closure, and the bank-movement booked date and amount, are roles the product
+must be able to recognise in a source table even where no importer column exists
+for them yet.
+
+The set spans two source shapes that are NOT the same document. Most members
+describe an invoice book; :attr:`FieldRole.BOOKED_DATE` and
+:attr:`FieldRole.MOVEMENT_AMOUNT` describe a bank statement, which has no issue
+date, no base and no total. They are declared separately rather than borrowed
+from the nearest invoice member because a role is a claim about MEANING, and a
+near-fit reused across shapes propagates the wrong claim downstream to every
+consumer that trusts the name.
 
 The axis lives in ``core`` because its producers, the deterministic copy step
 and the operator-facing report of unmapped columns sit in different packages,
@@ -62,6 +71,24 @@ class FieldRole(StrEnum):
 
     INVOICE_DATE = "invoice_date"
     """Date of issue."""
+
+    BOOKED_DATE = "booked_date"
+    """Date a bank movement was booked to the account.
+
+    Distinct from :attr:`INVOICE_DATE`, which is a date of *issue* on a document
+    the counterparty printed. A movement has no issue date, and reading a booked
+    date under the invoice member is the quiet mislabelling this member exists
+    to remove.
+    """
+
+    MOVEMENT_AMOUNT = "movement_amount"
+    """The signed-in-source amount of one bank movement.
+
+    Distinct from :attr:`GRAND_TOTAL`, which is an invoice's printed total and
+    the figure the arithmetic closure is checked against. A movement is not an
+    invoice and has no total, no base and no cuota to close over. Direction is
+    carried by the ledger's own direction axis, never by this value's sign.
+    """
 
     TAXABLE_BASE = "taxable_base"
     """Base imponible, before cuota."""

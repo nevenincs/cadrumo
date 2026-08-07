@@ -148,34 +148,46 @@ def test_a_commercial_posture_never_selects_a_licence_barred_candidate() -> None
         assert ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED not in selection.advisories
 
 
-def test_a_non_commercial_posture_may_reach_a_research_licensed_candidate() -> None:
+def test_the_posture_predicate_widens_eligibility_for_a_research_licensed_candidate() -> None:
     """Positive control for the licence filter: it is the posture doing the excluding.
 
-    Under a non-commercial posture the research-licensed model becomes eligible;
-    with the permissive candidates' window lowered out of reach it is the one
-    that survives, which cannot happen under the commercial posture.
+    Exercises the production predicate the selector filters on, so the two
+    postures are shown to disagree about the research-licensed candidate and to
+    agree about the permissive one -- the second half being what rules out a
+    predicate that simply refuses everything under a commercial posture.
+    """
+    vision = candidates_for_role(ModelRole.VISION_TRANSCRIPTION)
+    research = next(c for c in vision if not c.licence.commercial_use_permitted)
+    permissive = next(c for c in vision if c.licence.commercial_use_permitted)
+
+    assert research.permitted_under(DeploymentLicencePosture.NON_COMMERCIAL)
+    assert not research.permitted_under(DeploymentLicencePosture.COMMERCIAL)
+    assert permissive.permitted_under(DeploymentLicencePosture.NON_COMMERCIAL)
+    assert permissive.permitted_under(DeploymentLicencePosture.COMMERCIAL)
+
+
+def test_the_weakest_eligible_candidate_in_every_role_is_permissively_licensed() -> None:
+    """The structural reason automatic selection cannot differ by posture today.
+
+    Selection takes the weakest candidate that clears the bars, and in every
+    role that model is currently Apache-2.0 -- so the commercial and
+    non-commercial postures resolve identically, and the licence filter is
+    load-bearing only against an override. That is a property worth pinning
+    rather than a coincidence to leave implicit: adding a research-licensed
+    candidate *smaller* than the permissive one would silently make the posture
+    decide the shipped model, and this reds when it does.
     """
     profile = _cuda_profile(14 * _GIB)
-    research = next(
-        candidate
-        for candidate in candidates_for_role(ModelRole.VISION_TRANSCRIPTION)
-        if not candidate.licence.commercial_use_permitted
-    )
-    with override_settings(cadrumo_llm_ollama_num_ctx=research.max_context_tokens + 1):
-        commercial = select_model_for_role(
-            ModelRole.VISION_TRANSCRIPTION,
-            profile=profile,
-            posture=DeploymentLicencePosture.COMMERCIAL,
+    for role in ModelRole:
+        commercial = select_model_for_role(role, profile=profile, posture=DeploymentLicencePosture.COMMERCIAL)
+        non_commercial = select_model_for_role(role, profile=profile, posture=DeploymentLicencePosture.NON_COMMERCIAL)
+        assert commercial.selected and non_commercial.selected
+        assert commercial.runtime_id == non_commercial.runtime_id, (
+            f"role {role.value} now resolves differently by posture; the weakest candidate is "
+            f"no longer permissively licensed"
         )
-        non_commercial = select_model_for_role(
-            ModelRole.VISION_TRANSCRIPTION,
-            profile=profile,
-            posture=DeploymentLicencePosture.NON_COMMERCIAL,
-        )
-    assert commercial.runtime_id != research.runtime_id
-    assert non_commercial.selected
-    assert non_commercial.candidate is not None
-    assert non_commercial.candidate.licence.commercial_use_permitted is False
+        assert non_commercial.candidate is not None
+        assert non_commercial.candidate.licence.commercial_use_permitted
 
 
 def test_a_constrained_machine_refuses_rather_than_naming_a_model_that_cannot_fit() -> None:

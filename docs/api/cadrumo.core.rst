@@ -76,6 +76,7 @@ Submodules
    cadrumo.core._invoice_link
    cadrumo.core._irnr
    cadrumo.core._ledger_sort
+   cadrumo.core._model_catalogue
    cadrumo.core._modelo
    cadrumo.core._models
    cadrumo.core._optional_extras
