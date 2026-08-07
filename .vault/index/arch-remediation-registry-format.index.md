@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-registry-format'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:8e5488df445c0e1db14fc331c5e4e2397224c59b16bc4ded2e9fc178b06ba1d4'
+body_hash: 'sha256:8a106bb8f9a6a345779c0c83c0cf90486245aef7b33741b95170c31ddd1d8b2c'
 related:
   - '[[2026-07-02-arch-remediation-registry-format-P01-S01]]'
   - '[[2026-07-02-arch-remediation-registry-format-P01-S02]]'
@@ -30,6 +30,9 @@ related:
   - '[[2026-07-02-arch-remediation-registry-format-plan]]'
   - '[[2026-07-03-arch-remediation-registry-format-audit]]'
   - '[[2026-07-06-arch-remediation-registry-format-research]]'
+  - '[[2026-08-05-arch-remediation-registry-format-S01]]'
+  - '[[2026-08-05-arch-remediation-registry-format-S02]]'
+  - '[[2026-08-05-arch-remediation-registry-format-S03]]'
   - '[[2026-08-05-arch-remediation-registry-format-casilla-fragment-content-naming-audit]]'
   - '[[2026-08-05-arch-remediation-registry-format-casilla-section-order-adr]]'
   - '[[2026-08-05-arch-remediation-registry-format-plan]]'
@@ -71,6 +74,9 @@ Auto-generated index of all documents tagged with `#arch-remediation-registry-fo
 - `2026-07-02-arch-remediation-registry-format-P03-S15` - Add a loud loader refusal that raises a load error naming the fragmented layout when an inline bindings or formulas table appears in revision.toml
 - `2026-07-02-arch-remediation-registry-format-P03-S16` - Converge the registry-revision-content-inline-or-fragmented discovery rule at its vaultspec source to record the convergence and retire the dual-format caveat, then run vaultspec-core sync
 - `2026-07-02-arch-remediation-registry-format-P03-S17` - Delete the parameterised compiled-schema equality harness now that migration is complete
+- `2026-08-05-arch-remediation-registry-format-S01` - Correct the parity-gate claim in the rule source so it enumerates only the enforced assertions, and add the paragraph stating casilla section is ungated presentation
+- `2026-08-05-arch-remediation-registry-format-S02` - Propagate the corrected rule to the generated provider copies with the sync verb, confirming no generated copy carries a hand-edit
+- `2026-08-05-arch-remediation-registry-format-S03` - Record in the workbook parity gate docstring that section order is deliberately unasserted, so a future reader does not re-add the claim from the rule history
 
 ### plan
 

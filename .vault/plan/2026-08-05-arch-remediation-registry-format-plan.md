@@ -3,14 +3,15 @@ tags:
   - '#plan'
   - '#arch-remediation-registry-format'
 date: '2026-08-05'
-modified: '2026-08-06'
-body_hash: 'sha256:3dffa0f3cd2652aa1b0ab1d9aa2cd3d947efbb4915b0d78b1091d49b3466ee44'
+modified: '2026-08-07'
+body_hash: 'sha256:602d13983a26e9c0811fbec59a37228d3f6faa2bb724fef7eef5e58bca20618a'
 tier: L1
 related:
   - '[[2026-08-05-arch-remediation-registry-format-casilla-section-order-adr]]'
   - '[[2026-08-05-arch-remediation-registry-format-casilla-fragment-content-naming-audit]]'
   - '[[2026-07-06-arch-remediation-registry-format-research]]'
 ---
+
 # `arch-remediation-registry-format` plan
 
 Correct the export rule's parity-gate claim to the set the gates genuinely enforce,
@@ -42,9 +43,9 @@ generated copies, which the next sync would silently revert.
 
 ## Steps
 
-- [ ] `S01` - Correct the parity-gate claim in the rule source so it enumerates only the enforced assertions, and add the paragraph stating casilla section is ungated presentation; `.vaultspec/rules/modelo-export-mirrors-official-structure.md`.
-- [ ] `S02` - Propagate the corrected rule to the generated provider copies with the sync verb, confirming no generated copy carries a hand-edit; `.claude/rules/modelo-export-mirrors-official-structure.md`.
-- [ ] `S03` - Record in the workbook parity gate docstring that section order is deliberately unasserted, so a future reader does not re-add the claim from the rule history; `src/cadrumo/application/storage/calc_sheets/tests/test_modelo_export_parity.py`.
+- [x] `S01` - Correct the parity-gate claim in the rule source so it enumerates only the enforced assertions, and add the paragraph stating casilla section is ungated presentation; `.vaultspec/rules/modelo-export-mirrors-official-structure.md`.
+- [x] `S02` - Propagate the corrected rule to the generated provider copies with the sync verb, confirming no generated copy carries a hand-edit; `.claude/rules/modelo-export-mirrors-official-structure.md`.
+- [x] `S03` - Record in the workbook parity gate docstring that section order is deliberately unasserted, so a future reader does not re-add the claim from the rule history; `src/cadrumo/application/storage/calc_sheets/tests/test_modelo_export_parity.py`.
 
 ## Parallelization
 
