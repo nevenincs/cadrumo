@@ -4,11 +4,14 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:be882acf5bcdae280c456683568bc0f0866edb4912e010be388c5c7d89603384'
+body_hash: 'sha256:bd13a5663a7edb45f408311c28028288539ddf9eff09eb2467b8149fbfda7f39'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
+  - '[[2026-08-07-unstructured-document-ingestion-provisioning-adr]]'
   - '[[2026-08-06-llm-package-split-adr]]'
+  - '[[2026-06-15-dependency-provisioning-adr]]'
+  - '[[2026-06-28-product-packaging-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-llm-invoice-read-reconciliation-adr]]'
 ---
@@ -133,6 +136,61 @@ Builds the key-pinned harness and produces the stage baselines and recorded acce
 - [ ] `W04.P10.S37` - Measure the S4 category baseline over the 59 category-scorable documents only, with the acquired-real set excluded by category_scorable false; `dev`.
 - [ ] `W04.P10.S38` - Measure the tabular mapping baseline over the six csv_dialect descriptors, nine CSV exports and the libro registro header; `dev`.
 - [ ] `W04.P10.S39` - Record the acceptance floors from the first measured baselines with the key hash, and wire subsequent harness runs to compare against them; `dev`.
+
+## Wave `W05` - The reinstated consent gate
+
+Reinstates the cloud consent apparatus under the pipeline ADR D8a, partially superseding the executed llm-package-split D5 deletion: the choke-point gate, the CLI consent token, the re-scoped deletion gate, and the corpus status amendment, all landing so that no interval leaves the tree red or the gate vacuous. Governed by the pipeline ADR D8 and D8a.
+
+### Phase `W05.P11` - Gate reinstatement and governance re-scope
+
+Lands the consent gate, its CLI token, the re-scoped deletion gate and the corpus amendment as one coherent sequence.
+
+- [ ] `W05.P11.S40` - Re-scope the cloud-deletion gate and reinstate the consent apparatus in one atomic commit: subprocess symbols stay asserted deleted with the MCP positive control, the four consent symbols move to a presence assertion wired at the dispatch choke point, the non-vacuity floor re-bases, proven by mutation; `src/cadrumo/tests/test_cloud_transport_fully_deleted.py`.
+- [ ] `W05.P11.S41` - Enforce the consent gate at the dispatch choke point: an evidence-derived request refuses every cloud provider absent a per-invocation consent token, default-off and gestor-barred, gated by refusal tests including a reach-around attempt through the unpinned extract_invoice_fields_from_text; `src/cadrumo/llm/_client.py`.
+- [ ] `W05.P11.S42` - Mint the consent token at the CLI boundary per invocation, never persisted, recorded in provenance, gated by the documented-command and JSON schema conformance suites; `src/cadrumo/entrypoints/cli`.
+- [ ] `W05.P11.S43` - Narrow the minting-side provenance assertion to transports mintable without a consent token, keeping consented cloud stamps honest, with both directions red-green proven; `src/cadrumo/tests/test_cloud_transport_fully_deleted.py`.
+- [ ] `W05.P11.S44` - Amend the llm-package-split ADR status note to record the partial supersession of its D5 in the same change that lands the gate, gated by a clean vault check and a curate cross-check for corpus self-contradiction; `.vault/adr/2026-08-06-llm-package-split-adr.md`.
+
+## Wave `W06` - Model provisioning and adaptive selection
+
+Builds the provisioning authority the provisioning ADR decides: the hardware profile with free-resource and VRAM awareness, live fail-closed contention detection at the dispatch choke point, the licence-aware typed model catalogue with adaptive selection and the default flip, the explicit provision verb family, transient-scoped retry with backoff, and degradation that cannot launder the consent gate. Governed by the provisioning ADR D1 through D7.
+
+### Phase `W06.P12` - Hardware profile and live contention
+
+Lands the free-resource and VRAM-aware hardware profile and the fail-closed contention check at the dispatch choke point.
+
+- [ ] `W06.P12.S45` - Add the HardwareProfile probe carrying free system memory, accelerator presence, and NVML-backed total and free VRAM, with unknown reported as unverified on diagnostic rows, gated by injected-measurement tests covering every branch; `src/cadrumo/application/provisioning.py`.
+- [ ] `W06.P12.S46` - Add live contention detection at the dispatch choke point comparing the selected model declared requirement plus margin against free headroom and the runtime resident set, fail-closed on unreadable figures, gated by the live-machine refusal case plus an injected post-quiesce permit case, proven by mutation; `src/cadrumo/llm/_client.py`.
+- [ ] `W06.P12.S47` - Surface the hardware profile and contention snapshot rows in aeat config check, gated by the check payload conformance tests; `src/cadrumo/entrypoints/cli/_config`.
+
+### Phase `W06.P13` - The model catalogue, adaptive selection, and the licence flip
+
+Lands the typed licence-aware catalogue, adaptive per-role selection, and the Apache-2.0 default flip with its gate.
+
+- [ ] `W06.P13.S48` - Author the typed per-role model catalogue declaring runtime id, memory requirement, SPDX licence with an explicit commercial-use flag verified against publisher text, and measured-baseline reference, gated by catalogue validation tests; `src/cadrumo/core`.
+- [ ] `W06.P13.S49` - Implement adaptive selection resolving each role to the best candidate fitting the measured hardware tier and the licence posture, with an operator override surfacing a visible licence advisory on a non-commercial candidate, gated by selection-matrix tests over injected profiles; `src/cadrumo/application/provisioning.py`.
+- [ ] `W06.P13.S50` - Flip the default vision model to the Apache-2.0 candidate and add the licence gate asserting no default candidate in any role carries a commercial-use bar, proven by mutation; `src/cadrumo/core/_config_runtime_fields.py`.
+
+### Phase `W06.P14` - Lifecycle verbs, retry, and degradation
+
+Lands the explicit provision verb family, the transient-scoped retry policy, and consent-safe degradation.
+
+- [ ] `W06.P14.S51` - Add the aeat config provision verb family: report, model pull with progress and a pre-load contention check, and readiness verification, with no implicit pulls and no daemon spawn, gated by documented-command conformance and refusal tests against an unreachable runtime; `src/cadrumo/entrypoints/cli/_config`.
+- [ ] `W06.P14.S52` - Add the typed transport retry policy with exponential backoff, jitter and a bounded budget scoped to transient failures only, never retrying schema, contention, consent or capability refusals, gated by tests against a real local HTTP server exhibiting each failure shape; `src/cadrumo/llm/_client.py`.
+- [ ] `W06.P14.S53` - Route every degradation refusal through a typed remediation naming the provision verb, never auto-falling back to the cloud route, gated by a test proving a local outage cannot reach a cloud dispatch without a consent token; `src/cadrumo/llm`.
+
+## Wave `W07` - The llm distribution boundary and packaging lanes
+
+Lands the cadrumo[llm] boundary the provisioning ADR D8 and D9 decide: uniform require_optional_extra guards, import-linter enrolment, the completed extra dependency list, the absent-llm packaging smoke lane, and the tabular split behaviour proof. Governed by the provisioning ADR D8 and D9 and the package-split ADR D2 and D12.
+
+### Phase `W07.P15` - Boundary guards and packaging proof
+
+Lands the uniform extra guards, the import contracts, the completed extra closure, and the artifact-level absent-extra proof.
+
+- [ ] `W07.P15.S54` - Guard every cadrumo.llm entry point with require_optional_extra on the llm extra and enrol cadrumo.llm in the import-linter layers and forbidden contracts, proven by a deliberate violating import observing red; `src/cadrumo/llm/__init__.py`.
+- [ ] `W07.P15.S55` - Complete the llm extra dependency closure (Pillow, pynvml) in the packaging metadata with the boundary rationale recorded, gated by deptry and the packaging smoke lanes; `pyproject.toml`.
+- [ ] `W07.P15.S56` - Add the absent-llm packaging smoke lane: install the core cohort without the extra, drive every inference-adjacent surface, and assert each refusal is the declared install guidance rather than a ModuleNotFoundError; `dev/packaging`.
+- [ ] `W07.P15.S57` - Prove the tabular split behaviour: a known fixed-layout file imports fully on a core-only install while an unknown vocabulary refuses at the mapping call with the install hint, gated by fixtures on both sides; `src/cadrumo/adapters/inbound/financial`.
 
 ## Parallelization
 

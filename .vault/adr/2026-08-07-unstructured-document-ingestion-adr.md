@@ -472,6 +472,57 @@ requires — explicit, per-invocation, default-off, gestor-barred, in-memory
 only, no decrypted bytes reaching disk. Which provider a run selects stays
 configuration behind `LLMProvider`; the confidentiality guarantee is an
 operator directive and is not weakened by this amendment.
+
+### D8a — the reinstated consent gate, partially superseding an executed deletion
+
+**Operator ruling (second amendment): cloud reading over real taxpayer
+evidence is sanctioned behind a reinstated consent gate.** This must be
+reconciled honestly with the corpus: `2026-08-06-llm-package-split-adr` D5 is
+accepted AND executed — it deleted not only the subprocess transport but the
+entire consent apparatus (`cloud_evidence_read_permitted`,
+`ServiceCapability.CLOUD_EVIDENCE_UPLOAD`,
+`cadrumo_evidence_cloud_upload_permitted`, `--evidence-acknowledged`), and
+those symbols now exist in exactly one file,
+`src/cadrumo/tests/test_cloud_transport_fully_deleted.py`, a gate asserting
+they are gone. **This record therefore partially supersedes an accepted,
+executed decision, and says so** rather than diverging quietly. What returns:
+the consent apparatus, over the in-memory HTTP providers only. What stays
+deleted permanently: the subprocess CLI-agent family, every file-writing
+transport, and any sticky enablement. What is unchanged: production defaults
+on-host, the gestor bar, per-invocation acknowledgement, provenance
+recording.
+
+**Placement: the single dispatch choke point in `llm/_client.py`, so no
+primitive can be reached around it.** The same dispatch that enforces the
+`supports_images` capability boundary enforces this one: a request whose
+content derives from taxpayer evidence carries a required evidence-derived
+marker, and the dispatch refuses any cloud provider for a marked request
+unless an explicit consent token — minted per invocation at the CLI boundary,
+never persisted, refused outright in gestor deployments — accompanies it.
+This resolves the live governance conflict: `extract_invoice_fields_from_text`
+is exported with no provider pin, reintroducing cloud capability without
+reintroducing the deleted words — passing the deletion gate's letter while
+failing its intent. Under this ruling no per-caller pin is load-bearing:
+callers may still pin `LOCAL` as documentation, but the refusal lives at the
+one point every request crosses. Corpus and measurement runs construct
+requests without the evidence marker, because the corpus carries no taxpayer
+data — that is the D8 measurement half, and it needs no gate.
+
+**The deletion gate is re-scoped, not narrowed into vacuity, and in the same
+atomic commit as the reinstatement.** That test's own docstring forbids
+narrowing the pattern until it returns clean and demands that any edit to the
+symbol set be a visible decision; this ruling is that decision. In one
+commit: the subprocess-family symbols and the MCP-transport positive control
+stay asserted verbatim; the four consent-apparatus symbols move from the
+deleted set to a new **presence** assertion — the reinstated gate must exist
+AND be wired at the dispatch choke point, proven by mutation (remove the
+consent check, observe red); the minting-side provenance test narrows from
+"every mintable transport is local" to "every transport mintable **without a
+consent token** is local", because a consented cloud read now honestly mints
+a cloud stamp; and the non-vacuity floor re-bases onto the surviving deleted
+set with its anti-gutting anchors kept. Any interval in which the symbols
+return while the gate still lists them as deleted is a red tree, which is why
+the re-scope cannot land separately.
 Confidentiality survives by inheritance, not re-argument: images and text
 move as in-memory base64/strings through the existing client, the subpackage
 holds no storage handle (D3 of the split ADR), every persisted intermediate
@@ -597,6 +648,11 @@ Spanish rendered documents are acquired.
 **Supersessions and contradictions, consolidated.** This record: closes
 `2026-08-06-llm-package-split-adr` D8 (staged shape adopted) and supersedes
 its stage-isolation-measurement precondition on the grounds stated in D2;
+**partially supersedes that ADR's accepted and executed D5** per D8a — the
+consent apparatus returns over the in-memory HTTP providers under an operator
+ruling, while the subprocess-family deletion, the on-host production default
+and the gestor bar all stand, and that ADR's status note is amended to record
+the partial supersession in the same change that lands the reinstated gate;
 supersedes in part `2026-08-06-llm-invoice-read-reconciliation-adr` (the
 extraction-side framing of the counterparty defect and the Spanish-label
 anchoring remedy), while consuming its direction threading and rename and
