@@ -754,6 +754,10 @@ convention = "google"
 "src/cadrumo/domain/calculations/registry/_workbook_parity.py" = ["S603"]
 "src/cadrumo/domain/deadlines/_festivos.py" = ["S105"]
 "src/cadrumo/application/ledger/tests/_subprocess_classifier_support.py" = ["S603"]
+# Spawns a fresh interpreter to make Pillow genuinely unimportable before any
+# product module loads; the absent state cannot be reached in-process because
+# the test session has already imported it. Argv is this repo's own literal.
+"src/cadrumo/llm/tests/test_missing_llm_extra_refuses_instructively.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_language_flag_help_honesty.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py" = ["S603"]
 # Test modules under master_key/ exercise the passphrase-rejection paths
