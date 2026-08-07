@@ -31,9 +31,11 @@ from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import transcribe_text_layer
 from .._grounded_reading import (
     GROUNDABLE_ORIGINS,
+    _identity_candidates,
     ground_draft_against_transcription,
     verified_provenance,
 )
+from .._identity_roles import IdentityCandidate, resolve_counterparty_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -375,3 +377,66 @@ def test_the_refusals_provision_verb_survives_to_the_error_envelope() -> None:
         _refuse_a_text_read_with_no_reader(LLMProviderError("Ollama is not reachable"))
 
     assert get_error_suggestion(raised.value) == "aeat config provision pull"
+
+
+class TestTheReadingPathSuppliesNoManufacturedRoleEvidence:
+    """The positive-role-evidence filter must be able to refuse on this path.
+
+    The resolver grounds an identity only on positive role evidence, never on
+    survival, because sole survivorship is first-match with the competitors
+    removed beforehand. That filter is a truthiness test, so a reading path that
+    manufactures a non-empty string for every candidate satisfies it always and
+    the filter can never exclude anything.
+
+    It did exactly that, passing ``the reader assigned this identifier to
+    <field>`` -- a restatement of the reader's own assignment rather than
+    anything the document says about the party. The resulting note read as
+    positive evidence, which is what made it worse than supplying none.
+    """
+
+    @staticmethod
+    def _candidates(**values: str) -> tuple[IdentityCandidate, ...]:
+        draft = InvoiceDraft(**values)
+        return _identity_candidates(draft=draft, envelopes=())
+
+    def test_no_candidate_arrives_carrying_evidence(self) -> None:
+        candidates = self._candidates(supplier_tax_id="B12345674", customer_tax_id="A82645177")
+
+        assert candidates, "the fixture must produce candidates, or this passes vacuously"
+        assert all(not candidate.role_evidence for candidate in candidates)
+
+    def test_the_measured_defect_no_longer_grounds_the_lone_survivor(self) -> None:
+        """True supplier's id fails its control character; an unrelated valid id survives.
+
+        The case the filter exists for. Previously the survivor resolved with a
+        note claiming role evidence picked it.
+        """
+        resolution = resolve_counterparty_identity(
+            field="supplier_tax_id",
+            candidates=self._candidates(supplier_tax_id="B1234567X", customer_tax_id="B12345674"),
+            taxpayer_tax_id=None,
+            origin=FieldOrigin.TEXT_LAYER,
+        )
+
+        assert resolution.resolved is None, "a lone survivor must not be grounded as the counterparty"
+        assert resolution.provenance.grounding is not FieldGroundingOutcome.ANCHORED
+
+    def test_the_filter_still_grounds_when_real_evidence_is_present(self) -> None:
+        """The mechanism is intact and waiting on evidence, not disabled.
+
+        Without this the change would be indistinguishable from deleting the
+        resolution path outright, and a later stage supplying real evidence
+        would have nothing proving the filter still promotes on it.
+        """
+        resolution = resolve_counterparty_identity(
+            field="supplier_tax_id",
+            candidates=(
+                IdentityCandidate(value="B12345674", role_evidence="printed under 'Proveedor'"),
+                IdentityCandidate(value="A82645177"),
+            ),
+            taxpayer_tax_id=None,
+            origin=FieldOrigin.TEXT_LAYER,
+        )
+
+        assert resolution.resolved == "B12345674"
+        assert resolution.provenance.grounding is FieldGroundingOutcome.ANCHORED

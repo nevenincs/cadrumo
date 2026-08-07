@@ -216,12 +216,6 @@ def _identity_candidates(
             IdentityCandidate(
                 value=value,
                 anchor=anchors.get(field),
-                # The field a reader assigned IS role evidence: a structured
-                # record names the parties, and a semantic reader assigns the
-                # role under the field-form contract. What it is not is a
-                # licence to resolve when several compete, which the resolver
-                # still refuses.
-                role_evidence=f"the reader assigned this identifier to {field}",
             ),
         )
     return tuple(candidates)
