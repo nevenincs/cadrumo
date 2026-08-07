@@ -887,8 +887,14 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
     draft grew them: a flat base/rate/cuota triple structurally cannot hold a
     two-rate invoice.
     """
+    # Function-local for the same cycle-break reason the grounding import in the
+    # semantic path is: the findings module reaches back into this one for the
+    # draft and finding types. Read it exactly as if it were written at module
+    # scope.
+    from ._deterministic_findings import deterministic_findings
+
     parsed = parse_einvoice_document(evidence.data)
-    return InvoiceDraft(
+    draft = InvoiceDraft(
         supplier_tax_id=parsed.supplier_tax_id,
         supplier_name=parsed.supplier_name,
         customer_tax_id=parsed.customer_tax_id,
@@ -924,6 +930,14 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
         ),
         raw_text_length=len(evidence.data),
     )
+
+    # Exactness is not correctness, and conflating the two is what left this path
+    # unchecked. Reaching no model makes prompt injection categorically
+    # impossible for this document -- it says nothing about whether its
+    # arithmetic closes, or whether the regime it prints in words matches the tax
+    # it charged. Those are questions about the ISSUER's document, not about the
+    # reader, and an exactly-read wrong invoice is still a wrong invoice.
+    return draft.model_copy(update={"discrepancies": deterministic_findings(draft)})
 
 
 def _extract_invoice_fields_via_vision(
