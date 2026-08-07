@@ -421,6 +421,14 @@ ignore_imports =
     # own bytes by an INBOUND adapter, because reading an externally-authored
     # format is inbound-adapter work; the ledger consumes the answer.
     cadrumo.application.ledger._evidence_input -> cadrumo.adapters.inbound.einvoice
+    # Same shape, same reason: the AEAT submission BATCH is read by the inbound
+    # adapter (reading an externally-authored format is inbound-adapter work),
+    # and this module is the projection that decides how many recipients a
+    # single-counterparty ledger record can accept. The batch reader carries
+    # every recipient deliberately and names this refusal as the consumer's
+    # obligation, so the constraint has to live where the projection does --
+    # which means consuming the adapter's record type here.
+    cadrumo.application.ledger._aeat_record_projection -> cadrumo.adapters.inbound.einvoice
     cadrumo.application.filing._history_repository -> cadrumo.adapters.**
     cadrumo.application.filing._import -> cadrumo.adapters.**
     cadrumo.application.filing._runtime_repository -> cadrumo.adapters.**

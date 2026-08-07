@@ -139,9 +139,7 @@ def test_every_defaultable_field_is_populated_off_default() -> None:
     draft = _fully_populated_draft()
     bare = InvoiceDraft()
 
-    defaulted = {
-        name for name, info in InvoiceDraft.model_fields.items() if not info.is_required()
-    }
+    defaulted = {name for name, info in InvoiceDraft.model_fields.items() if not info.is_required()}
     assert defaulted, "InvoiceDraft has no defaultable fields; this gate is misdirected"
 
     still_default = {name for name in defaulted if getattr(draft, name) == getattr(bare, name)}
@@ -192,9 +190,7 @@ def test_the_draft_carries_no_numeric_confidence_axis() -> None:
     """
     forbidden = ("confidence", "score", "probability", "certainty", "likelihood")
     for model in (InvoiceDraft, FieldProvenance, FieldAmbiguityCandidate, DraftDiscrepancyFinding):
-        offending = [
-            name for name in model.model_fields if any(token in name.lower() for token in forbidden)
-        ]
+        offending = [name for name in model.model_fields if any(token in name.lower() for token in forbidden)]
         assert not offending, f"{model.__name__} carries a self-reported confidence axis: {offending}"
 
 
