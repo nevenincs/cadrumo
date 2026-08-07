@@ -309,7 +309,9 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
     assert codes == {"ledger.evidence.batch.work_deferred"}
     deferred_notice = _run_notices(deferred)[0]
     assert deferred_notice.suggestion == _PAUSE.remediation
-    assert deferred_notice.context["causes"] == "runtime_unreachable"
+    deferred_context = deferred_notice.context
+    assert deferred_context is not None, "the deferral notice carries no structured cause"
+    assert deferred_context["causes"] == "runtime_unreachable"
 
     failed = BatchRunResult(items=(_refused_row("broken.pdf"),))
     assert {notice.code for notice in _run_notices(failed)} == {"ledger.evidence.batch.items_refused"}
@@ -343,4 +345,6 @@ def test_an_unreadable_source_counts_as_a_failure_without_becoming_an_item() -> 
     assert run.any_failed is True
     notices = _run_notices(run)
     assert [notice.code for notice in notices] == ["ledger.evidence.batch.items_refused"]
-    assert notices[0].context["unresolved"] == "1"
+    refusal_context = notices[0].context
+    assert refusal_context is not None, "the refusal notice carries no structured context"
+    assert refusal_context["unresolved"] == "1"

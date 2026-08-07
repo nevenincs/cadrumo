@@ -138,6 +138,18 @@ if TYPE_CHECKING:
         describe_aeat_party_identifier,
         project_aeat_record_counterparty,
     )
+    from ._batch_ingest import (
+        BATCH_ITEM_STATUSES,
+        BatchItemResult,
+        BatchRunResult,
+        InferencePause,
+        UnresolvedBatchSource,
+        batch_item_identity,
+        order_batch_items,
+        order_batch_sources,
+        run_evidence_batch,
+        summarise_batch,
+    )
     from ._closure_findings import (
         ROUNDING_ALLOWANCE_PER_TERM,
         closure_findings,
