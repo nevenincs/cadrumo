@@ -26,6 +26,7 @@ from ....adapters.inbound.einvoice import (
     parse_einvoice_document,
 )
 from ....adapters.inbound.pdf import extract_pages_text_from_bytes
+from ....core import STRUCTURED_DOCUMENT_SHAPES
 from ....llm import LLMPdfRasterisationError, rasterise_pdf_pages_to_base64_png
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -193,3 +194,49 @@ def test_malformed_structured_document_refuses_rather_than_partially_reading() -
     """
     with pytest.raises(EInvoiceXmlParseError):
         parse_einvoice_document(b"<rsm:CrossIndustryInvoice><rsm:ExchangedDocument>")
+
+
+def test_the_core_draft_path_routes_a_structured_document_to_the_exact_reader() -> None:
+    """S21: the core evidence path REACHES the parsers rather than routing around them.
+
+    An enrolment gate, not a unit test. Every parser assertion elsewhere in this
+    module would keep passing if the draft path never called them -- which is
+    precisely the failure this campaign's own research records: three
+    deliverables that shipped correct, tested and unreferenced, because a unit
+    test passes whether or not anything calls the code.
+
+    The routing decision is asserted on DocumentShape rather than on the stored
+    MIME type, because that is the whole point. The same fixture answers ``pdf``
+    by its MIME label and ``pdf_embedded_xml`` by its bytes; routing on the
+    label is what sent the most machine-readable document in the corpus down
+    the least exact path.
+    """
+    from hashlib import sha256
+
+    from .._evidence import MediaKind
+    from .._evidence_draft import _extract_invoice_fields_from_structured_record
+    from .._evidence_input import EvidenceInput
+
+    data = _read("zugferd_en16931_invoice.pdf")
+    evidence = EvidenceInput(
+        media_kind=MediaKind.PDF,
+        mime_type="application/pdf",
+        data=data,
+        content_sha256=sha256(data).hexdigest(),
+        evidence_id="ev-structured",
+        attachment_id=None,
+    )
+
+    # The label cannot see inside; the bytes can.
+    assert evidence.media_kind is MediaKind.PDF
+    assert evidence.document_shape in STRUCTURED_DOCUMENT_SHAPES
+
+    draft = _extract_invoice_fields_from_structured_record(evidence)
+
+    # A draft the regex path structurally could not produce: two rates, each
+    # with its own base and cuota, plus the line set they came from.
+    assert len(draft.iva_breakdown) == 2
+    assert len(draft.lines) == 2
+    assert draft.supplier_tax_id == "DE123456789"
+    assert draft.taxable_base == Decimal("473.00")
+    assert draft.grand_total == Decimal("529.87")
