@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:66cb68f28083c78fe9fd771393d7833c8ce5b61f0931a5a72e958cf3d01298e4'
+body_hash: 'sha256:29e47c00fb9cacdbdc98b89cbdb60fd1429ff88cd9c4665be5091b05f1eb2c4b'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -30,6 +30,7 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-P02-S07]]'
   - '[[2026-08-06-invoice-canonical-structure-P02-S26]]'
   - '[[2026-08-06-invoice-canonical-structure-P02-S27]]'
+  - '[[2026-08-06-invoice-canonical-structure-P03-S12]]'
   - '[[2026-08-06-invoice-canonical-structure-P03-S38]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-audit]]'
@@ -77,6 +78,7 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 - `2026-08-06-invoice-canonical-structure-P02-S06` - Accept operation-date on every entry verb including the guided one, so a guided entry can reach a declared devengo rank rather than only the proxy rank
 - `2026-08-06-invoice-canonical-structure-P02-S26` - Widen the confirm-boundary override set from the extraction draft's field set to the writer's, adding retencion, recargo, invoice-class, series, rectifies-invoice-number, iva-category, operation-date and the missing iva-amount, so an operator confirming a rectificativa or a retencion-bearing invoice from evidence need not abandon the evidence path
 - `2026-08-06-invoice-canonical-structure-P02-S27` - Make the recargo figure reachable at the confirm boundary and on the persisted invoice once the llm-package-split lane lands its draft-side recargo slot at W02.P04.S79, so the printed-total discrepancy that lane's reader already detects has somewhere to resolve to, this Step owning only the confirm side and never the draft model
+- `2026-08-06-invoice-canonical-structure-P03-S12` - Record the lane-partition decision explicitly, whether the slim store's per-source-kind document partition is reproduced on the canonical home or consciously dropped in favour of the existing per-consumer gates, naming those gates and what each still guarantees
 - `2026-08-06-invoice-canonical-structure-P03-S38` - Build the canonical invoice update operation before the bare verbs are repointed, because the canonical surface has create, view, list and remove but NO update, so repointing the five bare verbs would silently drop the operator's only way to correct a persisted invoice and deleting the slim store would remove the sole update surface with nothing named to replace it
 
 ### plan

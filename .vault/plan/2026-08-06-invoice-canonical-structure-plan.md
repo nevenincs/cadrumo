@@ -4,7 +4,7 @@ tags:
   - '#invoice-canonical-structure'
 date: '2026-08-06'
 modified: '2026-08-07'
-body_hash: 'sha256:40ef795781effb47492f68c2ef38604dd4e8f7bb7d86f37194f3131cb8ad5cab'
+body_hash: 'sha256:cc02887c7e625dc068515795f1d114a6cd4a659377571e1d34f4532cb2c2e93d'
 tier: L2
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
@@ -80,7 +80,7 @@ Additive only. Make the canonical aggregate's existing fields reachable from sin
 Move the operator CRUD surface onto the canonical aggregate, then remove the slim model, services, repository, namespace, payloads and locale leaves from the tree. Delete, never bridge. This phase is where the double-count actually closes. Landing P01 and P02 without it is strictly worse than today, because P02 makes the rich writer more attractive while the shorter, more discoverable bare verb still writes the weaker store and both still union into M347 and M349 with no dedup.
 
 - [ ] `P03.S11` - Repoint the five bare invoice verbs add, view, list, update and remove at the canonical aggregate and retire the catalogue sub-noun, keeping the operator noun and the kind issued-or-received flag exactly as the superseded ADR established them; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
-- [ ] `P03.S12` - Record the lane-partition decision explicitly, whether the slim store's per-source-kind document partition is reproduced on the canonical home or consciously dropped in favour of the existing per-consumer gates, naming those gates and what each still guarantees; `src/cadrumo/domain/invoices/_service.py`.
+- [x] `P03.S12` - Record the lane-partition decision explicitly, whether the slim store's per-source-kind document partition is reproduced on the canonical home or consciously dropped in favour of the existing per-consumer gates, naming those gates and what each still guarantees; `src/cadrumo/domain/invoices/_service.py`.
 - [ ] `P03.S13` - Remove the two-store union, the slim loader and the slim observation adapter from the invoice source resolver so exactly one store feeds M347 and M349; `src/cadrumo/application/invoices/_source_resolver.py`.
 - [ ] `P03.S14` - Delete the slim model, both services, the repository, the storage namespace and the BusinessOperationInvoiceDirection enum in one atomic explicit-path commit carrying every consumer, fixture and __all__ update, with no alias, bridge or re-export left behind; `src/cadrumo/application/ledger/_business_operation_invoice.py`.
 - [ ] `P03.S15` - Delete the slim CLI payload schemas and retire the blessing test that creates one invoice in both stores and asserts only that the ids differ, keeping the surviving link tests in that module; `src/cadrumo/entrypoints/cli/_ledger_business_payloads.py`.
