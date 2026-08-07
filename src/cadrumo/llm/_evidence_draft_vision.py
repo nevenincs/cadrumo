@@ -64,7 +64,7 @@ from ..application.ledger import (
 from ..core import FieldOrigin
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
-from ._consent import EvidenceConsentToken
+from ._consent import EvidenceConsentToken, provenance_transport_label
 from ._errors import LLMConfigError
 from ._models import LLMProvider, LLMRequest, MultimodalImageInput, PromptDefinition, PromptRegistry
 
@@ -232,7 +232,7 @@ class LocalVisionDocumentTranscriber:
         way, the artefact that most needs re-deriving is not the one the survey
         cannot see.
         """
-        transport = "local" if self._provider is LLMProvider.LOCAL else self._provider.value.lower()
+        transport = provenance_transport_label(self._provider)
         return TranscriberIdentity(
             origin=FieldOrigin.VISION,
             name=f"{_TRANSCRIBER_NAME_PREFIX}-{transport}:{self._model}",

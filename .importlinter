@@ -433,6 +433,12 @@ ignore_imports =
     # other test chain origins above rather than widened, so a NEW production
     # application -> llm edge still fails loudly.
     cadrumo.application.ledger.tests.test_evidence_corpus_parsing -> cadrumo.llm
+    # The on-host transport token is declared on BOTH sides of this boundary --
+    # the reader writes it into a provenance stamp, the withdrawal survey reads
+    # it back out -- and the layers cannot share one declaration. The test
+    # pinning the two equal therefore has to see both. Production
+    # application -> llm coupling stays zero and still fails loudly.
+    cadrumo.application.ledger.tests.test_consent_withdrawal -> cadrumo.llm
     # The cloud-evidence eligibility bar is a consent gate that lives in the
     # gated subpackage, so the test asserting when an upload is permitted has
     # to reach it. Pinned like the test chain origins above; production

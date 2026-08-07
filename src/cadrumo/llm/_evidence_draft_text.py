@@ -63,7 +63,7 @@ from ..application.ledger import DocumentTranscription, InvoiceDraft, PurchaseIn
 from ..core import Period
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
-from ._consent import EvidenceConsentToken
+from ._consent import EvidenceConsentToken, provenance_transport_label
 from ._errors import LLMConfigError
 from ._invoice_extraction_prompt import (
     CompiledInvoiceExtractionPrompt,
@@ -202,7 +202,7 @@ class TextInvoiceFieldExtractor:
         omits it makes a withdrawal silently incomplete: the artefact that most
         needs re-deriving is the one the survey cannot see.
         """
-        transport = "local" if self._provider is LLMProvider.LOCAL else self._provider.value.lower()
+        transport = provenance_transport_label(self._provider)
         model = self._model or "configured"
         return f"llm:{transport}-text-extract:{model}:rates-{self._compiled_prompt().rate_provenance}"
 

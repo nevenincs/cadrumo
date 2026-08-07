@@ -84,9 +84,11 @@ from ._column_role_mapping import (
     permitted_column_roles,
 )
 from ._consent import (
+    LOCAL_TRANSPORT_LABEL,
     EvidenceConsentToken,
     cloud_evidence_read_permitted,
     mint_evidence_consent_token,
+    provenance_transport_label,
 )
 from ._errors import (
     LLMCacheError,
@@ -118,6 +120,7 @@ from ._text_classifier import LocalTextLLMClassifier
 
 __all__ = [
     "COLUMN_ROLE_MAPPING_PROMPT_ID",
+    "LOCAL_TRANSPORT_LABEL",
     "CacheKey",
     "CacheStats",
     "CachedEntry",
@@ -167,6 +170,7 @@ __all__ = [
     "mint_evidence_consent_token",
     "parse_column_role_mapping_response",
     "permitted_column_roles",
+    "provenance_transport_label",
     "rasterise_pdf_pages_to_base64_png",
     "select_retention_removal_keys",
     "transcribe_document_images",
