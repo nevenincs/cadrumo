@@ -5546,7 +5546,6 @@ errors:
     error_resources_validation: A bundled application file failed strict validation.
     error_retention: Could not evaluate the tax-record retention policy.
     error_review: A review error occurred.
-    error_sanitization: An error occurred while sanitizing the document.
     error_sede: An error occurred in the AEAT electronic Sede.
     error_sede_browser_adapter_type: The browser page object returned an unexpected
       type at the Sede adapter boundary.
@@ -5658,7 +5657,6 @@ errors:
     fail_repair_decision_not_found: The requested repair-remediation decision does
       not exist.
     fail_review_source_load: The source file is present but could not be parsed.
-    fail_sanitization_source_parse: The source PDF could not be opened for sanitization.
     fail_secure_storage: A secure-storage error occurred.
     fail_sede_justificante_fetch: The receipt PDF download from the AEAT Sede failed,
       or the file is malformed.
@@ -6179,12 +6177,6 @@ errors:
       the syntax of the filter provided.'
     refused_review_kind_reserved: The `--kind` value provided is reserved and cannot
       be used.
-    refused_sanitization_already_sanitized: The source document has already been sanitized.
-    refused_sanitization_signature_present: The source PDF carries a digital signature.
-      Modifying it would invalidate the signature; human review is required.
-    refused_sanitization_unknown_surface: A personal-data surface was detected that
-      the sanitizer cannot handle. Human review is required.
-    refused_sanitization_validation: The sanitizer parameters failed validation.
     refused_source_mesh_invariant: 'Refused: source mesh invariant violation.'
     refused_storage_bucket_already_present: The import collides with a storage bucket
       that already exists.

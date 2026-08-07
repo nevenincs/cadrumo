@@ -5853,7 +5853,6 @@ errors:
       érvényesítésen.
     error_retention: Nem sikerült kiértékelni az adónyilvántartás megőrzési szabályzatát.
     error_review: Felülvizsgálati hiba történt.
-    error_sanitization: Hiba történt a dokumentum sanitizálása során.
     error_sede: Hiba történt az AEAT elektronikus Sede-n.
     error_sede_browser_adapter_type: A böngésző oldalas objektuma váratlan típust
       adott vissza a Sede adapter határán.
@@ -5967,7 +5966,6 @@ errors:
       el. Várjon néhány percet, és próbálja újra.
     fail_repair_decision_not_found: A kért javítási döntés nem létezik.
     fail_review_source_load: A forrásfájl jelen van, de nem elemezhető.
-    fail_sanitization_source_parse: A forrás PDF-et nem sikerült megnyitni sanitizáláshoz.
     fail_secure_storage: Biztonságos tárhelyhiba történt.
     fail_sede_justificante_fetch: A bizonylat PDF letöltése az AEAT Sede-ről meghiúsult,
       vagy a fájl hibás.
@@ -6500,12 +6498,6 @@ errors:
     refused_review_filter_parse: A  paramétert nem sikerült elemezni. Ellenőrizze
       a megadott szűrő szintaxisát.
     refused_review_kind_reserved: A megadott  érték foglalt és nem használható.
-    refused_sanitization_already_sanitized: A forrásdokumentum már sanitizálva van.
-    refused_sanitization_signature_present: A forrás PDF digitális aláírást tartalmaz.
-      A módosítás érvényteleníti az aláírást; emberi felülvizsgálat szükséges.
-    refused_sanitization_unknown_surface: Olyan személyes adatfelületet észleltek,
-      amelyet a sanitizáló nem tud kezelni. Emberi felülvizsgálat szükséges.
-    refused_sanitization_validation: A sanitizáló paraméterei nem mentek át az érvényesítésen.
     refused_source_mesh_invariant: 'Elutasítva: a forrásháló invariánsának megsértése.'
     refused_storage_bucket_already_present: Az importálás ütközik egy már létező tárolási
       bucket-tel.

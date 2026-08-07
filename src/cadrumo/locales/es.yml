@@ -5967,7 +5967,6 @@ errors:
     error_retention: No se ha podido evaluar la política de conservación de registros
       tributarios.
     error_review: Se produjo un error en la revisión.
-    error_sanitization: Se produjo un error al sanear el documento.
     error_sede: Se produjo un error en la Sede electrónica de la AEAT.
     error_sede_browser_adapter_type: El objeto de página del navegador devolvió un
       tipo inesperado en el límite del adaptador Sede.
@@ -6091,7 +6090,6 @@ errors:
       no disponible. Espera unos minutos y vuelve a intentarlo.
     fail_repair_decision_not_found: No se encontró la decisión de reparación solicitada.
     fail_review_source_load: El archivo de origen existe pero no se pudo interpretar.
-    fail_sanitization_source_parse: El PDF de origen no se pudo abrir para sanearlo.
     fail_secure_storage: Se produjo un error en el almacenamiento seguro.
     fail_sede_justificante_fetch: La descarga del justificante en PDF desde la Sede
       de la AEAT falló o el archivo no es válido.
@@ -6653,13 +6651,6 @@ errors:
       la sintaxis del filtro indicado.
     refused_review_kind_reserved: El valor de `--kind` indicado está reservado y no
       se puede usar.
-    refused_sanitization_already_sanitized: El documento de origen ya ha sido saneado
-      anteriormente.
-    refused_sanitization_signature_present: El PDF de origen lleva una firma digital.
-      Modificarlo invalidaría la firma; requiere revisión humana.
-    refused_sanitization_unknown_surface: Se detectó una superficie con datos personales
-      que el saneador no sabe tratar. Requiere revisión humana.
-    refused_sanitization_validation: Los parámetros del saneador no superaron la validación.
     refused_source_mesh_invariant: 'Rechazado: invariante de la malla de fuentes incumplida.'
     refused_storage_bucket_already_present: La importación colisiona con un bucket
       de almacenamiento que ya existe.
