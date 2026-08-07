@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:ed8f6b1672773e43acbc410a6f10dd2244861fbfdaef03842c5dfa61c18064af'
+body_hash: 'sha256:076202760e216ea304801db305ddb9747f879dab240062bbebd6bb1addc5e924'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -116,7 +116,7 @@ Lands the whole tabular lane from dialect normalization through importer consump
 - [x] `W03.P08.S25` - Normalize tabular dialects covering delimiter, decimal convention, encoding, preamble rows, summary rows and embedded newlines into one typed table, gated by all nine bundled operator CSV exports normalizing against the current 1-of-7 baseline; `src/cadrumo/adapters/inbound/financial`.
 - [x] `W03.P08.S26` - Build the semantic column-role mapping capability: observed headers to the closed FieldRole enum once per file, UNMAPPED surfaced and reported, never refuse-whole, gated by allow-list refusal tests, accuracy owned by the W04 measured lane; `src/cadrumo/llm`.
 - [x] `W03.P08.S27` - Project rows deterministically under a confirmed mapping so the model never touches a cell value, gated by a property test asserting projected values byte-equal their source cells; `src/cadrumo/adapters/inbound/financial`.
-- [ ] `W03.P08.S28` - Consume the mapping lane from the invoice-book importer including a retencion role, gated by the libro registro fixture importing fully with unknown columns reported rather than refused; `src/cadrumo/entrypoints/cli`.
+- [x] `W03.P08.S28` - Consume the mapping lane from the invoice-book importer including a retencion role, gated by the libro registro fixture importing fully with unknown columns reported rather than refused; `src/cadrumo/entrypoints/cli`.
 - [x] `W03.P08.S29` - Enrol the mapping lane as statement-import fallback strictly after the exact fixed-layout providers, gated by a known-bank fixture still taking the exact provider and an unknown-format fixture reaching the mapping lane; `src/cadrumo/adapters/inbound/financial`.
 - [ ] `W03.P08.S30` - Apply row-level S3 grounding to tabular rows where base, cuota and total are present, gated by a defective-row fixture surfacing a closure finding; `src/cadrumo/application/ledger`.
 
@@ -169,7 +169,7 @@ Lands the free-resource and VRAM-aware hardware profile and the fail-closed cont
 
 - [x] `W06.P12.S45` - Add the HardwareProfile probe carrying free system memory, accelerator presence, and NVML-backed total and free VRAM, with unknown reported as unverified on diagnostic rows, gated by injected-measurement tests covering every branch; `src/cadrumo/application/provisioning.py`.
 - [ ] `W06.P12.S46` - Add live contention detection at the dispatch choke point comparing the selected model declared requirement plus margin against free headroom and the runtime resident set, fail-closed on unreadable figures, gated by the live-machine refusal case plus an injected post-quiesce permit case, proven by mutation; `src/cadrumo/llm/_client.py`.
-- [ ] `W06.P12.S47` - Surface the hardware profile and contention snapshot rows in aeat config check, gated by the check payload conformance tests; `src/cadrumo/entrypoints/cli/_config`.
+- [x] `W06.P12.S47` - Surface the hardware profile and contention snapshot rows in aeat config check, gated by the check payload conformance tests; `src/cadrumo/entrypoints/cli/_config`.
 - [ ] `W06.P12.S58` - Bound in-process inference concurrency (default one) with a typed busy refusal or deterministic queueing, gated by a two-concurrent-request test proving exactly one proceeds; `src/cadrumo/llm/_client.py`.
 - [x] `W06.P12.S59` - Distinguish runtime residents from peer-process device usage in the contention snapshot and add the explicit unload action for Cadrumo-selected models, with the refusal naming which remediation applies, gated by injected readings covering both causes and an unload-path test, never touching another process; `src/cadrumo/application/provisioning.py`.
 
@@ -186,7 +186,7 @@ Lands the typed licence-aware catalogue, adaptive per-role selection, and the Ap
 
 Lands the explicit provision verb family, the transient-scoped retry policy, and consent-safe degradation.
 
-- [ ] `W06.P14.S51` - Add the aeat config provision verb family: report, model pull with progress and a pre-load contention check, and readiness verification, with no implicit pulls and no daemon spawn, gated by documented-command conformance and refusal tests against an unreachable runtime; `src/cadrumo/entrypoints/cli/_config`.
+- [x] `W06.P14.S51` - Add the aeat config provision verb family: report, model pull with progress and a pre-load contention check, and readiness verification, with no implicit pulls and no daemon spawn, gated by documented-command conformance and refusal tests against an unreachable runtime; `src/cadrumo/entrypoints/cli/_config`.
 - [ ] `W06.P14.S52` - Add the typed transport retry policy with exponential backoff, jitter and a bounded budget scoped to transient failures only, never retrying schema, contention, consent or capability refusals, gated by tests against a real local HTTP server exhibiting each failure shape; `src/cadrumo/llm/_client.py`.
 - [ ] `W06.P14.S53` - Route every degradation refusal through a typed remediation naming the provision verb, never auto-falling back to the cloud route, gated by a test proving a local outage cannot reach a cloud dispatch without a consent token; `src/cadrumo/llm`.
 
