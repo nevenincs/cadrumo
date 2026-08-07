@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:fc682e186bc3d2bc26391bab3222c9819420100123f04860cefadd3ad93ac04d'
+body_hash: 'sha256:d928f4b7b60fe2b3deda4f71d4413c6d9490ad5707a44ced65dfb81d249e26fd'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -114,7 +114,7 @@ Delivers CSV and spreadsheet ingestion through the same pipeline: deterministic 
 Lands the whole tabular lane from dialect normalization through importer consumption and row-level grounding.
 
 - [x] `W03.P08.S25` - Normalize tabular dialects covering delimiter, decimal convention, encoding, preamble rows, summary rows and embedded newlines into one typed table, gated by all nine bundled operator CSV exports normalizing against the current 1-of-7 baseline; `src/cadrumo/adapters/inbound/financial`.
-- [ ] `W03.P08.S26` - Build the semantic column-role mapping capability: observed headers to the closed FieldRole enum once per file, UNMAPPED surfaced and reported, never refuse-whole, gated by allow-list refusal tests, accuracy owned by the W04 measured lane; `src/cadrumo/llm`.
+- [x] `W03.P08.S26` - Build the semantic column-role mapping capability: observed headers to the closed FieldRole enum once per file, UNMAPPED surfaced and reported, never refuse-whole, gated by allow-list refusal tests, accuracy owned by the W04 measured lane; `src/cadrumo/llm`.
 - [x] `W03.P08.S27` - Project rows deterministically under a confirmed mapping so the model never touches a cell value, gated by a property test asserting projected values byte-equal their source cells; `src/cadrumo/adapters/inbound/financial`.
 - [ ] `W03.P08.S28` - Consume the mapping lane from the invoice-book importer including a retencion role, gated by the libro registro fixture importing fully with unknown columns reported rather than refused; `src/cadrumo/entrypoints/cli`.
 - [x] `W03.P08.S29` - Enrol the mapping lane as statement-import fallback strictly after the exact fixed-layout providers, gated by a known-bank fixture still taking the exact provider and an unknown-format fixture reaching the mapping lane; `src/cadrumo/adapters/inbound/financial`.
@@ -177,9 +177,9 @@ Lands the free-resource and VRAM-aware hardware profile and the fail-closed cont
 
 Lands the typed licence-aware catalogue, adaptive per-role selection, and the Apache-2.0 default flip with its gate.
 
-- [ ] `W06.P13.S48` - Author the typed per-role model catalogue declaring runtime id, memory requirement, SPDX licence with an explicit commercial-use flag verified against publisher text, and measured-baseline reference, gated by catalogue validation tests; `src/cadrumo/core`.
-- [ ] `W06.P13.S49` - Implement adaptive selection resolving each role to the best candidate fitting the measured hardware tier and the licence posture, with an operator override surfacing a visible licence advisory on a non-commercial candidate, gated by selection-matrix tests over injected profiles; `src/cadrumo/application/provisioning.py`.
-- [ ] `W06.P13.S50` - Flip the default vision model to the Apache-2.0 candidate and add the licence gate asserting no default candidate in any role carries a commercial-use bar, proven by mutation; `src/cadrumo/core/_config_runtime_fields.py`.
+- [x] `W06.P13.S48` - Author the typed per-role model catalogue declaring runtime id, memory requirement, SPDX licence with an explicit commercial-use flag verified against publisher text, and measured-baseline reference, gated by catalogue validation tests; `src/cadrumo/core`.
+- [x] `W06.P13.S49` - Implement adaptive selection resolving each role to the best candidate fitting the measured hardware tier and the licence posture, with an operator override surfacing a visible licence advisory on a non-commercial candidate, gated by selection-matrix tests over injected profiles; `src/cadrumo/application/provisioning.py`.
+- [x] `W06.P13.S50` - Flip the default vision model to the Apache-2.0 candidate and add the licence gate asserting no default candidate in any role carries a commercial-use bar, proven by mutation; `src/cadrumo/core/_config_runtime_fields.py`.
 - [ ] `W06.P13.S80` - Add per-model parameter support to the transport capability axis and omit unsupported parameters at the dispatch point (the unconditional temperature currently draws a vendor 400 from top-tier models), gated by adapter tests proving the typed refusal replaces the vendor error and the parameter is absent from the wire shape; `src/cadrumo/llm/_providers`.
 
 ### Phase `W06.P14` - Lifecycle verbs, retry, and degradation
