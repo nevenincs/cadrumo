@@ -83,12 +83,19 @@ source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-
 source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
+# The annual devengada must carry the SAME intracomunitaria cuota the four
+# M303 quarters carry, or the M390<->M303 reconciliation diverges. Both the
+# goods leg (LIVA arts. 13/15) and the services leg (art. 69.Uno.1, read
+# subject to art. 70) self-assess under art. 84.Uno.2.a), and the quarterly
+# line combines them because the official M303 boxes 10/11 and 36/37 are
+# titled "de bienes y servicios"; the annual aggregate therefore selects both
+# categories too.
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"
-selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum" }
+selector = { categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]

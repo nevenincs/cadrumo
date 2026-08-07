@@ -164,21 +164,27 @@ def test_intracom_goods_and_services_share_the_combined_official_casilla_10_11()
     classifier collapses both legs onto one category and the aggregation sums them
     into one casilla.
 
-    The live classifier is the ground truth for the leg -> category mapping: an
-    intra-community acquisition of GOODS (LIVA art. 13 + 15) and a reverse-charge
-    reception of SERVICES from an EU-established provider (LIVA art. 84.Uno.2) both
-    resolve to ``INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE``. Booking one goods leg
-    and one services leg on that category then sums BOTH cuotas into the single
-    devengado box-10/11 parity casilla (and the box-36/37 deducible casilla),
-    proving they are not separated. The combined value is derived by summing the two
-    input legs (the ``op = "sum"`` aggregation contract), never from the registry
-    formula (``no-tautological-calculation-tests``). A future erroneous split of
-    goods away from services would break this assertion.
+    The two legs carry DISTINCT categories, because Modelo 349 files them under
+    distinct claves ("A" for adquisiciones intracomunitarias sujetas, "I" for
+    adquisiciones intracomunitarias de servicios). What the combined M303 box
+    requires is not one category but one DESTINATION: the classifier keeps the
+    legs apart and the aggregation sums them onto the same casilla. Asserting
+    they share a category would be asserting the wrong invariant — it held only
+    while the services leg was resolved to the goods category, which filed it as
+    an adquisición de bienes against VIES.
+
+    Booking one goods leg and one services leg therefore sums BOTH cuotas into
+    the single devengado box-10/11 parity casilla (and the box-36/37 deducible
+    casilla). The combined value is derived by summing the two input legs (the
+    ``op = "sum"`` aggregation contract), never from the registry formula
+    (``no-tautological-calculation-tests``). Dropping either category from the
+    selectors, or splitting them onto separate casillas, breaks this.
     """
     goods = classify_iva(_received_from_eu_criteria(kind=TransactionKind.GOODS))
     services = classify_iva(_received_from_eu_criteria(kind=TransactionKind.SERVICES_GENERAL))
     assert goods.category is IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
-    assert services.category is IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
+    assert services.category is IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE
+    assert goods.category is not services.category
     assert goods.matched_rule_id == "R11_intra_community_acquisition"
     assert services.matched_rule_id == "R13_services_b2b_eu_inbound"
 
