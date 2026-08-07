@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:2f178c1ac99a3523114c560a8da9c36c162febeca25297bfdc9ee380c9aa7649'
+body_hash: 'sha256:24054768ae0352f76cb5688bae0c99ebfc91f1269a110ae333eb2b362962f841'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -290,6 +290,9 @@ Lands the review surface, the blocking-findings gate, assertion-shaped correctio
 - [ ] `W09.P17.S139` - Prove the ladder never defaults to the peninsula with a fixture whose invoice prints a bare B-CIF, no country and no gated postal evidence, asserting unknown and never the mainland, mutation-proven. Add the companion probe feeding a Paris five-digit code with the country gate removed and asserting it reds, since Spain France Germany and Italy all use five-digit codes so the shape guard discriminates nothing and a Paris code otherwise resolves to the Spanish peninsula; `src/cadrumo/application/ledger`.
 - [ ] `W09.P17.S140` - Refuse at setup when the taxpayer profile carries no own territory, since the operator side of every ingested invoice is a profile and censo fact consumed from the profile authority rather than a document question, so an incomplete profile is a setup-time completeness refusal and never a per-document prompt; `src/cadrumo/application/ledger`.
 - [ ] `W09.P17.S141` - Add the contradiction fixture where a mainland registry rate is charged to a confirmed non-mainland counterparty, riding the existing finding class, since the charged rate is issuer-asserted treatment evidence that feeds the contradiction channel and never establishes territory; `src/cadrumo/application/ledger`.
+- [ ] `W09.P17.S142` - Let a postal field carry role evidence, since the role-evidence flag derives from the tax-identifier form and the validator refuses a role-evidence instruction on any other form, so the two identity fields each get a key asking the model to quote the printed heading proving whose they are while the two postal fields structurally cannot and their party attribution rests on prose alone. A transposition produces a fully valid draft with both fields grounded and every gate green, and once the consumer lands both parties get a confident wrong territory. Either widen the flag to a declared per-contract axis or record in the ADR rather than only the exec record that postal party attribution is anchor-reviewed rather than evidence-anchored, and make that a stated precondition on the consumer row; `src/cadrumo/llm`.
+- [ ] `W09.P17.S143` - Surface a populated postal code that is not five digits as a draft discrepancy, since the free-text grounder passes an address blob through verbatim into the draft and the operator payload where the surface labels it a postal code. Not a safety defect because the domain resolver returns nothing for it rather than the mainland, and the grounder must stay permissive because dropping the value would destroy the anchor the operator reviews. Add the check at the layer that already owns deterministic read-time findings rather than a second copy of the rule upstream of the domain authority; `src/cadrumo/application/ledger`.
+- [ ] `W09.P17.S144` - Drive the anchor-not-equal-to-value gate from the contract declaration rather than a hardcoded name tuple, since the postal fixtures honour the property by author convention and collapsing an anchor to equal its value reds nothing, following the sibling gates in the same file that already derive their subjects. Rename the free-text grounder which now serves four fields while naming one of them; `src/cadrumo/llm`.
 
 ## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
 
