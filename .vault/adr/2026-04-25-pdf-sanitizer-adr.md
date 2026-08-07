@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#pdf-sanitizer'
 date: '2026-04-25'
-modified: '2026-07-17'
-body_hash: 'sha256:8067bb608412e95ec6f16b2adbf77e07fecaf46a20a4d765717e11a6dcc92e7e'
+modified: '2026-08-07'
+body_hash: 'sha256:8c4645ff1907b5383045fb5d0ad0e1f08568f9eb86c7c0b7377cd22e4f38d41a'
 related:
   - "[[2026-04-25-pdf-sanitizer-research]]"
   - "[[2026-04-25-aeat-verify-research]]"
@@ -473,3 +473,55 @@ benefit is that `pip install aeat` produces a working sanitiser.
   adversarial absence test which scans the *whole* PDF for the
   *whole* TokenMap, including arbitrary entries the operator can
   add for ad-hoc strings).
+
+
+### Amendment (2026-08-07): the package moves to `dev/`, and the CLI bridge is withdrawn
+
+This ADR stays `accepted` as to WHAT the sanitiser is and how it works. Two
+things it decided are withdrawn here, because HEAD has diverged from both and a
+reader inheriting this record would otherwise act on decisions that are no
+longer in force.
+
+**The home changes from `src/cadrumo/adapters/inbound/sanitizer/` to
+`dev/sanitizer/`.** Nothing about the design changes; only where it lives. This
+record already said the thing that settles it -- "fixture-preparation
+infrastructure, not runtime filing import or general-purpose anonymisation" --
+and a standing operator mandate forbids exactly that under `src/`. The package
+shipped in the wheel to every operator for four months, including a 121-line
+table of SHA-256 digests of committed TEST fixtures, which is unreachable and
+meaningless on an installed system.
+
+**The `aeat sanitize {pdf, prepare-map, verify, check}` CLI bridge is withdrawn
+and must not be built.** It was locked here and planned as Phase 7 of the
+companion plan; it was never implemented, and no `sanitize` group exists under
+`src/cadrumo/entrypoints/cli/`. This record read as in force for four months
+while HEAD carried no such surface -- the plain case of an ADR ruling on code
+not being self-executing.
+
+Withdrawing it is not merely tidying an unbuilt plan. Shipping `aeat sanitize`
+would make an operator-facing safety claim this tool has demonstrably failed:
+the 2026-07-27 justificante privacy purge found that all NINE committed real
+sanitised filings still leaked, with a mod-97-valid IBAN, a control-letter-valid
+tax id, an email, a phone, and name-shaped strings surviving in every remaining
+fixture. The root cause recorded there is structural and still open --
+`sanitiser-has-no-detection-stage`; this ADR's own Constraints put detection out
+of scope, which is the decision that produced it. The Consequences section above
+calls the failure modes "loud". They were silent. No operator surface may be
+built on this tool before a detection stage lands.
+
+**What is NOT withdrawn.** The package is kept, not deleted. It retains three
+live in-repo consumers -- the end-to-end agreement test between the
+residual-identity privacy gate and the pipeline, the cross-package
+non-mutation contract in the e-invoice embedded-file probe, and the
+`SANITIZED_SHAS` catalogue -- and `no-legacy-compatibility` does not reach it:
+that rule governs code reading or migrating shapes an older version of this app
+wrote, and this reads none. The package is misplaced, not legacy.
+
+**Open, and owned by the product owner rather than by this record:** whether
+this project will ever again commit a real AEAT document as a test fixture.
+Every justificante sidecar at HEAD now declares `synthetic_generated` and none
+declares `real_corpus`, so nothing has passed through the sanitiser since the
+purge. The relocation is correct under either answer -- `dev/` is the right home
+whether the tool is later hardened with a detection stage or later dropped --
+so that question blocks only the hardening investment, not the move.
+

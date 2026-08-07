@@ -4,7 +4,7 @@ tags:
   - "#real-pdf-fixture-corpus"
 date: "2026-04-21"
 modified: '2026-08-07'
-body_hash: 'sha256:252e62be2a1cf7724188a4efa13f3a048c9a8470a9e4b616dbe21a75a4bf32bd'
+body_hash: 'sha256:94575c1003e737ae1c8786655f221125e80c602c2a8c25ffc59da3e85b1cbab1'
 related:
   - '[[2026-04-21-real-pdf-fixture-corpus-research]]'
   - '[[2026-04-21-real-pdf-import-umbrella-research]]'
@@ -197,3 +197,37 @@ With counts per `(modelo, año, template_revision)`. Ties to cluster B's schema-
 - **User consent is first-class.** Nothing enters the repo without a sidecar record; revocation is supported; every scrubbed file carries its own audit trail.
 - **Synthetic generator doubles as a product surface** — once built, Kent could generate a mock justificante / declaración for training / demo purposes. Not scope now, but a latent win.
 - **Superseded (2026-08-07):** the `src/cadrumo/adapters/inbound/pdf/_scrub.py` library named in §2 was never wired to any caller, recipe, or committed fixture, and has been deleted along with its test module and the empty L2 scaffold. See §2's supersession note; `2026-04-25-pdf-sanitizer-adr` is the accepted successor design for redacting PII in fixture PDFs.
+
+
+### Amendment (2026-08-07): the middle layer no longer exists
+
+This ADR decided a three-layer corpus -- public anchors, **scrubbed privates**,
+synthetic parametrised. The middle layer is gone, and this record did not say
+so, which matters more than the sanitiser relocation that surfaced it: this ADR
+governs the whole fixture strategy, so a reader planning new fixture work
+inherits a layer that no longer exists and a workflow that no longer runs.
+
+The 2026-07-27 justificante privacy purge found that all NINE committed scrubbed
+privates still carried recoverable personal data -- a checksum-valid IBAN, a
+valid tax id, an email, a phone, and name-shaped strings in every remaining
+fixture. All nine were replaced with synthetic anchors and their blobs stripped
+from history with `git filter-repo`. Verified at HEAD rather than taken from the
+audit: every justificante sidecar declares `provenance: "synthetic_generated"`
+and none declares `real_corpus`.
+
+So the corpus is two-layer in practice. Fixtures are produced by the generator
+modules under `src/cadrumo/tests/fixtures/justificantes/`, stamped
+`SYNTHETIC_SANITIZER_VERSION`, and deliberately distinguished from the
+sanitiser's production stamp.
+
+This does NOT retire the scrubbed-private layer as a concept. The
+fixture-provenance contract still models both provenances, and a real sanitised
+anchor remains legitimate the moment the sanitiser gains the detection stage the
+purge audit's root-cause finding requires. What is recorded here is that the
+layer is currently EMPTY and the path to refilling it runs through that
+hardening, not through the workflow this ADR described.
+
+One consequence worth naming for whoever picks this up: the generator workflow
+that replaced it is driven by `python -m` on the generator modules and is
+documented nowhere outside their own docstrings.
+
