@@ -69336,6 +69336,8 @@ profile:
         provider:
           label: Método de autenticación
       capabilities:
+        cloud_evidence_upload:
+          label: Lectura de documentos fuera del equipo
         google_export:
           label: Exportación a Google
         llm_vision:

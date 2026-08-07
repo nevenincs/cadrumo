@@ -67014,6 +67014,8 @@ profile:
         provider:
           label: Mètode d'autenticació
       capabilities:
+        cloud_evidence_upload:
+          label: Lectura de documents fora de l'equip
         google_export:
           label: Exportació a Google
         llm_vision:

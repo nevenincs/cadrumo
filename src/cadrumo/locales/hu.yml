@@ -67189,6 +67189,8 @@ profile:
         provider:
           label: Hitelesítési mód
       capabilities:
+        cloud_evidence_upload:
+          label: Dokumentumolvasás a gépen kívül
         google_export:
           label: Google-exportálás
         llm_vision:

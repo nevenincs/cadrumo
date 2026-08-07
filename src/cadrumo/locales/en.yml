@@ -66619,6 +66619,8 @@ profile:
         provider:
           label: Authentication method
       capabilities:
+        cloud_evidence_upload:
+          label: Off-host document reading
         google_export:
           label: Google export
         llm_vision:
