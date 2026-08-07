@@ -1,3 +1,21 @@
+# Casilla 0599 has no binding and no formula ON PURPOSE, and that is not an
+# unwired gap.
+#
+# AEAT pre-populates this box in the borrador from third-party Modelo 190
+# withholding data, which this application does not hold: the retentions were
+# declared by the PAYERS, not by the taxpayer. So there is nothing for a ledger
+# binding to aggregate, and the taxpayer confirms the figure AEAT already
+# supplied rather than deriving it.
+#
+# Recorded here because the adjudication is otherwise unrecordable and keeps
+# being re-made. The sibling axis carries the same fact for the EXPORT question
+# -- core.ExportExemptionReason.PRE_POPULATED_BY_AEAT names this exact casilla in
+# its own docstring -- but that member governs whether a box files a fixed-width
+# slot, and Modelo 100 exports xml_dictionary, so it does not apply here and is
+# deliberately dormant. The FEED question has no such member: input_kind's four
+# members are manual / bound / computed / informational, and none of them says
+# "supplied by AEAT from data we do not hold". Until one exists, this comment is
+# the record.
 [[revisions."2020".casillas]]
 id = "0599"
 number = "0599"
