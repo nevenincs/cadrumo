@@ -57,10 +57,13 @@ def test_the_fixture_period_actually_generates_credit_on_both_bases() -> None:
     """
     assert Decimal("0") < _GENERATED
     assert Decimal("0") > _NEGATIVE_RESULTADO
-    assert derive_303_compensation_available(
-        posterior=_POSTERIOR,
-        resultado=_NEGATIVE_RESULTADO,
-    ) > _POSTERIOR
+    assert (
+        derive_303_compensation_available(
+            posterior=_POSTERIOR,
+            resultado=_NEGATIVE_RESULTADO,
+        )
+        > _POSTERIOR
+    )
 
 
 def test_a_refunded_period_carries_only_the_posterior_on_the_resultado_basis() -> None:
@@ -154,6 +157,6 @@ def test_the_refund_disposition_is_required_rather_than_defaulted() -> None:
     assert parameter.kind is inspect.Parameter.KEYWORD_ONLY
 
     with pytest.raises(TypeError):
-        derive_m303_compensation_available_from_casillas(  # type: ignore[call-arg]
+        derive_m303_compensation_available_from_casillas(  # type: ignore[call-arg]  # ty: ignore[missing-argument]  # reason: the omission IS the assertion — the disposition must be impossible to forget at a call site
             _values(**{M303_COMPENSATION_RESULTADO_CASILLA: _NEGATIVE_RESULTADO}),
         )
