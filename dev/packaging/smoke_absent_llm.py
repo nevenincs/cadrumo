@@ -27,6 +27,7 @@ indistinguishable from a guard that is simply dormant by construction.
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import sys
 from pathlib import Path
@@ -72,6 +73,9 @@ _CLAIM_PROBE_IS_EXCLUSIVE: Final[str] = "llm probe target is exclusive to the ex
 _CLAIM_EXTRA_PROBES_ABSENT: Final[str] = "llm extra probes absent in the core install"
 _CLAIM_SURFACES_REFUSE: Final[str] = "inference surfaces refuse with the declared install guidance"
 _CLAIM_CORE_CLI_WORKS: Final[str] = "core CLI runs without the llm extra"
+_CLAIM_GUARDED_SET_IS_DERIVED: Final[str] = "guarded surface set derived from the production guard call sites"
+_CLAIM_GUARDED_SURFACES_WORK: Final[str] = "guarded surfaces do not refuse once the extra is installed"
+_CLAIM_UNINSTALL_RESTORES_REFUSAL: Final[str] = "uninstalling the extra returns every guarded surface to the refusal"
 
 #: The model-bearing surfaces of the inference boundary, each named with the
 #: call that reaches it. Every entry is an operator-reachable entry point that
@@ -105,6 +109,265 @@ _INFERENCE_SURFACES: Final[tuple[tuple[str, str], ...]] = (
 )
 
 
+def _guard_symbol_for_the_extra(repo_root: Path) -> str:
+    """Return the registry symbol the production guard is called with for this extra.
+
+    Derived from the registry rather than hardcoded, and checked against the
+    symbols :data:`OPTIONAL_EXTRAS` actually enumerates, so a renamed record
+    fails here instead of silently yielding an empty guarded set below.
+    """
+    _extras, symbols = optional_extra_registry(repo_root)
+    symbol = f"{_EXTRA.upper()}_EXTRA"
+    if symbol not in symbols:
+        raise SystemExit(
+            f"the core optional-extra registry enumerates {sorted(symbols)!r}, which does not include "
+            f"{symbol!r}; the guarded-surface derivation below has nothing to key on.",
+        )
+    return symbol
+
+
+def _guarded_surfaces_from_production_guards(repo_root: Path, symbol: str) -> tuple[frozenset[str], frozenset[str]]:
+    """Derive the guarded surfaces from the PRODUCTION guard call sites.
+
+    Walks the AST of every non-test module under the gated subpackage for a call
+    to ``require_optional_extra(<symbol>)`` and attributes it to the OUTERMOST
+    enclosing definition -- the callable an operator can name. The walk is
+    structural throughout: nothing here slices source text, so a guard inside a
+    branch, a nested helper, or a string mentioning the guard's name cannot
+    change the answer.
+
+    Deriving beats declaring for one reason that matters to this lane's claim:
+    "every guarded surface returns to the refusal" is a completeness claim, and
+    a hand-kept inventory makes it a claim over a set the lane's own author
+    chose. A guard added to a new entry point enrolls itself here; one added to
+    a hand list only when someone remembers.
+
+    Returns:
+        ``(reachable, internal)`` -- the derived names the package exports, and
+        the derived names it does not. The second set is reported rather than
+        dropped: an operator cannot reach those directly, but a lane that
+        silently discarded them would be capping its own denominator.
+    """
+    package = repo_root / "src" / "cadrumo" / "llm"
+    exported = _exported_names(package / "__init__.py")
+    derived: set[str] = set()
+    for path in sorted(package.rglob("*.py")):
+        if "tests" in path.relative_to(package).parts:
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        derived |= _guarded_definition_names(tree, symbol)
+    if not derived:
+        raise SystemExit(
+            f"no production call to require_optional_extra({symbol}) was found under {package}. The lane's "
+            "guarded-surface set would be empty, and an empty set makes every completeness assertion below "
+            "vacuously true -- which is indistinguishable from a pass.",
+        )
+    return frozenset(derived & exported), frozenset(derived - exported)
+
+
+def _exported_names(init_path: Path) -> frozenset[str]:
+    """Return the string members of the module's ``__all__``, read structurally."""
+    tree = ast.parse(init_path.read_text(encoding="utf-8"), filename=str(init_path))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            targets: list[ast.expr] = list(node.targets)
+        elif isinstance(node, ast.AnnAssign):
+            targets = [node.target]
+        else:
+            continue
+        if not any(isinstance(target, ast.Name) and target.id == "__all__" for target in targets):
+            continue
+        value = node.value
+        if isinstance(value, ast.List | ast.Tuple | ast.Set):
+            return frozenset(
+                element.value
+                for element in value.elts
+                if isinstance(element, ast.Constant) and isinstance(element.value, str)
+            )
+    raise SystemExit(f"no literal __all__ found in {init_path}")
+
+
+def _guarded_definition_names(tree: ast.Module, symbol: str) -> set[str]:
+    """Return the outermost definition names enclosing a guard call, by AST descent."""
+    found: set[str] = set()
+
+    def contains_guard(node: ast.AST) -> bool:
+        return any(
+            isinstance(child, ast.Call)
+            and isinstance(child.func, ast.Name)
+            and child.func.id == "require_optional_extra"
+            and any(isinstance(arg, ast.Name) and arg.id == symbol for arg in child.args)
+            for child in ast.walk(node)
+        )
+
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) and contains_guard(node):
+            found.add(node.name)
+    return found
+
+
+def _assert_the_driver_reaches_every_guarded_surface(
+    reachable: frozenset[str],
+    internal: frozenset[str],
+) -> None:
+    """Require the driver inventory to cover the derived set, and print what it does not.
+
+    The direction of the check is the point. A derived surface the driver never
+    reaches is a hole in the completeness claim and fails. A driver entry with no
+    derived guard is NOT a failure -- those surfaces are driven for reachability
+    rather than because they carry the guard themselves -- but it is printed, so
+    the lane's coverage is legible instead of implied.
+    """
+    driven = {name for name, _call in _INFERENCE_SURFACES}
+    unreached = sorted(reachable - driven)
+    if unreached:
+        raise SystemExit(
+            f"these surfaces carry the production require_optional_extra({_EXTRA.upper()}_EXTRA) guard but "
+            f"the lane never drives them: {unreached!r}. The lane cannot claim every guarded surface "
+            "returns to the refusal while some are never reached.",
+        )
+    print(f"derived guarded surfaces (driven): {sorted(reachable)!r}", flush=True)
+    if internal:
+        print(
+            f"derived guarded definitions NOT exported, so not operator-reachable and excluded from the "
+            f"completeness claim: {sorted(internal)!r}",
+            flush=True,
+        )
+    reachability_only = sorted(driven - reachable)
+    if reachability_only:
+        print(
+            f"driven for reachability but carrying no guard of their own: {reachability_only!r}",
+            flush=True,
+        )
+    record_proof(_CLAIM_GUARDED_SET_IS_DERIVED)
+
+
+def _install_core_with_the_extra(work_dir: Path, cohort: PythonCohort, venv_path: Path) -> None:
+    """Install the exact cohort WITH the extra, the state the uninstall step starts from."""
+    install_targets_with_pip(
+        work_dir,
+        install_targets(cohort, root_artifact=cohort.root_wheel, extras=(_EXTRA,)),
+        venv_path,
+    )
+
+
+def _assert_guarded_surfaces_do_not_refuse(
+    work_dir: Path,
+    venv_path: Path,
+    reachable: frozenset[str],
+) -> None:
+    """The positive control: with the extra installed, no guarded surface refuses.
+
+    Without this, "the surfaces refuse after uninstall" is satisfiable by a
+    surface that refuses unconditionally -- a guard wired to fire always would
+    pass every assertion in this lane and be indistinguishable from a correct
+    one. What is asserted is narrow and deliberate: only that the EXTRA refusal
+    is absent. A guarded call driven with a deliberately empty input is expected
+    to fail on its own terms, and demanding a success would be asserting the
+    feature works rather than that the gate opened.
+    """
+    calls = json.dumps([{"name": name, "call": call} for name, call in _INFERENCE_SURFACES if name in reachable])
+    outcomes = _drive_surfaces(work_dir, venv_path, calls, leaf="present-state")
+    refused = [entry for entry in outcomes if entry["outcome"] in {"refused", "module-not-found"}]
+    if refused:
+        raise SystemExit(
+            f"these guarded surfaces still reported the extra as missing WITH the extra installed: "
+            f"{refused!r}. Every refusal this lane observes after the uninstall would then be evidence of "
+            "nothing.",
+        )
+    print(f"{len(outcomes)} guarded surfaces opened with the extra installed", flush=True)
+    record_proof(_CLAIM_GUARDED_SURFACES_WORK)
+
+
+def _uninstall_the_extra(work_dir: Path, venv_path: Path, exclusive: frozenset[str]) -> None:
+    """Remove exactly the distributions the extra adds beyond the core closure."""
+    run_checked(
+        [
+            str(venv_python_path(venv_path)),
+            "-m",
+            "pip",
+            "uninstall",
+            "--disable-pip-version-check",
+            "--yes",
+            *sorted(exclusive),
+        ],
+        cwd=work_dir,
+    )
+
+
+def _assert_uninstall_restores_the_refusal(
+    work_dir: Path,
+    venv_path: Path,
+    reachable: frozenset[str],
+) -> None:
+    """Every guarded surface must return to the instructive refusal after the uninstall."""
+    _assert_extra_probes_absent(work_dir, venv_path)
+    calls = json.dumps([{"name": name, "call": call} for name, call in _INFERENCE_SURFACES if name in reachable])
+    outcomes = _drive_surfaces(work_dir, venv_path, calls, leaf="uninstalled-state")
+    driven = {entry["name"] for entry in outcomes}
+    if driven != set(reachable):
+        raise SystemExit(f"the driver did not reach every guarded surface: missing {sorted(reachable - driven)!r}")
+    wrong = [entry for entry in outcomes if entry["outcome"] != "refused" or entry["hint"] != _EXPECTED_HINT]
+    if wrong:
+        raise SystemExit(
+            "these guarded surfaces did not return to the instructive refusal after the extra was "
+            f"uninstalled: {wrong!r}. A surface that keeps working once its dependencies are removed is "
+            "reaching them by a path the guard does not cover.",
+        )
+    print(f"{len(outcomes)} guarded surfaces returned to the instructive refusal after uninstall", flush=True)
+    record_proof(_CLAIM_UNINSTALL_RESTORES_REFUSAL)
+
+
+def _drive_surfaces(work_dir: Path, venv_path: Path, calls: str, *, leaf: str) -> list[dict[str, str]]:
+    """Drive the named surfaces in the installed venv and return their classified outcomes."""
+    code = f"""
+import json
+
+from cadrumo.core import MissingOptionalExtraError
+from cadrumo.llm import (
+    LocalTextLLMClassifier,
+    LocalVisionLLMClassifier,
+    MultimodalImageInput,
+    extract_invoice_fields_from_images,
+    extract_invoice_fields_from_text,
+    rasterise_pdf_pages_to_base64_png,
+)
+
+outcomes = []
+for surface in json.loads({calls!r}):
+    try:
+        eval(surface["call"])
+    except MissingOptionalExtraError as exc:
+        outcomes.append({{"name": surface["name"], "outcome": "refused", "hint": exc.install_hint}})
+    except ModuleNotFoundError as exc:
+        outcomes.append({{"name": surface["name"], "outcome": "module-not-found", "hint": str(exc)}})
+    except BaseException as exc:
+        outcomes.append(
+            {{"name": surface["name"], "outcome": "other", "hint": f"{{type(exc).__name__}}: {{exc}}"}}
+        )
+    else:
+        outcomes.append({{"name": surface["name"], "outcome": "succeeded", "hint": ""}})
+
+print("SURFACE_OUTCOMES:" + json.dumps(outcomes))
+"""
+    result = run_checked(
+        [str(venv_python_path(venv_path)), "-c", code],
+        cwd=work_dir,
+        env=_lane_env(work_dir, leaf),
+    )
+    marker = "SURFACE_OUTCOMES:"
+    line = next((row for row in result.stdout.splitlines() if row.startswith(marker)), None)
+    if line is None:
+        raise SystemExit(f"the surface driver produced no outcomes; stdout was: {result.stdout!r}")
+    parsed: list[dict[str, str]] = json.loads(line[len(marker) :])
+    if not parsed:
+        raise SystemExit(
+            "the surface driver returned an empty outcome set, so every assertion over it holds "
+            "vacuously; the guarded-surface set reaching the driver was empty.",
+        )
+    return parsed
+
+
 def _install_core_without_extras(work_dir: Path, cohort: PythonCohort, venv_path: Path) -> None:
     """Install the exact cohort with NO extras, which is this lane's whole premise."""
     install_targets_with_pip(
@@ -114,7 +377,7 @@ def _install_core_without_extras(work_dir: Path, cohort: PythonCohort, venv_path
     )
 
 
-def _assert_extra_is_real_in_the_artifact(wheel: Path) -> None:
+def _assert_extra_is_real_in_the_artifact(wheel: Path) -> frozenset[str]:
     """Verify the wheel declares an ``llm`` extra that adds something to core.
 
     An extra every one of whose requirements is ALSO an unconditional core
@@ -122,6 +385,11 @@ def _assert_extra_is_real_in_the_artifact(wheel: Path) -> None:
     never fire and this lane can never observe a refusal. Read from the built
     wheel's own metadata rather than from ``pyproject.toml``, because the wheel
     is what an operator installs and the two can drift.
+
+    Returns:
+        The distributions the extra adds beyond core -- exactly the set the
+        uninstall step removes, so the removal is derived from the artifact
+        rather than from a second hand-kept list that could drift from it.
     """
     requirements, provided_extras = wheel_metadata(wheel)
     if normalise_distribution_name(_EXTRA) not in provided_extras:
@@ -150,6 +418,7 @@ def _assert_extra_is_real_in_the_artifact(wheel: Path) -> None:
         )
     print(f"{_EXTRA} extra adds {sorted(exclusive)!r} beyond the core closure", flush=True)
     record_proof(_CLAIM_EXTRA_IS_REAL)
+    return frozenset(exclusive)
 
 
 def _assert_probe_target_is_exclusive_to_the_extra(repo_root: Path, wheel: Path) -> None:
@@ -340,8 +609,11 @@ def main(argv: list[str] | None = None) -> int:
     cohort = load_python_cohort(args.cohort_dir)
     wheel = cohort.root_wheel
     assert_wheel_metadata_matches_pyproject(repo_root, wheel)
-    _assert_extra_is_real_in_the_artifact(wheel)
+    exclusive = _assert_extra_is_real_in_the_artifact(wheel)
     _assert_probe_target_is_exclusive_to_the_extra(repo_root, wheel)
+    guard_symbol = _guard_symbol_for_the_extra(repo_root)
+    reachable, internal = _guarded_surfaces_from_production_guards(repo_root, guard_symbol)
+    _assert_the_driver_reaches_every_guarded_surface(reachable, internal)
 
     print("creating stdlib venv and installing the cohort with NO extras", flush=True)
     venv_path = create_pip_venv(work_dir, args.python)
@@ -356,28 +628,53 @@ def main(argv: list[str] | None = None) -> int:
     _assert_inference_surfaces_refuse(work_dir, venv_path)
     _assert_core_cli_still_works(work_dir, venv_path)
 
+    # The uninstall half, in its own venv. The absent state above is reached by
+    # never installing the extra; this one is reached by installing it, proving
+    # the guarded surfaces OPEN, and then removing it again. The two are
+    # different claims: the first says a core install refuses, the second says
+    # the refusal is a live function of what is installed rather than a
+    # permanent property of the build.
+    print("creating a second venv, installing WITH the extra, then uninstalling it", flush=True)
+    # A sibling work root rather than a second name in the same one: the shared
+    # helper roots its venv at a fixed leaf, and reusing that leaf would build
+    # the with-extra environment on top of the core one this lane just proved.
+    extra_root = work_dir / "with-extra"
+    extra_root.mkdir(parents=True, exist_ok=True)
+    extra_venv = create_pip_venv(extra_root, args.python)
+    _install_core_with_the_extra(work_dir, cohort, extra_venv)
+    _assert_guarded_surfaces_do_not_refuse(work_dir, extra_venv, reachable)
+    _uninstall_the_extra(work_dir, extra_venv, exclusive)
+    _assert_uninstall_restores_the_refusal(work_dir, extra_venv, reachable)
+
     manifest = write_smoke_manifest(
         work_dir,
         lane="absent-llm-wheel",
         artifacts={
             "wheel": relative_manifest_path(work_dir, wheel),
             "venv": relative_manifest_path(work_dir, venv_path),
+            "venv_with_extra": relative_manifest_path(work_dir, extra_venv),
         },
         declared=(
             "wheel metadata dependency surface",
             _CLAIM_EXTRA_IS_REAL,
             _CLAIM_PROBE_IS_EXCLUSIVE,
+            _CLAIM_GUARDED_SET_IS_DERIVED,
             "stdlib venv creation",
             "exact local cohort install with pip",
             "pip dependency check",
             _CLAIM_EXTRA_PROBES_ABSENT,
             _CLAIM_SURFACES_REFUSE,
             _CLAIM_CORE_CLI_WORKS,
+            _CLAIM_GUARDED_SURFACES_WORK,
+            _CLAIM_UNINSTALL_RESTORES_REFUSAL,
         ),
         details={
             "cohort_version": cohort.version,
             "python": args.python,
             "surfaces": [name for name, _call in _INFERENCE_SURFACES],
+            "guarded_surfaces": sorted(reachable),
+            "guarded_but_unexported": sorted(internal),
+            "uninstalled_distributions": sorted(exclusive),
         },
     )
 

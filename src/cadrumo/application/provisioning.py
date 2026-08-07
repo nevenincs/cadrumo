@@ -33,6 +33,7 @@ import httpx
 from pydantic import BaseModel, Field
 
 from ..core import (
+    LLM_EXTRA,
     OPTIONAL_EXTRAS,
     STRICT_FROZEN_CONFIG,
     AcceleratorKind,
@@ -54,6 +55,7 @@ from ..core.config import Settings, load_settings
 from ..core.i18n import tr
 
 __all__ = [
+    "LOCAL_MODEL_PROVISIONING_SERVICE",
     "OPTIONAL_EXTRAS",
     "AcceleratorDevice",
     "AcceleratorKind",
@@ -63,11 +65,13 @@ __all__ = [
     "DependencyStatus",
     "HardwareProfile",
     "HardwareTier",
+    "InstalledModel",
     "ModelSelection",
     "OptionalExtra",
     "PullOutcome",
     "PullProgress",
     "ReadinessOutcome",
+    "RemoveOutcome",
     "RuntimeResident",
     "SystemMemoryReading",
     "UnloadOutcome",
@@ -76,6 +80,7 @@ __all__ = [
     "cadrumo_selected_models",
     "probe_hardware_profile",
     "probe_local_inference_hardware",
+    "probe_local_model_provisioning",
     "probe_model_runtime_hardware_floor",
     "probe_ollama_vision",
     "probe_optional_extra",
@@ -83,8 +88,10 @@ __all__ = [
     "probe_playwright_browser",
     "pull_runtime_model",
     "read_accelerator",
+    "read_installed_models",
     "read_runtime_residents",
     "read_system_memory",
+    "remove_runtime_model",
     "select_model_for_role",
     "unload_runtime_model",
     "verify_model_ready",
@@ -1709,6 +1716,327 @@ def verify_model_ready(
         answered=True,
         elapsed_ms=elapsed,
         detail=f"{model!r} answered in {elapsed} ms",
+    )
+
+
+class InstalledModel(BaseModel):
+    """One model the local runtime reports as PRESENT ON DISK, loaded or not.
+
+    Distinct from :class:`RuntimeResident`, and the distinction is the whole
+    reason both exist. A resident model is loaded into memory right now; an
+    installed model occupies disk whether or not anything ever loads it. Removal
+    reclaims disk, so it reads this inventory -- reading the resident set instead
+    would report a multi-gigabyte model as absent merely because it is cold.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    name: str = Field(min_length=1)
+    size_bytes: int | None = Field(default=None, ge=0)
+
+
+def read_installed_models(settings: Settings | None = None) -> tuple[InstalledModel, ...] | None:
+    """Read the runtime's on-disk model inventory, or ``None`` when it could not be read.
+
+    A short-timeout ``GET /api/tags``. Downloads nothing and loads nothing. As
+    with :func:`read_runtime_residents`, ``None`` and the empty tuple are
+    different states and must not be collapsed: empty means "measured, no models
+    are installed", which is a fact callers may act on, while ``None`` means the
+    inventory is unknown and every caller here refuses rather than guessing.
+
+    The reported ``size`` is the runtime's own figure for the bytes that model
+    occupies, which is what makes a freed-bytes report a measurement rather than
+    an estimate.
+    """
+    resolved = settings if settings is not None else load_settings()
+    url = _ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "tags")
+    try:
+        with httpx.Client(timeout=_OLLAMA_PROBE_TIMEOUT_S) as client:
+            response = client.get(url)
+            response.raise_for_status()
+            payload = response.json()
+        if not isinstance(payload, dict):
+            return None
+        # CAST-RATIONALE-OLLAMA-TAGS-PAYLOAD: httpx.Response.json() returns Any;
+        # isinstance narrows to dict but not its type parameters.
+        # nosemgrep: no-cast-in-domain-application
+        entries = cast(dict[str, object], payload).get("models")
+        if not isinstance(entries, list):
+            return None
+        # CAST-RATIONALE-OLLAMA-TAGS-MODELS: isinstance narrows to list but not
+        # its element type; entries are validated individually below.
+        # nosemgrep: no-cast-in-domain-application
+        installed: list[InstalledModel] = []
+        for entry in cast(list[object], entries):
+            if not isinstance(entry, dict):
+                return None
+            # CAST-RATIONALE-OLLAMA-TAGS-ENTRY: isinstance narrows to dict but
+            # not its type parameters.
+            # nosemgrep: no-cast-in-domain-application
+            row = cast(dict[str, object], entry)
+            name = row.get("name") or row.get("model")
+            if not isinstance(name, str) or not name:
+                return None
+            size = row.get("size")
+            installed.append(
+                InstalledModel(
+                    name=name,
+                    size_bytes=int(size) if isinstance(size, int) and size >= 0 else None,
+                ),
+            )
+    except (httpx.HTTPError, ValueError):
+        return None
+    return tuple(installed)
+
+
+class RemoveOutcome(BaseModel):
+    """The result of removing one Cadrumo-selected model from the local runtime's store.
+
+    ``freed_bytes`` is a **measurement, not an estimate**, and is populated only
+    when the removal was confirmed against a re-read of the inventory. The figure
+    is the runtime's own reported size for that model, so an operator can
+    reconcile it against the disk the runtime's store actually gives back. When
+    the confirming read fails, the removal may well have succeeded, but no figure
+    is reported -- an unreconcilable number is worse than none.
+
+    Never raises. A model Cadrumo did not select, a model that is not installed,
+    and an unreadable inventory each return ``removed`` false with the reason.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    model: str = Field(min_length=1)
+    removed: bool
+    was_installed: bool = False
+    freed_bytes: int | None = Field(default=None, ge=0)
+    detail: str = ""
+    remediation: str = ""
+
+
+def remove_runtime_model(
+    model: str,
+    *,
+    installed: tuple[InstalledModel, ...] | None = None,
+    installed_measured: bool = True,
+    settings: Settings | None = None,
+) -> RemoveOutcome:
+    """Delete ``model`` from the local runtime's store and report the bytes reclaimed.
+
+    Deletion is delegated to the runtime that owns the store; nothing here
+    unlinks a file, walks a directory, or reaches any path Cadrumo manages. That
+    boundary is deliberate and load-bearing: the model store is a third-party
+    cache, and no encrypted bucket, key material, or secure-storage object is
+    reachable from this action by construction.
+
+    The selection guard mirrors :func:`unload_runtime_model` -- Cadrumo removes
+    only models :func:`cadrumo_selected_models` names, so a model another
+    operator or application pulled into the shared runtime is reported and never
+    deleted. Deleting a peer's multi-gigabyte model would be a far more expensive
+    overreach than evicting one from memory, since the bytes must be re-fetched.
+
+    The freed figure is measured across the action: the size is read from the
+    inventory BEFORE the delete, and reported only after a re-read confirms the
+    model is gone.
+
+    Args:
+        model: The model identifier to remove.
+        installed: The on-disk inventory; read via :func:`read_installed_models`
+            when omitted.
+        installed_measured: False when the inventory could not be read.
+        settings: Settings carrying the runtime endpoint; loaded when omitted.
+
+    Returns:
+        A :class:`RemoveOutcome` describing what happened and, on refusal, why.
+    """
+    resolved = settings if settings is not None else load_settings()
+    if not _matches_selected(model, cadrumo_selected_models(resolved)):
+        return RemoveOutcome(
+            model=model,
+            removed=False,
+            detail=f"{model!r} is not a model Cadrumo selected, so Cadrumo will not remove it",
+            remediation=(
+                "Cadrumo removes only the models it selected; remove it with the runtime's own tooling, "
+                "or point cadrumo_llm_ollama_vision_model / _text_model / _mapping_model at it"
+            ),
+        )
+    if installed is None and installed_measured:
+        inventory = read_installed_models(resolved)
+    else:
+        inventory = installed if installed_measured else None
+    if inventory is None:
+        return RemoveOutcome(
+            model=model,
+            removed=False,
+            detail="the local runtime's installed model inventory could not be read, so nothing was removed",
+            remediation="start the local model runtime with 'ollama serve', then retry",
+        )
+    entry = next((row for row in inventory if _matches_selected(row.name, frozenset({model}))), None)
+    if entry is None:
+        return RemoveOutcome(
+            model=model,
+            removed=False,
+            was_installed=False,
+            freed_bytes=0,
+            detail=f"{model!r} is not installed in the local runtime; nothing to remove",
+        )
+
+    url = _ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "delete")
+    try:
+        with httpx.Client(timeout=_OLLAMA_PROBE_TIMEOUT_S) as client:
+            response = client.request("DELETE", url, json={"model": entry.name})
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        return RemoveOutcome(
+            model=model,
+            removed=False,
+            was_installed=True,
+            detail=f"the local runtime refused the removal request for {model!r} ({exc.__class__.__name__})",
+            remediation="check that the local model runtime is reachable at cadrumo_llm_ollama_chat_url",
+        )
+
+    # The confirming re-read is what turns the figure into a measurement. A
+    # runtime that accepted the request and kept the bytes, or one that became
+    # unreachable between the two calls, must not yield a freed-bytes number the
+    # operator cannot reconcile against the store.
+    after = read_installed_models(resolved)
+    if after is None:
+        return RemoveOutcome(
+            model=model,
+            removed=False,
+            was_installed=True,
+            detail=(
+                f"the runtime accepted the removal of {model!r} but the inventory could not be re-read, "
+                "so no reclaimed figure is reported"
+            ),
+            remediation="re-run the removal once the local model runtime is reachable to confirm the outcome",
+        )
+    if any(_matches_selected(row.name, frozenset({model})) for row in after):
+        return RemoveOutcome(
+            model=model,
+            removed=False,
+            was_installed=True,
+            detail=f"the runtime accepted the removal of {model!r} but it is still installed",
+            remediation="remove the model with the runtime's own tooling and check the store for a lock",
+        )
+    return RemoveOutcome(
+        model=model,
+        removed=True,
+        was_installed=True,
+        freed_bytes=entry.size_bytes,
+        detail=f"removed {entry.name!r} from the local runtime store",
+    )
+
+
+#: The doctor row id for the local-inference provisioning coherence check.
+LOCAL_MODEL_PROVISIONING_SERVICE = "local_model_provisioning"
+
+
+def probe_local_model_provisioning(
+    *,
+    installed: tuple[InstalledModel, ...] | None = None,
+    installed_measured: bool = True,
+    settings: Settings | None = None,
+) -> DependencyStatus:
+    """Detect a PARTIALLY-installed local-inference posture, in both directions.
+
+    Local inference has two independent halves: the ``llm`` package extra, which
+    an operator installs with pip, and the models themselves, which an operator
+    pulls into the runtime. Either half can be present without the other, and the
+    two broken states are not variations of one problem -- they have different
+    causes and different remedies, so a row detecting only one strands every
+    operator who lands in the other with no signal at all.
+
+    * **Extra present, no selected model installed.** The code path is live and
+      the model it would load is absent. The remedy is a pull.
+    * **A selected model installed, extra absent.** Multi-gigabyte models occupy
+      disk that nothing can use, typically after a core reinstall. The remedy is
+      the extra's install command -- or a removal, to reclaim the disk.
+
+    The two conditions are disjoint by construction: each requires the extra
+    state the other forbids, so neither can be satisfied by the other's evidence
+    and a check for one can never stand in for the other.
+
+    Coherent postures -- both halves present, or neither -- report available. So
+    does the case where the inventory cannot be read while the extra is ALSO
+    absent: nothing indicates an opted-in local-inference posture, and the
+    detail says plainly that the inventory was not readable so the
+    models-without-extra direction could not be ruled out. When the extra IS
+    present, an unreadable inventory is itself reported, because an operator who
+    opted into local inference and cannot be told what is installed has a real
+    problem rather than an absence.
+
+    Args:
+        installed: The on-disk inventory; read via :func:`read_installed_models`
+            when omitted.
+        installed_measured: False when the inventory could not be read.
+        settings: Settings carrying the runtime endpoint and role models.
+
+    Returns:
+        A :class:`DependencyStatus` naming the direction and its remedy.
+    """
+    resolved = settings if settings is not None else load_settings()
+    extra_present = optional_extra_available(LLM_EXTRA)
+    if installed is None and installed_measured:
+        inventory = read_installed_models(resolved)
+    else:
+        inventory = installed if installed_measured else None
+
+    if inventory is None:
+        if extra_present:
+            return DependencyStatus(
+                service=LOCAL_MODEL_PROVISIONING_SERVICE,
+                available=False,
+                detail=(
+                    f"the '{LLM_EXTRA.extra}' extra is installed but the runtime's model inventory could "
+                    "not be read, so neither half of the local-inference posture could be confirmed"
+                ),
+                remediation="start the local model runtime with 'ollama serve', then re-run this check",
+            )
+        return DependencyStatus(
+            service=LOCAL_MODEL_PROVISIONING_SERVICE,
+            available=True,
+            detail=(
+                f"the '{LLM_EXTRA.extra}' extra is not installed; the runtime's model inventory could not "
+                "be read, so installed-models-without-the-extra was not ruled out"
+            ),
+        )
+
+    selected = cadrumo_selected_models(resolved)
+    present = tuple(sorted(row.name for row in inventory if _matches_selected(row.name, selected)))
+
+    if extra_present and not present:
+        return DependencyStatus(
+            service=LOCAL_MODEL_PROVISIONING_SERVICE,
+            available=False,
+            detail=(
+                f"the '{LLM_EXTRA.extra}' extra is installed but none of the selected models "
+                f"({', '.join(sorted(selected))}) is present in the local runtime"
+            ),
+            remediation="aeat config provision pull",
+        )
+    if present and not extra_present:
+        return DependencyStatus(
+            service=LOCAL_MODEL_PROVISIONING_SERVICE,
+            available=False,
+            detail=(
+                f"{', '.join(present)} occupies the local runtime store but the '{LLM_EXTRA.extra}' extra "
+                "is not installed, so nothing can use it"
+            ),
+            remediation=(f"{LLM_EXTRA.install_hint} to use the installed models, or remove them to reclaim the disk"),
+        )
+    if extra_present:
+        return DependencyStatus(
+            service=LOCAL_MODEL_PROVISIONING_SERVICE,
+            available=True,
+            detail=f"the '{LLM_EXTRA.extra}' extra is installed and {', '.join(present)} is present",
+        )
+    return DependencyStatus(
+        service=LOCAL_MODEL_PROVISIONING_SERVICE,
+        available=True,
+        detail=(
+            f"local inference is not provisioned: the '{LLM_EXTRA.extra}' extra is not installed and no "
+            "selected model occupies the runtime store"
+        ),
     )
 
 
