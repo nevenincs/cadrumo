@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 
+from ...adapters.inbound.financial.providers import ParsedLedgerRow
 from ...domain.transactions import (
     RawProvenance,
     RawTransaction,
@@ -29,6 +30,7 @@ from ...domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
     derive_import_fingerprint,
+    derive_transaction_id,
 )
 from ..ledger._actions_import import _evaluate_import_rows
 from ..transactions import import_ledger_with_diagnostics
@@ -62,19 +64,9 @@ def _raw(provider_id: str, *, amount: Decimal = Decimal("121.00"), description: 
     )
 
 
-class _Parsed:
-    """The parse-boundary pair the persisting path consumes.
-
-    A real :class:`ParsedLedgerRow` requires the provider package; this carries
-    exactly the two attributes ``_evaluate_import_rows`` reads, and every value
-    in it is a real domain object.
-    """
-
-    __slots__ = ("direction", "raw")
-
-    def __init__(self, raw: RawTransaction) -> None:
-        self.raw = raw
-        self.direction = _DIRECTION
+def _parsed(raw: RawTransaction) -> ParsedLedgerRow:
+    """Pair a row with the direction the provider read at the parse boundary."""
+    return ParsedLedgerRow(raw=raw, direction=_DIRECTION)
 
 
 def _preview(rows: tuple[RawTransaction, ...], catalogue: TransactionCatalogue) -> tuple[int, int]:
@@ -93,7 +85,7 @@ def _persist(rows: tuple[RawTransaction, ...], catalogue: TransactionCatalogue) 
     plan = _evaluate_import_rows(
         bucket_id=_BUCKET,
         catalogue=catalogue,
-        parsed_rows=tuple(_Parsed(raw) for raw in rows),  # type: ignore[arg-type]
+        parsed_rows=tuple(_parsed(raw) for raw in rows),
     )
     return len(plan.imported), len(plan.skipped_refs)
 
@@ -103,7 +95,7 @@ def _stored(rows: tuple[RawTransaction, ...]) -> TransactionCatalogue:
     plan = _evaluate_import_rows(
         bucket_id=_BUCKET,
         catalogue=TransactionCatalogue(),
-        parsed_rows=tuple(_Parsed(raw) for raw in rows),  # type: ignore[arg-type]
+        parsed_rows=tuple(_parsed(raw) for raw in rows),
     )
     return TransactionCatalogue.model_validate({tx.transaction_id: tx for tx in plan.imported})
 
@@ -111,7 +103,12 @@ def _stored(rows: tuple[RawTransaction, ...]) -> TransactionCatalogue:
 def _input_classes() -> list[tuple[str, tuple[RawTransaction, ...], TransactionCatalogue]]:
     """One case per verdict the classifier can return, plus a mixed batch."""
     single = _raw("tx-1")
-    repeated_fingerprint = (_raw("tx-1"), _raw("tx-2"))
+    # Same movement identity, distinct provider ids: the fingerprint ignores the
+    # provider id, so these share a fingerprint while resolving to two ids.
+    repeated_fingerprint = (
+        _raw("row-1", description="Cuota mensual"),
+        _raw("row-2", description="Cuota mensual"),
+    )
     identical_rows = (_raw("tx-1"), _raw("tx-1"))
     return [
         ("all new", (_raw("tx-1"), _raw("tx-2")), TransactionCatalogue()),
@@ -145,9 +142,10 @@ def test_an_intra_batch_repeat_is_counted_as_imported_by_both_paths() -> None:
     because the two paths agreeing on the *wrong* answer would satisfy the
     parametrised comparison above while under-declaring in both.
     """
-    rows = (_raw("tx-1"), _raw("tx-2"))
+    rows = (_raw("row-1", description="Cuota mensual"), _raw("row-2", description="Cuota mensual"))
     fingerprints = {derive_import_fingerprint(raw, direction=_DIRECTION) for raw in rows}
     assert len(fingerprints) == 1, "fixture no longer produces an intra-batch fingerprint repeat"
+    assert len({derive_transaction_id(raw) for raw in rows}) == 2, "fixture rows must carry distinct ids"
 
     assert _preview(rows, TransactionCatalogue()) == (2, 0)
     assert _persist(rows, TransactionCatalogue()) == (2, 0)
