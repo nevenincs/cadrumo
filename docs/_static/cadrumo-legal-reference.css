@@ -8,6 +8,14 @@
 
 /* --- Legal provision entries ------------------------------------------- */
 
+/* Search results deep-link to a provision anchor, so arrival lands mid-page.
+   The margin keeps the citation heading clear of the sticky page chrome
+   instead of tucked under it. */
+span[id^='legal-'] {
+  display: block;
+  scroll-margin-top: 2.5rem;
+}
+
 .cadrumo-legal-force {
   font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
@@ -50,6 +58,7 @@
   margin: 0;
   padding: 0;
   border: 0;
+  background: none;
   font-style: italic;
   color: var(--color-foreground-secondary);
 }

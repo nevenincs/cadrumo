@@ -41,10 +41,74 @@ def test_required_text_trailing_whitespace_is_removed_only_from_rst_projection()
     page = render_legal_reference(_REPO_ROOT, records=(record,)).pages[0]
 
     assert record.required_text == ("first authoritative phrase ", "second authoritative phrase")
-    rendered = [line.strip() for line in page.rst.splitlines()]
-    assert "first authoritative phrase" in rendered
-    assert "second authoritative phrase" in rendered
-    assert "first authoritative phrase " not in page.rst
+    doctree = publish_doctree(page.rst, settings_overrides={"report_level": 5})
+    quoted = [
+        paragraph.astext()
+        for quote in doctree.findall(nodes.block_quote)
+        for paragraph in quote.findall(nodes.paragraph)
+    ]
+
+    assert quoted == ["first authoritative phrase", "second authoritative phrase"]
+    assert _system_messages(page.rst) == ()
+
+
+def test_each_authored_extract_renders_as_its_own_block() -> None:
+    """Disjoint extracts stay disjoint; they never merge into continuous wording.
+
+    ``required_text`` holds separate phrases lifted from different parts of a
+    provision. Rendered into one paragraph they would read as one continuous
+    piece of statutory wording that the provision does not contain, which is a
+    legal misstatement made by presentation alone.
+    """
+    record = LegalProvisionRecord(
+        legal_id="ley-37-1992:art-98",
+        kind="ley",
+        document_id="BOE-A-1992-28740",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a98",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a98",
+        article="98",
+        required_text=("primera frase autoritativa", "segunda frase autoritativa"),
+    )
+
+    page = render_legal_reference(_REPO_ROOT, records=(record,)).pages[0]
+    doctree = publish_doctree(page.rst, settings_overrides={"report_level": 5})
+    quoted = [
+        paragraph.astext()
+        for quote in doctree.findall(nodes.block_quote)
+        for paragraph in quote.findall(nodes.paragraph)
+    ]
+
+    assert quoted == ["primera frase autoritativa", "segunda frase autoritativa"]
+
+
+def test_an_extract_opening_with_a_subparagraph_marker_is_not_reparsed() -> None:
+    """An extract beginning ``b)`` stays a quotation, never becomes a list item.
+
+    Spanish provisions are written in lettered subparagraphs, so an authored
+    extract routinely opens with one. Left unescaped, docutils reads it as an
+    enumerated list and restructures the official wording; the rendered text
+    must come back exactly as authored.
+    """
+    record = LegalProvisionRecord(
+        legal_id="ley-37-1992:art-97",
+        kind="ley",
+        document_id="BOE-A-1992-28740",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a97",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a97",
+        article="97",
+        required_text=("b) las facturas expedidas por el empresario",),
+    )
+
+    page = render_legal_reference(_REPO_ROOT, records=(record,)).pages[0]
+    doctree = publish_doctree(page.rst, settings_overrides={"report_level": 5})
+
+    assert not list(doctree.findall(nodes.enumerated_list))
+    quoted = [
+        paragraph.astext()
+        for quote in doctree.findall(nodes.block_quote)
+        for paragraph in quote.findall(nodes.paragraph)
+    ]
+    assert quoted == ["b) las facturas expedidas por el empresario"]
     assert _system_messages(page.rst) == ()
 
 

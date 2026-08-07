@@ -672,9 +672,7 @@ def _headings_by_id(records: tuple[LegalProvisionRecord, ...], instrument: str) 
             headings[group[0].legal_id] = citation
             continue
         dated = [
-            f"{citation} (in force from {record.effective_from.isoformat()})"
-            if record.effective_from is not None
-            else citation
+            f"{citation} (from {record.effective_from.isoformat()})" if record.effective_from is not None else citation
             for record in group
         ]
         distinct = len(set(dated)) == len(dated) and instrument not in dated
@@ -709,16 +707,19 @@ def _render_entry(record: LegalProvisionRecord, heading: str) -> tuple[str, str 
         lines.extend([".. container:: cadrumo-legal-summary", "", f"   {_rst_escape(record.notes)}", ""])
 
     if record.required_text:
-        lines.extend(
-            [
-                ".. container:: cadrumo-legal-wording",
-                "",
-                "   Wording checked against the official text, in extract:",
-                "",
-                *(f"      {_rst_escape(item.rstrip())}" for item in record.required_text),
-                "",
-            ],
-        )
+        # Each phrase is a separate extract from the official text. They are
+        # rendered as separate blocks: run together into one paragraph they
+        # would read as continuous statutory wording that no provision says.
+        # The leading backslash is an RST escape that renders as nothing and
+        # stops the line being reparsed as structure. Legal extracts routinely
+        # open with a subparagraph marker ("b) ...") that docutils would
+        # otherwise turn into an enumerated list item, restructuring the
+        # official wording into something the provision does not say.
+        extracts: list[str] = []
+        for item in record.required_text:
+            extracts.extend([f"      \\{_rst_escape(item.rstrip())}", ""])
+        label = "Official wording, in extract:" if len(record.required_text) == 1 else "Official wording, in extracts:"
+        lines.extend([".. container:: cadrumo-legal-wording", "", f"   {label}", "", *extracts])
 
     lines.extend(
         [
