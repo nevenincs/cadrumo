@@ -12,7 +12,7 @@ The command is a child of ``app`` (the CLI root surface is pinned to ``config``
 and ``app``; this adds no third root). It is BUILD + EXPORT only: it never
 performs a live AEAT submission and never contacts AEAT. The terminal step is the
 local export the human files themselves through the AEAT sede
-(``aeat-safety-legal-gates``).
+(``sensitive-financial-data-secure-storage-only``).
 """
 
 from __future__ import annotations

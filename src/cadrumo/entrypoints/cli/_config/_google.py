@@ -538,7 +538,7 @@ class _MirrorObjectPushOutcome:
     ``cleanup_failed`` carries the `(namespace, hmac, error)` triples for a
     rollback delete that itself failed: an object this namespace already
     uploaded, whose namespace later failed, that could not be removed and so
-    remains durable but unmanifested (``ledger-evidence-bytes-not-links`` and
+    remains durable but unmanifested (``aeat-ledger-contract`` and
     ``no-silent-under-declaration`` both bar treating this as ordinary success).
     """
 

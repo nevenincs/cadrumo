@@ -10,7 +10,7 @@ identical validation and branching every frontend runs), the real
 export authority, and the real CLI import command over real encrypted
 storage; nothing is mocked.
 
-The roundtrip proof follows ``aeat-roundtrip-discipline``: a bundle
+The roundtrip proof follows ``aeat-quality-gates``: a bundle
 exported through flow-collected answers is imported into a second,
 fresh storage root through the live CLI import verb, re-exported there,
 and the two on-disk bundles must be strictly equal as

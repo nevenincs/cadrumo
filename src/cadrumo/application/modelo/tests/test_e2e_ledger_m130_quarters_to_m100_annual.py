@@ -792,8 +792,8 @@ def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
     must NOT be granted verificado-completo. The verify gate therefore returns a
     BLOCKING ``cross_period_dependency_unclean`` finding naming the non-official
     prior-year filing (modelo 100 / 2023), per
-    ``local-filed-observations-are-non-official-evidence`` and
-    ``aeat-safety-legal-gates``. This is the correct refusal, not a defect: it
+    ``no-silent-under-declaration`` and
+    ``sensitive-financial-data-secure-storage-only``. This is the correct refusal, not a defect: it
     proves the chain reaches the verify gate and the safety guard engages on a
     real ledger-derived multi-period chain.
     """

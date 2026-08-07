@@ -6,7 +6,7 @@ the flywheel content-addresses a failure and promotes it into a golden
 regression scenario. Every fixture here is a real ``LiveScenarioScore`` /
 ``LiveTrajectory`` built from the shipped models and a real ``GoldenScenario``
 loaded from a shipped scenario TOML - no doubles of the code under test
-(``no-tautological-calculation-tests``, ``aeat-quality-gates``).
+(``aeat-quality-gates``, ``aeat-quality-gates``).
 """
 
 from __future__ import annotations

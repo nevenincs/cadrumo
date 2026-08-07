@@ -7,7 +7,7 @@ legitimate reason to hand-type a taxonomy segment at all -- it should read the
 declaration (``storage_location(StorageCategory.X).subpath``, an existing
 ``*_DIRNAME``/``*_FILENAME`` re-export, or import a sibling module's own named
 constant) rather than mint a second copy that happens to agree today, per
-``aeat-schema-central-config``.
+``aeat-registry-authority-flow``.
 
 Real bugs, already fixed while measuring this gate's precision (not by this
 change): ``secret_store/_secret_store.py`` independently hand-typed

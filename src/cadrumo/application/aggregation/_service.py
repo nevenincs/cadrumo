@@ -387,7 +387,7 @@ def _aggregate_retenciones(
     # Delegate to the ONE canonical mesh resolver aggregation entry point so the
     # per-modelo service (CLI aggregate / pull) and the live calculate mesh share
     # a single retenciones dispatch and cannot drift
-    # (one-aggregation-path-pull-equals-calculate). ``provider_for_modelo`` has
+    # (aeat-calculation-aggregation). ``provider_for_modelo`` has
     # already confirmed ``modelo`` is one of the retenciones modelos.
     return RetencionesAggregationSourceResolver.aggregate(modelo, observations, period=period)
 

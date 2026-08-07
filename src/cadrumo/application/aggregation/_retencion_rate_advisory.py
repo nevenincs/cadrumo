@@ -62,7 +62,7 @@ rounding gap, or a disputed line lands on no such product. Screening on the rate
 rather than on the derivation marker is what keeps this advisory off the correct
 domestic-B2B majority, where the shortfall genuinely IS the retención — a blanket
 advisory on every inference would fire on those and train operators to ignore the
-channel, the failure mode ``ledger-iva-advisory-only-on-cuota-bearing-categories``
+channel, the failure mode ``aeat-ledger-contract``
 exists to prevent.
 
 The comparison reads the whole grounded art. 95 rate set — 15 %, 7 %, 2 % and 1 %

@@ -291,7 +291,7 @@ def test_calculate_303_domestic_reverse_charge_books_boxes_13_and_37_with_zero_n
     # The reverse-charge nets to zero: both totals rose by exactly the
     # self-assessed cuota, so the resultado is unchanged versus the
     # domestic-only filing. Each delta is computed by comparison, not by
-    # summing literals (no-tautological-calculation-tests).
+    # summing literals (aeat-quality-gates).
     assert (
         with_reverse_charge.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
         - domestic_only.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]

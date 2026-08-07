@@ -9,11 +9,11 @@ but never removes the bucket directory, so ``restore`` (via
 :func:`~application.user_profile.reactivate_profile_with_lifecycle_span`)
 can bring the same bucket back with its data intact.
 
-Authority: ``composition-service-no-parallel-write-path`` — archive/restore
+Authority: ``aeat-architecture-boundaries`` — archive/restore
 compose the existing soft-tombstone / reactivate primitives rather than
 re-implementing bucket lifecycle transitions. Real encrypted-SQL storage,
 real plaintext manifest, real bucket-event-history catalogue throughout —
-no mocks, per ``aeat-roundtrip-discipline``.
+no mocks, per ``aeat-quality-gates``.
 
 See Also:
     :class:`~application.bucket_maintenance.BucketMaintenanceService`

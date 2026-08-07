@@ -706,7 +706,7 @@ def verify_modelo_revision(
             context={"calculation_revision_id": calculation_revision_id},
         )
     if target.state is not CalculationRevisionState.BORRADOR:
-        # Idempotent re-verify (single-subject-mutation-is-idempotent-guarded): a
+        # Idempotent re-verify (aeat-cli-contract): a
         # revision that has already been verified-and-granted (VERIFICADO_COMPLETO,
         # or PRESENTADO after filing) is LOCKED — its content, and therefore its
         # verification outcome, cannot change — so a retry returns the existing

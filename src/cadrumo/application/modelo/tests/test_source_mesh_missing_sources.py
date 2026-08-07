@@ -80,7 +80,7 @@ def test_every_declared_source_kind_resolves_enrolled_or_deferred_under_live_mes
     Reads each declared kind's disposition from the disposition registry built
     over the LIVE enrolled set (``BUCKET_AGGREGATION_OWNED_SOURCES``). A declared
     kind that no live resolver owns and that is not explicitly deferred would
-    classify ``RESERVED`` here — the silent-blank ``no-dormant-source-resolvers``
+    classify ``RESERVED`` here — the silent-blank ``aeat-calculation-aggregation``
     defect — and this gate would enumerate it.
     """
     dispositions = build_binding_source_dispositions(BUCKET_AGGREGATION_OWNED_SOURCES)

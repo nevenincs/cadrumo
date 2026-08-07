@@ -48,7 +48,7 @@ def test_modelo_100_2025_autonomic_deduction_sections_use_art77_only() -> None:
         # deducción (casilla 1039) legitimately carry more than the art-77
         # framework default: the latter is a computed regulatory value whose
         # per-child cuantía and income limits MUST cite their binding provision
-        # (Madrid DL 1/2010 arts. 4 y 18.1) per registry-calculation-legal-grounding.
+        # (Madrid DL 1/2010 arts. 4 y 18.1) per aeat-calculation-grounding.
         _ART77_ONLY_EXEMPT_ROLES = frozenset(
             {
                 "irpf_deduccion_nueva_empresa_entidad_nif",
@@ -234,7 +234,7 @@ def test_modelo_100_2025_objective_estimation_sections_use_activity_refs_only() 
     # (reducción general 5%) and LIRPF DA-6 / anexo-i-instruccion-3
     # (reducción agricultores jóvenes 25%) each establish a concrete
     # regulatory value that the generic art. 27/28/30/31/32 chapter refs
-    # alone do not ground — registry-calculation-legal-grounding requires
+    # alone do not ground — aeat-calculation-grounding requires
     # citing the specific provision that fixes the number. The Fase 5ª
     # art. 32.1 irregularidad base support casilla
     # (eo-agraria-reduccion-irregularidad-base) narrows to art-32 alone

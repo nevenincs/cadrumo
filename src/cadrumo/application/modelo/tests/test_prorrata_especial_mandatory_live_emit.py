@@ -15,7 +15,7 @@ a REAL bucket-local ledger + prorrata register inside a genuine bucket runtime
 from the LIVA art. 104 (single whole-entity percentage) and art. 106.Uno reglas
 (100 / 0 / general %), never from the ``deductible_percentage_for`` /
 ``is_especial_mandatory`` substrate under test
-(``no-tautological-calculation-tests``): the FIRES cases are paired with SILENT
+(``aeat-quality-gates``): the FIRES cases are paired with SILENT
 non-breach cases so the check is proven to bite, not merely to always fire. At
 least one FIRES case is asserted through the actual calculate fan-out
 (:func:`~application.modelo._calculation_diagnostics.collect_bucket_aggregation_advisory_diagnostics`),

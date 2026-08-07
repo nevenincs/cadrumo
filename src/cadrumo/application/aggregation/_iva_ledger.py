@@ -962,7 +962,7 @@ def compute_annual_deducible_totals_by_regime(
     :class:`IvaLedgerProrrataApportionment` at the register's resolved percentage
     — and sums the deducible-cuota binding ids under each. One aggregation, two
     apportionment passes through the one canonical resolver
-    (``one-aggregation-path-pull-equals-calculate``); no second aggregation
+    (``aeat-calculation-aggregation``); no second aggregation
     implementation is introduced.
 
     Returns ``None`` when no register apportionment resolves for the ejercicio

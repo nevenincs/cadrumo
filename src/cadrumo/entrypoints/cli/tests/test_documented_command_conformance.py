@@ -1,7 +1,7 @@
 """Argument-level conformance gate for documented ``aeat`` commands.
 
 ``aeat`` is the sole human CLI executable (the ``cadrumo`` package ships it as
-its one console entry point per ``cadrumo-product-authority-names``); every
+its one console entry point per ``aeat-naming``); every
 documented CLI invocation therefore begins with the ``aeat`` token, and this
 gate anchors on it. The package name ``cadrumo``, the ``cadrumo-mcp`` server
 executable, ``cadrumo-vault/`` storage, and ``src/cadrumo/`` paths are product

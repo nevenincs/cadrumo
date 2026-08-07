@@ -10,7 +10,7 @@ These tests pin the narrowed guard: an evidence-only attachment proceeds and
 reports the cited revisions as stale, while every value-affecting update — and
 any update that smuggles a value change alongside an attachment — still meets
 the guard. Real adapters only: real evidence service, real encrypted repository,
-real revision fixtures (``aeat-quality-gates``, ``aeat-roundtrip-discipline``).
+real revision fixtures (``aeat-quality-gates``, ``aeat-quality-gates``).
 """
 
 from __future__ import annotations

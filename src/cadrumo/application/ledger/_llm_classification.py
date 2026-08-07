@@ -931,7 +931,7 @@ def apply_saturated_llm_classification(
     patch = ManualLedgerTransactionPatch.model_validate(patch_fields)
 
     # Compose the single-writer manual write rather than re-implementing the
-    # regulated-field persistence (composition-service-no-parallel-write-path).
+    # regulated-field persistence (aeat-architecture-boundaries).
     # The operator's verb is recorded via ``source_command`` on the manual
     # write's own classification event, and model provenance via
     # ``classified_by_override``; we deliberately do not emit a second,

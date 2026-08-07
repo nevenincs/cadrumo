@@ -508,7 +508,7 @@ M347_THRESHOLD_EUR: Final[Decimal] = Decimal("3005.06")
 #: IVA regularización de deducciones por bienes de inversión — regulatory constants
 #: (LIVA arts. 107-109, Ley 37/1992, BOE-A-1992-28740), re-read verbatim from the
 #: bundled consolidated corpus ``corpus/normatives/html/ley-37-1992-art-107.html``
-#: and ``-art-109.html`` per ``legal-grounding-verifies-bundled-authoritative-corpus``.
+#: and ``-art-109.html`` per ``aeat-calculation-grounding``.
 #:
 #: Art. 107.Uno: movable capital goods regularise over the "cuatro años naturales
 #: siguientes" to acquisition; art. 107.Tres: "terrenos o edificaciones" over the

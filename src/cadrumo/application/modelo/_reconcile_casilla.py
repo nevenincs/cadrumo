@@ -4,7 +4,7 @@
 module contributes to :mod:`~application.modelo._reconcile`: given the
 canonical ``revision.casilla_values`` a work unit already persisted (the same
 values the calculate path, the result summary, and the export surface render,
-per ``one-aggregation-path-pull-equals-calculate``) and the per-casilla values a
+per ``aeat-calculation-aggregation``) and the per-casilla values a
 filed declaration printed, it classifies every disagreement into one of three
 closed :class:`CasillaDivergenceKind` categories — ``value_mismatch`` (both
 sides declare the casilla but the amounts disagree beyond tolerance),

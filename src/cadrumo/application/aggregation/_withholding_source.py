@@ -5,7 +5,7 @@ annual window and materialises the Modelo 190 "número total de percepciones" bo
 with the DISTINCT (perceptor, clave, subclave) count (the ``percepcion_count``
 withholding fact) — replacing the wrong sum-of-quarterly-M111-perceptor-counts
 relations. The pull and calculate surfaces read this ONE store
-(``one-aggregation-path-pull-equals-calculate``).
+(``aeat-calculation-aggregation``).
 
 Lives in its own module (rather than ``_modelo_bindings.py``) so the percepciones
 source is isolated from the contended retenciones/ledger mesh surface; it is

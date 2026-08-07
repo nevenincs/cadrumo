@@ -506,11 +506,11 @@ def invoice_wizard(
     malformed date are BOTH reported in one refusal, never just the first one
     found (``no-silent-under-declaration``). The write delegates to the same
     :func:`cadrumo.application.invoices.create_catalogue_invoice` primitive
-    ``catalogue create`` uses (``composition-service-no-parallel-write-path``).
+    ``catalogue create`` uses (``aeat-architecture-boundaries``).
     A retry with identical fields resolves to the already-catalogued
     content-derived identity and is reported as a guarded idempotent no-op
     rather than re-written or raised as a duplicate
-    (``single-subject-mutation-is-idempotent-guarded``).
+    (``aeat-cli-contract``).
     """
     from ...application.invoices import create_invoice_via_wizard
     from ...domain.invoices import InvoiceValidationError

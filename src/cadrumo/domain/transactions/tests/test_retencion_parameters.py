@@ -1,8 +1,8 @@
 """Gates for the registry-backed RIRPF art. 95 retención rates.
 
 The two rate figures are legal data, not Python constants. These gates pin the
-chain the ``aeat-schema-central-config`` and
-``registry-calculation-legal-grounding`` rules require:
+chain the ``aeat-registry-authority-flow`` and
+``aeat-calculation-grounding`` rules require:
 
     bundled BOE corpus excerpt → registry parameter → typed record → the
     inference bound the transaction model actually applies.
@@ -124,7 +124,7 @@ def test_the_inference_bound_is_the_general_rate() -> None:
 def test_no_feature_module_redeclares_the_retencion_rates_as_literals() -> None:
     """The literal this loader replaced must not reappear anywhere in the tree.
 
-    ``aeat-schema-central-config`` bars inlined regulatory values; the retired
+    ``aeat-registry-authority-flow`` bars inlined regulatory values; the retired
     ``_MAX_SUPPORTED_ACTIVITY_WITHHOLDING`` ``_RATE`` constant is the specific
     regression this guards.
 

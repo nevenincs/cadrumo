@@ -12,7 +12,7 @@ makes. This gate fails on the commit that wires one instead.
 Scanning is by SYMBOL NAME across every ``from ... import``, not by importers of
 the defining module. That distinction is the whole design. The sole real consumer
 reaches these types through the package facade rather than through
-``_result_summary``, and ``service-imports-via-top-level-reexports`` mandates
+``_result_summary``, and ``aeat-architecture-boundaries`` mandates
 that route, so a definer-keyed scan finds zero importers, reports clean, and
 would certify its own blindness. A facade re-export changes the module path but
 never the symbol name, so name scanning is immune to that failure by
@@ -68,7 +68,7 @@ _MINIMUM_MODULES_SCANNED = 200
 #: re-export point is the opposite case: adding one genuinely widens the surface a
 #: consumer can reach the symbol through, so the change IS the thing to review and
 #: bumping this is the sanctioned response rather than a way around the gate.
-#: ``service-imports-via-top-level-reexports`` actively encourages promotions on
+#: ``aeat-architecture-boundaries`` actively encourages promotions on
 #: these types, which is exactly why the widening should not be silent.
 _EXPECTED_REEXPORTERS = 2
 

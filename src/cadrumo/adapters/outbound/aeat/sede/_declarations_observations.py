@@ -453,7 +453,7 @@ def _declaration_pdf_extraction_profile_provisional(snapshot: RegistrySnapshot) 
     A profile with ``provisional_pending_specimen = true`` has its
     ``bbox_anchored`` anchor positions guessed from the bundled AEAT-published
     Diseño de Registro rather than confirmed against a real filed PDF (see
-    ``fixture-provenance-declared-in-sidecar``). The parser's coverage gate
+    ``aeat-quality-gates``). The parser's coverage gate
     (``min_coverage``) still fails hard when the anchor pattern matches nowhere
     on a real PDF's page, but a real PDF whose layout coincidentally matches the
     guessed anchor position at the wrong casilla would extract silently with no

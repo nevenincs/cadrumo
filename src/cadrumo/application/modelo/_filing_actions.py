@@ -255,7 +255,7 @@ def file_modelo_revision(
         # A retry of a completed single-subject file returns the existing VIGENTE
         # filing record as a clean no-op - no new filing record, no duplicate
         # MODELO_FILED lifecycle event, and (filing is a local transition, never
-        # an AEAT submission per aeat-safety-legal-gates) no write/submit path is
+        # an AEAT submission per sensitive-financial-data-secure-storage-only) no write/submit path is
         # touched. Mirrors the verify-report content-pinned idempotency. The CLI
         # surfaces the no-op as an info Notice. A PRESENTADO revision with no
         # VIGENTE record is an inconsistent state, so it falls through to the

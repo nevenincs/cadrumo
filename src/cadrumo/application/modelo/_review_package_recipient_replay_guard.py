@@ -13,7 +13,7 @@ the exact governed-repository shape of
 :class:`~application.modelo.RecipientFingerprintRegistryRepository`: one
 ``FINANCIAL``-sensitivity secure-object singleton per bucket, an empty ledger
 when absent, and ``mark_consumed`` refuses a nonce already on file. This is
-the ``composition-service-no-parallel-write-path`` companion to that
+the ``aeat-architecture-boundaries`` companion to that
 registry -- the decrypt primitive itself performs no persistence; a caller
 (the future CLI decrypt verb) composes this ledger's ``check_and_consume``
 around the existing, unmodified

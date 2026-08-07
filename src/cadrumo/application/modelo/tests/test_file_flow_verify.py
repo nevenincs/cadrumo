@@ -513,7 +513,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
 def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos) -> None:
     """Real e2e: re-verifying an already-verified revision is a guarded no-op.
 
-    Per single-subject-mutation-is-idempotent-guarded, verify is a creating
+    Per aeat-cli-contract, verify is a creating
     mutation keyed on the clock-free derived report id
     (``derive_verification_report_id`` folds the outcome, not ``run_at``). A retry
     against a locked ``VERIFICADO_COMPLETO`` revision — whose content, and thus

@@ -4,7 +4,7 @@ Covers the DT 12ª LIRPF plan-de-pensiones reducción and the Ley 44/2015 art. 1
 SAL/SLL reserva especial dotacion, relocated from the CLI to the modelos domain.
 Expected values are derived from the cited regulatory formulas with explicit
 derivations (oracle), not manufactured arithmetic, per the
-no-tautological-calculation-tests rule.
+aeat-quality-gates rule.
 """
 
 from __future__ import annotations

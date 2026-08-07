@@ -5,7 +5,7 @@ which mechanism :mod:`~adapters.outbound.google` uses to produce a
 ``google.oauth2.credentials.Credentials``-shaped object for the Sheets/Drive
 export mirror. Declared in ``core`` per ``aeat-architecture-boundaries``
 (closed value sets are ``StrEnum`` in the innermost ring) and
-``aeat-schema-central-config`` (a code-level, non-registry taxonomy still
+``aeat-registry-authority-flow`` (a code-level, non-registry taxonomy still
 belongs in the central authority, not scattered string literals).
 
 See Also:

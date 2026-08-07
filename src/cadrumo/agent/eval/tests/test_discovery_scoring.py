@@ -15,7 +15,7 @@ verb plus the ``overview.*`` family) mirrors ``entrypoints.mcp._surface`` and is
 reproduced locally rather than imported to keep this test off the cross-package
 private-import ratchet. Every trajectory is hand-constructed from the real
 ``LiveTrajectory`` / ``LiveToolCallRecord`` models - no mocks of the scoring code
-under test (``no-tautological-calculation-tests``, ``aeat-quality-gates``).
+under test (``aeat-quality-gates``, ``aeat-quality-gates``).
 """
 
 from __future__ import annotations

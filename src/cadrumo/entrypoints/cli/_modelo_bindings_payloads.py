@@ -2,7 +2,7 @@
 
 Extracted from :mod:`~entrypoints.cli._modelo_payloads` to keep that
 module under its size budget (`aeat-architecture-boundaries`,
-`registry-resolver-family-extraction`), following the split pattern already
+`aeat-architecture-boundaries`), following the split pattern already
 established by :mod:`~entrypoints.cli._modelo_aux_payloads`,
 :mod:`~entrypoints.cli._modelo_revision_payload_parts`, and
 :mod:`~entrypoints.cli._modelo_work_revision_payloads`. Covers the
@@ -12,7 +12,7 @@ envelopes. Every class declared here is a strict
 :func:`register_schema` for the bindings-list and
 bindings-resolve command JSON-contract surface.
 
-Per `binding-values-carry-provenance`, every row here carries the binding's
+Per `aeat-registry-bindings`, every row here carries the binding's
 regulatory grounding (``legal_refs`` / ``source_refs``) at parity with the
 casilla-side payloads (``CasillaRowPayload`` in
 :mod:`~entrypoints.cli._modelo_payloads`).
@@ -52,7 +52,7 @@ class BindingEncodedOptionPayload(OutputSchema):
 class BindingGroundingPayload(OutputSchema):
     """Identity and regulatory grounding shared by every binding row payload.
 
-    Per `binding-values-carry-provenance`, an operator-facing binding value
+    Per `aeat-registry-bindings`, an operator-facing binding value
     carries its ``legal_refs`` / ``source_refs`` and its typed source kind at
     parity with the casilla half. The ``bindings list`` and ``bindings
     resolve`` (preview) surfaces describe the *same* binding, so they declare

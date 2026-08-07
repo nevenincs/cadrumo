@@ -7,7 +7,7 @@ the real registry calculation engine and asserts the resulting instalment casill
 equals the published AEAT figure. This is the figure-level value-oracle dimension
 the operator golden eval needs.
 
-Oracle authority (NON-tautological under ``no-tautological-calculation-tests``):
+Oracle authority (NON-tautological under ``aeat-quality-gates``):
 the expected 1.600,00 EUR is the AEAT DR 130 Instrucciones worked example for
 estimación directa (ingresos 12.000, gastos 4.000 -> rendimiento neto 8.000 ->
 casilla 04 = 20 % x 8.000 = 1.600 -> casilla 07 = 04 - 05 - 06 = 1.600), grounded

@@ -8,7 +8,7 @@ against a REAL encrypted
 register roundtrips through the encrypted boundary with strict equality,
 confirm the register is real ciphertext at rest, confirm duplicate/missing-id
 refusal, and confirm a corrupted on-disk payload is refused at load (the
-anti-tautology proof required by ``aeat-roundtrip-discipline``).
+anti-tautology proof required by ``aeat-quality-gates``).
 
 See Also:
     :class:`~application.modelo.RecipientFingerprintRegistryRepository`:

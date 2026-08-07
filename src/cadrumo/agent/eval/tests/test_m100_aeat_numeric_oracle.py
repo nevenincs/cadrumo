@@ -2,7 +2,7 @@
 
 The operator relays computed casilla values; whether those values are correct is
 reconciled against an authoritative external oracle, never hand-computed from the
-registry formula under test (``no-tautological-calculation-tests``). For Modelo
+registry formula under test (``aeat-quality-gates``). For Modelo
 100 that oracle already exists and is bundled: JSON payloads captured from AEAT's
 official Renta WEB Open simulator carry ``expected_by_casilla_id`` - AEAT's own
 computed casilla figures. This test asserts that oracle is real and consumable:

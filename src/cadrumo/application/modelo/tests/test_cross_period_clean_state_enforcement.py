@@ -769,7 +769,7 @@ def test_first_local_filing_still_persists_under_non_official_app_filing() -> No
     it never mints evidence. The local ``file`` flow still stamps its persisted
     observation as the non-official ``app_filing`` source kind, so a later dependent
     period still demands real AEAT evidence of that filing - the
-    ``local-filed-observations-are-non-official-evidence`` invariant is unchanged.
+    ``no-silent-under-declaration`` invariant is unchanged.
     """
     assert APP_FILING_SOURCE_KIND == "app_filing"
     assert not APP_FILING_SOURCE_KIND.is_official_aeat

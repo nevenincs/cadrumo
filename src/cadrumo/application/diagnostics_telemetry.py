@@ -209,7 +209,7 @@ def flush_telemetry(*, settings: Settings | None = None, acknowledged: bool) -> 
     computation, so the returned report always reflects the real invocation's
     acknowledgement -- never a hardcoded optimistic verdict. Delegates the
     actual gate check and dispatch to :func:`~core.telemetry.emit_telemetry_event`
-    (``composition-service-no-parallel-write-path``): this function never
+    (``aeat-architecture-boundaries``): this function never
     re-implements the consent gate or the HTTP transport.
 
     A real send requires ALL of: the consent gate permits (deployment opt-in,

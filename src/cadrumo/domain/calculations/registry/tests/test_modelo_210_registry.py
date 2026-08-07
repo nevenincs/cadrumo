@@ -417,7 +417,7 @@ def test_modelo_210_2025_verification_predicates_guard_representante_fiscal_and_
     """The 2025 revision carries both the representante-fiscal gate and the no-silent-
 
     under-declaration base-imponible advisory in the same verification_predicates
-    array (per registry-revision-content-inline-or-fragmented, the array is
+    array (per aeat-registry-authority-flow, the array is
     declared inline in revision.toml fragments, not in a bindings/ subdirectory).
     """
     modelo, catalogues = _load_modelo_210()

@@ -27,6 +27,8 @@ Submodules
    cadrumo.application.ledger._evidence_reference
    cadrumo.application.ledger._evidence_split
    cadrumo.application.ledger._evidence_textlayer
+   cadrumo.application.ledger._extracted_document_cache
+   cadrumo.application.ledger._extraction_draft_store
    cadrumo.application.ledger._id_resolution
    cadrumo.application.ledger._llm_classification
    cadrumo.application.ledger._llm_diagnostics

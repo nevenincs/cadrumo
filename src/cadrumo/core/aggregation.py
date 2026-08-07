@@ -261,7 +261,7 @@ class BindingSourceKind(StrEnum):
     # dimension.
     #
     # Both renta gastos sources carry the AEAT "Gastos" stem
-    # (aeat-spanish-stem-naming) and each is qualified by the régimen it serves,
+    # (aeat-naming) and each is qualified by the régimen it serves,
     # because the M100 first-slice boxes are gastos too (casilla 0203 is "Gastos
     # financieros"): a bare ``gasto`` would not say which régimen it belongs to.
     # ``ledger_renta_gastos_estimacion_directa_aggregation`` stays a separate,

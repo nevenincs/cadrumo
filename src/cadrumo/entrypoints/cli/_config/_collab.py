@@ -6,7 +6,7 @@ fingerprint of that recipient's X25519 public key, verified out-of-band (read
 aloud, compared over a separate channel) before it is trusted -- exactly the
 :class:`~application.modelo.RecipientFingerprintRegistryRepository`
 contract this module wires, never re-implements
-(``composition-service-no-parallel-write-path``). The registered public key is
+(``aeat-architecture-boundaries``). The registered public key is
 what ``aeat app modelo review-package encrypt-for-recipient`` seals a package
 against; see :mod:`~entrypoints.cli._modelo_review_package_cli`.
 

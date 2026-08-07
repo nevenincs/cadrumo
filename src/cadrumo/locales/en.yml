@@ -4448,8 +4448,6 @@ cli:
       period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
         01-12 (months). Combine with --year to choose the year.'
       year_help: Filing year (e.g. 2024).
-    providers:
-      help: List which subprocess LLM providers have a usable CLI on PATH.
     pull_folder:
       errors:
         folder_id_unrecognised: Google Drive folder reference %{reference} does not

@@ -7,9 +7,9 @@
 # topological sorter orders the projection after a computed-target source; a
 # bound-casilla source is already in the initial-values map). NO binding, NO
 # ledger re-selection, NO relation, NO previous_filing carry — one value keeps
-# exactly one aggregation path (one-aggregation-path-pull-equals-calculate,
-# calculation-source-canonical-mechanism). Each projection carries the box's own
-# legal_refs verbatim (registry-calculation-legal-grounding). Registered by id
+# exactly one aggregation path (aeat-calculation-aggregation,
+# aeat-calculation-aggregation). Each projection carries the box's own
+# legal_refs verbatim (aeat-calculation-grounding). Registered by id
 # in revision.toml's formulas list; the directory-mode loader merges this
 # fragment into revisions.formulas.
 

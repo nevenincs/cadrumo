@@ -133,7 +133,7 @@ def test_modelo_100_2024_descendientes_minimos_aggregate_binding_is_wired() -> N
     ``family.descendientes_minimos_aggregate_2024``, a profile-model attribute
     that :class:`~cadrumo.domain.contribuyente.family.RentaFamilyProfile` never
     declared (no formula or bound casilla consumed it either) -- a dangling
-    selector per ``no-dormant-source-resolvers``. The Option B interim removed
+    selector per ``aeat-calculation-aggregation``. The Option B interim removed
     the binding outright. Option A's computed engine retires the gap for real:
     the derived selector ``renta_family.descendientes_minimos_aggregate_{filing_year}``
     (declared as a year-parameterised pattern rather than a per-year schema field)

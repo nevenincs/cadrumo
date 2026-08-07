@@ -5,7 +5,7 @@ selects candidate transaction ids from the plaintext, non-sensitive
 :class:`~adapters.persistence.storage.sql.TransactionDateIndexRow` routing
 table before decrypting only that subset -- never a full-namespace scan (issue
 ``#408``). The index is derived and rebuildable
-(``ledger-participation-index-is-derived-rebuildable``): correctness never
+(``aeat-ledger-contract``): correctness never
 depends on its presence or freshness, so every correctness assertion here is
 mirrored by an anti-tautology proof that the fallback still reproduces the
 unfiltered result when the index is missing, incomplete, or stale.
@@ -270,7 +270,7 @@ def test_rebuild_date_index_reconstructs_a_dropped_index(
 ) -> None:
     """``rebuild_date_index`` regenerates the index from the encrypted catalogue.
 
-    Per ``ledger-participation-index-is-derived-rebuildable``: dropping every
+    Per ``aeat-ledger-contract``: dropping every
     index row for this bucket must not lose data -- a full decrypt-scan
     rebuild must restore the exact same index a fresh save would have produced.
     """
@@ -330,7 +330,7 @@ def test_load_for_date_range_falls_back_to_full_scan_when_index_is_missing(
     encrypted membership index), :meth:`load_for_date_range` must fall back to
     a full decrypt scan filtered in memory and reproduce the identical result
     -- correctness never depends on the index being present, per
-    ``ledger-participation-index-is-derived-rebuildable``. This is the proof
+    ``aeat-ledger-contract``. This is the proof
     that the perf path is a pure optimisation, not a second source of truth.
     """
 

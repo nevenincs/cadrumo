@@ -10,7 +10,7 @@ the service-boundary contracts that are awkward to isolate through the CLI:
 the non-sandbox destructive-action guard, the reserved-label helpers, and
 the archive/restore refusal contracts.
 
-Authority: ``composition-service-no-parallel-write-path`` — the sandbox
+Authority: ``aeat-architecture-boundaries`` — the sandbox
 service composes ``BucketMaintenanceService.delete`` /
 ``BucketMaintenanceService.archive`` / ``BucketMaintenanceService.restore``
 and the canonical profile atomic-create span rather than re-implementing

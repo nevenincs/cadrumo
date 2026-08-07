@@ -8,7 +8,7 @@ service's byte totals track the real filesystem state via plain ``os.stat``
 — never decrypted secure-object content. This is the #422 sandbox
 disk-envelope-accounting slice.
 
-Authority: ``composition-service-no-parallel-write-path`` (the service reads
+Authority: ``aeat-architecture-boundaries`` (the service reads
 filesystem metadata through the existing
 :func:`~adapters.persistence.storage.bucket.bucket_paths` layout
 resolver rather than inventing a parallel storage-accounting path);

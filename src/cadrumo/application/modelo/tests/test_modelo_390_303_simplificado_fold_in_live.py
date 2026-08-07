@@ -223,7 +223,7 @@ def test_m390_carries_simplificado_cuota_devengada_from_4t_m303_on_live_calculat
 def test_simplificado_relation_is_enrolled_not_dormant() -> None:
     """Structural: the simplificado relation is enrolled in the live mesh, not dormant.
 
-    Three enrollment facts (no-dormant-source-resolvers): the relation exists on
+    Three enrollment facts (aeat-calculation-aggregation): the relation exists on
     the M390 revision, its ``target_binding`` is a DECLARED ``relation_prefill``
     binding the engine materialises, and the live calculate mesh's
     :class:`RelationPrefillSourceResolver` owns the ``relation_prefill`` source

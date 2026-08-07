@@ -22,7 +22,7 @@ The chain is BUILD + EXPORT only. It never performs a live AEAT submission and
 never contacts AEAT: the terminal step is the local fichero-BOE export the human
 files themselves through the AEAT sede (see
 :func:`application.modelo.export_modelo_revision`, which is local-only, and
-the ``aeat-safety-legal-gates`` rule). The internal ``file`` record step is
+the ``sensitive-financial-data-secure-storage-only`` rule). The internal ``file`` record step is
 deliberately excluded: export consumes the ``VERIFICADO_COMPLETO`` revision
 directly.
 

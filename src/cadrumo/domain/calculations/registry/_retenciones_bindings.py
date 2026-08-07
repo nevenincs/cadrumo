@@ -3,7 +3,7 @@
 The per-family module for the ``retenciones_aggregation`` binding source — the
 calc-mesh source that materialises retenciones-family scalars from the dedicated
 per-perceptor retención store.
-Extracted as its own family module per ``registry-resolver-family-extraction``;
+Extracted as its own family module per ``aeat-architecture-boundaries``;
 the cross-family validator dispatch in :mod:`._bindings` registers this family's
 ``validate(binding) -> list[str]`` entry.
 
@@ -82,7 +82,7 @@ def validate_retenciones_aggregation_binding(binding: DataBindingDefinition) -> 
     """Accumulating registry-build validator for a ``retenciones_aggregation`` binding.
 
     Validates the selector shape against :class:`_RetencionesAggregationSelector`
-    (the single build-time contract per ``binding-validation-single-contract``),
+    (the single build-time contract per ``aeat-registry-bindings``),
     preserving the underlying pydantic field message in the diagnostic.
     """
     return selector_against_model(binding, _RetencionesAggregationSelector)

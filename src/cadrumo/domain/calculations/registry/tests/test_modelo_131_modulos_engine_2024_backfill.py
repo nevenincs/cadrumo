@@ -234,7 +234,7 @@ class TestModulos2024PartialTableCoverageDoesNotSilentlyMisattribute:
         actividad figure for the same declared units on an épigrafe whose Orden
         coefficients are byte-identical across both years — an independent check
         that the 2024 back-fill did not silently drift from its 2025 source
-        (calculation-source-canonical-mechanism).
+        (aeat-calculation-aggregation).
         """
         snapshot_2025 = _committed_snapshot("131", 2025, "1T")
         assert snapshot_2025.filing_period is not None

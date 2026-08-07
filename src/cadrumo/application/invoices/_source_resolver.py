@@ -145,7 +145,7 @@ def invoice_direction_to_source_kind(kind: InvoiceKind) -> BindingSourceKind:
 
     Returns the canonical :class:`~core.BindingSourceKind` member rather than a
     locally-declared direction enum: the settlement taxonomy has exactly one
-    home per ``binding-source-kind-single-taxonomy``.
+    home per ``aeat-registry-bindings``.
 
     Returns:
         The :class:`BindingSourceKind` settling ``kind``.

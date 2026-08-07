@@ -226,7 +226,7 @@ class Modelo232VinculadaRow(BaseModel):
 # Member State (plus post-Brexit Northern Ireland ``XI``) routes through the
 # canonical :data:`cadrumo.core.identity.NIF_IVA_FORMATS` authority so the
 # structural pattern lives in exactly one place (per the
-# binding-source-kind-single-taxonomy discipline: a per-family collection is
+# aeat-registry-bindings discipline: a per-family collection is
 # derived from the core table, never hand-maintained as a parallel literal
 # set). ``GB`` is the sole deliberate exception: post-Brexit UK is not an EU
 # Member State, so the general IVA/invoice counterparty boundary

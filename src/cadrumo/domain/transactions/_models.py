@@ -1543,7 +1543,7 @@ class LedgerDatePartition(BaseModel):
     ``index_complete`` records whether the partition was served from a
     complete plaintext date index (``True``) or from a full-scan fallback
     after a completeness-gate mismatch (``False`` -- see
-    ``ledger-participation-index-is-derived-rebuildable``): both cases return
+    ``aeat-ledger-contract``): both cases return
     an identical partition shape, so a caller cannot observe which path
     served it except through this flag and through latency.
     """

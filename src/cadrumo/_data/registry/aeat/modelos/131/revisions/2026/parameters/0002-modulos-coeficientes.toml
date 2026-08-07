@@ -294,7 +294,7 @@ keyed_brackets = [
     # Cross-checked byte-identical against the bundled consolidated Orden
     # HAC/1425/2025 Anexo II (corpus/normatives/html/orden-hac-1425-2025.html) —
     # the 2026 filing year's own applicable Orden
-    # (legal-grounding-verifies-bundled-authoritative-corpus).
+    # (aeat-calculation-grounding).
     #
     # Corpus-typo correction: the bundled Orden HAC/1425/2025 HTML módulo 2
     # figure for 651.3 y 5 reads "11.998.85" (a literal period-for-comma

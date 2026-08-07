@@ -13,7 +13,7 @@ here delegates to :mod:`~application.bucket_maintenance`
 to the same atomic profile-create span and destructive-erase / soft-tombstone
 primitives ``config profile create`` / ``duplicate`` / ``delete`` already use
 — this module owns only CLI argument parsing, pointer resolution, and
-envelope emission (``composition-service-no-parallel-write-path``).
+envelope emission (``aeat-architecture-boundaries``).
 
 Isolation is not a new guarantee this module invents: it is the pre-existing
 per-bucket encrypted-storage boundary every profile bucket already has (one

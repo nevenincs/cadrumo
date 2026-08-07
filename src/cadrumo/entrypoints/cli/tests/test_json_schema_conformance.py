@@ -662,7 +662,7 @@ def test_every_emit_json_success_exemption_is_still_live() -> None:
 # round-trip gate above cannot catch (it never feeds a real report dump
 # through the payload). This table-driven gate constructs a fully-populated
 # backend report (every defaultable field set non-default per
-# ``aeat-roundtrip-discipline``, including a non-empty
+# ``aeat-quality-gates``, including a non-empty
 # ``stale_draft_revision_references``), validates the payload mirror against
 # its JSON dump, and asserts the mirror carries the stale-draft advisory.
 # It reds when a report grows a field its paired payload lacks and greens

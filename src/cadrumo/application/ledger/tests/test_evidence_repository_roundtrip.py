@@ -8,7 +8,7 @@ save/load coverage that only asserted records survived, never that they survived
 *unchanged*, so a save-drops-field / load-re-defaults-field regression on any of
 the seven optional fiscal fields was invisible.
 
-These are the two gates ``aeat-roundtrip-discipline`` requires of that boundary:
+These are the two gates ``aeat-quality-gates`` requires of that boundary:
 a real save -> load -> strict-equality cycle with every defaultable field carrying
 a NON-default value, and an anti-tautology proof that surgically rewrites the
 stored payload and asserts the load refuses it. Real adapters throughout -- real

@@ -280,7 +280,7 @@ def link_attachment_invoice(
     *after* the attachment is already stored. This helper re-persists the same
     manifest (attachment id and bytes unchanged) through the same
     :meth:`AttachmentStoreProtocol.write_manifest` write path
-    (``composition-service-no-parallel-write-path``), with ``invoice_id`` appended.
+    (``aeat-architecture-boundaries``), with ``invoice_id`` appended.
 
     Idempotent by construction: :class:`Attachment`'s
     ``linked_invoice_ids`` validator deduplicates and preserves first-seen
@@ -328,7 +328,7 @@ def link_attachment_transaction(
 
     Re-persists the same manifest (attachment id and bytes unchanged) through
     the same :meth:`AttachmentStoreProtocol.write_manifest` write path
-    (``composition-service-no-parallel-write-path``).
+    (``aeat-architecture-boundaries``).
 
     Idempotent by construction: :class:`Attachment`'s
     ``linked_transaction_ids`` validator deduplicates and preserves first-seen

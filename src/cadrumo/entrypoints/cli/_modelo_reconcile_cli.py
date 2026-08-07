@@ -114,7 +114,7 @@ def _render_reconciliation_report(
 
     ``command`` is the registered leaf id (``modelo.reconcile.pull`` /
     ``modelo.reconcile.file``); reconciliation advisories ride the typed
-    ``Notice`` channel (``cli-notices-are-the-only-diagnostic-channel``) and are
+    ``Notice`` channel (``aeat-cli-contract``) and are
     folded into the same text lines so JSON and text cannot drift.
     """
     from ...core.json_contract import Notice, NoticeSeverity

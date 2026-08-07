@@ -12,7 +12,7 @@ Casilla-id canonicalisation, registry-membership validation, and
 :class:`~domain.calculations.registry.CasillaObservation` construction
 remain owned by :func:`~application.modelo._local_observation_actions.record_operator_local_observation`,
 which this module's CLI caller feeds directly — there is no second casilla
-validation path here (``no-dormant-source-resolvers`` companion: one
+validation path here (``aeat-calculation-aggregation`` companion: one
 validation authority, not two).
 
 See Also:

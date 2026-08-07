@@ -1,7 +1,7 @@
 """Audit gate: persistence-boundary roundtrip coverage.
 
 Tracks the persistence boundaries the codebase exposes; each has at
-least one roundtrip test (per aeat-roundtrip-discipline.md).
+least one roundtrip test (per aeat-quality-gates.md).
 
   Boundary -> roundtrip test file:
   - SecureObjectRepository (SQL encrypted storage)
@@ -181,7 +181,7 @@ def test_persistence_boundary_roundtrip_tests_exist() -> None:
 
     assert not missing, (
         "Persistence boundaries declared in the roundtrip inventory are missing "
-        "their roundtrip test files (per aeat-roundtrip-discipline.md):\n\n" + "\n".join(f"  - {m}" for m in missing)
+        "their roundtrip test files (per aeat-quality-gates.md):\n\n" + "\n".join(f"  - {m}" for m in missing)
     )
 
 

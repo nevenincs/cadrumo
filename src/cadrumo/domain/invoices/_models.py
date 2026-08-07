@@ -596,7 +596,7 @@ class Invoice(BaseModel):
     # from `issued_at` (when the document was issued) and from `operation_date`
     # (when the operation occurred). Both are outside the identity derived by
     # `derive_invoice_id`: folding a clock into the id would mint a new record
-    # on every retry, which `single-subject-mutation-is-idempotent-guarded`
+    # on every retry, which `aeat-cli-contract`
     # bars. They are last-seen body fields, not identity.
     #
     # Optional rather than required on purpose. A record that genuinely carries

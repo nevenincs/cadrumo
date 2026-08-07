@@ -6,7 +6,7 @@ plain-language term ("prorrata", "recargo de equivalencia") to its preferred
 label, short description, and concept id, so the assistant explains a concept in
 the taxpayer's own words rather than inventing a definition. Only
 ``approved``-lifecycle concepts are searched (the taxpayer-facing set), per the
-``glossary-concepts-are-taxpayer-facing`` rule the application service already
+``aeat-documentation`` rule the application service already
 enforces.
 
 Like ``_corpus_tools`` / ``_harness_tools``, this module is SDK-independent pure
@@ -14,7 +14,7 @@ functions over typed models; :func:`build_terminology_search_tool` lazily adapts
 onto the MCP SDK's ``Tool`` type so the module imports (and the server refuses
 gracefully) without the ``cadrumo[agent]`` extra. The search itself is owned by the
 application service (:func:`~application.corpus_search.search_terminology`),
-consumed through the package facade per ``service-imports-via-top-level-reexports``.
+consumed through the package facade per ``aeat-architecture-boundaries``.
 """
 
 from __future__ import annotations

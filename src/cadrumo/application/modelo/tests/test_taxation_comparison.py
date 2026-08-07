@@ -18,7 +18,7 @@ Direction authority: AEAT Renta WEB 2025 comparative mode confirms these
 recommendation directions.  The tests assert ``recommendation`` enum value
 and the *sign* of ``delta_resultado``; they do NOT assert exact cuota
 amounts (which would require computing the same formula the registry
-evaluates, violating the no-tautological-calculation-tests rule).
+evaluates, violating the aeat-quality-gates rule).
 
 A structural wiring test verifies that the comparison returns the expected
 typed envelope and that both cuota fields are populated.
@@ -269,7 +269,7 @@ def test_individual_branch_honesty_caveat_surfaces(snapshot_2025: RegistrySnapsh
     reuses the unidad familiar's single input set, so it faithfully models only
     a single-earner household. The result MUST carry an explicit, operator-facing
     caveat so a two-earner individual figure is never presented as authoritative
-    (``no-silent-under-declaration`` / ``aeat-safety-legal-gates``). The caveat
+    (``no-silent-under-declaration`` / ``sensitive-financial-data-secure-storage-only``). The caveat
     must be non-silent: present on the typed result regardless of which mode wins.
     """
     inputs = {**_BASE_INPUTS, _M100_TRABAJO_INGRESO_CASILLA: Decimal("52000")}

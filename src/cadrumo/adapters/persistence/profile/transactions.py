@@ -492,7 +492,7 @@ class TransactionCatalogueRepository:
         stale or partially-synced index -- this falls back to a full
         :meth:`load` and partitions the result in memory, so correctness never
         depends on the index being present or fresh
-        (``ledger-participation-index-is-derived-rebuildable``): a stale index
+        (``aeat-ledger-contract``): a stale index
         costs a slower read, never a silent drop from either half.
 
         Membership in the in-window half is decided by OVERLAP against each
@@ -665,7 +665,7 @@ class TransactionCatalogueRepository:
         """Rebuild this bucket's plaintext date index from the encrypted catalogue.
 
         The index is derived and rebuildable
-        (``ledger-participation-index-is-derived-rebuildable``): correctness
+        (``aeat-ledger-contract``): correctness
         never depends on it, so this is an explicit maintenance/recovery
         operation, not something callers need on the normal read/write path.
         Performs a full :meth:`load` (decrypting every row once) and rewrites
@@ -715,7 +715,7 @@ class TransactionCatalogueRepository:
         was built to eliminate).
 
         The index is a derived, rebuildable cache
-        (``ledger-participation-index-is-derived-rebuildable``): a crash
+        (``aeat-ledger-contract``): a crash
         between the two writes leaves the index one write behind, which
         :meth:`load_for_date_range` detects via the membership-index subset
         check and safely falls back to a full scan for -- never a correctness

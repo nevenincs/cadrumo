@@ -277,7 +277,7 @@ def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
     detail was formerly a ``_log.warning`` stderr line, which was
     environment-inconsistent (present under one logging config, absent under
     another) and made replay goldens unportable, and bypassed the typed Notice
-    channel (cli-notices-are-the-only-diagnostic-channel). It must now be emitted
+    channel (aeat-cli-contract). It must now be emitted
     at DEBUG only. The DEBUG-level capture below still sees the breadcrumb (proving
     the cold-start path fired — the anti-tautology leg), and every such record is
     DEBUG, so a default WARNING-level operator surface sees none of it.
@@ -312,7 +312,7 @@ def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
     warning_or_above = [record for record in operator_manual_records if record.levelno >= logging.WARNING]
     assert not warning_or_above, (
         "the 'remains operator-manual' detail must be a DEBUG breadcrumb, never a WARNING+ stderr line "
-        "(cli-notices-are-the-only-diagnostic-channel); found: "
+        "(aeat-cli-contract); found: "
         f"{[(r.levelname, r.getMessage()) for r in warning_or_above]}"
     )
 

@@ -13,7 +13,7 @@ fact changes:
 
 These assert routing + proportionality wiring against independent expectations;
 they do not re-compute a registry tax formula (per
-``no-tautological-calculation-tests``).
+``aeat-quality-gates``).
 """
 
 from __future__ import annotations

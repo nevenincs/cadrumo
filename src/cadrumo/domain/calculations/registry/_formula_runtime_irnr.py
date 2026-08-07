@@ -2,7 +2,7 @@
 
 Extracted from :mod:`~domain.calculations.registry._formula_runtime` to
 keep that module under its size budget (`aeat-architecture-boundaries`,
-`registry-resolver-family-extraction`). Holds the two IRNR-specific formula
+`aeat-architecture-boundaries`). Holds the two IRNR-specific formula
 ops -- ``irnr_resolve_tipo_gravamen`` and ``m210_resolve_base_imponible`` --
 and their private argument-resolution and rate-computation helpers. Dispatch
 still lives in :func:`~domain.calculations.registry._formula_runtime._evaluate_expression`,

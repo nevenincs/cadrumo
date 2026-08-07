@@ -7,7 +7,7 @@ of identical input, distinct id for distinct justificante), the bucket
 cross-check (record's ``bucket_id`` matches storage scope), and the
 co-emitted ``BucketEvent`` carries the matching CENSO_DECLARATION_*
 event_type per the operator-action / data-write two-event composition
-contract (`composition-service-no-parallel-write-path` rule).
+contract (`aeat-architecture-boundaries` rule).
 """
 
 from __future__ import annotations

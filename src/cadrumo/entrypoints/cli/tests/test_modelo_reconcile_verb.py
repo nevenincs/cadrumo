@@ -210,7 +210,7 @@ pass."""
 _M303_2024_1T_REVISION_ID = "2023-y-siguientes"
 """Law-determined registry revision for M303 filing_year=2024, period=1T
 (confirmed via ``authority.snapshot("303", filing_year=2024, period="1T").revision.id``);
-required by ``revision-resolution-is-law-determined`` so the seeded work unit's
+required by ``aeat-registry-authority-flow`` so the seeded work unit's
 pinned ``revision_id`` matches the resolver's answer."""
 
 # The 9 `computed_casilla_ids` the registry's verification policy actually

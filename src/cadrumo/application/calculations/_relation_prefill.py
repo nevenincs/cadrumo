@@ -683,7 +683,7 @@ def _resolve_available_relation_values(
             # A requirement with no single observed source filing stays
             # operator-manual. This is a developer breadcrumb only: the
             # operator-facing form rides the typed Notice channel
-            # (cli-notices-are-the-only-diagnostic-channel) as a
+            # (aeat-cli-contract) as a
             # relation-prefill advisory built in the resolver boundary from the
             # unresolved set, not this stderr log — which was also
             # environment-inconsistent (present under one logging config, absent
@@ -842,7 +842,7 @@ class RelationPrefillSourceResolver:
         # threads, which is the intended cold-start behaviour for the cross-modelo
         # carries (M200/M202/M100), so it is deliberately NOT flagged here (and its
         # unresolved-source detail is a debug breadcrumb, never operator-facing
-        # stderr, per cli-notices-are-the-only-diagnostic-channel).
+        # stderr, per aeat-cli-contract).
         declared_binding_ids = frozenset(binding.id for binding in snapshot.revision.bindings)
         relation_target_binding = {relation.id: relation.target_binding for relation in snapshot.revision.relations}
         unresolved_non_formula_relation_ids = frozenset(
@@ -925,7 +925,7 @@ def relation_prefill_period_zero_default_binding_ids(
     (:func:`_modelo_202_first_period_previous_payment_defaults`) and the
     readiness missing-bindings projection consume it, so readiness and calculate
     agree on the missing set by construction
-    (``one-aggregation-path-pull-equals-calculate``).
+    (``aeat-calculation-aggregation``).
     """
     if modelo != Modelo.M202.value:
         return frozenset()

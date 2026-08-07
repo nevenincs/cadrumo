@@ -9,7 +9,7 @@ casillas changed and what the corrected value is for each, confirms the legal
 amendment kind and a free-text reason, then calls the exact same
 :func:`~application.modelo.amend_modelo_revision` composition path
 ``work amend`` uses. The wizard is a guided front end over that one write
-path, not a second one (``composition-service-no-parallel-write-path``).
+path, not a second one (``aeat-architecture-boundaries``).
 
 The baseline casilla values the wizard displays are read from the filing
 record's :class:`~domain.modelos.CalculationRevision`, so the operator

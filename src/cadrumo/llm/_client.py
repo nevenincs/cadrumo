@@ -9,7 +9,6 @@ Coordinates :class:`~adapters.outbound.llm.LLMRequest` inputs,
 
 from __future__ import annotations
 
-import json
 import time
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -18,7 +17,7 @@ from uuid import uuid4
 from pydantic import SecretStr
 
 from ..core.config import Settings
-from ..core.hashing import sha256_hex
+from ..core.hashing import content_hash_hex
 from ..core.logging import get_logger
 from ..core.time import now
 from ._errors import LLMCacheError, LLMConfigError
@@ -324,8 +323,7 @@ class LLMClient:
             Stable SHA-256 request identifier.
         """
         payload = request.model_dump(mode="json", exclude_none=True)
-        material = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-        return sha256_hex(material.encode("utf-8"))
+        return content_hash_hex(payload)
 
 
 def _llm_run_record() -> type:

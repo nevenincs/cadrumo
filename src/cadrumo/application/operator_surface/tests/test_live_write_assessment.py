@@ -3,7 +3,7 @@
 # live_write derivation without touching AEAT.
 """A command's safety assessment is distinguishable from its absence.
 
-`aeat-safety-legal-gates` forbids live AEAT submission outright, so `live_write` is
+`sensitive-financial-data-secure-storage-only` forbids live AEAT submission outright, so `live_write` is
 False for every command in the tree and must stay that way. That correctness is
 exactly what made the property untestable: an assertion holding for all 297 verbs
 whether or not anyone assessed them is a tautology, and the project bans those.

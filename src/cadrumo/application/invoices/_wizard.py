@@ -13,10 +13,10 @@ dropped or reported one-at-a-time when several are wrong).
 
 The write itself delegates to :func:`~application.invoices.create_catalogue_invoice`
 -- the sole sanctioned :class:`~domain.invoices.Invoice` writer
-(``composition-service-no-parallel-write-path``); this module never persists a
+(``aeat-architecture-boundaries``); this module never persists a
 row itself. Because :class:`~domain.invoices.Invoice` identity is a
 content-derived hash, a retry that resolves to an already-catalogued identity
-is a guarded no-op (``single-subject-mutation-is-idempotent-guarded``): the
+is a guarded no-op (``aeat-cli-contract``): the
 existing record is returned, not re-written or raised as an error, mirroring
 the re-import-of-an-unchanged-file semantics
 :func:`~application.invoices.import_invoices_from_rows` already implements for
@@ -87,7 +87,7 @@ class InvoiceWizardResult(BaseModel):
 
     ``already_existed`` is ``True`` when the derived identity already named a
     catalogued invoice -- the guarded idempotent no-op path
-    (``single-subject-mutation-is-idempotent-guarded``): ``invoice`` is the
+    (``aeat-cli-contract``): ``invoice`` is the
     pre-existing record and nothing was written.
     """
 
@@ -460,7 +460,7 @@ def create_invoice_via_wizard(
     catalogue = repo.load()
     existing = catalogue.get(candidate.invoice_id)
     if existing is not None:
-        # Guarded idempotent retry (single-subject-mutation-is-idempotent-guarded):
+        # Guarded idempotent retry (aeat-cli-contract):
         # the same fields were already submitted and catalogued under this
         # content-derived identity. Return the existing record; nothing is
         # re-written and no duplicate is raised.

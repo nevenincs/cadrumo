@@ -146,7 +146,7 @@ class ModeloReconciliationAdvisory(BaseModel):
     structured ``context`` (the reason, the anchor, the modelo). The CLI folds
     each advisory into a typed :class:`~core.json_contract.Notice` on the
     envelope's ``notices`` channel per
-    ``cli-notices-are-the-only-diagnostic-channel`` — an advisory is never a
+    ``aeat-cli-contract`` — an advisory is never a
     bespoke result field. Advisories never flip the verdict: they disclose that
     a comparison could not be performed (so identity-only ``matches`` is never a
     silent false green), not that a value diverged.
@@ -173,7 +173,7 @@ class ModeloReconciliationRecord(BaseModel):
     Grounding is **stored, not re-derived**. Each :class:`ModeloReconciliationDiff`
     keeps the ``legal_refs`` / ``source_refs`` that were in force when the
     reconciliation ran. Re-deriving them at read time would resolve the snapshot
-    from modelo, filing year and period per ``revision-resolution-is-law-determined``,
+    from modelo, filing year and period per ``aeat-registry-authority-flow``,
     so a routine re-grounding sweep that moved a casilla's ``legal_refs`` without
     moving the revision id would silently rewrite the legal basis of a historical
     reconciliation — and one that did move the revision id would make the history

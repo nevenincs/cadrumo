@@ -104,7 +104,7 @@ def test_calculate_303_aic_official_box_parity_books_boxes_and_leaves_resultado_
     formula — so adding the AIC observation changes the resultado by exactly the
     already-net-zero ISP contribution, i.e. leaves it unchanged versus a filing
     with no AIC. Deltas are computed by comparison, never by summing literals
-    (no-tautological-calculation-tests).
+    (aeat-quality-gates).
     """
     aic_cuota = Decimal("84.00")
     domestic_only = _calculate_303_from_observations(
@@ -177,7 +177,7 @@ def test_intracom_goods_and_services_share_the_combined_official_casilla_10_11()
     the single devengado box-10/11 parity casilla (and the box-36/37 deducible
     casilla). The combined value is derived by summing the two input legs (the
     ``op = "sum"`` aggregation contract), never from the registry formula
-    (``no-tautological-calculation-tests``). Dropping either category from the
+    (``aeat-quality-gates``). Dropping either category from the
     selectors, or splitting them onto separate casillas, breaks this.
     """
     goods = classify_iva(_received_from_eu_criteria(kind=TransactionKind.GOODS))

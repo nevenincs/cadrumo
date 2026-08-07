@@ -9,7 +9,7 @@ by ``evidence add`` is accepted by ``aeat app ledger attach`` in the same shell
 session — while still refusing unknown ids and ids minted by the slim
 ``aeat app ledger invoice add`` store (the deliberate evidence/invoice store
 split). Real adapters only: no mocks, stubs, or monkeypatch
-(``aeat-quality-gates``, ``aeat-roundtrip-discipline``).
+(``aeat-quality-gates``, ``aeat-quality-gates``).
 """
 
 from __future__ import annotations

@@ -8,7 +8,7 @@ revision's applicability window.  The gate is strict:
 - Every revision MUST declare at least one entry; missing entries are a hard
   failure.
 - Every declared entry MUST resolve in the legal catalogue with a ``corpus_ref``
-  (per ``registry-calculation-legal-grounding``).
+  (per ``aeat-calculation-grounding``).
 - Every declared entry MUST also appear in (or be merged into) ``legal_refs``
   so existing snapshot ref-collection carries it.
 
@@ -100,7 +100,7 @@ def validate_orden_aplicabilidad(
             f"{scope}: revision {revision.id!r} (valid_from {revision.valid_from.isoformat()}) "
             f"MUST declare orden_aplicabilidad citing the orden ministerial that approves "
             f"modelo {modelo_id} for this applicability window; see "
-            f"registry-calculation-legal-grounding rule",
+            f"aeat-calculation-grounding rule",
         )
         return hard
 
@@ -113,7 +113,7 @@ def validate_orden_aplicabilidad(
             hard.append(
                 f"{scope}: revision {revision.id!r} orden_aplicabilidad entry {ref_id!r} "
                 f"does not resolve in the legal catalogue; add the full LegalReference "
-                f"entry to a legal/*.toml file (registry-calculation-legal-grounding rule)",
+                f"entry to a legal/*.toml file (aeat-calculation-grounding rule)",
             )
             continue  # Cannot check corpus_ref on an absent entry.
 
@@ -124,7 +124,7 @@ def validate_orden_aplicabilidad(
             hard.append(
                 f"{scope}: revision {revision.id!r} orden_aplicabilidad entry {ref_id!r} "
                 f"exists in the catalogue but has no corpus_ref; add a corpus_ref pointing "
-                f"to real BOE/AEAT text (registry-calculation-legal-grounding rule)",
+                f"to real BOE/AEAT text (aeat-calculation-grounding rule)",
             )
 
         # (iii) Must also appear in legal_refs so snapshot ref-collection carries it.

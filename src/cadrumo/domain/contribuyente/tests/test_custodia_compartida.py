@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 FILING_YEAR = 2024
 
 # Art. 58 amounts read from the registry, never restated as Python literals
-# (`aeat-schema-central-config`).
+# (`aeat-registry-authority-flow`).
 _MINIMO_1 = registry_birth_order_amounts(FILING_YEAR)[0]
 _MENOR_TRES = registry_menor_tres_supplement(FILING_YEAR)
 _THRESHOLDS = registry_thresholds(FILING_YEAR)

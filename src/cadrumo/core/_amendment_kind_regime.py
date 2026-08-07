@@ -38,7 +38,7 @@ Registros and manual corpus:
   supporting rectificativa — every period continues to route through the
   dual complementaria/solicitud-de-rectificación regime — until a bundled
   AEAT diseño or orden grounds an effective period
-  (`legal-grounding-verifies-bundled-authoritative-corpus`).
+  (`aeat-calculation-grounding`).
 
 A modelo absent from :data:`_RECTIFICATIVA_EFFECTIVE_FROM` has no codified
 regime at all: :func:`permitted_amendment_kind_values` falls back to the

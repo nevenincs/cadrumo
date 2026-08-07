@@ -144,7 +144,7 @@ def test_identity_api_exposes_no_former_product_aliases() -> None:
     assert AEAT_AUTHORITY_SHORT_NAME == "AEAT"
     # AEAT_CSV_* names the shape contract for AEAT's own Codigo Seguro de
     # Verificacion (the identifier AEAT prints on a justificante) -- a
-    # legitimate AEAT-referent export per cadrumo-product-authority-names,
+    # legitimate AEAT-referent export per aeat-naming,
     # not a former-product alias.
     allowed_aeat_names = {"AEAT_AUTHORITY_SHORT_NAME", "AEAT_CSV_MIN_LENGTH", "AEAT_CSV_MAX_LENGTH", "AEAT_CSV_PATTERN"}
     assert {name for name in core_all if name.casefold().startswith("aeat")} == allowed_aeat_names

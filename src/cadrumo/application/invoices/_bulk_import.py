@@ -4,14 +4,14 @@ The accountant/gestor batch case: a spreadsheet of invoice rows (counterparty
 NIF, invoice number, date, taxable base, IVA rate) is turned into one
 :class:`~domain.invoices.Invoice` per row. This module is a typed transport
 over :func:`~application.invoices.create_catalogue_invoice` -- the sole
-sanctioned :class:`Invoice` writer (``composition-service-no-parallel-write-path``);
+sanctioned :class:`Invoice` writer (``aeat-architecture-boundaries``);
 it never persists a row itself.
 
 Each row's identity is the same content-derived
 :attr:`~domain.invoices.Invoice.invoice_id` hash the single-invoice
 ``catalogue create`` verb and the evidence-confirm slice use, so a re-import of
 an unchanged file is a guarded no-op per row
-(``single-subject-mutation-is-idempotent-guarded``): an already-catalogued
+(``aeat-cli-contract``): an already-catalogued
 identical row is reported ``skipped_duplicate``, never re-written and never
 raised as an error. A malformed row (missing required field, invalid NIF,
 unsupported IVA rate) is collected as a ``refused`` row carrying its 1-based
@@ -377,13 +377,13 @@ def import_invoices_from_rows(
     Every accepted row is handed to
     :func:`~application.invoices.create_catalogue_invoice` -- this
     function never persists a row itself
-    (``composition-service-no-parallel-write-path``). Because
+    (``aeat-architecture-boundaries``). Because
     :class:`~domain.invoices.Invoice` identity is a content-derived hash of
     ``(kind, invoice_number, issued_at, counterparty_tax_id, currency,
     grand_total)``, re-importing the identical file a second time resolves
     every row to its already-catalogued ``invoice_id`` and reports it in
     ``skipped_duplicate`` -- no second write, no raised error
-    (``single-subject-mutation-is-idempotent-guarded``). A row whose resolved
+    (``aeat-cli-contract``). A row whose resolved
     fields genuinely differ (a corrected amount, a new invoice number) mints a
     distinct record rather than overwriting one filer's data with another's.
 
@@ -428,7 +428,7 @@ def import_invoices_from_rows(
             continue
 
         if candidate.invoice_id in existing_ids:
-            # Guarded idempotent retry (single-subject-mutation-is-idempotent-guarded):
+            # Guarded idempotent retry (aeat-cli-contract):
             # a re-import of the same file resolves every row to an
             # already-catalogued identity -- report it, do not re-write or raise.
             skipped_duplicate += 1

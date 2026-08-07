@@ -21,6 +21,7 @@ import pytest
 from ....iva import (
     IvaCashAccountingTreatment,
     IvaCategory,
+    IvaExemptionArticle,
     IvaFlowDirection,
     IvaRateKind,
 )
@@ -104,7 +105,11 @@ def test_the_unmatched_selector_really_matches_every_treatment_never() -> None:
 
 
 class _StubIvaObservation:
-    """Minimal stand-in carrying only the five axes the IVA matcher reads."""
+    """Minimal stand-in carrying only the five axes the IVA matcher reads.
+
+    Satisfies ``IvaSelectorAxesProtocol`` structurally, which is what makes it
+    a legitimate stand-in for the full observation record here.
+    """
 
     def __init__(
         self,
@@ -113,7 +118,7 @@ class _StubIvaObservation:
         rate_kind: IvaRateKind,
         flow_direction: IvaFlowDirection,
         cash_accounting_treatment: IvaCashAccountingTreatment,
-        exemption_article: object | None,
+        exemption_article: IvaExemptionArticle | None,
     ) -> None:
         self.category = category
         self.rate_kind = rate_kind

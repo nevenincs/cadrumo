@@ -441,7 +441,7 @@ def _rebuild_participation_index(*, target_bucket_id: str) -> None:
     """Rebuild the derived transaction-revision participation index after import.
 
     The index is a derived, rebuildable read-cache (excluded from the carry per
-    ``ledger-participation-index-is-derived-rebuildable``); it is regenerated from
+    ``aeat-ledger-contract``); it is regenerated from
     the restored revision, work-unit, and filing catalogues.
     """
     from ..modelo import rebuild_participation_index

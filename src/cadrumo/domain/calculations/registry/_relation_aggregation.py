@@ -3,7 +3,7 @@
 The relation ``aggregation.op`` was re-parsed inline as
 ``str((relation.aggregation or {}).get("op", "copy"))`` at the requirement-keying,
 resolve, and M390-partition sites — exactly the untyped re-parse the
-``binding-aggregation-is-typed`` rule forbids for bindings, on the relation half it
+``aeat-registry-bindings`` rule forbids for bindings, on the relation half it
 skipped. ``RelationDefinition.aggregation`` is now the typed
 :class:`~core.aggregation.RelationAggregation` model (an unknown op is rejected
 at registry-build by its strict ``op`` field). This module centralises the read into

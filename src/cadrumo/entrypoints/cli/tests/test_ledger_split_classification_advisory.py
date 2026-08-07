@@ -4,7 +4,7 @@ Splitting a parent transaction deliberately resets every child to
 ``NOT_YET_PROCESSED`` to force conscious per-row tax treatment; the parent's
 classification is not cloned. That drop is a non-blocking advisory, not a silent
 side-effect (per ``no-silent-under-declaration`` /
-``cli-notices-are-the-only-diagnostic-channel``): when the parent carried a real
+``aeat-cli-contract``): when the parent carried a real
 classified outcome (BUSINESS / PERSONAL / MIXED) the split emits an ``info``
 notice naming the dropped classification and pointing at ``ledger classify``.
 

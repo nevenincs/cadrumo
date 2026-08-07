@@ -23,7 +23,7 @@ No mocks: every decision is the real ``confirmation_for_tool`` called against
 real ``McpAnnotations`` built by the real ``build_tool_descriptors`` /
 ``annotations_for_command``, and the argument-independence proof drives the real
 MCP server over an in-memory client session instead of asserting a hand-rolled
-boolean (``no-tautological-calculation-tests``, ``aeat-quality-gates``).
+boolean (``aeat-quality-gates``, ``aeat-quality-gates``).
 
 See Also:
     :mod:`~entrypoints.mcp._hitl`

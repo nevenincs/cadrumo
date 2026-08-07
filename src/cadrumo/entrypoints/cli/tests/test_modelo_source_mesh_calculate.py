@@ -802,7 +802,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
 def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_supply() -> None:
     """An INTRA_COMMUNITY_SUPPLY observation is cuota-less, so it raises NO advisory.
 
-    Per the ``ledger-iva-advisory-only-on-cuota-bearing-categories`` rule, an
+    Per the ``aeat-ledger-contract`` rule, an
     exempt entrega intracomunitaria (Ley 37/1992 art. 25) is base-only with no
     cuota to route: it is a member of ``CUOTA_LESS_M303_IVA_CATEGORIES`` and
     MUST NEVER fire the unconsumed-declarable-IVA advisory. Flagging it would be

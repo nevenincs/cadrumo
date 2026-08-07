@@ -195,7 +195,7 @@ def test_wizard_scripted_inputs_compose_the_same_calculate_as_work_calculate() -
     """The scripted-wizard inputs assemble the same overrides and draft as ``work calculate``.
 
     The wizard is a guided front end over the shared calculate path
-    (``composition-service-no-parallel-write-path``), not a second surface: its
+    (``aeat-architecture-boundaries``), not a second surface: its
     scripted-derived casilla overrides are byte-identical to the override set a
     hand-typed ``work calculate`` receives, and both compose the identical draft.
     """

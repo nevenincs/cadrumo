@@ -6,7 +6,7 @@ package level -- :class:`ProfileBareModelSecurePersistence`, the bare-document
 singleton-persistence kernel several of this package's own repositories
 compose, and the only piece of this package a caller OUTSIDE it (a namespace
 whose on-disk rows are bare JSON, not Envelope-wrapped) has a sanctioned
-reason to import directly, per ``service-imports-via-top-level-reexports``.
+reason to import directly, per ``aeat-architecture-boundaries``.
 Every other repository is consumed from its own child module directly:
 
 * :mod:`adapters.persistence.profile.assets` for the FINANCIAL secure-object

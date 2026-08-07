@@ -20,7 +20,7 @@ server still refuses gracefully) when the ``cadrumo[agent]`` extra is absent.
 The operating-layer text is read through the ``cadrumo.agent`` package facade
 (:func:`~agent.operator_rules_text` and
 :func:`~agent.iter_personas`), never a private submodule, per the
-``service-imports-via-top-level-reexports`` discipline.
+``aeat-architecture-boundaries`` discipline.
 """
 
 from __future__ import annotations

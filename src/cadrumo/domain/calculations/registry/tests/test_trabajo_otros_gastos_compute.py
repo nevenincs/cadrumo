@@ -22,7 +22,7 @@ revisions:
 Expected values are grounded in LIRPF art. 19.2.f ("2.000 euros anuales" and the
 letter-f cap "tendrán como límite el rendimiento íntegro del trabajo una vez
 minorado por el resto de gastos deducibles"), never re-derived from the formula
-under test (``no-tautological-calculation-tests``).
+under test (``aeat-quality-gates``).
 """
 
 from __future__ import annotations

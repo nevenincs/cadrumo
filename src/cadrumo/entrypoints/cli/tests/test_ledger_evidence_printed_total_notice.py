@@ -8,7 +8,7 @@ art. 161) is the worked case, and before this notice the surcharge simply
 vanished behind a valid-looking invoice.
 
 The diagnostic travels on the typed ``notices`` channel of the shared envelope
-spine (``cli-notices-are-the-only-diagnostic-channel``), never as a bespoke
+spine (``aeat-cli-contract``), never as a bespoke
 field inside ``result``.
 
 Drives the real Typer CLI tree, a real encrypted bucket session, and a real

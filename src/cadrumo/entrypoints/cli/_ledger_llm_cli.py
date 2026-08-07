@@ -11,7 +11,7 @@ child's base and IVA (``llm-selects-system-derives-tax-numbers``).
 Also owns :func:`split_recommendation_notice`,
 the typed ``info`` notice that ``classify --read-evidence`` emits when the model
 flags the invoice as multi-component
-(``cli-notices-are-the-only-diagnostic-channel``).
+(``aeat-cli-contract``).
 """
 
 from __future__ import annotations
@@ -88,7 +88,7 @@ def emit_llm_rejection(
     ``source_command`` audit label is derived from the origin rather than a
     CLI-owned literal. An ``info`` :class:`Notice` confirms the log and points at
     the manual-override next step
-    (``cli-notices-are-the-only-diagnostic-channel``).
+    (``aeat-cli-contract``).
     """
     from ._ledger_llm_payloads import LedgerClassifyLlmRejectResult
 
@@ -140,7 +140,7 @@ def split_recommendation_notice(transaction_id: str, *, provider: LLMProvider | 
 
     Fired when the evidence read judged the invoice multi-component. The
     ``suggestion`` is the exact runnable command that actions the split, preserving
-    the provider the operator used (``cli-notices-are-the-only-diagnostic-channel``;
+    the provider the operator used (``aeat-cli-contract``;
     the recommendation rides the Notice channel, never a bespoke result field).
     """
     provider_flag = f" --llm {provider.value}" if provider is not None else ""

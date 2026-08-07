@@ -1,6 +1,6 @@
 """Strict JSON roundtrip test for :class:`PullResult` and its leaf records.
 
-The discipline rule (``aeat-roundtrip-discipline``) requires a dedicated
+The discipline rule (``aeat-quality-gates``) requires a dedicated
 ``model_dump_json`` → ``model_validate_json`` test for every persistence-
 shaped pydantic model that flows over the wire. ``PullResult`` is the
 Google Sheets pull adapter's wire shape — :func:`compute_from_pull`

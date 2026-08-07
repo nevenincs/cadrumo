@@ -288,7 +288,7 @@ def _draft_revision_advisories(
     on the next verify/file. These advisory rows name each affected draft so the
     operator can recalculate it (no-silent-under-declaration). Correctness rides
     on the live revision-catalogue scan, never the derived participation index
-    (ledger-participation-index-is-derived-rebuildable).
+    (aeat-ledger-contract).
     """
     if not transaction_ids:
         return ()
@@ -704,7 +704,7 @@ def _persisted_classified_by(command: ManualLedgerTransactionCommand) -> str:
 def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict[str, object]:
     """Project every persisted field of ``command`` into a name-keyed mapping.
 
-    The full-field idempotency contract (``single-subject-mutation-is-idempotent-guarded``)
+    The full-field idempotency contract (``aeat-cli-contract``)
     requires the no-op match to compare EVERY persisted field. Keeping the field set as one
     ordered mapping makes a new model field omitted here a single greppable site, paired with
     :func:`_transaction_idempotency_fields` key-for-key.

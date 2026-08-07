@@ -4,7 +4,7 @@ These tests drive the real recovery transport end to end: seed the
 previously-dropped per-bucket stores, export a sealed archive under a recovery
 passphrase, import it into a *fresh storage root* (a distinct recipient DEK),
 and assert the evidence bytes and audit trail survive. They are the
-persistence-boundary proof for ``aeat-roundtrip-discipline`` applied to the
+persistence-boundary proof for ``aeat-quality-gates`` applied to the
 generic custody carry, plus an anti-tautology proof and a fail-closed
 coverage-gate check.
 """

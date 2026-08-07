@@ -8,7 +8,7 @@ no binding or formula, so an estimación-objetiva filer who declares the 1T-3T
 simplificado" (casilla 48) at zero would file a zero-cuota result with no
 gate. This module pins the ``implies_nonzero(["47", "48"])`` ADVISORY guard
 shipped on both M303 revisions (2009-y-siguientes inline, 2023-y-siguientes
-fragmented — registry-revision-content-inline-or-fragmented).
+fragmented — aeat-registry-authority-flow).
 """
 
 from __future__ import annotations

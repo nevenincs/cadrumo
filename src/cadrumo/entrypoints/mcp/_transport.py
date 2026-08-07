@@ -364,7 +364,7 @@ def _warm_degradation_notice(*, command_key: str, wedged: bool) -> Notice:
 def _envelope_with_notice(envelope: dict[str, object], notice: Notice) -> dict[str, object]:
     """Append a typed ``Notice`` to an envelope and raise its status to warning.
 
-    The single diagnostic channel (``cli-notices-are-the-only-diagnostic-channel``):
+    The single diagnostic channel (``aeat-cli-contract``):
     a transport-degradation or soft-timeout advisory rides the envelope's ``notices``
     array, and a ``success`` envelope becomes ``warning`` so the status stays in
     lock-step with its notice severity.

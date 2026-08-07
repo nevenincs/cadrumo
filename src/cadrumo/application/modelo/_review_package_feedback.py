@@ -10,7 +10,7 @@ SAME X25519 ECIES construction, re-encrypted FOR THE ORIGINATOR rather than for
 the accountant.
 
 This module invents no new cryptography
-(``composition-service-no-parallel-write-path`` /
+(``aeat-architecture-boundaries`` /
 ``sensitive-financial-data-secure-storage-only``): both
 :func:`encrypt_feedback_package_for_originator` and
 :func:`decrypt_feedback_package_from_originator_envelope` are thin

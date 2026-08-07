@@ -288,7 +288,6 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "inventory",
             "invoice",
             "participation",
-            "providers",
             "llm-diagnostics",
             "restore",
             "rule",

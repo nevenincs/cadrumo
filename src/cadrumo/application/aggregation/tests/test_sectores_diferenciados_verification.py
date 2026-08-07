@@ -3,7 +3,7 @@
 No bundled AEAT worked-example oracle for a two-sector differentiated-sectors
 prorrata ships in ``src/cadrumo/_data/corpus/manual_oracles/`` (that pool carries
 only the WHOLE-ENTITY Modelo 303 prorrata-general regularización example and
-unrelated modelos). Per the ``no-tautological-calculation-tests`` rule, this
+unrelated modelos). Per the ``aeat-quality-gates`` rule, this
 verification uses a hand-constructed register with structural anti-tautology
 assertions rather than numbers hand-computed from the substrate formula under
 test.
