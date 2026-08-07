@@ -70,7 +70,7 @@ estimate, or guess any value. If a field is not visibly printed on the document,
 its value is null.
 
 Return ONLY one JSON object with exactly these keys (no other text):
-{{
+{
   "supplier_tax_id": <string or null, the supplier's NIF/NIE/CIF exactly as printed>,
   "invoice_number": <string or null, the invoice number exactly as printed>,
   "invoice_date": <string or null, the invoice date exactly as printed, e.g. "10/03/2026">,
@@ -81,7 +81,7 @@ Return ONLY one JSON object with exactly these keys (no other text):
   "currency": <string or null, the ISO-4217 code for the currency the amounts \
 are printed in, e.g. "EUR", "USD", "GBP". Read it from the printed symbol or \
 code next to the amounts. If no currency is shown anywhere, null>
-}}
+}
 """
 
 

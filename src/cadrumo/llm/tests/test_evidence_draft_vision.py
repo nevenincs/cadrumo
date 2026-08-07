@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 from decimal import Decimal
 
 import pytest
@@ -41,6 +42,7 @@ from ...core.config import load_settings
 from ...core.decimal import coerce_finite_european_decimal
 from ...tests.secure_sql import TestRuntimeProfile
 from .._evidence_draft_vision import (
+    _FIELD_EXTRACTION_PROMPT,
     LocalVisionInvoiceFieldExtractor,
     extract_invoice_fields_from_images,
 )
@@ -328,3 +330,36 @@ class TestGroundedAmountsShareTheCanonicalDecimalAuthority:
         assert draft.taxable_base == expected
         assert draft.iva_amount == expected
         assert draft.grand_total == expected
+
+
+class TestFieldExtractionPromptShowsWellFormedJson:
+    """The example object the prompt shows must be the object it asks for.
+
+    The prompt is a plain string that is never passed through ``str.format``,
+    so a doubled brace is not an escape -- it reaches the model verbatim. The
+    template shipped ``{{``/``}}`` for a while, which showed the model a
+    malformed skeleton immediately after instructing it to "Return ONLY one
+    JSON object": the model then either echoes the doubling, in which case
+    :func:`~llm._invoice_field_grounding.parse_invoice_extraction_response`
+    rejects the response outright, or silently repairs it, in which case the
+    read depends on that recovery rather than on the instruction.
+
+    This gate is deliberately model-free: it asserts a property of the prompt
+    text itself, so it holds on a machine that can run no vision model at all.
+    """
+
+    def test_template_parses_as_json_carrying_exactly_the_schema_keys(self) -> None:
+        """The shown skeleton is valid JSON whose keys are the schema's keys."""
+        template = _FIELD_EXTRACTION_PROMPT[
+            _FIELD_EXTRACTION_PROMPT.index("{") : _FIELD_EXTRACTION_PROMPT.rindex("}") + 1
+        ]
+        # The prompt documents each value as a `<string or null, ...>` annotation
+        # rather than a literal; substituting null leaves the SHAPE under test.
+        skeleton = re.sub(r"<[^>]*>", "null", template, flags=re.DOTALL)
+
+        assert json.loads(skeleton) == dict.fromkeys(ExtractedInvoiceFields.model_fields)
+
+    def test_prompt_carries_no_doubled_brace(self) -> None:
+        """No ``{{``/``}}`` survives: nothing ever ``format``s this prompt."""
+        assert "{{" not in _FIELD_EXTRACTION_PROMPT
+        assert "}}" not in _FIELD_EXTRACTION_PROMPT
