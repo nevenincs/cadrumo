@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:58f360d4d2aaf6a254536dddf6c48d985f570f4b4d82361a7744daadd4523e29'
+body_hash: 'sha256:df3326887cb340eb626a97063eb63862a680000fe25d02086649a764290bcca1'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -254,6 +254,64 @@ an unrelated invoice model.
 Left entirely alone: all three files are actively held. Noted only so the next
 reader does not attribute the failure to the confirm boundary, which is where its
 symptom surfaces.
+
+### rate-derived-domestic-category | critical | Closed: the plain rated document now grounds, resolved rather than guessed
+
+The open half of the standard-rated finding above is closed, and closing it
+required inventing nothing. Two authorities already ship. One answers which tier
+a declared rate WAS on a given date, against the registered rate records, and
+returns a tuple precisely because that question can have more than one answer, so
+a caller detects ambiguity instead of picking. The other is the single authority
+for which domestic category a tier denotes, promoted after three independent
+copies of that mapping were found. Composing them resolves the ordinary case
+without asserting any legal mapping this sweep authored.
+
+The earlier refusal to invert the category-to-rate direction was still correct.
+The hazard recorded there was real but mis-scoped: RD-ley 4/2024 broke
+tier-to-rate, not rate-to-tier. Measured against the shipped table, no percentage
+maps to two tiers, and the 2 percent and 4 percent super-reducido rates both
+resolve to the same tier.
+
+Three cases decline rather than approximate, each with its own proof. A
+multi-rate document, because one category field cannot hold a two-tier answer and
+that remains a modelling decision. A recargo-bearing document, because such a
+supply may belong to the ordinary domestic tier or to the recargo category and
+the decomposition contract accepts BOTH, so a wrong pick would be caught nowhere
+downstream. And a rate not registered on the issue date, which the lookup reports
+as a real refusal rather than a lookup failure. Declining is visible; a guess
+would not be.
+
+Red observed before green by neutralising the resolution: `AssertionError: the
+21% tier was not resolved from the document: None`. The refusal branch is
+exercised against the real lookup rather than assumed, using a 2023 issue date
+the registered records do not cover, paired with the same draft on a date they do
+so the refusal is attributable to the date rather than to an unusable draft.
+
+One convention is worth stating because it cost two probes to find: the lookup
+takes the rate as a FRACTION, matching how a transaction stores it, not as the
+percentage a document prints. Passing a percentage returns empty, and empty is
+documented as a real refusal, so a caller unaware of the convention reads "not a
+registered rate" for an ordinary 21 percent.
+
+### zero-rate-record-dropped-for-2025-onward | high | Not mine: a rate re-grounding refuses legitimate zero-rated records
+
+Encountered while running the regression after the change above. The Spanish rate
+table was re-grounded to admit the 2024 temporary food rates, which is a correct
+and welcome grounding. In the same pass the standing zero-rate records were
+reduced to a single window covering July to September 2024, so the zero tier is
+now in force only inside that window.
+
+That conflates two different zero rates. The temporary measure is one thing; the
+zero-rate SLOT is what an exempt or intra-community supply carries, and such a
+supply in 2026 is entirely legitimate. Building one now raises `line rate RATE_0
+was not in force on 2026-01-15`, and 26 tests in the invoices suite fail on it.
+
+The direction is fail-closed, so it refuses records rather than under-declaring
+them, which is the safe direction of the two. It is still wrong: a taxpayer with
+an intra-community supply cannot record it. Left entirely alone, as re-grounding
+a rate table is a legal exercise owned by whoever performed it, and the fix is a
+decision about whether the zero SLOT and the temporary zero RATE are one record
+or two.
 
 ## Recommendations
 
