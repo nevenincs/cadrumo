@@ -6,7 +6,6 @@
         "app",
         "ledger",
         "invoice",
-        "catalogue",
         "wizard",
         "--kind",
         "issued",
@@ -33,7 +32,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "invoice_id\t86f7f4a0abb1ddec95074d9ba002cddce7bd6b3a879ddc74d6ed424eb2094d2b\nkind\tissued\ncounterparty_name\tMuenchner Handels GmbH\ncounterparty_tax_id\tDE811569869\ninvoice_number\tF-2026-IC-01\nissued_at\t2026-02-10\ngrand_total\t5000.00\ncurrency\tEUR\noperation_type\tE\nlinked_transaction_ids\t\nalready_existed\tFalse\n"
+      "text": "invoice_id\t86f7f4a0abb1ddec95074d9ba002cddce7bd6b3a879ddc74d6ed424eb2094d2b\nkind\tissued\ncounterparty_name\tMuenchner Handels GmbH\ncounterparty_tax_id\tDE811569869\ninvoice_number\tF-2026-IC-01\nissued_at\t2026-02-10\nbase_total\t5000.00\niva_total\t0.00\ngrand_total\t5000.00\ncurrency\tEUR\noperation_type\tE\ninvoice_class\tORDINARIA\nseries\t\nrectifies_invoice_number\t\nrecargo_amount\t\niva_category\tintra_community_supply\nlinked_transaction_ids\t\nalready_existed\tFalse\n"
     },
     {
       "argv": [
@@ -41,7 +40,6 @@
         "app",
         "ledger",
         "invoice",
-        "catalogue",
         "wizard",
         "--kind",
         "issued",
@@ -68,7 +66,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "invoice_id\t0af0b63e6244ac6a3cc3f4365945d1835730d2985ada6dd9652df59143371209\nkind\tissued\ncounterparty_name\tLyon Services SARL\ncounterparty_tax_id\tFR40123456824\ninvoice_number\tF-2026-IC-02\nissued_at\t2026-03-05\ngrand_total\t3000.00\ncurrency\tEUR\noperation_type\tS\nlinked_transaction_ids\t\nalready_existed\tFalse\n"
+      "text": "invoice_id\t0af0b63e6244ac6a3cc3f4365945d1835730d2985ada6dd9652df59143371209\nkind\tissued\ncounterparty_name\tLyon Services SARL\ncounterparty_tax_id\tFR40123456824\ninvoice_number\tF-2026-IC-02\nissued_at\t2026-03-05\nbase_total\t3000.00\niva_total\t0.00\ngrand_total\t3000.00\ncurrency\tEUR\noperation_type\tS\ninvoice_class\tORDINARIA\nseries\t\nrectifies_invoice_number\t\nrecargo_amount\t\niva_category\tintra_community_service_supply\nlinked_transaction_ids\t\nalready_existed\tFalse\n"
     },
     {
       "argv": [
@@ -135,12 +133,12 @@
           "revision_id": "2020-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "5b1a3542189e",
+          "short_work_unit_id": "2d35589f9d5e",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "300d50b8cf23e3328bfd095cb845fe0700f181278b98c70e07475b1a3542189e"
+          "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e"
         },
         "schema_version": "2",
         "status": "success"
@@ -184,7 +182,7 @@
             "iva-349-declarante-numero-rectificaciones": "0",
             "iva-349-declarante-numero-rectificaciones-adquisicion": "0"
           },
-          "calculation_revision_id": "963aceb15d60baa295c89e07b243765814a61e4c1e2fbf4761ad56d8adafe720",
+          "calculation_revision_id": "d7159496e901411af9512b70bca8fd3abdd3fd563edac2d0a0b1031228a166e9",
           "casilla_values": {
             "decl.importe-operaciones": "8000.00",
             "decl.importe-rectificaciones": "0",
@@ -314,13 +312,13 @@
           "relation_overrides": {},
           "result_summary": [],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 963aceb15d60baa295c89e07b243765814a61e4c1e2fbf4761ad56d8adafe720 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 349 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 963aceb15d60baa295c89e07b243765814a61e4c1e2fbf4761ad56d8adafe720`.",
+          "saved_confirmation": "Saved as draft calculation revision d7159496e901411af9512b70bca8fd3abdd3fd563edac2d0a0b1031228a166e9 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 349 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision d7159496e901411af9512b70bca8fd3abdd3fd563edac2d0a0b1031228a166e9`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "300d50b8cf23e3328bfd095cb845fe0700f181278b98c70e07475b1a3542189e"
+          "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e"
         },
         "schema_version": "2",
         "status": "success"
@@ -361,7 +359,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "963aceb15d60baa295c89e07b243765814a61e4c1e2fbf4761ad56d8adafe720",
+          "calculation_revision_id": "d7159496e901411af9512b70bca8fd3abdd3fd563edac2d0a0b1031228a166e9",
           "completeness_status": "complete",
           "findings": [],
           "granted_verificado_completo": true,
@@ -379,7 +377,7 @@
             "rect.base-anterior"
           ],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "62642d2a4b60383eb20e059a6fe5f66dcc486fd66f47ff9e984201857313a9cd",
+          "verification_report_id": "2a91567e4d5eb98ec14170833ab77d0c9316b70e5ef9529e75282c51d15acb92",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -416,11 +414,11 @@
           "aeat_accepted": false,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "963aceb15d60baa295c89e07b243765814a61e4c1e2fbf4761ad56d8adafe720",
+          "calculation_revision_id": "d7159496e901411af9512b70bca8fd3abdd3fd563edac2d0a0b1031228a166e9",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "f9bee3a181ba1c466f26a6df3ca3f979a13d8dee1ed7635910d25657f5b57513",
+          "filing_record_id": "b367d0e7b5a7e403cfcd30b720f961b13c8eda1176b3696cee0128dd28116f7b",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,
@@ -434,7 +432,7 @@
           "status": "vigente",
           "superseded_at": null,
           "superseded_by_filing_record_id": null,
-          "work_unit_id": "300d50b8cf23e3328bfd095cb845fe0700f181278b98c70e07475b1a3542189e"
+          "work_unit_id": "640a4c074dc06e4238ac45aad87d73d0a3c26458fbe3e1c766bc2d35589f9d5e"
         },
         "schema_version": "2",
         "status": "success"
