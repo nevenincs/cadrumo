@@ -37,6 +37,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Sequence
+from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -364,15 +365,17 @@ def run_evidence_batch(
         )
         rows.append(row)
         if on_item is not None:
-            try:
+            # Progress reporting is incidental to the run; a sink that fails
+            # must not cost the operator results already produced.
+            with suppress(Exception):
                 on_item(row)
-            except Exception:  # noqa: BLE001, S110  # reason: progress reporting must never cost the run its results.
-                pass
 
     return summarise_batch(rows, unresolved)
 
 
-def _ingest_one_batch_item(  # noqa: PLR0913  # reason: every collaborator is an explicit seam; binding them ambiently is what makes a batch untestable.
+# reason: every collaborator is an explicit seam; binding them ambiently is what
+# makes a batch runner untestable without reaching into module globals.
+def _ingest_one_batch_item(
     *,
     bucket_id: str,
     path: Path,
@@ -400,7 +403,7 @@ def _ingest_one_batch_item(  # noqa: PLR0913  # reason: every collaborator is an
 
     try:
         attached = service.add(bucket_id=bucket_id, source_path=path, idempotency_key=identity)
-    except Exception as exc:  # noqa: BLE001  # reason: one document's failure is its own row, never the run's end.
+    except Exception as exc:  # reason: one document's failure is its own row, never the run's end.
         return refused("evidence_refused", str(exc))
 
     evidence_id = attached.record.evidence_id
@@ -420,7 +423,7 @@ def _ingest_one_batch_item(  # noqa: PLR0913  # reason: every collaborator is an
 
     try:
         draft = extract(bucket_id=bucket_id, evidence_id=evidence_id, settings=settings)
-    except Exception as exc:  # noqa: BLE001  # reason: an unreadable document is a refusal row, not a dead run.
+    except Exception as exc:  # reason: an unreadable document is a refusal row, not a dead run.
         return refused("not_readable", str(exc))
 
     try:
@@ -431,7 +434,7 @@ def _ingest_one_batch_item(  # noqa: PLR0913  # reason: every collaborator is an
             extractor=BATCH_DRAFT_EXTRACTOR,
             settings=settings,
         )
-    except Exception as exc:  # noqa: BLE001  # reason: a draft that could not be stored is this item's refusal.
+    except Exception as exc:  # reason: a draft that could not be stored is this item's refusal.
         return refused("draft_not_stored", str(exc))
 
     # A draft carrying an unresolved finding is held rather than reported clean.
