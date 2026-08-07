@@ -800,6 +800,7 @@ application:
           obligatòries: {missing_columns}'
         unsupported_extension: El fitxer d'importació massiva de factures ha de ser
           .csv o .xlsx (s'ha rebut {extension}).
+        unreadable_table: 'El fitxer d''importació massiva de factures no conté cap taula llegible: {detail}'
     creation:
       errors:
         duplicate_invoice: 'Ja existeix una factura amb la mateixa identitat al catàleg:
@@ -6701,6 +6702,7 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    refused_tabular_source_unreadable: 'El fitxer tabular no s''ha pogut descodificar, o no conté cap taula amb fila de capçalera.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'

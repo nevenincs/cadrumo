@@ -750,6 +750,7 @@ application:
           oszlopok: {missing_columns}'
         unsupported_extension: 'A számlák tömeges importálási fájljának .csv vagy
           .xlsx kiterjesztésűnek kell lennie (kapott: {extension}).'
+        unreadable_table: 'A számlák tömeges importálási fájlja nem tartalmaz olvasható táblázatot: {detail}'
     creation:
       errors:
         duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
@@ -6593,6 +6594,7 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
+    refused_tabular_source_unreadable: 'A táblázatos fájlt nem sikerült dekódolni, vagy nem tartalmaz fejlécsorral rendelkező táblázatot.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'

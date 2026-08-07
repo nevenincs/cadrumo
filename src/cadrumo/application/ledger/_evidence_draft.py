@@ -430,6 +430,14 @@ class InvoiceDraft(BaseModel):
             ``None``.
         iva_amount: Labelled IVA cuota amount, or ``None``.
         grand_total: Labelled invoice total amount, or ``None``.
+        regime_legend: The statutory mention the document prints to state that
+            a special regime applies (RD 1619/2012 art. 6.1), copied verbatim,
+            or ``None`` when the document prints none. Transcriptive and
+            anchorable like every other copied field: it carries what the paper
+            says, never a category derived from it. The derivation belongs to
+            the deterministic classifier downstream, because an
+            :class:`~domain.iva.IvaCategory` token is printed on no invoice and
+            a reading stage asked for one would have to infer.
         currency: ISO-4217 code for the currency the amounts are printed in,
             or ``None`` when the document shows no currency marker. Left
             ``None`` rather than defaulted to euro: a foreign-currency
@@ -483,6 +491,7 @@ class InvoiceDraft(BaseModel):
     iva_amount: Decimal | None = None
     grand_total: Decimal | None = None
     currency: str | None = None
+    regime_legend: str | None = None
     recargo_amount: Decimal | None = None
     retencion_rate: Decimal | None = None
     retencion_amount: Decimal | None = None

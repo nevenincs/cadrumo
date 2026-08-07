@@ -804,6 +804,7 @@ application:
           obligatorias: {missing_columns}'
         unsupported_extension: El archivo de importación masiva de facturas debe ser
           .csv o .xlsx (se recibió {extension}).
+        unreadable_table: 'El archivo de importación masiva de facturas no contiene ninguna tabla legible: {detail}'
     creation:
       errors:
         duplicate_invoice: 'Ya existe una factura con la misma identidad en el catálogo:
@@ -6743,6 +6744,7 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    refused_tabular_source_unreadable: 'El archivo tabular no se pudo descodificar, o no contiene ninguna tabla con fila de encabezado.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'

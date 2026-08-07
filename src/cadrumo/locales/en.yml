@@ -724,6 +724,7 @@ application:
           {missing_columns}'
         unsupported_extension: The bulk invoice import file must be .csv or .xlsx
           (got {extension}).
+        unreadable_table: 'The bulk invoice import file carries no readable table: {detail}'
     creation:
       errors:
         duplicate_invoice: 'An invoice with the same identity already exists in the
@@ -6269,6 +6270,7 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    refused_tabular_source_unreadable: 'The tabular file could not be decoded, or carries no table with a header row.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
