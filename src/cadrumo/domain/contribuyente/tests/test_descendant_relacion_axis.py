@@ -20,6 +20,7 @@ structural coverage.
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -458,7 +459,7 @@ class TestGuardaYCustodiaJudicial:
     """
 
     @staticmethod
-    def _child(**kwargs: object) -> DescendantInfo:
+    def _child(**kwargs: Any) -> DescendantInfo:
         return DescendantInfo(
             birth_date=_OLD_BIRTH,
             relacion=DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL,

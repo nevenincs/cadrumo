@@ -20,6 +20,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -145,7 +146,7 @@ def _linked(
     *,
     cash: str = "1060.00",
     retention_rate: str = "0.15",
-    **invoice_kwargs: object,
+    **invoice_kwargs: Any,
 ) -> tuple[TransactionCatalogue, InvoiceCatalogue]:
     transaction = _transaction(cash=cash)
     invoice = _invoice(

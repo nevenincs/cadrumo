@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -48,7 +49,7 @@ def _revision(*bindings: DataBindingDefinition) -> ModeloRevision:
     return _modelo_349_revision().model_copy(update={"bindings": bindings})
 
 
-def _with_selector(binding: DataBindingDefinition, **updates: object) -> DataBindingDefinition:
+def _with_selector(binding: DataBindingDefinition, **updates: Any) -> DataBindingDefinition:
     return binding.model_copy(update={"selector": {**selector_as_dict(binding), **updates}})
 
 
