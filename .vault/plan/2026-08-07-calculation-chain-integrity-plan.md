@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:b031ce786b2226b5dd7eac3e71233b4231cb23038437ba002cc2a9f43a3f03d9'
+body_hash: 'sha256:5be029a11ddc43e24cd5927a95ee117c3dc6020185e89c72a70af28e08c0286a'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -84,7 +84,7 @@ Fully grounded work correctly waiting on an operator ruling. No code moves here 
 Track the classifier disposition and the shared-index decision against the records that already carry them, without opening competing ones.
 
 - [x] `W04.P06.S14` - Attach the classify_iva disposition to question one of the llm-invoice-read-reconciliation ADR rather than opening a competing record; `.vault/adr/2026-08-06-llm-invoice-read-reconciliation-adr.md`.
-- [ ] `W04.P06.S15` - Fix the R13 wrong-clave mapping with its own M349-surface gate, required only if the ruling makes the classifier wireable; `src/cadrumo/domain/iva/_classification.py`.
+- [x] `W04.P06.S15` - Gate the M349 clave against the classifier that feeds it - re-testing the blocker showed the ruling gates a different question, because R13 already resolves to the services acquisition category and the clave table already files it under I. What was missing is the join, since one suite proves R13 reaches the category and another proves the category maps to I while nothing runs the chain, so re-pointing R13 at goods would leave both green and file every acquired service as an adquisicion de bienes. Mutation-proven and reverted, with a positive control against the two categories being collapsed; `src/cadrumo/application/invoices/tests/`.
 - [x] `W04.P06.S30` - Correct the pending ruling's premise, question one reasons from a single closed rate-to-category mapping while three exist and only one is the invoice-path mapping it means; `.vault/adr/2026-08-06-llm-invoice-read-reconciliation-adr.md`.
 
 ## Wave `W05` - Full-suite failure triage
