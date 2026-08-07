@@ -56,7 +56,7 @@ BULK_IMPORT_FIELD_BY_ROLE: dict[FieldRole, str] = {
     FieldRole.INVOICE_DATE: "invoice_date",
     FieldRole.TAXABLE_BASE: "taxable_base",
     FieldRole.IVA_RATE: "iva_rate",
-    FieldRole.RETENCION_AMOUNT: "retention_amount",
+    FieldRole.RETENCION_AMOUNT: "retencion_amount",
     FieldRole.CURRENCY: "currency",
     FieldRole.COUNTRY_CODE: "country_code",
     FieldRole.NOTES: "notes",

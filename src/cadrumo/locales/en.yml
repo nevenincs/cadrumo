@@ -1931,6 +1931,7 @@ cli:
           exists (%{invoice_id}); nothing was created.'
         yes_help: Confirm deleting the invoice
         yes_required: Pass --yes to delete an invoice
+        import_column_role_not_applied: 'a proposed column role was not applied: {detail}'
       prorrata:
         activity_code_help: CNAE / IAE activity code grouped into this sector (repeatable,
           at least one).
@@ -3696,11 +3697,13 @@ cli:
       report:
         help: Report measured hardware, the model selected per role, and whether it
           can be loaded now.
-      role_help: cli.config.provision.role_help
+      role_help: Model role to act on (vision transcription, text extraction, tabular
+        mapping).
       verify:
         help: Verify a model is loaded and answers a trivial prompt within a time
           bound.
-        model_help: cli.config.provision.verify.model_help
+        model_help: Runtime identifier of the model to verify. Defaults to the model
+          selected for the role.
     recover:
       errors:
         recovery_code_rejected: The recovery code did not open the recovery wrapper;
@@ -5633,7 +5636,6 @@ errors:
     fail_llm_provider: The language-model provider returned an unrecoverable error.
     fail_llm_rate_limit: The language-model provider rejected the request due to rate
       limits. Wait a few minutes and try again.
-    fail_locale_manager: An error occurred while managing or parsing the locale files.
     fail_manuals_manual_parse: A manual record failed schema validation.
     fail_mcp_launch: The MCP server could not be launched.
     fail_modelo_calculation_revision_persistence: The calculation-revision catalogue

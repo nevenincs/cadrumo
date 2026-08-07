@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import ast
 import io
+import re
 import tokenize
 import tomllib
 from functools import cache
@@ -29,10 +30,14 @@ import pytest
 from ._inventory import PROJECT_TEST_ROOTS, ast_for_path, project_test_modules, repo_relative
 from ._marker_metadata_patterns import CAMPAIGN_METADATA_CASES as _CAMPAIGN_METADATA_CASES
 from ._marker_metadata_patterns import CAMPAIGN_METADATA_PATTERNS as _CAMPAIGN_METADATA_PATTERNS
+from ._marker_metadata_patterns import PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES as _PRODUCTION_SCOPED_CASES
+from ._marker_metadata_patterns import PRODUCTION_SCOPED_CAMPAIGN_METADATA_PATTERNS as _PRODUCTION_SCOPED_PATTERNS
 from ._marker_metadata_patterns import PROCESS_PLAN_CASE as _PROCESS_PLAN_CASE
 from ._marker_metadata_patterns import PROCESS_SYMBOL_METADATA_CASES as _PROCESS_SYMBOL_METADATA_CASES
 from ._marker_metadata_patterns import PROCESS_SYMBOL_METADATA_PATTERNS as _PROCESS_SYMBOL_METADATA_PATTERNS
 from ._marker_metadata_patterns import RETIRED_SCRAMBLED_PLAN_PATTERN as _RETIRED_SCRAMBLED_PLAN_PATTERN
+from ._marker_metadata_patterns import MarkerScanScope as _MarkerScanScope
+from ._marker_metadata_patterns import PatternCase as _PatternCase
 from ._marker_metadata_patterns import assert_cases_discriminate as _assert_cases_discriminate
 from ._marker_metadata_patterns import campaign_metadata_scan_text as _campaign_metadata_scan_text
 
@@ -319,7 +324,18 @@ def _campaign_metadata_violations_for_ranges(
     path: Path,
     source: str,
     ranges: set[tuple[int, int]],
+    patterns: tuple[re.Pattern[str], ...] = _CAMPAIGN_METADATA_PATTERNS,
 ) -> list[str]:
+    """Return process-metadata hits in the comments and docstrings of one module.
+
+    The single scan mechanism for both module populations. ``patterns`` is the
+    caller's scope selection — the whole table for a test module, the
+    production-scoped subset for ordinary source — so widening a family's reach
+    is a declaration on the pattern rather than a second walk over the tree. A
+    parallel production scanner would be free to drift in its tokenisation, its
+    docstring-range derivation and its noqa handling, and every such drift is
+    invisible from the outside because both shapes report an empty list.
+    """
     if path.relative_to(_REPO_ROOT) in _VAULT_PIPELINE_SELF_TEST_MODULES:
         return []
     violations: list[str] = []
@@ -331,7 +347,7 @@ def _campaign_metadata_violations_for_ranges(
         if not inspect_token:
             continue
         token_text = _campaign_metadata_scan_text(token.string)
-        for pattern in _CAMPAIGN_METADATA_PATTERNS:
+        for pattern in patterns:
             if pattern.search(token_text):
                 relative = path.relative_to(_REPO_ROOT)
                 violations.append(f"{relative}:{token.start[0]}: {token.string.strip()[:160]}")
@@ -825,6 +841,47 @@ def _production_live_test_opt_in_violations() -> list[str]:
     return violations
 
 
+def _discover_production_modules() -> list[Path]:
+    """Return every shipped non-test module under ``src/cadrumo``.
+
+    The production half of the metadata scan's corpus. Test infrastructure is
+    excluded by :func:`_is_test_infrastructure_path`, which is also what keeps
+    :mod:`._marker_metadata_patterns` out: that module is the pattern table
+    itself, so its own literals are scan DATA rather than a leak, and it splits
+    every token across a concatenation for exactly that reason.
+
+    Scoped to the shipped package rather than the whole repository. ``dev``,
+    ``docs`` and ``packaging`` are development scaffolding whose own subject is
+    frequently the authoring pipeline; the "Code Stands Alone" mandate is about
+    what ships.
+    """
+    return sorted(path for path in _SRC_CADRUMO.rglob("*.py") if not _is_test_infrastructure_path(path))
+
+
+def _production_campaign_metadata_violations() -> list[str]:
+    """Return production-scoped process-metadata hits across the shipped package."""
+    violations: list[str] = []
+    scanned = 0
+    for path in _discover_production_modules():
+        scanned += 1
+        try:
+            source = _source_for_path(path)
+            ranges = _docstring_ranges(path)
+            violations.extend(
+                _campaign_metadata_violations_for_ranges(path, source, ranges, _PRODUCTION_SCOPED_PATTERNS),
+            )
+        except (SyntaxError, tokenize.TokenError):  # pragma: no cover - defensive
+            continue
+    # Floor the walk for the same reason the live-test-opt-in scan floors its
+    # own: a package relocation would empty this corpus, and an empty corpus
+    # reports precisely what a clean one reports.
+    assert scanned > 1000, (
+        f"scanned only {scanned} production modules; the production scan corpus collapsed, so an "
+        "empty violation list would mean 'nothing was checked' rather than 'nothing is wrong'"
+    )
+    return violations
+
+
 _MODULES = _discover_test_modules()
 
 
@@ -1200,6 +1257,123 @@ def test_source_test_symbol_names_and_ids_do_not_reference_process_metadata(
     """Durable test names and pytest ids must not carry process metadata."""
     violations = marker_policy_inventory.process_symbol_metadata_violations
     assert not violations, "process metadata remains in test symbols/ids:\n" + "\n".join(violations)
+
+
+def test_production_source_does_not_cite_dated_vault_documents() -> None:
+    """Shipped source must not name a dated record from this repo's own vault.
+
+    The citation direction is one-way: a vault document cites code by locator,
+    and code never cites the vault. Every other pattern in the table stays
+    test-scoped; this check is the dated-document-stem family only, because
+    that is the only shape measured at a zero false-positive rate over real
+    production source.
+    """
+    violations = _production_campaign_metadata_violations()
+    assert not violations, (
+        "production modules must not name a dated vault document:\n" + "\n".join(violations)
+    )
+
+
+def test_production_scan_corpus_reaches_the_shipped_package() -> None:
+    """Proves the production walk is a real corpus, not an empty one.
+
+    An empty walk and a clean walk both report no violations, so the corpus is
+    asserted directly: it must be large, it must exclude test infrastructure,
+    and it must contain modules from the layers the mandate is about.
+    """
+    corpus = _discover_production_modules()
+
+    assert len(corpus) > 1000, f"the production corpus collapsed to {len(corpus)} modules"
+    assert not [path for path in corpus if _is_test_infrastructure_path(path)]
+    # The pattern table is scan DATA, and its deliberately split literals would
+    # otherwise read as leaks. It is excluded by being test infrastructure.
+    assert _SRC_CADRUMO / "tests" / "_marker_metadata_patterns.py" not in corpus
+    relative_parts = {path.relative_to(_SRC_CADRUMO).parts[0] for path in corpus}
+    assert {"adapters", "application", "core", "domain", "entrypoints"} <= relative_parts
+
+
+def test_production_scan_detects_a_dated_stem_citation_in_production_source() -> None:
+    """The widened scope detects in production what it previously could not see.
+
+    Run through the real scanner against a module docstring of exactly the
+    shape that shipped in production source before this scope existed. The
+    same source scanned with an empty pattern selection is the negative
+    control: the detection is the scope's doing, not the walker's.
+    """
+    probe_path = _SRC_CADRUMO / "domain" / "_scope_probe.py"
+    source = (
+        '"""Ledger binding contract.\n'
+        "\n"
+        "Governed by 2026-05-27-schema-hardening-casilla-continuity-contract-adr.\n"
+        '"""\n'
+        "\n"
+        "VALUE = 1\n"
+    )
+    ranges = _docstring_ranges_for_tree(ast.parse(source))
+
+    detected = _campaign_metadata_violations_for_ranges(probe_path, source, ranges, _PRODUCTION_SCOPED_PATTERNS)
+    undetected = _campaign_metadata_violations_for_ranges(probe_path, source, ranges, ())
+
+    assert len(detected) == 1, f"the production-scoped scan missed the citation: {detected}"
+    assert "continuity-contract-adr" in detected[0]
+    assert not undetected, "the walker alone reported the citation, so the scope proves nothing"
+
+
+def test_production_scope_excludes_the_families_that_false_fire_on_domain_prose() -> None:
+    """The noisy families stayed test-scoped, and stayed live in tests.
+
+    Each probe is asserted BOTH ways. Absent from production proves the
+    widening was per-family rather than global; present in the full table
+    proves the exclusion is a scope decision rather than a pattern that has
+    quietly stopped matching anything at all.
+    """
+    test_scoped_only = (
+        "the second wave landed",
+        "phase-2 rollout",
+        "landed in PR",
+        "recorded in the ADR",
+        "Ste" + "p 4 of the campaign",
+        "carried in W01.P02.S03",
+        "cite .vault/plan/x",
+    )
+    for probe in test_scoped_only:
+        assert any(pattern.search(probe) for pattern in _CAMPAIGN_METADATA_PATTERNS), (
+            f"{probe!r} is matched by no pattern at all, so its exclusion from production measures nothing"
+        )
+        assert not any(pattern.search(probe) for pattern in _PRODUCTION_SCOPED_PATTERNS), (
+            f"{probe!r} reached the production scope; only the dated-document-stem family was widened"
+        )
+
+    # Real domain prose from the shipped tree that the noisy families flag and
+    # the production scope must never see: a Spanish tax-law citation, a
+    # custody protocol describing itself as two-phase, and a bare constraint
+    # statement naming no document.
+    domain_prose = (
+        "RD-ley 4/2024 phase-out",
+        "Two-phase like :func:`recovery_create`",
+        "needs a superseding ADR",
+    )
+    for probe in domain_prose:
+        assert not any(pattern.search(probe) for pattern in _PRODUCTION_SCOPED_PATTERNS), (
+            f"legitimate domain prose {probe!r} would be reported against production source"
+        )
+
+
+def test_production_scoped_cases_are_derived_from_the_declared_scope() -> None:
+    """The production subset is the table filtered by its own scope field.
+
+    A hand-maintained second list is the drift this derivation removes, and
+    the drift is silent in the direction that matters: a case widened at its
+    declaration but missing from the subset is never applied to production and
+    reports a clean tree.
+    """
+    assert _PRODUCTION_SCOPED_CASES, "no case is production-scoped, so the production scan is vacuous"
+    assert set(_PRODUCTION_SCOPED_CASES) <= set(_CAMPAIGN_METADATA_CASES)
+    assert set(_PRODUCTION_SCOPED_CASES) == {
+        case for case in _CAMPAIGN_METADATA_CASES if case.scope is _MarkerScanScope.TEST_AND_PRODUCTION_MODULES
+    }
+    # A new case arrives at the narrower reach unless its author says otherwise.
+    assert _PatternCase(re.compile("x"), ("x",), ("y",)).scope is _MarkerScanScope.TEST_MODULES
 
 
 def test_discovery_found_modules() -> None:

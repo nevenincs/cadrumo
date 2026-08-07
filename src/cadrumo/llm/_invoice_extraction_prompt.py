@@ -55,6 +55,7 @@ from __future__ import annotations
 
 import re
 from decimal import Decimal
+from functools import lru_cache
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
@@ -66,19 +67,38 @@ from ._invoice_field_contract import (
     INVOICE_FIELD_CONTRACTS,
     anchor_key_for_field,
 )
+from ._models import PromptDefinition, PromptRegistry
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
 __all__ = [
+    "INVOICE_EXTRACTION_PROMPT_ID",
+    "INVOICE_EXTRACTION_PROMPT_VERSION",
     "PROMPT_TEMPLATE",
     "CompiledInvoiceExtractionPrompt",
     "build_invoice_extraction_prompt",
     "default_extraction_period",
+    "invoice_extraction_prompt_registry",
     "template_numeric_literals",
 ]
 
 _FINGERPRINT_LENGTH: Final[int] = 12
+
+INVOICE_EXTRACTION_PROMPT_ID: Final[str] = "ledger-invoice-extraction"
+"""Registry id of the pre-substitution extraction template."""
+
+INVOICE_EXTRACTION_PROMPT_VERSION: Final[int] = 1
+"""Version of the registered template.
+
+Bumped when the template's INSTRUCTIONS change -- a new field, a changed rule, a
+different response shape -- never when the values substituted into it move. The
+two are different facts and are carried separately:
+:attr:`CompiledInvoiceExtractionPrompt.template_version` says which instructions
+were issued, and :attr:`CompiledInvoiceExtractionPrompt.fingerprint` says which
+compiled text a model actually received. An integer cannot express the second,
+which is why registering the template does not replace the fingerprint.
+"""
 
 # The only digits the template may carry: a standards identifier, not a
 # regulatory value. Allowlisted as a whole token with its reason stated, per
@@ -140,12 +160,17 @@ class CompiledInvoiceExtractionPrompt(BaseModel):
         fingerprint: Short content hash of :attr:`text`. Two prompts compiled
             from different registry values differ here, which is what makes the
             stamp discriminating.
+        template_version: Which registered template version issued the
+            instructions. Distinct from :attr:`fingerprint`, which moves whenever
+            any substituted value moves; this moves only when the instructions
+            themselves change.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     text: str = Field(min_length=1)
     period: Period
+    template_version: int = Field(ge=1)
     iva_rate_pcts: tuple[Decimal, ...]
     retencion_rate_pcts: tuple[Decimal, ...]
     fingerprint: str = Field(min_length=_FINGERPRINT_LENGTH, max_length=_FINGERPRINT_LENGTH)
@@ -158,6 +183,38 @@ class CompiledInvoiceExtractionPrompt(BaseModel):
             The token a reader folds into its ``decided_by`` stamp.
         """
         return f"{self.period.filing_year}-{self.period.code}-{self.fingerprint}"
+
+
+@lru_cache(maxsize=1)
+def invoice_extraction_prompt_registry() -> PromptRegistry:
+    """Return the registry holding the pre-substitution extraction template.
+
+    The template is versioned prompt metadata, which is exactly what
+    :class:`~adapters.outbound.llm.PromptRegistry` already stores -- so it is
+    registered there rather than reachable only as a module constant. The
+    compiler then asks the registry for its template instead of closing over one,
+    which is what lets the id and version travel onto the compiled artefact.
+
+    Cached because the registered definition is immutable: rebuilding it per call
+    would mint an equal object and lose the identity a caller can compare.
+
+    Returns:
+        :class:`~adapters.outbound.llm.PromptRegistry`: A registry carrying the
+        extraction template at :data:`INVOICE_EXTRACTION_PROMPT_VERSION`.
+    """
+    registry = PromptRegistry()
+    registry.register(
+        PromptDefinition(
+            id=INVOICE_EXTRACTION_PROMPT_ID,
+            version=INVOICE_EXTRACTION_PROMPT_VERSION,
+            template=PROMPT_TEMPLATE,
+            expected_output_schema=None,
+            description=(
+                "Read one invoice document into typed fields, each beside the verbatim printed anchor it was read from."
+            ),
+        ),
+    )
+    return registry
 
 
 def default_extraction_period() -> Period:
@@ -189,16 +246,22 @@ def template_numeric_literals(template: str | None = None) -> tuple[str, ...]:
     production code instead of re-implementing the scan it is checking.
 
     Args:
-        template: Template text to scan. ``None`` reads :data:`PROMPT_TEMPLATE`
+        template: Template text to scan. ``None`` reads the REGISTERED template
             AT CALL TIME rather than defaulting to it in the signature: a
             default argument is evaluated once at import, so the scan would hold
             a snapshot and keep reporting clean over a template that had since
-            gained a literal -- which a mutation probe caught it doing.
+            gained a literal -- which a mutation probe caught it doing. Reading
+            it from the registry rather than from the constant keeps the scan
+            pointed at the text the compiler will actually use.
 
     Returns:
         The numeric literals found, in order. Empty is the passing state.
     """
-    scanned = PROMPT_TEMPLATE if template is None else template
+    scanned = (
+        invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID).template
+        if template is None
+        else template
+    )
     for token in _NON_NUMERIC_TOKEN_ALLOWLIST:
         scanned = scanned.replace(token, "")
     return tuple(match.group(0) for match in _NUMERIC_LITERAL_RE.finditer(scanned))
@@ -304,9 +367,10 @@ def build_invoice_extraction_prompt(*, period: Period) -> CompiledInvoiceExtract
         PeriodError: When ``period`` carries no calendar span, so no rate window
             can be resolved against it.
     """
+    definition = invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID)
     iva_rate_pcts = _iva_rate_pcts_for(period)
     retencion_rate_pcts = _retencion_rate_pcts()
-    text = PROMPT_TEMPLATE.format(
+    text = definition.template.format(
         anchor_suffix=ANCHOR_KEY_SUFFIX,
         field_lines=_field_lines(),
         iva_rates=_join_pcts(iva_rate_pcts),
@@ -320,4 +384,5 @@ def build_invoice_extraction_prompt(*, period: Period) -> CompiledInvoiceExtract
         iva_rate_pcts=iva_rate_pcts,
         retencion_rate_pcts=retencion_rate_pcts,
         fingerprint=sha256_hex(text.encode("utf-8"))[:_FINGERPRINT_LENGTH],
+        template_version=definition.version,
     )

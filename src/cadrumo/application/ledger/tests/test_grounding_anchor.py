@@ -16,6 +16,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ....core.decimal import coerce_finite_european_decimal
 from .._closure_findings import closure_findings
 from .._document_transcription import DocumentTranscription, TranscriberIdentity
 from .._evidence import MediaKind
@@ -27,6 +28,7 @@ from .._grounding_anchor import (
     ground_anchored_value,
     ground_self_reported_anchor,
     normalise_for_anchor_search,
+    strip_printed_unit,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -532,3 +534,83 @@ def test_the_anchor_check_alone_is_not_the_anti_fabrication_guarantee() -> None:
     kinds = {finding.kind for finding in closure_findings(obeyed)}
 
     assert DraftDiscrepancyKind.ARITHMETIC_CLOSURE in kinds, "the second leg must catch what the anchor cannot"
+
+
+# ---------------------------------------------------------------------------
+# The printed unit: a rate anchor must support its bare value
+# ---------------------------------------------------------------------------
+
+_RATE_TEXT = "IVA 21% sobre 766,30 160,92\nRetencion IRPF 15 % 114,95\nTOTAL 890,00 EUR\n"
+
+
+@pytest.mark.parametrize(
+    ("anchor", "value"),
+    [
+        ("21%", Decimal("21")),
+        ("15 %", Decimal("15")),
+    ],
+)
+def test_a_rate_anchor_carrying_its_printed_unit_supports_the_bare_value(
+    anchor: str,
+    value: Decimal,
+) -> None:
+    """The case the module docstring calls intended, asserted rather than assumed.
+
+    Without the unit strip this reported CONTRADICTED: the anchor was found, the
+    decimal authority returned ``None`` on the percent sign, and the checker
+    announced a contradiction on a rate the reader read correctly. That punishes
+    the reader that copied more literally -- which is exactly what the field-form
+    contract asks it to do.
+    """
+    evaluation = evaluate_anchor(
+        value=value,
+        anchor=anchor,
+        transcription=_transcription(_RATE_TEXT),
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
+    assert evaluation.parsed_anchor == value
+
+
+def test_a_genuine_contradiction_on_a_rate_anchor_still_reports_contradicted() -> None:
+    """Positive control: the unit strip must not become "accept everything".
+
+    A reader citing ``21%`` for a value of 99 is contradicted, and must stay so.
+    """
+    evaluation = evaluate_anchor(
+        value=Decimal("99"),
+        anchor="21%",
+        transcription=_transcription(_RATE_TEXT),
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.CONTRADICTED
+    assert evaluation.parsed_anchor == Decimal("21")
+
+
+def test_only_one_trailing_unit_is_stripped() -> None:
+    """A doubled or embedded unit is a misread, not a unit, and still fails."""
+    assert strip_printed_unit("21%") == "21"
+    assert strip_printed_unit("15 %") == "15"
+    assert strip_printed_unit("21 percent") == "21"
+    assert strip_printed_unit("766,30") == "766,30"
+    # Exactly one: the remainder must still satisfy the decimal authority alone.
+    assert coerce_finite_european_decimal(strip_printed_unit("21%%")) is None
+    assert coerce_finite_european_decimal(strip_printed_unit("2%1")) is None
+
+
+def test_the_envelope_keeps_the_verbatim_unit_bearing_anchor() -> None:
+    """The strip applies to the PARSE, never to what is recorded.
+
+    Anchor and value stay explicitly distinct, so a transcription error cannot be
+    laundered into a computed figure by collapsing them into one field.
+    """
+    envelope = ground_anchored_value(
+        field="iva_rate",
+        value=Decimal("21"),
+        anchor="21%",
+        origin=FieldOrigin.TEXT_LAYER,
+        transcription=_transcription(_RATE_TEXT),
+    )
+
+    assert envelope.grounding is FieldGroundingOutcome.ANCHORED
+    assert envelope.anchor == "21%", "the printed form must survive verbatim"

@@ -27,6 +27,14 @@ is NOT required to be byte-identical to the anchor -- anchor ``21%`` with value
 would make the whole apparatus useless for every field that needs parsing, which
 is every monetary field.
 
+Exactly one trailing UNIT marker is removed before that parse
+(:func:`strip_printed_unit`). Without it the percentage form inverted: ``21%``
+found in the document, ``coerce_finite_european_decimal`` returning ``None`` on
+the percent sign, and the checker reporting CONTRADICTION on a rate the reader
+read correctly -- punishing the reader that copied more literally, which is what
+the field-form contract asks for. A wrong verdict is worse than an absent one,
+because an absent verdict prompts review and a wrong one forecloses it.
+
 The parse is :func:`~core.decimal.coerce_finite_european_decimal`, the repository's
 one extraction-side decimal contract, reused rather than re-spelled. It drops an
 ambiguous thousands reading instead of guessing, which is exactly the behaviour
@@ -87,6 +95,7 @@ __all__ = [
     "ground_anchored_value",
     "ground_self_reported_anchor",
     "normalise_for_anchor_search",
+    "strip_printed_unit",
 ]
 
 #: Characters a PDF text layer routinely substitutes for an ordinary space.
@@ -108,6 +117,42 @@ _WHITESPACE_RUN = re.compile(r"\s+")
 #: in ``,00`` -- which turned D4's structural anti-fabrication check into an
 #: assertion that the digits appear *somewhere*.
 _NUMBER_CONTINUATION = frozenset("0123456789.,")
+
+
+#: Unit markers a document prints AFTER a rate. Stripped from the anchor before
+#: the decimal parse, exactly one, mirroring the reader-side rule.
+_TRAILING_UNIT_MARKERS = ("%", "percent", "pct")
+
+
+def strip_printed_unit(anchor: str) -> str:
+    """Return *anchor* with exactly one trailing unit marker removed.
+
+    A percent sign is a UNIT, not a digit. A document prints ``IVA (21%)`` and a
+    reader obeying "copy exactly as printed" cites ``21%`` as the anchor for the
+    value ``21`` -- which is the correct, more literal reading. Passing that
+    string straight to the decimal authority returns ``None``, so the anchor was
+    found, the parse failed, and the check reported CONTRADICTION on a field the
+    reader got right. That verdict is worse than no provenance at all: an absent
+    verdict prompts review, a wrong one forecloses it.
+
+    Exactly ONE trailing marker is removed and the remainder must still satisfy
+    the decimal authority on its own, so ``21%%`` or ``2%1`` still fail. The
+    stripping applies only to the anchor's PARSE; the envelope keeps the
+    verbatim printed form, so anchor and value stay explicitly distinct and a
+    transcription error cannot be laundered into a computed figure.
+
+    Args:
+        anchor: The verbatim printed form.
+
+    Returns:
+        The anchor with one trailing unit marker removed, or unchanged.
+    """
+    text = anchor.strip()
+    lowered = text.lower()
+    for unit in _TRAILING_UNIT_MARKERS:
+        if lowered.endswith(unit):
+            return text[: -len(unit)].strip()
+    return text
 
 
 def _is_numeric_edge(character: str) -> bool:
@@ -250,7 +295,7 @@ def evaluate_anchor(
             detail=f"anchored to {anchor!r}",
         )
 
-    parsed = coerce_finite_european_decimal(anchor)
+    parsed = coerce_finite_european_decimal(strip_printed_unit(anchor))
     if parsed is None:
         return AnchorEvaluation(
             outcome=FieldGroundingOutcome.CONTRADICTED,

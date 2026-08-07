@@ -438,6 +438,20 @@ ignore_imports =
     # obligation, so the constraint has to live where the projection does --
     # which means consuming the adapter's record type here.
     cadrumo.application.ledger._aeat_record_projection -> cadrumo.adapters.inbound.einvoice
+    # Same shape, same reason. An invoice book arrives in a dialect nobody
+    # controls -- delimiter, decimal convention, encoding, a metadata preamble,
+    # an appended TOTAL row -- and resolving that is reading an externally-
+    # authored format, which is inbound-adapter work. This module consumes the
+    # answer (a typed table) and never parses a byte itself. Pinned per origin
+    # rather than by widening the contract, so a NEW application module reaching
+    # the financial adapter still fails loudly.
+    #
+    # Worth revisiting rather than growing: this module ALSO reads .xlsx through
+    # openpyxl directly, so its file-reading half is arguably misplaced and the
+    # whole of it is a relocation candidate into adapters.inbound. That is a
+    # larger move than the Step that added this edge, and is recorded rather
+    # than attempted here.
+    cadrumo.application.invoices._bulk_import -> cadrumo.adapters.inbound.financial
     cadrumo.application.filing._history_repository -> cadrumo.adapters.**
     cadrumo.application.filing._import -> cadrumo.adapters.**
     cadrumo.application.filing._runtime_repository -> cadrumo.adapters.**

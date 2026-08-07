@@ -107,9 +107,21 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "text casilla). Routing it through the strict grammar would make the "
         "guard more permissive, letting a mis-routed '1e3' past it."
     ),
-    ("application/ledger/_evidence_draft.py", "_find_iva_rate"): (
-        "Deliberately tolerant OCR rate scrape; returns None on failure. Same "
-        "machine-produced-text posture as _parse_labelled_amount above."
+    ("application/calculations/_foreign_asset_redeclaration.py", "_decimal_or_none"): (
+        "Modelo 720/721 valuation read, and filing-grade, so the provenance was "
+        "traced to both its callers rather than assumed. Neither can carry the "
+        "ambiguous shape. The casilla caller reads "
+        "revision.input_values_by_casilla_id, whose only non-empty writer is the "
+        "calculate replay payload and which stores canonical_decimal_string(...) "
+        "output -- that normalises 1E+3 to '1000' and 1.000 to '1', so neither "
+        "an exponent nor a thousands-ambiguous spelling can be persisted. The "
+        "row caller reads row_binding_values, written by the same serialiser "
+        "from Modelo720RowObservation.valuation_amount, a typed non-negative "
+        "Decimal. Upstream of both, the CLI boundary already refuses the shape: "
+        "try_parse_canonical_decimal returns None for '1.000', '12.500', "
+        "'1.234' and '999.999' even with the fraction cap off (measured), "
+        "because the ambiguity test is independent of the cap. The external "
+        "import path writes an empty dict and contributes nothing."
     ),
     ("application/aggregation/_atribucion_member.py", "_decimal"): (
         "Typed isinstance dispatch over an already-persisted profile fact; the "
@@ -183,6 +195,29 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
     ("domain/calculations/registry/_workbook_parity.py", "_registry_decimal_value"): (
         "Typed dispatch over an already-validated synthetic parity input; the "
         "boolean and int arms raise or convert before any text is parsed."
+    ),
+    # --- surfaced when the isinstance-str narrowing reached rule 3. Every one
+    # is a pydantic mode="before" validator re-hydrating a Decimal THIS
+    # application serialised, so the text is its own canonical dot-decimal
+    # output and no separator reading is in question. They are one shape, and
+    # they are listed individually rather than as a file-wide waiver so a new
+    # bad call in any of these files still fails.
+    ("domain/calculations/registry/_bindings.py", "_decimal_from_json_string"): (
+        "Re-hydrates a casilla observation's Decimal from the JSON this "
+        "application wrote; raises RegistryValidationError on a non-numeric."
+    ),
+    ("domain/iva/_schema.py", "_coerce_decimal_field"): (
+        "Re-hydrates cash-accounting payment evidence from "
+        "Envelope[Transaction].model_validate_json, whose string form this "
+        "application serialised."
+    ),
+    ("domain/transactions/_models.py", "_coerce_inbound"): (
+        "Same JSON re-hydration for the classification confidence and "
+        "business_pct fields, from the app's own persisted envelope."
+    ),
+    ("domain/transactions/_models.py", "_coerce_decimal_field"): (
+        "Same JSON re-hydration as its _coerce_inbound sibling above, on the "
+        "model's own Decimal fields."
     ),
     ("domain/deadlines/_profiles.py", "_parse_decimal"): (
         "Reads canonical profile facts already persisted, so the text grammar "

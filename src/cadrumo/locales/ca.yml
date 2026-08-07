@@ -2071,6 +2071,7 @@ cli:
           amb aquesta identitat (%{invoice_id}); no s''ha creat res.'
         yes_help: Confirma l'eliminació de la factura
         yes_required: Has de passar --yes per eliminar una factura
+        import_column_role_not_applied: 'no s''ha aplicat un rol de columna proposat: {detail}'
       prorrata:
         activity_code_help: Codi d'activitat CNAE / IAE agrupat en aquest sector (repetible,
           com a mínim un).
@@ -3956,7 +3957,8 @@ cli:
       role_help: Funció del model sobre la qual actuar (transcripció d'imatges, extracció
         de text, mapatge tabular).
       verify:
-        help: cli.config.provision.verify.help
+        help: Verifica que un model està carregat i respon una consulta trivial dins
+          d'un límit de temps.
         model_help: Identificador del model que es verificarà. Per defecte, el model
           seleccionat per a la funció.
     recover:
@@ -6022,7 +6024,6 @@ errors:
     fail_llm_provider: El proveïdor del model de llenguatge ha retornat un error irrecuperable.
     fail_llm_rate_limit: El proveïdor del model de llenguatge ha rebutjat la sol·licitud
       per límit d'ús. Espera uns minuts i torna-ho a provar.
-    fail_locale_manager: S'ha produït un error en gestionar o llegir els fitxers d'idioma.
     fail_manuals_manual_parse: Un registre de manual no ha superat la validació de
       l'esquema.
     fail_mcp_launch: No s'ha pogut iniciar el servidor MCP.

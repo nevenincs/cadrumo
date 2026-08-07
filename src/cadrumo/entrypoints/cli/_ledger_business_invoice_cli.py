@@ -698,7 +698,8 @@ def invoice_import(
             ),
         )
     try:
-        source = read_bulk_invoice_import_source(file, mapper=_invoice_column_role_mapper())
+        mapper, mapping_reasons = _invoice_column_role_mapper()
+        source = read_bulk_invoice_import_source(file, mapper=mapper)
         result = import_invoices_from_rows(source, bucket_id=bucket_id, kind=kind)
     except InvoiceValidationError as exc:
         raise _bad(str(exc)) from exc
@@ -731,6 +732,25 @@ def invoice_import(
                 code="ledger.invoice.catalogue.import.unmapped_columns",
                 message=message,
                 context={"columns": headers, "count": str(len(unmapped))},
+            ),
+        )
+    for index, reason in enumerate(mapping_reasons):
+        # The positional mapping carries roles only, so a token the allow-list
+        # refused would otherwise reach the operator as nothing more than
+        # "column not imported". The reason is the difference between an
+        # unrecognised column and a mapping that named a role which does not
+        # exist, and only one of those is worth an operator's attention.
+        lines.append(f"mapping_note\t{reason}")
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.invoice.catalogue.import.column_role_not_applied",
+                message=tr(
+                    "cli.app.ledger.invoice.import_column_role_not_applied",
+                    detail=reason,
+                    default=f"a proposed column role was not applied: {reason}",
+                ),
+                context={"detail": reason, "index": str(index)},
             ),
         )
     every_row_refused = result.rows > 0 and result.created == 0 and bool(result.refused)
@@ -771,15 +791,23 @@ def invoice_import(
         raise typer.Exit(code=1)
 
 
-def _invoice_column_role_mapper() -> Callable[[Sequence[str]], Sequence[FieldRole] | None]:
-    """Return the mapper that establishes an invoice book's column roles.
+def _invoice_column_role_mapper() -> tuple[Callable[[Sequence[str]], Sequence[FieldRole] | None], list[str]]:
+    """Return the invoice-book column-role mapper, and the reasons it collects.
 
     Bound here rather than inside the importer so the application layer keeps no
     dependency on the language-model package: the CLI already reaches it, and the
     importer only needs something callable. A host that cannot map -- the extra
     absent, no model configured, an unusable reply -- resolves to ``None``, and
     every column then reports as unmapped instead of the file being refused.
+
+    The mapping the importer consumes is positional roles and nothing else, so
+    *why* a column ended up unmapped cannot travel with it. The reasons are
+    accumulated in the returned list instead, and the command turns them into
+    notices -- which is the only sanctioned channel for them, and the difference
+    between telling an operator "this column was not imported" and telling them
+    the mapping proposed a role that is not a permitted one.
     """
+    reasons: list[str] = []
 
     def resolve(headers: Sequence[str]) -> Sequence[FieldRole] | None:
         from ...core.errors import CadrumoError
@@ -789,11 +817,25 @@ def _invoice_column_role_mapper() -> Callable[[Sequence[str]], Sequence[FieldRol
         except ImportError:
             return None
         try:
-            return map_column_roles(headers).roles
+            proposal = map_column_roles(headers)
         except CadrumoError:
             return None
+        reasons.extend(
+            f"column {item.column_index} {item.header!r}: proposed role {item.proposed_role!r} is not a permitted role"
+            for item in proposal.rejected_role_proposals
+        )
+        reasons.extend(
+            f"column {item.column_index} {item.header!r}: role {item.role.value!r} was already taken by column "
+            f"{item.kept_column_index}"
+            for item in proposal.discarded_duplicate_claims
+        )
+        reasons.extend(
+            f"a role {item.proposed_role!r} was claimed for column {item.column_index}, which the table does not carry"
+            for item in proposal.unknown_column_claims
+        )
+        return proposal.roles
 
-    return resolve
+    return resolve, reasons
 
 
 @invoice_app.command(

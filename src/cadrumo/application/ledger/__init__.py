@@ -176,6 +176,7 @@ if TYPE_CHECKING:
         ground_anchored_value,
         ground_self_reported_anchor,
         normalise_for_anchor_search,
+        strip_printed_unit,
     )
     from ._id_resolution import (
         MINIMUM_DISPLAY_ID_WIDTH,
@@ -294,6 +295,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ground_anchored_value": "._grounding_anchor",
     "ground_self_reported_anchor": "._grounding_anchor",
     "normalise_for_anchor_search": "._grounding_anchor",
+    "strip_printed_unit": "._grounding_anchor",
     "IdentityCandidate": "._identity_roles",
     "IdentityRoleResolution": "._identity_roles",
     "canonical_identity_token": "._identity_roles",
@@ -595,6 +597,7 @@ __all__ = [
     "split_transaction",
     "split_transaction_with_classified_children",
     "stash_manual_transaction",
+    "strip_printed_unit",
     "suggest_evidence_split",
     "suggest_llm_classification",
     "summarize_manual_transactions",

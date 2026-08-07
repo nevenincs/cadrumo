@@ -2012,6 +2012,7 @@ cli:
           (%{invoice_id}); semmi sem jött létre.'
         yes_help: Üzleti számla törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót az üzleti számla törléséhez.
+        import_column_role_not_applied: 'egy javasolt oszlopszerep nem lett alkalmazva: {detail}'
       prorrata:
         activity_code_help: Ebbe a szektorba sorolt CNAE / IAE tevékenységi kód (ismételhető,
           legalább egy).
@@ -3919,7 +3920,8 @@ cli:
       verify:
         help: Ellenőrzi, hogy a modell be van töltve és időkorláton belül válaszol
           egy egyszerű kérésre.
-        model_help: cli.config.provision.verify.model_help
+        model_help: Az ellenőrizendő modell futtatókörnyezeti azonosítója. Alapértelmezés
+          a szerepkörhöz választott modell.
     recover:
       errors:
         recovery_code_rejected: A helyreállítási kód nem nyitotta meg a helyreállítási
@@ -4859,21 +4861,6 @@ cli:
         került; osztályozd kézzel, amikor készen állsz.
       transaction_id_help: A főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális
         előtag).
-  locales:
-    allow_identical_key_help: A kizárandó pontozott locale kulcs.
-    allow_identical_locale_help: A frissítendő locale kódja.
-    allow_identical_reason_help: Miért egyezik jogosan ez a szöveg az angollal.
-    app_help: Lokalizációs katalógusok ellenőrzése és sablonjainak létrehozása.
-    canonicalize_product_identity:
-      locale_help: Csak ezt a támogatott nyelvi katalógust frissítse.
-    remove_key_help: Eltávolítandó pontozott locale-kulcs.
-    remove_locale_help: Frissítendő locale kód.
-    scaffold_check_help: Eltérések jelentése lokalizációs fájlok írása nélkül.
-    set_batch_manifest_help: JSON objektum, amely nyelvi kódokat pontozott kulcsú
-      skalártérképekre képez le.
-    set_key_help: A beállítandó lokalizációs kulcs.
-    set_locale_help: A célnyelv kódja (pl. hu, en, es).
-    set_value_help: A kulcshoz beállítandó lokalizált érték.
   log_levels:
     errors:
       flags_mutually_exclusive: A --quiet, --verbose és --debug kapcsolók kölcsönösen
@@ -5959,7 +5946,6 @@ errors:
       vissza.
     fail_llm_rate_limit: A nyelvi modell szolgáltatója sebességkorlátozás miatt elutasította
       a kérést. Várjon néhány percet, és próbálja újra.
-    fail_locale_manager: Hiba történt a locale-fájlok kezelése vagy elemzése során.
     fail_manuals_manual_parse: Egy kézikönyv-rekord nem ment át a sémaérvényesítésen.
     fail_mcp_launch: Az MCP-kiszolgálót nem sikerült elindítani.
     fail_modelo_calculation_revision_persistence: A számítás-revízió katalógust nem
@@ -6882,20 +6868,6 @@ live:
     target_period_year_mismatch: A célidőszak éve nem egyezik.
     year_range_invalid: A kezdő évnek kisebbnek vagy egyenlőnek kell lennie a záró
       évvel.
-locales:
-  cli:
-    allow_identical:
-      recorded: 'rögzítve: {allowlist_file}:{locale_code}:{key}'
-    audit:
-      file_drift: '%{locale_file}: hiányzó=%{missing_count} többlet=%{extra_count}'
-      file_ok: '%{locale_file}: rendben'
-      key_extra: '  többlet %{key}'
-      key_missing: '  hiányzó %{key}'
-    remove:
-      removed: 'eltávolítva: %{locale_file}:%{key}'
-    scaffold_updated: a nyelvi katalógus váza frissítve
-    set:
-      updated: 'frissítve: %{locale_file}:%{key}'
 mcp:
   call:
     timeout: A(z) '{command}' túllépte a(z) {tier} szint időkorlátját ({seconds}s),

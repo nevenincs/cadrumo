@@ -260,36 +260,6 @@ beside a site the detector really reports, or
 :func:`stale_decimal_text_rationale_markers` fails.
 """
 
-_ISINSTANCE_NARROWING_IS_RULE_THREE_PENDING = (
-    "domain/calculations/registry/_bindings.py:_decimal_from_json_string",
-    "domain/iva/_schema.py:_coerce_decimal_field",
-    "domain/transactions/_models.py:_coerce_inbound",
-    "domain/transactions/_models.py:_coerce_decimal_field",
-)
-"""Rule-3 sites the ``isinstance`` narrowing would newly surface, and why it is not fed there yet.
-
-The narrowing is truthful for both rules — a name inside ``if isinstance(v,
-str):`` really is a ``str`` — so the only reason rule 3 does not consume it is
-sequencing, and the honest thing is to record the sequencing rather than to
-imply the two rules disagree about types.
-
-Feeding it to rule 3 was measured, not assumed: it surfaces exactly the four
-functions above (six call sites, three of them in one ``_coerce_inbound``). All
-six are the same shape — a pydantic ``mode="before"`` validator re-hydrating a
-``Decimal`` this application itself serialised to JSON, so the text is canonical
-dot-decimal and no separator reading is in question. They are clean, and each
-would take an exemption entry rather than a fix.
-
-They are not landed here because rule 3 is independently red at the time of
-writing on two failures this change neither causes nor owns — a bare
-``Decimal(str)`` in ``application/calculations/_foreign_asset_redeclaration.py``
-and a rule-3 exemption for ``application/ledger/_evidence_draft.py`` whose site a
-peer has since removed. Adding six exemptions into a gate already red for
-someone else's reasons buries their triage under mine. Flip the narrowing on for
-rule 3 by passing ``str_names | narrowed`` at the ``Decimal`` branch in
-:func:`_visit_scope`, once those two are owned.
-"""
-
 _CORE_DECIMAL_MODULE_SUFFIX = "core.decimal"
 """Import module suffix identifying the canonical decimal package.
 
@@ -541,11 +511,12 @@ def _visit_scope(
 ) -> None:
     """Record text-parsing ``Decimal`` and tolerant-coercer calls in one scope.
 
-    Both rules share one walk and one :func:`_expression_is_str`, because they
-    share one type judgement; splitting them would let the two drift on what
-    counts as text. They differ in exactly one declared place — the
-    ``isinstance`` narrowing feeds only the coercer rule, for the reason given
-    on :data:`_ISINSTANCE_NARROWING_IS_RULE_THREE_PENDING`.
+    Both rules share one walk, one :func:`_expression_is_str` and one narrowing
+    set, because they share one type judgement; splitting them would let the two
+    drift on what counts as text. The ``isinstance`` narrowing reached the
+    coercer rule one change before it reached the ``Decimal`` rule, purely so
+    that the six sites it surfaces did not land in a gate that was red for two
+    unrelated reasons at the time. Both now consume it.
     """
     str_names = _scope_str_names(body, inherited, node)
     nested: list[ast.FunctionDef | ast.AsyncFunctionDef] = []
@@ -565,7 +536,7 @@ def _visit_scope(
         if _is_single_argument_decimal_call(current):
             assert isinstance(current, ast.Call)
             argument = current.args[0]
-            if not isinstance(argument, ast.Constant) and _expression_is_str(argument, str_names):
+            if not isinstance(argument, ast.Constant) and _expression_is_str(argument, str_names | narrowed):
                 found.append((current.lineno, _enclosing_name(node)))
         elif isinstance(current, ast.Call) and current.args:
             coercer = coercer_bindings.get(leaf_name(current.func))

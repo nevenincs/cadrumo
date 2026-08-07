@@ -732,9 +732,11 @@ def config_status(
 
 from ._capabilities_cli import register as _register_profile_capabilities
 from ._check_cli import register as _register_config_check
+from ._provision_cli import register_provision_commands as _register_provision_commands
 
 _register_profile_capabilities(profile_app)
 _register_config_check(app)
+_register_provision_commands(app)
 register_profile_bundle_commands(
     profile_app,
     atomic_create_profile=_atomic_create_profile,
