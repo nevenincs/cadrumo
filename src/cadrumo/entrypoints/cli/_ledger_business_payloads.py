@@ -350,6 +350,12 @@ class EvidenceExtractResult(OutputSchema):
     lines: list[EvidenceDraftLinePayload] = []
     iva_breakdown: list[EvidenceDraftRateBreakdownPayload] = []
     iva_category: str | None = None
+    # The statutory mention the document PRINTS, carried verbatim. Transcriptive
+    # evidence rather than a classification: the printed legend is on the page
+    # and can be anchored, while the IVA category it implies is an internal
+    # token no invoice prints. The operator sees the phrase and can disagree
+    # with what was made of it.
+    regime_legend: str | None = None
     # A SUGGESTION, never the decision. Direction is decided by the operator at
     # confirm through --kind; surfacing the reading path's reading of it lets
     # them disagree with something specific instead of guessing unaided.
