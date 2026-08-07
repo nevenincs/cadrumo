@@ -34,9 +34,8 @@ The reason the fix is not simply "consult the purchase-evidence id here" is that
 ledger amounts are absolute magnitudes by standing convention, so returning
 ``RECEIVED`` for a refund would add to deducible input IVA rather than reduce
 it — trading one wrong figure for another. The renta side models the same event
-as a third, signed disposition. Which representation the IVA side adopts is an
-open decision recorded in the vault; when it is taken, it changes this function
-and nothing else.
+as a third, signed disposition. Which representation the IVA side adopts is not
+yet settled; when it is, it changes this function and nothing else.
 """
 
 from __future__ import annotations

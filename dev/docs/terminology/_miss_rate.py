@@ -38,9 +38,9 @@ __all__ = [
     "relevance_mapping_path",
 ]
 
-# The ratified materiality line (2026-07-13 ADR, D3): implement rung 2 only
-# when MORE THAN ten percent of held-out queries miss the top-five shipped
-# results. The gate default IS the ratified number; never loosen it ad hoc.
+# The materiality line: implement rung 2 only when MORE THAN ten percent of
+# held-out queries miss the top-five shipped results. The gate default IS
+# that accepted number; never loosen it ad hoc.
 DEFAULT_RUNG2_MISS_RATE_THRESHOLD = 0.10
 #: ADR D3 counts a hit only within the top five shipped results.
 TOP_RESULTS_BOUND = 5
