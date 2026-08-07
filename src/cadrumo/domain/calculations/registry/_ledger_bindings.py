@@ -1148,9 +1148,15 @@ def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> froze
 class _RentaLedgerIncomeSelector(BaseModel):
     """Validated form of a ledger_renta_income_aggregation binding selector.
 
-    ``modelo`` is the M130 declaration series (the only model that sources
-    income via this aggregation path). ``target_casilla_id`` is the casilla id that
-    receives the cumulative revenue total.
+    ``modelo`` names the declaration series the aggregation feeds: M130's
+    cumulative quarter, M100's annual ejercicio, or M131's agrarian quarterly
+    volumen de ingresos. ``target_casilla_id`` is the casilla that receives the
+    total. The M131 leg is NOT cumulative -- art. 110.1.c) fixes its payment on
+    *el volumen de ingresos del trimestre* -- and its projection applies two
+    filters the others do not: the art. 110.1.c) activity set, and the exclusion
+    of subvenciones de capital and indemnizaciones. Both live in the projection
+    rather than in this selector because they decide which rows EXIST as
+    observations, not which observations a binding claims.
 
     ``fact`` is REQUIRED and carries no default. Each accepted value names a
     different legal measure of the same rows, so a default would silently pick
@@ -1189,7 +1195,7 @@ class _RentaLedgerIncomeSelector(BaseModel):
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
-    modelo: Literal[Modelo.M130, Modelo.M100] = Modelo.M130
+    modelo: Literal[Modelo.M130, Modelo.M100, Modelo.M131] = Modelo.M130
     target_casilla_id: CasillaId
     fact: Literal["ingresos_integros_sum", "cash_received_sum", "taxable_base_sum", "withheld_amount_sum"]
 
