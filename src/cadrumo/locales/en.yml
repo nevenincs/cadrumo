@@ -192,9 +192,6 @@ adapters:
           namespace_forbidden_characters: Google Drive storage namespace {namespace}
             contains forbidden path characters.
           namespace_not_found: Google Drive namespace {namespace} was not found.
-          object_key_hmac_blank: Google Drive object key HMAC must not be blank.
-          object_key_hmac_forbidden_characters: Google Drive object key HMAC {object_key_hmac}
-            contains forbidden characters.
           object_not_found: Google Drive object {object_key_hmac} was not found in
             namespace {namespace}.
           request_failed: Google Drive request {action} failed with status {status}.
@@ -222,9 +219,6 @@ adapters:
             forbidden path characters.
           namespace_not_found: Local storage namespace {namespace} was not found.
           object_delete_permission: Local storage could not delete object payload.
-          object_key_hmac_blank: Local storage object key HMAC must not be blank.
-          object_key_hmac_forbidden_characters: Local storage object key HMAC {object_key_hmac}
-            contains forbidden characters.
           object_not_found: Local storage object {object_key_hmac} was not found in
             namespace {namespace}.
           payload_commit_failed: Local storage could not commit object payload atomically.
@@ -66063,7 +66057,8 @@ modelo:
               help: null
               label: VAT charged at the standard rate (21%) - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
-              help: null
+              help: Add up the taxable base of domestic output transactions in the
+                general rate tier, whatever percentage each transaction carried.
               label: Taxable base of output VAT - standard regime - 21% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
               help: null
@@ -66078,19 +66073,26 @@ modelo:
               help: null
               label: VAT charged at the reduced rate (10%) - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
-              help: null
+              help: Add up the taxable base of domestic output transactions in the
+                reduced rate tier, whatever percentage each transaction carried.
               label: Taxable base of output VAT - standard regime - 10% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
               label: VAT charged at the super-reduced rate (4%) - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
-              help: null
+              help: Add up the taxable base of domestic output transactions in the
+                super-reduced rate tier, whatever percentage each transaction carried.
               label: Taxable base of output VAT - standard regime - 4% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: null
+              help: 'Declare the taxable base of domestic ordinary-regime transactions
+                charged at the 0 % rate. Real Decreto-ley 4/2024, article 1, applied
+                this rate to basic foodstuffs from 1 July to 30 September 2024. Do
+                not enter exempt transactions here: they are declared in their own
+                section.'
               label: Taxable base of output VAT - standard regime - 0% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
-              help: null
+              help: Declare the output VAT charged at the 0 % rate on the taxable
+                base in box 700. A 0 % rate yields no VAT, so this amount is zero.
               label: Output VAT amount - standard regime - 0% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
               help: Declare the taxable base of domestic ordinary-regime transactions
@@ -66101,10 +66103,15 @@ modelo:
                 taxable base in box 03.
               label: Output VAT amount - standard regime - 10% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
-              help: null
+              help: 'Declare the taxable base of basic foodstuffs charged at 2 %:
+                common bread, bread-making flours, milk, cheese, eggs, fruit, vegetables,
+                pulses, tubers, natural cereals and olive oils. Real Decreto-ley 4/2024,
+                article 1, set this rate from 1 October to 31 December 2024.'
               label: Taxable base of output VAT - standard regime - 2% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
-              help: null
+              help: Declare the output VAT charged at 2 % on the taxable base in box
+                667. Real Decreto-ley 4/2024, article 1, set this rate from 1 October
+                to 31 December 2024.
               label: Output VAT amount - standard regime - 2% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
               help: Declare the taxable base of domestic ordinary-regime transactions
@@ -66123,10 +66130,14 @@ modelo:
                 the taxable base in box 01.
               label: Output VAT amount - standard regime - 4% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
-              help: null
+              help: Declare the taxable base of seed oils and pasta charged at 5 %.
+                Real Decreto-ley 4/2024, article 1, set this rate from 1 July to 30
+                September 2024.
               label: Taxable base of output VAT - standard regime - 5% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
-              help: null
+              help: Declare the output VAT charged at 5 % on the taxable base in box
+                702. Real Decreto-ley 4/2024, article 1, set this rate from 1 July
+                to 30 September 2024.
               label: Output VAT amount - standard regime - 5% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
               help: Declare the taxable base of seed oils and pasta charged at 7,5
@@ -66134,7 +66145,9 @@ modelo:
                 to 31 December 2024.
               label: Taxable base of output VAT - standard regime - 7,5% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
-              help: null
+              help: Declare the output VAT charged at 7,5 % on the taxable base in
+                box 669. Real Decreto-ley 4/2024, article 1, set this rate from 1
+                October to 31 December 2024.
               label: Output VAT amount - standard regime - 7,5% rate - annual
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
@@ -66147,7 +66160,8 @@ modelo:
               help: null
               label: VAT borne on ordinary domestic transactions - annual
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
-              help: null
+              help: Add up the taxable base of current domestic purchases of goods
+                and services carrying input VAT, across the three domestic rate tiers.
               label: Taxable base of deductible VAT - total current domestic purchases
                 of goods and services - annual
           construct:
@@ -66571,7 +66585,7 @@ profile:
           label: Tax ID (NIF/NIE/CIF)
       irpf:
         activity_kind:
-          label: profile.schema.field.irpf.activity_kind.label
+          label: Activity type
         art109_activity_income_withholding_ge_70pct:
           label: Meets Art. 109 RIRPF 70% exception
         estimation_regime:
@@ -66847,6 +66861,10 @@ profile:
         title: Withholding payer obligations
   validation:
     required_field_missing: Required profile field missing.
+provisioning:
+  model:
+    licence:
+      non_commercial_advisory: provisioning.model.licence.non_commercial_advisory
 review:
   adapters:
     errors:

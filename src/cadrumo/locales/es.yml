@@ -213,10 +213,6 @@ adapters:
             contiene caracteres de ruta prohibidos.
           namespace_not_found: No se encontró el espacio de nombres de Google Drive
             {namespace}.
-          object_key_hmac_blank: El HMAC de clave de objeto de Google Drive no puede
-            estar vacío.
-          object_key_hmac_forbidden_characters: El HMAC de clave de objeto de Google
-            Drive {object_key_hmac} contiene caracteres prohibidos.
           object_not_found: No se encontró el objeto de Google Drive {object_key_hmac}
             en el espacio {namespace}.
           request_failed: La petición de Google Drive {action} falló con estado {status}.
@@ -250,9 +246,6 @@ adapters:
           namespace_not_found: No se encontró el espacio de nombres local {namespace}.
           object_delete_permission: El almacenamiento local no pudo borrar el payload
             del objeto.
-          object_key_hmac_blank: El HMAC de clave de objeto local no puede estar vacío.
-          object_key_hmac_forbidden_characters: El HMAC de clave de objeto local {object_key_hmac}
-            contiene caracteres prohibidos.
           object_not_found: No se encontró el objeto local {object_key_hmac} en el
             espacio {namespace}.
           payload_commit_failed: El almacenamiento local no pudo confirmar atomicamente
@@ -68776,7 +68769,8 @@ modelo:
               help: null
               label: Cuota IVA repercutido al tipo general (21%) - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
-              help: null
+              help: Suma la base imponible de las operaciones interiores repercutidas
+                al tipo general, sea cual sea el porcentaje aplicado a cada operación.
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 21% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
@@ -68792,22 +68786,31 @@ modelo:
               help: null
               label: Cuota IVA repercutido al tipo reducido (10%) - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
-              help: null
+              help: Suma la base imponible de las operaciones interiores repercutidas
+                al tipo reducido, sea cual sea el porcentaje aplicado a cada operación.
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 10% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
               label: Cuota IVA repercutido al tipo super-reducido (4%) - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
-              help: null
+              help: Suma la base imponible de las operaciones interiores repercutidas
+                al tipo superreducido, sea cual sea el porcentaje aplicado a cada
+                operación.
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 4% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: null
+              help: 'Declara la base imponible de las operaciones interiores del régimen
+                ordinario gravadas al tipo del 0 %. El Real Decreto-ley 4/2024, artículo
+                1, aplicó este tipo a los alimentos básicos desde el 1 de julio hasta
+                el 30 de septiembre de 2024. No incluyas aquí las operaciones exentas:
+                se declaran en su propio apartado.'
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 0% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
-              help: null
+              help: Declara la cuota de IVA repercutida al tipo del 0 % sobre la base
+                imponible de la casilla 700. Un tipo del 0 % no genera cuota, así
+                que este importe es cero.
               label: Cuota IVA devengado - Regimen ordinario - Tipo 0% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
               help: Declara la base imponible de las operaciones interiores del régimen
@@ -68819,11 +68822,17 @@ modelo:
                 sobre la base imponible de la casilla 03.
               label: Cuota IVA devengado - Regimen ordinario - Tipo 10% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
-              help: null
+              help: 'Declara la base imponible de los alimentos básicos gravados al
+                2 %: pan común, harinas panificables, leche, quesos, huevos, frutas,
+                verduras, hortalizas, legumbres, tubérculos, cereales naturales y
+                aceites de oliva. El Real Decreto-ley 4/2024, artículo 1, fijó este
+                tipo desde el 1 de octubre hasta el 31 de diciembre de 2024.'
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 2% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
-              help: null
+              help: Declara la cuota de IVA repercutida al 2 % sobre la base imponible
+                de la casilla 667. El Real Decreto-ley 4/2024, artículo 1, fijó este
+                tipo desde el 1 de octubre hasta el 31 de diciembre de 2024.
               label: Cuota IVA devengado - Regimen ordinario - Tipo 2% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
               help: Declara la base imponible de las operaciones interiores del régimen
@@ -68844,11 +68853,16 @@ modelo:
                 4 % sobre la base imponible de la casilla 01.
               label: Cuota IVA devengado - Regimen ordinario - Tipo 4% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
-              help: null
+              help: Declara la base imponible de los aceites de semillas y las pastas
+                alimenticias gravados al 5 %. El Real Decreto-ley 4/2024, artículo
+                1, fijó este tipo desde el 1 de julio hasta el 30 de septiembre de
+                2024.
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 5% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
-              help: null
+              help: Declara la cuota de IVA repercutida al 5 % sobre la base imponible
+                de la casilla 702. El Real Decreto-ley 4/2024, artículo 1, fijó este
+                tipo desde el 1 de julio hasta el 30 de septiembre de 2024.
               label: Cuota IVA devengado - Regimen ordinario - Tipo 5% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
               help: Declara la base imponible de los aceites de semillas y las pastas
@@ -68858,7 +68872,9 @@ modelo:
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 7,5%
                 - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
-              help: null
+              help: Declara la cuota de IVA repercutida al 7,5 % sobre la base imponible
+                de la casilla 669. El Real Decreto-ley 4/2024, artículo 1, fijó este
+                tipo desde el 1 de octubre hasta el 31 de diciembre de 2024.
               label: Cuota IVA devengado - Regimen ordinario - Tipo 7,5% - anual
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
@@ -68872,7 +68888,9 @@ modelo:
               help: null
               label: Cuota IVA soportado en operaciones interiores corrientes - anual
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
-              help: null
+              help: Suma la base imponible de las adquisiciones interiores corrientes
+                de bienes y servicios con IVA soportado, agregando los tres tipos
+                interiores.
               label: Base imponible IVA deducible - Total operaciones interiores corrientes
                 de bienes y servicios - anual
           construct:
@@ -69317,7 +69335,7 @@ profile:
           label: NIF/NIE/CIF de identificación
       irpf:
         activity_kind:
-          label: profile.schema.field.irpf.activity_kind.label
+          label: Tipo de actividad
         art109_activity_income_withholding_ge_70pct:
           label: Cumple la excepción del 70 % del art. 109 RIRPF
         estimation_regime:
@@ -69594,6 +69612,13 @@ profile:
         title: Obligaciones como pagador con retención
   validation:
     required_field_missing: Falta un campo obligatorio del perfil.
+provisioning:
+  model:
+    licence:
+      non_commercial_advisory: El modelo %{model} está sujeto a la %{licence}, que
+        no permite el uso comercial. Lo ha indicado usted de forma explícita, así
+        que Cadrumo lo utilizará, pero una gestoría comercial necesita una licencia
+        aparte del editor.
 review:
   adapters:
     errors:

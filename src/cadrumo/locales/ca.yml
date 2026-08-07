@@ -212,10 +212,6 @@ adapters:
           namespace_forbidden_characters: L espai de noms de Google Drive {namespace}
             conté caràcters de ruta prohibits.
           namespace_not_found: No s ha trobat l espai de noms de Google Drive {namespace}.
-          object_key_hmac_blank: L HMAC de clau d objecte de Google Drive no pot estar
-            buit.
-          object_key_hmac_forbidden_characters: L HMAC de clau d objecte de Google
-            Drive {object_key_hmac} conté caràcters prohibits.
           object_not_found: No s ha trobat l objecte de Google Drive {object_key_hmac}
             a l espai {namespace}.
           request_failed: La petició de Google Drive {action} ha fallat amb estat
@@ -248,9 +244,6 @@ adapters:
           namespace_not_found: No s ha trobat l espai de noms local {namespace}.
           object_delete_permission: L emmagatzematge local no ha pogut esborrar el
             payload de l objecte.
-          object_key_hmac_blank: L HMAC de clau d objecte local no pot estar buit.
-          object_key_hmac_forbidden_characters: L HMAC de clau d objecte local {object_key_hmac}
-            conté caràcters prohibits.
           object_not_found: No s ha trobat l objecte local {object_key_hmac} a l espai
             {namespace}.
           payload_commit_failed: L emmagatzematge local no ha pogut confirmar atomicament
@@ -16357,11 +16350,11 @@ modelo:
               help: null
               label: null
             0993:
-              help: null
+              help: modelo.schema.100.revision.2021.casilla.0993.help
               label: null
             0994:
-              help: null
-              label: null
+              help: modelo.schema.100.revision.2021.casilla.0994.help
+              label: modelo.schema.100.revision.2021.casilla.0994.label
             0995:
               help: null
               label: null
@@ -49541,11 +49534,10 @@ modelo:
             '00230':
               help: null
               label: 'Balanç: Patrimoni net i passiu (II) - Patrimoni net i passiu
-                - Provisions a curt termini [00230]'
-            '00231':
-              help: null
-              label: 'Balanç: Patrimoni net i passiu (II) - Patrimoni net i passiu
                 - Deutes a curt termini [00231]'
+            '00231':
+              help: modelo.schema.200.revision.2024-y-siguientes.casilla.00231.help
+              label: modelo.schema.200.revision.2024-y-siguientes.casilla.00231.label
             '00232':
               help: null
               label: 'Balanç: Patrimoni net i passiu (II) - Patrimoni net i passiu
@@ -66486,7 +66478,8 @@ modelo:
               help: null
               label: Quota d'IVA repercutit al tipus general (21%) - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
-              help: null
+              help: Suma la base imposable de les operacions interiors repercutides
+                al tipus general, sigui quin sigui el percentatge aplicat a cada operació.
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 21% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
               help: null
@@ -66501,19 +66494,28 @@ modelo:
               help: null
               label: Quota d'IVA repercutit al tipus reduït (10%) - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
-              help: null
+              help: Suma la base imposable de les operacions interiors repercutides
+                al tipus reduït, sigui quin sigui el percentatge aplicat a cada operació.
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 10% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
               label: Quota d'IVA repercutit al tipus superreduït (4%) - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
-              help: null
+              help: Suma la base imposable de les operacions interiors repercutides
+                al tipus superreduït, sigui quin sigui el percentatge aplicat a cada
+                operació.
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 4% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: null
+              help: 'Declara la base imposable de les operacions interiors del règim
+                ordinari gravades al tipus del 0 %. El Reial decret llei 4/2024, article
+                1, va aplicar aquest tipus als aliments bàsics des de l''1 de juliol
+                fins al 30 de setembre de 2024. No hi incloguis les operacions exemptes:
+                es declaren en el seu propi apartat.'
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 0% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
-              help: null
+              help: Declara la quota d'IVA repercutida al tipus del 0 % sobre la base
+                imposable de la casella 700. Un tipus del 0 % no genera quota, així
+                que aquest import és zero.
               label: Quota d’IVA meritat - Règim ordinari - Tipus 0% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
               help: Declara la base imposable de les operacions interiors del règim
@@ -66524,10 +66526,16 @@ modelo:
                 la base imposable de la casella 03.
               label: Quota d’IVA meritat - Règim ordinari - Tipus 10% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
-              help: null
+              help: 'Declara la base imposable dels aliments bàsics gravats al 2 %:
+                pa comú, farines panificables, llet, formatges, ous, fruites, verdures,
+                hortalisses, llegums, tubercles, cereals naturals i olis d''oliva.
+                El Reial decret llei 4/2024, article 1, va fixar aquest tipus des
+                de l''1 d''octubre fins al 31 de desembre de 2024.'
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 2% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
-              help: null
+              help: Declara la quota d'IVA repercutida al 2 % sobre la base imposable
+                de la casella 667. El Reial decret llei 4/2024, article 1, va fixar
+                aquest tipus des de l'1 d'octubre fins al 31 de desembre de 2024.
               label: Quota d’IVA meritat - Règim ordinari - Tipus 2% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
               help: Declara la base imposable de les operacions interiors del règim
@@ -66545,10 +66553,14 @@ modelo:
                 % sobre la base imposable de la casella 01.
               label: Quota d’IVA meritat - Règim ordinari - Tipus 4% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
-              help: null
+              help: Declara la base imposable dels olis de llavors i les pastes alimentàries
+                gravats al 5 %. El Reial decret llei 4/2024, article 1, va fixar aquest
+                tipus des de l'1 de juliol fins al 30 de setembre de 2024.
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 5% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
-              help: null
+              help: Declara la quota d'IVA repercutida al 5 % sobre la base imposable
+                de la casella 702. El Reial decret llei 4/2024, article 1, va fixar
+                aquest tipus des de l'1 de juliol fins al 30 de setembre de 2024.
               label: Quota d’IVA meritat - Règim ordinari - Tipus 5% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
               help: Declara la base imposable dels olis de llavors i les pastes alimentàries
@@ -66557,7 +66569,9 @@ modelo:
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 7,5% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
-              help: null
+              help: Declara la quota d'IVA repercutida al 7,5 % sobre la base imposable
+                de la casella 669. El Reial decret llei 4/2024, article 1, va fixar
+                aquest tipus des de l'1 d'octubre fins al 31 de desembre de 2024.
               label: Quota d’IVA meritat - Règim ordinari - Tipus 7,5% - anual
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
@@ -66570,7 +66584,8 @@ modelo:
               help: null
               label: Quota d'IVA suportat en operacions interiors corrents - anual
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
-              help: null
+              help: Suma la base imposable de les adquisicions interiors corrents
+                de béns i serveis amb IVA suportat, agregant els tres tipus interiors.
               label: Base imposable d’IVA deduïble - Total operacions interiors corrents
                 de béns i serveis - anual
           construct:
@@ -66994,7 +67009,7 @@ profile:
           label: NIF/NIE/CIF d'identificació
       irpf:
         activity_kind:
-          label: profile.schema.field.irpf.activity_kind.label
+          label: Tipus d'activitat
         art109_activity_income_withholding_ge_70pct:
           label: Compleix l'excepció del 70 % de l'art. 109 RIRPF
         estimation_regime:
@@ -67271,6 +67286,13 @@ profile:
         title: Obligacions com a pagador amb retenció
   validation:
     required_field_missing: Falta un camp obligatori del perfil.
+provisioning:
+  model:
+    licence:
+      non_commercial_advisory: El model %{model} està subjecte a la %{licence}, que
+        no permet l'ús comercial. L'heu indicat de manera explícita, així que Cadrumo
+        l'utilitzarà, però una gestoria comercial necessita una llicència a part de
+        l'editor.
 review:
   adapters:
     errors:

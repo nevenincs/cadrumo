@@ -200,9 +200,6 @@ adapters:
           namespace_forbidden_characters: A Google Drive névtér {namespace} tiltott
             útvonal-karaktereket tartalmaz.
           namespace_not_found: 'A Google Drive névtér nem található: {namespace}.'
-          object_key_hmac_blank: A Google Drive objektumkulcs HMAC nem lehet üres.
-          object_key_hmac_forbidden_characters: A Google Drive objektumkulcs HMAC
-            {object_key_hmac} tiltott karaktereket tartalmaz.
           object_not_found: 'A Google Drive objektum {object_key_hmac} nem található
             ebben a névtérben: {namespace}.'
           request_failed: A Google Drive {action} kérés {status} állapottal sikertelen.
@@ -234,9 +231,6 @@ adapters:
           namespace_not_found: 'A helyi névtér nem található: {namespace}.'
           object_delete_permission: A helyi tárhely nem tudta törölni az objektum
             payloadjat.
-          object_key_hmac_blank: A helyi tárhely objektumkulcs HMAC nem lehet üres.
-          object_key_hmac_forbidden_characters: A helyi objektumkulcs HMAC {object_key_hmac}
-            tiltott karaktereket tartalmaz.
           object_not_found: 'A helyi objektum {object_key_hmac} nem található ebben
             a névtérben: {namespace}.'
           payload_commit_failed: A helyi tárhely nem tudta atomikusan véglegesíteni
@@ -66599,7 +66593,8 @@ modelo:
               help: null
               label: Általános kulcs (21%) szerint felszámított ÁFA - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
-              help: null
+              help: Adja össze az általános adókulcsú belföldi értékesítések adóalapját,
+                függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Fizetendő áfa adóalapja - általános szabályozás - 21%-os kulcs
                 - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
@@ -66615,22 +66610,29 @@ modelo:
               help: null
               label: Csökkentett kulcs (10%) szerint felszámított ÁFA - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
-              help: null
+              help: Adja össze a kedvezményes adókulcsú belföldi értékesítések adóalapját,
+                függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Fizetendő áfa adóalapja - általános szabályozás - 10%-os kulcs
                 - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
               label: Szuperkedvezményes kulcs (4%) szerint felszámított ÁFA - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
-              help: null
+              help: Adja össze a szuperkedvezményes adókulcsú belföldi értékesítések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Fizetendő áfa adóalapja - általános szabályozás - 4%-os kulcs
                 - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: null
+              help: 'Vallja be a belföldi általános szabályozás szerinti, 0 %-os adókulccsal
+                adózó ügyletek adóalapját. A 4/2024. sz. királyi törvényerejű rendelet
+                1. cikke ezt az adókulcsot az alapvető élelmiszerekre 2024. július
+                1-jétől 2024. szeptember 30-ig alkalmazta. Az adómentes ügyleteket
+                ne itt tüntesse fel: azoknak saját rovatuk van.'
               label: Fizetendő áfa adóalapja - általános szabályozás - 0%-os kulcs
                 - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
-              help: null
+              help: Vallja be a 700. rovat adóalapjára 0 %-os adókulccsal felszámított
+                áfát. A 0 %-os adókulcs nem keletkeztet áfát, ezért ez az összeg nulla.
               label: Fizetendő áfa összege - általános szabályozás - 0%-os kulcs -
                 éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
@@ -66644,11 +66646,18 @@ modelo:
               label: Fizetendő áfa összege - általános szabályozás - 10%-os kulcs
                 - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
-              help: null
+              help: 'Vallja be a 2 %-os adókulccsal adózó alapvető élelmiszerek adóalapját:
+                közönséges kenyér, kenyérliszt, tej, sajt, tojás, gyümölcs, zöldség,
+                hüvelyesek, gumós növények, természetes gabonafélék és olívaolajok.
+                A 4/2024. sz. királyi törvényerejű rendelet 1. cikke ezt az adókulcsot
+                2024. október 1-jétől 2024. december 31-ig állapította meg.'
               label: Fizetendő áfa adóalapja - általános szabályozás - 2%-os kulcs
                 - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
-              help: null
+              help: Vallja be a 667. rovat adóalapjára 2 %-os adókulccsal felszámított
+                áfát. A 4/2024. sz. királyi törvényerejű rendelet 1. cikke ezt az
+                adókulcsot 2024. október 1-jétől 2024. december 31-ig állapította
+                meg.
               label: Fizetendő áfa összege - általános szabályozás - 2%-os kulcs -
                 éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
@@ -66671,19 +66680,31 @@ modelo:
               label: Fizetendő áfa összege - általános szabályozás - 4%-os kulcs -
                 éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
-              help: null
+              help: Vallja be az 5 %-os adókulccsal adózó magolajok és tésztafélék
+                adóalapját. A 4/2024. sz. királyi törvényerejű rendelet 1. cikke ezt
+                az adókulcsot 2024. július 1-jétől 2024. szeptember 30-ig állapította
+                meg.
               label: Fizetendő áfa adóalapja - általános szabályozás - 5%-os kulcs
                 - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
-              help: null
+              help: Vallja be a 702. rovat adóalapjára 5 %-os adókulccsal felszámított
+                áfát. A 4/2024. sz. királyi törvényerejű rendelet 1. cikke ezt az
+                adókulcsot 2024. július 1-jétől 2024. szeptember 30-ig állapította
+                meg.
               label: Fizetendő áfa összege - általános szabályozás - 5%-os kulcs -
                 éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
-              help: null
+              help: Vallja be a 7,5 %-os adókulccsal adózó magolajok és tésztafélék
+                adóalapját. A 4/2024. sz. királyi törvényerejű rendelet 1. cikke ezt
+                az adókulcsot 2024. október 1-jétől 2024. december 31-ig állapította
+                meg.
               label: Fizetendő áfa adóalapja - általános szabályozás - 7,5%-os kulcs
                 - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
-              help: null
+              help: Vallja be a 669. rovat adóalapjára 7,5 %-os adókulccsal felszámított
+                áfát. A 4/2024. sz. királyi törvényerejű rendelet 1. cikke ezt az
+                adókulcsot 2024. október 1-jétől 2024. december 31-ig állapította
+                meg.
               label: Fizetendő áfa összege - általános szabályozás - 7,5%-os kulcs
                 - éves
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
@@ -66697,7 +66718,8 @@ modelo:
               help: null
               label: Folyó belföldi ügyletek után viselt ÁFA - éves
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
-              help: null
+              help: Adja össze az áfát tartalmazó belföldi folyó termék- és szolgáltatásbeszerzések
+                adóalapját, a három belföldi adókulcs összesítésével.
               label: Levonható áfa adóalapja - belföldi folyó termék- és szolgáltatásbeszerzések
                 összesen - éves
           construct:
@@ -67122,7 +67144,7 @@ profile:
           label: Adóazonosító (NIF/NIE/CIF)
       irpf:
         activity_kind:
-          label: profile.schema.field.irpf.activity_kind.label
+          label: Tevékenység típusa
         art109_activity_income_withholding_ge_70pct:
           label: Megfelel a RIRPF 109. cikk 70%-os kivételének
         estimation_regime:
@@ -67398,6 +67420,13 @@ profile:
         title: Forrásadó-fizetői kötelezettségek
   validation:
     required_field_missing: Hiányzik egy kötelező profilmező.
+provisioning:
+  model:
+    licence:
+      non_commercial_advisory: A(z) %{model} modellre a(z) %{licence} vonatkozik,
+        amely nem engedélyezi a kereskedelmi felhasználást. Ön kifejezetten ezt adta
+        meg, ezért a Cadrumo használni fogja, de kereskedelmi könyvelői tevékenységhez
+        külön licencet kell kérni a kiadótól.
 review:
   adapters:
     errors:
