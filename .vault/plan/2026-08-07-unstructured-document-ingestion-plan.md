@@ -218,7 +218,7 @@ Lands the batch verb family with per-item truth, idempotent resume, deterministi
 - [ ] `W08.P16.S63` - Pace inference batch-wide: a standing contention refusal pauses the inference lane while every non-inference item completes, and cloud rate limits with the shared backoff apply across the run, gated by an injected-contention fixture completing deterministic items and reporting paused ones; `src/cadrumo/application/ledger`.
 - [ ] `W08.P16.S64` - Report progress through the notice channel in text mode and complete typed row sets in JSON mode, gated by the envelope schema conformance suite; `src/cadrumo/entrypoints/cli`.
 - [ ] `W08.P16.S65` - Persist any batch state through secure storage only, with no spool, journal or progress file, gated by the sensitive-persistence gate scan and an anti-tautology proof; `src/cadrumo/application/ledger`.
-- [ ] `W08.P16.S85` - Guard the statement folder import per file so one unreadable statement is reported with its path and reason through the typed Notice channel while every other file still imports, keeping a run that imported nothing a hard refusal, gated by a poisoned-file folder fixture importing the rest and a positive control proving an all-good folder imports every file; `src/cadrumo/entrypoints/cli`.
+- [x] `W08.P16.S85` - Guard the statement folder import per file so one unreadable statement is reported with its path and reason through the typed Notice channel while every other file still imports, keeping a run that imported nothing a hard refusal, gated by a poisoned-file folder fixture importing the rest and a positive control proving an all-good folder imports every file; `src/cadrumo/entrypoints/cli`.
 
 ## Wave `W09` - The review process and ledger end-to-end
 
