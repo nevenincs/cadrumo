@@ -565,6 +565,12 @@ def _value_shape_issue(casilla: CasillaDefinition, value: str) -> str | None:
             return None
         case "money":
             try:
+                # DECIMAL-TEXT-RATIONALE-M145-SHAPE-PREDICATE: inverted use --
+                # the result is discarded and only the raise is read, so this
+                # asks "is this parseable at all", not "what number is it".
+                # Routing it through the strict grammar would make the guard
+                # REFUSE more, which is the shape the rule-3 declarante-selector
+                # and Renta-WEB-oracle exemptions record.
                 coerce_decimal_strict(stripped)
             except (InvalidOperation, ValueError) as exc:
                 return f"value is not a valid decimal amount: {type(exc).__name__}"
@@ -582,6 +588,18 @@ def _constraint_issue(casilla: CasillaDefinition, value: str) -> str | None:
     if casilla.data_type not in {"integer", "money"}:
         return None
     try:
+        # DECIMAL-TEXT-RATIONALE-M145-CONSTRAINT-RESIDUAL: declared as a
+        # residual, not as clean. Unlike its shape-predicate sibling above this
+        # one READS the parsed magnitude, and the value is operator-written, so
+        # a Spanish ``1.000`` is compared as one euro against the casilla's
+        # constraint. It is bounded rather than harmless: the output is a
+        # validation issue, never a declared amount, and Modelo 145 is a
+        # communication to the payer that this application does not file.
+        # The coherent fix belongs to the shape predicate above -- refusing the
+        # ambiguous form before it reaches any comparison -- because narrowing
+        # only here would turn an ambiguous value into no constraint check at
+        # all, which is a silent pass rather than a refusal. That is a change to
+        # what Modelo 145 accepts and needs its own decision.
         numeric = coerce_decimal_strict(value)
     except (InvalidOperation, ValueError):
         return None

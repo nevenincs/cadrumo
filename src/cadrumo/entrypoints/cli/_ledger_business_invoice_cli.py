@@ -12,6 +12,7 @@ record behind it and ``link --invoice-id`` resolves against that same identity.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import Enum
@@ -24,12 +25,12 @@ from ...application.invoices import (
     CatalogueInvoicePatch,
     create_catalogue_invoice,
     import_invoices_from_rows,
-    read_bulk_invoice_import_rows,
+    read_bulk_invoice_import_source,
     remove_catalogue_invoice,
     resolve_catalogue_invoice_from_repository,
     update_catalogue_invoice,
 )
-from ...core import IntracomOperationType
+from ...core import FieldRole, IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -697,8 +698,8 @@ def invoice_import(
             ),
         )
     try:
-        rows = list(read_bulk_invoice_import_rows(file))
-        result = import_invoices_from_rows(rows, bucket_id=bucket_id, kind=kind)
+        source = read_bulk_invoice_import_source(file, mapper=_invoice_column_role_mapper())
+        result = import_invoices_from_rows(source, bucket_id=bucket_id, kind=kind)
     except InvoiceValidationError as exc:
         raise _bad(str(exc)) from exc
 
@@ -712,7 +713,28 @@ def invoice_import(
     notices: list[Notice] = []
     for failure in result.refused:
         lines.append(f"  refused\trow={failure.row_number}\tfield={failure.field}\treason={failure.reason}")
-    if result.rows > 0 and result.created == 0 and result.refused:
+    unmapped = source.resolution.unmapped_columns
+    if unmapped:
+        # Reported, never a refusal: a book carrying a column the importer has
+        # no slot for still imports every row, and the operator is told which
+        # columns went unused rather than handed back a rejected file.
+        headers = ", ".join(column.header for column in unmapped)
+        message = tr(
+            "cli.app.ledger.invoice.import_unmapped_columns",
+            columns=headers,
+            default=f"columns not imported because no invoice field matched them: {headers}",
+        )
+        lines.append(f"unmapped_columns\t{headers}")
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.invoice.catalogue.import.unmapped_columns",
+                message=message,
+                context={"columns": headers, "count": str(len(unmapped))},
+            ),
+        )
+    every_row_refused = result.rows > 0 and result.created == 0 and bool(result.refused)
+    if every_row_refused:
         message = tr(
             "cli.app.ledger.invoice.import_all_refused",
             default="bulk invoice import failed: every row was refused; no invoices were created",
@@ -741,8 +763,37 @@ def invoice_import(
         lines=lines,
         notices=notices,
     )
-    if notices:
+    # Only a failed import exits non-zero. The unmapped-column report is an
+    # observation about a SUCCESSFUL import, so keying the exit on "any notice"
+    # would turn every book carrying an extra column into a failure -- exactly
+    # the refuse-whole behaviour this path exists to remove.
+    if every_row_refused:
         raise typer.Exit(code=1)
+
+
+def _invoice_column_role_mapper() -> Callable[[Sequence[str]], Sequence[FieldRole] | None]:
+    """Return the mapper that establishes an invoice book's column roles.
+
+    Bound here rather than inside the importer so the application layer keeps no
+    dependency on the language-model package: the CLI already reaches it, and the
+    importer only needs something callable. A host that cannot map -- the extra
+    absent, no model configured, an unusable reply -- resolves to ``None``, and
+    every column then reports as unmapped instead of the file being refused.
+    """
+
+    def resolve(headers: Sequence[str]) -> Sequence[FieldRole] | None:
+        from ...core.errors import CadrumoError
+
+        try:
+            from ...llm import map_column_roles
+        except ImportError:
+            return None
+        try:
+            return map_column_roles(headers).roles
+        except CadrumoError:
+            return None
+
+    return resolve
 
 
 @invoice_app.command(

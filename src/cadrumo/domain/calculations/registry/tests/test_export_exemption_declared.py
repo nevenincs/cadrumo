@@ -189,7 +189,7 @@ def test_feeds_addressed_casilla_claim_is_verified_not_trusted(
                 export_exemption_reason=ExportExemptionReason.FEEDS_ADDRESSED_CASILLA,
             )
             failures = _gate(mutated, modelo_id)
-            assert any(repr(casilla.id) in failure and "no formula chain" in failure for failure in failures), (
+            assert any(repr(casilla.id) in failure and "Either wire the chain" in failure for failure in failures), (
                 f"{casilla.id!r} claims to feed an addressed casilla and the gate believed it"
             )
             relabelled += 1

@@ -185,6 +185,12 @@ def _attribution_received_base_for_year(
         if base is None:
             continue
         try:
+            # DECIMAL-TEXT-RATIONALE-ATTRIBUTION-FACT-SUM: sums an already
+            # persisted profile fact, whose write boundary owns the text
+            # grammar. Same residual as the rule-3 exemption for
+            # ``domain/deadlines/_profiles.py``, and recorded as one rather than
+            # tightened here: promoting the string at read time would leave the
+            # unguarded write still writing it.
             total += coerce_decimal_strict(base if isinstance(base, Decimal) else str(base).strip())
         except (InvalidOperation, ValueError):
             continue

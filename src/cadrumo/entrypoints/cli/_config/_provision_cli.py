@@ -103,19 +103,23 @@ def register_provision_commands(app: typer.Typer) -> None:
         residents = read_runtime_residents()
         resident_names = [entry.name for entry in residents] if residents is not None else []
 
-        models = []
+        # Built as payloads rather than as dicts splatted in later. The
+        # intermediate mapping had no other use, and an inferred dict widens
+        # every value to the union of all of them -- so the splat read as
+        # passing a str where a bool was expected, and checked nothing.
+        models: list[ProvisionModelPayload] = []
         primary = None
         for role in ModelRole:
             selection = select_model_for_role(role, profile=profile)
             resident = any(name.startswith(selection.runtime_id or "\x00") for name in resident_names)
             models.append(
-                {
-                    "role": role.value,
-                    "model": selection.runtime_id,
-                    "selected": selection.selected,
-                    "resident": resident,
-                    "detail": selection.detail,
-                },
+                ProvisionModelPayload(
+                    role=role.value,
+                    model=selection.runtime_id,
+                    selected=selection.selected,
+                    resident=resident,
+                    detail=selection.detail,
+                ),
             )
             if primary is None and selection.selected and selection.candidate is not None:
                 primary = (selection.runtime_id or "", selection.candidate.memory_requirement_bytes)

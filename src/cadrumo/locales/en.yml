@@ -722,7 +722,6 @@ application:
         file_read_failed: The bulk invoice import file could not be read.
         missing_columns: 'The bulk invoice import file is missing required columns:
           {missing_columns}'
-        unknown_columns: 'The bulk invoice import file contains unknown columns: {unknown_columns}'
         unsupported_extension: The bulk invoice import file must be .csv or .xlsx
           (got {extension}).
     creation:
@@ -1895,6 +1894,8 @@ cli:
           iva_rate/currency/country_code/notes).
         import_file_not_found: 'File not found: {path}'
         import_help: Bulk-create catalogue invoices from a CSV or XLSX file.
+        import_unmapped_columns: 'columns not imported because no invoice field matched
+          them: {columns}'
         invoice_class_help: Invoice class. A rectificativa also requires --rectifies-invoice-number
           naming the invoice it corrects.
         invoice_date_help: Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.
@@ -3683,6 +3684,23 @@ cli:
       validate_name_help: Optional profile label to validate; defaults to the active
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
+    provision:
+      help: 'Manage local inference provisioning: report, pull models, verify readiness.'
+      no_model: No model is available for that role on this machine. Run 'aeat config
+        provision report' to see why.
+      pull:
+        help: Download a model into the local runtime. Refuses before downloading
+          when it could not be loaded.
+        model_help: Runtime identifier of the model to download. Defaults to the model
+          selected for the role.
+      report:
+        help: Report measured hardware, the model selected per role, and whether it
+          can be loaded now.
+      role_help: cli.config.provision.role_help
+      verify:
+        help: Verify a model is loaded and answers a trivial prompt within a time
+          bound.
+        model_help: cli.config.provision.verify.model_help
     recover:
       errors:
         recovery_code_rejected: The recovery code did not open the recovery wrapper;
@@ -4559,21 +4577,6 @@ cli:
       llm_rejected_notice: The most recent LLM suggestion for this transaction was
         rejected; classify it manually when ready.
       transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
-  locales:
-    allow_identical_key_help: Dotted locale key to exempt.
-    allow_identical_locale_help: Locale code to update.
-    allow_identical_reason_help: Why this string is legitimately identical to English.
-    app_help: Audit and scaffold locale catalogues
-    canonicalize_product_identity:
-      locale_help: Update only this supported locale catalogue.
-    remove_key_help: Dotted locale key to remove.
-    remove_locale_help: Locale code to update.
-    scaffold_check_help: Report drift without writing locale files
-    set_batch_manifest_help: JSON object mapping locale codes to dotted-key scalar
-      maps.
-    set_key_help: Dotted locale key to set.
-    set_locale_help: Locale code to update (e.g. en, es, ca).
-    set_value_help: Replacement locale value.
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose, and --debug are mutually exclusive.
@@ -6534,20 +6537,6 @@ live:
     target_period_year_mismatch: The target year does not match the target period's
       filing year.
     year_range_invalid: From-year must be less than or equal to to-year.
-locales:
-  cli:
-    allow_identical:
-      recorded: recorded {allowlist_file}:{locale_code}:{key}
-    audit:
-      file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
-      file_ok: '%{locale_file}: ok'
-      key_extra: '  extra %{key}'
-      key_missing: '  missing %{key}'
-    remove:
-      removed: removed %{locale_file}:%{key}
-    scaffold_updated: locale scaffold updated
-    set:
-      updated: updated %{locale_file}:%{key}
 mcp:
   call:
     timeout: '''{command}'' exceeded the {tier}-tier time limit ({seconds}s) and was

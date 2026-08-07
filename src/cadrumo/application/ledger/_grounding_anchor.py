@@ -62,6 +62,7 @@ __all__ = [
     "evaluate_anchor",
     "ground_ambiguous_candidates",
     "ground_anchored_value",
+    "ground_self_reported_anchor",
     "normalise_for_anchor_search",
 ]
 
@@ -235,6 +236,56 @@ def ground_anchored_value(
         # the printed form the reader misread, not merely be told it disagreed.
         anchor=anchor if evaluation.anchor_found else None,
         note=evaluation.detail,
+    )
+
+
+def ground_self_reported_anchor(
+    *,
+    field: str,
+    anchor: str,
+    origin: FieldOrigin,
+    note: str = "",
+) -> FieldProvenance:
+    """Return the envelope for an anchor the reader asserted about its own output.
+
+    The honest verdict for a lane that produces no transcription. The vision path
+    reads image to fields in a single model call, so there is no independently
+    produced text for an anchor to be a substring OF -- the model returns the
+    printed form alongside the value, and that is a CLAIM about the document
+    rather than evidence from it. Substring-matching such a claim against the
+    model's own reply would confirm only that the model is self-consistent, which
+    a fabricating model also is.
+
+    The anchor is still recorded: an operator comparing ``21%`` against the page
+    in front of them is doing exactly the check the machine cannot, and taking
+    the anchor away would remove the one thing that makes that quick. What is
+    withheld is the VERDICT -- the outcome is ``UNANCHORED``, because no
+    independent check ran.
+
+    This is a floor, not a ceiling. When a vision transcription stage lands, that
+    path calls :func:`evaluate_anchor` like the text lane and earns ``ANCHORED``
+    through the real check, with no change to any logic here.
+
+    Args:
+        field: Name of the draft field.
+        anchor: The printed form the reader claims to have read.
+        origin: How the value was obtained.
+        note: Additional operator-facing explanation.
+
+    Returns:
+        An ``UNANCHORED`` envelope carrying the anchor and flagged self-reported.
+    """
+    explanation = (
+        "the reader asserted this anchor about its own output and no independent transcription "
+        "exists to check it against, so the anchor is recorded but not verified"
+    )
+    return FieldProvenance(
+        field=field,
+        origin=origin,
+        grounding=FieldGroundingOutcome.UNANCHORED,
+        anchor=anchor,
+        anchor_self_reported=True,
+        note=f"{note}; {explanation}" if note else explanation,
     )
 
 

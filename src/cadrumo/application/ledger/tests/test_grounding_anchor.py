@@ -13,15 +13,18 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....core import FieldGroundingOutcome, FieldOrigin
 from .._document_transcription import DocumentTranscription, TranscriberIdentity
 from .._evidence import MediaKind
+from .._evidence_draft import FieldProvenance
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import transcribe_text_layer
 from .._grounding_anchor import (
     evaluate_anchor,
     ground_anchored_value,
+    ground_self_reported_anchor,
     normalise_for_anchor_search,
 )
 
@@ -316,3 +319,52 @@ def test_grounding_runs_against_a_transcription_of_a_real_corpus_document() -> N
         transcription=transcription,
     )
     assert absent.outcome is FieldGroundingOutcome.UNANCHORED
+
+
+def test_a_self_reported_anchor_never_reads_as_verified() -> None:
+    """The vision lane's anchor is a claim, not evidence, and must say so.
+
+    That path reads image to fields in one model call, so there is no
+    independently produced transcription for the anchor to be a substring of.
+    Matching the model's claim against the model's own reply would confirm only
+    self-consistency, which a fabricating model also has.
+    """
+    envelope = ground_self_reported_anchor(
+        field="taxable_base",
+        anchor="766,30",
+        origin=FieldOrigin.VISION,
+    )
+
+    assert envelope.grounding is FieldGroundingOutcome.UNANCHORED
+    assert envelope.anchor_self_reported is True
+    assert envelope.anchor == "766,30", "the anchor is still recorded for the operator to check by eye"
+
+
+def test_a_self_reported_anchor_cannot_be_laundered_into_an_anchored_outcome() -> None:
+    """Enforced at the model, so no reading path can bypass it by construction."""
+    with pytest.raises(ValidationError, match="self-reported anchor"):
+        FieldProvenance(
+            field="taxable_base",
+            origin=FieldOrigin.VISION,
+            grounding=FieldGroundingOutcome.ANCHORED,
+            anchor="766,30",
+            anchor_self_reported=True,
+        )
+
+
+def test_the_text_lane_anchor_is_not_marked_self_reported() -> None:
+    """Positive control: the flag must discriminate, not be always-on.
+
+    Without this, marking every anchor self-reported would satisfy the two cases
+    above while destroying the distinction they exist to draw.
+    """
+    envelope = ground_anchored_value(
+        field="taxable_base",
+        value=Decimal("2420.00"),
+        anchor="2.420,00",
+        origin=FieldOrigin.TEXT_LAYER,
+        transcription=_transcription(_SPANISH_INVOICE_TEXT),
+    )
+
+    assert envelope.grounding is FieldGroundingOutcome.ANCHORED
+    assert envelope.anchor_self_reported is False

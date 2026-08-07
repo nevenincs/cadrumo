@@ -13,6 +13,26 @@ Production modules under ``src/cadrumo/`` must not use:
    (operator-typed text) or :func:`~core.decimal.coerce_decimal` (machine-produced
    text), outside the reasoned exemptions declared below.
 
+4. ``coerce_decimal(<some string>)`` or ``coerce_decimal_strict(<some string>)``
+   anywhere outside the canonical home, unless the site carries a
+   ``DECIMAL-TEXT-RATIONALE-*`` declaration saying why its separator convention
+   is externally fixed.
+
+Rule 4 exists because rule 3 names ``coerce_decimal`` as an acceptable
+destination, and it is acceptable only for machine-produced text. The coercer
+reaches ``Decimal(str(value))`` without consulting the ambiguity test, so
+``coerce_decimal("1.000")`` is ``Decimal('1.000')`` — one euro from an operator
+who typed a thousand. Rewriting a bare ``Decimal(text)`` onto it therefore
+satisfies rule 3 while preserving the misread rule 3 exists to stop. Rule 4 asks
+about the ARGUMENT rather than the callee, which is why the three correct
+machine-numeric coercions in the tree (two float branches and the worksheet
+coercer's int/float arm) never appear in its report and need no exemption.
+
+Rule 4's declarations live at the call site rather than in a mapping here, and
+that divergence is deliberate: see the module docstring of
+:mod:`~tests._decimal_parse_inventory` for the fixture-provenance argument and
+for the blind spot a green from rule 4 does NOT cover.
+
 Rule 3 exists because rule 2 was structurally blind to the shape that actually
 ships defects. ``_is_decimal_str_call`` requires the single argument to be a
 literal ``str(...)`` *call*, so ``Decimal(str(x))`` was caught while
@@ -44,7 +64,14 @@ from pathlib import Path
 
 import pytest
 
-from ._decimal_parse_inventory import string_parse_decimal_sites, string_parse_decimal_violations
+from ._decimal_parse_inventory import (
+    DECIMAL_TEXT_RATIONALE_MARKER,
+    SEPARATOR_SAFE_DESTINATIONS,
+    stale_decimal_text_rationale_markers,
+    string_parse_decimal_sites,
+    string_parse_decimal_violations,
+    tolerant_coercion_text_violations,
+)
 from ._inventory import SRC_CADRUMO, aeat_relative, leaf_name, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -327,6 +354,226 @@ def test_string_parse_exemptions_are_all_live(source_tree_ast: Mapping[Path, ast
         f"{len(stale)} rule-3 exemption(s) no longer match a real site and must be "
         f"deleted from _STRING_PARSE_EXEMPTIONS: {stale}"
     )
+
+
+def _destination_scan_items(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> tuple[tuple[Path, ast.AST, list[str]], ...]:
+    """Return ``(path, AST, source lines)`` for every production file outside the canonical home."""
+    return tuple(
+        (path, tree, path.read_text(encoding="utf-8").splitlines())
+        for path, tree in _string_parse_scan_items(source_tree_ast)
+    )
+
+
+def _planted(tmp_path: Path, name: str, *lines: str) -> tuple[Path, ast.AST, list[str]]:
+    """Write a synthetic module and return it as a scan item.
+
+    Synthetic sources are scanned through an injected ``display_root``, so no
+    proof in this module monkeypatches the production scan surface or commits a
+    violation to the tree.
+    """
+    module = tmp_path / name
+    module.write_text("\n".join((*lines, "")), encoding="utf-8")
+    source = module.read_text(encoding="utf-8")
+    return module, ast.parse(source), source.splitlines()
+
+
+_IMPORT_COERCERS = "from cadrumo.core.decimal import coerce_decimal, coerce_decimal_strict"
+
+
+def test_no_undeclared_tolerant_coercion_of_text(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+    """Text reaching a tolerant coercer must carry a declaration at the site.
+
+    The coercer resolves the ambiguous Spanish thousands shape instead of
+    refusing it, so a site that admits operator text must either move to one of
+    the separator-safe destinations or state why its separator convention is
+    fixed by something other than the writer's locale.
+    """
+    violations = tolerant_coercion_text_violations(
+        _destination_scan_items(source_tree_ast),
+        display_root=_SRC_ROOT,
+    )
+    if violations:
+        joined = "\n  ".join(violations)
+        safe = ", ".join(SEPARATOR_SAFE_DESTINATIONS)
+        raise AssertionError(
+            f"{len(violations)} tolerant Decimal coercion(s) of provably-string text:\n  {joined}\n\n"
+            f"coerce_decimal('1.000') is Decimal('1.000') -- one euro from an operator who meant a "
+            f"thousand. Route the text to one of {safe}, or add a "
+            f"'# {DECIMAL_TEXT_RATIONALE_MARKER}<SLUG>: ...' comment on the call line or in the "
+            "comment block immediately above it, saying why the separator convention is fixed by "
+            "the source rather than chosen by whoever wrote the value.",
+        )
+
+
+def test_decimal_text_rationale_declarations_are_all_live(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+    """Every declaration must sit beside a site the detector really reports.
+
+    This is the cross-check that keeps an at-the-site declaration from decaying
+    into the path-keyed allowlist it replaces. A marker left behind by a fixed
+    or deleted call is a rubber stamp waiting to launder the next coercion added
+    beneath it, and unlike a mapping entry it is invisible to a reader who is
+    not already looking at that line.
+    """
+    stale = stale_decimal_text_rationale_markers(
+        _destination_scan_items(source_tree_ast),
+        display_root=_SRC_ROOT,
+    )
+    assert not stale, (
+        f"{len(stale)} {DECIMAL_TEXT_RATIONALE_MARKER}* declaration(s) govern no reported coercion "
+        f"and must be deleted:\n  " + "\n  ".join(stale)
+    )
+
+
+def test_destination_gate_reds_on_an_undeclared_text_coercion(tmp_path: Path) -> None:
+    """Anti-tautology proof: the shape rule 3 would bless must fail rule 4.
+
+    The planted module is exactly the rewrite that satisfies rule 3 — the bare
+    ``Decimal(raw)`` moved onto the tolerant coercer — so a green here would
+    mean the two rules together still permit the defect they were built for.
+    """
+    item = _planted(
+        tmp_path,
+        "planted.py",
+        _IMPORT_COERCERS,
+        "",
+        "",
+        "def rewritten_to_satisfy_rule_three(raw: str):",
+        "    return coerce_decimal(raw)",
+        "",
+        "",
+        "def strict_variant(raw: str):",
+        "    return coerce_decimal_strict(raw.strip())",
+    )
+
+    violations = tolerant_coercion_text_violations((item,), display_root=tmp_path)
+
+    assert violations == [
+        "planted.py:5 (in rewritten_to_satisfy_rule_three, coerce_decimal)",
+        "planted.py:9 (in strict_variant, coerce_decimal_strict)",
+    ], violations
+
+
+def test_destination_gate_ignores_provably_numeric_arguments(tmp_path: Path) -> None:
+    """The three correct machine-numeric coercions must not be reported.
+
+    A per-symbol sweep for ``coerce_decimal`` calls all three violations — a 43%
+    false-positive rate against the hand-classified set, which is the rate at
+    which a detector stops being read and starts accumulating exemptions. Keying
+    on the argument's provable type drops them by construction, so this is the
+    control that the gate is not merely loud.
+    """
+    item = _planted(
+        tmp_path,
+        "numeric.py",
+        _IMPORT_COERCERS,
+        "from decimal import Decimal",
+        "",
+        "",
+        "def float_branch(value: object):",
+        "    if isinstance(value, float):",
+        "        return coerce_decimal(value)",
+        "    return None",
+        "",
+        "",
+        "def already_decimal(value: Decimal):",
+        "    return coerce_decimal(value)",
+        "",
+        "",
+        "def counts(rows: list[int]):",
+        "    return coerce_decimal(len(rows))",
+    )
+
+    assert tolerant_coercion_text_violations((item,), display_root=tmp_path) == []
+
+
+def test_destination_gate_sees_an_isinstance_narrowed_branch(tmp_path: Path) -> None:
+    """A ``str`` branch of an isinstance dispatch is text, and its siblings are not.
+
+    This is the shape the worksheet coercer uses, and without the narrowing the
+    gate would report neither arm — reading as clean for the wrong reason.
+    """
+    item = _planted(
+        tmp_path,
+        "dispatch.py",
+        _IMPORT_COERCERS,
+        "",
+        "",
+        "def dispatch(raw: object):",
+        "    if isinstance(raw, (int, float)):",
+        "        return coerce_decimal(raw)",
+        "    if isinstance(raw, str):",
+        "        return coerce_decimal(raw)",
+        "    return None",
+    )
+
+    violations = tolerant_coercion_text_violations((item,), display_root=tmp_path)
+
+    assert violations == ["dispatch.py:8 (in dispatch, coerce_decimal)"], violations
+
+
+def test_destination_gate_resolves_an_aliased_coercer_import(tmp_path: Path) -> None:
+    """A renamed import must not hide the call.
+
+    The tree really does alias one of these (``coerce_decimal_strict as
+    _coerce_decimal_strict``), and the sibling cast ratchet documents
+    spelling-matched detection failing on exactly this shape.
+    """
+    item = _planted(
+        tmp_path,
+        "aliased.py",
+        "from cadrumo.core.decimal import coerce_decimal as _money",
+        "",
+        "",
+        "def parses(raw: str):",
+        "    return _money(raw)",
+    )
+
+    violations = tolerant_coercion_text_violations((item,), display_root=tmp_path)
+
+    assert violations == ["aliased.py:5 (in parses, coerce_decimal)"], violations
+
+
+def test_a_declaration_clears_only_its_own_site(tmp_path: Path) -> None:
+    """A declaration governs the call it sits beside, never the file or the function."""
+    item = _planted(
+        tmp_path,
+        "mixed.py",
+        _IMPORT_COERCERS,
+        "",
+        "",
+        "def two_calls(raw: str, other: str):",
+        f"    # {DECIMAL_TEXT_RATIONALE_MARKER}PLANTED: machine-produced, separator fixed.",
+        "    first = coerce_decimal(raw)",
+        "    second = coerce_decimal(other)",
+        "    return first, second",
+    )
+
+    violations = tolerant_coercion_text_violations((item,), display_root=tmp_path)
+
+    assert violations == ["mixed.py:7 (in two_calls, coerce_decimal)"], violations
+    assert stale_decimal_text_rationale_markers((item,), display_root=tmp_path) == []
+
+
+def test_a_declaration_left_behind_by_a_fixed_site_is_reported(tmp_path: Path) -> None:
+    """Removing the coercion but leaving its declaration must fail.
+
+    Without this the at-the-site scheme is strictly worse than a mapping: an
+    orphaned marker sits invisibly above whatever line is written next.
+    """
+    item = _planted(
+        tmp_path,
+        "orphaned.py",
+        "from cadrumo.core.decimal import try_parse_canonical_decimal",
+        "",
+        "",
+        "def now_safe(raw: str):",
+        f"    # {DECIMAL_TEXT_RATIONALE_MARKER}PLANTED: reason for a call that no longer exists.",
+        "    return try_parse_canonical_decimal(raw)",
+    )
+
+    assert stale_decimal_text_rationale_markers((item,), display_root=tmp_path) == ["orphaned.py:5"]
 
 
 def test_string_parse_gate_reds_on_a_planted_bare_call(tmp_path: Path) -> None:

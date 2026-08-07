@@ -537,6 +537,20 @@ def _require_matching_metadata(
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: googleapiclient Resource
 # object; no precise static type is available in google-api-python-client.
 def _coerce_value(raw: Any) -> Decimal | str | bool | None:
+    """Type one raw worksheet cell, keeping an unreadable amount as its own text.
+
+    Both ``values.batchGet`` calls in this module pin
+    ``valueRenderOption="UNFORMATTED_VALUE"``, so Sheets returns a numeric cell
+    as an int or float and only a cell the operator forced to plain text arrives
+    as a string. That string is the operator's own writing, which is why it goes
+    to the extraction contract rather than to
+    :func:`~core.decimal.coerce_decimal`: the tolerant coercer resolves the
+    ambiguous Spanish ``1.000`` to one euro, while
+    :func:`~core.decimal.coerce_finite_european_decimal` yields no value for it
+    and the cell stays a string for the caller to refuse — the same judgement
+    ``_coerce_edit_value_to_decimal`` already applies to a spreadsheet edit
+    further down this module, over the same workbook.
+    """
     if raw is None or raw == "":
         return None
     if isinstance(raw, bool):
@@ -544,7 +558,7 @@ def _coerce_value(raw: Any) -> Decimal | str | bool | None:
     if isinstance(raw, (int, float)):
         return coerce_decimal(raw)
     if isinstance(raw, str):
-        as_decimal = coerce_decimal(raw)
+        as_decimal = coerce_finite_european_decimal(raw)
         if as_decimal is not None:
             return as_decimal
         return raw

@@ -174,6 +174,7 @@ if TYPE_CHECKING:
         evaluate_anchor,
         ground_ambiguous_candidates,
         ground_anchored_value,
+        ground_self_reported_anchor,
         normalise_for_anchor_search,
     )
     from ._id_resolution import (
@@ -291,6 +292,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "evaluate_anchor": "._grounding_anchor",
     "ground_ambiguous_candidates": "._grounding_anchor",
     "ground_anchored_value": "._grounding_anchor",
+    "ground_self_reported_anchor": "._grounding_anchor",
     "normalise_for_anchor_search": "._grounding_anchor",
     "IdentityCandidate": "._identity_roles",
     "IdentityRoleResolution": "._identity_roles",
@@ -562,6 +564,7 @@ __all__ = [
     "get_transaction_participation",
     "ground_ambiguous_candidates",
     "ground_anchored_value",
+    "ground_self_reported_anchor",
     "import_ledger_source",
     "import_ledger_transactions",
     "ledger_transaction_payload",

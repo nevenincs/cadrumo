@@ -128,18 +128,24 @@ def resolve_bulk_import_columns(
     headers: Sequence[str],
     *,
     mapper: ColumnRoleMapper | None = None,
+    required_fields: frozenset[str] = frozenset(),
 ) -> BulkImportColumnResolution:
     """Resolve ``headers`` onto importer fields, exact names first.
 
     A header that already names a canonical importer column is bound to it
     without consulting ``mapper`` at all. The mapping lane is called at most
-    once, and only when at least one column is still unresolved; its verdict is
-    applied only to those columns, so it can never displace an exact match.
+    once, and **only when exact matching cannot supply every required field** —
+    a file already written in the product's own vocabulary is read without any
+    judgement, even when it carries extra columns the importer has no slot for.
+    Those extras are simply reported. Its verdict is applied only to columns
+    exact matching left open, so it can never displace an exact match.
 
     Args:
         headers: The source header cells, in column order.
         mapper: Establishes roles for the columns exact matching did not
             resolve. ``None`` leaves them unmapped and reported.
+        required_fields: Fields the importer cannot proceed without. The
+            mapping lane is consulted only if exact matching misses one.
 
     Returns:
         The per-column resolution, with everything unresolved reported rather
@@ -154,7 +160,7 @@ def resolve_bulk_import_columns(
     ]
 
     consulted = False
-    if mapper is not None and any(field is None for field in exact):
+    if mapper is not None and required_fields - {field for field in exact if field is not None}:
         proposed = mapper(list(headers))
         if proposed is not None:
             consulted = True

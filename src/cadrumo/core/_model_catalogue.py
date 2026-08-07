@@ -55,8 +55,9 @@ from pydantic import BaseModel, Field, model_validator
 from ._models import STRICT_FROZEN_CONFIG
 
 __all__ = [
+    "ANTHROPIC_COMMERCIAL_TERMS",
     "APACHE_2_0",
-    "DEFAULT_MODEL_BY_ROLE",
+    "DEFAULT_MODEL_BY_RUNTIME_AND_ROLE",
     "MODEL_CATALOGUE",
     "QWEN_RESEARCH",
     "DeploymentLicencePosture",
@@ -64,6 +65,7 @@ __all__ = [
     "ModelCandidate",
     "ModelLicence",
     "ModelRole",
+    "ModelRuntime",
     "ModelSelectionAdvisory",
     "candidates_for_role",
     "default_model_runtime_id",
@@ -102,6 +104,30 @@ class ModelRole(StrEnum):
     COLUMN_ROLE_MAPPING = "column_role_mapping"
 
 
+class ModelRuntime(StrEnum):
+    """Where a candidate's weights actually run, which changes what may be judged.
+
+    The axis exists because two of the catalogue's bars are meaningless off-host.
+    A hosted model has no local memory requirement to compare against measured
+    free headroom, and no weights to pull; what it has instead is a service
+    contract. Collapsing the two runtimes into one list would force every
+    consumer to special-case that, and would let a cloud model be ranked by a
+    memory figure it does not have.
+
+    The capability and licence bars still apply to both: the prompt is the same
+    size wherever it runs, and "may we use this commercially" is the same
+    question whether the answer comes from a weights licence or a terms of
+    service.
+
+    Members:
+        LOCAL_OLLAMA: Weights pulled and run on the operator's own machine.
+        CLOUD_ANTHROPIC: A hosted Anthropic API model; nothing runs on-host.
+    """
+
+    LOCAL_OLLAMA = "local_ollama"
+    CLOUD_ANTHROPIC = "cloud_anthropic"
+
+
 class LicenceVerification(StrEnum):
     """How a catalogue entry's licence claim was checked, and against what.
 
@@ -113,12 +139,15 @@ class LicenceVerification(StrEnum):
     Members:
         PUBLISHER_LICENCE_FILE: The publisher's own LICENSE text was read.
         PUBLISHER_MODEL_CARD: The publisher's model card licence field was read.
+        PUBLISHER_SERVICE_TERMS: The publisher's terms of service were read. The
+            artefact for a hosted model, which ships no weights licence.
         UNVERIFIED: No publisher text was read. Bars a commercial-use claim
             outright -- see :class:`ModelLicence`.
     """
 
     PUBLISHER_LICENCE_FILE = "publisher_licence_file"
     PUBLISHER_MODEL_CARD = "publisher_model_card"
+    PUBLISHER_SERVICE_TERMS = "publisher_service_terms"
     UNVERIFIED = "unverified"
 
 
@@ -237,12 +266,32 @@ class ModelCandidate(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     runtime_id: str = Field(min_length=1)
+    runtime: ModelRuntime
     roles: frozenset[ModelRole] = Field(min_length=1)
-    memory_requirement_bytes: int = Field(gt=0)
+    memory_requirement_bytes: int | None = Field(default=None, gt=0)
     max_context_tokens: int = Field(gt=0)
     licence: ModelLicence
     measured_baseline_ref: str = ""
     notes: str = ""
+
+    @model_validator(mode="after")
+    def _memory_requirement_matches_the_runtime(self) -> ModelCandidate:
+        """Require a memory figure exactly where one can be measured against.
+
+        A local candidate without it cannot be admitted by the contention check;
+        a cloud candidate WITH one invites a comparison against this machine's
+        free memory that means nothing, because the weights never touch it.
+        """
+        if self.runtime is ModelRuntime.LOCAL_OLLAMA and self.memory_requirement_bytes is None:
+            msg = f"local candidate {self.runtime_id!r} declares no memory requirement"
+            raise ValueError(msg)
+        if self.runtime is not ModelRuntime.LOCAL_OLLAMA and self.memory_requirement_bytes is not None:
+            msg = (
+                f"hosted candidate {self.runtime_id!r} declares a local memory requirement; "
+                f"its weights never run on this machine"
+            )
+            raise ValueError(msg)
+        return self
 
     def serves(self, role: ModelRole) -> bool:
         """Return whether this candidate is eligible for ``role``."""
@@ -299,6 +348,33 @@ advised operator override rather than through automatic selection.
 """
 
 
+ANTHROPIC_COMMERCIAL_TERMS: Final = ModelLicence(
+    spdx_id="LicenseRef-Anthropic-Commercial-Terms",
+    name="Anthropic Commercial Terms of Service",
+    commercial_use_permitted=True,
+    verification=LicenceVerification.PUBLISHER_SERVICE_TERMS,
+    source_url="https://www.anthropic.com/legal/commercial-terms",
+    verified_quote=(
+        "Subject to these Terms, Anthropic gives Customer permission to use the Services, "
+        "including to power products and services Customer makes available to its own "
+        "customers and end users"
+    ),
+)
+"""The service contract a hosted Anthropic model is used under.
+
+Not a weights licence -- there are no weights to license -- so it carries an
+SPDX ``LicenseRef-`` identifier and is verified against the publisher's terms of
+service rather than a LICENSE file. The same terms assign output ownership to
+the customer, which is what makes a hosted read usable in a filing-grade
+product at all.
+
+Reading it as a licence keeps ONE gate over both runtimes: "may we use this
+commercially" has to be answered for a hosted model exactly as for a local one,
+and a second, parallel notion of permission is how one of the two answers goes
+unchecked.
+"""
+
+
 # Memory requirements are the publishers' stated weight sizes for the pulled
 # quantisation (decimal GB as published by the runtime library), NOT an
 # estimate: the figure a contention check compares must be traceable to a
@@ -307,6 +383,7 @@ advised operator override rather than through automatic selection.
 MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
     ModelCandidate(
         runtime_id="moondream:1.8b",
+        runtime=ModelRuntime.LOCAL_OLLAMA,
         roles=frozenset({ModelRole.VISION_TRANSCRIPTION}),
         memory_requirement_bytes=1_700_000_000,
         max_context_tokens=2_048,
@@ -321,6 +398,7 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
     ),
     ModelCandidate(
         runtime_id="qwen3-vl:2b",
+        runtime=ModelRuntime.LOCAL_OLLAMA,
         roles=frozenset({ModelRole.VISION_TRANSCRIPTION}),
         memory_requirement_bytes=1_900_000_000,
         max_context_tokens=256_000,
@@ -333,6 +411,7 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
     ),
     ModelCandidate(
         runtime_id="qwen2.5vl:3b",
+        runtime=ModelRuntime.LOCAL_OLLAMA,
         roles=frozenset({ModelRole.VISION_TRANSCRIPTION}),
         memory_requirement_bytes=3_200_000_000,
         max_context_tokens=125_000,
@@ -346,6 +425,7 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
     ),
     ModelCandidate(
         runtime_id="qwen2.5vl:7b",
+        runtime=ModelRuntime.LOCAL_OLLAMA,
         roles=frozenset({ModelRole.VISION_TRANSCRIPTION}),
         memory_requirement_bytes=6_000_000_000,
         max_context_tokens=125_000,
@@ -358,6 +438,7 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
     ),
     ModelCandidate(
         runtime_id="qwen3:1.7b",
+        runtime=ModelRuntime.LOCAL_OLLAMA,
         roles=frozenset({ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING}),
         memory_requirement_bytes=1_400_000_000,
         max_context_tokens=40_000,
@@ -373,6 +454,7 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
     ),
     ModelCandidate(
         runtime_id="qwen2.5:3b",
+        runtime=ModelRuntime.LOCAL_OLLAMA,
         roles=frozenset({ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING}),
         memory_requirement_bytes=1_900_000_000,
         max_context_tokens=32_768,
@@ -383,6 +465,22 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
             "is precisely why the flag is declared per candidate and read from the "
             "publisher's licence file. Licence read at "
             "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct"
+        ),
+    ),
+    ModelCandidate(
+        runtime_id="claude-haiku-4-5",
+        runtime=ModelRuntime.CLOUD_ANTHROPIC,
+        roles=frozenset({ModelRole.VISION_TRANSCRIPTION, ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING}),
+        max_context_tokens=200_000,
+        licence=ANTHROPIC_COMMERCIAL_TERMS,
+        notes=(
+            "The cloud default for every role: the smallest and fastest current Claude "
+            "model, and the tier the provisioning decision names as the off-host proxy "
+            "for the on-host 2B-4B class. It is the lowest-bound capable cloud candidate, "
+            "which is the whole point -- a hosted route must not silently reach a frontier "
+            "tier. Vision-capable: the publisher's model overview states that all current "
+            "Claude models support text and image input and vision. Specification read at "
+            "https://platform.claude.com/docs/en/about-claude/models/overview"
         ),
     ),
 )

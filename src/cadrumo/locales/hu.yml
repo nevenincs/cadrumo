@@ -748,8 +748,6 @@ application:
         file_read_failed: A számlák tömeges importálási fájlja nem olvasható.
         missing_columns: 'A számlák tömeges importálási fájljából hiányoznak kötelező
           oszlopok: {missing_columns}'
-        unknown_columns: 'A számlák tömeges importálási fájlja ismeretlen oszlopokat
-          tartalmaz: {unknown_columns}'
         unsupported_extension: 'A számlák tömeges importálási fájljának .csv vagy
           .xlsx kiterjesztésűnek kell lennie (kapott: {extension}).'
     creation:
@@ -1972,6 +1970,8 @@ cli:
           taxable_base, valamint opcionálisan iva_rate/currency/country_code/notes).
         import_file_not_found: 'A fájl nem található: {path}'
         import_help: Katalógusszámlák tömeges létrehozása CSV vagy XLSX fájlból.
+        import_unmapped_columns: 'nem importált oszlopok, mert egyetlen számlamező
+          sem felelt meg nekik: {columns}'
         invoice_class_help: A számla osztálya. A rectificativa emellett a --rectifies-invoice-number
           megadását is megköveteli, amely a javított számlát nevezi meg.
         invoice_date_help: A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN),
@@ -3901,6 +3901,25 @@ cli:
       validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
+    provision:
+      help: 'A helyi következtetés előkészítésének kezelése: jelentés, modellletöltés,
+        készenlét-ellenőrzés.'
+      no_model: Ehhez a szerepkörhöz nincs elérhető modell ezen a gépen. Futtassa
+        az 'aeat config provision report' parancsot az okért.
+      pull:
+        help: Modell letöltése a helyi futtatókörnyezetbe. Letöltés előtt elutasít,
+          ha nem lenne betölthető.
+        model_help: A letöltendő modell futtatókörnyezeti azonosítója. Alapértelmezés
+          a szerepkörhöz választott modell.
+      report:
+        help: Jelentés a mért hardverről, a szerepkörhöz választott modellről és a
+          betölthetőségről.
+      role_help: A kezelendő modellszerepkör (képátírás, szövegkinyerés, táblázatos
+        leképezés).
+      verify:
+        help: Ellenőrzi, hogy a modell be van töltve és időkorláton belül válaszol
+          egy egyszerű kérésre.
+        model_help: cli.config.provision.verify.model_help
     recover:
       errors:
         recovery_code_rejected: A helyreállítási kód nem nyitotta meg a helyreállítási

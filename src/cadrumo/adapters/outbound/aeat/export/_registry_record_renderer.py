@@ -106,6 +106,11 @@ def _money_value(field: ExportFieldDefinition, raw: str) -> Decimal | None:
     if not text:
         return None
     try:
+        # DECIMAL-TEXT-RATIONALE-EXPORT-DRAFT-VALUE: ``raw`` comes from the
+        # draft's own ``field_values`` mapping, which this application wrote by
+        # formatting a Decimal it had already validated at the calculate
+        # boundary. The separator convention is therefore the one this code
+        # emits, not one a writer chose, and no operator keystroke reaches here.
         return coerce_decimal_strict(text)
     except (InvalidOperation, ValueError) as exc:
         raise _export_error(

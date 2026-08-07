@@ -333,6 +333,12 @@ class FieldProvenance(BaseModel):
             the operator sees both.
         candidates: Competing readings, when the grounding outcome is
             ``AMBIGUOUS``. Empty otherwise.
+        anchor_self_reported: ``True`` when the anchor was asserted by the same
+            reader that produced the value, with nothing independent to check it
+            against -- the vision lane, which reads image to fields in one call
+            and has no transcription. Such an anchor is recorded because it is
+            still useful to an operator, but it can never carry an ``ANCHORED``
+            outcome; see the validator below.
         note: Operator-facing explanation, e.g. which identity contradicted the
             value.
     """
@@ -344,7 +350,36 @@ class FieldProvenance(BaseModel):
     grounding: FieldGroundingOutcome
     anchor: str | None = None
     candidates: tuple[FieldAmbiguityCandidate, ...] = ()
+    anchor_self_reported: bool = False
     note: str = ""
+
+    @model_validator(mode="after")
+    def _a_self_reported_anchor_can_never_read_as_verified(self) -> Self:
+        """Refuse an ``ANCHORED`` outcome on an anchor nothing independent confirmed.
+
+        The two reading lanes do not supply the same STRENGTH of evidence, and
+        collapsing them is how an anti-fabrication check becomes decoration.
+
+        On the text lane the anchor is matched against a transcription produced
+        by a different reader than the one that proposed the value, so the match
+        is a genuine external check. On the vision lane there is no transcription
+        at all -- the model reads image to fields in one call -- so the anchor is
+        the model's own claim about what it saw. Matching that claim against the
+        model's own reply confirms only that the model is self-consistent, which
+        a fabricating model also is.
+
+        Enforcing the invariant HERE rather than in the checker means no reading
+        path can launder a self-reported anchor into a verified-looking one, even
+        by constructing the envelope directly. When a vision transcription stage
+        lands, that path stops setting this flag and earns ``ANCHORED`` through
+        the same check the text lane already passes -- no change to this rule.
+        """
+        if self.anchor_self_reported and self.grounding is FieldGroundingOutcome.ANCHORED:
+            raise ValueError(
+                "a self-reported anchor cannot be ANCHORED: the anchor was asserted by the same "
+                "reader that produced the value, so nothing independent confirmed it",
+            )
+        return self
 
     @model_validator(mode="after")
     def _ambiguity_carries_its_candidates(self) -> Self:

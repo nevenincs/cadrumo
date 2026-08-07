@@ -798,8 +798,6 @@ application:
         file_read_failed: No s'ha pogut llegir el fitxer d'importació massiva de factures.
         missing_columns: 'Al fitxer d''importació massiva de factures li falten columnes
           obligatòries: {missing_columns}'
-        unknown_columns: 'El fitxer d''importació massiva de factures conté columnes
-          desconegudes: {unknown_columns}'
         unsupported_extension: El fitxer d'importació massiva de factures ha de ser
           .csv o .xlsx (s'ha rebut {extension}).
     creation:
@@ -2033,6 +2031,8 @@ cli:
           iva_rate/currency/country_code/notes).
         import_file_not_found: 'Fitxer no trobat: {path}'
         import_help: Crea factures del catàleg en lot des d'un fitxer CSV o XLSX.
+        import_unmapped_columns: 'columnes no importades perquè cap camp de factura
+          hi va coincidir: {columns}'
         invoice_class_help: Classe de factura. Una rectificativa exigeix a més --rectifies-invoice-number
           indicant la factura que corregeix.
         invoice_date_help: Data d'emissió de la factura en ISO 8601 (AAAA-MM-DD),
@@ -3036,11 +3036,11 @@ cli:
           mostrat és una previsualització no avaluada; aquesta aplicació no determina
           cap deute per recàrrec ni interessos.'
         prestacion_inss_exenta_help: Import íntegre de les prestacions de la Seguretat
-          Social per maternitat/paternitat exemptes d''IRPF (Art. 7.h LIRPF). Es registra
-          a la casella d''exempció corresponent a la revisió i es resta del total
-          d''ingressos computables. Introdueix l''import brut rebut de la Seguretat
-          Social per baixa de maternitat o paternitat. NO l''incloguis a --casilla
-          0003 (Retribucions dineràries).
+          Social per maternitat/paternitat exemptes d'IRPF (Art. 7.h LIRPF). Es registra
+          a la casella d'exempció corresponent a la revisió i es resta del total d'ingressos
+          computables. Introdueix l'import brut rebut de la Seguretat Social per baixa
+          de maternitat o paternitat. NO l'incloguis a --casilla 0003 (Retribucions
+          dineràries).
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta ha de ser un
           import decimal; s''ha rebut: {value}. Utilitzeu el punt com a separador
           decimal i sense separador de milers, p. ex. 1234.56.'
@@ -3730,10 +3730,10 @@ cli:
         list_help: Llista els descendents declarats al perfil actiu.
         remove_help: Elimina un descendent per índex (base 0) del perfil actiu.
         remove_index_help: Índex (base 0) del descendent a eliminar.
-      duplicate_display_name_help: Nom visible del nou perfil (per defecte l''id de
+      duplicate_display_name_help: Nom visible del nou perfil (per defecte l'id de
         destinació)
       duplicate_help: Copiar un perfil sota un id i nom visibles nous
-      duplicate_source_help: Id del perfil d''origen a duplicar
+      duplicate_source_help: Id del perfil d'origen a duplicar
       duplicate_target_help: Id del perfil de destinació per al duplicat
       edit_help: Torna a executar l'assistent sobre un perfil existent
       edit_target_not_active: El perfil '%{name}' no és el perfil actiu, i 'profile
@@ -3849,7 +3849,7 @@ cli:
       remove_name_help: Id del perfil a retirar
       remove_requires_yes: La retirada és destructiva. Torna a executar 'aeat config
         profile delete %{name} --yes' per confirmar.
-      remove_yes_help: Confirma explícitament l''operació de retirada
+      remove_yes_help: Confirma explícitament l'operació de retirada
       rename_display_name_help: Etiqueta visible per a l'operador; per defecte, l'existent
       rename_help: Canvia el nom d'un perfil i mou el punter actiu automàticament
       rename_source_help: Nom actual del perfil
@@ -3934,12 +3934,31 @@ cli:
       unknown_profile: 'Perfil desconegut: %{name}. Executa ''aeat config profile
         list'' per veure els perfils registrats.'
       use_help: Seleccionar un perfil existent com a perfil actiu
-      use_name_help: Id del perfil que s''activarà
+      use_name_help: Id del perfil que s'activarà
       validate_help: Valida un perfil contra l'esquema carregat (per defecte el perfil
         actiu).
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
-      view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
+      view_help: Mostrar els fets d'un perfil (per defecte el perfil actiu)
+    provision:
+      help: 'Gestiona l''aprovisionament d''inferència local: informe, descàrrega
+        de models i verificació.'
+      no_model: No hi ha cap model disponible per a aquesta funció en aquesta màquina.
+        Executeu 'aeat config provision report' per veure'n el motiu.
+      pull:
+        help: Descarrega un model al runtime local. Rebutja abans de descarregar si
+          no es podria carregar.
+        model_help: Identificador del model que es descarregarà. Per defecte, el model
+          seleccionat per a la funció.
+      report:
+        help: Informa del maquinari mesurat, el model seleccionat per funció i si
+          es pot carregar ara.
+      role_help: Funció del model sobre la qual actuar (transcripció d'imatges, extracció
+        de text, mapatge tabular).
+      verify:
+        help: cli.config.provision.verify.help
+        model_help: Identificador del model que es verificarà. Per defecte, el model
+          seleccionat per a la funció.
     recover:
       errors:
         recovery_code_rejected: El codi de recuperació no ha obert l'embolcall de
@@ -4704,7 +4723,7 @@ cli:
       id_help: Id de transacció del llibre (SHA-256 o prefix inequívoc).
       invoice_id_help: Id de factura procedent d'una factura importada, reconciliada
         o afegida manualment, vinculat bidireccionalment amb el moviment. Qualsevol
-        id d''aeat app ledger invoice add' es pot vincular aquí.
+        id de 'aeat app ledger invoice add' es pot vincular aquí.
     list:
       by_group_help: Agrupa el llistat per etiqueta de grup.
       column_header: "id\tid_complet\tdata\timport\tdescripció\testat_revisió"
@@ -4873,22 +4892,6 @@ cli:
       llm_rejected_notice: El suggeriment més recent del model per a aquesta transacció
         es va rebutjar; classifica-la manualment quan vulguis.
       transaction_id_help: Id de la transacció (o prefix no ambigu)
-  locales:
-    allow_identical_key_help: Clau de locale amb punts a eximir.
-    allow_identical_locale_help: Codi de locale a actualitzar.
-    allow_identical_reason_help: Per què aquesta cadena és legítimament idèntica a
-      l'anglès.
-    app_help: Auditar i generar catàlegs de traducció
-    canonicalize_product_identity:
-      locale_help: Actualitzeu només aquest catàleg d'idioma compatible.
-    remove_key_help: Clau de locale amb punts que s'eliminarà.
-    remove_locale_help: Codi de locale que s'ha d'actualitzar.
-    scaffold_check_help: Informar de diferències sense escriure fitxers de locale
-    set_batch_manifest_help: Objecte JSON que assigna codis d'idioma a mapes de claus
-      amb punts.
-    set_key_help: Clau de locale amb format de punts a establir.
-    set_locale_help: Codi del locale a actualitzar (p. ex. en, es, ca).
-    set_value_help: Valor de locale a establir.
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose i --debug són mútuament excloents.
@@ -5657,8 +5660,8 @@ errors:
       per a {as_of}.
     casilla_constraint_violation: 'La casella {casilla_id} amb valor {value} infringeix
       la restricció declarada: {violation}. Refs: {legal_refs}.'
-    casilla_referenced_before_evaluation: La casella {casilla_id} s''ha referenciat
-      abans d''avaluar la seva fórmula.
+    casilla_referenced_before_evaluation: La casella {casilla_id} s'ha referenciat
+      abans d'avaluar la seva fórmula.
     computed_supplied_as_input: 'No es poden subministrar com a entrada les caselles
       calculades: {casilla_ids}.'
     date_binding_used_as_decimal_leaf: 'Error intern: vinculació de data usada com
@@ -5666,14 +5669,14 @@ errors:
     date_binding_value_missing: Falta el valor de la vinculació de data.
     dispatch_key_unknown: 'La clau de despatx {dispatch_key!r} no és a la taula de
       l''operador {op} sobre la vinculació {binding_id} (claus declarades: {available_keys}).'
-    dispatch_parameter_kind: El paràmetre {parameter_id} no encaixa amb l''operador
-      {op}; s''esperava un paràmetre escalar (decimal / dinerari / enter / ràtio).
+    dispatch_parameter_kind: El paràmetre {parameter_id} no encaixa amb l'operador
+      {op}; s'esperava un paràmetre escalar (decimal / dinerari / enter / ràtio).
     divide_by_zero: La fórmula amb operador {op} divideix entre zero.
     empty_expression: Expressió de fórmula buida.
     enum_binding_value_missing: La vinculació enumerada {binding_id} no té cap valor
-      assignat (requerida per l''operador {op}).
-    lookup_dispatch_arg_count: L''operador {op} de la fórmula espera {expected} arguments.
-    lookup_dispatch_arg_kind: L''operador {op} de la fórmula requereix que {position}
+      assignat (requerida per l'operador {op}).
+    lookup_dispatch_arg_count: L'operador {op} de la fórmula espera {expected} arguments.
+    lookup_dispatch_arg_kind: L'operador {op} de la fórmula requereix que {position}
       sigui una fulla de tipus {expected_kind}.
     m100_art85_boolean_invalid: La casella booleana de l'article 85 del Model 100
       ha de ser 0 o 1.
@@ -6972,20 +6975,6 @@ live:
     target_period_year_mismatch: L'any objectiu no coincideix amb l'exercici del període
       objectiu.
     year_range_invalid: El rang d'exercicis indicat no és vàlid.
-locales:
-  cli:
-    allow_identical:
-      recorded: registrat {allowlist_file}:{locale_code}:{key}
-    audit:
-      file_drift: '%{locale_file}: falten=%{missing_count} sobrants=%{extra_count}'
-      file_ok: '%{locale_file}: correcte'
-      key_extra: '  sobrant %{key}'
-      key_missing: '  falta %{key}'
-    remove:
-      removed: eliminat %{locale_file}:%{key}
-    scaffold_updated: s'ha actualitzat la bastida del locale
-    set:
-      updated: actualitzat %{locale_file}:%{key}
 mcp:
   call:
     timeout: '''{command}'' ha superat el límit de temps del nivell {tier} ({seconds}s)
@@ -16350,11 +16339,11 @@ modelo:
               help: null
               label: null
             0993:
-              help: modelo.schema.100.revision.2021.casilla.0993.help
+              help: null
               label: null
             0994:
-              help: modelo.schema.100.revision.2021.casilla.0994.help
-              label: modelo.schema.100.revision.2021.casilla.0994.label
+              help: null
+              label: Per quotes a la Seguretat Social d'empleats de la llar
             0995:
               help: null
               label: null
@@ -49536,8 +49525,9 @@ modelo:
               label: 'Balanç: Patrimoni net i passiu (II) - Patrimoni net i passiu
                 - Deutes a curt termini [00231]'
             '00231':
-              help: modelo.schema.200.revision.2024-y-siguientes.casilla.00231.help
-              label: modelo.schema.200.revision.2024-y-siguientes.casilla.00231.label
+              help: null
+              label: 'Balanç: Patrimoni net i passiu (II) - Patrimoni net i passiu
+                - Deutes a curt termini [00231]'
             '00232':
               help: null
               label: 'Balanç: Patrimoni net i passiu (II) - Patrimoni net i passiu

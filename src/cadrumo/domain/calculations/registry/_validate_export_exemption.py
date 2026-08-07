@@ -41,13 +41,29 @@ exactly like one AEAT never prints. Modelo 720's ejercicio (design positions
 5-8) and declaración complementaria/sustitutiva (121-122) are both written that
 way, and reading their names alone suggests the opposite conclusion.
 
+A value can reach a casilla through THREE channels, and this gate sees two:
+
+1. a formula expression naming it;
+2. a binding selector naming it — the registry-declared route, which the
+   ``feeds_addressed_casilla`` check walks; and
+3. **application-code injection**, via ``bound_inputs_by_casilla_id`` on a
+   :class:`CalculationSourceResolution`, which never consults ``casilla.binding``
+   at all.
+
+Channel three is invisible here and cannot be made visible: it lives in the
+application layer, which a domain validator must not import. Modelo 303's box 44
+is the worked case — it is ``input_kind = manual`` with ``binding = None``, no
+casilla names its binding, and the prorrata resolver delivers its value anyway by
+returning ``{"44": ...}`` keyed on the casilla id. **"No casilla names the
+binding" does not imply "the value does not arrive."**
+
 So a refusal from this gate is a question, not a verdict: it says the exemption
-is undeclared, never that the casilla is unrepresentable. Answering it means
-reading the record design AND the bindings —
-:attr:`~core.ExportExemptionReason.FILED_VIA_BINDING_FIELD` exists precisely
-because the honest answer is sometimes "it is filed, just not through a casilla
-address". The refusal message repeats this warning, because that is where an
-author actually lands.
+is undeclared, never that the casilla is unrepresentable and never that its value
+fails to arrive. Answering it means reading the record design, the bindings, AND
+the resolver mesh. :attr:`~core.ExportExemptionReason.FILED_VIA_BINDING_FIELD`
+exists precisely because the honest answer is sometimes "it is filed, just not
+through a casilla address". The refusal message repeats this warning, because
+that is where an author actually lands.
 
 This is deliberately NOT a cross-check of casilla numbers against the bundled
 Diseño de Registros. That check is not yet viable — Modelo 390 alone would emit
@@ -200,9 +216,12 @@ def validate_export_exemption_declarations(
                 failures.append(
                     f"{prefix}: casilla {casilla.id!r} declares export_exemption_reason "
                     f"{ExportExemptionReason.FEEDS_ADDRESSED_CASILLA.value!r}, which asserts its figure "
-                    f"reaches the record through a downstream box, but no formula chain leads from it to "
-                    f"any casilla a fixed-width export record addresses. Either wire the chain, or declare "
-                    f"the reason this casilla genuinely files no slot",
+                    f"reaches the record through a downstream box, but no formula or binding chain leads "
+                    f"from it to any casilla a fixed-width export record addresses. Either wire the chain, "
+                    f"or declare the reason this casilla genuinely files no slot. Note this walk sees the "
+                    f"REGISTRY graph only: a value delivered by application code through "
+                    f"bound_inputs_by_casilla_id is invisible here, so confirm no resolver already carries "
+                    f"it before rewiring",
                 )
             continue
         if casilla.export_exemption_reason is not None:
@@ -215,10 +234,13 @@ def validate_export_exemption_declarations(
             f"internal_only nor export_exemption_reason. Exemption from that gate must be declared, "
             f"not left to absence: annotate the casilla with the reason it files no slot, or give it "
             f"the export field it is missing. Before concluding it is not representable, check the "
-            f"record design and the bindings: this scan is casilla-keyed and CANNOT see a "
-            f"BINDING-kind field, so a value the export really does write at a declared offset "
-            f"looks identical here to one AEAT never prints "
-            f"({ExportExemptionReason.FILED_VIA_BINDING_FIELD.value!r} is the reason for that case)",
+            f"record design, the bindings AND the resolver mesh: this scan is casilla-keyed and sees "
+            f"neither a BINDING-kind export field (so a value the export really does write at a "
+            f"declared offset looks identical here to one AEAT never prints -- "
+            f"{ExportExemptionReason.FILED_VIA_BINDING_FIELD.value!r} is the reason for that case) nor "
+            f"a value injected by application code through bound_inputs_by_casilla_id, which never "
+            f"consults casilla.binding. 'No casilla names the binding' does not imply 'the value does "
+            f"not arrive'",
         )
 
 

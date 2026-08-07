@@ -53,7 +53,7 @@ from __future__ import annotations
 import asyncio
 
 from ..application.ledger import InvoiceDraft
-from ..core import Period
+from ..core import FieldOrigin, Period
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._errors import LLMConfigError
@@ -178,7 +178,16 @@ class LocalVisionInvoiceFieldExtractor:
         # own transcription text, mirroring the text-layer path's semantics of
         # "how much source material did the reader have to work with" -- here
         # that is the model's read-out rather than a pdfplumber page dump.
-        return ground_extracted_fields(parsed, raw_text_length=len(response.text))
+        #
+        # VISION is the strongest origin this path may claim: image in, fields
+        # out, in one call. There is no separately-acquired text behind the
+        # values, so nothing here can be checked against the document without
+        # reading it again.
+        return ground_extracted_fields(
+            parsed,
+            raw_text_length=len(response.text),
+            origin=FieldOrigin.VISION,
+        )
 
 
 def extract_invoice_fields_from_images(

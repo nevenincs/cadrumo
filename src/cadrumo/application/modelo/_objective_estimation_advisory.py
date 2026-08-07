@@ -163,6 +163,14 @@ def _scope_source_refs(filing_year: int) -> tuple[SourceRefId, ...]:
 
 def _as_decimal(value: object, surface: str) -> Decimal:
     try:
+        # DECIMAL-TEXT-RATIONALE-EO-THRESHOLD-COMPARISON: two callers, both
+        # non-operator. ``parameter.value`` is a registry-authored legal
+        # parameter, which is committed data in canonical dot-decimal form. The
+        # profile-field caller reads a fact the profile write boundary already
+        # promoted, the same posture the rule-3 exemption for
+        # ``domain/deadlines/_profiles.py`` records -- and it is the same
+        # residual: the grammar has to be enforced where the string is still a
+        # string, which is that boundary and not this comparison.
         return coerce_decimal_strict(value if isinstance(value, Decimal) else str(value).strip())
     except (InvalidOperation, ValueError) as exc:
         raise ModeloValidationError(f"invalid decimal value {value!r} for {surface}") from exc

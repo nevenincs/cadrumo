@@ -802,8 +802,6 @@ application:
         file_read_failed: No se pudo leer el archivo de importación masiva de facturas.
         missing_columns: 'Al archivo de importación masiva de facturas le faltan columnas
           obligatorias: {missing_columns}'
-        unknown_columns: 'El archivo de importación masiva de facturas contiene columnas
-          desconocidas: {unknown_columns}'
         unsupported_extension: El archivo de importación masiva de facturas debe ser
           .csv o .xlsx (se recibió {extension}).
     creation:
@@ -2042,6 +2040,8 @@ cli:
           iva_rate/currency/country_code/notes).
         import_file_not_found: 'Archivo no encontrado: {path}'
         import_help: Crea facturas del catálogo en lote desde un archivo CSV o XLSX.
+        import_unmapped_columns: 'columnas no importadas porque ningún campo de factura
+          coincidió con ellas: {columns}'
         invoice_class_help: Clase de factura. Una rectificativa exige además --rectifies-invoice-number
           indicando la factura que corrige.
         invoice_date_help: Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD),
@@ -3970,6 +3970,25 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
+    provision:
+      help: 'Gestiona el aprovisionamiento de inferencia local: informe, descarga
+        de modelos y verificación.'
+      no_model: No hay ningún modelo disponible para esa función en esta máquina.
+        Ejecute 'aeat config provision report' para ver por qué.
+      pull:
+        help: Descarga un modelo al runtime local. Rechaza antes de descargar si no
+          podría cargarse.
+        model_help: Identificador del modelo que se descargará. Por defecto, el modelo
+          seleccionado para la función.
+      report:
+        help: Informa del hardware medido, el modelo seleccionado por función y si
+          puede cargarse ahora.
+      role_help: Función del modelo sobre la que actuar (transcripción de imágenes,
+        extracción de texto, mapeo tabular).
+      verify:
+        help: cli.config.provision.verify.help
+        model_help: Identificador del modelo que se verificará. Por defecto, el modelo
+          seleccionado para la función.
     recover:
       errors:
         recovery_code_rejected: El código de recuperación no abrió el envoltorio de
@@ -4909,22 +4928,6 @@ cli:
       llm_rejected_notice: La sugerencia más reciente del modelo para esta transacción
         fue rechazada; clasifícala manualmente cuando quieras.
       transaction_id_help: Id de la transacción (o prefijo no ambiguo)
-  locales:
-    allow_identical_key_help: Clave de locale con puntos a eximir.
-    allow_identical_locale_help: Código de locale a actualizar.
-    allow_identical_reason_help: Por qué esta cadena es legítimamente idéntica al
-      inglés.
-    app_help: Auditar y generar catálogos de traducción
-    canonicalize_product_identity:
-      locale_help: Actualiza solo este catálogo de idioma compatible.
-    remove_key_help: Clave de locale con puntos que se eliminará.
-    remove_locale_help: Código de locale a actualizar.
-    scaffold_check_help: Informar de diferencias sin escribir archivos de locale
-    set_batch_manifest_help: Objeto JSON que asigna códigos de idioma a mapas de claves
-      con puntos.
-    set_key_help: Clave de locale con formato de puntos a establecer.
-    set_locale_help: Código del locale a actualizar (p. ej. en, es, ca).
-    set_value_help: Valor de locale a establecer.
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose y --debug son mutuamente excluyentes.
@@ -7015,20 +7018,6 @@ live:
     target_period_year_mismatch: El año objetivo no coincide con el ejercicio del
       periodo objetivo.
     year_range_invalid: El rango de ejercicios indicado no es válido.
-locales:
-  cli:
-    allow_identical:
-      recorded: registrado {allowlist_file}:{locale_code}:{key}
-    audit:
-      file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
-      file_ok: '%{locale_file}: ok'
-      key_extra: '  extra %{key}'
-      key_missing: '  falta %{key}'
-    remove:
-      removed: eliminado %{locale_file}:%{key}
-    scaffold_updated: catálogo de locale actualizado
-    set:
-      updated: actualizado %{locale_file}:%{key}
 mcp:
   call:
     timeout: '''{command}'' superó el límite de tiempo del nivel {tier} ({seconds}s)

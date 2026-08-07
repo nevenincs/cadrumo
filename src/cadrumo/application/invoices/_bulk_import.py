@@ -34,9 +34,7 @@ See Also:
 
 from __future__ import annotations
 
-import csv
-import io
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -102,14 +100,16 @@ class BulkImportSourceRow(BaseModel):
     Attributes:
         row_number: 1-based row number in the source file, header included, so
             a refusal names the row an operator counts in a spreadsheet.
-        values: Cell text per importer field. Values are the source's own
-            printed forms; nothing is reinterpreted on the way here.
+        values: One cell per importer field, in the source's own
+            representation. A delimited file yields text exactly as printed; a
+            workbook yields the type the workbook itself chose, so a numeric
+            cell is never stringified into the operator's typed-text grammar.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     row_number: int = Field(ge=1)
-    values: dict[str, str]
+    values: dict[str, object]
 
 
 class BulkInvoiceImportSource(BaseModel):
@@ -352,6 +352,7 @@ def _parse_bulk_invoice_row(
             invoice_date=invoice_date,
             taxable_base=taxable_base,
             iva_rate=iva_rate,
+            retention_amount=retention_amount,
             currency=currency_raw,
             country_code=country_code_raw,
             notes=_cell_text(raw_row.get("notes")),
@@ -362,29 +363,71 @@ def _parse_bulk_invoice_row(
         raise _RowParseError(row_number=row_number, field=field, reason=str(first.get("msg", "invalid row"))) from exc
 
 
-def _read_csv_rows(text: str) -> Iterator[tuple[int, Mapping[str, object]]]:
-    reader = csv.DictReader(io.StringIO(text))
-    if reader.fieldnames is None:
+def _assert_required_fields_present(resolution: BulkImportColumnResolution) -> None:
+    """Refuse a file that cannot supply a required field under any column.
+
+    This is the one refusal the header can still cause, and it is not the
+    refuse-whole this Step removed: an unknown column is reported and the file
+    still imports, but a book carrying no taxable base at all has no row to
+    create. The refusal names the fields, and lists what the file did carry, so
+    the operator can see whether a column was simply not recognised.
+    """
+    missing = BULK_INVOICE_IMPORT_REQUIRED_COLUMNS - resolution.fields_present
+    if not missing:
         return
-    unknown = frozenset(reader.fieldnames) - BULK_INVOICE_IMPORT_ALLOWED_COLUMNS
-    if unknown:
-        raise InvoiceValidationError(
-            "bulk invoice import CSV contains unknown columns",
-            translated_message="application.invoices.bulk_import.errors.unknown_columns",
-            context={"unknown_columns": ", ".join(sorted(unknown))},
-        )
-    missing_required = BULK_INVOICE_IMPORT_REQUIRED_COLUMNS - frozenset(reader.fieldnames)
-    if missing_required:
-        raise InvoiceValidationError(
-            "bulk invoice import CSV is missing required columns",
-            translated_message="application.invoices.bulk_import.errors.missing_columns",
-            context={"missing_columns": ", ".join(sorted(missing_required))},
-        )
-    for row_number, raw_row in enumerate(reader, start=2):  # header is row 1
-        yield row_number, dict(raw_row)
+    raise InvoiceValidationError(
+        "bulk invoice import file supplies no column for required field(s): " + ", ".join(sorted(missing)),
+        translated_message="application.invoices.bulk_import.errors.missing_columns",
+        context={
+            "missing_columns": ", ".join(sorted(missing)),
+            "unmapped_columns": ", ".join(column.header for column in resolution.unmapped_columns) or "none",
+        },
+    )
 
 
-def _read_xlsx_rows(path: Path) -> Iterator[tuple[int, Mapping[str, object]]]:
+def _read_delimited_source(path: Path, *, mapper: ColumnRoleMapper | None) -> BulkInvoiceImportSource:
+    """Read a delimited invoice book of any dialect into a resolved source."""
+    try:
+        source_bytes = path.read_bytes()
+    except OSError as exc:
+        raise InvoiceValidationError(
+            "bulk invoice import file could not be read",
+            translated_message="application.invoices.bulk_import.errors.file_read_failed",
+            context={"path_name": path.name, "error_type": type(exc).__name__},
+        ) from exc
+    table = normalize_tabular_bytes(source_bytes)
+    resolution = resolve_bulk_import_columns(
+        table.headers, mapper=mapper, required_fields=BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
+    )
+    _assert_required_fields_present(resolution)
+    field_by_index = resolution.field_by_index
+    rows = tuple(
+        BulkImportSourceRow(
+            row_number=row.source_line_number,
+            values={field: row.cells[index] for index, field in field_by_index.items() if index < len(row.cells)},
+        )
+        for row in table.rows
+    )
+    # A file written in the product's OWN column names is the operator's
+    # template, and its amounts stay under the canonical euro grammar: a bare
+    # ``1.234`` there is genuinely ambiguous and must refuse rather than be
+    # guessed at. Only a book the mapping lane had to interpret -- foreign
+    # headers, its own conventions -- is read under its detected separator,
+    # where the whole file's evidence settles what a comma means.
+    return BulkInvoiceImportSource(
+        rows=rows,
+        resolution=resolution,
+        decimal_separator=table.dialect.decimal_separator if resolution.consulted_mapping_lane else ".",
+    )
+
+
+def _read_workbook_source(path: Path, *, mapper: ColumnRoleMapper | None) -> BulkInvoiceImportSource:
+    """Read a workbook invoice book into a resolved source.
+
+    A workbook states its own cell types, so there is no dialect to detect: a
+    numeric cell arrives numeric and keeps the representation the workbook
+    chose. Only the header resolution is shared with the delimited path.
+    """
     from openpyxl import load_workbook
 
     workbook = load_workbook(filename=path, read_only=True, data_only=True)
@@ -394,71 +437,68 @@ def _read_xlsx_rows(path: Path) -> Iterator[tuple[int, Mapping[str, object]]]:
         try:
             header_row = next(rows_iter)
         except StopIteration:
-            return
+            return BulkInvoiceImportSource(rows=(), resolution=resolve_bulk_import_columns((), mapper=None))
         headers = [_cell_text(cell) for cell in header_row]
-        unknown = frozenset(headers) - BULK_INVOICE_IMPORT_ALLOWED_COLUMNS
-        if unknown:
-            raise InvoiceValidationError(
-                "bulk invoice import workbook contains unknown columns",
-                translated_message="application.invoices.bulk_import.errors.unknown_columns",
-                context={"unknown_columns": ", ".join(sorted(unknown))},
-            )
-        missing_required = BULK_INVOICE_IMPORT_REQUIRED_COLUMNS - frozenset(headers)
-        if missing_required:
-            raise InvoiceValidationError(
-                "bulk invoice import workbook is missing required columns",
-                translated_message="application.invoices.bulk_import.errors.missing_columns",
-                context={"missing_columns": ", ".join(sorted(missing_required))},
-            )
+        resolution = resolve_bulk_import_columns(
+            headers, mapper=mapper, required_fields=BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
+        )
+        _assert_required_fields_present(resolution)
+        field_by_index = resolution.field_by_index
+        rows: list[BulkImportSourceRow] = []
         for row_number, row in enumerate(rows_iter, start=2):  # header is row 1
             if not any(cell is not None and str(cell).strip() for cell in row):
                 continue
-            raw_row: dict[str, object] = {}
-            for index, header in enumerate(headers):
-                if not header:
-                    continue
+            values: dict[str, object] = {}
+            for index, field in field_by_index.items():
                 cell = row[index] if index < len(row) else None
-                raw_row[header] = cell.isoformat() if isinstance(cell, date) else cell
-            yield row_number, raw_row
+                values[field] = cell.isoformat() if isinstance(cell, date) else cell
+            rows.append(BulkImportSourceRow(row_number=row_number, values=values))
+        return BulkInvoiceImportSource(rows=tuple(rows), resolution=resolution)
     finally:
         workbook.close()
 
 
-def read_bulk_invoice_import_rows(path: Path) -> Iterator[tuple[int, Mapping[str, object]]]:
-    """Yield ``(row_number, raw_row)`` pairs from a CSV or XLSX bulk-import file.
+def read_bulk_invoice_import_source(
+    path: Path,
+    *,
+    mapper: ColumnRoleMapper | None = None,
+) -> BulkInvoiceImportSource:
+    """Read a CSV, TSV or XLSX invoice book into rows keyed by importer field.
 
-    ``row_number`` is 1-based against the file's own rows (the header is row
-    1), so a refusal names exactly the row an operator would count by opening
-    the file in a spreadsheet application.
+    A column whose header already names an importer field binds to it outright.
+    Anything left over is put to ``mapper`` once for the whole file, and a column
+    that still resolves to nothing is carried on the returned resolution for
+    reporting — **the file is never refused for carrying a column the importer
+    does not know**.
+
+    ``row_number`` is 1-based against the file's own rows, so a refusal names
+    exactly the row an operator would count in a spreadsheet application.
+
+    Args:
+        path: The invoice book to read.
+        mapper: Establishes roles for columns exact matching did not resolve.
+
+    Returns:
+        The resolved source, ready to apply.
 
     Raises:
-        InvoiceValidationError: When the file extension is unsupported, or the
-            header carries unknown columns or omits a required column.
+        InvoiceValidationError: The extension is unsupported, the file cannot be
+            read, or no column supplies a required field.
     """
     suffix = path.suffix.lower()
-    if suffix == ".csv":
-        try:
-            text = path.read_text(encoding="utf-8-sig")
-        except OSError as exc:
-            raise InvoiceValidationError(
-                "bulk invoice import file could not be read",
-                translated_message="application.invoices.bulk_import.errors.file_read_failed",
-                context={"path_name": path.name, "error_type": type(exc).__name__},
-            ) from exc
-        yield from _read_csv_rows(text)
-        return
+    if suffix in {".csv", ".tsv"}:
+        return _read_delimited_source(path, mapper=mapper)
     if suffix in {".xlsx", ".xlsm"}:
-        yield from _read_xlsx_rows(path)
-        return
+        return _read_workbook_source(path, mapper=mapper)
     raise InvoiceValidationError(
-        "bulk invoice import file must be .csv or .xlsx",
+        "bulk invoice import file must be .csv, .tsv or .xlsx",
         translated_message="application.invoices.bulk_import.errors.unsupported_extension",
         context={"path_name": path.name, "extension": suffix},
     )
 
 
 def import_invoices_from_rows(
-    rows: Sequence[tuple[int, Mapping[str, object]]],
+    source: BulkInvoiceImportSource,
     *,
     bucket_id: str,
     kind: InvoiceKind,
@@ -493,9 +533,14 @@ def import_invoices_from_rows(
     skipped_duplicate = 0
     created_ids: list[str] = []
 
-    for row_number, raw_row in rows:
+    for source_row in source.rows:
+        row_number = source_row.row_number
         try:
-            parsed = _parse_bulk_invoice_row(raw_row, row_number=row_number)
+            parsed = _parse_bulk_invoice_row(
+                source_row.values,
+                row_number=row_number,
+                decimal_separator=source.decimal_separator,
+            )
         except _RowParseError as exc:
             refused.append(BulkInvoiceImportRowFailure(row_number=exc.row_number, field=exc.field, reason=exc.reason))
             continue
@@ -511,6 +556,7 @@ def import_invoices_from_rows(
                 issued_at=parsed.invoice_date,
                 taxable_base=parsed.taxable_base,
                 iva_rate=parsed.iva_rate,
+                retention_amount=parsed.retention_amount,
                 currency=parsed.currency,
                 notes=parsed.notes,
             )
@@ -536,6 +582,7 @@ def import_invoices_from_rows(
             issued_at=parsed.invoice_date,
             taxable_base=parsed.taxable_base,
             iva_rate=parsed.iva_rate,
+            retention_amount=parsed.retention_amount,
             currency=parsed.currency,
             notes=parsed.notes,
             repository=repo,
@@ -545,7 +592,7 @@ def import_invoices_from_rows(
         created += 1
 
     return BulkInvoiceImportResult(
-        rows=len(rows),
+        rows=len(source.rows),
         created=created,
         skipped_duplicate=skipped_duplicate,
         refused=tuple(refused),
