@@ -200,6 +200,20 @@ def derive_rate_box_partitions(revision: ModeloRevision) -> tuple[RateBoxPartiti
     sum. They are not boxes, but they are money accounted for, and dropping them
     would overstate the shortfall.
 
+    .. warning::
+        **Do not make a gate over rate-asserting casillas consume this function.**
+        The convergence looks obviously correct from outside — this is the
+        canonical owner of the rate-box concept — and it silently narrows the
+        gate's population. What comes back here is only casillas belonging to a
+        FORMED partition, so a rate-pinned casilla whose group formed none is
+        absent by construction. That group is exactly where the severe defect
+        lives: every binding pins a rate, no blind sibling remains, and a row
+        whose rate was never recorded reaches no casilla at all. A gate rebuilt
+        on this output would stop seeing precisely the case it exists for.
+
+        :func:`rate_box_unscreened_groups` returns that residue and is the
+        correct thing to consume when the question is "what was never checked".
+
     Args:
         revision: The :class:`ModeloRevision` whose bindings and casillas are read.
 
