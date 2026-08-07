@@ -383,3 +383,30 @@ def test_an_underdetermined_observation_would_reach_no_rung_at_all() -> None:
         "modelo-303-iva-repercutido-reducido-base": Decimal("1600.00"),
         "modelo-303-iva-repercutido-reducido-cuota": Decimal("120.00"),
     }
+
+
+def test_total_cuota_devengada_enumerates_every_recargo_rung_aeat_sums() -> None:
+    """The aggregate must carry every rung AEAT's own [27] formula enumerates.
+
+    The diseño prints casilla 27 as an explicit sum, and it names the recargo
+    rungs [158], [170] and [26] alongside [18], [21] and [24]. Three of those
+    were missing here, and [158] is the one that cost money: it is bound, so a
+    super-reducido recargo cuota reached that box, but the box reached no total
+    -- declared on the face of the return and absent from the figure the
+    resultado chain uses.
+
+    Keyed on the rungs rather than on a count, so adding a rung without totalling
+    it reds this rather than passing on a stale tally. [158] and [26] appear in
+    the printed formula of every design this revision spans; [170] appears from
+    the 2024-late design, and is included so the total stays correct on both
+    sides of the pending box move rather than needing a second edit then.
+    """
+    revision = _revision()
+    total = next(f for f in revision.formulas if f.target_casilla_id == "iva.cuota-devengada-total")
+    summed = {str(arg.casilla_id) for arg in total.expression.args if arg.casilla_id is not None}
+
+    recargo_rungs_aeat_sums = {"18", "21", "24", "158", "170", "26"}
+    assert recargo_rungs_aeat_sums <= summed, (
+        f"recargo rungs AEAT sums into [27] but this total omits: "
+        f"{sorted(recargo_rungs_aeat_sums - summed)}"
+    )

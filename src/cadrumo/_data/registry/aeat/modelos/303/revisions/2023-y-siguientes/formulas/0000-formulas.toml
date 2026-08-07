@@ -64,6 +64,31 @@ casilla_id = "21"
 [[revisions.2023-y-siguientes.formulas.expression.args]]
 casilla_id = "24"
 
+# The recargo rungs the aggregate omitted. AEAT's own printed formula for [27]
+# enumerates [158] and [26] in EVERY design this revision spans (2023 and 2025
+# both), and [170] from the 2024-late design onward, so their absence here was a
+# gap rather than a scoping choice.
+#
+# [158] is the one that costs money today. It is bound, so a super-reducido
+# recargo cuota already reaches that box -- but the box never reached this total,
+# so the amount was declared on the face of the return and omitted from the
+# figure the resultado chain uses. That is an under-declaration for any recargo
+# filer with super-reducido supplies, and it is independent of the separate
+# defect that [158] is the wrong rung for that population (AEAT mandates it as
+# 1,75 % tabaco; the 0,5 % box is [170]).
+#
+# [170] contributes nothing until something populates it, and is added now so the
+# total stays correct on both sides of that box move rather than needing a second
+# edit at the moment the cuota relocates.
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "158"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "170"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "26"
+
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-autoconsumo-promotor-cuota"
 target_casilla_id = "iva.autoconsumo.promotor.cuota"
