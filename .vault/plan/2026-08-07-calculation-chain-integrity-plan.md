@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:ca588caa80f80c6881d4c72d5ef80aed331d10e8d6c6b7e8b50f8f761e2b8419'
+body_hash: 'sha256:9df955d68b82a5a39f1aa34d47e946cb88b3bac21f0efb1b50651882da5f9370'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -70,7 +70,7 @@ Establish which of the profile field, the per-transaction marker, and the regist
 Implement the canonical placement, then unblock the retencion regimen filter and M130 casilla 08.
 
 - [ ] `W03.P05.S11` - Implement the canonical activity-type placement with its persistence roundtrip and anti-tautology proof; `src/cadrumo/domain/transactions/`.
-- [ ] `W03.P05.S12` - Narrow the statutory-rate advisory to the rates a taxpayer can lawfully be subject to, restoring the flat-fee catch measured lost; `src/cadrumo/application/aggregation/_retencion_rate_advisory.py`.
+- [x] `W03.P05.S12` - Narrow the statutory-rate advisory to the rates a taxpayer can lawfully be subject to, restoring the flat-fee catch measured lost; `src/cadrumo/application/aggregation/_retencion_rate_advisory.py`.
 - [ ] `W03.P05.S13` - Aggregate M130 casilla 08 agrarian volume from the ledger, currently manual and silently zero for an agrarian-objetiva filer; `src/cadrumo/application/aggregation/`.
 - [ ] `W03.P05.S37` - Refresh the corpus to bundle the M036 tipo-de-actividad code table the diseno points at, the field is declared but its value set is absent and the mapping cannot be authored against what ships; `src/cadrumo/_data/corpus/aeat_official/`.
 - [ ] `W03.P05.S38` - Ground the code-to-art-95-partition mapping in the registry with its own legal refs once the table lands, never inferred in code, and plan for the refreshed table proving unable to serve at all; `src/cadrumo/_data/registry/aeat/legal/`.
