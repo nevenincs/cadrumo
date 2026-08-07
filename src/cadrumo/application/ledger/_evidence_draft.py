@@ -1149,6 +1149,42 @@ def confirm_invoice_draft_from_evidence(
             suggestion="aeat app ledger evidence extract --evidence-id <id>",
         )
 
+    # A PRINTED cuota is evidence and outranks a recomputed one. When the
+    # operator states it, the line carries that exact figure rather than
+    # base * rate, so a document whose printed cuota differs by a cent from the
+    # arithmetic is recorded as it was issued. The line invariants still apply,
+    # so a cuota the base and rate cannot support refuses rather than being
+    # accepted as an override.
+    #
+    # Resolved BEFORE the idempotency candidate, not just before the write: the
+    # candidate's derived id hashes the totals, so a candidate built without the
+    # lines and the recargo hashes to an id the real record will never carry.
+    # The guarded-retry lookup then misses every time and the re-confirm reaches
+    # the writer's duplicate-identity refusal instead of returning the existing
+    # invoice unchanged (`aeat-cli-contract`).
+    operator_overrode_the_amounts = taxable_base is not None or iva_rate is not None or iva_amount is not None
+    confirmed_lines = _confirmed_lines_from_the_document(
+        draft=draft,
+        invoice_number=resolved_invoice_number,
+        taxable_base=resolved_taxable_base,
+        iva_rate=resolved_iva_rate,
+        iva_amount=iva_amount,
+        operator_overrode_the_amounts=operator_overrode_the_amounts,
+    )
+    # The recargo de equivalencia is a real cuota the issuer owes (LIVA art.
+    # 161) and Modelo 303 sums it in its own devengado tiers. A structured
+    # document states it exactly and the writer already models it as riding
+    # inside the invoice total, so forwarding only the operator's override
+    # dropped the whole figure whenever they did not retype what they were
+    # confirming. An explicit override still wins, as it does on every field.
+    resolved_recargo_amount = recargo_amount if recargo_amount is not None else draft.recargo_amount
+    if operator_overrode_the_amounts:
+        # An override is a statement about the whole invoice. Keeping a
+        # document-read recargo beside operator-restated totals would leave two
+        # disagreeing authorities on the same figures, which is the reason the
+        # per-rate split is skipped on that path too.
+        resolved_recargo_amount = recargo_amount
+
     repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     candidate = build_catalogue_invoice(
         bucket_id=bucket_id,
@@ -1162,6 +1198,8 @@ def confirm_invoice_draft_from_evidence(
         iva_rate=resolved_iva_rate,
         currency=resolved_currency,
         notes=notes,
+        recargo_amount=resolved_recargo_amount,
+        lines=confirmed_lines,
     )
     attachment_store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, resolved_settings))
     catalogue = repository.load()
@@ -1184,51 +1222,6 @@ def confirm_invoice_draft_from_evidence(
             total_discrepancy=printed_total_discrepancy(draft=draft, invoice=existing),
         )
 
-    # A PRINTED cuota is evidence and outranks a recomputed one. When the
-    # operator states it, the line carries that exact figure rather than
-    # base * rate, so a document whose printed cuota differs by a cent from the
-    # arithmetic is recorded as it was issued. The line invariants still apply,
-    # so a cuota the base and rate cannot support refuses rather than being
-    # accepted as an override.
-    confirmed_lines = None
-    operator_overrode_the_amounts = taxable_base is not None or iva_rate is not None or iva_amount is not None
-    if len(draft.iva_breakdown) > 1 and not operator_overrode_the_amounts:
-        # A document that charges more than one rate cannot be represented by a
-        # single base and cuota pair. The parsers read the per-rate split
-        # exactly; collapsing it here would lose WHICH part of the base carried
-        # which rate, and the totals would still agree -- which is what makes
-        # the loss quiet. Modelo 303 sums cuota devengada per tier, so a
-        # collapsed invoice declares into one tier what belongs in two.
-        #
-        # Skipped entirely when the operator overrode any amount: an explicit
-        # override is a statement about the whole invoice, and silently keeping
-        # a per-rate split beside it would leave two disagreeing authorities on
-        # the same figures.
-        confirmed_lines = tuple(
-            InvoiceLine(
-                description=f"{resolved_invoice_number or 'Invoice'} - IVA {entry.iva_rate}%",
-                quantity=Decimal("1"),
-                unit_price=entry.taxable_base,
-                subtotal=entry.taxable_base,
-                iva_rate=resolve_iva_rate_slot(entry.iva_rate),
-                iva_amount=entry.iva_amount,
-            )
-            for entry in draft.iva_breakdown
-        )
-    elif iva_amount is not None:
-        confirmed_lines = (
-            InvoiceLine(
-                description=resolved_invoice_number or "Invoice",
-                quantity=Decimal("1"),
-                unit_price=resolved_taxable_base,
-                subtotal=resolved_taxable_base,
-                # The SAME resolver the writer below applies to the same value,
-                # so an unrepresentable percentage refuses identically whether
-                # or not the document printed a cuota.
-                iva_rate=resolve_iva_rate_slot(resolved_iva_rate),
-                iva_amount=iva_amount,
-            ),
-        )
     result = create_catalogue_invoice(
         bucket_id=bucket_id,
         kind=kind,
@@ -1245,7 +1238,7 @@ def confirm_invoice_draft_from_evidence(
         operation_date=operation_date,
         retention_rate=retention_rate,
         retention_amount=retention_amount,
-        recargo_amount=recargo_amount,
+        recargo_amount=resolved_recargo_amount,
         invoice_class=invoice_class,
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
@@ -1270,6 +1263,80 @@ def confirm_invoice_draft_from_evidence(
         created=True,
         total_discrepancy=printed_total_discrepancy(draft=draft, invoice=result.invoice),
     )
+
+
+def _confirmed_lines_from_the_document(
+    *,
+    draft: InvoiceDraft,
+    invoice_number: str,
+    taxable_base: Decimal,
+    iva_rate: Decimal | None,
+    iva_amount: Decimal | None,
+    operator_overrode_the_amounts: bool,
+) -> tuple[InvoiceLine, ...] | None:
+    """Build the confirmed lines from what the document itself declared.
+
+    Returns ``None`` when nothing better than the writer's own base-times-rate
+    derivation is available, which is the correct outcome for a text or vision
+    reader: those recover printed totals, not a tax breakdown.
+
+    The per-rate breakdown is used whenever the document states one, at ANY
+    length. A single entry is not the harmless case it looks like: the
+    structured readers populate the breakdown and never the draft's flat
+    ``iva_rate``, so a one-rate structured document reached the writer with no
+    rate at all and resolved to the base-only EXEMPT slot -- minting a
+    zero-cuota invoice out of a document that plainly charged one. Reading the
+    breakdown at length one is what recovers that rate; reading it at length two
+    or more is additionally what preserves WHICH part of the base carried which
+    rate, since Modelo 303 sums cuota devengada per tier.
+
+    Args:
+        draft: The re-run extraction being confirmed.
+        invoice_number: Resolved invoice number, used to label the lines.
+        taxable_base: Resolved taxable base the lines must sum back to.
+        iva_rate: Resolved IVA percentage, or ``None``.
+        iva_amount: The operator-supplied printed cuota, or ``None``.
+        operator_overrode_the_amounts: Whether the operator restated any of the
+            base, rate or cuota.
+
+    Returns:
+        The lines to hand the writer, or ``None`` to let it derive one line.
+    """
+    if draft.iva_breakdown and not operator_overrode_the_amounts:
+        # Every entry must state both halves of its subtotal. A partial
+        # breakdown is not silently completed here: deriving the missing cuota
+        # would put this function's arithmetic in place of the document's own
+        # figure, which is the opposite of reading the record exactly. The
+        # fall-through keeps the pre-existing behaviour, and the printed-total
+        # cross-check still reports the shortfall.
+        entries = draft.iva_breakdown
+        if all(entry.taxable_base is not None and entry.iva_amount is not None for entry in entries):
+            return tuple(
+                InvoiceLine(
+                    description=f"{invoice_number or 'Invoice'} - IVA {entry.iva_rate}%",
+                    quantity=Decimal("1"),
+                    unit_price=entry.taxable_base,
+                    subtotal=entry.taxable_base,
+                    iva_rate=resolve_iva_rate_slot(entry.iva_rate),
+                    iva_amount=entry.iva_amount,
+                )
+                for entry in entries
+            )
+    if iva_amount is not None:
+        return (
+            InvoiceLine(
+                description=invoice_number or "Invoice",
+                quantity=Decimal("1"),
+                unit_price=taxable_base,
+                subtotal=taxable_base,
+                # The SAME resolver the writer applies to the same value, so an
+                # unrepresentable percentage refuses identically whether or not
+                # the document printed a cuota.
+                iva_rate=resolve_iva_rate_slot(iva_rate),
+                iva_amount=iva_amount,
+            ),
+        )
+    return None
 
 
 def _resolve_confirmed_invoice_date(invoice_date: date | None, draft: InvoiceDraft) -> date:
