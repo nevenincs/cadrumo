@@ -8,7 +8,9 @@ from typing import Annotated
 
 import typer
 
-from ..core.external_constants import OutputLanguage
+from cadrumo.core.external_constants import OutputLanguage
+
+from ._paths import LOCALES_DIR, SRC_DIR
 from ._status import CatalogueStatusRecord, catalogue_status
 from .manager import (
     LocaleAuditResult,
@@ -22,8 +24,7 @@ app = typer.Typer(name="locales", help="Audit and scaffold locale catalogues", n
 
 
 def _default_manager() -> LocaleManager:
-    locales_dir = Path(__file__).parent
-    return LocaleManager(locales_dir.parent, locales_dir)
+    return LocaleManager(SRC_DIR, LOCALES_DIR)
 
 
 @app.command("audit")

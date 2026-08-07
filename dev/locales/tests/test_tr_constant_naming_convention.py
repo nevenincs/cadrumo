@@ -22,18 +22,18 @@ ALL-CAPS shape must carry a ``_LOCALE_KEY``/``_LOCALE_KEYS`` suffix.
 from __future__ import annotations
 
 import ast
-from pathlib import Path
 
 import pytest
 
 from .._ast_scanner import find_tr_constant_naming_violations, tr_constant_naming_violations_in_tree
+from .._paths import SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# The source tree the scanner walks: ``src/cadrumo`` (parents[2] of this file,
-# which sits at ``src/cadrumo/locales/tests/``), matching the sibling
-# dynamic-prefix-registry gate in this same directory.
-_SRC_ROOT = Path(__file__).resolve().parents[2]
+# The source tree the scanner walks. The tooling sits outside the package it
+# maintains, so the root is resolved from the checkout by the shared derivation
+# rather than counted from this file's own parents.
+_SRC_ROOT = SRC_DIR
 
 
 def test_no_tr_constant_naming_violations_repo_wide() -> None:

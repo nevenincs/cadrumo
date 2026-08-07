@@ -122,10 +122,10 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     stays import-error-safe. If a domain import fails, ``get_registered_keys``
     will propagate the error with full context rather than a silent empty set.
     """
-    from ..application.wizard import WIZARD_FLOWS
-    from ..core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-    from ..domain.contribuyente import CCAA
-    from ..domain.deadlines import (
+    from cadrumo.application.wizard import WIZARD_FLOWS
+    from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+    from cadrumo.domain.contribuyente import CCAA
+    from cadrumo.domain.deadlines import (
         EntityType,
         FiscalResidency,
         IrpfEstimationRegime,
@@ -133,7 +133,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         IrpfSpecialRegime,
         LegalEntityForm,
     )
-    from ..domain.user_profile import UserProfileStatus
+    from cadrumo.domain.user_profile import UserProfileStatus
 
     return (
         *_wizard_choice_label_registrations(

@@ -8,10 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from ...core import normalise_product_identity_references
-from ...core.i18n import extract_placeholders
-from ...core.product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY
-from ...tests.cli_runner import invoke_typer_app
+from cadrumo.core import normalise_product_identity_references
+from cadrumo.core.i18n import extract_placeholders
+from cadrumo.core.product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY
+from cadrumo.tests.cli_runner import invoke_typer_app
+
+from .._paths import LOCALES_DIR, SRC_DIR
 from ..cli import app
 from ..manager import LocaleError, LocaleManager, _flatten_leaf_values
 
@@ -300,8 +302,7 @@ def test_audit_accepts_matching_conversions_escaped_and_literal_braces(tmp_path:
 
 def test_committed_catalogues_pass_production_audit() -> None:
     """The shipped four-language catalogue is accepted by the real validator."""
-    locales_dir = Path(__file__).resolve().parents[1]
-    manager = LocaleManager(src_dir=locales_dir.parent, locales_dir=locales_dir)
+    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR)
 
     result = manager.audit()
 
@@ -310,8 +311,7 @@ def test_committed_catalogues_pass_production_audit() -> None:
 
 def test_committed_catalogues_follow_contextual_product_identity_contract() -> None:
     """Shipped locale values preserve prose, identity, CLI, machine, and authority referents."""
-    locales_dir = Path(__file__).resolve().parents[1]
-    manager = LocaleManager(src_dir=locales_dir.parent, locales_dir=locales_dir)
+    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR)
 
     assert PRODUCT_IDENTITY.prose_name == "Cadrumo"
     assert PRODUCT_IDENTITY.display_name == "CADRUMO"
@@ -333,7 +333,7 @@ def test_committed_catalogues_follow_contextual_product_identity_contract() -> N
         # vacuously.
         leaves = {
             key: value
-            for key, value in _flatten_leaf_values(manager.load_locale(locales_dir / f"{locale}.yml")).items()
+            for key, value in _flatten_leaf_values(manager.load_locale(LOCALES_DIR / f"{locale}.yml")).items()
             if value is not None
         }
         assert len(leaves) > 10_000, (

@@ -1,4 +1,4 @@
-"""Run :mod:`locales.cli` with ``python -m cadrumo.locales``."""
+"""Run :mod:`locales.cli` with ``python -m dev.locales``."""
 
 from __future__ import annotations
 

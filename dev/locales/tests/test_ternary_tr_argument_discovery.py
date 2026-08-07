@@ -25,7 +25,7 @@ from .._ast_scanner import scan_source_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_FIXTURE_MODULE = '''
+_FIXTURE_MODULE = """
 from cadrumo.core.i18n import tr
 
 
@@ -35,7 +35,7 @@ def render_state(condition: bool) -> str:
         if condition
         else "fixture.ternary.branch_false"
     )
-'''
+"""
 
 
 def test_both_ternary_branches_are_discovered(tmp_path: Path) -> None:

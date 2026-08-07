@@ -16,11 +16,12 @@ from typing import Any, cast, override
 
 import yaml
 
-from ..core import normalise_product_identity_references
-from ..core.atomic_write import atomic_write_text
-from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
-from ..core.i18n import extract_placeholders
-from ..core.logging import get_logger
+from cadrumo.core import normalise_product_identity_references
+from cadrumo.core.atomic_write import atomic_write_text
+from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
+from cadrumo.core.i18n import extract_placeholders
+from cadrumo.core.logging import get_logger
+
 from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
@@ -200,8 +201,6 @@ class LocaleManager:
 
         keys: set[str] = set()
         for py_file in self.src_dir.rglob("*.py"):
-            if py_file.name == "test_parity.py" or py_file.name == "manager.py":
-                continue
             if _is_test_module(py_file):
                 continue
             try:

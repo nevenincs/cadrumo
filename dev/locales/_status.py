@@ -8,7 +8,7 @@ an absent one for reporting purposes, because it looks done.
 
 The partition is an internal-consistency guarantee, not a completeness
 one: the required set is the production key inventory from
-:meth:`~cadrumo.locales.manager.LocaleManager.get_codebase_keys`, so a
+:meth:`~dev.locales.manager.LocaleManager.get_codebase_keys`, so a
 key that inventory cannot see is outside the partition entirely.
 Namespace-exempted keys are likewise outside it; their count is surfaced
 per catalogue so the exempted surface stays visible rather than silently
@@ -24,7 +24,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..core.i18n import extract_placeholders
+from cadrumo.core.i18n import extract_placeholders
+
 from .manager import (
     _INTENTIONAL_IDENTICAL_FILENAME,
     LocaleManager,

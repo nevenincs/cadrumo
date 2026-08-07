@@ -36,19 +36,20 @@ and the verdict-factory and required/optional badge keys stay scanner-visible.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
-from ...domain.user_profile import UserProfileStatus
+from cadrumo.domain.user_profile import UserProfileStatus
+
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
 from .._fstring_registry import get_registered_keys
+from .._paths import SRC_DIR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# The source tree the scanner walks: ``src/cadrumo`` (parents[2] of this file,
-# which sits at ``src/cadrumo/locales/tests/``).
-_SRC_ROOT = Path(__file__).resolve().parents[2]
+# The source tree the scanner walks. The tooling sits outside the package it
+# maintains, so the root is resolved from the checkout by the shared derivation
+# rather than counted from this file's own parents.
+_SRC_ROOT = SRC_DIR
 
 
 # ---------------------------------------------------------------------------
@@ -170,7 +171,7 @@ def test_every_dynamic_prefix_is_registry_covered_or_allowlisted() -> None:
             "allowlisted:\n"
             f"{detail}\n\n"
             "If the tail is a BOUNDED enumeration, add an FStringKeyRegistration "
-            "to src/cadrumo/locales/_fstring_registry.py so scaffold "
+            "to dev/locales/_fstring_registry.py so scaffold "
             "re-materialises every concrete key. If the value space is genuinely "
             "OPEN-ENDED, add a reason-carrying entry to OPEN_ENDED_NAMESPACES in "
             "this gate stating why it cannot be registered."
@@ -224,7 +225,7 @@ def test_status_page_registration_expands_exactly_user_profile_status() -> None:
     assert expanded == expected, (
         "flows.status.profiles.status.* registration is out of sync with "
         f"UserProfileStatus.\n  registered: {sorted(expanded)}\n  expected:   {sorted(expected)}\n"
-        "Update the registration in src/cadrumo/locales/_fstring_registry.py."
+        "Update the registration in dev/locales/_fstring_registry.py."
     )
 
 
@@ -288,7 +289,7 @@ def test_no_catalogue_leaf_is_a_self_referencing_placeholder() -> None:
     assert total_leaves > 1000, "catalogue flattening returned implausibly few leaves - the walk regressed"
     assert not echoes, (
         "self-referencing placeholder leaves (value == key) found; author real "
-        "values via `python -m cadrumo.locales set`:\n" + "\n".join(echoes)
+        "values via `python -m dev.locales set`:\n" + "\n".join(echoes)
     )
 
 
@@ -320,7 +321,7 @@ def test_no_catalogue_value_carries_a_doubled_apostrophe() -> None:
     assert not doubled, (
         "catalogue values carrying a doubled apostrophe after YAML parsing; the "
         "escape belongs in the file, never in the value - re-author via "
-        "`python -m cadrumo.locales set`:\n" + "\n".join(doubled)
+        "`python -m dev.locales set`:\n" + "\n".join(doubled)
     )
 
 
