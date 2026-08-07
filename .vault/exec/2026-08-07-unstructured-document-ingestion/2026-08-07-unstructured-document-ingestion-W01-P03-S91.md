@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:76fe662632324443ba73f0ebfa5f0ac98b6a3bff9162b27aaae6422f52c8913f'
+body_hash: 'sha256:aea0406080a1e3fc6622b434b019498b742ecf4280ceaced8131baeb2f27f70a'
 step_id: 'S91'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -99,6 +99,28 @@ applied its mutation through an anchor that refused to fire on zero matches — 
 did refuse once, on a line-ending mismatch — and verified restoration by digest in
 a `finally`. The target file was byte-identical afterwards.
 
+### The runtime form was not the problem; the seam was
+
+An independent re-verification lands the same mutation at runtime, so the
+conclusion above should not be generalised into "mutate this code by editing the
+source". Both mechanical causes are properties of the seam that was chosen, not
+of runtime patching: reassigning a plain class attribute loses to the instance
+`__dict__` pydantic v2 stores field values in, and swapping a module attribute
+misses a class the confirm path already imported.
+
+A `property` installed on `InvoiceDraft.customer_tax_id` and `customer_name`
+sidesteps both. A property is a data descriptor, so it wins over the instance
+`__dict__` on the class object the confirm path is already holding, and it
+intercepts exactly the two attribute reads the selection performs. Serialization
+reads `__dict__` directly and is untouched, which makes the patch as narrow as
+the fallback it restores rather than a class-wide rewrite that could red
+something else and be mistaken for a proof.
+
+This matters beyond one Step. A source-edit window is shippable state in a tree
+where peers commit continuously, and it was reached for here on the belief that
+runtime patching could not work. It could; the first attempt had simply gripped
+the wrong seam.
+
 ## How this code reached main
 
 The implementation landed accidentally, swept into a 101-file bare commit while
@@ -134,3 +156,28 @@ tax id, so the two profile guards were inert and could not have produced them.
 Confirm surface: 11 passed in isolation; a full-directory run required sequential
 re-execution to clear concurrent registry writes, as the local-execution rule
 predicts. No failure in the directory was attributable to this change.
+
+Re-verified independently, sequentially, with the cache provider disabled, by a
+second lane that reproduced the figures rather than accepting them.
+
+The gate reproduces at 5 passed. The mutation reproduces at 2 failed and 3
+passed, through the runtime seam described above, with the observable delta
+printed before any assertion ran. Both reds were located rather than merely
+counted. The first is the load-bearing one: `pytest.raises` in the gate body
+recorded DID NOT RAISE, and the run log shows the confirm went on to write the
+catalogue entry — the defect performing itself. The second is a production
+refusal raised inside the confirm path under test, not in fixture setup, when the
+agreement check found the operator's correct override disagreeing with the
+fallback-supplied issuer. Neither red came from the two profile guards: the log
+records the profile resolution returning no record twice on the refusal case,
+which is those guards loading a profile that is not there and returning without
+judging. That is the inertness premise observed at runtime rather than asserted
+from a docstring.
+
+The directory result the earlier record left open: the whole of
+`application/ledger` runs 742 passed and 4 failed on the `unit` lane, and 19
+passed on the complement, both sequential. All four failures are the same
+`regime_legend` field on the draft-projection parity and provenance cases, which
+belongs to a different lane's in-flight work and is unrelated to the selection.
+Nothing else in the directory depended on the deleted fallback — the concern that
+removing it would strand an existing expectation does not materialise.
