@@ -6,9 +6,10 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:0e734fafe0e5c1b96dd240f1c5c35e9107988497cf5bae720cd27e0664d4ed15'
+body_hash: 'sha256:25830383729be7f5a257ad00fd96edad8b85b73700d0afdd84a380eab02f3bb2'
 related:
   - '[[2026-08-07-dehu-notification-legal-effect-adr]]'
+  - '[[2026-08-07-dehu-notification-legal-effect-plan]]'
   - '[[2026-08-07-dehu-notification-legal-effect-reference]]'
 ---
 
@@ -21,6 +22,10 @@ Auto-generated index of all documents tagged with `#dehu-notification-legal-effe
 ### adr
 
 - `2026-08-07-dehu-notification-legal-effect-adr` - `dehu-notification-legal-effect` adr: `DEHu notification legal-effect and service state` | (**status:** `accepted`)
+
+### plan
+
+- `2026-08-07-dehu-notification-legal-effect-plan` - `dehu-notification-legal-effect` plan
 
 ### reference
 
