@@ -5,107 +5,132 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:ad9953458f5facbd484aa26c30973a312563d39fdfc95c3fd56975355b4a554a'
+body_hash: 'sha256:82f87c4d1e37863d1f400257fa144819c64510818ecc9490400959fbfb49e5ab'
 related: []
 ---
 
-# `code-dedup-sweep` audit: `Corpus anchor verification: the unverified set is 63 cites across 31 files, not tree-wide`
+# `code-dedup-sweep` audit: `Corpus anchor verification: three resolution paths, one unchecked, 320 cites`
 
 ## Scope
 
-ADR input. A `corpus_ref` in the legal catalogue takes the form `path#anchor`, and
-the anchor asserts that the cited text sits in a particular provision. This note
-measures how far that assertion is actually checked.
+ADR input. A `corpus_ref` in the legal catalogue takes the form `path#anchor`,
+and the anchor asserts that the cited text sits in a particular provision. This
+note measures how far that assertion is actually checked.
 
-It supersedes an earlier reading that the anchor was decorative tree-wide. That
-reading came from a positive control run against a single file which happened to
-be single-unit: the control correctly demonstrated the single-unit fallback and
-was then generalised to the whole tree. A control that only ever sees one shape
-cannot establish that the shape is universal.
+It supersedes two earlier readings, both produced by this campaign and both
+wrong. The first held that the anchor was decorative tree-wide. The second put
+the unverified set at 63 cites via a filename heuristic. **The mechanism section
+below is the finding; the counts follow from it.**
 
 ## Findings
 
-### anchors-are-enforced-on-multi-unit-files | low | The resolver checks anchors precisely wherever a sidecar carries more than one unit
+### three-resolution-paths-not-one | high | The resolver has three ways to satisfy an anchor, and only one of them is unchecked
 
-Full census of all 363 sidecars under `corpus/normatives/html`: **1690 units, of
-which 1280 carry a populated anchor.** Not zero.
+Both earlier censuses were built assuming the resolver matches a unit's
+`anchor` field and nothing else. It does not.
 
-Measured against a 222-unit sidecar, the resolver returns a **277-character**
-unit for a real anchor and REFUSES an invented one. That is an article-sized
-extract, not a document. Where a file has several units the citation is precise
-and a wrong anchor fails loudly.
+1. **Anchor-field match.** Where a sidecar's units carry populated `anchor`
+   values, the requested anchor is matched against them and a wrong anchor is
+   refused.
+2. **Title match**, in `_title_matches_anchor`. A unit whose `anchor` field is
+   EMPTY can still resolve by its title. This path is not a loose fallback: it
+   canonicalises by stripping non-alphanumerics, **expands Spanish ordinals**
+   (`primero` to 1, `segunda` to 2) via a substitution table, normalises article
+   prefixes so `a5`, `art-5` and `articulo-5` converge, and applies distinct
+   rules per prefix family (`articulo`, `anexo`, `apartado`). It **refuses on
+   ambiguity** rather than choosing — two separate raises, one for a duplicated
+   anchor and one for an ambiguous match.
+3. **Single-unit fallback.** Where a sidecar holds exactly ONE unit, that unit is
+   returned for any non-empty anchor. Only the empty string is refused. **This is
+   the entire defect.**
 
-### single-unit-fallback-is-the-actual-mechanism | medium | With exactly one unit the resolver returns it regardless of anchor, so any non-empty string resolves
+Measured examples of paths 1 and 2 working: a 222-unit sidecar returns a
+277-character unit for a real anchor and refuses an invented one; a 12-unit
+sidecar with zero populated anchor fields returns 476 characters for `#a1`; a
+9-unit sidecar returns 1802 characters for `#a5`. Article-sized and precise in
+every case.
 
-287 of 363 sidecars hold exactly one unit. For those, every non-empty anchor
-resolves to the same blob and only the empty string is refused. That is the
-whole of the defect, and it is a property of the fallback rather than of anchors
-in general.
+### two-probe-errors-same-class | high | Both censuses tested a real pattern against the wrong instance
 
-### the-actionable-set-is-63-cites-across-31-files | medium | Most single-unit cites are harmless because the PATH already isolates the provision
+Recorded because the next person to probe this corpus faces the same structure,
+and the corrected numbers are less useful than the reason they were wrong.
 
-Of 598 anchored `corpus_ref` entries in the legal catalogue:
+**Error one, the tree-wide claim.** A positive control showed several nonsense
+anchors all resolving to one blob, and that was generalised to the whole tree.
+The control was run only against a newly bundled file that happened to be
+single-unit. It correctly demonstrated path 3 and said nothing about paths 1 or
+2. With 287 of 363 sidecars single-unit, a small sample was always likely to
+land there.
 
-* **277** cite a multi-unit file, where the anchor is enforced.
-* **256** cite a single-unit file whose filename already names the provision, for
-  example an orden extracted per article. The file IS the article, so the path
-  carries the precision and the anchor is redundant rather than false. Nobody can
-  be misled by `...-art-1.html#a1`.
-* **63** cite a single-unit file that is a WHOLE DOCUMENT, where the anchor is the
-  only thing claiming to isolate the provision and nothing checks it. This is the
-  actionable set.
+**Error two, the broken-cite claim.** A 13-unit sidecar with all anchor fields
+empty was probed with `#a1`, refused, and reported as evidence that such files
+cannot resolve at all. But `#a1` is not that file's cite — its actual cite is
+`#primero`, which resolves to 406 characters. The refusal was **correct
+behaviour on a fabricated probe**, presented as a defect.
 
-Per-file, the 63 across 31 files: `trlirnr-rdleg-5-2004.html` (8: a2, a10, a13,
-a13-1-h, a24, a25-1-a, a25-1-b, a25-1-f); `orden-hfp-105-2017.html` (4);
-`orden-eha-1881-2011`, `orden-eha-3021-2007`, `orden-eha-3290-2008`,
-`orden-eha-3514-2009`, `orden-hac-1197-2025`, `orden-hac-1400-2018`,
-`orden-hac-177-2020`, `orden-hac-342-2021`, `orden-hac-3580-2003`,
-`orden-hac-510-2021`, `orden-hac-539-2003`, `orden-hac-590-2021`,
-`orden-hac-612-2021`, `orden-hac-66-2002`, `orden-hac-72-2024`,
-`orden-hac-85-2003`, `orden-hap-2368-2013`, `orden-hap-2455-2013`,
-`orden-hap-2486-2014`, `orden-hfp-1314-2022`, `orden-min-2000-12-15-m341` (2
-each); `orden-eha-3851-2007`, `orden-eha-586-2011`, `orden-eha-2887-2008`,
-`orden-hac-1023-2021-modelo-714`, `orden-hac-657-2025` (1 each); and
-`boe-a-2024-12944-rdl-4-2024-iva-alimentos.html#a1`.
+The shared class: a real pattern tested against the wrong instance. A control
+that only ever sees one shape cannot establish the shape is universal, and a
+probe invented by the auditor tests the auditor's assumption rather than the
+system's contract.
 
-### my-own-classifier-had-false-negatives-in-both-directions | low | The filename heuristic is not sound and the union needs a hand review
+### the-honest-denominator-is-320 | medium | Only the single-unit bucket is unverified, and no heuristic is needed to say so
 
-The loose pattern treated any `-a<digit>` as an article marker, so it exempted
-`boe-a-2024-12944-...` — a BOE identifier, not an article. That wrongly excluded
-the newest and most recently authored entry from the risky set, which is exactly
-the entry a reviewer would most want counted.
+Of **598** anchored `corpus_ref` entries in the legal catalogue:
 
-A tighter pattern then over-flagged in the other direction: two `-df-unica`
-files carry no digit after `df`, so a rule requiring one calls them risky when
-their path genuinely isolates the disposición final única.
+* **240** cite a multi-unit sidecar with populated anchors — enforced by path 1.
+* **35** cite a multi-unit sidecar with empty anchors — enforced by path 2.
+* **320** cite a single-unit sidecar — **unchecked**, path 3.
+* **3** point at a derived artefact, treated separately below.
 
-Both patterns are wrong at the edges. At 31 files the union is small enough to
-review by hand, and the ADR should not rest on either regex.
+So **275 of 598 are genuinely enforced**. The earlier note would have sent an
+ADR author to repair something largely working.
 
-### derived-artefact-citations-are-a-separate-defect | medium | Three cites point at a markdown EXTRACTION rather than a source document
+### the-path-isolation-question-is-a-judgement-not-a-regex | medium | Two independent filename heuristics failed in opposite directions and their disagreement was never a measurement
 
-Kept out of the 63 deliberately. Folding them in would let an anchor decision
-resolve while leaving a `corpus_ref` aimed at a derived artefact nobody would
-think to re-check:
+Many of the 320 are harmless because the file itself IS the provision: an orden
+extracted per article cannot mislead, since the path carries the precision the
+anchor merely repeats. Two attempts were made to compute that subset and both
+were wrong at the edges.
+
+One pattern treated any `-a<digit>` as an article marker, so it read a BOE
+identifier (`boe-a-2024-12944-...`) as an article and exempted the newest
+entry in the catalogue — the one a reviewer would most want counted. A tighter
+pattern then over-flagged, requiring a digit after `df` and so classing
+`-df-unica` files as unverified when their path plainly names the disposición
+final única. A third pass omitted `apartado-` and `-modelo-N` stems entirely.
+
+The gap between the resulting figures was never a measurement disagreement; it
+was two guesses at a judgement. **No regex should carry this.** The defensible
+statement is that 320 single-unit cites are unchecked, and which of them are
+additionally path-isolated is a hand review across the roughly 90 distinct files
+behind them, where a human can see at a glance what a pattern cannot.
+
+### derived-artefact-citations-are-a-separate-defect | medium | Three cites point at a markdown extraction rather than a source document
+
+Kept out of the count deliberately. Folding them in would let an anchor decision
+resolve while leaving a `corpus_ref` aimed at a rendering that regenerates:
 
 * `corpus/manuals/renta/2025/part1/source.pdf.extracted.md#madrid-minimo-descendientes`
 * `corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf.extracted.md#madrid-nacimiento-adopcion`
 * the same file, `#madrid-nacimiento-adopcion-limites`
 
-Two files, three cites. The anchors are hand-styled slugs rather than document
-anchors, so these assert precision against a rendering that regenerates.
+Two files, three cites, anchors that are hand-styled slugs rather than document
+anchors.
 
 ## Recommendations
 
-Make the single-unit fallback refuse an anchor it cannot match, rather than
-returning the sole unit unconditionally. That converts 63 silent assertions into
-loud ones without touching the 277 that already work or the 256 that are
-redundant-but-harmless.
+Make the single-unit fallback refuse an anchor it cannot match by title, rather
+than returning the sole unit unconditionally. The title matcher already exists
+and is careful; the fallback bypasses it. That converts 320 silent assertions
+into checked ones without touching the 275 that already work.
 
-Re-extract only the whole-document files behind those 63 so their units carry
-real anchors. Re-extracting the wider set risks reddening entries whose
-`required_text` currently passes on a whole-document read, for no gain.
+Do not re-extract broadly. The multi-unit files are working through two
+mechanisms, and re-extraction risks reddening entries whose `required_text`
+currently passes.
+
+Hand-review the roughly 90 files behind the 320 rather than computing a subset.
+Record the review's judgement per file; do not encode it as a naming rule.
 
 Treat the derived-artefact cites as their own decision. A citation should name a
-source, and if a manual PDF has no anchorable extraction the honest answer may be
-that those three entries cannot carry an anchor at all.
+source, and if a manual PDF has no anchorable extraction the honest answer may
+be that those three cannot carry an anchor at all.
