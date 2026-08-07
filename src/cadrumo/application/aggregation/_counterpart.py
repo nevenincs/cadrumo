@@ -39,6 +39,36 @@ def _validate_source_kind(value: str) -> CounterpartSourceKind:
     return counterpart_source_kind(value)
 
 
+_CANONICAL_OPERATION_KINDS: frozenset[str] = frozenset(
+    kind.value for kind in (*OperationKind347, *OperationKind349)
+)
+
+
+def _validate_operation_kind(value: str) -> str:
+    """Refuse an ``operation_kind`` outside the declared 347/349 clave vocabulary.
+
+    Bounding this field by non-blankness alone made an unrecognised token
+    *silently declarable-invisible* rather than refused. The aggregator routes
+    each observation to its modelo by testing ``operation_kind`` against that
+    modelo's clave set (:func:`~._grouping.filter_observations_for_modelo`), so
+    a token in neither set matches neither pass and is dropped from the rollup —
+    while the aggregation's own totals still reconcile, because they are summed
+    from the surviving rollups. A capitalisation slip on a real above-threshold
+    operation therefore produced a Modelo 347 preview reporting zero
+    counterparties and a zero base, with no error and no notice.
+
+    The cross-modelo filtering itself is correct and stays: a 349 clave passed
+    to the 347 pass *should* be skipped. Only a token belonging to neither
+    vocabulary is a defect, and refusing it here — at the operator JSON
+    boundary, where the provenance to explain the refusal still exists — is
+    what separates the two cases.
+    """
+    if value not in _CANONICAL_OPERATION_KINDS:
+        accepted = ", ".join(sorted(_CANONICAL_OPERATION_KINDS))
+        raise ValueError(f"operation_kind must be a declared 347/349 clave, got {value!r}; accepted: {accepted}")
+    return value
+
+
 def _validate_country(value: str, *, field_name: str) -> str:
     if len(value) != 2 or any(char < "A" or char > "Z" for char in value):
         raise ValueError(f"{field_name} must be uppercase ISO-3166 alpha-2, got {value!r}")
@@ -83,6 +113,11 @@ class CounterpartObservation(BaseModel):
             raise ValueError("source_kind must be a string")
         return _validate_source_kind(value)
 
+    @field_validator("operation_kind")
+    @classmethod
+    def _operation_kind_is_canonical(cls, value: str) -> str:
+        return _validate_operation_kind(value)
+
     @field_validator("counterparty_country")
     @classmethod
     def _country_is_uppercase(cls, value: str) -> str:
@@ -114,6 +149,11 @@ class CounterpartRollup(BaseModel):
         if not isinstance(value, str):
             raise ValueError("source_kind must be a string")
         return _validate_source_kind(value)
+
+    @field_validator("operation_kind")
+    @classmethod
+    def _operation_kind_is_canonical(cls, value: str) -> str:
+        return _validate_operation_kind(value)
 
     @field_validator("counterparty_country")
     @classmethod
