@@ -13,7 +13,7 @@ related:
   - "[[2026-04-17-attachment-service-adr]]"
 ---
 
-# `llm-evidence-classification` adr: `Evidence-aware LLM ledger classification (Stage-3): on-host/local-first reading; cloud only behind a consent gate; splitting in scope` | (**status:** `accepted`)
+# `llm-evidence-classification` adr: `Evidence-aware LLM ledger classification (Stage-3): on-host/local-first reading; cloud only behind a consent gate; splitting in scope` | (**status:** `accepted, partially superseded`)
 
 > **DECISION 2026-06-10 (operator ruling, binding).** The first draft treated taking
 > decrypted sensitive evidence out of secure storage (a decrypted temp file for the
@@ -342,3 +342,42 @@ use** — with a narrow, explicitly-consented cloud exception:
 The downstream research finding and the implementation plan are corrected to match
 this ruling (on-host reader Waves replace the temp-file/cloud-first design; the
 consent gate is its own Phase).
+
+## Partial supersession (2026-08-07)
+
+**Ruling 2 of the operator ruling above — the consent-gated cloud exception — is
+superseded in part by `2026-08-06-llm-package-split-adr` (D5).** That record
+deletes the consent gate, the `cloud_evidence_upload` capability, the
+`cadrumo_evidence_gestor_mode` and `cadrumo_evidence_cloud_upload_permitted`
+settings, the `--evidence-acknowledged` flag and the subprocess provider family
+outright, so the narrow cloud exception this record sanctioned no longer exists
+in the tree.
+
+This is recorded here, in the same change as the deletion, rather than left to
+be inferred. Two accepted records — one sanctioning a capability the other
+removes — is the ADR-versus-ADR conflict the curate pass exists to catch, and
+the window in which the corpus carries both is exactly as long as the gap
+between deleting the code and amending the record.
+
+**The narrowing runs WITH this record's headline, not against it.** The title
+says on-host/local-first reading, and the exception existed only because a
+text-layer PDF had no on-host reader: a scan was read locally by a vision model
+while the more machine-readable document had to leave the host. The successor
+wires a local TEXT reader first and deletes the cloud path second — that
+ordering is mandated, not preferred — so both document classes now take the same
+on-host route. What is removed is the exception, and with it the gestor bar that
+applied to one arm of the fork and not the other.
+
+**Everything else in this record stands.** On-host reading as the default and
+only posture acceptable for serious use, the in-memory-only custody discipline,
+the exclusion of the file-writing CLI-agent route, and first-class local-model
+support are all unchanged and are in fact strengthened: the successor makes them
+the only posture rather than the preferred one.
+
+One consequence rides with the deletion and is authorised there rather than
+discovered later. The `llm:<provider>:<model>` provenance stamp's provider axis
+collapses to the local runtime, so every stamp written after the deletion names
+a local transport. The stamp's SHAPE is unchanged and no persisted record is
+rewritten — pre-existing records keep the provider they were stamped with, which
+is the honest history — but a reader who assumes the axis is still multi-valued
+would be wrong.

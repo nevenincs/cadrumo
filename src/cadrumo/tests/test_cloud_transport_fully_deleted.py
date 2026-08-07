@@ -114,3 +114,39 @@ def test_the_declared_symbol_set_is_not_silently_emptied() -> None:
     assert len(_DELETED_CLOUD_SYMBOLS) >= 15
     assert "SubprocessLLMClassifier" in _DELETED_CLOUD_SYMBOLS
     assert "CLOUD_EVIDENCE_UPLOAD" in _DELETED_CLOUD_SYMBOLS
+
+
+def test_every_provenance_stamp_a_reader_can_mint_names_a_local_transport() -> None:
+    """S78: the provider axis collapsed, so no NEW stamp can name a cloud transport.
+
+    Asserted over the readers that actually exist rather than over a hand-kept
+    list of expected prefixes, so a reader added later is covered by
+    construction instead of needing this test updated.
+
+    The complementary half is deliberately NOT asserted: pre-existing persisted
+    records keep the cloud transport they were stamped with, because that is the
+    honest history of how those classifications were reached. Rewriting them
+    would erase the fact that some data did once leave the host. What this pins
+    is the minting side.
+    """
+    from ..domain.transactions import prompt_spec_with_every_spending_category
+    from ..llm import LocalTextLLMClassifier, LocalVisionLLMClassifier
+
+    spec = prompt_spec_with_every_spending_category()
+    stamps = [
+        LocalTextLLMClassifier(spec=spec, model="qwen2.5:3b").decided_by,
+        LocalVisionLLMClassifier(spec=spec, model="qwen2.5vl:3b").decided_by,
+    ]
+
+    for stamp in stamps:
+        transport = stamp.split(":")[1]
+        assert stamp.startswith("llm:"), f"{stamp!r} must keep the llm:<transport>:<model> shape"
+        assert transport.startswith("local-"), (
+            f"{stamp!r} names transport {transport!r}; every mintable transport is on-host now"
+        )
+        assert transport not in {"claude", "codex", "antigravity"}
+
+    assert len({s.split(":")[1] for s in stamps}) == len(stamps), (
+        "the two on-host transports must stay distinguishable from each other, or a persisted "
+        "record cannot say whether it was read as text or as an image"
+    )

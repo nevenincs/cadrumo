@@ -13,6 +13,31 @@ is not persisted until the operator applies it, a rejection records an audit
 event without mutating the transaction, and regulated euro amounts / IVA rates
 are derived by the system rather than emitted by the model.
 
+PROVENANCE STAMP: ``llm:<transport>:<model>``
+--------------------------------------------
+
+Every suggestion carries a ``provenance`` stamp recording which transport read
+the document and with which model, so a persisted classification can always
+answer how it was reached.
+
+**The transport axis collapsed to the local runtime.** It once ranged over cloud
+provider CLIs -- ``llm:claude:...``, ``llm:codex:...`` -- alongside the on-host
+reader. Those transports were deleted, so every stamp written from now on names
+a local one: ``llm:local-text:<model>`` for a text-layer document and
+``llm:local-vision:<model>`` for a scan or image.
+
+The stamp's SHAPE is unchanged and **no persisted record is rewritten.**
+Pre-existing rows keep the provider they were stamped with, because that is the
+honest history of how those classifications were actually reached -- rewriting
+them would erase the fact that some data did once leave the host. A reader
+inspecting old records will therefore still meet cloud transport names; what
+changed is that no NEW stamp can carry one.
+
+The consequence for code: do not treat the axis as multi-valued when deciding
+what a fresh classification can be, and do not assume a stored stamp names a
+local transport when reading history. Those are different questions and the
+answer differs by record age.
+
 See Also:
     :mod:`~application.ledger._llm_classification`
         Application service that builds, applies, saturates, splits, and rejects
