@@ -552,6 +552,15 @@ class PurchaseInvoiceEvidenceService:
             notes: Operator free-text annotation.
             actor: Identifier stamped on the audit event (defaults to
                 ``"cli"``).
+            idempotency_key: Caller-supplied retry key. When supplied the
+                record id is derived CLOCK-FREE from it, so a retry at a
+                different instant resolves to the same record: a matching
+                re-add returns the existing record as a guarded no-op with no
+                second bucket event and no re-stamped timestamp, and a same-key
+                re-add whose content differs refuses naming the divergent
+                fields. When omitted the verb stays deliberately ADDITIVE --
+                two attachments of one file are two distinct pieces of
+                evidence, and collapsing them would be its own defect.
 
         Returns:
             :class:`PurchaseInvoiceEvidenceResult`: Carrying the new record and the
