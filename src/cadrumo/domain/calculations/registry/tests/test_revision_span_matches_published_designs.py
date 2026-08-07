@@ -57,6 +57,19 @@ No count is hardcoded. The number of designs, boundaries and shared boxes all
 vary as the corpus grows; gating on any of them would encode today and detect
 nothing tomorrow.
 
+RUNTIME, stated here so the next reader meets it in the code rather than in CI.
+Reading the design SOURCES rather than their markdown derivatives took this
+module from roughly 28s to roughly 185s, a five-fold increase, because it now
+parses spreadsheets and PDFs instead of pre-extracted text. Two things keep that
+acceptable and both are worth knowing before anyone tries to "optimise" it. The
+parsers are ``lru_cache``d, so the cost is paid ONCE PER SESSION rather than per
+test -- the number that matters for CI is the one-off, not a multiple of it. And
+it cannot be scoped away: restricting the parse to modelos that actually declare
+an export layout removes only ~37% of the files and ~15% of the bytes, because
+the largest designs belong to modelos that do export. The cost buys the offsets
+and the field occupancy the derivatives do not carry, which is what the box and
+retirement signals are made of.
+
 TWO INDEPENDENT SIGNALS, ONE VERDICT. The box-offset diff sees which boxes moved
 but needs bracketed box markers. The page-length diff sees only that a page
 changed size, but reads designs the box table cannot -- several older PDF
