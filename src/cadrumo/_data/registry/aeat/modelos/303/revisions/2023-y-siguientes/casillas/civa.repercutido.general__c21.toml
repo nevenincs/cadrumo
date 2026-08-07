@@ -144,6 +144,25 @@ binding = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
+# Base-imponible parity casilla for official box 10, mirroring the cuota
+# parity casilla above (box 11). Feeds box 10 via a projection formula only --
+# never the resultado, which is cuota-denominated and already carries this
+# quantity's tax through iva.autorepercutido.intracomunitaria.
+[[revisions.2023-y-siguientes.casillas]]
+id = "iva.autorepercutido.intracomunitaria.devengado.base"
+number = "iva.autorepercutido.intracomunitaria.devengado.base"
+section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_base_autorepercutida_intracomunitaria_devengado"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Sole base-imponible parity casilla for the AIC devengado box pair (10/11); no sibling rate or category split exists on this casilla."
+continuidad_id = "iva-base-autorepercutida-intracomunitaria-devengado"
+required = false
+input_kind = "bound"
+binding = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.autorepercutido.intracomunitaria.deducible"
 number = "iva.autorepercutido.intracomunitaria.deducible"
@@ -782,8 +801,9 @@ data_type = "money"
 semantic_role = "dr303_10"
 continuidad_id = "dr303-10"
 required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "computed"
+formula = "modelo-303-dr303-10-projection"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-10"]
 

@@ -149,6 +149,10 @@ casilla_id = "iva.autorepercutido.intracomunitaria.devengado"
 number = "iva.autorepercutido.intracomunitaria.devengado"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.intracomunitaria.devengado.base"
+number = "iva.autorepercutido.intracomunitaria.devengado.base"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "iva.autorepercutido.intracomunitaria.deducible"
 number = "iva.autorepercutido.intracomunitaria.deducible"
 
@@ -214,6 +218,10 @@ number = "06"
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "09"
 number = "09"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "10"
+number = "10"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "11"
