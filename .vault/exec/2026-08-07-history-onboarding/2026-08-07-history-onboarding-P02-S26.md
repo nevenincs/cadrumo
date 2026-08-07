@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:e23b288c4e4b3239769cbaf9926e6cb5407cad121f4fc524e7500fe4ae63f7bd'
+body_hash: 'sha256:5ec17bf590701c6a30dca94ffbeb6c66d2fd1902b675506462757c2666dee51b'
 step_id: 'S26'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
@@ -81,3 +81,26 @@ green.
 The mutation is the exact shape of the change this test exists to block, so its
 red is direct evidence the pin holds against that edit rather than against an
 arbitrary break.
+
+THIS TEST HAS BEEN REVERSED, and that is the correct outcome rather than a lost
+gate. The open question it was holding open got answered while this Step was
+closing, and answered better than "correct the comparison": the presentation-
+identifier parameter was removed from the predicate outright, on the ground that
+AEAT's Numero de justificante and the register's expediente id are different
+identifier namespaces and no receipt body ever carries the register value, so the
+comparison could never agree and no caller could populate the parameter correctly.
+The defect this Step made reproducible was therefore an incoherent axis, not a
+mis-tuned one.
+
+The test now asserts the reverse -- the divergent identifiers no longer block a
+legitimate stamp -- and its divergence premise plus the do-not-tidy guard survive
+into that reversal, because the divergence is what makes the stamp evidence that
+the identifier is not consulted rather than evidence that two equal values agreed.
+
+The residual risk this creates was the obvious thing to pin next and did NOT need
+a new test from this Step: removing an identity axis means nothing in the receipt
+distinguishes one filing of a period from another, which matters precisely because
+a period can hold an original and an amendment. That gap is already covered by a
+csv-based discrimination test asserting two same-period filings are told apart by
+csv where the other axes cannot, plus two tests exercising the csv axis in both
+directions. Adding a fourth would have duplicated an existing authority.
