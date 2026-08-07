@@ -44,7 +44,7 @@ the ``%{command}`` interpolation the message template already appends
 command as ``aeat config profile create NAME``; the English and Hungarian
 catalogues never hardcoded a command there, and es/ca were corrected to
 match that bare-message shape).
-Locale edits route through ``python -m cadrumo.locales set`` per the
+Locale edits route through ``python -m dev.locales set`` per the
 locale-CLI workflow, never a hand-edit of the YAML.
 
 Citation grammar: ``aeat`` followed by a root family (``app`` / ``config``)
@@ -67,10 +67,10 @@ from typing import cast
 
 import click
 import pytest
+from dev.locales import LocaleManager, LocaleNode
 
 from ....application.operator_surface import HelpSurface, build_help_document
 from ....core.errors import ERROR_REGISTRY
-from ....locales.manager import LocaleManager, LocaleNode
 from ....tests.cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

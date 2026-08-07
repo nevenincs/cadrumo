@@ -88,13 +88,13 @@ def test_discover_facades_registers_annotated_all_init_as_a_facade() -> None:
 def test_find_shim_modules_excludes_dunder_main_entrypoint_modules() -> None:
     """A standard ``__main__.py`` entrypoint module must never be classified as a shim.
 
-    Exercises the real classifier against ``src/cadrumo/locales/__main__.py`` --
+    Exercises the real classifier against ``dev/locales/__main__.py`` --
     the live module whose ``from .cli import app`` plus
     ``if __name__ == "__main__": app()`` shape previously false-positived as a
     shim (zero real defs, one import statement) before the classifier learned
     to skip ``__main__.py`` modules as the standard entry-point pattern.
     """
-    main_path = REPO_ROOT / "src" / "cadrumo" / "locales" / "__main__.py"
+    main_path = REPO_ROOT / "dev" / "locales" / "__main__.py"
     assert main_path.is_file()
 
     shims = find_shim_modules([main_path], facades={})

@@ -61,6 +61,7 @@ from .....core.errors import CadrumoError, CoreValidationError
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.logging import get_logger
 from .....core.parsing import normalise_iso_4217_currency
+from .....core.tabular import coerce_cell_text as _coerce_cell_text
 from .....core.time import now
 from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat, TransactionDirection
 
@@ -394,14 +395,14 @@ def normalize_header(value: str) -> str:
 
 
 def coerce_cell_text(value: object) -> str:
-    """Coerce a source value to a stripped string for raw-field storage."""
-    if value is None:
-        return ""
-    if isinstance(value, datetime):
-        return value.isoformat(sep=" ", timespec="seconds")
-    if isinstance(value, date):
-        return value.isoformat()
-    return str(value).strip()
+    """Coerce a source value to a stripped string for raw-field storage.
+
+    Binds the raw-field archive's rendering policy — a booking stamp is
+    stored ISO-8601 rather than however ``str()`` happens to print it — onto
+    the shared cell coercer, so the twelve call sites in this package state
+    the policy once instead of each carrying the keyword.
+    """
+    return _coerce_cell_text(value, temporal_as_iso=True)
 
 
 def _expected_date_format_hint(*, day_first: bool) -> str:

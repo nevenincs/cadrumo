@@ -56,3 +56,19 @@ class FieldOrigin(StrEnum):
 
     OPERATOR = "operator"
     """Supplied or corrected by the operator at the confirm boundary."""
+
+    DERIVED = "derived"
+    """Concluded deterministically from other values already on the record.
+
+    Not a reading. Every other member here answers "how was this copied off the
+    document"; this one answers "what followed from what was copied", and the
+    distinction has to survive because a derived value has no printed form to
+    point at. It is not weaker evidence than a read value -- the derivation is
+    deterministic code over inputs that were themselves read and anchored -- but
+    it is evidence ABOUT those inputs rather than about the page, so an operator
+    auditing it must be sent to the inputs rather than to a highlighted phrase.
+
+    A derived value therefore records the inputs it followed from in place of an
+    anchor, and can never claim the ANCHORED outcome; see the provenance
+    envelope's validators.
+    """

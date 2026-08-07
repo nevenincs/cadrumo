@@ -35,13 +35,23 @@ before being carried into ``detail_rows`` on the ``CalculationRevision``.
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
-from typing import Annotated, Literal
+from enum import StrEnum
+from types import MappingProxyType
+from typing import Annotated, Final, Literal
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, StringConstraints, ValidationInfo, field_validator, model_validator
 
-from ...core import M210_TIPO_RENTA_CODE_PROJECTION, M347_THRESHOLD_EUR, STRICT_FROZEN_CONFIG, M210PayerMode
+from ...core import (
+    M210_TIPO_RENTA_CODE_PROJECTION,
+    M347_THRESHOLD_EUR,
+    STRICT_FROZEN_CONFIG,
+    M210PayerMode,
+    MetodoValoracion,
+    TipoOperacionVinculada,
+    TipoVinculacion,
+)
 from ...core.errors import CadrumoError
 from ...core.identity import nif_iva_format_for_country
 
@@ -117,36 +127,20 @@ class Modelo184MemberRow(BaseModel):
 # One row per related-party transaction group.
 # ---------------------------------------------------------------------------
 
-# Tabla A of the AEAT diseño de registro DR23200 — tipo de vinculación, the
-# art. 18.2 LIS relationship cases. One alphanumeric position (240 on page_01),
-# so a code is exactly one character. The empty string is the conditional
-# field's unstated state: the whole vinculada block is non-obligatorio, and
-# defaulting to a real relationship would declare one the taxpayer never
-# stated.
-_M232_TIPO_VINCULACION = Literal["A", "B", "C", "D", "E", "F", "G", "H", ""]
+# The three coded fields' value sets are AEAT's published Tablas A, C and B
+# of the diseño de registro DR23200. They are declared once in ``core`` --
+# see :class:`~core.TipoVinculacion`, :class:`~core.TipoOperacionVinculada`
+# and :class:`~core.MetodoValoracion` -- because the registry's own
+# related-party observation is typed with the same sets.
 
-# Tabla C of DR23200 — tipo de operación, the eleven claves enumerated in
-# Orden HFP/816/2017 art. 3.1.f, zero-padded to the field's two positions
-# (243-244 on page_01).
-_M232_TIPO_OPERACION = Literal[
-    "01",
-    "02",
-    "03",
-    "04",
-    "05",
-    "06",
-    "07",
-    "08",
-    "09",
-    "10",
-    "11",
-    "",
-]
-
-# Tabla B of DR23200 — método de valoración, the five methods of art. 18.4.1º
-# LIS in the two positions the field carries (246-247 on page_01). These are
-# AEAT's own codes, not the OECD abbreviations for the same methods.
-_M232_METODO = Literal["1A", "1B", "1C", "1D", "1E", ""]
+_M232_CODE_SETS: Final[Mapping[str, type[StrEnum]]] = MappingProxyType(
+    {
+        "tipo_vinculacion": TipoVinculacion,
+        "tipo_operacion": TipoOperacionVinculada,
+        "metodo": MetodoValoracion,
+    },
+)
+"""Field name to its DR23200 code set, read by the hydrating validator."""
 
 
 class Modelo232VinculadaRow(BaseModel):
@@ -175,9 +169,9 @@ class Modelo232VinculadaRow(BaseModel):
     nif: _NifStr
     nombre: _NameStr = Field(default="")
     pais: _IsoCountryCode = Field(default="ES")
-    tipo_vinculacion: _M232_TIPO_VINCULACION = ""
-    tipo_operacion: _M232_TIPO_OPERACION = ""
-    metodo: _M232_METODO = ""
+    tipo_vinculacion: TipoVinculacion = TipoVinculacion.NO_DECLARADO
+    tipo_operacion: TipoOperacionVinculada = TipoOperacionVinculada.NO_DECLARADO
+    metodo: MetodoValoracion = MetodoValoracion.NO_DECLARADO
     importe: Decimal
 
     @field_validator("pais")
@@ -194,16 +188,25 @@ class Modelo232VinculadaRow(BaseModel):
             raise ValueError("nif cannot be blank")
         return value.upper()
 
-    @field_validator("tipo_vinculacion", "metodo", mode="before")
+    @field_validator("tipo_vinculacion", "tipo_operacion", "metodo", mode="before")
     @classmethod
-    def _code_uppercase(cls, value: object) -> object:
-        """Fold operator-typed lowercase into the catalogue's own casing.
+    def _hydrate_m232_codigo(cls, value: object, info: ValidationInfo) -> object:
+        """Hydrate the operator's text into its typed DR23200 code set.
 
-        Runs before the catalogue check so ``metodo=1a`` and
-        ``tipo_vinculacion=d`` are accepted as the codes DR23200 spells in
-        uppercase, while a genuinely off-catalogue code still refuses.
+        The CLI delivers `--row vinculada k=v` as plain strings and the model is
+        strict, so this is the boundary that turns a token into a member. An
+        off-catalogue token is refused here rather than by the strict-instance
+        check, so the message can name the codes AEAT actually publishes instead
+        of only reporting the wrong type.
         """
-        return value.upper() if isinstance(value, str) else value
+        if not isinstance(value, str):
+            return value
+        code_set = _M232_CODE_SETS[info.field_name]
+        try:
+            return code_set(value.upper())
+        except ValueError:
+            accepted = ", ".join(repr(str(member)) for member in code_set)
+            raise ValueError(f"{info.field_name} must be one of {accepted}; got {value!r}") from None
 
 
 # ---------------------------------------------------------------------------

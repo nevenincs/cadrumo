@@ -181,6 +181,30 @@ def _identity_candidates(
     re-scan the transcription for every checksum-valid token: that scan is the
     defect this campaign removed, and reintroducing it here under a different
     name would restore first-match selection at the exact seam that was fixed.
+
+    **No role evidence is supplied here, and that is the point.** The candidates
+    carry none, because nothing on this path has any: the reader reports a value
+    under a field name, and the field name is a restatement of the reader's own
+    assignment rather than anything the document says about the party.
+
+    This previously passed ``f"the reader assigned this identifier to {field}"``,
+    which is always truthy, so the resolver's positive-role-evidence filter
+    accepted every candidate and could never exclude one. The measured defect
+    that filter exists to stop -- the true supplier's identifier failing its
+    control character, one unrelated but valid identifier left standing, and the
+    survivor grounded with full confidence -- was live again through it, and the
+    note it emitted read as positive evidence while saying only that the reader
+    had assigned the field. A guard that cannot refuse is worse than no guard,
+    because its output is trusted.
+
+    With nothing supplied, an identity that cannot be evidenced stays
+    unresolved, which is the direction that fails safe: an absent counterparty
+    refuses as a missing field naming the override that supplies it, while a
+    wrong one reaches the counterparty totals AEAT reconciles against the other
+    party's own filing. Real evidence -- the transcription context that assigns
+    a value to a party role -- is a payload field the reading stage does not yet
+    carry; when it does, it arrives here and the filter has something true to
+    test.
     """
     anchors = {envelope.field: envelope.anchor for envelope in envelopes}
     candidates: list[IdentityCandidate] = []

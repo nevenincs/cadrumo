@@ -182,7 +182,7 @@ class TextInvoiceFieldExtractor:
 
     @property
     def decided_by(self) -> str:
-        """Provenance stamp for this extractor's transport.
+        """Provenance stamp: transport, reader, model, and the rates compiled in.
 
         Distinct from the vision stamp so a persisted record always says which
         reader produced the fields. The model segment is ``configured`` when the
@@ -192,8 +192,19 @@ class TextInvoiceFieldExtractor:
         The trailing rate-provenance token answers the question the model name
         cannot: the prompt now enumerates registry-resolved rates, so which
         rates were in force for this read is part of how the figure was reached.
+
+        **The transport segment is DERIVED from the provider actually used**,
+        matching the vision reader. It was previously absent, so this stamp
+        could not say whether a read had left the host -- and a model name does
+        not answer that, because a vendor model identifier reveals the vendor
+        only to a reader who already knows the catalogue. A consent withdrawal
+        enumerates cloud-derived artefacts BY this segment, so a stamp that
+        omits it makes a withdrawal silently incomplete: the artefact that most
+        needs re-deriving is the one the survey cannot see.
         """
-        return f"llm:text-extract:{self._model or 'configured'}:rates-{self._compiled_prompt().rate_provenance}"
+        transport = "local" if self._provider is LLMProvider.LOCAL else self._provider.value.lower()
+        model = self._model or "configured"
+        return f"llm:{transport}-text-extract:{model}:rates-{self._compiled_prompt().rate_provenance}"
 
     def extract(self, *, evidence_text: str) -> InvoiceDraft:
         """Read ``evidence_text`` and return the grounded draft.

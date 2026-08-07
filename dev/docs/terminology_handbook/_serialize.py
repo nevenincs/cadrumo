@@ -6,7 +6,7 @@ always emits byte-identical TOML, so a no-change scaffold run is a
 no-op diff (idempotence) and a curated field round-trips through
 ``serialise -> load`` unchanged (the PRESERVE guarantee operates at the
 field-value level: a definition string survives verbatim, mirroring the
-``cadrumo.locales`` YAML re-dump precedent that preserves leaf values).
+``dev.locales`` YAML re-dump precedent that preserves leaf values).
 
 ``narrower`` is never serialised -- it is derived at load from the
 inverse of ``broader`` and authoring it is rejected. Empty optional

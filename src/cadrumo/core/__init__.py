@@ -180,6 +180,7 @@ from ._model_catalogue import (
     model_candidate,
 )
 from ._modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
+from ._modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ._models import STRICT_FROZEN_CONFIG
 from ._optional_extras import (
     ANTHROPIC_EXTRA,
@@ -442,6 +443,7 @@ __all__: list[str] = [
     "M210GrossIncomeSourceMode",
     "M210PayerMode",
     "ManualCorpusTextSidecar",
+    "MetodoValoracion",
     "MissingOptionalExtraError",
     "ModelCandidate",
     "ModelLicence",
@@ -481,8 +483,10 @@ __all__: list[str] = [
     "StorageScope",
     "TaxDomain",
     "TipoActividad",
+    "TipoOperacionVinculada",
     "TipoRentaGroundingTier",
     "TipoRentaIrnr",
+    "TipoVinculacion",
     "accepted_filing_period_codes",
     "accepted_filing_period_patterns",
     "accepted_period_codes",

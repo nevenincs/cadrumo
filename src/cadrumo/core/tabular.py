@@ -44,6 +44,7 @@ import csv
 import io
 import re
 from collections import Counter
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -64,6 +65,7 @@ __all__ = [
     "TabularNotice",
     "TabularNoticeCode",
     "TabularSourceError",
+    "coerce_cell_text",
     "decode_tabular_bytes",
     "detect_tabular_delimiter",
     "normalize_tabular_bytes",
@@ -204,6 +206,49 @@ class NormalizedTable(BaseModel):
     preamble: tuple[NormalizedRow, ...] = ()
     summary_rows: tuple[NormalizedRow, ...] = ()
     notices: tuple[TabularNotice, ...] = ()
+
+
+def coerce_cell_text(
+    value: object,
+    *,
+    integral_floats_as_int: bool = False,
+    temporal_as_iso: bool = False,
+) -> str:
+    """Render one source cell as the text a reader stores or matches on.
+
+    A workbook cell arrives as a typed Python object rather than as text —
+    openpyxl hands back ``float``, ``datetime`` and ``None`` — so every reader
+    of a spreadsheet needs the same value-to-text step. The base rendering is
+    ``str(value).strip()``, with ``None`` becoming the empty string.
+
+    Two renderings genuinely differ by consumer, and both are declared rather
+    than assumed:
+
+    ``integral_floats_as_int``
+        A whole number a spreadsheet stores as ``3.0`` prints as ``"3"``. A
+        casilla value is a figure that goes on a return, so a spurious
+        ``.0`` is wrong there; a bank statement's raw-field archive keeps the
+        source's own spelling instead.
+    ``temporal_as_iso``
+        A ``date`` or ``datetime`` renders ISO-8601, with a datetime truncated
+        to whole seconds. This pins the archived form of a booking stamp
+        rather than inheriting whatever ``str()`` currently prints.
+
+    The two axes are disjoint by type, so their order cannot matter.
+
+    Returns:
+        The cell's text under the requested renderings.
+    """
+    if value is None:
+        return ""
+    if temporal_as_iso:
+        if isinstance(value, datetime):
+            return value.isoformat(sep=" ", timespec="seconds")
+        if isinstance(value, date):
+            return value.isoformat()
+    if integral_floats_as_int and isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value).strip()
 
 
 def decode_tabular_bytes(source_bytes: bytes) -> tuple[str, str, TabularNotice | None]:

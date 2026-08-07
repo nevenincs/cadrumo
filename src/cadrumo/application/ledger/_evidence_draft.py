@@ -315,7 +315,38 @@ class FieldProvenance(BaseModel):
     anchor: str | None = None
     candidates: tuple[FieldAmbiguityCandidate, ...] = ()
     anchor_self_reported: bool = False
+    derived_from: tuple[str, ...] = ()
     note: str = ""
+
+    @model_validator(mode="after")
+    def _a_derived_value_cites_its_inputs_and_never_an_anchor(self) -> Self:
+        """Tie ``DERIVED`` to the inputs it followed from, and bar it from ANCHORED.
+
+        A derived value was never on the page, so there is nothing in the
+        document to point at and an ``ANCHORED`` stamp would assert a printed
+        form that does not exist. What an auditor needs instead is the input
+        set: the derivation is deterministic, so naming its inputs makes the
+        conclusion reproducible by hand, which is the derived equivalent of
+        showing the anchor.
+
+        Enforced in both directions, for the same reason the ambiguity rule is.
+        A ``DERIVED`` envelope with no inputs claims a conclusion it cannot show
+        its working for, and inputs recorded under any other origin describe a
+        derivation that did not happen.
+        """
+        if self.origin is FieldOrigin.DERIVED:
+            if self.grounding is FieldGroundingOutcome.ANCHORED:
+                raise ValueError(
+                    "a derived value cannot be ANCHORED: it was concluded from other values rather "
+                    "than read from the document, so no printed form anchors it",
+                )
+            if not self.derived_from:
+                raise ValueError("a derived value must record the inputs it was derived from")
+        elif self.derived_from:
+            raise ValueError(
+                f"derived_from is only meaningful for a derived value; got origin={self.origin.value!r}",
+            )
+        return self
 
     @model_validator(mode="after")
     def _a_self_reported_anchor_can_never_read_as_verified(self) -> Self:

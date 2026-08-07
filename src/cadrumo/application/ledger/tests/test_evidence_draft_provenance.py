@@ -258,3 +258,56 @@ def test_a_short_transcription_address_is_refused() -> None:
     """The content address is a full SHA-256; a truncated one addresses nothing."""
     with pytest.raises(ValidationError):
         InvoiceDraft(transcription_sha256="b" * 40)
+
+
+class TestADerivedValueCitesItsInputsRatherThanAnAnchor:
+    """A conclusion has no printed form, so it shows its working instead.
+
+    ``DERIVED`` is the one origin that is not a reading. Every other member
+    answers how a value was copied off the document; this one answers what
+    followed from what was copied. The envelope has to keep that distinguishable,
+    because an auditor checking a derived value must be sent to its inputs rather
+    than to a phrase on the page that was never there.
+    """
+
+    def test_a_derived_value_cannot_claim_it_was_anchored(self) -> None:
+        """An ANCHORED stamp would assert a printed form that does not exist."""
+        with pytest.raises(ValidationError):
+            FieldProvenance(
+                field="iva_category",
+                origin=FieldOrigin.DERIVED,
+                grounding=FieldGroundingOutcome.ANCHORED,
+                anchor="inversión del sujeto pasivo",
+                derived_from=("regime_legend",),
+            )
+
+    def test_a_derived_value_must_record_the_inputs_it_followed_from(self) -> None:
+        """Without them the record claims a conclusion it cannot show working for."""
+        with pytest.raises(ValidationError):
+            FieldProvenance(
+                field="iva_category",
+                origin=FieldOrigin.DERIVED,
+                grounding=FieldGroundingOutcome.UNANCHORED,
+            )
+
+    def test_inputs_recorded_under_a_reading_origin_are_refused(self) -> None:
+        """They would describe a derivation that did not happen."""
+        with pytest.raises(ValidationError):
+            FieldProvenance(
+                field="taxable_base",
+                origin=FieldOrigin.TEXT_LAYER,
+                grounding=FieldGroundingOutcome.UNANCHORED,
+                derived_from=("regime_legend",),
+            )
+
+    def test_a_well_formed_derived_envelope_is_accepted(self) -> None:
+        """The positive case, so the three refusals above are not vacuous."""
+        envelope = FieldProvenance(
+            field="iva_category",
+            origin=FieldOrigin.DERIVED,
+            grounding=FieldGroundingOutcome.UNANCHORED,
+            derived_from=("regime_legend", "iva_rate", "iva_amount"),
+        )
+
+        assert envelope.anchor is None
+        assert envelope.derived_from == ("regime_legend", "iva_rate", "iva_amount")

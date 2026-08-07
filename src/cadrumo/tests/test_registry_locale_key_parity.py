@@ -21,10 +21,9 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from dev.locales import LocaleManager, scan_registry_keys
 
 from ..core.i18n import tr
-from ..locales import scan_registry_keys
-from ..locales.manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -75,8 +74,8 @@ def test_registry_key_resolves_in_catalogue(registry_key: str, locale: str) -> N
     """Every registry-declared locale key resolves in every catalogue."""
     assert not _unresolved({registry_key}, locale), (
         f"{registry_key!r} is declared by the category profile registry but does not "
-        f"resolve in {locale}.yml; run `python -m cadrumo.locales scaffold`, then author "
-        f"the value with `python -m cadrumo.locales set {locale} {registry_key} <value>`. "
+        f"resolve in {locale}.yml; run `python -m dev.locales scaffold`, then author "
+        f"the value with `python -m dev.locales set {locale} {registry_key} <value>`. "
         f"Scaffolding alone leaves the key echoing itself, which does not count as translated."
     )
 
@@ -125,5 +124,5 @@ def test_no_catalogue_leaf_echoes_its_own_key(locale: str) -> None:
     assert not echoes, (
         f"{locale}.yml stores {len(echoes)} key(s) as their own value, which the renderer "
         f"treats as untranslated: {echoes[:5]}. Author them with "
-        f"`python -m cadrumo.locales set {locale} <key> <value>`."
+        f"`python -m dev.locales set {locale} <key> <value>`."
     )

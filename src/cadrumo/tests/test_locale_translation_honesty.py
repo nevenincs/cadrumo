@@ -23,7 +23,7 @@ for a new authored value that merely echoes its canonical source.
 The bucket and its ceiling are retained rather than removed because
 neither is hand-editable — ``_intentional_identical.json`` is
 CLI-managed (``aeat-locales-cli``), ``allow-identical`` only ADDS a
-per-key entry, and no verb removes one; ``cadrumo.locales._status``
+per-key entry, and no verb removes one; ``dev.locales._status``
 also binds the bucket key, so dropping it is a code change rather than
 a data edit.
 """
@@ -148,8 +148,9 @@ def _reserved_token_offenders(flat_leaves: dict[str, str | None]) -> list[str]:
     strips them from the interpolation map, so a catalogue token named after
     either is permanently unfillable regardless of what a call site passes.
     """
+    from dev.locales import RESERVED_INTERPOLATION_TOKENS
+
     from ..core.i18n import extract_placeholders
-    from ..locales import RESERVED_INTERPOLATION_TOKENS
 
     return sorted(
         key
@@ -226,7 +227,7 @@ def test_key_echo_count_matches_the_pinned_ceiling() -> None:
             failures.append(
                 f"{locale_code}.yml carries {len(offenders)} key-echo value(s) against a pinned ceiling "
                 f"of {ceiling}. A key-echo is the scaffold placeholder, never a translation; author the "
-                f"value via `python -m cadrumo.locales set`. First five: {offenders[:5]}"
+                f"value via `python -m dev.locales set`. First five: {offenders[:5]}"
             )
 
     assert failures == [], "\n".join(failures)
@@ -247,7 +248,7 @@ def test_no_catalogue_value_is_blank() -> None:
         if offenders:
             failures.append(
                 f"{locale_code}.yml carries {len(offenders)} blank value(s). Author the value via "
-                f"`python -m cadrumo.locales set`, or remove the key. Keys: {offenders[:5]}"
+                f"`python -m dev.locales set`, or remove the key. Keys: {offenders[:5]}"
             )
 
     assert failures == [], "\n".join(failures)

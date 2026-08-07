@@ -69,7 +69,7 @@ that is correct -- but a recipe no workflow ever invokes has never executed, so
 a gate that accepts it reports coverage over tests CI has never run. That was
 not hypothetical either: ``just test-integration`` (370 integration-marked
 modules under ``src/`` -- every cross-layer test the product has) and
-``just test-dev-tooling`` (nine ``dev/`` subsystems, whose own recipe docstring
+``just test-dev-tooling`` (ten ``dev/`` subsystems, whose own recipe docstring
 reads "the gates that no other lane reaches") were both declared, both healthy,
 and named by no workflow at all. :func:`ci_invoked_lanes` narrows the lane set
 to what CI actually reaches, so the two questions can be asked separately and
@@ -362,7 +362,7 @@ def ci_invoked_lanes(root: Path) -> tuple[Lane, ...]:
     recipe counts — which is correct for its question and dangerously
     reassuring for the one a reader usually means. Two lanes proved that:
     ``just test-integration`` (370 integration-marked modules under ``src/``)
-    and ``just test-dev-tooling`` (nine ``dev/`` subsystems, including the
+    and ``just test-dev-tooling`` (ten ``dev/`` subsystems, including the
     deploy-authority tests) were both declared, both healthy, and invoked by no
     workflow at all, so the declared-lane gate reported full coverage over
     tests CI had never once run.

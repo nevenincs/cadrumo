@@ -37,7 +37,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
             "source_refs. legal_refs must resolve against the legal catalogue "
             "(aeat-registry-authority-flow) and source_refs against the source catalogue. "
             "The title and official name are localizable values, not schema fields: author "
-            "them in the shared locale catalogues with 'python -m cadrumo.locales set', "
+            "them in the shared locale catalogues with 'python -m dev.locales set', "
             "against the derived keys the scaffolded manifest names in its header comment."
         ),
     ),
@@ -117,7 +117,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         title="Author shared locale keys",
         detail=(
             "src/cadrumo/locales/{es,en,ca,hu}.yml: derived casilla labels and "
-            "help text via `python -m cadrumo.locales scaffold/set` "
+            "help text via `python -m dev.locales scaffold/set` "
             "(aeat-locales-cli) — never create revision-local locale files or "
             "hand-edit catalogue YAML. Spanish in es.yml is the official Casilla source; "
             "non-Spanish values derive from that source through the shared key resolver."

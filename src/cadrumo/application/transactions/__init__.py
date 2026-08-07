@@ -9,10 +9,13 @@ diagnostic preview helper the ledger import path consumes before persistence.
 :class:`domain.transactions.TransactionCatalogue`, returns an immutable
 :class:`LedgerImportResult`, and leaves catalogue mutation, FX normalization,
 and bucket-event emission to :mod:`application.ledger`. Duplicate diagnostics
-use the same :func:`domain.transactions.derive_import_fingerprint` identity as
-the persisting import path, so dry-run reports and saved imports agree.
+route through :func:`classify_import_row`, the single verdict the persisting
+import path also consumes, so a preview and a saved import cannot disagree about
+what a row is.
 
 See Also:
+    :func:`classify_import_row`
+        The shared import/skip verdict, and why an intra-batch repeat imports.
     :class:`LedgerImportDiagnostic`
         Typed import finding grouped by
         :class:`LedgerImportDiagnosticKind` and
@@ -38,11 +41,14 @@ from ._diagnostics import (
     build_ledger_import_diagnostic,
 )
 from ._import import LedgerImportResult, import_ledger_with_diagnostics
+from ._import_classification import ImportRowVerdict, classify_import_row
 
 __all__ = [
+    "ImportRowVerdict",
     "LedgerImportDiagnostic",
     "LedgerImportDiagnosticKind",
     "LedgerImportResult",
     "build_ledger_import_diagnostic",
+    "classify_import_row",
     "import_ledger_with_diagnostics",
 ]

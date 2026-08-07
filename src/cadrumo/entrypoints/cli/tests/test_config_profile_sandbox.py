@@ -973,3 +973,52 @@ def test_sandbox_active_indicator_absent_when_a_non_active_sandbox_manifest_is_c
     listed = _invoke(("config", "profile", "list"))
     assert listed.exit_code == 0, listed.output
     assert "SANDBOX\t" not in listed.output
+
+
+def test_sandbox_active_indicator_rides_the_json_error_document() -> None:
+    """A command that FAILS under an active sandbox names the sandbox on stderr.
+
+    The success and error envelopes share the ``notices`` spine precisely so a
+    consumer need not branch on stdout-versus-stderr. Without the indicator on
+    the error document a refusal inside a discardable sandbox is
+    indistinguishable from the same refusal against the operator's real
+    profile — the one case where knowing which bucket you are in matters most.
+    """
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+
+    refused = _invoke(("--format", "json", "config", "profile", "sandbox", "discard", "does-not-exist", "--yes"))
+    assert refused.exit_code != 0, refused.output
+    document = json.loads((refused.stderr or "").strip().splitlines()[-1])
+    assert document["status"] == "error"
+    sandbox_notices = [n for n in document["notices"] if n["code"] == "config.profile.sandbox.active_indicator"]
+    assert len(sandbox_notices) == 1, document["notices"]
+    assert "sandbox:bakeoff" in sandbox_notices[0]["message"]
+
+
+def test_sandbox_active_indicator_rides_the_text_error_payload() -> None:
+    """The text-mode error payload carries the same ``SANDBOX`` banner the success path prints."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+
+    refused = _invoke(("config", "profile", "sandbox", "discard", "does-not-exist", "--yes"))
+    assert refused.exit_code != 0, refused.output
+    stderr = refused.stderr or ""
+    assert "SANDBOX\t" in stderr, stderr
+    assert "sandbox:bakeoff" in stderr
+
+
+def test_error_document_carries_no_sandbox_indicator_for_a_real_profile() -> None:
+    """The same refusal against a real profile carries no indicator, on either stream."""
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bakeoff", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "login", "main")).exit_code == 0
+
+    refused_json = _invoke(("--format", "json", "config", "profile", "sandbox", "discard", "does-not-exist", "--yes"))
+    assert refused_json.exit_code != 0, refused_json.output
+    document = json.loads((refused_json.stderr or "").strip().splitlines()[-1])
+    assert document["notices"] == []
+
+    refused_text = _invoke(("config", "profile", "sandbox", "discard", "does-not-exist", "--yes"))
+    assert refused_text.exit_code != 0, refused_text.output
+    assert "SANDBOX\t" not in (refused_text.stderr or "")

@@ -44,6 +44,7 @@ from ...core.decimal import (
 from ...core.external_constants import XLSX_EXTENSION
 from ...core.tabular import (
     TabularSourceError,
+    coerce_cell_text,
     decode_tabular_bytes,
     detect_tabular_delimiter,
 )
@@ -242,18 +243,10 @@ def _read_xlsx_rows(path: Path) -> list[list[str]]:
                         "column": str(column_index),
                     },
                 )
-            rows.append([_coerce_cell_text(cell.value) for cell in cells])
+            rows.append([coerce_cell_text(cell.value, integral_floats_as_int=True) for cell in cells])
         return [row for row in rows if any(cell for cell in row)]
     finally:
         workbook.close()
-
-
-def _coerce_cell_text(value: object) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, float) and value.is_integer():
-        return str(int(value))
-    return str(value).strip()
 
 
 __all__ = [

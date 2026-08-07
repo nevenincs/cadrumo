@@ -21,6 +21,7 @@ Submodules
    cadrumo.domain.iva._establishment
    cadrumo.domain.iva._flow
    cadrumo.domain.iva._invoice_classification
+   cadrumo.domain.iva._legend_derivation
    cadrumo.domain.iva._lookup
    cadrumo.domain.iva._m303_settlement
    cadrumo.domain.iva._oss

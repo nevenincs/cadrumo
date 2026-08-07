@@ -115,7 +115,7 @@ def test_modelo_232_related_party_round_trip_preserves_operation_metadata() -> N
         RowSetCellEdit(binding="modelo-232-related-party-row-name", row_index=1, value="Counter SL"),
         RowSetCellEdit(binding="modelo-232-related-party-row-country", row_index=1, value="ES"),
         RowSetCellEdit(binding="modelo-232-related-party-row-operation-kind", row_index=1, value="01"),
-        RowSetCellEdit(binding="modelo-232-related-party-row-tpr-method", row_index=1, value="CUP"),
+        RowSetCellEdit(binding="modelo-232-related-party-row-tpr-method", row_index=1, value="1A"),
         RowSetCellEdit(binding="modelo-232-related-party-row-amount", row_index=1, value=Decimal("50000")),
     )
 
@@ -124,7 +124,7 @@ def test_modelo_232_related_party_round_trip_preserves_operation_metadata() -> N
 
     assert resolved[("modelo-232-related-party-row-nif", 1)] == "A12345678"
     assert resolved[("modelo-232-related-party-row-operation-kind", 1)] == "01"
-    assert resolved[("modelo-232-related-party-row-tpr-method", 1)] == "CUP"
+    assert resolved[("modelo-232-related-party-row-tpr-method", 1)] == "1A"
     assert resolved[("modelo-232-related-party-row-amount", 1)] == Decimal("50000")
 
 

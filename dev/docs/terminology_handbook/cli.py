@@ -1,7 +1,7 @@
 """Developer CLI for Terminology Handbook scaffolding, curation, and audits.
 
 A dev / maintenance module CLI invoked as ``python -m dev.docs.terminology_handbook``,
-mirroring the ``cadrumo.locales`` and ``dev.docs.apidocs`` precedents. It is
+mirroring the ``dev.locales`` and ``dev.docs.apidocs`` precedents. It is
 NOT part of the operator ``aeat config`` / ``aeat app`` surface, so it
 does not bear on the two-CLI-roots architecture rule; like ``apidocs`` it
 emits plain English maintenance output rather than localised strings.

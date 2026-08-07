@@ -433,6 +433,11 @@ ignore_imports =
     # other test chain origins above rather than widened, so a NEW production
     # application -> llm edge still fails loudly.
     cadrumo.application.ledger.tests.test_evidence_corpus_parsing -> cadrumo.llm
+    # The cloud-evidence eligibility bar is a consent gate that lives in the
+    # gated subpackage, so the test asserting when an upload is permitted has
+    # to reach it. Pinned like the test chain origins above; production
+    # application -> llm coupling stays zero and still fails loudly.
+    cadrumo.application.user_profile.tests.test_cloud_evidence_eligibility_bar -> cadrumo.llm
     cadrumo.application.evidence._service -> cadrumo.adapters.persistence.**
     # Two ledger stores added by llm-package-split, same shape as the ledger
     # repositories pinned around them: derived financial data is STORAGE, so

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:1191578e1a7c7c53371b6c070b9424befc39e06da8f0464d6738853f33775936'
+body_hash: 'sha256:e3e5edb8492d9d86a74e0bfbcba3fca81ab50ba3815c3352a0f89049b35d6fba'
 related:
   - '[[2026-08-07-unstructured-document-ingestion-W01-P01-S01]]'
   - '[[2026-08-07-unstructured-document-ingestion-W01-P01-S02]]'
@@ -23,6 +23,12 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S77]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S78]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S79]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S86]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S87]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S94]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S95]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S96]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S97]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P06-S18]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P06-S19]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P06-S20]]'
@@ -38,6 +44,7 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W04-P09-S33]]'
   - '[[2026-08-07-unstructured-document-ingestion-W04-P10-S34]]'
   - '[[2026-08-07-unstructured-document-ingestion-W04-P10-S81]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W05-P11-S41]]'
   - '[[2026-08-07-unstructured-document-ingestion-W06-P12-S45]]'
   - '[[2026-08-07-unstructured-document-ingestion-W06-P12-S47]]'
   - '[[2026-08-07-unstructured-document-ingestion-W06-P12-S59]]'
@@ -100,6 +107,12 @@ Auto-generated index of all documents tagged with `#unstructured-document-ingest
 - `2026-08-07-unstructured-document-ingestion-W02-P05-S77` - Declare the field-form contract once and compile it into both the extraction prompt and the grounding validators (a rate as a bare number, amounts preserving the printed decimal separator, dates exactly as printed), resolving the printed-percent mismatch, gated by a contract-parity test proving prompt guidance and validator vocabulary derive from one declaration
 - `2026-08-07-unstructured-document-ingestion-W02-P05-S78` - Build the prompt compiler in the application layer: template plus registry-resolved IVA and retencion rates for the filing year and period plus IvaCategory members, handed to the extension as data, with no numeric rate literal in any template, gated by the model-free anti-drift gate proven by mutation in both directions
 - `2026-08-07-unstructured-document-ingestion-W02-P05-S79` - Fold the compiled prompt hash and its registry revision into the LLM cache key and the provenance stamp so a cached response cannot outlive a revision change and an audit can answer under which rates a figure was read, gated by cache-key collision tests and a provenance roundtrip
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S86` - Add the transcriptive regime_legend field to ExtractedInvoiceFields and InvoiceDraft carrying the printed statutory legend verbatim with its anchor at parity with every other copied field, gated by a strict roundtrip populating it non-default and an anchor test proving an unprinted legend yields no value
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S87` - Compile the statutory legend vocabulary from RD 1619/2012 art. 6.1 mandated mentions as prompt data with the instruction to copy verbatim if printed and never to choose one, gated by extending the anti-drift literal scan so the legend set carries no hardcoded prose literal outside its single home, proven by mutation in both directions
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S94` - Carry the printed currency code from the invoice draft through confirm into the ledger transaction so a foreign-currency invoice is recognisable as foreign rather than defaulting to euro, gated by a fixture invoice printing a non-euro code and an assertion that the stored transaction reports that currency, mutation-proven by dropping the carry and confirming the row is no longer distinguishable from a euro one
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S95` - Populate the euro equivalent at confirm for a foreign-currency invoice from a dated grounded rate carrying its source and rate date in the provenance envelope, refusing rather than inventing a rate when none is available for the invoice date, since a non-euro row with no euro equivalent is gated out of aggregation as unsupported currency and silently leaves the modelo totals, gated by a refusal test with a positive control proving a rated conversion reaches the casilla projection
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S96` - Prove the reading path on non-Spanish invoices by extending the bundled corpus fixtures to at least one intra-community invoice whose labels and regime legend are printed in another official EU language, asserting the reader recovers base, cuota, both parties and the legend without any Spanish label appearing on the document, so the field contract is shown to be language-independent rather than assumed to be
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S97` - Derive origin AND destination as anchorable printed evidence, both parties' country prefixes from their printed tax identifiers plus any printed address countries, and where the document states them the shipment or delivery endpoints, which for goods can differ from either party's establishment. The pair sets the IVA treatment for a business invoice, so a single counterparty establishment is insufficient, and the classifier consuming this today has no producer for it at all. Transcribe rather than infer so each value keeps its anchor, and resolve an unstated or unrecognised country to unknown and never to domestic, since a wrong pairing silently converts an intra-community or reverse-charge operation into a domestic one. Gated by fixtures covering a domestic pair, a foreign EU pair, a pair whose shipment endpoints differ from the parties' establishments, and a document stating no country, mutation-proven by defaulting the unknown case to domestic and confirming the gate reds
 - `2026-08-07-unstructured-document-ingestion-W02-P06-S18` - Enforce the anchor check: a candidate grounds only when its anchor occurs in the transcription and the typed value equals the deterministic parse of that anchor, proven by mutation with an off-document value observing red
 - `2026-08-07-unstructured-document-ingestion-W02-P06-S19` - Resolve identity roles deterministically, excluding the taxpayer own NIF from counterparty candidacy and surfacing AMBIGUOUS with all candidates when role evidence does not pick exactly one, gated by the OP-PUR-COM-2026-0005_layout-minimal fixture never yielding a first-match id
 - `2026-08-07-unstructured-document-ingestion-W02-P06-S20` - Emit arithmetic-closure findings over the identities total equals base plus cuota plus recargo plus suplido, cash equals total minus retencion, and per-rate sums, gated by both COM-2026-0005 fixture entries producing a blocking 890.00 versus 927.22 finding
@@ -115,6 +128,7 @@ Auto-generated index of all documents tagged with `#unstructured-document-ingest
 - `2026-08-07-unstructured-document-ingestion-W04-P09-S33` - Run the mutation-proof pass over every W01 through W03 gate, breaking from outside the repo, observing red, restoring, and recording each red signature
 - `2026-08-07-unstructured-document-ingestion-W04-P10-S34` - Build the harness runner pinned to key sha256 e2db6a49, recording model identity, revision and engine route on every result, stamping the corpus GAPS section-1 optimism caveat on every Spanish figure, and resolving twin pairs from the prose notes field until the corpus grows a structured link
 - `2026-08-07-unstructured-document-ingestion-W04-P10-S81` - Report the model tier beside every harness figure, record the claude-sonnet-4-6 REC-DOM-IMG-008 result (7 of 8, zero fabricated) as an upper reference point, and re-establish the baseline at the Haiku-tier proxy and the 2B-4B on-host class, gated by the harness refusing a result row missing its tier
+- `2026-08-07-unstructured-document-ingestion-W05-P11-S41` - 2026-08-07-unstructured-document-ingestion-W05-P11-S41
 - `2026-08-07-unstructured-document-ingestion-W06-P12-S45` - Add the HardwareProfile probe carrying free system memory, accelerator presence, and NVML-backed total and free VRAM, with unknown reported as unverified on diagnostic rows, gated by injected-measurement tests covering every branch
 - `2026-08-07-unstructured-document-ingestion-W06-P12-S47` - 2026-08-07-unstructured-document-ingestion-W06-P12-S47
 - `2026-08-07-unstructured-document-ingestion-W06-P12-S59` - Distinguish runtime residents from peer-process device usage in the contention snapshot and add the explicit unload action for Cadrumo-selected models, with the refusal naming which remediation applies, gated by injected readings covering both causes and an unload-path test, never touching another process

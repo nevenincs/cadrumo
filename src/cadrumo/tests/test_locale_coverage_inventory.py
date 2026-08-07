@@ -91,7 +91,7 @@ def test_operator_error_locale_keys_resolve_in_catalogues() -> None:
                 failures.append(
                     f"Locale key {key!r} is not set in the {locale!r} catalogue "
                     f"(got self-referencing placeholder {resolved!r}). "
-                    f"Add a real translation via `python -m cadrumo.locales set {locale} {key!r} <value>`."
+                    f"Add a real translation via `python -m dev.locales set {locale} {key!r} <value>`."
                 )
             if not resolved:
                 failures.append(f"Locale key {key!r} resolved to an empty string in the {locale!r} catalogue.")

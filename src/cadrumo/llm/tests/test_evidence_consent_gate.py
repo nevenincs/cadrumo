@@ -328,13 +328,14 @@ def test_a_local_evidence_read_needs_no_consent() -> None:
 
 
 @pytest.mark.parametrize(
-    ("permitted", "gestor", "acknowledged"),
+    ("permitted", "gestor", "profile_eligible", "acknowledged"),
     [
-        (False, False, False),
-        (False, False, True),
-        (True, False, False),
-        (True, True, True),
-        (False, True, True),
+        (permitted, gestor, eligible, acknowledged)
+        for permitted in (False, True)
+        for gestor in (False, True)
+        for eligible in (False, True)
+        for acknowledged in (False, True)
+        if not (permitted and not gestor and eligible and acknowledged)
     ],
 )
 def test_a_token_cannot_be_minted_unless_every_condition_holds(
@@ -342,18 +343,30 @@ def test_a_token_cannot_be_minted_unless_every_condition_holds(
     *,
     permitted: bool,
     gestor: bool,
+    profile_eligible: bool,
     acknowledged: bool,
 ) -> None:
-    """Every combination short of all-three refuses to mint.
+    """Every combination short of all-four refuses to mint.
 
-    Enumerated rather than sampled, so a future reordering of the gate's
-    conditions cannot leave one of them unexercised.
+    Enumerated exhaustively rather than sampled, so a future reordering of the
+    gate's conditions cannot leave one of them unexercised. The one permitting
+    combination is excluded by the comprehension's filter and asserted
+    positively in the next test, so the two together partition all sixteen
+    states -- no state is untested and none is tested for both outcomes.
+
+    The standing PER-PROFILE eligibility bar is the fourth condition: deployment
+    opt-in and profile eligibility are separate questions, because one machine
+    can serve several taxpayers and one of them permitting an off-host read must
+    not decide it for the others.
     """
     settings = _settings(tmp_path, cloud_upload_permitted=permitted, gestor_mode=gestor)
-    assert cloud_evidence_read_permitted(settings, acknowledged=acknowledged) is False
+    assert (
+        cloud_evidence_read_permitted(settings, profile_eligible=profile_eligible, acknowledged=acknowledged) is False
+    )
     with pytest.raises(LLMConsentError):
         mint_evidence_consent_token(
             settings=settings,
+            profile_eligible=profile_eligible,
             acknowledged=acknowledged,
             surface="aeat app ledger evidence extract",
             evidence_content_address="b" * 64,
@@ -361,11 +374,12 @@ def test_a_token_cannot_be_minted_unless_every_condition_holds(
 
 
 def test_the_only_permitting_combination_mints(tmp_path: Path) -> None:
-    """POSITIVE CONTROL for the minting side: all three conditions mint a token."""
+    """POSITIVE CONTROL for the minting side: all four conditions mint a token."""
     settings = _settings(tmp_path, cloud_upload_permitted=True)
-    assert cloud_evidence_read_permitted(settings, acknowledged=True) is True
+    assert cloud_evidence_read_permitted(settings, profile_eligible=True, acknowledged=True) is True
     token = mint_evidence_consent_token(
         settings=settings,
+        profile_eligible=True,
         acknowledged=True,
         surface="aeat app ledger evidence extract",
         evidence_content_address="c" * 64,

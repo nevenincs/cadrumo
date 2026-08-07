@@ -31,6 +31,7 @@ from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
+from dev.locales import LocaleManager
 from pydantic import BaseModel, ValidationError
 
 from ....core import BindingSourceKind
@@ -38,7 +39,6 @@ from ....core.aggregation import COUNTERPART_SOURCE_KINDS
 from ....core.config import override_settings
 from ....core.errors import get_registered_error_code
 from ....core.external_constants import OutputLanguage
-from ....locales import LocaleManager
 from ... import operator_surface
 from .. import (
     FilingStatus,

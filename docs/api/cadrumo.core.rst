@@ -43,6 +43,7 @@ Submodules
    cadrumo.core._capabilities
    cadrumo.core._casilla_id
    cadrumo.core._casilla_value_kind
+   cadrumo.core._classifier_input_source
    cadrumo.core._concept_lifecycle
    cadrumo.core._concepto_ingreso
    cadrumo.core._config_integration_fields

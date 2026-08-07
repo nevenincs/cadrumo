@@ -1,7 +1,7 @@
 """Developer CLI for modelo registry conformance governance.
 
 A dev / maintenance module CLI invoked as ``python -m dev.registry.conformance``,
-mirroring the ``dev.registry.newmodelo``, ``cadrumo.locales`` and
+mirroring the ``dev.registry.newmodelo``, ``dev.locales`` and
 ``dev.docs.terminology_handbook`` precedents. It is NOT part of the operator
 ``aeat config`` / ``aeat app`` surface, so it does not bear on the
 two-CLI-roots architecture rule; like ``apidocs`` it emits plain English
