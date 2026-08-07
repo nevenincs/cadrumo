@@ -145,7 +145,12 @@ def test_a_second_run_re_ingests_nothing_and_emits_no_second_event(
 
     second = _run(runtime_profile, batch_dir)
 
-    assert [item.content_address for item in second.items] == [item.content_address for item in first.items]
+    # Byte-identical rows, not merely the same addresses in the same order: a
+    # runner that re-derived a field per run — a timestamp, a run id — would
+    # order identically and still make the two reports undiffable.
+    assert [item.model_dump_json() for item in second.items if item.status != "no_op"] == [
+        item.model_dump_json() for item in first.items if item.status != "no_op"
+    ]
     assert any(item.status == "no_op" for item in second.items), "the completed document must report as a no-op"
     assert len(service.list_all(bucket_id=_BUCKET_ID)) == records_after_first, "no second evidence record"
     assert len(_events(runtime_profile).load().events) == events_after_first, "no second lifecycle event"
