@@ -27,6 +27,7 @@ from ._common import (
     parse_decimal_amount,
     parse_optional_decimal_amount,
 )
+from ._evidence_field_notices import field_degradation_notices
 from ._ledger_business_invoice_cli import _catalogue_invoice_shared_fields
 from ._ledger_payloads import (
     EvidenceAddResult,
@@ -433,6 +434,10 @@ def _register_evidence_extract_command() -> None:
                 context={"reference": reviewed_reference},
             ),
         ]
+        # Per-field degradation, so a thin read is distinguishable from a clean
+        # one. The reading path raises on neither, and the field COUNT above
+        # cannot say which fields failed a check or why.
+        notices.extend(field_degradation_notices(draft.provenance))
         _emit_envelope(
             ctx,
             command="ledger.evidence.extract",
@@ -703,6 +708,9 @@ def _run_evidence_confirm(
                 context={"invoice_id": invoice.invoice_id},
             ),
         )
+    # The confirm surface describes the SAME pre-override draft, so the operator
+    # sees why a field they are about to accept was not corroborated.
+    notices.extend(field_degradation_notices(result.draft.provenance))
     _emit_envelope(
         ctx,
         command="ledger.evidence.confirm",
