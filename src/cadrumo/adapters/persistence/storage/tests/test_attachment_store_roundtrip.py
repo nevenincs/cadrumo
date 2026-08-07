@@ -376,3 +376,112 @@ def test_malformed_attachment_manifest_payload_is_localized_for_all_read_paths(
                     "surface": "attachment_store",
                     "violation": "manifest_payload",
                 }, f"{case_label}:{read_path}"
+
+
+def test_put_many_bytes_roundtrips_every_payload_in_order(tmp_path: Path) -> None:
+    """The batched write must return the same bytes the per-record path would.
+
+    Batching changes only the transaction granularity, so every payload must
+    survive the encrypted boundary byte-for-byte and each returned digest must
+    positionally match its input.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        store = AttachmentStore()
+        payloads = [b"%PDF-1.4\ninvoice-" + str(index).encode() + b"\x00\xff" for index in range(6)]
+
+        digests = store.put_many_bytes(payloads)
+
+        assert len(digests) == len(payloads)
+        for digest, payload in zip(digests, payloads, strict=True):
+            assert digest == hashlib.sha256(payload).hexdigest()
+            assert store.read_bytes(digest) == payload
+
+
+def test_put_many_bytes_collapses_a_repeated_payload_within_one_batch(tmp_path: Path) -> None:
+    """A digest repeated inside one batch is written once, not twice.
+
+    A bulk import legitimately repeats a document — the same receipt attached
+    to two rows. The namespace is content-addressed, so an identical digest
+    means identical bytes and the second copy is redundant. Asserted through
+    the store's own read path rather than a row count so the test binds to the
+    contract callers see.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        store = AttachmentStore()
+        repeated = b"%PDF-1.4\nthe-same-receipt"
+        distinct = b"%PDF-1.4\na-different-document"
+
+        digests = store.put_many_bytes([repeated, distinct, repeated])
+
+        assert digests[0] == digests[2], "the repeated payload must resolve to one digest"
+        assert digests[0] != digests[1]
+        assert store.read_bytes(digests[0]) == repeated
+        assert store.read_bytes(digests[1]) == distinct
+
+
+def test_put_many_bytes_writes_a_repeated_payload_only_once(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The in-batch dedup must actually skip the redundant write.
+
+    Asserted by COUNTING the writes handed to ``save_many``, because the state
+    it produces is identical either way: the upsert is idempotent, so a
+    duplicated digest yields the same rows and the same readable bytes. A
+    behavioural assertion therefore cannot see this at all — the first version
+    of this proof asserted digests and bytes, and passed unchanged with the
+    dedup disabled.
+
+    What the dedup buys is real but invisible to state: encrypting and writing
+    a 40 KB payload a second time for a document the batch already carries.
+    The counter delegates to the real ``save_many``, so the write genuinely
+    happens and this observes its shape.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        # The repository must be INJECTED: an AttachmentStore built without one
+        # resolves a fresh repository per call, so a counter attached to any
+        # single instance would never be the object the store actually writes
+        # through -- the first version of this test patched exactly that and
+        # silently observed nothing.
+        objects = profile.repository
+        store = AttachmentStore(objects=objects)
+        repeated = b"%PDF-1.4 the-same-receipt"
+        distinct = b"%PDF-1.4 a-different-document"
+        real_save_many = objects.save_many
+        seen: list[int] = []
+
+        def counting_save_many(writes: tuple[object, ...]) -> None:
+            seen.append(len(writes))
+            real_save_many(writes)  # type: ignore[arg-type]
+
+        monkeypatch.setattr(objects, "save_many", counting_save_many)
+        store.put_many_bytes([repeated, distinct, repeated])
+
+        assert seen == [2], (
+            f"three payloads carrying two distinct digests must produce two writes, saw {seen}"
+        )
+
+
+def test_put_many_bytes_reuses_payloads_already_stored(tmp_path: Path) -> None:
+    """Re-ingesting a stored document is a no-op that still returns its digest.
+
+    The second dedup axis: a batch overlapping an earlier import must neither
+    fail nor rewrite, and must still answer with the digest so the caller can
+    link to the existing blob.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        store = AttachmentStore()
+        already = b"%PDF-1.4\nimported-last-week"
+        first = store.put_bytes(already)
+
+        digests = store.put_many_bytes([already, b"%PDF-1.4\nnew-this-run"])
+
+        assert digests[0] == first
+        assert store.read_bytes(digests[0]) == already
+        assert store.read_bytes(digests[1]) == b"%PDF-1.4\nnew-this-run"
+
+
+def test_put_many_bytes_on_an_empty_batch_writes_nothing(tmp_path: Path) -> None:
+    """An empty ingest must not open a transaction or raise."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        assert AttachmentStore().put_many_bytes([]) == ()

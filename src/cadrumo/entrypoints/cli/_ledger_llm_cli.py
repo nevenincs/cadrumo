@@ -104,7 +104,7 @@ def emit_llm_rejection(
         {
             "llm": True,
             "rejected": True,
-            "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
+            "provider": reader_from_provenance(suggestion.provenance),
             "transaction_id": result.transaction_id,
             "suggestion_kind": result.suggestion_kind,
             "provenance": result.provenance,
@@ -131,6 +131,22 @@ def emit_llm_rejection(
         notice.message,
     ]
     _emit_envelope(ctx, command="ledger.classify", result=payload, lines=lines, notices=[notice])
+
+
+def reader_from_provenance(provenance: str) -> str:
+    """Return the reader segment of an ``llm:<reader>:<model>`` provenance.
+
+    The suggestion DTOs carried a ``provider`` enum until the cloud transport was
+    retired; the payloads still publish a reader label, so it is derived from the
+    provenance the suggestion already carries rather than restated. Deriving it
+    keeps the field truthful if a second on-host reader is ever added, where a
+    hardcoded constant would quietly misreport.
+
+    Falls back to the whole string when the shape is unexpected, so a malformed
+    provenance surfaces in the payload instead of being silently blanked.
+    """
+    parts = provenance.split(":")
+    return parts[1] if len(parts) >= 2 and parts[1] else provenance
 
 
 def split_recommendation_notice(transaction_id: str) -> Notice:
@@ -296,7 +312,7 @@ def _emit_split(
                 "parent_transaction_id": suggestion.transaction_id,
                 "llm": True,
                 "persisted": False,
-                "provider": suggestion.provider.value if suggestion.provider is not None else None,
+                "provider": reader_from_provenance(suggestion.provenance),
                 "provenance": suggestion.provenance,
                 "reason": suggestion.reason,
                 "parent_amount": format(suggestion.parent_amount, "f"),
@@ -360,7 +376,7 @@ def _emit_single(
                 "llm": True,
                 "persisted": False,
                 "transaction_id": suggestion.transaction_id,
-                "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
+                "provider": reader_from_provenance(suggestion.provenance),
                 "classification": BusinessClassification.BUSINESS.value,
                 "category": child.category.value if child.category is not None else None,
                 "confidence": "1",
@@ -495,7 +511,7 @@ def _llm_suggestion_base_payload(
         "llm": True,
         "persisted": False,
         "transaction_id": suggestion.transaction_id,
-        "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
+        "provider": reader_from_provenance(suggestion.provenance),
         "classification": suggestion.classification.value,
         "category": suggestion.category.value if suggestion.category is not None else None,
         "confidence": format(suggestion.confidence, "f"),

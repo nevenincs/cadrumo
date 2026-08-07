@@ -24,6 +24,7 @@ import functools
 import multiprocessing
 import os
 import stat
+import tempfile
 import threading
 import time
 from collections.abc import Callable
@@ -631,35 +632,55 @@ class TestDurableWriteBatch:
         assert (tmp_path / "landed.bin").read_bytes() == b"kept"
         assert _tmp_leftovers(tmp_path) == []
 
-    def test_batching_removes_the_per_write_durability_cost(self, tmp_path: Path) -> None:
-        """The batch must be materially cheaper than the unbatched path.
+    def test_batching_defers_the_per_write_sync(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Batched writes must issue no per-file sync; unbatched must issue one each.
 
         This is the reason the class exists, so it is asserted rather than
-        assumed. Measured on the target platform the unbatched hardened tier
-        costs ~3.4 ms/write against ~1.0 ms batched; at the record counts this
-        store targets that is the difference between roughly a minute and
-        roughly twenty seconds of pure durability overhead.
+        assumed — but asserted as a SYSCALL COUNT, not as elapsed time.
 
-        Asserted as a RATIO against a same-run unbatched baseline, never as an
-        absolute duration, so the gate measures the property on whatever
-        hardware it runs rather than encoding this machine's disk speed.
+        Two earlier versions of this gate measured duration: an absolute
+        budget, then a same-run ratio. Both passed alone and failed under
+        parallel load, because a stopwatch measures whatever else is hitting
+        the disk. The property is "how many syncs are issued", which is an
+        integer that does not move with machine or contention.
+
+        The counter DELEGATES to the real :func:`os.fsync`, so the writes
+        under test perform genuine syncs and this observes them rather than
+        replacing them.
         """
-        payload = b"y" * 4096
-        for index in range(4):  # warm the directory and the page cache
-            atomic_write_hardened_bytes(tmp_path / f"warm{index}.bin", payload)
+        real_fsync = os.fsync
+        calls = 0
 
-        started = time.perf_counter()
-        for index in range(_PERMISSION_PROBE_WRITES):
-            atomic_write_hardened_bytes(tmp_path / f"plain{index}.bin", payload)
-        unbatched = time.perf_counter() - started
+        def counting_fsync(fd: int) -> None:
+            nonlocal calls
+            calls += 1
+            real_fsync(fd)
 
-        started = time.perf_counter()
-        with durable_write_batch() as batch:
-            for index in range(_PERMISSION_PROBE_WRITES):
-                atomic_write_hardened_bytes(tmp_path / f"batched{index}.bin", payload, batch=batch)
-        batched = time.perf_counter() - started
+        monkeypatch.setattr(os, "fsync", counting_fsync)
+        payload = b"y" * 512
+        writes = 8
 
-        assert batched < unbatched, (
-            f"batched writes ({batched:.3f}s) must beat unbatched ({unbatched:.3f}s); "
-            "the per-file fsync is no longer being deferred"
+        with tempfile.TemporaryDirectory() as raw_unbatched:
+            unbatched_dir = Path(raw_unbatched)
+            calls = 0
+            for index in range(writes):
+                atomic_write_hardened_bytes(unbatched_dir / f"plain{index}.bin", payload)
+            unbatched_syncs = calls
+
+        with tempfile.TemporaryDirectory() as raw_batched:
+            batched_dir = Path(raw_batched)
+            calls = 0
+            with durable_write_batch() as batch:
+                for index in range(writes):
+                    atomic_write_hardened_bytes(batched_dir / f"blob{index}.bin", payload, batch=batch)
+                during_batch = calls
+
+        # Positive control: the counter genuinely observes the unbatched path,
+        # so a zero on the batched side means deferral rather than a blind
+        # instrument.
+        assert unbatched_syncs >= writes, (
+            f"expected at least one sync per unbatched write, saw {unbatched_syncs} for {writes} writes"
+        )
+        assert during_batch == 0, (
+            f"batched writes issued {during_batch} per-file syncs; the batch is no longer deferring them"
         )

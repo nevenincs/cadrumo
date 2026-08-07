@@ -957,6 +957,7 @@ def _render_split_llm_preview(
     proposed_children: list[LedgerSplitChildProposalPayload],
 ) -> None:
     """Emit the non-persisting split preview envelope."""
+    from ._ledger_llm_cli import reader_from_provenance
     from ._ledger_payloads import LedgerSplitResult
 
     result = LedgerSplitResult.model_validate(
@@ -965,7 +966,7 @@ def _render_split_llm_preview(
             "parent_transaction_id": suggestion.transaction_id,
             "llm": True,
             "persisted": False,
-            "provider": suggestion.provider.value if suggestion.provider is not None else None,
+            "provider": reader_from_provenance(suggestion.provenance),
             "provenance": suggestion.provenance,
             "reason": suggestion.reason,
             "parent_amount": format(suggestion.parent_amount, "f"),
@@ -989,6 +990,7 @@ def _render_split_llm_applied(
     proposed_children: list[LedgerSplitChildProposalPayload],
 ) -> None:
     """Emit the persisted split-applied envelope."""
+    from ._ledger_llm_cli import reader_from_provenance
     from ._ledger_payloads import LedgerSplitResult
 
     child_id_rows = _split_child_id_rows(applied.child_transaction_ids)
@@ -1001,7 +1003,7 @@ def _render_split_llm_applied(
             "child_transactions": [row.model_dump(mode="json") for row in child_id_rows],
             "llm": True,
             "persisted": True,
-            "provider": suggestion.provider.value if suggestion.provider is not None else None,
+            "provider": reader_from_provenance(suggestion.provenance),
             "provenance": applied.provenance,
             "reason": suggestion.reason,
             "parent_amount": format(suggestion.parent_amount, "f"),
