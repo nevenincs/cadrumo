@@ -4,7 +4,7 @@ tags:
   - '#m200-export-nif-misbinding'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:62f68f7f96d9f45a2a2b50fdb4fda7958f0fea66209e0787af5bd11382d3001f'
+body_hash: 'sha256:bdb925c8d3e60fdbd1e9caa758506eaa50c4e74f52a0afec6ac22380c0537393'
 tier: L2
 related:
   - '[[2026-08-07-m200-export-nif-misbinding-adr]]'
@@ -34,23 +34,23 @@ modelos.
 
 Close the live filing-correctness defect by re-declaring the misbound field as filler and locking the fix with a byte-level regression and mutation proof.
 
-- [ ] `P01.S01` - Re-declare field modelo-200-page-001b-draft-profile_tax_id-pos-141 as kind filler, dropping draft_attribute; `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0003-modelo-200-page-001b.toml`.
-- [ ] `P01.S02` - Add a byte-range regression asserting the rendered page-001b offset 141 to 155 is blank for a populated profile_tax_id draft; `src/cadrumo/application/filing/tests/test_export_completeness_sets.py`.
-- [ ] `P01.S03` - Prove the new regression is load bearing by reverting the field to draft profile_tax_id, confirming the test reds, then restoring the fix; `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0003-modelo-200-page-001b.toml`.
+- [x] `P01.S01` - Re-declare field modelo-200-page-001b-draft-profile_tax_id-pos-141 as kind filler, dropping draft_attribute; `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0003-modelo-200-page-001b.toml`.
+- [x] `P01.S02` - Add a byte-range regression asserting the rendered page-001b offset 141 to 155 is blank for a populated profile_tax_id draft; `src/cadrumo/application/filing/tests/test_export_completeness_sets.py`.
+- [x] `P01.S03` - Prove the new regression is load bearing by reverting the field to draft profile_tax_id, confirming the test reds, then restoring the fix; `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0003-modelo-200-page-001b.toml`.
 
 ### Phase `P02` - gate draft-attribute width against its typed source
 
 Add a registry-build validator that mechanically catches a draft_attribute bound to a slot whose width diverges from its typed source's canonical width, the same defect class as P01, proven with a fixture-anchor test.
 
-- [ ] `P02.S04` - Add a registry-build validator asserting a draft field whose draft_attribute resolves to a typed fixed-width source declares a matching length, starting with profile_tax_id against SubjectTaxId at 9 characters; `src/cadrumo/domain/calculations/registry/_export.py`.
-- [ ] `P02.S05` - Add a fixture-anchor test mutating a scratch export field's profile_tax_id length away from 9 and asserting RegistryValidationError, then restore; `src/cadrumo/domain/calculations/registry/tests/test_export.py`.
-- [ ] `P02.S06` - Name the new width check as the slot-width sibling of the overlap check in the module docstring; `src/cadrumo/domain/calculations/registry/_export.py`.
+- [x] `P02.S04` - Add a registry-build validator asserting a draft field whose draft_attribute resolves to a typed fixed-width source declares a matching length, starting with profile_tax_id against SubjectTaxId at 9 characters; `src/cadrumo/domain/calculations/registry/_export.py`.
+- [x] `P02.S05` - Add a fixture-anchor test mutating a scratch export field's profile_tax_id length away from 9 and asserting RegistryValidationError, then restore; `src/cadrumo/domain/calculations/registry/tests/test_export.py`.
+- [x] `P02.S06` - Name the new width check as the slot-width sibling of the overlap check in the module docstring; `src/cadrumo/domain/calculations/registry/_export.py`.
 
 ### Phase `P03` - record the explicit follow-ups this fix does not close
 
 Scaffold a research document capturing the still-unwired grupo mercantil block and the broader unswept semantic-mismatch sweep as open questions for a future ADR, so the scope this ADR narrowed is not lost.
 
-- [ ] `P03.S07` - Scaffold a research document recording the unwired grupo mercantil block and the unswept broader draft-attribute, casilla, and binding semantic-mismatch sweep as open questions for a future ADR; `.vault/research/2026-08-07-m200-grupo-mercantil-wiring-research.md`.
+- [x] `P03.S07` - Scaffold a research document recording the unwired grupo mercantil block and the unswept broader draft-attribute, casilla, and binding semantic-mismatch sweep as open questions for a future ADR; `.vault/research/2026-08-07-m200-grupo-mercantil-wiring-research.md`.
 
 ## Parallelization
 
