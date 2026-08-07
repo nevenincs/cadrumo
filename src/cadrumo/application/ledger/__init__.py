@@ -237,6 +237,7 @@ if TYPE_CHECKING:
         ground_anchored_value,
         ground_self_reported_anchor,
         normalise_for_anchor_search,
+        printed_excerpt_occurs,
         strip_printed_unit,
     )
     from ._id_resolution import (
@@ -396,6 +397,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ground_anchored_value": "._grounding_anchor",
     "ground_self_reported_anchor": "._grounding_anchor",
     "normalise_for_anchor_search": "._grounding_anchor",
+    "printed_excerpt_occurs": "._grounding_anchor",
     "strip_printed_unit": "._grounding_anchor",
     "IdentityCandidate": "._identity_roles",
     "IdentityRoleResolution": "._identity_roles",
@@ -728,6 +730,7 @@ __all__ = [
     "mark_transaction_reviewed_excluded",
     "merge_transactions",
     "normalise_for_anchor_search",
+    "printed_excerpt_occurs",
     "order_batch_items",
     "order_batch_sources",
     "preflight_ledger_tax_readiness",

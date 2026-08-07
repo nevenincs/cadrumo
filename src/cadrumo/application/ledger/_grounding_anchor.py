@@ -95,6 +95,7 @@ __all__ = [
     "ground_anchored_value",
     "ground_self_reported_anchor",
     "normalise_for_anchor_search",
+    "printed_excerpt_occurs",
     "strip_printed_unit",
 ]
 
@@ -215,6 +216,38 @@ def normalise_for_anchor_search(text: str) -> str:
     """
     composed = unicodedata.normalize("NFKC", text)
     return _WHITESPACE_RUN.sub(" ", composed).strip()
+
+
+def printed_excerpt_occurs(excerpt: str, *, transcription: DocumentTranscription) -> bool:
+    """Return whether ``excerpt`` occurs in the document, as a printed token.
+
+    The presence half of :func:`evaluate_anchor`, exposed on its own for a claim
+    that has no typed value behind it to re-parse. Role evidence is such a
+    claim: it is a printed heading or label the reader copied to justify
+    assigning an identifier to a party, so the only question that can be asked
+    of it is whether the document actually says it.
+
+    Reusing this module's own search rather than open-coding a containment test
+    is what keeps one authority over "does the document print this": the same
+    Unicode and whitespace regularisation that survives a real PDF text layer,
+    and the same numeric-edge boundary rule, so a role evidence excerpt cannot
+    be admitted under weaker matching than an anchor.
+
+    Args:
+        excerpt: The printed context the reader claims to have copied.
+        transcription: The acquisition-stage text, printed forms intact.
+
+    Returns:
+        ``True`` when the excerpt occurs. A blank excerpt is ``False``: it
+        evidences nothing, and the caller must treat that as absent evidence
+        rather than as a permissive match.
+    """
+    if not excerpt.strip():
+        return False
+    return _occurs_as_a_whole_printed_token(
+        normalise_for_anchor_search(excerpt),
+        normalise_for_anchor_search(transcription.text),
+    )
 
 
 class AnchorEvaluation(BaseModel):

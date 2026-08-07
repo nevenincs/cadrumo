@@ -46,7 +46,7 @@ from ...core import FieldGroundingOutcome, FieldOrigin
 from ._closure_findings import closure_findings
 from ._document_transcription import DocumentTranscription
 from ._evidence_draft import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
-from ._grounding_anchor import evaluate_anchor
+from ._grounding_anchor import evaluate_anchor, printed_excerpt_occurs
 from ._identity_roles import IdentityCandidate, resolve_counterparty_identity
 from ._regime_contradiction import regime_contradiction_finding
 
@@ -56,13 +56,21 @@ __all__ = [
     "verified_provenance",
 ]
 
-GROUNDABLE_ORIGINS = frozenset({FieldOrigin.TEXT_LAYER, FieldOrigin.EXACT_STRUCTURED, FieldOrigin.TABULAR_MAPPED})
+GROUNDABLE_ORIGINS = frozenset(
+    {FieldOrigin.TEXT_LAYER, FieldOrigin.VISION, FieldOrigin.EXACT_STRUCTURED, FieldOrigin.TABULAR_MAPPED},
+)
 """Origins whose anchors can be checked against an independent transcription.
 
 Derived as a named set rather than an inline test so the exclusion is auditable.
-``VISION`` is absent because that path produces no transcription -- its anchor is
-the model's own claim about its own output, and checking it against the model's
-reply would confirm self-consistency rather than evidence. ``OPERATOR`` is absent
+``VISION`` is present because the vision lane now transcribes and interprets in
+SEPARATE calls: stage one turns pixels into a transcription and reads no fields,
+stage two proposes values from that text, and the anchor check runs against
+stage one's output. That is the same independence the text lane has -- a
+different reader produced the text the anchor is searched in -- so excluding it
+would now withhold a verdict a real check had earned. It was excluded while one
+call went image-to-fields, because the only thing an anchor could then be
+compared against was the reply that asserted it, and a fabricating model is
+self-consistent. ``OPERATOR`` is absent
 because an operator-supplied value is not a reading of the document at all.
 ``DERIVED`` is absent for a sharper reason than either: a derived value was never
 printed, so there is no anchor to check and the envelope refuses to carry one.
@@ -167,7 +175,7 @@ def ground_draft_against_transcription(
     if taxpayer_tax_id is not None:
         resolution = resolve_counterparty_identity(
             field="supplier_tax_id",
-            candidates=_identity_candidates(draft=draft, envelopes=envelopes),
+            candidates=_identity_candidates(draft=draft, envelopes=envelopes, transcription=transcription),
             taxpayer_tax_id=taxpayer_tax_id,
             origin=_reading_origin(envelopes),
         )
@@ -186,48 +194,54 @@ def _identity_candidates(
     *,
     draft: InvoiceDraft,
     envelopes: tuple[FieldProvenance, ...],
+    transcription: DocumentTranscription,
 ) -> tuple[IdentityCandidate, ...]:
-    """Return the tax identifiers the draft carries, with their anchors.
+    """Return the tax identifiers the draft carries, with their anchors and role evidence.
 
     Only identifiers the reader actually proposed. This deliberately does NOT
     re-scan the transcription for every checksum-valid token: that scan is the
     defect this campaign removed, and reintroducing it here under a different
     name would restore first-match selection at the exact seam that was fixed.
 
-    **No role evidence is supplied here, and that is the point.** The candidates
-    carry none, because nothing on this path has any: the reader reports a value
-    under a field name, and the field name is a restatement of the reader's own
-    assignment rather than anything the document says about the party.
+    **Role evidence is admitted only after the document is asked.** The reader
+    reports, per identity field, the printed heading or label that assigns the
+    identifier to a party. That is a claim about the document, exactly like an
+    anchor, so it is checked against the transcription with
+    :func:`~application.ledger.printed_excerpt_occurs` before it is allowed to
+    influence anything. An excerpt the document does not print is dropped, and
+    the candidate carries no role evidence -- which fails safe, because an
+    unevidenced identity does not resolve.
 
-    This previously passed ``f"the reader assigned this identifier to {field}"``,
-    which is always truthy, so the resolver's positive-role-evidence filter
-    accepted every candidate and could never exclude one. The measured defect
-    that filter exists to stop -- the true supplier's identifier failing its
-    control character, one unrelated but valid identifier left standing, and the
-    survivor grounded with full confidence -- was live again through it, and the
-    note it emitted read as positive evidence while saying only that the reader
-    had assigned the field. A guard that cannot refuse is worse than no guard,
-    because its output is trusted.
+    That check is what separates this from what it replaced. The reading stage
+    once synthesised ``f"the reader assigned this identifier to {field}"``,
+    which is always truthy and unfalsifiable, so the resolver's
+    positive-role-evidence filter accepted every candidate and could never
+    exclude one. The measured defect that filter exists to stop -- the true
+    supplier's identifier failing its control character, one unrelated but valid
+    identifier left standing, and the survivor grounded with full confidence --
+    was live through it, under a note that read as positive evidence while
+    saying only that the reader had assigned the field.
 
-    With nothing supplied, an identity that cannot be evidenced stays
-    unresolved, which is the direction that fails safe: an absent counterparty
-    refuses as a missing field naming the override that supplies it, while a
-    wrong one reaches the counterparty totals AEAT reconciles against the other
-    party's own filing. Real evidence -- the transcription context that assigns
-    a value to a party role -- is a payload field the reading stage does not yet
-    carry; when it does, it arrives here and the filter has something true to
-    test.
+    The difference is not that the text is longer. It is that this text can be
+    WRONG: a model that invents a heading the document does not carry loses its
+    role evidence here and its identity stays unresolved, while the synthesised
+    string was true by construction for every candidate on every document.
     """
     anchors = {envelope.field: envelope.anchor for envelope in envelopes}
+    role_evidence = {envelope.field: envelope.role_evidence for envelope in envelopes}
     candidates: list[IdentityCandidate] = []
     for field in ("supplier_tax_id", "customer_tax_id"):
         value = getattr(draft, field, None)
         if not isinstance(value, str) or not value.strip():
             continue
+        claimed = role_evidence.get(field)
         candidates.append(
             IdentityCandidate(
                 value=value,
                 anchor=anchors.get(field),
+                role_evidence=(
+                    claimed if claimed and printed_excerpt_occurs(claimed, transcription=transcription) else ""
+                ),
             ),
         )
     return tuple(candidates)

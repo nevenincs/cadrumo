@@ -151,8 +151,7 @@ def test_the_reinstated_consent_apparatus_exists_and_is_wired_at_the_choke_point
     import textwrap
 
     from ..core import ServiceCapability
-    from ..llm import cloud_evidence_read_permitted
-    from ..llm._client import LLMClient
+    from ..llm import LLMClient, cloud_evidence_read_permitted
 
     settings_fields = set(_settings_model_fields())
     for symbol in _REINSTATED_CONSENT_SYMBOLS:

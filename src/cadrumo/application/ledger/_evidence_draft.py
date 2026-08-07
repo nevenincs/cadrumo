@@ -303,6 +303,18 @@ class FieldProvenance(BaseModel):
             and has no transcription. Such an anchor is recorded because it is
             still useful to an operator, but it can never carry an ``ANCHORED``
             outcome; see the validator below.
+        role_evidence: For an identity field, the printed context the reader
+            copied that assigns this value to its party role -- a heading, a
+            label, the line the identifier sits under. ``None`` where the
+            document showed nothing that does, and on every field that names no
+            party. This is a SECOND anchor rather than a note: it is a printed
+            excerpt, so it is checkable against the transcription exactly the
+            way :attr:`anchor` is, and it is only trusted once that check has
+            run. The reader's own account of what it did ("I assigned this to
+            supplier_tax_id") is not role evidence and must never be recorded
+            here -- always-truthy text in this slot permanently satisfies the
+            guard that exists to refuse an unevidenced identity, which is a
+            measured defect rather than a hypothetical one.
         note: Operator-facing explanation, e.g. which identity contradicted the
             value.
     """
@@ -316,6 +328,7 @@ class FieldProvenance(BaseModel):
     candidates: tuple[FieldAmbiguityCandidate, ...] = ()
     anchor_self_reported: bool = False
     derived_from: tuple[str, ...] = ()
+    role_evidence: str | None = None
     note: str = ""
 
     @model_validator(mode="after")
@@ -705,9 +718,9 @@ def _refuse_a_text_read_with_no_reader(exc: Exception) -> NoReturn:
         PurchaseInvoiceEvidenceInputError: Always.
     """
     raise PurchaseInvoiceEvidenceInputError(
-        "this document's text layer is readable, but the semantic reader that turns it into fields "
-        f"could not be run ({exc}). The document was not read, and no value was guessed from it. "
-        "Provision an on-host reading model, then extract again.",
+        "this document was transcribed successfully, but the semantic reader that turns that text "
+        f"into fields could not be run ({exc}). The document was not read, and no value was guessed "
+        "from it. Provision an on-host reading model, then extract again.",
         suggestion="aeat config provision pull",
     ) from exc
 
@@ -772,7 +785,7 @@ def _read_transcription_semantically(
     from ._grounded_reading import ground_draft_against_transcription
 
     try:
-        read = extract_invoice_fields_from_text(transcription.text)
+        read = extract_invoice_fields_from_text(transcription)
     except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
         # The reader is absent or unreachable. See the refusal's own docstring
         # for why this does not fall through to vision.
@@ -869,7 +882,18 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
 
 
 def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Settings) -> InvoiceDraft:
-    """Rasterise/encode *evidence* and read it with the on-host local vision model.
+    """Rasterise/encode *evidence*, TRANSCRIBE it with the on-host vision model, then read it.
+
+    Two stages, not one, and the split is what earns this path its grounding.
+    The vision model produces a :class:`DocumentTranscription` and interprets
+    nothing; the same semantic reader and the same anchor check the text lane
+    uses then run over that text
+    (:func:`_read_transcription_semantically`). Because the transcription is
+    produced by a different call than the one that proposes values, the anchor
+    check is an external check here exactly as it is on the text lane -- which
+    it structurally could not be while one call went image-to-fields and the
+    only thing an anchor could be compared against was the reply that asserted
+    it.
 
     Gated by :attr:`~core.ServiceCapability.LLM_VISION` -- an operator who has
     opted out gets a typed refusal naming the capability toggle, never a silent
@@ -889,7 +913,7 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
         )
 
     try:
-        from ...llm import extract_invoice_fields_from_images
+        from ...llm import transcribe_document_images
 
         if evidence.document_shape in PDF_CONTAINER_SHAPES:
             images = tuple(
@@ -908,7 +932,14 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
                     detect_image_media_type(evidence.data),
                 ),
             )
-        return extract_invoice_fields_from_images(images, settings=settings)
+        # Content-addressed to the SOURCE bytes, never to the renders: the same
+        # document rasterised at another resolution is one document, and hashing
+        # the images would split it into two cache entries that can never hit.
+        transcription = transcribe_document_images(
+            images,
+            source_content_sha256=evidence.content_sha256,
+            settings=settings,
+        )
     except MissingOptionalExtraError as exc:
         # Ordered ahead of the runtime-failure branch deliberately. A missing
         # `llm` extra is a dependency problem, not a reachability problem: the
@@ -927,6 +958,13 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
             f"on-host vision reading failed: {detail}. Fix: {fix}",
             suggestion=fix,
         ) from exc
+
+    # OUTSIDE the try, deliberately, and for the same reason the text lane's
+    # semantic read sits outside its transcription try: a failure here is a
+    # statement about the semantic READER, and converting it into "vision
+    # reading failed" would send the operator to restart a daemon that read the
+    # page perfectly well.
+    return _read_transcription_semantically(evidence, transcription)
 
 
 class PrintedTotalDiscrepancy(BaseModel):

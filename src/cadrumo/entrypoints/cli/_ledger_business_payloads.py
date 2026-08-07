@@ -347,6 +347,13 @@ class EvidenceFieldProvenancePayload(OutputSchema):
     # was computed from in place of an anchor, so the operator can see what a
     # derivation stood on rather than only that it happened.
     derived_from: list[str] = []
+    # Mirrors FieldProvenance.role_evidence. For an identity field this is the
+    # printed heading or label that assigns the identifier to a party, already
+    # checked against the document's transcription. It reaches the operator
+    # because it is the answer to the question the anchor cannot answer: two tax
+    # identifiers on one invoice have the same printed shape, so knowing WHERE a
+    # number was printed says nothing about WHOSE it is.
+    role_evidence: str | None = None
     note: str = ""
 
 
@@ -502,6 +509,11 @@ class EvidenceReviewFieldPayload(OutputSchema):
     anchor: str | None = None
     anchor_self_reported: bool = False
     candidates: list[EvidenceFieldAmbiguityCandidatePayload] = []
+    # The printed context assigning an identity field to its party role, shown
+    # on the review row for the same reason the anchor is: a person deciding
+    # whether to accept a counterparty identifier needs to see what on the page
+    # said it was the counterparty's, not only that it verified.
+    role_evidence: str | None = None
     note: str = ""
 
 

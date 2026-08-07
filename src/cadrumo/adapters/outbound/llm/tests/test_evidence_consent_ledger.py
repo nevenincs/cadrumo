@@ -39,8 +39,7 @@ import pytest
 
 from .....core.config import Settings
 from .....core.external_constants import UTF_8_ENCODING
-from .....llm import EvidenceConsentToken, LLMConsentError, LLMProvider, LLMRequest
-from .....llm._client import LLMClient
+from .....llm import EvidenceConsentToken, LLMClient, LLMConsentError, LLMProvider, LLMRequest
 from .....llm._providers.base import ProviderCompletion, ProviderRequest, _ProviderAdapter
 from ....persistence.storage import (
     LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE,

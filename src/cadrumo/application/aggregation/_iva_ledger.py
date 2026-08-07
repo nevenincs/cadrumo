@@ -129,6 +129,14 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     # out-of-coverage year that their rate is wrong, sending them to correct a
     # figure that was right.
     IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE = "iva_rate_date_outside_table_coverage"
+    # The row declares a 0 % rate and a non-zero cuota, which its own declared
+    # rate makes arithmetically impossible: cuota is base x tipo, so a zero
+    # tipo admits only a zero cuota. This is corrupt data rather than an
+    # unrouted value, so it is refused here rather than routed onward. Routing
+    # it instead would put money AEAT can disprove from the filed record into a
+    # 0 % box -- the return publishes both the rate and the cuota, so the
+    # contradiction is checkable arithmetically without any other source.
+    CUOTA_ON_ZERO_RATED_ROW = "cuota_on_zero_rated_row"
     MISSING_EUR_TAX_SUBSTRATE = "missing_eur_tax_substrate"
     INVALID_PRORRATA_REFERENCE = "invalid_prorrata_reference"
     UNSUPPORTED_IVA_CATEGORY = "unsupported_iva_category"
@@ -1208,6 +1216,17 @@ def _classify_iva_transaction(
     assert transaction.taxable_base is not None
     assert transaction.iva_amount is not None
     assert transaction.iva_rate is not None
+    if transaction.iva_rate == Decimal("0") and transaction.iva_amount != Decimal("0"):
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW,
+                detail=(
+                    f"row declares iva_rate 0 with iva_amount {transaction.iva_amount}; a zero tipo "
+                    "admits only a zero cuota, so one of the two facts is wrong"
+                ),
+            ),
+        )
     rate_kind = _iva_rate_kind_for(transaction.iva_rate, on_date=operation_date)
     if rate_kind is None:
         covered = _rate_table_covers(operation_date)

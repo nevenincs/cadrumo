@@ -30,7 +30,7 @@ from typing import get_type_hints
 import pytest
 
 from ..core import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
-from ..domain.calculations.registry._detail_record_bindings import RelatedPartyOperationObservation
+from ..domain.calculations.registry import RelatedPartyOperationObservation
 from ..domain.modelos import Modelo232VinculadaRow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
