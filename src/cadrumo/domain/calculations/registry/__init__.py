@@ -44,8 +44,9 @@ See Also:
 # package during validation bootstrap.
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ._aeat_hosts import REMOTE_READ_SCHEME, canonical_remote_hostname
-from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle, AeatNifIvaObservation
 from ._ids import (
     ApplicationLinkId,
     BindingId,
@@ -268,20 +269,6 @@ from ._errors import (
     RegistrySnapshotError,
     RegistryValidationError,
 )
-from ._external_grounding import (
-    ExternalGroundingFinding,
-    ExternalGroundingFindingKind,
-    ExternalOracleEvidence,
-    ExternalOracleInventory,
-    ManualWorkedExamplePayload,
-    OracleAttributionGap,
-    RegistryExternalGroundingAudit,
-    RevisionExternalGroundingRow,
-    UnattributedOraclePayload,
-    audit_bundled_external_grounding,
-    build_external_grounding_audit,
-    load_bundled_external_oracle_inventory,
-)
 from ._period_offset_math import same_ejercicio_prior_quarter_anchors
 from ._export import (
     ResolvedExportLayout,
@@ -309,33 +296,10 @@ from ._formula_runtime import (
 from ._formula_initial_values import initial_value_casilla_ids
 from ._formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
 from ._formula_text_inputs import validate_text_input_targets, validated_text_input_casilla_ids
-from ._groi_oracle import (
-    GROI_ORACLE_ID,
-    GroiDriver,
-    GroiObservation,
-    GroiOracle,
-    GroiReplayDriver,
-)
 from ._legal import (
     legal_reference_quotes_corpus,
     verify_legal_catalogue,
     verify_legal_reference,
-)
-from ._live_parity import (
-    CrossReferenceApplicability,
-    CrossReferenceApplicabilityDeclaracion,
-    LiveParityCatalogue,
-    LiveParityOracle,
-    OracleEnvironment,
-    OracleSurfaceKind,
-    ParityFieldComparison,
-    ParityResult,
-    ParityVerdict,
-    audit_registry_oracle_bindings,
-    collect_applicability_declarations,
-    collect_orphan_oracle_ids,
-    evaluate_cross_reference_applicability,
-    resolve_cross_reference_oracle,
 )
 from ._loader import (
     ModeloRevisionSource,
@@ -456,20 +420,6 @@ from ._remote_state_guard import (
     evaluate_remote_operation,
     remote_state_policy_from_cross_reference,
 )
-from ._renta_web_open_oracle import (
-    RentaWebOpenDisplayOverride,
-    RentaWebOpenDriver,
-    RentaWebOpenLivePayload,
-    RentaWebOpenObservation,
-    RentaWebOpenOracle,
-    RentaWebOpenReplayDriver,
-    RentaWebOpenSyntheticProfile,
-    equivalent_renta_web_open_value,
-    parse_renta_web_open_live_payload,
-    serialize_renta_web_open_replay_decimal,
-    validate_renta_web_open_expected_casilla_ids,
-    validate_renta_web_open_expected_casilla_values,
-)
 from ._runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -581,6 +531,165 @@ from ._workbook_parity import (
     scan_workbook,
     verify_workbook_backend,
 )
+
+if TYPE_CHECKING:
+    from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle, AeatNifIvaObservation
+    from ._external_grounding import (
+        ExternalGroundingFinding,
+        ExternalGroundingFindingKind,
+        ExternalOracleEvidence,
+        ExternalOracleInventory,
+        ManualWorkedExamplePayload,
+        OracleAttributionGap,
+        RegistryExternalGroundingAudit,
+        RevisionExternalGroundingRow,
+        UnattributedOraclePayload,
+        audit_bundled_external_grounding,
+        build_external_grounding_audit,
+        load_bundled_external_oracle_inventory,
+    )
+    from ._groi_oracle import (
+        GROI_ORACLE_ID,
+        GroiDriver,
+        GroiObservation,
+        GroiOracle,
+        GroiReplayDriver,
+    )
+    from ._live_parity import (
+        CrossReferenceApplicability,
+        CrossReferenceApplicabilityDeclaracion,
+        LiveParityCatalogue,
+        LiveParityOracle,
+        OracleEnvironment,
+        OracleSurfaceKind,
+        ParityFieldComparison,
+        ParityResult,
+        ParityVerdict,
+        audit_registry_oracle_bindings,
+        collect_applicability_declarations,
+        collect_orphan_oracle_ids,
+        evaluate_cross_reference_applicability,
+        resolve_cross_reference_oracle,
+    )
+    from ._renta_web_open_oracle import (
+        RentaWebOpenDisplayOverride,
+        RentaWebOpenDriver,
+        RentaWebOpenLivePayload,
+        RentaWebOpenObservation,
+        RentaWebOpenOracle,
+        RentaWebOpenReplayDriver,
+        RentaWebOpenSyntheticProfile,
+        equivalent_renta_web_open_value,
+        parse_renta_web_open_live_payload,
+        serialize_renta_web_open_replay_decimal,
+        validate_renta_web_open_expected_casilla_ids,
+        validate_renta_web_open_expected_casilla_values,
+    )
+
+
+#: Public name -> owning submodule, resolved on first attribute access.
+#:
+#: Scoped to the live-network/browser-driven "oracle" tail only (GROI,
+#: NIF-IVA, Renta WEB Open, live-parity, external-grounding) -- the rest of
+#: this package's ~470 names stay eagerly imported above. Importing
+#: ANY name from this package, even the lightweight identifiers in `._ids`,
+#: executes this whole `__init__.py` first (Python always runs a package's
+#: `__init__.py` before any of its submodules), so a fully-eager facade
+#: charges every one of this package's 225+ production consumers for this
+#: tail even when they only want a type alias for a pydantic field
+#: annotation. Measured: importing `cadrumo.domain.calculations.registry`
+#: cost ~1.77M us cumulative, of which the oracle tail
+#: (`_aeat_nif_iva_oracle` -> `_checker_oracle_flow` -> `_live_parity` ->
+#: `_external_grounding` -> `_loader`/`_compiled_cache`, plus `_groi_oracle`
+#: and `_renta_web_open_oracle`) accounted for roughly 330,000-560,000 us of
+#: it. None of these six modules performs live-AEAT-participating work (a
+#: browser session, an HTTP call, a live-test gate) at IMPORT time -- every
+#: `RemoteOperation`/browser reference lives inside a method body, called
+#: only when an oracle's `.collect()`/`.planned_operations()` actually runs;
+#: deferring the import changes only WHEN the class definitions execute,
+#: never WHEN a live call happens. Outside this package, only the three sede
+#: live-drivers (`adapters.outbound.aeat.sede._groi_check`/`_nif_iva_check`/
+#: `_renta_web_open`) and the `aeat app registry` CLI group
+#: (`entrypoints.cli.registry`/`_registry_payloads`) import any of these 45
+#: names in production; confirmed by grepping every name individually
+#: against the whole tree, not inferred from the module names alone.
+_LAZY_EXPORTS: dict[str, str] = {
+    "AeatNifIvaCheckerOracle": "._aeat_nif_iva_oracle",
+    "AeatNifIvaObservation": "._aeat_nif_iva_oracle",
+    "ExternalGroundingFinding": "._external_grounding",
+    "ExternalGroundingFindingKind": "._external_grounding",
+    "ExternalOracleEvidence": "._external_grounding",
+    "ExternalOracleInventory": "._external_grounding",
+    "ManualWorkedExamplePayload": "._external_grounding",
+    "OracleAttributionGap": "._external_grounding",
+    "RegistryExternalGroundingAudit": "._external_grounding",
+    "RevisionExternalGroundingRow": "._external_grounding",
+    "UnattributedOraclePayload": "._external_grounding",
+    "audit_bundled_external_grounding": "._external_grounding",
+    "build_external_grounding_audit": "._external_grounding",
+    "load_bundled_external_oracle_inventory": "._external_grounding",
+    "GROI_ORACLE_ID": "._groi_oracle",
+    "GroiDriver": "._groi_oracle",
+    "GroiObservation": "._groi_oracle",
+    "GroiOracle": "._groi_oracle",
+    "GroiReplayDriver": "._groi_oracle",
+    "CrossReferenceApplicability": "._live_parity",
+    "CrossReferenceApplicabilityDeclaracion": "._live_parity",
+    "LiveParityCatalogue": "._live_parity",
+    "LiveParityOracle": "._live_parity",
+    "OracleEnvironment": "._live_parity",
+    "OracleSurfaceKind": "._live_parity",
+    "ParityFieldComparison": "._live_parity",
+    "ParityResult": "._live_parity",
+    "ParityVerdict": "._live_parity",
+    "audit_registry_oracle_bindings": "._live_parity",
+    "collect_applicability_declarations": "._live_parity",
+    "collect_orphan_oracle_ids": "._live_parity",
+    "evaluate_cross_reference_applicability": "._live_parity",
+    "resolve_cross_reference_oracle": "._live_parity",
+    "RentaWebOpenDisplayOverride": "._renta_web_open_oracle",
+    "RentaWebOpenDriver": "._renta_web_open_oracle",
+    "RentaWebOpenLivePayload": "._renta_web_open_oracle",
+    "RentaWebOpenObservation": "._renta_web_open_oracle",
+    "RentaWebOpenOracle": "._renta_web_open_oracle",
+    "RentaWebOpenReplayDriver": "._renta_web_open_oracle",
+    "RentaWebOpenSyntheticProfile": "._renta_web_open_oracle",
+    "equivalent_renta_web_open_value": "._renta_web_open_oracle",
+    "parse_renta_web_open_live_payload": "._renta_web_open_oracle",
+    "serialize_renta_web_open_replay_decimal": "._renta_web_open_oracle",
+    "validate_renta_web_open_expected_casilla_ids": "._renta_web_open_oracle",
+    "validate_renta_web_open_expected_casilla_values": "._renta_web_open_oracle",
+}
+
+
+def __getattr__(name: str) -> object:
+    """Resolve one oracle-tail name by importing only the submodule that owns it.
+
+    Every other name in this package's ``__all__`` resolves through the
+    ordinary eager imports above and never reaches this hook -- PEP 562's
+    ``__getattr__`` fires only for a name Python did not already find as a
+    module attribute. The resolved value is written into module globals, so
+    only the first access to a lazy name goes through this hook; every later
+    one is an ordinary global lookup with no import machinery in the path.
+
+    Ownership is unchanged: every name still has exactly one canonical home
+    in this package's ``__all__``, and consumers still import it from here.
+    Only WHEN the owning submodule executes has moved.
+    """
+    module_name = _LAZY_EXPORTS.get(name)
+    if module_name is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    from importlib import import_module
+
+    value = getattr(import_module(module_name, __name__), name)
+    globals()[name] = value
+    return value
+
+
+def __dir__() -> list[str]:
+    """Report the full public surface, including oracle-tail names not yet resolved."""
+    return sorted(set(__all__) | set(globals()))
+
 
 __all__ = [
     "AEAT_WRITE_FORBIDDEN_ACTIONS",
