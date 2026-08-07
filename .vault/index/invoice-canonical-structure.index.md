@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:0c580bf014a74544e55fb3fdee7d573ab5fb1a4e4c6622cb00484fea86099c45'
+body_hash: 'sha256:3e2c51e1f10606109a05230ddf98ab67c41b035433cf7982cc62e6e63fe41a10'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -30,7 +30,12 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-P02-S07]]'
   - '[[2026-08-06-invoice-canonical-structure-P02-S26]]'
   - '[[2026-08-06-invoice-canonical-structure-P02-S27]]'
+  - '[[2026-08-06-invoice-canonical-structure-P03-S11]]'
   - '[[2026-08-06-invoice-canonical-structure-P03-S12]]'
+  - '[[2026-08-06-invoice-canonical-structure-P03-S13]]'
+  - '[[2026-08-06-invoice-canonical-structure-P03-S14]]'
+  - '[[2026-08-06-invoice-canonical-structure-P03-S15]]'
+  - '[[2026-08-06-invoice-canonical-structure-P03-S16]]'
   - '[[2026-08-06-invoice-canonical-structure-P03-S38]]'
   - '[[2026-08-06-invoice-canonical-structure-P04-S17]]'
   - '[[2026-08-06-invoice-canonical-structure-P04-S18]]'
@@ -47,6 +52,7 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-naming-and-capability-reference]]'
   - '[[2026-08-06-invoice-canonical-structure-plan]]'
   - '[[2026-08-06-invoice-canonical-structure-research]]'
+  - '[[2026-08-07-invoice-canonical-structure-close-honesty-review-audit]]'
   - '[[2026-08-07-invoice-canonical-structure-fragmentation-sweep-audit]]'
 ---
 
@@ -63,6 +69,7 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 ### audit
 
 - `2026-08-06-invoice-canonical-structure-audit` - `invoice-canonical-structure` audit: `Fresh-context honesty review of the campaign`
+- `2026-08-07-invoice-canonical-structure-close-honesty-review-audit` - `invoice-canonical-structure` audit: `Close honesty review: what a fresh inheritor finds behind the 38/38`
 - `2026-08-07-invoice-canonical-structure-fragmentation-sweep-audit` - `invoice-canonical-structure` audit: `Fragmentation sweep of the invoice and identifier surfaces`
 
 ### exec
@@ -89,7 +96,12 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 - `2026-08-06-invoice-canonical-structure-P02-S06` - Accept operation-date on every entry verb including the guided one, so a guided entry can reach a declared devengo rank rather than only the proxy rank
 - `2026-08-06-invoice-canonical-structure-P02-S26` - Widen the confirm-boundary override set from the extraction draft's field set to the writer's, adding retencion, recargo, invoice-class, series, rectifies-invoice-number, iva-category, operation-date and the missing iva-amount, so an operator confirming a rectificativa or a retencion-bearing invoice from evidence need not abandon the evidence path
 - `2026-08-06-invoice-canonical-structure-P02-S27` - Make the recargo figure reachable at the confirm boundary and on the persisted invoice once the llm-package-split lane lands its draft-side recargo slot at W02.P04.S79, so the printed-total discrepancy that lane's reader already detects has somewhere to resolve to, this Step owning only the confirm side and never the draft model
+- `2026-08-06-invoice-canonical-structure-P03-S11` - Repoint the five bare invoice verbs add, view, list, update and remove at the canonical aggregate and retire the catalogue sub-noun, keeping the operator noun and the kind issued-or-received flag exactly as the superseded ADR established them
 - `2026-08-06-invoice-canonical-structure-P03-S12` - Record the lane-partition decision explicitly, whether the slim store's per-source-kind document partition is reproduced on the canonical home or consciously dropped in favour of the existing per-consumer gates, naming those gates and what each still guarantees
+- `2026-08-06-invoice-canonical-structure-P03-S13` - Remove the two-store union, the slim loader and the slim observation adapter from the invoice source resolver so exactly one store feeds M347 and M349
+- `2026-08-06-invoice-canonical-structure-P03-S14` - Delete the slim model, both services, the repository, the storage namespace and the BusinessOperationInvoiceDirection enum in one atomic explicit-path commit carrying every consumer, fixture and __all__ update, with no alias, bridge or re-export left behind
+- `2026-08-06-invoice-canonical-structure-P03-S15` - Delete the slim CLI payload schemas and retire the blessing test that creates one invoice in both stores and asserts only that the ids differ, keeping the surviving link tests in that module
+- `2026-08-06-invoice-canonical-structure-P03-S16` - Remove every locale leaf orphaned by the deletion through the locales CLI so all four catalogues stay in parity, then run the locale and apidocs drift gates
 - `2026-08-06-invoice-canonical-structure-P03-S38` - Build the canonical invoice update operation before the bare verbs are repointed, because the canonical surface has create, view, list and remove but NO update, so repointing the five bare verbs would silently drop the operator's only way to correct a persisted invoice and deleting the slim store would remove the sole update surface with nothing named to replace it
 - `2026-08-06-invoice-canonical-structure-P04-S17` - Delete the dead second Invoice writer and its tests outright rather than routing it, because the live bulk importer already routes canonically and routing would create a third import surface
 - `2026-08-06-invoice-canonical-structure-P04-S18` - Rename InvoiceLine.category_id to state what it is, first confirming whether the preflight site using category_id with the spending-taxonomy meaning shares a serialised key with it or is unrelated, and sweeping data consumers as well as callers

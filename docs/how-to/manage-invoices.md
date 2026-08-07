@@ -27,18 +27,15 @@ describes what each step does.
 
 Cadrumo keeps invoices in two separate places, for two different jobs.
 
-- **The invoice record** (`aeat app ledger invoice ...`) is your bookkeeping
-  ledger of who owes you and whom you owe. Use it to record, list, and edit
-  invoices. These records are for tracking; on their own they do **not** feed a
-  modelo calculation.
-- **The reconciliation catalogue** (`aeat app ledger invoice catalogue ...`) is
-  the linkable copy. A catalogue invoice can be matched to a bank transaction
-  and is the copy a calculation reads, for example the Modelo 349
-  recapitulative declaration of intra-community operations.
+Your invoices live in one place (`aeat app ledger invoice ...`): a record of
+who owes you and whom you owe. Use it to record, list, and edit invoices.
 
-Record everyday invoices with `invoice add`. When an invoice must drive a
-calculation or be reconciled against a payment, also create it in the catalogue
-with `invoice add`.
+Every invoice you record is linkable and calculable. Match it to a bank
+transaction with `aeat app ledger link`, and a calculation reads it directly --
+for example the Modelo 349 recapitulative declaration of intra-community
+operations.
+
+Record every invoice with `invoice add`. There is no second copy to create.
 
 Every command takes `--kind issued` or `--kind received`. *Issued* means a
 customer owes you (a collectible invoice); *received* means you owe a supplier
