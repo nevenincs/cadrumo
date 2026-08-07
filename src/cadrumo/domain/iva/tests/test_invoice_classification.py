@@ -150,6 +150,137 @@ def test_invoice_line_to_iva_observation_builds_repercutido_record_for_issued() 
     assert obs.iva_amount == Decimal("210")
 
 
+def test_invoice_observation_carries_the_rate_the_line_charged_not_its_tier_default() -> None:
+    """A 2 % foodstuffs line reaches the modelo bridge as 2 %, and is discriminable from 4 %.
+
+    ``applied_rate`` was deliberately unset on this path while an invoice line
+    carried a rate SLOT rather than a number. The RD-ley 4/2024 food slots ended
+    that: ``RATE_2`` names its own rate, so the number is measured rather than
+    inferred, and withholding it drops the line out of every rate-specific box
+    on the annual return -- the 2 % line missing from the 2 % box.
+
+    The 4 % case is the discriminator, not padding. Both slots share the
+    super-reducido tier, so an implementation that resolved the TIER instead of
+    the slot would return 4 % for both and this test would still see a populated
+    field. Only the pair distinguishes "carries its own rate" from "carries
+    something".
+    """
+    from datetime import date
+
+    from ...invoices import invoice_line_to_iva_observation
+
+    in_window = date(2024, 11, 15)
+    two_percent = invoice_line_to_iva_observation(
+        invoice_id="inv-2pct",
+        issued_at=in_window,
+        invoice_kind=InvoiceKind.ISSUED,
+        iva_rate=IvaRate.RATE_2,
+        base_amount=Decimal("100"),
+        iva_amount=Decimal("2"),
+    )
+    four_percent = invoice_line_to_iva_observation(
+        invoice_id="inv-4pct",
+        issued_at=in_window,
+        invoice_kind=InvoiceKind.ISSUED,
+        iva_rate=IvaRate.RATE_4,
+        base_amount=Decimal("100"),
+        iva_amount=Decimal("4"),
+    )
+
+    assert two_percent.applied_rate == Decimal("0.02")
+    assert four_percent.applied_rate == Decimal("0.04")
+    assert two_percent.rate_kind is four_percent.rate_kind is IvaRateKind.SUPER_REDUCED
+    assert two_percent.applied_rate != four_percent.applied_rate, (
+        "both slots share the super-reducido tier, so a tier-resolved applied_rate would collapse them "
+        "and the 2 % line would be indistinguishable from a 4 % one at the annual return"
+    )
+
+
+def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
+    """Mutation proof: an invoice-derived 2 % line lands in the 2 % box, not nowhere.
+
+    Asserting ``applied_rate == 0.02`` says nothing about whether anything reads
+    it. This drives the real production resolver over the real invoice bridge,
+    against the per-rate box shape Modelo 390 uses, and separates the two
+    outcomes that matter: each row reaching its own box, and neither absorbing
+    the other's.
+
+    The pre-change behaviour is what makes this load-bearing. Both observations
+    carried ``applied_rate=None``, which matches NO rate-specific binding, so
+    both boxes resolved to zero -- the lines vanished rather than being
+    misfiled. A silent drop is invisible to every totals check, which is why
+    nothing failed while it was happening.
+    """
+    from datetime import date
+
+    from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+    from ...calculations.registry import (
+        DataBindingDefinition,
+        ModeloRevision,
+        PeriodSelector,
+        resolve_ledger_iva_aggregation_binding_values,
+    )
+    from ...invoices import invoice_line_to_iva_observation
+
+    def _rate_box(binding_id: str, rate: Decimal) -> DataBindingDefinition:
+        return DataBindingDefinition(
+            id=binding_id,
+            source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+            selector={
+                "categories": (IvaCategory.DOMESTIC_SUPER_REDUCED_4,),
+                "rate_kinds": (IvaRateKind.SUPER_REDUCED,),
+                "flow_direction": IvaFlowDirection.REPERCUTIDO,
+                "applied_rates": (rate,),
+                "fact": "base_amount_sum",
+            },
+            aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
+            legal_refs=("ley-37-1992:art-91",),
+            source_refs=("aeat-dr-390-2025",),
+        )
+
+    in_window = date(2024, 11, 15)
+    rows = tuple(
+        invoice_line_to_iva_observation(
+            invoice_id=f"inv-{slot.name}",
+            issued_at=in_window,
+            invoice_kind=InvoiceKind.ISSUED,
+            iva_rate=slot,
+            base_amount=base,
+            iva_amount=Decimal("1"),
+        )
+        for slot, base in ((IvaRate.RATE_2, Decimal("100.00")), (IvaRate.RATE_4, Decimal("250.00")))
+    )
+    revision = ModeloRevision(
+        id="2010-y-siguientes",
+        localization_key="test.schema.revision.2010-y-siguientes.label",
+        valid_from=date(2024, 1, 1),
+        period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
+        legal_refs=("ley-37-1992:art-91",),
+        source_refs=("aeat-dr-390-2025",),
+        bindings=(
+            _rate_box("m390-super-reducido-2pct", Decimal("0.02")),
+            _rate_box("m390-super-reducido-4pct", Decimal("0.04")),
+        ),
+    )
+
+    resolved = resolve_ledger_iva_aggregation_binding_values(revision, rows)
+
+    assert resolved["m390-super-reducido-2pct"] == Decimal("100.00")
+    assert resolved["m390-super-reducido-4pct"] == Decimal("250.00")
+
+    # The pre-change arm, asserted rather than described: strip the rate the way
+    # this path used to leave it and both boxes go to zero. Without this the
+    # test above could pass against a resolver that ignored applied_rate
+    # entirely and matched on tier alone -- it would then put 350 in each box,
+    # which the equalities catch, but a resolver that dropped BOTH rows would
+    # need this arm to be distinguishable from a genuine empty period.
+    unrated = tuple(row.model_copy(update={"applied_rate": None}) for row in rows)
+    dropped = resolve_ledger_iva_aggregation_binding_values(revision, unrated)
+
+    assert dropped["m390-super-reducido-2pct"] == Decimal("0")
+    assert dropped["m390-super-reducido-4pct"] == Decimal("0")
+
+
 def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() -> None:
     from datetime import date
     from decimal import Decimal
