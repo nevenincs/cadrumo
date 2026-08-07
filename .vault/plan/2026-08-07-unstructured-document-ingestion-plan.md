@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:4eb97980d809ece0a261826bc98b7f9240fb431b7cd3232e3f4a894ef46cc35a'
+body_hash: 'sha256:02132fdd9ec1e90478e2267e532e85561d11fdee09a08525f948e3188f5bec9c'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -180,7 +180,7 @@ Lands the typed licence-aware catalogue, adaptive per-role selection, and the Ap
 - [x] `W06.P13.S48` - Author the typed per-role model catalogue declaring runtime id, memory requirement, SPDX licence with an explicit commercial-use flag verified against publisher text, and measured-baseline reference, gated by catalogue validation tests; `src/cadrumo/core`.
 - [x] `W06.P13.S49` - Implement adaptive selection resolving each role to the best candidate fitting the measured hardware tier and the licence posture, with an operator override surfacing a visible licence advisory on a non-commercial candidate, gated by selection-matrix tests over injected profiles; `src/cadrumo/application/provisioning.py`.
 - [x] `W06.P13.S50` - Flip the default vision model to the Apache-2.0 candidate and add the licence gate asserting no default candidate in any role carries a commercial-use bar, proven by mutation; `src/cadrumo/core/_config_runtime_fields.py`.
-- [ ] `W06.P13.S80` - Add per-model parameter support to the transport capability axis and omit unsupported parameters at the dispatch point (the unconditional temperature currently draws a vendor 400 from top-tier models), gated by adapter tests proving the typed refusal replaces the vendor error and the parameter is absent from the wire shape; `src/cadrumo/llm/_providers`.
+- [x] `W06.P13.S80` - Add per-model parameter support to the transport capability axis and omit unsupported parameters at the dispatch point (the unconditional temperature currently draws a vendor 400 from top-tier models), gated by adapter tests proving the typed refusal replaces the vendor error and the parameter is absent from the wire shape; `src/cadrumo/llm/_providers`.
 
 ### Phase `W06.P14` - Lifecycle verbs, retry, and degradation
 
@@ -213,11 +213,11 @@ Delivers the bounded batch run the operations ADR D1 decides: per-item typed res
 Lands the batch verb family with per-item truth, idempotent resume, deterministic ordering, and contention-aware pacing.
 
 - [ ] `W08.P16.S60` - Add the batch verb family accepting a directory or repeated --file and executing the full per-item pipeline into typed per-item result rows, never aborting on one item, with exit status reflecting any-item failure, gated by a poisoned-item fixture batch completing and reporting the refusal row; `src/cadrumo/entrypoints/cli`.
-- [ ] `W08.P16.S61` - Derive per-item idempotency keys from content address plus direction riding the evidence idempotency guard so a re-run reports no-op rows, gated by a double-run producing byte-identical result sets with no second lifecycle event; `src/cadrumo/application/ledger`.
-- [ ] `W08.P16.S62` - Order batch items deterministically by content address, gated by shuffled input directories producing identical reports; `src/cadrumo/application/ledger`.
+- [x] `W08.P16.S61` - Derive per-item idempotency keys from content address plus direction riding the evidence idempotency guard so a re-run reports no-op rows, gated by a double-run producing byte-identical result sets with no second lifecycle event; `src/cadrumo/application/ledger`.
+- [x] `W08.P16.S62` - Order batch items deterministically by content address, gated by shuffled input directories producing identical reports; `src/cadrumo/application/ledger`.
 - [ ] `W08.P16.S63` - Pace inference batch-wide: a standing contention refusal pauses the inference lane while every non-inference item completes, and cloud rate limits with the shared backoff apply across the run, gated by an injected-contention fixture completing deterministic items and reporting paused ones; `src/cadrumo/application/ledger`.
 - [ ] `W08.P16.S64` - Report progress through the notice channel in text mode and complete typed row sets in JSON mode, gated by the envelope schema conformance suite; `src/cadrumo/entrypoints/cli`.
-- [ ] `W08.P16.S65` - Persist any batch state through secure storage only, with no spool, journal or progress file, gated by the sensitive-persistence gate scan and an anti-tautology proof; `src/cadrumo/application/ledger`.
+- [x] `W08.P16.S65` - Persist any batch state through secure storage only, with no spool, journal or progress file, gated by the sensitive-persistence gate scan and an anti-tautology proof; `src/cadrumo/application/ledger`.
 - [x] `W08.P16.S85` - Guard the statement folder import per file so one unreadable statement is reported with its path and reason through the typed Notice channel while every other file still imports, keeping a run that imported nothing a hard refusal, gated by a poisoned-file folder fixture importing the rest and a positive control proving an all-good folder imports every file; `src/cadrumo/entrypoints/cli`.
 
 ## Wave `W09` - The review process and ledger end-to-end
@@ -232,7 +232,8 @@ Lands the review surface, the blocking-findings gate, assertion-shaped correctio
 - [ ] `W09.P17.S67` - Make blocking findings block: an unresolved closure discrepancy, ambiguous identity or unresolved direction refuses confirm until each named finding carries an explicit per-finding resolution, with no bulk confirm flag, gated by refusal tests per finding class; `src/cadrumo/application/ledger`.
 - [ ] `W09.P17.S68` - Record corrections as assertions: an operator override re-stamps the field OPERATOR while the confirmation record retains the prior value and origin, gated by a roundtrip asserting both values survive; `src/cadrumo/application/ledger`.
 - [ ] `W09.P17.S69` - Persist the confirmation provenance record naming the confirmer, time, overridden fields, finding resolutions, and the evidence and transcription content addresses, gated by a strict roundtrip with every defaultable field non-default; `src/cadrumo/application/ledger`.
-- [ ] `W09.P17.S70` - Add the end-to-end waist gate: an exact-parse fixture travels ingest, transcription, extraction, grounding, confirm, Invoice and the Modelo 303 observation with per-hop field accounting and no model in CI, proven by mutation at each hop; `src/cadrumo/application/ledger/tests`.
+- [x] `W09.P17.S70` - Add the end-to-end waist gate: an exact-parse fixture travels ingest, transcription, extraction, grounding, confirm, Invoice and the Modelo 303 observation with per-hop field accounting and no model in CI, proven by mutation at each hop; `src/cadrumo/application/ledger/tests`.
+- [x] `W09.P17.S84` - Make the waist gate's ingest hop accountable by driving the real ingest path that resolves bytes out of the encrypted attachment store, replacing the helper-performed ingest whose assertion has no production seam a mutation can break, gated by a mutation at that hop reddening exactly the ingest assertions; `src/cadrumo/application/ledger/tests`.
 
 ## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
 
