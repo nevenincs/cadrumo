@@ -97,6 +97,7 @@ def test_an_invoice_reading_back_the_filers_own_nif_is_refused(tmp_path: Path) -
     confirmed = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "issued",
             "--counterparty-name", "Cliente SL",
@@ -120,6 +121,7 @@ def test_a_genuine_third_party_counterparty_still_confirms(tmp_path: Path) -> No
     confirmed = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "received",
             "--counterparty-name", "Acme Suministros SL",
@@ -153,6 +155,7 @@ def test_an_operator_confirming_the_misread_identifier_is_still_refused(tmp_path
     confirmed = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "received",
             "--counterparty-nif", own,
@@ -191,6 +194,7 @@ def test_a_supplier_document_confirmed_as_issued_is_refused(tmp_path: Path) -> N
     confirmed = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "issued",
             "--counterparty-name", "Acme Suministros SL",
@@ -226,6 +230,7 @@ def test_the_direction_gate_declines_to_judge_a_document_with_no_issuer_identity
     confirmed = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "issued",
             "--counterparty-name", "Cliente SL",

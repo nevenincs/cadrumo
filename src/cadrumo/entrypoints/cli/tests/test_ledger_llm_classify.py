@@ -13,16 +13,13 @@ from typing import Any
 
 import pytest
 from click.testing import Result
-from pydantic import ValidationError
 
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
-from ....tests import temporary_env
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from .._ledger_rule_payloads import LLMProviderAvailabilityPayload
 from .envelope_helpers import unwrap_cli_result as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -74,44 +71,12 @@ def test_llm_rejects_combination_with_manual_classification(
 ) -> None:
     tx = _import_one_transaction(tmp_path)
     result = _invoke(
-        ["app", "ledger", "classify", tx, "--llm", "claude", "--classification", "BUSINESS"],
+        ["app", "ledger", "classify", tx, "--llm", "--classification", "BUSINESS"],
     )
     assert result.exit_code != 0
 
 
-def test_llm_invalid_provider_lists_choices(tmp_path: Path) -> None:
-    tx = _import_one_transaction(tmp_path)
-    result = _invoke(["app", "ledger", "classify", tx, "--llm", "not-a-provider"])
-    assert result.exit_code != 0
-    # Typer renders the Choice([...]) accepted-value set on a bad enum value.
-    assert "claude" in result.output and "antigravity" in result.output and "codex" in result.output
 
-
-@pytest.mark.parametrize(
-    "payload",
-    (
-        {"provider": "bogus", "cli_binary": "claude", "available": False},
-        {"provider": "", "cli_binary": "claude", "available": False},
-        {"provider": "claude", "cli_binary": "", "available": False},
-    ),
-)
-def test_provider_availability_payload_rejects_noncanonical_provider_rows(payload: dict[str, object]) -> None:
-    with pytest.raises(ValidationError):
-        LLMProviderAvailabilityPayload.model_validate(payload)
-
-
-def test_llm_unavailable_provider_refuses_from_real_path_lookup(tmp_path: Path) -> None:
-    tx = _import_one_transaction(tmp_path)
-    empty_path = tmp_path / "empty-path"
-    empty_path.mkdir()
-
-    with temporary_env(PATH=str(empty_path)):
-        result = _invoke(["app", "ledger", "classify", tx, "--llm", "antigravity"])
-
-    assert result.exit_code != 0
-    assert "antigravity" in result.output
-    assert "PATH" in result.output
-    assert _row_by_id(tx)["business_classification"] == "NOT_YET_PROCESSED"
 
 
 # ---------------------------------------------------------------------------
@@ -139,7 +104,7 @@ def test_llm_classify_rejects_unknown_nif_option(
     tx = _import_one_transaction(tmp_path)
 
     result = _invoke(
-        ["app", "ledger", "classify", tx, "--llm", "claude", *extra_flags, "--nif", "12345678Z"],
+        ["app", "ledger", "classify", tx, "--llm", *extra_flags, "--nif", "12345678Z"],
     )
 
     assert result.exit_code != 0, result.output

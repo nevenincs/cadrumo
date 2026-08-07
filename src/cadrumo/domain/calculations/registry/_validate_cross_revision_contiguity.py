@@ -1,7 +1,7 @@
 """Continuity-chain contiguity policy for registry casillas.
 
 A `continuidad_id` asserts one legal concept running continuously across the
-revisions that carry it. This module owns the policy that refuses a chain which
+:class:`ModeloRevision` entries that carry it. This module owns the policy that refuses a chain which
 is present, absent, then present again: such a chain asserts continuity across a
 period in which the modelo itself declares the concept does not exist, and no
 legal grounding can support that claim.

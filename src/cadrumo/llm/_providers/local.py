@@ -142,6 +142,7 @@ class LocalAdapter(_ProviderAdapter):
     """Provider adapter that invokes a local Ollama-compatible HTTP endpoint."""
 
     provider = LLMProvider.LOCAL
+    supports_images = True
 
     def __init__(self, timeout_s: int) -> None:
         """Initialize the adapter.
@@ -172,7 +173,7 @@ class LocalAdapter(_ProviderAdapter):
         if request.images:
             # Ollama carries multimodal inputs as base64 strings on the message
             # ``images`` field; only present them when a vision read supplied them.
-            user_message["images"] = list(request.images)
+            user_message["images"] = [image.base64_data for image in request.images]
         messages.append(user_message)
         settings = load_settings()
         async with httpx.AsyncClient(timeout=self._timeout_s) as client:

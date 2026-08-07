@@ -243,7 +243,6 @@ def test_no_evidence_transaction_does_not_trigger_consent_gate_and_uploads_no_ev
     suggestion = suggest_llm_classification(
         bucket_id=_BUCKET_ID,
         transaction_id=txn.transaction_id,
-        provider=None,
         classifier=classifier,
         transaction_repository=repository,
         read_evidence=True,

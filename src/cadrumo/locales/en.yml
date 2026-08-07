@@ -1888,43 +1888,26 @@ cli:
         valuation_preview_help: Preview closing stock and cost of sales
         year_help: Tax year
       invoice:
-        catalogue:
-          country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code. Required:
-            it routes both informativas, so it is never assumed.'
-          create_help: Create a linkable reconciliation invoice in the catalogue.
-          import_all_refused: 'bulk invoice import failed: every row was refused;
-            no invoices were created'
-          import_file_help: Path to a CSV or XLSX file of invoice rows (counterparty_nif,
-            counterparty_name, invoice_number, invoice_date, taxable_base, and optional
-            iva_rate/currency/country_code/notes).
-          import_file_not_found: 'File not found: {path}'
-          import_help: Bulk-create catalogue invoices from a CSV or XLSX file.
-          invoice_class_help: Invoice class. A rectificativa also requires --rectifies-invoice-number
-            naming the invoice it corrects.
-          invoice_id_help: Catalogue invoice id (or unambiguous prefix).
-          iva_category_help: IVA treatment of the operation. Required for a renta
-            income calculation to ground it.
-          list_help: List reconciliation catalogue invoices.
-          recargo_help: Recargo de equivalencia charged on top of the cuota (LIVA
-            art. 161). It rides inside the invoice total, unlike a retencion.
-          rectifies_help: Number of the invoice this rectificativa corrects.
-          remove_help: Delete one reconciliation catalogue invoice.
-          retention_amount_help: Amount of IRPF retención withheld by the payer, in
-            euros. May be supplied alone, or alongside --retention-rate.
-          retention_rate_help: RIRPF art. 95.1 retención fraction withheld by the
-            payer (0.15 for the general 15%, or 0.07 during the inicio-de-actividad
-            window). Requires --retention-amount; a rate alone is refused.
-          series_help: Invoice numbering series, when the issuer uses one.
-          view_help: Show one reconciliation catalogue invoice by id or unambiguous
-            prefix.
-          wizard_help: Guided, non-interactive manual entry when extraction is unavailable.
-          wizard_idempotent_noop: 'Idempotent no-op: an invoice with this identity
-            already exists (%{invoice_id}); nothing was created.'
+        add_help: Create a linkable reconciliation invoice in the catalogue.
+        country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code. Required:
+          it routes both informativas, so it is never assumed.'
         group_help: Business invoice records (issued or received)
+        import_all_refused: 'bulk invoice import failed: every row was refused; no
+          invoices were created'
+        import_file_help: Path to a CSV or XLSX file of invoice rows (counterparty_nif,
+          counterparty_name, invoice_number, invoice_date, taxable_base, and optional
+          iva_rate/currency/country_code/notes).
+        import_file_not_found: 'File not found: {path}'
+        import_help: Bulk-create catalogue invoices from a CSV or XLSX file.
+        invoice_class_help: Invoice class. A rectificativa also requires --rectifies-invoice-number
+          naming the invoice it corrects.
         invoice_date_help: Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.
-        invoice_id_help: Invoice id (or unambiguous prefix)
+        invoice_id_help: Catalogue invoice id (or unambiguous prefix).
+        iva_category_help: IVA treatment of the operation. Required for a renta income
+          calculation to ground it.
         kind_help: 'Invoice kind: issued (a customer owes you) or received (you owe
           a supplier)'
+        list_help: List reconciliation catalogue invoices.
         operation_date_help: Date the entrega or prestacion took place (YYYY-MM-DD).
           This is the LIVA art. 75 devengo date that decides which period declares
           the cuota; without it the invoice date stands in for it.
@@ -1933,7 +1916,22 @@ cli:
           of goods, T triangular supplies, S services supplied, I services acquired,
           R call-off-stock transfers, D call-off-stock returns, C call-off-stock substitutions'
         operation_type_invalid: '--operation-type must be one of: {valid}'
+        recargo_help: Recargo de equivalencia charged on top of the cuota (LIVA art.
+          161). It rides inside the invoice total, unlike a retencion.
+        rectifies_help: Number of the invoice this rectificativa corrects.
+        remove_help: Delete one reconciliation catalogue invoice.
+        retention_amount_help: Amount of IRPF retención withheld by the payer, in
+          euros. May be supplied alone, or alongside --retention-rate.
+        retention_rate_help: RIRPF art. 95.1 retención fraction withheld by the payer
+          (0.15 for the general 15%, or 0.07 during the inicio-de-actividad window).
+          Requires --retention-amount; a rate alone is refused.
+        series_help: Invoice numbering series, when the issuer uses one.
         update_help: Update business invoice details
+        view_help: Show one reconciliation catalogue invoice by id or unambiguous
+          prefix.
+        wizard_help: Guided, non-interactive manual entry when extraction is unavailable.
+        wizard_idempotent_noop: 'Idempotent no-op: an invoice with this identity already
+          exists (%{invoice_id}); nothing was created.'
         yes_help: Confirm deleting the invoice
         yes_required: Pass --yes to delete an invoice
       prorrata:
@@ -4185,10 +4183,8 @@ cli:
       llm_exclusive: --llm cannot be combined with --classification or --file; the
         manual path is the explicit operator override.
       llm_failed: 'LLM classification failed: {reason}'
-      llm_help: Ask a local LLM provider (claude/antigravity/codex) to classify the
-        transaction; preview by default, persist with --apply.
-      llm_provider_unavailable: 'LLM provider ''{provider}'' is unavailable: its CLI
-        is not on PATH. Install the ''{provider}'' CLI and ensure it is on PATH.'
+      llm_help: Ask the on-host local reader to classify the transaction; preview
+        by default, persist with --apply.
       llm_reason_label: reason
       llm_rejected_label: rejected
       llm_rejected_message: LLM suggestion rejected and recorded. The transaction
@@ -6026,6 +6022,8 @@ errors:
     refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was
       violated; check that exactly one of next_action or dead_end is set for fail/warn
       rows, and neither is set for ok rows.
+    refused_einvoice_xml_parse: The e-invoice XML could not be read and was refused
+      rather than partially parsed.
     refused_evidence_bundle_ambiguous: The evidence-bundle id prefix matches more
       than one bundle in this bucket.
     refused_evidence_bundle_not_found: No evidence bundle exists with the identifier
@@ -66069,6 +66067,9 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
               help: null
               label: VAT charged at the standard rate (21%) - annual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8.help
+              label: Taxable base of output VAT - standard regime - 21% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
               help: null
               label: Equivalence surcharge at 5.2% - annual VAT due
@@ -66081,9 +66082,15 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: null
               label: VAT charged at the reduced rate (10%) - annual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5.help
+              label: Taxable base of output VAT - standard regime - 10% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
               label: VAT charged at the super-reduced rate (4%) - annual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck.help
+              label: Taxable base of output VAT - standard regime - 4% rate - annual
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
               label: Annual result under the standard regime (VAT due minus deductible
@@ -66094,6 +66101,10 @@ modelo:
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: null
               label: VAT borne on ordinary domestic transactions - annual
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5.help
+              label: Taxable base of deductible VAT - total current domestic purchases
+                of goods and services - annual
           construct:
             modelo-390-iva-resumen-anual:
               field:
@@ -66514,6 +66525,8 @@ profile:
         tax_id:
           label: Tax ID (NIF/NIE/CIF)
       irpf:
+        activity_kind:
+          label: profile.schema.field.irpf.activity_kind.label
         art109_activity_income_withholding_ge_70pct:
           label: Meets Art. 109 RIRPF 70% exception
         estimation_regime:

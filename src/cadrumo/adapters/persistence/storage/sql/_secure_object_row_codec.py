@@ -1,19 +1,20 @@
 """Row-level codec helpers for SQL secure-object records.
 
-This module keeps the encrypted row decode path and post-write revision
-metadata update close to the SQL secure-object adapter without leaving both
-algorithms embedded in the repository class. It derives and persists revision
-lineage after ciphertext is written, validates row classification and the
-schema-lineage ceiling before decrypting (a version above the consumer's
-current version is refused; an older version decrypts under its written
-version and is chain-upgraded to current), and refuses rows whose revision
-hashes no longer match their stored metadata.
+This module keeps the encrypted row decode path close to the SQL
+secure-object adapter without leaving the algorithm embedded in the
+repository class. It validates row classification and the schema-lineage
+ceiling before decrypting (a version above the consumer's current version is
+refused; an older version decrypts under its written version and is
+chain-upgraded to current), and refuses rows whose revision hashes no longer
+match their stored metadata. Revision lineage is derived and stamped by the
+repository's write funnel inside the same statement that persists the
+ciphertext.
 
 See Also:
     :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
-        Repository that delegates revision metadata writes and row decoding here.
+        Repository that owns the write funnel and delegates row decoding here.
     :func:`~adapters.persistence.storage.sql._secure_object_crypto.derive_revision_id`
-        Deterministic revision-id primitive used after a row write.
+        Deterministic revision-id primitive the write funnel stamps rows with.
     :func:`~adapters.persistence.storage.sql._secure_object_crypto.verify_revision_self_consistency`
         Integrity check applied before decrypting an existing row.
     :func:`~adapters.persistence.storage.sql._secure_object_schema.build_revision_ancestor_ids`
@@ -29,19 +30,14 @@ See Also:
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Protocol, cast
 
-from sqlalchemy import bindparam, text, update
-from sqlalchemy.orm import Session
-
 from .....core.classification import SensitivityClass
 from .....core.errors import resolve_error_message
 from .....core.external_constants import UTF_8_ENCODING
-from .....core.hashing import sha256_hex
 from .....core.logging import get_logger
 from .....core.time import coerce_utc_aware
 from .._namespace_registry import SecureObjectNamespaceDefinition
@@ -53,9 +49,8 @@ from .._schema_lineage import (
 from ..crypto import decrypt_secure_object_payload, secure_object_payload_aad
 from ..errors import ClassificationError, DecryptionError, EnvelopeVersionError, SecureObjectUnreadableError
 from . import _orm
-from ._secure_object_crypto import derive_revision_id, verify_revision_self_consistency
+from ._secure_object_crypto import verify_revision_self_consistency
 from ._secure_object_records import SecureObjectBatchLoadItem, SecureObjectRecord, SecureObjectUnreadable
-from ._secure_object_schema import build_revision_ancestor_ids
 
 _log = get_logger(__name__)
 
@@ -74,62 +69,6 @@ class _SecureObjectListRawRow(Protocol):
     payload_hash: str | None
     ciphertext_hash: str | None
     previous_payload_hash: str | None
-
-
-def write_revision_metadata(
-    session: Session,
-    *,
-    row_id: int,
-    namespace: str,
-    schema_version: int,
-    written_at: datetime,
-    payload: bytes,
-    previous_revision_id: str | None,
-    previous_revision_ancestor_ids: tuple[str, ...],
-    previous_payload_hash: str | None,
-    write_provenance: str,
-    source_event_id: str | None,
-    conflict_policy: str,
-) -> None:
-    raw = session.execute(
-        text("SELECT object_key, payload FROM secure_objects WHERE id = :row_id").bindparams(
-            bindparam("row_id", value=row_id),
-        ),
-    ).one()
-    object_key = raw.object_key if isinstance(raw.object_key, bytes) else bytes(raw.object_key)
-    ciphertext = raw.payload if isinstance(raw.payload, bytes) else bytes(raw.payload)
-    payload_hash = sha256_hex(payload)
-    ciphertext_hash = sha256_hex(ciphertext)
-    revision_id = derive_revision_id(
-        namespace=namespace,
-        object_key=object_key,
-        schema_version=schema_version,
-        written_at=written_at,
-        payload_hash=payload_hash,
-        ciphertext_hash=ciphertext_hash,
-        previous_revision_id=previous_revision_id,
-        previous_payload_hash=previous_payload_hash,
-    )
-    revision_ancestor_ids = build_revision_ancestor_ids(
-        previous_revision_id,
-        previous_revision_ancestor_ids,
-    )
-    session.execute(
-        update(_orm.SecureObjectRow)
-        .where(_orm.SecureObjectRow.id == row_id)
-        .values(
-            revision_id=revision_id,
-            previous_revision_id=previous_revision_id,
-            revision_ancestor_ids=json.dumps(revision_ancestor_ids),
-            previous_payload_hash=previous_payload_hash,
-            payload_hash=payload_hash,
-            ciphertext_hash=ciphertext_hash,
-            revision_written_at=written_at,
-            write_provenance=write_provenance,
-            source_event_id=source_event_id,
-            conflict_policy=conflict_policy,
-        ),
-    )
 
 
 def decode_secure_object_row(

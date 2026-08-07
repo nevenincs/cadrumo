@@ -253,8 +253,14 @@ def invoice_line_to_iva_observation(
     Raises:
         InvoiceValidationError: If the classification produces a ``None``
             rate_kind (e.g. when ``iva_rate`` is ``NOT_SUBJECT``).
+        IvaRateNotFoundError: If ``iva_rate`` names a rate that was not in
+            force for its tier on ``issued_at`` -- a transitional food slot
+            used outside its statutory window. The line asserts a rate the
+            statute did not offer that day, so it is refused rather than
+            recorded at whatever the tier happened to mean.
     """
     from ..calculations.registry import IvaLedgerObservation
+    from ..invoices import iva_rate_percentage
 
     classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=invoice_kind)
     if classification.rate_kind is None:
@@ -268,13 +274,21 @@ def invoice_line_to_iva_observation(
         base_amount=base_amount,
         iva_amount=iva_amount,
         recargo_amount=recargo_amount,
-        # applied_rate is deliberately left unset here. An invoice line carries a
-        # rate SLOT, not a number, and the slot's percentage is resolved against
-        # the registry for a given date -- so filling it would mean re-deriving
-        # the rate from the tier, which answers "what does this tier mean" rather
-        # than "what was this line charged". The ledger path, where the operator
-        # declared a numeric rate, carries the value; this path records that it
-        # does not have one rather than inventing agreement with the tier.
+        # applied_rate was previously left unset, on the reasoning that an
+        # invoice line carries a rate SLOT rather than a number, so filling it
+        # would mean re-deriving the rate from the TIER -- answering "what does
+        # this tier mean" instead of "what was this line charged", and inventing
+        # agreement with a tier default the line may not have carried.
+        #
+        # That reasoning does not survive slots that name their own rate. The
+        # RD-ley 4/2024 food slots exist precisely because 2 % and 4 % were both
+        # correct super-reducido rates at once, so RATE_2 states a number the
+        # tier cannot supply, and iva_rate_percentage now reads it off the slot
+        # and confirms it was in force on issued_at rather than consulting the
+        # tier. The rate is measured, not inferred, so withholding it would drop
+        # the line out of every rate-specific box on the annual return -- the
+        # 2 % foodstuffs line silently missing from the 2 % box it belongs in.
+        applied_rate=iva_rate_percentage(iva_rate, issued_at),
     )
 
 

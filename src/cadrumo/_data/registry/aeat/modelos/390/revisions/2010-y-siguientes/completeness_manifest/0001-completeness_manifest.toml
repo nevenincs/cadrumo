@@ -87,6 +87,18 @@ casilla_id = "iva.anual.repercutido.super-reducido"
 number = "iva.anual.repercutido.super-reducido"
 
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.general.base"
+number = "05"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.reducido.base"
+number = "03"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.super-reducido.base"
+number = "01"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.repercutido.recargo.general"
 number = "iva.anual.repercutido.recargo.general"
 
@@ -105,6 +117,10 @@ number = "iva.anual.resultado-regimen-general"
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.soportado.interiores"
 number = "iva.anual.soportado.interiores"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.soportado.interiores.base"
+number = "48"
 
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.soportado.importaciones"

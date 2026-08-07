@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import Art104TresExclusion
+from ....core import Art104TresExclusion, TipoActividad
 from ...iva import (
     InputClassification,
     IvaCategory,
@@ -290,6 +290,73 @@ def test_art_104_tres_exclusion_roundtrips_for_judgment_exclusion() -> None:
 
     assert restored == original
     assert restored.art_104_tres_exclusion is Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL
+
+
+def test_tipo_actividad_roundtrips_for_a_declared_activity() -> None:
+    """A declared Modelo 036 activity code survives a strict JSON save/load cycle.
+
+    Populated with a NON-default member so a save-drops-field /
+    load-re-defaults-field regression cannot hide behind the ``None`` default.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("1800.00"), description="Venta de cosecha"),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "tipo_actividad": TipoActividad.B01_AGRICOLA,
+        },
+    )
+
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.tipo_actividad is TipoActividad.B01_AGRICOLA
+
+
+def test_tipo_actividad_dropped_from_the_payload_surfaces_as_inequality() -> None:
+    """Anti-tautology proof: deleting the persisted code is DETECTED, not defaulted away.
+
+    The field is optional, so a dropped value re-defaults to ``None`` rather than
+    raising -- which is exactly the regression shape a roundtrip test can miss.
+    Removing the key from the payload must therefore surface as strict inequality;
+    if this assertion ever held with the field silently restored, the roundtrip
+    above would be proving nothing.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("1800.00"), description="Venta de cosecha"),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "tipo_actividad": TipoActividad.B01_AGRICOLA,
+        },
+    )
+    storage_payload = json.loads(original.model_dump_json())
+    del storage_payload["tipo_actividad"]
+
+    restored = Transaction.model_validate_json(json.dumps(storage_payload))
+
+    assert restored != original
+    assert restored.tipo_actividad is None
+
+
+def test_tipo_actividad_rejects_a_token_outside_the_modelo_036_table() -> None:
+    """A persisted payload carrying an unknown activity code is refused at load."""
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("1800.00"), description="Venta de cosecha"),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "tipo_actividad": TipoActividad.B01_AGRICOLA,
+        },
+    )
+    storage_payload = json.loads(original.model_dump_json())
+    storage_payload["tipo_actividad"] = "Z99"
+
+    with pytest.raises(ValidationError):
+        Transaction.model_validate_json(json.dumps(storage_payload))
 
 
 def test_art_104_tres_exclusion_rejects_auto_derived_operator_tag() -> None:

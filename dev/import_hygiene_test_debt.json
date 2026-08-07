@@ -660,6 +660,77 @@
           "data_root_cache_exclusions"
         ],
         "reason": "White-box test reach: this gate asserts that the storage taxonomy's fingerprint_participation axis and the digest that actually consumes it agree, so it has to call the settings-bound composition itself -- the generic primitive cannot answer which directories the axis excludes. `compute_data_root_sha256` and `data_root_cache_exclusions` are observability's internal wiring of compute_db_sha256 onto Settings and the storage taxonomy, producing the RunTrace.db_sha256 field; measured at HEAD, both are consumed in production ONLY inside cadrumo.core.observability itself (_context.py, _replay.py, and _fingerprint.py), with zero cross-package production consumers. Deliberately NOT promoted: the facade already exports the generic, domain-agnostic compute_db_sha256 -- whose own docstring draws exactly this line, stating it knows nothing about Settings or the storage-root taxonomy -- and that primitive is the one with a cross-package consumer. Minting the settings-bound compositions onto the public facade to serve a single test would grow the package's public contract with implementation detail no consumer needs."
+      },
+      {
+        "importer_path": "src/cadrumo/adapters/inbound/einvoice/tests/test_embedded_file_read_does_not_mutate.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.adapters.inbound.sanitizer._dynamic",
+        "imported_names": [
+          "strip_attachments"
+        ],
+        "reason": "White-box test reach asserting the cross-package non-mutation contract in BOTH directions at once: the einvoice embedded-file READ must not mutate the PDF, and the sanitiser's attachment STRIP must still remove what that read can see. Only the real `strip_attachments` proves the pair, so a double would defeat the test's purpose. Public-named but deliberately NOT promoted: the sanitizer package docstring names `_dynamic` an implementation detail and requires outside callers to import exclusively from the package facade. Its only other consumers are intra-package (`_pipeline`, `sanitizer/tests/test_dynamic.py`), so there is no shared-primitive case for widening the facade for one test."
+      },
+      {
+        "importer_path": "src/cadrumo/domain/renta/tests/test_retenciones_routing_integrity.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.domain.calculations.registry._validate_references",
+        "imported_names": [
+          "_CROSS_DOMAIN_SNAPSHOT_CHECKS"
+        ],
+        "reason": "White-box test confirming the renta retenciones output-casilla validator is registered in the private cross-domain snapshot-check dispatch table by `renta` package import. Internal registry-build validator wiring, not a public contract. Same shape and disposition as the `test_first_slice_routing.py` entry against the same table."
+      },
+      {
+        "importer_path": "src/cadrumo/llm/tests/test_evidence_draft_vision.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.application.ledger.tests._llm_vision_evidence_support",
+        "imported_names": [
+          "_json_array",
+          "_json_object",
+          "_png_image",
+          "_run_against_loopback_ollama"
+        ],
+        "reason": "Shared loopback-Ollama vision test-support helpers. The ledger and llm suites must drive the SAME local-model harness (identical PNG builder, JSON envelope shapes, and live-model skip/run predicate) or the two suites would silently diverge on what a local vision run means. Private test-support scaffolding with no production consumer; promoting it to a package facade would put test fixtures on a production surface."
+      },
+      {
+        "importer_path": "src/cadrumo/llm/tests/test_evidence_draft_vision.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.application.ledger.tests._llm_vision_evidence_support",
+        "imported_names": [
+          "profile"
+        ],
+        "reason": "Pytest fixture re-export. The `profile` fixture must be imported into the consuming test module's namespace for pytest to resolve it, and is re-exported through the module's `__all__` for that reason alone. Same shared-harness rationale as the helper import above."
+      },
+      {
+        "importer_path": "src/cadrumo/llm/tests/test_llm_vision_classifier.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.application.ledger._llm_classification",
+        "imported_names": [
+          "_classify_with_evidence",
+          "_ResolvedEvidence"
+        ],
+        "reason": "White-box test reach exercising the evidence-classification internals directly: `_classify_with_evidence` is the private composition step and `_ResolvedEvidence` its private carrier. Both are internals-only; the public ledger facade exposes the classification entry point, not this seam, and promoting either would put an implementation detail on the facade for one test."
+      },
+      {
+        "importer_path": "src/cadrumo/llm/tests/test_llm_vision_classifier.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.application.ledger.tests._llm_vision_evidence_support",
+        "imported_names": [
+          "_json_array",
+          "_json_object",
+          "_png_image",
+          "_run_against_loopback_ollama",
+          "_transaction"
+        ],
+        "reason": "Shared loopback-Ollama vision test-support helpers, plus the `_transaction` builder so the classifier suite classifies the same transaction shape the ledger suite does. Same shared-harness rationale as the `test_evidence_draft_vision.py` entry; private test scaffolding with no production consumer."
+      },
+      {
+        "importer_path": "src/cadrumo/llm/tests/test_llm_vision_classifier.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.application.ledger.tests._llm_vision_evidence_support",
+        "imported_names": [
+          "profile"
+        ],
+        "reason": "Pytest fixture re-export, imported into the module namespace so pytest can resolve it and re-exported through `__all__` for that reason alone. Same shared-harness rationale as the helper import above."
       }
     ]
   }

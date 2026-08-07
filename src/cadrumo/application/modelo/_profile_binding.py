@@ -397,7 +397,8 @@ def resolve_maternidad_meses(
     the Art. 81.1 eligibility question is asked of the same facts every other
     Art. 58 question is asked of.
 
-    ``ceilings_resolved`` is ``False`` when the revision does not declare the
+    ``ceilings_resolved`` is ``False`` when the revision on the
+    :class:`RegistrySnapshot` ``snapshot`` does not declare the
     Art. 58.1 / Art. 61 norma 2ª parameters. The deducción is then withheld
     rather than granted against a fabricated ceiling — the same refusal the
     mínimo aggregate makes, for the same reason — and the caller discloses it

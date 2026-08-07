@@ -101,6 +101,7 @@ def _confirm(
     svc = _make_svc(isolated_settings, secure_objects)
     record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
     return confirm_invoice_draft_from_evidence(
+        counterparty_country="ES",
         bucket_id=_BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         evidence_id=record.evidence_id,
@@ -182,6 +183,7 @@ def test_the_guarded_no_op_retry_still_reports_the_discrepancy(
 
     def _run():
         return confirm_invoice_draft_from_evidence(
+            counterparty_country="ES",
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,
@@ -214,6 +216,7 @@ def _confirm_with(
     svc = _make_svc(isolated_settings, secure_objects)
     record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
     return confirm_invoice_draft_from_evidence(
+        counterparty_country="ES",
         bucket_id=_BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
         evidence_id=record.evidence_id,

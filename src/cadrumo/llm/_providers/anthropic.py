@@ -34,7 +34,13 @@ if TYPE_CHECKING:
         BadRequestError,
         RateLimitError,
     )
-    from anthropic.types import MessageParam, MetadataParam, TextBlock
+    from anthropic.types import (
+        ImageBlockParam,
+        MessageParam,
+        MetadataParam,
+        TextBlock,
+        TextBlockParam,
+    )
 
 
 @dataclass(frozen=True)
@@ -80,6 +86,47 @@ def _load_anthropic_sdk() -> _AnthropicSdk:
     )
 
 
+def build_user_content(request: ProviderRequest) -> str | list[ImageBlockParam | TextBlockParam]:
+    """Render one request's user turn as the Messages API expects it.
+
+    A text-only request keeps the bare-string content the API has always
+    accepted. A multimodal request becomes a content-block list: one base64
+    ``image`` block per input, each declaring the media type its producer
+    stamped, followed by a single ``text`` block carrying the prompt.
+
+    Images come BEFORE the text deliberately -- that is the ordering Anthropic
+    documents for best results, and it reads correctly too: the question is
+    asked about documents the model has already been shown.
+
+    Split out from :meth:`AnthropicAdapter.complete` so the shape can be
+    asserted without an API key, a network call, or the optional SDK -- the
+    payload is the whole contract here, and a shape defect is invisible in a
+    mocked response.
+
+    Args:
+        request: Normalized provider request.
+
+    Returns:
+        The prompt string when the request carries no images; otherwise the
+        image-then-text content-block list.
+    """
+    if not request.images:
+        return request.prompt
+    blocks: list[ImageBlockParam | TextBlockParam] = [
+        {
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": image.media_type.value,
+                "data": image.base64_data,
+            },
+        }
+        for image in request.images
+    ]
+    blocks.append({"type": "text", "text": request.prompt})
+    return blocks
+
+
 class AnthropicAdapter(_ProviderAdapter):
     """Provider adapter that talks to Anthropic's Messages API.
 
@@ -94,6 +141,7 @@ class AnthropicAdapter(_ProviderAdapter):
     """
 
     provider = LLMProvider.ANTHROPIC
+    supports_images = True
 
     def __init__(self, api_key: str, timeout_s: int) -> None:
         """Construct the adapter and bind a fresh async client.
@@ -135,7 +183,7 @@ class AnthropicAdapter(_ProviderAdapter):
                 or timeout failures, and non-2xx API status codes.
         """
         sdk = self._sdk
-        user_message: MessageParam = {"role": "user", "content": request.prompt}
+        user_message: MessageParam = {"role": "user", "content": build_user_content(request)}
         messages = (user_message,)
         metadata: MetadataParam = {"user_id": request.request_id}
         response: Any = None

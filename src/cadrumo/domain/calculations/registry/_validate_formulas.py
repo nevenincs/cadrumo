@@ -48,7 +48,11 @@ def validate_formula_section(
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
 ) -> None:
-    """Append formula reference, evidence, citation, and duplicate-target failures."""
+    """Append formula reference, evidence, citation, and duplicate-target failures.
+
+    Every formula the :class:`ModeloRevision` ``revision`` declares is checked in
+    turn, and each failure is appended to ``failures``.
+    """
     for formula in revision.formulas:
         owner = f"formula {formula.id}"
         failures.extend(missing_refs(prefix, owner, formula.legal_refs, legal_refs, "legal"))

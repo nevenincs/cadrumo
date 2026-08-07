@@ -111,6 +111,7 @@ from ._irnr_ledger_bindings import (
     validate_ledger_irnr_income_aggregation_binding,
     validate_ledger_irnr_income_aggregation_binding_definition,
 )
+from ._ledger_binding_resolution import UnroutedLedgerQuantity
 from ._ledger_bindings import (
     LEDGER_BINDING_SOURCE_KINDS,
     IvaLedgerObservation,
@@ -119,7 +120,6 @@ from ._ledger_bindings import (
     RentaGastosPagoFraccionadoObservationProtocol,
     RentaIncomeObservationProtocol,
     UngroundedRentaIncome,
-    UnroutedRentaQuantity,
     renta_first_slice_binding_target_casillas,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_oss_aggregation_binding_values,
@@ -127,6 +127,7 @@ from ._ledger_bindings import (
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
+    unrouted_ledger_iva_quantities,
     unrouted_ledger_renta_income_quantities,
     unsupported_ledger_iva_observations,
     unsupported_ledger_oss_observations,
@@ -222,7 +223,7 @@ __all__ = [
     "RentaGastosPagoFraccionadoObservationProtocol",
     "RentaIncomeObservationProtocol",
     "UngroundedRentaIncome",
-    "UnroutedRentaQuantity",
+    "UnroutedLedgerQuantity",
     "WithholdingClaveBreakdown",
     "WithholdingObservation",
     "WithholdingObservationRequirement",
@@ -266,6 +267,7 @@ __all__ = [
     "resolve_withholding_binding_values",
     "selector_model_for_source",
     "ungrounded_ledger_renta_income_observations",
+    "unrouted_ledger_iva_quantities",
     "unrouted_ledger_renta_income_quantities",
     "unsupported_ledger_impatriado_income_observations",
     "unsupported_ledger_irnr_income_observations",

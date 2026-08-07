@@ -18,7 +18,7 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .._errors import LLMProviderError, LLMRateLimitError
-from .._models import LLMProvider
+from .._models import LLMProvider, MultimodalImageInput
 
 
 class ProviderRequest(BaseModel):
@@ -33,10 +33,12 @@ class ProviderRequest(BaseModel):
         max_tokens: Maximum number of output tokens to request.
         temperature: Sampling temperature in the inclusive range ``[0.0, 1.0]``.
         timeout_s: Per-request timeout in seconds.
-        images: Base64-encoded on-host-prepared image inputs for a multimodal
-            read (empty for a text-only request). Transient and in-memory only;
-            a provider adapter forwards them to a local vision model and they are
-            never persisted (sensitive-financial-data-secure-storage-only).
+        images: On-host-prepared image inputs for a multimodal read (empty for a
+            text-only request), each carrying its base64 payload AND its declared
+            media type -- a cloud provider needs the type on the wire, so the
+            adapter cannot receive a bare string. Transient and in-memory only;
+            an adapter forwards them to a vision model and they are never
+            persisted (sensitive-financial-data-secure-storage-only).
     """
 
     model_config = ConfigDict(strict=True, frozen=True)
@@ -48,9 +50,9 @@ class ProviderRequest(BaseModel):
     max_tokens: int = Field(ge=1, description="Maximum output tokens.")
     temperature: float = Field(ge=0.0, le=1.0, description="Sampling temperature.")
     timeout_s: int = Field(ge=1, description="Per-request timeout in seconds.")
-    images: tuple[str, ...] = Field(
+    images: tuple[MultimodalImageInput, ...] = Field(
         default=(),
-        description="Base64-encoded on-host image inputs for a multimodal request; empty for text-only.",
+        description="On-host image inputs for a multimodal request; empty for text-only.",
     )
 
 
@@ -86,9 +88,18 @@ class _ProviderAdapter(ABC):
 
     Attributes:
         provider: Identifier of the LLM vendor this adapter speaks to.
+        supports_images: Whether :meth:`complete` actually forwards
+            :attr:`ProviderRequest.images` to the vendor. Declared as DATA on
+            the class rather than left to each adapter to remember, and
+            enforced once at the client's single dispatch point -- the same
+            reasoning :func:`post_provider_request` documents for the transport
+            boundary. Defaults to ``False`` so a newly added adapter is
+            text-only until it has genuinely implemented the image path; the
+            failure of the opposite default is silent and unbounded.
     """
 
     provider: LLMProvider
+    supports_images: bool = False
 
     @abstractmethod
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:

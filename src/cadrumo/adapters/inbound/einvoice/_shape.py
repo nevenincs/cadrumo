@@ -14,6 +14,7 @@ document cannot resolve an external entity or expand a billion-laughs payload.
 from __future__ import annotations
 
 from io import BytesIO
+from xml.etree.ElementTree import Element
 
 from ....core import DocumentShape
 from ._xml import EInvoiceXmlParseError, parse_hardened_xml
@@ -51,6 +52,50 @@ _CII_ROOTS = frozenset({"CrossIndustryInvoice", "CrossIndustryDocument"})
 _UBL_ROOTS = frozenset({"Invoice", "CreditNote"})
 _FACTURAE_ROOTS = frozenset({"Facturae"})
 
+# AEAT record-batch payload elements, by family. These are matched ANYWHERE in
+# the document rather than at the root, because AEAT submissions arrive in two
+# shapes: wrapped in a SOAP `Envelope`, or as a bare payload element. Both ship
+# in the wild -- the gisce SII captures are SOAP-wrapped while the josemmo
+# VERI*FACTU records are bare -- so a root-only test recognises half of them
+# and reports the rest as UNKNOWN.
+_SII_PAYLOAD_ELEMENTS = frozenset(
+    {
+        "SuministroLRFacturasEmitidas",
+        "SuministroLRFacturasRecibidas",
+        "BajaLRFacturasEmitidas",
+        "BajaLRFacturasRecibidas",
+        "SuministroLRBienesInversion",
+        "BajaLRBienesInversion",
+        "SuministroLRAgenciasViajes",
+        "BajaLRAgenciasViajes",
+        "SuministroLRCobrosMetalico",
+        "BajaLRCobrosMetalico",
+        "SuministroLROperacionesSeguros",
+        "BajaLROperacionesSeguros",
+        "SuministroLRDetOperacionIntracomunitaria",
+        "BajaLRDetOperacionIntracomunitaria",
+        "SuministroLRCobrosEmitidas",
+        "SuministroLRInmueblesAdicionales",
+        "SuministroLRPagosRecibidas",
+    },
+)
+"""Every top-level record family the SII envelope schema declares.
+
+All seventeen, not only the two this reader claims. Recognising the SHAPE is
+separate from supporting the FAMILY: a document we decline to read must still
+be identified, so the refusal can name what it is instead of reporting
+unrecognised bytes.
+"""
+
+_VERIFACTU_PAYLOAD_ELEMENTS = frozenset(
+    {"RegFactuSistemaFacturacion", "RegistroAlta", "RegistroAnulacion"},
+)
+"""The VERI*FACTU envelope plus the two bare record elements.
+
+The bare forms are listed because real captures ship a lone ``RegistroAlta``
+or ``RegistroAnulacion`` with no envelope around it.
+"""
+
 
 def _local_name(tag: str) -> str:
     """Return an element tag's local name, dropping any ``{namespace}`` prefix."""
@@ -80,6 +125,27 @@ def _xml_shape(payload: bytes) -> DocumentShape | None:
         # UBL shares the bare local name "Invoice" with nothing else in the
         # recognised set, but the namespace confirms it rather than assuming.
         return DocumentShape.XML_UBL if "urn:oasis:names" in root.tag or "}" not in root.tag else None
+    return _aeat_record_batch_shape(root)
+
+
+def _aeat_record_batch_shape(root: Element) -> DocumentShape | None:
+    """Classify an AEAT record submission by LOCATING its payload element.
+
+    Searched rather than read off the root, because a submission may be wrapped
+    in a SOAP ``Envelope`` or arrive as a bare payload element and both forms
+    ship. The search is over the payload element NAMES the two AEAT envelope
+    schemas declare, so an arbitrary SOAP message carrying something else stays
+    unrecognised rather than being classified as a tax record.
+
+    Checked only after the single-invoice roots, so a document that is both --
+    which none is -- would keep its more precise classification.
+    """
+    for node in root.iter():
+        local = _local_name(node.tag)
+        if local in _SII_PAYLOAD_ELEMENTS:
+            return DocumentShape.XML_AEAT_SII
+        if local in _VERIFACTU_PAYLOAD_ELEMENTS:
+            return DocumentShape.XML_AEAT_VERIFACTU
     return None
 
 

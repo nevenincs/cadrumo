@@ -83,10 +83,10 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-eha-1274-2007-art-1.html#a1"
+corpus_ref = "corpus/normatives/html/orden-eha-1274-2007-art-1.html#ar"
 document_id = "BOE-A-2007-9508"
 article = "1"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#a1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#ar"
 published_at = 2007-05-10
 effective_from = 2007-07-01
 consolidated_as_of = 2025-02-03
@@ -95,19 +95,19 @@ reviewed_at = 2026-05-14
 reviewed_by = "operator"
 notes = "Articulo 1 de la Orden EHA/1274/2007: aprobacion del Modelo 036 de declaracion censal de alta, modificacion y baja."
 required_text = [
-    "Aprobacion del modelo 036",
-    "declaracion censal de alta, modificacion y baja",
-    "Censo de empresarios, profesionales y retenedores",
+    "Aprobación del modelo 036 de declaración censal",
+    "se aprueba el modelo 036, de declaración censal de alta, modificación y baja",
+    "Censo de empresarios, profesionales y retenedores que figura en el anexo I de esta orden",
 ]
 
 [legal."orden-eha-1274-2007:art-2"]
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-eha-1274-2007-art-2.html#a2"
+corpus_ref = "corpus/normatives/html/orden-eha-1274-2007-art-2.html#ar-2"
 document_id = "BOE-A-2007-9508"
 article = "2"
-permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#a2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#ar-2"
 published_at = 2007-05-10
 effective_from = 2007-07-01
 consolidated_as_of = 2025-02-03
@@ -116,9 +116,9 @@ reviewed_at = 2026-05-14
 reviewed_by = "operator"
 notes = "Articulo 2 de la Orden EHA/1274/2007: obligados a presentar declaracion censal y declaracion de baja mediante Modelo 036."
 required_text = [
-    "Obligados a presentar declaracion censal",
-    "declaracion de alta",
-    "declaracion de baja",
+    "Obligados a presentar declaración censal",
+    "deberán presentar una declaración de alta en el mismo",
+    "Quienes desarrollen o vayan a desarrollar en territorio español actividades empresariales o profesionales",
 ]
 
 [legal."orden-hac-1526-2024:art-1"]

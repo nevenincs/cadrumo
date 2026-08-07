@@ -272,7 +272,15 @@ class EvidenceExtractResult(OutputSchema):
     evidence_id: str | None = None
     attachment_id: str | None = None
     supplier_tax_id: str | None = None
+    # Both parties, not just the supplier. A structured record names each side,
+    # and which one is the counterparty depends on the direction of the invoice:
+    # on one the filer issued it is the customer. Surfacing only the supplier
+    # showed the operator their OWN identifier where the counterparty belongs.
+    supplier_name: str | None = None
+    customer_tax_id: str | None = None
+    customer_name: str | None = None
     invoice_number: str | None = None
+    invoice_series: str | None = None
     invoice_date: str | None = None
     taxable_base: str | None = None
     iva_rate: str | None = None

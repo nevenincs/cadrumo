@@ -19,10 +19,12 @@ test. A primitive's own tests do not import a helper built on that primitive.
 
 from __future__ import annotations
 
+import ast
 import functools
 import multiprocessing
 import os
 import stat
+import tempfile
 import threading
 import time
 from collections.abc import Callable
@@ -32,6 +34,7 @@ from typing import Any
 
 import pytest
 
+from .. import atomic_write
 from ..atomic_write import (
     _write_all,
     atomic_write_best_effort_bytes,
@@ -41,6 +44,7 @@ from ..atomic_write import (
     atomic_write_hardened_text,
     atomic_write_stream,
     atomic_write_text,
+    durable_write_batch,
 )
 
 _PERMISSION_PROBE_WRITES = 20
@@ -545,31 +549,136 @@ class TestHardenedTier:
         assert target.read_bytes() == b"OLD-SECRET"
         assert _tmp_leftovers(tmp_path) == []
 
-    def test_hardened_tier_adds_no_per_write_permission_subprocess(self, tmp_path: Path) -> None:
-        """Writing N secret-bearing files must not cost N subprocess spawns.
+    def test_hardened_tier_calls_no_per_file_permission_helper(self) -> None:
+        """The durable write path must spawn no permission subprocess per file.
 
-        The confidentiality boundary for durable writes is the storage tree's
+        Confidentiality for durable writes comes from the storage tree's
         directory ACL, applied ONCE at creation by
         :func:`~cadrumo.core.file_permissions.restrict_directory_permissions`.
-        This tier must therefore stay free of any per-file hardening call.
+        A per-file ``icacls.exe`` strip was measured at ~28 ms/write, and the
+        blob writer runs this tier once per stored attachment, so reinstating
+        one would be O(N) subprocess spawns across a bulk evidence ingest.
 
-        A per-file ``icacls.exe`` strip was measured at ~28 ms/write on Windows.
-        The blob writer runs this tier once per stored attachment and the
-        journal writer once per entry, so at the record counts this store is
-        built for that is O(N) subprocess spawns -- minutes of overhead on a
-        bulk evidence import, for a property directory inheritance already
-        provides. The budget below is deliberately far below a single spawn:
-        it fails if anyone reintroduces one, and is not a latency benchmark.
+        Asserted against the module SOURCE rather than by timing a write.
+        This gate was first written as an elapsed-time budget and was wrong:
+        it passed alone and failed under parallel load, because wall-clock
+        measures disk contention rather than the property in question. A
+        reference to the per-file helper either exists in this module or it
+        does not, and that answer does not vary with machine or load.
         """
-        budget_seconds = 0.010 * _PERMISSION_PROBE_WRITES
+        source = Path(atomic_write.__file__).read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        called = {
+            node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+        } | {
+            node.func.attr
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+        }
 
-        started = time.perf_counter()
-        for index in range(_PERMISSION_PROBE_WRITES):
-            atomic_write_hardened_bytes(tmp_path / f"secret{index}.bin", b"\x00key-material\xff")
-        elapsed = time.perf_counter() - started
+        assert "restrict_file_permissions" not in called, (
+            "the hardened tier calls the per-file permission helper again; "
+            "harden the storage directory once instead of every write"
+        )
 
-        assert elapsed < budget_seconds, (
-            f"{_PERMISSION_PROBE_WRITES} hardened writes took {elapsed:.2f}s "
-            f"(budget {budget_seconds:.2f}s) — a per-write permission subprocess "
-            "has been reintroduced; harden the directory once instead"
+
+class TestDurableWriteBatch:
+    """Batched hardened writes stay atomic while deferring their durability sync."""
+
+    def test_batched_writes_land_complete_and_leave_no_staging_files(self, tmp_path: Path) -> None:
+        """Deferring fsync must not weaken ATOMICITY, only durability timing.
+
+        The two properties are independent and the batch trades exactly one of
+        them: ``O_EXCL`` staging plus :func:`os.replace` still means a reader
+        never observes a partial file, while the fsync that guarantees the
+        bytes survive a power cut moves to the commit.
+        """
+        payload = b"\x00evidence-bytes\xff"
+
+        with durable_write_batch() as batch:
+            for index in range(8):
+                atomic_write_hardened_bytes(tmp_path / f"blob{index}.bin", payload, batch=batch)
+
+        for index in range(8):
+            assert (tmp_path / f"blob{index}.bin").read_bytes() == payload
+        assert _tmp_leftovers(tmp_path) == []
+
+    def test_commit_is_idempotent(self, tmp_path: Path) -> None:
+        """An explicit commit inside the scope must not double-sync on exit."""
+        with durable_write_batch() as batch:
+            atomic_write_hardened_bytes(tmp_path / "one.bin", b"payload", batch=batch)
+            batch.commit()
+            batch.commit()
+
+        assert (tmp_path / "one.bin").read_bytes() == b"payload"
+
+    def test_an_exception_mid_batch_still_commits_what_landed(self, tmp_path: Path) -> None:
+        """A failure must not leave completed writes LESS durable than unbatched.
+
+        The commit runs from a ``finally``, so raising part-way through a bulk
+        ingest still syncs the records that already landed. Without that, an
+        interrupted import would be more exposed than the per-file path it
+        replaced — a batch may defer durability, never abandon it.
+        """
+        sentinel = RuntimeError("ingest aborted part-way")
+
+        with pytest.raises(RuntimeError) as caught, durable_write_batch() as batch:
+            atomic_write_hardened_bytes(tmp_path / "landed.bin", b"kept", batch=batch)
+            raise sentinel
+
+        assert caught.value is sentinel
+        assert (tmp_path / "landed.bin").read_bytes() == b"kept"
+        assert _tmp_leftovers(tmp_path) == []
+
+    def test_batching_defers_the_per_write_sync(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Batched writes must issue no per-file sync; unbatched must issue one each.
+
+        This is the reason the class exists, so it is asserted rather than
+        assumed — but asserted as a SYSCALL COUNT, not as elapsed time.
+
+        Two earlier versions of this gate measured duration: an absolute
+        budget, then a same-run ratio. Both passed alone and failed under
+        parallel load, because a stopwatch measures whatever else is hitting
+        the disk. The property is "how many syncs are issued", which is an
+        integer that does not move with machine or contention.
+
+        The counter DELEGATES to the real :func:`os.fsync`, so the writes
+        under test perform genuine syncs and this observes them rather than
+        replacing them.
+        """
+        real_fsync = os.fsync
+        calls = 0
+
+        def counting_fsync(fd: int) -> None:
+            nonlocal calls
+            calls += 1
+            real_fsync(fd)
+
+        monkeypatch.setattr(os, "fsync", counting_fsync)
+        payload = b"y" * 512
+        writes = 8
+
+        with tempfile.TemporaryDirectory() as raw_unbatched:
+            unbatched_dir = Path(raw_unbatched)
+            calls = 0
+            for index in range(writes):
+                atomic_write_hardened_bytes(unbatched_dir / f"plain{index}.bin", payload)
+            unbatched_syncs = calls
+
+        with tempfile.TemporaryDirectory() as raw_batched:
+            batched_dir = Path(raw_batched)
+            calls = 0
+            with durable_write_batch() as batch:
+                for index in range(writes):
+                    atomic_write_hardened_bytes(batched_dir / f"blob{index}.bin", payload, batch=batch)
+                during_batch = calls
+
+        # Positive control: the counter genuinely observes the unbatched path,
+        # so a zero on the batched side means deferral rather than a blind
+        # instrument.
+        assert unbatched_syncs >= writes, (
+            f"expected at least one sync per unbatched write, saw {unbatched_syncs} for {writes} writes"
+        )
+        assert during_batch == 0, (
+            f"batched writes issued {during_batch} per-file syncs; the batch is no longer deferring them"
         )

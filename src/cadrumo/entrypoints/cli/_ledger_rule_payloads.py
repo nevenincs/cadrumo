@@ -21,7 +21,6 @@ from pydantic import Field, model_validator
 
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.transactions import BusinessClassification, LedgerClassificationRule
-from ...llm import SubprocessProvider
 from ._decimal_wire import DecimalWireText
 
 
@@ -144,20 +143,6 @@ class RuleApplyResult(OutputSchema):
     no_match: int | None = None
     applied: list[RuleApplyAppliedPayload] | None = None
 
-
-class LLMProviderAvailabilityPayload(OutputSchema):
-    """One subprocess LLM provider's PATH availability.
-
-    Mirrors
-    :class:`LLMProviderAvailability` from
-    :func:`available_llm_providers`. The probe uses PATH lookup only; it does
-    not spawn the provider CLI or send transaction data to a cloud service.
-    """
-
-    provider: SubprocessProvider
-    cli_binary: str = Field(min_length=1)
-    available: bool
-    resolved_path: str | None = None
 
 
 class LlmUsageProviderPayload(OutputSchema):

@@ -1008,6 +1008,26 @@ required_text = [
     "La factura original expedida",
 ]
 
+[legal."rd-1619-2012:art-6.1.d"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1619-2012-art-6.html#a6"
+document_id = "BOE-A-2012-14696"
+article = "6.1.d"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2012-14696#a6"
+published_at = 2012-12-01
+effective_from = 2013-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-07
+reviewed_by = "agent-review"
+notes = "RD 1619/2012 Reglamento de facturacion art 6.1.d: contenido de la factura, NIF. Ademas del NIF del expedidor, la consignacion del NIF del DESTINATARIO es obligatoria en tres casos, y el tercero -- operaciones realizadas en el territorio de aplicacion del Impuesto por un empresario o profesional establecido en dicho territorio -- es el que fundamenta el aviso de la CLI cuando una factura simplificada domestica no nombra NIF de contraparte. Se declara con el id compuesto art-6.1.d porque el aviso cita la letra, no el articulo entero: citar solo art-6 apuntaria al contenido general de la factura y no a la provision que exige ese dato."
+required_text = [
+    "Contenido de la factura",
+    "sera obligatoria la consignacion del Numero de Identificacion Fiscal del destinatario",
+    "el empresario o profesional obligado a la expedicion de la factura haya de considerarse establecido en dicho territorio",
+]
+
 [legal."rd-1619-2012:art-2"]
 evidence_tier = "legal_authority"
 authority = "boe"

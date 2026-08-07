@@ -72,7 +72,6 @@ from ._ledger_ratios_payloads import (
 )
 from ._ledger_rule_payloads import (
     ClassificationRulePayload,
-    LLMProviderAvailabilityPayload,
     RuleAddResult,
     RuleApplyAppliedPayload,
     RuleApplyMatchPayload,
@@ -100,7 +99,6 @@ _LEDGER_BUSINESS_PAYLOAD_EXPORTS = (
 )
 _LEDGER_RULE_PAYLOAD_EXPORTS = (
     ClassificationRulePayload,
-    LLMProviderAvailabilityPayload,
     RuleAddResult,
     RuleApplyAppliedPayload,
     RuleApplyMatchPayload,

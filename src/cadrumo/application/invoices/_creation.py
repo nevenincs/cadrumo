@@ -194,12 +194,19 @@ def _require_operation_type_where_the_category_cannot_settle_it(
     )
 
 
-def _resolve_iva_rate_slot(iva_rate: Decimal | None) -> IvaRate:
-    """Map an operator-supplied integer IVA percentage to its rate slot.
+def resolve_iva_rate_slot(iva_rate: Decimal | None) -> IvaRate:
+    """Map a percentage to its rate slot, refusing one the taxonomy does not carry.
 
     ``None`` resolves to :attr:`IvaRate.EXEMPT` so a base-only invoice with no
     cuota is accepted. A percentage outside the closed slot taxonomy is refused
     with the accepted set named, never a bare "value invalid".
+
+    Public because the percentage does not only come from an operator: the
+    ledger's evidence-confirm path reads it off the document itself and needs
+    the SAME refusal. Two resolvers previously split that job between them and
+    disagreed about the outcome -- one raised a localised error naming the
+    accepted set, the other a raw English one -- so which message an operator
+    saw depended on whether their document happened to print a cuota.
     """
     if iva_rate is None:
         return IvaRate.EXEMPT
@@ -220,7 +227,7 @@ def build_catalogue_invoice(
     bucket_id: str | None,
     kind: InvoiceKind,
     counterparty_name: str,
-    counterparty_tax_id: str,
+    counterparty_tax_id: str | None,
     counterparty_country: str,
     invoice_number: str,
     issued_at: date,
@@ -285,21 +292,24 @@ def build_catalogue_invoice(
     identity. The model re-checks that identity exactly, so a stated recargo
     the lines do not support refuses rather than being balanced silently.
     """
-    from ...domain.invoices import iva_rate_percentage
+    from ...domain.invoices import iva_rate_slot_percentage
 
     # Normalise once, before either the persisted payload or the FX lookup
     # reads it: a padded or lowercase token ("gbp", " gbp ") must resolve the
     # SAME provider rate as its canonical "GBP" form, not silently miss the
     # rate and leave the invoice unstamped.
     currency = normalise_iso_4217_currency(currency)
-    rate_slot = _resolve_iva_rate_slot(iva_rate)
-    # Resolve the cuota with the same default-date the Invoice line validator
-    # uses (``iva_rate_percentage(self.iva_rate)``), so the synthesised
-    # ``iva_amount`` matches the model's own re-derivation within tolerance and
-    # the line-arithmetic invariant holds. The cuota is grounded against the
-    # registry-resolved rate, never a hand-typed percentage. EXEMPT /
-    # NOT_SUBJECT resolve to None and carry a zero cuota.
-    pct = iva_rate_percentage(rate_slot)
+    rate_slot = resolve_iva_rate_slot(iva_rate)
+    # Resolve the cuota through the same undated helper the Invoice line
+    # validator uses (``iva_rate_slot_percentage(self.iva_rate)``), so the
+    # synthesised ``iva_amount`` matches the model's own re-derivation within
+    # tolerance and the line-arithmetic invariant holds. The rate comes from the
+    # slot the operator chose, never a hand-typed percentage. Whether that rate
+    # was in force is settled by the invoice-level validator against the
+    # operation date, not here -- resolving it against today would refuse to
+    # record a legitimate 2024 transitional-rate invoice. EXEMPT / NOT_SUBJECT
+    # resolve to None and carry a zero cuota.
+    pct = iva_rate_slot_percentage(rate_slot)
     if lines:
         # Deliberate runtime guard on a boundary sequence: the annotation does not
         # constrain what a caller actually passes, and a foreign element would reach
@@ -398,7 +408,7 @@ def create_catalogue_invoice(
     bucket_id: str,
     kind: InvoiceKind,
     counterparty_name: str,
-    counterparty_tax_id: str,
+    counterparty_tax_id: str | None,
     counterparty_country: str,
     invoice_number: str,
     issued_at: date,

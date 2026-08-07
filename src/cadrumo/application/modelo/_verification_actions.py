@@ -78,6 +78,7 @@ from ...domain.calculations.registry import (
     derive_taxpayer_files_economic_activity,
 )
 from ...domain.deadlines import TaxpayerProfile
+from ...domain.iva import CUOTA_LESS_M303_IVA_CATEGORIES
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -297,6 +298,84 @@ _MISSING_EVIDENCE_LEGAL_REFS: tuple[str, ...] = (
 )
 
 
+#: Legal grounding for a cuota-less row that declares no base. LIVA art. 164.Uno.6
+#: obliges the taxpayer to declare the operations; the M303 base casillas are
+#: where an exempt, zero-rated, not-subject or intra-community operation is
+#: reported, since by law it carries no cuota. RD 1624/1992 art. 71.7 fixes the
+#: content of the periodic self-assessment those bases feed.
+_CUOTA_LESS_WITHOUT_BASE_LEGAL_REFS: tuple[str, ...] = (
+    "ley-37-1992:art-164",
+    "rd-1624-1992:art-71",
+)
+
+
+def _cuota_less_without_base_findings(
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    transaction_repository: TransactionCatalogueRepository | None = None,
+) -> list[ModeloVerificationFinding]:
+    """Refuse a row whose declared category can only ever contribute a base it lacks.
+
+    A cuota-less category -- exempt, zero-rated, not-subject, intra-community
+    supply, export -- carries no cuota BY LAW. The base is therefore the row's
+    only possible contribution to the return, and a row declaring such a
+    category with no taxable base contributes nothing at all while looking, in
+    the ledger, like a declared operation.
+
+    This is the one shape in the missing-substrate family where the direction of
+    error is certain. Elsewhere a missing base is ambiguous: a cuota-bearing row
+    still contributes through its quota, and a renta row falls back to its bank
+    cash, so refusing would block filings that are merely imprecise. Here there
+    is no second measure to fall back to and no offsetting effect -- the base
+    casilla is understated by exactly the operation's amount, every time.
+
+    BLOCKING for the reason the evidence gate above states: an advisory at
+    verify grants and freezes a gap-carrying bundle, and the later export and
+    filing refusals then arrive after the operator has been told the draft is
+    fine. A non-granting verify leaves the revision BORRADOR, so the base can be
+    entered and the draft re-verified, which is what ``next_action`` says.
+
+    Scoped to rows the revision actually consumed: a cuota-less row outside
+    ``source_transaction_ids`` reached no casilla and is not this gate's business.
+    """
+    if not target.source_transaction_ids:
+        return []
+    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+    catalogue = tx_repo.load()
+    registry_source_refs = _optional_observation_refs(target.observations, "source_refs")
+
+    findings: list[ModeloVerificationFinding] = []
+    for transaction_id in sorted(target.source_transaction_ids):
+        transaction = catalogue.get(transaction_id)
+        if transaction is None:
+            continue
+        category = transaction.iva_category
+        if category is None or category not in CUOTA_LESS_M303_IVA_CATEGORIES:
+            continue
+        if transaction.taxable_base is not None:
+            continue
+        findings.append(
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                message=(
+                    f"Ledger row {transaction_id} declares IVA category {category.value!r}, which carries no "
+                    "cuota by law, and no taxable base. The row therefore contributes nothing to this return "
+                    "while representing a declared operation, understating the base casilla."
+                ),
+                next_action=(
+                    f"Set the base with `aeat app ledger classify {transaction_id} --taxable-base AMOUNT`, "
+                    "then recalculate and rerun verification. If the row is not a declarable operation, "
+                    "reclassify its IVA category instead."
+                ),
+                legal_refs=_CUOTA_LESS_WITHOUT_BASE_LEGAL_REFS,
+                source_refs=registry_source_refs,
+            ),
+        )
+    return findings
+
+
 def _missing_evidence_findings(
     *,
     target: CalculationRevision,
@@ -475,6 +554,16 @@ def _collect_verification_gate_findings(
     )
     findings.extend(
         _missing_evidence_findings(
+            target=target,
+            work_unit=work_unit,
+            transaction_repository=transaction_repository,
+        ),
+    )
+    # Beside the evidence gate and for the same reason: both refuse a draft whose
+    # rows cannot support what it declares, and both block at verify so the later
+    # export and filing refusals are unreachable rather than merely later.
+    findings.extend(
+        _cuota_less_without_base_findings(
             target=target,
             work_unit=work_unit,
             transaction_repository=transaction_repository,

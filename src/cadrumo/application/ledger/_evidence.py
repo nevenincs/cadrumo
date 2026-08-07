@@ -65,7 +65,7 @@ from ...adapters.persistence.storage import (
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.errors import CadrumoError
-from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE
+from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
 from ...core.time import now as _utc_now
@@ -96,6 +96,12 @@ _STRUCTURED_EXTENSIONS = frozenset({".xml"})
 # concrete MIME (image/png vs image/jpeg), which `MediaKind` alone cannot supply.
 _SUFFIX_MIME = {
     PDF_EXTENSION: PDF_MIME_TYPE,
+    # Every extension `_resolve_media_kind` ADMITS must have an entry here, or
+    # `evidence add` raises a bare KeyError the operator sees as an internal
+    # error. Widening the accept-list for structured documents without this
+    # entry is exactly what made Facturae, CII and UBL unreachable through the
+    # front door while the readers for them worked perfectly.
+    ".xml": XML_MIME_TYPE,
     ".png": "image/png",
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",

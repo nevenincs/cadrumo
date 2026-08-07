@@ -378,6 +378,33 @@ class IvaRateRecord(_IvaStrictFrozen):
         default=(),
         description="Registry source-reference identities backing this rate.",
     )
+    supersedes_tier_default: bool = Field(
+        default=False,
+        description="A rate that applies ALONGSIDE its tier's ordinary rate, not instead of it.",
+    )
+    """Whether this rate coexists with its tier's ordinary rate rather than replacing it.
+
+    ``False`` -- the ordinary case -- means the record IS the tier's rate for its
+    window, so :func:`lookup_rate` can answer "what does this tier mean on this
+    date" with one record and the no-overlap rule guarantees that answer is
+    unambiguous.
+
+    ``True`` marks a rate that a statute applied to PART of a tier's supplies
+    while the rest stayed on the ordinary rate. Spain's 2024 anti-inflation
+    measures are the worked case: certain foodstuffs moved to 2 % while every
+    other super-reducido supply stayed at 4 %, so both were simultaneously
+    correct and neither replaced the other (RDL 4/2024 art. 1). Such a record is
+    excluded from the no-overlap rule and from :func:`lookup_rate`, because
+    including it would make the tier's rate ambiguous for the far larger set of
+    supplies that never moved.
+
+    The distinction is which QUESTION each record can answer. A coexisting rate
+    cannot answer "what is this tier's rate" -- only the statute's goods scope
+    decides that, and no bundled AEAT surface carries a goods axis. It can
+    answer "is this declared rate a legitimate one for this tier on this date",
+    which is what classification needs and what
+    :func:`rate_kinds_for_declared_rate` serves.
+    """
 
     @model_validator(mode="after")
     def _validate_window(self) -> IvaRateRecord:

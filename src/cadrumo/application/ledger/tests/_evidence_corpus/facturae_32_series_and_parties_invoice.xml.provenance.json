@@ -1,0 +1,9 @@
+{
+  "provenance": "synthetic_generated",
+  "kind": "xml_invoice_facturae",
+  "source": "authored in-tree for the structured-reader series and party-name work",
+  "licence": "Apache-2.0",
+  "notes": "Hand-authored Facturae 3.2.2 invoice, fictional data, structured after the element layout of real Facturae documents. Exists to make three reader traps bite rather than pass by luck. (1) InvoiceHeader states InvoiceSeriesCode 'R-2026' beside InvoiceNumber '0031', so a reader that takes only InvoiceNumber loses the series half of the invoice's identity. (2) The same InvoiceHeader carries a Corrective block restating InvoiceNumber '0028' and InvoiceSeriesCode 'NE-2026' for the invoice being rectified, so a namespace-agnostic descendant walk has two candidates for each and is correct only because Facturae fixes element order; the reader must scope to the header's own children. (3) SellerParty is a natural person whose name is split across Individual/Name, FirstSurname and SecondSurname, and carries an AdministrativeCentres contact named 'Ruth Decoy' whose Name and FirstSurname elements are identical in local name to the party's own, so a loose walk reports the administrative contact as the invoice party. BuyerParty is a legal entity naming itself in LegalEntity/CorporateName, the other of the two mutually exclusive Facturae naming blocks. Party tax ids differ on the two sides (45821337R seller, A82645177 buyer) so a reader that carries only one side is detectable.",
+  "sha256": "cd9bf11e0ab84cd44e5405db63d6a175a1fbbf7615306b20e98c30f333df795d",
+  "bytes": 4511
+}

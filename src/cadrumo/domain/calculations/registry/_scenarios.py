@@ -273,8 +273,8 @@ def run_registry_calculation_scenario(
 def bound_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
     """Return every casilla ``revision`` declares ``input_kind = "bound"``.
 
-    Read off the revision rather than listed anywhere, so a casilla that becomes
-    bound is covered the moment the registry says so.
+    Read off the :class:`ModeloRevision` rather than listed anywhere, so a
+    casilla that becomes bound is covered the moment the registry says so.
     """
     return frozenset(casilla.id for casilla in revision.casillas if casilla.input_kind is InputKind.BOUND)
 

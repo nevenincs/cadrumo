@@ -117,16 +117,13 @@ def bind_active_bucket_session(session: BucketSession) -> None:
     _active_session.set(session)
 
 
-def get_active_master_key() -> bytes:
-    """Return the DEK bytes of the currently-active :class:`BucketSession`.
+def _require_fresh_active_session() -> BucketSession:
+    """Return the active, unexpired :class:`BucketSession` or raise.
 
-    Used by every column-level encrypt and decrypt operation in
-    ``_encrypted_columns.py``. The DEK (not the KEK) is the
-    AES-256-GCM key for the row-ciphertext layer — the KEK only ever
-    unwraps the DEK during :meth:`BucketSession.open`.
-
-    Returns:
-        The 32-byte DEK used for AES-256-GCM column-level encryption.
+    The shared resolution behind :func:`get_active_master_key` and
+    :func:`get_active_hmac_subkey`: both key surfaces must refuse
+    identically when no session is bound or the bound session expired,
+    so the checks live once here.
 
     Raises:
         NoActiveBucketSessionError: When no :func:`activate_session` block is
@@ -144,7 +141,51 @@ def get_active_master_key() -> bytes:
         bucket_id = session.bucket_id
         close_active_bucket_session()
         raise BucketLockedError(bucket_id=bucket_id)
-    return session.dek
+    return session
+
+
+def get_active_master_key() -> bytes:
+    """Return the DEK bytes of the currently-active :class:`BucketSession`.
+
+    Used by every column-level encrypt and decrypt operation in
+    ``_encrypted_columns.py``. The DEK (not the KEK) is the
+    AES-256-GCM key for the row-ciphertext layer — the KEK only ever
+    unwraps the DEK during :meth:`BucketSession.open`.
+
+    Returns:
+        The 32-byte DEK used for AES-256-GCM column-level encryption.
+
+    Raises:
+        NoActiveBucketSessionError: When no :func:`activate_session` block is
+            currently active on the calling thread or task.
+        BucketLockedError: When the active session has expired.
+    """
+    return _require_fresh_active_session().dek
+
+
+def get_active_hmac_subkey(context: bytes) -> bytes:
+    """Return the active session's memoised HKDF sub-key for ``context``.
+
+    The keyed-lookup digest path (:class:`HashedLookup` and the
+    secure-object key digest built on it) derives a per-consumer sub-key
+    from the active DEK before HMAC-ing its material. That derivation
+    depends only on ``(DEK, context)``, so it is memoised on the
+    :class:`BucketSession` (see :meth:`BucketSession.hmac_subkey`) and
+    resolved here under exactly the freshness checks
+    :func:`get_active_master_key` applies.
+
+    Args:
+        context: Stable per-consumer HKDF info bytes.
+
+    Returns:
+        The 32-byte derived sub-key.
+
+    Raises:
+        NoActiveBucketSessionError: When no :func:`activate_session` block is
+            currently active on the calling thread or task.
+        BucketLockedError: When the active session has expired.
+    """
+    return _require_fresh_active_session().hmac_subkey(context)
 
 
 def has_active_bucket_session() -> bool:
@@ -283,6 +324,7 @@ __all__ = [
     "bind_active_bucket_session",
     "close_active_bucket_session",
     "current_active_bucket_session",
+    "get_active_hmac_subkey",
     "get_active_master_key",
     "has_active_bucket_session",
     "session_serves_bucket",

@@ -38,7 +38,7 @@ from ...domain.transactions import (
     TransactionValidationError,
     is_classified,
 )
-from ...llm import LLMSplitApplyResult, SubprocessProvider
+from ...llm import LLMSplitApplyResult
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
 from ._ledger_support import _emit_update_result, _ledger_validation_bad, _resolve_id
 
@@ -751,12 +751,12 @@ def ledger_split(
         "--child-description",
         help=tr("cli.ledger.split.child_description_help"),
     ),
-    llm: SubprocessProvider | None = typer.Option(
-        None,
+    llm: bool = typer.Option(
+        False,
         "--llm",
         help=tr(
             "cli.ledger.split.llm_help",
-            default="Propose an evidence-driven N-way split with the given LLM provider.",
+            default="Propose an evidence-driven N-way split with the on-host reader.",
         ),
     ),
     apply: bool = typer.Option(
@@ -788,13 +788,12 @@ def ledger_split(
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.split.actor_help")),
 ) -> None:
     """Redistribute one parent transaction into N child transactions (manual or --llm)."""
-    if llm is not None or read_evidence:
+    if llm or read_evidence:
         _ledger_split_llm(
             ctx,
             transaction_id=transaction_id,
             child_amount=child_amount,
             child_description=child_description,
-            provider=llm,
             apply=apply,
             read_evidence=read_evidence,
             vision_model=vision_model,
@@ -911,31 +910,16 @@ def _validate_split_llm_options(
     *,
     child_amount: list[str],
     child_description: list[str],
-    provider: SubprocessProvider | None,
     apply: bool,
     yes: bool,
 ) -> None:
     """Reject manual-override flag combinations and an unconfirmed apply for ``ledger split --llm``."""
-    from ...application.ledger import is_llm_provider_available
-
     if child_amount or child_description:
         raise _bad(
             tr(
                 "cli.ledger.split.llm_exclusive",
                 default="--llm cannot be combined with --child-amount/--child-description; "
                 "the manual path is the explicit operator override.",
-            ),
-        )
-    if provider is not None and not is_llm_provider_available(provider):
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_provider_unavailable",
-                provider=provider.value,
-                default=(
-                    f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
-                    f"Install the {provider.value!r} CLI and ensure it is on PATH, "
-                    "or run 'aeat config check' to confirm the local model runtime is reachable."
-                ),
             ),
         )
     if apply and not yes:
@@ -972,6 +956,7 @@ def _render_split_llm_preview(
     proposed_children: list[LedgerSplitChildProposalPayload],
 ) -> None:
     """Emit the non-persisting split preview envelope."""
+    from ._ledger_llm_cli import reader_from_provenance
     from ._ledger_payloads import LedgerSplitResult
 
     result = LedgerSplitResult.model_validate(
@@ -980,7 +965,7 @@ def _render_split_llm_preview(
             "parent_transaction_id": suggestion.transaction_id,
             "llm": True,
             "persisted": False,
-            "provider": suggestion.provider.value if suggestion.provider is not None else None,
+            "provider": reader_from_provenance(suggestion.provenance),
             "provenance": suggestion.provenance,
             "reason": suggestion.reason,
             "parent_amount": format(suggestion.parent_amount, "f"),
@@ -1004,6 +989,7 @@ def _render_split_llm_applied(
     proposed_children: list[LedgerSplitChildProposalPayload],
 ) -> None:
     """Emit the persisted split-applied envelope."""
+    from ._ledger_llm_cli import reader_from_provenance
     from ._ledger_payloads import LedgerSplitResult
 
     child_id_rows = _split_child_id_rows(applied.child_transaction_ids)
@@ -1016,7 +1002,7 @@ def _render_split_llm_applied(
             "child_transactions": [row.model_dump(mode="json") for row in child_id_rows],
             "llm": True,
             "persisted": True,
-            "provider": suggestion.provider.value if suggestion.provider is not None else None,
+            "provider": reader_from_provenance(suggestion.provenance),
             "provenance": applied.provenance,
             "reason": suggestion.reason,
             "parent_amount": format(suggestion.parent_amount, "f"),
@@ -1040,7 +1026,6 @@ def _ledger_split_llm(
     transaction_id: str,
     child_amount: list[str],
     child_description: list[str],
-    provider: SubprocessProvider | None,
     apply: bool,
     read_evidence: bool,
     vision_model: str | None,
@@ -1070,7 +1055,6 @@ def _ledger_split_llm(
     _validate_split_llm_options(
         child_amount=child_amount,
         child_description=child_description,
-        provider=provider,
         apply=apply,
         yes=yes,
     )
@@ -1083,7 +1067,6 @@ def _ledger_split_llm(
         suggestion = suggest_evidence_split(
             bucket_id=bucket_id,
             transaction_id=resolved_id,
-            provider=provider,
             transaction_repository=transaction_repository,
             read_evidence=read_evidence,
             vision_model=vision_model,

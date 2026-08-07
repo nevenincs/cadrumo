@@ -120,6 +120,10 @@ def _parse_rate(raw_rate: object) -> IvaRateRecord:
             "effective_until": data.get("effective_until"),
             "legal_refs": _reference_ids(data, "legal_refs"),
             "source_refs": _reference_ids(data, "source_refs"),
+            # Every field the record carries must be listed here: this builds
+            # the model from an explicit mapping, so a TOML key absent from it
+            # is DROPPED without error and the field silently takes its default.
+            "supersedes_tier_default": data.get("supersedes_tier_default", False),
         },
     )
 
@@ -270,9 +274,20 @@ def _assert_no_overlap(
     member_state: EUMemberState,
     rates: Iterable[IvaRateRecord],
 ) -> None:
-    """Raise on any same-kind date-window overlap."""
+    """Raise on any same-kind date-window overlap between TIER-DEFINING rates.
+
+    Rates flagged ``supersedes_tier_default`` are excluded, because they exist
+    precisely to overlap: a statute applied them to part of a tier's supplies
+    while the rest stayed on the ordinary rate, so both are simultaneously
+    correct. Including them would make the rule reject the very shape it is
+    meant to permit, while excluding the ordinary records from it would let two
+    genuine tier definitions collide unnoticed -- which is the ambiguity
+    :func:`lookup_rate` relies on this rule to prevent.
+    """
     by_kind: dict[IvaRateKind, list[IvaRateRecord]] = {}
     for rate in rates:
+        if rate.supersedes_tier_default:
+            continue
         by_kind.setdefault(rate.kind, []).append(rate)
     for kind, partition in by_kind.items():
         ordered = sorted(partition, key=lambda rate: rate.effective_from)

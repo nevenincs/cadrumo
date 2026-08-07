@@ -29,7 +29,15 @@ from ...core.identity import BucketId, validate_spanish_tax_id
 from ...core.money import round_to_cents
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from .. import canonical_decimal_string
-from ..iva import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, OssIossRegime, TransactionKind
+from ..iva import (
+    EUMemberState,
+    InvoiceKind,
+    IvaCategory,
+    IvaRateKind,
+    IvaRateNotFoundError,
+    OssIossRegime,
+    TransactionKind,
+)
 from ._enums import (
     InvoiceClass,
     InvoiceLegalMention,
@@ -37,6 +45,7 @@ from ._enums import (
     IvaRate,
     PaymentStatus,
     iva_rate_percentage,
+    iva_rate_slot_percentage,
 )
 from ._errors import InvoiceValidationError
 from ._ids import InvoiceId
@@ -520,7 +529,13 @@ class InvoiceLine(BaseModel):
         expected_subtotal = (self.quantity * self.unit_price).quantize(Decimal("0.0001"))
         if abs(self.subtotal - expected_subtotal) > _LINE_TOLERANCE:
             raise InvoiceValidationError("subtotal must equal quantity * unit_price within 1 cent")
-        rate = iva_rate_percentage(self.iva_rate)
+        # The undated helper: this checks the line's ARITHMETIC, which needs the
+        # number the operator applied, not whether the statute still offers it.
+        # A line carries no date of its own, so the dated helper would resolve a
+        # 2024 transitional-rate line against today and refuse to build it. The
+        # in-force question is asked by the invoice-level validator below, which
+        # has the operation date to ask it against.
+        rate = iva_rate_slot_percentage(self.iva_rate)
         if self.oss_rate_kind is not None:
             return self
         if rate is None:
@@ -729,6 +744,32 @@ class Invoice(BaseModel):
         return self
 
     @model_validator(mode="after")
+    def _validate_line_rates_were_in_force(self) -> Self:
+        """Refuse a line naming a rate the statute did not offer on the devengo date.
+
+        The invoice is the first object that knows WHEN the operation happened,
+        so it is the first that can ask whether each line's rate was legally
+        available. The question is live because the taxonomy carries the RD-ley
+        4/2024 food rates: 2 % and 4 % were both correct super-reducido rates in
+        late 2024, so a slot cannot be checked against its tier alone, and a
+        2025 invoice claiming 2 % is naming a rate already withdrawn.
+
+        Checked against the operation date when one is recorded and the issue
+        date otherwise -- RD 1619/2012 art. 6.1.i records the operation date
+        precisely when it differs from expedition, and both readings are the
+        LIVA art. 75 devengo date the rate binds to (art. 90.Dos).
+        """
+        devengo_date = self.operation_date or self.issued_at
+        for line in self.lines:
+            try:
+                iva_rate_percentage(line.iva_rate, devengo_date)
+            except IvaRateNotFoundError as exc:
+                raise InvoiceValidationError(
+                    f"line rate {line.iva_rate.name} was not in force on {devengo_date.isoformat()}: {exc}",
+                ) from exc
+        return self
+
+    @model_validator(mode="after")
     def _validate_totals_and_exempt_invariants(self) -> Self:
         line_subtotal_sum = sum((line.subtotal for line in self.lines), start=Decimal("0"))
         line_iva_sum = sum((line.iva_amount for line in self.lines), start=Decimal("0"))
@@ -742,7 +783,7 @@ class Invoice(BaseModel):
             raise InvoiceValidationError(
                 "grand_total must equal base_total + iva_total + recargo_amount + suplido_amount exactly",
             )
-        all_non_numeric = all(iva_rate_percentage(line.iva_rate) is None for line in self.lines)
+        all_non_numeric = all(iva_rate_slot_percentage(line.iva_rate) is None for line in self.lines)
         if all_non_numeric:
             if self.iva_total != Decimal("0"):
                 raise InvoiceValidationError("iva_total must be zero when every line is EXEMPT or NOT_SUBJECT")

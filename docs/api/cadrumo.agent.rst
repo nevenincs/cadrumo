@@ -7,14 +7,6 @@ cadrumo.agent package
    :ignore-module-all:
 
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   cadrumo.agent.eval
-
 Submodules
 ----------
 

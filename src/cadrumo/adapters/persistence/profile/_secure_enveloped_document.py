@@ -1,5 +1,8 @@
 """Canonical encrypted persistence kernel for Envelope-wrapped profile singleton documents.
 
+Both kernels read and write through a :class:`SecureObjectRepository` supplied
+at construction; neither opens storage of its own.
+
 Sibling of :class:`~adapters.persistence.profile._secure_model_document.ProfileBareModelSecurePersistence`
 (``_secure_model_document.py``). The two kernels cover two DIFFERENT on-disk wire
 shapes that both happen to persist "one whole singleton Pydantic document per

@@ -103,7 +103,9 @@ def assert_snapshot_matches_work_unit_revision(
     *,
     period: Period | None = None,
 ) -> None:
-    """Raise when ``snapshot``'s revision diverges from ``work_unit``'s pinned revision.
+    """Raise when the :class:`RegistrySnapshot` revision diverges from the pinned one.
+
+    ``snapshot``'s revision must equal the revision ``work_unit`` was pinned to.
 
     This is the single home for the D1 calc-time assertion's message and
     exception type: the law-determined revision must equal the revision the

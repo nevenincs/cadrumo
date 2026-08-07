@@ -78,6 +78,7 @@ from ._enums import (
     invoice_legal_mention_text,
     iva_rate_kind,
     iva_rate_percentage,
+    iva_rate_slot_percentage,
     numeric_iva_rate_percentages,
     numeric_iva_rate_slots,
 )
@@ -160,6 +161,7 @@ __all__ = [
     "invoice_line_to_iva_observation",
     "iva_rate_kind",
     "iva_rate_percentage",
+    "iva_rate_slot_percentage",
     "link_transaction",
     "numeric_iva_rate_percentages",
     "numeric_iva_rate_slots",

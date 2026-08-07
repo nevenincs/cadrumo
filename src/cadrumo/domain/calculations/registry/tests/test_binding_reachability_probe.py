@@ -154,6 +154,28 @@ def test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail() -> None
     The meaningful reachability question for a casilla-keyed family is whether
     the target casilla exists on the revision, which is a different check with
     a different input, and is where that guarantee actually lives.
+
+    Reconciled with its apparent opposite
+    -------------------------------------
+    ``test_reachability_probe_is_not_tautological_against_a_mistyped_casilla_id``
+    (in ``test_ledger_renta_gastos_pago_fraccionado_binding.py``) asserts that
+    this same probe is NOT tautological. Both are true, and a reader meeting
+    one without the other will think the codebase contradicts itself.
+
+    They test different subjects. That test builds a DELIBERATELY MISTYPED
+    observation -- an ``int`` casilla id where the registry's is always a
+    ``str`` -- and proves the MATCHER discriminates by type rather than
+    coercing the digits equal. That is a real and worthwhile property of the
+    matcher.
+
+    This test is about the PROBE's own path: the observation the probe itself
+    constructs copies ``target_casilla_id`` straight off the selector, with the
+    selector's own type, so the comparison the validator actually performs can
+    never fail. A matcher that discriminates correctly is still asked a
+    question with only one possible answer.
+
+    So: the matcher is honest, and the probe still cannot bite. Fixing the
+    second does not follow from having proved the first.
     """
     for casilla_id in ("02", "9999", "definitely-not-a-real-casilla"):
         selector = _RentaLedgerGastosPagoFraccionadoSelector(

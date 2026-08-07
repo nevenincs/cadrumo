@@ -193,12 +193,34 @@ class IrpfActivityKind(StrEnum):
     spend names on splits that select the same figure and then have to be kept
     true.
 
-    Operator-declared, because it cannot be derived. Deriving it would need an
-    authoritative IAE epígrafe classification, and none is bundled: the corpus
-    carries the article approving the tariffs plus a single illustrative
-    epígrafe, not a classification. ``iae_epigraph`` cannot stand in either --
-    agricultural activities are largely IAE-exempt, so the field is emptiest for
-    exactly the filers it would need to identify.
+    Operator-declared today, but no longer because the authority is missing.
+    That was true when this enum landed and is not any more: the bundled Modelo
+    036 instrucciones carry the tipo-de-actividad code table AND the sentence
+    binding each IAE sección to its activity class, which is exactly the
+    granularity RIRPF art. 95.2.a keys on ("las actividades incluidas en las
+    Secciones Segunda y Tercera"). The correspondence is grounded in the
+    registry as the ``rirpf-art-95:selector-m036-*`` parameters -- data with its
+    own ``legal_refs``, not an if-chain -- so a derivation is now possible in
+    principle. What is still missing is the INPUT: no field on this profile
+    holds an M036 tipo-de-actividad code, so nothing can feed the selectors yet.
+
+    Two limits on that derivation, both declared rather than latent. The M036
+    table's finest ganadero grain is B02, so the art. 95.4.1.º engorde de
+    porcino/avicultura carve-out is not selectable and its parameter carries a
+    deliberately EMPTY code set. And ``iae_epigraph`` cannot stand in for the
+    code: the same instrucciones state the epígrafe is filled "solo para las
+    actividades comprendidas dentro de los códigos de actividad A01, A02, A03,
+    A04 y A05", so it is blank for precisely the B-series agrarian filers a
+    sectorial discriminator would need to identify.
+
+    KNOWN GAP in the two-member shape. Four of the ten codes -- A01 Arrendadores,
+    A03 Resto empresariales, B04 Producción de mejillón, B05 Pesquera -- select
+    NO art. 95 partition, so they are absent from every selector rather than
+    forced into an arm. This enum cannot say that: ``None`` currently means
+    "undeclared", and an empresarial filer for whom no activity rate applies is
+    a different fact with different fail-closed behaviour. Whether that wants a
+    third member or a different shape depends on what ends up reading the field,
+    which is not settled while the field has no production consumer.
 
     Attributes:
         PROFESIONAL: An actividad profesional under RIRPF art. 95.1 --

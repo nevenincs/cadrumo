@@ -80,6 +80,7 @@ def test_cache_key_distinguishes_multimodal_evidence(tmp_path: Path) -> None:
     the same content address must reproduce the same key even when the base64
     payload differs (the key folds the content address, never the bytes).
     """
+    from .....core import ImageMediaType
     from .....llm import MultimodalImageInput
 
     cache = LLMCache(root_dir=tmp_path)
@@ -89,17 +90,28 @@ def test_cache_key_distinguishes_multimodal_evidence(tmp_path: Path) -> None:
 
     text_only = cache.build_key(LLMRequest(prompt=prompt), LLMProvider.LOCAL, "gpt-oss")
     with_a = cache.build_key(
-        LLMRequest(prompt=prompt, images=(MultimodalImageInput(content_sha256=sha_a, base64_data="QQ=="),)),
+        LLMRequest(
+            prompt=prompt,
+            images=(MultimodalImageInput(content_sha256=sha_a, base64_data="QQ==", media_type=ImageMediaType.PNG),),
+        ),
         LLMProvider.LOCAL,
         "gpt-oss",
     )
     with_b = cache.build_key(
-        LLMRequest(prompt=prompt, images=(MultimodalImageInput(content_sha256=sha_b, base64_data="Qg=="),)),
+        LLMRequest(
+            prompt=prompt,
+            images=(MultimodalImageInput(content_sha256=sha_b, base64_data="Qg==", media_type=ImageMediaType.PNG),),
+        ),
         LLMProvider.LOCAL,
         "gpt-oss",
     )
     with_a_other_bytes = cache.build_key(
-        LLMRequest(prompt=prompt, images=(MultimodalImageInput(content_sha256=sha_a, base64_data="ZGlmZmVyZW50"),)),
+        LLMRequest(
+            prompt=prompt,
+            images=(
+                MultimodalImageInput(content_sha256=sha_a, base64_data="ZGlmZmVyZW50", media_type=ImageMediaType.PNG),
+            ),
+        ),
         LLMProvider.LOCAL,
         "gpt-oss",
     )

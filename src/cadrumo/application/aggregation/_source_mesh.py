@@ -96,6 +96,16 @@ CalculationSourceDiagnosticReason = Literal[
     # the two would leave an operator unable to tell "this row reaches nothing"
     # from "this row reaches a casilla but its withholding does not".
     "unrouted_declarable_quantity",
+    # The same row-versus-quantity axis on the IVA family: an IVA quantity every
+    # consumed row carries -- base imponible, cuota, or recargo -- that no
+    # ledger_iva_aggregation binding on the revision draws. Kept a separate
+    # member rather than folded into "unrouted_declarable_quantity" because the
+    # consequence class differs and an operator must route on it: there a
+    # taxpayer's suffered-retención CREDIT disappears from the settlement, here a
+    # base imponible the official form asks for is absent from a return whose
+    # cuota boxes are populated. Modelo 390 is the standing instance -- it draws
+    # cuota and recargo while declaring no base binding at all.
+    "unrouted_declarable_iva_quantity",
     # A row a binding DOES consume, but without the invoice substrate the
     # binding's fact assumes: its contribution rests on bank cash (or is
     # absent). Distinct from "unrouted_observation", which is a row no binding

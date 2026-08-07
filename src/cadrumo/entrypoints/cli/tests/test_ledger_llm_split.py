@@ -64,7 +64,7 @@ def test_llm_split_apply_without_yes_is_refused(
 ) -> None:
     tx = _import_one_transaction(tmp_path)
 
-    result = invoke_cached_cli(["app", "ledger", "split", tx, "--llm", "claude", "--apply"])
+    result = invoke_cached_cli(["app", "ledger", "split", tx, "--llm", "--apply"])
     assert result.exit_code != 0
     # Nothing was persisted: the single parent row is intact.
     assert len(_rows()) == 1
@@ -82,7 +82,6 @@ def test_llm_split_rejects_manual_child_flags(
             "split",
             tx,
             "--llm",
-            "claude",
             "--child-amount",
             "60.00",
             "--child-description",

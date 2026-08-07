@@ -63,7 +63,7 @@ def counterparty_is_the_filer(*, counterparty_tax_id: str | None, profile: Taxpa
         counterparty_tax_id: The counterparty identifier about to be recorded,
             or ``None`` when the invoice carries none (a factura simplificada
             may legitimately omit it).
-        profile: The bucket's taxpayer profile.
+        profile: The bucket's :class:`TaxpayerProfile`.
 
     Returns:
         ``True`` only when both sides carry a value and they are the same

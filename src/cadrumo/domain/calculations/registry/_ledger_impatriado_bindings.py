@@ -290,9 +290,10 @@ def unsupported_ledger_impatriado_income_observations(
     revision: ModeloRevision,
     observations: Iterable[ImpatriadoIncomeObservationProtocol],
 ) -> tuple[ImpatriadoIncomeObservationProtocol, ...]:
-    """Return ES-scoped impatriado observations no binding on ``revision`` can consume.
+    """Return ES-scoped impatriado observations no binding can consume.
 
-    Delegates the screen to :func:`unsupported_ledger_family_observations` —
+    ``revision`` is the :class:`ModeloRevision` whose declared bindings define
+    what is consumable. Delegates the screen to :func:`unsupported_ledger_family_observations` —
     see that function for the shared fail-closed contract (why an unmatched
     observation is a modelling gap, not a legitimate zero). This family's
     own contribution is narrow: the ``target_casilla_id`` match predicate

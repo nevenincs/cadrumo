@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _IMPOSSIBLE_ANCHOR: Final[str] = "zzz-no-such-anchor-zzz"
 
-_UNVERIFIED_ANCHOR_CEILING: Final[int] = 90
+_UNVERIFIED_ANCHOR_CEILING: Final[int] = 89
 """Entries whose anchor a wrong value would pass, re-measured 2026-08-06.
 
 Shrink-only. The 318 this replaces was inflated by the resolver falling back to
@@ -55,6 +55,16 @@ and not a campaign.
 
 Raising this number means new entries were added whose anchor nothing checks,
 which is the regression the ceiling exists to catch.
+
+Lowered 90 -> 89 on 2026-08-07. The two Orden EHA/1274/2007 entries were not
+merely unverified, they were grounded on hand-written paraphrase stubs whose
+single unit carried no anchor at all, so every anchor resolved against them.
+Replacing both with the BOE consolidated text carrying its real ``[Bloque N:
+#ar]`` marker made them verified and exposed a second defect the ceiling was
+hiding: their declared anchors were ``#a1``/``#a2``, minted by the extractor's
+legacy heading fallback, while boe.es publishes this orden's articles under
+``#ar``/``#ar-2``. Both citations deep-linked nowhere. An unverified anchor is
+not only unchecked, it can be wrong.
 """
 
 _MINIMUM_CLASSIFIED_ENTRIES: Final[int] = 550

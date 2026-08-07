@@ -21,7 +21,7 @@ from typing import Never, Self, SupportsIndex, override
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, DocumentShape
-from ...core.external_constants import PDF_MIME_TYPE
+from ...core.external_constants import PDF_MIME_TYPE, XML_MIME_TYPE
 from ...core.hashing import sha256_hex
 from ...domain.attachments import AttachmentStoreProtocol, normalize_media_type
 from ._evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceInputError
@@ -132,14 +132,23 @@ class EvidenceInput(BaseModel):
 
 
 def _media_kind_from_mime(mime_type: str) -> MediaKind:
-    """Map a stored attachment MIME type to the reader's ``MediaKind``."""
+    """Map a stored attachment MIME type to the reader's ``MediaKind``.
+
+    A structured XML e-invoice resolves to :attr:`MediaKind.PDF` for the same
+    reason the write-side admission gate does: the coarse media kind only says
+    "not an image", and both a PDF and a structured record are then read through
+    the document-shape probe, which is the only thing that can say what the
+    document actually is. Omitting XML here refuses on the READ path a document
+    the write path accepted, which is the halfway state that leaves a document
+    ingestible and unreadable.
+    """
     normalized_mime_type = normalize_media_type(mime_type)
-    if normalized_mime_type == PDF_MIME_TYPE:
+    if normalized_mime_type in {PDF_MIME_TYPE, XML_MIME_TYPE}:
         return MediaKind.PDF
     if normalized_mime_type.startswith("image/"):
         return MediaKind.IMAGE
     raise PurchaseInvoiceEvidenceInputError(
-        f"evidence media type {mime_type!r} cannot be read; only PDF and image evidence is supported",
+        f"evidence media type {mime_type!r} cannot be read; only PDF, structured XML and image evidence is supported",
         suggestion="aeat app ledger evidence list",
     )
 

@@ -111,6 +111,7 @@ def test_confirm_by_evidence_id_mints_a_real_catalogue_invoice(tmp_path: Path) -
     confirmed = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "received",
             "--counterparty-name", "Acme Suministros SL",
@@ -146,6 +147,7 @@ def test_confirm_is_idempotent_guarded_on_a_second_identical_confirm(tmp_path: P
     first = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "received",
             "--counterparty-name", "Acme Suministros SL",
@@ -158,6 +160,7 @@ def test_confirm_is_idempotent_guarded_on_a_second_identical_confirm(tmp_path: P
     second = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "received",
             "--counterparty-name", "Acme Suministros SL",
@@ -187,6 +190,7 @@ def test_confirm_honours_an_override_of_an_extracted_field(tmp_path: Path) -> No
     confirmed = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "received",
             "--counterparty-name", "Acme Suministros SL",
@@ -212,6 +216,7 @@ def test_confirm_of_a_different_override_mints_a_distinct_invoice(tmp_path: Path
     first = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "received",
             "--counterparty-name", "Acme Suministros SL",
@@ -224,6 +229,7 @@ def test_confirm_of_a_different_override_mints_a_distinct_invoice(tmp_path: Path
     second = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "received",
             "--counterparty-name", "Acme Suministros SL",
@@ -252,6 +258,7 @@ def test_confirm_by_attachment_id_uses_the_same_in_store_bytes(tmp_path: Path) -
     confirmed = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--attachment-id", attachment_id,
             "--kind", "received",
             "--counterparty-name", "Acme Suministros SL",
@@ -273,6 +280,7 @@ def test_confirm_missing_required_field_refuses_actionably(tmp_path: Path) -> No
     confirmed = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "received",
             # --counterparty-name intentionally omitted: no extraction heuristic exists.
@@ -297,6 +305,7 @@ def test_confirm_never_writes_a_file_to_disk(tmp_path_factory: pytest.TempPathFa
     confirmed = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "received",
             "--counterparty-name", "Acme Suministros SL",

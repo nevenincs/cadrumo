@@ -8,7 +8,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ....core import M347_THRESHOLD_EUR, STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import COUNTERPART_SOURCE_KINDS, BindingSourceKind, CounterpartSourceKind
 from ._binding_selector_utils import (
     intracommunity_clave_validator,
@@ -35,6 +35,7 @@ from ._invoice_bindings import (
 from ._invoice_bindings import (
     invoice_selector as _invoice_selector,
 )
+from ._m347_threshold import m347_declarable_party_ids
 from ._schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [
@@ -309,7 +310,7 @@ def _m347_declarable_party_ids(
         totals[observation.party_tax_id] = totals.get(observation.party_tax_id, Decimal("0")) + _m347_summary_amount(
             observation,
         )
-    return frozenset(party_tax_id for party_tax_id, total in totals.items() if total > M347_THRESHOLD_EUR)
+    return m347_declarable_party_ids(totals)
 
 
 def _m347_summary_amount(observation: CounterpartAggregationObservation) -> Decimal:

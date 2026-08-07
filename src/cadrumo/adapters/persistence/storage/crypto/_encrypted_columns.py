@@ -55,7 +55,7 @@ from ..errors import (
 from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
-from ..master_key import get_active_master_key
+from ..master_key import get_active_hmac_subkey, get_active_master_key
 from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 
 
@@ -353,8 +353,13 @@ class HashedLookup(TypeDecorator[bytes]):
         """
         if not isinstance(plaintext, str):
             raise _storage_validation_error(f"HashedLookup.compute expects str; got {type(plaintext).__name__}")
-        key = _resolve_master_key()
-        return hkdf_hmac_digest(key, context=_HKDF_CONTEXT_COLUMN_LOOKUP, material=plaintext.encode("utf-8"))
+        # The sub-key depends only on the active DEK and the column-lookup
+        # context, so it is resolved through the session-scoped memo rather
+        # than re-derived per digest; the HMAC over ``plaintext`` is the only
+        # per-call work. Byte-identical to
+        # ``hkdf_hmac_digest(get_active_master_key(), ...)`` by construction.
+        sub_key = get_active_hmac_subkey(_HKDF_CONTEXT_COLUMN_LOOKUP)
+        return hmac.new(sub_key, plaintext.encode("utf-8"), hashlib.sha256).digest()
 
     @override
     def process_bind_param(self, value: str | bytes | None, dialect: Dialect) -> bytes | None:

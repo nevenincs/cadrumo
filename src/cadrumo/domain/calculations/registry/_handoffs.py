@@ -172,7 +172,8 @@ def audit_registry_relation_handoffs(
     """Validate and enumerate canonical relation declarations.
 
     The function is deliberately an inventory, not a semantic adjudicator. It
-    records the relation declaration and the binding slot it targets. Parallel
+    walks the relations each :class:`ModeloDefinition` in ``modelos`` declares
+    and records the relation declaration and the binding slot it targets. Parallel
     paths and accepted exceptions are classified by the later handoff validator,
     so this fold cannot turn a source/binding shape into a new legal conclusion.
     """
@@ -229,8 +230,10 @@ def audit_registry_relation_handoff_applicability(
 ) -> RegistryRelationHandoffApplicabilityAudit:
     """Measure authority-selected relation periods and clean-state contracts.
 
-    Every declared relation is expanded over its target revision's declared
-    periods at the revision's representative filing year. Active rows are
+    Every relation declared in the registry that the
+    :class:`ValidatedRegistryAuthority` ``authority`` validates is expanded over
+    its target revision's declared periods at the revision's representative
+    filing year. Active rows are
     projected from :func:`relation_source_requirements`, the same requirement
     graph consumed by the runtime clean-state gate. This function records the
     clean-state contract (required, conditional, or advisory) but deliberately

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import base64
 import getpass
-import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Final
 
 from .....core.atomic_write import atomic_write_hardened_bytes
+from .....core.tty import stderr_is_tty, stdin_is_tty
 from ..errors import SecretStoreError
 
 __all__ = [
@@ -68,7 +68,7 @@ def _default_passphrase_callback(getpass_fn: Callable[[str], str] | None = None)
                 f"{PASSPHRASE_ENV_VAR} is set to whitespace-only; supply a non-empty passphrase.",
             )
         return normalized
-    if getpass_fn is None and (not sys.stdin.isatty() or not sys.stderr.isatty()):
+    if getpass_fn is None and not (stdin_is_tty() and stderr_is_tty()):
         raise SecretStoreError(
             f"{PASSPHRASE_ENV_VAR} is not set and stdin is not interactive; "
             "re-run the command from an interactive terminal (the CLI prompts "

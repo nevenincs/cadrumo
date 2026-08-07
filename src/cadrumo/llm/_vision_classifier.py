@@ -18,10 +18,8 @@ number.
 from __future__ import annotations
 
 import asyncio
-import base64
 
 from ..core.config import Settings, load_settings
-from ..core.hashing import sha256_hex
 from ..domain.transactions import (
     LLMClassificationResponse,
     LLMSplitResponse,
@@ -35,15 +33,6 @@ from ._client import LLMClient
 from ._models import LLMProvider, LLMRequest, MultimodalImageInput
 
 __all__ = ["LocalVisionLLMClassifier"]
-
-
-def _to_multimodal_images(images: tuple[str, ...]) -> tuple[MultimodalImageInput, ...]:
-    """Pair each base64 image with its content address (sha256 of the raw bytes)."""
-    resolved: list[MultimodalImageInput] = []
-    for encoded in images:
-        digest = sha256_hex(base64.b64decode(encoded))
-        resolved.append(MultimodalImageInput(content_sha256=digest, base64_data=encoded))
-    return tuple(resolved)
 
 
 class LocalVisionLLMClassifier:
@@ -90,12 +79,18 @@ class LocalVisionLLMClassifier:
         """Provenance stamp recorded as ``classified_by`` (distinct from cloud subprocess)."""
         return f"llm:local-vision:{self._model}"
 
-    def classify(self, transaction: Transaction, *, evidence_images: tuple[str, ...]) -> LLMClassificationResponse:
+    def classify(
+        self,
+        transaction: Transaction,
+        *,
+        evidence_images: tuple[MultimodalImageInput, ...],
+    ) -> LLMClassificationResponse:
         """Read the attached invoice image with the local vision model and classify.
 
         Args:
             transaction: The transaction to classify.
-            evidence_images: In-memory base64 page/image renders of the evidence.
+            evidence_images: In-memory page/image renders of the evidence, each
+                carrying its declared media type.
 
         Returns:
             A validated :class:`LLMClassificationResponse` (allow-list-guarded).
@@ -104,12 +99,18 @@ class LocalVisionLLMClassifier:
         response = asyncio.run(self._client.complete(self._request(prompt, evidence_images)))
         return parse_response(response.text, spec=self._spec)
 
-    def propose_split(self, transaction: Transaction, *, evidence_images: tuple[str, ...]) -> LLMSplitResponse:
+    def propose_split(
+        self,
+        transaction: Transaction,
+        *,
+        evidence_images: tuple[MultimodalImageInput, ...],
+    ) -> LLMSplitResponse:
         """Read the attached invoice image with the local vision model and propose a split.
 
         Args:
             transaction: The transaction to split.
-            evidence_images: In-memory base64 page/image renders of the evidence.
+            evidence_images: In-memory page/image renders of the evidence, each
+                carrying its declared media type.
 
         Returns:
             A validated :class:`LLMSplitResponse` (allow-list-guarded).
@@ -118,11 +119,11 @@ class LocalVisionLLMClassifier:
         response = asyncio.run(self._client.complete(self._request(prompt, evidence_images)))
         return parse_split_response(response.text, spec=self._spec)
 
-    def _request(self, prompt: str, evidence_images: tuple[str, ...]) -> LLMRequest:
+    def _request(self, prompt: str, evidence_images: tuple[MultimodalImageInput, ...]) -> LLMRequest:
         """Build a LOCAL-provider multimodal request for ``prompt`` plus the images."""
         return LLMRequest(
             prompt=prompt,
             provider_override=LLMProvider.LOCAL,
             model_override=self._model,
-            images=_to_multimodal_images(evidence_images),
+            images=evidence_images,
         )

@@ -16,7 +16,7 @@ from ....domain.transactions import (
     TransactionLifecycleState,
     TransactionValidationError,
 )
-from ....llm import LLMSplitApplyResult, SubprocessProvider
+from ....llm import LLMSplitApplyResult
 from .. import (
     ManualLedgerTransactionPatch,
     SplitChildCommand,
@@ -48,7 +48,6 @@ def test_apply_splits_parent_and_classifies_children(
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
@@ -96,7 +95,6 @@ def test_apply_links_parent_invoice_evidence_to_each_child(
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
@@ -126,7 +124,6 @@ def test_apply_child_numbers_are_registry_derived_not_model(
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
@@ -164,7 +161,6 @@ def test_split_children_retain_lineage_and_evidence_provenance(
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
@@ -211,7 +207,6 @@ def test_split_child_evidence_failure_leaves_everything_unchanged(
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,

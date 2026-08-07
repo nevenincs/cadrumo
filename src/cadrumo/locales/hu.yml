@@ -1965,46 +1965,27 @@ cli:
         valuation_preview_help: Zárópreparát és értékesítési önköltség előnézete.
         year_help: Adóév.
       invoice:
-        catalogue:
-          country_code_help: 'Az ügyfél ISO 3166-1 alfa-2 országkódja. Kötelező: mindkét
-            adatszolgáltatás útválasztását meghatározza, ezért soha nem feltételezzük.'
-          create_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
-          import_all_refused: 'a számlák tömeges importálása sikertelen: minden sor
-            elutasításra került; nem jött létre számla'
-          import_file_help: Elérési út egy CSV vagy XLSX fájlhoz, amely számlasorokat
-            tartalmaz (counterparty_nif, counterparty_name, invoice_number, invoice_date,
-            taxable_base, valamint opcionálisan iva_rate/currency/country_code/notes).
-          import_file_not_found: 'A fájl nem található: {path}'
-          import_help: Katalógusszámlák tömeges létrehozása CSV vagy XLSX fájlból.
-          invoice_class_help: A számla osztálya. A rectificativa emellett a --rectifies-invoice-number
-            megadását is megköveteli, amely a javított számlát nevezi meg.
-          invoice_id_help: Katalógusbeli számla azonosítója (vagy egyértelmű előtag).
-          iva_category_help: Az ügylet áfakezelése. Szükséges ahhoz, hogy egy renta-számítás
-            megalapozhassa.
-          list_help: Az egyeztetési katalógus számláinak listázása.
-          recargo_help: Az adótételre felszámított recargo de equivalencia (LIVA 161.
-            cikk). A retencióval ellentétben a számla végösszegén belül szerepel.
-          rectifies_help: Annak a számlának a száma, amelyet ez a rectificativa javít.
-          remove_help: Egy egyeztetési katalógusbeli számla törlése.
-          retention_amount_help: A kifizető által levont IRPF visszatartás összege
-            euróban. Megadható önállóan, vagy a --retention-rate paraméterrel együtt.
-          retention_rate_help: A RIRPF 95.1. cikke szerinti visszatartási hányad,
-            amelyet a kifizető von le (0,15 az általános 15%-hoz, vagy 0,07 a tevékenység
-            megkezdésének időszakában). A --retention-amount megadása kötelező; önmagában
-            a hányad megadása elutasításra kerül.
-          series_help: A számla sorozatjele, ha a kibocsátó használ ilyet.
-          view_help: Egy egyeztetési katalógusbeli számla megjelenítése azonosító
-            vagy egyértelmű előtag alapján.
-          wizard_help: Irányított, nem interaktív kézi bevitel, ha a kinyerés nem
-            elérhető.
-          wizard_idempotent_noop: 'Idempotens no-op: már létezik ilyen azonosságú
-            számla (%{invoice_id}); semmi sem jött létre.'
+        add_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
+        country_code_help: 'Az ügyfél ISO 3166-1 alfa-2 országkódja. Kötelező: mindkét
+          adatszolgáltatás útválasztását meghatározza, ezért soha nem feltételezzük.'
         group_help: Üzleti számlák nyilvántartása (kiállított vagy beérkezett).
+        import_all_refused: 'a számlák tömeges importálása sikertelen: minden sor
+          elutasításra került; nem jött létre számla'
+        import_file_help: Elérési út egy CSV vagy XLSX fájlhoz, amely számlasorokat
+          tartalmaz (counterparty_nif, counterparty_name, invoice_number, invoice_date,
+          taxable_base, valamint opcionálisan iva_rate/currency/country_code/notes).
+        import_file_not_found: 'A fájl nem található: {path}'
+        import_help: Katalógusszámlák tömeges létrehozása CSV vagy XLSX fájlból.
+        invoice_class_help: A számla osztálya. A rectificativa emellett a --rectifies-invoice-number
+          megadását is megköveteli, amely a javított számlát nevezi meg.
         invoice_date_help: A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN),
           pl. 2026-01-15.
-        invoice_id_help: Számla azonosítója (vagy egyértelmű előtag).
+        invoice_id_help: Katalógusbeli számla azonosítója (vagy egyértelmű előtag).
+        iva_category_help: Az ügylet áfakezelése. Szükséges ahhoz, hogy egy renta-számítás
+          megalapozhassa.
         kind_help: 'Számla típusa: kiállított (vevő tartozik) vagy beérkezett (szállítónak
           tartozol).'
+        list_help: Az egyeztetési katalógus számláinak listázása.
         operation_date_help: A teljesites (termekertekesites vagy szolgaltatasnyujtas)
           idopontja (EEEE-HH-NN). Ez a LIVA 75. cikke szerinti adofizetesi kotelezettseg
           keletkezesenek napja, amely meghatarozza, melyik idoszakban kell az adot
@@ -2016,7 +1997,23 @@ cli:
           címzettcseréje'
         operation_type_invalid: 'A --operation-type értéke csak a következők egyike
           lehet: {valid}'
+        recargo_help: Az adótételre felszámított recargo de equivalencia (LIVA 161.
+          cikk). A retencióval ellentétben a számla végösszegén belül szerepel.
+        rectifies_help: Annak a számlának a száma, amelyet ez a rectificativa javít.
+        remove_help: Egy egyeztetési katalógusbeli számla törlése.
+        retention_amount_help: A kifizető által levont IRPF visszatartás összege euróban.
+          Megadható önállóan, vagy a --retention-rate paraméterrel együtt.
+        retention_rate_help: A RIRPF 95.1. cikke szerinti visszatartási hányad, amelyet
+          a kifizető von le (0,15 az általános 15%-hoz, vagy 0,07 a tevékenység megkezdésének
+          időszakában). A --retention-amount megadása kötelező; önmagában a hányad
+          megadása elutasításra kerül.
+        series_help: A számla sorozatjele, ha a kibocsátó használ ilyet.
         update_help: Üzleti számla adatainak frissítése.
+        view_help: Egy egyeztetési katalógusbeli számla megjelenítése azonosító vagy
+          egyértelmű előtag alapján.
+        wizard_help: Irányított, nem interaktív kézi bevitel, ha a kinyerés nem elérhető.
+        wizard_idempotent_noop: 'Idempotens no-op: már létezik ilyen azonosságú számla
+          (%{invoice_id}); semmi sem jött létre.'
         yes_help: Üzleti számla törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót az üzleti számla törléséhez.
       prorrata:
@@ -4440,12 +4437,8 @@ cli:
       llm_exclusive: --llm nem kombinálható a --classification vagy --file kapcsolóval;
         a kézi út a kezelő kifejezett felülbírálása.
       llm_failed: 'Az LLM osztályozás sikertelen: {reason}'
-      llm_help: Kérd meg egy helyi LLM szolgáltatót (claude/antigravity/codex), hogy
-        osztályozza a tranzakciót; alapértelmezetten előnézet, --apply kapcsolóval
-        menti.
-      llm_provider_unavailable: 'A(z) ''{provider}'' LLM-szolgáltató nem érhető el:
-        a CLI-je nincs a PATH-on. Telepítse a(z) ''{provider}'' CLI-t, és győződjön
-        meg róla, hogy a PATH-on van.'
+      llm_help: A gepen futo helyi olvasoval osztalyozza a tranzakciot; alapertelmezetten
+        elonezet, --apply kapcsoloval menti.
       llm_reason_label: indok
       llm_rejected_label: elutasítva
       llm_rejected_message: A modell javaslata elutasítva és rögzítve. A tranzakció
@@ -6348,6 +6341,8 @@ errors:
     refused_diagnostic_model_invariant: A DiagnosticCheck konstrukciós invariánsa
       sérült; ellenőrizze, hogy az elmaradás/figyelmeztetés sorokban pontosan az egyik
       next_action vagy dead_end van-e beállítva, az ok sorokban pedig egyik sem.
+    refused_einvoice_xml_parse: Az elektronikus számla XML-je nem volt olvasható,
+      ezért elutasításra került részleges feldolgozás helyett.
     refused_evidence_bundle_ambiguous: A bizonyítékcsomag azonosítójának előtagja
       a tárolóban több csomagra is illik.
     refused_evidence_bundle_not_found: Nem létezik igazoláscsomag a megadott azonosítóval.
@@ -66608,6 +66603,10 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r0:
               help: null
               label: Általános kulcs (21%) szerint felszámított ÁFA - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8.help
+              label: Fizetendő áfa adóalapja - általános szabályozás - 21%-os kulcs
+                - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
               help: null
               label: 5,2%-os egyenértékűségi pótlék - éves keletkezett ÁFA
@@ -66620,9 +66619,17 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: null
               label: Csökkentett kulcs (10%) szerint felszámított ÁFA - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5.help
+              label: Fizetendő áfa adóalapja - általános szabályozás - 10%-os kulcs
+                - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
               label: Szuperkedvezményes kulcs (4%) szerint felszámított ÁFA - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck.help
+              label: Fizetendő áfa adóalapja - általános szabályozás - 4%-os kulcs
+                - éves
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
               label: Az általános rendszer éves eredménye (keletkezett ÁFA mínusz
@@ -66633,6 +66640,10 @@ modelo:
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: null
               label: Folyó belföldi ügyletek után viselt ÁFA - éves
+            x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5.help
+              label: Levonható áfa adóalapja - belföldi folyó termék- és szolgáltatásbeszerzések
+                összesen - éves
           construct:
             modelo-390-iva-resumen-anual:
               field:
@@ -67054,6 +67065,8 @@ profile:
         tax_id:
           label: Adóazonosító (NIF/NIE/CIF)
       irpf:
+        activity_kind:
+          label: profile.schema.field.irpf.activity_kind.label
         art109_activity_income_withholding_ge_70pct:
           label: Megfelel a RIRPF 109. cikk 70%-os kivételének
         estimation_regime:

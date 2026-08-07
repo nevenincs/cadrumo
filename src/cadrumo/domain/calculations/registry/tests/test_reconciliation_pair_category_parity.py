@@ -214,3 +214,52 @@ def test_reconciliation_pairs_aggregate_the_same_categories() -> None:
             )
     assert compared > 0, "no shared ledger-bound roles compared; the parity assertion is vacuous"
     assert not divergences, "reconciliation pairs disagree on aggregated categories: " + "; ".join(divergences)
+
+
+#: The role whose disappearance from the shared set would be silent.
+#:
+#: The intra-community autorepercutido concept is the one this whole gate was
+#: built from: routing a services category onto the quarterly line without the
+#: annual line gave 84.00 against 63.00 and nothing objected.
+_INTRACOM_AUTOREPERCUTIDO_ROLE = "iva_cuota_autorepercutida_intracomunitaria"
+
+
+def test_the_intracom_concept_is_still_inside_the_compared_set() -> None:
+    """The originating concept stays covered, named rather than counted.
+
+    ``test_reconciliation_pairs_aggregate_the_same_categories`` guards against
+    vacuity with ``compared > 0``, which is the right global check and the wrong
+    one for this. The comparison runs over the INTERSECTION of the two sides'
+    semantic roles, and an intersection shrinks silently: if one side stops
+    carrying a role, that role simply stops being compared while every other
+    role keeps the count positive. The gate goes on passing and quietly covers
+    less.
+
+    That is not hypothetical for this role. Splitting an annual casilla per leg
+    — the M390 under-modelling work — gives the annual side two per-leg roles
+    where the quarterly side carries one combined role. Neither new role
+    intersects the old one, so the concept drops out of the comparison on the
+    day the split lands, with no test reddening anywhere.
+
+    Naming the role is what makes that loud. If a split retires this role, this
+    test fails and forces a deliberate choice: carry the combined role on both
+    sides, or teach the gate the per-leg mapping. Both are fine; losing the
+    coverage without noticing is not.
+    """
+    covered: list[str] = []
+    for (target_id, counterpart_id), (target_revision, counterpart_revision) in sorted(_derive_pairs().items()):
+        shared = set(_ledger_categories_by_semantic_role(target_revision)) & set(
+            _ledger_categories_by_semantic_role(counterpart_revision),
+        )
+        if _INTRACOM_AUTOREPERCUTIDO_ROLE in shared:
+            covered.append(f"M{target_id}<->M{counterpart_id}")
+
+    assert covered, (
+        f"role {_INTRACOM_AUTOREPERCUTIDO_ROLE!r} is compared by no reconciliation pair. "
+        "It is the concept this gate was built from, so its absence from every shared set "
+        "means the gate no longer covers the divergence it exists to catch. If an annual "
+        "casilla was split per leg, the annual side now carries per-leg roles that do not "
+        "intersect the quarterly side's combined role -- decide whether both sides carry the "
+        "combined role or the gate learns the per-leg mapping, rather than letting the "
+        "intersection shrink silently"
+    )

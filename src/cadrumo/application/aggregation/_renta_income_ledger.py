@@ -488,7 +488,9 @@ def aggregate_renta_m100_income_ledger(
     same actividad-económica eligibility (excluding nómina/trabajo and personal
     flows) over the FULL ejercicio (Jan 1 to Dec 31 of ``period.filing_year``) and targets
     the M100 "Ingresos de explotación" leaf (0171) instead of the M130 cumulative
-    casilla. ``period`` must be the annual period.
+    casilla. ``period`` must be the annual period. The :class:`InvoiceCatalogue`
+    passed as ``invoices`` is consulted when classifying each transaction; an
+    empty catalogue is used when it is omitted.
 
     Returns:
         The :class:`RentaIncomeLedgerAggregation` built from eligible transactions.

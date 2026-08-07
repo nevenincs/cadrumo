@@ -146,6 +146,16 @@ def test_identity_api_exposes_no_former_product_aliases() -> None:
     # Verificacion (the identifier AEAT prints on a justificante) -- a
     # legitimate AEAT-referent export per aeat-naming,
     # not a former-product alias.
-    allowed_aeat_names = {"AEAT_AUTHORITY_SHORT_NAME", "AEAT_CSV_MIN_LENGTH", "AEAT_CSV_MAX_LENGTH", "AEAT_CSV_PATTERN"}
+    # AEAT_RECORD_BATCH_SHAPES names the document shapes of AEAT's OWN record-
+    # supply submissions (SII and VERI*FACTU). The referent is the tax
+    # authority's published schema, not this product, so per aeat-naming it
+    # keeps the AEAT name -- renaming it would misname whose records they are.
+    allowed_aeat_names = {
+        "AEAT_AUTHORITY_SHORT_NAME",
+        "AEAT_CSV_MIN_LENGTH",
+        "AEAT_CSV_MAX_LENGTH",
+        "AEAT_CSV_PATTERN",
+        "AEAT_RECORD_BATCH_SHAPES",
+    }
     assert {name for name in core_all if name.casefold().startswith("aeat")} == allowed_aeat_names
     assert "__getattr__" not in vars(identity_module)

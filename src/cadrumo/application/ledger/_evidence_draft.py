@@ -101,18 +101,30 @@ from pydantic import BaseModel
 from ...adapters.inbound.einvoice import EInvoiceXmlParseError, parse_einvoice_document
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice
-from ...core import STRICT_FROZEN_CONFIG, STRUCTURED_DOCUMENT_SHAPES, MissingOptionalExtraError, ServiceCapability
+from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice, resolve_iva_rate_slot
+from ...core import (
+    STRICT_FROZEN_CONFIG,
+    STRUCTURED_DOCUMENT_SHAPES,
+    ImageMediaType,
+    MissingOptionalExtraError,
+    ServiceCapability,
+    detect_image_media_type,
+)
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.decimal import coerce_finite_european_decimal
-from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.external_constants import DEFAULT_CURRENCY, XML_MIME_TYPE
 from ...core.identity import IdentityError, tax_id_identity_token, validate_spanish_tax_id
 from ...core.parsing import parse_date, parse_iso8601_date
-from ...domain.attachments import link_attachment_invoice
-from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceClass, InvoiceLine, IvaRate
+from ...domain.attachments import link_attachment_invoice, normalize_media_type
+from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceClass, InvoiceLine
 from ...domain.iva import InvoiceKind, IvaCategory
-from ...llm import LLMPdfRasterisationError, LLMProviderError, rasterise_pdf_pages_to_base64_png
+from ...llm import (
+    LLMPdfRasterisationError,
+    LLMProviderError,
+    MultimodalImageInput,
+    rasterise_pdf_pages_to_base64_png,
+)
 from ..provisioning import probe_ollama_vision
 from ..user_profile import resolve_active_capability
 from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
@@ -264,8 +276,19 @@ class InvoiceDraft(BaseModel):
     Attributes:
         supplier_tax_id: Canonical Spanish NIF / NIE / CIF recovered from the
             text, or ``None`` when no valid tax identifier was found.
+        supplier_name: The issuing party's stated name, or ``None``.
+        customer_tax_id: The receiving party's tax identifier, or ``None``.
+            Populated only by a structured reader, which is the only one that
+            can tell the two parties apart; a text or vision reader recovers a
+            single identifier and cannot say whose it is.
+        customer_name: The receiving party's stated name, or ``None``.
         invoice_number: Invoice number recovered from a labelled line, or
             ``None``.
+        invoice_series: The series half of the invoice's identity, stated
+            separately by Facturae as ``InvoiceSeriesCode``, or ``None``. Kept
+            beside the number rather than concatenated into it: composing the
+            printed reference from the two is always possible, while splitting a
+            composed string back into them is not.
         invoice_date: Day-first invoice date recovered from the text, or
             ``None``.
         taxable_base: Labelled "base imponible" amount, or ``None``.
@@ -290,7 +313,11 @@ class InvoiceDraft(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     supplier_tax_id: str | None = None
+    supplier_name: str | None = None
+    customer_tax_id: str | None = None
+    customer_name: str | None = None
     invoice_number: str | None = None
+    invoice_series: str | None = None
     invoice_date: str | None = None
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
@@ -509,6 +536,7 @@ def extract_invoice_draft_from_evidence(
             # partial one; fall through so a document whose embedded payload is
             # broken can still be read by the text or vision path.
             pass
+    _refuse_an_unrecognised_xml_document(evidence_input)
     if evidence_input.media_kind is MediaKind.PDF:
         try:
             return extract_invoice_fields(evidence_input)
@@ -516,6 +544,44 @@ def extract_invoice_draft_from_evidence(
             # No usable text layer (scan-only / XFA) -> on-host vision fallback below.
             pass
     return _extract_invoice_fields_via_vision(evidence_input, settings=resolved_settings)
+
+
+def _refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:
+    """Refuse an XML document whose syntax no structured reader recognises.
+
+    XML must never reach the text-layer or vision fallbacks. Those exist for
+    documents whose content is RENDERED -- a PDF's text layer, a photograph of a
+    receipt -- and an XML file is neither: extracting prose from markup yields
+    tag soup, and rasterising it to read with a vision model is incoherent as
+    well as expensive.
+
+    This became reachable only when ``.xml`` was admitted at the evidence gate.
+    Before that a structured document could not be ingested at all, so the
+    fallback chain was never handed one. Admitting the extension without closing
+    the chain would route every unrecognised XML -- a SII or VERI*FACTU record,
+    a TicketBAI record, any XML at all -- to the on-host vision model, whose
+    capability is ON by default.
+
+    The refusal names the syntaxes that ARE read, so an operator holding a
+    document we do not support learns which ones we do rather than watching a
+    model fail to read their markup.
+    """
+    if normalize_media_type(evidence.mime_type) != XML_MIME_TYPE:
+        return
+    if evidence.document_shape in STRUCTURED_DOCUMENT_SHAPES:
+        # Self-contained rather than relying on call position. Today the
+        # structured branch returns before reaching here, so this is
+        # unreachable in the live routing -- which is precisely why it is
+        # asserted: a later refactor that moves this call earlier would
+        # otherwise refuse every Facturae, CII and UBL document, and the guard
+        # would look correct while removing the capability it protects.
+        return
+    raise PurchaseInvoiceEvidenceInputError(
+        "this XML document carries no invoice record in a syntax this reader knows. Recognised "
+        "structured syntaxes are Facturae 3.2.x, EN16931 Cross Industry Invoice (CII) and EN16931 "
+        "UBL. AEAT SII and VERI*FACTU submission records are not read as invoice evidence.",
+        suggestion="aeat app ledger evidence list",
+    )
 
 
 def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> InvoiceDraft:
@@ -529,7 +595,11 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
     parsed = parse_einvoice_document(evidence.data)
     return InvoiceDraft(
         supplier_tax_id=parsed.supplier_tax_id,
+        supplier_name=parsed.supplier_name,
+        customer_tax_id=parsed.customer_tax_id,
+        customer_name=parsed.customer_name,
         invoice_number=parsed.invoice_number,
+        invoice_series=parsed.invoice_series,
         invoice_date=parsed.invoice_date,
         taxable_base=parsed.taxable_base,
         iva_amount=parsed.iva_amount,
@@ -580,11 +650,22 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
         from ...llm import extract_invoice_fields_from_images
 
         if evidence.media_kind is MediaKind.PDF:
-            images = rasterise_pdf_pages_to_base64_png(evidence.data)
+            images = tuple(
+                MultimodalImageInput.from_base64(page, ImageMediaType.PNG)
+                for page in rasterise_pdf_pages_to_base64_png(evidence.data)
+            )
         else:
             import base64
 
-            images = (base64.b64encode(evidence.data).decode("ascii"),)
+            # An attachment is whatever format the operator supplied, so the type is
+            # detected from the bytes; an unsupported one refuses here rather than
+            # travelling to a provider under a guessed label.
+            images = (
+                MultimodalImageInput.from_base64(
+                    base64.b64encode(evidence.data).decode("ascii"),
+                    detect_image_media_type(evidence.data),
+                ),
+            )
         return extract_invoice_fields_from_images(images, settings=settings)
     except MissingOptionalExtraError as exc:
         # Ordered ahead of the runtime-failure branch deliberately. A missing
@@ -837,29 +918,6 @@ def _require_confirmed_field(value: Decimal | str | None, *, field: str) -> Deci
     return value
 
 
-def _iva_rate_slot_for(rate: Decimal | None) -> IvaRate:
-    """Map a resolved percentage to its closed rate slot, refusing an unknown one.
-
-    Reuses the writer's own accepted-slot table rather than restating it, so
-    the confirm boundary and the direct writer cannot drift about which rates
-    exist. An unread or unsupported rate REFUSES here; letting it fall to the
-    exempt slot would mint a zero-cuota invoice against a document that printed
-    a cuota.
-    """
-    from ...domain.invoices import numeric_iva_rate_slots
-
-    if rate is None:
-        return IvaRate.EXEMPT
-    slot = numeric_iva_rate_slots().get(rate)
-    if slot is None:
-        accepted = ", ".join(format(value, "f") for value in sorted(numeric_iva_rate_slots()))
-        rendered = format(rate, "f")
-        raise PurchaseInvoiceEvidenceInputError(
-            f"iva_rate {rendered} is not a recognised IVA percentage (accepted: {accepted})",
-        )
-    return slot
-
-
 def _refuse_an_issued_document_the_filer_did_not_issue(
     *,
     kind: InvoiceKind,
@@ -927,7 +985,7 @@ def confirm_invoice_draft_from_evidence(
     *,
     bucket_id: str,
     kind: InvoiceKind,
-    counterparty_country: str = "ES",
+    counterparty_country: str,
     evidence_id: str | None = None,
     attachment_id: str | None = None,
     counterparty_tax_id: str | None = None,
@@ -1043,8 +1101,21 @@ def confirm_invoice_draft_from_evidence(
         settings=resolved_settings,
     )
 
+    # WHICH party is the counterparty depends on the direction of the document,
+    # so the side is selected by `kind` rather than assumed to be the supplier.
+    # On an invoice the filer ISSUED, the counterparty is the customer; taking
+    # the supplier there names the filer as their own counterparty, and that
+    # value reaches the Modelo 347 / 349 totals AEAT reconciles against the
+    # other party's own declaration. Only a structured reader distinguishes the
+    # two, so the text and vision paths leave the customer side unset and fall
+    # back to the single identifier they can recover.
+    extracted_counterparty_tax_id = draft.supplier_tax_id
+    extracted_counterparty_name = draft.supplier_name
+    if kind is InvoiceKind.ISSUED and draft.customer_tax_id is not None:
+        extracted_counterparty_tax_id = draft.customer_tax_id
+        extracted_counterparty_name = draft.customer_name
     resolved_counterparty_tax_id = _require_confirmed_field(
-        _agreed_counterparty_tax_id(supplied=counterparty_tax_id, extracted=draft.supplier_tax_id),
+        _agreed_counterparty_tax_id(supplied=counterparty_tax_id, extracted=extracted_counterparty_tax_id),
         field="counterparty_tax_id",
     )
     assert isinstance(resolved_counterparty_tax_id, str)
@@ -1070,11 +1141,11 @@ def confirm_invoice_draft_from_evidence(
     # else euro. Preferring the extracted code over the euro default is what
     # stops a foreign-currency invoice being minted at its face value in euro.
     resolved_currency = (currency or draft.currency or DEFAULT_CURRENCY).strip().upper()
-    resolved_counterparty_name = (counterparty_name or "").strip()
+    resolved_counterparty_name = (counterparty_name or extracted_counterparty_name or "").strip()
     if not resolved_counterparty_name:
         raise PurchaseInvoiceEvidenceInputError(
-            "cannot confirm an invoice: counterparty_name has no extraction heuristic yet and "
-            "no --counterparty-name override was supplied",
+            "cannot confirm an invoice: the document states no counterparty name and no "
+            "--counterparty-name override was supplied",
             suggestion="aeat app ledger evidence extract --evidence-id <id>",
         )
 
@@ -1127,7 +1198,10 @@ def confirm_invoice_draft_from_evidence(
                 quantity=Decimal("1"),
                 unit_price=resolved_taxable_base,
                 subtotal=resolved_taxable_base,
-                iva_rate=_iva_rate_slot_for(resolved_iva_rate),
+                # The SAME resolver the writer below applies to the same value,
+                # so an unrepresentable percentage refuses identically whether
+                # or not the document printed a cuota.
+                iva_rate=resolve_iva_rate_slot(resolved_iva_rate),
                 iva_amount=iva_amount,
             ),
         )

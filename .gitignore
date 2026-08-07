@@ -282,6 +282,10 @@ src/cadrumo/_data/corpus/manuals/**/source.html/
 /.codex/*.lock
 /.agents/*.lock
 /.pre-commit-config.yaml
+# Ad-hoc persona testimonial runs. Scratch findings from one-off CLI
+# exercises; durable outcomes belong in the vaultspec pipeline (research,
+# adr, plan, exec, audit), never here.
+/.agents/testimonials/
 
 # Scratch / ad-hoc workspace / temp
 scratch/*

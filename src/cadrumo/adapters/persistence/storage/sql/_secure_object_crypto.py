@@ -75,7 +75,7 @@ def verify_revision_self_consistency(
     and can be failed closed.
 
     The coverage stops at that tuple, and the stamping write is wider than it.
-    :func:`~._secure_object_row_codec.write_revision_metadata` also stamps
+    The repository's write funnel also stamps
     ``revision_ancestor_ids``, ``revision_written_at``, ``write_provenance``,
     ``source_event_id``, and ``conflict_policy``, none of which is a derivation
     input; a row whose stored value for any of them is edited recomputes the

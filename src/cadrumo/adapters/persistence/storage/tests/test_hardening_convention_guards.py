@@ -54,6 +54,7 @@ _APPROVED_EXPLICIT_ROUTE_TEST_SURFACES = {
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_digest_identity.py",
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_integrity_agreement.py",
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_revision_lineage_coverage.py",
+    "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_write_batching.py",
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part1.py",
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part2.py",
     "src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part3.py",

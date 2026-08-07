@@ -28,3 +28,4 @@ Submodules
    cadrumo.domain.transactions._repository
    cadrumo.domain.transactions._retencion_parameters
    cadrumo.domain.transactions._service
+   cadrumo.domain.transactions._tipo_actividad_partitions

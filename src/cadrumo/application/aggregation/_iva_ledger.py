@@ -75,6 +75,7 @@ from ...domain.iva import (
     derive_flow_for_classification,
     domestic_categories_by_rate_kind,
     lookup_rate,
+    rate_kinds_for_declared_rate,
     validate_prorrata_reference,
 )
 from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterRepositoryProtocol
@@ -1646,9 +1647,16 @@ def _rate_table_covers(on_date: date) -> bool:
     one -- no record for any member state starts before 2024 -- so a
     transaction dated earlier cannot be classified whatever rate it carries,
     and telling its filer that their rate is unsupported sends them to correct
-    a figure that was right. Reads the same table
-    :func:`_iva_rate_kind_for` reads rather than a duplicated floor constant,
-    so the two cannot disagree about what is covered.
+    a figure that was right.
+
+    Asks the registry rather than restating a floor constant that could drift
+    from it. It reads only TIER-DEFINING rates, via :func:`lookup_rate`, while
+    :func:`_iva_rate_kind_for` reads every rate including the coexisting
+    temporary ones -- so a date covered solely by a temporary record would
+    report uncovered here. That cannot arise today, because every temporary
+    window sits inside a year the tier-defining records already span, and it is
+    the safe direction anyway: the worst outcome is an unsupported-rate refusal
+    naming the rate instead of one naming the year.
     """
     for kind in domestic_categories_by_rate_kind():
         try:
@@ -1660,18 +1668,23 @@ def _rate_table_covers(on_date: date) -> bool:
 
 
 def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:
-    # Iterates the canonical rate-kind set. EXEMPT is present here and has no
-    # rate record, so lookup_rate raises and the except below skips it -- the
-    # local 4-entry copy this replaced simply omitted EXEMPT, which is the same
-    # outcome reached by accident rather than by contract.
-    for kind in domestic_categories_by_rate_kind():
-        try:
-            rate_record = lookup_rate(EUMemberState.ES, kind, on_date)
-        except IvaRateNotFoundError:
-            continue
-        if rate_record.pct / Decimal("100") == rate:
-            return kind
-    return None
+    """Return the tier a declared rate belongs to, or ``None`` if it is not one.
+
+    Delegates to :func:`rate_kinds_for_declared_rate`, the registry's own
+    value-to-tier direction. This previously iterated the tiers and called the
+    tier-to-value lookup once each, comparing percentages -- a simulation of the
+    inverse that holds only while the mapping is one-to-one per date. Spain's
+    2024 temporary food rates broke that: 2 % and 4 % were both correct
+    super-reducido rates, and the simulation found neither for a 2 % row.
+
+    When a rate matches more than one tier the FIRST registered match wins, and
+    the ambiguity is real rather than a defect -- the tiers genuinely share that
+    rate on that date, and no bundled AEAT surface carries the goods axis that
+    would separate them. Callers that must report the rate itself carry it
+    separately on the observation.
+    """
+    matched = rate_kinds_for_declared_rate(EUMemberState.ES, rate, on_date)
+    return matched[0] if matched else None
 
 
 __all__ = [

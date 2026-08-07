@@ -250,14 +250,24 @@ def administrador_retencion_rate_advisory_observations(
 def _profile_suggests_sectoral_activity(bucket_id: str | None) -> bool | None:
     """Return whether the active profile hints at a sectoral activity.
 
-    A HINT, deliberately weak, and the weakness is the point: nothing in
-    :class:`~domain.deadlines.TaxpayerProfile` positively establishes that a
-    taxpayer is NOT agrícola, ganadero or forestal. Agrícola/forestal is an
-    ACTIVITY TYPE while the profile records an estimation REGIME, and the two
-    are independent -- a farmer may file estimación directa and may sit in IVA
-    general. ``iae_epigraph`` cannot close the gap either, because agricultural
-    activities are largely IAE-exempt, so the field is emptiest for exactly the
-    filers it would need to identify.
+    A HINT, and everything below the first check is deliberately weak. The
+    weakness has one cause: agrícola/forestal is an ACTIVITY TYPE, while the
+    rest of what the profile records is an estimation REGIME, and the two are
+    independent -- a farmer may file estimación directa and may sit in IVA
+    general. ``iae_epigraph`` cannot close that gap either, because
+    agricultural activities are largely IAE-exempt, so the field is emptiest
+    for exactly the filers it would need to identify.
+
+    :attr:`~domain.deadlines.TaxpayerProfile.irpf_activity_kind` is the one
+    signal here that is not a surrogate: it is the activity axis itself,
+    operator-declared, so it answers the question asked rather than one
+    correlated with it. It is therefore consulted FIRST and its answer is
+    final. That ordering matters in one real case -- a taxpayer who declares
+    PROFESIONAL while filing estimación objetiva now reads as non-sectoral,
+    where the objetiva surrogate alone called them sectoral. Objetiva is an
+    art. 95.6 regime that covers plenty of non-agrarian activity (taxis, bars),
+    so the declaration is the better answer and the surrogates stay only as
+    fallbacks for a profile that has not declared.
 
     So this answers only "is there a POSITIVE indication of sectoral activity?":
     ``True`` on an explicit indicator, ``False`` when the profile declares a
@@ -272,7 +282,7 @@ def _profile_suggests_sectoral_activity(bucket_id: str | None) -> bool | None:
         return None
     # Function-local for the cycle reason the sibling profile-backed advisories
     # document: the profile package reaches back into this layer.
-    from ...domain.deadlines import IrpfEstimationRegime, IVARegime
+    from ...domain.deadlines import IrpfActivityKind, IrpfEstimationRegime, IVARegime
     from ...domain.user_profile import ProfileNotFoundError
     from ..user_profile import UserProfileLifecycleRepository, projection_for_taxpayer
 
@@ -288,6 +298,12 @@ def _profile_suggests_sectoral_activity(bucket_id: str | None) -> bool | None:
     # former ``else {}`` fallback was unreachable. Failures arrive through the
     # except clause above, which is where the degraded-read handling lives.
     profile = projection_for_taxpayer(record)
+    # The declared activity axis answers the question directly, so it outranks
+    # every surrogate below and short-circuits both ways.
+    if profile.irpf_activity_kind is IrpfActivityKind.SECTORIAL:
+        return True
+    if profile.irpf_activity_kind is IrpfActivityKind.PROFESIONAL:
+        return False
     if profile.iva_regime is IVARegime.REAGP:
         return True
     if profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA:
@@ -324,9 +340,12 @@ def _sectoral_match_message(
             "withholding at this rate is consistent with it."
         )
     if sectoral_hint is False:
+        # Deliberately does not name the mechanism: a False now arrives either
+        # from a declared professional activity or from a non-sectoral
+        # estimación directa régimen, and naming one would misdescribe the other.
         return opening + (
-            "Your profile declares a non-sectoral estimación directa activity, which is not "
-            "normally subject to this rate, so the shortfall may not be tax withheld at all."
+            "Your profile declares a non-sectoral activity, which is not normally subject "
+            "to this rate, so the shortfall may not be tax withheld at all."
         )
     return opening + (
         "Your profile does not say whether you carry on an agricultural, forestry or módulos "

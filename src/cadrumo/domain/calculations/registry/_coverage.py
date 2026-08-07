@@ -271,7 +271,8 @@ def audit_registry_construct_evidence(
 ) -> RegistryConstructEvidenceAudit:
     """Build construct evidence ledgers from the validated registry authority.
 
-    The fold enumerates only revision-level declarations. It deliberately does
+    The fold validates the given :class:`ModeloDefinition` set and enumerates
+    only revision-level declarations. It deliberately does
     not turn revision evidence floors or casilla declarations into construct
     evidence, and it never supplies a reference that is absent from the owning
     declaration.
@@ -317,7 +318,10 @@ def build_model_law_coverage_ledger(snapshot: RegistrySnapshot) -> ModelLawCover
 def build_construct_evidence_ledger(
     snapshot: RegistrySnapshot,
 ) -> ConstructEvidenceLedger:
-    """Build declared legal/source rows without claiming registry validation."""
+    """Build declared legal/source rows from a :class:`RegistrySnapshot`.
+
+    Reads the snapshot's declarations as given, claiming no registry validation.
+    """
     return _build_construct_evidence_ledger(snapshot, authority_proof=None)
 
 
