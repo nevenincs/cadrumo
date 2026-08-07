@@ -139,7 +139,7 @@ def _readable_producer(fixture: Path) -> str | None:
     """
     try:
         return producer_field(fixture)
-    except Exception:  # noqa: BLE001 - any open failure means no readable DocInfo
+    except Exception:
         return None
 
 
