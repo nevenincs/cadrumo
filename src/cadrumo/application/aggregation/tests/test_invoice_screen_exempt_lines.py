@@ -13,6 +13,19 @@ Modelo 303 declares those bases in its own base-only casillas.
 
 So the filter dropped exactly the lines whose base is the only thing they were
 ever going to contribute.
+
+CORRECTION, recorded because the first version of this module claimed more than
+it delivered: keeping the line does NOT by itself put an exempt base on Modelo
+303. The screen classifies from the RATE SLOT, so an exempt line becomes
+``domestic_exempt``/``exempt`` while casilla 59 selects
+``intra_community_supply``/``zero`` and casilla 60 the export categories -- a
+miss on both axes. No M303 binding selects ``domestic_exempt``, so the
+observation routes nowhere rather than into a wrong casilla: inert, not harmful.
+
+These tests therefore assert exactly what the predicate does -- that a
+declarable line is retained -- and deliberately do NOT assert that a casilla is
+populated, because it is not. The routing fix is to construct the observation
+from the invoice's own category the way the bank-transaction path already does.
 """
 
 from __future__ import annotations

@@ -1242,6 +1242,22 @@ def _line_contributes_to_the_iva_screen(base_amount: Decimal, iva_amount: Decima
 
     A line carrying neither is the only shape that genuinely contributes
     nothing, and is the only one this predicate declines.
+
+    **This predicate alone does not make an exempt base reach Modelo 303, and
+    was mistakenly reported as doing so.** The loop classifies from the RATE
+    SLOT, so an exempt line becomes ``domestic_exempt``/``exempt`` while casilla
+    59 selects ``intra_community_supply``/``zero`` and casilla 60 the two export
+    categories -- a miss on both axes. No M303 binding selects
+    ``domestic_exempt`` or ``domestic_zero``, so such an observation routes
+    nowhere rather than into a wrong casilla; the effect is inert, not harmful.
+
+    Keeping the line is a PRECONDITION of the real fix, not the fix. The real
+    fix is to construct the observation from the invoice's own
+    ``iva_category`` the way the bank-transaction path already does
+    (``_iva_ledger.py``: explicit category first, rate-derived domestic
+    category only as a fallback, with the intracom/export counterparty gate).
+    Two feeds populating one binding source with divergent logic is what
+    ``one-aggregation-path-pull-equals-calculate`` exists to prevent.
     """
     return base_amount > Decimal("0") or iva_amount > Decimal("0")
 
