@@ -111,6 +111,7 @@ source_modules =
     cadrumo.domain
 forbidden_modules =
     cadrumo.adapters
+    cadrumo.llm
 ignore_imports =
     # ── aeat-roundtrip-discipline carve-out (test-file-only) ──────────────
     # Test/conftest modules across the domain layer legitimately construct the
@@ -162,6 +163,7 @@ forbidden_modules =
     cadrumo.application
     cadrumo.adapters
     cadrumo.entrypoints
+    cadrumo.llm
 ignore_imports =
     # ── aeat-roundtrip-discipline carve-out (test-file-only) ──────────────
     # Core test/conftest modules pull domain/application/adapters/entrypoints
@@ -195,6 +197,60 @@ ignore_imports =
     cadrumo.core.resources._repos.iva_rate_tables -> cadrumo.domain.iva
     cadrumo.core.resources._repos.recargo_bands -> cadrumo.domain.deadlines
     cadrumo.core.resources._repos.user_profile -> cadrumo.domain.user_profile
+[importlinter:contract:llm-not-persistence]
+name = Local-inference subpackage must not reach persistence
+type = forbidden
+source_modules =
+    cadrumo.llm
+forbidden_modules =
+    cadrumo.adapters.persistence
+# The outward half of the inference boundary. The subpackage receives
+# already-resolved bytes in memory and returns a typed payload; it holds no
+# repository handle and constructs no AttachmentStore. That is not a style
+# preference -- it is the property the encryption exemption rests on. The
+# operator ruling exempts IN-MEMORY processing from encryption precisely
+# because the code persists nothing, and the only thing establishing that it
+# persists nothing is enforcement like this. A persistence import here would
+# make the exemption self-referential.
+#
+# The inward half (who may import THIS package) is the forbidden-module
+# enrolment in the core and domain contracts above. Both are needed and
+# neither substitutes for the other.
+ignore_imports =
+    # ── Test-module carve-out, matching every other contract in this file ──
+    # The subpackage's own tests reach the shared secure-SQL runtime profile
+    # and the core-side stores for real-adapter roundtrips. Pinned per chain
+    # origin rather than by a wildcard so a NEW production edge still fails.
+    cadrumo.llm.conftest -> cadrumo.tests.secure_sql
+    cadrumo.llm.tests.test_evidence_draft_vision -> cadrumo.tests.secure_sql
+    cadrumo.llm.tests.test_llm_vision_classifier -> cadrumo.tests.secure_sql
+    cadrumo.llm.tests.test_redaction -> cadrumo.tests.secure_sql
+    cadrumo.llm.tests.test_llm_vision_classifier -> cadrumo.application.ledger._llm_classification
+    cadrumo.llm.tests.test_local_text_reader_wiring -> cadrumo.application.ledger._llm_classification
+    cadrumo.llm.tests.test_evidence_draft_vision -> cadrumo.application.ledger
+    cadrumo.llm.tests.test_llm_vision_classifier -> cadrumo.application.ledger.tests._llm_vision_evidence_support
+    cadrumo.llm.tests.test_evidence_draft_vision -> cadrumo.application.ledger.tests._llm_vision_evidence_support
+    cadrumo.llm.tests.test_redaction -> cadrumo.adapters.outbound.llm
+    cadrumo.llm.tests.test_retention_selector_parity -> cadrumo.adapters.outbound.llm
+    cadrumo.llm.tests.test_retention_selector_parity -> cadrumo.adapters.outbound.llm._cache
+    cadrumo.llm.tests.test_retention_selector_parity -> cadrumo.adapters.outbound.llm._usage
+    cadrumo.llm.tests.test_retention_selector_parity -> cadrumo.adapters.outbound.llm._run_telemetry
+    cadrumo.llm.tests.test_client -> cadrumo.adapters.outbound.llm
+    # ── One PRODUCTION edge, sanctioned and worth stating precisely ────────
+    # LLMClient default-constructs the three core-side stores, which do resolve
+    # secure storage. So the subpackage reaches persistence TRANSITIVELY even
+    # though it imports nothing from it directly and constructs no
+    # AttachmentStore of its own -- the letter of the persistence decision
+    # holds, the spirit is stretched by the defaulting.
+    #
+    # This is pinned rather than silently permitted because it is the one place
+    # the boundary is softer than the governing record implies. The clean close
+    # is to make the three stores caller-injected instead of defaulted, which
+    # removes the edge entirely; the client already accepts them as optional
+    # constructor parameters, so the change is mechanical but touches every
+    # construction site and is deliberately not bundled into a relocation.
+    cadrumo.llm._client -> cadrumo.adapters.outbound.llm
+
 [importlinter:contract:layered]
 name = AEAT layered architecture
 # ── S23: Full layered architecture contract ───────────────────────────────────
@@ -215,7 +271,7 @@ unmatched_ignore_imports_alerting = error
 type = layers
 layers =
     cadrumo.entrypoints
-    cadrumo.adapters
+    cadrumo.adapters : cadrumo.llm
     cadrumo.application
     cadrumo.domain
     cadrumo.core
@@ -335,6 +391,12 @@ ignore_imports =
     # being a legal inner reach, and resolves through the ledger's public facade.
     cadrumo.application.ledger._evidence_draft -> cadrumo.llm
     cadrumo.application.ledger._llm_classification -> cadrumo.llm
+    cadrumo.application.ledger._llm_diagnostics -> cadrumo.llm
+    # Test-module chain origin: the corpus-parsing test exercises the on-host
+    # rasteriser, which now lives in the gated subpackage. Pinned like the
+    # other test chain origins above rather than widened, so a NEW production
+    # application -> llm edge still fails loudly.
+    cadrumo.application.ledger.tests.test_evidence_corpus_parsing -> cadrumo.llm
     cadrumo.application.evidence._service -> cadrumo.adapters.**
     cadrumo.application.filing._history_repository -> cadrumo.adapters.**
     cadrumo.application.filing._import -> cadrumo.adapters.**
