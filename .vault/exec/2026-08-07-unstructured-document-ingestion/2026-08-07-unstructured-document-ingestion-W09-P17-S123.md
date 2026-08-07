@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:2556eedeadd8ff16c272acba5f2444579d7bb71d755e2d3cd7b09f789757b303'
+body_hash: 'sha256:7c0feb23ca7a7095da7792c9c5beb2db41e06a27932e58a0576335263a514c5c'
 step_id: 'S123'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -50,7 +50,13 @@ both exclusion limbs, and the Balears must stay inside the territory by
 non-exclusion.
 
 The bundled art. 3 unit is character-identical to the live BOE consolidated text
-at 2733 characters, checked on the day of the change.
+at 2311 characters, checked on the day of the change. The figure originally
+recorded here was 2733, which no artefact carries; a later review measured the
+unit and a re-measurement confirmed 2311. The convention is stated so the number
+stays re-derivable rather than merely corrected: it is the length of the anchored
+unit's own text as the json sidecar stores it, excluding the article heading.
+Rendering the same unit with its title gives 2340, which is what the registry's
+legal evidence gate reads.
 
 Three findings, none silently reconciled. The table's prose claimed art. 3 was
 not bundled, which was false. It attributed the definition of the ambito

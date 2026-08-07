@@ -148,6 +148,21 @@ def _cited_article_text() -> str:
     return normalise_corpus_text(resolve_anchored_extracted_unit(sidecar, anchor=anchor, include_title=True))
 
 
+def _article_states(phrase: str) -> bool:
+    """Return whether the cited article carries ``phrase``, comparison-normalised.
+
+    Every statute check goes through this rather than asserting the membership
+    expression directly, so a failure reports the PHRASE and never the corpus.
+    Asserting ``normalise(phrase) in article`` inline reads better until it
+    fails: pytest renders both operands, and under exactly the regression these
+    cases exist to catch -- a resolver handing back the whole consolidated law --
+    the operand is six hundred thousand characters and the runner stops being
+    able to report the failure at all. A gate nobody can read the output of is
+    not much better than one that did not fire.
+    """
+    return normalise_corpus_text(phrase) in _cited_article_text()
+
+
 def test_every_cited_provision_resolves_in_the_legal_catalogue() -> None:
     """A row citing an article nobody defined is ungrounded and must not ship.
 
@@ -177,10 +192,8 @@ def test_the_citation_resolves_to_one_article_rather_than_the_whole_law() -> Non
     scope is pinned here directly, at both ends: the article's own wording is
     present, and wording from a different article of the same law is not.
     """
-    article = _cited_article_text()
-
-    assert normalise_corpus_text("Territorialidad") in article
-    assert normalise_corpus_text(_WORDING_FROM_ANOTHER_ARTICLE) not in article, (
+    assert _article_states("Territorialidad"), "the resolved unit is not the territoriality article"
+    assert not _article_states(_WORDING_FROM_ANOTHER_ARTICLE), (
         "the citation resolved to more than its own article, so every phrase check here is weakened"
     )
 
@@ -193,16 +206,13 @@ def test_the_cited_article_excludes_exactly_the_territories_the_table_enumerates
     turnover-tax harmonisation. Both limbs are asserted, so a table that kept one
     exclusion and dropped the other cannot pass.
     """
-    article = _cited_article_text()
-
-    assert (
-        normalise_corpus_text(
-            "en el Reino de España, Ceuta y Melilla y en la República Italiana, Livigno, "
-            "en cuanto territorios no comprendidos en la Unión Aduanera",
-        )
-        in article
+    assert _article_states(
+        "en el Reino de España, Ceuta y Melilla y en la República Italiana, Livigno, "
+        "en cuanto territorios no comprendidos en la Unión Aduanera",
+    ), "the cited article no longer excludes Ceuta y Melilla as territory outside the customs union"
+    assert _article_states("En el Reino de España, Canarias"), (
+        "the cited article no longer excludes Canarias from turnover-tax harmonisation"
     )
-    assert normalise_corpus_text("En el Reino de España, Canarias") in article
 
     scopes = {IvaTerritorialScope(str(record["scope"])) for record in _territory_records()}
 
@@ -233,11 +243,13 @@ def test_the_balears_are_inside_by_non_exclusion_and_the_statute_never_names_the
     actually rests on is that the article defining the ámbito espacial does not
     name them, and that is what is checked.
     """
-    article = _cited_article_text()
-
-    assert normalise_corpus_text("incluyendo en él las islas adyacentes") in article
-    assert normalise_corpus_text("Baleares") not in article
-    assert normalise_corpus_text("Balears") not in article
+    assert _article_states("incluyendo en él las islas adyacentes"), (
+        "the article no longer reaches the adjacent islands, which is what places the Balears inside"
+    )
+    for name in ("Baleares", "Balears"):
+        assert not _article_states(name), (
+            f"the ámbito espacial article now names the {name}, so the table's non-exclusion reasoning no longer holds"
+        )
 
     excluded_prefixes = {
         prefix for record in _territory_records() for prefix in _string_list(record, "postal_prefixes")
