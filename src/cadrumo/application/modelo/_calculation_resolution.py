@@ -26,6 +26,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core import Period
 from ...domain import canonical_decimal_string as _canonical_decimal_str
@@ -39,7 +40,6 @@ from ...domain.calculations.registry import (
 )
 from ...domain.modelos import WorkUnit
 from ..aggregation import CalculationSourceResolution, merge_source_resolutions_by_precedence
-from ..live import Borrador100SnapshotRepository
 from ._binding_resolution import (
     lift_previous_filing_casilla_overrides_to_bindings,
     reject_binding_channel_mismatch,
@@ -48,6 +48,9 @@ from ._binding_resolution import (
     resolve_declaration_period_inputs,
     resolve_profile_source_tier,
 )
+
+if TYPE_CHECKING:
+    from ..live import Borrador100SnapshotRepository
 
 
 @dataclass(frozen=True, slots=True)

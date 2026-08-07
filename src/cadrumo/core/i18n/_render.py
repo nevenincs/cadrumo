@@ -14,6 +14,7 @@ from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import lru_cache
+from io import StringIO
 from pathlib import Path
 from string import Formatter
 from typing import IO
@@ -485,15 +486,36 @@ def _locale_map(locale: str) -> dict[str, str | None]:
 
 @lru_cache(maxsize=len(SUPPORTED_OUTPUT_LANGUAGES))
 def _packaged_locale_map(locale: str) -> dict[str, str | None]:
+    from ._catalogue_cache import compute_source_digest, read_catalogue_cache, write_catalogue_cache
+
     resource = importlib.resources.files(PRODUCT_IDENTITY.python_package).joinpath("locales", f"{locale}.yml")
-    with resource.open("r", encoding="utf-8") as handle:
-        return _flatten_translations(_load_locale_yaml(handle))
+    raw_source = resource.read_bytes()
+    source_digest = compute_source_digest(raw_source)
+
+    cached = read_catalogue_cache(locale, source_digest=source_digest)
+    if cached is not None:
+        return cached
+
+    _log.info(
+        "Locale catalogue cache miss for %r; parsing YAML directly (slower, correct) and rewarming",
+        locale,
+    )
+    flat = _flatten_translations(_load_locale_yaml(StringIO(raw_source.decode("utf-8"))))
+    write_catalogue_cache(locale, source_digest=source_digest, flat=flat)
+    return flat
 
 
 def _load_locale_yaml(handle: IO[str]) -> object:
-    # The C-accelerated SafeLoader parses the ~430 KB catalogue in tens of
-    # milliseconds where the pure-Python loader costs ~0.5 s on every
-    # process start; both apply identical safe-load semantics.
+    # CSafeLoader C-accelerates only scanning/parsing; PyYAML's higher-level
+    # "construct Python objects from the parsed node tree" step is always
+    # pure Python and scales with node count. The packaged catalogues now
+    # carry a large modelo.schema.* block (compiled casilla labels/help,
+    # see domain.calculations.registry._modelo_localization), so even this
+    # accelerated path costs ~800 ms per process -- both loaders apply
+    # identical safe-load semantics. _packaged_locale_map's on-disk flat-map
+    # cache (._catalogue_cache) is what actually avoids paying this on every
+    # process start; this function is the (correct, still-necessary) slow
+    # path a cache miss falls back to.
     if hasattr(yaml, "CSafeLoader"):
         return yaml.load(handle, Loader=yaml.CSafeLoader) or {}
     return yaml.safe_load(handle) or {}

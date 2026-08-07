@@ -15,6 +15,7 @@ shape (enum values as their strings, timestamps as ISO text).
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -36,8 +37,8 @@ _DIGEST = "b" * 64
 _WHEN = datetime(2026, 4, 1, 10, 30, tzinfo=UTC)
 
 
-def _event(**overrides: object) -> WorkUnitHistoryEventPayload:
-    fields: dict[str, object] = {
+def _event(**overrides: Any) -> WorkUnitHistoryEventPayload:
+    fields: dict[str, Any] = {
         "event_id": _HEX64,
         "occurred_at": _WHEN,
         "event_type": BucketEventType.MODELO_WORK_UNIT_CREATED,
@@ -50,8 +51,8 @@ def _event(**overrides: object) -> WorkUnitHistoryEventPayload:
     return WorkUnitHistoryEventPayload(**fields)  # type: ignore[arg-type]
 
 
-def _record(**overrides: object) -> EvidenceRecordRefPayload:
-    fields: dict[str, object] = {
+def _record(**overrides: Any) -> EvidenceRecordRefPayload:
+    fields: dict[str, Any] = {
         "object_type": BucketEventObjectType.WORK_UNIT,
         "object_id": "wu-1",
         "content_sha256": _DIGEST,
@@ -115,8 +116,8 @@ class TestEvidenceRecordRef:
 class TestModeloAuditShowResult:
     """Evidence bundle manifest envelope."""
 
-    def _bundle(self, **overrides: object) -> ModeloAuditShowResult:
-        fields: dict[str, object] = {
+    def _bundle(self, **overrides: Any) -> ModeloAuditShowResult:
+        fields: dict[str, Any] = {
             "bundle_id": _HEX64,
             "manifest_version": 1,
             "bucket_id": "bucket-one",

@@ -25,13 +25,14 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from enum import StrEnum
+from typing import Annotated
 
 from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios_with_censo_guard
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period, elided_prose
+from ...core import ElidedProse, Period
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId
 from ...domain.categories import SpendingCategory, SpendingCategoryFamily, family_for
@@ -89,7 +90,7 @@ class LedgerPreflightIssueReason(StrEnum):
 #: length would drop the explanation for the exclusion AND fail the aggregation
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
-_IssueDetail = elided_prose(512)
+_IssueDetail = Annotated[str, ElidedProse(512)]
 
 
 class LedgerPreflightIssue(BaseModel):

@@ -17,6 +17,7 @@ a future edit that re-loosens the payload fails here.
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -27,8 +28,8 @@ from .._modelo_iva_wallet_payloads import IvaWalletBalanceResult
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def _report(**overrides: object) -> IvaWalletBalanceReport:
-    base: dict[str, object] = {
+def _report(**overrides: Any) -> IvaWalletBalanceReport:
+    base: dict[str, Any] = {
         "as_of_year": 2026,
         "total_balance": Decimal("100.00"),
         "active_balance": Decimal("60.00"),
@@ -41,8 +42,8 @@ def _report(**overrides: object) -> IvaWalletBalanceReport:
     return IvaWalletBalanceReport(**base)  # type: ignore[arg-type]
 
 
-def _payload(**overrides: object) -> IvaWalletBalanceResult:
-    base: dict[str, object] = {
+def _payload(**overrides: Any) -> IvaWalletBalanceResult:
+    base: dict[str, Any] = {
         "as_of_year": 2026,
         "total_balance": "100.00",
         "active_balance": "60.00",

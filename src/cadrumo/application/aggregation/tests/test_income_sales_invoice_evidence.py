@@ -44,11 +44,16 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
     link_invoice,
+    statutory_activity_retencion_rates,
 )
 from .._renta_income_ledger import (
     SalesInvoiceEvidenceRefusal,
     aggregate_renta_income_ledger,
     aggregate_renta_m100_income_ledger,
+)
+from .._retencion_rate_advisory import (
+    _conforms_to_fixed_rate,
+    inferred_actividad_retencion_rate_advisory_observations,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -99,6 +104,7 @@ def _invoice(
     kind: InvoiceKind = InvoiceKind.ISSUED,
     bucket_id: str = _BUCKET,
     retention_amount: str | None = "150.00",
+    retention_rate: str = "0.15",
     number: str = "F-2024-001",
     iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL_21,
 ) -> Invoice:
@@ -128,7 +134,7 @@ def _invoice(
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
             "iva_category": iva_category,
-            "retention_rate": None if retention_amount is None else Decimal("0.15"),
+            "retention_rate": None if retention_amount is None else Decimal(retention_rate),
             "retention_amount": None if retention_amount is None else Decimal(retention_amount),
             "linked_transaction_ids": linked_transaction_ids,
         },
@@ -138,10 +144,15 @@ def _invoice(
 def _linked(
     *,
     cash: str = "1060.00",
+    retention_rate: str = "0.15",
     **invoice_kwargs: object,
 ) -> tuple[TransactionCatalogue, InvoiceCatalogue]:
     transaction = _transaction(cash=cash)
-    invoice = _invoice(linked_transaction_ids=(transaction.transaction_id,), **invoice_kwargs)  # type: ignore[arg-type]
+    invoice = _invoice(
+        linked_transaction_ids=(transaction.transaction_id,),
+        retention_rate=retention_rate,
+        **invoice_kwargs,  # type: ignore[arg-type]
+    )
     catalogue = link_invoice(
         TransactionCatalogue.from_transactions((transaction,)),
         transaction.transaction_id,
@@ -176,6 +187,44 @@ def test_the_declared_retencion_is_preferred_over_the_inference() -> None:
 
     assert observation.withheld_amount == Decimal("150.00")
     assert observation.withheld_derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
+
+
+def test_a_declared_retencion_is_never_screened_by_the_rate_advisory() -> None:
+    """The advisory discloses INFERENCES; it does not second-guess a document.
+
+    The exclusion is implemented -- ``DECLARED_ON_LINKED_INVOICE`` is absent from
+    the advisory's inferred-marker set -- and asserted in prose there, but no gate
+    held it, so a marker-set edit could have widened the screen onto declared
+    figures silently.
+
+    123,45 on a 1.000,00 base is 12,345 %, which matches no RIRPF art. 95 rate.
+    An inferred figure of that shape fires the advisory; this one must not, purely
+    because the invoice STATES it. That is why the amount is deliberately
+    non-conforming: a conforming figure would pass for the wrong reason and prove
+    nothing about the exclusion.
+    """
+    transactions, invoices = _linked(
+        cash="1086.55",
+        retention_amount="123.45",
+        retention_rate="0.12345",
+    )
+
+    observations = aggregate_renta_income_ledger(
+        transactions,
+        invoices,
+        bucket_id=_BUCKET,
+        period=_QUARTER,
+    ).observations
+
+    assert observations[0].withheld_amount == Decimal("123.45")
+    assert observations[0].withheld_derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
+    assert observations[0].taxable_base_amount == Decimal("1000.00")
+    assert not any(
+        _conforms_to_fixed_rate(Decimal("1000.00"), observations[0].withheld_amount, rate)
+        for rate in statutory_activity_retencion_rates()
+    ), "the figure must match no statutory rate, or the silence below proves nothing"
+
+    assert inferred_actividad_retencion_rate_advisory_observations(observations) == ()
 
 
 def test_the_annual_m100_path_grounds_identically_to_the_quarterly_one() -> None:

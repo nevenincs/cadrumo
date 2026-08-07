@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Protocol
 
 # LOGGING-STDLIB-RATIONALE-TYPE-CHECKING-ONLY:
@@ -33,10 +33,18 @@ def build_playwright_stage_runner(
     *,
     surface_label: str,
     log_prefix: str,
-    shape_suggestion: str,
+    shape_suggestion: Callable[[], str],
     logger: logging.Logger,
 ) -> PlaywrightStageRunner:
-    """Build a :class:`PlaywrightStageRunner` bound to the shared Sede error mapping."""
+    """Build a :class:`PlaywrightStageRunner` bound to the shared Sede error mapping.
+
+    ``shape_suggestion`` is a thunk, not a resolved string: it is read only
+    on the rare ``EXTERNAL_SHAPE_CHANGED`` failure path, so module-level
+    callers pass the translation lookup itself rather than its resolved
+    value -- resolving it eagerly would force the full locale catalogue to
+    load at import time for every consumer of this driver, whether or not a
+    shape-change failure ever occurs.
+    """
 
     async def _runner[T](
         operation: Awaitable[T],
@@ -69,7 +77,7 @@ async def run_playwright_stage[T](
     timeout_ms: int,
     surface_label: str,
     log_prefix: str,
-    shape_suggestion: str,
+    shape_suggestion: Callable[[], str],
     logger: logging.Logger,
     timeout_is_shape_change: bool = False,
 ) -> T:
@@ -91,7 +99,7 @@ async def run_playwright_stage[T](
                 f"{surface_label} expected page element was not visible: {description}",
                 failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
                 context={"stage": stage, "expected": description, "timeout_ms": timeout_ms},
-                suggestion=shape_suggestion,
+                suggestion=shape_suggestion(),
             ) from exc
         logger.error(
             "%s playwright stage timed out failure_mode=%s stage=%s description=%s timeout_ms=%s",

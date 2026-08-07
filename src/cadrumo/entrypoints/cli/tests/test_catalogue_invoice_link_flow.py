@@ -91,6 +91,7 @@ def _create_catalogue_invoice() -> str:
             "--counterparty-name", "Papeleria Sol SL",
             "--invoice-number", "2026-0142",
             "--invoice-date", "2026-03-10",
+            "--country-code", "ES",
             "--taxable-base", "100.00", "--iva-rate", "21",
         ],
     )  # fmt: skip

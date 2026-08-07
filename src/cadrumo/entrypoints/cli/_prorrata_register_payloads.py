@@ -15,7 +15,7 @@ the settlement auto-seed (general / ninguna).
 
 from __future__ import annotations
 
-from ._schemas import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema, register_schema
 
 
 class ProrrataEntryPayload(OutputSchema):

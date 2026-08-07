@@ -169,21 +169,29 @@ def test_clave_credential_inputs_mask_on_the_real_shipped_schema(path: str) -> N
     )
 
 
-def test_every_shipped_schema_field_masks_identically_on_both_surfaces() -> None:
-    """No shipped field may mask on one surface and not the other.
+def test_every_shipped_schema_field_masks_the_same_under_either_callers_label() -> None:
+    """The status and overview call sites build ``label`` differently; masking must agree anyway.
 
-    SUPPORTING as currently written. Both surfaces now call the same
-    function, so this cannot fail while that holds -- it is a structural
-    restatement, not an independent measurement, and it passes under the
-    keyword-policy mutation. Its value is forward-looking: it fails the
-    day someone re-forks the decision, which the mechanism test above
-    catches more directly.
+    There is one ``mask_profile_field`` -- the status surface
+    (``_status_frontend.py``) and the overview surface (``_overview.py``)
+    both call it, so there is no second decision to fork. That singularity
+    is enforced, not merely asserted here: ``test_mask_profile_field_singularity.py``
+    fails the build if a second masking-verdict function appears anywhere
+    in the tree, under any name. This test's own job is narrower and
+    different -- given the one authority, do the two call sites' differing
+    label construction agree on its answer. What differs between them is
+    the ``label`` argument each site constructs:
+    ``_status_frontend.py`` falls back to the path when the schema
+    description is empty, ``_overview.py`` passes the description as-is
+    (possibly ``None``). ``sensitivity`` only defers to the keyword net on
+    ``label`` when the schema declares no sensitivity for the field, so
+    that fallback difference could in principle flip an unclassified
+    field's masking between the two sites.
 
     It walks every field the real schema declares rather than a sample,
     so a field added later is covered without touching this test.
     """
     from .....application.user_profile import mask_profile_field
-    from .....application.user_profile._overview import mask_profile_field as overview_decision
     from .....domain.user_profile import load_user_profile_schema
 
     schema = load_user_profile_schema()
@@ -191,11 +199,13 @@ def test_every_shipped_schema_field_masks_identically_on_both_surfaces() -> None
     for section in schema.sections:
         for field in section.fields:
             path = f"{section.key}.{field.key}"
-            label = field.description or path
-            status_masked = mask_profile_field(path=path, label=label, sensitivity=field.sensitivity)
-            if status_masked != overview_decision(path=path, label=field.description, sensitivity=field.sensitivity):
+            status_label = field.description or path
+            overview_label = field.description
+            status_masked = mask_profile_field(path=path, label=status_label, sensitivity=field.sensitivity)
+            overview_masked = mask_profile_field(path=path, label=overview_label, sensitivity=field.sensitivity)
+            if status_masked != overview_masked:
                 divergent.append(path)
-    assert not divergent, f"masking diverges between overview and status for: {divergent}"
+    assert not divergent, f"masking diverges between the status and overview label construction for: {divergent}"
 
 
 def test_unknown_field_falls_back_to_the_keyword_policy() -> None:

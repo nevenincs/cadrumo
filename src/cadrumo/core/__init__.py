@@ -114,6 +114,7 @@ from ._descendant_relacion import (
     ART_81_1_MATERNIDAD_RELACIONES,
     DescendantRelacion,
 )
+from ._document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from ._export_layout_format import ExportLayoutFormat
 from ._external_oracle_corpus import ExternalOracleCorpus
 from ._fts_query import fts_or_group
@@ -140,6 +141,7 @@ from ._optional_extras import (
     ANTHROPIC_EXTRA,
     BROWSER_EXTRA,
     GOOGLE_EXTRA,
+    LLM_EXTRA,
     OFX_EXTRA,
     OPTIONAL_EXTRAS,
     MissingOptionalExtraError,
@@ -243,7 +245,7 @@ from .product_identity import (
     ProductIdentity,
     normalise_product_identity_references,
 )
-from .prose_elision import PROSE_ELISION_MARKER, elide_to_cap, elided_prose
+from .prose_elision import PROSE_ELISION_MARKER, ElidedProse, elide_to_cap, elided_prose
 from .secure_object_write import (
     ABSENT_SECURE_OBJECT_REVISION_ID,
     DEFAULT_WRITE_PROVENANCE,
@@ -304,6 +306,7 @@ __all__: list[str] = [
     "IBAN_SHAPE_RE",
     "LENGTH_ALONE_IS_STRONG",
     "LENGTH_FAIR_FLOOR",
+    "LLM_EXTRA",
     "M210_TIPO_RENTA_CODE_PROJECTION",
     "M347_THRESHOLD_EUR",
     "MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX",
@@ -326,6 +329,7 @@ __all__: list[str] = [
     "STORAGE_ROOT_SETTINGS_FIELD",
     "STORAGE_TAXONOMY",
     "STRICT_FROZEN_CONFIG",
+    "STRUCTURED_DOCUMENT_SHAPES",
     "UNMODELED_OBLIGATIONS",
     "AmendmentKindRegime",
     "AmendmentLiabilityDirection",
@@ -342,6 +346,8 @@ __all__: list[str] = [
     "CorpusAnchorResolutionError",
     "DeclaracionIdioma",
     "DescendantRelacion",
+    "DocumentShape",
+    "ElidedProse",
     "ExportLayoutFormat",
     "ExternalOracleCorpus",
     "ExternalPathDeclaration",

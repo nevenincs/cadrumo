@@ -252,12 +252,28 @@ def audit_registry_relation_handoff_applicability(
                 classification.source_modelo: classification for classification in revision.dependency_classifications
             }
             for period in selector.periods:
+                # Resolve law-determined, then assert-equal against the revision
+                # this loop is already on -- never inject revision.id as the
+                # selector (revision-resolution-is-law-determined). Injecting it
+                # here would silently mask a revision whose own period_selector
+                # does not self-consistently resolve back to itself; asserting
+                # instead turns that into a loud registry-validation failure. A
+                # live probe against the bundled registry confirms the two are
+                # equivalent for every relation-bearing revision today (0
+                # mismatches across 42 modelo/revision/period triples).
                 snapshot = authority.snapshot(
                     str(modelo.id),
                     filing_year=filing_year,
                     period=period,
-                    revision_id=str(revision.id),
                 )
+                if snapshot.revision.id != revision.id:
+                    raise RegistryValidationError(
+                        f"modelo {modelo.id} revision {revision.id}: law-determined "
+                        f"resolution for filing_year={filing_year} period={period!r} "
+                        f"selected revision {snapshot.revision.id!r} instead -- this "
+                        "revision's own declared period_selector does not "
+                        "self-consistently resolve to itself",
+                    )
                 requirements = relation_source_requirements(
                     snapshot.revision,
                     filing_year=snapshot.filing_year,

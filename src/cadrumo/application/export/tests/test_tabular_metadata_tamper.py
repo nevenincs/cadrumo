@@ -17,6 +17,8 @@ everything would pass the refusal cases and fail those.
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 from pydantic import ValidationError
 
@@ -61,8 +63,8 @@ def _serialized(export_format: ExportSerializationFormat) -> TabularExportResult
     return serialize_tabular_rows(_ROWS, fieldnames=_FIELDNAMES, export_format=export_format)
 
 
-def _rebuilt(result: TabularExportResult, **overrides: object) -> TabularExportResult:
-    fields: dict[str, object] = {
+def _rebuilt(result: TabularExportResult, **overrides: Any) -> TabularExportResult:
+    fields: dict[str, Any] = {
         "format": result.format,
         "media_type": result.media_type,
         "filename_extension": result.filename_extension,

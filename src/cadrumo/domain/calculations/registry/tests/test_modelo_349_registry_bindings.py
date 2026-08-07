@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import cast
+from typing import Any, cast
 
 import pytest
 
@@ -34,7 +34,7 @@ from ._modelo_349_registry_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _selector(binding: DataBindingDefinition) -> dict[str, object]:
+def _selector(binding: DataBindingDefinition) -> dict[str, Any]:
     return selector_as_dict(binding)
 
 
@@ -196,6 +196,7 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
 
     non_rect_obs = (
         InvoiceObservation(
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-de-1",
             party_tax_id="DE123456789",
             country_code="DE",
@@ -204,6 +205,7 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
             intracommunity_clave="E",
         ),
         InvoiceObservation(
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-fr-1",
             party_tax_id="FR12345678901",
             country_code="FR",
@@ -213,6 +215,7 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
         ),
     )
     rect_obs = InvoiceObservation(
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         invoice_id="inv-it-1-rect",
         party_tax_id="IT12345678901",
         country_code="IT",
@@ -287,6 +290,7 @@ def test_committed_modelo_349_row_resolver_appends_payable_acquisitions_to_publi
 
     observations = (
         InvoiceObservation(
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-de-sale",
             party_tax_id="DE111111111",
             country_code="DE",
@@ -416,6 +420,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
 
     observations = (
         InvoiceObservation(
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-de-1",
             party_tax_id="DE123456789",
             country_code="DE",
@@ -425,6 +430,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
             party_legal_name="ALEMAN GMBH",
         ),
         InvoiceObservation(
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-de-2",
             party_tax_id="DE123456789",
             country_code="DE",
@@ -434,6 +440,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
             party_legal_name="ALEMAN GMBH",
         ),
         InvoiceObservation(
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-fr-1",
             party_tax_id="FR12345678901",
             country_code="FR",
@@ -473,6 +480,7 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
 
     observations = (
         InvoiceObservation(
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-de-rect",
             party_tax_id="DE123456789",
             country_code="DE",
@@ -486,6 +494,7 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
             rectified_year=2025,
         ),
         InvoiceObservation(
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-it-rect",
             party_tax_id="IT12345678901",
             country_code="IT",
@@ -521,6 +530,7 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
 
     non_rect_obs = (
         InvoiceObservation(
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-de-1",
             party_tax_id="DE123456789",
             country_code="DE",
@@ -529,6 +539,7 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
             intracommunity_clave="E",
         ),
         InvoiceObservation(
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-fr-1",
             party_tax_id="FR12345678901",
             country_code="FR",
@@ -538,6 +549,7 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
         ),
     )
     rect_obs = InvoiceObservation(
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         invoice_id="inv-it-1-rect",
         party_tax_id="IT12345678901",
         country_code="IT",

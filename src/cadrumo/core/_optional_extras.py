@@ -33,6 +33,7 @@ __all__ = [
     "ANTHROPIC_EXTRA",
     "BROWSER_EXTRA",
     "GOOGLE_EXTRA",
+    "LLM_EXTRA",
     "OFX_EXTRA",
     "OPTIONAL_EXTRAS",
     "MissingOptionalExtraError",
@@ -77,8 +78,16 @@ ANTHROPIC_EXTRA = OptionalExtra(extra="anthropic", import_name="anthropic", feat
 # ``ofxtools`` is GPL-3.0-only; gating it behind an extra keeps the CORE
 # dependency closure free of strong copyleft.
 OFX_EXTRA = OptionalExtra(extra="ofx", import_name="ofxtools", feature="OFX/QFX bank-statement import")
+# Local-inference document reading (the gated ``cadrumo.llm`` subpackage).
+# ``PIL`` is the inference path's one direct third-party reliance beyond the
+# core closure: the Ollama runtime is reached over HTTP on the declared
+# ``httpx``, page rendering runs on the declared ``pypdfium2``, and its
+# ``to_pil()`` hands off to Pillow. Registered here rather than hand-rolled
+# outside the classifier like the ``agent`` extra, so the doctor enumerates it
+# and one refusal shape covers every inference boundary.
+LLM_EXTRA = OptionalExtra(extra="llm", import_name="PIL", feature="local-inference document reading")
 
-OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHROPIC_EXTRA, OFX_EXTRA)
+OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHROPIC_EXTRA, OFX_EXTRA, LLM_EXTRA)
 
 
 class MissingOptionalExtraError(CoreError, ImportError):

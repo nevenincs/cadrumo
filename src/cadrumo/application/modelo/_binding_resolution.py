@@ -30,6 +30,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...core import BindingSourceKind as _BindingSourceKind
 from ...core import Period as _Period
@@ -46,8 +47,10 @@ from ...domain.calculations.registry import (
 )
 from ...domain.modelos import ModeloError
 from ..aggregation import CalculationSourceResolution
-from ..live import Borrador100SnapshotRepository
 from ._borrador_binding import Modelo100BorradorSourceResolver
+
+if TYPE_CHECKING:
+    from ..live import Borrador100SnapshotRepository
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
     casilla_id_for_unique_revision_semantic_role,

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
@@ -37,7 +38,7 @@ def _snapshot(year: int = _YEAR) -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("100", filing_year=year, period="0A")
 
 
-def _facts(child: DescendantInfo) -> dict[str, object]:
+def _facts(child: DescendantInfo) -> dict[str, Any]:
     return dict(descendant_facts_from_list((child,)))
 
 
@@ -111,7 +112,7 @@ def test_a_childless_profile_resolves_to_zero_rather_than_absent() -> None:
     Distinct from the unresolvable cases, which leave the fact ABSENT so the
     casilla stays visibly unresolved instead of reading as a computed nil.
     """
-    index: dict[str, object] = {}
+    index: dict[str, Any] = {}
 
     _inject_derived_incremento_guarderia_facts(index, _snapshot(), _declared_profile_selectors(_snapshot().revision))
 

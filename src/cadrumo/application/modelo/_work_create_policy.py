@@ -147,7 +147,7 @@ def modelo_work_create_applicability_refusal(
 
     from ...application.user_profile import projection_for_taxpayer
     from ...application.workflow import workflow_state_repository
-    from ...domain.calculations.registry.applicability import (
+    from ...domain.calculations.registry import (
         ApplicabilityVerdict,
         derive_modelo_applicability,
     )

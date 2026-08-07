@@ -48,6 +48,21 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
             "CPU-only/low-memory hardware"
         ),
     )
+    cadrumo_llm_model_runtime_memory_floor_bytes: int = Field(
+        default=8 * 1024**3,
+        gt=0,
+        description=(
+            "Minimum total system memory the local model runtime needs before a "
+            "vision read is worth attempting. Sized for the default vision model "
+            "(qwen2.5vl:3b, ~3 GB of weights) plus the 8192-token context window "
+            "and normal OS residency, which is why the floor sits well above the "
+            "weight size alone. Below it the runtime does not refuse -- it loads "
+            "and thrashes, or is killed mid-read, which reaches the operator as "
+            "an unexplained timeout rather than as a hardware shortfall. Tunable "
+            "because the floor tracks the configured model: lower it for "
+            "moondream on low-memory hardware, raise it for qwen2.5vl:7b"
+        ),
+    )
     cadrumo_llm_default_max_tokens: int = Field(
         default=1024,
         gt=0,

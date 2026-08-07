@@ -10,17 +10,25 @@ field, so ``link --invoice-id`` cannot resolve it. Only the rich
 ``linked_transaction_ids`` and is the reconciliation authority ``link`` targets.
 
 :func:`create_catalogue_invoice` builds a strict :class:`Invoice` from
-operator-friendly fields — synthesising a single line item from a taxable base
-and IVA rate, mirroring the single-line synthesis the import path uses — and
-persists it through the sanctioned :class:`InvoiceCatalogueRepository` (no
-parallel write path). The returned :attr:`Invoice.invoice_id` is the
+operator-friendly fields and persists it through the sanctioned
+:class:`InvoiceCatalogueRepository` (no parallel write path). A caller that
+supplies no line set gets a single line synthesised from the taxable base and
+IVA rate; a caller that supplies one gets those lines, which is how an invoice
+carrying several IVA rates is expressed.
+
+This is the ONE line-synthesis site. The bulk import path does not carry its
+own: it routes every row through :func:`build_catalogue_invoice`, so the two
+transports cannot disagree about the shape they produce. Its row model does
+still admit only one rate per row, which is a limit of that file format rather
+than a second synthesis to keep in step. The returned :attr:`Invoice.invoice_id` is the
 content-addressed hash ``link --invoice-id`` resolves, closing the documented
 add->link gap without collapsing the two stores.
 """
 
 from __future__ import annotations
 
-from datetime import date
+from collections.abc import Sequence
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
@@ -31,11 +39,19 @@ from ...core import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.money import round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
+from ...domain.buckets import (
+    BucketEventHistoryRepositoryProtocol,
+    BucketEventObjectType,
+    BucketEventType,
+    emit_bucket_event,
+)
 from ...domain.currency import ExchangeRateProvider
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepositoryProtocol,
+    InvoiceClass,
+    InvoiceLine,
     InvoiceOperationDateRole,
     InvoiceValidationError,
     IvaRate,
@@ -70,6 +86,64 @@ class CatalogueInvoiceCreateResult(BaseModel):
 
     invoice: Invoice
     catalogue: InvoiceCatalogue
+    bucket_event_ids: tuple[str, ...] = ()
+
+
+# An invoice's DIRECTION decides which lifecycle event it emits, so the
+# canonical store speaks the same event vocabulary the slim store did rather
+# than inventing a second one. Issued invoices are collectible (a customer owes
+# us); received ones are payable (we owe a vendor).
+_CREATED_EVENT_BY_KIND: dict[InvoiceKind, tuple[BucketEventType, BucketEventObjectType]] = {
+    InvoiceKind.ISSUED: (BucketEventType.COLLECTIBLE_INVOICE_CREATED, BucketEventObjectType.COLLECTIBLE_INVOICE),
+    InvoiceKind.RECEIVED: (BucketEventType.PAYABLE_INVOICE_CREATED, BucketEventObjectType.PAYABLE_INVOICE),
+}
+
+_INVOICE_EVENT_PAYLOAD_VERSION = 1
+
+
+def _emit_catalogue_invoice_created(
+    *,
+    invoice: Invoice,
+    bucket_id: str,
+    event_repository: BucketEventHistoryRepositoryProtocol | None,
+    occurred_at: datetime,
+    actor: str,
+) -> tuple[str, ...]:
+    """Append the creation event for a canonically-written invoice.
+
+    The canonical write paths emitted NO bucket event of any kind, while the
+    slim store emitted six types and returned their ids to the operator. So
+    repointing the operator's verbs onto this store would have dropped the
+    invoice audit trail and the event-ids field in the same change -- a
+    capability loss with no replacement, which is why it blocked the fold.
+
+    The event type is chosen by direction so this store speaks the vocabulary
+    that already exists rather than minting a parallel one; the six members
+    outlive the slim store that used to be their only emitter.
+    """
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+
+    repository = event_repository or BucketEventHistoryRepository(
+        objects=secure_object_repository_for_bucket(bucket_id),
+    )
+    event_type, object_type = _CREATED_EVENT_BY_KIND[invoice.kind]
+    event = emit_bucket_event(
+        repository=repository,
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=object_type,
+        object_id=invoice.invoice_id,
+        payload={
+            "invoice_number": invoice.invoice_number,
+            "invoice_date": invoice.issued_at.isoformat(),
+            "counterparty_nif": invoice.counterparty_tax_id or "",
+        },
+        payload_version=_INVOICE_EVENT_PAYLOAD_VERSION,
+    )
+    return (event.event_id,)
 
 
 def _resolve_iva_rate_slot(iva_rate: Decimal | None) -> IvaRate:
@@ -111,14 +185,32 @@ def build_catalogue_invoice(
     operation_date: date | None = None,
     retention_rate: Decimal | None = None,
     retention_amount: Decimal | None = None,
+    invoice_class: InvoiceClass = InvoiceClass.ORDINARIA,
+    series: str | None = None,
+    rectifies_invoice_number: str | None = None,
+    recargo_amount: Decimal | None = None,
+    lines: Sequence[InvoiceLine] | None = None,
     rate_provider: ExchangeRateProvider | None = None,
 ) -> Invoice:
     """Return a strict rich :class:`Invoice` from operator-supplied fields.
 
-    A single line item is synthesised from ``taxable_base`` and the resolved
-    IVA rate slot; the invoice totals are derived from that line so the
-    :class:`Invoice` arithmetic invariants hold. The returned invoice carries
-    no linked transactions yet — ``link --invoice-id`` populates them later.
+    When ``lines`` is omitted a single line item is synthesised from
+    ``taxable_base`` and the resolved IVA rate slot, and the invoice totals are
+    derived from that line so the :class:`Invoice` arithmetic invariants hold.
+    The returned invoice carries no linked transactions yet — ``link
+    --invoice-id`` populates them later.
+
+    When ``lines`` IS supplied they are authoritative and the totals are summed
+    from them, which is what lets one invoice carry several IVA rates. A real
+    invoice mixing 21% and 10% lines is not exotic — collapsing it to one line
+    at a single rate reports the right grand total while attributing the cuota
+    to the wrong rate, and the per-rate breakdown is precisely what the IVA
+    modelos declare.
+
+    ``taxable_base`` must then AGREE with the summed line subtotals, and a
+    mismatch refuses rather than resolving. Two disagreeing sources of truth
+    for the same base is the shape that silently mis-declares, so the caller is
+    made to state one number, not two.
 
     ``iva_category`` carries the intra-community classification the M349
     recapitulative resolver reads for historical goods/triangulation records.
@@ -131,6 +223,18 @@ def build_catalogue_invoice(
     ``_validate_retencion_consistency`` accepts an amount alone, requires an
     amount whenever a rate is supplied, and refuses either that does not
     match the invoice's ``base_total``.
+
+    ``invoice_class``, ``series``, ``rectifies_invoice_number`` and
+    ``recargo_amount`` reach axes the aggregate has always modelled and no
+    write path could set. Until they existed here every canonically-written
+    invoice was ORDINARIA with no series and no recargo **by construction**,
+    and a rectificativa was unrepresentable — so the aggregate claimed a
+    vocabulary the writer could not speak.
+
+    The recargo rides INSIDE ``grand_total`` (LIVA art. 161) while a retención
+    is settled outside it, which is why only the recargo enters the totals
+    identity. The model re-checks that identity exactly, so a stated recargo
+    the lines do not support refuses rather than being balanced silently.
     """
     from ...domain.invoices import iva_rate_percentage
 
@@ -147,18 +251,37 @@ def build_catalogue_invoice(
     # registry-resolved rate, never a hand-typed percentage. EXEMPT /
     # NOT_SUBJECT resolve to None and carry a zero cuota.
     pct = iva_rate_percentage(rate_slot)
-    iva_amount = Decimal("0") if pct is None else round_to_cents(taxable_base * pct)
-    base_total = round_to_cents(taxable_base)
-    iva_total = iva_amount
-    grand_total = base_total + iva_total
-    line = {
-        "description": invoice_number or "Invoice",
-        "quantity": "1",
-        "unit_price": format(base_total, "f"),
-        "subtotal": format(base_total, "f"),
-        "iva_rate": rate_slot.value,
-        "iva_amount": format(iva_amount, "f"),
-    }
+    if lines:
+        if not all(isinstance(item, InvoiceLine) for item in lines):
+            raise InvoiceValidationError("lines must be InvoiceLine records")
+        base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
+        iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))
+        declared_base = round_to_cents(taxable_base)
+        if declared_base != base_total:
+            raise InvoiceValidationError(
+                f"taxable_base {declared_base} does not equal the summed line subtotals {base_total}",
+            )
+        payload_lines = [item.model_dump(mode="json") for item in lines]
+    else:
+        iva_amount = Decimal("0") if pct is None else round_to_cents(taxable_base * pct)
+        base_total = round_to_cents(taxable_base)
+        iva_total = iva_amount
+        payload_lines = [
+            {
+                "description": invoice_number or "Invoice",
+                "quantity": "1",
+                "unit_price": format(base_total, "f"),
+                "subtotal": format(base_total, "f"),
+                "iva_rate": rate_slot.value,
+                "iva_amount": format(iva_amount, "f"),
+            },
+        ]
+    # The recargo de equivalencia rides INSIDE the invoice total (LIVA art. 161)
+    # while a retencion is settled outside it, which is why only the recargo
+    # appears here. The model re-checks this identity exactly, so a caller that
+    # states a recargo the lines do not support is refused rather than balanced.
+    recargo = recargo_amount or Decimal("0")
+    grand_total = base_total + iva_total + recargo
     invoice_payload: dict[str, object] = {
         "bucket_id": bucket_id,
         "kind": kind.value,
@@ -172,9 +295,16 @@ def build_catalogue_invoice(
         "grand_total": format(grand_total, "f"),
         "currency": currency,
         "payment_status": payment_status.value,
-        "lines": [line],
+        "lines": payload_lines,
         "notes": notes,
+        "invoice_class": invoice_class.value,
     }
+    if series is not None:
+        invoice_payload["series"] = series
+    if rectifies_invoice_number is not None:
+        invoice_payload["rectifies_invoice_number"] = rectifies_invoice_number
+    if recargo_amount is not None:
+        invoice_payload["recargo_amount"] = format(recargo_amount, "f")
     if iva_category is not None:
         invoice_payload["iva_category"] = iva_category.value
     if operation_type is not None:
@@ -246,8 +376,16 @@ def create_catalogue_invoice(
     operation_date: date | None = None,
     retention_rate: Decimal | None = None,
     retention_amount: Decimal | None = None,
+    invoice_class: InvoiceClass = InvoiceClass.ORDINARIA,
+    series: str | None = None,
+    rectifies_invoice_number: str | None = None,
+    recargo_amount: Decimal | None = None,
+    lines: Sequence[InvoiceLine] | None = None,
     repository: InvoiceCatalogueRepositoryProtocol | None = None,
     rate_provider: ExchangeRateProvider | None = None,
+    event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+    actor: str = "cli",
 ) -> CatalogueInvoiceCreateResult:
     """Persist one rich catalogue :class:`Invoice` and return the updated catalogue.
 
@@ -276,6 +414,11 @@ def create_catalogue_invoice(
         operation_date=operation_date,
         retention_rate=retention_rate,
         retention_amount=retention_amount,
+        invoice_class=invoice_class,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        recargo_amount=recargo_amount,
+        lines=lines,
         rate_provider=rate_provider,
     )
     catalogue = repo.load()
@@ -289,7 +432,22 @@ def create_catalogue_invoice(
     updated[invoice.invoice_id] = invoice
     new_catalogue = InvoiceCatalogue.model_validate({"invoices": updated})
     repo.save(new_catalogue)
-    return CatalogueInvoiceCreateResult(invoice=invoice, catalogue=new_catalogue)
+    # Emitted AFTER the save, so the audit trail never records a creation that
+    # did not persist. The reverse order would leave an event pointing at an
+    # invoice that is not there, which is worse than a missing event: it reads
+    # as evidence.
+    event_ids = _emit_catalogue_invoice_created(
+        invoice=invoice,
+        bucket_id=bucket_id,
+        event_repository=event_repository,
+        occurred_at=occurred_at or datetime.now(UTC),
+        actor=actor,
+    )
+    return CatalogueInvoiceCreateResult(
+        invoice=invoice,
+        catalogue=new_catalogue,
+        bucket_event_ids=event_ids,
+    )
 
 
 __all__ = [

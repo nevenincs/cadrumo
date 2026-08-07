@@ -190,10 +190,15 @@ _VISIBLE_PROBE_TIMEOUT_MS: int = 2_000
 #: the Renta WEB Open casilla navigation flow. Matches the Settings default
 #: for form-interaction interactions across the sede adapter.
 _ELEMENT_WAIT_TIMEOUT_MS: int = 10_000
+def _renta_web_open_shape_suggestion() -> str:
+    """Return the localised shape-change suggestion string for Renta WEB Open error messages."""
+    return tr("adapters.aeat.sede.renta_web_open.suggestions.shape_change")
+
+
 _playwright_stage = build_playwright_stage_runner(
     surface_label="Renta WEB Open",
     log_prefix="renta web open",
-    shape_suggestion=tr("adapters.aeat.sede.renta_web_open.suggestions.shape_change"),
+    shape_suggestion=_renta_web_open_shape_suggestion,
     logger=logger,
 )
 

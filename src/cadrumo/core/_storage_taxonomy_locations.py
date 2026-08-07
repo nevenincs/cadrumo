@@ -371,6 +371,23 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
             "storage root. See _loader_cache.registry_disk_cache_dir."
         ),
     ),
+    _location(
+        # Fingerprint-keyed flat-map cache of one shared locale catalogue
+        # (source YAML -> flattened dict), mirroring
+        # domain/calculations/registry/_validate_verdict.py's shape: JSON, a
+        # source-digest key embedded in the payload, delete-not-migrate on any
+        # mismatch. FIXED (no dedicated settings field) because the shared
+        # storage-root override already gives tests private isolation, the
+        # same override policy CORPUS_SEARCH_INDEX uses.
+        StorageCategory.LOCALE_CATALOGUE_CACHE,
+        "cache/locale-catalogue",
+        consumer_module="core/i18n/_catalogue_cache.py",
+        node_kind=StorageNodeKind.DIRECTORY,
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.CACHE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+        override_policy=StorageOverridePolicy.FIXED,
+    ),
     # ── Durable generated outputs ───────────────────────────────────────────
     _location(
         StorageCategory.SUBMISSIONS,

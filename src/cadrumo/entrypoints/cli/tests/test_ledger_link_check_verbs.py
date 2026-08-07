@@ -291,6 +291,7 @@ def test_check_reports_a_one_sided_invoice_link(tmp_path: Path) -> None:
             "--counterparty-name", "Proveedor SL",
             "--invoice-number", "2026-0143",
             "--invoice-date", "2026-03-10",
+            "--country-code", "ES",
             "--taxable-base", "100.00", "--iva-rate", "21",
         ],
     )  # fmt: skip

@@ -167,7 +167,8 @@ def _matches_when_shown_unlabelled(selector: str) -> bool:
 
 async def _run_auth(page: _FakePage) -> None:
     provider = ClaveMovilAuthProvider(load_settings())
-    await provider._dismiss_pre303_alert_modal_if_present(page)  # noqa: SLF001 -- characterisation of the private method itself
+    # Reaches the private method deliberately: this test characterises that method itself.
+    await provider._dismiss_pre303_alert_modal_if_present(page)
 
 
 async def _run_wallet(page: _FakePage) -> None:

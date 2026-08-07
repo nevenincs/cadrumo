@@ -22,8 +22,11 @@ from ....core.aggregation import InvoiceDevengoRank
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import load_modelo_path
 from ....domain.invoices import (
+    InvoiceClass,
+    InvoiceLine,
     InvoiceOperationDateRole,
     InvoiceValidationError,
+    IvaRate,
     PaymentStatus,
     decompose_invoice,
 )
@@ -588,3 +591,270 @@ def test_intracommunity_services_now_carry_a_category_and_reach_m349(tmp_path: P
     assert ("FR", "E") not in rows
     assert ("IT", "A") not in rows
     assert resolution.diagnostics == ()
+
+
+def _mixed_rate_lines() -> tuple[InvoiceLine, ...]:
+    """A 21% line and a 10% line, the ordinary mixed-rate invoice."""
+    return (
+        InvoiceLine(
+            description="Consultoria",
+            quantity=Decimal("1"),
+            unit_price=Decimal("1000.00"),
+            subtotal=Decimal("1000.00"),
+            iva_rate=IvaRate.RATE_21,
+            iva_amount=Decimal("210.00"),
+        ),
+        InvoiceLine(
+            description="Transporte de viajeros",
+            quantity=Decimal("1"),
+            unit_price=Decimal("500.00"),
+            subtotal=Decimal("500.00"),
+            iva_rate=IvaRate.RATE_10,
+            iva_amount=Decimal("50.00"),
+        ),
+    )
+
+
+def test_a_supplied_line_set_persists_per_rate_instead_of_collapsing_to_one_line(
+    tmp_path: Path,
+) -> None:
+    """A mixed-rate invoice keeps its per-rate breakdown through persistence.
+
+    Every canonically-written invoice previously carried exactly one
+    synthesised line at one rate, because the builder derived the line from a
+    single taxable base and a single rate. A real invoice mixing 21% and 10% is
+    ordinary, and collapsing it reports the correct GRAND TOTAL while
+    attributing the whole cuota to one rate -- which is precisely the axis the
+    IVA modelos declare, so the error is invisible in the total and wrong in
+    the return.
+
+    Persisted through the real encrypted repository rather than asserted on the
+    in-memory model, because the claim is that the breakdown SURVIVES, not
+    merely that the builder assembled it.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        result = create_catalogue_invoice(
+            bucket_id=profile.bucket_id,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Cliente Mixto SL",
+            counterparty_tax_id="B12345674",
+            counterparty_country="ES",
+            invoice_number="F-2026-MIXED-001",
+            issued_at=date(2026, 4, 1),
+            taxable_base=Decimal("1500.00"),
+            iva_rate=None,
+            currency="EUR",
+            lines=_mixed_rate_lines(),
+            repository=InvoiceCatalogueRepository(objects=profile.repository),
+        )
+        restored = InvoiceCatalogueRepository(objects=profile.repository).load().get(result.invoice.invoice_id)
+
+    assert restored is not None
+    assert len(restored.lines) == 2
+    assert [line.iva_rate for line in restored.lines] == [IvaRate.RATE_21, IvaRate.RATE_10]
+    # Per-rate cuota, not one blended figure: 210 belongs to the 21% base and
+    # 50 to the 10% base, and a collapse would put all 260 on a single rate.
+    assert [line.iva_amount for line in restored.lines] == [Decimal("210.00"), Decimal("50.00")]
+    assert restored.base_total == Decimal("1500.00")
+    assert restored.iva_total == Decimal("260.00")
+    assert restored.grand_total == Decimal("1760.00")
+
+
+def test_a_supplied_line_set_refuses_a_taxable_base_that_disagrees_with_it() -> None:
+    """Two disagreeing sources of truth for the base must refuse, not resolve.
+
+    With a line set supplied the caller states the base twice: once as the
+    summed subtotals and once as ``taxable_base``. Silently preferring either
+    would let a caller believe the other was recorded, and on this field that
+    means declaring a base the operator never entered.
+    """
+    with pytest.raises(InvoiceValidationError, match="summed line subtotals"):
+        build_catalogue_invoice(
+            bucket_id=None,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Cliente Mixto SL",
+            counterparty_tax_id="B12345674",
+            counterparty_country="ES",
+            invoice_number="F-2026-MIXED-002",
+            issued_at=date(2026, 4, 1),
+            taxable_base=Decimal("1400.00"),
+            iva_rate=None,
+            currency="EUR",
+            lines=_mixed_rate_lines(),
+        )
+
+
+def test_omitting_the_line_set_still_synthesises_the_single_line() -> None:
+    """Positive control: the additive change leaves the single-rate path intact.
+
+    The overwhelming majority of invoices carry one rate, and every existing
+    caller omits the line set. If this regressed, the mixed-rate proof above
+    would still pass while the common path broke.
+    """
+    invoice = build_catalogue_invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        counterparty_name="Cliente Simple SL",
+        counterparty_tax_id="B12345674",
+        counterparty_country="ES",
+        invoice_number="F-2026-SIMPLE-001",
+        issued_at=date(2026, 4, 1),
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("21"),
+        currency="EUR",
+    )
+
+    assert len(invoice.lines) == 1
+    assert invoice.lines[0].iva_rate is IvaRate.RATE_21
+    assert invoice.iva_total == Decimal("210.00")
+    assert invoice.grand_total == Decimal("1210.00")
+
+
+def test_a_rectificativa_with_series_and_recargo_is_writable_and_persists(tmp_path: Path) -> None:
+    """The four axes the aggregate modelled and no write path could set.
+
+    Before these parameters existed every canonically-written invoice was
+    ORDINARIA with no series and no recargo BY CONSTRUCTION, and a
+    rectificativa could not be represented at all -- the aggregate claimed a
+    vocabulary the writer could not speak. Folding the operator surface onto an
+    aggregate that cannot express a rectificativa would have been a capability
+    loss on its face, which is why the conservation inventory named this a
+    blocking row.
+
+    Persisted and reloaded rather than asserted in memory, because the claim is
+    that all four SURVIVE the encrypted boundary.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        result = create_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Minorista Recargo SL",
+            counterparty_tax_id="B12345674",
+            counterparty_country="ES",
+            invoice_number="R-2026-0001",
+            issued_at=date(2026, 5, 4),
+            taxable_base=Decimal("1000.00"),
+            iva_rate=Decimal("21"),
+            currency="EUR",
+            invoice_class=InvoiceClass.RECTIFICATIVA,
+            series="R",
+            rectifies_invoice_number="F-2026-0044",
+            recargo_amount=Decimal("52.00"),
+        )
+        restored = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(result.invoice.invoice_id)
+
+    assert restored is not None
+    assert restored.invoice_class is InvoiceClass.RECTIFICATIVA
+    assert restored.series == "R"
+    assert restored.rectifies_invoice_number == "F-2026-0044"
+    assert restored.recargo_amount == Decimal("52.00")
+    # The recargo is INSIDE the invoice total (LIVA art. 161): 1000 + 210 + 52.
+    assert restored.grand_total == Decimal("1262.00")
+
+
+def test_a_recargo_on_an_exempt_supply_refuses() -> None:
+    """A recargo cannot ride on a supply that bears no cuota (LIVA art. 161).
+
+    The recargo de equivalencia is charged on top of the cuota of a taxable
+    supply, so a supply that is exempt by law bears no recargo either. Passing
+    one through the new writer parameter must therefore refuse rather than be
+    carried into the totals.
+
+    This is the sharper of the two available refusals and the reason the
+    parameter is safe to expose: the writer does not merely add the figure to
+    the grand total, it hands it to invariants that already know when a recargo
+    is legally impossible.
+    """
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError, match="recargo_amount must be zero"):
+        build_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Minorista Recargo SL",
+            counterparty_tax_id="B12345674",
+            counterparty_country="ES",
+            invoice_number="R-2026-0002",
+            issued_at=date(2026, 5, 4),
+            taxable_base=Decimal("1000.00"),
+            iva_rate=None,
+            currency="EUR",
+            recargo_amount=Decimal("52.00"),
+        )
+
+
+def test_the_default_invoice_class_is_still_ordinaria() -> None:
+    """Positive control: the additive change leaves the ordinary path alone.
+
+    Every existing caller omits all four axes, so a regression here would break
+    the common case while the rectificativa proof above still passed.
+    """
+    invoice = build_catalogue_invoice(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.ISSUED,
+        counterparty_name="Cliente Ordinario SL",
+        counterparty_tax_id="B12345674",
+        counterparty_country="ES",
+        invoice_number="F-2026-0100",
+        issued_at=date(2026, 5, 4),
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("21"),
+        currency="EUR",
+    )
+
+    assert invoice.invoice_class is InvoiceClass.ORDINARIA
+    assert invoice.series is None
+    assert invoice.recargo_amount is None
+    assert invoice.grand_total == Decimal("1210.00")
+
+
+@pytest.mark.parametrize(
+    ("kind", "expected_event"),
+    [
+        (InvoiceKind.ISSUED, "COLLECTIBLE_INVOICE_CREATED"),
+        (InvoiceKind.RECEIVED, "PAYABLE_INVOICE_CREATED"),
+    ],
+)
+def test_canonical_creation_emits_the_lifecycle_event_for_its_direction(
+    tmp_path: Path,
+    kind: InvoiceKind,
+    expected_event: str,
+) -> None:
+    """The canonical store now emits the audit trail the slim store carried.
+
+    The canonical write paths emitted NO bucket event of any kind, while the
+    slim services emitted six types and returned their ids in the operator's
+    mutation result. Repointing the operator's verbs onto this store would
+    therefore have dropped the invoice audit trail and the event-ids field in
+    one change, and deleting the slim store would have orphaned six enum
+    members. That is why the conservation inventory ruled this a blocking row.
+
+    Parametrised over both directions because the event type is chosen BY
+    direction: a single-direction test would pass while the other half emitted
+    the wrong event, which is the same silent mis-attribution the campaign has
+    already found on other axes.
+    """
+    from ....domain.buckets import BucketEventType
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        result = create_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=kind,
+            counterparty_name="Papeleria Sol SL",
+            counterparty_tax_id="A58818501",
+            counterparty_country="ES",
+            invoice_number=f"EV-2026-{kind.value}",
+            issued_at=date(2026, 6, 1),
+            taxable_base=Decimal("100.00"),
+            iva_rate=Decimal("21"),
+            currency="EUR",
+        )
+        from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+
+        history = BucketEventHistoryRepository(objects=profile.repository).load().events.values()
+
+    assert len(result.bucket_event_ids) == 1
+    emitted = [event for event in history if event.event_id == result.bucket_event_ids[0]]
+    assert len(emitted) == 1, "the returned event id must resolve in the bucket history"
+    assert emitted[0].event_type is getattr(BucketEventType, expected_event)
+    assert emitted[0].object_id == result.invoice.invoice_id

@@ -79,6 +79,7 @@ def _tx(
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
     attachment_ids: tuple[str, ...] = (),
     purchase_invoice_evidence_id: str | None = None,
+    invoice_id: str | None = None,
     taxable_base: Decimal | None = Decimal("100.00"),
     iva_rate: Decimal | None = Decimal("0.21"),
     iva_amount: Decimal | None = Decimal("21.00"),
@@ -100,6 +101,8 @@ def _tx(
         payload["business_pct"] = business_pct
     if purchase_invoice_evidence_id is not None:
         payload["purchase_invoice_evidence_id"] = purchase_invoice_evidence_id
+    if invoice_id is not None:
+        payload["invoice_id"] = invoice_id
     return Transaction.model_validate(payload)
 
 
@@ -160,6 +163,39 @@ def test_output_row_stays_silent_when_only_a_generic_attachment_is_present() -> 
 def test_advisory_silent_when_purchase_invoice_present() -> None:
     tx = _tx("expense-with-invoice", purchase_invoice_evidence_id="pinv-001")
     assert missing_evidence_advisory_observations([tx]) == ()
+
+
+def test_advisory_silent_when_a_validated_invoice_is_linked() -> None:
+    """A row linked to a reconciliation-catalogue ``Invoice`` also silences the gap.
+
+    ``ledger link`` refuses to stamp ``invoice_id`` unless it resolves to a
+    record already in the ``Invoice`` catalogue, which only exists behind the
+    sanctioned catalogue writer's RD 1619/2012 art. 6 content validators. That
+    is STRONGER evidence than a bare ``PurchaseInvoiceEvidence`` blob (every
+    field optional, no content check), so crediting it here only widens what
+    already passes and cannot narrow what already blocks -- proven by the
+    sibling "no evidence at all" test below, which is unaffected by this row's
+    ``invoice_id`` being unset.
+    """
+    tx = _tx("expense-with-linked-invoice", invoice_id="inv-001")
+    assert missing_evidence_advisory_observations([tx]) == ()
+
+
+def test_advisory_still_fires_when_neither_invoice_id_nor_evidence_id_is_set() -> None:
+    """The widening above must not have narrowed the base case.
+
+    Explicit companion to
+    ``test_advisory_fires_on_outgoing_business_expense_without_evidence``: a row
+    with NEITHER carrier set is exactly what the deductible-evidence rule exists
+    to catch, and it must still block. A regression that always returned
+    ``True`` from ``_row_has_deduction_grade_evidence`` (over-crediting every
+    row) would pass every OTHER test in this module but fail this one.
+    """
+    tx = _tx("expense-with-nothing", purchase_invoice_evidence_id=None, invoice_id=None)
+    diagnostics = missing_evidence_advisory_observations([tx])
+    assert len(diagnostics) == 1
+    assert diagnostics[0].source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
+    assert diagnostics[0].binding_id == tx.transaction_id
 
 
 # --- False-positive guards ----------------------------------------------------------

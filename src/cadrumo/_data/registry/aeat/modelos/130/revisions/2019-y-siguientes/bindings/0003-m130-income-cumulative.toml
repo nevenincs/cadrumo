@@ -55,6 +55,32 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 source_ref = "aeat-modelo-130-instructions"
 required_text = ["Rendimiento neto", "Casilla 03"]
 
+# NOTE ON `target_casilla_id = "01"` BELOW — read this before "fixing" it to "06".
+# This field is doing double duty and reads as a contradiction against the
+# `required_text` two lines down (which cites "Casilla 06"). It is not a typo.
+# `target_casilla_id` here is the OBSERVATION-MATCH KEY, not the output casilla:
+# `_renta_income_build_matcher` (domain/calculations/registry/_ledger_bindings.py)
+# selects observations by `observation.target_casilla_id == selector.target_casilla_id`,
+# and every RentaIncomeObservation is constructed with target_casilla_id="01" (the
+# income casilla) regardless of which fact a binding reads off it. Retargeting this
+# selector to "06" does not redirect the aggregate to casilla 06 -- it empties the
+# match entirely (no observation is ever built with target_casilla_id="06"),
+# silently resolving this binding to 0. Measured directly: retargeting to "06"
+# also fails registry-build validation outright, since `_RENTA_130_INCOME_CASILLAS`
+# (the allowed-target set for this whole binding family) is {"01", "03"} and does
+# not include "06".
+#
+# The actual output casilla (06, per the required_text below) is set separately, in
+# application code: `_m130_retenciones_backend_inputs` in
+# application/aggregation/_modelo_bindings.py reads this binding's resolved value by
+# id and writes it to casilla 06 directly, bypassing the registry's normal
+# casilla-to-binding wiring. That hardcoded override exists because this binding
+# family's selector schema has no field for "match on X's observations, output to
+# Y's casilla" -- `target_casilla_id` can only express one of those two facts, and
+# the observation-match role is the one that must stay "01" for the aggregation to
+# resolve anything at all. Retiring the hardcoded override in favour of an honest
+# `output_casilla_id` field is a real schema change, tracked separately -- not a
+# one-line correction here.
 [[revisions."2019-y-siguientes".bindings]]
 id = "modelo-130-actividad-economica-retenciones-cumulative"
 source = "ledger_renta_income_aggregation"

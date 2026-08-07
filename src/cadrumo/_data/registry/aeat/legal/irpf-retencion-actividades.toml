@@ -54,3 +54,68 @@ review_status = "reviewed"
 reviewed_at = 2026-08-05
 reviewed_by = "agent-review"
 notes = "RIRPF art 95.1 segundo parrafo: tipo reducido del 7 por ciento en el periodo impositivo de inicio de actividades profesionales y en los dos siguientes, siempre que no se hubiera ejercido actividad profesional alguna en el ano anterior a la fecha de inicio. Requiere comunicacion firmada al pagador. Verificado contra el texto consolidado vivo del BOE el 2026-08-05."
+
+# Sectoral rates, apartados 4, 5 and 6.1 of the same article. Added 2026-08-07
+# after the M130 retencion advisory showed that grounding only the art. 95.1
+# pair made every genuine sectoral withholding look like a phantom credit.
+#
+# Derived from the live BOE Legislacion Consolidada open-data API (bloque a95,
+# Accept: application/xml -- the JSON mime type is refused with HTTP 400) on
+# 2026-08-07, reading the LAST of the five versions the payload carries. The
+# payload is ordered oldest-first, so the first version is the 2007 redaccion
+# and only the last (BOE-A-2023-2023, vigente desde 2023-01-26) is in force.
+# The tracked amendment history for this article -- RD 1003/2014, RD 633/2015,
+# RD 1461/2018, RD 31/2023 -- modifies apartado 1 ONLY, so these four
+# percentages have stood unchanged since the original 2007 text.
+#
+# The bundled corpus excerpt previously stopped at apartado 1, so these rates
+# could not be verified against it; the excerpt was extended to carry apartados
+# 4, 5 and 6.1 verbatim in the same commit as these parameters.
+#
+# Apartado 4 is NOT a single flat figure: the general agricola/ganadera rate is
+# 2 por ciento, but engorde de porcino y avicultura retains at 1 por ciento.
+# Grounding only the general figure would under-declare that carve-out.
+
+[parameters."rirpf-art-95:retencion-actividades-agricolas-ganaderas-general"]
+evidence_tier = "legal_authority"
+value = "0.02"
+unit = "fraction"
+applies_to = "irpf-retencion-actividades-economicas"
+legal_refs = ["rd-439-2007:art-95"]
+review_status = "reviewed"
+reviewed_at = 2026-08-07
+reviewed_by = "agent-review"
+notes = "RIRPF art 95.4.2: 'Restantes casos: 2 por ciento' -- tipo general de retencion sobre rendimientos de actividades agricolas o ganaderas, aplicado sobre los ingresos integros satisfechos con excepcion de las subvenciones corrientes y de capital y de las indemnizaciones. Verificado contra el texto consolidado vivo del BOE el 2026-08-07."
+
+[parameters."rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura"]
+evidence_tier = "legal_authority"
+value = "0.01"
+unit = "fraction"
+applies_to = "irpf-retencion-actividades-economicas"
+legal_refs = ["rd-439-2007:art-95"]
+review_status = "reviewed"
+reviewed_at = 2026-08-07
+reviewed_by = "agent-review"
+notes = "RIRPF art 95.4.1: 'Actividades ganaderas de engorde de porcino y avicultura: 1 por ciento' -- carve-out expreso al tipo general del 2 por ciento del apartado 4. Misma base de calculo que el tipo general. Verificado contra el texto consolidado vivo del BOE el 2026-08-07."
+
+[parameters."rirpf-art-95:retencion-actividades-forestales"]
+evidence_tier = "legal_authority"
+value = "0.02"
+unit = "fraction"
+applies_to = "irpf-retencion-actividades-economicas"
+legal_refs = ["rd-439-2007:art-95"]
+review_status = "reviewed"
+reviewed_at = 2026-08-07
+reviewed_by = "agent-review"
+notes = "RIRPF art 95.5: tipo de retencion del 2 por ciento cuando los rendimientos sean contraprestacion de una actividad forestal, sobre los ingresos integros satisfechos con excepcion de las subvenciones corrientes y de capital y de las indemnizaciones. Coincide en valor con el tipo agricola/ganadero general pero lo fija un apartado distinto, por lo que se declara como parametro propio. Verificado contra el texto consolidado vivo del BOE el 2026-08-07."
+
+[parameters."rirpf-art-95:retencion-actividades-estimacion-objetiva"]
+evidence_tier = "legal_authority"
+value = "0.01"
+unit = "fraction"
+applies_to = "irpf-retencion-actividades-economicas"
+legal_refs = ["rd-439-2007:art-95"]
+review_status = "reviewed"
+reviewed_at = 2026-08-07
+reviewed_by = "agent-review"
+notes = "RIRPF art 95.6.1: tipo de retencion del 1 por ciento cuando el rendimiento neto de la actividad se determine con arreglo al metodo de estimacion objetiva y la actividad figure en la relacion de grupos y epigrafes de la Seccion Primera de las Tarifas del IAE del apartado 6.2. Esa tabla de epigrafes no se consume como parametro. Verificado contra el texto consolidado vivo del BOE el 2026-08-07."

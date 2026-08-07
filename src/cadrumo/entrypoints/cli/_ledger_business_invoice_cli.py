@@ -517,7 +517,10 @@ _CatalogueCountryCodeOpt = Annotated[
         "--country-code",
         help=tr(
             "cli.app.ledger.invoice.catalogue.country_code_help",
-            default="Counterparty ISO 3166-1 alpha-2 country code.",
+            default=(
+                "Counterparty ISO 3166-1 alpha-2 country code. Required:"
+                " it routes both informativas, so it is never assumed."
+            ),
         ),
     ),
 ]
@@ -594,9 +597,9 @@ def catalogue_create(
     invoice_number: _CatalogueInvoiceNumberOpt,
     invoice_date: _CatalogueInvoiceDateOpt,
     taxable_base: _CatalogueTaxableBaseOpt,
+    country_code: _CatalogueCountryCodeOpt,
     iva_rate: _CatalogueIvaRateOpt = None,
     currency: _CatalogueCurrencyOpt = DEFAULT_CURRENCY,
-    country_code: _CatalogueCountryCodeOpt = "ES",
     operation_type: _CatalogueOperationTypeOpt = None,
     operation_date: _CatalogueOperationDateOpt = None,
     retention_rate: _CatalogueRetentionRateOpt = None,
@@ -677,9 +680,9 @@ def catalogue_wizard(
     invoice_number: _CatalogueInvoiceNumberOpt,
     invoice_date: _CatalogueInvoiceDateOpt,
     taxable_base: _CatalogueTaxableBaseOpt,
+    country_code: _CatalogueCountryCodeOpt,
     iva_rate: _CatalogueIvaRateOpt = None,
     currency: _CatalogueCurrencyOpt = DEFAULT_CURRENCY,
-    country_code: _CatalogueCountryCodeOpt = "ES",
     operation_type: _CatalogueOperationTypeOpt = None,
     retention_rate: _CatalogueRetentionRateOpt = None,
     retention_amount: _CatalogueRetentionAmountOpt = None,

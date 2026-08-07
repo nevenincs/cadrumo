@@ -74,10 +74,19 @@ fact = "iva_amount_sum"
 [revisions.2023-y-siguientes.bindings.aggregation]
 op = "sum"
 
+# Official boxes 10/11 are titled "Adquisiciones intracomunitarias de bienes y
+# servicios": AEAT reports the goods leg and the services leg on ONE combined
+# line, so this binding selects both categories and sums them. Their legal bases
+# differ — goods rest on arts. 13/15 (hecho imponible de la adquisicion
+# intracomunitaria), services on art. 69.Uno.1 (the operation is located in the
+# TAI because the recipient is established here) with art. 70's reglas
+# especiales prevailing over that general rule — while art. 84.Uno.2.a) makes
+# the recipient the sujeto pasivo in both cases. Box 12/13 is expressly "excepto
+# adq. intracom", so neither leg belongs there.
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"
-legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023-y-siguientes.bindings.source_citations]]
@@ -85,7 +94,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.bindings.selector]
-categories = ["intra_community_acquisition_reverse_charge"]
+categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]
 rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "inversion_sujeto_pasivo"
 fact = "iva_amount_sum"

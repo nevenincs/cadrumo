@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from dataclasses import replace as _dataclass_replace
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import Modelo
@@ -35,7 +36,6 @@ from ...domain.modelos import (
 from ...domain.period import calculation_filing_date
 from ...domain.transactions import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..calculations import IvaWalletDecisionRepository
-from ..live import Borrador100SnapshotRepository
 from ._action_errors import ModeloAggregationBindingError
 from ._calculation_helpers import load_work_unit_for_calculation as _load_work_unit_for_calculation
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
@@ -53,6 +53,9 @@ from ._required_binding_gate import (
 from ._required_binding_gate import (
     resolved_required_profile_binding_values as _resolved_required_profile_binding_values,
 )
+
+if TYPE_CHECKING:
+    from ..live import Borrador100SnapshotRepository
 
 _apply_iva_compensation_decision_binding = apply_iva_compensation_decision_binding
 _taxpayer_nif_for_bucket = taxpayer_nif_for_bucket

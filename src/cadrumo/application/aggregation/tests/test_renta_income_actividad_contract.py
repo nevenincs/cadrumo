@@ -18,7 +18,11 @@ from ....domain.calculations.registry import (
     PeriodSelector,
     resolve_ledger_renta_income_aggregation_binding_values,
 )
-from ....domain.transactions import BusinessClassification, TransactionCatalogue
+from ....domain.transactions import (
+    BusinessClassification,
+    TransactionCatalogue,
+    load_retencion_actividades_rates,
+)
 from .._modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from .._renta_income_ledger import RentaIncomeLedgerAggregationIssueReason, aggregate_renta_income_ledger
 from .._source_mesh import CalculationSourceContext
@@ -222,6 +226,81 @@ def test_net_paid_professional_invoice_derives_withheld_amount_for_m130() -> Non
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
     assert aggregation.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA] == Decimal("2000.00")
     assert resolved[_M130_RETENCIONES_BINDING] == Decimal("300.00")
+
+
+def test_a_mixed_classified_activity_receipt_is_undivided_at_the_binding() -> None:
+    """Partial affectation divides assets, never an activity receipt.
+
+    LIRPF art. 29.2 limits partial affectation to "elementos patrimoniales que
+    sirvan sólo parcialmente al objeto de la actividad económica", reaching the
+    rendimiento neto through the deductibility of those assets' gastos. No rule
+    in arts. 27-30 divides an INGRESO by a usage percentage, and RIRPF art. 95.1
+    fixes the retención "sobre los ingresos íntegros satisfechos" — the payment
+    as made, carrying no affectation term. So a 50 %-affected taxpayer invoicing
+    a client declares the whole invoice and claims the whole withholding.
+
+    Asserted at the BINDING level because that is where a filing reads the
+    figures: casilla 01 and the retenciones binding, not the observation alone.
+
+    The same invoice as the BUSINESS case above (2000 base + 420 IVA - 300
+    retención = 2120 banked), so the two classifications are asserted EQUAL
+    rather than each against its own expectation — a rule that divided the
+    income but not the withholding would break the equality and the internal
+    15 % coherence at once.
+    """
+    invoiced_base = Decimal("2000.00")
+    banked = Decimal("2120.00")
+    withheld = Decimal("300.00")
+
+    def resolved_pair(
+        provider_id: str,
+        *,
+        business_classification: BusinessClassification,
+        business_pct: Decimal | None = None,
+    ) -> tuple[Decimal, Decimal]:
+        tx = _actividad_transaction(
+            provider_id,
+            value_date=date(2024, 3, 15),
+            amount=banked,
+            taxable_base=invoiced_base,
+            iva_rate=Decimal("0.21"),
+            iva_amount=Decimal("420.00"),
+            business_classification=business_classification,
+            business_pct=business_pct,
+        )
+        aggregation = aggregate_renta_income_ledger(
+            TransactionCatalogue.from_transactions((tx,)),
+            bucket_id="test",
+            period=_Q1_2024,
+        )
+        resolved = resolve_ledger_renta_income_aggregation_binding_values(
+            _m130_2026_q1_revision(),
+            aggregation.observations,
+        )
+        return (
+            aggregation.casilla_aggregation.casilla_values[_M130_INGRESOS_CASILLA],
+            resolved[_M130_RETENCIONES_BINDING],
+        )
+
+    business_income, business_retencion = resolved_pair(
+        "ae-business-undivided",
+        business_classification=BusinessClassification.BUSINESS,
+    )
+    mixed_income, mixed_retencion = resolved_pair(
+        "ae-mixed-half-affected",
+        business_classification=BusinessClassification.MIXED,
+        business_pct=Decimal("0.50"),
+    )
+
+    # The invoice, not the affectation, is what reaches the casillas.
+    assert (business_income, business_retencion) == (invoiced_base, withheld)
+    assert (mixed_income, mixed_retencion) == (invoiced_base, withheld)
+
+    # Coherent as a pair: 300,00 IS the art. 95.1 general 15 % of the income
+    # declared beside it. Halving the income while claiming the whole
+    # withholding would present a 30 % rate no article fixes.
+    assert mixed_retencion == mixed_income * load_retencion_actividades_rates().general_rate
+    assert mixed_income != invoiced_base * Decimal("0.50"), "a receipt is not divided by affectation"
 
 
 def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06(

@@ -178,6 +178,10 @@ def _validate_nie(value: str) -> str:
     return value
 
 
+# ALT-CIF-LEADER-RATIONALE-TAX-ID: treats _CIF_KIND_DIGIT_ONLY leaders
+# ("ABEH") as mixed (digit-or-letter accepted) rather than digit-only;
+# deliberately divergent from the stricter core.identity._documents._validate_cif
+# leader-set policy over the same _cif_check_value arithmetic.
 def _validate_cif(value: str) -> str:
     """Validate a normalised CIF, returning the input or raising :exc:`ValueError`."""
     leader = value[0]

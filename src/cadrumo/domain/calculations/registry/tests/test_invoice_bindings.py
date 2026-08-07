@@ -14,7 +14,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .._binding_selector_utils import selector_as_dict
 from .._bindings import (
     InvoiceObservation,
@@ -69,6 +69,7 @@ def _observation(
     year: int | None = None,
 ) -> InvoiceObservation:
     return InvoiceObservation(
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         invoice_id=f"inv-{party}-{base}",
         party_tax_id=party,
         country_code=country,
@@ -86,6 +87,7 @@ def _observation(
 def test_invoice_observation_validates_country_and_clave_enums() -> None:
     with pytest.raises(ValidationError, match=r"country_code must be uppercase"):
         InvoiceObservation(
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-1",
             party_tax_id="DE123",
             country_code="de",
@@ -94,6 +96,7 @@ def test_invoice_observation_validates_country_and_clave_enums() -> None:
         )
     with pytest.raises(ValidationError, match=r"intracommunity_clave .* is not an AEAT clave de operacion"):
         InvoiceObservation(
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-1",
             party_tax_id="DE123",
             country_code="DE",
@@ -109,6 +112,7 @@ def test_invoice_observation_rejects_inconsistent_rectification_metadata() -> No
         match=r"rectification observation must declare rectified_year and rectified_period",
     ):
         InvoiceObservation(
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-1",
             party_tax_id="DE1",
             country_code="DE",
@@ -121,6 +125,7 @@ def test_invoice_observation_rejects_inconsistent_rectification_metadata() -> No
         match=r"non-rectification observation must not declare rectified_base_previous",
     ):
         InvoiceObservation(
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             invoice_id="inv-1",
             party_tax_id="DE1",
             country_code="DE",
@@ -587,3 +592,25 @@ def test_registry_modelo_349_has_no_bare_invoice_source_kind() -> None:
         "(collectible_invoice / payable_invoice / ledger_transaction / "
         "purchase_invoice_evidence)."
     )
+
+
+def test_an_observation_without_a_source_kind_refuses() -> None:
+    """The direction axis is stated, never defaulted.
+
+    ``source_kind`` used to default to the collectible (issued) member, and it
+    is not a label: the invoice-family resolver selects observations by
+    matching it against a binding's declared source, so a defaulted value
+    decides which bindings a record feeds.
+
+    A default on that axis means an omission silently declares an operation as
+    issued. Requiring it converts the omission into a refusal at construction,
+    where the caller can still say what it meant.
+    """
+    with pytest.raises(ValidationError):
+        InvoiceObservation(
+            invoice_id="inv-no-source-kind",
+            party_tax_id="B12345674",
+            country_code="ES",
+            transaction_date=date(2026, 3, 10),
+            base_amount=Decimal("100.00"),
+        )

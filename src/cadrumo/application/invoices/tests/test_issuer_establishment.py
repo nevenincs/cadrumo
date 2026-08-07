@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
@@ -25,8 +26,8 @@ _BASE = Decimal("40.00")
 _CUOTA = Decimal("8.40")
 
 
-def _profile(**overrides: object) -> TaxpayerProfile:
-    payload: dict[str, object] = {"tax_id": "12345678Z", "iva_regime": IVARegime.GENERAL}
+def _profile(**overrides: Any) -> TaxpayerProfile:
+    payload: dict[str, Any] = {"tax_id": "12345678Z", "iva_regime": IVARegime.GENERAL}
     payload.update(overrides)
     return TaxpayerProfile(**payload)  # type: ignore[arg-type]
 
@@ -42,8 +43,8 @@ def _line() -> InvoiceLine:
     )
 
 
-def _invoice(**overrides: object) -> Invoice:
-    payload: dict[str, object] = {
+def _invoice(**overrides: Any) -> Invoice:
+    payload: dict[str, Any] = {
         "kind": InvoiceKind.ISSUED,
         "invoice_class": InvoiceClass.SIMPLIFICADA,
         "invoice_number": "T-2026-001",

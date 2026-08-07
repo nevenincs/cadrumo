@@ -13,7 +13,7 @@ Counterparty identity validation is delegated to
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, Self, override
@@ -149,6 +149,25 @@ def _coerce_date(value: object) -> date:
     raise InvoiceValidationError("expected a date or ISO-8601 string")
 
 
+def _coerce_datetime(value: object) -> datetime:
+    """Coerce a record-lifecycle stamp, refusing anything that is not one.
+
+    The model is strict, so a stamp serialised to an ISO-8601 string would not
+    re-parse on load without this. It refuses rather than falling back: a
+    stamp that cannot be read is an unreadable audit fact, and defaulting it
+    to ``None`` would turn "this record's history is corrupt" into "this
+    record has no history", which reads as normal.
+    """
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        try:
+            return datetime.fromisoformat(value)
+        except ValueError as exc:
+            raise InvoiceValidationError(f"expected a datetime or ISO-8601 string, got {value!r}") from exc
+    raise InvoiceValidationError("expected a datetime or ISO-8601 string")
+
+
 def _normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, object]:
     if "kind" in payload and isinstance(payload["kind"], str):
         try:
@@ -263,6 +282,9 @@ def _normalise_invoice_dates(payload: dict[str, object]) -> dict[str, object]:
         payload["fx_rate_date"] = _coerce_date(payload["fx_rate_date"])
     if payload.get("operation_date") is not None:
         payload["operation_date"] = _coerce_date(payload["operation_date"])
+    for stamp in ("created_at", "updated_at"):
+        if payload.get(stamp) is not None:
+            payload[stamp] = _coerce_datetime(payload[stamp])
     return payload
 
 
@@ -556,6 +578,19 @@ class Invoice(BaseModel):
     payment_id: str | None = None
     fx_rate: Decimal | None = None
     fx_rate_date: date | None = None
+    # When this RECORD was entered and last amended, which is a different fact
+    # from `issued_at` (when the document was issued) and from `operation_date`
+    # (when the operation occurred). Both are outside the identity derived by
+    # `derive_invoice_id`: folding a clock into the id would mint a new record
+    # on every retry, which `single-subject-mutation-is-idempotent-guarded`
+    # bars. They are last-seen body fields, not identity.
+    #
+    # Optional rather than required on purpose. A record that genuinely carries
+    # no recorded entry time must say so, because the alternative is stamping
+    # `now()` at load and manufacturing an audit fact nobody observed. `None`
+    # here means "not recorded", never "recorded as now".
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     @override
     def __hash__(self) -> int:

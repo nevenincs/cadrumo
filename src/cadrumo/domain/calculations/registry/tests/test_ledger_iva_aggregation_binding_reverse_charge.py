@@ -29,16 +29,28 @@ from ._ledger_iva_aggregation_support import (
     _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEDUCIBLE_CASILLA,
     _M303_AUTOREPERCUTIDO_INTRACOMUNITARIA_DEVENGADO_CASILLA,
     _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
+    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
     _M303_RESULTADO_REGIMEN_GENERAL_CASILLA,
     _M303_SOPORTADO_IMPORTACIONES_CASILLA,
     _binding,
     _calculate_303_from_observations,
+    _casilla_id,
     _modelo_303_revision,
     _observation,
     _revision_with_bindings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# The official AEAT box numbers this file asserts against, read from the modelo
+# 303 diseño de registros: box [11] "Adquisiciones intracomunitarias de bienes y
+# servicios - Cuota" on the devengado side, box [37] "En adquisiciones
+# intracomunitarias de bienes y servicios corrientes - Cuota" on the deducible
+# side. Both titles cover goods AND services; box [13] is "Otras operaciones con
+# inversión del sujeto pasivo (excepto. adq. intracom)", which excludes them.
+_OFFICIAL_AIC_DEVENGADO_CUOTA_BOX = _casilla_id("11")
+_OFFICIAL_AIC_DEDUCIBLE_CUOTA_BOX = _casilla_id("37")
+_OFFICIAL_OTRAS_ISP_DEVENGADO_CUOTA_BOX = _casilla_id("13")
 
 
 def test_resolve_aic_official_box_parity_routes_devengado_and_deducible_net_zero() -> None:
@@ -336,3 +348,109 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
             flagged.append((category.value, flow.value))
 
     assert flagged == [], f"#64 advisory residual must be empty; still flagged: {sorted(flagged)}"
+
+
+def test_eu_service_acquisition_books_official_boxes_11_and_37_and_nets_to_zero() -> None:
+    """An EU services reverse charge lands on official boxes 11/37, netting to zero.
+
+    A Spanish taxpayer buying a B2B service from an EU-established supplier (AWS
+    Ireland, a German consultant) self-assesses the cuota: LIVA art. 69.Uno.1.º
+    locates the service in the TAI because the recipient is established here, and
+    art. 84.Uno.2.a) makes that recipient the sujeto pasivo. AEAT reports the
+    resulting cuota on the SAME line as the goods acquisition — the diseño de
+    registros titles box [11] "Adquisiciones intracomunitarias de bienes y
+    servicios - Cuota" and box [37] "En adquisiciones intracomunitarias de bienes
+    y servicios corrientes - Cuota", while box [13] is expressly "excepto. adq.
+    intracom". The box numbers asserted here come from that official design, not
+    from the bindings under test.
+
+    Both declared figures must be non-zero (booking neither would under-declare on
+    the devengada side and over-state nothing on the deducible side, yet leave the
+    M349/VIES cross-check unbacked), and the two must cancel so the cash resultado
+    is identical to a filing without the EU service. The deltas are computed by
+    comparing two calculates, never by summing literals.
+    """
+    service_cuota = Decimal("21.00")
+    sale = _observation(ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00"))
+    without_service = _calculate_303_from_observations(
+        filing_year=2025,
+        period="1T",
+        observations=(sale,),
+    )
+    with_service = _calculate_303_from_observations(
+        filing_year=2025,
+        period="1T",
+        observations=(
+            sale,
+            _observation(
+                ledger_id="eu-service",
+                txn_date=date(2025, 3, 1),
+                category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+                flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+                iva=service_cuota,
+            ),
+        ),
+    )
+
+    assert with_service.values[_OFFICIAL_AIC_DEVENGADO_CUOTA_BOX] == service_cuota
+    assert with_service.values[_OFFICIAL_AIC_DEDUCIBLE_CUOTA_BOX] == service_cuota
+    # Box 13 excludes adquisiciones intracomunitarias, so the service must not
+    # leak onto the "otras operaciones con inversión del sujeto pasivo" line.
+    assert (
+        with_service.values[_OFFICIAL_OTRAS_ISP_DEVENGADO_CUOTA_BOX]
+        == without_service.values[_OFFICIAL_OTRAS_ISP_DEVENGADO_CUOTA_BOX]
+    )
+    # Both declared figures move; only the resultado stays put.
+    assert (
+        with_service.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
+        - without_service.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA]
+        == service_cuota
+    )
+    assert (
+        with_service.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+        - without_service.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+        == service_cuota
+    )
+    assert (
+        with_service.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
+        == without_service.values[_M303_RESULTADO_REGIMEN_GENERAL_CASILLA]
+    )
+
+
+def test_eu_service_and_goods_legs_sum_onto_the_one_official_intracom_line() -> None:
+    """A goods leg and a services leg add up on the single official box 11/37 line.
+
+    The two legs carry DIFFERENT categories — goods rest on LIVA arts. 13/15,
+    services on art. 69.Uno.1.º — but AEAT reports them on one combined line
+    ("de bienes y servicios"). Booking one of each must therefore produce the sum
+    of the two cuotas on box 11 and on box 37, proving the services leg is neither
+    dropped nor split onto a second box. The expected figure is the sum of the two
+    input legs (the ``op = "sum"`` aggregation contract), never a value read back
+    from the registry formula.
+    """
+    goods_cuota = Decimal("63.00")
+    service_cuota = Decimal("21.00")
+    combined = goods_cuota + service_cuota
+    result = _calculate_303_from_observations(
+        filing_year=2025,
+        period="1T",
+        observations=(
+            _observation(ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")),
+            _observation(
+                ledger_id="eu-goods",
+                txn_date=date(2025, 3, 1),
+                category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+                flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+                iva=goods_cuota,
+            ),
+            _observation(
+                ledger_id="eu-service",
+                txn_date=date(2025, 3, 2),
+                category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+                flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+                iva=service_cuota,
+            ),
+        ),
+    )
+    assert result.values[_OFFICIAL_AIC_DEVENGADO_CUOTA_BOX] == combined
+    assert result.values[_OFFICIAL_AIC_DEDUCIBLE_CUOTA_BOX] == combined

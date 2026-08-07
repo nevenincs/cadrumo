@@ -63,6 +63,7 @@ def _create_catalogue_invoice(*, invoice_number: str = "2026-0142") -> str:
             "--counterparty-name", "Papeleria Sol SL",
             "--invoice-number", invoice_number,
             "--invoice-date", "2026-03-10",
+            "--country-code", "ES",
             "--taxable-base", "100.00", "--iva-rate", "21",
         ],
     )  # fmt: skip
@@ -87,6 +88,7 @@ def test_catalogue_create_records_a_retention_amount() -> None:
             "--counterparty-name", "Asesoria Profesional SL",
             "--invoice-number", "2026-RETENCION-001",
             "--invoice-date", "2026-03-10",
+            "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--retention-rate", "0.15", "--retention-amount", "150.00",
         ],
@@ -110,6 +112,7 @@ def test_catalogue_create_refuses_a_retention_rate_without_an_amount() -> None:
             "--counterparty-name", "Asesoria Profesional SL",
             "--invoice-number", "2026-RETENCION-002",
             "--invoice-date", "2026-03-10",
+            "--country-code", "ES",
             "--taxable-base", "1000.00", "--iva-rate", "21",
             "--retention-rate", "0.15",
         ],
@@ -199,3 +202,62 @@ def test_catalogue_remove_refuses_linked_invoice() -> None:
     stored = InvoiceCatalogueRepository().load().get(invoice_id)
     assert stored is not None
     assert stored.linked_transaction_ids == (transaction_id,), stored.linked_transaction_ids
+
+
+def test_catalogue_create_refuses_an_omitted_country_code() -> None:
+    """``--country-code`` is mandatory, because it routes both informativas.
+
+    Both canonical entry verbs used to default it to ``ES``. The slim verb they
+    replace defaults it to nothing and either derives the country from the EU
+    VAT-ID prefix or raises, so repointing the operator's bare verbs onto the
+    canonical aggregate would have converted a derive-or-raise into a silent
+    domestic assumption.
+
+    A silent ``ES`` is not a cosmetic default on this axis. The M347 projection
+    filters on the counterparty country being ``ES``, so a foreign invoice
+    stamped domestic is pulled INTO M347 and can carry a party over the
+    declaration floor, while M349 declares the wrong member state. The
+    canonical record has no EU VAT-ID field to derive a country from -- by
+    design, since the tax id already IS the NIF-IVA for a non-ES country -- so
+    the honest remedy is to require the operator to state it.
+    """
+    result = invoke_cached_cli(
+        [
+            "app", "ledger", "invoice", "catalogue", "create",
+            "--kind", "received",
+            "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
+            "--counterparty-name", "Papeleria Sol SL",
+            "--invoice-number", "2026-NOCOUNTRY-001",
+            "--invoice-date", "2026-03-10",
+            "--taxable-base", "100.00", "--iva-rate", "21",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0, result.output
+    # Names the missing option rather than failing generically, so the operator
+    # is told what to supply instead of being left to guess.
+    assert "--country-code" in result.output
+
+
+def test_catalogue_create_still_accepts_an_explicit_domestic_country_code() -> None:
+    """Positive control for the refusal above.
+
+    A gate that refuses everything passes its own negative test and is worse
+    than no gate, so the domestic case an operator previously got by omission
+    must still succeed when it is stated explicitly.
+    """
+    result = invoke_cached_cli(
+        [
+            "app", "ledger", "invoice", "catalogue", "create",
+            "--kind", "received",
+            "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
+            "--counterparty-name", "Papeleria Sol SL",
+            "--invoice-number", "2026-WITHCOUNTRY-001",
+            "--invoice-date", "2026-03-10",
+            "--country-code", "ES",
+            "--taxable-base", "100.00", "--iva-rate", "21",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code == 0, result.output
+    assert len(_line_value(result.output, "invoice_id")) == 64

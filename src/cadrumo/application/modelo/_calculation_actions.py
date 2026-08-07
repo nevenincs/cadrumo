@@ -83,7 +83,6 @@ from ...domain.modelos import (
     upsert_calculation_revision,
 )
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
-from ..live import Borrador100SnapshotRepository
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -153,6 +152,7 @@ if TYPE_CHECKING:
         ForeignAssetIngestObservation,
     )
     from ..calculations import IvaWalletDecisionRepository
+    from ..live import Borrador100SnapshotRepository
 
 
 @dataclass(frozen=True, slots=True)

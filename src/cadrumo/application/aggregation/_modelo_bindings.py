@@ -484,7 +484,10 @@ class LedgerRentaIncomeAggregationSourceResolver:
             )
             + _ungrounded_income_diagnostics(ungrounded, resolver_id=self.resolver_id)
             + _unusable_sales_invoice_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
-            + inferred_actividad_retencion_rate_advisory_observations(aggregation.observations),
+            + inferred_actividad_retencion_rate_advisory_observations(
+                aggregation.observations,
+                bucket_id=context.bucket_id,
+            ),
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="ledger_renta_income_aggregation",
@@ -669,6 +672,20 @@ def _m130_retenciones_backend_inputs(
     context: CalculationSourceContext,
     binding_values: Mapping[BindingId, Decimal],
 ) -> dict[CasillaId, Decimal]:
+    """Redirect the retenciones binding's resolved value to casilla 06.
+
+    This is the OUTPUT half of a fact that is declared with
+    `target_casilla_id = "01"` in the registry (see the comment on the
+    `modelo-130-actividad-economica-retenciones-cumulative` binding in
+    `_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/
+    0003-m130-income-cumulative.toml`). That selector field is the
+    OBSERVATION-MATCH key -- it must stay "01" for the aggregation to see any
+    rows at all -- not a declaration of where the aggregate lands. Casilla 06
+    is hardcoded here because this binding family has no schema field to
+    express "match on X's observations, output to Y's casilla" honestly; do
+    not "fix" the selector to "06" without reading that TOML comment first,
+    since doing so silently zeroes this value instead of redirecting it.
+    """
     if str(context.modelo) != Modelo.M130.value:
         return {}
     value = binding_values.get(_M130_RETENCIONES_BINDING_ID)

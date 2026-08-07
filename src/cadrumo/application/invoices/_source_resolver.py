@@ -270,16 +270,37 @@ def _m349_incoherent_verdict(
 
     Within Modelo 349 the check is narrowed again, to the defects where the
     record CONTRADICTS ITSELF. Absence is deliberately not disqualifying, and
-    the reason is measured rather than cautious: ``IntracomOperationType.S``
-    and ``I`` -- an ordinary prestacion or adquisicion de servicios
-    intracomunitaria -- map to no :class:`~cadrumo.domain.iva.IvaCategory`
-    member at all, because the enum names goods, acquisitions and
-    triangulation but not services. Treating an absent category as
-    disqualifying therefore drops an entire lawful operation class out of the
-    recapitulativa, which is a far larger under-declaration than the
-    contradiction the check exists to catch. ``FX_UNRESOLVED`` is likewise
-    excluded here because the unconverted-foreign gate upstream already
-    withholds those records.
+    the reason is structural: **an absent category does not mean the operation
+    was inexpressible, it usually means the clave came from somewhere else.**
+    :func:`_intracommunity_clave` consults an explicit
+    :attr:`~cadrumo.domain.invoices.Invoice.operation_type` FIRST and returns
+    without ever reading ``iva_category``, so a record carrying a directly
+    declared clave legitimately carries no category at all. Since this check
+    runs only after the clave is settled, treating absence as disqualifying
+    would drop exactly the records whose clave the operator stated most
+    explicitly -- the least ambiguous rows in the store.
+
+    That reasoning is deliberately independent of what the category enum
+    happens to contain, because the previous justification was not and went
+    stale. It asserted that an ordinary prestacion or adquisicion de servicios
+    intracomunitaria "maps to no :class:`~cadrumo.domain.iva.IvaCategory`
+    member at all, because the enum names goods, acquisitions and triangulation
+    but not services". The enum has since gained
+    ``INTRA_COMMUNITY_SERVICE_SUPPLY`` and
+    ``INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE``, and
+    :func:`_intracommunity_clave` maps both to their claves a hundred-odd lines
+    below -- so the stated ground for weakening a filing-path guard was refuted
+    by the same module that stated it.
+
+    The behaviour is unchanged, and that is a decision rather than an
+    omission: making absence disqualifying would alter filed M349 output, which
+    needs its own evidence and its own ruling, not a docstring correction.
+    Services now being expressible only strengthens the conclusion -- a
+    services invoice can reach its clave through either route, so absence is
+    even weaker evidence of an unrepresentable operation than before.
+
+    ``FX_UNRESOLVED`` is likewise excluded here because the unconverted-foreign
+    gate upstream already withholds those records.
     """
     if context.modelo != Modelo.M349.value:
         return None
@@ -339,7 +360,26 @@ def _is_m347_declarante_summary_binding(binding: DataBindingDefinition) -> bool:
 
 
 def _invoice_in_context(invoice: Invoice, context: CalculationSourceContext) -> bool:
-    if invoice.bucket_id != context.bucket_id:
+    """Whether this invoice is declarable for the context's bucket and period.
+
+    Only a POPULATED, mismatching bucket excludes. An unattributed invoice
+    belongs to the store it was loaded from, and that store is opened against
+    ``context.bucket_id`` -- with ``InvoiceCatalogueRepository`` refusing a
+    foreign row on read, so nothing another bucket owns reaches here.
+
+    Treating ``None`` as a mismatch is what this reads as if the check is
+    written against the bucket id alone, and it is silent: an unattributed
+    invoice compares unequal to every real bucket, so it drops out of M347 and
+    M349 with no defect, no advisory and no refusal. Nothing downstream of the
+    filter can tell "this taxpayer had no such operations" apart from "the
+    filter discarded them", which is the shape a declaration must never take.
+
+    This is the same rule the persistence guard applies, deliberately: the two
+    layers previously disagreed about whether an unattributed invoice was
+    normal, and a disagreement about that between the store and the projection
+    is resolved in favour of declaring.
+    """
+    if invoice.bucket_id is not None and invoice.bucket_id != context.bucket_id:
         return False
     return _date_in_period(invoice.issued_at, period=context.period)
 

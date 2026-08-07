@@ -107,10 +107,10 @@ def _prose_caps() -> Mapping[tuple[str, str], int]:
     make the gate stricter, never blinder.
     """
     warnings.filterwarnings("ignore")
-    import cadrumo
+    from .. import __path__ as cadrumo_path
 
     caps: dict[tuple[str, str], int] = {}
-    for module_info in pkgutil.walk_packages(cadrumo.__path__, "cadrumo."):
+    for module_info in pkgutil.walk_packages(cadrumo_path, "cadrumo."):
         if ".tests" in module_info.name:
             continue
         try:
