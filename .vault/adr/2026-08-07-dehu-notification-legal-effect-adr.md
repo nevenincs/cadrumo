@@ -41,12 +41,25 @@ not a filing action, since the buzón stays read-only.
   from access.** Confirmed against `RemoteNotification`'s own field
   docstring; access is the separate `leida` boolean
   (`dehu-notification-legal-effect-reference`, "The read-only DEHu surface").
-- **The value is a regulatory leaf constant, not a literal.** Per
-  `aeat-registry-authority-flow`, regulatory values live in the central
-  config or the registry authoring tree, never inlined; `external_constants.py`
-  is the established home for a year-stable, non-modelo-scoped figure like
-  this one (`dehu-notification-legal-effect-reference`, "Value-storage
-  precedent").
+- **`core/external_constants.py` is a DEFINITION home for this class of
+  value, not a re-export layer.** Checked directly: none of its existing
+  regulatory leaf constants (`M347_THRESHOLD_EUR`,
+  `MINIMO_DESCENDIENTE_MAX_AGE`, `ART_7P_EXEMPTION_CAP_EUR`, and every
+  sibling) are imported from `external_constants.toml` or from any registry
+  TOML — each is a hand-authored `Final[Decimal]`/`Final[int]` literal in
+  the `.py` file itself, with a doc comment citing its binding provision.
+  `test_external_constants_centralisation_part1.py`'s own module docstring
+  states the file's role in terms: "pins ... statutory threshold amounts to
+  `core.external_constants`... AST scans catch bare ... threshold literals
+  reintroduced OUTSIDE THE CANONICAL REGISTRY" — i.e. this file IS the
+  canonical registry for exactly this value class, and the "one-line import
+  from the curated `core.external_constants` re-export layer" language in
+  `aeat-registry-authority-flow` describes how a *consuming feature module*
+  should reference the value (import it, don't re-declare it), not a
+  requirement that `external_constants.py` itself source values from
+  elsewhere. `DEHU_RECHAZO_TACITO_DIAS_NATURALES` follows the identical
+  shape as its neighbours: non-modelo-scoped, year-stable, statutory,
+  doc-cited.
 - **The legal catalogue entry is a precondition, not a side effect of this
   ADR.** No Ley 39/2015 corpus file or catalogue entry exists yet
   (`dehu-notification-legal-effect-reference`, "Corpus and legal-catalogue
@@ -54,6 +67,16 @@ not a filing action, since the buzón stays read-only.
   (`aeat-agent-orchestration`); the fetch, anchor, and catalogue entry are
   opened as their own Step in Implementation below, in the same action as
   this ADR, so the debt has an owner.
+- **The human-review gate is enforced by the type system, not only by
+  discipline.** `LegalReference.review_status` is typed
+  `Literal["reviewed"]` (`domain/calculations/registry/_legal.py`'s own
+  documented invariant), so no other value is representable on disk — an
+  agent CANNOT write a "draft, pending review" entry without the written
+  bytes themselves asserting a review that did not happen. The only
+  compliant move is to draft the candidate entry outside the registry (in
+  the executing Step's own record) and let the operator commit the real
+  file. This is a structural guarantee, not merely a process rule the plan
+  states.
 - **Service state and procedural kind are orthogonal axes.**
   `PostFilingEventKind` already closes the procedural-category axis
   (`dehu-notification-legal-effect-reference`, "No legal-effect computation
@@ -123,11 +146,16 @@ not a filing action, since the buzón stays read-only.
   from BOE's live consolidated text (never hand-authored), taking the LAST
   version if the fetched payload bundles historical redactions, per
   `aeat-calculation-grounding`.
-- **Días de cortesía is explicitly out of scope.** No profile schema
-  currently models declared courtesy days; the window computation this ADR
-  authorises does not pause for them. A later feature adding courtesy-day
-  capture must revisit the window function, not bolt an unmodelled
-  parameter onto this one now.
+- **Días de cortesía is excluded on its own terms, not merely deferred.**
+  RD 1363/2010 DA tercera bars AEAT from *depositing* a new notification
+  during declared courtesy days; it does not pause a clock already running
+  on a notification that WAS deposited. Since this ADR's window anchors on
+  the actual `fecha_notificacion` (a deposit that already happened), the
+  window is legally unaffected by courtesy days regardless of whether they
+  are ever modelled — this is a correct exclusion, not an unresolved gap.
+  No profile schema currently captures declared courtesy days at all; if
+  one is ever added, it would change WHEN a notification can be deposited,
+  not this window's arithmetic once deposited.
 - **Exhaustive procedure-specific notification-window review is out of
   scope.** Only the general Ley 39/2015 regime, RD 1363/2010, and LGT art.
   112 were checked (Considerations, "Direction of error"). A narrower
@@ -143,9 +171,18 @@ not a filing action, since the buzón stays read-only.
 **Precondition — legal grounding (opened as its own implementing row, same
 action as this ADR, not deferred):**
 
-1. Fetch BOE's live consolidated text for Ley 39/2015 art. 43.2, taking the
-   LAST version if the payload bundles historical redactions; commit the
-   HTML plus its `.extracted.json`/`.extracted.md` sidecars under
+1. Reuse the campaign's already-primary-sourced BOE consolidated PDF for
+   Ley 39/2015 (`https://www.boe.es/buscar/pdf/2015/BOE-A-2015-10565-consolidado.pdf`,
+   art. 43 at page 35) rather than re-deriving it; take the LAST version if
+   the payload bundles historical redactions, never pass the text through a
+   shell (a truncating heredoc silently loses text), and read the committed
+   file back before trusting it. The consolidated PDF does NOT annotate
+   which articles were amended (confirmed by positive control against art.
+   28, amended by Ley Orgánica 3/2018 with no marker present) — the absence
+   of a marker on art. 43 establishes only that this is TODAY's operative
+   text, and no claim that art. 43 is unamended since 2015 may be made or
+   implied anywhere downstream of this Step. Commit the HTML plus its
+   `.extracted.json`/`.extracted.md` sidecars under
    `src/cadrumo/_data/corpus/normatives/html/` following the existing
    `ley-*` naming convention (e.g. `ley-39-2015-art-43.html`).
 2. Add a new topic-scoped legal-catalogue file
@@ -217,6 +254,15 @@ assumes that scoping; forcing a generic rule through it would be the
 aggregation` forbids in the adjacent domain. Option E leaves the actual gap
 (a lapsed notification never surfacing outside a live submission attempt)
 unaddressed.
+
+`core/external_constants.py` was independently confirmed as the correct
+constant home (not `DeadlineWindowDefinition`, and not a re-export
+requiring a registry-TOML-backed value elsewhere): every existing sibling
+constant in that file is defined in place as a Python literal with a
+citing doc comment, and the file's own centralisation-test docstring names
+it the "canonical registry" for exactly this value class. No generic,
+non-modelo-scoped registry TOML surface for arbitrary statutory figures
+exists as an alternative.
 
 ## Consequences
 
