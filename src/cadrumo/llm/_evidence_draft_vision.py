@@ -1,8 +1,8 @@
 """On-host vision fallback for invoice-field extraction from a scan-only PDF or image.
 
-:func:`~application.ledger.extract_invoice_fields` reads a PDF's embedded text
-layer. A scan-only or image-only invoice has no text layer at all, so that
-primitive raises. This module supplies the on-host fallback: rasterise the PDF
+:func:`~application.ledger.transcribe_text_layer` reads a PDF's embedded text
+layer for the semantic text reader. A scan-only or image-only invoice has no text
+layer at all, so that primitive raises. This module supplies the on-host fallback: rasterise the PDF
 (or use an image directly) into in-memory base64 PNG pages
 (:func:`~adapters.outbound.llm.rasterise_pdf_pages_to_base64_png`) and read them
 with the same LOCAL Ollama vision model the classification path already uses
@@ -20,7 +20,7 @@ exact same grounded heuristics the text-layer path uses --
 :func:`~core.decimal.normalize_decimal_separators` -- so a malformed or
 hallucinated value is rejected (left ``None``) rather than trusted. This mirrors the
 document-printed-value semantics
-:func:`~application.ledger.extract_invoice_fields` already has for text-layer PDFs:
+:func:`.extract_invoice_fields_from_text` already has for text-native PDFs:
 both paths recover what is *printed on the
 document*, never a registry-derived or model-computed tax figure
 (``evidence-read-never-emits-regulated-numbers`` in spirit -- the persisted
@@ -38,9 +38,9 @@ See Also:
         Transport-neutral response schema, parser and grounded re-validation
         this module shares with the text reader; only the prompt and the
         request payload differ between the two.
-    :func:`~application.ledger.extract_invoice_fields`
-        Text-layer extraction primitive this module complements for scan-only
-        or image-only evidence.
+    :func:`.extract_invoice_fields_from_text`
+        Semantic text reader this module complements for scan-only or
+        image-only evidence.
     :func:`~application.ledger.extract_invoice_draft_from_evidence`
         Orchestration layer that falls back to this on-host reader.
     :class:`~llm._vision_classifier.LocalVisionLLMClassifier`
@@ -78,7 +78,7 @@ class LocalVisionInvoiceFieldExtractor:
     (a local Ollama vision model fed in-memory base64 images) but for field
     transcription instead of category classification. Every returned field is
     re-validated through the grounded heuristics
-    :func:`~application.ledger.extract_invoice_fields` uses for the text-layer path,
+    :func:`.extract_invoice_fields_from_text` uses for the text-native path,
     so a hallucinated or malformed value never reaches the operator as a
     fabricated fact.
 

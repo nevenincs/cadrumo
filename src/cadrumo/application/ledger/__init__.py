@@ -37,11 +37,11 @@ Major declarations:
   proportionality rules to persisted usage-ratio overrides.
 * :class:`PurchaseInvoiceEvidenceService` - the
   evidence lifecycle for receipts or supplier invoice artefacts attached to
-  ledger transactions, and :func:`extract_invoice_fields` with
-  :class:`InvoiceDraft` - the on-host field-extraction primitive an operator
+  ledger transactions, and :func:`extract_invoice_draft_from_evidence` with
+  :class:`InvoiceDraft` - the on-host document-reading entry point an operator
   reviews before minting a :class:`domain.invoices.Invoice` from a PDF.
 * :class:`EvidenceInput` - the transient in-memory carrier of decrypted
-  evidence bytes that :func:`extract_invoice_fields` reads. Exported because
+  evidence bytes that :func:`transcribe_text_layer` reads. Exported because
   it is that function's argument type: a consumer cannot construct a call
   through this facade without it. It is never persisted or serialized.
 * :class:`DocumentTranscription` with :class:`TranscriberIdentity` - the
@@ -165,10 +165,10 @@ if TYPE_CHECKING:
         PrintedTotalDiscrepancy,
         confirm_invoice_draft_from_evidence,
         extract_invoice_draft_from_evidence,
-        extract_invoice_fields,
         printed_total_discrepancy,
     )
     from ._evidence_input import EvidenceInput
+    from ._evidence_textlayer import transcribe_text_layer
     from ._grounded_reading import (
         GROUNDABLE_ORIGINS,
         ground_draft_against_transcription,
@@ -403,7 +403,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "execute_reviewed_decision": "._llm_review_workflow",
     "export_ledger_transactions": "._actions_export",
     "extract_invoice_draft_from_evidence": "._evidence_draft",
-    "extract_invoice_fields": "._evidence_draft",
     "get_manual_transaction": "._actions_manual",
     "get_transaction_participation": "._participation_read",
     "import_ledger_source": "._actions_import",
@@ -436,6 +435,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "suggest_evidence_split": "._llm_classification",
     "suggest_llm_classification": "._llm_classification",
     "summarize_manual_transactions": "._actions_manual",
+    "transcribe_text_layer": "._evidence_textlayer",
     "unset_usage_ratio": "._ratios",
     "update_manual_transaction": "._actions_manual",
     "update_manual_transaction_fields": "._actions_manual",
@@ -584,7 +584,6 @@ __all__ = [
     "execute_reviewed_decision",
     "export_ledger_transactions",
     "extract_invoice_draft_from_evidence",
-    "extract_invoice_fields",
     "get_manual_transaction",
     "get_transaction_participation",
     "ground_ambiguous_candidates",
@@ -629,6 +628,7 @@ __all__ = [
     "suggest_llm_classification",
     "summarise_batch",
     "summarize_manual_transactions",
+    "transcribe_text_layer",
     "unset_usage_ratio",
     "update_manual_transaction",
     "update_manual_transaction_fields",

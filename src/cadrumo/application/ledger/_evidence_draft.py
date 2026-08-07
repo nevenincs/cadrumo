@@ -1,39 +1,47 @@
-"""On-host invoice-PDF field extraction into a typed draft.
+"""On-host invoice-document reading into a typed draft.
 
-Given an ``EvidenceInput`` already resolved from secure storage (see
-:mod:`~application.ledger._evidence_input`),
-:func:`~application.ledger.extract_invoice_fields` runs the in-tree on-host
-text-layer extractor
-(:func:`~application.ledger._evidence_textlayer.extract_evidence_text`) and
-applies grounded heuristics -- the shared Spanish tax-id validator
-(:func:`~core.identity.validate_spanish_tax_id`), the shared day-first date
-parser (:func:`~core.parsing.parse_date`), and the shared European decimal
-separator normaliser (:func:`~core.decimal.normalize_decimal_separators`) -- to
-recover a supplier NIF/NIE/CIF, invoice number, invoice date, taxable base, IVA
-rate, IVA amount, and grand total.
+Holds the draft record set -- :class:`InvoiceDraft` with its per-field
+:class:`FieldProvenance` envelopes -- and the routing layer that decides which
+reader a given document is handed to. It never persists an
+:class:`~domain.invoices.Invoice` and never guesses a value no reader could
+ground in the document: every field a reader could not recover is left ``None``
+rather than fabricated (``no-silent-under-declaration`` in spirit: an unconfident
+field is absent, not invented).
 
-This is the extraction PRIMITIVE only: it returns an :class:`InvoiceDraft` the
-operator reviews and confirms. It never persists an
-:class:`~domain.invoices.Invoice` and never guesses a value it cannot ground in
-the extracted text -- every field it cannot recover is left ``None`` rather than
-fabricated
-(``no-silent-under-declaration`` in spirit: an unconfident field is absent, not
-invented).
+Three reading paths, chosen on the document's own shape rather than on its
+stored MIME type:
 
-Everything here runs on-host and in-memory only. The evidence bytes and the
-extracted text never touch disk and are never sent to a cloud provider or an
-LLM. This module makes no network call and performs no filesystem write.
+- A **structured** e-invoice (Facturae, CII, UBL) is read exactly by
+  :func:`~adapters.inbound.einvoice.parse_einvoice_document`. It reaches no model
+  at all, so prompt injection is categorically impossible for that document
+  rather than merely mitigated, and it is the only path that can recover the
+  document's own line decomposition and per-rate breakdown.
+- A **text-native PDF** is transcribed by
+  :func:`~application.ledger.transcribe_text_layer`, read semantically by
+  :func:`~llm.extract_invoice_fields_from_text`, and then grounded against that
+  same transcription by
+  :func:`~application.ledger.ground_draft_against_transcription`. The
+  transcription is produced by a DIFFERENT reader than the one that proposes
+  values, which is what makes the anchor check an external check rather than a
+  model confirming itself.
+- A **scan-only PDF or image** has nothing to transcribe, so it falls back to the
+  on-host LOCAL vision reader (:mod:`~llm._evidence_draft_vision`) -- the same
+  rasterise-then-read-with-Ollama transport
+  :class:`~llm._vision_classifier.LocalVisionLLMClassifier` already uses for
+  classification, gated by :attr:`~core.ServiceCapability.LLM_VISION` and never a
+  cloud call.
 
-A scan-only PDF (no embedded text layer) or an image attachment has nothing for
-:func:`~application.ledger.extract_invoice_fields` to read, so
-:func:`~application.ledger.extract_invoice_draft_from_evidence` falls back to the
-on-host LOCAL vision reader (:mod:`~llm._evidence_draft_vision`)
--- the same rasterise-then-read-with-Ollama transport
-:class:`~llm._vision_classifier.LocalVisionLLMClassifier` already
-uses for classification, gated by :attr:`~core.ServiceCapability.LLM_VISION` and
-never a cloud call. When on-host vision reading is disabled for the profile, or
-the local Ollama runtime is unreachable, the caller gets a typed, instructive
-refusal -- never a silent empty draft.
+The escalation is one-directional and the asymmetry is deliberate. A document
+with no text layer genuinely needs a reader that works on pixels, so it escalates.
+A readable document whose semantic reader is absent or unreachable is an
+ENVIRONMENT failure, so it REFUSES in the operator's face rather than silently
+running a heavier engine they did not ask for -- see
+:func:`_refuse_a_text_read_with_no_reader`. A profile that has opted out of vision
+reading likewise gets a typed, instructive refusal, never a silent empty draft.
+
+Everything here runs on-host and in-memory only. The evidence bytes, the
+transcription and the draft never touch disk and are never sent to a cloud
+provider. This module performs no filesystem write.
 
 :func:`~application.ledger.extract_invoice_draft_from_evidence` is the CLI-facing
 wiring layer: it resolves an already-stored ``purchase_invoice_evidence`` record
@@ -42,8 +50,7 @@ evidence-input resolvers
 :func:`~application.ledger._evidence_input.resolve_purchase_invoice_evidence_input`
 and
 :func:`~application.ledger._evidence_input.resolve_attachment_evidence_input`) and
-runs :func:`~application.ledger.extract_invoice_fields` over them, falling back
-to the on-host vision reader for scan-only PDFs and images, so
+routes them to one of the three readers above, so
 ``aeat app ledger evidence extract`` needs only a bucket id plus one of the two
 reference ids.
 
@@ -75,12 +82,12 @@ is idempotent (dedup on the linked-ids tuple).
 See Also:
     :class:`~application.ledger.InvoiceDraft`
         Public draft record returned before an invoice is persisted.
-    :func:`~application.ledger.extract_invoice_fields`
-        Text-layer extraction primitive used before any evidence reference
-        resolution or confirm write.
+    :func:`~application.ledger.transcribe_text_layer`
+        Acquisition-stage primitive that turns a text-native PDF into the
+        reading-order transcription the semantic reader is handed.
     :func:`~application.ledger.extract_invoice_draft_from_evidence`
         CLI-facing resolver that loads stored evidence bytes and chooses the
-        text-layer or on-host vision path.
+        structured, text-native or on-host vision path.
     :func:`~application.ledger.confirm_invoice_draft_from_evidence`
         Non-interactive confirm step that re-extracts, applies overrides, and
         delegates the catalogue write.
@@ -92,7 +99,6 @@ See Also:
 
 from __future__ import annotations
 
-import re
 from datetime import date
 from decimal import Decimal
 from typing import NoReturn, Self
@@ -117,10 +123,9 @@ from ...core import (
 )
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
-from ...core.decimal import coerce_finite_european_decimal
 from ...core.external_constants import DEFAULT_CURRENCY, XML_MIME_TYPE
-from ...core.identity import IdentityError, tax_id_identity_token, validate_spanish_tax_id
-from ...core.parsing import parse_date, parse_iso8601_date
+from ...core.identity import tax_id_identity_token
+from ...core.parsing import parse_iso8601_date
 from ...domain.attachments import link_attachment_invoice, normalize_media_type
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceClass, InvoiceLine
 from ...domain.iva import (
@@ -152,7 +157,7 @@ from ._evidence_reference import (
     refuse_reference_without_document_bytes,
     refuse_unresolved_evidence_reference,
 )
-from ._evidence_textlayer import extract_evidence_text, transcribe_text_layer
+from ._evidence_textlayer import transcribe_text_layer
 
 __all__ = [
     "DraftDiscrepancyFinding",
@@ -165,62 +170,13 @@ __all__ = [
     "PrintedTotalDiscrepancy",
     "confirm_invoice_draft_from_evidence",
     "extract_invoice_draft_from_evidence",
-    "extract_invoice_fields",
     "printed_total_discrepancy",
 ]
-
-# A Spanish NIF / NIE / CIF token: 8 digits + letter, or a leading letter
-# (K/L/M for NIF, X/Y/Z for NIE, A-H/J/N/P-S/U/V/W for CIF) + 7 digits + a
-# trailing letter or digit control character. Matched case-insensitively and
-# tolerant of embedded spaces/dashes, which the validator itself strips.
-_TAX_ID_RE = re.compile(
-    r"\b([A-Za-z][ -]?\d[ -]?\d[ -]?\d[ -]?\d[ -]?\d[ -]?\d[ -]?\d[ -]?[A-Za-z0-9]|\d{8}[A-Za-z])\b",
-)
-
-# A Spanish day-first date: DD-MM-YYYY or DD/MM/YYYY.
-_DATE_RE = re.compile(r"\b(\d{2}[-/]\d{2}[-/]\d{4})\b")
-
-# Labels that precede an invoice number in Spanish invoice layouts.
-_INVOICE_NUMBER_LABEL_RE = re.compile(
-    r"(?:n[uú]mero\s+de\s+factura|n[uº°]\.?\s*factura|factura\s+n[uº°]\.?|invoice\s*(?:no\.?|number|#))"
-    r"\s*[:\-]?\s*([A-Za-z0-9][A-Za-z0-9/_.-]{1,29})",
-    re.IGNORECASE,
-)
-
-# Labels that precede the taxable base ("base imponible").
-_BASE_LABEL_RE = re.compile(
-    r"base\s+imponible\s*[:\-]?\s*(\d{1,3}(?:\.\d{3})*,\d{2})",
-    re.IGNORECASE,
-)
-
-# Labels that precede the IVA cuota amount.
-_IVA_AMOUNT_LABEL_RE = re.compile(
-    r"(?:cuota\s+(?:de\s+)?iva|iva\s+repercutido|iva)\s*[:\-]?\s*(\d{1,3}(?:\.\d{3})*,\d{2})",
-    re.IGNORECASE,
-)
-
-# Labels that precede the invoice grand total.
-_TOTAL_LABEL_RE = re.compile(
-    r"(?:total\s+factura|importe\s+total|total\s+a\s+pagar|total)\s*[:\-]?\s*(\d{1,3}(?:\.\d{3})*,\d{2})",
-    re.IGNORECASE,
-)
-
-# An IVA rate percentage, e.g. "IVA 21%" or "IVA (21%)".
-_IVA_RATE_RE = re.compile(r"\biva\b[^%\n]{0,12}?(\d{1,2}(?:[.,]\d{1,2})?)\s*%", re.IGNORECASE)
-
-# An explicit ISO-4217 code printed beside an amount. Only the alphabetic code
-# is matched, never a symbol: "$" is ambiguous across USD/CAD/AUD/MXN and "kr"
-# across the Nordic currencies, so a symbol cannot ground a currency fact.
-_CURRENCY_CODE_RE = re.compile(
-    r"(?<![A-Za-z])(EUR|USD|GBP|CHF|SEK|NOK|DKK|PLN|CZK|JPY|CAD|AUD)(?![A-Za-z])",
-    re.IGNORECASE,
-)
-
 
 class InvoiceDraftLine(BaseModel):
     """One line item recovered from a structured invoice document.
 
-    Only a structured reader can populate this: a regex or vision reader
+    Only a structured reader can populate this: a text or vision reader
     recovers printed totals, not the document's own line decomposition. The
     rate is carried as a bare percentage :class:`~decimal.Decimal` (``21``, not
     ``0.21``) because the draft is pre-confirm operator-facing data; mapping it
@@ -562,122 +518,6 @@ class InvoiceDraft(BaseModel):
         return self
 
 
-def _find_currency(text: str) -> str | None:
-    """Return the single ISO-4217 code printed in *text*, or ``None``.
-
-    Grounds a currency only when the document is unambiguous: exactly one
-    distinct code appears. A document showing two codes (an invoice quoting a
-    foreign total beside its euro equivalent) cannot be resolved from the text
-    alone, so the heuristic declines rather than picking the first match and
-    silently mis-denominating a filing amount. An absent code stays ``None``
-    for the operator to resolve; it is never defaulted to euro.
-    """
-    found = {match.group(1).upper() for match in _CURRENCY_CODE_RE.finditer(text)}
-    if len(found) != 1:
-        return None
-    return found.pop()
-
-
-def _find_supplier_tax_id(text: str) -> str | None:
-    """Return the first substring in *text* that validates as a Spanish tax id.
-
-    Scans every candidate match in document order and returns the first one
-    that passes the AEAT checksum algorithm, so a false-positive token (an
-    invoice number or a phone number that happens to match the coarse shape)
-    is silently skipped rather than fabricating a wrong identifier.
-    """
-    for match in _TAX_ID_RE.finditer(text):
-        candidate = match.group(1)
-        try:
-            return validate_spanish_tax_id(candidate)
-        except IdentityError:
-            continue
-    return None
-
-
-def _find_invoice_number(text: str) -> str | None:
-    match = _INVOICE_NUMBER_LABEL_RE.search(text)
-    if match is None:
-        return None
-    return match.group(1).strip()
-
-
-def _find_invoice_date(text: str) -> str | None:
-    for match in _DATE_RE.finditer(text):
-        parsed = parse_date(match.group(1), fmt="ddmmyyyy", on_error="none")
-        if parsed is not None:
-            return parsed.isoformat()
-    return None
-
-
-def _parse_labelled_amount(pattern: re.Pattern[str], text: str) -> Decimal | None:
-    """Return the labelled amount captured from the text layer, or ``None``.
-
-    Shares the finite European-decimal authority with the vision adapter, so
-    the two extraction paths cannot read the same invoice differently: an
-    already dot-decimal amount keeps its scale and a non-finite token is
-    refused rather than becoming a filing figure.
-    """
-    match = pattern.search(text)
-    if match is None:
-        return None
-    return coerce_finite_european_decimal(match.group(1))
-
-
-def _find_iva_rate(text: str) -> Decimal | None:
-    """Return the IVA rate captured from the text layer, or ``None``.
-
-    Routes through the same finite European-decimal authority as
-    :func:`_parse_labelled_amount` above. This previously hand-rolled the
-    comma-to-dot swap, which agreed with the authority only because
-    :data:`_IVA_RATE_RE` caps its capture at two digits and a two-digit
-    fraction -- no thousands separator or non-finite token could reach it. That
-    made the regex load-bearing for the parse's correctness, silently: widening
-    the pattern would have diverged two extractors eight lines apart, and a
-    wrong IVA rate surfaces on a filed form rather than at the parse.
-    """
-    match = _IVA_RATE_RE.search(text)
-    if match is None:
-        return None
-    return coerce_finite_european_decimal(match.group(1))
-
-
-def extract_invoice_fields(evidence: EvidenceInput) -> InvoiceDraft:
-    """Return a best-effort :class:`InvoiceDraft` extracted from *evidence*.
-
-    Runs the on-host pdfplumber text-layer extractor over the evidence's
-    in-memory bytes and applies grounded regex heuristics scoped to Spanish
-    invoice layouts. A field the heuristics cannot ground in the extracted
-    text is left ``None``; nothing is fabricated.
-
-    Args:
-        evidence: Resolved in-memory evidence bytes (already read from secure
-            storage by the caller).
-
-    Returns:
-        :class:`InvoiceDraft` carrying every field the heuristics could
-        ground, with ``raw_text_length`` recording how much text the on-host
-        extractor recovered.
-
-    Raises:
-        PurchaseInvoiceEvidenceInputError: When the evidence is not a PDF, or
-            the PDF has no usable text layer (scan-only / XFA) -- the caller
-            should fall back to the on-host vision reader in that case.
-    """
-    text = extract_evidence_text(evidence)
-    return InvoiceDraft(
-        supplier_tax_id=_find_supplier_tax_id(text),
-        invoice_number=_find_invoice_number(text),
-        invoice_date=_find_invoice_date(text),
-        taxable_base=_parse_labelled_amount(_BASE_LABEL_RE, text),
-        iva_rate=_find_iva_rate(text),
-        iva_amount=_parse_labelled_amount(_IVA_AMOUNT_LABEL_RE, text),
-        grand_total=_parse_labelled_amount(_TOTAL_LABEL_RE, text),
-        currency=_find_currency(text),
-        raw_text_length=len(text),
-    )
-
-
 def extract_invoice_draft_from_evidence(
     *,
     bucket_id: str,
@@ -687,7 +527,7 @@ def extract_invoice_draft_from_evidence(
 ) -> InvoiceDraft:
     """Resolve one stored evidence reference to bytes and extract its :class:`InvoiceDraft`.
 
-    The CLI-facing wiring layer over :func:`extract_invoice_fields`: given
+    The CLI-facing wiring layer over the three readers: given
     either a ``purchase_invoice_evidence`` id (looked up through
     :class:`PurchaseInvoiceEvidenceService`) or a linked ``attachment_id``,
     reads the evidence's bytes from secure storage into memory
@@ -695,7 +535,7 @@ def extract_invoice_draft_from_evidence(
     :func:`~application.ledger._evidence_input.resolve_purchase_invoice_evidence_input`
     and
     :func:`~application.ledger._evidence_input.resolve_attachment_evidence_input`)
-    and runs the on-host extractor over them. Exactly one of *evidence_id* /
+    and routes them to the reader the document's shape selects. Exactly one of *evidence_id* /
     *attachment_id* must be supplied.
 
     Nothing is written to disk and nothing leaves the host: the resolved
@@ -831,12 +671,7 @@ def _read_transcription_semantically(
 ) -> InvoiceDraft:
     """Read a text-native PDF through the transcribe-extract-ground chain.
 
-    The three stages the campaign built, connected. Before this, each was correct
-    and gated and reached by nothing: the router called a label-regex family that
-    recovered 0-1 fields on real vendor documents and fabricated where the
-    semantic reader did not.
-
-    The stages, and why the order is not arbitrary:
+    The three stages, and why the order is not arbitrary:
 
     **Transcribe.** :func:`~application.ledger.transcribe_text_layer` produces the
     document's reading-order text with printed forms preserved verbatim. It is
@@ -1700,7 +1535,7 @@ def _category_stated_by_the_document(draft: InvoiceDraft) -> IvaCategory | None:
     """Return the IVA treatment the document's own record declares, or ``None``.
 
     The UNTDID 5305 tax-category code is a fact only a structured reader can
-    recover: it is IN the document and no regex or vision reader can supply it.
+    recover: it is IN the document and no text or vision reader can supply it.
     Dropping it here is not a missing label but a missing declaration. A
     domestic reverse charge, an exempt supply and a zero-rated supply all print
     a base and no cuota, so once the code is gone the record cannot be told

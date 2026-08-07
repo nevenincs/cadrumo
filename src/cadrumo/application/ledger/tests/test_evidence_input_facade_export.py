@@ -1,6 +1,6 @@
 """``EvidenceInput`` is reachable through the package's public facade.
 
-``extract_invoice_fields`` is exported from :mod:`application.ledger`, and its
+``transcribe_text_layer`` is exported from :mod:`application.ledger`, and its
 argument type is ``EvidenceInput``. While that type was private, no
 out-of-package consumer could construct a call to the exported function without
 reaching into ``._evidence_input`` -- which ``aeat-architecture-boundaries``
@@ -35,14 +35,14 @@ def test_evidence_input_is_declared_in_the_facade_all() -> None:
     assert "EvidenceInput" in ledger.__all__
 
 
-def test_the_exported_extraction_entry_point_annotates_the_exported_type() -> None:
+def test_the_exported_reading_entry_point_annotates_the_exported_type() -> None:
     """The reason for the export, stated as a check rather than a comment.
 
-    If ``extract_invoice_fields`` stopped taking an ``EvidenceInput``, the
+    If ``transcribe_text_layer`` stopped taking an ``EvidenceInput``, the
     export would be justified by nothing and this reddens instead of quietly
     leaving a stale public name behind.
     """
-    signature = inspect.signature(ledger.extract_invoice_fields)
+    signature = inspect.signature(ledger.transcribe_text_layer)
     annotations = {str(parameter.annotation) for parameter in signature.parameters.values()}
 
     assert any("EvidenceInput" in annotation for annotation in annotations)

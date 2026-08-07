@@ -1,11 +1,7 @@
 """Semantic invoice-field extraction from a document's TEXT representation.
 
-The product had exactly two ways to turn evidence into invoice fields, and
-neither could read a document semantically from text.
-:func:`~application.ledger.extract_invoice_fields` runs labelled-line regexes
-over a PDF text layer, so it recovers only what its patterns anticipate and
-nothing at all from an unfamiliar layout or language.
-:func:`.extract_invoice_fields_from_images` hands rasterised pages to a vision
+Reading a rendered document is two questions, not one, and the vision reader
+answers them together. :func:`.extract_invoice_fields_from_images` hands rasterised pages to a vision
 model, which collapses *reading the page* and *understanding the page* into one
 call -- when the result is wrong there is no way to tell a transcription error
 from a reasoning error, and a perfect transcription obtained by any other means

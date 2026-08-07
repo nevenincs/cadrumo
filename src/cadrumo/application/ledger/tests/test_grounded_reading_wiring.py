@@ -235,23 +235,11 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
     assert "ground_draft_against_transcription" in source
 
 
-def test_the_router_no_longer_reads_the_text_layer_with_label_regexes() -> None:
-    """The regex family must not be what a text-native PDF reaches.
-
-    This is the gate that reds if the router silently falls back to the old
-    path -- the highest-value mutation for this wiring, because a fallback would
-    restore the reader that fabricated twice on the twin pairs while every
-    grounding suite stayed green.
-    """
-    router = Path(__file__).parents[1] / "_evidence_draft.py"
-    source = router.read_text(encoding="utf-8")
-
-    chain_start = source.index("def _read_transcription_semantically")
-    chain_body = source[chain_start : chain_start + 3000]
-
-    assert "extract_invoice_fields(evidence" not in chain_body, (
-        "the semantic text path fell back to the label-regex extractor"
-    )
+# The companion property -- that the label-regex family is not merely unreached
+# but absent -- is owned by ``test_no_label_regex_reader.py``, which walks the
+# router's AST rather than slicing its source text. A source slice cannot tell a
+# call from the same characters inside a comment or docstring, and it silently
+# truncates when the region it measures grows.
 
 
 # ---------------------------------------------------------------------------
