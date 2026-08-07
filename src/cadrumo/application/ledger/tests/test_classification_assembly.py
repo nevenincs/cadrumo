@@ -130,12 +130,87 @@ def test_a_foreign_country_code_does_settle_the_territory() -> None:
     assert assembly.criteria.issuer_residency is IvaTerritorialScope.EU_MEMBER
 
 
-def test_an_absent_supply_nature_refuses_rather_than_defaulting() -> None:
-    """Goods and services fork the place-of-supply rules; guessing picks a branch."""
+def test_an_absent_supply_nature_refuses_on_a_branch_that_forks() -> None:
+    """Cross-border: goods and services take different place-of-supply rules."""
     assembly = _complete(supply_nature=None)
 
     assert not assembly.assembled
     assert {m.field for m in assembly.missing} == {"kind"}
+
+
+def test_a_domestic_operation_is_never_asked_for_the_supply_nature() -> None:
+    """The common path must not carry a gap the law does not fork on.
+
+    A domestic operation between established parties at a registry rate resolves
+    identically for goods and services, so demanding the distinction asked the
+    operator a question with no answer that could change anything — on every
+    domestic invoice.
+    """
+    assembly = _complete(
+        supply_nature=None,
+        customer_country_code=None,
+        asserted_issuer_scope=IvaTerritorialScope.ES_MAINLAND,
+        asserted_customer_scope=IvaTerritorialScope.ES_MAINLAND,
+        rate_tier=IvaRateKind.GENERAL,
+    )
+
+    assert "kind" not in {m.field for m in assembly.missing}
+    assert assembly.assembled, [m.field for m in assembly.missing]
+
+    # And the placeholder it supplied must land on the same category an
+    # explicitly-natured domestic operation does. Asserting only that it
+    # assembled leaves the placeholder unguarded: a value that quietly selected
+    # a reverse-charge branch would still assemble, and would still be wrong.
+    with_nature = _complete(
+        supply_nature=SupplyNature.SERVICES,
+        customer_country_code=None,
+        asserted_issuer_scope=IvaTerritorialScope.ES_MAINLAND,
+        asserted_customer_scope=IvaTerritorialScope.ES_MAINLAND,
+        rate_tier=IvaRateKind.GENERAL,
+    )
+    without = classify_from_assembled_criteria(assembly)
+    stated = classify_from_assembled_criteria(with_nature)
+
+    assert without is not None and stated is not None
+    assert without.category is stated.category, (
+        f"the nature-indifferent placeholder changed the outcome: {without.category} vs {stated.category}"
+    )
+
+
+def test_the_domestic_branch_is_genuinely_indifferent_to_the_nature() -> None:
+    """Proves the placeholder kind is sound rather than asserting it.
+
+    Skipping the demand is only honest if the answer truly cannot matter. So
+    classify the same domestic operation under BOTH reachable kinds and require
+    the identical category. If the branch ever starts forking on nature, this
+    reds and the laziness above becomes a defect rather than a convenience.
+    """
+    verdicts = set()
+    for nature in (SupplyNature.GOODS, SupplyNature.SERVICES):
+        assembly = _complete(
+            supply_nature=nature,
+            customer_country_code=None,
+            asserted_issuer_scope=IvaTerritorialScope.ES_MAINLAND,
+            asserted_customer_scope=IvaTerritorialScope.ES_MAINLAND,
+            rate_tier=IvaRateKind.GENERAL,
+        )
+        verdict = classify_from_assembled_criteria(assembly)
+        assert verdict is not None
+        verdicts.add(verdict.category)
+
+    assert len(verdicts) == 1, f"the domestic branch forked on supply nature: {verdicts}"
+
+
+def test_an_unresolved_scope_still_demands_the_nature() -> None:
+    """Fails toward asking: an unplaced operation may yet land on a forking branch."""
+    assembly = _complete(
+        supply_nature=None,
+        customer_country_code="ES",
+        asserted_issuer_scope=None,
+        asserted_customer_scope=None,
+    )
+
+    assert "kind" in {m.field for m in assembly.missing}
 
 
 def test_an_absent_date_refuses() -> None:

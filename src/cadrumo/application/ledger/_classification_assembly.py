@@ -202,6 +202,51 @@ def _member_state(
         )
 
 
+#: The kind supplied on a branch the law does not fork on, where the document
+#: established no nature.
+#:
+#: Not a guess about the document, and it is only sound because the branch was
+#: checked rather than assumed: the domestic rule consults ``kind`` ONLY to
+#: exclude the three reverse-charge kinds, and neither value this module can
+#: produce is in that set. So both reachable kinds yield the identical category,
+#: which is then picked from the rate tier. A test proves that indifference by
+#: classifying the same operation under both, rather than trusting this note.
+_NATURE_INDIFFERENT_KIND: TransactionKind = TransactionKind.GOODS
+
+
+def _nature_forks_the_law(
+    issuer_scope: IvaTerritorialScope | None,
+    customer_scope: IvaTerritorialScope | None,
+) -> bool:
+    """Whether the supply's nature can change this operation's treatment.
+
+    The laziness rule the governing record requires: ask only on the branches
+    where the law forks on the answer. Demanding it everywhere put a blocking
+    gap on the common path — a domestic operation between established parties at
+    a registry rate resolves identically for goods and services, so the question
+    had no answer that could change anything and the operator was asked anyway.
+
+    Decided from the territorial scopes, which are the only branch selector
+    available before the category exists. The domain's own
+    ``supply_nature_is_required`` answers the same question from a CATEGORY and
+    is the authority once one is established; it deliberately returns ``True``
+    for ``None``, so it cannot serve here — at assembly time no category exists
+    yet, and consulting it would restore the unconditional demand it is meant to
+    prevent.
+
+    Fails toward asking: an unresolved scope forks, because an operation not yet
+    placed may still land on a branch that needs the answer.
+    """
+    if issuer_scope is None or customer_scope is None:
+        return True
+    spanish = {
+        IvaTerritorialScope.ES_MAINLAND,
+        IvaTerritorialScope.ES_CANARIAS,
+        IvaTerritorialScope.ES_CEUTA_MELILLA,
+    }
+    return not (issuer_scope in spanish and customer_scope in spanish)
+
+
 def assemble_classification_criteria(
     *,
     transaction_date: date | None,
@@ -278,7 +323,7 @@ def assemble_classification_criteria(
     if customer_state_gap is not None:
         missing.append(customer_state_gap)
 
-    if supply_nature is None:
+    if supply_nature is None and _nature_forks_the_law(issuer_scope, customer_scope):
         missing.append(
             MissingClassifierInput(
                 field="kind",
@@ -302,7 +347,6 @@ def assemble_classification_criteria(
     assert status is not None  # narrowed: a gap would have been recorded
     assert issuer_scope is not None
     assert customer_scope is not None
-    assert supply_nature is not None
     assert transaction_date is not None
 
     return ClassificationAssembly(
@@ -311,7 +355,7 @@ def assemble_classification_criteria(
             issuer_residency=issuer_scope,
             customer_residency=customer_scope,
             customer_tax_status=status,
-            kind=_NATURE_TO_KIND[supply_nature],
+            kind=_NATURE_TO_KIND[supply_nature] if supply_nature is not None else _NATURE_INDIFFERENT_KIND,
             direction=direction,
             issuer_member_state=issuer_state,
             customer_member_state=customer_state,
