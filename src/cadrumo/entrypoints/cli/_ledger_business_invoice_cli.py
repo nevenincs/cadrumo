@@ -11,7 +11,6 @@ service over the encrypted
 
 from __future__ import annotations
 
-from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
@@ -68,20 +67,6 @@ from ._ledger_payloads import (
 )
 
 
-class InvoiceKindOption(StrEnum):
-    """Operator-facing ``--kind`` axis for the unified invoice command.
-
-    Mirrors :class:`InvoiceKind`; declared as the Typer option
-    type so click renders ``Choice([issued, received])`` and instructs the
-    operator on parse failure. ``issued`` settles to ``collectible_invoice``;
-    ``received`` settles to ``payable_invoice`` via
-    :func:`invoice_direction_to_source_kind`.
-    """
-
-    ISSUED = "issued"
-    RECEIVED = "received"
-
-
 def register_business_invoice_commands(app: typer.Typer) -> None:
     """Mount the unified invoice command group on the ledger app."""
     invoice_app.add_typer(catalogue_app, name="catalogue")
@@ -89,10 +74,10 @@ def register_business_invoice_commands(app: typer.Typer) -> None:
 
 
 def _service_for_kind(
-    kind: InvoiceKindOption,
+    kind: InvoiceKind,
 ) -> PayableInvoiceService | CollectibleInvoiceService:
     """Select the slim CRUD service for ``kind`` via the contractual mapping."""
-    source_kind = invoice_direction_to_source_kind(InvoiceKind(kind.value))
+    source_kind = invoice_direction_to_source_kind(kind)
     if source_kind is BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE:
         return CollectibleInvoiceService()
     return PayableInvoiceService()
@@ -184,7 +169,7 @@ invoice_app = typer.Typer(
 )
 def invoice_add(
     ctx: typer.Context,
-    kind: InvoiceKindOption = typer.Option(
+    kind: InvoiceKind = typer.Option(
         ...,
         "--kind",
         help=tr(
@@ -284,7 +269,7 @@ def invoice_view(
         ...,
         help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
     ),
-    kind: InvoiceKindOption = typer.Option(
+    kind: InvoiceKind = typer.Option(
         ...,
         "--kind",
         help=tr(
@@ -313,7 +298,7 @@ def invoice_view(
 )
 def invoice_list(
     ctx: typer.Context,
-    kind: InvoiceKindOption | None = typer.Option(
+    kind: InvoiceKind | None = typer.Option(
         None,
         "--kind",
         help=tr(
@@ -368,7 +353,7 @@ def invoice_update(
         ...,
         help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
     ),
-    kind: InvoiceKindOption = typer.Option(
+    kind: InvoiceKind = typer.Option(
         ...,
         "--kind",
         help=tr(
@@ -499,7 +484,7 @@ def _catalogue_invoice_lines(invoice) -> list[str]:
 # once keeps the ``cli.app.ledger.invoice.*`` help keys in one home so ``--help``
 # renders identically for both verbs from one ``tr`` lookup.
 _CatalogueKindOpt = Annotated[
-    InvoiceKindOption,
+    InvoiceKind,
     typer.Option(
         "--kind",
         help=tr(
@@ -713,7 +698,7 @@ def catalogue_create(
     try:
         result = create_catalogue_invoice(
             bucket_id=bucket_id,
-            kind=InvoiceKind(kind.value),
+            kind=kind,
             counterparty_name=counterparty_name,
             counterparty_tax_id=counterparty_nif,
             counterparty_country=country_code,
@@ -805,7 +790,7 @@ def catalogue_wizard(
     try:
         wizard_result = create_invoice_via_wizard(
             bucket_id=bucket_id,
-            kind=InvoiceKind(kind.value),
+            kind=kind,
             counterparty_nif=counterparty_nif,
             counterparty_name=counterparty_name,
             invoice_number=invoice_number,
@@ -880,7 +865,7 @@ def catalogue_import(
             ),
         ),
     ),
-    kind: InvoiceKindOption = typer.Option(
+    kind: InvoiceKind = typer.Option(
         ...,
         "--kind",
         help=tr(
@@ -914,7 +899,7 @@ def catalogue_import(
         )
     try:
         rows = list(read_bulk_invoice_import_rows(file))
-        result = import_invoices_from_rows(rows, bucket_id=bucket_id, kind=InvoiceKind(kind.value))
+        result = import_invoices_from_rows(rows, bucket_id=bucket_id, kind=kind)
     except InvoiceValidationError as exc:
         raise _bad(str(exc)) from exc
 
@@ -970,7 +955,7 @@ def catalogue_import(
 )
 def catalogue_list(
     ctx: typer.Context,
-    kind: InvoiceKindOption | None = typer.Option(
+    kind: InvoiceKind | None = typer.Option(
         None,
         "--kind",
         help=tr(
@@ -984,7 +969,7 @@ def catalogue_list(
 
     bucket_id = _business_invoice_bucket_id()
     catalogue = InvoiceCatalogueRepository(bucket_id=bucket_id).load()
-    wanted = None if kind is None else InvoiceKind(kind.value)
+    wanted = None if kind is None else kind
     rows = tuple(invoice for invoice in catalogue.values() if wanted is None or invoice.kind is wanted)
     payload = {
         "bucket_id": bucket_id,
@@ -1097,7 +1082,7 @@ def invoice_remove(
         ...,
         help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
     ),
-    kind: InvoiceKindOption = typer.Option(
+    kind: InvoiceKind = typer.Option(
         ...,
         "--kind",
         help=tr(
