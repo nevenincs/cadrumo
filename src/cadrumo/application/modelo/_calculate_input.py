@@ -82,7 +82,10 @@ from ...domain.modelos import (
     validate_m347_threshold,
 )
 from ..aggregation import CalculationSourceDiagnostic
-from ._minimo_descendientes_advisory import _MAX_NAMED_DESCENDANTS
+
+# Intra-package reuse of a sibling module's cap, permitted by the architecture
+# rule; only cross-package private reaches are barred, and that gate is separate.
+from ._minimo_descendientes_advisory import _MAX_NAMED_DESCENDANTS  # pyright: ignore[reportPrivateUsage]
 from ._profile_binding import MaternidadMesesResolution
 from ._registry_helpers import validate_casilla_input_ids
 from ._semantic_role_resolution import (

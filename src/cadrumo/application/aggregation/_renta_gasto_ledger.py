@@ -71,7 +71,10 @@ from ._errors import AggregationValidationError, t
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 from ._renta_business_eligibility import renta_expense_business_proportion
-from ._renta_ledger import _resolve_iva_deduction_ratio
+
+# Intra-package reuse of the sibling ledger's ratio resolver, permitted by the
+# architecture rule; the cross-package boundary is enforced elsewhere.
+from ._renta_ledger import _resolve_iva_deduction_ratio  # pyright: ignore[reportPrivateUsage]
 
 # The only casilla M130 deductible-expense aggregation feeds: official box 02
 # ("Gastos"), bound to the ledger renta gasto aggregation. Operator-supplied

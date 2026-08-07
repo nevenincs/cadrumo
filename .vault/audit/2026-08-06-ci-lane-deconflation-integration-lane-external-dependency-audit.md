@@ -175,6 +175,23 @@ first step certifies nothing beyond that step, and the absence of failures downs
 reads exactly like their absence in the code. Three gates deep, the lane is still
 finding real work.
 
+### m210-tipo-renta-validator-duplicated-and-unwired | medium | A validator is tested but never called; its logic is inlined at the only call site
+
+The typecheck gate reports a Modelo 210 tipo-renta validator as never accessed. It is
+not orphaned: tests exercise it directly, and its own docstring describes it as the
+semantic-role fallback for the generic casilla override surface.
+
+That surface does validate, but by inlining the same two steps the function performs -
+validate the official code, then project it. So the function duplicates logic that
+already exists at its intended call site rather than guarding a gap. Nothing is
+currently unvalidated.
+
+Not remediated here. Collapsing the duplication means editing an IRNR validation path,
+and the call site also binds the intermediate official code that other fields consume,
+so the substitution is not the one-line swap it appears to be. Left for someone with
+the modelo context, since a wrong consolidation here changes what the CLI refuses on a
+real filing surface.
+
 ## Recommendations
 
 <!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
@@ -264,6 +281,23 @@ The finding is not any individual defect. It is that a gate which always fails a
 first step certifies nothing beyond that step, and the absence of failures downstream
 reads exactly like their absence in the code. Three gates deep, the lane is still
 finding real work.
+
+### m210-tipo-renta-validator-duplicated-and-unwired | medium | A validator is tested but never called; its logic is inlined at the only call site
+
+The typecheck gate reports a Modelo 210 tipo-renta validator as never accessed. It is
+not orphaned: tests exercise it directly, and its own docstring describes it as the
+semantic-role fallback for the generic casilla override surface.
+
+That surface does validate, but by inlining the same two steps the function performs -
+validate the official code, then project it. So the function duplicates logic that
+already exists at its intended call site rather than guarding a gap. Nothing is
+currently unvalidated.
+
+Not remediated here. Collapsing the duplication means editing an IRNR validation path,
+and the call site also binds the intermediate official code that other fields consume,
+so the substitution is not the one-line swap it appears to be. Left for someone with
+the modelo context, since a wrong consolidation here changes what the CLI refuses on a
+real filing surface.
 
 ## Recommendations
 
