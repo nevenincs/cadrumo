@@ -53,12 +53,19 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
         yield resolved
 
 
-def _seed_cloud_draft(profile: TestRuntimeProfile, *, reference: str = "ev-1", stamp: str = _CLOUD_STAMP) -> None:
+def _seed_cloud_draft(
+    profile: TestRuntimeProfile,
+    *,
+    reference: str = "ev-1",
+    stamp: str = _CLOUD_STAMP,
+    transports: tuple[str, ...] = ("openai",),
+) -> None:
     write_extraction_draft(
         bucket_id=profile.bucket_id,
         evidence_reference=reference,
         draft=InvoiceDraft(),
         extractor=stamp,
+        read_transports=transports,
         settings=profile.settings,
     )
 
@@ -110,9 +117,10 @@ def test_an_unreadable_stamp_is_surfaced_rather_than_assumed_clean() -> None:
     never fail in. The cost of the other direction is one extra document to
     look at.
     """
-    assert artefact_is_cloud_derived("classified_by_manual") is True
-    assert artefact_is_cloud_derived(_CLOUD_STAMP) is True
-    assert artefact_is_cloud_derived(_LOCAL_STAMP) is False
+    assert artefact_is_cloud_derived(()) is True, "an unestablished transport must be surfaced"
+    assert artefact_is_cloud_derived(("openai",)) is True
+    assert artefact_is_cloud_derived((LOCAL_TRANSPORT_LABEL, "openai")) is True, "any off-host field makes the document off-host"
+    assert artefact_is_cloud_derived((LOCAL_TRANSPORT_LABEL,)) is False
 
 
 # ── The survey ───────────────────────────────────────────────────────────────
@@ -137,7 +145,7 @@ def test_the_survey_leaves_an_on_host_artefact_alone(profile: TestRuntimeProfile
     every draft it finds, which would tell an operator that on-host reads need
     withdrawing too.
     """
-    _seed_cloud_draft(profile, reference="ev-local", stamp=_LOCAL_STAMP)
+    _seed_cloud_draft(profile, reference="ev-local", stamp=_LOCAL_STAMP, transports=(LOCAL_TRANSPORT_LABEL,))
 
     survey = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings)
 
@@ -195,6 +203,24 @@ def test_re_derivability_resolves_true_and_false_once_a_resolver_is_supplied(pro
         transcriber_cache_key=_TEXT_LAYER.cache_key,
     )
     assert unresolvable.cloud_derived_artefacts[0].rederivable_on_host is False
+
+
+def test_a_draft_with_no_recorded_transport_is_surfaced_not_assumed_local(
+    profile: TestRuntimeProfile,
+) -> None:
+    """An unestablished transport is surfaced, and the survey says it cannot name one.
+
+    This is the case a batch-driven gate cannot reach, because the batch always
+    records a transport -- so the "empty means unknown" branch would otherwise
+    be asserted nowhere and a change making it read as on-host would pass every
+    other test in the suite.
+    """
+    _seed_cloud_draft(profile, reference="ev-unknown", transports=())
+
+    survey = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings)
+
+    assert [row.evidence_reference for row in survey.cloud_derived_artefacts] == ["ev-unknown"]
+    assert survey.cloud_derived_artefacts[0].transport is None
 
 
 # ── Re-derivation: the Step's gate ───────────────────────────────────────────

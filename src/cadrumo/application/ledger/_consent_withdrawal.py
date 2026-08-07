@@ -54,6 +54,7 @@ from ._extraction_draft_store import load_extraction_drafts, write_extraction_dr
 
 if TYPE_CHECKING:
     from ...core.config import Settings
+    from ._document_transcription import DocumentTranscription
     from ._evidence_draft import InvoiceDraft
 
 __all__ = [
@@ -67,15 +68,23 @@ __all__ = [
     "survey_cloud_consent",
 ]
 
+
 class OnHostReader(Protocol):
-    """Re-reads already-transcribed text on this host, returning draft and stamp.
+    """Re-reads an already-produced transcription on this host, returning draft and stamp.
 
     A Protocol rather than a concrete reader so this layer never constructs the
     gated inference subpackage: the caller supplies something that reads
     on-host, and the return's stamp is what proves it did.
+
+    Takes the TRANSCRIPTION rather than its text. The semantic stage stamps
+    every envelope with the origin it reads off the transcriber, so handing it a
+    bare string would strip the record of which reader acquired the characters
+    and silently re-stamp a vision-acquired document as a text-layer one --
+    turning a re-derivation into a quiet upgrade of the provenance it exists to
+    preserve.
     """
 
-    def __call__(self, transcribed_text: str, /) -> tuple[InvoiceDraft, str]:
+    def __call__(self, transcription: DocumentTranscription, /) -> tuple[InvoiceDraft, str]:
         """Return the re-read draft and the provenance stamp of the reader."""
         ...
 
@@ -364,7 +373,7 @@ def rederive_artefact_on_host(
             "the document, which this path deliberately does not do"
         )
         raise ValueError(msg)
-    draft, stamp = read_on_host(transcription.text)
+    draft, stamp = read_on_host(transcription)
     transport = provenance_stamp_transport(stamp)
     if transport != LOCAL_TRANSPORT_LABEL:
         msg = (
