@@ -4,7 +4,7 @@ tags:
   - '#code-dedup-sweep'
 date: '2026-07-25'
 modified: '2026-08-07'
-body_hash: 'sha256:262d220c001598c0769262af0d46643ae5ab833be9fe8781591d2fb2f7667452'
+body_hash: 'sha256:7cd0416966f764e605e5af33fd403b086fdfaf12cfe805d3fb663c41813d610b'
 related:
   - '[[2026-08-07-code-dedup-sweep-status-header-audit]]'
   - '[[2026-08-07-code-dedup-sweep-d1-1-binding-validator-refutation-audit]]'
@@ -41,7 +41,7 @@ by the document itself.
 | Tier 2: committed-TOML reader bypassed by 4 loaders | RESOLVED, no edits needed | `toml-cluster-resolved` / `toml-cluster-closure-confirmed` — each bypass has a documented reason not to convert |
 | Tier 2: registry-tree fingerprint 2x + snapshot cache | RESOLVED (partially) | `registry-caching-defect-and-three-refutations` — commit `31ce3018bf`, one real defect fixed, three sharper-rated sibling claims refuted |
 | Tier 2: scalar-parameter resolver 3x (M100/M131/M210) | OPEN | not addressed anywhere later in this document |
-| Tier 2: sensitive-key redaction predicate 4x | OPEN | not addressed anywhere later in this document |
+| Tier 2: sensitive-key redaction predicate 4x | CORRECTED to 2, distinct layer | Re-measured 2026-08-07: `rg` finds 2 key-name predicates in production, not 4 — `core/logging.py::SCRUB_FIELD_PATTERNS` and `application/live/_remote_state_outcomes.py`'s `_SENSITIVE_FAILURE_CONTEXT_EXACT_KEYS`/`_KEY_PARTS`. Both also call the canonical shape-based `core.redaction.default_rules_for_class`/`redact_for_log`, so the key-name lists are a complementary second layer, not a competing implementation — genuine constraint-shape divergence (the second is domain-scoped to AEAT/infra identifiers a generic logging list should not carry), not a promotable duplicate. Real residual: ~7 overlapping terms with no shared authority, a drift risk. Adjudicated: no merge; land a shared minimal always-redact base tuple both compose from, gated so a future author cannot silently drop the composition.
 | Tier 2: accent-fold 4x | OPEN | not addressed anywhere later in this document |
 | Tier 2: `_renta_ledger::_casilla_aggregation` hand-rolled fold | OPEN | not addressed anywhere later in this document |
 | Tier 2: evidence-covers-snapshot contributor-coverage guard 3x | OPEN | not addressed anywhere later in this document |
