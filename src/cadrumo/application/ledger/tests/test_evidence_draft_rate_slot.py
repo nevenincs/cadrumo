@@ -180,7 +180,12 @@ def test_an_unrepresentable_rate_refuses_and_names_the_accepted_rates(
     assert error.context["iva_rate"] == format(_UNREPRESENTABLE_RATE, "f"), (
         f"the refusal must name the rate rejected: {error.context}"
     )
-    accepted = {slot.strip() for slot in error.context["accepted"].split(",")}
+    # The context is a str-keyed mapping of arbitrary values; the accepted set is
+    # published as a comma-joined string, so assert that shape before splitting
+    # it rather than discovering a changed encoding as an AttributeError.
+    accepted_raw = error.context["accepted"]
+    assert isinstance(accepted_raw, str), f"the accepted set must be published as a string, got {type(accepted_raw)}"
+    accepted = {slot.strip() for slot in accepted_raw.split(",")}
     assert accepted == {format(rate, "f") for rate in numeric_iva_rate_slots()}, (
         f"the refusal must advertise exactly the taxonomy's slots, got {accepted}"
     )
@@ -220,6 +225,11 @@ def test_the_refusal_is_the_same_one_whether_or_not_a_cuota_was_printed(
         raised.append(excinfo.value)
 
     assert raised[0].translated_message == raised[1].translated_message
+    # Both refusals must carry their context: the point of this test is that the
+    # two paths advertise the SAME accepted set, which a missing context would
+    # vacuously satisfy by having nothing to compare.
+    assert raised[0].context is not None
+    assert raised[1].context is not None
     assert raised[0].context["accepted"] == raised[1].context["accepted"]
 
 
