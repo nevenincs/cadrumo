@@ -181,6 +181,7 @@ if TYPE_CHECKING:
     from ._consent_withdrawal import (
         LOCAL_TRANSPORT_SEGMENT,
         CloudDerivedArtefact,
+        ConsentedDispatch,
         ConsentWithdrawalSurvey,
         LocalRederivation,
         OnHostReader,
@@ -332,6 +333,7 @@ if TYPE_CHECKING:
         validate_ratios_for_bucket,
         validate_ratios_profile,
     )
+    from ._regime_contradiction import draft_prints_a_repercutido_line, regime_contradiction_finding
     from ._review_projection import ledger_transaction_review_status
     from ._rule_repository import LedgerClassificationRuleRepository
 
@@ -341,6 +343,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "LOCAL_TRANSPORT_SEGMENT": "._consent_withdrawal",
     "CloudDerivedArtefact": "._consent_withdrawal",
     "ConsentWithdrawalSurvey": "._consent_withdrawal",
+    "ConsentedDispatch": "._consent_withdrawal",
     "LocalRederivation": "._consent_withdrawal",
     "OnHostReader": "._consent_withdrawal",
     "artefact_is_cloud_derived": "._consent_withdrawal",
@@ -398,6 +401,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "IdentityRoleResolution": "._identity_roles",
     "canonical_identity_token": "._identity_roles",
     "resolve_counterparty_identity": "._identity_roles",
+    "draft_prints_a_repercutido_line": "._regime_contradiction",
+    "regime_contradiction_finding": "._regime_contradiction",
     "describe_aeat_party_identifier": "._aeat_record_projection",
     "project_aeat_record_counterparty": "._aeat_record_projection",
     "DocumentTranscription": "._document_transcription",
@@ -593,6 +598,7 @@ __all__ = [
     "ConfirmationRecordDocument",
     "ConfirmationRecordRepository",
     "ConsentWithdrawalSurvey",
+    "ConsentedDispatch",
     "DocumentTranscription",
     "DraftDiscrepancyFinding",
     "EligibleCategoryRow",
@@ -694,6 +700,7 @@ __all__ = [
     "derive_operator_iva_substrate",
     "describe_aeat_party_identifier",
     "discard_extraction_draft",
+    "draft_prints_a_repercutido_line",
     "eligible_ratio_categories",
     "evaluate_anchor",
     "execute_reviewed_decision",
@@ -733,6 +740,7 @@ __all__ = [
     "read_confirmation_record",
     "read_extraction_draft",
     "rederive_artefact_on_host",
+    "regime_contradiction_finding",
     "reject_llm_suggestion",
     "remove_manual_transaction",
     "reset_ledger_catalogue",

@@ -233,6 +233,59 @@ class EvidenceListResult(OutputSchema):
     rows: list[EvidenceRecordPayload]
 
 
+class ConsentedDispatchPayload(OutputSchema):
+    """One recorded off-host dispatch on the consent surface."""
+
+    evidence_content_address: str
+    provider: str
+    model: str
+    surface: str
+    recorded_at: str
+
+
+class CloudDerivedArtefactPayload(OutputSchema):
+    """One artefact a withdrawal marks as derived from an off-host read."""
+
+    evidence_reference: str
+    provenance_stamp: str
+    transport: str | None = None
+    drafted_at: str
+    rederivable_on_host: bool | None = None
+
+
+@register_schema("ledger.evidence.consent.list")
+class EvidenceConsentListResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger evidence consent list``.
+
+    ``transmitted_bytes_are_unrecallable`` is carried in the payload rather than
+    only in the rendered text. A caveat that exists only in prose is invisible
+    to the agent or script consuming this envelope, and this is the one caveat
+    on this surface that must never be missed.
+    """
+
+    bucket_id: str
+    transmitted_bytes_are_unrecallable: bool
+    consented_dispatches: list[ConsentedDispatchPayload]
+    cloud_derived_artefacts: list[CloudDerivedArtefactPayload]
+
+
+@register_schema("ledger.evidence.consent.rederive")
+class EvidenceConsentRederiveResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger evidence consent rederive``.
+
+    Both stamps are carried because the operation's whole meaning is their
+    difference, and because the superseded stamp is not deleted anywhere: this
+    records a new derivation rather than a relabelling of the old one.
+    """
+
+    bucket_id: str
+    evidence_reference: str
+    previous_provenance_stamp: str
+    provenance_stamp: str
+    transcription_reused: bool
+    transmitted_bytes_are_unrecallable: bool
+
+
 class EvidenceDraftLinePayload(OutputSchema):
     """One extracted invoice line on the reviewable draft."""
 

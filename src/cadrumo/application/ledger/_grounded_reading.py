@@ -48,6 +48,7 @@ from ._document_transcription import DocumentTranscription
 from ._evidence_draft import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
 from ._grounding_anchor import evaluate_anchor
 from ._identity_roles import IdentityCandidate, resolve_counterparty_identity
+from ._regime_contradiction import regime_contradiction_finding
 
 __all__ = [
     "GROUNDABLE_ORIGINS",
@@ -155,6 +156,13 @@ def ground_draft_against_transcription(
     envelopes = verified_provenance(draft=draft, transcription=transcription)
     findings: list[DraftDiscrepancyFinding] = list(draft.discrepancies)
     findings.extend(closure_findings(draft))
+
+    # Beside the arithmetic findings rather than among them: a document whose
+    # figures close perfectly can still say two incompatible things about itself
+    # in words, so this is a separate check and not a closure one.
+    contradiction = regime_contradiction_finding(draft)
+    if contradiction is not None:
+        findings.append(contradiction)
 
     if taxpayer_tax_id is not None:
         resolution = resolve_counterparty_identity(

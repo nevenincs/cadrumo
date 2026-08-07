@@ -56,6 +56,16 @@ class ConfirmationBlockReason(StrEnum):
     belongs, and the result reads as a plausible record.
     """
 
+    CONTRADICTED_REGIME = "contradicted_regime"
+    """The document's stated regime and the tax it charged cannot both be true.
+
+    Distinct from a closure discrepancy, which says the figures do not add up.
+    Here the figures may be flawless and the document still contradicts itself
+    in words, so an operator sent to re-check the arithmetic would find nothing
+    wrong and confirm. The reason has to name the actual conflict for the
+    resolution to mean anything.
+    """
+
 
 class FindingResolutionAction(StrEnum):
     """How the operator settled one named blocking finding.

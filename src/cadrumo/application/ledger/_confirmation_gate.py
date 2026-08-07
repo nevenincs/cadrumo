@@ -71,6 +71,7 @@ BLOCKING_REASON_BY_DISCREPANCY_KIND: Mapping[DraftDiscrepancyKind, ConfirmationB
     DraftDiscrepancyKind.BREAKDOWN_INCONSISTENT: ConfirmationBlockReason.CLOSURE_DISCREPANCY,
     DraftDiscrepancyKind.IDENTITY_UNVERIFIED: ConfirmationBlockReason.AMBIGUOUS_IDENTITY,
     DraftDiscrepancyKind.ROLE_UNRESOLVED: ConfirmationBlockReason.UNRESOLVED_DIRECTION,
+    DraftDiscrepancyKind.REGIME_CONTRADICTED: ConfirmationBlockReason.CONTRADICTED_REGIME,
 }
 """Which review-gate reason each deterministic check's failure raises.
 

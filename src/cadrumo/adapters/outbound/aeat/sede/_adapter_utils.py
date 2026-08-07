@@ -32,7 +32,7 @@ from .....core.i18n import tr
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
 
-from pydantic import BaseModel
+from pydantic import AnyUrl, BaseModel
 from pydantic import ValidationError as PydanticValidationError
 
 from .....core.logging import get_logger
@@ -142,6 +142,32 @@ def assert_query_browser_action_for(policy: RemoteStateGuardPolicy, action: str)
         action: Browser action label to validate (e.g. ``"open-groi-form"``).
     """
     assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action=action))
+
+
+def assert_read_http_for(policy: RemoteStateGuardPolicy, method: str, url: str) -> None:
+    """Assert that a wire-crossing read of ``url`` is permitted under ``policy``.
+
+    The ``http`` counterpart of :func:`assert_query_browser_action_for`, and the
+    one body behind every sede reader's fail-closed no-write guard. The censal,
+    notifications and expedientes-walker readers each carried an identical copy
+    differing only in the module-level policy it named; each still declares its
+    OWN policy — the surfaces genuinely differ in which hosts they admit — and
+    passes it here, so the refusal RULE has one home while the per-surface
+    posture stays local.
+
+    A guard that refuses writes is the wrong thing to hold three copies of: a
+    correction applied to one leaves the other two admitting what it now
+    refuses, and nothing fails until a write reaches AEAT.
+
+    Args:
+        policy: The read policy the calling surface declared.
+        method: HTTP method of the navigation about to be made.
+        url: Absolute target URL.
+
+    Raises:
+        RegistryValidationError: The navigation is not a permitted read.
+    """
+    assert_remote_operation_allowed(policy, RemoteOperation(kind="http", method=method, url=AnyUrl(url)))
 
 
 def require_playwright_page(raw_page: object) -> Page:
@@ -593,6 +619,7 @@ __all__ = [
     "_SedeCheckerModel",
     "assert_pdf_response",
     "assert_query_browser_action_for",
+    "assert_read_http_for",
     "assert_read_landing",
     "extract_marker_verdict",
     "first_visible_locator",

@@ -45,7 +45,7 @@ from typing import TYPE_CHECKING, Any, Final, Literal
 from urllib.parse import quote, urlsplit
 
 from bs4 import BeautifulSoup, Tag
-from pydantic import AnyHttpUrl, AnyUrl, BaseModel, Field
+from pydantic import AnyHttpUrl, BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import fold_diacritics
@@ -62,6 +62,7 @@ from .....domain.calculations.registry import (
 )
 from .._playwright import Page, PlaywrightError
 from ..browser import BrowserSession, DefaultBrowserSession, default_browser_session_factory
+from ._adapter_utils import assert_read_http_for
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
@@ -752,10 +753,7 @@ def _assert_read_browser_action(action: str) -> None:
 
 def _assert_read_http(method: str, url: str) -> None:
     """Fail-closed guard: refuse any non-read-only or off-AEAT censal navigation."""
-    assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
-        RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
-    )
+    assert_read_http_for(_READ_GUARD_POLICY, method, url)
 
 
 def forbidden_censal_landing_marker(landing_url: str) -> str | None:

@@ -64,3 +64,18 @@ class DraftDiscrepancyKind(StrEnum):
     recipient. Guessing here puts the filer's own identifier where the
     counterparty belongs, which reads as a plausible record.
     """
+
+    REGIME_CONTRADICTED = "regime_contradicted"
+    """The regime the issuer printed in words disagrees with the tax it charged.
+
+    Not an arithmetic failure: every figure may close perfectly and the document
+    still say two incompatible things about itself. A mention whose whole point
+    is that the issuer charges no Spanish IVA, printed beside a repercutido rate
+    and cuota, is the reachable case -- and which half is wrong is not decidable
+    from the page, because either the mention was printed in error or the tax
+    was charged in error, and the two lead to different declarations.
+
+    Blocking rather than advisory, for the reason the sibling kinds are: the
+    disagreement is a fact about the document under every reading, not a doubt
+    about one figure, and confirming past it silently picks a side.
+    """

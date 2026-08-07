@@ -178,17 +178,19 @@ class TransactionKind(StrEnum):
             Unión. Admitted by LIVA art. 163 unvicies; located as a supply of
             services by art. 69.
 
-    **Art. 163 unvicies admits an operation to the Union scheme; it does not say
-    which limb the operation is.** Its own scope paragraph reaches "presten
-    servicios" and "ventas a distancia intracomunitarias de bienes" alike, so
-    citing it alone establishes neither. The three members above were previously
-    documented as resting on it for their goods-or-services character, and two
-    separate readers took that at face value and derived the wrong nature before
-    going to the statute. What fixes the nature is the placement article: art. 68
-    for *entregas de bienes*, art. 69 for *prestaciones de servicios*.
         IOSS_DISTANCE_SALE_LOW_VALUE: Distance sale of imported goods with
             intrinsic value at or below 150 EUR routed through Esquema de
             Importación (IOSS). LIVA art. 163 quinvicies.
+
+    **Art. 163 unvicies admits an operation to the Union scheme; it does not say
+    which limb the operation is.** Its own scope paragraph reaches "presten
+    servicios" and "ventas a distancia intracomunitarias de bienes" alike, so
+    citing it alone establishes neither. The three Union-scheme members above
+    were previously documented as resting on it for their goods-or-services
+    character, and two separate readers took that at face value and derived the
+    wrong nature before going to the statute. What fixes the nature is the
+    placement article: art. 68 for *entregas de bienes*, art. 69 for
+    *prestaciones de servicios*.
     """
 
     GOODS = "goods"
