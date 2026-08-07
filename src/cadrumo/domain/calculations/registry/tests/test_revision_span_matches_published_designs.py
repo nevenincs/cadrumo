@@ -41,19 +41,27 @@ No count is hardcoded. The number of designs, boundaries and shared boxes all
 vary as the corpus grows; gating on any of them would encode today and detect
 nothing tomorrow.
 
+TWO INDEPENDENT SIGNALS, neither subsuming the other. The box-offset diff sees
+which boxes moved but needs bracketed box markers. The page-length diff sees only
+that a page changed size, but reads designs the box table cannot -- several older
+PDF extractions publish their page totals while yielding no box markers -- so it
+measures years that would otherwise be blind. A re-layout preserving every page
+length is caught by the first; a year only the second can read is caught by the
+second. A year is reported UNMEASURED only when BOTH are blind.
+
 THIS MODULE IS LANDED RED, DELIBERATELY, AND THE FAILURES ARE THE FINDING RATHER
 THAN A REGRESSION. It names two confirmed live defects: Modelo 390's single
-revision spans five re-layouts, and Modelo 303's two revisions span four more
-including a 2025-to-2026 shift that affects filings made today. The Modelo 390
-case was proved end to end -- an export at an earlier filing year succeeds and
-writes bytes laid out for the newest design. Weakening the assertions to land
-green would delete the evidence; both go green when the revisions are split at
-the boundaries the failure text names, which is the fix.
+revision spans five re-layouts, and Modelo 303's revisions span six more --
+including a 2025-to-2026 shift affecting filings made today, where the box diff
+shows 120 of 163 shared boxes moving and the page diff independently shows the
+Liquidación page growing by five bytes. The Modelo 390 case was proved end to end
+-- an export at an earlier filing year succeeds and writes bytes laid out for the
+newest design. Weakening the assertions to land green would delete the evidence;
+all of it goes green when the revisions are split at the boundaries the failure
+text names, which is the fix.
 
-The coverage guard is red for a different and smaller reason: three years inside
-gated spans have designs this parser cannot read (a PDF and two spreadsheet
-extractions), so the gate is blind there. That is a statement about coverage, not
-about those years being clean.
+The coverage guard is red for a different and much smaller reason: one year
+inside a gated span has a design neither signal can read.
 
 Mutation-proved from outside the repository, three directions. Narrowing Modelo
 390's claimed span to the newest design removes exactly its own violations and
@@ -84,6 +92,13 @@ _DESIGN_ROOT_PARTS = ("corpus", "aeat_official", "disenos_registro")
 _BOX_MARKER = re.compile(r"\[(\d{1,4})\]")
 _DESIGN_YEAR = re.compile(r"ejercicio-(\d{4})")
 
+# Each page closes with a "TOTAL <n> POSICIONES" row, in the pipe-delimited
+# spreadsheet extractions and the space-delimited PDF ones alike. The sequence of
+# page lengths is a SECOND, box-number-free signal: if a page's byte length
+# changed, something inside it moved. It reaches designs the box table cannot --
+# the older PDF extractions carry these rows while yielding no bracketed boxes.
+_PAGE_TOTAL = re.compile(r"TOTAL\s*\|?\s*\|?\s*(\d+|variable)\s*\|?\s*POSICIONES", re.IGNORECASE)
+
 
 def _authority() -> ValidatedRegistryAuthority:
     return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
@@ -113,6 +128,27 @@ def _parse_design(path: Path) -> dict[str, int]:
         # first and never overwrite, so a later segment cannot mask a movement.
         table.setdefault(boxes[0], offset)
     return table
+
+
+def _page_lengths(path: Path) -> tuple[str, ...]:
+    """The per-page ``TOTAL n POSICIONES`` sequence for one design."""
+    return tuple(_PAGE_TOTAL.findall(path.read_text(encoding="utf-8", errors="replace")))
+
+
+def _page_lengths_for(modelo_id: str) -> dict[int, tuple[str, ...]]:
+    """``{design year: page-length sequence}`` for every readable design."""
+    directory = _design_dir(modelo_id)
+    if not directory.is_dir():
+        return {}
+    lengths: dict[int, tuple[str, ...]] = {}
+    for path in sorted(directory.glob("files/*.extracted.md")):
+        matched = _DESIGN_YEAR.search(path.name)
+        if matched is None:
+            continue
+        found = _page_lengths(path)
+        if found:
+            lengths.setdefault(int(matched.group(1)), found)
+    return lengths
 
 
 def _designs_for(modelo_id: str) -> tuple[dict[int, dict[str, int]], dict[int, str]]:
@@ -197,10 +233,16 @@ def test_the_design_parser_reads_every_markdown_design_it_claims() -> None:
         # this gate. One outside every span is a corpus file nothing compares,
         # so failing on it would be noise about the extractor rather than about
         # coverage.
-        in_span = _claimed_years(revision, set(unreadable))
+        # A year is only a blind spot when BOTH signals are blind. A design that
+        # yields no bracketed boxes but does publish its per-page lengths is
+        # still measured by the page-length check below, so reporting it here
+        # would overstate the gap.
+        page_lengths = _page_lengths_for(modelo.id)
+        opaque = {year for year in unreadable if year not in page_lengths}
+        in_span = _claimed_years(revision, opaque)
         blind_spots.extend(
             f"modelo {modelo.id} revision {revision_id!r} claims {year}, but its design "
-            f"{unreadable[year]!r} yielded no box offsets"
+            f"{unreadable[year]!r} yields neither box offsets nor page lengths"
             for year in sorted(in_span)
         )
     assert measured, "no bundled design parsed at all; the extractor or the corpus path has moved"
@@ -236,4 +278,34 @@ def test_no_revision_spans_a_design_relayout() -> None:
     assert not violations, (
         "a revision carries ONE export layout, so a span crossing a re-layout writes prior-year "
         "filings at the wrong byte offsets:\n  " + "\n  ".join(violations)
+    )
+
+
+def test_no_revision_spans_a_page_length_change() -> None:
+    """Second signal: a page whose byte length changed had something move inside it.
+
+    Independent of box numbers entirely, which is what makes it worth having
+    beside the offset diff. It reaches designs the box table cannot — several
+    older PDF extractions publish their ``TOTAL n POSICIONES`` rows while yielding
+    no bracketed box markers — so it converts years that would otherwise be
+    unmeasured into measured ones.
+
+    It is also strictly coarser: it sees that a page changed size, not which
+    boxes moved. A re-layout that preserves every page's length would pass here
+    and be caught by the offset diff, and the reverse holds for a year only this
+    signal can read. Neither subsumes the other.
+    """
+    violations: list[str] = []
+    for modelo, revision_id, revision in _exporting_revisions():
+        lengths = _page_lengths_for(modelo.id)
+        years = sorted(_claimed_years(revision, set(lengths)))
+        for earlier, later in zip(years, years[1:]):
+            if lengths[earlier] != lengths[later]:
+                violations.append(
+                    f"modelo {modelo.id} revision {revision_id!r} claims {earlier} and {later}, "
+                    f"but the published page lengths differ: {lengths[earlier]} vs {lengths[later]}"
+                )
+    assert not violations, (
+        "a page whose byte length changed between two years a single revision claims cannot be "
+        "written by one layout:\n  " + "\n  ".join(violations)
     )
