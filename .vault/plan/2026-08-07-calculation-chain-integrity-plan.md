@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:f255f0b014d1f23165520abdeeef7502a8ba4d13230de76439670f1620c3ab25'
+body_hash: 'sha256:943a516827d146d3f95812fed7e81525bcd5e5fe0900c1195db192cf4839c9b3'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -42,15 +42,15 @@ Three mechanisms sit adjacent to a binding whose resolved value regresses to zer
 Turn the research into an accepted decision record naming which mechanism ships, before any gate is built.
 
 - [x] `W02.P02.S05` - Read the modelo-130-relation-regression ADR ruling on bound-casilla zero defaults as direct prior art, nothing in the research cites it; `.vault/adr/2026-05-26-modelo-130-relation-regression-adr.md`.
-- [ ] `W02.P02.S18` - Read the relation-prefill zero-default authority before designing the screen, it is the single authority for which bindings are legitimately pre-satisfied with zero in a period and defines the screen's false-positive floor; `src/cadrumo/application/calculations/_relation_prefill.py`.
+- [x] `W02.P02.S18` - Read the relation-prefill zero-default authority before designing the screen, it is the single authority for which bindings are legitimately pre-satisfied with zero in a period and defines the screen's false-positive floor; `src/cadrumo/application/calculations/_relation_prefill.py`.
 - [x] `W02.P02.S06` - Author the decision record selecting registry-build reachability as primary with the implies-nonzero coverage floor layered, rejecting prior-period comparison on its false-fire profile; `.vault/adr/`.
 
 ### Phase `W02.P03` - Build the chosen gate
 
 Implement the decided mechanism with a mutation proof and an explicit statement of what it cannot catch.
 
-- [ ] `W02.P03.S07` - Implement the reachability probe per binding source family, hung on the existing per-family module seam; `src/cadrumo/domain/calculations/registry/`.
-- [ ] `W02.P03.S08` - Mutation-prove the gate reddens on a binding retargeted to match nothing, and state in code what it cannot catch; `src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W02.P03.S07` - Implement the reachability probe per binding source family, hung on the existing per-family module seam; `src/cadrumo/domain/calculations/registry/`.
+- [x] `W02.P03.S08` - Mutation-prove the gate reddens on a binding retargeted to match nothing, and state in code what it cannot catch; `src/cadrumo/domain/calculations/registry/tests/`.
 - [ ] `W02.P03.S40` - Gate that both sides of every reconciliation pair select the same category set, enumerated from both declaration sites, so a periodic-line change that skips its annual or aggregate counterpart reddens instead of shipping; `src/cadrumo/domain/calculations/registry/tests/`.
 
 ## Wave `W03` - The activity-type classification axis
