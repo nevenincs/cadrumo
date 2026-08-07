@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:89da3c62d83e8cdfa0994c7fcedef02b8861bdf60ae61b7af135ebd0c6b16d58'
+body_hash: 'sha256:87104ec11ff7af50ad96691aa1a3ac6f341c0159f8cea3b3d6976d9610b515ec'
 related:
   - "[[2026-08-07-dehu-notification-legal-effect-reference]]"
 ---
