@@ -229,6 +229,33 @@ _IVA_RATE_TO_IVA_KIND: dict[IvaRate, IvaRateKind] = {
 }
 
 
+def iva_rate_slot_percentage(rate: IvaRate) -> Decimal | None:
+    """Return the fractional percentage ``rate`` names, without asking whether it was in force.
+
+    The undated half of the pair. A line's arithmetic -- does ``iva_amount``
+    equal ``subtotal * rate`` -- needs the NUMBER the operator applied and
+    nothing else, and an :class:`~cadrumo.domain.invoices.InvoiceLine` carries
+    no date of its own to check legality against. Asking the dated
+    :func:`iva_rate_percentage` there would resolve a 2024 line against today
+    and refuse to build it at all.
+
+    Whether the rate was legally available is a separate question, asked where
+    a date actually exists: :func:`iva_rate_percentage` at the invoice's
+    operation date, and the invoice-level validator that applies it to every
+    line. Both read this same derivation, so the number never differs between
+    the two -- only whether it is accepted.
+
+    Returns:
+        The slot's own percentage as a fraction (``Decimal("0.02")`` for
+        :attr:`IvaRate.RATE_2`); ``None`` for :attr:`IvaRate.EXEMPT` and
+        :attr:`IvaRate.NOT_SUBJECT`.
+    """
+    declared_percentage = _slot_declared_percentage(rate)
+    if declared_percentage is None:
+        return None
+    return declared_percentage / Decimal("100")
+
+
 def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal | None:
     """Return the fractional percentage ``rate`` names, confirmed in force at ``on_date``.
 
@@ -267,16 +294,15 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
             is the point: substituting whatever the tier happens to mean that
             day would record a number the invoice never carried.
     """
-    declared_percentage = _slot_declared_percentage(rate)
-    if declared_percentage is None:
+    fraction = iva_rate_slot_percentage(rate)
+    if fraction is None:
         return None
 
     kind = _IVA_RATE_TO_IVA_KIND[rate]
     effective_date = on_date or today_madrid()
-    fraction = declared_percentage / Decimal("100")
     if kind not in rate_kinds_for_declared_rate(EUMemberState.ES, fraction, effective_date):
         raise IvaRateNotFoundError(
-            f"IVA rate slot {rate.name} ({declared_percentage}%) was not in force for "
+            f"IVA rate slot {rate.name} ({fraction * Decimal('100')}%) was not in force for "
             f"kind={kind.value!r} in Spain on {effective_date.isoformat()}",
         )
     return fraction
