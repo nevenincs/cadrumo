@@ -8,10 +8,17 @@ Two hand-maintained copies of one registry vocabulary drift silently: a casilla
 renamed on one side keeps resolving on the other, and the two surfaces then
 disagree about which value the operator's compensation actually came from.
 
-This module is the one declaration both import. Each constant is validated
-through :func:`~core.validated_casilla_id` at import time, so a token that is
-not a well-formed casilla id fails at module load rather than at the first
-compensation calculation that touches it.
+This module is the one declaration both import. Each constant declared here is
+validated through :func:`~core.validated_casilla_id` at import time, so a token
+that is not a well-formed casilla id fails at module load rather than at the
+first compensation calculation that touches it.
+
+Four of the Modelo 303 chain tokens are NOT declared here: the pure carry-forward
+derivation policy in the domain layer names the same casillas, and a policy that
+decides a figure from a casilla owns that casilla's identity. Those four are
+bound to the domain declarations rather than re-typed, so the calculations layer
+and the policy cannot be renamed apart -- which is the same drift this module was
+created to end, one layer further down.
 """
 
 from __future__ import annotations
@@ -19,6 +26,12 @@ from __future__ import annotations
 from typing import Final
 
 from ...core import CasillaId, validated_casilla_id
+from ...domain.iva_compensation import (
+    M303_COMPENSATION_AVAILABLE_CASILLA,
+    M303_COMPENSATION_GENERADA_CASILLA,
+    M303_COMPENSATION_POSTERIOR_CASILLA,
+    M303_COMPENSATION_RESULTADO_CASILLA,
+)
 
 __all__ = [
     "M303_COMPENSACION_APLICADA_CASILLA",
@@ -54,18 +67,16 @@ def iva_compensation_casilla_id(value: object) -> CasillaId:
         raise RuntimeError(f"IVA compensation casilla constant {value!r} is not a CasillaId") from exc
 
 
-M303_RESULTADO_CASILLA: Final[CasillaId] = iva_compensation_casilla_id("iva.resultado")
+M303_RESULTADO_CASILLA: Final[CasillaId] = M303_COMPENSATION_RESULTADO_CASILLA
 """Modelo 303 periodic resultado, before the compensation chain is applied."""
 
-M303_GENERADA_CASILLA: Final[CasillaId] = iva_compensation_casilla_id("iva.compensacion-generada-periodo")
+M303_GENERADA_CASILLA: Final[CasillaId] = M303_COMPENSATION_GENERADA_CASILLA
 """Compensation the period itself generated."""
 
-M303_POSTERIOR_CASILLA: Final[CasillaId] = iva_compensation_casilla_id(
-    "iva.compensacion-pendiente-periodos-posteriores",
-)
+M303_POSTERIOR_CASILLA: Final[CasillaId] = M303_COMPENSATION_POSTERIOR_CASILLA
 """Compensation carried forward to later periods."""
 
-M303_DISPONIBLE_CASILLA: Final[CasillaId] = iva_compensation_casilla_id("iva.compensacion-disponible-fin-periodo")
+M303_DISPONIBLE_CASILLA: Final[CasillaId] = M303_COMPENSATION_AVAILABLE_CASILLA
 """Compensation available at the close of the period."""
 
 M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Final[CasillaId] = iva_compensation_casilla_id(
