@@ -63,6 +63,10 @@ Derived as a named set rather than an inline test so the exclusion is auditable.
 the model's own claim about its own output, and checking it against the model's
 reply would confirm self-consistency rather than evidence. ``OPERATOR`` is absent
 because an operator-supplied value is not a reading of the document at all.
+``DERIVED`` is absent for a sharper reason than either: a derived value was never
+printed, so there is no anchor to check and the envelope refuses to carry one.
+What makes it auditable is its recorded input set, and those inputs are anchored
+in their own right by whichever origin read them.
 """
 
 
