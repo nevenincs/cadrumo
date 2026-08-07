@@ -54,6 +54,7 @@ from ...domain.calculations.registry import (
     resolve_ledger_renta_income_aggregation_binding_values,
     resolve_retenciones_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
+    unrouted_ledger_renta_income_quantities,
     unsupported_ledger_impatriado_income_observations,
     unsupported_ledger_irnr_income_observations,
     unsupported_ledger_iva_observations,
@@ -468,6 +469,19 @@ class LedgerRentaIncomeAggregationSourceResolver:
         # thing standing between the operator and a silently mis-measured
         # income casilla.
         ungrounded = ungrounded_ledger_renta_income_observations(context.revision, aggregation.observations)
+        # Third screen, keyed on the QUANTITY rather than the row. A row consumed
+        # for its income can still carry a second, independent figure -- the
+        # retención credit -- that no binding draws, and both screens above stay
+        # silent because the row itself was routed and did carry its substrate.
+        unrouted_quantities = unrouted_ledger_renta_income_quantities(context.revision, aggregation.observations)
+        # Third screen, on the axis the two above cannot see. Both of those key
+        # on the ROW, and every observation is built with target_casilla_id="01"
+        # whatever fact a binding reads off it -- so a row consumed for its
+        # income reads as routed while a SECOND, independent quantity it carries
+        # (the retención suffered) reaches no binding at all. Without this the
+        # taxpayer's whole retención credit can disappear with both other
+        # screens clean.
+        unrouted_quantities = unrouted_ledger_renta_income_quantities(context.revision, aggregation.observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -504,11 +518,40 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 )
                 for observation in unrouted
             )
+            + tuple(
+                CalculationSourceDiagnostic(
+                    reason="unrouted_observation",
+                    source_kind="ledger_renta_income_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=(
+                        f"{len(quantity.observations)} income row(s) carry {quantity.total} EUR of "
+                        f"{quantity.fact!r}, which no ledger_renta_income_aggregation binding on revision "
+                        f"{context.revision.id!r} draws; that amount is not declared on this calculation. "
+                        f"The rows themselves ARE consumed for their income, so no other screen reports them"
+                    ),
+                )
+                for quantity in unrouted_quantities
+            )
             + _ungrounded_income_diagnostics(ungrounded, resolver_id=self.resolver_id)
             + _unusable_sales_invoice_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
+            + tuple(
+                CalculationSourceDiagnostic(
+                    reason="unrouted_quantity",
+                    source_kind="ledger_renta_income_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=(
+                        f"the ledger rows carry {quantity.total} of {quantity.fact!r} that no "
+                        f"ledger_renta_income_aggregation binding on revision {context.revision.id!r} "
+                        f"draws, across {len(quantity.observations)} transaction(s); that figure is "
+                        f"not declared on this calculation"
+                    ),
+                )
+                for quantity in unrouted_quantities
+            )
             + inferred_actividad_retencion_rate_advisory_observations(
                 aggregation.observations,
                 bucket_id=context.bucket_id,
+                resolver_id=self.resolver_id,
             ),
             provenance=tuple(
                 CalculationSourceProvenance(
