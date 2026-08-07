@@ -2274,6 +2274,12 @@ cli:
         state_help: 'Filtre d''estat del snapshot: active, superseded, discarded o
           all'
         view_help: Mostrar un snapshot del borrador del model 100
+      deudas:
+        app_help: Instantànies de deudas AEAT només de lectura
+        latest_help: Mostra la instantània de deudas més recent
+        list_help: Llista les instantànies de deudas desades
+        snapshot_id_help: Identificador de la instantània, o un prefix sense ambigüitat
+        view_help: Mostra una instantània de deudas
       expediente_help: Identificador d'expedient AEAT
       expedientes:
         app_help: Snapshots d'expedients AEAT de només lectura

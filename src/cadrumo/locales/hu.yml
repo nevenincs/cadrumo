@@ -2220,6 +2220,12 @@ cli:
         state_help: 'Pillanatkép-állapot szűrő: active, superseded, discarded vagy
           all.'
         view_help: Egyetlen Modelo 100 borrador pillanatkép megjelenítése.
+      deudas:
+        app_help: AEAT deudas pillanatképek, csak olvasásra
+        latest_help: A legutóbbi deudas pillanatkép megjelenítése
+        list_help: Listázza a tárolt deudas pillanatképeket
+        snapshot_id_help: Pillanatkép azonosító, vagy egyértelmű előtag
+        view_help: Egy deudas pillanatkép megtekintése
       expediente_help: AEAT expediente azonosító.
       expedientes:
         app_help: Csak olvasható AEAT expediente pillanatképek.

@@ -2113,6 +2113,12 @@ cli:
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         state_help: 'Snapshot state filter: active, superseded, discarded, or all'
         view_help: Show one Modelo 100 borrador snapshot
+      deudas:
+        app_help: AEAT deudas snapshots, read-only
+        latest_help: Show the most recent deudas snapshot
+        list_help: List the stored deudas snapshots
+        snapshot_id_help: Snapshot id, or an unambiguous prefix
+        view_help: View one deudas snapshot
       expediente_help: AEAT expediente identifier
       expedientes:
         app_help: Read-only AEAT expediente snapshots
