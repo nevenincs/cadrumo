@@ -226,6 +226,16 @@ fact = "recargo_amount_sum"
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
+# Casilla 59, base-only informativa for exempt entregas intracomunitarias
+# (LIVA art. 25). The official box is titled "Entregas intracomunitarias de
+# bienes y servicios", but the selector deliberately admits ONLY
+# intra_community_supply, and the title is NOT authority to widen it: a plain
+# B2B service supplied to an EU-established taxable person is located outside
+# the TAI by art. 69.Uno.1, so it is not subject in Spain and belongs in
+# casilla 61 (operaciones no sujetas), never here. Only a service with a
+# Spanish fiscal adjustment point under art. 25 belongs in casilla 59, and the
+# operator declares that by tagging intra_community_supply explicitly. Adding
+# a not-subject services category to this selector would over-declare.
 [[revisions.2009-y-siguientes.bindings]]
 id = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 source = "ledger_iva_aggregation"
