@@ -2,6 +2,6 @@
 aeat --format json app ledger invoice add --kind issued --counterparty-nif B12345674 --country-code ES --counterparty-name "Cliente SL" --invoice-number FAC-2026-001 --invoice-date 2026-02-15 --taxable-base 1000 --iva-rate 21
 @capture invoice_id result.invoice_id
 @step Confirm it resolved to a collectible invoice.
-@result aeat --format json app ledger invoice view {invoice_id} --kind issued
+@result aeat --format json app ledger invoice view {invoice_id}
 @expect result.source_kind == "collectible_invoice"
 @expect result.total_amount == "1210"

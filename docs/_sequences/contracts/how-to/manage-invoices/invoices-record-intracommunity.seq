@@ -2,6 +2,6 @@
 aeat --format json app ledger invoice add --kind issued --counterparty-nif DE345678901 --counterparty-name "Kunde GmbH" --invoice-number EU-001 --invoice-date 2026-02-10 --taxable-base 2000 --iva-rate 0 --country-code DE --operation-type E
 @capture invoice_id result.invoice_id
 @step Confirm the operation type and country were stored.
-@result aeat --format json app ledger invoice view {invoice_id} --kind issued
+@result aeat --format json app ledger invoice view {invoice_id}
 @expect result.operation_type == "E"
 @expect result.country_code == "DE"
