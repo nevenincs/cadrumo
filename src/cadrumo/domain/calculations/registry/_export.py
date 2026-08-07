@@ -404,7 +404,13 @@ def _record_field_ranges(record: ExportRecordDefinition) -> list[tuple[int, int,
 
 
 def _reject_overlapping_ranges(record_id: str, sorted_ranges: list[tuple[int, int, str]]) -> None:
-    """Reject any pair of byte ranges that overlap. ``sorted_ranges`` must be sorted by start."""
+    """Reject any pair of byte ranges that overlap. ``sorted_ranges`` must be sorted by start.
+
+    The slot-geometry check that asks whether two fields claim the same bytes. Its
+    slot-WIDTH sibling asks whether the bytes one field claims can hold what that
+    field supplies, and lives at registry-build time rather than here: see
+    :func:`cadrumo.domain.calculations.registry._validate_exports._validate_draft_field_slot_width`.
+    """
     for index, current in enumerate(sorted_ranges):
         for other in sorted_ranges[index + 1 :]:
             if current[1] <= other[0]:

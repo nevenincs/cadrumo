@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import get_args
 
 import pytest
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
+from .....core.identity import SPANISH_TAX_ID_WIDTH, IdentityError, validate_spanish_tax_id
 from ..._export_field_kind import CasillaFieldKind
 from .. import BboxAnchorSpec, CasillaId, RegistrySnapshot, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
 from .._binding_selector_utils import selector_as_dict
 from .._schema import DataBindingDefinition
+from .._validate_exports import _DRAFT_ATTRIBUTE_CANONICAL_WIDTHS
 from ._registry_schema_support import (
     _EXPECTED_DEADLINE_WINDOWS,
     _EXPECTED_LIVE_CROSS_REFERENCES,
@@ -655,6 +658,170 @@ def test_validator_rejects_literal_export_field_longer_than_declared_length() ->
     mutated = revision.model_copy(update={"export_layouts": layouts})
 
     with pytest.raises(RegistryValidationError, match=r"literal length .* exceeds declared length"):
+        _validate_revision(modelo, catalogues, mutated)
+
+
+#: The Modelo 200 page 001B slot the diseño reserves for the mercantile group's
+#: ultimate parent company's foreign tax identification number.
+_M200_PARENT_TIN_FIELD_ID = "modelo-200-page-001b-draft-profile_tax_id-pos-141"
+
+
+def _export_field_by_id(
+    revision: ModeloRevision,
+    field_id: str,
+) -> tuple[ExportFieldDefinition, str, str]:
+    """Return one export field with its record and layout ids, or fail loudly."""
+    for layout in revision.export_layouts:
+        for record in layout.records:
+            for field in record.fields:
+                if field.id == field_id:
+                    return field, record.id, layout.id
+    raise AssertionError(f"the committed revision declares no export field {field_id!r}")
+
+
+def _first_profile_tax_id_draft_field(
+    revision: ModeloRevision,
+) -> tuple[ExportFieldDefinition, str, str]:
+    """Return the revision's first declarant-NIF draft field with its record and layout ids.
+
+    Located by PROPERTY -- draft kind plus the ``profile_tax_id`` attribute -- not
+    by a pinned field id, so renaming or renumbering the committed declaration
+    cannot make the callers below pass without exercising anything.
+    """
+    for layout in revision.export_layouts:
+        for record in layout.records:
+            for field in record.fields:
+                if field.kind == CasillaFieldKind.DRAFT and field.draft_attribute == "profile_tax_id":
+                    return field, record.id, layout.id
+    raise AssertionError("the committed revision declares no profile_tax_id draft export field to anchor on")
+
+
+def _with_replaced_export_field(
+    revision: ModeloRevision,
+    *,
+    layout_id: str,
+    record_id: str,
+    field: ExportFieldDefinition,
+) -> ModeloRevision:
+    def _replace_record(record):
+        fields = tuple(field if item.id == field.id else item for item in record.fields)
+        return record.model_copy(update={"fields": fields})
+
+    layouts = tuple(
+        layout.model_copy(
+            update={
+                "records": tuple(
+                    _replace_record(record) if record.id == record_id else record for record in layout.records
+                ),
+            },
+        )
+        if layout.id == layout_id
+        else layout
+        for layout in revision.export_layouts
+    )
+    return revision.model_copy(update={"export_layouts": layouts})
+
+
+def test_spanish_tax_id_width_is_the_width_the_identifier_validator_enforces() -> None:
+    """The declared identifier width must still be the one the validator refuses around.
+
+    The export slot-width check asserts a ``profile_tax_id`` slot is exactly
+    ``SPANISH_TAX_ID_WIDTH`` characters. That assertion means nothing unless the
+    constant still describes the identifier contract, so pin it against the
+    validator's actual behaviour rather than against a second copy of the number:
+    a canonical identifier of that width validates, and padding or truncating it
+    by one character is refused.
+    """
+    canonical = validate_spanish_tax_id("B12345674")
+
+    assert len(canonical) == SPANISH_TAX_ID_WIDTH
+    with pytest.raises(IdentityError, match=rf"exactly {SPANISH_TAX_ID_WIDTH} characters"):
+        validate_spanish_tax_id(f"{canonical}0")
+    with pytest.raises(IdentityError, match=rf"exactly {SPANISH_TAX_ID_WIDTH} characters"):
+        validate_spanish_tax_id(canonical[:-1])
+
+
+def test_draft_attribute_width_ruling_covers_every_declarable_attribute() -> None:
+    """Every declarable draft attribute must carry a width ruling, gated or abstained.
+
+    Keys the gate on the property rather than on today's declarations: a new
+    ``draft_attribute`` added to the field schema without a ruling makes the width
+    mapping non-total, and registry validation then refuses any field binding it.
+    Asserting the mapping is total here names that obligation at the schema, so the
+    refusal is a design prompt rather than a puzzling build failure.
+    """
+    # The annotation is Literal[...] | None; NoneType contributes no args, so the
+    # comprehension yields exactly the declarable attribute tokens whatever order
+    # the union carries them in.
+    declarable = {
+        token
+        for member in get_args(ExportFieldDefinition.model_fields["draft_attribute"].annotation)
+        for token in get_args(member)
+    }
+
+    assert declarable
+    assert set(_DRAFT_ATTRIBUTE_CANONICAL_WIDTHS) == declarable
+    assert _DRAFT_ATTRIBUTE_CANONICAL_WIDTHS["profile_tax_id"] == SPANISH_TAX_ID_WIDTH
+
+
+def test_validator_rejects_declarant_nif_draft_field_bound_to_a_wider_slot() -> None:
+    """A declarant-NIF draft field must be refused at a slot wider than the identifier.
+
+    The defect shape this closes: Modelo 200 bound the filer's own NIF into a
+    15-character slot the diseño reserves for a group parent's foreign tax
+    identification number, and every export right-padded the filer's identifier
+    into another entity's field. Widening a committed, correct declaration
+    reproduces that contradiction against the real registry validator.
+    """
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    field, record_id, layout_id = _first_profile_tax_id_draft_field(revision)
+    assert field.length == SPANISH_TAX_ID_WIDTH, "the anchor declaration must start at the identifier width"
+    widened = field.model_copy(update={"length": SPANISH_TAX_ID_WIDTH + 6})
+    mutated = _with_replaced_export_field(revision, layout_id=layout_id, record_id=record_id, field=widened)
+
+    with pytest.raises(RegistryValidationError, match=r"to a slot of length 15"):
+        _validate_revision(modelo, catalogues, mutated)
+
+
+def test_validator_accepts_declarant_nif_draft_field_at_the_identifier_width() -> None:
+    """The committed declaration at the identifier width must stay accepted.
+
+    The control for the refusal above: without it, a validator that refused every
+    ``profile_tax_id`` draft field would look like a working width gate.
+    """
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    field, record_id, layout_id = _first_profile_tax_id_draft_field(revision)
+    restated = field.model_copy(update={"length": SPANISH_TAX_ID_WIDTH})
+    mutated = _with_replaced_export_field(revision, layout_id=layout_id, record_id=record_id, field=restated)
+
+    _validate_revision(modelo, catalogues, mutated)
+
+
+def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_declarant() -> None:
+    """Re-binding M200's foreign-parent-TIN slot to the declarant must be refused.
+
+    The real-site proof for the width check, and the standing regression against
+    re-authoring the misbinding. The checks above widen a correct declaration, which
+    shows the validator works on input the test itself shaped; this one restores the
+    defect exactly as it shipped -- the committed Modelo 200 field, at its
+    AEAT-correct 15-byte width, re-bound to the declarant's own NIF -- and drives the
+    real registry validator over the real loaded revision. A detector that only fires
+    on shaped input can still miss the site that matters.
+
+    The field id is read from the committed revision rather than restated, so the
+    declaration must exist and must be filler for the restore to mean anything.
+    """
+    modelo, catalogues = _committed_modelo("200")
+    revision = modelo.revisions["2024-y-siguientes"]
+    field, record_id, layout_id = _export_field_by_id(revision, _M200_PARENT_TIN_FIELD_ID)
+    assert field.kind == CasillaFieldKind.FILLER, "the parent-TIN slot must ship unbound"
+    assert field.length == 15, "the AEAT slot width must stay as the diseño publishes it"
+    rebound = field.model_copy(update={"kind": CasillaFieldKind.DRAFT, "draft_attribute": "profile_tax_id"})
+    mutated = _with_replaced_export_field(revision, layout_id=layout_id, record_id=record_id, field=rebound)
+
+    with pytest.raises(RegistryValidationError, match=re.escape(_M200_PARENT_TIN_FIELD_ID)):
         _validate_revision(modelo, catalogues, mutated)
 
 

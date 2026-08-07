@@ -54,6 +54,7 @@ from ._nif_iva import (
 from ._profile import ProfileId
 from ._profile_label import ProfileLabel
 from ._tax_id import (
+    SPANISH_TAX_ID_WIDTH,
     nif_check_letter,
     same_tax_identifier,
     tax_id_identity_token,
@@ -120,6 +121,7 @@ malformed identifier fails fast at the model boundary with an
 
 __all__ = [
     "NIF_IVA_FORMATS",
+    "SPANISH_TAX_ID_WIDTH",
     "BucketId",
     "ContentDigest",
     "ContentDigestOrAbsent",
