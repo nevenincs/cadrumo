@@ -48,6 +48,7 @@ from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from .. import (
     IvaLedgerObservation,
     ModeloRevision,
+    expression_casilla_refs,
     resolve_ledger_iva_aggregation_binding_values,
 )
 
@@ -249,12 +250,25 @@ def test_neither_volumen_box_feeds_any_total() -> None:
     """
     revision = _m390_revision()
     volumen_ids = {casilla_id for casilla_id, _number, _phrase in _BOXES}
+    seen_operands: set[str] = set()
     for formula in revision.formulas:
-        operands = set(re.findall(r"'casilla_id':\s*'([^']+)'", repr(formula.expression)))
+        operands = set(expression_casilla_refs(formula.expression))
+        seen_operands |= operands
         assert not (operands & volumen_ids), (
             f"formula {formula.id!r} takes volumen casilla(s) {sorted(operands & volumen_ids)} as an operand"
         )
         assert formula.target_casilla_id not in volumen_ids
+    # Anti-vacuity: the assertions above are satisfied by an operand set that is
+    # merely EMPTY, so an extraction that silently returns nothing would pass
+    # them while checking nothing. An earlier revision of this test did exactly
+    # that -- it scraped operands from repr() with a pattern matching a mapping
+    # form the loaded schema does not use -- so it could never fail. Pin that the
+    # walk actually reached the graph, and reached a known operand.
+    assert len(seen_operands) >= len(revision.formulas), (
+        f"operand walk returned {len(seen_operands)} refs across {len(revision.formulas)} formulas; "
+        "the extraction is not reaching the expression graph"
+    )
+    assert "iva.anual.repercutido.general" in seen_operands
 
 
 def test_the_volumen_boxes_select_what_the_quarterly_return_selects() -> None:
