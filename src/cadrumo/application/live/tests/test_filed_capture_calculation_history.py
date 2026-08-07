@@ -1043,21 +1043,20 @@ def test_history_selection_is_invariant_to_the_order_duplicated_periods_arrive_i
 _SYNTHETIC_REQUEST_TYPE = "SYNTHETIC-REQUEST-TYPE"
 
 
-def test_persisted_source_metadata_drops_the_register_request_type_signal(tmp_path: Path) -> None:
-    """AEAT's own request-type signal reaches the observation and is lost at persistence.
+def test_persisted_source_metadata_carries_the_register_request_type_signal(tmp_path: Path) -> None:
+    """AEAT's own request-type signal now survives to persisted provenance.
 
-    The capture path reads the register row's request type into the raw
-    observation's ``metadata``, and the calculation-observation source metadata
-    is built from a fixed key set that does not include it. So the one signal
-    that could distinguish an original filing from an amendment is discarded
-    before anything downstream could elect on it, and no selection logic reads
-    it today.
+    This test previously pinned the OPPOSITE: the capture path read the register
+    row's request type into the raw observation and the source metadata was built
+    from a fixed key set that dropped it, so the one signal distinguishing an
+    original filing from an amendment was gone before anything downstream could
+    read it. Its docstring said to reverse it when the carry-through landed, and
+    this is that reversal -- the absence assertions are gone rather than relaxed.
 
-    This pins that loss deliberately rather than repairing it: which identifier
-    an amendment-aware election should key on is an open decision, and a silent
-    half-fix would be worse than a visible gap. REVERSE THIS TEST when the
-    request-type signal is carried through -- assert the persisted metadata
-    carries it, and the two absence assertions below become the ones to delete.
+    Carrying the signal is NOT electing on it. No selection logic reads this key,
+    and which identifier an amendment-aware election should key on stays an open
+    decision; what changed is that the evidence survives so that decision can be
+    made against persisted data instead of requiring a re-capture.
 
     Modelo 130 keeps this off the IVA compensation machinery a Modelo 303
     observation additionally drives, so the persistence boundary is exercised on
@@ -1068,7 +1067,7 @@ def test_persisted_source_metadata_drops_the_register_request_type_signal(tmp_pa
         update={"metadata": {"tipo_solicitud": _SYNTHETIC_REQUEST_TYPE, "observaciones": ""}},
     )
     assert observation.metadata["tipo_solicitud"] == _SYNTHETIC_REQUEST_TYPE, (
-        "the raw observation does not carry the signal, so this test cannot show it being dropped"
+        "the raw observation does not carry the signal, so this test cannot show it being carried"
     )
 
     with _secure_backend(tmp_path):
@@ -1076,13 +1075,74 @@ def test_persisted_source_metadata_drops_the_register_request_type_signal(tmp_pa
         loaded = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
 
     assert loaded is not None
-    assert "aeat_expediente_id" in loaded.source_metadata, (
-        "the metadata was not built at all, so the absences below would prove nothing"
+    assert loaded.source_metadata["aeat_tipo_solicitud"] == _SYNTHETIC_REQUEST_TYPE
+    # The surrounding provenance is asserted too, so a change that carried the
+    # request type while dropping a sibling key would not read as a pass.
+    assert loaded.source_metadata["aeat_expediente_id"] == observation.expediente_id
+    assert loaded.source_metadata["aeat_register_status"] == "ALTA"
+
+
+def test_persisted_source_metadata_omits_an_absent_request_type_rather_than_writing_it_empty(
+    tmp_path: Path,
+) -> None:
+    """A register row with no request type leaves the key ABSENT, never empty.
+
+    An empty string would be indistinguishable from AEAT declaring an empty
+    request type, so a later amendment-aware reader could not tell "the row did
+    not say" from "the row said nothing". Absence is the honest encoding, and
+    this pins it in both directions: the blank-string case and the
+    key-entirely-missing case both omit it.
+    """
+    blank = _filed_130_observation().model_copy(update={"metadata": {"tipo_solicitud": "   "}})
+    missing = _filed_130_observation().model_copy(update={"metadata": {"observaciones": ""}})
+
+    with _secure_backend(tmp_path / "blank"):
+        persist_filed_calculation_observation(blank, repository=CalculationObservationRepository())
+        blank_row = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
+    with _secure_backend(tmp_path / "missing"):
+        persist_filed_calculation_observation(missing, repository=CalculationObservationRepository())
+        missing_row = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
+
+    assert blank_row is not None
+    assert missing_row is not None
+    assert "aeat_tipo_solicitud" not in blank_row.source_metadata
+    assert "aeat_tipo_solicitud" not in missing_row.source_metadata
+    # Anchor: the metadata was built at all, so the absences above mean something.
+    assert "aeat_expediente_id" in blank_row.source_metadata
+    assert "aeat_expediente_id" in missing_row.source_metadata
+
+
+def test_the_request_type_signal_survives_a_strict_persistence_roundtrip(tmp_path: Path) -> None:
+    """The carried key crosses the real encrypted boundary and reloads equal.
+
+    Real key provider, real SQLite, real serializer: the field is written through
+    the production persist path and read back through the production load path,
+    then the whole reloaded provenance envelope is compared rather than just the
+    one key, so a save that carried the request type while re-defaulting a
+    neighbouring field fails here.
+    """
+    observation = _filed_130_observation().model_copy(
+        update={"metadata": {"tipo_solicitud": _SYNTHETIC_REQUEST_TYPE, "observaciones": "OBS"}},
     )
-    assert "tipo_solicitud" not in loaded.source_metadata
-    assert _SYNTHETIC_REQUEST_TYPE not in loaded.source_metadata.values(), (
-        "the request type reached persistence under some other key; this test must name that key instead"
-    )
+    with _secure_backend(tmp_path):
+        persist_filed_calculation_observation(
+            observation,
+            repository=CalculationObservationRepository(),
+            justificante_csvs=("CSV13020261T",),
+        )
+        first = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
+        second = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
+
+    assert first is not None
+    assert second is not None
+    assert first == second
+    assert first.source_metadata == {
+        "aeat_register_status": "ALTA",
+        "aeat_expediente_id": observation.expediente_id,
+        "authenticated_identity": _SYNTHETIC_PROFILE_ID,
+        "aeat_tipo_solicitud": _SYNTHETIC_REQUEST_TYPE,
+        "aeat_justificante_csv": "CSV13020261T",
+    }
 
 
 def test_receipt_presentation_identifier_is_rejected_against_a_register_expediente_id(tmp_path: Path) -> None:
@@ -1105,11 +1165,16 @@ def test_receipt_presentation_identifier_is_rejected_against_a_register_expedien
     refusal for silent mis-stamping. REVERSE THIS TEST once that is decided:
     assert the receipt stamps, and delete the rejection assertions below.
     """
+    # DO NOT "tidy" these two into agreement. Their divergence IS the subject of
+    # this test: making them equal turns it into a test that a matching receipt
+    # matches, which nothing needs. The guard below refuses that edit, and it
+    # compares the way the predicate itself does -- case-folded -- so a
+    # case-variant of the same identifier cannot slip past a naive `!=`.
     register_expediente_id = "202613000000101A"
     receipt = parse_justificante_bytes(_modelo_130_justificante_pdf_bytes())
     assert receipt.presentation_id is not None
-    assert receipt.presentation_id != register_expediente_id, (
-        "the receipt's presentation identifier equals the register expediente id, "
+    assert receipt.presentation_id.strip().casefold() != register_expediente_id.strip().casefold(), (
+        "the receipt's presentation identifier and the register expediente id no longer diverge, "
         "so this fixture pair cannot exercise the divergence"
     )
     assert receipt.matches_filing_target(

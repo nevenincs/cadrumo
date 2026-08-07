@@ -238,6 +238,7 @@ from ._provenance_stamp import (
     provenance_transport_label,
 )
 from ._refund_election import RefundElection
+from ._register_scoping_signal import RegisterScopingSignal
 from ._rescate_type import RescateType
 from ._result_disposition import (
     ResultDisposition,
@@ -480,6 +481,7 @@ __all__: list[str] = [
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",
     "RefundElection",
+    "RegisterScopingSignal",
     "RegistryPeriodCode",
     "RegistrySelectorPeriodCode",
     "RescateType",

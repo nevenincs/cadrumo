@@ -25,12 +25,13 @@ from ....adapters.outbound.aeat.sede import (
     FiledDeclarationAvailability,
     FiledDeclarationAvailabilityReport,
 )
-from ....core import FiledHistoryDiscoverySignal
+from ....core import FiledHistoryDiscoverySignal, RegisterScopingSignal
 from ....domain.deadlines import TaxpayerProfile
 from .._filed_data_capture import (
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryPair,
     FiledHistoryDiscoveryReport,
+    classify_register_scoping_signal,
     expected_filed_declaration_grid,
     filed_history_discovery_report,
 )
@@ -38,6 +39,13 @@ from .._filed_data_capture import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _TODAY = date(2026, 8, 7)
+
+
+def _confidently_excluded(profile: TaxpayerProfile) -> set[str]:
+    """Return the modelos the profile positively answers "no" for."""
+    from ....application.overview import build_obligation_coverage
+
+    return set(build_obligation_coverage(profile, (), today=_TODAY).confidently_excluded)
 
 
 def _autonomo(**overrides: object) -> TaxpayerProfile:
@@ -231,9 +239,7 @@ def test_the_register_signal_only_ever_widens_the_grid() -> None:
     )
     assert set(without.walk_pairs) <= set(with_register.walk_pairs)
     # And every profile pair keeps its standing after the union.
-    assert {
-        (pair.modelo, pair.ejercicio) for pair in with_register.profile_expected_pairs
-    } == set(without.walk_pairs)
+    assert {(pair.modelo, pair.ejercicio) for pair in with_register.profile_expected_pairs} == set(without.walk_pairs)
 
 
 def test_the_register_signal_can_never_remove_a_profile_pair() -> None:
@@ -372,3 +378,99 @@ def test_the_report_refuses_an_unknown_signal_token() -> None:
     corrupted["pairs"][0]["signals"] = ["operator_guess"]
     with pytest.raises(ValidationError, match="signals"):
         FiledHistoryDiscoveryReport.model_validate_json(json.dumps(corrupted))
+
+
+# --------------------------------------------------- the offline scoping reading
+
+
+def test_an_offered_modelo_the_profile_excludes_reads_as_likely_universal() -> None:
+    """The positive observation: the register offers something this filer cannot file.
+
+    A natural person's profile positively answers "no" for the corporate-tax
+    return, so a list scoped to that NIF would not offer it. Offering it anyway is
+    what a catalogue rendered regardless of taxpayer looks like -- and this is the
+    reading that matters, because it is the one under which measuring coverage
+    against the offered set alone would be meaningless.
+    """
+    profile = _autonomo()
+    excluded = _confidently_excluded(profile)
+    assert excluded, "the profile excludes nothing, so this fixture cannot show an excluded modelo being offered"
+
+    reading = classify_register_scoping_signal(
+        profile,
+        _availability((next(iter(sorted(excluded))), (2025,))),
+        today=_TODAY,
+    )
+    assert reading is RegisterScopingSignal.LIKELY_UNIVERSAL
+
+
+def test_an_offered_set_avoiding_every_excluded_modelo_reads_as_likely_nif_scoped() -> None:
+    """Consistent with a NIF-scoped list -- and only consistent with it.
+
+    The absence of an excluded modelo is ALSO what a universal catalogue produces
+    for a taxpayer whose profile happens to exclude nothing the register lists,
+    which is why the member stays a hedge and why this test asserts the hedge
+    rather than a resolved answer.
+    """
+    profile = _autonomo()
+    excluded = _confidently_excluded(profile)
+    offered = "303"
+    assert offered not in excluded, "the fixture modelo is excluded, so this arm is testing the other branch"
+
+    reading = classify_register_scoping_signal(profile, _availability((offered, (2025,))), today=_TODAY)
+    assert reading is RegisterScopingSignal.LIKELY_NIF_SCOPED
+
+
+def test_an_empty_offered_set_reads_as_inconclusive() -> None:
+    """No offered modelos means the comparison discriminates nothing.
+
+    Reported as inconclusive rather than as a weak version of either reading: the
+    available evidence says nothing either way, and collapsing that into
+    "probably scoped" would manufacture confidence from an absent measurement.
+    """
+    reading = classify_register_scoping_signal(_autonomo(), _availability(), today=_TODAY)
+    assert reading is RegisterScopingSignal.INCONCLUSIVE
+
+
+def test_no_reading_can_express_a_resolved_answer() -> None:
+    """The enum cannot say "universal" or "nif_scoped" outright, by construction.
+
+    The plan row requires that no test assert a resolved boolean. This goes
+    further and pins that a resolved value is not even representable, so a future
+    consumer cannot store a heuristic reading and later cite it as though a live
+    probe had confirmed it.
+    """
+    values = {signal.value for signal in RegisterScopingSignal}
+    assert values == {"likely_universal", "likely_nif_scoped", "inconclusive"}
+    assert "universal" not in values
+    assert "nif_scoped" not in values
+    assert all(signal.value.startswith(("likely_", "inconclusive")) for signal in RegisterScopingSignal)
+
+
+def test_the_reading_does_not_change_the_walked_grid() -> None:
+    """The classification is advisory: it can neither widen nor narrow the walk.
+
+    Asserted because an advisory that quietly gated coverage would be the worst of
+    both -- an unconfirmed signal deciding what gets queried.
+    """
+    profile = _autonomo()
+    excluded = next(iter(sorted(_confidently_excluded(profile))))
+    universal_looking = _availability((excluded, (2025,)))
+    scoped_looking = _availability(("303", (2025,)))
+
+    expected = ExpectedFiledDeclarationGrid(
+        modelos=("303",),
+        ejercicios=(2025,),
+        activity_start_declared=True,
+    )
+    assert classify_register_scoping_signal(profile, universal_looking, today=_TODAY) is (
+        RegisterScopingSignal.LIKELY_UNIVERSAL
+    )
+    assert classify_register_scoping_signal(profile, scoped_looking, today=_TODAY) is (
+        RegisterScopingSignal.LIKELY_NIF_SCOPED
+    )
+    # Both offered sets are unioned in identically regardless of the reading.
+    for availability in (universal_looking, scoped_looking):
+        report = filed_history_discovery_report(expected=expected, availability=availability)
+        assert set(expected.pairs) <= set(report.walk_pairs)
+        assert set(availability.offered_pairs) <= set(report.walk_pairs)
