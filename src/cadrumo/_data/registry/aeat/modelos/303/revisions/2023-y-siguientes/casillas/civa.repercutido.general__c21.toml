@@ -557,8 +557,12 @@ data_type = "money"
 semantic_role = "dr303_158"
 continuidad_id = "dr303-158"
 required = false
-input_kind = "bound"
-binding = "modelo-303-recargo-equivalencia-super-reducido-cuota"
+# The design fixes this rung's Tipo % [157] as the constant "00175" -- the LIVA
+# art. 161.4 tabaco recargo. It previously carried the super-reducido binding, so
+# the 0,5 % cuota was declared under a rate AEAT publishes as 1,75 %. That binding
+# now feeds [170], whose Tipo [169] admits "00050". This box stays operator-input
+# until the tabaco population is modelled -- an omission, not this mis-allocation.
+input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-158"]
@@ -634,13 +638,19 @@ export_refs = ["modelo-303-page-01-casilla-169"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "170"
 number = "170"
-section = ["iva", "regimen_general", "devengado"]
+section = ["iva", "recargo_equivalencia", "devengado"]
 data_type = "money"
 semantic_role = "dr303_170"
 continuidad_id = "dr303-170"
 required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+# Recargo de equivalencia cuota for the rung whose Tipo [169] admits "00026" and
+# "00050" -- the LIVA art. 161.3 super-reducido 0,5 % and its RDL 4/2024 0,26 %
+# transitional companion. Both land in this one rung, so the transitional rates
+# do not change this destination. Section corrected from regimen_general: the
+# design names this row Recargo equivalencia.
+input_kind = "bound"
+binding = "modelo-303-recargo-equivalencia-super-reducido-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-170"]
 
