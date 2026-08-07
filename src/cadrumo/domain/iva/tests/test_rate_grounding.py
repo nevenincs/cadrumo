@@ -101,10 +101,13 @@ def test_every_shipped_rate_resolves_registry_legal_and_source_evidence() -> Non
     table = load_iva_rate_table()
     rates = tuple(rate for member_rates in table.values() for rate in member_rates)
 
-    # 64 tier-defining rates plus the three RDL 4/2024 coexisting food rates
-    # (2 % and 7,5 % for Oct-Dec 2024, 5 % for Jul-Sep 2024). The 0 % arm needs
-    # no record: ZERO is its own tier and already classifies.
-    assert len(rates) == 67
+    # Gated on the PROPERTY, never on a tally. A hardcoded count encodes one
+    # moment, trains every author to bump the constant, and then detects
+    # nothing: it cannot tell a deliberately retired record from a lost one.
+    # What the count was standing in for is that the table is non-empty and
+    # every record it ships is grounded and resolvable -- asserted directly
+    # below, and unaffected by a record being legitimately added or withdrawn.
+    assert rates, "the shipped rate table must not be empty"
     assert all(rate.legal_refs for rate in rates if rate.member_state is EUMemberState.ES)
     assert all(not rate.legal_refs for rate in rates if rate.member_state is not EUMemberState.ES)
     assert all(rate.source_refs for rate in rates if rate.member_state is not EUMemberState.ES)

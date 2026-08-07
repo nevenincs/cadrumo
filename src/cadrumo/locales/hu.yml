@@ -66666,7 +66666,8 @@ modelo:
               label: Fizetendő áfa adóalapja - általános szabályozás - 21%-os kulcs
                 - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
-              help: null
+              help: Vallja be a 05. rovat adóalapjára 21 %-os általános adókulccsal
+                felszámított áfát.
               label: Fizetendő áfa összege - általános szabályozás - 21%-os kulcs
                 - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:

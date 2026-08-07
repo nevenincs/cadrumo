@@ -66864,7 +66864,9 @@ profile:
 provisioning:
   model:
     licence:
-      non_commercial_advisory: provisioning.model.licence.non_commercial_advisory
+      non_commercial_advisory: Model %{model} is covered by the %{licence}, which
+        does not permit commercial use. You named it explicitly, so Cadrumo will use
+        it, but a commercial filing practice needs a separate licence from the publisher.
 review:
   adapters:
     errors:

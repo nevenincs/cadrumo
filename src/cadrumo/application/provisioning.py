@@ -35,11 +35,20 @@ from ..core import (
     STRICT_FROZEN_CONFIG,
     AcceleratorKind,
     ContentionCause,
+    DeploymentLicencePosture,
     ExternalPathRole,
+    HardwareTier,
+    ModelCandidate,
+    ModelRole,
+    ModelSelectionAdvisory,
     OptionalExtra,
+    candidates_for_role,
+    hardware_tier_for_free_bytes,
+    model_candidate,
     optional_extra_available,
 )
 from ..core.config import Settings, load_settings
+from ..core.i18n import tr
 
 __all__ = [
     "OPTIONAL_EXTRAS",
@@ -50,11 +59,14 @@ __all__ = [
     "ContentionSnapshot",
     "DependencyStatus",
     "HardwareProfile",
+    "HardwareTier",
+    "ModelSelection",
     "OptionalExtra",
     "RuntimeResident",
     "SystemMemoryReading",
     "UnloadOutcome",
     "assess_model_load_contention",
+    "binding_free_bytes",
     "cadrumo_selected_models",
     "probe_hardware_profile",
     "probe_local_inference_hardware",
@@ -66,6 +78,7 @@ __all__ = [
     "read_accelerator",
     "read_runtime_residents",
     "read_system_memory",
+    "select_model_for_role",
     "unload_runtime_model",
 ]
 
@@ -396,9 +409,9 @@ def probe_model_runtime_hardware_floor(
                 f"{resolved.cadrumo_llm_ollama_vision_model!r}"
             ),
             remediation=(
-                "use a smaller local vision model (set cadrumo_llm_ollama_vision_model to "
-                "moondream for low-memory hardware), or lower "
-                "cadrumo_llm_model_runtime_memory_floor_bytes if this machine is known good"
+                "resolve the vision role against this machine with select_model_for_role, which "
+                "names the weakest catalogued candidate that still clears the capability bar, or "
+                "lower cadrumo_llm_model_runtime_memory_floor_bytes if this machine is known good"
             ),
         )
     return DependencyStatus(
@@ -631,6 +644,27 @@ def probe_hardware_profile(
     )
 
 
+def binding_free_bytes(profile: HardwareProfile) -> int | None:
+    """Return free memory in the arena that actually binds a model load, or ``None``.
+
+    The one place the arena rule lives, shared by
+    :func:`assess_model_load_contention` (which acts on it) and
+    :func:`select_model_for_role` (which plans against it), so the two can never
+    disagree about which figure binds. A device load is bound by device memory,
+    a measured-accelerator-free machine by system memory, and an *unmeasurable*
+    accelerator by nothing that may be trusted -- which is ``None``, and is why
+    :attr:`~core.AcceleratorKind.UNKNOWN` does not fall through to system
+    memory: a card this build cannot read may still be holding the memory a
+    load needs.
+    """
+    kind = profile.accelerator.kind
+    if kind is AcceleratorKind.NVIDIA_CUDA:
+        return profile.free_vram_bytes
+    if kind is AcceleratorKind.NONE:
+        return profile.memory.free_bytes
+    return None
+
+
 def _gib(value: int | None) -> str:
     """Render a byte count as GiB for an operator-facing row, or ``unverified`` when unknown."""
     return "unverified" if value is None else f"{value / 1024**3:.1f} GiB"
@@ -671,6 +705,263 @@ def probe_local_inference_hardware(profile: HardwareProfile | None = None) -> De
             ),
         )
     return DependencyStatus(service="local-inference-hardware", available=True, detail=detail)
+
+
+class ModelSelection(BaseModel):
+    """Which model a role resolved to, and everything the operator should know about it.
+
+    A *planning* result, not an admission decision. It answers "which model
+    should this role use on this machine"; whether that model may be loaded
+    right now is :func:`assess_model_load_contention`'s question, asked later
+    and against readings taken at that moment. Keeping the two apart is what
+    lets selection stay useful on a machine whose headroom is momentarily gone.
+
+    ``selected`` false means no catalogued candidate cleared the bars, and
+    ``runtime_id`` is then ``None`` rather than a fallback -- naming a model
+    that cannot serve the role would push the failure into inference, where it
+    surfaces as a timeout instead of as a refusal.
+
+    ``advisories`` is never empty for an override that carries a licence,
+    context or headroom concern. An override is honoured, because the operator's
+    explicit setting outranks the catalogue's preference -- but it is never
+    honoured silently.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    role: ModelRole
+    runtime_id: str | None = None
+    candidate: ModelCandidate | None = None
+    posture: DeploymentLicencePosture
+    tier: HardwareTier
+    binding_free_bytes: int | None = Field(default=None, ge=0)
+    required_context_tokens: int = Field(gt=0)
+    safety_margin_bytes: int = Field(ge=0)
+    override_applied: bool = False
+    selected: bool
+    advisories: tuple[ModelSelectionAdvisory, ...] = ()
+    detail: str = ""
+    remediation: str = ""
+
+    @property
+    def licence_advisory(self) -> str:
+        """Return the localised non-commercial licence advisory, or an empty string.
+
+        Non-empty exactly when
+        :attr:`~core.ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED` is
+        present, which automatic selection can never produce -- so this string
+        appearing is itself the signal that an override reached past the
+        commercial posture.
+        """
+        if ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED not in self.advisories:
+            return ""
+        candidate = self.candidate
+        if candidate is None:
+            return ""
+        return tr(
+            "provisioning.model.licence.non_commercial_advisory",
+            model=candidate.runtime_id,
+            licence=candidate.licence.name,
+        )
+
+
+def select_model_for_role(
+    role: ModelRole,
+    *,
+    profile: HardwareProfile | None = None,
+    settings: Settings | None = None,
+    override: str | None = None,
+    posture: DeploymentLicencePosture = DeploymentLicencePosture.COMMERCIAL,
+) -> ModelSelection:
+    """Resolve ``role`` to the weakest catalogued model that clears every bar.
+
+    **Bounded from below, never maximised.** Candidates are ordered by ascending
+    memory requirement and the FIRST survivor wins, so a machine with headroom
+    to spare still gets the small model. A larger model is an operator's
+    explicit choice, which is why nothing here ranks on capability above the
+    floor.
+
+    Three bars, applied in this order and each for a different reason:
+
+    * **Context window.** A model whose window cannot hold the configured
+      request window is excluded on *capability*, not preference -- it cannot do
+      the job at any price.
+    * **Licence.** Under a ``COMMERCIAL`` posture a candidate whose publisher
+      text bars commercial use is not eligible. This is the bar that moved the
+      shipped default.
+    * **Measured headroom.** Requirement plus the configured safety margin
+      against free memory in the binding arena.
+
+    An unmeasurable machine does **not** refuse here, and that is deliberate
+    rather than a softening of the fail-closed rule: refusing to *name* a model
+    because headroom is momentarily unreadable would break provisioning on
+    exactly the machines that most need to pull one, while the load itself is
+    still failed closed by :func:`assess_model_load_contention` at the act. The
+    selection says so with
+    :attr:`~core.ModelSelectionAdvisory.FIT_UNVERIFIED`.
+
+    Args:
+        role: The role to resolve.
+        profile: Measured hardware; probed when omitted.
+        settings: Settings carrying the context window and safety margin; loaded
+            when omitted.
+        override: An operator-named runtime id that outranks selection. Honoured
+            even when uncatalogued or licence-barred, always with advisories.
+        posture: The deployment's licence posture; commercial by default,
+            because that is what this product is.
+
+    Returns:
+        A :class:`ModelSelection`. Never raises: an unsatisfiable role returns
+        ``selected`` false carrying the reason and a remediation.
+    """
+    resolved = settings if settings is not None else load_settings()
+    hardware = profile if profile is not None else probe_hardware_profile()
+    free = binding_free_bytes(hardware)
+    tier = hardware_tier_for_free_bytes(free)
+    required_context = resolved.cadrumo_llm_ollama_num_ctx
+    margin = resolved.cadrumo_llm_contention_safety_margin_bytes
+    base = {
+        "role": role,
+        "posture": posture,
+        "tier": tier,
+        "binding_free_bytes": free,
+        "required_context_tokens": required_context,
+        "safety_margin_bytes": margin,
+    }
+
+    if override is not None:
+        return _selection_from_override(
+            override,
+            base=base,
+            posture=posture,
+            free=free,
+            margin=margin,
+            context=required_context,
+        )
+
+    eligible = [
+        candidate
+        for candidate in candidates_for_role(role)
+        if candidate.max_context_tokens >= required_context and candidate.permitted_under(posture)
+    ]
+    if not eligible:
+        return ModelSelection(
+            **base,
+            selected=False,
+            detail=(
+                f"no catalogued {role.value} candidate both holds the configured "
+                f"{required_context}-token request window and carries a licence permitting "
+                f"{posture.value} use"
+            ),
+            remediation=(
+                "lower cadrumo_llm_ollama_num_ctx if the smaller window still fits the prompt, "
+                "or name a model explicitly and accept the advisories it carries"
+            ),
+        )
+
+    fitting = [
+        candidate for candidate in eligible if free is None or candidate.memory_requirement_bytes + margin <= free
+    ]
+    if not fitting:
+        smallest = eligible[0]
+        needed = smallest.memory_requirement_bytes + margin
+        return ModelSelection(
+            **base,
+            selected=False,
+            advisories=(ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM,),
+            detail=(
+                f"{_gib(free)} free on a {tier.value} machine is short of the {_gib(needed)} the "
+                f"smallest eligible {role.value} candidate {smallest.runtime_id!r} needs "
+                f"({_gib(smallest.memory_requirement_bytes)} requirement plus a {_gib(margin)} margin)"
+            ),
+            remediation=(
+                "close what is holding the memory, or unload a Cadrumo-selected resident model, "
+                "then retry; there is no smaller catalogued candidate that clears the capability bar"
+            ),
+        )
+
+    chosen = fitting[0]
+    advisories: list[ModelSelectionAdvisory] = []
+    if free is None:
+        advisories.append(ModelSelectionAdvisory.FIT_UNVERIFIED)
+    detail = (
+        f"{role.value} resolves to {chosen.runtime_id!r} ({_gib(chosen.memory_requirement_bytes)}, "
+        f"{chosen.licence.spdx_id}) -- the weakest catalogued candidate holding the "
+        f"{required_context}-token window on a {tier.value} machine with {_gib(free)} free"
+    )
+    return ModelSelection(
+        **base,
+        runtime_id=chosen.runtime_id,
+        candidate=chosen,
+        selected=True,
+        advisories=tuple(advisories),
+        detail=detail,
+        remediation=(
+            "install the NVML reader (pip install cadrumo[llm]) so fit can be verified before the pull"
+            if free is None
+            else ""
+        ),
+    )
+
+
+def _selection_from_override(
+    override: str,
+    *,
+    base: dict[str, object],
+    posture: DeploymentLicencePosture,
+    free: int | None,
+    margin: int,
+    context: int,
+) -> ModelSelection:
+    """Honour an operator-named model, attaching every concern it carries.
+
+    The override always wins -- an operator who names a model has made a
+    decision this function is not entitled to overturn. What it is entitled to
+    do is refuse to be quiet about it, which is the whole of this helper.
+    """
+    candidate = model_candidate(override)
+    if candidate is None:
+        return ModelSelection(
+            **base,
+            runtime_id=override,
+            selected=True,
+            override_applied=True,
+            advisories=(
+                ModelSelectionAdvisory.OVERRIDE_NOT_IN_CATALOGUE,
+                ModelSelectionAdvisory.LICENCE_UNVERIFIED,
+            ),
+            detail=(
+                f"{override!r} was named explicitly but is not in the model catalogue, so neither "
+                f"its licence nor its fit on this machine could be judged"
+            ),
+            remediation=(
+                "add the model to the core model catalogue with its publisher-verified licence, "
+                "or select a catalogued candidate"
+            ),
+        )
+
+    advisories: list[ModelSelectionAdvisory] = []
+    if not candidate.permitted_under(posture):
+        advisories.append(ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED)
+    if candidate.max_context_tokens < context:
+        advisories.append(ModelSelectionAdvisory.OVERRIDE_BELOW_CONTEXT_FLOOR)
+    if free is None:
+        advisories.append(ModelSelectionAdvisory.FIT_UNVERIFIED)
+    elif candidate.memory_requirement_bytes + margin > free:
+        advisories.append(ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM)
+
+    return ModelSelection(
+        **base,
+        runtime_id=candidate.runtime_id,
+        candidate=candidate,
+        selected=True,
+        override_applied=True,
+        advisories=tuple(advisories),
+        detail=(
+            f"{candidate.runtime_id!r} ({_gib(candidate.memory_requirement_bytes)}, "
+            f"{candidate.licence.spdx_id}) was named explicitly and overrides selection"
+        ),
+    )
 
 
 class RuntimeResident(BaseModel):
@@ -880,10 +1171,7 @@ def assess_model_load_contention(
     free_vram = hardware.free_vram_bytes
     free_ram = hardware.memory.free_bytes
     on_device = kind is AcceleratorKind.NVIDIA_CUDA
-    # The binding arena follows the measured accelerator kind: a device load is
-    # bound by device memory, a CPU-only machine by system memory, and an
-    # unmeasurable accelerator by nothing that can be trusted.
-    binding_free = free_vram if on_device else (free_ram if kind is AcceleratorKind.NONE else None)
+    binding_free = binding_free_bytes(hardware)
     required = requirement_bytes + margin
 
     base = {
@@ -954,9 +1242,7 @@ def assess_model_load_contention(
 
     selected = cadrumo_selected_models(resolved)
     resident_bytes = _attributed_resident_bytes(resident_set, on_device=on_device)
-    unloadable = tuple(
-        resident.name for resident in resident_set if _matches_selected(resident.name, selected)
-    )
+    unloadable = tuple(resident.name for resident in resident_set if _matches_selected(resident.name, selected))
     unloadable_bytes = _attributed_resident_bytes(
         resident_set,
         on_device=on_device,

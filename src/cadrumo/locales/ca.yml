@@ -66542,7 +66542,8 @@ modelo:
                 ordinari gravades al tipus general del 21 %.
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 21% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
-              help: null
+              help: Declara la quota d'IVA repercutida al tipus general del 21 % sobre
+                la base imposable de la casella 05.
               label: Quota d’IVA meritat - Règim ordinari - Tipus 21% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
               help: Declara la base imposable de les operacions interiors del règim

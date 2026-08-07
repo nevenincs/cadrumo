@@ -161,19 +161,23 @@ def default_extraction_period() -> Period:
     return Period.from_year_and_code(today_madrid().year, "0A")
 
 
-def template_numeric_literals(template: str = PROMPT_TEMPLATE) -> tuple[str, ...]:
+def template_numeric_literals(template: str | None = None) -> tuple[str, ...]:
     """Return every numeric literal in ``template``, ignoring allowlisted tokens.
 
     Exposed rather than inlined in the gate so the gate asserts a property of
     production code instead of re-implementing the scan it is checking.
 
     Args:
-        template: Template text to scan; defaults to :data:`PROMPT_TEMPLATE`.
+        template: Template text to scan. ``None`` reads :data:`PROMPT_TEMPLATE`
+            AT CALL TIME rather than defaulting to it in the signature: a
+            default argument is evaluated once at import, so the scan would hold
+            a snapshot and keep reporting clean over a template that had since
+            gained a literal -- which a mutation probe caught it doing.
 
     Returns:
         The numeric literals found, in order. Empty is the passing state.
     """
-    scanned = template
+    scanned = PROMPT_TEMPLATE if template is None else template
     for token in _NON_NUMERIC_TOKEN_ALLOWLIST:
         scanned = scanned.replace(token, "")
     return tuple(match.group(0) for match in _NUMERIC_LITERAL_RE.finditer(scanned))

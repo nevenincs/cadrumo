@@ -89,6 +89,7 @@ Submodules
    cadrumo.domain.calculations.registry._schedules
    cadrumo.domain.calculations.registry._schema
    cadrumo.domain.calculations.registry._schema_base
+   cadrumo.domain.calculations.registry._schema_export_exemption
    cadrumo.domain.calculations.registry._schema_extraction
    cadrumo.domain.calculations.registry._schema_formula
    cadrumo.domain.calculations.registry._schema_governance

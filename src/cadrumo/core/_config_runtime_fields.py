@@ -3,6 +3,7 @@ from __future__ import annotations
 from pydantic import Field
 
 from ._config_timeouts import CadrumoTimeoutSettings
+from ._model_catalogue import ModelRole, default_model_runtime_id
 
 
 class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
@@ -38,27 +39,31 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
         ),
     )
     cadrumo_llm_ollama_vision_model: str = Field(
-        default="qwen2.5vl:3b",
+        default=default_model_runtime_id(ModelRole.VISION_TRANSCRIPTION),
         description=(
             "Local Ollama vision model used to read scanned/image evidence on-host "
             "(the default, gestor-allowed posture); must be a multimodal model pulled "
-            "into the local Ollama runtime. Default qwen2.5vl:3b (~3 GB) is "
-            "document/OCR-grade and runs on normal consumer hardware (modest GPU or "
-            "CPU); override to qwen2.5vl:7b for an 8 GB+ GPU or moondream for "
-            "CPU-only/low-memory hardware"
+            "into the local Ollama runtime. The default is the weakest catalogued "
+            "candidate that clears the capability bars under a COMMERCIAL licence "
+            "posture -- qwen3-vl:2b, Apache-2.0, ~1.9 GB. It replaces qwen2.5vl:3b, "
+            "which is measured-equivalent at this discipline but carries the Qwen "
+            "Research licence and therefore bars commercial use. Every accepted value "
+            "and its licence are declared in the core model catalogue; overriding to a "
+            "research-licensed candidate is permitted and surfaces a licence advisory"
         ),
     )
     cadrumo_llm_ollama_text_model: str = Field(
-        default="qwen2.5:3b",
+        default=default_model_runtime_id(ModelRole.TEXT_EXTRACTION),
         description=(
             "Local Ollama TEXT model used to classify a text-layer document on-host. "
-            "Chosen under the same consumer-hardware constraint that binds the vision "
-            "default rather than beside it: qwen2.5:3b is ~2 GB, comfortably under the "
-            "declared memory floor, and is the text sibling of the qwen2.5vl:3b vision "
-            "default, so a machine provisioned for one is provisioned for the other. "
-            "This model reads only the extracted text and selects from the registry "
-            "allow-list; it never emits a regulated number. Override upward "
-            "(qwen2.5:7b) on a larger GPU"
+            "Chosen under the same constraints that bind the vision default rather "
+            "than beside it: qwen3:1.7b is Apache-2.0 and ~1.4 GB, comfortably under "
+            "the declared memory floor, so a machine provisioned for the vision "
+            "default is provisioned for this one. It replaces qwen2.5:3b, which is one "
+            "of the two Qwen2.5 sizes released under the Qwen Research licence rather "
+            "than Apache-2.0 -- easy to miss, and the reason the licence flag is "
+            "declared per candidate. This model reads only the extracted text and "
+            "selects from the registry allow-list; it never emits a regulated number"
         ),
     )
     cadrumo_llm_model_runtime_memory_floor_bytes: int = Field(
@@ -67,13 +72,13 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
         description=(
             "Minimum total system memory the local model runtime needs before a "
             "vision read is worth attempting. Sized for the default vision model "
-            "(qwen2.5vl:3b, ~3 GB of weights) plus the 8192-token context window "
+            "(qwen3-vl:2b, ~1.9 GB of weights) plus the 8192-token context window "
             "and normal OS residency, which is why the floor sits well above the "
             "weight size alone. Below it the runtime does not refuse -- it loads "
             "and thrashes, or is killed mid-read, which reaches the operator as "
             "an unexplained timeout rather than as a hardware shortfall. Tunable "
-            "because the floor tracks the configured model: lower it for "
-            "moondream on low-memory hardware, raise it for qwen2.5vl:7b"
+            "because the floor tracks the configured model: raise it when "
+            "overriding upward to a larger catalogued candidate"
         ),
     )
     cadrumo_llm_contention_safety_margin_bytes: int = Field(

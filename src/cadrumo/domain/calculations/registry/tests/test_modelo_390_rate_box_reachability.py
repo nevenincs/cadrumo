@@ -52,8 +52,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 # slot, a date inside the slot's statutory window, box suffix, base, cuota.
-# 5 % runs 1 Jul - 30 Sep 2024 and 7,5 % / 2 % from 1 Oct (RDL 4/2024 art. 1), so
-# each transitional slot is exercised on a day it was actually in force.
+# Only 21 %, 10 % and 4 % run the whole year. Under RDL 4/2024 art. 1, 5 % and
+# 0 % apply 1 Jul - 30 Sep 2024 and 7,5 % and 2 % from 1 Oct, so each windowed
+# slot is exercised on a day it was actually in force.
+#
+# The 0 % row is deliberately dated inside July-September rather than in Q1. The
+# zero window was corrected to the span the bundled corpus actually supports, and
+# a Q1 date now refuses at the bridge. That refusal is the CORRECT behaviour and
+# this fixture follows the law rather than pinning the date it used to accept.
 _LINES = (
     (IvaRate.RATE_21, date(2024, 3, 10), "21", "4000.00", "817.00"),
     (IvaRate.RATE_10, date(2024, 3, 11), "10", "2500.00", "241.00"),
@@ -61,7 +67,7 @@ _LINES = (
     (IvaRate.RATE_5, date(2024, 8, 13), "5", "1400.00", "73.00"),
     (IvaRate.RATE_4, date(2024, 3, 14), "4", "1200.00", "51.00"),
     (IvaRate.RATE_2, date(2024, 11, 15), "2", "900.00", "19.00"),
-    (IvaRate.RATE_0, date(2024, 3, 16), "0", "700.00", "0.00"),
+    (IvaRate.RATE_0, date(2024, 8, 16), "0", "700.00", "0.00"),
 )
 
 # The rate each slot must resolve to, and the tier the classifier must pick. The
@@ -83,6 +89,9 @@ _OUT_OF_WINDOW = (
     (IvaRate.RATE_7_5, date(2024, 3, 10)),
     (IvaRate.RATE_5, date(2024, 11, 12)),
     (IvaRate.RATE_2, date(2024, 8, 13)),
+    # 0 % is windowed too, which is easy to forget because it reads like a
+    # permanent tier rather than a transitional food rate.
+    (IvaRate.RATE_0, date(2024, 3, 16)),
 )
 
 

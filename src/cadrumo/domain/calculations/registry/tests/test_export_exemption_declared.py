@@ -20,6 +20,7 @@ subject is a defect that hides by looking like nothing.
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from .....core import ExportExemptionReason, ExportLayoutFormat
 from .._authority import ValidatedRegistryAuthority
@@ -213,22 +214,70 @@ def test_declared_feeds_addressed_casilla_reasons_really_do_reach_a_box(
     # vacuous for this member.
 
 
-def test_a_casilla_the_record_addresses_may_not_declare_an_exemption() -> None:
-    """A reason contradicting an export_refs declaration is refused at schema level."""
-    from .._errors import RegistryValidationError
+def _revalidate(casilla: object, **updates: object) -> object:
+    """Re-run strict schema validation over a real casilla with fields overridden.
+
+    ``model_copy`` deliberately skips validation, so a contradiction test must
+    round-trip through ``model_validate`` to exercise the model validator.
+    """
     from .._schema import CasillaDefinition
 
-    with pytest.raises(RegistryValidationError, match="not exempt"):
-        CasillaDefinition(
-            id="probe",
-            number="probe",
-            localization_keys=("modelo.probe.label",),
-            section=["probe"],
-            export_refs=("some-export-field",),
-            export_exemption_reason=ExportExemptionReason.NOT_IN_RECORD_DESIGN,
-            legal_refs=["ley-37-1992:art-99"],
-            source_refs=["aeat-dr-303-2025"],
-        )
+    payload = dict(casilla.__dict__)
+    payload.update(updates)
+    return CasillaDefinition.model_validate(payload)
+
+
+def test_a_casilla_the_record_addresses_may_not_declare_an_exemption(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """A reason contradicting an export_refs declaration is refused at schema level.
+
+    Built from a REAL bundled casilla so the contradiction is the only thing under
+    test; a hand-rolled fixture could fail validation for an unrelated reason and
+    read as a pass.
+    """
+    exported = next(
+        casilla
+        for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority)
+        for casilla in revision.casillas
+        if casilla.export_refs and not casilla.internal_only
+    )
+    # Control: the untouched casilla revalidates cleanly, so the refusal below is
+    # caused by the contradiction and not by the round-trip itself.
+    _revalidate(exported)
+    # pydantic wraps the model validator's RegistryValidationError.
+    with pytest.raises(ValidationError, match="not exempt"):
+        _revalidate(exported, export_exemption_reason=ExportExemptionReason.NOT_IN_RECORD_DESIGN)
+
+
+def test_an_internal_only_casilla_may_not_also_declare_a_reason(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """``internal_only`` already asserts its exemption, so a second one is refused.
+
+    Two mechanisms saying the same thing is how a divergence starts: a later
+    author could set them inconsistently and neither would be authoritative.
+    """
+    internal = next(
+        casilla
+        for modelo in registry_authority.modelos
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+        if casilla.internal_only
+    )
+    _revalidate(internal)
+    with pytest.raises(ValidationError, match="already asserts"):
+        _revalidate(internal, export_exemption_reason=ExportExemptionReason.INTERNAL_INTERMEDIATE)
+
+
+def test_an_unknown_reason_token_is_refused_at_the_loader_boundary() -> None:
+    """An unrecognised TOML token refuses at hydration, naming the accepted set."""
+    from .._errors import RegistryValidationError
+    from .._schema_export_exemption import _coerce_export_exemption_reason
+
+    assert _coerce_export_exemption_reason("not_in_record_design") is ExportExemptionReason.NOT_IN_RECORD_DESIGN
+    with pytest.raises(RegistryValidationError, match="not a recognised ExportExemptionReason"):
+        _coerce_export_exemption_reason("probably_fine")
 
 
 def test_pre_populated_by_aeat_is_documented_dormant_not_silently_unused(

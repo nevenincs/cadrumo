@@ -123,7 +123,13 @@ from ...core.identity import IdentityError, tax_id_identity_token, validate_span
 from ...core.parsing import parse_date, parse_iso8601_date
 from ...domain.attachments import link_attachment_invoice, normalize_media_type
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceClass, InvoiceLine
-from ...domain.iva import InvoiceKind, IvaCategory
+from ...domain.iva import (
+    EUMemberState,
+    InvoiceKind,
+    IvaCategory,
+    domestic_categories_by_rate_kind,
+    rate_kinds_for_declared_rate,
+)
 from ...llm import (
     LLMPdfRasterisationError,
     LLMProviderError,
@@ -1374,6 +1380,21 @@ def confirm_invoice_draft_from_evidence(
         # per-rate split is skipped on that path too.
         resolved_recargo_amount = recargo_amount
     resolved_iva_category = iva_category if iva_category is not None else _category_stated_by_the_document(draft)
+    if resolved_iva_category is None and not operator_overrode_the_amounts:
+        # A document charging an ordinary rate states the category code for
+        # "standard rate", which by design carries no special treatment: the
+        # rate itself is the meaning. That left the record with no declared IVA
+        # treatment at all, which the decomposition contract refuses -- so the
+        # renta income path counted the row's bank cash instead of its ingresos
+        # integros, dropping the base, the cuota and the retencion.
+        #
+        # Resolved from the rate the document states, never assumed. Skipped
+        # when the operator restated the amounts, for the same reason the
+        # per-rate split is: their figures are the authority, not the reader's.
+        resolved_iva_category = _domestic_category_from_the_declared_rate(
+            draft,
+            invoice_date=resolved_invoice_date,
+        )
 
     repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     candidate = build_catalogue_invoice(
@@ -1453,6 +1474,66 @@ def confirm_invoice_draft_from_evidence(
         created=True,
         total_discrepancy=printed_total_discrepancy(draft=draft, invoice=result.invoice),
     )
+
+
+def _domestic_category_from_the_declared_rate(draft: InvoiceDraft, *, invoice_date: date) -> IvaCategory | None:
+    """Return the domestic IVA category the document's own rate denotes, or ``None``.
+
+    Composed from two shipped authorities rather than a new table.
+    :func:`~domain.iva.rate_kinds_for_declared_rate` answers which tier a
+    declared rate WAS on a given date, against the registered rate records; it
+    returns a tuple because that question can legitimately have more than one
+    answer, so a caller detects ambiguity instead of picking one.
+    :func:`~domain.iva.domestic_categories_by_rate_kind` is the single authority
+    for which domestic category a tier denotes -- three independent copies of
+    that mapping existed before it was promoted, so re-deriving it here would
+    make a fourth.
+
+    The date is load-bearing and is the invoice's own issue date, not today's.
+    A tier's rate changes by statute, so resolving a 2024 document against
+    today's table would answer about a rate it was never charged at.
+
+    Declines, rather than approximating, in three cases:
+
+    - **More than one rate.** One invoice carries one category field and a
+      two-tier document has two answers. Picking either declares part of the
+      base under a rate it was not charged at, and picking by size is an
+      invention. Which category a multi-rate invoice takes is a modelling
+      decision this resolution does not make.
+    - **A recargo de equivalencia.** The rate resolves cleanly, but a supply
+      carrying a recargo may belong to the ordinary domestic tier or to the
+      recargo category, and the decomposition contract accepts BOTH -- so a
+      wrong pick would be caught nowhere downstream. That is exactly the shape
+      that must not be guessed.
+    - **An unregistered or ambiguous rate.** A rate that was not a registered
+      Spanish rate on the issue date is a real refusal rather than a lookup
+      failure, and a rate matching two tiers is the ambiguity the tuple exists
+      to surface.
+
+    Declining is visible: the record stays undeclared, the decomposition reports
+    it, and the renta income path raises an advisory. A guess would not be.
+
+    Args:
+        draft: The re-run extraction being confirmed.
+        invoice_date: The resolved issue date the rate must be read against.
+
+    Returns:
+        The resolved :class:`~domain.iva.IvaCategory`, or ``None`` when the
+        document does not settle it unambiguously.
+    """
+    if len(draft.iva_breakdown) != 1:
+        return None
+    entry = draft.iva_breakdown[0]
+    if entry.iva_rate is None:
+        return None
+    if entry.recargo_amount is not None or draft.recargo_amount is not None:
+        return None
+    # The lookup takes the rate as a FRACTION, matching how a transaction stores
+    # it; the draft carries the bare percentage the document prints.
+    tiers = rate_kinds_for_declared_rate(EUMemberState.ES, entry.iva_rate / Decimal("100"), invoice_date)
+    if len(tiers) != 1:
+        return None
+    return domestic_categories_by_rate_kind().get(tiers[0])
 
 
 def _category_stated_by_the_document(draft: InvoiceDraft) -> IvaCategory | None:

@@ -22,13 +22,31 @@ effective_from = 2024-01-01
 effective_until = 2024-12-31
 legal_refs = ["ley-37-1992:art-91"]
 
+# Tipo del 0 % sobre alimentos de primera necesidad, RDL 4/2024 art. 1.Dos.1.
+# Es un TIPO IMPOSITIVO, no una exencion: la rubrica del articulo dice "Tipo
+# impositivo aplicable temporalmente" y la clausula operativa "se aplicara el
+# tipo del 0 por ciento". Una entrega a tipo 0 es sujeta y NO exenta, y deduce
+# como una operacion gravada ordinaria (art. 94.Uno.1), que es lo que la separa
+# de las exenciones de los arts. 20 y 21-25.
+#
+# VENTANA. Del 1 de julio al 30 de septiembre de 2024. Desde el 1 de octubre de
+# 2024 la lista pasa al 2 % (RDL 4/2024 art. 1.Dos.2), de modo que un 0 % que
+# resolviera en el cuarto trimestre seria incorrecto.
+#
+# ENERO-JUNIO DE 2024 NO ESTA CUBIERTO, y es deliberado. Esas ventanas las fijan
+# RDL 20/2022, RDL 18/2022 y RDL 5/2023, ninguno de los cuales esta en el corpus
+# empaquetado -- lo declara la propia entrada legal de RDL 4/2024. Un valor cuya
+# provision habilitante no esta en el esquema no puede publicarse, y el preambulo
+# del real decreto-ley no sirve de fundamento. Una venta de enero a junio de 2024
+# rechaza en voz alta (IvaRateNotFoundError) en lugar de resolver sin fundamento;
+# cerrar el hueco es trabajo de corpus, no de este fichero.
 [[rates]]
 member_state = "es"
 kind = "zero"
 pct = "0"
-effective_from = 2024-01-01
-effective_until = 2024-12-31
-legal_refs = ["ley-37-1992:art-24", "ley-37-1992:art-25"]
+effective_from = 2024-07-01
+effective_until = 2024-09-30
+legal_refs = ["real-decreto-ley-4-2024:art-1"]
 
 [[rates]]
 member_state = "es"
@@ -51,12 +69,22 @@ pct = "4"
 effective_from = 2025-01-01
 legal_refs = ["ley-37-1992:art-91"]
 
-[[rates]]
-member_state = "es"
-kind = "zero"
-pct = "0"
-effective_from = 2025-01-01
-legal_refs = ["ley-37-1992:art-24", "ley-37-1992:art-25"]
+# NO HAY registro de tipo 0 general desde 2025-01-01, y su ausencia es una
+# decision fundamentada, no un olvido. Desde el 1 de enero de 2025 la lista de
+# alimentos vuelve al 4 % super-reducido (RDL 4/2024 art. 2, que modifica el
+# art. 91.Dos.1.1 LIVA, con la reforma posterior de la Ley 7/2024 DF 1.2), de
+# modo que un 0 % general vigente en 2025 no tiene amparo legal.
+#
+# El unico 0 % domestico indefinido que si existe es el del art. 91.Cuatro LIVA
+# (entregas de donativos a entidades de la Ley 49/2002, incorporado por la Ley
+# 7/2022 DF 3.2). NO se declara aqui porque el eje plano `kind = "zero"` no puede
+# expresar un tipo acotado a donativos: un registro abierto lo aplicaria a
+# cualquier entrega domestica. Ademas el dominio de IVA no modela hoy el concepto
+# de donativo -- `donativo` no aparece en la ruta de clasificacion -- asi que ese
+# supuesto no es alcanzable y no se pierde ningun caso legitimo.
+#
+# Sin registro, una clasificacion domestic_zero en 2025 lanza IvaRateNotFoundError
+# en lugar de resolver 0 % en silencio. El rechazo ruidoso es la direccion segura.
 
 [[rates]]
 member_state = "de"

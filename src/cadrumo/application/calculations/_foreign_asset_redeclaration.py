@@ -19,11 +19,25 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
-from ...core import CasillaId, ForeignAssetObligationGroup, Modelo
-from ...domain.calculations.registry import RegistryModeloObservation
+from ...core import (
+    MODELO_720_FOREIGN_ASSET_CLASS_CODES,
+    BindingSourceKind,
+    CasillaId,
+    ForeignAssetObligationGroup,
+    Modelo,
+    foreign_asset_obligation_group,
+)
+from ...core.aggregation import ForeignAssetClass
+from ...domain.calculations.registry import (
+    CasillaObservation,
+    ModeloRevision,
+    RegistryModeloObservation,
+    selector_as_dict,
+)
 from ...domain.modelos import (
+    CalculationRevision,
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
@@ -40,6 +54,19 @@ _M720_GROUP_LABELS: Mapping[ForeignAssetObligationGroup, str] = {
     ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS: "valores, derechos, seguros e IIC",
     ForeignAssetObligationGroup.INMUEBLES: "inmuebles",
 }
+
+_M720_GROUP_VALUATION_CASILLAS: Mapping[ForeignAssetObligationGroup, CasillaId] = {
+    group: casilla_id for casilla_id, group in _M720_VALUATION_CASILLA_GROUPS.items()
+}
+_M720_ASSET_CLASS_BY_CODE: Mapping[str, ForeignAssetClass] = {
+    code: asset_class for asset_class, code in MODELO_720_FOREIGN_ASSET_CLASS_CODES.items()
+}
+#: ``row_field`` selectors of the two foreign-asset row bindings the evidence
+#: projection joins. Named rather than inlined so the join is greppable; the
+#: binding IDs themselves are never hardcoded — they are discovered from the
+#: revision by these row fields.
+_ASSET_CLASS_ROW_FIELD = "asset_class_code"
+_VALUATION_ROW_FIELD = "valuation_amount"
 
 _M721_CUSTODIAN_NAME_CASILLA: CasillaId = "custodio.nombre-razon-social"
 _M721_CUSTODIAN_COUNTRY_CASILLA: CasillaId = "custodio.codigo-pais"

@@ -67,6 +67,19 @@ if TYPE_CHECKING:
     from ._vision_classifier import LocalVisionLLMClassifier
 
 from ._client import LLMClient
+from ._column_role_mapping import (
+    COLUMN_ROLE_MAPPING_PROMPT_ID,
+    ColumnRoleProposal,
+    DiscardedDuplicateClaim,
+    ObservedColumn,
+    RejectedRoleProposal,
+    SemanticColumnRoleMapper,
+    UnknownColumnClaim,
+    build_column_role_mapping_prompt,
+    map_column_roles,
+    parse_column_role_mapping_response,
+    permitted_column_roles,
+)
 from ._errors import (
     LLMCacheError,
     LLMConfigError,
@@ -74,6 +87,7 @@ from ._errors import (
     LLMPdfRasterisationError,
     LLMProviderError,
     LLMRateLimitError,
+    LLMValidationError,
 )
 from ._models import (
     CachedEntry,
@@ -94,9 +108,12 @@ from ._retention import select_retention_removal_keys
 from ._text_classifier import LocalTextLLMClassifier
 
 __all__ = [
+    "COLUMN_ROLE_MAPPING_PROMPT_ID",
     "CacheKey",
     "CacheStats",
     "CachedEntry",
+    "ColumnRoleProposal",
+    "DiscardedDuplicateClaim",
     "ExtractionPayload",
     "ExtractionProducer",
     "LLMCacheError",
@@ -115,19 +132,28 @@ __all__ = [
     "LLMSplitChildSuggestion",
     "LLMSplitSuggestion",
     "LLMSuggestionRejectionResult",
+    "LLMValidationError",
     "LocalTextLLMClassifier",
     "LocalVisionLLMClassifier",
     "MultimodalImageInput",
+    "ObservedColumn",
     "OperatorIvaDerivationResult",
     "PromptDefinition",
     "PromptRegistry",
+    "RejectedRoleProposal",
+    "SemanticColumnRoleMapper",
     "TextInvoiceFieldExtractor",
     "Translation",
+    "UnknownColumnClaim",
     "UsageRecord",
     "UsageSummary",
+    "build_column_role_mapping_prompt",
     "build_text_field_extraction_prompt",
     "extract_invoice_fields_from_images",
     "extract_invoice_fields_from_text",
+    "map_column_roles",
+    "parse_column_role_mapping_response",
+    "permitted_column_roles",
     "rasterise_pdf_pages_to_base64_png",
     "select_retention_removal_keys",
 ]

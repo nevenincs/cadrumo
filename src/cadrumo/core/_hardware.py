@@ -18,7 +18,14 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-__all__ = ["AcceleratorKind", "ContentionCause"]
+__all__ = [
+    "HARDWARE_TIER_CAPABLE_FLOOR_BYTES",
+    "HARDWARE_TIER_MODEST_FLOOR_BYTES",
+    "AcceleratorKind",
+    "ContentionCause",
+    "HardwareTier",
+    "hardware_tier_for_free_bytes",
+]
 
 
 class AcceleratorKind(StrEnum):
@@ -71,3 +78,70 @@ class ContentionCause(StrEnum):
     RUNTIME_RESIDENT = "runtime_resident"
     PEER_PROCESS = "peer_process"
     UNREADABLE = "unreadable"
+
+
+class HardwareTier(StrEnum):
+    """The measured headroom band this machine falls in, for reporting a selection.
+
+    A band, never the decision. Model selection and the contention check both
+    compare **measured bytes** against a candidate's declared requirement plus
+    the configured margin; collapsing that comparison to a tier would round a
+    real shortfall away. The tier exists so an operator-facing selection row can
+    say *why* a machine got the model it got without reprinting byte counts, and
+    so a selection test can assert the band it covers.
+
+    ``UNMEASURED`` is the same distinction :class:`AcceleratorKind` draws
+    between ``NONE`` and ``UNKNOWN``: an unreadable free figure is the absence
+    of a measurement, never a measured zero.
+
+    Members:
+        UNMEASURED: Free memory in the binding arena could not be read.
+        CONSTRAINED: Below :data:`HARDWARE_TIER_MODEST_FLOOR_BYTES` free.
+        MODEST: At the modest floor, below :data:`HARDWARE_TIER_CAPABLE_FLOOR_BYTES`.
+        CAPABLE: At or above the capable floor.
+    """
+
+    UNMEASURED = "unmeasured"
+    CONSTRAINED = "constrained"
+    MODEST = "modest"
+    CAPABLE = "capable"
+
+
+HARDWARE_TIER_MODEST_FLOOR_BYTES = 4 * 1024**3
+"""Free bytes at which a machine stops being :attr:`HardwareTier.CONSTRAINED`.
+
+Sized against the catalogue rather than chosen roundly: the smallest
+vision-capable candidate that clears the default context window declares a
+requirement just under 2 GB, and the shipped safety margin adds 1 GiB, so a
+machine with less than 4 GiB free cannot host it with the headroom the
+contention check demands.
+"""
+
+HARDWARE_TIER_CAPABLE_FLOOR_BYTES = 8 * 1024**3
+"""Free bytes at which a machine is reported :attr:`HardwareTier.CAPABLE`.
+
+Matches the shipped ``cadrumo_llm_model_runtime_memory_floor_bytes`` total-memory
+floor, so the reporting band and the provisioning floor agree about what a
+comfortably-provisioned machine looks like.
+"""
+
+
+def hardware_tier_for_free_bytes(free_bytes: int | None) -> HardwareTier:
+    """Classify measured free bytes in the binding arena into a :class:`HardwareTier`.
+
+    Args:
+        free_bytes: Free bytes measured in whichever arena binds the load
+            (device memory on a readable accelerator, system memory on a
+            measured-absent one), or ``None`` when unreadable.
+
+    Returns:
+        The band, with ``None`` mapping to :attr:`HardwareTier.UNMEASURED`
+        rather than to the lowest band -- unknown is not a small machine.
+    """
+    if free_bytes is None:
+        return HardwareTier.UNMEASURED
+    if free_bytes < HARDWARE_TIER_MODEST_FLOOR_BYTES:
+        return HardwareTier.CONSTRAINED
+    if free_bytes < HARDWARE_TIER_CAPABLE_FLOOR_BYTES:
+        return HardwareTier.MODEST
+    return HardwareTier.CAPABLE

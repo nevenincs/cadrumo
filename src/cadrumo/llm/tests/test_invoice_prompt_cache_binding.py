@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...adapters.outbound.llm._cache import LLMCache
+from ...adapters.outbound.llm import LLMCache
 from ...core import Period
 from ...core.time import now
 from ...domain.transactions import DecisionProvenance

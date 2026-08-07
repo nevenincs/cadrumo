@@ -87,15 +87,17 @@ class TestTheTemplateCarriesNoRegulatoryLiteral:
 class TestCompiledEnumerationsComeFromTheRegistry:
     """The compiled numbers equal what the owning authority resolves for the period."""
 
-    def test_iva_rates_equal_every_registered_spanish_rate_overlapping_the_period(self) -> None:
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+    @pytest.mark.parametrize("period", [_ANNUAL_2026, _Q4_2024], ids=["annual-2026", "q4-2024"])
+    def test_iva_rates_equal_every_registered_spanish_rate_overlapping_the_period(self, period: Period) -> None:
+        """Asserted on two periods whose law differs, so one hardcoded tuple cannot satisfy both."""
+        compiled = build_invoice_extraction_prompt(period=period)
 
         expected = sorted(
             {
                 record.pct
                 for record in load_iva_rate_table()[EUMemberState.ES]
-                if record.effective_from <= _ANNUAL_2026.end_date
-                and (record.effective_until is None or record.effective_until >= _ANNUAL_2026.start_date)
+                if record.effective_from <= period.end_date
+                and (record.effective_until is None or record.effective_until >= period.start_date)
             },
         )
 
