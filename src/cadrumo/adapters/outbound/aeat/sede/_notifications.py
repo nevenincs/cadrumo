@@ -32,7 +32,6 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING, Any, Final, Literal
 from urllib.parse import urlsplit, urlunsplit
 
-from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl, BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -45,6 +44,7 @@ from .....core.time import now
 from .....domain.calculations.registry import (
     RemoteStateGuardPolicy,
 )
+from .._html import parse_html
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._adapter_utils import assert_read_http_for
@@ -232,7 +232,7 @@ def _parse_rows(
 ) -> list[RemoteNotification]:
     """Walk every certificate-bearing table in ``html`` and yield typed rows."""
     try:
-        soup = BeautifulSoup(html, "lxml")
+        soup = parse_html(html)
     except Exception as exc:  # pragma: no cover — lxml always available
         raise SedeParseError(f"failed to parse notifications HTML: {exc}") from exc
     for tag in soup(["script", "style"]):

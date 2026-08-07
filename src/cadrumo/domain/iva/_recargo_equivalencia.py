@@ -11,8 +11,8 @@ from this module.
 The loader follows the same idiom as
 :mod:`cadrumo.domain.fincas._imputacion_parameters`: a frozen pydantic
 record loaded once at module import time, with an explicit
-:func:`recargo_rate_for` helper that maps from the substrate's
-:class:`IvaRateKind` tier to the corresponding recargo Decimal.
+:func:`recargo_rate_for_applied_rate` lookup that answers from the rate a
+line actually carried and the date it carried it.
 The ``LIVA_ART_161_RECARGO`` accessor is the canonical source for
 recargo de equivalencia rates across the codebase.
 
@@ -142,44 +142,10 @@ def load_recargo_rates() -> LivaArt161RecargoRates:
     Reads the four art. 161 rate parameters from the bundled
     legal-parameter catalogue and returns the typed
     :class:`LivaArt161RecargoRates` record. Use
-    :func:`recargo_rate_for` for the convenient ``IvaRateKind``-
-    keyed lookup; tobacco callers read ``.tabaco_rate`` directly.
+    :func:`recargo_rate_for_applied_rate` for the rate-and-date keyed
+    lookup; tobacco callers read ``.tabaco_rate`` directly.
     """
     return _load_rates()
-
-
-def recargo_rate_for(rate_kind: IvaRateKind) -> Decimal | None:
-    """Return the recargo de equivalencia rate aligned with ``rate_kind``.
-
-    SUPERSEDED by :func:`recargo_rate_for_applied_rate`, which answers the same
-    question on a key that can express the 2023-2024 transitional rates. A tier
-    stopped determining a recargo the moment a transitional rate coexisted with
-    its tier's ordinary one, so this function cannot distinguish the 1.4 % of a
-    10 % line from the 0.62 % of a 5 % line in the same window. It is retained
-    only because the ``ZERO`` behaviour below is under separate adjudication;
-    prefer the applied-rate lookup for new work.
-
-    Args:
-        rate_kind: The substrate IVA rate tier.
-
-    Returns:
-        The matching recargo Decimal for ``GENERAL`` / ``REDUCED`` /
-        ``SUPER_REDUCED`` tiers; ``None`` for ``ZERO`` and ``EXEMPT``
-        (recargo de equivalencia does not apply to operations whose
-        underlying IVA rate is zero or exempt).
-
-    The tobacco-specific 1.75 % rate is not keyed by ``IvaRateKind``;
-    callers that handle labores del tabaco read
-    ``LIVA_ART_161_RECARGO.tabaco_rate`` directly.
-    """
-    rates = _load_rates()
-    if rate_kind is IvaRateKind.GENERAL:
-        return rates.general_rate
-    if rate_kind is IvaRateKind.REDUCED:
-        return rates.reducido_rate
-    if rate_kind is IvaRateKind.SUPER_REDUCED:
-        return rates.super_reducido_rate
-    return None
 
 
 class RecargoRateRecord(BaseModel):
@@ -317,8 +283,8 @@ def recargo_rate_for_applied_rate(applied_rate: Decimal, on_date: date) -> Decim
 
     This is the lookup that can express the 2023-2024 transitional rates. Asked
     for 10 % inside that window it answers 1.4 %; asked for 5 % on the same date
-    it answers 0.62 %. The tier-keyed :func:`recargo_rate_for` cannot separate
-    those, because both rates sat on the reduced tier at once.
+    it answers 0.62 %. A tier-keyed lookup cannot separate those, because both
+    rates sat on the reduced tier at once.
 
     Args:
         applied_rate: The IVA rate the line actually carried, as a fraction.
@@ -344,6 +310,5 @@ __all__ = [
     "RecargoRateRecord",
     "load_recargo_rate_table",
     "load_recargo_rates",
-    "recargo_rate_for",
     "recargo_rate_for_applied_rate",
 ]

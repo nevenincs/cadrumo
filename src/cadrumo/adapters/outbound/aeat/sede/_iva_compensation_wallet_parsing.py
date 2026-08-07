@@ -34,6 +34,7 @@ from .....domain.calculations.registry import (
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
+from .._html import parse_html
 from ._adapter_utils import bounded_text, normalize_display_text, normalize_response_text, redacted_url
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
@@ -99,7 +100,7 @@ def parse_iva_compensation_wallet_html(
     ``0,00`` with no detail rows.
     """
     validated_source_url = _ANY_HTTP_URL_ADAPTER.validate_python(source_url)
-    soup = BeautifulSoup(html, "html.parser")
+    soup = parse_html(html)
     summary_total = _parse_wallet_summary_total(soup)
     rows, matched_wallet_table = _parse_wallet_result_rows(soup)
     _assert_wallet_result_target_matches(soup, target_year=target_year, target_period=target_period)
@@ -232,7 +233,7 @@ def _wallet_label_value_text(node: Tag, label_node: Tag) -> str:
 
 def discover_iva_compensation_wallet_entrypoint(html: str, *, base_url: str) -> str | None:
     """Return AEAT's Pre303-provided wallet URL when the authenticated page exposes one."""
-    soup = BeautifulSoup(html, "html.parser")
+    soup = parse_html(html)
     for node in soup.find_all(["a", "form"]):
         raw_url = node.get("href") if node.name == "a" else node.get("action")
         if not raw_url:
@@ -268,7 +269,7 @@ def _own_name_representation_action_allowed(
 
 
 def _assert_own_name_representation_form_html(html: str, *, landing_url: str, expected_path: str) -> None:
-    soup = BeautifulSoup(html, "html.parser")
+    soup = parse_html(html)
     submit = soup.select_one(_PRE303.representation_submit_selector)
     if submit is None:
         raise SedeNavigationError(
@@ -335,7 +336,7 @@ def _assert_own_name_representation_form_html(html: str, *, landing_url: str, ex
 
 
 def _representation_gate_context(html: str, *, landing_url: str) -> dict[str, object]:
-    soup = BeautifulSoup(html, "html.parser")
+    soup = parse_html(html)
     forms = tuple(
         {
             "id": bounded_text(form.get("id", "")),
@@ -365,7 +366,7 @@ def _input_checked(node: object) -> bool:
 
 
 def _wallet_execute_gate_status(html: str, *, expected_path: str) -> str:
-    soup = BeautifulSoup(html, "html.parser")
+    soup = parse_html(html)
     form = soup.select_one(_PRE303.wallet_form_selector)
     if form is None:
         return "no-wallet-form"
@@ -381,7 +382,7 @@ def _wallet_execute_gate_status(html: str, *, expected_path: str) -> str:
 
 
 def _wallet_execute_form_method(html: str) -> str:
-    soup = BeautifulSoup(html, "html.parser")
+    soup = parse_html(html)
     form = soup.select_one(_PRE303.wallet_form_selector)
     if form is None:
         return "GET"
@@ -390,7 +391,7 @@ def _wallet_execute_form_method(html: str) -> str:
 
 
 def _has_wallet_table(html: str) -> bool:
-    soup = BeautifulSoup(html, "html.parser")
+    soup = parse_html(html)
     for table in soup.find_all("table"):
         header = _normalised_text(table.get_text(" "))
         if all(token in header for token in _PRE303.iva_wallet_header_tokens):
@@ -425,7 +426,7 @@ class _WalletPageShape(TypedDict):
 
 
 def _wallet_page_shape_context(html: str, *, landing_url: str) -> _WalletPageShape:
-    soup = BeautifulSoup(html, "html.parser")
+    soup = parse_html(html)
     wallet_entrypoints = tuple(
         entrypoint
         for entrypoint in (

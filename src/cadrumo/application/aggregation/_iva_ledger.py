@@ -71,6 +71,7 @@ from ...domain.iva import (
     IvaRateNotFoundError,
     ProrrataInputError,
     ProrrataReference,
+    category_cuota_is_zero_by_law,
     deductible_percentage_for,
     derive_flow_for_classification,
     domestic_categories_by_rate_kind,
@@ -137,6 +138,17 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     # 0 % box -- the return publishes both the rate and the cuota, so the
     # contradiction is checkable arithmetically without any other source.
     CUOTA_ON_ZERO_RATED_ROW = "cuota_on_zero_rated_row"
+    # The mirror of the above, one field over. The operator declared a category
+    # whose cuota is zero BY LAW for the side of the operation this row is on --
+    # an issued inversión del sujeto pasivo supply, an exempt or not-subject
+    # operation, an exportación, an entrega intracomunitaria -- and then declared
+    # a non-zero tipo on it. A tipo is what produces a cuota, so the two facts
+    # contradict each other exactly as a zero tipo contradicts a non-zero cuota.
+    # The zero-by-law expectation is READ from the Axis-A component table rather
+    # than re-listed here: that table is already the invoices path's authority
+    # for this same legal fact, and a second list beside it is how the two paths
+    # came to disagree in the first place.
+    NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY = "non_zero_rate_on_zero_cuota_category"
     MISSING_EUR_TAX_SUBSTRATE = "missing_eur_tax_substrate"
     INVALID_PRORRATA_REFERENCE = "invalid_prorrata_reference"
     UNSUPPORTED_IVA_CATEGORY = "unsupported_iva_category"
@@ -1176,6 +1188,12 @@ def _classify_iva_transaction(
                 detail=f"transaction direction {transaction.direction.value!r} is not an IVA settlement flow",
             ),
         )
+    # Which side of the operation the taxpayer is on. Read once here because two
+    # things below need it: the component-table screen on the declared category,
+    # and the canonical flow derivation. Cannot be None -- the direction screen
+    # immediately above already refused every non-settlement direction.
+    invoice_kind = invoice_kind_for_direction(transaction.direction)
+    assert invoice_kind is not None
     proportionality = _business_proportionality(transaction)
     if proportionality is None:
         reason = (
@@ -1279,6 +1297,23 @@ def _classify_iva_transaction(
         )
         if d5_issue is not None:
             return _IvaTransactionOutcome(gate_issue=d5_issue)
+        # Scoped to the DECLARED category deliberately. The derived branch below
+        # reads its category off the rate, so it cannot contradict the rate; a
+        # screen written across both would be vacuous on half its population
+        # while reading as though it covered it.
+        if category_cuota_is_zero_by_law(explicit_category, invoice_kind) and transaction.iva_rate != Decimal("0"):
+            return _IvaTransactionOutcome(
+                gate_issue=IvaLedgerAggregationIssue(
+                    transaction_id=transaction_id,
+                    reason=IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY,
+                    detail=(
+                        f"row declares iva_category {explicit_category.value!r} on a "
+                        f"{invoice_kind.value!r} invoice, whose cuota is zero by law, with "
+                        f"iva_rate {transaction.iva_rate}; a category that admits no cuota admits "
+                        "no tipo either, so one of the two facts is wrong"
+                    ),
+                ),
+            )
         effective_category = explicit_category
     else:
         effective_category = domestic_categories_by_rate_kind()[rate_kind]
@@ -1303,10 +1338,8 @@ def _classify_iva_transaction(
     # the canonical flow routes reverse-charge categories
     # (DOMESTIC_REVERSE_CHARGE, INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE)
     # to INVERSION_SUJETO_PASIVO and leaves every other category on its
-    # repercutido/soportado direction. ``_invoice_kind_for`` cannot be
-    # None here: ``flow_direction`` above already gated unknown directions.
-    invoice_kind = invoice_kind_for_direction(transaction.direction)
-    assert invoice_kind is not None
+    # repercutido/soportado direction. ``invoice_kind`` was resolved beside the
+    # direction screen above, which is what guarantees it is not None.
     flow_direction = derive_flow_for_classification(
         category=effective_category,
         invoice_direction=invoice_kind,

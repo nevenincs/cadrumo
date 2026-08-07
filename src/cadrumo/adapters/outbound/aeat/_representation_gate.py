@@ -34,8 +34,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from typing import NoReturn, Protocol, cast
 
-from bs4 import BeautifulSoup
-
+from ._html import parse_html
 from ._playwright import PlaywrightError
 
 
@@ -269,7 +268,7 @@ async def dismiss_pre303_alert_modal_if_present(
     if content is None or click is None:
         return
     html = await content()
-    soup = BeautifulSoup(html, "html.parser")
+    soup = parse_html(html)
     modal = soup.select_one(alert_modal_selector)
     if modal is None:
         return

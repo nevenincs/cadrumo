@@ -170,12 +170,21 @@ def derive_flow_for_classification(
 
     The mapping is:
 
-    * Reverse-charge categories (domestic RC, intra-community
-      acquisition RC) always resolve to
-      :attr:`IvaFlowDirection.INVERSION_SUJETO_PASIVO`, irrespective of the
-      invoice direction. The substrate's classifier emits these for
-      operations where the recipient self-assesses both output and
-      input IVA on the same operation.
+    * Recipient-only reverse-charge categories (the intra-community
+      acquisitions in :data:`_RECIPIENT_ONLY_REVERSE_CHARGE_CATEGORIES`)
+      resolve to :attr:`IvaFlowDirection.INVERSION_SUJETO_PASIVO`
+      irrespective of the invoice direction, because their supply
+      counterpart is not located in Spain and so raises no Spanish cuota
+      to self-assess.
+    * Domestic reverse charge resolves BY DIRECTION, because both sides
+      of the operation are Spanish and the form asks for them
+      separately: :attr:`InvoiceKind.RECEIVED` is the recipient
+      self-assessing, so
+      :attr:`IvaFlowDirection.INVERSION_SUJETO_PASIVO`;
+      :attr:`InvoiceKind.ISSUED` is the supplier making a sujeta y no
+      exenta supply that repercutes nothing, so
+      :attr:`IvaFlowDirection.OPERACION_CON_INVERSION`. Collapsing the
+      two once put the supplier's turnover on the recipient's line.
     * Otherwise: :attr:`InvoiceKind.ISSUED` resolves to
       :attr:`IvaFlowDirection.REPERCUTIDO` (the autónomo charged
       output IVA on a sale) and :attr:`InvoiceKind.RECEIVED`

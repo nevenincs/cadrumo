@@ -859,7 +859,20 @@ application:
       transaction_id_prefix_too_long: el prefijo de id de transacción %{prefix} tiene
         más de %{max_length} caracteres
       transaction_not_found: 'transacción no encontrada: %{transaction_id}'
+    evidence:
+      errors:
+        document_already_confirmed: 'Este documento ya generó la factura %{stored_invoice_id},
+          y esta confirmación difiere en: %{divergent_fields}. Corrija o elimine la
+          factura almacenada en lugar de confirmar dos veces el mismo documento.'
   live:
+    deudas:
+      errors:
+        bucket_id_blank: El identificador del bucket de deudas no puede estar vacío.
+        snapshot_id_blank: application.live.deudas.errors.snapshot_id_blank
+        snapshot_not_found: No hay ninguna instantánea de deudas que coincida con
+          el identificador solicitado.
+        snapshot_prefix_ambiguous: El prefijo de la instantánea de deudas coincide
+          con varias instantáneas.
     expedientes:
       errors:
         bucket_id_blank: El identificador del bucket de expedientes no puede estar
@@ -2030,14 +2043,29 @@ cli:
         evidence_id_help: Identificador del justificante (coincidencia exacta)
         extract_acknowledge_off_host_help: Confirma, solo para esta lectura, que el
           documento sale de este equipo.
+        extract_acknowledge_without_provider: --acknowledge-off-host confirma un envío
+          que no llegaría a producirse. Indica también --off-host-provider, o retira
+          la confirmación.
         extract_attachment_id_help: Identificador del adjunto vinculado del que extraer
           los datos (alternativa a --evidence-id).
         extract_evidence_id_help: Identificador del justificante de factura de compra
           del que extraer los datos.
         extract_help: Lee los campos de una factura en PDF en el propio equipo y genera
           un borrador para revisar.
+        extract_off_host_needs_content_address: Este justificante no tiene huella
+          de contenido, por lo que una lectura fuera del equipo no puede registrarse
+          sobre los bytes que enviaría.
+        extract_off_host_needs_evidence_id: 'Una lectura fuera del equipo debe indicar
+          --evidence-id: el consentimiento se registra sobre la huella de contenido
+          del documento, que un identificador de adjunto no aporta.'
         extract_off_host_provider_help: Envía este documento a un modelo alojado en
           lugar de leerlo en este equipo.
+        extract_off_host_provider_is_local: --off-host-provider local es el valor
+          por defecto y no envía nada fuera del equipo. Omite la opción o indica un
+          proveedor alojado.
+        extract_provider_without_acknowledge: Leer este documento fuera del equipo
+          envía su contenido a un tercero. Añade --acknowledge-off-host para confirmarlo,
+          solo para esta lectura.
         extract_reference_required: Indique exactamente uno de --evidence-id o --attachment-id.
         extract_review_hint_message: Este es un borrador aproximado; confirme cada
           campo antes de crear una factura.
@@ -6799,6 +6827,8 @@ errors:
       con el identificador indicado.
     refused_live_borrador_snapshot_not_found: No existe ningún snapshot del borrador
       de Modelo 100 con el identificador indicado.
+    refused_live_deudas_snapshot_not_found: No existe ningún snapshot de deudas con
+      el identificador indicado.
     refused_live_expedientes_snapshot_not_found: No existe ningún snapshot de expedientes
       con el identificador indicado.
     refused_live_justificante_capture_snapshot_not_found: No existe ninguna captura
@@ -67459,6 +67489,9 @@ modelo:
           filing-year:
             help: null
             label: Ejercicio al que se refiere la autoliquidacion
+          iva-base-autorepercutida-intracomunitaria-devengado:
+            help: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.help
+            label: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.label
           iva-compensacion-aplicada-periodo:
             help: null
             label: Cuotas a compensar de periodos anteriores aplicadas en este periodo
@@ -68294,6 +68327,10 @@ modelo:
               help: null
               label: Cuota IVA autorepercutida devengada en adquisiciones intracomunitarias
                 (LIVA art 13 + art 15 + art 84.Uno.2; oficial casillas 10/11)
+            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
+              help: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck.help
+              label: Base imponible autorepercutida devengada en adquisiciones intracomunitarias
+                (LIVA art 13 + art 15 + art 84.Uno.2; oficial casillas 10/11)
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
               help: null
               label: Cuotas a compensar de periodos anteriores aplicadas en este periodo
@@ -68995,6 +69032,120 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.label
+            x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62.label
+            x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma.label
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8.label
+            x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31.label
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: null
               label: Cuota IVA autorepercutida en adquisiciones intracomunitarias

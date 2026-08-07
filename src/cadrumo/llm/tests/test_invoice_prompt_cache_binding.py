@@ -173,8 +173,17 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
             provider=LLMProvider.ANTHROPIC,
         ).transcriber_identity
 
-        assert "local" in local.name
-        assert "anthropic" in cloud.name
-        assert local.name != cloud.name
+        # The transport rides its own field now. It began folded into ``name``,
+        # which is contracted to say WHICH reader produced the text and not to
+        # carry a coarse label -- so asserting it there was asserting the
+        # contract violation rather than the property.
+        assert local.transport == "local"
+        assert cloud.transport == "anthropic"
+        assert local.transport != cloud.transport
+        assert local.name == "qwen2.5vl:3b", "the name is the reader, with nothing else folded in"
         assert local.revision.startswith("prompt-v")
         assert "rates-" not in local.name, "stage one compiles no rates, so it must claim none"
+        # The cache still separates the two, which is what the name-folding was
+        # incidentally buying: an off-host reading of the same model is a
+        # different trust context and must not serve an on-host question.
+        assert local.cache_key != cloud.cache_key

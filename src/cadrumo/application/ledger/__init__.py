@@ -188,6 +188,12 @@ if TYPE_CHECKING:
         rederive_artefact_on_host,
         survey_cloud_consent,
     )
+    from ._deterministic_findings import (
+        DETERMINISTIC_CHECKS,
+        DeterministicCheck,
+        deterministic_check_names,
+        deterministic_findings,
+    )
     from ._document_transcription import DocumentTranscription, TranscriberIdentity
     from ._evidence import (
         MediaKind,
@@ -213,7 +219,7 @@ if TYPE_CHECKING:
         printed_total_discrepancy,
     )
     from ._evidence_input import EvidenceInput
-    from ._evidence_textlayer import transcribe_text_layer
+    from ._evidence_textlayer import text_layer_transcriber_identity, transcribe_text_layer
     from ._extraction_draft_store import (
         ExtractionDraftDocument,
         ExtractionDraftRepository,
@@ -383,6 +389,10 @@ _LAZY_EXPORTS: dict[str, str] = {
     "write_confirmation_record": "._confirmation_record",
     "ROUNDING_ALLOWANCE_PER_TERM": "._closure_findings",
     "closure_findings": "._closure_findings",
+    "DETERMINISTIC_CHECKS": "._deterministic_findings",
+    "DeterministicCheck": "._deterministic_findings",
+    "deterministic_check_names": "._deterministic_findings",
+    "deterministic_findings": "._deterministic_findings",
     "within_rounding_allowance": "._closure_findings",
     "AnchorEvaluation": "._grounding_anchor",
     "evaluate_anchor": "._grounding_anchor",
@@ -529,6 +539,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "suggest_evidence_split": "._llm_classification",
     "suggest_llm_classification": "._llm_classification",
     "summarize_manual_transactions": "._actions_manual",
+    "text_layer_transcriber_identity": "._evidence_textlayer",
     "transcribe_text_layer": "._evidence_textlayer",
     "unset_usage_ratio": "._ratios",
     "update_manual_transaction": "._actions_manual",
@@ -576,6 +587,7 @@ __all__ = [
     "BULK_CLASSIFY_ALLOWED_COLUMNS",
     "CLASSIFIED_BY_MANUAL",
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD",
+    "DETERMINISTIC_CHECKS",
     "GROUNDABLE_ORIGINS",
     "IDENTITY_FIELDS",
     "MINIMUM_DISPLAY_ID_WIDTH",
@@ -596,6 +608,7 @@ __all__ = [
     "ConfirmationRecordRepository",
     "ConsentWithdrawalSurvey",
     "ConsentedDispatch",
+    "DeterministicCheck",
     "DocumentTranscription",
     "DraftDiscrepancyFinding",
     "EligibleCategoryRow",
@@ -696,6 +709,8 @@ __all__ = [
     "derive_confirmation_id",
     "derive_operator_iva_substrate",
     "describe_aeat_party_identifier",
+    "deterministic_check_names",
+    "deterministic_findings",
     "discard_extraction_draft",
     "draft_prints_a_repercutido_line",
     "eligible_ratio_categories",
@@ -758,6 +773,7 @@ __all__ = [
     "summarise_batch",
     "summarize_manual_transactions",
     "survey_cloud_consent",
+    "text_layer_transcriber_identity",
     "transcribe_text_layer",
     "unset_usage_ratio",
     "update_manual_transaction",

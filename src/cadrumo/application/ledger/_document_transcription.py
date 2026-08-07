@@ -70,11 +70,14 @@ transcribes a document, so none may stamp a transcription.
 class TranscriberIdentity(BaseModel):
     """Who produced a transcription, at what revision.
 
-    Both halves are required for both origins, and neither has a default. A
+    Every axis is required for both origins, and none has a default. A
     provenance stamp that can be constructed without naming its producer is a
     stamp that will eventually be constructed wrong: a hardcoded default would
     let a transcription claim a reader it did not come from, which is exactly
-    the class of lie a provenance record exists to make impossible.
+    the class of lie a provenance record exists to make impossible. The
+    transport is required for the same reason and it is the sharper case -- a
+    defaulted transport would let an off-host read claim it never left the
+    machine, and that claim is the one a consent withdrawal rests on.
 
     The revision is load-bearing rather than decorative. A transcription
     produced by one model under one prompt revision is NOT interchangeable with
@@ -89,6 +92,19 @@ class TranscriberIdentity(BaseModel):
         name: The concrete reader, e.g. a deterministic extractor's name or a
             vision model's identifier. Never a coarse label like ``local``: the
             point is to know which reader's output is being trusted.
+        transport: Where the read ran, as the one canonical transport token
+            (:func:`~core.provenance_transport_label`). A transcription is a
+            durable artefact derived from the document, so one produced
+            off-host is an artefact a consent withdrawal must enumerate -- and
+            a model identifier reveals its vendor only to a reader who already
+            knows the catalogue.
+
+            Its own axis rather than folded into ``name``, which is where it
+            started: ``name`` is contracted to say WHICH reader produced the
+            text and explicitly not to carry a coarse label, so smuggling the
+            transport through it broke that contract and created a third
+            provenance grammar nothing could parse. Recorded as data, nothing
+            has to parse it at all.
         revision: The reader's version -- an extractor release, or a model's
             weights-plus-prompt revision.
     """
@@ -97,6 +113,7 @@ class TranscriberIdentity(BaseModel):
 
     origin: FieldOrigin
     name: str = Field(min_length=1)
+    transport: str = Field(min_length=1)
     revision: str = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -116,8 +133,14 @@ class TranscriberIdentity(BaseModel):
         Folds every axis that makes two transcriptions non-interchangeable, so
         a vision re-read and a text-layer read of the same bytes occupy separate
         cache entries rather than overwriting one another.
+
+        The transport is one of those axes, and it was already folded in before
+        it had its own field -- it rode inside ``name``. Keeping it here is
+        therefore preservation rather than a new decision, and the reason it
+        earns the place is that serving the same model off-host is a different
+        trust context, not merely a different route.
         """
-        return f"{self.origin.value}:{self.name}@{self.revision}"
+        return f"{self.origin.value}:{self.transport}-{self.name}@{self.revision}"
 
 
 class DocumentTranscription(BaseModel):

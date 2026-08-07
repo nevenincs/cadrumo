@@ -121,8 +121,6 @@ async def test_cancelled_queued_closer_releases_its_intent() -> None:
     await asyncio.wait_for(_exercise_cancelled_close_intent(), timeout=1.0)
 
 
-
-
 @pytest.mark.asyncio
 async def test_bounded_cleanup_retains_real_resources_for_retry() -> None:
     """A timed-out cleanup leaves each real owner available for a successful retry."""

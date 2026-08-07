@@ -44,15 +44,71 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from ._closure_findings import closure_findings
 from ._regime_contradiction import regime_contradiction_finding
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from ._evidence_draft import DraftDiscrepancyFinding, InvoiceDraft
 
-__all__ = ["deterministic_findings"]
+__all__ = ["DETERMINISTIC_CHECKS", "DeterministicCheck", "deterministic_check_names", "deterministic_findings"]
+
+
+class DeterministicCheck(NamedTuple):
+    """One check, with the name a record stamps it under.
+
+    The name is the CHECK's, not its findings'. The closure check raises three
+    different discrepancy kinds, so naming it after any one of them would
+    describe a third of what it does.
+
+    Attributes:
+        name: Stable identifier. Changing it changes what every later record
+            claims ran, so it is renamed only when the check itself changes
+            meaning.
+        run: Runs the check and returns its findings, empty when it holds.
+    """
+
+    name: str
+    run: Callable[[InvoiceDraft], tuple[DraftDiscrepancyFinding, ...]]
+
+
+def _closure_identities(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ...]:
+    return closure_findings(draft)
+
+
+def _regime_contradiction(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ...]:
+    """Adapt the single-or-nothing check onto the uniform check signature."""
+    finding = regime_contradiction_finding(draft)
+    return () if finding is None else (finding,)
+
+
+DETERMINISTIC_CHECKS: tuple[DeterministicCheck, ...] = (
+    DeterministicCheck("closure_identities", _closure_identities),
+    DeterministicCheck("regime_contradiction", _regime_contradiction),
+)
+"""Every draft-only check, as data rather than as a sequence of calls.
+
+Declared once and used twice: :func:`deterministic_findings` runs them, and
+:func:`deterministic_check_names` names them for the record that stamps which
+ran. A hand-written list of names beside this one would be a second declaration
+of the same set, drifting the moment a check is added -- which is the defect this
+module was created to close, returning one layer up in the record.
+"""
+
+
+def deterministic_check_names() -> tuple[str, ...]:
+    """Return the name of every check that runs, in declaration order.
+
+    Derived from :data:`DETERMINISTIC_CHECKS` rather than restated, so a check
+    added there reaches every record without anyone remembering a second place.
+
+    Returns:
+        The check names, in the order they run.
+    """
+    return tuple(check.name for check in DETERMINISTIC_CHECKS)
 
 
 def deterministic_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ...]:
@@ -72,10 +128,7 @@ def deterministic_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding
         contradiction. Stable, so an operator surface and a test read them the
         same way.
     """
-    findings = list(closure_findings(draft))
-
-    contradiction = regime_contradiction_finding(draft)
-    if contradiction is not None:
-        findings.append(contradiction)
-
+    findings: list[DraftDiscrepancyFinding] = []
+    for check in DETERMINISTIC_CHECKS:
+        findings.extend(check.run(draft))
     return tuple(findings)

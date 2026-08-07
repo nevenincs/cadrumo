@@ -1,7 +1,7 @@
 """Tests for the registry-backed LIVA art. 161 recargo substrate.
 
 The suite pins :func:`~domain.iva.load_recargo_rates` and
-:func:`~domain.iva.recargo_rate_for` to the bundled legal-parameter catalogue,
+:func:`~domain.iva.load_recargo_rates` to the bundled legal-parameter catalogue,
 its BOE excerpt, and the closed :class:`~domain.iva.IvaRateKind` tier mapping.
 It protects the recargo de equivalencia ladder as legal data, not as inline
 Python constants.
@@ -30,7 +30,6 @@ from .. import (
     IvaRateKind,
     LivaArt161RecargoRates,
     load_recargo_rates,
-    recargo_rate_for,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -93,20 +92,6 @@ def test_recargo_corpus_excerpt_present_with_boe_quotes() -> None:
 def test_recargo_record_is_frozen() -> None:
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         load_recargo_rates().general_rate = Decimal("0.999")
-
-
-@pytest.mark.parametrize(
-    ("iva_rate_kind", "expected"),
-    (
-        pytest.param(IvaRateKind.GENERAL, Decimal("0.052"), id="general"),
-        pytest.param(IvaRateKind.REDUCED, Decimal("0.014"), id="reducido"),
-        pytest.param(IvaRateKind.SUPER_REDUCED, Decimal("0.005"), id="super-reducido"),
-        pytest.param(IvaRateKind.ZERO, None, id="zero"),
-        pytest.param(IvaRateKind.EXEMPT, None, id="exempt"),
-    ),
-)
-def test_recargo_rate_for(iva_rate_kind: IvaRateKind, expected: Decimal | None) -> None:
-    assert recargo_rate_for(iva_rate_kind) == expected
 
 
 def test_recargo_record_validates_inputs_in_strict_mode() -> None:

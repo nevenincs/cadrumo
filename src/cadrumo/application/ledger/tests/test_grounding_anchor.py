@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ....core import LOCAL_TRANSPORT_LABEL, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from ....core.decimal import coerce_finite_european_decimal
 from .._closure_findings import closure_findings
 from .._document_transcription import DocumentTranscription, TranscriberIdentity
@@ -47,6 +47,7 @@ def _transcription(text: str) -> DocumentTranscription:
         page_count=1,
         source_content_sha256="a" * 64,
         transcriber=TranscriberIdentity(
+            transport=LOCAL_TRANSPORT_LABEL,
             origin=FieldOrigin.TEXT_LAYER,
             name="pdfplumber",
             revision="0.11.4",

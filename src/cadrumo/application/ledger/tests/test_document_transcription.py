@@ -27,7 +27,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ....core import FieldOrigin
+from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from .._document_transcription import (
     ACQUISITION_ORIGINS,
     DocumentTranscription,
@@ -51,6 +51,7 @@ def _transcription(**overrides: object) -> DocumentTranscription:
         "page_count": 3,
         "source_content_sha256": _DIGEST,
         "transcriber": TranscriberIdentity(
+            transport=LOCAL_TRANSPORT_LABEL,
             origin=FieldOrigin.VISION,
             name="qwen2.5-vl-7b-instruct",
             revision="q4_k_m/prompt-r3",
@@ -156,6 +157,7 @@ def test_the_transcriber_identity_is_part_of_the_cache_key() -> None:
     vision = _transcription()
     text_layer = _transcription(
         transcriber=TranscriberIdentity(
+            transport=LOCAL_TRANSPORT_LABEL,
             origin=FieldOrigin.TEXT_LAYER,
             name="pdfplumber-text-layer",
             revision="0.11.4",
@@ -163,6 +165,7 @@ def test_the_transcriber_identity_is_part_of_the_cache_key() -> None:
     )
     newer_revision = _transcription(
         transcriber=TranscriberIdentity(
+            transport=LOCAL_TRANSPORT_LABEL,
             origin=FieldOrigin.VISION,
             name="qwen2.5-vl-7b-instruct",
             revision="q4_k_m/prompt-r4",
@@ -185,7 +188,7 @@ def test_a_non_acquisition_origin_is_refused(origin: FieldOrigin) -> None:
     of quietly defaulting to accepted.
     """
     with pytest.raises(ValidationError):
-        TranscriberIdentity(origin=origin, name="reader", revision="1")
+        TranscriberIdentity(transport=LOCAL_TRANSPORT_LABEL, origin=origin, name="reader", revision="1")
 
 
 def test_a_transcriber_identity_cannot_be_built_without_naming_its_reader() -> None:
@@ -196,17 +199,26 @@ def test_a_transcriber_identity_cannot_be_built_without_naming_its_reader() -> N
     A required field with no default cannot lie by omission.
     """
     assert TranscriberIdentity.model_validate_json(
-        '{"origin": "vision", "name": "model", "revision": "r1"}',
+        '{"origin": "vision", "name": "model", "transport": "local", "revision": "r1"}',
     ), "positive control: the complete payload must build, or the refusals below prove nothing"
 
     with pytest.raises(ValidationError):
         TranscriberIdentity.model_validate_json('{"origin": "vision"}')
 
+    # The transport is the sharper case of the same rule. A defaulted one would
+    # let an off-host read claim it never left the machine, and that claim is
+    # what a consent withdrawal rests on -- so its absence must refuse rather
+    # than resolve to the reassuring answer.
     with pytest.raises(ValidationError):
-        TranscriberIdentity(origin=FieldOrigin.VISION, name="", revision="r1")
+        TranscriberIdentity.model_validate_json(
+            '{"origin": "vision", "name": "model", "revision": "r1"}',
+        )
 
     with pytest.raises(ValidationError):
-        TranscriberIdentity(origin=FieldOrigin.VISION, name="model", revision="")
+        TranscriberIdentity(transport=LOCAL_TRANSPORT_LABEL, origin=FieldOrigin.VISION, name="", revision="r1")
+
+    with pytest.raises(ValidationError):
+        TranscriberIdentity(transport=LOCAL_TRANSPORT_LABEL, origin=FieldOrigin.VISION, name="model", revision="")
 
 
 def test_an_empty_or_pageless_transcription_is_refused() -> None:

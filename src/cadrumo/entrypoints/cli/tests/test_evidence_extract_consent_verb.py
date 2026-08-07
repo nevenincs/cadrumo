@@ -40,10 +40,9 @@ from pydantic import SecretStr
 
 from ....adapters.outbound.llm import LLMCache, UsageRecorder
 from ....application.ledger import DocumentTranscription, TranscriberIdentity
-from ....core import FieldOrigin
+from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ....core.config import override_settings
 from ....llm import (
-    EvidenceConsentToken,
     LLMConsentError,
     LLMProvider,
     TextInvoiceFieldExtractor,
@@ -74,6 +73,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
         label="Test evidence consent profile",
     ) as profile:
         yield profile
+
 
 _CONTENT_ADDRESS = "a" * 64
 _SURFACE = "cli:ledger.evidence.extract"
@@ -110,7 +110,7 @@ def _serve_openai() -> Iterator[tuple[str, Queue[str]]]:
 
     class _Endpoint(BaseHTTPRequestHandler):
         @override
-        def do_POST(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler's own name
+        def do_POST(self) -> None:
             raw = self.rfile.read(int(self.headers.get("content-length", "0")))
             bodies.put(raw.decode("utf-8"))
             payload = json.dumps(
@@ -128,7 +128,7 @@ def _serve_openai() -> Iterator[tuple[str, Queue[str]]]:
             self.wfile.write(payload)
 
         @override
-        def log_message(self, format: str, *args: object) -> None:  # noqa: A002 - signature is fixed
+        def log_message(self, format: str, *args: object) -> None:
             return
 
     server = ThreadingHTTPServer(("127.0.0.1", 0), _Endpoint)
@@ -147,7 +147,12 @@ def _transcription() -> DocumentTranscription:
         text="FACTURA Base imponible 100,00 EUR",
         page_count=1,
         source_content_sha256=_CONTENT_ADDRESS,
-        transcriber=TranscriberIdentity(origin=FieldOrigin.TEXT_LAYER, name="pdfplumber", revision="gate"),
+        transcriber=TranscriberIdentity(
+            origin=FieldOrigin.TEXT_LAYER,
+            name="pdfplumber",
+            transport=LOCAL_TRANSPORT_LABEL,
+            revision="gate",
+        ),
     )
 
 

@@ -48,6 +48,11 @@ def _fully_populated_draft() -> InvoiceDraft:
         supplier_name="Proveedor Ejemplo SL",
         customer_tax_id="X1234567L",
         customer_name="Cliente Ejemplo SL",
+        # Off-default and DIFFERENT from each other: two parties sharing one
+        # code would let a projection that carried only the supplier's satisfy
+        # a value comparison the customer's silently failed.
+        supplier_postal_code="35001",
+        customer_postal_code="28013",
         invoice_number="0042",
         invoice_series="FA",
         invoice_date="2026-03-14",

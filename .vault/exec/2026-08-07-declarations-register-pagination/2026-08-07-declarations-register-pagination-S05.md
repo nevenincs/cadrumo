@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:d2127ba5fcc0cc0ac8ac731024f1cf391dc4a081008d5482f36aac3c01192ae0'
+body_hash: 'sha256:766a8fd56ddcc639a851ad0aa2ebf8fcec0124e6e9eb00e8351ffd3619badc2c'
 step_id: 'S05'
 related:
   - "[[2026-08-07-declarations-register-pagination-plan]]"
@@ -49,3 +49,23 @@ a regenerated fixture of a different size travels with the assertions.
 ## Notes
 
 No live AEAT probe was involved in any part of this proof.
+
+## Xdist vacuity check
+
+This project's `addopts` injects `-n auto --dist=loadfile`, so every run above
+was parallel without the flag appearing in any command. A mutation applied in the
+controlling process would never have reached the worker subprocesses that ran the
+assertions, and the proof would have been vacuous while looking green.
+
+Every proof was re-run with `-n0` and reds identically: `truncated` forced false,
+2 failed of 3; forced true, 1 failed of 3; the pager total forced to `None`, 2
+failed of 3; baselines 3 passed. So none of these proofs was vacuous.
+
+The reason they survived is the mechanism, and it is the distinction worth
+carrying: the mutation is a pytest plugin loaded with `-p` from outside the
+repository, and xdist forwards its own argv to each worker, so the plugin is
+imported and the mutation applied INSIDE every worker process. The original reds
+carry `[gw0]` worker markers, which is direct evidence the mutated code executed
+in the worker rather than the controller. An in-process monkeypatch applied in
+the controlling session — a conftest fixture or an inline patch — would NOT
+propagate, and that is the shape that goes vacuous.

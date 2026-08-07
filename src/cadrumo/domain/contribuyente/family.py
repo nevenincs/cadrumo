@@ -1013,6 +1013,16 @@ class DescendantInfo(BaseModel):
         dropped. Before that period the child is under three throughout and every
         month counts; after it, nothing does.
 
+        That wording is the Renta manual's own, Capítulo 18: "En el período
+        impositivo en que el hijo menor cumpla tres años, el incremento podrá
+        resultar de aplicación respecto de los gastos incurridos con
+        posterioridad al cumplimiento de dicha edad hasta el mes anterior a
+        aquel en el que pueda comenzar el segundo ciclo de educación infantil."
+        The extension therefore opens AFTER the birthday, not at the start of
+        the period — a reading of it as "the whole turning-three year counts"
+        over-declares the months before the birthday, and is why the boundary is
+        quoted here rather than paraphrased.
+
         The UPPER bound is not derived, and that is a decision rather than a gap.
         The statute ends the extension at the month before the second cycle of
         infant education may begin, which each region determines. The informative
@@ -1098,22 +1108,32 @@ class DescendantInfo(BaseModel):
         for the whole twelve.
 
         TOTAL over every input rather than correct only where it happens to be
-        called, and it was made so BECAUSE A SECOND CALLER WAS DESIGNED FOR --
-        not because the first was wrong. The first caller reaches it under an
-        "under three at year-end" guard, where "alive" and "alive and under
-        three" coincide, so a version that simply returned twelve was correct
-        there and indistinguishable in production. Reachability is a snapshot,
-        though: "no defect, nothing can call it that way" holds only until
-        something does, and here the something was already specified. The
-        second caller is an advisory that QUOTES this count to the operator as
-        the basis it prorated by, so the wrong number would have been shown as
-        an explanation rather than merely computed. It is public precisely so an operator-facing advisory can cite
-        the months it prorated by, and a figure quoted to a taxpayer has to be
-        one they can reproduce from their own child's age. A docstring narrower
-        than the method's reachable inputs is how that stops being true.
+        called. The sole production caller —
+        :meth:`guarderia_qualifying_meses`'s annual-total fallback — reaches it
+        under an "under three at year-end" guard, and that guard places the
+        third birthday after the period, so the under-three ceiling below is
+        inert on that path and only the birth month moves the answer. Deriving
+        the ceiling regardless keeps the result true of the method's NAME rather
+        than of one call site's guard, so that guard can move without silently
+        changing the number; the ceiling is exercised by direct tests rather
+        than through the fallback.
 
-        The month the child turns three is EXCLUDED, matching the boundary
-        :meth:`guarderia_contributing_spend` already draws for that period.
+        Public for the same reason: it is the basis
+        :meth:`guarderia_qualifying_meses` approximates by when only an annual
+        total is on record, and the operator is told that is what the count
+        rests on, so it is separately addressable and separately tested rather
+        than observable only through that one branch.
+
+        The month the child turns three is EXCLUDED — but that is NOT the
+        boundary :meth:`guarderia_contributing_spend` draws, and the two month
+        sets are DISJOINT. This one counts the months BEFORE the birthday month,
+        while the child is still under three; the spend method counts the months
+        AFTER it, the Art. 81.2 extension the Renta manual (Capítulo 18) opens
+        at "los gastos incurridos con posterioridad al cumplimiento de dicha
+        edad". They agree only on excluding the birthday month itself, and they
+        never both apply to one descendant-year: this method is consulted only
+        where the child is under three for the whole period, where no extension
+        window exists.
         """
         if self.birth_date.year > filing_year:
             return 0
@@ -1122,9 +1142,9 @@ class DescendantInfo(BaseModel):
         if third_birthday_year < filing_year:
             return 0
         # In the year the child turns three they are under three only until the
-        # birthday month, which is itself excluded -- the same boundary
-        # ``guarderia_contributing_spend`` draws when it drops months up to and
-        # including that month.
+        # birthday month, which is itself excluded. Same cut point as
+        # ``guarderia_contributing_spend``, opposite side of it: that method
+        # keeps the months after the birthday month, this one the months before.
         last_month = self.birth_date.month - 1 if third_birthday_year == filing_year else 12
         return max(0, last_month - first_month + 1)
 

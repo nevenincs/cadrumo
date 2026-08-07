@@ -226,6 +226,18 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
             "exactly as it appears; null if the document shows nothing that does"
         ),
     ),
+    # Kept adjacent to the identifier it belongs to, for the reason the anchor
+    # key sits beside its field in the JSON skeleton: a small model pairs two
+    # facts about ONE party most reliably when they are asked for together.
+    InvoiceFieldContract(
+        field_name="supplier_postal_code",
+        form=InvoiceFieldForm.FREE_TEXT,
+        concept="the postal code printed in the postal address of the party who ISSUED the invoice",
+        form_instruction=(
+            "copy the postal code alone as printed, without the town, province or country; "
+            "this is the issuer's own address, not the address of the party being billed"
+        ),
+    ),
     InvoiceFieldContract(
         field_name="customer_tax_id",
         form=InvoiceFieldForm.TAX_IDENTIFIER,
@@ -237,6 +249,15 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
         role_evidence_instruction=(
             "copy the printed heading, label or line that shows this identifier belongs to the party "
             "BEING BILLED, exactly as it appears; null if the document shows nothing that does"
+        ),
+    ),
+    InvoiceFieldContract(
+        field_name="customer_postal_code",
+        form=InvoiceFieldForm.FREE_TEXT,
+        concept="the postal code printed in the postal address of the party BILLED by the invoice",
+        form_instruction=(
+            "copy the postal code alone as printed, without the town, province or country; "
+            "leave empty unless the document prints an address for the party being billed"
         ),
     ),
     InvoiceFieldContract(

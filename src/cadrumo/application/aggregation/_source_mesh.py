@@ -106,6 +106,15 @@ CalculationSourceDiagnosticReason = Literal[
     # missing base imponible is a completeness error) and that belongs in the
     # message, not in a routing key nothing routes on.
     "unrouted_declarable_quantity",
+    # A fourth axis beside the one above, and OBSERVATION-INDEPENDENT unlike
+    # it: "unrouted_declarable_quantity" needs a real row whose fact is
+    # uncovered by a binding that DOES exist; this fires when no binding on
+    # the revision could EVER draw a present category's base, for any row of
+    # that category, before this taxpayer's own row is even considered. True
+    # or false from the registry alone. Advisory rather than blocking -- the
+    # affected categories are typically cuota-less by law, so no tax is lost,
+    # only the base itself has nowhere on this revision to land.
+    "structurally_unroutable_base_category",
     # A row a binding DOES consume, but without the invoice substrate the
     # binding's fact assumes: its contribution rests on bank cash (or is
     # absent). Distinct from "unrouted_observation", which is a row no binding

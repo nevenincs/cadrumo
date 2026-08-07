@@ -1,0 +1,317 @@
+---
+tags:
+  - '#plan'
+  - '#canonical-identifiers'
+date: '2026-08-07'
+modified: '2026-08-07'
+body_hash: 'sha256:132f978d6106b1500303d72ee6c5d4929e970bdd9737de9ffc1e8b4c0fdcf531'
+tier: L3
+related:
+  - '[[2026-08-07-canonical-identifiers-adr]]'
+  - '[[2026-08-07-canonical-identifiers-reference]]'
+  - '[[2026-08-07-justificante-identity-matching-adr]]'
+---
+# `canonical-identifiers` plan
+
+Enroll the AEAT document-identifier taxonomy `2026-08-07-canonical-identifiers-adr`
+decided, staged so no Step retypes more than one identifier concept at once.
+
+## Description
+
+Executes `2026-08-07-canonical-identifiers-adr` (including its same-day
+Amendment), grounded in `2026-08-07-canonical-identifiers-reference`. Waves
+`W01`-`W03` are the original ADR scope: hex-64 primitive consolidation,
+AEAT-issued namespace enrollment (expediente id, clave de liquidacion, then
+CSV under an evidence-gated Phase), and the resolver plus the
+`matches_filing_target` type-level guard delivering the sibling
+`justificante-identity-matching-adr`'s deferred "Option 4". The CSV Phase
+(`W02.P03`) is prioritised within `W02` because the sibling plan's correct
+fix for its own live defect (a two-filings-per-period ambiguity) depends on
+a cotejo-derived CSV field this taxonomy's CSV type gates; the Phase's
+internal evidence-first order is unchanged.
+
+Waves `W04`-`W08` are the Amendment's scope: the mechanical app-derived
+alias-adoption tranche (302 fields, existing aliases only); the newly
+surfaced namespaces (`revision_id` adjudication, truncated display ids,
+`registry_snapshot_id`, `registry_revision_id`, `certificado_id`, box/form
+numbers, M210/M720 closed-set enums); the tax-identity split
+(`SubjectTaxId` versus `TaxIdIdentityToken`); the free-text
+three-population documentation pass plus the second-pass noun-heuristic
+sweep that proved the 589 denominator is a floor; and the storage
+key-composition redesign (extending `_namespace_registry.py`, bounded to
+Cadrumo's own databases via its own teardown authority, never a filesystem
+delete) plus the MCP/CLI golden-schema pinning the wire census showed is
+otherwise uncovered. Wave `W09` is the ratchet gate and closeout, now
+correctly sequenced last, after every enrollment tranche.
+
+**Declared gap:** the mechanical tranche in `W04` is scoped per-namespace at
+package granularity, not per individual field occurrence. This is a stated,
+reasoned exception to the no-compression convention: every occurrence in
+scope receives the SAME already-existing alias (a single mechanical
+transform, not heterogeneous per-site work), and each Step's execution
+record MUST enumerate every file it touched, reconciled against the
+classified589.csv census, before the Step is checked closed. A Step closed
+without that enumeration is not verifiably complete.
+
+## Steps
+
+## Wave `W01` - Core primitive consolidation
+
+Collapses the two hand-rolled hex-64 identity declarations
+(`domain/modelos/_ids.py`, `domain/invoices/_ids.py`) onto the one existing
+`core/identity/` `Hex64Str` primitive before any new namespace lands, so the
+taxonomy grows from a clean shared base. No persisted shape changes; this
+Wave must land and its roundtrip suite stay green before Wave `W02` begins.
+
+### Phase `W01.P01` - relocate hex-64 identity aliases
+
+Moves the four modelo ids and the invoice id onto the shared `Hex64Str`
+primitive with no shape change, proving the relocation is safe before any
+AEAT-issued namespace work begins.
+
+- [ ] `W01.P01.S01` - alias `WorkUnitId`, `CalculationRevisionId`, `FilingRecordId`, and `VerificationReportId` from `core.identity.Hex64Str`, deleting the duplicate pattern declaration; `src/cadrumo/domain/modelos/_ids.py`.
+- [ ] `W01.P01.S02` - relocate the four aliased ids into `core/identity/` and update every consumer import in the same commit per the relocation-atomicity rule; `src/cadrumo/core/identity/__init__.py`.
+- [ ] `W01.P01.S03` - alias `InvoiceId` from `core.identity.Hex64Str`, deleting its duplicate pattern declaration, and relocate it into `core/identity/` with its consumer imports updated in the same commit; `src/cadrumo/domain/invoices/_ids.py`.
+- [ ] `W01.P01.S04` - run the full persistence and pydantic-model roundtrip suite to confirm the relocation changed no shape; `src/cadrumo/tests/`.
+
+## Wave `W02` - AEAT-issued namespace enrollment
+
+Introduces the `IdentifierNamespace` enum and the AEAT-issued typed aliases,
+closing the expediente-id divergence between `sede/_schema.py` and
+`iva_compensation/_carry_forward.py` under one bound, then separately
+deciding and enrolling the CSV shape only after empirical replay against
+real captured receipts. Depends on Wave `W01` landing first.
+
+### Phase `W02.P02` - namespace enum and expediente or clave aliases
+
+Declares the closed namespace enum and the `AeatExpedienteId`,
+`AeatClaveLiquidacion`, and `AeatPresentationId` aliases at their already
+AEAT-evidenced bounds, then retypes every field carrying those concepts
+onto the shared alias, tightening the one under-constrained divergence.
+
+- [ ] `W02.P02.S05` - declare `IdentifierNamespace` as a closed StrEnum split into AEAT-issued and app-derived groups, each member documented with the concept it names; `src/cadrumo/core/identity/_namespace.py`.
+- [ ] `W02.P02.S06` - declare `AeatExpedienteId` at the sede-schema bound (12-32 chars, AEAT shape pattern) and `AeatClaveLiquidacion` and `AeatPresentationId` at their current field bounds; `src/cadrumo/core/identity/__init__.py`.
+- [ ] `W02.P02.S07` - retype the eleven `expediente_id` fields onto `AeatExpedienteId`, removing the per-field repeated bound and the duplicated shape validator; `src/cadrumo/adapters/outbound/aeat/sede/_schema.py`.
+- [ ] `W02.P02.S08` - retype `Deuda.clave_liquidacion` onto `AeatClaveLiquidacion`; `src/cadrumo/adapters/outbound/aeat/sede/_schema.py`.
+- [ ] `W02.P02.S09` - retype `PeriodComplianceState.expediente_id` onto `AeatExpedienteId`, closing the min-length-1 divergence, with a strict roundtrip proving every already-persisted observed value still validates; `src/cadrumo/domain/iva_compensation/_carry_forward.py`.
+- [ ] `W02.P02.S10` - add an anti-tautology proof for the tightened expediente-id bound: corrupt a persisted fixture value below the new bound and assert refusal; `src/cadrumo/domain/iva_compensation/tests/`.
+- [ ] `W02.P02.S11` - retype `ExpedienteDeclarationPayload.expediente_id` from unconstrained bare `str` onto `AeatExpedienteId`, closing the fourth (loosest) divergence sighted on the operator-facing wire contract; `src/cadrumo/entrypoints/cli/_app_live_payloads.py`.
+- [ ] `W02.P02.S12` - add a golden-schema pinning test capturing `ExpedienteDeclarationPayload`'s advertised `model_json_schema()` before and after `W02.P02.S11`, so the CLI/MCP contract change is a visible reviewed diff rather than a silent constraint shift; `src/cadrumo/entrypoints/cli/tests/`.
+
+### Phase `W02.P03` - CSV canonical shape decision and enrollment
+
+Decides the CSV shape empirically against real captured receipts before any
+retype, then enrolls `AeatCsv` and reconciles the three divergent
+validation strengths and two normalisation forms to one, enumerating every
+storage key the change touches. Prioritised within `W02` because the
+sibling `justificante-identity-matching` plan's fix for its own live
+two-filings-per-period defect depends on this Phase's `AeatCsv` type.
+
+- [ ] `W02.P03.S13` - replay the two real captured M303 justificante PDF fixtures against the three candidate CSV shapes (`is_aeat_csv` 8-32 uppercase pattern, `JustificanteCsv` 4-64 no pattern, and the two normalisation forms) and record in the Step record which shape and normal form both fixtures actually satisfy; `src/cadrumo/domain/justificante/`.
+- [ ] `W02.P03.S14` - enumerate every secure-object storage key derived from the CSV value, starting from `extract_identifier` in the justificante persistence adapter, informing (not gating, per the schema-rewrite authorisation) the key-composition redesign in `W08`; `src/cadrumo/adapters/persistence/profile/justificante.py`.
+- [ ] `W02.P03.S15` - declare `AeatCsv` in `core/identity/` at the shape decided in `W02.P03.S13`; `src/cadrumo/core/identity/__init__.py`.
+- [ ] `W02.P03.S16` - retype `JustificanteRef.csv` onto `AeatCsv`, removing its now-redundant field validator; `src/cadrumo/adapters/outbound/aeat/sede/_schema.py`.
+- [ ] `W02.P03.S17` - retype `Justificante.csv` (via the `JustificanteCsv` alias) onto `AeatCsv`; `src/cadrumo/domain/justificante/_schema.py`.
+- [ ] `W02.P03.S18` - retype the two bare-`str` CSV fields onto `AeatCsv`; `src/cadrumo/application/live/_justificante.py`.
+- [ ] `W02.P03.S19` - retype the bare-`str` CSV field onto `AeatCsv`; `src/cadrumo/adapters/inbound/borrador/_schema.py`.
+- [ ] `W02.P03.S20` - unify CSV normalisation to one form across the verify adapter and the calendar-evidence consumer, matching whichever form `W02.P03.S13` proved correct; `src/cadrumo/application/overview/_calendar_evidence.py`.
+- [ ] `W02.P03.S21` - add a strict roundtrip test for `Justificante` populating every defaultable field non-default, plus an anti-tautology proof corrupting the persisted CSV value and asserting refusal; `src/cadrumo/domain/justificante/tests/`.
+- [ ] `W02.P03.S22` - re-run the live-captured justificante fixture parse regression to confirm the enrolled shape still accepts both real receipts; `src/cadrumo/domain/justificante/tests/`.
+- [ ] `W02.P03.S23` - hand off `AeatCsv` to the sibling `justificante-identity-matching` plan's cotejo-derived CSV field, confirming by inspection its new observation-model field is typed onto this alias rather than bare `str`; `src/cadrumo/domain/justificante/_schema.py`.
+
+## Wave `W03` - Resolver and type-level namespace guard
+
+Lands the shape-only resolver with its documented ambiguity limit, then
+delivers the sibling `justificante-identity-matching` ADR's deferred
+"Option 4" by retyping `matches_filing_target`'s `presentation_id`
+parameter so a register-namespace value is refused at the type-checker
+boundary. Depends on Wave `W02` landing first.
+
+### Phase `W03.P04` - shape resolver and matches_filing_target hardening
+
+Delivers the resolver the operator asked for, honest about where shape
+alone cannot disambiguate, and closes the recurrence risk the sibling ADR
+named as future hardening.
+
+- [ ] `W03.P04.S24` - land `resolve_identifier_namespace` returning every `IdentifierNamespace` a value's shape is consistent with, with its docstring stating any pair of namespaces whose shapes overlap; `src/cadrumo/core/identity/_namespace.py`.
+- [ ] `W03.P04.S25` - add unit coverage proving the resolver returns more than one namespace for a value shaped to overlap two members, and exactly one for a value shaped to only one; `src/cadrumo/core/identity/tests/`.
+- [ ] `W03.P04.S26` - retype `matches_filing_target`'s `presentation_id` parameter from bare `str | None` to `AeatPresentationId | AeatCsv | None`; `src/cadrumo/domain/justificante/_schema.py`.
+- [ ] `W03.P04.S27` - update the corrected pinning test from the sibling ADR to assert the new parameter type is honoured, without reintroducing `presentation_id=expediente_id` at any call site; `src/cadrumo/domain/justificante/tests/`.
+- [ ] `W03.P04.S28` - confirm by inspection that none of the three call sites the sibling ADR corrected regressed to passing an `AeatExpedienteId`-typed value into the now-narrower parameter; `src/cadrumo/application/live/_filed_observation_persistence.py`.
+
+## Wave `W04` - Mechanical app-derived alias adoption
+
+Applies the FOUR already-existing app-derived aliases (`TransactionId`,
+`BucketId`, `InvoiceId`, `BucketEventId`) at bare-`str` sites the
+classification census confirmed are the same concept, unchanged constraint
+shape. No new type is declared in this Wave. Depends on Wave `W01` landing
+first (so `TransactionId` etc. are already relocated into `core/identity/`);
+independent of Waves `W02`/`W03`.
+
+### Phase `W04.P06` - adopt existing aliases at classified bare-str sites
+
+Each Step retypes every classified bare-`str` occurrence of one namespace
+name onto its existing alias. Per the Description's declared gap, this is
+package-batch-scoped; the Step's execution record must enumerate every file
+touched, reconciled against the classified589.csv census.
+
+- [ ] `W04.P06.S29` - retype every classified `transaction_id`/`parent_transaction_id`/`old_transaction_id`/`previous_transaction_id`/`merged_transaction_id` pydantic model field onto `TransactionId` across the ledger application package, function parameters and non-model locals excluded; `src/cadrumo/application/ledger/`.
+- [ ] `W04.P06.S30` - retype every classified `transaction_id` pydantic model field onto `TransactionId` across the aggregation package's ledger models, then the renta-ledger-expenses model; `src/cadrumo/application/aggregation/`.
+- [ ] `W04.P06.S31` - retype every classified `bucket_id` pydantic model field onto `BucketId` across the persistence-adapter package; `src/cadrumo/adapters/persistence/profile/`.
+- [ ] `W04.P06.S32` - retype every classified `invoice_id` pydantic model field onto `InvoiceId` across the invoices application and domain packages; `src/cadrumo/application/invoices/`.
+- [ ] `W04.P06.S33` - retype every classified `bucket_event_id`/`event_id` pydantic model field onto the existing `BucketEventId` alias at the sites not already using it; `src/cadrumo/application/modelo/_reconciliation_records.py`.
+- [ ] `W04.P06.S34` - run the full persistence and pydantic-model roundtrip suite and the CLI/MCP schema-conformance gate to confirm the four adoptions changed no wire shape for already-valid values; `src/cadrumo/tests/`.
+
+## Wave `W05` - Newly surfaced namespaces
+
+Adjudicates the `revision_id` conflation per-site, retypes truncated
+display ids onto the existing `Hex16Str`, and declares the AEAT-issued and
+app-derived namespaces the census surfaced beyond the original four.
+Depends on Wave `W01` (for `CalculationRevisionId`) landing first.
+
+### Phase `W05.P07` - revision id adjudication and truncated display ids
+
+Closes the `revision_id` conflation the census found living inside the
+enrollment work itself, and moves the two truncated display forms onto the
+primitive already built for them.
+
+- [ ] `W05.P07.S35` - adjudicate each of the twelve bare `revision_id` sites against its actual producer (registry `ModeloRevision.id` versus the hex-64 `CalculationRevisionId`), recording the per-site decision in the Step record before retyping any of them; `src/cadrumo/domain/calculations/registry/_snapshot_coordinate.py`.
+- [ ] `W05.P07.S36` - retype every site adjudicated in `W05.P07.S35` onto `CalculationRevisionId` or the new `RegistryRevisionId` alias per its recorded disposition; `src/cadrumo/domain/calculations/registry/`.
+- [ ] `W05.P07.S37` - retype `short_work_unit_id` and `short_calculation_revision_id` onto the existing `core.Hex16Str` primitive rather than the full-length aliases; `src/cadrumo/domain/modelos/`.
+
+### Phase `W05.P08` - new AEAT-issued and app-derived namespace members
+
+Declares the namespace members and aliases the census found with no
+existing type at all.
+
+- [ ] `W05.P08.S38` - declare `RegistrySnapshotId` as a new `IdentifierNamespace.APP_REGISTRY_SNAPSHOT_ID` member and alias for the composite `modelo:revision_id:filing_year:period` string, explicitly distinct from `core.identity.SnapshotId`; `src/cadrumo/core/identity/_namespace.py`.
+- [ ] `W05.P08.S39` - declare `RegistryRevisionId` as a new `IdentifierNamespace.APP_REGISTRY_REVISION_ID` member and alias for the human-authored registry version tag; `src/cadrumo/core/identity/_namespace.py`.
+- [ ] `W05.P08.S40` - retype the three `registry_snapshot_id` sites and the `registry_revision_id` sites onto the two new aliases; `src/cadrumo/domain/calculations/registry/`.
+- [ ] `W05.P08.S41` - declare `AeatCertificadoId` as a new `IdentifierNamespace.AEAT_CERTIFICADO_ID` member and alias at the 13-digit-or-longer bound its docstring already states, and retype `RemoteNotification.certificado_id` onto it; `src/cadrumo/adapters/outbound/aeat/sede/_notifications.py`.
+- [ ] `W05.P08.S42` - declare `AeatBoxNumber` as a new `IdentifierNamespace.AEAT_BOX_NUMBER` member and alias, distinct from the registry's own `CasillaId`, and retype `display_number`, `form_number`, `from_number`, and `to_number` onto it; `src/cadrumo/adapters/outbound/aeat/sede/_notifications.py`.
+- [ ] `W05.P08.S43` - check whether M210's `official_tipo_renta_code` catalogue is already enumerated in registry TOML; if so, declare a `StrEnum` sourced from that catalogue rather than re-declaring the values, and retype the five sites onto it, explicitly NOT as an `IdentifierNamespace` member; `src/cadrumo/domain/modelos/_calculation_revision.py`.
+- [ ] `W05.P08.S44` - declare `M720OperationKindCode` and `M720AssetClassCode` as `StrEnum`s in `core/` sourced from registry TOML if enumerated there, and retype `operation_kind_code` / `asset_class_code` onto them, explicitly NOT as `IdentifierNamespace` members; `src/cadrumo/domain/modelos/`.
+
+## Wave `W06` - Tax-identity split
+
+Applies the `SubjectTaxId` versus `TaxIdIdentityToken` split this ADR
+decided across the 27 tax-identity-shaped sites, neither type used at any
+of them today. Independent of Waves `W02`-`W05`; depends only on `core/identity`
+already existing (it does).
+
+### Phase `W06.P09` - self and profile-owned tax identity
+
+Retypes the filer's-own and declared-family-member tax-identity fields onto
+the checksum-enforced `SubjectTaxId`.
+
+- [ ] `W06.P09.S45` - retype every classified `tax_id`, `profile_tax_id`, and `spouse_tax_id` pydantic model field onto `SubjectTaxId`, per-file enumeration recorded in the Step record reconciled against the classified589.csv census; `src/cadrumo/`.
+
+### Phase `W06.P10` - counterparty-facing tax identity
+
+Retypes counterparty-facing tax-identity fields onto the checksum-free
+`TaxIdIdentityToken`, preserving the ability to hold a non-resident
+counterparty's identifier.
+
+- [ ] `W06.P10.S46` - retype every classified `supplier_tax_id`, `customer_tax_id`, `party_tax_id`, `counterparty_tax_id`, `donor_tax_id`, and `member_tax_id` pydantic model field onto `TaxIdIdentityToken`, per-file enumeration recorded in the Step record reconciled against the classified589.csv census; `src/cadrumo/`.
+- [ ] `W06.P10.S47` - add a roundtrip regression proving a non-Spanish-shaped counterparty tax id (a real EU VAT-shaped value) still validates under `TaxIdIdentityToken` after the retype, guarding against the split being applied backwards; `src/cadrumo/core/identity/tests/`.
+
+## Wave `W07` - Free-text documentation and denominator second pass
+
+Documents the three free-text sub-populations without retyping them, and
+runs the noun-vocabulary second-pass sweep the amendment requires before
+the census can be treated as complete enough to gate the ratchet's initial
+baseline.
+
+### Phase `W07.P11` - free-text categorisation and second-pass sweep
+
+- [ ] `W07.P11.S48` - document the three free-text sub-populations (AEAT-bounded prose, counterparty-issued document numbers, externally-controlled non-AEAT identifiers) as a code comment on `IdentifierNamespace` naming representative fields for each, explicitly stating none are namespace members; `src/cadrumo/core/identity/_namespace.py`.
+- [ ] `W07.P11.S49` - run a second-pass AST sweep using a noun-vocabulary heuristic (`identificador`, `clave`, `número`, `referencia` in field docstrings) independent of the original suffix heuristic, and record every newly found identifier-shaped field the first pass missed; `dev/`.
+- [ ] `W07.P11.S50` - triage the second-pass sweep's findings from `W07.P11.S49` into the existing namespace set, a new namespace, or an explicit non-identifier exclusion, recording the disposition of each; `src/cadrumo/core/identity/_namespace.py`.
+
+## Wave `W08` - Storage key-composition redesign and external-contract pinning
+
+Resolves the object-key-grammar pre-hash inconsistency deliberately, bounded
+strictly to Cadrumo's own databases via the app's own teardown authority,
+and pins the MCP/CLI external contract the wire census found otherwise
+uncovered. Depends on Waves `W02`, `W04`, `W05`, `W06` having landed (so the
+namespaces feeding key composition and the schemas being pinned already
+carry their final types).
+
+### Phase `W08.P12` - object-key-grammar decision
+
+- [ ] `W08.P12.S51` - decide, and record the reason, whether every PII-shaped fold-in in `object_key_grammar` (`{member_nif}`, `{perceptor_nif}`, `{perceptor_tax_id}`) is pre-hashed uniformly or intentionally left raw beneath the outer `HashedLookup` HMAC, given the column is deterministically hashed either way; `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`.
+- [ ] `W08.P12.S52` - apply the `W08.P12.S51` decision to every `SecureObjectNamespaceDefinition.object_key_grammar` declaration that currently diverges from it; `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`.
+- [ ] `W08.P12.S53` - discard and re-derive the affected Cadrumo profile databases via `resume_config_reset` / `BucketMaintenanceService.delete` for any namespace whose rendered key changed, never a filesystem-level delete; `src/cadrumo/application/config_reset.py`.
+- [ ] `W08.P12.S54` - record the operator re-authentication step (Cl@ve Móvil) required to re-acquire the discarded live captures as an explicit OPERATOR action in the Step record, not an automated action; `.vault/exec/`.
+
+### Phase `W08.P13` - golden-schema pinning for the external MCP/CLI contract
+
+- [ ] `W08.P13.S55` - enumerate every registered `OutputSchema` class carrying an identifier field this plan retyped, cross-referenced against the wire census's roughly-fifty-class sweep; `src/cadrumo/entrypoints/cli/`.
+- [ ] `W08.P13.S56` - add a golden-schema pinning test capturing each enumerated class's `model_json_schema()` output (the CLI envelope shape) and, for classes backing an MCP tool, the MCP `output_schema` from `_output_schema_for`, asserting the pinned constraints match the enrolled type; `src/cadrumo/entrypoints/mcp/tests/`.
+- [ ] `W08.P13.S57` - confirm `test_json_schema_conformance.py`'s existing key-parity gate still passes and add a note in its module docstring cross-referencing the new content-pinning test, since the existing gate self-describes as structural-shape-only; `src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
+
+## Wave `W09` - Ratchet gate and closeout
+
+Adds the structural enrollment gate that keeps the taxonomy from decaying
+as new identifier-shaped fields are added, proves the gate's own bite, and
+records every surface this plan deliberately left unenrolled. Depends on
+every prior Wave landing first, so the gate's enrolled baseline reflects
+the full staged taxonomy rather than a partial one.
+
+### Phase `W09.P14` - structural enrollment gate and closeout recording
+
+Delivers the property-keyed ratchet test and makes the plan's own known
+gaps explicit rather than implied-complete.
+
+- [ ] `W09.P14.S58` - author the identifier-enrollment ratchet test asserting every production pydantic field whose name matches the namespace vocabulary carries a `core.identity` namespace alias rather than bare `str`, with `Declaracion.estado`, `Deuda.situacion`, and the three free-text sub-populations from `W07.P11.S48` as named, documented exclusions; `src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py`.
+- [ ] `W09.P14.S59` - prove the gate's bite: add a throwaway bare-`str` field named to match the namespace vocabulary on a scratch model outside `src`, confirm the gate reds, then remove it and confirm the gate is green again; `src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py`.
+- [ ] `W09.P14.S60` - record NRC, fixed-width fichero-BOE tax-id width (owned by the separate Modelo 200 misattribution ADR), registry TOML id-shaped values (no measured denominator), and any second-pass finding from `W07.P11.S49` not triaged into an enrolled namespace as explicit deferred follow-ups in this plan's Verification section, each with a named next reference rather than a silent close; `.vault/plan/2026-08-07-canonical-identifiers-plan.md`.
+
+## Parallelization
+
+Waves `W01` -> `W02` -> `W03` are sequenced as originally decided. `W04`,
+`W05`, and `W06` each depend only on `W01` and are mutually independent of
+each other and of `W02`/`W03` (disjoint files, disjoint namespaces), so may
+run in parallel once `W01` closes. `W07` is independent of every other Wave
+and may run at any time after this plan is approved. `W08` depends on
+`W02`, `W04`, `W05`, and `W06` all having landed, since it re-derives
+storage keys built from namespaces those Waves finalise and pins schemas
+those Waves retype. `W09` depends on every other Wave. Within a Phase,
+Steps retyping disjoint files may be parallelized per the no-compression
+rule's file-level granularity; Steps sharing one file stay sequential to
+avoid contended edits.
+
+## Verification
+
+The plan is complete when every Step above is closed (`- [x]`) and:
+
+- The full roundtrip and anti-tautology suites for every retyped model
+  (`W01.P01.S04`, `W02.P02.S10`, `W02.P03.S21`, `W04.P06.S34`,
+  `W06.P10.S47`) pass.
+- The ratchet gate (`W09.P14.S58`) is green against the fully-enrolled
+  baseline and its bite proof (`W09.P14.S59`) is recorded in that Step's
+  execution record.
+- `matches_filing_target` (`W03.P04.S26`) type-checks under the project's
+  static type gate with the narrowed parameter type.
+- The two real-captured M303 justificante fixtures still parse
+  (`W02.P03.S22`).
+- Every golden-schema pinning test from `W08.P13.S56` passes, and the
+  `test_json_schema_conformance.py` structural gate still passes.
+- Every Step whose action names a per-namespace batch (`W04.P06`,
+  `W06.P09`, `W06.P10`) carries a file enumeration in its execution record
+  reconciled against the classified589.csv census.
+- Every discarded Cadrumo profile database from `W08.P12.S53` was
+  re-derived through `resume_config_reset` / `BucketMaintenanceService.delete`
+  only, confirmed by inspection of the Step's execution record, never a
+  filesystem-level delete.
+
+**Explicitly deferred, not covered by this plan's completion** (recorded
+per `W09.P14.S60`): NRC capture and persistence (no existing field to
+retype); fixed-width fichero-BOE tax-id width (owned by the separate
+Modelo 200 misattribution ADR, must not be touched here); registry TOML
+id-shaped values (architecturally clean per the wire census, but no
+measured denominator equivalent to the Python count); and any second-pass
+sweep finding (`W07.P11.S49`) not triaged to a disposition by
+`W07.P11.S50`. A future plan referencing this one's ADR is the sanctioned
+next step for any of these, not a silent assumption that this plan's
+closure covers them.

@@ -4,7 +4,7 @@ tags:
   - '#aeat-liabilities-sanciones'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:57eec3c965b3ac0f9be55287df359ab5bb772cb114cdbd3cdb2a336fc0ed4e5f'
+body_hash: 'sha256:7e73731e0913dbcdb50ad93a7e02b0abfcf4c594d3e290ccf954b134f8c7210c'
 tier: L2
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
@@ -71,7 +71,7 @@ Land the guard function modelled on the censal reader's _assert_read_landing, sh
 
 Expose aeat app live deudas list/view/latest over persisted snapshots, matching the expedientes verb shape exactly; needs no specimen since it reads only what has already been captured.
 
-- [ ] `P04.S10` - Add the deudas CLI entrypoint and its list, view and latest payload models mirroring the expedientes payload shapes; `src/cadrumo/entrypoints/cli/_app_live_deudas_cli.py, src/cadrumo/entrypoints/cli/_app_live_payloads.py`.
+- [ ] `P04.S10` - Add the deudas CLI entrypoint and its list, view and latest payload models as new OutputSchema subclasses in the existing _app_live_payloads module, mirroring the expedientes payload shapes. Introduces tr help keys, so this row and S11 and S12 land as ONE unit with P07.S23 rather than independently: the codebase-to-locale parity gate is tree-wide and immediate, so the moment a tr key exists in source it must exist in all four catalogues; `src/cadrumo/entrypoints/cli/_app_live_deudas_cli.py, src/cadrumo/entrypoints/cli/_app_live_payloads.py`.
 - [ ] `P04.S11` - Wire aeat app live deudas list, view and latest into the app live command group, matching the expedientes latest, list, view verb shape exactly; `src/cadrumo/entrypoints/cli`.
 - [ ] `P04.S12` - Add the three new leaves to the reviewed-non-mutating roster as pure reads over persisted snapshots, verified by test_every_app_leaf_is_accounted_for_by_name_independent_census and a new CLI integration test asserting the three verb shapes; `src/cadrumo/entrypoints/cli/tests/test_root_fallback_write_guard.py`.
 
@@ -99,7 +99,7 @@ Author legal-catalogue entries for the four ungrounded LGT provisions, each with
 
 Author real es/en/ca/hu values for the new deudas CLI help and labels once the in-flight en.yml/hu.yml peer WIP lands and scaffold --check is clean.
 
-- [ ] `P07.S23` - BLOCKED on the in-flight en.yml and hu.yml peer WIP landing: author real es, en, ca and hu values for the new deudas CLI help and labels via python -m dev.locales set, verified by scaffold then scaffold --check running clean; `src/cadrumo/locales`.
+- [ ] `P07.S23` - Author real es, en, ca and hu values for the new deudas CLI help and label keys via python -m dev.locales set, then scaffold and scaffold --check clean. Lands as ONE unit with P04.S10 through S12 because the codebase-to-locale parity gate is tree-wide and immediate, so no ordering exists in which the CLI rows are green before these values exist in all four catalogues. The original en.yml and hu.yml peer-WIP blocker is discharged; `src/cadrumo/locales`.
 
 ## Parallelization
 

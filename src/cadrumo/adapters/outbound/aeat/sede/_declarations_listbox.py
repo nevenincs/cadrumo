@@ -6,13 +6,13 @@ import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from bs4 import BeautifulSoup
 from pydantic import BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import Period
 from .....core.i18n import tr
 from .....core.logging import get_logger
+from .._html import parse_html
 from ._adapter_utils import normalize_response_text
 from ._declarations_schema import Declaracion
 from ._errors import SedeFailureMode, SedeParseError, SedeValidationError
@@ -86,7 +86,7 @@ def _parse_listbox(
         from a rendered-page-only one.
     """
     try:
-        soup = BeautifulSoup(html, "html.parser")
+        soup = parse_html(html)
     except Exception as exc:
         raise SedeParseError(
             f"failed to parse declaraciones HTML: {exc}",

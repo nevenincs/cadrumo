@@ -159,14 +159,21 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
 
 
 def _generated_docs_registrations() -> tuple[FStringKeyRegistration, ...]:
-    """Registrations for display copy consumed outside ``src/cadrumo``.
+    """Registrations for generated-docs display copy whose tail is an enum value.
 
-    The key scan walks ``src/cadrumo`` only, so a catalogue key whose only
-    consumer is a dev-side surface is invisible to it and scaffold would prune
-    it as stale. The generated casilla reference renders every one of its
-    display strings from the catalogues rather than from Python literals, and
-    derives the key set from the schema's own closed value sets, so the
-    registration reads that one derivation instead of restating it.
+    The generated casilla reference names every string it renders with a full
+    literal key at the call site, so the regex scan sees them directly. Five
+    families are the exception: their tail is an ``InputKind`` /
+    ``BindingSourceKind`` / ``data_type`` / ``cadence`` / ``sign`` member, and
+    the surface derives them from those closed sets rather than writing 62 keys
+    out - the derivation is what makes a new enum member fail loudly instead of
+    rendering blank.
+
+    Those f-strings would otherwise emit a ``docs.casilla.<family>.*`` namespace
+    marker and need no registration, but :func:`_is_dynamic_translation_prefix`
+    only admits a marker whose root is in ``_DYNAMIC_TRANSLATION_ROOTS``, and
+    ``docs`` is not among them. Until that root is admitted, this registration
+    is what keeps scaffold from pruning the families as stale.
     """
     from dev.docs.casilla_reference import display_locale_keys
 

@@ -54,6 +54,7 @@ from ...domain.calculations.registry import (
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
     resolve_retenciones_aggregation_binding_values,
+    structurally_unroutable_iva_base_categories,
     ungrounded_ledger_renta_income_observations,
     unrouted_ledger_iva_quantities,
     unrouted_ledger_renta_income_quantities,
@@ -276,6 +277,22 @@ class LedgerIvaAggregationSourceResolver:
         # binding, so without this the annual return's missing base boxes are
         # silent with the row screen clean.
         unrouted_quantities = unrouted_ledger_iva_quantities(context.revision, aggregation.observations)
+        # Fourth, structural axis, observation-INDEPENDENT unlike the two above:
+        # it asks whether the revision's bindings could EVER route a category's
+        # base, not whether a particular row's base was reached. Scoped to
+        # categories this taxpayer's ledger actually carries this period, so it
+        # reads as taxpayer-relevant rather than a blanket registry dump, and to
+        # Modelo 303 only pending Modelo 390 coordination (#80). Advisory, never
+        # blocking: several of these categories are cuota-less BY LAW, so no tax
+        # is lost -- only the base itself has nowhere on this revision to land.
+        unroutable_categories: tuple[IvaCategory, ...] = ()
+        if str(context.modelo) == Modelo.M303.value:
+            present_categories = {observation.category for observation in aggregation.observations}
+            unroutable_categories = tuple(
+                category
+                for category in structurally_unroutable_iva_base_categories(context.revision)
+                if category in present_categories
+            )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -335,6 +352,21 @@ class LedgerIvaAggregationSourceResolver:
                     ),
                 )
                 for quantity in unrouted_quantities
+            )
+            + tuple(
+                CalculationSourceDiagnostic(
+                    reason="structurally_unroutable_base_category",
+                    source_kind="ledger_iva_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=(
+                        f"IVA category {category.value!r} appears on this period's ledger, and no "
+                        f"ledger_iva_aggregation binding on revision {context.revision.id!r} could ever draw "
+                        "its taxable base, for any row of that category -- not merely for the rows seen this "
+                        "period. Cuota is legitimately zero or already declared elsewhere for this category, "
+                        "so no tax is lost, but the base amount itself is not represented in this filing"
+                    ),
+                )
+                for category in unroutable_categories
             ),
             provenance=(
                 tuple(
@@ -1408,6 +1440,12 @@ def _invoice_line_iva_observation(
         # "zero", and these operations are exempt WITH a zero rate applied to a
         # real base, which is what a base-only casilla declares.
         rate_kind=IvaRateKind.ZERO,
+        # Stated, not left unset. These operations carry a real zero rate on a
+        # real base, and a rate-specific binding takes only rows that say what
+        # they were charged: leaving it None would make this producer's rows
+        # invisible to any zero-rate box, which is the shape that made a
+        # narrowed reducido binding look like a silent under-declaration.
+        applied_rate=Decimal("0"),
         flow_direction=IvaFlowDirection.REPERCUTIDO,
         base_amount=line.subtotal,
         iva_amount=Decimal("0"),

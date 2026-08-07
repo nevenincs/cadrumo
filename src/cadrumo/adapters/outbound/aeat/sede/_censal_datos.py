@@ -44,7 +44,7 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING, Any, Final, Literal
 from urllib.parse import quote, urlsplit
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import Tag
 from pydantic import AnyHttpUrl, BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -60,6 +60,7 @@ from .....domain.calculations.registry import (
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
+from .._html import parse_html
 from .._playwright import Page, PlaywrightError
 from ..browser import BrowserSession, DefaultBrowserSession, default_browser_session_factory
 from ._adapter_utils import assert_read_http_for
@@ -332,7 +333,7 @@ def parse_censal_datos(html: str, *, source_url: str) -> CensalDatosResult:
             no censal data table.
     """
     try:
-        soup = BeautifulSoup(html, "lxml")
+        soup = parse_html(html)
     except Exception as exc:  # pragma: no cover — lxml always available
         raise SedeParseError(f"failed to parse censal HTML: {exc}") from exc
     for tag in soup(["script", "style"]):

@@ -135,7 +135,7 @@ _DESIGN_ROOT_PARTS = ("corpus", "aeat_official", "disenos_registro")
 # The extracted design tables render one field per row as
 # "order | offset | length | kind | description [box] | ... ".
 _BOX_MARKER = re.compile(r"\[(\d{1,4})\]")
-_DESIGN_YEAR = re.compile(r"ejercicio-(\d{4})(?:-y-(\d{4}))?")
+_DESIGN_YEAR = re.compile(r"ejercicios?-(\d{4})(?:-(y|a|hasta)-(\d{4}))?")
 #: A design filename may name TWO explicit ejercicios ("ejercicio-2015-y-2016"),
 #: and the corpus holds four such spans (2007-y-2008, 2008-y-2009, 2015-y-2016,
 #: 2019-y-2020). Taking only the first match attributed the design to its opening
@@ -186,11 +186,35 @@ def _sources_by_year(modelo_id: str) -> tuple[tuple[int, Path], ...]:
 
 
 def _design_years(name: str) -> tuple[int, ...]:
-    """Every ejercicio a design filename explicitly claims, in order."""
+    """Every ejercicio a design filename claims, expanded and ordered.
+
+    AEAT names these four ways and they do NOT mean the same thing:
+
+    * ``ejercicio-2024``            -- one year.
+    * ``ejercicios-2024``           -- one year; the plural is a naming
+      habit, not a range, and it appears on 61 bundled files.
+    * ``ejercicio-2015-y-2016``     -- TWO discrete years ("and").
+    * ``ejercicios-2004-a-2009`` /
+      ``ejercicios-2016-hasta-2018`` -- an INCLUSIVE RANGE ("through"),
+      so 2004-a-2009 claims six years, not two endpoints.
+
+    Reading ``a``/``hasta`` as two endpoints silently drops every year
+    between them, and matching only the singular ``ejercicio-`` misses 40 of
+    the 209 bundled design files across 15 modelos entirely -- a design that
+    is invisible to enumeration reads exactly like one that does not exist.
+
+    ``y-siguientes`` is still NOT expanded: its span is open-ended, so
+    enumerating it would invent years.
+    """
     matched = _DESIGN_YEAR.search(name)
     if matched is None:
         return ()
-    return tuple(int(group) for group in matched.groups() if group is not None)
+    first, connector, second = matched.group(1), matched.group(2), matched.group(3)
+    if second is None:
+        return (int(first),)
+    if connector == "y":
+        return (int(first), int(second))
+    return tuple(range(int(first), int(second) + 1))
 
 
 def _designs_by_year(modelo_id: str) -> dict[int, tuple[Path, ...]]:
@@ -590,7 +614,7 @@ def test_no_revision_spans_a_design_relayout() -> None:
 def test_every_ejercicio_a_design_names_is_attributed_to_it() -> None:
     """A design naming two ejercicios must be attributed to BOTH.
 
-    ``ejercicio-(\d{4})`` taken as a first match attributed a two-year design to
+    ``ejercicio-(\\d{4})`` taken as a first match attributed a two-year design to
     its opening year only, so Modelo 303's 2015-y-2016 and 2019-y-2020 designs
     left 2016 and 2020 claimed by nothing -- years the corpus covers and the
     enumeration reported as unmeasured.
@@ -637,3 +661,22 @@ def test_the_orden_year_in_a_filename_is_not_read_as_a_coverage_year() -> None:
     assert _design_years("10-303-orden-hap-2373-2014-ejercicio-2015-y-2016-247-kb-xlsx.xlsx") == (2015, 2016)
     assert _design_years("02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021.xlsx") == (2022,)
     assert _design_years("07-303-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf") == ()
+
+
+def test_the_plural_and_range_naming_variants_are_read() -> None:
+    """AEAT names an ejercicio four ways and two of them are not two years.
+
+    Matching only the singular ``ejercicio-`` missed 40 of the 209 bundled
+    design files across 15 modelos, and reading ``a``/``hasta`` as a pair of
+    endpoints drops every year between them. Both failures are silent: an
+    unenumerated design is indistinguishable from an absent one.
+    """
+    # plural, single year
+    assert _design_years("01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes.xlsx") == (2019,)
+    # "y" is AND -- two discrete years, nothing between them
+    assert _design_years("10-303-ejercicio-2015-y-2016.xlsx") == (2015, 2016)
+    # "a" and "hasta" are THROUGH -- an inclusive range
+    assert _design_years("02-111-ejercicios-2004-a-2009-49-kb-pdf.pdf") == (2004, 2005, 2006, 2007, 2008, 2009)
+    assert _design_years("06-111-ejercicios-2016-hasta-2018.pdf") == (2016, 2017, 2018)
+    # the orden year is still never coverage
+    assert _design_years("01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes.xlsx") == (2019,)

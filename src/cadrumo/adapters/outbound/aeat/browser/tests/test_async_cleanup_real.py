@@ -29,8 +29,6 @@ async def _opened_real_session(name: str) -> tuple[DefaultBrowserSession, int]:
     return session, driver_pid
 
 
-
-
 async def _cancel_blocked_cleanup_attempts(
     *,
     task_name: str,
