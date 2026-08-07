@@ -572,13 +572,18 @@ def test_a_rate_anchor_carrying_its_printed_unit_supports_the_bare_value(
     assert evaluation.parsed_anchor == value
 
 
-def test_a_genuine_contradiction_on_a_rate_anchor_still_reports_contradicted() -> None:
+@pytest.mark.parametrize("wrong_value", [Decimal("19"), Decimal("99")])
+def test_a_genuine_contradiction_on_a_rate_anchor_still_reports_contradicted(
+    wrong_value: Decimal,
+) -> None:
     """Positive control: the unit strip must not become "accept everything".
 
-    A reader citing ``21%`` for a value of 99 is contradicted, and must stay so.
+    A reader citing ``21%`` for a value of 19 or 99 is contradicted, and must
+    stay so. ``19`` is included because it is the neighbouring real IVA rate --
+    the plausible misread, and the one a loosened check would wave through.
     """
     evaluation = evaluate_anchor(
-        value=Decimal("99"),
+        value=wrong_value,
         anchor="21%",
         transcription=_transcription(_RATE_TEXT),
     )
