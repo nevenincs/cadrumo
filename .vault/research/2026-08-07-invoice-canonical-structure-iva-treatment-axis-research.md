@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:5cab829361827234b131d51bc794345c998fea818f9cc05f653011bb4473157e'
+body_hash: 'sha256:10abd76cbfb2d62d658f1e5c20f5ccb039a9520a598d42ecb131c7097794a76a'
 related:
   - "[[2026-08-07-invoice-canonical-structure-iva-treatment-axis-adr]]"
 ---
@@ -206,11 +206,54 @@ formulas, constructs, bindings, casillas, completeness manifest and export layou
 codebase's own con-derecho set - the classification this article governs - is what routes
 volume between the prorrata numerator and denominator.
 
-**Actions, neither of them authoring legal text.** Refresh the bundled excerpt from the BOE
-consolidated text for this article. Separately, strengthen the entry's `required_text` to
-quote a phrase from the operative point rather than the heading, so a future truncation
-fails loudly. Whether other bundled excerpts share the title-only `required_text` shape was
-NOT swept here and is worth a pass.
+**It is a class, not an instance.** The sweep this research flagged as unrun was run by the
+team lead; the numbers below are their measurement, and two rows were spot-checked
+independently here before being recorded.
+
+Of 599 legal entries carrying both a `required_text` and a readable corpus file, 67 have
+every required phrase falling inside the excerpt's opening heading. That raw figure
+over-reports: some are genuine one-line dispositions where the heading IS the provision
+(`orden-hac-1526-2024:df-unica` is "Entrada en vigor" and has nothing further to check),
+and counting those as defects would be its own over-claim. The meaningful cut is entries
+whose BODY the gate never touches: **32 entries carry a body over 1200 characters that no
+required phrase reaches, and all 32 are stamped `review_status = "reviewed"`.**
+
+The largest:
+
+```
+orden-eha-3127-2009:art-1    176,330 chars   reviewed
+ley-37-1992:art-20            30,207 chars   reviewed
+ley-27-2014:art-18            24,764 chars   reviewed
+rd-1065-2007:art-42-ter        9,603 chars   reviewed
+rd-1065-2007:art-3             9,552 chars   reviewed
+```
+
+Spot-checked here rather than taken on report. `ley-37-1992:art-20` requires
+`["Exenciones en operaciones interiores", "Estaran exentas de este impuesto las siguientes
+operaciones"]` - the title plus the chapeau that INTRODUCES the enumeration, so which
+operations are actually exempt is never checked, across a 35KB file.
+`orden-eha-3127-2009:art-1` requires three title-region phrases against a 445KB file. Both
+carry the operator review stamp.
+
+`ley-37-1992:art-20` matters directly to this session's work: it is the LIVA exemptions
+article, it grounds the exempt classification that the component table and the con-derecho
+set both rest on, and its operative content is unverified by construction.
+
+**Two claims, deliberately kept apart.** ESTABLISHED: for these 32 entries the evidence
+gate confirms a heading is present and nothing more. NOT ESTABLISHED: that any of those 32
+files is actually truncated. Only `ley-37-1992-art-94.html` is confirmed truncated, because
+its tail was read - and at 1,627 bytes it is two orders of magnitude smaller than the
+articles above. The finding is that a truncation or corruption in any of the 32 would pass
+the gate exactly as art. 94's did: silently, under a reviewed stamp. Establishing that any
+of them IS truncated needs 32 more tail-reads and has not been done.
+
+**Actions, none of them authoring legal text.** Refresh the art. 94 excerpt from the BOE
+consolidated article. Require `required_text` to quote a phrase from the OPERATIVE
+provision rather than the heading - now a rule about 32 entries, and mechanically checkable
+by the sweep above, which is near enough to be the gate itself. Neither correction should
+be authored by an agent: requoting means choosing which phrase is operative, and choosing
+wrongly on an article nobody has re-read from BOE leaves the entry looking better-grounded
+while checking something equally incidental. Both belong in the operator corpus refresh.
 
 ## Sources
 
