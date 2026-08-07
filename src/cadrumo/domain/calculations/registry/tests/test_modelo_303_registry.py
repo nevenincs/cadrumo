@@ -647,6 +647,10 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         "modelo-303-iva-repercutido-general-cuota": Decimal("1000.00"),
         "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
         "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
+        # The two RD-ley 4/2024 transitional rungs carry no cuota in these
+        # scenarios; they are supplied because every bound casilla needs a fact.
+        "modelo-303-iva-repercutido-reducido-transitorio-cuota": Decimal("0.00"),
+        "modelo-303-iva-repercutido-super-reducido-transitorio-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-importaciones-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
@@ -659,6 +663,8 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         "modelo-303-iva-repercutido-general-base": Decimal("0"),
         "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
         "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
+        "modelo-303-iva-repercutido-reducido-transitorio-base": Decimal("0"),
+        "modelo-303-iva-repercutido-super-reducido-transitorio-base": Decimal("0"),
         "modelo-303-iva-soportado-interiores-base": Decimal("0"),
         "modelo-303-recargo-equivalencia-general-cuota": Decimal("0"),
         "modelo-303-recargo-equivalencia-reducido-cuota": Decimal("0"),
@@ -808,6 +814,10 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         "modelo-303-iva-repercutido-general-cuota": Decimal("0.00"),
         "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
         "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
+        # The two RD-ley 4/2024 transitional rungs carry no cuota in these
+        # scenarios; they are supplied because every bound casilla needs a fact.
+        "modelo-303-iva-repercutido-reducido-transitorio-cuota": Decimal("0.00"),
+        "modelo-303-iva-repercutido-super-reducido-transitorio-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-importaciones-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
@@ -820,6 +830,8 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         "modelo-303-iva-repercutido-general-base": Decimal("0"),
         "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
         "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
+        "modelo-303-iva-repercutido-reducido-transitorio-base": Decimal("0"),
+        "modelo-303-iva-repercutido-super-reducido-transitorio-base": Decimal("0"),
         "modelo-303-iva-soportado-interiores-base": Decimal("0"),
         "modelo-303-recargo-equivalencia-general-cuota": Decimal("0"),
         "modelo-303-recargo-equivalencia-reducido-cuota": Decimal("0"),
@@ -872,6 +884,10 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
         "modelo-303-iva-repercutido-general-cuota": Decimal("0.00"),
         "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
         "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
+        # The two RD-ley 4/2024 transitional rungs carry no cuota in these
+        # scenarios; they are supplied because every bound casilla needs a fact.
+        "modelo-303-iva-repercutido-reducido-transitorio-cuota": Decimal("0.00"),
+        "modelo-303-iva-repercutido-super-reducido-transitorio-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
         "modelo-303-iva-soportado-importaciones-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
@@ -884,6 +900,8 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
         "modelo-303-iva-repercutido-general-base": Decimal("0"),
         "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
         "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
+        "modelo-303-iva-repercutido-reducido-transitorio-base": Decimal("0"),
+        "modelo-303-iva-repercutido-super-reducido-transitorio-base": Decimal("0"),
         "modelo-303-iva-soportado-interiores-base": Decimal("0"),
         "modelo-303-recargo-equivalencia-general-cuota": Decimal("0"),
         "modelo-303-recargo-equivalencia-reducido-cuota": Decimal("0"),
