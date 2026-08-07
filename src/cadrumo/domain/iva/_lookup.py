@@ -196,6 +196,27 @@ def rate_kinds_for_declared_rate(
     if not rates:
         return ()
     matched: list[IvaRateKind] = []
+    if declared_rate == Decimal("0"):
+        # Zero is date-independent, and this is the one tier where the rate
+        # table cannot answer the legality question at all.
+        #
+        # Spain zero-rates on FOUR distinct grounds, three of them permanent:
+        # exports to a third country (LIVA art. 21), intra-community supplies
+        # (art. 25), entregas of donativos to Ley 49/2002 entities
+        # (art. 91.Cuatro), and the temporary RD-ley 4/2024 basic-foods window.
+        # ``rates.toml`` records only the last, and says so itself -- a flat
+        # ``kind = "zero"`` record cannot be bounded to a class of supply, so an
+        # open one would zero-rate everything. Reading that partial table as
+        # exhaustive made every export and intra-EU supply unclassifiable
+        # outside one 2024 quarter.
+        #
+        # So the honest answer is that 0 % is ALWAYS a legitimate Spanish
+        # declared rate belonging to the ZERO tier, and whether THIS supply was
+        # entitled to it is a question about the supply, not the rate. That
+        # question lives on the category axis, which distinguishes
+        # ``DOMESTIC_ZERO`` from ``EXPORT_THIRD_COUNTRY_ZERO_RATED`` and the
+        # rest; the rate axis structurally cannot express it.
+        matched.append(IvaRateKind.ZERO)
     for rate in rates:
         if rate.effective_from > on_date:
             continue
