@@ -4440,9 +4440,8 @@ cli:
       llm_exclusive: --llm nem kombinálható a --classification vagy --file kapcsolóval;
         a kézi út a kezelő kifejezett felülbírálása.
       llm_failed: 'Az LLM osztályozás sikertelen: {reason}'
-      llm_help: Kérd meg egy helyi LLM szolgáltatót (claude/antigravity/codex), hogy
-        osztályozza a tranzakciót; alapértelmezetten előnézet, --apply kapcsolóval
-        menti.
+      llm_help: A gepen futo helyi olvasoval osztalyozza a tranzakciot; alapertelmezetten
+        elonezet, --apply kapcsoloval menti.
       llm_provider_unavailable: 'A(z) ''{provider}'' LLM-szolgáltató nem érhető el:
         a CLI-je nincs a PATH-on. Telepítse a(z) ''{provider}'' CLI-t, és győződjön
         meg róla, hogy a PATH-on van.'
@@ -6348,6 +6347,8 @@ errors:
     refused_diagnostic_model_invariant: A DiagnosticCheck konstrukciós invariánsa
       sérült; ellenőrizze, hogy az elmaradás/figyelmeztetés sorokban pontosan az egyik
       next_action vagy dead_end van-e beállítva, az ok sorokban pedig egyik sem.
+    refused_einvoice_xml_parse: Az elektronikus számla XML-je nem volt olvasható,
+      ezért elutasításra került részleges feldolgozás helyett.
     refused_evidence_bundle_ambiguous: A bizonyítékcsomag azonosítójának előtagja
       a tárolóban több csomagra is illik.
     refused_evidence_bundle_not_found: Nem létezik igazoláscsomag a megadott azonosítóval.
@@ -6559,7 +6560,6 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
-    refused_einvoice_xml_parse: 'Az elektronikus számla XML-je nem volt olvasható, ezért elutasításra került részleges feldolgozás helyett.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'

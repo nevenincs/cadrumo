@@ -4185,8 +4185,8 @@ cli:
       llm_exclusive: --llm cannot be combined with --classification or --file; the
         manual path is the explicit operator override.
       llm_failed: 'LLM classification failed: {reason}'
-      llm_help: Ask a local LLM provider (claude/antigravity/codex) to classify the
-        transaction; preview by default, persist with --apply.
+      llm_help: Ask the on-host local reader to classify the transaction; preview
+        by default, persist with --apply.
       llm_provider_unavailable: 'LLM provider ''{provider}'' is unavailable: its CLI
         is not on PATH. Install the ''{provider}'' CLI and ensure it is on PATH.'
       llm_reason_label: reason
@@ -6026,6 +6026,8 @@ errors:
     refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was
       violated; check that exactly one of next_action or dead_end is set for fail/warn
       rows, and neither is set for ok rows.
+    refused_einvoice_xml_parse: The e-invoice XML could not be read and was refused
+      rather than partially parsed.
     refused_evidence_bundle_ambiguous: The evidence-bundle id prefix matches more
       than one bundle in this bucket.
     refused_evidence_bundle_not_found: No evidence bundle exists with the identifier
@@ -6235,7 +6237,6 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
-    refused_einvoice_xml_parse: 'The e-invoice XML could not be read and was refused rather than partially parsed.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'

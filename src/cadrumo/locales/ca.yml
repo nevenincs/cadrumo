@@ -4488,8 +4488,8 @@ cli:
       llm_exclusive: --llm no es pot combinar amb --classification ni --file; la ruta
         manual es l'anul-lació explícita de l'operador.
       llm_failed: 'La classificació per LLM ha fallat: {reason}'
-      llm_help: Demana a un proveïdor LLM local (claude/antigravity/codex) que classifiqui
-        la transacció; vista prèvia per defecte, persisteix amb --apply.
+      llm_help: Demana al lector local on-host que classifiqui la transacció; vista
+        prèvia per defecte, persisteix amb --apply.
       llm_provider_unavailable: 'El proveïdor LLM ''{provider}'' no està disponible:
         el seu CLI no és al PATH. Instal·la el CLI de ''{provider}'' i assegura''t
         que sigui al PATH.'
@@ -6445,6 +6445,8 @@ errors:
       corpus.
     refused_diagnostic_model_invariant: 'Refusat: invariant del model de diagnòstic
       incomplit.'
+    refused_einvoice_xml_parse: No s'ha pogut llegir l'XML de la factura electrònica
+      i s'ha rebutjat en lloc d'interpretar-lo parcialment.
     refused_evidence_bundle_ambiguous: El prefix de l'identificador del paquet d'evidències
       coincideix amb més d'un paquet en aquest bucket.
     refused_evidence_bundle_not_found: No existeix cap paquet d'evidències amb l'identificador
@@ -6670,7 +6672,6 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
-    refused_einvoice_xml_parse: 'No s''ha pogut llegir l''XML de la factura electrònica i s''ha rebutjat en lloc d''interpretar-lo parcialment.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
