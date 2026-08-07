@@ -373,14 +373,7 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit(
     )
     tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
-    income_only = _m130_2026_q1_revision()
-    income_only = income_only.model_copy(
-        update={
-            "bindings": tuple(
-                binding for binding in income_only.bindings if binding.id != _M130_RETENCIONES_BINDING
-            ),
-        },
-    )
+    income_only = _m130_revision_without_the_retenciones_binding()
     context = CalculationSourceContext(
         bucket_id="test",
         modelo="130",
@@ -392,15 +385,39 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit(
     resolution = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context)
 
     advisories = [
-        diagnostic
-        for diagnostic in resolution.diagnostics
-        if diagnostic.reason == "unrouted_observation" and "withheld_amount_sum" in diagnostic.message
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
     ]
     assert len(advisories) == 1, "a dropped retenciones binding must surface exactly one advisory"
+    assert "withheld_amount_sum" in advisories[0].message
     assert "300.00" in advisories[0].message, "the advisory must name the amount the taxpayer loses"
+    # Attributed like every sibling diagnostic in this resolver's envelope, so
+    # an agent can trace the advisory to the source that raised it.
+    assert advisories[0].resolver_id == "ledger_renta_income_aggregation"
+    # The reason must NOT collapse into the row-keyed screen's: an operator has
+    # to distinguish "no binding consumes this row" from "this row is consumed
+    # but its withholding reaches nothing", and the row screen is silent here by
+    # construction, so a shared reason would make its silence read as agreement.
+    assert not [diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_observation"], (
+        "the quantity advisory must carry its own reason, not the row screen's"
+    )
     # Non-blocking: the income still resolves, so calculate succeeds and the
     # operator sees the gap rather than a refusal.
     assert resolution.binding_values[_M130_INGRESOS_BINDING] == Decimal("2000.00")
+
+    # Silence control: with the binding present the retención is drawn and the
+    # advisory must not fire, or it would fire on every correct M130 filing.
+    complete = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(
+        CalculationSourceContext(
+            bucket_id="test",
+            modelo="130",
+            filing_year=2026,
+            period=_period(2026, "1T"),
+            revision=_m130_2026_q1_revision(),
+        ),
+    )
+    assert not [
+        diagnostic for diagnostic in complete.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
+    ]
 
 
 def test_casilla_projection_uses_base_for_tagged_and_gross_for_untagged() -> None:
@@ -631,62 +648,6 @@ def _m130_revision_without_the_retenciones_binding() -> ModeloRevision:
     full = _m130_2026_q1_revision()
     return full.model_copy(
         update={
-            "bindings": tuple(
-                binding for binding in full.bindings if binding.id != _M130_RETENCIONES_BINDING
-            ),
+            "bindings": tuple(binding for binding in full.bindings if binding.id != _M130_RETENCIONES_BINDING),
         },
     )
-
-
-def test_a_retencion_no_binding_draws_reaches_the_operator_as_an_advisory(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """The quantity screen must reach the resolver, not just exist in the domain.
-
-    The domain screen is separately proved; what this pins is the WIRING. A
-    revision declaring the ingresos binding but not the retenciones one consumes
-    every row for its income, so ``unrouted_observation`` and the ungrounded
-    screen both stay silent -- and without this advisory the taxpayer's entire
-    withholding credit would vanish with no operator-facing signal.
-
-    Invoice arithmetic: 2000 base + 420 IVA - 300 retención = 2120 banked.
-    """
-    tx = _actividad_transaction(
-        "ae-unrouted-retencion",
-        value_date=date(2026, 3, 15),
-        amount=Decimal("2120.00"),
-        taxable_base=Decimal("2000.00"),
-        iva_rate=Decimal("0.21"),
-        iva_amount=Decimal("420.00"),
-    )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
-    tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
-
-    def resolve(revision: ModeloRevision):
-        return LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(
-            CalculationSourceContext(
-                bucket_id="test",
-                modelo="130",
-                filing_year=2026,
-                period=_period(2026, "1T"),
-                revision=revision,
-            ),
-        )
-
-    stripped = resolve(_m130_revision_without_the_retenciones_binding())
-    reasons = [diagnostic.reason for diagnostic in stripped.diagnostics]
-
-    assert "unrouted_quantity" in reasons, reasons
-    advisory = next(d for d in stripped.diagnostics if d.reason == "unrouted_quantity")
-    assert "withheld_amount_sum" in advisory.message
-    assert "300.00" in advisory.message
-    # Attributed like every sibling diagnostic, so an agent can route on it.
-    assert advisory.resolver_id == "ledger_renta_income_aggregation"
-    # The blindness this screen exists to cover: the row WAS consumed, so the
-    # row-keyed screen has nothing to say about it.
-    assert "unrouted_observation" not in reasons
-
-    # Control: with the binding present the retención is drawn and the advisory
-    # must fall silent, or it would fire on every correct M130 filing.
-    complete = resolve(_m130_2026_q1_revision())
-    assert "unrouted_quantity" not in [diagnostic.reason for diagnostic in complete.diagnostics]
