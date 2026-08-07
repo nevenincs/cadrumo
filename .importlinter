@@ -425,7 +425,7 @@ ignore_imports =
     # other test chain origins above rather than widened, so a NEW production
     # application -> llm edge still fails loudly.
     cadrumo.application.ledger.tests.test_evidence_corpus_parsing -> cadrumo.llm
-    cadrumo.application.evidence._service -> cadrumo.adapters.**
+    cadrumo.application.evidence._service -> cadrumo.adapters.persistence.**
     # Two ledger stores added by llm-package-split, same shape as the ledger
     # repositories pinned around them: derived financial data is STORAGE, so
     # it routes through the core's encrypted repository rather than living
@@ -467,16 +467,21 @@ ignore_imports =
     # obligation, so the constraint has to live where the projection does --
     # which means consuming the adapter's record type here.
     cadrumo.application.ledger._aeat_record_projection -> cadrumo.adapters.inbound.einvoice
-    cadrumo.application.filing._history_repository -> cadrumo.adapters.**
-    cadrumo.application.filing._import -> cadrumo.adapters.**
-    cadrumo.application.filing._runtime_repository -> cadrumo.adapters.**
-    cadrumo.application.inventory._service -> cadrumo.adapters.**
+    cadrumo.application.filing._history_repository -> cadrumo.adapters.persistence.**
+    cadrumo.application.filing._runtime_repository -> cadrumo.adapters.persistence.**
+    cadrumo.application.inventory._service -> cadrumo.adapters.persistence.**
+    # Reaches NO persistence: this pin sat between two repository modules and
+    # was wholly an inbound-adapter allowance. A justificante PDF is an
+    # externally-authored format, so lifting a filing out of its bytes is
+    # inbound-adapter work; this module validates and stores what the parse
+    # returned. Same class as the einvoice pins above, now stated.
+    cadrumo.application.filing._import -> cadrumo.adapters.inbound.justificante
     # Foreign-currency invoices are converted at creation time, so the invoice
     # creation path constructs the default ECB rate provider (the concrete
     # ExchangeRateProvider) — the outbound-wiring edge sec. 538 permits, pinned
     # at the narrow fx target rather than a broad adapters wildcard.
     cadrumo.application.invoices._creation -> cadrumo.adapters.outbound.fx
-    cadrumo.application.invoices._source_resolver -> cadrumo.adapters.**
+    cadrumo.application.invoices._source_resolver -> cadrumo.adapters.persistence.**
     # ── application/ledger narrowed from `adapters.**` to the layer each module
     #    actually reaches. A broad wildcard admits an INBOUND-adapter edge from
     #    these modules without review, and that is the one class this contract
