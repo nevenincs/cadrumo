@@ -4,7 +4,7 @@ tags:
   - '#llm-package-split'
 date: '2026-08-06'
 modified: '2026-08-07'
-body_hash: 'sha256:ef0de1d178dfac7600aff3af41086dea41d03d0aa381f0a4adca6378e138c279'
+body_hash: 'sha256:68a27303500e4bc26d4650ed33d895be9eebcbc144b5ff03c00e756b5458fcd5'
 tier: L3
 related:
   - '[[2026-08-06-llm-package-split-adr]]'
@@ -191,7 +191,7 @@ Declares the strict closed payload the core accepts, with its shape grounding an
 - [x] `W03.P06.S26` - Carry the producing model identity and revision on the payload so a persisted record can answer how each field was recovered, red if a payload omitting the producer validates; `src/cadrumo/application/ledger/_llm_suggestions.py`.
 - [x] `W03.P06.S27` - Refuse a malformed payload at the core boundary rather than coercing it and pin the refusal by test, red if a malformed payload is silently normalised into a valid one; `src/cadrumo/application/ledger/`.
 - [x] `W03.P06.S28` - Prove the refusal is not vacuous by mutating a well-formed payload field by field and asserting each mutation reddens, red if any single-field mutation still validates; `src/cadrumo/application/ledger/tests/`.
-- [ ] `W03.P06.S29` - Prove provenance survives persistence with a strict save-load-equality roundtrip against the real encrypted namespace with every defaultable field populated non-default, paired with an anti-tautology proof that deleting a persisted field reddens the load; `src/cadrumo/application/ledger/tests/`.
+- [x] `W03.P06.S29` - Prove provenance survives persistence with a strict save-load-equality roundtrip against the real encrypted namespace with every defaultable field populated non-default, paired with an anti-tautology proof that deleting a persisted field reddens the load; `src/cadrumo/application/ledger/tests/`.
 
 ### Phase `W03.P07` - Keep every durable artefact on the core side
 
