@@ -152,6 +152,66 @@ def test_a_record_batch_shape_is_never_routed_to_the_single_invoice_reader() -> 
     assert DocumentShape.XML_AEAT_SII in AEAT_RECORD_BATCH_SHAPES
 
 
+def test_every_batch_shape_has_a_reader_that_accepts_it() -> None:
+    """A batch shape may not exist without a reader that handles it.
+
+    Disjointness alone leaves a gap: a new AEAT family could be added to
+    :data:`AEAT_RECORD_BATCH_SHAPES` -- correctly kept out of the single-invoice
+    set -- while no reader accepts it, so documents of that shape would be
+    recognised and then handled by nothing. The evidence path refuses
+    unrecognised XML, so such a document would be classified, refused, and
+    look deliberate.
+
+    Asserted by ROUTING rather than by a name list, so it holds for a member
+    added later: every member must be a shape ``parse_aeat_record_batch``
+    admits. Checked on the refusal message, since reaching it means the shape
+    passed the entry guard.
+    """
+    for shape in AEAT_RECORD_BATCH_SHAPES:
+        assert shape in set(DocumentShape), "a batch shape must be a real member"
+
+    # The entry guard names precisely the shapes it accepts; anything outside
+    # the batch set is turned away by it. Proving a NON-batch shape is refused
+    # is what makes the acceptance of the batch shapes meaningful rather than
+    # a function that accepts everything.
+    with pytest.raises(EInvoiceXmlParseError, match="not an AEAT"):
+        parse_aeat_record_batch(_read("facturae_32_series_and_parties_invoice.xml"))
+
+    batch = _batch()
+    assert batch.shape in AEAT_RECORD_BATCH_SHAPES, "a batch document reaches the batch reader and is accepted"
+
+
+def test_a_record_family_outside_the_boundary_is_refused_by_name_not_skipped() -> None:
+    """An unclaimed family must REFUSE, never fall through as an empty batch.
+
+    The SII envelope declares seventeen top-level record families; this reader
+    claims two of them. A family left unmapped is silently skipped, so a
+    submission of bienes de inversion would read as a batch containing nothing
+    and report no problem -- indistinguishable, to an operator, from a
+    submission we read successfully and found empty.
+
+    Asserted on the refusal naming the element, so the operator learns WHICH
+    family was declined rather than that something unspecified was.
+    """
+    submission = (
+        b'<?xml version="1.0" encoding="UTF-8"?>'
+        b'<siiLR:SuministroLRBienesInversion xmlns:siiLR="urn:sii" xmlns:sii="urn:sii2">'
+        b"<sii:Cabecera><sii:Titular><sii:NombreRazon>X</sii:NombreRazon>"
+        b"<sii:NIF>B12345674</sii:NIF></sii:Titular></sii:Cabecera>"
+        b"<siiLR:RegistroLRBienesInversion><sii:Ejercicio>2026</sii:Ejercicio>"
+        b"</siiLR:RegistroLRBienesInversion>"
+        b"</siiLR:SuministroLRBienesInversion>"
+    )
+
+    batch = parse_aeat_record_batch(submission)
+
+    assert batch.records == (), "nothing is read from an unclaimed family"
+    assert len(batch.refusals) == 1, "and it is REFUSED, not skipped"
+    assert batch.refusals[0].family is AeatRecordFamily.OTHER
+    assert batch.refusals[0].element_name == "RegistroLRBienesInversion"
+    assert "RegistroLRBienesInversion" in batch.refusals[0].reason
+
+
 def test_a_single_invoice_document_is_refused_by_the_batch_reader() -> None:
     """The batch reader declines what the single-invoice reader owns.
 

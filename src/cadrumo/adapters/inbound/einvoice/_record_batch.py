@@ -24,6 +24,34 @@ identified and refused, never turned into an invoice.
 simplificada legitimately names nobody. Recipients are carried losslessly, and
 the decision about how many a downstream single-counterparty record can accept
 belongs to that projection, not here.
+
+Intended consumer
+-----------------
+This reader has NO caller yet, and that is a recorded gap rather than an open
+question. Its intended consumer is a **declared-versus-recorded reconciliation**
+surface: comparing what the taxpayer has already DECLARED to AEAT through SII or
+VERI*FACTU against what the ledger RECORDS. That is the only thing a
+filing-artefact reader is for, and it is the reason this must not be wired into
+evidence extraction -- a record the filer produced is not evidence of what a
+counterparty billed, so admitting it there would let a taxpayer's own
+declaration stand in for the document it was derived from.
+
+A REQUIREMENT WHOEVER BUILDS THAT PROJECTION INHERITS: a record may name more
+than one recipient (``IDDestinatario`` is ``[1..1000]``), and nothing refuses
+that today, because the refusal belongs to the projection onto a
+single-counterparty record and no such projection exists. The reader carrying
+every recipient is deliberate -- a party set cannot be split once discarded --
+but it means the >1 case is UNGUARDED the moment a consumer appears. The
+projection must refuse it instructively, naming each recipient with its
+identifier scheme, rather than silently taking the first.
+
+A note on the shape of this module's refusals, which is not decoration: every
+record family outside the claimed boundary is mapped EXPLICITLY and refused by
+name. An unmapped family is silently skipped, and a submission of records we do
+not read then presents as an empty batch reporting nothing wrong -- which an
+operator cannot distinguish from a submission we read successfully and found
+empty. Reading fewer records than a document contains, without saying so, is the
+failure mode this whole module is arranged against.
 """
 
 from __future__ import annotations
@@ -85,6 +113,25 @@ _RECORD_ELEMENTS: dict[str, AeatRecordFamily] = {
     "RegistroLRBajaRecibidas": AeatRecordFamily.SII_BAJA_RECIBIDAS,
     "RegistroAlta": AeatRecordFamily.VERIFACTU_ALTA,
     "RegistroAnulacion": AeatRecordFamily.VERIFACTU_ANULACION,
+    # The thirteen SII record families outside the claimed boundary. Listed
+    # EXPLICITLY rather than left to fall off the end of the map: an unmapped
+    # element is silently skipped, so a submission of, say, bienes de inversion
+    # would read as an empty batch and report nothing wrong. Declaring the
+    # boundary is support; silently ignoring a family is not, and the two are
+    # indistinguishable to an operator unless the refusal names the family.
+    "RegistroLRBienesInversion": AeatRecordFamily.OTHER,
+    "RegistroLRBajaBienesInversion": AeatRecordFamily.OTHER,
+    "RegistroLRAgenciasViajes": AeatRecordFamily.OTHER,
+    "RegistroLRBajaAgenciasViajes": AeatRecordFamily.OTHER,
+    "RegistroLRCobrosMetalico": AeatRecordFamily.OTHER,
+    "RegistroLRBajaCobrosMetalico": AeatRecordFamily.OTHER,
+    "RegistroLROperacionesSeguros": AeatRecordFamily.OTHER,
+    "RegistroLRBajaOperacionesSeguros": AeatRecordFamily.OTHER,
+    "RegistroLRDetOperacionIntracomunitaria": AeatRecordFamily.OTHER,
+    "RegistroLRBajaDetOperacionIntracomunitaria": AeatRecordFamily.OTHER,
+    "RegistroLRCobros": AeatRecordFamily.OTHER,
+    "RegistroLRInmueblesAdicionales": AeatRecordFamily.OTHER,
+    "RegistroLRPagos": AeatRecordFamily.OTHER,
 }
 
 #: The complexType backing each readable family, for the schema-derived
