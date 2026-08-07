@@ -407,6 +407,11 @@ ignore_imports =
     # never cross it -- only headers out, roles back.
     cadrumo.adapters.inbound.financial.providers._mapped_tabular -> cadrumo.llm
     cadrumo.application.ledger.tests.test_extraction_interchange -> cadrumo.llm
+    # The wiring gate constructs a real LLMProviderError to prove the text path
+    # REFUSES on a missing reader instead of silently escalating to vision. The
+    # exception type is the contract being tested, so substituting another would
+    # test a different thing; production code here holds no new llm edge.
+    cadrumo.application.ledger.tests.test_grounded_reading_wiring -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_evidence_split -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_evidence_split_apply -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_reject -> cadrumo.llm

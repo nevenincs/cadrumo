@@ -95,7 +95,7 @@ from __future__ import annotations
 import re
 from datetime import date
 from decimal import Decimal
-from typing import Self
+from typing import NoReturn, Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -772,8 +772,44 @@ def extract_invoice_draft_from_evidence(
             return _read_text_layer_semantically(evidence_input)
         except PurchaseInvoiceEvidenceInputError:
             # No usable text layer (scan-only / XFA) -> on-host vision fallback below.
+            # This is a statement about the DOCUMENT, so escalating to a reader
+            # that works on pixels is the right answer.
             pass
     return _extract_invoice_fields_via_vision(evidence_input, settings=resolved_settings)
+
+
+def _refuse_a_text_read_with_no_reader(exc: Exception) -> NoReturn:
+    """Refuse a text-native document the semantic reader could not be run for.
+
+    Deliberately a refusal rather than a fallback, and the distinction is a
+    decision rather than an artefact of which exception type happens to be
+    caught above.
+
+    A missing or unreachable reader is a statement about the ENVIRONMENT, not
+    about the document. Silently escalating to the vision reader would run a
+    heavier engine the operator did not ask for, on a document whose text layer
+    was perfectly readable -- and would do it invisibly, so the operator could
+    not tell why an extract that used to be cheap became slow. The one case
+    where escalation IS right is the opposite one, handled above: a document
+    with no text layer genuinely needs a reader that works on pixels.
+
+    The refusal names the provisioning verb, because "no reader" is a gap the
+    operator can close and a message that does not say how is a dead end. It
+    never routes to a cloud provider as a consolation: that decision belongs to
+    the operator, per invocation, and is not this path's to make.
+
+    Args:
+        exc: The provider or dependency failure that prevented the read.
+
+    Raises:
+        PurchaseInvoiceEvidenceInputError: Always.
+    """
+    raise PurchaseInvoiceEvidenceInputError(
+        "this document's text layer is readable, but the semantic reader that turns it into fields "
+        f"could not be run ({exc}). The document was not read, and no value was guessed from it. "
+        "Provision an on-host reading model, then extract again.",
+        suggestion="aeat config provision pull",
+    ) from exc
 
 
 def _read_text_layer_semantically(evidence: EvidenceInput) -> InvoiceDraft:
@@ -823,11 +859,18 @@ def _read_text_layer_semantically(evidence: EvidenceInput) -> InvoiceDraft:
     # import rule requires of a deferred import; the second is intra-package and
     # so may name its private module directly. Read both exactly as if they were
     # written at module scope.
+    import httpx
+
     from ...llm import extract_invoice_fields_from_text
     from ._grounded_reading import ground_draft_against_transcription
 
     transcription = transcribe_text_layer(evidence)
-    read = extract_invoice_fields_from_text(transcription.text)
+    try:
+        read = extract_invoice_fields_from_text(transcription.text)
+    except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
+        # The reader is absent or unreachable. See the refusal's own docstring
+        # for why this does not fall through to vision.
+        _refuse_a_text_read_with_no_reader(exc)
     return ground_draft_against_transcription(
         draft=read.model_copy(update={"transcription_sha256": transcription.source_content_sha256}),
         transcription=transcription,
