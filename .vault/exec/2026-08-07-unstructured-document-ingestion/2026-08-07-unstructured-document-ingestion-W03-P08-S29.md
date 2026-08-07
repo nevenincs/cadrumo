@@ -5,14 +5,11 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:c00744fecb45bc30b9b96ed1468884e43b65774775941be96c79c0b71a4327c2'
+body_hash: 'sha256:9e0372f0c1e324e8d00fba4caf7b83637b6022cadedb7ff9dc6df0a683b14ff0'
 step_id: 'S29'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-
-
 
 # Enrol the mapping lane as statement-import fallback strictly after the exact fixed-layout providers, gated by a known-bank fixture still taking the exact provider and an unknown-format fixture reaching the mapping lane
 
@@ -21,7 +18,6 @@ related:
 - `src/cadrumo/adapters/inbound/financial`
 
 ## Description
-
 
 - Add `_mapped_tabular.py`: the fallback provider, its required-role contract,
   and the single wiring point through which detection obtains a mapping.
@@ -55,7 +51,6 @@ exact provider offered, each exactly once, fallback last.
 
 ## Verification
 
-
 The enrolment tests together with the detection tests they change:
 
     uv run --no-sync pytest src/cadrumo/adapters/inbound/financial/providers/tests/test_mapped_tabular_fallback.py src/cadrumo/adapters/inbound/financial/providers/tests/test_detection_ordered.py -p no:randomly -n0
@@ -74,7 +69,6 @@ its exact parser, which is the gate this Step exists to install. Restored and
 re-run green.
 
 ## Notes
-
 
 This Step deliberately shipped the lane inert, its wiring point returning no
 resolver, so a file reaching it got a named diagnostic rather than a guess.
