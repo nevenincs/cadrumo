@@ -331,7 +331,7 @@ def profile_binding_selectors(selector: Mapping[str, object] | BaseModel) -> tup
             item
             # CAST-RATIONALE-PROFILE-KEYS-TUPLE: isinstance narrows to tuple but
             # not its element type; each item is filtered by isinstance below.
-            for item in cast(tuple[object, ...], profile_keys)  # ty: ignore[redundant-cast]
+            for item in cast(tuple[object, ...], profile_keys)
             if isinstance(item, str)
         )
     required_when_profile_key = selector.get("required_when_profile_key")

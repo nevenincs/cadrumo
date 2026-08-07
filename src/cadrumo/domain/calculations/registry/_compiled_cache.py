@@ -131,7 +131,7 @@ def _compiled_payload_root_models() -> tuple[type[BaseModel], ...]:
     return (ModeloDefinition, RegistryCatalogues, *ordered)
 
 
-def _iter_annotation_types(annotation: object) -> Iterator[type]:
+def _iter_annotation_types(annotation: object) -> Iterator[type[object]]:
     """Yield every concrete type a pydantic field annotation can hold at runtime.
 
     Unwraps type aliases, ``Annotated`` metadata, unions, and container
