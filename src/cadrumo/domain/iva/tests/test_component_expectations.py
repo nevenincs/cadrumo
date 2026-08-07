@@ -70,6 +70,16 @@ _SENTINEL_CATEGORIES: frozenset[IvaCategory] = frozenset(
 )
 
 
+def _category_id(category: IvaCategory) -> str:
+    """Return the parametrize id for *category*.
+
+    A named function rather than a lambda: pytest types its ``ids`` callable
+    loosely, so an inline lambda's parameter infers as ``object`` and every
+    attribute read off it is reported unresolved.
+    """
+    return category.value
+
+
 def _bundled_legal_ref_ids() -> frozenset[str]:
     """Return every legal-reference id declared in the bundled legal catalogue.
 
@@ -140,7 +150,7 @@ def test_derived_cuota_less_set_equals_the_canonical_frozenset() -> None:
     )
 
 
-@pytest.mark.parametrize("category", tuple(IvaCategory), ids=lambda c: c.value)
+@pytest.mark.parametrize("category", tuple(IvaCategory), ids=_category_id)
 def test_per_category_cuota_columns_agree_with_the_frozenset(category: IvaCategory) -> None:
     """Editing one row's cuota columns alone flips exactly this category's gate.
 
@@ -202,8 +212,8 @@ def test_evidence_exempt_extends_the_cuota_less_set_by_the_three_sentinels() -> 
 
 @pytest.mark.parametrize(
     "category",
-    tuple(sorted(CUOTA_LESS_M303_IVA_CATEGORIES, key=lambda c: c.value)),
-    ids=lambda c: c.value,
+    tuple(sorted(CUOTA_LESS_M303_IVA_CATEGORIES, key=_category_id)),
+    ids=_category_id,
 )
 def test_cuota_less_categories_still_require_a_taxable_base(category: IvaCategory) -> None:
     """An exempt or export operation carries a real base that feeds base-only casillas.
@@ -337,7 +347,7 @@ def test_live_source_only_rows_name_the_unbundled_provision() -> None:
 
 def test_sentinel_rows_declare_their_grounding_as_ungrounded() -> None:
     """A sentinel abstains honestly rather than borrowing someone else's citation."""
-    for category in sorted(_SENTINEL_CATEGORIES, key=lambda c: c.value):
+    for category in sorted(_SENTINEL_CATEGORIES, key=_category_id):
         row = IVA_CATEGORY_COMPONENTS[(category, InvoiceKind.RECEIVED)]
         assert row.cuota_grounding is IvaGroundingConfidence.UNGROUNDED
         assert row.recargo_grounding is IvaGroundingConfidence.UNGROUNDED
@@ -386,14 +396,14 @@ def test_the_reference_row_kwargs_build_a_valid_row() -> None:
 
 def test_zero_by_law_cuota_must_declare_no_settlement() -> None:
     """A structurally-zero cuota cannot also name someone who settles it."""
-    kwargs = _valid_row_kwargs() | {"cuota_settlement": IvaCuotaSettlement.REPERCUTIDA}
+    kwargs: dict[str, Any] = _valid_row_kwargs() | {"cuota_settlement": IvaCuotaSettlement.REPERCUTIDA}
     with pytest.raises(ValidationError, match="zero-by-law cuota"):
         IvaCategoryComponents(**kwargs)
 
 
 def test_a_settled_cuota_cannot_be_declared_zero_by_law() -> None:
     """The coherence check binds in both directions."""
-    kwargs = _valid_row_kwargs() | {
+    kwargs: dict[str, Any] = _valid_row_kwargs() | {
         "cuota": IvaComponentPresence.REQUIRED,
         "cuota_settlement": IvaCuotaSettlement.NONE,
     }
@@ -403,7 +413,7 @@ def test_a_settled_cuota_cannot_be_declared_zero_by_law() -> None:
 
 def test_weak_retencion_grounding_without_a_note_is_refused() -> None:
     """The honesty requirement is enforced by the model, not only by a test."""
-    kwargs = _valid_row_kwargs() | {
+    kwargs: dict[str, Any] = _valid_row_kwargs() | {
         "retencion_grounding": IvaGroundingConfidence.REASONED,
         "retencion_note": "   ",
     }
@@ -413,7 +423,7 @@ def test_weak_retencion_grounding_without_a_note_is_refused() -> None:
 
 def test_live_source_only_grounding_without_a_pending_ref_is_refused() -> None:
     """A live-only claim must name the provision it is waiting on."""
-    kwargs = _valid_row_kwargs() | {
+    kwargs: dict[str, Any] = _valid_row_kwargs() | {
         "retencion_grounding": IvaGroundingConfidence.LIVE_SOURCE_ONLY,
         "retencion_note": "verified live, provision not yet bundled",
         "pending_legal_refs": (),
@@ -424,7 +434,7 @@ def test_live_source_only_grounding_without_a_pending_ref_is_refused() -> None:
 
 def test_bundled_grounding_without_legal_refs_is_refused() -> None:
     """A bundled-corpus claim must cite the corpus it claims."""
-    kwargs = _valid_row_kwargs() | {"legal_refs": ()}
+    kwargs: dict[str, Any] = _valid_row_kwargs() | {"legal_refs": ()}
     with pytest.raises(ValidationError, match="claims bundled corpus"):
         IvaCategoryComponents(**kwargs)
 
@@ -460,7 +470,7 @@ def test_not_expected_retencion_without_a_note_is_refused_even_when_bundled() ->
 
 def test_duplicate_legal_refs_are_refused() -> None:
     """Duplicate citations would inflate an apparent grounding breadth."""
-    kwargs = _valid_row_kwargs() | {
+    kwargs: dict[str, Any] = _valid_row_kwargs() | {
         "legal_refs": ("ley-37-1992:art-20", "ley-37-1992:art-20"),
     }
     with pytest.raises(ValidationError, match="legal_refs must be unique"):
@@ -469,7 +479,7 @@ def test_duplicate_legal_refs_are_refused() -> None:
 
 def test_a_ref_cannot_be_both_bundled_and_pending_on_one_row() -> None:
     """The model refuses the contradiction the table-level gate also checks."""
-    kwargs = _valid_row_kwargs() | {"pending_legal_refs": ("ley-37-1992:art-20",)}
+    kwargs: dict[str, Any] = _valid_row_kwargs() | {"pending_legal_refs": ("ley-37-1992:art-20",)}
     with pytest.raises(ValidationError, match="both bundled and pending"):
         IvaCategoryComponents(**kwargs)
 
