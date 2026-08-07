@@ -6559,6 +6559,7 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
+    refused_einvoice_xml_parse: 'Az elektronikus számla XML-je nem volt olvasható, ezért elutasításra került részleges feldolgozás helyett.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'

@@ -6235,6 +6235,7 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    refused_einvoice_xml_parse: 'The e-invoice XML could not be read and was refused rather than partially parsed.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'

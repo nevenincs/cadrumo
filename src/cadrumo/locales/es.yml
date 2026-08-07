@@ -6712,6 +6712,7 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    refused_einvoice_xml_parse: 'No se ha podido leer el XML de la factura electrónica y se ha rechazado en lugar de interpretarlo parcialmente.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
