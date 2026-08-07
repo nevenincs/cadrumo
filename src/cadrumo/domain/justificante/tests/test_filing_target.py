@@ -93,7 +93,7 @@ def test_matches_filing_target_refuses_a_presentation_identifier_argument() -> N
             filing_year=2025,
             period=_PERIOD,
             tax_id="X1234567L",
-            presentation_id="202530300000101A",
+            presentation_id="202530300000101A",  # ty: ignore[unknown-argument]  # reason: passing the removed parameter is the refusal under test
         )
 
     # Anchor: the same call without the argument is accepted, so the TypeError
