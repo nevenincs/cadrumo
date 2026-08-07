@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:1bc104503eaace9083ef583bc947bf7a10deb71d12a9a7defde0527c088ef30d'
+body_hash: 'sha256:a599754e03a39457281bbbd91d6433c74cd0c05817f7e324e4b6f3a7db932078'
 related:
   - "[[2026-08-07-rate-box-evidence-assertion-research]]"
 ---
@@ -105,8 +105,11 @@ rate-specific boxes can be populated. It is tracked separately and deliberately
 not resolved here.
 
 This record governs the Reg. ordinario block. The four unmodelled régimen blocks
-inherit the same shape and are expected to follow this decision, but their box
-sets have not been measured.
+are CANDIDATES to follow this decision, not inheritors of it: neither their box
+sets nor the precondition in the amendment above have been measured for them.
+Each must be checked for a rate-blind total before the two-layer shape is applied,
+because where a block's tier boxes are themselves the operands of its total the
+shape double-counts.
 
 ### Two vocabularies name the same slots, and nothing reconciles them
 
@@ -207,10 +210,28 @@ forbids. That property needs an explicit regression, not a comment.
 The Modelo 390 to Modelo 303 reconciliation keeps its role unchanged, since the
 total layer preserves exactly the rows the quarterly bindings preserve.
 
-The two-layer shape generalises to every rate-keyed box in the registry and is
-the expected pattern for the unmodelled régimen blocks, which means the
-implementation should read as a pattern rather than as a Modelo 390 special
-case.
+The two-layer shape generalises to every rate-keyed box **whose modelo carries a
+rate-blind total**, and is the expected pattern for the unmodelled régimen blocks
+only where that precondition holds, which means the implementation should read as
+a pattern rather than as a Modelo 390 special case.
+
+**Amendment — the precondition, which this record originally omitted.** The
+two-layer shape requires a total that is NOT the sum of the tier boxes. Where the
+tiers themselves are the total's operands, the rate-blind layer is not a safety
+net: it is a duplicate, and it double-counts into the total.
+
+Modelo 303 is the measured counterexample. Its `[27]` total-cuota-devengada
+formula enumerates the tier cuota boxes directly, including the RD-ley 4/2024
+transitional rungs' `[155]` and `[167]`, so it has no rate-blind total for a
+second layer to feed. Adding a rate-blind sibling alongside those tiers would add
+the same money twice rather than catch a residue. The original claim that the
+shape generalises to *every* rate-keyed box was therefore false as written, and
+the failure was one of scope rather than of reasoning: the shape is right on
+Modelo 390 precisely because Modelo 390's total is not the sum of its tiers.
+
+Each modelo must therefore be TESTED against this precondition rather than
+assumed to satisfy it. That is an instance of the standing rule that AEAT
+surfaces do not transfer between modelos.
 
 Making the rate mandatory at source remains open, and until it lands the
 refusal at export is the only thing preventing an incomplete breakdown from
