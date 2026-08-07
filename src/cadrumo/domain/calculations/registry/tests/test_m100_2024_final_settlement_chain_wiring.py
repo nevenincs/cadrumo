@@ -51,7 +51,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import CasillaId, validated_casilla_id
-from .._scenarios import (
+from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     run_registry_calculation_scenario,

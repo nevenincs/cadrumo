@@ -10,13 +10,6 @@ from pydantic import ValidationError
 
 from .....core.resources import bundled_path
 from .._errors import RegistrySnapshotError, RegistryValidationError
-from .._scenarios import (
-    RegistryCalculationScenario,
-    RegistryScenarioExpectedOutput,
-    RegistryScenarioRunReport,
-    assert_registry_scenario_matches,
-    run_registry_calculation_scenario,
-)
 from ._registry_scenarios_support import (
     _REGISTRY_ROOT,
     _estimacion_objetiva_modulos_archetype_scenario,
@@ -31,6 +24,13 @@ from ._registry_scenarios_support import (
     _real_estate_capital_scenario,
     _simplified_direct_estimation_cap_scenario,
     _tributacion_conjunta_family_joint_archetype_scenario,
+)
+from ._scenarios import (
+    RegistryCalculationScenario,
+    RegistryScenarioExpectedOutput,
+    RegistryScenarioRunReport,
+    assert_registry_scenario_matches,
+    run_registry_calculation_scenario,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

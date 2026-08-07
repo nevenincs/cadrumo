@@ -20,13 +20,13 @@ from .....core.resources import bundled_path
 # Importing the renta package registers the first-slice routing cross-domain
 # snapshot check required by Modelo 100 parity scenarios run via _scenarios.
 from .._ids import CasillaId, validated_casilla_id
-from .._scenarios import (
+from ._registry_schema_support import _committed_modelo
+from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -134,7 +134,7 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import CasillaId, ValidatedRegistryAuthority, validated_casilla_id
-from .._scenarios import (
+from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,
