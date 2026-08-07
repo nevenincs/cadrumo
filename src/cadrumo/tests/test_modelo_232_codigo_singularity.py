@@ -75,15 +75,107 @@ def test_each_code_set_is_declared_exactly_once_in_the_tree() -> None:
         )
 
 
-def _modules_declaring_the_literal_set(codes: frozenset[str]) -> set[str]:
+def _detect_in(sources: dict[str, str], codes: frozenset[str], tmp_path: Path) -> set[str]:
+    """Run the real detector over a synthetic tree of ``{filename: source}``."""
+    for name, text in sources.items():
+        (tmp_path / name).write_text(text, encoding="utf-8", newline="\n")
+    return _modules_declaring_the_literal_set(codes, root=tmp_path)
+
+
+_VINCULACION_CODES = frozenset(str(member) for member in TipoVinculacion if str(member))
+
+
+def test_a_second_declaration_of_the_vinculada_set_is_still_detected(tmp_path: Path) -> None:
+    """The gate must keep catching what it exists to catch.
+
+    Re-keying a detector to remove a false positive is only half a change: the
+    half that matters is that the true positive still fires. Both real shapes
+    are planted — an enum class re-spelling the table under a different name,
+    and a ``Literal`` alias — because a duplicate arrives under a different name
+    or it would be an import.
+    """
+    detected = _detect_in(
+        {
+            "enum_copy.py": (
+                "from enum import StrEnum\n\n\n"
+                "class VinculacionKind(StrEnum):\n"
+                + "".join(f'    K{code} = "{code}"\n' for code in sorted(_VINCULACION_CODES))
+            ),
+            "literal_copy.py": (
+                "from typing import Literal\n\n"
+                "_CODES = Literal[" + ", ".join(f'"{code}"' for code in sorted(_VINCULACION_CODES)) + "]\n"
+            ),
+        },
+        _VINCULACION_CODES,
+        tmp_path,
+    )
+
+    assert detected == {"enum_copy.py", "literal_copy.py"}
+
+
+def test_a_wider_catalogue_drawn_from_the_same_alphabet_is_not_a_duplicate(tmp_path: Path) -> None:
+    """The false positive this gate shipped with, planted so it cannot return.
+
+    ``RetencionClave`` is the Modelo 190/193 clave de percepción ``A``-``L``
+    (Orden EHA/3127/2009) and the Modelo 347 clave de operación runs ``A``-``I``
+    (Orden EHA/3012/2008). Both are independently grounded AEAT catalogues that
+    merely share an alphabet with the vinculación table, and under containment
+    both were reported as re-declaring it. Deleting either to satisfy the gate
+    would have removed correctly-grounded law.
+    """
+    wider = sorted(_VINCULACION_CODES | {"I", "J", "K", "L"})
+    detected = _detect_in(
+        {
+            "retencion_clave.py": (
+                "from enum import StrEnum\n\n\n"
+                "class RetencionClave(StrEnum):\n" + "".join(f'    {code} = "{code}"\n' for code in wider)
+            ),
+        },
+        _VINCULACION_CODES,
+        tmp_path,
+    )
+
+    assert detected == set()
+
+
+def test_the_not_declared_sentinel_does_not_hide_the_canonical_home(tmp_path: Path) -> None:
+    """The canonical enum carries a ``""`` member the key does not.
+
+    Comparing raw literal sets would make the ONE module that should match the
+    one that does not, emptying the detector and turning the assertion into a
+    vacuous pass. This pins the asymmetry rather than leaving it to a comment.
+    """
+    detected = _detect_in(
+        {
+            "canonical.py": (
+                "from enum import StrEnum\n\n\n"
+                "class TipoVinculacion(StrEnum):\n"
+                '    NO_DECLARADO = ""\n'
+                + "".join(f'    L{code} = "{code}"\n' for code in sorted(_VINCULACION_CODES))
+            ),
+        },
+        _VINCULACION_CODES,
+        tmp_path,
+    )
+
+    assert detected == {"canonical.py"}
+
+
+def _modules_declaring_the_literal_set(codes: frozenset[str], *, root: Path | None = None) -> set[str]:
     """Return modules whose source enumerates ``codes`` as a literal collection.
 
     Reads the AST rather than the text so a docstring listing the codes for
     documentation — which the row model legitimately does — is not counted as a
     declaration.
+
+    *root* exists so the detector can be aimed at a synthetic tree in the proofs
+    below. A detector that can only be run against the real source can be shown
+    to be quiet, never to be *right*, and quiet is exactly what a mis-keyed
+    detector looks like.
     """
     declaring: set[str] = set()
-    for path in _SRC_ROOT.rglob("*.py"):
+    source_root = root if root is not None else _SRC_ROOT
+    for path in source_root.rglob("*.py"):
         if "tests" in path.parts:
             continue
         try:
@@ -91,27 +183,57 @@ def _modules_declaring_the_literal_set(codes: frozenset[str]) -> set[str]:
         except (SyntaxError, UnicodeDecodeError):  # pragma: no cover - not source we own
             continue
         if any(_node_enumerates(node, codes) for node in ast.walk(tree)):
-            declaring.add(path.relative_to(_SRC_ROOT).as_posix())
+            declaring.add(path.relative_to(source_root).as_posix())
     return declaring
 
 
 def _node_enumerates(node: ast.AST, codes: frozenset[str]) -> bool:
-    """Return whether ``node`` is a literal collection or enum body covering ``codes``."""
+    """Return whether ``node`` enumerates EXACTLY ``codes`` as a literal collection.
+
+    Equality, not containment, and the distinction is the whole discriminating
+    power of this gate. A duplicate declaration re-spells THE SAME table; a
+    module enumerating a superset is declaring a DIFFERENT, larger one.
+
+    Containment made the gate unable to tell those apart, and single-letter AEAT
+    claves are where that bites hardest, because a bare ``A``-``H`` key is
+    satisfied by any wider catalogue drawn from the same alphabet. It reported
+    :class:`~core.RetencionClave` (Modelo 190/193 clave de percepción ``A``-``L``,
+    Orden EHA/3127/2009) and the Modelo 347 ``clave de operación`` ``A``-``I``
+    (Orden EHA/3012/2008) as re-declarations of the vinculación table, and the
+    two-digit operation key matched the twenty-one-member standard period codes.
+    Six modules across the three code sets, none of them a duplicate — and the
+    obvious way to silence that red is to delete a correctly-grounded catalogue.
+
+    Falsy literals are dropped from the compared set because the key itself
+    drops them: the canonical enums carry a ``""`` not-declared sentinel that is
+    not one of the AEAT codes, so leaving it in would make the true home the one
+    module that failed to match.
+    """
+    literals = _string_literals_enumerated_by(node)
+    if literals is None:
+        return False
+    return codes == {literal for literal in literals if literal}
+
+
+def _string_literals_enumerated_by(node: ast.AST) -> set[str] | None:
+    """The string literals this node enumerates, or ``None`` if it enumerates none.
+
+    ``None`` rather than an empty set, so "this node is not a collection" stays
+    distinguishable from "this node is an empty collection" at the comparison
+    above.
+    """
     if isinstance(node, ast.Tuple | ast.List | ast.Set):
-        literals = {e.value for e in node.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)}
-        return codes <= literals
+        return {e.value for e in node.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)}
     if isinstance(node, ast.Subscript):  # Literal["A", "B", ...]
         sliced = node.slice
         elts = sliced.elts if isinstance(sliced, ast.Tuple) else []
-        literals = {e.value for e in elts if isinstance(e, ast.Constant) and isinstance(e.value, str)}
-        return codes <= literals
+        return {e.value for e in elts if isinstance(e, ast.Constant) and isinstance(e.value, str)}
     if isinstance(node, ast.ClassDef):
-        literals = {
+        return {
             stmt.value.value
             for stmt in node.body
             if isinstance(stmt, ast.Assign | ast.AnnAssign)
             and isinstance(stmt.value, ast.Constant)
             and isinstance(stmt.value.value, str)
         }
-        return codes <= literals
-    return False
+    return None
