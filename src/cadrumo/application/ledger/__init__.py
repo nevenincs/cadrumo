@@ -188,6 +188,12 @@ if TYPE_CHECKING:
         rederive_artefact_on_host,
         survey_cloud_consent,
     )
+    from ._deterministic_findings import (
+        DETERMINISTIC_CHECKS,
+        DeterministicCheck,
+        deterministic_check_names,
+        deterministic_findings,
+    )
     from ._document_transcription import DocumentTranscription, TranscriberIdentity
     from ._evidence import (
         MediaKind,
@@ -383,6 +389,10 @@ _LAZY_EXPORTS: dict[str, str] = {
     "write_confirmation_record": "._confirmation_record",
     "ROUNDING_ALLOWANCE_PER_TERM": "._closure_findings",
     "closure_findings": "._closure_findings",
+    "DETERMINISTIC_CHECKS": "._deterministic_findings",
+    "DeterministicCheck": "._deterministic_findings",
+    "deterministic_check_names": "._deterministic_findings",
+    "deterministic_findings": "._deterministic_findings",
     "within_rounding_allowance": "._closure_findings",
     "AnchorEvaluation": "._grounding_anchor",
     "evaluate_anchor": "._grounding_anchor",
@@ -576,6 +586,7 @@ __all__ = [
     "BULK_CLASSIFY_ALLOWED_COLUMNS",
     "CLASSIFIED_BY_MANUAL",
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD",
+    "DETERMINISTIC_CHECKS",
     "GROUNDABLE_ORIGINS",
     "IDENTITY_FIELDS",
     "MINIMUM_DISPLAY_ID_WIDTH",
@@ -596,6 +607,7 @@ __all__ = [
     "ConfirmationRecordRepository",
     "ConsentWithdrawalSurvey",
     "ConsentedDispatch",
+    "DeterministicCheck",
     "DocumentTranscription",
     "DraftDiscrepancyFinding",
     "EligibleCategoryRow",
@@ -696,6 +708,8 @@ __all__ = [
     "derive_confirmation_id",
     "derive_operator_iva_substrate",
     "describe_aeat_party_identifier",
+    "deterministic_check_names",
+    "deterministic_findings",
     "discard_extraction_draft",
     "draft_prints_a_repercutido_line",
     "eligible_ratio_categories",
