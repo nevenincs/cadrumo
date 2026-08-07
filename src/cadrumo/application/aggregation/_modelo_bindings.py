@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
+from datetime import date
 from decimal import Decimal
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -67,9 +68,11 @@ from ...domain.calculations.registry import (
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogueRepositoryProtocol,
+    InvoiceLine,
     InvoicePersistenceError,
     invoice_line_to_iva_observation,
 )
+from ...domain.iva import EUMemberState, InvoiceKind, IvaCategory, IvaFlowDirection, IvaRateKind
 from ...domain.modelos import Modelo210AgrupacionRentaRow
 from ...domain.renta import (
     RENTA_130_RETENCIONES_BINDING_ID,
@@ -1262,6 +1265,138 @@ def _line_contributes_to_the_iva_screen(base_amount: Decimal, iva_amount: Decima
     return base_amount > Decimal("0") or iva_amount > Decimal("0")
 
 
+# The base-only categories a live Modelo 303 binding actually selects: casilla
+# 59 takes the intra-community supply (LIVA art. 25) and casilla 60 the two
+# export families (arts. 21-22). Deliberately NOT every cuota-less category --
+# a domestic exemption under art. 20 is equally cuota-less and has no base-only
+# casilla, so routing it anywhere would over-declare a volume the taxpayer never
+# supplied abroad.
+_BASE_ONLY_ROUTED_CATEGORIES: frozenset[IvaCategory] = frozenset(
+    {
+        IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+    },
+)
+
+_EU_MEMBER_STATE_CODES: frozenset[str] = frozenset(member.value.upper() for member in EUMemberState)
+
+
+def _counterparty_supports_the_declared_category(invoice: Invoice) -> bool:
+    """Whether the counterparty's country can bear the category the invoice claims.
+
+    The same coupling the bank-transaction path gates, adapted rather than
+    shared: that path holds a typed :class:`~domain.iva.EUMemberState` on the
+    transaction, while an invoice carries an ISO country code, so the rule is
+    re-expressed against the field that exists here.
+
+    An intra-community supply must go to another member state -- to Spain it is
+    a domestic operation, and outside the Union it is an export. An export must
+    leave the Union, so an EU counterparty contradicts it. Either mismatch means
+    the category and the counterparty disagree, and routing on the category
+    alone would declare volume the taxpayer never supplied that way.
+
+    Returns ``False`` rather than raising, which leaves the line unrouted. That
+    is the status quo for a mismatched invoice rather than a new silence, but it
+    IS a silence: this projector returns observations and has no issue channel
+    to report a refusal through, unlike the bank path which returns a typed
+    gate issue. Surfacing it needs that channel and is not in reach here.
+    """
+    country = (invoice.counterparty_country or "").strip().upper()
+    if invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
+        return country in _EU_MEMBER_STATE_CODES and country != "ES"
+    return country not in _EU_MEMBER_STATE_CODES
+
+
+def _invoice_line_iva_observation(
+    *,
+    invoice: Invoice,
+    line: InvoiceLine,
+    line_index: int,
+    devengo_date: date,
+    recargo_amount: Decimal,
+) -> IvaLedgerObservation | None:
+    """Project one invoice line into the observation the screen declares from.
+
+    A line carrying a cuota takes the standard-case classification, which
+    derives the domestic category from the line's rate slot.
+
+    A line carrying NO cuota cannot be classified that way, and that is the
+    defect this branch closes. An intra-community supply, an export and a
+    domestic exemption all print the same exempt slot, so the rate alone
+    collapses three different declarations into ``domestic_exempt`` -- which
+    casilla 59 and 60 do not select, on either category or rate kind. The base
+    then reached no casilla at all while the line looked handled.
+
+    The invoice's OWN declared category is what distinguishes them, which is
+    exactly how the bank-transaction path resolves the same question: explicit
+    category first, rate-derived domestic category only as a fallback. Two feeds
+    of one binding source reading it differently is what
+    ``one-aggregation-path-pull-equals-calculate`` exists to prevent.
+
+    Returns ``None`` when the line has no cuota and its category is not one a
+    base-only casilla selects, or when the counterparty contradicts that
+    category. Both cases are unrouted rather than mis-routed.
+
+    Args:
+        invoice: The invoice the line belongs to, read for its declared
+            category and counterparty country.
+        line: The line being projected.
+        line_index: Position of the line, folded into the observation id.
+        devengo_date: The date the observation is declared on.
+        recargo_amount: Recargo attributable to this line, already resolved.
+
+    Returns:
+        The observation to declare from, or ``None`` when the line routes
+        nowhere.
+    """
+    ledger_id = f"invoice:{invoice.invoice_id}:{line_index}"
+    if line.iva_amount > Decimal("0"):
+        return invoice_line_to_iva_observation(
+            invoice_id=ledger_id,
+            issued_at=devengo_date,
+            invoice_kind=invoice.kind,
+            iva_rate=line.iva_rate,
+            base_amount=line.subtotal,
+            iva_amount=line.iva_amount,
+            recargo_amount=recargo_amount,
+        )
+    category = invoice.iva_category
+    if category not in _BASE_ONLY_ROUTED_CATEGORIES:
+        # Left on the standard path: it routes nowhere for a cuota-less line,
+        # which is correct for a domestic exemption and is the pre-existing
+        # inert behaviour for anything else.
+        return invoice_line_to_iva_observation(
+            invoice_id=ledger_id,
+            issued_at=devengo_date,
+            invoice_kind=invoice.kind,
+            iva_rate=line.iva_rate,
+            base_amount=line.subtotal,
+            iva_amount=line.iva_amount,
+            recargo_amount=recargo_amount,
+        )
+    if invoice.kind is not InvoiceKind.ISSUED:
+        # Both base-only casillas select the repercutido flow: these are
+        # operations the taxpayer SUPPLIES. A received invoice claiming one is a
+        # mis-tag, not a purchase to declare there.
+        return None
+    if not _counterparty_supports_the_declared_category(invoice):
+        return None
+    return IvaLedgerObservation(
+        ledger_id=ledger_id,
+        transaction_date=devengo_date,
+        category=category,
+        # Zero rather than the exempt tier: the casillas select rate kind
+        # "zero", and these operations are exempt WITH a zero rate applied to a
+        # real base, which is what a base-only casilla declares.
+        rate_kind=IvaRateKind.ZERO,
+        flow_direction=IvaFlowDirection.REPERCUTIDO,
+        base_amount=line.subtotal,
+        iva_amount=Decimal("0"),
+        recargo_amount=recargo_amount,
+    )
+
+
 def _screened_invoice_iva_observations(
     *,
     context: CalculationSourceContext,
@@ -1287,19 +1422,18 @@ def _screened_invoice_iva_observations(
         for line_index, line in enumerate(invoice.lines):
             if not _line_contributes_to_the_iva_screen(line.subtotal, line.iva_amount):
                 continue
-            observations.append(
-                invoice_line_to_iva_observation(
-                    invoice_id=f"invoice:{invoice.invoice_id}:{line_index}",
-                    issued_at=devengo.devengo_date,
-                    invoice_kind=invoice.kind,
-                    iva_rate=line.iva_rate,
-                    base_amount=line.subtotal,
-                    iva_amount=line.iva_amount,
-                    recargo_amount=(
-                        invoice.recargo_amount or Decimal("0") if line_index == recargo_line_index else Decimal("0")
-                    ),
+            observation = _invoice_line_iva_observation(
+                invoice=invoice,
+                line=line,
+                line_index=line_index,
+                devengo_date=devengo.devengo_date,
+                recargo_amount=(
+                    invoice.recargo_amount or Decimal("0") if line_index == recargo_line_index else Decimal("0")
                 ),
             )
+            if observation is None:
+                continue
+            observations.append(observation)
             invoice_ids.add(invoice.invoice_id)
             contributed = True
         if contributed:
