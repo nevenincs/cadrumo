@@ -1,4 +1,4 @@
-"""Resolve a printed country code to a party's territorial scope, or to nothing.
+"""Resolve printed country evidence to a party's territorial scope, or to nothing.
 
 The IVA treatment of a business invoice turns on WHERE each party is established,
 so a reading pipeline that recovers amounts but not places cannot answer the
@@ -36,6 +36,15 @@ receive and does not guess at.
 So the honest reading of a Spanish prefix is "Spain, territory undetermined", and
 the honest return for it is ``None``.
 
+**Why a country NAME needs its own rung.** A code is printed only where a
+NIF-IVA is printed. Everywhere else the country appears in an address block as a
+name, in the document's own language -- "Alemania", "Deutschland", "Germany".
+Asking a reading stage for the code would be asking it to translate, and
+translation is inference. So the name is transcribed verbatim and matched
+against a bounded vocabulary held as registry data, which is deterministic
+lookup; the code that yields is then handed to the same country resolver, so
+nothing about what a country ESTABLISHES is decided twice.
+
 See Also:
     :class:`IvaTerritorialScope`
         The closed target this resolves into.
@@ -51,12 +60,15 @@ from typing import Final
 
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction
 from ...core.resources import bundled_path
+from ...core.text_fold import fold_diacritics
 from ._classification import IvaTerritorialScope
 from ._schema import EUMemberState
 
 __all__ = [
     "SPAIN_COUNTRY_CODE",
+    "country_code_for_printed_country_name",
     "territorial_scope_for_country",
+    "territorial_scope_for_printed_country_name",
     "territorial_scope_for_spanish_postal_code",
 ]
 
@@ -213,3 +225,170 @@ def territorial_scope_for_spanish_postal_code(postal_code: str | None) -> IvaTer
         return None
     excluded = _excluded_territories_by_prefix()
     return excluded.get(candidate[:_POSTAL_PREFIX_LENGTH], IvaTerritorialScope.ES_MAINLAND)
+
+
+def _normalise_printed_country_name(printed: str) -> str:
+    """Return the form a printed country name is matched under.
+
+    Three normalisations and no more. Case is folded because a document sets its
+    address block in whatever typography it likes. Runs of whitespace collapse to
+    one because a name broken across an address line arrives with the break in
+    it. Combining accents are folded away because invoicing systems routinely
+    print ASCII-only, so ``"Mexico"`` and ``"México"`` are the same printed name.
+
+    Punctuation is deliberately NOT stripped: ``"EE.UU."`` is carried in the
+    vocabulary with its stops, and squeezing punctuation generally would start
+    matching strings that are not names.
+    """
+    return " ".join(fold_diacritics(printed.casefold()).split())
+
+
+@lru_cache(maxsize=1)
+def _country_codes_by_printed_name() -> dict[str, str]:
+    """Return every vocabulary name, normalised, mapped to its alpha-2 code.
+
+    Read from ``registry/aeat/iva/country_names.toml`` rather than written here,
+    for the same reason the territory table is: a name vocabulary inlined in a
+    feature module is unreviewable, and reviewability is the whole argument for
+    it being data.
+
+    Raises:
+        IvaCatalogueError: When the bundled vocabulary cannot be read, names a
+            malformed code, or maps one normalised name to two different
+            countries. The last is the check that makes accent folding safe:
+            folding is only sound while no two distinct countries fold together,
+            and this refuses the table rather than resolving the collision to
+            whichever record happened to be read last.
+    """
+    from ._errors import IvaCatalogueError
+
+    target = bundled_path("registry", "aeat", "iva", "country_names.toml")
+    try:
+        payload = tomllib.loads(target.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise IvaCatalogueError(f"{target}: cannot read the country-name vocabulary: {exc}") from exc
+    except tomllib.TOMLDecodeError as exc:
+        raise IvaCatalogueError(f"{target}: malformed country-name vocabulary: {exc}") from exc
+    return _index_country_names(payload, source=str(target))
+
+
+def _index_country_names(payload: object, *, source: str) -> dict[str, str]:
+    """Index an already-parsed vocabulary payload, refusing an unusable one.
+
+    Split from the read so the refusals are reachable with a payload rather than
+    only with a file: the collision refusal is the one that makes accent folding
+    sound, and a check that can only be exercised against the bundled table is a
+    check nothing proves.
+
+    Args:
+        payload: The parsed TOML document.
+        source: What to name in a diagnostic -- the bundled path in production.
+
+    Returns:
+        Each normalised printed name mapped to its alpha-2 code.
+
+    Raises:
+        IvaCatalogueError: When a record names no alpha-2 code, carries no
+            printed name, carries a blank one, when two DIFFERENT countries
+            claim one normalised name, or when the vocabulary is empty.
+    """
+    from ._errors import IvaCatalogueError
+
+    target = source
+    if not isinstance(payload, dict):
+        raise IvaCatalogueError(f"{target}: the country-name vocabulary is not a table")
+
+    resolved: dict[str, str] = {}
+    for record in payload.get("country", ()):
+        code = str(record.get("code", "")).strip().upper()
+        if len(code) != _ALPHA2_LENGTH or not code.isalpha():
+            raise IvaCatalogueError(f"{target}: country record names no alpha-2 code: {record!r}")
+        names = record.get("names", ())
+        if not names:
+            raise IvaCatalogueError(f"{target}: country {code} carries no printed name")
+        for name in names:
+            normalised = _normalise_printed_country_name(str(name))
+            if not normalised:
+                raise IvaCatalogueError(f"{target}: country {code} carries a blank printed name")
+            claimed = resolved.get(normalised)
+            if claimed is not None and claimed != code:
+                raise IvaCatalogueError(
+                    f"{target}: the printed name {name!r} normalises to {normalised!r}, which both "
+                    f"{claimed} and {code} claim; a name that cannot name one country cannot establish one",
+                )
+            resolved[normalised] = code
+    if not resolved:
+        raise IvaCatalogueError(f"{target}: the country-name vocabulary is empty")
+    return resolved
+
+
+def country_code_for_printed_country_name(printed_name: str | None) -> str | None:
+    """Return the alpha-2 code a printed country NAME establishes, or ``None``.
+
+    The second rung of the establishment ladder, and the reason it exists: a
+    country prints as a name in the document's own language -- "Alemania",
+    "Deutschland", "Germany" -- so asking a reader for ``DE`` would be a
+    translation, and translation is inference. Transcribing the name verbatim and
+    matching it against this closed vocabulary is a deterministic lookup instead,
+    the same shape as matching a transcribed regime mención against the closed
+    statutory vocabulary.
+
+    Matching is EXACT after normalisation, not containment. A country name is a
+    field value rather than a phrase inside prose, and containment over country
+    names is actively wrong: ``"Niger"`` is contained in ``"Nigeria"`` and
+    ``"Guinea"`` in ``"Papua New Guinea"``, so a containment match would place a
+    party in the wrong tax territory from a correctly printed name. A near miss
+    is not a match here.
+
+    Args:
+        printed_name: The country name transcribed from the document, or
+            ``None``. Case, surrounding and repeated whitespace, and combining
+            accents are normalised away; nothing else is.
+
+    Returns:
+        The upper-case ISO 3166-1 alpha-2 code, or ``None`` when the name is
+        absent, blank, or not in the vocabulary.
+
+        ``None`` NEVER degrades to a country and above all never to Spain. The
+        peninsula is the majority population, so a domestic default would be
+        invisible in testing while silently placing foreign parties inside the
+        territorio de aplicación del impuesto. An unrecognised name is handed
+        back to the ladder, which exhausts to an unknown scope and asks the
+        operator.
+
+    Raises:
+        IvaCatalogueError: When the bundled vocabulary cannot be read.
+    """
+    if printed_name is None:
+        return None
+    candidate = _normalise_printed_country_name(printed_name)
+    if not candidate:
+        return None
+    return _country_codes_by_printed_name().get(candidate)
+
+
+def territorial_scope_for_printed_country_name(printed_name: str | None) -> IvaTerritorialScope | None:
+    """Return the territorial scope a printed country NAME establishes.
+
+    The name rung expressed against the same target the other rungs resolve
+    into. It is deliberately a composition rather than a second rule set:
+    :func:`country_code_for_printed_country_name` answers "which country was
+    printed" and :func:`territorial_scope_for_country` stays the single authority
+    on "what does that country establish", so a change to either question is made
+    in one place.
+
+    Args:
+        printed_name: The country name transcribed from the document, or
+            ``None``.
+
+    Returns:
+        The scope the named country establishes, or ``None`` when no name was
+        recognised OR when the recognised country is Spain -- the country axis
+        returns nothing for Spain by design, because ``ES`` names the Member
+        State while the IVA territory inside it stays undetermined. A caller that
+        needs the Spanish territory resolves it from the postal code.
+
+    Raises:
+        IvaCatalogueError: When the bundled vocabulary cannot be read.
+    """
+    return territorial_scope_for_country(country_code_for_printed_country_name(printed_name))

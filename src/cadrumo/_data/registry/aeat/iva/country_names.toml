@@ -1,0 +1,344 @@
+# Printed country NAMES mapped to the ISO 3166-1 alpha-2 code they name.
+#
+# WHY THIS TABLE EXISTS. A party's country is one of the two country signals a
+# read document carries, and it is the one that prints as a NAME in whatever
+# language the issuer writes in: "Alemania", "Deutschland", "Germany". Asking a
+# reading model for "DE" is a translation, and translation is inference -- the
+# reading contract forbids both in the same breath. Transcribing the printed
+# name verbatim and matching it here is a deterministic lookup instead, the same
+# shape as matching a transcribed regime mencion against the closed statutory
+# vocabulary. The code this yields is then handed to the country resolver, which
+# stays the single authority on what scope a code establishes; nothing here
+# decides a territorial scope.
+#
+# ABSENCE NEVER DEFAULTS. A printed name this table does not carry yields
+# NOTHING -- never a country, and above all never Spain. The peninsula is the
+# majority population, so a domestic default is invisible in testing while
+# silently placing foreign parties inside the territorio de aplicacion del
+# impuesto. An unmatched name is handed back to the evidence ladder, which
+# exhausts to UNKNOWN and asks the operator.
+#
+# MATCHING IS EXACT, NOT CONTAINMENT. The regime-legend vocabulary matches by
+# containment because a mencion is a phrase inside a line of prose. A country is
+# a field value, and containment over country names is actively wrong: "Niger"
+# is contained in "Nigeria" and "Guinea" in "Papua New Guinea", so a containment
+# match would place a party in the wrong tax territory on a correctly printed
+# name. Case, surrounding and repeated whitespace, and combining accents are
+# normalised away; nothing else is. A near miss is not a match.
+#
+# WHY ACCENTS ARE FOLDED, AND WHAT MAKES THAT SAFE. Invoicing systems routinely
+# print ASCII-only, so "Mexico", "Peru" and "Turkiye" appear beside "México",
+# "Perú" and "Türkiye" with their diacritics intact. Folding covers both
+# spellings from one entry. The folding is only safe while no two DIFFERENT
+# countries fold together, so that is not assumed: the loader refuses this table
+# outright if any normalised name appears under two DIFFERENT codes, and a gate
+# proves the refusal.
+#
+# EACH NAME IS SPELLED ONCE, PROPERLY, and the ASCII twin is NOT listed beside
+# it. This is not tidiness. A table carrying both "Mexico" and "México" resolves
+# both even with the folding removed, so the folding stops being load-bearing
+# and a gate over it passes on the data rather than on the behaviour -- which is
+# exactly what the first draft of this table did, and what a mutation run
+# caught. A gate now refuses any name that another name in the same record folds
+# onto, so the redundancy cannot come back and quietly disarm the check.
+#
+# FOLDING IS NOT TRANSLITERATION, and the tell is Austria. Stripping the
+# diaeresis from "Osterreich" is what the fold does; the convention a German
+# keyboard actually uses is "Oesterreich", which no accent rule produces. Any
+# such convention has to be listed as data, which is the second reason the
+# folding is kept narrow rather than being taught more tricks.
+#
+# WHICH LANGUAGES, DELIBERATELY THREE.
+#   * Spanish, because the reading population is a Spanish taxpayer's documents
+#     and a domestic or Hispanophone issuer prints the Spanish name.
+#   * The country's own name (every official one, where a country has several),
+#     because a German supplier prints "Deutschland" on their own invoice.
+#   * English, because it is the working language of cross-border B2B invoicing
+#     in the EU: a Dutch or Polish supplier billing a Spanish customer very
+#     commonly prints the whole document in English. A vocabulary that silently
+#     failed there would fail on a large and entirely ordinary population.
+# Nothing further. Adding French, German or Italian exonyms for third countries
+# would multiply the table past the point a reviewer can check it, for a
+# population that barely exists: an issuer writing in French prints their own
+# country's endonym and, for anywhere else, usually English.
+#
+# WHICH COUNTRIES. Every EU Member State, because the Member State catalogue is
+# what the intra-community branch turns on and a missing State there is a real
+# gap. Plus the third countries that realistically appear on a Spanish
+# taxpayer's invoices: the European non-EU neighbours, the large trading
+# partners, and Latin America. DELIBERATELY EXCLUDED, with the reason:
+#   * The remaining ~140 sovereign states. This is a reviewable tax-facing
+#     vocabulary, not a general i18n country database. An unreviewable table is
+#     exactly what putting it in data was meant to avoid, and a country absent
+#     here degrades safely to "not established" rather than to a wrong answer.
+#   * SUB-NATIONAL names -- "England", "Scotland", "Northern Ireland",
+#     "Catalunya", "Bayern". A sub-national name is not a country name, and
+#     Northern Ireland is the case that proves the point: it is a distinct VAT
+#     jurisdiction whose goods movements carry the XI prefix, and a Belfast
+#     address prints "United Kingdom" regardless. An address name cannot settle
+#     that, so no name here maps to XI -- XI is established by a printed
+#     NIF-IVA prefix or not at all.
+#   * Bare alpha-2 codes. A printed "DE" is the tax-id/prefix evidence and is
+#     the country resolver's input already; accepting it here too would put two
+#     authorities on the same string.
+#
+# GROUNDING NOTE, HONEST. The code axis is ISO 3166-1 alpha-2, and the English
+# and endonym names follow its short-name register; the Spanish names follow the
+# same register's Spanish forms and ordinary Spanish usage. None of this is tax
+# law and no legal_refs are claimed for it -- the tax questions ("is this an EU
+# Member State", "what scope does this code establish") are answered elsewhere,
+# by the Member State catalogue and the country resolver respectively. This
+# table answers only "which country did the issuer print", and it is recorded
+# here rather than inlined in code so that it is reviewable in one place.
+
+# ---------------------------------------------------------------------------
+# EU Member States.
+# ---------------------------------------------------------------------------
+
+[[country]]
+code = "AT"
+names = ["Österreich", "Oesterreich", "Austria"]
+notes = "The German ASCII convention is 'Oesterreich', which accent folding does not produce, so it is listed as data. The Spanish and English names coincide."
+
+[[country]]
+code = "BE"
+names = ["België", "Belgique", "Belgien", "Bélgica", "Belgium"]
+notes = "Three official languages, all three endonyms printed in practice."
+
+[[country]]
+code = "BG"
+names = ["Bulgaria", "Bulgarien", "България"]
+notes = "The Cyrillic endonym is carried because a domestic Bulgarian invoice prints it; the Spanish and English names coincide."
+
+[[country]]
+code = "CY"
+names = ["Cyprus", "Chipre", "Κύπρος", "Kibris", "Kıbrıs"]
+
+[[country]]
+code = "CZ"
+names = ["Česko", "Česká republika", "Chequia", "República Checa", "Czechia", "Czech Republic"]
+
+[[country]]
+code = "DE"
+names = ["Deutschland", "Alemania", "Germany"]
+
+[[country]]
+code = "DK"
+names = ["Danmark", "Dinamarca", "Denmark"]
+
+[[country]]
+code = "EE"
+names = ["Eesti", "Estonia"]
+
+[[country]]
+code = "ES"
+names = ["España", "Espanya", "Espanha", "Spain"]
+notes = "Carried so the name axis can establish the code, NOT so it can establish a scope: the country resolver returns nothing for ES by design, because ES names the Member State while the IVA territory inside it stays undetermined between the TAI, Canarias and Ceuta y Melilla. The Catalan and Portuguese forms appear on invoices issued inside and beside the peninsula."
+
+[[country]]
+code = "FI"
+names = ["Suomi", "Finland", "Finlandia"]
+
+[[country]]
+code = "FR"
+names = ["France", "Francia"]
+
+[[country]]
+code = "GR"
+names = ["Ellada", "Ελλάδα", "Hellas", "Grecia", "Greece"]
+notes = "The IVA prefix catalogue keys Greece as GR rather than the EL used on Greek NIF-IVA numbers; the code emitted here matches the catalogue."
+
+[[country]]
+code = "HR"
+names = ["Hrvatska", "Croacia", "Croatia"]
+
+[[country]]
+code = "HU"
+names = ["Magyarország", "Hungría", "Hungary"]
+
+[[country]]
+code = "IE"
+names = ["Ireland", "Éire", "Irlanda"]
+
+[[country]]
+code = "IT"
+names = ["Italia", "Italy"]
+
+[[country]]
+code = "LT"
+names = ["Lietuva", "Lituania", "Lithuania"]
+
+[[country]]
+code = "LU"
+names = ["Luxembourg", "Lëtzebuerg", "Luxemburg", "Luxemburgo"]
+
+[[country]]
+code = "LV"
+names = ["Latvija", "Letonia", "Latvia"]
+
+[[country]]
+code = "MT"
+names = ["Malta"]
+notes = "The Maltese, Spanish and English names coincide."
+
+[[country]]
+code = "NL"
+names = ["Nederland", "Países Bajos", "Netherlands", "The Netherlands", "Holanda", "Holland"]
+notes = "Holanda and Holland name two provinces rather than the state, but they are printed as the country on real invoices often enough that refusing them would lose a genuine population; unlike a sub-national name they are unambiguous about which state is meant."
+
+[[country]]
+code = "PL"
+names = ["Polska", "Polonia", "Poland"]
+
+[[country]]
+code = "PT"
+names = ["Portugal"]
+notes = "The Portuguese, Spanish and English names coincide."
+
+[[country]]
+code = "RO"
+names = ["România", "Rumanía"]
+
+[[country]]
+code = "SE"
+names = ["Sverige", "Suecia", "Sweden"]
+
+[[country]]
+code = "SI"
+names = ["Slovenija", "Eslovenia", "Slovenia"]
+
+[[country]]
+code = "SK"
+names = ["Slovensko", "Eslovaquia", "Slovakia"]
+
+# ---------------------------------------------------------------------------
+# Third countries. Bounded to what a Spanish taxpayer's invoices realistically
+# print; see the exclusion note above.
+# ---------------------------------------------------------------------------
+
+[[country]]
+code = "GB"
+names = ["United Kingdom", "Reino Unido", "Great Britain", "Gran Bretaña", "UK"]
+notes = "No constituent nation is listed: those are sub-national names, and Northern Ireland in particular is a separate VAT jurisdiction (XI) that only a printed NIF-IVA prefix can establish."
+
+[[country]]
+code = "US"
+names = ["United States", "United States of America", "USA", "U.S.A.", "Estados Unidos", "EEUU", "EE.UU."]
+notes = "The abbreviations are carried deliberately: they are what the documents actually print, and each names exactly one state."
+
+[[country]]
+code = "CH"
+names = ["Schweiz", "Suisse", "Svizzera", "Svizra", "Suiza", "Switzerland"]
+
+[[country]]
+code = "NO"
+names = ["Norge", "Noreg", "Noruega", "Norway"]
+
+[[country]]
+code = "IS"
+names = ["Ísland", "Islandia", "Iceland"]
+
+[[country]]
+code = "AD"
+names = ["Andorra"]
+notes = "The Catalan, Spanish and English names coincide. Carried despite its size because it borders the peninsula and appears on real Spanish invoices out of proportion to it."
+
+[[country]]
+code = "TR"
+names = ["Türkiye", "Turquía", "Turkey"]
+
+[[country]]
+code = "MA"
+names = ["Maroc", "Marruecos", "Morocco", "Al Maghrib"]
+
+[[country]]
+code = "RU"
+names = ["Rusia", "Russia", "Россия", "Rossiya"]
+
+[[country]]
+code = "UA"
+names = ["Ucrania", "Ukraine", "Україна", "Ukraina"]
+
+[[country]]
+code = "RS"
+names = ["Srbija", "Serbia", "Србија"]
+
+[[country]]
+code = "CN"
+names = ["China", "People's Republic of China", "República Popular China", "中国"]
+
+[[country]]
+code = "JP"
+names = ["Japón", "Japan", "Nippon", "日本"]
+
+[[country]]
+code = "KR"
+names = ["Corea del Sur", "South Korea", "Republic of Korea", "República de Corea", "Daehan Minguk"]
+
+[[country]]
+code = "IN"
+names = ["India", "Bharat"]
+
+[[country]]
+code = "SG"
+names = ["Singapur", "Singapore"]
+
+[[country]]
+code = "HK"
+names = ["Hong Kong"]
+
+[[country]]
+code = "AE"
+names = ["Emiratos Árabes Unidos", "United Arab Emirates"]
+
+[[country]]
+code = "IL"
+names = ["Israel"]
+
+[[country]]
+code = "CA"
+names = ["Canada"]
+
+[[country]]
+code = "MX"
+names = ["México", "Méjico"]
+
+[[country]]
+code = "AR"
+names = ["Argentina"]
+
+[[country]]
+code = "BR"
+names = ["Brasil", "Brazil"]
+
+[[country]]
+code = "CL"
+names = ["Chile"]
+
+[[country]]
+code = "CO"
+names = ["Colombia"]
+
+[[country]]
+code = "PE"
+names = ["Perú"]
+
+[[country]]
+code = "UY"
+names = ["Uruguay"]
+
+[[country]]
+code = "VE"
+names = ["Venezuela"]
+
+[[country]]
+code = "AU"
+names = ["Australia"]
+
+[[country]]
+code = "NZ"
+names = ["Nueva Zelanda", "New Zealand", "Nueva Zelandia"]
+
+[[country]]
+code = "ZA"
+names = ["Sudáfrica", "South Africa"]
