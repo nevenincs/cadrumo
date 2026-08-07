@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:0466fbb0ccadc5755b26352eb4d64904796674d1627338a23e0afd1e60a1c52c'
+body_hash: 'sha256:b0b95f82d914f9b75cf21726aef6d7083a109c4c73edf2d9c321e1d21b74a2e7'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -133,6 +133,72 @@ but nothing is dropped quietly. Its candidate and its write are also built
 identically, so it does not carry the idempotency divergence found at the
 confirm boundary. A capability gap, not an under-declaration.
 
+### idempotency-projection-had-no-coverage-gate | high | The retry comparison's field set was hand-maintained with nothing pinning it
+
+The manual ledger add's guarded retry returns the stored row when the content
+matches, and the match is built from two hand-maintained parallel mappings folded
+into positional tuples. A persisted field missing from the comparison makes a
+retry that changes only that field look identical: the guard returns the old row,
+the new value is discarded, and the operator is told the write succeeded.
+
+This guard had already lost a field once, dropping the recargo and the source
+jurisdiction on retry, and the fix extended the mapping by hand without adding
+anything to stop it recurring. The mapping's own docstring offers a single
+greppable site as the safeguard, which is a property of a reader who thinks to
+grep; the field that went missing sat in a mapping just as greppable.
+
+The positional fold carries a second failure mode nobody had named: a key present
+in one mapping and absent from the other does not fail at that key, it shifts
+every later field by one and compares unrelated values. Two gates now pin both,
+deriving their expected set from the models rather than from a copied list.
+Mutation-proven by dropping the recargo from the command projection, the exact
+historical regression, which reds both with `At index 14 diff:
+'source_jurisdiction' != 'recargo_amount'` and the named missing field.
+
+### standard-rated-document-grounds-as-undeclared | critical | Not fixed: needs a legal decision. A plain rated invoice is refused by the renta income path
+
+This is the same drop as the category finding above, seen from the far end, and it
+is still open. The category code for a standard-rated supply carries no special
+treatment, so the parser maps it to the empty string and the record is minted with
+no category at all. A record with no declared IVA treatment fails the invoice
+decomposition contract with an undeclared-treatment defect, and the renta
+sales-evidence path refuses an ungrounded decomposition.
+
+The refusal is not an exclusion, which is what makes it quiet. The row still
+contributes, but it contributes its bank cash instead of the ingresos integros the
+casilla asks for: the invoice's base, its cuota and its retencion are all dropped.
+An advisory does fire, so this is visible to an operator who reads it, but the
+figure that reaches the declaration is wrong.
+
+Measured directly rather than inferred. Building the same invoice with no category
+yields `grounded=False defects=['iva_treatment_undeclared']`; building it with the
+general-rate domestic category yields `grounded=True defects=[]`.
+
+Deliberately not fixed. The obvious repair is to resolve the standard-rate code to
+its domestic tier from the rate the document states, and that is a legal mapping
+this sweep has no authority to invent. The rate-to-category direction is not a
+mechanical inversion of the category-to-rate mapping that already ships: that
+mapping's own documentation records that a tier once carried exactly one rate for
+all time and that RD-ley 4/2024 ended it. A percentage therefore identifies a tier
+only in combination with a date, and a wrong inversion would mis-declare rather
+than under-declare, which is not an improvement. A multi-rate document compounds
+it, since one invoice carries a single category field and a two-tier document has
+two answers. Needs legal adjudication and a modelling decision on the multi-rate
+case.
+
+### peer-registry-enum-not-hydrated-at-the-loader | medium | Not mine: an in-flight export-exemption enum reds every M130 registry load
+
+Encountered while running gates, recorded because it was twice mistaken for a
+transient. A new export-exemption reason enum is being introduced: the enum module
+and the registry TOML value are both present, but the loader does not hydrate the
+stored token into the enum at the boundary, so strict validation refuses the whole
+M130 revision and any test that loads it fails with a validation error pointing at
+an unrelated invoice model.
+
+Left entirely alone: all three files are actively held. Noted only so the next
+reader does not attribute the failure to the confirm boundary, which is where its
+symptom surfaces.
+
 ## Recommendations
 
 Treat a parser field that no consumer reads as a defect class in its own right,
@@ -157,3 +223,15 @@ completeness gate passes, because the manifest describes the skeleton rather tha
 the official form. The decision that record must make is whether a modelo
 declares its own modelling completeness explicitly, so a partial model refuses a
 filing artefact instead of producing a confident and thin one.
+
+A guard whose completeness is maintained by hand should carry a gate that derives
+its expected set from the model. Two of the findings here are the same mistake at
+different sites: a field is added to a record and a comparison, a projection or a
+forwarding list is not extended with it, and nothing notices because every test on
+both sides still passes. Greppability and a careful docstring are not controls.
+Where a list must mirror a model, assert the mirror against the model.
+
+A test that passes the day it is written proves nothing until it has been made to
+fail. Every gate this sweep added was mutation-checked against the exact
+historical regression it claims to prevent, and the diagnostics were read rather
+than assumed. That is cheap and it is the difference between a gate and a comment.
