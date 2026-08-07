@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:f34765d9bb6ffe3e622f47fd42fbdf1448b82cab5496d87521fcc723003e9745'
+body_hash: 'sha256:ba5548d9cf2a1a0976810a322021e9faa931d9813e6e9c00b46563f96138e711'
 related:
   - "[[2026-06-14-docs-tooling-separation-research]]"
 ---
