@@ -63,6 +63,7 @@ def taxpayer_profile_from_mapping(
     legal_entity_form = typed.legal_entity_form or None
     income_categories = _resolve_income_categories(typed.irpf_income_categories)
     estimation_regime = typed.irpf_estimation_regime or None
+    activity_kind = typed.irpf_activity_kind or None
     tax_id = canonical.get("identity.tax_id") or canonical.get("tax.id") or tax_id_default
     iva_regime = _resolve_iva_regime(
         canonical.get("iva.regime"),
@@ -79,6 +80,7 @@ def taxpayer_profile_from_mapping(
         legal_entity_form=legal_entity_form,
         irpf_income_categories=income_categories,
         irpf_estimation_regime=estimation_regime,
+        irpf_activity_kind=activity_kind,
         iva_regime=iva_regime,
         has_employees=typed.has_employees,
         pays_professionals_with_retencion=typed.pays_professionals_with_retencion,

@@ -174,6 +174,45 @@ class IrpfEstimationRegime(StrEnum):
     OBJETIVA = "objetiva"
 
 
+class IrpfActivityKind(StrEnum):
+    """Whether the taxpayer's activity is professional or sectorial, for retención.
+
+    An ACTIVITY axis, independent of :class:`IrpfEstimationRegime` (a method)
+    and :class:`IrpfIncomeCategory` (a rendimiento type). The independence is
+    the reason it has to exist separately: a farmer may file estimación directa
+    and sit in IVA general, so neither of those establishes the activity.
+
+    Deliberately TWO members, and the narrowness is grounded rather than
+    conservative. RIRPF art. 95 (RD 439/2007) states seven provisions that fix
+    only FOUR distinct rates, and six of the seven sit in rate-identical pairs:
+    inicio and the colectivos específicos both fix 7 %, agrícola/ganadera and
+    forestal both 2 %, engorde de porcino/avicultura and estimación objetiva
+    both 1 %. Only the 15 % general professional rate has a single legal source.
+    So the one distinction the rate table can consume is professional
+    (15 % / 7 %) against sectorial (2 % / 1 %); a member per activity would
+    spend names on splits that select the same figure and then have to be kept
+    true.
+
+    Operator-declared, because it cannot be derived. Deriving it would need an
+    authoritative IAE epígrafe classification, and none is bundled: the corpus
+    carries the article approving the tariffs plus a single illustrative
+    epígrafe, not a classification. ``iae_epigraph`` cannot stand in either --
+    agricultural activities are largely IAE-exempt, so the field is emptiest for
+    exactly the filers it would need to identify.
+
+    Attributes:
+        PROFESIONAL: An actividad profesional under RIRPF art. 95.1 --
+            the 15 % general rate, or 7 % under the inicio or
+            colectivos-específicos arms.
+        SECTORIAL: An actividad agrícola, ganadera or forestal, or one whose
+            rendimiento neto is determined by estimación objetiva -- RIRPF
+            art. 95.4, 95.5 and 95.6.1.º, fixing 2 % or 1 %.
+    """
+
+    PROFESIONAL = "profesional"
+    SECTORIAL = "sectorial"
+
+
 class IrpfSpecialRegime(StrEnum):
     """IRPF special-regime category for natural persons.
 
@@ -447,6 +486,12 @@ class TaxpayerProfile(BaseModel):
             when the taxpayer is not a natural person.
         irpf_estimation_regime: The IRPF estimation regime for
             economic-activity income. ``None`` when undeclared.
+        irpf_activity_kind: Whether the economic activity is
+            profesional or sectorial, for the RIRPF art. 95
+            retención rate. Operator-declared and independent of
+            the estimation regime. ``None`` when undeclared, which
+            a consumer MUST treat as unknown rather than as either
+            arm -- the wrong arm is 15 % against 2 %.
         iva_regime: The IVA regime the taxpayer files under.
         has_employees: Whether the taxpayer pays salaries with
             retención.
@@ -532,6 +577,7 @@ class TaxpayerProfile(BaseModel):
     legal_entity_form: LegalEntityForm | None = None
     irpf_income_categories: frozenset[IrpfIncomeCategory] = frozenset()
     irpf_estimation_regime: IrpfEstimationRegime | None = None
+    irpf_activity_kind: IrpfActivityKind | None = None
     iva_regime: IVARegime
     has_employees: bool = False
     pays_professionals_with_retencion: bool = False

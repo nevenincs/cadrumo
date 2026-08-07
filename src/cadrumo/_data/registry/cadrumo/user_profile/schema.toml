@@ -824,6 +824,20 @@ legal_refs = [
     "rd-439-2007:art-31",
 ]
 
+[[sections.fields]]
+key = "activity_kind"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the economic activity is profesional or sectorial, for the RIRPF art. 95 retencion rate. An ACTIVITY axis, independent of the estimation regime and of the IVA regime. Two values because art. 95 fixes only four rates across seven provisions, so profesional (15/7) against sectorial (2/1) is the only distinction the rate table can consume. Operator-declared; absent means undeclared and must not be read as either value."
+enum_values = ["profesional", "sectorial"]
+model_selectors = ["irpf.activity_kind"]
+schedule_predicates = ["irpf.activity_kind"]
+legal_refs = [
+    "rd-439-2007:art-95",
+]
+
 # THE TWELVE objective_estimation_* FIELDS BELOW MIX TWO SCOPES WHILE LOOKING
 # UNIFORM. Do not reshape them as one group.
 #
