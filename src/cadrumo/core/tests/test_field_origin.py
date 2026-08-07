@@ -25,10 +25,14 @@ _EXPECTED_TOKENS = {
     "VISION": "vision",
     "TABULAR_MAPPED": "tabular_mapped",
     "OPERATOR": "operator",
+    # Not a reading. Every member above answers how a value was copied off the
+    # document; this one answers what followed from what was copied, and a
+    # persisted record has to keep the two apart.
+    "DERIVED": "derived",
 }
 
 
-def test_the_member_set_is_exactly_the_five_declared_origins() -> None:
+def test_the_member_set_is_exactly_the_declared_origins() -> None:
     """A silent addition or removal reddens here.
 
     Written against member NAMES rather than the members themselves so a
