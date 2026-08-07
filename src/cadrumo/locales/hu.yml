@@ -813,10 +813,11 @@ application:
   live:
     deudas:
       errors:
-        bucket_id_blank: application.live.deudas.errors.bucket_id_blank
-        snapshot_id_blank: application.live.deudas.errors.snapshot_id_blank
-        snapshot_not_found: application.live.deudas.errors.snapshot_not_found
-        snapshot_prefix_ambiguous: application.live.deudas.errors.snapshot_prefix_ambiguous
+        bucket_id_blank: A deudas bucket azonosítója nem lehet üres.
+        snapshot_id_blank: A deudas pillanatkép azonosítója nem lehet üres.
+        snapshot_not_found: Nem található deudas-pillanatkép a kért azonosítóhoz.
+        snapshot_prefix_ambiguous: A deudas pillanatkép előtag több pillanatképre
+          illeszkedik.
     expedientes:
       errors:
         bucket_id_blank: Az expedientes bucket azonosítója nem lehet üres.
@@ -6688,7 +6689,8 @@ errors:
       azonosítóval.
     refused_live_borrador_snapshot_not_found: Nem létezik Modelo 100 tervezet-pillanatkép
       a megadott azonosítóval.
-    refused_live_deudas_snapshot_not_found: errors.refused.refused_live_deudas_snapshot_not_found
+    refused_live_deudas_snapshot_not_found: Nem létezik deudas-pillanatkép a megadott
+      azonosítóval.
     refused_live_expedientes_snapshot_not_found: Nem létezik expediente-pillanatkép
       a megadott azonosítóval.
     refused_live_justificante_capture_snapshot_not_found: Nem létezik rögzített igazolás-pillanatkép
