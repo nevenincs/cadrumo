@@ -49,7 +49,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import uuid4
 
-from ...adapters.outbound.llm import rasterise_pdf_pages_to_base64_png
+from ...llm import rasterise_pdf_pages_to_base64_png
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...core.config import Settings, load_settings
@@ -319,7 +319,7 @@ def _run_vision_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
     """
     import httpx
 
-    from ...adapters.outbound.llm import LLMProviderError
+    from .llm import LLMProviderError
     from ...domain.transactions import LLMClassifierError
 
     try:
@@ -346,7 +346,8 @@ def _record_subprocess_run[T](run: Callable[[], T], *, provider: str) -> T:
     """
     import time
 
-    from ...adapters.outbound.llm import LLMCacheError, LLMRunRecord, LLMRunTelemetryRecorder
+    from ...adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
+    from ...llm import LLMCacheError
 
     started_at = now()
     clock_start = time.monotonic()

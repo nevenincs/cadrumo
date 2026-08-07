@@ -30,7 +30,7 @@ import pytest
 
 from .._models import CachedEntry, LLMProvider, LLMResponse, UsageRecord
 from .._retention import select_retention_removal_keys
-from .._run_telemetry import LLMRunRecord
+from ...adapters.outbound.llm import LLMRunRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

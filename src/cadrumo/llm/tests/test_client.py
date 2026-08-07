@@ -21,17 +21,10 @@ from typing import override
 import pytest
 from pydantic import SecretStr
 
-from .....core.config import LLMProviderSetting, override_settings
-from .....tests.fixtures.settings import EnvFileFreeSettings
-from .. import (
-    LLMCache,
-    LLMClient,
-    LLMProviderError,
-    LLMRateLimitError,
-    LLMRequest,
-    LLMRunTelemetryRecorder,
-    UsageRecorder,
-)
+from ...core.config import LLMProviderSetting, override_settings
+from ...tests.fixtures.settings import EnvFileFreeSettings
+from ...adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
+from .. import LLMClient, LLMProviderError, LLMRateLimitError, LLMRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

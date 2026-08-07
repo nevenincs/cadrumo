@@ -22,7 +22,8 @@ import pytest
 from click.testing import Result
 from pydantic import ValidationError
 
-from ....adapters.outbound.llm import LLMProvider, LLMResponse, UsageRecorder
+from ....adapters.outbound.llm import UsageRecorder
+from ....llm import LLMProvider, LLMResponse
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository

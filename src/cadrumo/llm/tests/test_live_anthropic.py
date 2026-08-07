@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core.config import Settings
-from .....tests.live_gate import requires_live_enabled
+from ...core.config import Settings
+from ...tests.live_gate import requires_live_enabled
 from .. import LLMClient, LLMRequest
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]

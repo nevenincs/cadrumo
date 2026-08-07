@@ -23,7 +23,7 @@ from typing import ClassVar, override
 import pytest
 from PIL import Image
 
-from .....core.config import override_settings
+from ...core.config import override_settings
 from .._providers.base import ProviderRequest
 from .._providers.local import LocalAdapter, rasterise_pdf_pages_to_base64_png
 

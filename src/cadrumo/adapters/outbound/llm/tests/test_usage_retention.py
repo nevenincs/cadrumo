@@ -21,9 +21,9 @@ from .....adapters.persistence.storage import secure_object_repository_for_activ
 from .....core.classification import SensitivityClass
 from .....core.hashing import canonical_json_bytes
 from .....core.redaction import default_rules_for_class, redact_structured
-from .. import LLMProvider
-from .._errors import LLMCacheError
-from .._models import UsageRecord
+from .....llm import LLMProvider
+from .....llm import LLMCacheError
+from .....llm import UsageRecord
 from .._usage import _USAGE_NAMESPACE, _USAGE_VERSION, UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -122,7 +122,7 @@ def test_client_construction_sweeps_the_usage_store(tmp_path: Path) -> None:
     once-per-client retention sweep - proving retention fires in production
     rather than relying on a manual prune() call.
     """
-    from .._client import LLMClient
+    from .....llm import LLMClient
 
     anchor = datetime.now(UTC)
     recorder = UsageRecorder(root_dir=tmp_path / "llm-usage")

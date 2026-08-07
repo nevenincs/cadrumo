@@ -98,11 +98,7 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel
 
-from ...adapters.outbound.llm import (
-    LLMPdfRasterisationError,
-    LLMProviderError,
-    rasterise_pdf_pages_to_base64_png,
-)
+from ...llm import LLMPdfRasterisationError, LLMProviderError, rasterise_pdf_pages_to_base64_png
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice

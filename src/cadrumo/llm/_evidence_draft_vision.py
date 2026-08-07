@@ -53,7 +53,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ..adapters.outbound.llm import LLMClient, LLMProvider, LLMRequest, MultimodalImageInput
+from ._client import LLMClient
+from ._models import LLMProvider, LLMRequest, MultimodalImageInput
 from ..application.ledger import InvoiceDraft, PurchaseInvoiceEvidenceInputError
 from ..core import STRICT_FROZEN_CONFIG
 from ..core.config import Settings, load_settings

@@ -31,7 +31,8 @@ from .....core import StorageCategory
 from .....core.config import override_settings
 from .....tests import assert_path_matches_grammar
 from .....tests.storage_scope import storage_overrides
-from .. import LLMCache, LLMProvider, LLMRequest, LLMResponse, LLMRunRecord, LLMRunTelemetryRecorder, UsageRecorder
+from .. import LLMCache, LLMRunRecord, LLMRunTelemetryRecorder, UsageRecorder
+from .....llm import LLMProvider, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

@@ -26,9 +26,10 @@ import pytest
 from .....adapters.persistence.storage import secure_object_repository_for_active_bucket
 from .....core.classification import SensitivityClass
 from .....core.redaction import default_rules_for_class, redact_structured
-from .. import LLMCache, LLMProvider, LLMRequest, LLMResponse
+from .. import LLMCache
+from .....llm import LLMProvider, LLMRequest, LLMResponse
 from .._cache import _CACHE_NAMESPACE, _CACHE_VERSION
-from .._models import CachedEntry
+from .....llm import CachedEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -140,7 +141,7 @@ def test_client_construction_sweeps_the_cache_store(tmp_path: Path) -> None:
     retention fires in production rather than depending on a manual prune()
     call.
     """
-    from .._client import LLMClient
+    from .....llm import LLMClient
 
     anchor = datetime.now(UTC)
     cache = LLMCache(root_dir=tmp_path / "llm-cache")

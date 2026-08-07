@@ -40,7 +40,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...adapters.outbound.llm import UsageRecord, UsageRecorder
+from ...adapters.outbound.llm import UsageRecorder
+from ...llm import UsageRecord
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import resolve_active_bucket_id
 from ...domain.transactions import Transaction

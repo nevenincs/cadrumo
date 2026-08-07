@@ -20,7 +20,8 @@ from __future__ import annotations
 import asyncio
 import base64
 
-from ..adapters.outbound.llm import LLMClient, LLMProvider, LLMRequest, MultimodalImageInput
+from ._client import LLMClient
+from ._models import LLMProvider, LLMRequest, MultimodalImageInput
 from ..core.config import Settings, load_settings
 from ..core.hashing import sha256_hex
 from ..domain.transactions import (

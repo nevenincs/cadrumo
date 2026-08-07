@@ -26,7 +26,7 @@ from ....adapters.inbound.einvoice import (
     parse_einvoice_document,
 )
 from ....adapters.inbound.pdf import extract_pages_text_from_bytes
-from ....adapters.outbound.llm import LLMPdfRasterisationError, rasterise_pdf_pages_to_base64_png
+from ....llm import LLMPdfRasterisationError, rasterise_pdf_pages_to_base64_png
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

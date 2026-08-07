@@ -36,7 +36,7 @@ from ....persistence.storage import (
 from ....persistence.storage.sql import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
 from .._cache import LLMCache
-from .._models import LLMProvider, LLMRequest, LLMResponse, UsageRecord
+from .....llm import LLMProvider, LLMRequest, LLMResponse, UsageRecord
 from .._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from .._usage import UsageRecorder
 

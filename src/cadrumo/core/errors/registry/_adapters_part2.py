@@ -173,7 +173,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.llm._errors.LLMError",
+        "cadrumo.llm._errors.LLMError",
         ErrorCode(
             code="ERROR_LLM",
             category=ErrorCategory.ERROR,
@@ -184,7 +184,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.llm._errors.LLMProviderError",
+        "cadrumo.llm._errors.LLMProviderError",
         ErrorCode(
             code="FAIL_LLM_PROVIDER",
             category=ErrorCategory.FAIL,
@@ -195,7 +195,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.llm._errors.LLMPdfRasterisationError",
+        "cadrumo.llm._errors.LLMPdfRasterisationError",
         ErrorCode(
             code="FAIL_LLM_PDF_RASTERISATION",
             category=ErrorCategory.FAIL,
@@ -206,7 +206,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.llm._errors.LLMCacheError",
+        "cadrumo.llm._errors.LLMCacheError",
         ErrorCode(
             code="FAIL_LLM_CACHE",
             category=ErrorCategory.FAIL,
@@ -217,7 +217,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.llm._errors.LLMRateLimitError",
+        "cadrumo.llm._errors.LLMRateLimitError",
         ErrorCode(
             code="FAIL_LLM_RATE_LIMIT",
             category=ErrorCategory.FAIL,
@@ -228,7 +228,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.llm._errors.LLMConfigError",
+        "cadrumo.llm._errors.LLMConfigError",
         ErrorCode(
             code="REFUSED_LLM_CONFIG",
             category=ErrorCategory.REFUSED,
@@ -239,7 +239,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.llm._errors.LLMValidationError",
+        "cadrumo.llm._errors.LLMValidationError",
         ErrorCode(
             code="REFUSED_LLM_VALIDATION",
             category=ErrorCategory.REFUSED,
