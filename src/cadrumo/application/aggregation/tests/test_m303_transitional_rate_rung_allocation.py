@@ -38,7 +38,14 @@ import pytest
 
 from ....core import Modelo, Period
 from ....domain.calculations.registry import ModeloRevision, bundled_authority, selector_as_dict
-from ....domain.iva import EUMemberState, IvaRateKind, rate_kinds_for_declared_rate
+from ....domain.calculations.registry import IvaLedgerObservation
+from ....domain.iva import (
+    EUMemberState,
+    IvaCategory,
+    IvaFlowDirection,
+    IvaRateKind,
+    rate_kinds_for_declared_rate,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -314,3 +321,65 @@ def test_a_domestic_row_always_carries_the_rate_the_rungs_key_on() -> None:
         assert observation.applied_rate is not None, (
             f"observation {observation.ledger_id} reached a domestic tier with no recorded rate"
         )
+
+
+def test_a_rate_less_row_is_refused_at_ingest_rather_than_silently_dropped() -> None:
+    """The narrowing's whole safety case rests on this refusal, so it is gated here.
+
+    The accepted rate-box decision rejects narrowing a tier binding because
+    underdetermined rows then reach no box and leave the declared total. Modelo
+    303 narrows anyway, and is safe only because the underdetermined row cannot
+    exist on this path: the classifier refuses a transaction with no
+    ``iva_rate`` and says so, rather than emitting an observation whose rate is
+    unknown.
+
+    A refusal is a stronger guarantee than a catch-all layer -- the amount never
+    enters the return AND the operator is told -- but it is a different mechanism
+    from the one that decision prescribes, so it needs its own gate. If this ever
+    stops refusing, the narrowing becomes a silent under-declaration.
+    """
+    row = _transaction(
+        "row-no-rate",
+        on_date=date(2024, 11, 6),
+        taxable_base=Decimal("1600.00"),
+        iva_rate=None,
+        iva_amount=Decimal("120.00"),
+    )
+    catalogue = TransactionCatalogue.model_validate({"transactions": {row.transaction_id: row}})
+    aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD_4T_2024)
+
+    assert aggregation.observations == (), "a rate-less row produced an observation instead of being refused"
+    assert [i.reason.value for i in aggregation.issues] == ["missing_iva_rate"]
+
+
+def test_an_underdetermined_observation_would_reach_no_rung_at_all() -> None:
+    """Positive control: the probe above can only mean something if this fails.
+
+    Proving a rate-less row never appears says nothing unless we also show what
+    would happen if it did. Fed straight to the resolver, an observation with no
+    recorded rate reaches NO rung -- exactly the loss the rate-box decision warns
+    of -- while its determined twin reaches the ordinary reducido rung. So the
+    refusal above is load-bearing, not incidental.
+    """
+    common = {
+        "ledger_id": "control",
+        "transaction_date": date(2024, 11, 6),
+        "category": IvaCategory.DOMESTIC_REDUCED,
+        "rate_kind": IvaRateKind.REDUCED,
+        "flow_direction": IvaFlowDirection.REPERCUTIDO,
+        "base_amount": Decimal("1600.00"),
+        "iva_amount": Decimal("120.00"),
+        "recargo_amount": Decimal("0"),
+    }
+    revision = _revision()
+
+    def reached(applied_rate: Decimal | None) -> dict[str, Decimal]:
+        observation = IvaLedgerObservation(**common, applied_rate=applied_rate)
+        values = resolve_iva_ledger_binding_values(revision, (observation,))
+        return {str(k): v for k, v in values.items() if "iva-repercutido" in str(k) and v != Decimal("0")}
+
+    assert reached(None) == {}, "an underdetermined row reached a rate-specific rung"
+    assert reached(Decimal("0.10")) == {
+        "modelo-303-iva-repercutido-reducido-base": Decimal("1600.00"),
+        "modelo-303-iva-repercutido-reducido-cuota": Decimal("120.00"),
+    }
