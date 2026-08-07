@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:5212fb705daf0fa76fc6ece0a3e390c7bcf957db2500b31fbcd22c77ccfbb768'
+body_hash: 'sha256:e7c20396c8c390d1ed453b085f58581fea2323c8cc65c0c693f06dbd38049079'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
   - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
@@ -43,12 +43,21 @@ No offset check, length check or digest detects either.
   on the bracketed AEAT box number at each sheet, offset and length slot rather
   than on positional index or on free-text description. Across the five designs
   `2023-y-siguientes` claims: 2023 to 2024-H1 is identical (0 slot meaning flips,
-  0 boxes moved, 0 boxes added); 2024-H1 to 2024-H2 is purely additive (0 flips,
-  0 moved, 8 new numbered boxes, 108 and 111 and 165 through 170); 2024-H2 to
-  2025 is identical; 2025 to 2026 flips 4 slots and moves 128 boxes. So
-  `2023-y-siguientes` spans THREE design epochs, not the five an earlier
-  index-keyed measurement reported: 2023 through 2024 period 08 and 2T, then 2024
-  period 09 and 3T through 2025, then 2026 onward.
+  0 boxes moved, 0 boxes added, every sheet total unchanged); 2024-H1 to 2024-H2
+  adds 8 numbered boxes (108, 111, 165 through 170) with 0 flips and 0 moves and
+  every sheet total unchanged; 2024-H2 to 2025 shows 0 numbered-box movement but
+  grows sheet DP30302 from 1706 to 1900 positions; 2025 to 2026 flips 4 slots,
+  moves 128 boxes and grows sheet DP30305 from 1523 to 1528. Three boundaries,
+  so `2023-y-siguientes` spans FOUR design epochs: 2023 through 2024 period 08
+  and 2T, then 2024 period 09 and 3T, then 2025, then 2026 onward.
+- No single signal finds all three boundaries, and this record initially got that
+  wrong. The box-number key alone reports 2024-H2 and 2025 as one epoch, because
+  DP30302's growth is entirely in unnumbered modulos fields; the page-length
+  signal alone reports 2024-H1 and 2024-H2 as one epoch, because that transition
+  displaces nothing. Each finds a boundary the other cannot see, and only their
+  UNION is the epoch set. This is the accepted boundary record's own
+  union-of-two-signals doctrine, and taking one instrument's verdict for the
+  whole answer is the error that doctrine exists to prevent.
 - The instrument matters and both weaker ones mislead. An index-keyed diff
   compares unrelated fields the moment either side inserts, and produced a
   retracted reading of 56 fields relocating across 17 shift magnitudes. A
@@ -117,8 +126,8 @@ No offset check, length check or digest detects either.
   measured against the production selector, and declares the boundary in exactly
   the vocabulary AEAT used to publish it. Con: because the selector is a cross
   product, an epoch covering a whole year plus part of the next needs two
-  revisions, so Modelo 303's three epochs need five revisions, two pairs of which
-  are layout-identical.
+  revisions, so Modelo 303's four epochs need five revisions, one pair of which is
+  layout-identical.
 - **Discriminate two same-year revisions by on-date alone, both declaring the full
   token set.** Rejected: measured to be ambiguous without the date, and dependent
   on every call site supplying a derived one, so a single caller that omits it
@@ -127,8 +136,8 @@ No offset check, length check or digest detects either.
   exactly what a future author forgets.
 - **Add a within-year narrowing axis to `PeriodSelector`, a period-from field or
   an explicit year-and-period pair set.** Rejected for now, and it is the honest
-  runner-up: it would express three epochs in three revisions with no duplicate
-  layouts, a genuine advantage over the chosen option. Rejected because it adds a
+  runner-up: it would express four epochs in four revisions with no duplicate
+  layout, a genuine advantage over the chosen option. Rejected because it adds a
   schema axis, its validator, and a second way to say what the existing `periods`
   field already says, buying a reduction in authoring duplication and nothing in
   correctness, while giving the non-overlap property the resolver depends on two
@@ -141,9 +150,13 @@ No offset check, length check or digest detects either.
 
 ## Constraints
 
-- The epoch set stated here is data, not a constant. Re-derive it at implementation
-  time by re-running the box-number-keyed comparison over the bundled `.xlsx`
-  workbooks, paired with a description-keyed pass to catch unnumbered slot flips.
+- The epoch set stated here is data, not a constant, and no one signal produces it.
+  Re-derive it at implementation time as the UNION of three passes over the bundled
+  `.xlsx` workbooks: a box-number-keyed comparison for movement and slot meaning, a
+  per-sheet total-positions comparison for growth the numbered key cannot see, and a
+  description-keyed pass for unnumbered slot flips. Taking any one of the three for
+  the whole answer understates the boundary set, which this record did on its first
+  pass.
   Do not copy the three-epoch figure, and do not read the extracted markdown or
   extracted json siblings: they are one extraction pass in two envelopes, so
   neither is a control on the other, and across this corpus twenty-five xls and
@@ -172,13 +185,14 @@ Express a sub-year design epoch by giving each covering revision a
 `period_selector` that declares the AEAT-published token partition: for Modelo
 303's 2024, one revision declaring the quarterly and monthly tokens through period
 08 and 2T, and one declaring 3T, 4T and 09 through 12. Because the selector is a
-cross product of years and tokens, a year fully inside one epoch keeps its own
-revision declaring the full token set, so Modelo 303's three design epochs are
-authored as five revisions: 2023 full, 2024-early, 2024-late, 2025 full, and 2026
-onward. Two pairs of those carry identical export layouts by construction, which
-is the accepted cost of not adding a schema axis; they are duplicates of layout,
-not of decision, and each still declares its own `source_refs` naming the specific
-AEAT design it encodes.
+cross product of years and tokens, an epoch spanning a whole year plus part of the
+next needs two revisions, so Modelo 303's four design epochs are authored as five
+revisions: 2023 full and 2024-early (the same layout, split only because the
+selector cannot express one epoch crossing the year boundary), then 2024-late,
+2025 full, and 2026 onward. Exactly one pair carries an identical export layout by
+construction, which is the accepted cost of not adding a schema axis; the pair is
+a duplicate of layout, not of decision, and each revision still declares its own
+`source_refs` naming the specific AEAT design it encodes.
 
 Selection then needs no code change on the period-scoped path, since the
 production selector already resolves each token to exactly one revision. The
@@ -234,10 +248,10 @@ from a year to a period changes that reasoning.
 
 ## Consequences
 
-- Modelo 303 gains five revisions where one exists, two pairs of which carry
-  identical export layouts. Anything treating revision count as a proxy for design
-  count, or assuming distinct revisions imply distinct layouts, is now wrong and
-  must be swept.
+- Modelo 303 gains five revisions where one exists, covering four design epochs,
+  one pair of which carries an identical export layout. Anything treating revision
+  count as a proxy for design count, or assuming distinct revisions imply distinct
+  layouts, is now wrong and must be swept.
 - The year-only selector becomes a refusing surface for split years. That is a
   behaviour change for binding-readiness discovery, the registry describe and
   bindings query, and the revision diff command; the readiness helper's existing
