@@ -14,7 +14,7 @@ from itertools import pairwise
 
 import pytest
 
-from .. import EUMemberState, IvaRateKind, load_iva_rate_table, lookup_rate
+from .. import EUMemberState, IvaRateKind, load_iva_rate_table, lookup_rate, rate_kinds_for_declared_rate
 from .._errors import IvaRateNotFoundError, IvaRateOverlapError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -91,3 +91,58 @@ def test_committed_registry_has_no_overlapping_windows() -> None:
             for previous, current in pairwise(ordered):
                 if previous[1] >= current[0]:
                     raise IvaRateOverlapError(f"{member_state.value}/{kind.value}: {previous} overlaps {current}")
+
+
+def test_a_declared_zero_resolves_to_the_zero_tier_on_every_date() -> None:
+    """0 % is always a legitimate Spanish declared rate, whatever the table records.
+
+    Spain zero-rates on FOUR grounds, three of them permanent: exports to a
+    third country (LIVA art. 21), intra-community supplies (art. 25), entregas
+    of donativos to Ley 49/2002 entities (art. 91.Cuatro), and the temporary
+    RD-ley 4/2024 basic-foods window. ``rates.toml`` records only the last --
+    and says so itself, because a flat ``kind = "zero"`` record cannot be
+    bounded to a class of supply.
+
+    Reading that partial table as exhaustive made ``rate_kinds_for_declared_rate``
+    answer nothing for 0 % outside July-September 2024, so every export and
+    intra-EU supply became unclassifiable at any other date -- live for 2025 and
+    2026, not a historical-fixture problem. Seventeen tests failed on it.
+
+    Whether a PARTICULAR supply was entitled to zero-rating is a question about
+    the supply, and it lives on the category axis, which can tell
+    ``DOMESTIC_ZERO`` from ``EXPORT_THIRD_COUNTRY_ZERO_RATED``. The rate axis
+    structurally cannot express it, so it must not pretend to answer it.
+    """
+    for on_date in (date(2024, 3, 15), date(2024, 8, 15), date(2024, 11, 15), date(2025, 6, 1), date(2026, 6, 1)):
+        assert rate_kinds_for_declared_rate(EUMemberState.ES, Decimal("0"), on_date) == (IvaRateKind.ZERO,), (
+            f"0 % must resolve to the zero tier on {on_date.isoformat()}: the table's silence about a zero "
+            "record is incomplete coverage, not a statement that zero-rating was unlawful that day"
+        )
+
+
+def test_the_zero_exemption_does_not_leak_into_the_dated_temporary_rates() -> None:
+    """Control: the RD-ley 4/2024 rates stay window-bound, so the narrowing is not reverted.
+
+    The zero answer is unconditional; nothing else is. Without this the fix
+    above could have been implemented by making every rate date-blind, which
+    would re-admit a 2 % foodstuffs line in 2025 -- a rate the statute had
+    withdrawn, and precisely what the tax review closed.
+
+    Each rate is checked both INSIDE its own window and OUTSIDE it, so the
+    assertion fails if the window collapses in either direction.
+    """
+    inside_summer = date(2024, 8, 15)
+    inside_autumn = date(2024, 11, 15)
+    after = date(2025, 6, 1)
+
+    assert rate_kinds_for_declared_rate(EUMemberState.ES, Decimal("0.05"), inside_summer) == (IvaRateKind.REDUCED,)
+    assert rate_kinds_for_declared_rate(EUMemberState.ES, Decimal("0.02"), inside_autumn) == (
+        IvaRateKind.SUPER_REDUCED,
+    )
+    assert rate_kinds_for_declared_rate(EUMemberState.ES, Decimal("0.075"), inside_autumn) == (IvaRateKind.REDUCED,)
+
+    for withdrawn in (Decimal("0.02"), Decimal("0.05"), Decimal("0.075")):
+        assert rate_kinds_for_declared_rate(EUMemberState.ES, withdrawn, after) == (), (
+            f"{withdrawn} must not resolve in 2025 -- the temporary windows closed, and a date-blind fix "
+            "would silently re-admit a rate the statute withdrew"
+        )
