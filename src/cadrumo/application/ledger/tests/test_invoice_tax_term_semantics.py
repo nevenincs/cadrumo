@@ -65,16 +65,25 @@ def _closure_kinds(draft: InvoiceDraft) -> list[DraftDiscrepancyKind]:
     return [finding.kind for finding in closure_findings(draft)]
 
 
-def _draft(**overrides: Decimal | None) -> InvoiceDraft:
-    fields: dict[str, Decimal | None] = {
-        "taxable_base": _BASE,
-        "iva_rate": Decimal("21"),
-        "iva_amount": _CUOTA,
-        "recargo_amount": _RECARGO,
-        "grand_total": _TOTAL,
-    }
-    fields.update(overrides)
-    return InvoiceDraft(**fields)
+def _draft(
+    *,
+    taxable_base: Decimal | None = _BASE,
+    iva_amount: Decimal | None = _CUOTA,
+    recargo_amount: Decimal | None = _RECARGO,
+    grand_total: Decimal | None = _TOTAL,
+    retencion_rate: Decimal | None = None,
+    retencion_amount: Decimal | None = None,
+) -> InvoiceDraft:
+    """Build a draft over the bundled document's figures, one term at a time."""
+    return InvoiceDraft(
+        taxable_base=taxable_base,
+        iva_rate=Decimal("21"),
+        iva_amount=iva_amount,
+        recargo_amount=recargo_amount,
+        grand_total=grand_total,
+        retencion_rate=retencion_rate,
+        retencion_amount=retencion_amount,
+    )
 
 
 class TestTheProducerEmitsTheIdentitysCuotaTerm:
