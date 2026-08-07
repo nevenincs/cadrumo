@@ -5,12 +5,18 @@ than taking it from an operator, which is what makes this reachable: the
 taxpayer does not choose the percentage on a supplier's invoice, so any
 percentage that has ever existed can arrive at the confirm boundary.
 
-Five percent is the specific case, and it is real rather than hypothetical.
-Spain applied a transient reduced rate to electricity and gas supplies through
-2022-2024; :class:`~domain.invoices.IvaRate` deliberately does NOT carry a
-``RATE_5`` slot, and its own docstring names ingesting pre-2025 data as the
-event that would require adding one. Until then a 2024 electricity invoice is a
-document this application can read and cannot represent.
+Eight percent is the specific case, and it is real rather than hypothetical:
+Spain's reducido was 8% from July 2010 until September 2012, when it became the
+present 10%. A 2011 invoice therefore prints a percentage that is perfectly
+valid history and that :class:`~domain.invoices.IvaRate` does not carry.
+
+The rate this module names has already had to change once, which is the better
+argument for the gate than any wording could be. It was originally the transient
+5% electricity rate; a slot for that was added while this test was being
+written, and the module's own non-vacuity assertion caught it and said so
+directly rather than letting the refusal test quietly become a test of nothing.
+The taxonomy is expected to keep growing as older filing years come into scope,
+so the assertion below is what keeps this module honest across that growth.
 
 **Refusing is the correct outcome and rounding is the dangerous one.** Silently
 resolving five percent to the four percent slot understates the cuota; resolving
@@ -45,18 +51,19 @@ __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
 
 _SUPPLIER_CIF = "B12345674"
 
-# A 2024 electricity invoice at the transient 5% rate: base 100,00, cuota 5,00.
+# A 2011 invoice at the then-current 8% reducido: base 100,00, cuota 8,00.
 # Every figure is internally coherent -- the document is not malformed, it is
 # simply expressed in a rate slot this taxonomy does not carry.
+_UNREPRESENTABLE_RATE = Decimal("8")
 _TRANSIENT_RATE_INVOICE_LINES = (
     "Factura de Energia Peninsular SL",
     f"NIF: {_SUPPLIER_CIF}",
-    "Numero de factura: 2024-0451",
-    "Fecha: 14/06/2024",
+    "Numero de factura: 2011-0451",
+    "Fecha: 14/06/2011",
     "Base imponible: 100,00",
-    "IVA 5%",
-    "Cuota IVA: 5,00",
-    "Total factura: 105,00",
+    "IVA 8%",
+    "Cuota IVA: 8,00",
+    "Total factura: 108,00",
 )
 
 # The same document at a slot the taxonomy DOES carry. This is the positive
@@ -112,23 +119,31 @@ def _confirm(
     )
 
 
-def test_the_transient_five_percent_rate_is_genuinely_outside_the_taxonomy() -> None:
-    """Non-vacuity: the refusal below is only meaningful while 5 is unknown.
+def test_the_chosen_rate_is_genuinely_outside_the_taxonomy() -> None:
+    """Non-vacuity: the refusal below only means something while this rate is unknown.
 
-    Asserted rather than assumed, because the day a ``RATE_5`` slot is legitimately
-    added -- the exact event :class:`IvaRate` names -- the refusal test becomes
-    wrong rather than merely stale, and it must fail HERE, pointing at the
-    taxonomy change, instead of failing there as a mystery.
+    This assertion has already earned its place. The module first used the
+    transient 5% rate; a ``RATE_5`` slot was added while it was being written,
+    and this check failed immediately and named the cause, instead of letting
+    the refusal test below silently become a test that nothing refuses.
+
+    The taxonomy is expected to keep growing as older filing years come into
+    scope, so this will fire again. When it does the fix is HERE -- pick a
+    percentage the taxonomy still does not carry -- and never in the resolver,
+    which is behaving correctly by representing a rate it now has a slot for.
     """
     slots = numeric_iva_rate_slots()
 
-    assert Decimal("5") not in slots, (
-        "a RATE_5 slot now exists, so a 5% document is representable and must no longer refuse; "
-        "update this module rather than the mapper"
+    assert _UNREPRESENTABLE_RATE not in slots, (
+        f"a slot for {_UNREPRESENTABLE_RATE}% now exists, so such a document is representable and "
+        "must no longer refuse. Choose a percentage still outside the taxonomy and update the "
+        "fixture in this module; do not change the resolver"
     )
-    assert {Decimal("4"), Decimal("10"), Decimal("21")} <= set(slots), (
-        "the neighbouring slots this rate must NOT round into have to exist for the test to mean anything"
-    )
+    # Neighbours on both sides, so "did not round" is a claim with somewhere to
+    # have rounded TO. Derived from the taxonomy rather than listed, so this
+    # keeps holding as slots are added.
+    assert any(rate < _UNREPRESENTABLE_RATE for rate in slots), "no lower slot for the rate to round down into"
+    assert any(rate > _UNREPRESENTABLE_RATE for rate in slots), "no higher slot for the rate to round up into"
 
 
 def test_a_five_percent_document_refuses_and_names_the_accepted_rates(
@@ -158,11 +173,16 @@ def test_a_five_percent_document_refuses_and_names_the_accepted_rates(
 
     error = excinfo.value
     assert error.translated_message == "application.invoices.creation.errors.unsupported_iva_rate"
-    assert error.context["iva_rate"] == "5", f"the refusal must name the rate rejected: {error.context}"
-    accepted = error.context["accepted"]
-    for slot in ("4", "10", "21"):
-        assert slot in accepted, f"the refusal must name the accepted set, missing {slot}: {accepted}"
-    assert "5" not in accepted.split(", "), "5 must not appear in the set the refusal advertises as accepted"
+    assert error.context["iva_rate"] == format(_UNREPRESENTABLE_RATE, "f"), (
+        f"the refusal must name the rate rejected: {error.context}"
+    )
+    accepted = {slot.strip() for slot in error.context["accepted"].split(",")}
+    assert accepted == {format(rate, "f") for rate in numeric_iva_rate_slots()}, (
+        f"the refusal must advertise exactly the taxonomy's slots, got {accepted}"
+    )
+    assert format(_UNREPRESENTABLE_RATE, "f") not in accepted, (
+        "the rejected rate must not appear in the set the refusal advertises as accepted"
+    )
 
 
 def test_the_refusal_is_the_same_one_whether_or_not_a_cuota_was_printed(
