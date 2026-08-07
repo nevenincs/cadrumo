@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:13b2526eb39ebcdc2559f1c0967d7a044d2f7b2c88a6e9dd208413524cae31b7'
+body_hash: 'sha256:2c3273745babca6fff98e28b424d2e30a0ba000d62778329f1e2828a61f2da19'
 related:
   - "[[2026-08-06-llm-package-split-plan]]"
 ---
@@ -134,7 +134,6 @@ specified", "delivered narrower" and "recorded but not implemented" wear the sam
 mark. Three of the categories above would have been invisible under that
 treatment.
 
-
 ## Session outcome (2026-08-07, after this audit was first written)
 
 Four of the items above were closed in the same session that classified them.
@@ -198,4 +197,3 @@ blocked only on peer contention, not on `S11`.
 Seventy-six of eighty-three Steps closed. Open: `S12` (coding, contended),
 `S29` and `S69`/`S71` (verification of claims not confirmed in this pass), and
 `S70`/`S81`/`S83` (cross-campaign carry-forward with a named dependency).
-

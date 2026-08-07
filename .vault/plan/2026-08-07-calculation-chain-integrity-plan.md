@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:a7f3e5deca88e2f60da5fbce841d8bb775748beff5a17e88b48a6cc0e6776908'
+body_hash: 'sha256:25ff974586bb8ea43156f213e1a553535c5e175af6b605038324bd329d71934e'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -69,7 +69,7 @@ Establish which of the profile field, the per-transaction marker, and the regist
 
 Implement the canonical placement, then unblock the retencion regimen filter and M130 casilla 08.
 
-- [ ] `W03.P05.S11` - UNBLOCKED - S38 landed the M036 code-to-art-95 correspondence as registry parameters, so the grounding this row waited on now exists and the remaining blockers are different ones. What is missing is the INPUT, since no field on TaxpayerProfile nor the censal certificate holds an M036 tipo-de-actividad code, and epigrafe_iae cannot stand in because AEAT fills it only for codes A01 to A05 and therefore never for a B-series agrarian filer. Also open is the field shape itself, because A01, A03, B04 and B05 select no art. 95 partition at all and the two-member optional IrpfActivityKind cannot express that, where None currently means undeclared while an empresarial filer with no applicable activity rate is a different fact needing different fail-closed behaviour. Settle the shape against a real consumer rather than guessing a third member, noting IrpfActivityKind has no production consumer today and its members appear only in their own test; `src/cadrumo/domain/transactions/`.
+- [x] `W03.P05.S11` - Place the Modelo 036 activity axis - TipoActividad in core, tipo_actividad on Transaction with a non-default roundtrip and a delete-the-key anti-tautology proof, and a resolver that reads the art. 95 correspondence from the S38 registry parameters instead of restating it. The code sits per-row rather than on the profile because a taxpayer with both an agrarian and a non-agrarian activity is exactly the case S13 must split. The IrpfActivityKind bridge is deliberately not built - it needs a profile input that does not exist and the field shape is a decision this row should not pre-empt by building half of it; `src/cadrumo/domain/transactions/`.
 - [x] `W03.P05.S12` - Narrow the statutory-rate advisory to the rates a taxpayer can lawfully be subject to, restoring the flat-fee catch measured lost; `src/cadrumo/application/aggregation/_retencion_rate_advisory.py`.
 - [ ] `W03.P05.S13` - BLOCKED on S11, do not attempt first - casilla 08 is the agrarian quarterly volume and the ledger carries no activity-type axis to separate agrarian income from estimacion directa, so aggregating it today would feed the same rows into both casilla 01 and casilla 08 and double-count rather than close the silent zero; `src/cadrumo/application/aggregation/`.
 - [x] `W03.P05.S37` - Bundle the M036 tipo-de-actividad code table, which the diseno names only as Tabla and never enumerates - AEAT publishes it in the instrucciones, so it landed under instructions/modelo_036 with two independent sede captures, sha256 and a PROVENANCE.md rather than under disenos_registro; `src/cadrumo/_data/corpus/aeat_official/instructions/modelo_036/`.
