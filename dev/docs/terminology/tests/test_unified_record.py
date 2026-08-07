@@ -224,13 +224,17 @@ def test_funnelled_records_are_json_serialisable() -> None:
 
 
 def test_base_weights_follow_the_declared_tier_ordering() -> None:
-    """Concept/legal > casilla > CLI > page base weights (the per-class ladder).
+    """Concept > casilla > legal > CLI > page base weights (the per-class ladder).
 
-    The per-kind view now projects the one declared per-display-class table
-    declared once for the shipped ranking: CONCEPT and LEGAL use the
-    general-fact ``DOC`` band, and it reverses the navigation-tier order to
-    casilla > cli (previously cli > casilla), while a full-text PAGE hit
-    collapses to the ``TECHNICAL`` floor.
+    The per-kind view projects the one declared per-display-class table declared
+    once for the shipped ranking: CONCEPT uses the general-fact ``DOC`` band, and
+    it reverses the navigation-tier order to casilla > cli (previously cli >
+    casilla), while a full-text PAGE hit collapses to the ``TECHNICAL`` floor.
+
+    LEGAL is asserted explicitly because it is the one kind whose band was a
+    hand-written alias onto ``DOC`` rather than a projection. That put every BOE
+    article above the modelo and casilla cards it merely grounds, so the ordering
+    below casilla is the contract, not an incidental value.
     """
     from dev.docs.terminology._search_record import SearchRecordKind
     from dev.docs.terminology._unified_record import kind_base_weight
@@ -238,8 +242,44 @@ def test_base_weights_follow_the_declared_tier_ordering() -> None:
     concept = kind_base_weight(SearchRecordKind.CONCEPT)
     cli = kind_base_weight(SearchRecordKind.CLI)
     casilla = kind_base_weight(SearchRecordKind.CASILLA)
+    legal = kind_base_weight(SearchRecordKind.LEGAL)
     page = kind_base_weight(SearchRecordKind.PAGE)
-    assert concept > casilla > cli > page
+    assert concept > casilla > legal > cli > page
+
+
+def test_per_kind_projection_agrees_with_the_derivation_authority() -> None:
+    """The two weight authorities must not disagree for any kind.
+
+    ``_display_class_for`` decides the class of a record that reaches the reader;
+    ``_KIND_TO_DISPLAY_CLASS`` decides the weight stamped during sweep-relevance
+    reweighting. Both feed ``ranking_weight``, so a kind classed one way by the
+    derivation and another by the projection ranks differently depending on which
+    path built it -- which is exactly how LEGAL came to sit in the ``DOC`` band on
+    one path while the ladder placed it below casilla on the other.
+
+    CONCEPT and PAGE are excluded because their class genuinely depends on
+    context the projection cannot see -- Handbook domain and target path. Both
+    exclusions are declared behaviour, not drift: the projection deliberately
+    floors a full-text hit. Every context-free kind must agree.
+    """
+    from dev.docs.terminology._search_record import SearchRecordKind
+    from dev.docs.terminology._unified_record import (
+        _display_class_for,
+        _KIND_TO_DISPLAY_CLASS,
+    )
+
+    context_dependent = {SearchRecordKind.CONCEPT, SearchRecordKind.PAGE}
+    checked = 0
+    for kind, projected in _KIND_TO_DISPLAY_CLASS.items():
+        if kind in context_dependent:
+            continue
+        checked += 1
+        derived = _display_class_for(kind, None, "guides/overview.html")
+        assert derived is projected, (
+            f"{kind.value} is derived as {derived.value} but the per-kind "
+            f"projection stamps {projected.value}; the two ranking authorities have drifted"
+        )
+    assert checked >= 3, "the agreement check covered almost nothing; a kind was dropped"
 
 
 def test_normalisation_preserves_tier_ordering_under_score() -> None:

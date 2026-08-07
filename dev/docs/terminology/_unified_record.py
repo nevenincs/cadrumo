@@ -105,7 +105,7 @@ _DISPLAY_CLASS_BASE_WEIGHT: dict[ResultDisplayClass, float] = {
 #: reweight path (``_resolution._reweight``) that keys on record kind rather
 #: than the fully-derived display class. CONCEPT collapses to the general-fact
 #: ``DOC`` band (a per-hit reweight has no Handbook domain to split on), legal
-#: provisions use the same user-facing ``DOC`` band, and a
+#: provisions carry their own ``LEGAL`` band beneath casilla, and a
 #: full-text PAGE hit collapses to the ``TECHNICAL`` floor. Derived so the
 #: per-kind values can never drift from the one declared table.
 _KIND_TO_DISPLAY_CLASS: dict[SearchRecordKind, ResultDisplayClass] = {
@@ -113,7 +113,7 @@ _KIND_TO_DISPLAY_CLASS: dict[SearchRecordKind, ResultDisplayClass] = {
     SearchRecordKind.CASILLA: ResultDisplayClass.CASILLA,
     SearchRecordKind.CLI: ResultDisplayClass.CLI,
     SearchRecordKind.PAGE: ResultDisplayClass.TECHNICAL,
-    SearchRecordKind.LEGAL: ResultDisplayClass.DOC,
+    SearchRecordKind.LEGAL: ResultDisplayClass.LEGAL,
 }
 
 _KIND_BASE_WEIGHT: dict[SearchRecordKind, float] = {
