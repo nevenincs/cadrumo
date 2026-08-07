@@ -151,7 +151,7 @@ from ._evidence_reference import (
     refuse_reference_without_document_bytes,
     refuse_unresolved_evidence_reference,
 )
-from ._evidence_textlayer import extract_evidence_text
+from ._evidence_textlayer import extract_evidence_text, transcribe_text_layer
 
 __all__ = [
     "DraftDiscrepancyFinding",
@@ -769,11 +769,69 @@ def extract_invoice_draft_from_evidence(
     _refuse_an_unrecognised_xml_document(evidence_input)
     if evidence_input.document_shape in PDF_CONTAINER_SHAPES:
         try:
-            return extract_invoice_fields(evidence_input)
+            return _read_text_layer_semantically(evidence_input)
         except PurchaseInvoiceEvidenceInputError:
             # No usable text layer (scan-only / XFA) -> on-host vision fallback below.
             pass
     return _extract_invoice_fields_via_vision(evidence_input, settings=resolved_settings)
+
+
+def _read_text_layer_semantically(evidence: EvidenceInput) -> InvoiceDraft:
+    """Read a text-native PDF through the transcribe-extract-ground chain.
+
+    The three stages the campaign built, connected. Before this, each was correct
+    and gated and reached by nothing: the router called a label-regex family that
+    recovered 0-1 fields on real vendor documents and fabricated where the
+    semantic reader did not.
+
+    The stages, and why the order is not arbitrary:
+
+    **Transcribe.** :func:`~application.ledger.transcribe_text_layer` produces the
+    document's reading-order text with printed forms preserved verbatim. It is
+    produced by a DIFFERENT reader than the one that proposes values, which is
+    exactly what makes the anchor check in stage three an external check rather
+    than a model verifying itself.
+
+    **Extract semantically.** The reading model proposes values in their declared
+    form beside the printed anchor each was read from, and stamps every envelope
+    ``UNANCHORED`` -- an honest under-claim, because it holds no transcription to
+    check its own claims against.
+
+    **Ground.** :func:`~application.ledger.ground_draft_against_transcription`
+    holds the transcription, so it runs the check the reader could not, upgrading
+    each envelope to the outcome the evidence supports and appending the
+    arithmetic-closure findings.
+
+    Args:
+        evidence: Resolved in-memory evidence bytes.
+
+    Returns:
+        The grounded draft.
+
+    Raises:
+        PurchaseInvoiceEvidenceInputError: When the PDF carries no usable text
+            layer, so the caller can fall back to the on-host vision reader.
+    """
+    # Both imports are function-local by necessity, not preference, and both are
+    # cycle-breaks rather than lazy-loading:
+    #
+    # `cadrumo.llm` imports `InvoiceDraft` from this package, and
+    # `_grounded_reading` reaches this module through `_closure_findings`. A
+    # module-level import of either closes a loop through this file.
+    #
+    # The llm target names the OWNING PACKAGE'S PUBLIC FACADE, which is what the
+    # import rule requires of a deferred import; the second is intra-package and
+    # so may name its private module directly. Read both exactly as if they were
+    # written at module scope.
+    from ...llm import extract_invoice_fields_from_text
+    from ._grounded_reading import ground_draft_against_transcription
+
+    transcription = transcribe_text_layer(evidence)
+    read = extract_invoice_fields_from_text(transcription.text)
+    return ground_draft_against_transcription(
+        draft=read.model_copy(update={"transcription_sha256": transcription.source_content_sha256}),
+        transcription=transcription,
+    )
 
 
 def _refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:

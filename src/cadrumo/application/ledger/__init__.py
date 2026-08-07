@@ -169,6 +169,11 @@ if TYPE_CHECKING:
         printed_total_discrepancy,
     )
     from ._evidence_input import EvidenceInput
+    from ._grounded_reading import (
+        GROUNDABLE_ORIGINS,
+        ground_draft_against_transcription,
+        verified_provenance,
+    )
     from ._grounding_anchor import (
         AnchorEvaluation,
         evaluate_anchor,
@@ -291,7 +296,10 @@ _LAZY_EXPORTS: dict[str, str] = {
     "within_rounding_allowance": "._closure_findings",
     "AnchorEvaluation": "._grounding_anchor",
     "evaluate_anchor": "._grounding_anchor",
+    "GROUNDABLE_ORIGINS": "._grounded_reading",
     "ground_ambiguous_candidates": "._grounding_anchor",
+    "ground_draft_against_transcription": "._grounded_reading",
+    "verified_provenance": "._grounded_reading",
     "ground_anchored_value": "._grounding_anchor",
     "ground_self_reported_anchor": "._grounding_anchor",
     "normalise_for_anchor_search": "._grounding_anchor",
@@ -463,6 +471,7 @@ __all__ = [
     "BULK_CLASSIFY_ALLOWED_COLUMNS",
     "CLASSIFIED_BY_MANUAL",
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD",
+    "GROUNDABLE_ORIGINS",
     "MINIMUM_DISPLAY_ID_WIDTH",
     "ROUNDING_ALLOWANCE_PER_TERM",
     "AeatRecordProjectionError",
@@ -566,6 +575,7 @@ __all__ = [
     "get_transaction_participation",
     "ground_ambiguous_candidates",
     "ground_anchored_value",
+    "ground_draft_against_transcription",
     "ground_self_reported_anchor",
     "import_ledger_source",
     "import_ledger_transactions",
@@ -606,5 +616,6 @@ __all__ = [
     "update_manual_transaction_fields",
     "validate_ratios_for_bucket",
     "validate_ratios_profile",
+    "verified_provenance",
     "within_rounding_allowance",
 ]
