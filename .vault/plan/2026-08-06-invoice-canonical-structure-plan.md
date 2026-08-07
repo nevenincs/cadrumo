@@ -4,7 +4,7 @@ tags:
   - '#invoice-canonical-structure'
 date: '2026-08-06'
 modified: '2026-08-07'
-body_hash: 'sha256:20b0efd5e0de1c72b4d502c54ed5734d9c2bc5284fee7fb2064e709187094582'
+body_hash: 'sha256:40ef795781effb47492f68c2ef38604dd4e8f7bb7d86f37194f3131cb8ad5cab'
 tier: L2
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
@@ -85,7 +85,7 @@ Move the operator CRUD surface onto the canonical aggregate, then remove the sli
 - [ ] `P03.S14` - Delete the slim model, both services, the repository, the storage namespace and the BusinessOperationInvoiceDirection enum in one atomic explicit-path commit carrying every consumer, fixture and __all__ update, with no alias, bridge or re-export left behind; `src/cadrumo/application/ledger/_business_operation_invoice.py`.
 - [ ] `P03.S15` - Delete the slim CLI payload schemas and retire the blessing test that creates one invoice in both stores and asserts only that the ids differ, keeping the surviving link tests in that module; `src/cadrumo/entrypoints/cli/_ledger_business_payloads.py`.
 - [ ] `P03.S16` - Remove every locale leaf orphaned by the deletion through the locales CLI so all four catalogues stay in parity, then run the locale and apidocs drift gates; `src/cadrumo/locales/en.yml`.
-- [ ] `P03.S38` - Build the canonical invoice update operation before the bare verbs are repointed, because the canonical surface has create, view, list and remove but NO update, so repointing the five bare verbs would silently drop the operator's only way to correct a persisted invoice and deleting the slim store would remove the sole update surface with nothing named to replace it; `src/cadrumo/application/invoices/_lifecycle.py`.
+- [x] `P03.S38` - Build the canonical invoice update operation before the bare verbs are repointed, because the canonical surface has create, view, list and remove but NO update, so repointing the five bare verbs would silently drop the operator's only way to correct a persisted invoice and deleting the slim store would remove the sole update surface with nothing named to replace it; `src/cadrumo/application/invoices/_lifecycle.py`.
 
 ### Phase `P04` - Close the remaining second-authority, boundary and duplicate-type gaps
 
