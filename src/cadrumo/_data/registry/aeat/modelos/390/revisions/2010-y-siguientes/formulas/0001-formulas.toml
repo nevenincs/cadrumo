@@ -40,6 +40,36 @@ source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-
 source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
+# Box [34] "Total bases y cuotas IVA - Cuota" (page 02, Reg. Gral. section) is a
+# distinct printed total from box [47] "Total cuotas IVA y recargo de
+# equivalencia" (page 02 bis): [34] sums the Reg. ordinario IVA rungs only, and
+# the recargo de equivalencia block sits in a separate section that [34] never
+# reaches. modelo-390-iva-anual-cuota-devengada-total feeds [47] (see its
+# form_number) and correctly includes recargo; that value must never be
+# written to [34], which this formula alone feeds. This total covers the four
+# devengada rungs this revision currently models (general/reducido/
+# super-reducido repercutido plus autorepercutido intracomunitaria); the
+# intragrupo, criterio de caja, bienes usados, agencias de viajes, adquisicion
+# intracomunitaria and inversion del sujeto pasivo rungs box [34] also sums on
+# the official design are separate, already-tracked modelling gaps, not
+# reopened here.
+[[revisions."2010-y-siguientes".formulas]]
+id = "modelo-390-iva-anual-total-bases-cuotas-iva"
+target_casilla_id = "iva.anual.total-bases-cuotas-iva"
+expression = { op = "add", args = [
+    { casilla_id = "iva.anual.repercutido.general" },
+    { casilla_id = "iva.anual.repercutido.reducido" },
+    { casilla_id = "iva.anual.repercutido.super-reducido" },
+    { casilla_id = "iva.anual.autorepercutido.intracomunitaria" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
 [[revisions."2010-y-siguientes".formulas]]
 id = "modelo-390-iva-anual-cuota-deducible-total"
 target_casilla_id = "iva.anual.cuota-deducible-total"

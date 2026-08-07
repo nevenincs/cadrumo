@@ -48,6 +48,10 @@ casilla_id = "iva.anual.cuota-deducible-total"
 number = "iva.anual.cuota-deducible-total"
 
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.total-bases-cuotas-iva"
+number = "34"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.cuota-devengada-total"
 number = "iva.anual.cuota-devengada-total"
 

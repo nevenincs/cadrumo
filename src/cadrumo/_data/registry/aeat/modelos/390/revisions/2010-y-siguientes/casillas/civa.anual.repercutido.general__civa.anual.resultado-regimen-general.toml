@@ -244,6 +244,24 @@ export_refs = ["modelo-390-page-06-casilla-662"]
 # over the full ejercicio rather than per quarter.
 # -----------------------------------------------------------------------------
 
+# Box [34] "Total bases y cuotas IVA - Cuota" (page 02): the Reg. ordinario
+# devengada total, excluding recargo de equivalencia, over the four rungs this
+# revision models. See the comment on modelo-390-iva-anual-total-bases-cuotas-iva
+# for scope.
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.total-bases-cuotas-iva"
+number = "34"
+section = ["iva", "anual", "totales"]
+data_type = "money"
+semantic_role = "iva_anual_total_bases_cuotas_iva"
+required = false
+input_kind = "computed"
+formula = "modelo-390-iva-anual-total-bases-cuotas-iva"
+form_number = "34"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-total-iva-cuota"]
+
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.cuota-devengada-total"
 number = "iva.anual.cuota-devengada-total"
@@ -258,7 +276,7 @@ formula = "modelo-390-iva-anual-cuota-devengada-total"
 form_number = "47"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-02-casilla-total-cuota-devengada"]
+export_refs = ["modelo-390-page-02b-casilla-total-cuota-devengada"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.cuota-deducible-total"

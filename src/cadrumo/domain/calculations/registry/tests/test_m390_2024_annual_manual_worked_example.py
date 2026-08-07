@@ -203,6 +203,10 @@ _CASILLA_RESULTADO: CasillaId = validated_casilla_id(
     "iva.anual.resultado-regimen-general",
     surface="_CASILLA_RESULTADO",
 )
+_CASILLA_TOTAL_BASES_CUOTAS_IVA: CasillaId = validated_casilla_id(
+    "iva.anual.total-bases-cuotas-iva",
+    surface="_CASILLA_TOTAL_BASES_CUOTAS_IVA",
+)
 _M390_BIENES_INVERSION_REGULARIZACION_BINDING = "modelo-390-bienes-inversion-regularizacion-casilla-63"
 
 _FILING_YEAR = 2024
@@ -386,6 +390,41 @@ def test_m390_2024_annual_manual_worked_example_devengada_deducible_resultado() 
     assert result.values[_CASILLA_DEVENGADA] == Decimal("88416.00")
     assert result.values[_CASILLA_DEDUCIBLE] == Decimal("68202.00")
     assert result.values[_CASILLA_RESULTADO] == Decimal("20214.00")
+
+
+def test_m390_box_34_excludes_recargo_while_box_47_includes_it() -> None:
+    """Box [34] "Total bases y cuotas IVA - Cuota" (page 02) must equal the
+    IVA-only total, excluding recargo de equivalencia; box [47] "Total cuotas
+    IVA y recargo equivalencia" (page 02 bis) is the recargo-INCLUSIVE total.
+
+    Oracle: the same AEAT Manual practico IVA 2024 four-quarter arithmetic
+    the sibling test above grounds ``iva.anual.cuota-devengada-total`` (box
+    [47]) against -- 88.416,00 EUR, of which 3.744,00 EUR is the manual's own
+    four printed "Recargo de equivalencia" lines (1T 1.248, 2T 624, 3T 1.248,
+    4T 624). The expected box [34] figure, 84.672,00 EUR, is simple
+    arithmetic over those two bundled AEAT figures (88.416 - 3.744), never a
+    hand-run of the registry's ``iva.anual.total-bases-cuotas-iva`` formula
+    under test.
+
+    Anti-tautology companion: dropping every quarter's recargo must leave box
+    [34] UNCHANGED (it never depended on the recargo terms) while box [47]
+    drops by exactly the dropped amount -- proving the two totals draw from
+    disjoint formula membership, not merely different labels on one shared
+    value.
+    """
+    with_recargo = _calculate(include_recargo=True)
+    without_recargo = _calculate(include_recargo=False)
+
+    assert with_recargo.values[_CASILLA_TOTAL_BASES_CUOTAS_IVA] == Decimal("84672.00")
+    assert with_recargo.values[_CASILLA_DEVENGADA] == Decimal("88416.00")
+    assert with_recargo.values[_CASILLA_DEVENGADA] - with_recargo.values[
+        _CASILLA_TOTAL_BASES_CUOTAS_IVA
+    ] == Decimal("3744.00")
+
+    assert without_recargo.values[_CASILLA_TOTAL_BASES_CUOTAS_IVA] == with_recargo.values[
+        _CASILLA_TOTAL_BASES_CUOTAS_IVA
+    ]
+    assert with_recargo.values[_CASILLA_DEVENGADA] - without_recargo.values[_CASILLA_DEVENGADA] == Decimal("3744.00")
 
 
 def test_m390_annual_devengada_anti_tautology_recargo_changes_total() -> None:
