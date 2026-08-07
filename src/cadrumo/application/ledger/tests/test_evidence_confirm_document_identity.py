@@ -33,6 +33,7 @@ from ....domain.invoices import Invoice, InvoiceValidationError
 from ....domain.iva import InvoiceKind
 from .._evidence_draft import (
     _INVOICE_FIELDS_A_CONFIRM_DOES_NOT_AUTHOR,
+    InvoiceConfirmationResult,
     _fields_a_reconfirm_would_change,
     confirm_invoice_draft_from_evidence,
 )
@@ -69,8 +70,13 @@ def _confirm(
     evidence_id: str,
     isolated_settings: Settings,
     repository: InvoiceCatalogueRepository,
-    **overrides: object,
-):
+    counterparty_name: str | None = None,
+    invoice_number: str | None = None,
+    retention_rate: Decimal | None = None,
+    retention_amount: Decimal | None = None,
+    notes: str = "",
+) -> InvoiceConfirmationResult:
+    """Confirm the attached document, optionally restating what the operator saw."""
     return confirm_invoice_draft_from_evidence(
         bucket_id=_BUCKET_ID,
         kind=InvoiceKind.RECEIVED,
@@ -78,7 +84,11 @@ def _confirm(
         evidence_id=evidence_id,
         settings=isolated_settings,
         invoice_repository=repository,
-        **overrides,  # type: ignore[arg-type]
+        counterparty_name=counterparty_name,
+        invoice_number=invoice_number,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
+        notes=notes,
     )
 
 
@@ -259,7 +269,7 @@ def test_the_match_covers_every_invoice_field_the_confirm_authors(
 
     uncovered = set(Invoice.model_fields) - compared - set(_INVOICE_FIELDS_A_CONFIRM_DOES_NOT_AUTHOR)
     assert uncovered == set(), f"persisted fields outside the match: {sorted(uncovered)}"
-    assert _INVOICE_FIELDS_A_CONFIRM_DOES_NOT_AUTHOR <= set(Invoice.model_fields)
+    assert set(Invoice.model_fields) >= _INVOICE_FIELDS_A_CONFIRM_DOES_NOT_AUTHOR
 
 
 def _a_different_value_for(invoice: Invoice, name: str) -> object:
