@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:5613cf418c59376a2fccf620ed0de02daae5b185ca34d300492bc9efbcb83b75'
+body_hash: 'sha256:0aabf413968843f77e130a56c1e301d31192c1e847512cabccbfde17a3780f25'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -137,4 +137,4 @@ Run the sweep over the surfaces this campaign touches, where three parallel-auth
 - [x] `W06.P08.S54` - Carry the applied numeric rate on the IVA ledger observation alongside its resolved tier, since the value is discarded once the tier resolves and nothing downstream can then populate a per-tier-per-window annual box; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
 - [x] `W06.P08.S55` - Give the IVA binding selector a rate-value axis so the annual form can bind one box per rate per window where the quarterly form binds by tier alone; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
 - [ ] `W06.P08.S56` - Cross the rate axis with the four already-modelled regimenes only, following the cash-accounting precedent where a regimen is a typed axis crossed with the category rather than a fan-out of category members; `src/cadrumo/_data/registry/aeat/modelos/390/`.
-- [ ] `W06.P08.S57` - Record that used-goods and travel-agency appear only as printed-invoice notice phrases and that group-member rollup is filing topology, so a reader does not mistake either for a modelled settlement regimen; `.vault/audit/`.
+- [x] `W06.P08.S57` - Record that used-goods and travel-agency appear only as printed-invoice notice phrases and that group-member rollup is filing topology, so a reader does not mistake either for a modelled settlement regimen; `.vault/audit/`.

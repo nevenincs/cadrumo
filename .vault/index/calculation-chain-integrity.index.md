@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:2794938cfec56a8ac2b1224c9bae68f880515f59215f33bc1ff9e4f3a199ce92'
+body_hash: 'sha256:6401d9fc51679ad165139715626ad8293b5c61352a2bc08157807bf64cb635ad'
 related:
   - '[[2026-08-07-calculation-chain-integrity-W01-P01-S01]]'
   - '[[2026-08-07-calculation-chain-integrity-W01-P01-S02]]'
@@ -23,9 +23,19 @@ related:
   - '[[2026-08-07-calculation-chain-integrity-W03-P04-S09]]'
   - '[[2026-08-07-calculation-chain-integrity-W03-P04-S10]]'
   - '[[2026-08-07-calculation-chain-integrity-W03-P04-S36]]'
+  - '[[2026-08-07-calculation-chain-integrity-W03-P05-S12]]'
+  - '[[2026-08-07-calculation-chain-integrity-W03-P05-S37]]'
+  - '[[2026-08-07-calculation-chain-integrity-W03-P05-S38]]'
+  - '[[2026-08-07-calculation-chain-integrity-W04-P06-S14]]'
+  - '[[2026-08-07-calculation-chain-integrity-W04-P06-S30]]'
   - '[[2026-08-07-calculation-chain-integrity-W05-P07-S16]]'
   - '[[2026-08-07-calculation-chain-integrity-W05-P07-S17]]'
+  - '[[2026-08-07-calculation-chain-integrity-W05-P07-S20]]'
+  - '[[2026-08-07-calculation-chain-integrity-W05-P07-S21]]'
+  - '[[2026-08-07-calculation-chain-integrity-W05-P07-S22]]'
+  - '[[2026-08-07-calculation-chain-integrity-W05-P07-S23]]'
   - '[[2026-08-07-calculation-chain-integrity-W05-P07-S31]]'
+  - '[[2026-08-07-calculation-chain-integrity-W05-P07-S32]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S24]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S25]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S26]]'
@@ -39,9 +49,17 @@ related:
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S41]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S42]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S43]]'
+  - '[[2026-08-07-calculation-chain-integrity-W06-P08-S48]]'
+  - '[[2026-08-07-calculation-chain-integrity-W06-P08-S49]]'
+  - '[[2026-08-07-calculation-chain-integrity-W06-P08-S50]]'
+  - '[[2026-08-07-calculation-chain-integrity-W06-P08-S51]]'
+  - '[[2026-08-07-calculation-chain-integrity-W06-P08-S52]]'
+  - '[[2026-08-07-calculation-chain-integrity-W06-P08-S54]]'
+  - '[[2026-08-07-calculation-chain-integrity-W06-P08-S55]]'
   - '[[2026-08-07-calculation-chain-integrity-activity-type-placement-adr]]'
   - '[[2026-08-07-calculation-chain-integrity-adr]]'
   - '[[2026-08-07-calculation-chain-integrity-binding-output-casilla-declaration-adr]]'
+  - '[[2026-08-07-calculation-chain-integrity-iva-regimen-surface-boundaries-audit]]'
   - '[[2026-08-07-calculation-chain-integrity-iva-subjection-clave-authorities-audit]]'
   - '[[2026-08-07-calculation-chain-integrity-plan]]'
   - '[[2026-08-07-calculation-chain-integrity-research]]'
@@ -61,6 +79,7 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 
 ### audit
 
+- `2026-08-07-calculation-chain-integrity-iva-regimen-surface-boundaries-audit` - `calculation-chain-integrity` audit: `What is a modelled IVA settlement regimen, and what only looks like one`
 - `2026-08-07-calculation-chain-integrity-iva-subjection-clave-authorities-audit` - `calculation-chain-integrity` audit: `IVA subjection and M349 clave: two fragmented authorities`
 
 ### exec
@@ -80,9 +99,19 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 - `2026-08-07-calculation-chain-integrity-W03-P04-S09` - `calculation-chain-integrity` exec `W03-P04-S09`: Reconcile the candidate placements for the activity-type axis
 - `2026-08-07-calculation-chain-integrity-W03-P04-S10` - `calculation-chain-integrity` exec `W03-P04-S10`: Record the placement ruling against the deferring ADR
 - `2026-08-07-calculation-chain-integrity-W03-P04-S36` - `calculation-chain-integrity` exec `W03-P04-S36`: Ground the tipo-de-actividad code-set granularity
+- `2026-08-07-calculation-chain-integrity-W03-P05-S12` - `calculation-chain-integrity` exec W03.P05.S12
+- `2026-08-07-calculation-chain-integrity-W03-P05-S37` - `calculation-chain-integrity` exec W03.P05.S37
+- `2026-08-07-calculation-chain-integrity-W03-P05-S38` - `calculation-chain-integrity` exec W03.P05.S38
+- `2026-08-07-calculation-chain-integrity-W04-P06-S14` - `calculation-chain-integrity` exec W04.P06.S14
+- `2026-08-07-calculation-chain-integrity-W04-P06-S30` - `calculation-chain-integrity` exec W04.P06.S30
 - `2026-08-07-calculation-chain-integrity-W05-P07-S16` - Classify each candidate-genuine suite failure as defect, environment artefact, or caused by this session's landings, with evidence
 - `2026-08-07-calculation-chain-integrity-W05-P07-S17` - `calculation-chain-integrity` exec W05.P07.S17
+- `2026-08-07-calculation-chain-integrity-W05-P07-S20` - `calculation-chain-integrity` exec W05.P07.S20
+- `2026-08-07-calculation-chain-integrity-W05-P07-S21` - `calculation-chain-integrity` exec W05.P07.S21
+- `2026-08-07-calculation-chain-integrity-W05-P07-S22` - `calculation-chain-integrity` exec W05.P07.S22
+- `2026-08-07-calculation-chain-integrity-W05-P07-S23` - `calculation-chain-integrity` exec W05.P07.S23
 - `2026-08-07-calculation-chain-integrity-W05-P07-S31` - `calculation-chain-integrity` exec W05.P07.S31
+- `2026-08-07-calculation-chain-integrity-W05-P07-S32` - `calculation-chain-integrity` exec W05.P07.S32
 - `2026-08-07-calculation-chain-integrity-W06-P08-S24` - `calculation-chain-integrity` exec W06.P08.S24
 - `2026-08-07-calculation-chain-integrity-W06-P08-S25` - `calculation-chain-integrity` exec W06.P08.S25
 - `2026-08-07-calculation-chain-integrity-W06-P08-S26` - `calculation-chain-integrity` exec W06.P08.S26
@@ -96,6 +125,13 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 - `2026-08-07-calculation-chain-integrity-W06-P08-S41` - `calculation-chain-integrity` exec W06.P08.S41
 - `2026-08-07-calculation-chain-integrity-W06-P08-S42` - `calculation-chain-integrity` exec W06.P08.S42
 - `2026-08-07-calculation-chain-integrity-W06-P08-S43` - `calculation-chain-integrity` exec W06.P08.S43
+- `2026-08-07-calculation-chain-integrity-W06-P08-S48` - `calculation-chain-integrity` exec W06.P08.S48
+- `2026-08-07-calculation-chain-integrity-W06-P08-S49` - `calculation-chain-integrity` exec W06.P08.S49
+- `2026-08-07-calculation-chain-integrity-W06-P08-S50` - `calculation-chain-integrity` exec W06.P08.S50
+- `2026-08-07-calculation-chain-integrity-W06-P08-S51` - Confirm against live BOE which instrument set the October to December 2024 two and seven point five percent food windows, quoting the operative article text, since three near-identical names are in play and one already sits in the catalogue for an unrelated IRPF purpose
+- `2026-08-07-calculation-chain-integrity-W06-P08-S52` - Author corpus entries for the confirmed food-rate instruments before any rate record cites them, both the instrument that introduced the regime and the one that set the final step if they differ
+- `2026-08-07-calculation-chain-integrity-W06-P08-S54` - `calculation-chain-integrity` exec W06.P08.S54
+- `2026-08-07-calculation-chain-integrity-W06-P08-S55` - `calculation-chain-integrity` exec W06.P08.S55
 
 ### plan
 
