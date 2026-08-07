@@ -67,6 +67,7 @@ Submodules
    cadrumo.core._field_grounding
    cadrumo.core._field_origin
    cadrumo.core._field_role
+   cadrumo.core._filed_history_discovery_signal
    cadrumo.core._foreign_asset_obligation
    cadrumo.core._fsync
    cadrumo.core._fts_query
