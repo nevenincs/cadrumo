@@ -227,8 +227,13 @@ def aggregate_impatriado_income_ledger(
             t("aggregation.renta_ledger.errors.unsupported_period"),
             context={"period": str(period)},
         )
-    window_start = date(period.filing_year, 1, 1)
-    window_end = date(period.filing_year, 12, 31)
+    # The one boundary authority, not a second derivation of it: the repository
+    # partition above already selects on ``period.start_date``/``period.end_date``,
+    # and this filter re-checks the rows that partition returned. Deriving the
+    # same span a second time from the calendar year would make the two agree by
+    # coincidence rather than by construction.
+    window_start = period.start_date
+    window_end = period.end_date
 
     observations: list[ImpatriadoIncomeObservation] = []
     issues: list[ImpatriadoIncomeLedgerAggregationIssue] = []

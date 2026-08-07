@@ -7,7 +7,7 @@ rebuilding the classifier. The contract is deliberately thin:
 * :func:`suggest_llm_classification` loads one transaction, runs the
   (injected, default-resolved) classifier with the category-enabled prompt
   spec, and returns a typed
-  :class:`~application.ledger._llm_suggestions.LLMClassificationSuggestion`
+  :class:`~llm._suggestions.LLMClassificationSuggestion`
   **without persisting anything**. Rejecting a suggestion is simply not
   applying it.
 * :func:`apply_llm_classification` persists an accepted suggestion through the
@@ -75,7 +75,20 @@ from ...domain.transactions import (
     resolve_split_proposer,
     set_classification,
 )
-from ...llm import LocalTextLLMClassifier, LocalVisionLLMClassifier, rasterise_pdf_pages_to_base64_png
+from ...llm import (
+    LLMClassificationSuggestion,
+    LLMProviderAvailability,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitChildSuggestion,
+    LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
+    LocalTextLLMClassifier,
+    LocalVisionLLMClassifier,
+    OperatorIvaDerivationResult,
+    SubprocessProvider,
+    rasterise_pdf_pages_to_base64_png,
+)
 from ._actions_common import (
     build_bucket_event as _build_bucket_event,
 )
@@ -103,17 +116,6 @@ from ._evidence_reference import (
 )
 from ._evidence_split import derive_child_amounts
 from ._evidence_textlayer import extract_evidence_text
-from ._llm_suggestions import (
-    LLMClassificationSuggestion,
-    LLMProvider,
-    LLMProviderAvailability,
-    LLMSaturatedSuggestion,
-    LLMSplitApplyResult,
-    LLMSplitChildSuggestion,
-    LLMSplitSuggestion,
-    LLMSuggestionRejectionResult,
-    OperatorIvaDerivationResult,
-)
 from ._models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult, SplitChildCommand
 
 _logger = get_logger(__name__)
@@ -124,10 +126,10 @@ _BUCKET_EVENT_PAYLOAD_VERSION = 1
 # The CLI binary each subprocess provider shells out to. Used by
 # :func:`available_llm_providers` to probe PATH without spawning the process.
 # ``antigravity`` resolves to the ``agy`` binary.
-_PROVIDER_CLI_BINARY: dict[LLMProvider, str] = {
-    LLMProvider.CLAUDE: "claude",
-    LLMProvider.ANTIGRAVITY: "agy",
-    LLMProvider.CODEX: "codex",
+_PROVIDER_CLI_BINARY: dict[SubprocessProvider, str] = {
+    SubprocessProvider.CLAUDE: "claude",
+    SubprocessProvider.ANTIGRAVITY: "agy",
+    SubprocessProvider.CODEX: "codex",
 }
 
 
@@ -139,12 +141,12 @@ def available_llm_providers() -> tuple[LLMProviderAvailability, ...]:
     which providers are installed before classifying.
 
     Returns:
-        One :class:`~application.ledger._llm_suggestions.LLMProviderAvailability`
-        per :class:`~application.ledger._llm_suggestions.LLMProvider`, ordered
+        One :class:`~llm._suggestions.LLMProviderAvailability`
+        per :class:`~llm._suggestions.SubprocessProvider`, ordered
         by enum declaration.
     """
     listings: list[LLMProviderAvailability] = []
-    for provider in LLMProvider:
+    for provider in SubprocessProvider:
         binary = _PROVIDER_CLI_BINARY[provider]
         resolved = shutil.which(binary)
         listings.append(
@@ -158,12 +160,12 @@ def available_llm_providers() -> tuple[LLMProviderAvailability, ...]:
     return tuple(listings)
 
 
-def is_llm_provider_available(provider: LLMProvider) -> bool:
+def is_llm_provider_available(provider: SubprocessProvider) -> bool:
     """Return whether ``provider``'s CLI binary is resolvable on ``PATH``."""
     return shutil.which(_PROVIDER_CLI_BINARY[provider]) is not None
 
 
-def _resolve_default_classifier(provider: LLMProvider) -> LLMClassifier:
+def _resolve_default_classifier(provider: SubprocessProvider) -> LLMClassifier:
     """Resolve the production classifier for ``provider`` with the category prompt.
 
     Builds the classifier with
@@ -471,7 +473,7 @@ def suggest_llm_classification(
     *,
     bucket_id: str,
     transaction_id: str,
-    provider: LLMProvider | None,
+    provider: SubprocessProvider | None,
     classifier: LLMClassifier | None = None,
     vision_classifier: LocalVisionLLMClassifier | None = None,
     vision_model: str | None = None,
@@ -504,7 +506,7 @@ def suggest_llm_classification(
         settings: Injected settings; defaults to ``load_settings()``.
 
     Returns:
-        A :class:`~application.ledger._llm_suggestions.LLMClassificationSuggestion`.
+        A :class:`~llm._suggestions.LLMClassificationSuggestion`.
 
     Raises:
         TransactionNotFoundError: When the transaction id is unknown.
@@ -592,7 +594,7 @@ def apply_llm_classification(
 
     Args:
         suggestion: The accepted
-            :class:`~application.ledger._llm_suggestions.LLMClassificationSuggestion`.
+            :class:`~llm._suggestions.LLMClassificationSuggestion`.
         bucket_id: Active profile bucket id.
         business_pct: Required when ``suggestion.classification`` is ``MIXED``.
         actor: Operator identity for the audit event.
@@ -695,7 +697,7 @@ def apply_llm_classification(
 # ── stage-2 saturation: grounded rich tax metadata ────────────────
 
 
-def _resolve_saturation_classifier(provider: LLMProvider) -> LLMClassifier:
+def _resolve_saturation_classifier(provider: SubprocessProvider) -> LLMClassifier:
     """Resolve the production classifier for ``provider`` with the saturation prompt.
 
     Builds the classifier with
@@ -737,7 +739,7 @@ def saturate_llm_classification(
     *,
     bucket_id: str,
     transaction_id: str,
-    provider: LLMProvider | None,
+    provider: SubprocessProvider | None,
     classifier: LLMClassifier | None = None,
     vision_classifier: LocalVisionLLMClassifier | None = None,
     vision_model: str | None = None,
@@ -774,7 +776,7 @@ def saturate_llm_classification(
         settings: Injected settings; defaults to ``load_settings()``.
 
     Returns:
-        A :class:`~application.ledger._llm_suggestions.LLMSaturatedSuggestion`
+        A :class:`~llm._suggestions.LLMSaturatedSuggestion`
         carrying the model's selections and the system-derived euro substrate.
 
     Raises:
@@ -887,7 +889,7 @@ def apply_saturated_llm_classification(
 
     Args:
         suggestion: The accepted
-            :class:`~application.ledger._llm_suggestions.LLMSaturatedSuggestion`.
+            :class:`~llm._suggestions.LLMSaturatedSuggestion`.
         bucket_id: Active profile bucket id.
         business_pct: Operator override for the MIXED business percentage;
             falls back to the model's proposed ``business_pct``.
@@ -986,7 +988,7 @@ def derive_operator_iva_substrate(
 
     Returns:
         The
-        :class:`~application.ledger._llm_suggestions.OperatorIvaDerivationResult`
+        :class:`~llm._suggestions.OperatorIvaDerivationResult`
         recording the persisted IVA substrate, or an explanatory note when the
         category is non-derivable.
 
@@ -1065,7 +1067,7 @@ def derive_operator_iva_substrate(
 # ── stage-3b: evidence-driven N-way split ─────────────────────────
 
 
-def _resolve_default_split_proposer(provider: LLMProvider) -> LLMSplitProposer:
+def _resolve_default_split_proposer(provider: SubprocessProvider) -> LLMSplitProposer:
     """Resolve the production split proposer for ``provider`` with the saturation prompt.
 
     Uses :func:`~domain.transactions.prompt_spec_with_saturation_fields` so each
@@ -1091,7 +1093,7 @@ def suggest_evidence_split(
     *,
     bucket_id: str,
     transaction_id: str,
-    provider: LLMProvider | None,
+    provider: SubprocessProvider | None,
     proposer: LLMSplitProposer | None = None,
     vision_classifier: LocalVisionLLMClassifier | None = None,
     vision_model: str | None = None,
@@ -1128,7 +1130,7 @@ def suggest_evidence_split(
         settings: Injected settings; defaults to ``load_settings()``.
 
     Returns:
-        A :class:`~application.ledger._llm_suggestions.LLMSplitSuggestion`
+        A :class:`~llm._suggestions.LLMSplitSuggestion`
         whose child amounts sum exactly to the parent.
 
     Raises:
@@ -1270,7 +1272,7 @@ def apply_evidence_split(
 
     Args:
         suggestion: The accepted
-            :class:`~application.ledger._llm_suggestions.LLMSplitSuggestion`.
+            :class:`~llm._suggestions.LLMSplitSuggestion`.
         bucket_id: Active profile bucket id.
         actor: Operator identity for the audit events.
         source_command: Source-command label recording the operator's verb.
@@ -1279,7 +1281,7 @@ def apply_evidence_split(
         occurred_at: Override clock for deterministic tests.
 
     Returns:
-        An :class:`~application.ledger._llm_suggestions.LLMSplitApplyResult`
+        An :class:`~llm._suggestions.LLMSplitApplyResult`
         naming the split group and its children.
 
     Raises:
@@ -1380,7 +1382,7 @@ def apply_evidence_classification(
 
     Args:
         suggestion: A no-split
-            :class:`~application.ledger._llm_suggestions.LLMSplitSuggestion`
+            :class:`~llm._suggestions.LLMSplitSuggestion`
             (exactly one child).
         bucket_id: Active profile bucket id.
         actor: Operator identity for the audit event.
@@ -1483,7 +1485,7 @@ def reject_llm_suggestion(
 
     Returns:
         An
-        :class:`~application.ledger._llm_suggestions.LLMSuggestionRejectionResult`
+        :class:`~llm._suggestions.LLMSuggestionRejectionResult`
         naming the recorded event.
 
     Raises:
@@ -1573,7 +1575,6 @@ def reject_llm_suggestion(
 
 __all__ = [
     "LLMClassificationSuggestion",
-    "LLMProvider",
     "LLMProviderAvailability",
     "LLMSaturatedSuggestion",
     "LLMSplitApplyResult",
@@ -1581,6 +1582,7 @@ __all__ = [
     "LLMSplitSuggestion",
     "LLMSuggestionRejectionResult",
     "OperatorIvaDerivationResult",
+    "SubprocessProvider",
     "apply_evidence_classification",
     "apply_evidence_split",
     "apply_llm_classification",

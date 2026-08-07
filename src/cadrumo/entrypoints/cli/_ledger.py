@@ -23,7 +23,6 @@ from pydantic import ValidationError
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger import (
-    LLMProvider,
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
     create_manual_transaction,
@@ -47,6 +46,7 @@ from ...domain.transactions import (
     TransactionValidationError,
     is_classified,
 )
+from ...llm import LLMProvider
 from ._bienes_inversion_cli import register_bienes_inversion_commands
 from ._common import (
     _bad,

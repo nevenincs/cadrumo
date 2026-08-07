@@ -36,19 +36,19 @@ from ...domain.transactions import (
     TransactionCatalogueRepositoryProtocol,
     TransactionValidationError,
 )
-from ._llm_classification import (
-    apply_evidence_split,
-    apply_llm_classification,
-    apply_saturated_llm_classification,
-    reject_llm_suggestion,
-)
-from ._llm_suggestions import (
+from ...llm import (
     LLMClassificationSuggestion,
     LLMSaturatedSuggestion,
     LLMSplitApplyResult,
     LLMSplitSuggestion,
     LLMSuggestionRejectionResult,
     OperatorIvaDerivationResult,
+)
+from ._llm_classification import (
+    apply_evidence_split,
+    apply_llm_classification,
+    apply_saturated_llm_classification,
+    reject_llm_suggestion,
 )
 from ._models import ManualLedgerTransactionResult
 

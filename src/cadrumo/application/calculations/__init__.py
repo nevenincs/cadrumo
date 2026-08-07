@@ -92,6 +92,7 @@ from ._cross_period_clean_state import (
     filing_external_evidence_blockers,
     partition_cross_period_requirements_by_activity_start,
 )
+from ._cross_period_models import period_strictly_before_activity_start
 from ._iva_compensation_annual_partition import (
     IvaCompensationAnnualPartitionSourceResolver,
     resolve_iva_compensation_annual_partition_binding_values,
@@ -249,6 +250,7 @@ __all__ = [
     "observation_key",
     "observation_key_for_token",
     "partition_cross_period_requirements_by_activity_start",
+    "period_strictly_before_activity_start",
     "project_prorrata_regularizacion_feed",
     "query_iva_wallet_balance",
     "reconcile_iva_compensation_wallet",

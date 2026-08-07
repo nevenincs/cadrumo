@@ -20,7 +20,7 @@ from typing import Never, Self, SupportsIndex, override
 
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, DocumentShape
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.hashing import sha256_hex
 from ...domain.attachments import AttachmentStoreProtocol, normalize_media_type
@@ -93,6 +93,27 @@ class EvidenceInput(BaseModel):
     def model_dump(self, *args: object, **kwargs: object) -> Never:  # reason: deliberate persistence tripwire
         """Refuse serialization -- decrypted FINANCIAL bytes must never be persisted."""
         raise NotImplementedError(_REFUSAL_MESSAGE)
+
+    @property
+    def document_shape(self) -> DocumentShape:
+        """What this evidence actually IS, derived from its own bytes.
+
+        Supersedes :attr:`media_kind` as the reading decision. That field is
+        derived from the STORED MIME TYPE, which is a label the producer
+        attached and which cannot see inside the document -- so a ZUGFeRD
+        invoice, a PDF carrying a complete machine-readable EN16931 record,
+        answered ``PDF`` and was routed to prose extraction exactly like a
+        photograph of a receipt. The most exactly readable document in the
+        corpus took the least exact path, decided by a label.
+
+        Derived rather than stored, so it costs no constructor change and
+        cannot drift from the bytes it describes: there is no second field to
+        forget to update. The probe reads magic bytes and, for a PDF, walks the
+        embedded-file table -- it never consults ``mime_type``.
+        """
+        from ...adapters.inbound.einvoice import probe_document_shape
+
+        return probe_document_shape(self.data)
 
     @override
     def model_dump_json(self, *args: object, **kwargs: object) -> Never:  # reason: deliberate persistence tripwire

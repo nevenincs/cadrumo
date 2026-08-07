@@ -338,6 +338,7 @@ def inferred_actividad_retencion_rate_advisory_observations(
     observations: Iterable[RentaIncomeObservation],
     *,
     bucket_id: str | None = None,
+    resolver_id: str | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return advisories for inferred retención matching no RIRPF art. 95.1 rate.
 
@@ -372,6 +373,12 @@ def inferred_actividad_retencion_rate_advisory_observations(
     Args:
         observations: The actividad-económica income rows feeding the calculation.
         bucket_id: Bucket whose active profile words the sectoral advisory.
+        resolver_id: Identifier of the resolver emitting these diagnostics,
+            stamped onto each one so the operator can attribute an advisory to
+            the source that raised it. Every sibling diagnostic builder in the
+            calculate mesh carries it; omitting it here delivered these two
+            advisories with a null attribution while their neighbours were
+            attributed.
             ``None`` (or an absent/unreadable profile) simply yields the
             could-not-be-checked wording; it never suppresses a diagnostic.
 
@@ -409,6 +416,7 @@ def inferred_actividad_retencion_rate_advisory_observations(
             diagnostics.append(
                 CalculationSourceDiagnostic(
                     reason="inferred_retencion_sectoral_rate_unconfirmed",
+                    resolver_id=resolver_id,
                     source_kind=INFERRED_SECTORAL_RETENCION_RATE_SOURCE_KIND,
                     message=_sectoral_match_message(
                         transaction_id=observation.transaction_id,
@@ -427,6 +435,7 @@ def inferred_actividad_retencion_rate_advisory_observations(
         diagnostics.append(
             CalculationSourceDiagnostic(
                 reason="inferred_retencion_rate_unmatched",
+                resolver_id=resolver_id,
                 source_kind=INFERRED_ACTIVIDAD_RETENCION_RATE_SOURCE_KIND,
                 message=(
                     f"Transaction {observation.transaction_id!r} was paid {amount} EUR short of its "

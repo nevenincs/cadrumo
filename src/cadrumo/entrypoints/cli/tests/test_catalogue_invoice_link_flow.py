@@ -1,13 +1,12 @@
 """End-to-end CLI regression for the catalogue-invoice create -> link flow.
 
-The documented ``invoice add`` -> ``link --invoice-id`` chain was previously
-unreachable: ``invoice add`` writes the slim
-:class:`~cadrumo.application.ledger.BusinessOperationInvoice` (no
-``linked_transaction_ids``), while ``link --invoice-id`` resolves the rich
+The documented ``invoice add`` -> ``link --invoice-id`` chain was once
+unreachable: two invoice stores existed, and ``invoice add`` wrote the one
+without ``linked_transaction_ids`` while ``link --invoice-id`` resolved the
+other. That split is gone -- there is now a single
 :class:`~cadrumo.domain.invoices.Invoice` in the
-:class:`~cadrumo.domain.invoices.InvoiceCatalogue`. The two stores stay
-distinct, so the gap is closed by giving the operator a verb that mints a
-rich *linkable* invoice: ``aeat app ledger invoice catalogue create``.
+:class:`~cadrumo.domain.invoices.InvoiceCatalogue`, so ``add`` mints a
+rich *linkable* invoice: ``aeat app ledger invoice add``.
 
 These tests assert the now-working flow at the CLI boundary:
 
@@ -85,7 +84,7 @@ def _add_outgoing_transaction() -> str:
 def _create_catalogue_invoice() -> str:
     result = invoke_cached_cli(
         [
-            "app", "ledger", "invoice", "catalogue", "create",
+            "app", "ledger", "invoice", "add",
             "--kind", "received",
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
             "--counterparty-name", "Papeleria Sol SL",
@@ -133,32 +132,6 @@ def test_catalogue_create_then_link_succeeds_bidirectionally() -> None:
     assert "invoice-only" not in check.output, check.output
     assert "transaction-only" not in check.output, check.output
 
-
-def test_catalogue_create_id_differs_from_slim_invoice_add_id() -> None:
-    """The rich catalogue id and the slim ``invoice add`` id are distinct shapes.
-
-    The slim ``invoice add`` id is a short uuid hex; the catalogue id is the
-    hex-64 content hash ``link`` resolves. This pins the documented sharp edge:
-    the two stores are addressed by different identifiers.
-    """
-    slim = invoke_cached_cli(
-        [
-            "app", "ledger", "invoice", "add",
-            "--kind", "received",
-            "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
-            "--invoice-number", "2026-0142",
-            "--invoice-date", "2026-03-10",
-            "--taxable-base", "100.00", "--iva-rate", "21",
-            "--iva-amount", "21.00", "--total-amount", "121.00",
-        ],
-    )  # fmt: skip
-    assert slim.exit_code == 0, slim.output
-    slim_id = _line_value(slim.output, "invoice_id")
-
-    rich_id = _create_catalogue_invoice()
-    assert slim_id != rich_id
-    assert len(slim_id) != 64
-    assert len(rich_id) == 64
 
 
 def test_link_refuses_cross_bucket_catalogue_invoice() -> None:
@@ -255,7 +228,7 @@ def test_catalogue_create_stamps_intra_community_category() -> None:
     """
     result = invoke_cached_cli(
         [
-            "app", "ledger", "invoice", "catalogue", "create",
+            "app", "ledger", "invoice", "add",
             "--kind", "issued",
             "--counterparty-nif", "DE345678901",
             "--counterparty-name", "Kunde GmbH",
@@ -289,7 +262,7 @@ def test_catalogue_create_stamps_service_operation_type() -> None:
     """
     result = invoke_cached_cli(
         [
-            "app", "ledger", "invoice", "catalogue", "create",
+            "app", "ledger", "invoice", "add",
             "--kind", "issued",
             "--counterparty-nif", "DE345678901",
             "--counterparty-name", "Kunde GmbH",

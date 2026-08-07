@@ -27,7 +27,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex, sha256_hex
-from ...core.identity import BucketId
+from ...core.identity import BucketId, TransactionId
 from ...core.money import round_to_cents
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, parse_iso8601_date
 from ...core.time import now
@@ -42,7 +42,6 @@ from ..iva import (
 )
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
-from ._ids import TransactionId
 from ._irpf_categories import (
     IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
     PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING,

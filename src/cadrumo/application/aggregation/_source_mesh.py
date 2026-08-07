@@ -118,6 +118,13 @@ CalculationSourceDiagnosticReason = Literal[
     # an automated operator routes on the field; the two carry different
     # epistemic weight and must not be collapsed.
     "inferred_retencion_sectoral_rate_unconfirmed",
+    # A Modelo 349 clave the resolver INFERRED from the invoice's IVA category
+    # because the record stated no operation type. Correct for an ordinary LIVA
+    # art. 25 exempt supply, but a supply following an exempt importation (art.
+    # 27.12) reports under clave "M" or "H", and the invoice carries no fact
+    # separating the two. Raised only when the bucket also holds an importation,
+    # so it cannot fire on a taxpayer for whom "E" is the only available clave.
+    "m349_clave_inferred_from_category",
     "official_box_unpopulated",
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",

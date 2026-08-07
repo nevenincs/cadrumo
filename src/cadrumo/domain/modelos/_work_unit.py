@@ -31,7 +31,7 @@ from typing import Annotated, cast, override
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Period
-from ...core.hashing import sha256_hex
+from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
 from ..calculations.registry import RevisionId
 from ..contribuyente import CCAA
@@ -105,12 +105,18 @@ def derive_work_unit_id(
 ) -> str:
     """Return the deterministic ``work_unit_id`` for a four-axis key.
 
-    The five inputs are normalised (stripped, lowercased where
-    case is insignificant) and joined with a stable separator that
-    cannot appear inside any of the inputs. The resulting bytes
-    are hashed with SHA-256 and rendered as 64-character lowercase
-    hex — identical to the catalogue-key shape the project uses
-    elsewhere for content-addressed identifiers.
+    The five inputs are normalised (stripped, upper-cased where case is
+    insignificant) into a keyed payload and hashed through
+    :func:`~cadrumo.core.hashing.content_hash_hex`, the project's one
+    content-addressing primitive, yielding 64-character lowercase hex.
+
+    This derivation previously joined the components with a separator
+    byte and called :func:`~cadrumo.core.hashing.sha256_hex` directly,
+    while this docstring claimed it was "identical to the catalogue-key
+    shape the project uses elsewhere". It was not: every other derived
+    id in the tree hashes canonical JSON through ``content_hash_hex``.
+    Routing this one onto that primitive makes the claim true and leaves
+    one content-addressing mechanism rather than two.
 
     Determinism is the operative contract: callers that build the
     same four-axis key see the same identifier without
@@ -120,15 +126,14 @@ def derive_work_unit_id(
         raise ModeloValidationError(
             f"filing_year {filing_year!r} does not match period year {period.filing_year!r}",
         )
-    components = (
-        bucket_id.strip(),
-        modelo.strip().upper(),
-        str(int(filing_year)),
-        period.registry_token,
-        revision_id.strip(),
-    )
-    payload = "\x1f".join(components).encode("utf-8")
-    return sha256_hex(payload)
+    payload = {
+        "bucket_id": bucket_id.strip(),
+        "modelo": modelo.strip().upper(),
+        "filing_year": int(filing_year),
+        "period": period.registry_token,
+        "revision_id": revision_id.strip(),
+    }
+    return content_hash_hex(payload)
 
 
 class WorkUnit(BaseModel):

@@ -38,10 +38,10 @@ from .. import (
     GOOGLE_OAUTH_CLIENT_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
+    INVOICE_CATALOGUE_NAMESPACE,
     IVA_COMPENSATION_HISTORY_NAMESPACE,
     IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
     IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
-    LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
     LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
     LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
     LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
@@ -279,10 +279,10 @@ def _module_exists(dotted_path: str) -> bool:
         return False
 
 
-def test_all_67_namespace_rows_use_cadrumo_owners_and_preserve_six_authority_segments() -> None:
+def test_all_66_namespace_rows_use_cadrumo_owners_and_preserve_six_authority_segments() -> None:
     definitions = STORAGE_NAMESPACE_REGISTRY.namespaces
 
-    assert len(definitions) == 67
+    assert len(definitions) == 66
     assert all(
         definition.namespace.startswith(("cadrumo.", "cadrumo-test.", "cadrumo-tests.")) for definition in definitions
     )
@@ -346,8 +346,8 @@ def test_custody_profile_projection_matches_bucket_custody_worked_examples() -> 
     assert cross_period_keys <= structured_keys
     assert evidence_keys <= full_keys
     assert evidence_keys.isdisjoint(structured_keys)
-    assert LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.key in full_keys
-    assert LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE.key in structured_keys
+    assert INVOICE_CATALOGUE_NAMESPACE.key in full_keys
+    assert INVOICE_CATALOGUE_NAMESPACE.key in structured_keys
     assert BUCKET_EVENT_HISTORY_NAMESPACE.key in full_keys
     assert BUCKET_EVENT_HISTORY_NAMESPACE.key not in structured_keys
     assert TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.key not in full_keys
@@ -434,12 +434,6 @@ def test_auth_session_cache_remote_namespaces_are_registered() -> None:
             SensitivityClass.FINANCIAL,
             "{bucket_id}",
         ),
-        "ledger_business_operation_invoices": (
-            LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
-            "cadrumo.application.ledger.business_operation_invoices",
-            SensitivityClass.FINANCIAL,
-            "{bucket_id}:{source_kind}",
-        ),
         "live_expedientes_snapshot": (
             LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
             "cadrumo.application.live.expedientes_snapshot",
@@ -493,7 +487,6 @@ def test_auth_session_cache_namespace_registration_coverage_is_present() -> None
         "aeat_iva_wallet_observations",
         "application_evidence_bundles",
         "ledger_purchase_invoice_evidence",
-        "ledger_business_operation_invoices",
         "live_expedientes_snapshot",
         "live_notifications_snapshot",
         "live_verify_observations",

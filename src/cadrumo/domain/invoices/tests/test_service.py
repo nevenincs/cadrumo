@@ -11,7 +11,7 @@ suggestion or inconsistency record and silently fail to round-trip
 into the catalogue.
 
 The constraint is encoded by the
-:data:`cadrumo.domain.transactions._ids.TransactionId` typed alias so future
+:data:`cadrumo.core.identity.TransactionId` typed alias so future
 drift is a one-line change at the alias declaration. These tests pin
 the constraint at the model boundary so the field cannot be silently
 widened — which would still fail the :func:`link_transaction` runtime

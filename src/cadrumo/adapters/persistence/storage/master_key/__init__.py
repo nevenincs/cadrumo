@@ -48,12 +48,14 @@ from __future__ import annotations
 from ._active_session import (
     NoActiveBucketSessionError,
     activate_session,
+    active_bucket_session_serves,
     bind_active_bucket_session,
     close_active_bucket_session,
     close_all_live_bucket_sessions,
     current_active_bucket_session,
     get_active_master_key,
     has_active_bucket_session,
+    session_serves_bucket,
     suspend_active_session,
 )
 from ._bucket_session import BucketSession
@@ -178,6 +180,7 @@ __all__ = [
     "WrappedMasterKey",
     "activate_master_key_provider",
     "activate_session",
+    "active_bucket_session_serves",
     "advance_profile_session_idle_deadline",
     "atomic_write_secure_bytes",
     "bind_active_bucket_session",
@@ -222,6 +225,7 @@ __all__ = [
     "save_recovery_envelope",
     "save_wrapped_master_key",
     "session_absolute_minutes_for_bucket",
+    "session_serves_bucket",
     "store_profile_session_key",
     "suspend_active_session",
     "unwrap_dek",

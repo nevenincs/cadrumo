@@ -2071,16 +2071,12 @@ cli:
           rectifies_help: 'Número de la factura que corrige esta rectificativa.'
           recargo_help: 'Recargo de equivalencia repercutido sobre la cuota (LIVA art. 161). Va incluido en el total de la factura, a diferencia de una retención.'
           iva_category_help: 'Tratamiento de IVA de la operación. Necesario para que un cálculo de renta pueda fundamentarla.'
-        country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
-          intracomunitarias UE)
-        eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
         group_help: Registros de facturas de negocio (emitidas o recibidas)
         invoice_date_help: Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD),
           p. ej. 2026-01-15.
         invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
         kind_help: 'Tipo de factura: emitida (un cliente te debe) o recibida (debes
           a un proveedor)'
-        list_help: Lista las facturas de negocio (ambos tipos salvo que --kind filtre)
         operation_date_help: Fecha en que se realizo la entrega o prestacion (AAAA-MM-DD).
           Es la fecha de devengo del art. 75 LIVA que determina en que periodo se
           declara la cuota; sin ella se utiliza la fecha de factura.
@@ -2090,11 +2086,7 @@ cli:
           R transferencias de bienes en consigna, D devoluciones de bienes en consigna,
           C sustituciones del destinatario en consigna'
         operation_type_invalid: '--operation-type debe ser uno de: {valid}'
-        remove_help: Elimina una factura de negocio
-        total_amount_required: 'La opción --total-amount es obligatoria: indique el
-          total de la factura como importe decimal, por ejemplo 121.00.'
         update_help: Actualiza los datos de una factura de negocio
-        view_help: Muestra una factura de negocio
         yes_help: Confirma la eliminación de la factura
         yes_required: Debes pasar --yes para eliminar una factura
       prorrata:
@@ -6573,10 +6565,6 @@ errors:
     refused_iva_wallet_reconciliation_invariant: Las entradas de conciliación de la
       cartera IVA incumplen un invariante obligatorio. Compruebe la configuración
       de antigüedad de la cartera y vuelva a intentarlo.
-    refused_ledger_business_operation_invoice_input: Un dato indicado infringe el
-      contrato de la factura de operación. Corrige la entrada y vuelve a intentarlo.
-    refused_ledger_business_operation_invoice_not_found: No existe ninguna factura
-      de operación con el identificador indicado.
     refused_ledger_evidence_input: Un dato de evidencia indicado infringe el contrato
       de la factura de compra. Corrige la entrada y vuelve a intentarlo.
     refused_ledger_evidence_not_found: No existe ninguna evidencia de factura de compra

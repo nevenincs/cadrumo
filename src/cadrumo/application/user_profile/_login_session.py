@@ -72,6 +72,7 @@ from ...adapters.persistence.storage.master_key import (
     reset_login_throttle,
     resume_profile_session,
     session_absolute_minutes_for_bucket,
+    session_serves_bucket,
     write_profile_session,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -497,7 +498,7 @@ def _resume_for_idempotent_login(*, bucket_id: str, now: datetime):
     from ...adapters.persistence.storage.master_key import resume_profile_session as _peek
 
     live = current_active_bucket_session()
-    if live is not None and live.bucket_id == bucket_id and not live.is_expired(now):
+    if session_serves_bucket(live, bucket_id) and not live.is_expired(now):
         peeked, _ = _peek(storage_root=effective_storage_root(), bucket_id=bucket_id, now=now)
         return peeked.record if peeked.resumed else None
     if resume_active_profile_session(bucket_id=bucket_id, now=now) is not None:

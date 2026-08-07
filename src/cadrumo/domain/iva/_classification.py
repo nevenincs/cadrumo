@@ -43,9 +43,10 @@ Examples:
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import date
 from enum import StrEnum
+from types import MappingProxyType
 from typing import NamedTuple
 
 from pydantic import Field, model_validator
@@ -567,6 +568,34 @@ _RATE_TIER_TO_CATEGORY: dict[IvaRateKind, IvaCategory] = {
 _CATEGORY_TO_RATE_TIER: dict[IvaCategory, IvaRateKind] = {
     category: tier for tier, category in _RATE_TIER_TO_CATEGORY.items()
 }
+
+
+def domestic_categories_by_rate_kind() -> Mapping[IvaRateKind, IvaCategory]:
+    """Return the closed rate-kind to domestic-category mapping.
+
+    The single authority for "which DOMESTIC_* category does this rate tier
+    denote". Exposed as a read-only view so a cross-package consumer reaches it
+    through the package facade rather than re-declaring the table; three
+    independent copies of this mapping existed before it was promoted, none
+    sharing an identifier with another, so no symbol search would have found
+    them.
+
+    Callers needing the reverse direction want
+    :func:`rate_kind_for_domestic_category`. Callers needing "which rate kinds
+    exist" should iterate :class:`IvaRateKind` itself — using this mapping's
+    key set for that is the conflation that let one copy drift a member short.
+    """
+    return MappingProxyType(_RATE_TIER_TO_CATEGORY)
+
+
+def rate_kind_for_domestic_category(category: IvaCategory) -> IvaRateKind | None:
+    """Return the rate tier a domestic category denotes, or ``None`` if it is not one.
+
+    ``None`` is the honest answer for every non-domestic category —
+    intra-community, export, import, reverse-charge and recargo operations
+    carry no rate tier derivable from the category alone.
+    """
+    return _CATEGORY_TO_RATE_TIER.get(category)
 
 
 class _IvaClassificationRule(NamedTuple):

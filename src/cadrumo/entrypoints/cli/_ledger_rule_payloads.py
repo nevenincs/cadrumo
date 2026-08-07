@@ -19,9 +19,9 @@ from datetime import datetime
 
 from pydantic import Field, model_validator
 
-from ...application.ledger import LLMProvider
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.transactions import BusinessClassification, LedgerClassificationRule
+from ...llm import LLMProvider
 from ._decimal_wire import DecimalWireText
 
 

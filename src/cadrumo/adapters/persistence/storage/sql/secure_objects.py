@@ -270,7 +270,7 @@ class SecureObjectRepository:
             self._registered_namespace_definition(namespace)
 
         from ..errors import SessionExpiredError
-        from ..master_key import current_active_bucket_session, evaluate_idle
+        from ..master_key import current_active_bucket_session, evaluate_idle, session_serves_bucket
         from ..runtime import _runtime_not_ready_error
 
         session = current_active_bucket_session()
@@ -292,7 +292,9 @@ class SecureObjectRepository:
                 "storage runtime is not ready for profile-bound storage: active bucket session uses unsecured backend.",
                 message_key="errors.storage.runtime.unsecured_backend",
             )
-        if self._active_session_bucket_id is not None and session.bucket_id != self._active_session_bucket_id:
+        if self._active_session_bucket_id is not None and not session_serves_bucket(
+            session, self._active_session_bucket_id
+        ):
             raise _runtime_not_ready_error(
                 "storage runtime is not ready for profile-bound storage: active bucket session changed.",
                 message_key="errors.storage.runtime.session_changed",

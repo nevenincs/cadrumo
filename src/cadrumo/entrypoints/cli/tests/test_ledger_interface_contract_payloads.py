@@ -9,19 +9,24 @@ round-trip.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 from pydantic import ValidationError
 
 from ....application.ledger import ExportSerializationFormat, LedgerExportResult, LedgerExportRow
 from ....domain.categories import ProportionalityKind, SpendingCategory
 from ....domain.transactions import BusinessClassification
+from .._ledger_catalogue_invoice_payloads import (
+    CatalogueInvoiceListResult,
+    CatalogueInvoiceRecordPayload,
+)
 from .._ledger_llm_payloads import (
     LedgerClassifyLlmRejectResult,
     LedgerClassifyLlmSaturateResult,
     LedgerClassifyLlmSuggestResult,
 )
 from .._ledger_payloads import (
-    BusinessInvoiceRecordPayload,
     EvidenceListResult,
     EvidenceRecordPayload,
     InventoryLedgerPayload,
@@ -94,25 +99,6 @@ def test_readiness_issue_payloads_keep_the_domain_detail_requirement() -> None:
         invalid = {**shared, "detail": ""}
         with pytest.raises(ValueError, match="at least 1 character"):
             payload_type.model_validate(invalid)
-
-
-def _business_invoice_payload(**overrides: object) -> dict[str, object]:
-    base: dict[str, object] = {
-        "invoice_id": "invoice-001",
-        "bucket_id": "default",
-        "source_kind": "payable_invoice",
-        "counterparty_nif": "B12345678",
-        "invoice_number": "F-001",
-        "invoice_date": "2026-04-05",
-        "currency": "EUR",
-        "taxable_base": "100.00",
-        "iva_amount": "21.00",
-        "total_amount": "121.00",
-        "created_at": "2026-04-05T10:00:00+00:00",
-        "updated_at": "2026-04-05T10:00:00+00:00",
-    }
-    base.update(overrides)
-    return base
 
 
 def test_add_result_subclasses_mutation_quintet_and_carries_review_status() -> None:
@@ -424,8 +410,29 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
 
 def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> None:
     """List payloads for companion ledger sub-apps are typed."""
-    invoice_list = BusinessInvoiceRecordPayload.model_validate(_business_invoice_payload())
-    assert invoice_list.source_kind == "payable_invoice"
+    invoice_list = CatalogueInvoiceListResult.model_validate_json(
+        json.dumps({
+            "bucket_id": "default",
+            "rows": [
+                {
+                    "invoice_id": "b" * 64,
+                    "kind": "received",
+                    "invoice_number": "F-001",
+                    "issued_at": "2026-04-05",
+                    "counterparty_name": "Proveedor SL",
+                    "counterparty_tax_id": "B12345674",
+                    "counterparty_country": "ES",
+                    "base_total": "100.00",
+                    "iva_total": "21.00",
+                    "grand_total": "121.00",
+                    "currency": "EUR",
+                    "payment_status": "PENDING",
+                },
+            ],
+            "count": 1,
+        }),
+    )
+    assert isinstance(invoice_list.rows[0], CatalogueInvoiceRecordPayload)
 
     inventory = InventoryListResult.model_validate(
         {

@@ -46,7 +46,6 @@ from ...domain.calculations.registry import (
     CasillaId,
     IvaLedgerObservation,
     ModeloRevision,
-    RegistryValidationError,
     UngroundedRentaIncome,
     resolve_ledger_impatriado_income_aggregation_binding_values,
     resolve_ledger_irnr_income_aggregation_binding_values,
@@ -70,7 +69,7 @@ from ...domain.invoices import (
     invoice_line_to_iva_observation,
 )
 from ...domain.modelos import Modelo210AgrupacionRentaRow
-from ...domain.renta import RentaDeductibleExpenseObservation
+from ...domain.renta import RENTA_130_RETENCIONES_OUTPUT_CASILLA, RentaDeductibleExpenseObservation
 from ...domain.transactions import (
     OutOfWindowTransactionSummary,
     TransactionCatalogueRepositoryProtocol,
@@ -139,7 +138,6 @@ _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
     },
 )
 _M130_RETENCIONES_BINDING_ID: BindingId = "modelo-130-actividad-economica-retenciones-cumulative"
-_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
 _M210_RENDIMIENTOS_INTEGROS_CASILLA: CasillaId = validated_casilla_id(
     "rendimientos_integros",
     surface="_M210_RENDIMIENTOS_INTEGROS_CASILLA",
@@ -696,7 +694,7 @@ def _m130_retenciones_backend_inputs(
     context: CalculationSourceContext,
     binding_values: Mapping[BindingId, Decimal],
 ) -> dict[CasillaId, Decimal]:
-    """Redirect the retenciones binding's resolved value to casilla 06.
+    """Redirect the retenciones binding's resolved value to its output casilla.
 
     This is the OUTPUT half of a fact that is declared with
     `target_casilla_id = "01"` in the registry (see the comment on the
@@ -704,35 +702,32 @@ def _m130_retenciones_backend_inputs(
     `_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/
     0003-m130-income-cumulative.toml`). That selector field is the
     OBSERVATION-MATCH key -- it must stay "01" for the aggregation to see any
-    rows at all -- not a declaration of where the aggregate lands. Casilla 06
-    is hardcoded here because this binding family has no schema field to
-    express "match on X's observations, output to Y's casilla" honestly; do
-    not "fix" the selector to "06" without reading that TOML comment first,
-    since doing so silently zeroes this value instead of redirecting it.
+    rows at all -- not a declaration of where the aggregate lands.
+    `RENTA_130_RETENCIONES_OUTPUT_CASILLA` is hardcoded here because this
+    binding family has no schema field to express "match on X's
+    observations, output to Y's casilla" honestly; do not "fix" the selector
+    to that casilla without reading that TOML comment first, since doing so
+    silently zeroes this value instead of redirecting it.
 
-    A schema field expressing that divergence honestly was tried and reverted:
-    it would reopen the cross-domain routing-table design T-05 governs
-    (`.vault/reference/2026-05-15-linkage-design-audit-reference.md`), which
-    needs a superseding ADR, not an implementation choice made in passing.
-    Following T-05's established remedy instead: the hardcoded casilla
-    constant stays, and this function cross-checks it against the SAME
-    revision snapshot it is about to write into, so a future revision that
-    drops or renumbers casilla 06 fails loudly here instead of silently
-    writing a value nothing on the filed form will ever read.
+    A schema field expressing that divergence honestly was tried and
+    reverted: it would reopen the cross-domain routing-table design T-05
+    governs (`.vault/reference/2026-05-15-linkage-design-audit-reference.md`),
+    which needs a superseding ADR, not an implementation choice made in
+    passing. Following T-05's established remedy instead: the hardcoded
+    casilla constant lives in `domain.renta` and is validated against every
+    M130 revision by a `CrossDomainSnapshotCheck` registered at snapshot-build
+    time (`domain.renta._retenciones_routing_integrity`), the same mechanism
+    that already validates the Modelo 100 first-slice routing table. A
+    revision that dropped or renumbered the output casilla would fail loudly
+    at snapshot build, before this function ever runs -- it does not
+    re-validate that guarantee itself.
     """
     if str(context.modelo) != Modelo.M130.value:
         return {}
     value = binding_values.get(_M130_RETENCIONES_BINDING_ID)
     if value is None:
         return {}
-    revision_casilla_ids = {casilla.id for casilla in context.revision.casillas}
-    if _M130_RETENCIONES_CASILLA not in revision_casilla_ids:
-        raise RegistryValidationError(
-            f"M130 retenciones binding {_M130_RETENCIONES_BINDING_ID!r} resolved a value, but casilla "
-            f"{_M130_RETENCIONES_CASILLA!r} is not declared on revision {context.revision.id!r}; "
-            "the hardcoded output casilla is stale for this revision",
-        )
-    return {_M130_RETENCIONES_CASILLA: value}
+    return {RENTA_130_RETENCIONES_OUTPUT_CASILLA: value}
 
 
 class LedgerImpatriadoIncomeAggregationSourceResolver:

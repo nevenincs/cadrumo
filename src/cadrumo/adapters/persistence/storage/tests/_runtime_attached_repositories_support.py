@@ -126,6 +126,7 @@ from .....domain.transactions import (
     TransactionDirection,
 )
 from .....domain.usage_ratios import UsageRatioProfile
+from .....llm import LLMProvider, LLMRequest, LLMResponse, UsageRecord
 from .....tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,
     AUTH_DIAGNOSTIC_PATH_FIXTURE,
@@ -145,14 +146,7 @@ from ....outbound.google import (
     OAuthToken,
 )
 from ....outbound.google import _session_store as google_session_store
-from ....outbound.llm import (
-    LLMCache,
-    LLMProvider,
-    LLMRequest,
-    LLMResponse,
-    UsageRecord,
-    UsageRecorder,
-)
+from ....outbound.llm import LLMCache, UsageRecorder
 from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 from ...profile.inventory import load_inventory, save_inventory
 from ...profile.submission import SubmissionRepository

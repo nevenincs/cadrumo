@@ -14,13 +14,14 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
-from ....application.ledger import LLMClassificationSuggestion, LLMProvider, reject_llm_suggestion
+from ....application.ledger import reject_llm_suggestion
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....core.json_contract import NoticeSeverity
 from ....domain.categories import SpendingCategory
 from ....domain.transactions import BusinessClassification
+from ....llm import LLMClassificationSuggestion, SubprocessProvider
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
@@ -106,7 +107,7 @@ def test_classify_reject_and_apply_are_mutually_exclusive(tmp_path: Path, extra_
 def test_split_recommendation_notice_is_info_with_exact_runnable_action() -> None:
     transaction_id = "txn-contract"
 
-    notice = split_recommendation_notice(transaction_id, provider=LLMProvider.CLAUDE)
+    notice = split_recommendation_notice(transaction_id, provider=SubprocessProvider.CLAUDE)
 
     assert notice.severity is NoticeSeverity.INFO
     assert notice.code == "ledger.classify.split_recommended"

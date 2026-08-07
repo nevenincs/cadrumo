@@ -3,19 +3,18 @@
 :class:`InvoiceCatalogueSourceResolver` reads the
 :class:`~domain.invoices.InvoiceCatalogue` selected by
 :attr:`~application.aggregation.CalculationSourceContext.bucket_id` through
-:class:`~domain.invoices.InvoiceCatalogueRepository` and also adapts slim
-:class:`~application.ledger.BusinessOperationInvoice` records when their
-repository is available. It projects those records into the
-calculation mesh as :class:`~application.aggregation.CalculationSourceResolution`
-values for :attr:`~core.BindingSourceKind.COLLECTIBLE_INVOICE` and
+:class:`~domain.invoices.InvoiceCatalogueRepository`. It projects those records
+into the calculation mesh as
+:class:`~application.aggregation.CalculationSourceResolution` values for
+:attr:`~core.BindingSourceKind.COLLECTIBLE_INVOICE` and
 :attr:`~core.BindingSourceKind.PAYABLE_INVOICE`.
 
-The rich :class:`~domain.invoices.Invoice` aggregate remains the
-reconciliation and link authority; the slim ledger-mounted invoice records are
-operator-editable source-kind records. Both paths converge here only after they
-can be represented as registry :class:`~domain.calculations.registry.InvoiceObservation`
-facts, with Modelo 349 summary bindings, detail rows, transaction ids, and
-source provenance emitted through one resolver envelope.
+The :class:`~domain.invoices.Invoice` aggregate is the sole invoice record and
+the reconciliation and link authority. Records reach the mesh only once they can
+be represented as registry
+:class:`~domain.calculations.registry.InvoiceObservation` facts, with Modelo 349
+summary bindings, detail rows, transaction ids, and source provenance emitted
+through one resolver envelope.
 """
 
 from __future__ import annotations
@@ -29,12 +28,10 @@ from ...adapters.persistence.storage import (
     ClassificationError,
     DecryptionError,
     EnvelopeVersionError,
-    StorageValidationError,
 )
 from ...core import BindingSourceKind, IntracomOperationType, Modelo, Period
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
-from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
     BindingId,
     DataBindingDefinition,
@@ -59,11 +56,6 @@ from ..aggregation import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
     storage_degradation_resolution,
-)
-from ..ledger import (
-    BusinessOperationInvoice,
-    BusinessOperationInvoiceDirection,
-    BusinessOperationInvoiceRepository,
 )
 
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
@@ -105,21 +97,62 @@ _PAYABLE_M349_OPERATION_TYPES: frozenset[IntracomOperationType] = frozenset(
     },
 )
 
+#: The claves an invoice's IVA category alone determines, keyed by side.
+#:
+#: Values are :class:`~cadrumo.core.IntracomOperationType` MEMBERS, never the
+#: clave letters, because the member's ``value`` IS the letter the diseño de
+#: registro defines: a literal beside the enum is a copy that can drift from
+#: the thing it copies with nothing to catch it. The mismatch that makes this
+#: concrete is the services acquisition, whose member is named
+#: ``ADQUISICION_SERVICIOS`` while its clave is ``I`` -- a literal ``"I"`` here
+#: would be reachable from neither the member name nor the letter by search.
+#:
+#: Membership is deliberately the FOUR entries a category identifies
+#: unambiguously, plus triangulation handled separately because it is
+#: kind-independent. It is NOT the full ten-clave set, and widening it here
+#: would change what gets declared rather than how it is expressed:
+#:
+#: - ``M``/``H`` (supplies following an exempt importation, LIVA art. 27.12)
+#:   share the intra-community supply category with ``E``, so no category
+#:   predicate can separate them; the operator states them via the operation
+#:   type, and the resolver discloses the ambiguity rather than guessing.
+#: - ``R``/``D``/``C`` (the call-off stock claves) report movements that carry
+#:   no invoice at all, so no invoice-sourced path can reach them.
+_CLAVE_BY_KIND_AND_CATEGORY: dict[tuple[InvoiceKind, IvaCategory], IntracomOperationType] = {
+    (InvoiceKind.ISSUED, IvaCategory.INTRA_COMMUNITY_SUPPLY): IntracomOperationType.E,
+    # Goods and services stay separate rather than folding into E/A: Modelo 349
+    # reports them under distinct claves, so a service declared as E would be
+    # filed as an entrega de bienes.
+    (InvoiceKind.ISSUED, IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY): IntracomOperationType.S,
+    (
+        InvoiceKind.RECEIVED,
+        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+    ): IntracomOperationType.ADQUISICION_SERVICIOS,
+    (
+        InvoiceKind.RECEIVED,
+        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+    ): IntracomOperationType.A,
+}
 
-def invoice_direction_to_source_kind(kind: InvoiceKind) -> BusinessOperationInvoiceDirection:
+
+def invoice_direction_to_source_kind(kind: InvoiceKind) -> BindingSourceKind:
     """Map an invoice direction to its settlement source kind.
 
-    The single contractual home for the direction↔settlement relationship,
+    The single contractual home for the direction<->settlement relationship,
     consumed by both :class:`InvoiceCatalogueSourceResolver` and the operator
     ``aeat app ledger invoice`` CLI. An *issued* invoice (we billed a customer)
     is *collectible*; a *received* invoice (a vendor billed us) is *payable*.
 
+    Returns the canonical :class:`~core.BindingSourceKind` member rather than a
+    locally-declared direction enum: the settlement taxonomy has exactly one
+    home per ``binding-source-kind-single-taxonomy``.
+
     Returns:
-        The :class:`BusinessOperationInvoiceDirection` settling ``kind``.
+        The :class:`BindingSourceKind` settling ``kind``.
     """
     if kind is InvoiceKind.ISSUED:
-        return BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE
-    return BusinessOperationInvoiceDirection.PAYABLE_INVOICE
+        return BindingSourceKind.COLLECTIBLE_INVOICE
+    return BindingSourceKind.PAYABLE_INVOICE
 
 
 class InvoiceCatalogueSourceResolver:
@@ -139,10 +172,8 @@ class InvoiceCatalogueSourceResolver:
         self,
         *,
         invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
-        business_invoice_repository: BusinessOperationInvoiceRepository | None = None,
     ) -> None:
         self._invoice_repository = invoice_repository
-        self._business_invoice_repository = business_invoice_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         active_sources = _invoice_sources_for_revision(context)
@@ -176,30 +207,7 @@ class InvoiceCatalogueSourceResolver:
                 continue
             catalogue_observed_items.append((invoice, observation))
         catalogue_observed = tuple(catalogue_observed_items)
-        try:
-            business_invoices = _load_business_operation_invoices(
-                context,
-                repository=self._business_invoice_repository,
-                rich_invoice_repository=self._invoice_repository,
-            )
-        except _STORAGE_DEGRADATION_ERRORS as exc:
-            return storage_degradation_resolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                source_kinds=tuple(active_sources),
-                error=exc,
-            )
-        business_observed_items: list[tuple[BusinessOperationInvoice, InvoiceObservation]] = []
-        for invoice in business_invoices:
-            if _business_invoice_source_kind(invoice) not in active_sources:
-                continue
-            observation = _business_invoice_observation(invoice, context=context)
-            if observation is not None:
-                business_observed_items.append((invoice, observation))
-        business_observed = tuple(business_observed_items)
-        observations = tuple(observation for _, observation in catalogue_observed) + tuple(
-            observation for _, observation in business_observed
-        )
+        observations = tuple(observation for _, observation in catalogue_observed)
         binding_values = resolve_invoice_binding_values(context.revision, observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
@@ -215,9 +223,17 @@ class InvoiceCatalogueSourceResolver:
                     },
                 ),
             ),
-            diagnostics=_m349_incoherence_diagnostics(incoherent, resolver_id=self.resolver_id),
-            provenance=tuple(_invoice_provenance(invoice, observation) for invoice, observation in catalogue_observed)
-            + tuple(_business_invoice_provenance(invoice, observation) for invoice, observation in business_observed),
+            diagnostics=_m349_incoherence_diagnostics(incoherent, resolver_id=self.resolver_id)
+            + (
+                _m349_inferred_clave_diagnostics(
+                    [invoice for invoice, _ in catalogue_observed],
+                    bucket_invoices=tuple(catalogue.values()),
+                    resolver_id=self.resolver_id,
+                )
+                if context.modelo == Modelo.M349.value
+                else ()
+            ),
+            provenance=tuple(_invoice_provenance(invoice, observation) for invoice, observation in catalogue_observed),
         )
 
 
@@ -311,6 +327,84 @@ def _m349_incoherent_verdict(
     return verdict.model_copy(update={"defects": contradictions})
 
 
+#: Diagnostic ``reason`` for a Modelo 349 clave the resolver inferred from the
+#: invoice's IVA category because the record carried no explicit operation type.
+M349_CLAVE_INFERRED_REASON = "m349_clave_inferred_from_category"
+
+
+def _clave_was_inferred_as_entrega(invoice: Invoice) -> bool:
+    """Return whether this invoice's clave E was a guess rather than a statement.
+
+    True only for the one ambiguous case: an issued exempt intra-community
+    supply carrying no operation type, which ``_intracommunity_clave`` resolves
+    to E. Every other fallback branch maps a category that identifies its clave
+    unambiguously, and a record carrying an operation type stated its clave
+    outright.
+    """
+    return (
+        invoice.operation_type is None
+        and invoice.kind is InvoiceKind.ISSUED
+        and invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    )
+
+
+def _m349_inferred_clave_diagnostics(
+    declared: Sequence[Invoice],
+    *,
+    bucket_invoices: Sequence[Invoice],
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return at most ONE advisory disclosing that claves were inferred, not read.
+
+    Aggregated rather than per-invoice, and that is the whole design. The
+    ambiguity this discloses is not separable at this layer -- the prior
+    importation that distinguishes an art. 27.12 supply from an ordinary art. 25
+    one appears nowhere on the invoice -- so a per-record advisory would fire on
+    every ordinary intra-community supply a taxpayer makes. Firing on the correct
+    majority is what trains an operator to ignore a channel, and it would forfeit
+    this disclosure exactly when it matters.
+
+    One line per calculation states an assumption; N lines per calculation is an
+    alarm about nothing. The count and the invoice numbers are carried so the
+    operator can find the records without the advisory having to accuse each one.
+    """
+    inferred = [invoice for invoice in declared if _clave_was_inferred_as_entrega(invoice)]
+    if not inferred:
+        return ()
+    # The discriminator, and the reason this is a disclosure rather than noise.
+    # Clave M or H requires a PRIOR exempt importation by this same taxpayer
+    # (LIVA art. 27.12 exempts the importation only because the onward supply is
+    # art. 25 exempt). A bucket holding no importation at all therefore cannot
+    # contain a post-importation supply, so the inferred E is not merely likely
+    # correct there -- it is the only clave available, and saying so would be an
+    # alarm about nothing on every Modelo 349 an ordinary EU-trading taxpayer
+    # ever files.
+    # Read across the whole bucket, not the declared set: an importation is a
+    # RECEIVED record that produces no Modelo 349 row of its own, so it is absent
+    # from ``declared`` by construction and invisible to a scan of it.
+    if not any(invoice.iva_category is IvaCategory.IMPORT_THIRD_COUNTRY for invoice in bucket_invoices):
+        return ()
+    numbers = ", ".join(sorted(invoice.invoice_number for invoice in inferred))
+    return (
+        CalculationSourceDiagnostic(
+            reason=M349_CLAVE_INFERRED_REASON,
+            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE.value,
+            resolver_id=resolver_id,
+            message=(
+                f"{len(inferred)} intra-community supplies carry no operation type, so their Modelo 349 "
+                f"clave was inferred as 'E' from the IVA category ({numbers}). That is correct for an "
+                "ordinary exempt supply under LIVA art. 25, but a supply following an exempt importation "
+                "(art. 27.12) reports under clave 'M', or 'H' when made through a representante fiscal, "
+                "and the invoice records no fact that distinguishes the two."
+            ),
+            remedy=(
+                "If any of these supplies followed an exempt importation, set its operation type to M or H "
+                "and recalculate; otherwise the inferred clave is correct and no action is needed."
+            ),
+        ),
+    )
+
+
 def _m349_incoherence_diagnostics(
     incoherent: Sequence[tuple[Invoice, InvoiceDecomposition]],
     *,
@@ -390,10 +484,6 @@ def _date_in_period(value: date, *, period: Period) -> bool:
 
 def _invoice_source_kind(invoice: Invoice) -> str:
     return invoice_direction_to_source_kind(invoice.kind).value
-
-
-def _business_invoice_source_kind(invoice: BusinessOperationInvoice) -> str:
-    return invoice.source_kind.value
 
 
 def _eur(converted: Decimal | None, invoice: Invoice) -> Decimal:
@@ -527,26 +617,15 @@ def _intracommunity_clave(invoice: Invoice) -> str | None:
             operation_type=operation_type,
             record_label="catalogue invoice",
         )
+    # Triangulation first, and kind-independent: LIVA art. 26.3 exempts the
+    # intermediary's adquisición while the onward leg is a supply, so the
+    # taxpayer files clave T from either side of the operation.
     if invoice.iva_category is IvaCategory.INTRA_COMMUNITY_TRIANGULATION:
-        return "T"
-    if invoice.kind is InvoiceKind.ISSUED and invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
-        return "E"
-    # The service claves. Kept separate from E/A rather than folded into them:
-    # Modelo 349 reports goods and services under distinct claves, so a service
-    # declared as E would be filed as an entrega de bienes.
-    if invoice.kind is InvoiceKind.ISSUED and invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY:
-        return "S"
-    if (
-        invoice.kind is InvoiceKind.RECEIVED
-        and invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE
-    ):
-        return "I"
-    if (
-        invoice.kind is InvoiceKind.RECEIVED
-        and invoice.iva_category is IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
-    ):
-        return "A"
-    return None
+        return IntracomOperationType.T.value
+    if invoice.iva_category is None:
+        return None
+    derived = _CLAVE_BY_KIND_AND_CATEGORY.get((invoice.kind, invoice.iva_category))
+    return None if derived is None else derived.value
 
 
 def _m349_clave_for_operation_type(
@@ -634,163 +713,9 @@ def _m349_operador_rows_from_observations(
     return tuple(rows)
 
 
-def _load_business_operation_invoices(
-    context: CalculationSourceContext,
-    *,
-    repository: BusinessOperationInvoiceRepository | None,
-    rich_invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
-) -> tuple[BusinessOperationInvoice, ...]:
-    try:
-        source = repository or BusinessOperationInvoiceRepository(bucket_id=context.bucket_id)
-        return tuple(
-            record
-            for document in source.iter_records()
-            if document.bucket_id == context.bucket_id
-            for record in document.records
-            if _business_invoice_in_context(record, context)
-        )
-    except StorageValidationError:
-        if repository is None and rich_invoice_repository is not None:
-            return ()
-        raise
-
-
-def _business_invoice_in_context(invoice: BusinessOperationInvoice, context: CalculationSourceContext) -> bool:
-    if invoice.bucket_id != context.bucket_id:
-        return False
-    return _date_in_period(_business_invoice_date(invoice), period=context.period)
-
-
-def _business_invoice_observation(
-    invoice: BusinessOperationInvoice,
-    *,
-    context: CalculationSourceContext,
-) -> InvoiceObservation | None:
-    if _is_unconverted_foreign_business_invoice(invoice):
-        return None
-    if context.modelo == Modelo.M347.value:
-        return _m347_business_invoice_observation(invoice)
-    clave = _business_invoice_clave(invoice)
-    if clave is None:
-        return None
-    country_code = _business_invoice_country_code(invoice)
-    party_tax_id = _business_invoice_party_tax_id(invoice)
-    if context.modelo == Modelo.M349.value:
-        validate_m349_country_prefix_context(
-            country_code=country_code,
-            clave_operacion=clave,
-            filing_year=context.filing_year,
-            period=context.period.registry_token,
-        )
-    return InvoiceObservation(
-        invoice_id=invoice.invoice_id,
-        source_kind=BindingSourceKind(invoice.source_kind.value),
-        party_tax_id=party_tax_id,
-        country_code=country_code,
-        transaction_date=_business_invoice_date(invoice),
-        base_amount=_business_eur(invoice.taxable_base_eur, invoice),
-        invoice_total_amount=_business_eur(invoice.total_amount_eur, invoice),
-        intracommunity_clave=clave,
-        party_legal_name=invoice.counterparty_name or None,
-    )
-
-
-def _is_unconverted_foreign_business_invoice(invoice: BusinessOperationInvoice) -> bool:
-    """Return whether the slim invoice is foreign-currency with no euro equivalent."""
-    return invoice.currency != DEFAULT_CURRENCY and invoice.total_amount_eur is None
-
-
-def _business_eur(converted: Decimal | None, invoice: BusinessOperationInvoice) -> Decimal:
-    """Return the euro amount, refusing rather than declaring the face value."""
-    if converted is None:
-        msg = (
-            f"business invoice {invoice.invoice_id} is denominated in {invoice.currency} with no "
-            f"resolved euro value; it must be gated out of projection, not declared at face value"
-        )
-        raise RegistryValidationError(msg)
-    return converted
-
-
-def _m347_business_invoice_observation(invoice: BusinessOperationInvoice) -> InvoiceObservation | None:
-    country_code = (invoice.country_code or "ES").strip().upper()
-    if country_code != "ES" or invoice.operation_type is not None:
-        return None
-    party_tax_id = invoice.counterparty_nif.strip().upper()
-    if not party_tax_id:
-        raise RegistryValidationError(f"business invoice {invoice.invoice_id!r} has no counterparty tax id")
-    return InvoiceObservation(
-        invoice_id=invoice.invoice_id,
-        source_kind=BindingSourceKind(invoice.source_kind.value),
-        party_tax_id=party_tax_id,
-        country_code=country_code,
-        transaction_date=_business_invoice_date(invoice),
-        base_amount=_business_eur(invoice.taxable_base_eur, invoice),
-        invoice_total_amount=_business_eur(invoice.total_amount_eur, invoice),
-        intracommunity_clave=None,
-        party_legal_name=invoice.counterparty_name or None,
-    )
-
-
-def _business_invoice_date(invoice: BusinessOperationInvoice) -> date:
-    try:
-        parsed = parse_iso8601_date(invoice.invoice_date)
-    except ValueError as exc:
-        raise RegistryValidationError(
-            f"business invoice {invoice.invoice_id!r} has invalid invoice_date {invoice.invoice_date!r}",
-        ) from exc
-    if parsed is None:
-        raise RegistryValidationError(
-            f"business invoice {invoice.invoice_id!r} has invalid invoice_date {invoice.invoice_date!r}",
-        )
-    return parsed
-
-
-def _business_invoice_clave(invoice: BusinessOperationInvoice) -> str | None:
-    operation_type = invoice.operation_type
-    if operation_type is None:
-        return None
-    return _m349_clave_for_operation_type(
-        invoice_id=invoice.invoice_id,
-        source_kind=BindingSourceKind(invoice.source_kind.value),
-        operation_type=operation_type,
-        record_label="business invoice",
-    )
-
-
-def _business_invoice_party_tax_id(invoice: BusinessOperationInvoice) -> str:
-    value = (invoice.eu_iva_id or invoice.counterparty_nif).strip().upper()
-    if not value:
-        raise RegistryValidationError(f"business invoice {invoice.invoice_id!r} has no counterparty tax id")
-    return value
-
-
-def _business_invoice_country_code(invoice: BusinessOperationInvoice) -> str:
-    if invoice.country_code is not None:
-        return invoice.country_code.strip().upper()
-    party_tax_id = _business_invoice_party_tax_id(invoice)
-    if len(party_tax_id) >= 2 and party_tax_id[:2].isalpha():
-        return "GR" if party_tax_id[:2] == "EL" else party_tax_id[:2]
-    raise RegistryValidationError(
-        f"business invoice {invoice.invoice_id!r} has operation_type but no country_code or EU IVA-ID prefix",
-    )
-
-
 def _invoice_provenance(invoice: Invoice, observation: InvoiceObservation) -> CalculationSourceProvenance:
     payload = observation.model_dump_json()
     source_kind = _invoice_source_kind(invoice)
-    return CalculationSourceProvenance(
-        source_kind=source_kind,
-        source_ref=f"{source_kind}:{observation.invoice_id}",
-        fingerprint=f"sha256:{sha256_hex(payload.encode('utf-8'))}",
-    )
-
-
-def _business_invoice_provenance(
-    invoice: BusinessOperationInvoice,
-    observation: InvoiceObservation,
-) -> CalculationSourceProvenance:
-    payload = observation.model_dump_json()
-    source_kind = _business_invoice_source_kind(invoice)
     return CalculationSourceProvenance(
         source_kind=source_kind,
         source_ref=f"{source_kind}:{observation.invoice_id}",

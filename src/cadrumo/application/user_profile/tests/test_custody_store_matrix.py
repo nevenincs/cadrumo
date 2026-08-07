@@ -881,44 +881,6 @@ def _verify_purchase_invoice_evidence(bucket_id: str) -> None:
     assert document.records, "purchase invoice evidence lost"
 
 
-def _seed_business_operation_invoice(bucket_id: str) -> None:
-    from ...ledger import (
-        BusinessOperationInvoice,
-        BusinessOperationInvoiceDirection,
-        BusinessOperationInvoiceDocument,
-        BusinessOperationInvoiceRepository,
-    )
-
-    rec = BusinessOperationInvoice(
-        invoice_id="boi-0001",
-        source_kind=BusinessOperationInvoiceDirection.PAYABLE_INVOICE,
-        bucket_id=bucket_id,
-        counterparty_nif="12345678Z",
-        invoice_number="INV-001",
-        invoice_date="2024-02-15",
-        country_code=None,
-        eu_iva_id=None,
-        operation_type=None,
-        created_at=_NOW,
-        updated_at=_NOW,
-    )
-    BusinessOperationInvoiceRepository().save(
-        BusinessOperationInvoiceDocument(
-            bucket_id=bucket_id,
-            source_kind=BusinessOperationInvoiceDirection.PAYABLE_INVOICE,
-            records=(rec,),
-        ),
-    )
-
-
-def _verify_business_operation_invoice(bucket_id: str) -> None:
-    from ...ledger import BusinessOperationInvoiceRepository
-
-    document = BusinessOperationInvoiceRepository().load(f"{bucket_id}:payable_invoice")
-    assert document is not None, "business operation invoice lost"
-    assert document.records, "business operation invoice lost"
-
-
 def _filed_declaration_store() -> FiledDeclaracionObservationStore:
     return FiledDeclaracionObservationStore(Path("unused"), objects=secure_object_repository_for_active_bucket())
 
@@ -1022,11 +984,6 @@ _CASES: tuple[StoreCase, ...] = (
         "cadrumo.application.ledger.purchase_invoice_evidence",
         _seed_purchase_invoice_evidence,
         _verify_purchase_invoice_evidence,
-    ),
-    StoreCase(
-        "cadrumo.application.ledger.business_operation_invoices",
-        _seed_business_operation_invoice,
-        _verify_business_operation_invoice,
     ),
     StoreCase(
         "cadrumo.outbound.aeat.sede.filed_declaration.observations",

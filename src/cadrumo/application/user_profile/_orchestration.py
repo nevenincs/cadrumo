@@ -271,10 +271,12 @@ def _profile_export_runtime(
 ) -> Generator[BucketEventHistoryRepositoryProtocol]:
     """Bind export serialization and audit persistence to one profile runtime."""
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...adapters.persistence.storage import has_active_bucket_session
-    from ...core import resolve_active_bucket_id
+    from ...adapters.persistence.storage import active_bucket_session_serves
 
-    if profile_id == resolve_active_bucket_id() and has_active_bucket_session():
+    # Comparing the pointer to ``profile_id`` and then checking only that SOME
+    # session exists leaves the bound session unverified: the pointer and the
+    # bound session can name different buckets. Ask the session directly.
+    if active_bucket_session_serves(profile_id):
         yield BucketEventHistoryRepository()
         return
     with profile_storage_session(profile_id):
@@ -686,7 +688,7 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     import gc
 
     from ...adapters.persistence.storage.bucket import trash_rename_and_remove
-    from ...adapters.persistence.storage.master_key import current_active_bucket_session
+    from ...adapters.persistence.storage.master_key import current_active_bucket_session, session_serves_bucket
     from ...adapters.persistence.storage.sql.engine import dispose_engines_for_bucket
 
     root = load_settings().cadrumo_local_storage_root
@@ -717,7 +719,7 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     # storage access through the session reuses a handle bound to a directory
     # that no longer exists.
     active_session = current_active_bucket_session()
-    if active_session is not None and active_session.bucket_id == profile_id:
+    if session_serves_bucket(active_session, profile_id):
         active_session.invalidate_engine()
     # Proactively release lingering handles before the rename attempt (the
     # shared primitive also runs its own gc.collect() if the rename fails,

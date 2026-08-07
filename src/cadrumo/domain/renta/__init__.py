@@ -19,6 +19,9 @@ proportionality rules and citations remain in
 mapping from :class:`domain.categories.SpendingCategory` to registry
 casilla ids for the supported first slice; the registry validates those targets
 through a cross-domain snapshot check registered at package import time.
+:data:`RENTA_130_RETENCIONES_OUTPUT_CASILLA` is the equivalent single-casilla
+fact for the M130 retenciones-a-cuenta binding, validated by the same
+mechanism.
 
 The maritime surface exposes :class:`MaritimeWorkerFacts`, Art. 7.p and REBECA
 eligibility/calculation helpers, the inactive DA 41 guard, and the RETMAR
@@ -41,7 +44,8 @@ See Also:
         and returns registry-ready source resolutions.
     :mod:`domain.calculations.registry`
         Owns binding declarations, casilla formulas, and the snapshot check
-        contract that validates this domain's first-slice routing table.
+        contract that validates this domain's first-slice and retenciones
+        routing facts.
 """
 
 from __future__ import annotations
@@ -82,11 +86,20 @@ from ._maritime_exemption import (
     guard_da41_inactive,
     rebeca_eligible,
 )
+
+# Importing this module ALSO registers the M130 retenciones output-casilla
+# referential-integrity check with the registry validator, the same
+# Protocol-based dependency inversion _first_slice_routing_integrity uses
+# above. Unlike that module, this one's constant IS re-exported: it is the
+# single source of truth application.aggregation reads for the redirect, not
+# a mapping consumed only internally.
+from ._retenciones_routing_integrity import RENTA_130_RETENCIONES_OUTPUT_CASILLA
 from ._substrate import EstimacionDirectaModalidad, RentaIncomeType
 
 __all__ = [
     "ART_7P_EXEMPTION_CAP_EUR",
     "RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS",
+    "RENTA_130_RETENCIONES_OUTPUT_CASILLA",
     "RENTA_EXENTA_CASILLA",
     "EstimacionDirectaModalidad",
     "MaritimeExemptionInactiveError",

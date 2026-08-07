@@ -17,7 +17,6 @@ from ....domain.calculations.registry import (
     DataBindingDefinition,
     ModeloRevision,
     PeriodSelector,
-    RegistryValidationError,
     resolve_ledger_renta_income_aggregation_binding_values,
 )
 from ....domain.transactions import (
@@ -75,13 +74,14 @@ def _m130_renta_income_binding(
 
 
 def _m130_casilla(casilla_id: str) -> CasillaDefinition:
-    """Minimal casilla declaration -- enough for the T-05 output-casilla cross-check.
+    """Minimal casilla declaration for this fixture's synthetic revision.
 
-    ``_m130_retenciones_backend_inputs`` asserts casilla 06 is a real casilla
-    on the revision it is about to write into before writing the resolved
-    retención value there; this fixture's synthetic revision must declare
-    both casillas 01 and 06 so that cross-check passes the same way the
-    committed registry's revision does.
+    Declaring both casillas 01 and 06 keeps the fixture realistic relative
+    to the committed registry's revision, even though the T-05 cross-check
+    that validates the output casilla runs at snapshot-build time
+    (`domain.renta._retenciones_routing_integrity`), not against this
+    hand-built revision -- see that module's own test file for that
+    coverage.
     """
     return CasillaDefinition(
         id=casilla_id,
@@ -350,45 +350,6 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06(
 
     assert resolution.binding_values[_M130_RETENCIONES_BINDING] == Decimal("300.00")
     assert resolution.bound_inputs_by_casilla_id[_M130_RETENCIONES_CASILLA] == Decimal("300.00")
-
-
-def test_hardcoded_output_casilla_cross_check_raises_when_casilla_06_is_absent(
-    secure_objects: SecureObjectRepository,
-) -> None:
-    """The T-05 cross-check guards the hardcoded casilla constant, not just wires it.
-
-    ``_m130_retenciones_backend_inputs`` hardcodes casilla 06 as the
-    retención output casilla (a schema field expressing this honestly was
-    tried and reverted -- see the registry TOML comment and T-05 in
-    ``.vault/reference/2026-05-15-linkage-design-audit-reference.md``). The
-    remedy that survives is a snapshot cross-check: a revision that resolves
-    a retención VALUE but no longer declares casilla 06 must raise here,
-    loudly, rather than silently write a value nothing on the filed form
-    will ever read.
-    """
-    tx = _actividad_transaction(
-        "ae-net-paid-stale-casilla",
-        value_date=date(2026, 3, 15),
-        amount=Decimal("2120.00"),
-        taxable_base=Decimal("2000.00"),
-        iva_rate=Decimal("0.21"),
-        iva_amount=Decimal("420.00"),
-    )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
-    tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
-    revision_without_casilla_06 = _m130_2026_q1_revision().model_copy(
-        update={"casillas": (_m130_casilla(_M130_INGRESOS_CASILLA),)},
-    )
-    context = CalculationSourceContext(
-        bucket_id="test",
-        modelo="130",
-        filing_year=2026,
-        period=_period(2026, "1T"),
-        revision=revision_without_casilla_06,
-    )
-
-    with pytest.raises(RegistryValidationError, match=_M130_RETENCIONES_CASILLA):
-        LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context)
 
 
 def test_casilla_projection_uses_base_for_tagged_and_gross_for_untagged() -> None:

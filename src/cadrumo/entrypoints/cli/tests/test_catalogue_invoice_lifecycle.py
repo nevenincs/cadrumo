@@ -57,7 +57,7 @@ def _line_value(output: str, key: str) -> str:
 def _create_catalogue_invoice(*, invoice_number: str = "2026-0142") -> str:
     result = invoke_cached_cli(
         [
-            "app", "ledger", "invoice", "catalogue", "create",
+            "app", "ledger", "invoice", "add",
             "--kind", "received",
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
             "--counterparty-name", "Papeleria Sol SL",
@@ -82,7 +82,7 @@ def test_catalogue_create_records_a_retention_amount() -> None:
     """
     result = invoke_cached_cli(
         [
-            "app", "ledger", "invoice", "catalogue", "create",
+            "app", "ledger", "invoice", "add",
             "--kind", "received",
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
             "--counterparty-name", "Asesoria Profesional SL",
@@ -106,7 +106,7 @@ def test_catalogue_create_refuses_a_retention_rate_without_an_amount() -> None:
     """A rate alone is refused at the CLI boundary, not silently dropped."""
     result = invoke_cached_cli(
         [
-            "app", "ledger", "invoice", "catalogue", "create",
+            "app", "ledger", "invoice", "add",
             "--kind", "received",
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
             "--counterparty-name", "Asesoria Profesional SL",
@@ -126,11 +126,11 @@ def test_catalogue_view_resolves_full_id_and_prefix() -> None:
     """``view`` shows one catalogue invoice by full id and by unambiguous prefix."""
     invoice_id = _create_catalogue_invoice()
 
-    by_full = invoke_cached_cli(["app", "ledger", "invoice", "catalogue", "view", invoice_id])
+    by_full = invoke_cached_cli(["app", "ledger", "invoice", "view", invoice_id])
     assert by_full.exit_code == 0, by_full.output
     assert _line_value(by_full.output, "invoice_id") == invoice_id
 
-    by_prefix = invoke_cached_cli(["app", "ledger", "invoice", "catalogue", "view", invoice_id[:8]])
+    by_prefix = invoke_cached_cli(["app", "ledger", "invoice", "view", invoice_id[:8]])
     assert by_prefix.exit_code == 0, by_prefix.output
     assert _line_value(by_prefix.output, "invoice_id") == invoice_id
 
@@ -139,7 +139,7 @@ def test_catalogue_view_refuses_unknown_id() -> None:
     """An id matching no invoice is refused, naming the id — never a silent miss."""
     _create_catalogue_invoice()
     result = invoke_cached_cli(
-        ["app", "ledger", "invoice", "catalogue", "view", "deadbeefdeadbeef"],
+        ["app", "ledger", "invoice", "view", "deadbeefdeadbeef"],
     )
     assert result.exit_code != 0, result.output
     assert "deadbeefdeadbeef" in result.output, result.output
@@ -149,7 +149,7 @@ def test_catalogue_remove_requires_confirmation() -> None:
     """``remove`` without ``--yes`` is refused and leaves the record intact."""
     invoice_id = _create_catalogue_invoice()
 
-    result = invoke_cached_cli(["app", "ledger", "invoice", "catalogue", "remove", invoice_id])
+    result = invoke_cached_cli(["app", "ledger", "invoice", "remove", invoice_id])
     assert result.exit_code != 0, result.output
 
     # The unconfirmed refusal deleted nothing.
@@ -161,7 +161,7 @@ def test_catalogue_remove_deletes_unlinked_invoice() -> None:
     invoice_id = _create_catalogue_invoice()
 
     result = invoke_cached_cli(
-        ["app", "ledger", "invoice", "catalogue", "remove", invoice_id[:8], "--yes"],
+        ["app", "ledger", "invoice", "remove", invoice_id[:8], "--yes"],
     )
     assert result.exit_code == 0, result.output
     assert _line_value(result.output, "invoice_id") == invoice_id
@@ -193,7 +193,7 @@ def test_catalogue_remove_refuses_linked_invoice() -> None:
     assert linked.exit_code == 0, linked.output
 
     removed = invoke_cached_cli(
-        ["app", "ledger", "invoice", "catalogue", "remove", invoice_id, "--yes"],
+        ["app", "ledger", "invoice", "remove", invoice_id, "--yes"],
     )
     assert removed.exit_code != 0, removed.output
     assert transaction_id in removed.output, removed.output
@@ -223,7 +223,7 @@ def test_catalogue_create_refuses_an_omitted_country_code() -> None:
     """
     result = invoke_cached_cli(
         [
-            "app", "ledger", "invoice", "catalogue", "create",
+            "app", "ledger", "invoice", "add",
             "--kind", "received",
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
             "--counterparty-name", "Papeleria Sol SL",
@@ -248,7 +248,7 @@ def test_catalogue_create_still_accepts_an_explicit_domestic_country_code() -> N
     """
     result = invoke_cached_cli(
         [
-            "app", "ledger", "invoice", "catalogue", "create",
+            "app", "ledger", "invoice", "add",
             "--kind", "received",
             "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
             "--counterparty-name", "Papeleria Sol SL",
@@ -280,7 +280,7 @@ def test_catalogue_create_accepts_every_regime_option_and_holds_the_totals_ident
     """
     result = invoke_cached_cli(
         [
-            "app", "ledger", "invoice", "catalogue", "create",
+            "app", "ledger", "invoice", "add",
             "--kind", "issued",
             "--counterparty-nif", "B12345674",
             "--counterparty-name", "Minorista Recargo SL",
@@ -313,7 +313,7 @@ def test_catalogue_create_refuses_an_unknown_invoice_class_naming_the_accepted_s
     """
     result = invoke_cached_cli(
         [
-            "app", "ledger", "invoice", "catalogue", "create",
+            "app", "ledger", "invoice", "add",
             "--kind", "issued",
             "--counterparty-nif", "B12345674",
             "--counterparty-name", "Cliente SL",

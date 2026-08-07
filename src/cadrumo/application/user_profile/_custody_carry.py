@@ -75,7 +75,6 @@ from ..calculations import (
 from ..evidence import EvidenceBundleRepository
 from ..filing import ModeloHistoryRepository
 from ..ledger import (
-    BusinessOperationInvoiceRepository,
     LedgerClassificationRuleRepository,
     PurchaseInvoiceEvidenceRepository,
 )
@@ -318,13 +317,6 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         return PurchaseInvoiceEvidenceRepository()
 
     resolvers["cadrumo.application.ledger.purchase_invoice_evidence"] = _bound_resolver(_purchase_invoice_evidence_repo)
-
-    def _business_operation_invoice_repo() -> BusinessOperationInvoiceRepository:
-        return BusinessOperationInvoiceRepository()
-
-    resolvers["cadrumo.application.ledger.business_operation_invoices"] = _bound_resolver(
-        _business_operation_invoice_repo
-    )
 
     def _classification_rule_repo() -> LedgerClassificationRuleRepository:
         return LedgerClassificationRuleRepository()

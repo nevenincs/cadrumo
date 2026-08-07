@@ -215,3 +215,112 @@ def test_repository_backed_projection_matches_the_pure_projection_for_a_cross_qu
     assert pure.observations != ()
     assert tuple(repository_backed.observations) == tuple(pure.observations)
     assert repository_backed.issues == pure.issues
+
+
+def _not_subject_transaction(
+    provider_id: str,
+    *,
+    category: IvaCategory,
+    cash_accounting_treatment: IvaCashAccountingTreatment,
+) -> Transaction:
+    """A cuota-less row under the cash-accounting regime, category varied by the caller."""
+    return Transaction.model_validate(
+        {
+            "raw": _raw(provider_id, booked_date=date(2026, 2, 10), amount=Decimal("1000.00")),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.BUSINESS,
+            "taxable_base": Decimal("1000.00"),
+            "iva_rate": Decimal("0"),
+            "iva_amount": Decimal("0"),
+            "iva_category": category,
+            "cash_accounting_treatment": cash_accounting_treatment,
+            "operation_date": date(2026, 2, 10),
+            # The model refuses payment evidence without an active regime, so a
+            # NONE-treatment row carries none -- that pairing is the control for
+            # the gate keying on the regime rather than on the category alone.
+            "cash_accounting_payment_evidence": ()
+            if cash_accounting_treatment is IvaCashAccountingTreatment.NONE
+            else (
+                IvaCashAccountingPaymentEvidence(
+                    payment_date=date(2026, 2, 20),
+                    taxable_base=Decimal("1000.00"),
+                    iva_amount=Decimal("0"),
+                    recargo_amount=Decimal("0"),
+                ),
+            ),
+            "classified_at": datetime(2026, 4, 1, 10, 0, tzinfo=UTC),
+            "classified_by": "manual",
+        },
+    )
+
+
+def _gate_reasons(transaction: Transaction) -> tuple[str, ...]:
+    aggregation = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q1_2026,
+    )
+    return tuple(issue.reason.value for issue in aggregation.issues)
+
+
+@pytest.mark.parametrize(
+    "category",
+    [IvaCategory.OPERACION_NO_SUJETA, IvaCategory.DOMESTIC_NOT_SUBJECT],
+)
+def test_both_not_subject_categories_are_outside_the_cash_accounting_regime(
+    category: IvaCategory,
+) -> None:
+    """Ley 37/1992 art. 163 duodecies.Uno scopes the regime to operations realizadas en el TAI.
+
+    An operation that is not subject in the TAI is outside by SCOPE and matches
+    no letter of apartado Dos, so both not-subject members belong in the
+    exclusion set on that ground. `DOMESTIC_NOT_SUBJECT` was previously absent
+    while its twin was present, with nothing in the set distinguishing the two
+    mechanisms it carries -- which is how the omission survived.
+    """
+    transaction = _not_subject_transaction(
+        f"not-subject-{category.value}",
+        category=category,
+        cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
+    )
+
+    assert _gate_reasons(transaction) == ("cash_accounting_excluded_category",)
+
+
+def test_an_exempt_domestic_supply_still_enters_the_cash_accounting_regime() -> None:
+    """Anti-vacuity: the gate refuses the excluded set, not every cuota-less row.
+
+    A domestic exempt supply is realizada en el TAI and is not an apartado-Dos
+    carve-out, so it stays inside the regime. Without this the parametrized
+    refusal above would pass equally if the gate rejected everything.
+    """
+    transaction = _not_subject_transaction(
+        "exempt-inside-regime",
+        category=IvaCategory.DOMESTIC_EXEMPT,
+        cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
+    )
+
+    aggregation = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q1_2026,
+    )
+
+    assert aggregation.issues == ()
+    assert aggregation.observations != ()
+
+
+def test_a_not_subject_row_outside_the_regime_is_not_refused_by_this_gate() -> None:
+    """The gate keys on the regime being active, not on the category alone.
+
+    A not-subject row with no cash-accounting treatment must not trip the
+    exclusion -- otherwise the fix would refuse ordinary not-subject rows that
+    never claimed the regime at all.
+    """
+    transaction = _not_subject_transaction(
+        "not-subject-ordinary",
+        category=IvaCategory.DOMESTIC_NOT_SUBJECT,
+        cash_accounting_treatment=IvaCashAccountingTreatment.NONE,
+    )
+
+    assert "cash_accounting_excluded_category" not in _gate_reasons(transaction)

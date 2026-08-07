@@ -366,6 +366,14 @@ def test_the_governed_surface_is_not_empty() -> None:
         )
     ]
     names = {path.name for path in governed}
-    assert {"usage_ratios.py", "transactions.py", "_observation_store.py", "_snapshot_base.py"} <= names, (
-        f"gate scope lost real read paths; governed modules found: {sorted(names)}"
-    )
+    # ``_observation_store.py`` was in this set until its four hand-rolled
+    # envelope reads moved onto SecureBoundRepository; the kernel that now
+    # performs that check for it — ``_secure_enveloped_document.py`` — takes its
+    # place here, so the sede observation reads stay represented in the scope
+    # anchor rather than dropping out of it unnoticed.
+    assert {
+        "usage_ratios.py",
+        "transactions.py",
+        "_secure_enveloped_document.py",
+        "_snapshot_base.py",
+    } <= names, f"gate scope lost real read paths; governed modules found: {sorted(names)}"

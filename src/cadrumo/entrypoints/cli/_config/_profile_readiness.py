@@ -80,11 +80,12 @@ def _emit_profile_record_unreadable(
 
 def _read_profile_record(*, profile_id: str, bucket_id: str):
     """Read a profile record under a bucket session scoped to that profile."""
-    from ....adapters.persistence.storage.master_key import has_active_bucket_session
+    from ....adapters.persistence.storage.master_key import active_bucket_session_serves
     from ....application.user_profile import build_lifecycle_service, profile_storage_session
-    from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 
-    if bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
+    # Ask the bound session which bucket it serves; matching the pointer and
+    # then checking only that SOME session exists leaves it unverified.
+    if active_bucket_session_serves(bucket_id):
         return build_lifecycle_service(bucket_id=bucket_id).read(profile_id)
     with profile_storage_session(bucket_id):
         service = build_lifecycle_service(bucket_id=bucket_id)
