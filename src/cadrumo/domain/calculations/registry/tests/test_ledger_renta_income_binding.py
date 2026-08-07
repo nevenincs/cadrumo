@@ -35,9 +35,7 @@ from .....core.resources import bundled_path
 from .. import (
     CasillaId,
     DataBindingDefinition,
-    RegistryValidationError,
     build_snapshot,
-    renta_income_binding_output_casilla_values,
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
     unsupported_ledger_renta_income_observations,
@@ -57,7 +55,6 @@ _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(
     "03",
     surface="_M130_RENDIMIENTO_NETO_CASILLA",
 )
-_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
 
 
 def _modelo_130_snapshot():
@@ -134,7 +131,6 @@ def test_committed_m130_retenciones_binding_reads_withheld_amount_fact() -> None
         "modelo": "130",
         "target_casilla_id": _M130_INGRESOS_CASILLA,
         "fact": "withheld_amount_sum",
-        "output_casilla_id": _M130_RETENCIONES_CASILLA,
     }
     validate_ledger_renta_income_aggregation_binding_definition(binding)
 
@@ -438,122 +434,6 @@ def test_selector_refuses_an_omitted_fact_and_names_the_accepted_set() -> None:
     assert "requires an explicit 'fact'" in detail
     for fact in ("ingresos_integros_sum", "cash_received_sum", "taxable_base_sum", "withheld_amount_sum"):
         assert fact in detail, f"the refusal must name the accepted fact {fact!r}"
-
-
-def test_output_casilla_id_defaults_to_none_and_is_omitted_from_the_selector() -> None:
-    """A binding that never declares ``output_casilla_id`` reads as unset, not zero-valued.
-
-    The retenciones binding pins the divergent case below; this pins the
-    common case, which is every other committed renta-income binding.
-    """
-    binding = DataBindingDefinition(
-        id="m130-income-no-output-casilla",
-        source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        selector={"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "cash_received_sum"},
-        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
-        legal_refs=("rd-439-2007:art-110",),
-        source_refs=("aeat-modelo-130-instructions",),
-    )
-    validate_ledger_renta_income_aggregation_binding_definition(binding)
-    assert "output_casilla_id" not in selector_as_dict(binding)
-
-
-def test_output_casilla_id_declares_a_divergent_report_target() -> None:
-    """A binding may declare its aggregate lands on a DIFFERENT casilla from its match key.
-
-    The retención-a-cuenta fact matches casilla 01 income rows (that is where
-    :class:`RentaIncomeObservation` rows are built) but reports on casilla 06,
-    which is what ``_m130_retenciones_backend_inputs`` used to hardcode. This
-    proves the registry can now state that divergence itself.
-    """
-    binding = DataBindingDefinition(
-        id="m130-retenciones-output-casilla",
-        source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        selector={
-            "modelo": "130",
-            "target_casilla_id": _M130_INGRESOS_CASILLA,
-            "fact": "withheld_amount_sum",
-            "output_casilla_id": "06",
-        },
-        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
-        legal_refs=("rd-439-2007:art-110",),
-        source_refs=("aeat-modelo-130-instructions",),
-    )
-    validate_ledger_renta_income_aggregation_binding_definition(binding)
-    assert selector_as_dict(binding)["output_casilla_id"] == "06"
-
-
-def test_output_casilla_id_equal_to_target_casilla_id_is_refused() -> None:
-    """A restated ``output_casilla_id`` equal to ``target_casilla_id`` is pointless and refused."""
-    with pytest.raises(ValidationError, match="equals target_casilla_id"):
-        DataBindingDefinition(
-            id="m130-income-pointless-output-casilla",
-            source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-            selector={
-                "modelo": "130",
-                "target_casilla_id": _M130_INGRESOS_CASILLA,
-                "fact": "cash_received_sum",
-                "output_casilla_id": _M130_INGRESOS_CASILLA,
-            },
-            aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
-            legal_refs=("rd-439-2007:art-110",),
-            source_refs=("aeat-modelo-130-instructions",),
-        )
-
-
-def test_output_casilla_id_outside_the_supported_set_is_refused_at_build() -> None:
-    """An ``output_casilla_id`` outside the declared M130 output set fails registry build.
-
-    "03" is a valid M130 casilla (rendimiento neto), but it is not in
-    ``_RENTA_INCOME_OUTPUT_CASILLAS_BY_MODELO`` for M130 -- only "06" is. A
-    build-time refusal here is the safeguard against a typo silently
-    redirecting a value to the wrong box.
-    """
-    binding = DataBindingDefinition(
-        id="m130-income-bad-output-casilla",
-        source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        selector={
-            "modelo": "130",
-            "target_casilla_id": _M130_INGRESOS_CASILLA,
-            "fact": "cash_received_sum",
-            "output_casilla_id": _M130_RENDIMIENTO_NETO_CASILLA,
-        },
-        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
-        legal_refs=("rd-439-2007:art-110",),
-        source_refs=("aeat-modelo-130-instructions",),
-    )
-    with pytest.raises(RegistryValidationError, match="output_casilla_id"):
-        validate_ledger_renta_income_aggregation_binding_definition(binding)
-
-
-def test_output_casilla_id_projection_redirects_the_committed_retenciones_binding() -> None:
-    """The committed M130 retenciones binding projects onto casilla 06.
-
-    This is the generic replacement for what
-    ``_m130_retenciones_backend_inputs`` (now retired) used to hardcode by
-    binding id and casilla literal: given the binding's resolved value keyed
-    by binding id, the projection reads the registry's own
-    ``output_casilla_id`` declaration rather than a Python constant.
-    """
-    revision = _modelo_130_snapshot().revision
-    binding_values = {
-        _RETENCIONES_BINDING: Decimal("300.00"),
-        _INGRESOS_BINDING: Decimal("1500.00"),
-    }
-
-    projected = renta_income_binding_output_casilla_values(revision, binding_values)
-
-    assert projected == {_M130_RETENCIONES_CASILLA: Decimal("300.00")}, (
-        "only the retenciones binding declares output_casilla_id; the ingresos "
-        "binding's value must not leak into the projection"
-    )
-
-
-def test_output_casilla_id_projection_ignores_a_binding_with_no_resolved_value() -> None:
-    """A declaring binding absent from ``binding_values`` contributes nothing, never a spurious zero."""
-    revision = _modelo_130_snapshot().revision
-
-    assert renta_income_binding_output_casilla_values(revision, {}) == {}
 
 
 def test_observation_refuses_a_grounding_marker_that_contradicts_its_base() -> None:
