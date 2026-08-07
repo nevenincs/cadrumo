@@ -31,8 +31,8 @@ screen:
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import NoReturn
+from collections.abc import Callable, Iterable
+from typing import NoReturn, cast
 
 from bs4 import BeautifulSoup
 
@@ -173,13 +173,30 @@ async def click_first_matching_selector(page: object, selectors: tuple[str, ...]
         raise last_error
 
 
+def _absent_attribute(_name: str, default: object = None) -> object:
+    """Stand in for ``node.get`` on a node that has no attribute accessor.
+
+    A named function rather than a lambda: lambda parameters cannot carry
+    annotations, so the fallback erased the type of everything read through it.
+    """
+    return default
+
+
 def _html_node_has_class(node: object, class_name: str) -> bool:
-    classes = getattr(node, "get", lambda _name, _default=None: _default)("class", [])
+    getter = getattr(node, "get", _absent_attribute)
+    classes = getter("class", [])
     if isinstance(classes, str):
         return class_name in classes.split()
-    if classes is None:
-        return False
-    return class_name in classes
+    if isinstance(classes, Iterable):
+        # Third-party boundary: the node is whatever the HTML parser returned, so
+        # its class attribute is an iterable of unknown element type. The runtime
+        # check above establishes the iterability; the element type cannot be
+        # recovered and is compared as an opaque value.
+        entries = cast("Iterable[object]", classes)
+        return any(class_name == entry for entry in entries)
+    # Neither a class string nor an iterable of names: the node declares no
+    # usable class attribute, which is an absence rather than a match.
+    return False
 
 
 async def dismiss_pre303_alert_modal_if_present(
