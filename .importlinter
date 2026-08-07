@@ -430,8 +430,8 @@ ignore_imports =
     # repositories pinned around them: derived financial data is STORAGE, so
     # it routes through the core's encrypted repository rather than living
     # behind the optional inference boundary.
-    cadrumo.application.ledger._extracted_document_cache -> cadrumo.adapters.**
-    cadrumo.application.ledger._extraction_draft_store -> cadrumo.adapters.**
+    cadrumo.application.ledger._extracted_document_cache -> cadrumo.adapters.persistence.**
+    cadrumo.application.ledger._extraction_draft_store -> cadrumo.adapters.persistence.**
     # The confirmation record is the third of that same family and is pinned for
     # the same reason, not as a convenience: it declares its own secure-object
     # namespace and subclasses SecureBoundRepository, so it IS a ledger store
@@ -446,7 +446,7 @@ ignore_imports =
     # adapters.persistence (rg -l over src/cadrumo/application, excluding tests
     # and conftest). The count is given with its measurement because an
     # unreproducible figure in a rationale rots into folklore.
-    cadrumo.application.ledger._confirmation_record -> cadrumo.adapters.**
+    cadrumo.application.ledger._confirmation_record -> cadrumo.adapters.persistence.**
     # The read-time shape probe. DocumentShape is derived from a document's
     # own bytes by an INBOUND adapter, because reading an externally-authored
     # format is inbound-adapter work; the ledger consumes the answer.
@@ -477,13 +477,44 @@ ignore_imports =
     # at the narrow fx target rather than a broad adapters wildcard.
     cadrumo.application.invoices._creation -> cadrumo.adapters.outbound.fx
     cadrumo.application.invoices._source_resolver -> cadrumo.adapters.**
-    cadrumo.application.ledger._actions_common -> cadrumo.adapters.**
-    cadrumo.application.ledger._actions_import -> cadrumo.adapters.**
-    cadrumo.application.ledger._evidence -> cadrumo.adapters.**
-    cadrumo.application.ledger._evidence_draft -> cadrumo.adapters.**
-    cadrumo.application.ledger._evidence_textlayer -> cadrumo.adapters.**
-    cadrumo.application.ledger._llm_classification -> cadrumo.adapters.**
-    cadrumo.application.ledger._llm_diagnostics -> cadrumo.adapters.**
+    # ── application/ledger narrowed from `adapters.**` to the layer each module
+    #    actually reaches. A broad wildcard admits an INBOUND-adapter edge from
+    #    these modules without review, and that is the one class this contract
+    #    exists to surface: the three einvoice pins above were each justified by
+    #    name, while three more inbound edges sat inside these wildcards
+    #    unexamined. Narrowing is to keep the inbound class loud, not tidiness.
+    #    Each target below was read out of the module's runtime imports;
+    #    unmatched_ignore_imports_alerting = error fails a pin that overshoots. ──
+    cadrumo.application.ledger._actions_common -> cadrumo.adapters.persistence.**
+    cadrumo.application.ledger._evidence -> cadrumo.adapters.persistence.**
+    # Bank-statement rows arrive as the provider's own ParsedLedgerRow records,
+    # and this module classifies and imports them. Reading an externally-authored
+    # statement format is inbound-adapter work; the ledger consumes the answer --
+    # the same shape as the einvoice pins above. The type-only import is excluded
+    # from the graph; the runtime edge is two function-local imports that grimp
+    # sees and this pin therefore reviews.
+    cadrumo.application.ledger._actions_import -> cadrumo.adapters.persistence.**
+    cadrumo.application.ledger._actions_import -> cadrumo.adapters.inbound.financial.providers
+    # A fourth einvoice consumer, previously hidden inside a broad wildcard while
+    # its three siblings were individually reviewed. A structured e-invoice is
+    # read exactly by parse_einvoice_document and its parse failure is caught
+    # here; same justification as _evidence_input, _batch_ingest and
+    # _aeat_record_projection, now stated rather than assumed.
+    cadrumo.application.ledger._evidence_draft -> cadrumo.adapters.persistence.**
+    cadrumo.application.ledger._evidence_draft -> cadrumo.adapters.inbound.einvoice
+    # Reaches NO persistence at all: its former `adapters.**` pin was wholly an
+    # inbound-adapter allowance wearing a storage-shaped label. Lifting a PDF's
+    # text layer out of bytes is inbound-adapter work; this module decides what
+    # the extracted text means as evidence.
+    cadrumo.application.ledger._evidence_textlayer -> cadrumo.adapters.inbound.pdf
+    # Outbound wiring, the sec. 538 edge, pinned at the narrow llm target rather
+    # than a broad adapters wildcard -- the same treatment the fx rate provider
+    # above already gets. Classification records run telemetry through the
+    # outbound recorder; diagnostics folds that recorder's encrypted usage log.
+    cadrumo.application.ledger._llm_classification -> cadrumo.adapters.persistence.**
+    cadrumo.application.ledger._llm_classification -> cadrumo.adapters.outbound.llm
+    cadrumo.application.ledger._llm_diagnostics -> cadrumo.adapters.persistence.**
+    cadrumo.application.ledger._llm_diagnostics -> cadrumo.adapters.outbound.llm
     # ── arch-remediation-ports-inversion: usage_ratios persistence relocated to
     #    adapters.persistence.profile.usage_ratios; the ledger callers now import
     #    the adapter directly (narrow target keeps the source-module set flat) ──
@@ -498,8 +529,8 @@ ignore_imports =
     #    caller); application/entrypoint callers import the adapter directly ──
     cadrumo.application.calculations._cross_period_clean_state -> cadrumo.adapters.persistence.profile.justificante
     cadrumo.application.modelo._external_import_actions -> cadrumo.adapters.persistence.profile.justificante
-    cadrumo.application.ledger._review_projection -> cadrumo.adapters.**
-    cadrumo.application.ledger._rule_repository -> cadrumo.adapters.**
+    cadrumo.application.ledger._review_projection -> cadrumo.adapters.persistence.**
+    cadrumo.application.ledger._rule_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.live -> cadrumo.adapters.**
     cadrumo.application.live._borrador_100 -> cadrumo.adapters.**
     cadrumo.application.live._errors -> cadrumo.adapters.**
