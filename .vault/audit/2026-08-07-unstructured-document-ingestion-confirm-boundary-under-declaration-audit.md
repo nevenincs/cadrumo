@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:b0b95f82d914f9b75cf21726aef6d7083a109c4c73edf2d9c321e1d21b74a2e7'
+body_hash: 'sha256:90c1059930207a059a8138588f0cb9fe67152cfe5053e46b762f23bcf3668835'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -94,6 +94,11 @@ derives a domestic category from the stored rate and bank direction, which is
 correct for an ordinary supply and wrong for this one. Red before the fix:
 `assert None is <IvaCategory.DOMESTIC_REVERSE_CHARGE>`.
 
+The source change for this finding was swept into commit `bdc24c48b6` by an
+unrelated no-pathspec commit, so a reader arriving at that SHA finds the code
+under another message with no explanation. The reasoning was landed separately
+and in full as commit `9cd4e7f2e1`; that is where it is recoverable.
+
 The proof needed a new bundled fixture, because no document in the corpus stated
 a category other than the standard-rate code, so the drop could not be detected
 against the corpus as it stood. The fixture carries a provenance sidecar
@@ -114,15 +119,34 @@ break registry load. The gap is modelling completeness against the official
 Modelo 322 form, needing legal grounding, not a formula edit. Left unfixed
 deliberately.
 
-Two things about it are worth recording. The completeness manifest declares
-exactly the skeleton's own casillas, and its number fields repeat the casilla
-ids rather than official box numbers, so the export completeness gate is
-self-consistent with the under-modelling and structurally cannot detect it: that
-gate guards rendering, not modelling. And the first pass at this finding searched
-casilla ids for the substring recargo and found none on Modelo 303 either, which
-was a false negative. Modelo 303 does include its recargo tiers, referenced by
-box number rather than by a semantic id. Searching one naming scheme when a
-model carries two is how a correct model reads as broken.
+The under-modelling is invisible to the gate that exists to catch it; that is a
+separate defect and it is recorded as its own finding below.
+
+One correction worth keeping. The first pass at this searched casilla ids for the
+substring recargo, found none on Modelo 303 either, and briefly read a correct
+model as broken: Modelo 303 does include its recargo tiers, referenced by box
+NUMBER rather than by a semantic id. Searching one naming scheme when a model
+carries two is how that happens, and it is the failure mode a symbol-name search
+cannot protect against.
+
+### completeness-manifest-cannot-see-under-modelling | high | The export gate is self-consistent with a skeletal modelo and structurally cannot fail on it
+
+The export completeness gate asserts that every casilla the completeness manifest
+requires carries a value before any filing artefact is written. On Modelo 322 and
+Modelo 353 the manifest declares exactly the skeleton's own casillas, and its
+number fields repeat the casilla ids rather than official AEAT box numbers. The
+gate therefore compares the model against itself and passes.
+
+That is a gate that cannot fail on the defect it exists to catch. It guards
+RENDERING -- did the calculation populate what the model declares -- and nothing
+in the chain guards MODELLING, so a modelo covering a fraction of its official
+form produces a draft that is confident, thin, and green. The digest over those
+bytes is a byte-integrity lock, not a completeness one.
+
+Not a Modelo 322 problem specifically. Any modelo whose manifest was authored
+from its own casilla set rather than from the official form inherits it, and the
+repeated-id number fields are the readable signal that this one was. Belongs in
+front of whoever owns those modelos, grounded against the official forms.
 
 ### bulk-import-has-no-recargo-column | low | Not a silent loss: unknown columns are refused
 
@@ -216,13 +240,27 @@ would catch. It fired for years without any of them being fixed, because an
 advisory that the totals disagree is not a declaration of the missing figure. A
 detector that nothing acts on is indistinguishable from an absent one.
 
-An architecturally significant question is left open for a follow-on decision
-record: whether a skeletal registry modelo should be reachable by calculate and
+Two architecturally significant questions are left open for follow-on decision
+records, and neither can be closed by a test.
+
+The first: whether a skeletal registry modelo should be reachable by calculate and
 export at all. Modelo 322 and Modelo 353 will produce a draft that the
 completeness gate passes, because the manifest describes the skeleton rather than
 the official form. The decision that record must make is whether a modelo
 declares its own modelling completeness explicitly, so a partial model refuses a
 filing artefact instead of producing a confident and thin one.
+
+The second: how a standard-rated structured document resolves to a domestic IVA
+tier. A document stating the standard-rate code carries no special treatment, so
+the record is minted with no category, and a record with no declared treatment is
+refused by the invoice decomposition contract. The decision that record must make
+is whether a rate percentage may be resolved to a tier at all, given that the
+one-tier-one-rate assumption ended with RD-ley 4/2024 and a percentage now
+identifies a tier only together with a date; and what a multi-rate document
+resolves to, when the record carries a single category field and a two-tier
+document has two answers. Until that is settled, a plain rated invoice confirmed
+from evidence contributes its bank cash rather than the ingresos integros the
+casilla asks for. That is a live under-declaration, not a latent one.
 
 A guard whose completeness is maintained by hand should carry a gate that derives
 its expected set from the model. Two of the findings here are the same mistake at
