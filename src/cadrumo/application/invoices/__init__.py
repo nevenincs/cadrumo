@@ -74,10 +74,13 @@ from ._importing import (
 )
 from ._issuer_establishment import issuer_established_in_tai, simplificada_requires_tax_id_for_domestic_issuer
 from ._lifecycle import (
+    CatalogueInvoicePatch,
     CatalogueInvoiceRemoveResult,
+    CatalogueInvoiceUpdateResult,
     remove_catalogue_invoice,
     resolve_catalogue_invoice,
     resolve_catalogue_invoice_from_repository,
+    update_catalogue_invoice,
 )
 from ._linking import (
     InvoiceTransactionLinkResult,
@@ -121,7 +124,9 @@ __all__ = [
     "BulkInvoiceImportRow",
     "BulkInvoiceImportRowFailure",
     "CatalogueInvoiceCreateResult",
+    "CatalogueInvoicePatch",
     "CatalogueInvoiceRemoveResult",
+    "CatalogueInvoiceUpdateResult",
     "InvoiceCatalogueSourceResolver",
     "InvoiceImportResult",
     "InvoiceListRow",
@@ -167,5 +172,6 @@ __all__ = [
     "resolve_catalogue_invoice",
     "resolve_catalogue_invoice_from_repository",
     "simplificada_requires_tax_id_for_domestic_issuer",
+    "update_catalogue_invoice",
     "verify_invoice_repository_links",
 ]

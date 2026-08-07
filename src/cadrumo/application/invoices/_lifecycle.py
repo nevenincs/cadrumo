@@ -9,8 +9,11 @@ operator cannot confirm the long content-addressed ``invoice_id`` that
 catalogue invoice already binds; without a delete a mistaken
 ``catalogue create`` is permanent. These two services close that CRUD gap over
 the same sanctioned :class:`InvoiceCatalogueRepository` write path
-(``composition-service-no-parallel-write-path``), keeping the slim-vs-rich
-split intact.
+(``composition-service-no-parallel-write-path``). These verbs are the
+operator's single-record surface over the canonical aggregate; an earlier form
+of this docstring justified them as "keeping the slim-vs-rich split intact",
+which is a rationale the canonical-structure work removes -- the split is being
+retired, and these verbs survive it as the surviving store's own CRUD.
 
 :func:`resolve_catalogue_invoice` resolves a full id or an unambiguous prefix
 to one :class:`Invoice`. :func:`remove_catalogue_invoice` deletes one record,
@@ -21,16 +24,24 @@ into a one-sided inconsistency (``verify_link_consistency``).
 
 from __future__ import annotations
 
+from datetime import UTC, date, datetime
+from decimal import Decimal
+
 from pydantic import BaseModel, ConfigDict
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...core import IntracomOperationType
+from ...domain.buckets import BucketEventHistoryRepositoryProtocol
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepositoryProtocol,
+    InvoiceClass,
     InvoiceNotFoundError,
     InvoiceValidationError,
+    PaymentStatus,
 )
+from ...domain.iva import IvaCategory
 
 
 class CatalogueInvoiceRemoveResult(BaseModel):
@@ -130,9 +141,149 @@ def remove_catalogue_invoice(
     return CatalogueInvoiceRemoveResult(invoice=invoice, catalogue=new_catalogue)
 
 
+class CatalogueInvoicePatch(BaseModel):
+    """The fields of a persisted canonical invoice an operator may correct.
+
+    Deliberately EXCLUDES every field the invoice id is derived from -- kind,
+    invoice number, issue date, counterparty tax id, currency and the totals.
+    That exclusion is structural rather than a runtime refusal: a patch cannot
+    even express an identity change, so there is no path where one is attempted
+    and silently produces a record under a different id.
+
+    The reason is that the canonical id is CONTENT-ADDRESSED. Changing any of
+    those fields does not correct the record, it describes a different invoice,
+    and rewriting it in place would leave every transaction already linked to
+    the old id pointing at something that no longer exists. The slim store this
+    replaces had no such constraint because its id was independent of content;
+    this is the narrowing that content-addressing buys, and it is stated in the
+    update verb's refusal rather than left for an operator to discover.
+
+    An operator who genuinely must change an identity field removes the record
+    and creates it again -- which the remove verb already guards, refusing to
+    delete an invoice that still carries links.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    counterparty_name: str | None = None
+    counterparty_country: str | None = None
+    notes: str | None = None
+    payment_status: PaymentStatus | None = None
+    iva_category: IvaCategory | None = None
+    operation_type: IntracomOperationType | None = None
+    operation_date: date | None = None
+    retention_rate: Decimal | None = None
+    retention_amount: Decimal | None = None
+    series: str | None = None
+    invoice_class: InvoiceClass | None = None
+    rectifies_invoice_number: str | None = None
+    payment_id: str | None = None
+
+
+class CatalogueInvoiceUpdateResult(BaseModel):
+    """Result of correcting one rich catalogue invoice."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    invoice: Invoice
+    catalogue: InvoiceCatalogue
+    bucket_event_ids: tuple[str, ...] = ()
+
+
+def update_catalogue_invoice(
+    *,
+    bucket_id: str,
+    invoice_id: str,
+    patch: CatalogueInvoicePatch,
+    repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+    actor: str = "cli",
+) -> CatalogueInvoiceUpdateResult:
+    """Apply a correction to one persisted canonical invoice.
+
+    Only fields present on the patch are changed; an omitted field keeps its
+    stored value, so a correction never has to restate the whole record. The
+    identity fields are absent from the patch model entirely, so the record's
+    ``invoice_id`` is stable across an update by construction and every
+    transaction already linked to it stays bound.
+
+    ``linked_transaction_ids`` is carried forward explicitly rather than being
+    left to survive by accident: it is the reason this aggregate is the
+    reconciliation authority, and an update that dropped it would sever the
+    bidirectional link without the operator asking for it.
+
+    The corrected record is re-validated in full, so a patch that would break
+    an invariant -- a retención above its base, a counterparty country that no
+    longer matches the tax id -- refuses rather than persisting an inconsistent
+    invoice. The write rides the sanctioned
+    :class:`InvoiceCatalogueRepository`; no parallel write path is introduced.
+
+    Args:
+        bucket_id: Profile bucket whose encrypted catalogue holds the record.
+        invoice_id: Full id or an unambiguous prefix of the invoice to correct.
+        patch: The fields to change; omitted fields are left as stored.
+        repository: Optional injected catalogue repository (testing seam).
+        event_repository: Optional injected bucket-event repository.
+        occurred_at: Event timestamp; defaults to now.
+        actor: Who performed the correction, recorded on the event.
+
+    Returns:
+        The corrected invoice, the updated catalogue, and the emitted event id.
+
+    Raises:
+        InvoiceNotFoundError: No invoice matches ``invoice_id``.
+        InvoiceValidationError: The patch is empty, or the corrected record
+            would violate an invoice invariant.
+    """
+    from ._creation import emit_catalogue_invoice_event
+
+    repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
+    catalogue = repo.load()
+    existing = resolve_catalogue_invoice(catalogue, invoice_id)
+
+    changes = patch.model_dump(exclude_unset=True, exclude_none=True)
+    if not changes:
+        raise InvoiceValidationError(
+            "an invoice correction must state at least one field to change",
+            translated_message="application.invoices.lifecycle.errors.empty_invoice_patch",
+            context={"invoice_id": existing.invoice_id},
+        )
+
+    payload = existing.model_dump()
+    payload.update(changes)
+    # Carried explicitly, not by accident: the links are why this aggregate is
+    # the reconciliation authority, and an update that dropped them would sever
+    # a bidirectional binding the operator never asked to break.
+    payload["linked_transaction_ids"] = existing.linked_transaction_ids
+    payload["updated_at"] = occurred_at or datetime.now(UTC)
+    corrected = Invoice.model_validate(payload)
+
+    updated = dict(catalogue.invoices)
+    updated[corrected.invoice_id] = corrected
+    new_catalogue = InvoiceCatalogue.model_validate({"invoices": updated})
+    repo.save(new_catalogue)
+    event_ids = emit_catalogue_invoice_event(
+        invoice=corrected,
+        bucket_id=bucket_id,
+        slot=1,
+        event_repository=event_repository,
+        occurred_at=occurred_at or datetime.now(UTC),
+        actor=actor,
+    )
+    return CatalogueInvoiceUpdateResult(
+        invoice=corrected,
+        catalogue=new_catalogue,
+        bucket_event_ids=event_ids,
+    )
+
+
 __all__ = [
+    "CatalogueInvoicePatch",
     "CatalogueInvoiceRemoveResult",
+    "CatalogueInvoiceUpdateResult",
     "remove_catalogue_invoice",
     "resolve_catalogue_invoice",
     "resolve_catalogue_invoice_from_repository",
+    "update_catalogue_invoice",
 ]
