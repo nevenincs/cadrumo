@@ -75,11 +75,17 @@ _ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
 # its envelope is about a value rather than about a drop.
 _SPANISH_CIF = "B12345674"
 
+# The BILLED party, deliberately a different checksum-valid identifier from the
+# issuer's. A fixture reusing one id for both parties cannot fail when the two
+# sides are confused, which is the only failure these fields exist to catch.
+_SPANISH_CUSTOMER_NIF = "12345678Z"
+
 #: A Spanish invoice as a model would report it: values in their declared forms,
 #: anchors in the forms the page prints. Deliberately NOT byte-identical pairs --
 #: an anchor equal to its value makes the downstream parse check vacuous.
 _SPANISH_INVOICE: dict[str, str | None] = {
     "supplier_tax_id": _SPANISH_CIF,
+    "customer_tax_id": _SPANISH_CUSTOMER_NIF,
     "invoice_number": "2026-0142",
     "invoice_date": "10/03/2026",
     "taxable_base": "1.200,00",
@@ -92,6 +98,7 @@ _SPANISH_INVOICE: dict[str, str | None] = {
 }
 _SPANISH_ANCHORS: dict[str, str | None] = {
     "supplier_tax_id": f"CIF: {_SPANISH_CIF}",
+    "customer_tax_id": f"NIF cliente: {_SPANISH_CUSTOMER_NIF}",
     "invoice_number": "Factura n.º 2026-0142",
     "invoice_date": "10/03/2026",
     "taxable_base": "1.200,00 €",
