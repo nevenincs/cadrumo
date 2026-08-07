@@ -654,8 +654,12 @@ def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_ma
     Evidence class: THRESHOLD_CONTINUITY. The two-year per-asset-class baseline
     fidelity plus the application advisory assertions exercise the advisory layer
     this informativa can currently support without a numeric calculation engine.
-    This test does not close the separate registry `previous_filing` baseline
-    binding work for M720.
+    This test covers the enrollment cycle, not binding resolution: the
+    `previous_filing` baseline bindings are live registry data and are exercised
+    by test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grown_cuentas
+    above. What remains unwired for M720 is the ADVISORY TRIGGER itself —
+    :func:`~application.calculations.modelo_720_redeclaration_advisory_findings`
+    has no production caller and `verify_modelo_revision` never invokes it.
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
