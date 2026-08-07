@@ -1011,6 +1011,16 @@ class RentaIncomeObservationProtocol(Protocol):
     """
 
     @property
+    def transaction_id(self) -> str:
+        """Return the ledger row this observation was projected from.
+
+        Declared because a consumer samples these ids to name the offending
+        rows in an ungrounded-income diagnostic. Leaving it off the protocol
+        let a conforming implementation omit it and fail there at runtime.
+        """
+        ...
+
+    @property
     def target_casilla_id(self) -> CasillaId: ...
 
     @property
