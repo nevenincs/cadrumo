@@ -365,3 +365,27 @@ def test_the_no_text_layer_case_still_escalates_to_vision() -> None:
 
     assert "except PurchaseInvoiceEvidenceInputError" in source
     assert "_extract_invoice_fields_via_vision" in source
+
+
+def test_the_refusals_provision_verb_survives_to_the_error_envelope() -> None:
+    """The remedy must reach the operator, not be replaced by the registry default.
+
+    `PurchaseInvoiceEvidenceInputError` is registered with a default suggestion
+    of `aeat app ledger evidence list`, which is the right hint for a bad
+    evidence reference and exactly the wrong one here -- listing evidence does
+    not provision a reader. The resolver prefers a raised suggestion over the
+    registered default, and this pins that: the behaviour is "the operator is
+    told how to fix it", not an incidental string.
+
+    Gated because the missing-reader case is a REFUSAL rather than a per-field
+    notice. A missing reader is a statement about the ENVIRONMENT and produces
+    no draft at all, so there is no provenance for a notice to describe; the
+    non-blocking notice channel is for a draft that exists but degraded.
+    """
+    from ....core.errors import get_error_suggestion
+    from .._evidence_draft import _refuse_a_text_read_with_no_reader
+
+    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+        _refuse_a_text_read_with_no_reader(LLMProviderError("Ollama is not reachable"))
+
+    assert get_error_suggestion(raised.value) == "aeat config provision pull"
