@@ -34,14 +34,19 @@ from datetime import date
 import pytest
 
 from ....core import ClassifierInputSource
-from ....domain.iva import CustomerTaxStatus, IvaTerritorialScope, SupplyNature
-from ...invoices import InvoiceKind
+from ....domain.iva import (
+    CustomerTaxStatus,
+    InvoiceKind,
+    IvaRateKind,
+    IvaTerritorialScope,
+    SupplyNature,
+)
 from .._classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
     assemble_classification_criteria,
 )
-from .._classifier_inputs import ClassifierInputs
+from .._classifier_inputs import ClassifierInputFact, ClassifierInputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -112,15 +117,23 @@ class TestTheChannelIsExtendedByFieldNotByRoute:
 
         assert supplied == {"declared"}, f"a second supply route appeared: {sorted(supplied)}"
 
-    def test_a_new_fact_is_a_new_attribute_on_the_channel(self) -> None:
-        """Every declared field is a DeclaredFact, so adding one needs no new plumbing."""
-        annotations = DeclaredFacts.model_fields
+    def test_every_declared_field_is_an_optional_attributed_fact(self) -> None:
+        """Adding a fact needs an attribute, not plumbing -- asserted on the shape.
 
-        assert annotations, "the channel must carry at least one declared fact"
-        for name in annotations:
-            supplied = DeclaredFacts(**{name: DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED)})
+        Checked against the field annotations rather than by constructing one of
+        each: the facts are typed per field, so a constructed probe would have to
+        carry a value map that drifts from the model. The property that matters
+        is that every field is an OPTIONAL DeclaredFact -- optional so absence
+        stays absence, DeclaredFact so it cannot be supplied unattributed.
+        """
+        fields = DeclaredFacts.model_fields
 
-            assert getattr(supplied, name) is not None, name
+        assert fields, "the channel must carry at least one declared fact"
+        for name, info in fields.items():
+            rendered = str(info.annotation)
+
+            assert "DeclaredFact[" in rendered, f"{name} is not an attributed fact: {rendered}"
+            assert info.default is None, f"{name} must default to absent, not to a value"
 
 
 class TestTheChannelReachesTheAssembly:
@@ -164,7 +177,62 @@ class TestTheChannelReachesTheAssembly:
             ),
             issuer_country_code="ES",
             customer_country_code="ES",
+            rate_tier=IvaRateKind.GENERAL,
         )
 
         assert "issuer_residency" not in {gap.field for gap in supplied.missing}
         assert "customer_residency" not in {gap.field for gap in supplied.missing}
+
+
+class TestTheEnvelopeRefusesLaunderedBacking:
+    """A fact must be backed the way its own source can be backed, and no other.
+
+    The source split only means anything if each member's backing is enforced.
+    An operator assertion carrying a document anchor is the sharpest case: it
+    would state that the page printed the very fact the operator had to supply
+    BECAUSE the page did not, and an auditor sent to look at that anchor finds
+    nothing. The value survives, plausibly, with a citation that does not exist.
+    """
+
+    def test_an_operator_assertion_may_not_carry_a_document_anchor(self) -> None:
+        with pytest.raises(ValueError, match="must not carry a document anchor"):
+            ClassifierInputFact(
+                name="customer_tax_status",
+                value=CustomerTaxStatus.B2C_CONSUMER.value,
+                source=_ASSERTED,
+                anchor="Cliente particular",
+            )
+
+    def test_an_operator_assertion_may_not_borrow_a_profile_authority(self) -> None:
+        """The operator vouches for it; dressing that as the censo hides who decided."""
+        with pytest.raises(ValueError, match="vouched for by the operator"):
+            ClassifierInputFact(
+                name="customer_tax_status",
+                value=CustomerTaxStatus.B2C_CONSUMER.value,
+                source=_ASSERTED,
+                authority="censo",
+            )
+
+    def test_an_unbacked_operator_assertion_is_accepted(self) -> None:
+        """Positive control: the refusals above are about BACKING, not the source.
+
+        Without this, a validator rejecting every operator assertion outright
+        would satisfy both refusals and the channel would be unusable.
+        """
+        fact = ClassifierInputFact(
+            name="customer_tax_status",
+            value=CustomerTaxStatus.B2C_CONSUMER.value,
+            source=_ASSERTED,
+        )
+
+        assert fact.anchor is None
+        assert fact.authority is None
+
+    def test_the_document_and_profile_refusals_still_hold(self) -> None:
+        """The pre-existing branches, so the third member did not displace them."""
+        with pytest.raises(ValueError, match="must name the authority"):
+            ClassifierInputFact(
+                name="filer_iva_regime", value="general", source=ClassifierInputSource.PROFILE_AUTHORITY
+            )
+        with pytest.raises(ValueError, match="vouched for by its anchor"):
+            ClassifierInputFact(name="x", value="y", source=_FROM_DOCUMENT, authority="censo")
