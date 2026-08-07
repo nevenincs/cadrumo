@@ -1,0 +1,229 @@
+[[revisions."2010-y-siguientes".export_layouts]]
+id = "modelo-390-fichero-boe"
+
+# Pag. 5: regimen simplificado. Box [79] total cuota resultante del
+# regimen simplificado (annual carry from the 4T Modelo 303) sits at
+# offset 1118 on this page, not on Pag. 6. The remaining modulo and
+# deduction slots of the page are not modelled; the record still closes at
+# its official length through the end-of-record identifier at 1508.
+
+[[revisions."2010-y-siguientes".export_layouts.records]]
+id = "modelo-390-page-05"
+record_type = "page_05"
+order = 6
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-05-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-05-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "390"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-05-number"
+offset = 6
+length = 5
+kind = "literal"
+literal = "05000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-05-end"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-05-casilla-simplificado-total"
+offset = 1118
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.reconciliacion.devengada-simplificado-303"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-05-close"
+offset = 1508
+length = 12
+kind = "literal"
+literal = "</T39005000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# Pag. 6: resultado de las liquidaciones. Box [97] resultado ultimo periodo
+# a compensar, box [662] cuotas pendientes de compensacion generadas en el
+# ejercicio distintas de la 97 (LIVA art. 99/115/116).
+
+[[revisions."2010-y-siguientes".export_layouts.records]]
+id = "modelo-390-page-06"
+record_type = "page_06"
+order = 7
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "390"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-number"
+offset = 6
+length = 5
+kind = "literal"
+literal = "06000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-end"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-97"
+offset = 276
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.compensacion-ultimo-periodo-97"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-662"
+offset = 310
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-close"
+offset = 817
+length = 12
+kind = "literal"
+literal = "</T39006000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records]]
+id = "modelo-390-envelope-footer"
+record_type = "envelope_footer"
+order = 8
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-close"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]

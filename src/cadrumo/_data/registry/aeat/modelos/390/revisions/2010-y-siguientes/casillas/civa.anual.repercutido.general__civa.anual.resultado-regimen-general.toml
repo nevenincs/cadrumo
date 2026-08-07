@@ -218,7 +218,7 @@ input_kind = "bound"
 binding = "modelo-390-prev-303-cuota-devengada-simplificado"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-06-casilla-simplificado-total"]
+export_refs = ["modelo-390-page-05-casilla-simplificado-total"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.compensacion-ultimo-periodo-97"
