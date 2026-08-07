@@ -480,6 +480,45 @@ def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
 
 
 def _intracommunity_clave(invoice: Invoice) -> str | None:
+    """Return the Modelo 349 clave de operación for one invoice, or ``None``.
+
+    :class:`~cadrumo.core.IntracomOperationType` is the clave authority -- its
+    member VALUES are the letters the diseño de registro defines, which is why
+    the explicit branch below returns the value directly rather than mapping it.
+    The category branches are a fallback for an invoice that carries no
+    operation type, which is the common case: the field is optional on every
+    creation path.
+
+    That fallback reaches five of the ten claves, and the five it omits are
+    omitted for two different reasons worth separating, because the gap reads
+    as an oversight otherwise.
+
+    R, D and C are unreachable here BY CONSTRUCTION, not by omission. They are
+    the call-off stock claves -- a transfer of goods under a consignment sales
+    arrangement, a return of those goods, and a substitution of the intended
+    acquirer. LIVA art. 9 bis.Dos places the entrega, and its art. 25 exemption,
+    at the moment the acquirer takes the power of disposal, which is later than
+    and separate from the movement those three claves report. The movement
+    transfers no ownership and so carries no invoice at all; art. 9 bis.Uno.d
+    has the vendor declare the despatch through the libro registro and the
+    declaración recapitulativa precisely because there is no supply yet to
+    invoice. An invoice-sourced path therefore cannot produce them, and no
+    predicate added here would help -- they need a non-invoice record source.
+
+    M and H are a real limit rather than a scope boundary. Both are ordinary
+    invoiced entregas intracomunitarias that happen to FOLLOW an exempt
+    importation (LIVA art. 27.12, H being the variant made by a representante
+    fiscal under art. 86.Tres), so they carry the same intra-community supply
+    category as an art. 25 supply and the fallback cannot tell them apart --
+    the distinguishing fact is the prior importation, which appears nowhere on
+    the invoice except in the operation type itself. The diseño defines E as
+    excluding exactly these, directing them to M or H, so an operator with such
+    a supply MUST set the operation type. The fallback's E is correct for the
+    ordinary case and wrong for this one, and refusing instead is not the
+    remedy: no predicate here separates the two, so a refusal falls on the whole
+    category and makes the ordinary supply undeclarable -- measured, six
+    otherwise-passing M349 flows.
+    """
     operation_type = invoice.operation_type
     if operation_type is not None:
         return _m349_clave_for_operation_type(
