@@ -5,29 +5,10 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:c74cd5652fe39870dbc28d89b30f8adc1902c9bf5d05daf11afab1d8af272bd0'
+body_hash: 'sha256:b61093a5bab9ce33a358436a0900890951034691dbb0585bf6dda4ee780e4438'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace user-docs-search-consolidation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `user-docs-search-consolidation` audit: `Ranked-result measurement across modelo, casilla, natural-language and tax-term queries`
 
@@ -59,6 +40,23 @@ The two natural-language probes returned two generic documentation pages each an
 - `what happens if I file late` returned only an income-tax-year page and the same verify page.
 
 The taxonomy classes do not share this weakness: modelo, casilla and tax-term queries all recall the right card kinds. The gap is specific to prose phrasing, which is the case the static semantic tier exists to serve, and that tier is dark - its coverage measures 0.748 against a 0.8 floor and its composed ladder scored worse than the lexical baseline, so enabling it would ship a regression.
+
+### RANK-004 | OPEN | Prose queries fail on term conjunction, not on semantics
+
+RANK-003 recorded that natural-language queries recall no domain cards. The cause is measurable and is mostly not semantic. Pagefind conjoins every query term, so one absent or rare term empties the result set. Removing only the function words, with no other change, restores recall by more than an order of magnitude:
+
+| query | results |
+|---|---|
+| `how do I file my quarterly VAT return` | 2 |
+| `quarterly VAT return` | 36 |
+| `what happens if I file late` | 2 |
+| `file late` | 41 |
+
+The reader passes the raw query straight to Pagefind with no relaxation, so a reader who types a question rather than a keyword gets almost nothing.
+
+A second, smaller cause is genuine vocabulary and morphology mismatch: `penalty late filing` returns 0 because the corpus says recargo and sancion, and the Spanish `presento` returns 0 while the corpus carries other forms of the same verb. Only this residue is what a semantic tier would answer.
+
+**A corpus-frequency heuristic was tested as a language-agnostic way to drop function words, and it does not work.** Document frequency does not separate the two classes in this corpus: `my` matches 23 records while the content word `VAT` matches 180, and `quarterly` matches 1883 against `how` at 1862. Any relaxation must therefore be driven by an explicit per-language function-word authority or by progressive term relaxation, not by a frequency threshold. Recording the negative result so it is not re-attempted.
 
 ## Recommendations
 
