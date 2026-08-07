@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import importlib.util
 from pathlib import Path
 
 import pytest
@@ -245,6 +246,37 @@ def test_every_registered_namespace_declares_explicit_custody_disposition() -> N
     assert {definition.custody_disposition for definition in STORAGE_NAMESPACE_REGISTRY.namespaces} <= set(
         StorageCustodyDisposition,
     )
+
+
+def test_every_namespace_owner_resolves_to_a_real_module() -> None:
+    """Every ``owner`` must name a module that still exists.
+
+    The prefix assertion below checks only that an owner *starts with*
+    ``cadrumo.``, which a relocated module keeps satisfying after its real path
+    changes. Two rows had already rotted that way -- the test-topology refactor
+    moved both modules under a ``tests/`` package and updated the importers but
+    not these strings, because a string is a data consumer and no import breaks.
+    Storage-namespace ownership is the record of who is accountable for a body
+    of encrypted operator data, so a row naming a module that no longer exists
+    reports an owner nobody can be held to.
+    """
+    unresolvable = [
+        definition.owner
+        for definition in STORAGE_NAMESPACE_REGISTRY.namespaces
+        if definition.owner.startswith("cadrumo.") and not _module_exists(definition.owner)
+    ]
+
+    assert unresolvable == [], f"namespace owners naming modules that do not exist: {sorted(set(unresolvable))}"
+
+
+def _module_exists(dotted_path: str) -> bool:
+    """Report whether ``dotted_path`` is importable without importing it."""
+    try:
+        return importlib.util.find_spec(dotted_path) is not None
+    except (ImportError, ValueError):
+        # A parent package that does not exist raises rather than returning
+        # None, which is the same answer for this gate's purposes.
+        return False
 
 
 def test_all_67_namespace_rows_use_cadrumo_owners_and_preserve_six_authority_segments() -> None:
