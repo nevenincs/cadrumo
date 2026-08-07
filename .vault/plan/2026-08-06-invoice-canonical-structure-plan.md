@@ -4,7 +4,7 @@ tags:
   - '#invoice-canonical-structure'
 date: '2026-08-06'
 modified: '2026-08-07'
-body_hash: 'sha256:28f188f39aca33f11c7a972b3f33a37360580b3dd3a7610881353c34906f5746'
+body_hash: 'sha256:09bd2941ee91d0ddbfdb52d239d55bbfe134eaeba8345d0bc414125c8eda5fac'
 tier: L2
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
@@ -101,7 +101,7 @@ Delete the dead second Invoice writer, rename the misleading category token, add
 
 The source sweep ranked this the highest-consequence finding it carried and asked that it be acted on first. It is placed last here only because it is severable, it touches neither store's shape, and it can be lifted into its own campaign without disturbing P01 through P04. Severable is not optional: this phase carries Steps and Verification criteria of its own, and closing the plan with P05 untouched is a failed outcome, not a partial success.
 
-- [ ] `P05.S22` - Answer whether an invoice-only bucket can reach a filed M390 through the screen gap, tracing the M390 binding set to its value sources and settling whether both sides of the 390-to-303 reconciliation blocking rule derive from the same ledger, and encode the answer as a test rather than as prose; `src/cadrumo/application/aggregation/tests/test_modelo_bindings.py`.
+- [x] `P05.S22` - Answer whether an invoice-only bucket can reach a filed M390 through the screen gap, tracing the M390 binding set to its value sources and settling whether both sides of the 390-to-303 reconciliation blocking rule derive from the same ledger, and encode the answer as a test rather than as prose; `src/cadrumo/application/aggregation/tests/test_modelo_bindings.py`.
 - [ ] `P05.S23` - Extend the invoice-versus-ledger screen past its ES-only counterparty filter so intracomunitaria, import and export invoices are screened, proving a non-ES invoice diverging from the ledger is now caught where it passes silently today; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
 - [ ] `P05.S24` - Extend the screen past its four-cuota screened binding set to cover recargo de equivalencia, proving a recargo figure diverging from the ledger is caught; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
 - [ ] `P05.S25` - Add an M390-scoped equivalent of the invoice-versus-ledger screen, because the 390-to-303 blocking rule compares two ledger-derived sides and cannot detect consistent under-population, proving a bucket whose invoices exceed its ledger is caught on the annual path; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
