@@ -191,7 +191,7 @@ def test_every_minting_surface_sources_eligibility_from_the_canonical_resolver()
 
     Passing a literal ``True`` -- or any value not read from the resolver --
     would reinstate a per-surface decision above a profile-scoped bar, which is
-    the failure this Step exists to prevent. Vacuous today by design (nothing
+    the failure this test exists to prevent. Vacuous today by design (nothing
     mints yet); the signature test above is what holds the line until a surface
     appears.
     """
