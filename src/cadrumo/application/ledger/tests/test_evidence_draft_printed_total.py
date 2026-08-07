@@ -23,6 +23,7 @@ from __future__ import annotations
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -205,7 +206,7 @@ def _confirm_with(
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
     filename: str,
-    **overrides: object,
+    **overrides: Any,
 ):
     """Confirm with operator overrides, the boundary's widened parameter set."""
     pdf_path = tmp_path / filename
