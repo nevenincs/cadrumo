@@ -536,6 +536,84 @@ def validate_ledger_iva_aggregation_binding_definition(
             f"facts {{iva_amount_sum, base_amount_sum, recargo_amount_sum}}, got {selector.fact!r}",
         )
 
+    try:
+        _iva_reachability_probe(selector)
+    except RegistryValidationError as exc:
+        raise RegistryValidationError(f"binding {binding.id!r} {exc}") from exc
+
+
+class _IvaReachabilityProbeObservation(NamedTuple):
+    """Minimal shape carrying only the five axes the IVA matcher reads.
+
+    Stands in for :class:`IvaLedgerObservation` so the probe never needs the
+    full record's unrelated required fields (ledger id, dates, amounts). The
+    matcher reads exactly these five attributes, which is the seam that makes
+    the substitution legitimate.
+    """
+
+    category: IvaCategory
+    rate_kind: IvaRateKind
+    flow_direction: IvaFlowDirection
+    cash_accounting_treatment: IvaCashAccountingTreatment
+    exemption_article: IvaExemptionArticle | None
+
+
+def _iva_reachability_probe(selector: _IvaLedgerSelector) -> None:
+    """Assert the selector matches at least one constructible observation shape.
+
+    Builds a synthetic observation from the selector's OWN declared values and
+    runs it through the real matcher this family's resolver builds
+    (:func:`_iva_build_matcher`), not a reimplementation of the match rule.
+    A selector whose matcher accepts no shape assembled from its own
+    declarations can never resolve a value: the binding aggregates to zero
+    forever, indistinguishable from a taxpayer with no IVA of that kind.
+
+    This family is where a selector-derived probe genuinely bites, and the
+    reason is worth stating because it is not true of every family. Four of the
+    five selector axes are constrained so they cannot be empty --
+    ``categories``, ``rate_kinds`` and ``exemption_articles`` each carry a
+    ``MinLen(1)``, and ``flow_direction`` is a single enum. But
+    ``cash_accounting_treatments`` carries **no minimum length**, so
+    ``cash_accounting_treatments = []`` is constructible today, and the matcher
+    tests ``observation.cash_accounting_treatment in set(...)`` against it. An
+    empty set rejects every treatment the enum defines, so such a binding
+    compiles clean, validates clean, and silently resolves to zero for every
+    taxpayer, forever.
+
+    What this cannot catch, stated so no reader over-trusts it:
+
+    * It never touches real ledger data, so it proves the selector CAN match a
+      shape, never that any real row DOES.
+    * It cannot catch a matcher that accepts the WRONG rows, only one that
+      accepts none.
+    * It cannot catch a resolver that aggregates correctly-matched rows
+      incorrectly. That is the residual blind spot the governing ADR names,
+      and no build-time data-free check can observe it.
+    """
+    matcher = _iva_build_matcher(selector)
+    probe = _IvaReachabilityProbeObservation(
+        category=selector.categories[0],
+        rate_kind=selector.rate_kinds[0],
+        flow_direction=selector.flow_direction,
+        # An absent treatment tuple is the only axis that can be empty. Index 0
+        # when populated; when empty there is no value to offer, and NONE is the
+        # treatment an ordinary non-cash-accounting row carries -- so the probe
+        # asks the fairest possible question of an empty selector and still
+        # gets a refusal.
+        cash_accounting_treatment=(
+            selector.cash_accounting_treatments[0]
+            if selector.cash_accounting_treatments
+            else IvaCashAccountingTreatment.NONE
+        ),
+        exemption_article=(selector.exemption_articles[0] if selector.exemption_articles else None),
+    )
+    if not matcher(probe):
+        raise RegistryValidationError(
+            "ledger_iva_aggregation selector matches no constructible observation shape -- "
+            "the binding can never resolve a value from any ledger data. The usual cause is an "
+            "empty cash_accounting_treatments tuple, which rejects every treatment the enum defines",
+        )
+
 
 def _iva_ledger_observation_matches_selector(
     observation: IvaLedgerObservation,

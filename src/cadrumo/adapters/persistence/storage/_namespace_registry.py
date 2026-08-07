@@ -517,6 +517,29 @@ LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
+LEDGER_EXTRACTED_DOCUMENT_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="ledger_extracted_document_cache",
+    namespace="cadrumo.application.ledger.extracted_document_cache",
+    owner="cadrumo.application.ledger",
+    # FINANCIAL, and the classification is the point rather than a formality.
+    # What this caches is the deterministic text extraction of an invoice --
+    # which IS the invoice, in a shape a grep can read. On disk in the clear it
+    # would be a NEW plaintext store of taxpayer financial data that does not
+    # exist in this tree today, and the secure-storage rule names "on-disk
+    # caches" explicitly among the things the in-memory processing exemption
+    # does not reach.
+    #
+    # Deliberately NOT called a *normalization* cache: that name presupposes the
+    # normalize-then-extract pipeline shape the governing ADR leaves open for
+    # want of a measurement, and no identifier may assert a decision the record
+    # says is undecided. What is cached is the extraction, which exists under
+    # either shape.
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{bucket_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
+)
 LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
     key="ledger_classification_rules",
     namespace="cadrumo.ledger.classification.rules",

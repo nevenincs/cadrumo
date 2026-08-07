@@ -12,6 +12,9 @@ record behind it and ``link --invoice-id`` resolves against that same identity.
 
 from __future__ import annotations
 
+from datetime import date
+from decimal import Decimal
+from enum import Enum
 from pathlib import Path
 from typing import Annotated
 
@@ -116,50 +119,69 @@ invoice_app = typer.Typer(
 
 
 
-def _catalogue_invoice_shared_fields(invoice) -> dict[str, object]:
-    """Project the rich :class:`Invoice` identity/total fields shared by every operator surface.
+# The invoice fields every operator surface renders, declared once. Both
+# projections below read this tuple, so a field added to one surface cannot go
+# missing from the other -- which is exactly how the two drifted apart before.
+_SHARED_INVOICE_FIELDS: tuple[str, ...] = (
+    "invoice_id",
+    "kind",
+    "invoice_number",
+    "issued_at",
+    "counterparty_name",
+    "counterparty_tax_id",
+    "counterparty_country",
+    "base_total",
+    "iva_total",
+    "grand_total",
+    "currency",
+    "payment_status",
+    "linked_transaction_ids",
+    "notes",
+)
 
-    The single home for the invoice-derived payload fields both the catalogue
-    verbs (:func:`_catalogue_invoice_payload`) and the evidence-confirm verb
-    render, so the two surfaces cannot drift.
+
+def _wire_scalar(value: object) -> object:
+    """Render one invoice field in its string wire form.
+
+    The evidence-confirm envelope declares every field as ``str``, so its
+    projection needs the rendered form where the catalogue envelope wants the
+    native typed value. Keeping the rendering here means the two differ only in
+    FORM, never in which fields they carry.
     """
-    return {
-        "invoice_id": invoice.invoice_id,
-        "kind": invoice.kind.value,
-        "invoice_number": invoice.invoice_number,
-        "issued_at": invoice.issued_at.isoformat(),
-        "counterparty_name": invoice.counterparty_name,
-        "counterparty_tax_id": invoice.counterparty_tax_id,
-        "counterparty_country": invoice.counterparty_country,
-        "base_total": format(invoice.base_total, "f"),
-        "iva_total": format(invoice.iva_total, "f"),
-        "grand_total": format(invoice.grand_total, "f"),
-        "currency": invoice.currency,
-        "payment_status": invoice.payment_status.value,
-        "linked_transaction_ids": list(invoice.linked_transaction_ids),
-        "notes": invoice.notes,
-    }
+    if isinstance(value, Decimal):
+        return format(value, "f")
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, tuple | list):
+        return list(value)
+    return value
+
+
+def _catalogue_invoice_shared_fields(invoice) -> dict[str, object]:
+    """Project the :class:`Invoice` identity/total fields in their string wire form.
+
+    Consumed by the evidence-confirm verb, whose envelope is all-``str``. Shares
+    :data:`_SHARED_INVOICE_FIELDS` with :func:`_catalogue_invoice_payload`, so
+    the two operator surfaces cannot carry different field sets.
+    """
+    return {name: _wire_scalar(getattr(invoice, name)) for name in _SHARED_INVOICE_FIELDS}
 
 
 def _catalogue_invoice_payload(invoice) -> dict[str, object]:
-    return {
-        "invoice_id": invoice.invoice_id,
-        "bucket_id": invoice.bucket_id,
-        "kind": invoice.kind,
-        "invoice_number": invoice.invoice_number,
-        "issued_at": invoice.issued_at,
-        "counterparty_name": invoice.counterparty_name,
-        "counterparty_tax_id": invoice.counterparty_tax_id,
-        "counterparty_country": invoice.counterparty_country,
-        "base_total": invoice.base_total,
-        "iva_total": invoice.iva_total,
-        "grand_total": invoice.grand_total,
-        "currency": invoice.currency,
-        "payment_status": invoice.payment_status,
-        "linked_transaction_ids": list(invoice.linked_transaction_ids),
-        "notes": invoice.notes,
-        "operation_type": invoice.operation_type,
-    }
+    """Project the :class:`Invoice` in native typed form for the catalogue envelopes.
+
+    Same field set as :func:`_catalogue_invoice_shared_fields` plus the two
+    fields only the catalogue surface carries; values stay native because
+    :class:`CatalogueInvoiceRecordPayload` is strict and declares real
+    ``Decimal`` / ``date`` / enum types.
+    """
+    payload: dict[str, object] = {name: getattr(invoice, name) for name in _SHARED_INVOICE_FIELDS}
+    payload["linked_transaction_ids"] = list(invoice.linked_transaction_ids)
+    payload["bucket_id"] = invoice.bucket_id
+    payload["operation_type"] = invoice.operation_type
+    return payload
 
 
 def _catalogue_invoice_lines(invoice) -> list[str]:

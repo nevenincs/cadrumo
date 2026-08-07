@@ -233,6 +233,29 @@ class EvidenceListResult(OutputSchema):
     rows: list[EvidenceRecordPayload]
 
 
+class EvidenceDraftLinePayload(OutputSchema):
+    """One extracted invoice line on the reviewable draft."""
+
+    description: str | None = None
+    quantity: str | None = None
+    unit_price: str | None = None
+    taxable_base: str | None = None
+    iva_rate: str | None = None
+    iva_amount: str | None = None
+    recargo_rate: str | None = None
+    recargo_amount: str | None = None
+
+
+class EvidenceDraftRateBreakdownPayload(OutputSchema):
+    """One per-rate subtotal extracted from a multi-rate invoice."""
+
+    iva_rate: str | None = None
+    taxable_base: str | None = None
+    iva_amount: str | None = None
+    recargo_rate: str | None = None
+    recargo_amount: str | None = None
+
+
 @register_schema("ledger.evidence.extract")
 class EvidenceExtractResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence extract``.
@@ -256,6 +279,14 @@ class EvidenceExtractResult(OutputSchema):
     iva_amount: str | None = None
     grand_total: str | None = None
     currency: str | None = None
+    # Mirrors the rest of the draft the extractor produces. Omitting these left
+    # the operator reviewing a total with no visible per-line or per-rate
+    # breakdown -- and a recargo de equivalencia (LIVA art. 161) invisible at
+    # the confirm step, which is where the operator is meant to catch it.
+    recargo_amount: str | None = None
+    lines: list[EvidenceDraftLinePayload] = []
+    iva_breakdown: list[EvidenceDraftRateBreakdownPayload] = []
+    iva_category: str | None = None
     raw_text_length: int = 0
 
 

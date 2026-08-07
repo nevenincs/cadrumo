@@ -37,7 +37,7 @@ needs to express a second, independent domain fact.
 from __future__ import annotations
 
 from ...core import Modelo
-from ..calculations.registry import CasillaId, register_cross_domain_snapshot_check, validated_casilla_id
+from ..calculations.registry import BindingId, CasillaId, register_cross_domain_snapshot_check, validated_casilla_id
 
 RENTA_130_RETENCIONES_OUTPUT_CASILLA: CasillaId = validated_casilla_id(
     "06",
@@ -50,13 +50,35 @@ of truth for the redirect; a second literal declaring the same casilla id
 anywhere else is a duplication this constant exists to prevent.
 """
 
+RENTA_130_RETENCIONES_BINDING_ID: BindingId = "modelo-130-actividad-economica-retenciones-cumulative"
+"""The binding whose resolved value is redirected onto the output casilla above.
+
+Lives beside the casilla it routes to because the two are one fact -- "this
+binding reports on that casilla" -- and splitting them let the requirement be
+asserted without reference to the thing that creates it. The application-layer
+redirect reads both from here rather than re-declaring either.
+"""
+
 
 def check_m130_retenciones_output_casilla(
     modelo_id: str,
     casilla_ids: frozenset[CasillaId],
     renta_first_slice_binding_targets: frozenset[CasillaId],  # shared Protocol shape, unused here
+    revision_binding_ids: frozenset[BindingId] = frozenset(),
 ) -> list[str]:
-    """Assert the M130 retenciones output casilla exists on the revision.
+    """Assert the M130 retenciones output casilla exists when its binding is declared.
+
+    The requirement is conditional on the binding that creates it, mirroring
+    the sibling first-slice check, which likewise asserts only over the casillas
+    a revision's own bindings target. A revision declaring no retenciones
+    binding runs no redirect, so there is nothing for casilla 06 to receive and
+    nothing to protect.
+
+    Asserting it unconditionally for every modelo-130 revision was both wider
+    than the fact and wrong in practice: it fired on synthetic revisions built
+    to exercise unrelated referential-integrity properties, which legitimately
+    declare a minimal casilla set. A gate that reddens on revisions it has no
+    claim over trains its readers to work around it.
 
     Returns a list of failure strings (empty when consistent). The registry
     validator prefixes each failure with the snapshot coordinates and raises
@@ -64,11 +86,15 @@ def check_m130_retenciones_output_casilla(
     """
     if modelo_id != Modelo.M130:
         return []
+    if RENTA_130_RETENCIONES_BINDING_ID not in revision_binding_ids:
+        return []
     if RENTA_130_RETENCIONES_OUTPUT_CASILLA in casilla_ids:
         return []
     return [
-        f"M130 retenciones-a-cuenta output casilla {RENTA_130_RETENCIONES_OUTPUT_CASILLA!r} "
-        "is absent from the revision",
+        f"M130 revision declares binding {RENTA_130_RETENCIONES_BINDING_ID!r} but its "
+        f"retenciones-a-cuenta output casilla {RENTA_130_RETENCIONES_OUTPUT_CASILLA!r} "
+        "is absent from the revision -- the resolved retencion would be written nowhere "
+        "the filed form reads",
     ]
 
 

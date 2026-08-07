@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
-from ...core.hashing import sha256_hex
+from ...core.hashing import canonical_json_bytes, content_hash_hex
 from ...core.identity import ProfileId as _ProfileId
 from ...core.parsing import parse_bool, parse_iso8601_date
 from ...core.time import UtcInstant
@@ -417,7 +417,7 @@ class UserProfileSnapshot(BaseModel):
                     fact.path,
                     fact.valid_from or date.min,
                     fact.valid_to or date.max,
-                    _canonical_payload(fact.model_dump(mode="json")),
+                    canonical_json_bytes(fact.model_dump(mode="json")),
                 ),
             ),
         )
@@ -453,8 +453,19 @@ def _derive_canonical_hash(
     persisted facts on load). Sharing the derivation across both
     sides anchors the content-addressing invariant — there is only
     one place where the canonical payload shape is defined.
+
+    The serialisation itself is :func:`~cadrumo.core.hashing.content_hash_hex`,
+    the project's one content-addressing primitive. A module-local
+    ``_canonical_payload`` previously restated it and **disagreed with it**: it
+    passed ``ensure_ascii=False`` where
+    :func:`~cadrumo.core.hashing.canonical_json_bytes` does not, so a fact
+    carrying any non-ASCII character — an accented Spanish name, which is the
+    common case here rather than an edge case — serialised to different bytes
+    and hashed to a different digest than every other content-addressed id in
+    the tree. Two "canonical" forms that disagree are worse than one duplicated
+    helper, so the local one is gone.
     """
-    payload = _canonical_payload(
+    return content_hash_hex(
         {
             "schema_id": schema_id,
             "schema_version": schema_version,
@@ -462,8 +473,3 @@ def _derive_canonical_hash(
             "facts": [fact.model_dump(mode="json") for fact in facts],
         },
     )
-    return sha256_hex(payload)
-
-
-def _canonical_payload(payload: object) -> bytes:
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")

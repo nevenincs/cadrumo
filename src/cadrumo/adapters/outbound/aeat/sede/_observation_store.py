@@ -133,7 +133,7 @@ class FiledDeclaracionObservationRepository(SecureBoundRepository[FiledDeclaraci
     handled separately).
     """
 
-    namespace = _OBSERVATION_NAMESPACE
+    namespace = AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.namespace
     sensitivity = AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.sensitivity
     schema_version = AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.schema_version
     payload_type = FiledDeclaracionObservation
@@ -168,7 +168,7 @@ class IvaCompensationWalletObservationRepository(SecureBoundRepository[IvaCompen
     wallet snapshot's identity fields.
     """
 
-    namespace = _IVA_WALLET_OBSERVATION_NAMESPACE
+    namespace = AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.namespace
     sensitivity = AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.sensitivity
     schema_version = AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.schema_version
     payload_type = IvaCompensationWalletObservation
