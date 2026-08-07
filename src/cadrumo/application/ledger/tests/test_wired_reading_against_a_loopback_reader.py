@@ -36,7 +36,6 @@ import pytest
 
 from ....core import DraftDiscrepancyKind, FieldGroundingOutcome
 from ....core.config import override_settings
-from .._evidence import MediaKind
 from .._evidence_draft import _read_transcription_semantically
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import transcribe_text_layer
@@ -125,7 +124,6 @@ def reader(secure_objects: object) -> Iterator[tuple[str, Queue[dict[str, object
 def _control_evidence() -> EvidenceInput:
     payload = _CONTROL.read_bytes()
     return EvidenceInput(
-        media_kind=MediaKind.PDF,
         mime_type="application/pdf",
         data=payload,
         content_sha256=hashlib.sha256(payload).hexdigest(),

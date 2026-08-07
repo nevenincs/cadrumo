@@ -21,7 +21,7 @@ import pytest
 
 from ....core import FieldOrigin
 from .._document_transcription import DocumentTranscription
-from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError
+from .._evidence import PurchaseInvoiceEvidenceInputError
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import (
     TEXT_LAYER_TRANSCRIBER_NAME,
@@ -68,9 +68,8 @@ def _text_pdf_bytes(*pages: tuple[str, ...]) -> bytes:
     return buf.getvalue()
 
 
-def _evidence_input(data: bytes, media_kind: MediaKind, mime_type: str) -> EvidenceInput:
+def _evidence_input(data: bytes, mime_type: str) -> EvidenceInput:
     return EvidenceInput(
-        media_kind=media_kind,
         mime_type=mime_type,
         data=data,
         content_sha256=hashlib.sha256(data).hexdigest(),
@@ -82,7 +81,6 @@ def _evidence_input(data: bytes, media_kind: MediaKind, mime_type: str) -> Evide
 def invoice_evidence() -> EvidenceInput:
     return _evidence_input(
         _text_pdf_bytes(_PAGE_ONE_LINES, _PAGE_TWO_LINES),
-        MediaKind.PDF,
         "application/pdf",
     )
 
@@ -194,13 +192,13 @@ class TestRefusals:
         assert transcribe_text_layer(invoice_evidence).page_count == 2
 
     def test_image_evidence_is_refused(self) -> None:
-        image = _evidence_input(b"\x89PNG\r\n\x1a\nnot-a-pdf", MediaKind.IMAGE, "image/png")
+        image = _evidence_input(b"\x89PNG\r\n\x1a\nnot-a-pdf", "image/png")
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError):
             transcribe_text_layer(image)
 
     def test_pdf_without_a_text_layer_is_refused(self) -> None:
-        blank = _evidence_input(_text_pdf_bytes(()), MediaKind.PDF, "application/pdf")
+        blank = _evidence_input(_text_pdf_bytes(()), "application/pdf")
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError):
             transcribe_text_layer(blank)

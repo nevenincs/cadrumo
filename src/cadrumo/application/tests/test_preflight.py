@@ -19,9 +19,15 @@ from pydantic import SecretStr
 
 from ...adapters.outbound.storage import windows_worst_case_object_path_suffix_length
 from ...core.config import override_settings
+from ..auth import ProviderProbeResult
 from ..preflight import (
+    _ERROR_PROBE_RESULTS,
+    _OK_PROBE_RESULTS,
+    _UNCONFIGURED_PROBE_RESULTS,
+    _WARN_PROBE_RESULTS,
     HealthSeverity,
     PreflightCheck,
+    grade_provider_probe_result,
     probe_auth_providers,
     probe_portal_registry_health,
     probe_registry_referential_integrity,
@@ -75,6 +81,52 @@ def test_auth_provider_clave_invalid_identity_is_error() -> None:
     assert clave.healthy is False
     assert clave.severity is HealthSeverity.ERROR
     assert clave.remediation
+
+
+def test_every_probe_result_belongs_to_exactly_one_severity_band() -> None:
+    """The four bands must partition ProviderProbeResult — no member ungraded, none double-graded.
+
+    This is the structural guarantee behind the doctor's honesty: a probe
+    result added without a band would otherwise be graded by the fall-through,
+    and the fall-through is a defect report, not a verdict. Reds the moment a
+    new member lands unclassified.
+    """
+    bands = {
+        "error": _ERROR_PROBE_RESULTS,
+        "warn": _WARN_PROBE_RESULTS,
+        "unconfigured": _UNCONFIGURED_PROBE_RESULTS,
+        "ok": _OK_PROBE_RESULTS,
+    }
+    declared = frozenset(member.value for member in ProviderProbeResult)
+    banded: set[str] = set()
+    for name, band in bands.items():
+        overlap = banded & band
+        assert not overlap, f"band {name} double-grades {sorted(overlap)}"
+        unknown = band - declared
+        assert not unknown, f"band {name} names non-members {sorted(unknown)}"
+        banded |= band
+    assert banded == declared, f"ungraded ProviderProbeResult members: {sorted(declared - banded)}"
+
+
+def test_every_declared_probe_result_grades_without_the_defect_fall_through() -> None:
+    """No real probe result reaches the fall-through, so the fall-through only reports defects."""
+    for member in ProviderProbeResult:
+        severity, healthy, remediation = grade_provider_probe_result("certificate", member.value)
+        assert "cannot grade" not in remediation, member.value
+        if member in {ProviderProbeResult.OK, *(ProviderProbeResult(v) for v in _UNCONFIGURED_PROBE_RESULTS)}:
+            assert healthy is True and severity is HealthSeverity.OK, member.value
+
+
+def test_an_ungraded_probe_result_is_not_reported_healthy() -> None:
+    """A probe state in no band must surface, never render green.
+
+    Silently green on an unrecognised state is the wrong default for a doctor:
+    the operator reads a clean bill of health for a condition nothing assessed.
+    """
+    severity, healthy, remediation = grade_provider_probe_result("certificate", "quantum_indeterminate")
+    assert healthy is False
+    assert severity is HealthSeverity.ERROR
+    assert remediation, "an ungraded row must still tell the operator what to do"
 
 
 # ── #102 — secure-storage, bundled-corpus, and configuration preflight ───────

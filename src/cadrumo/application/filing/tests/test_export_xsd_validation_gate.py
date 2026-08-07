@@ -1,6 +1,6 @@
 """A rendered declaration validates against AEAT's own published schema.
 
-Every structural defect this campaign closed -- a missing mandatory attribute,
+Every structural defect closed here -- a missing mandatory attribute,
 an element emitted where the schema does not declare it, a comunidad filed as a
 domain token -- was found by an ad-hoc probe and, until this module, nothing
 standing would have caught the next one. This is that gate: it renders a
@@ -193,7 +193,7 @@ def test_a_populated_declaration_validates_against_the_official_schema() -> None
 def test_the_schema_rejects_a_declaration_missing_a_mandatory_attribute() -> None:
     """The oracle discriminates, so the assertion above is not vacuous.
 
-    Removes ``@nif`` -- one of the attributes this campaign added -- from the
+    Removes ``@nif`` -- one of the attributes this gate covers -- from the
     document the gate just accepted, and requires the schema to say so. If this
     ever passes, the validator is not looking at this document and the gate above
     proves nothing.

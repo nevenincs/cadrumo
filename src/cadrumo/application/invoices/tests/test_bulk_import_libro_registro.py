@@ -112,7 +112,7 @@ def test_the_libro_registro_imports_with_no_column_resolution_failure(tmp_path: 
     :data:`_ROWS_REFUSED_BY_DOMAIN_RULES` so this test states which failures it
     is accepting, and would break rather than absorb a new one silently.
 
-    What this Step owns is that the file is read at all: every row reaches the
+    What this test owns is that the file is read at all: every row reaches the
     importer under Spanish column names, and not one refusal says a column could
     not be resolved.
     """

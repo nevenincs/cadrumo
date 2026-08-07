@@ -377,9 +377,10 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
     for issue in _find_all(invoice, "InvoiceIssueData"):
         parsed.invoice_date = _first_text(issue, "IssueDate")
         parsed.currency = _first_text(issue, "InvoiceCurrencyCode")
+    total_output_tax: Decimal | None = None
     for totals in _find_all(invoice, "InvoiceTotals"):
         parsed.taxable_base = _decimal(_first_text(totals, "TotalGrossAmountBeforeTaxes"))
-        parsed.iva_amount = _decimal(_first_text(totals, "TotalTaxOutputs"))
+        total_output_tax = _decimal(_first_text(totals, "TotalTaxOutputs"))
         parsed.grand_total = _decimal(_first_text(totals, "InvoiceTotal"))
     # Facturae states taxes TWICE: once at invoice level under TaxesOutputs and
     # again per line under Items/InvoiceLine/TaxesOutputs. A descendant walk
@@ -391,6 +392,8 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
     for node in invoice:
         if _local(node.tag) == "TaxesOutputs":
             header_taxes.extend(child for child in node if _local(child.tag) == "Tax")
+    band_cuotas: list[Decimal] = []
+    band_recargos: list[Decimal] = []
     for tax in header_taxes:
         rate = _decimal(_first_text(tax, "TaxRate"))
         base = None
@@ -399,9 +402,32 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
             base = _decimal(_first_text(base_node, "TotalAmount"))
         for amount_node in _find_all(tax, "TaxAmount"):
             amount = _decimal(_first_text(amount_node, "TotalAmount"))
+        if amount is not None:
+            band_cuotas.append(amount)
         parsed.iva_breakdown.append((rate, base, amount))
         for surcharge_node in _find_all(tax, "EquivalenceSurchargeAmount"):
-            parsed.recargo_amount = _decimal(_first_text(surcharge_node, "TotalAmount"))
+            surcharge = _decimal(_first_text(surcharge_node, "TotalAmount"))
+            if surcharge is not None:
+                band_recargos.append(surcharge)
+    # Summed, never last-wins: a document charging two rates surcharges each
+    # band separately, so keeping only the final node silently under-reports the
+    # recargo -- and it under-reports it into a term the printed-total identity
+    # depends on, where the shortfall reads as a misread total rather than as a
+    # dropped surcharge.
+    parsed.recargo_amount = sum(band_recargos, Decimal("0")) if band_recargos else None
+    # `iva_amount` is the identity's CUOTA term, which excludes the recargo de
+    # equivalencia carried beside it. Facturae's `TotalTaxOutputs` is a different
+    # figure: it is total repercutido output tax, cuota PLUS surcharge, so
+    # assigning it here states 26,20 where the identity means 21,00 and the
+    # recargo is then added a second time from its own term. The per-band
+    # `TaxAmount` is the cuota by construction -- `EquivalenceSurchargeAmount` is
+    # its sibling, not part of it -- so reading the term from there cannot carry
+    # a surcharge into it, which is why the bands are preferred over correcting
+    # the combined figure after the fact.
+    if band_cuotas:
+        parsed.iva_amount = sum(band_cuotas, Decimal("0"))
+    elif total_output_tax is not None:
+        parsed.iva_amount = total_output_tax - (parsed.recargo_amount or Decimal("0"))
     for line in _find_all(invoice, "InvoiceLine"):
         rate = None
         for tax in _find_all(line, "Tax"):

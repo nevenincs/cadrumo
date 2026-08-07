@@ -42,12 +42,12 @@ from typing import ClassVar, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ...adapters.inbound.financial import normalize_tabular_bytes
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.decimal import coerce_decimal, normalize_decimal_separators, try_parse_canonical_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing import parse_iso8601_date
+from ...core.tabular import TabularSourceError, normalize_tabular_bytes
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceValidationError
 from ...domain.iva import InvoiceKind
 from ._bulk_import_columns import (
@@ -395,7 +395,14 @@ def _read_delimited_source(path: Path, *, mapper: ColumnRoleMapper | None) -> Bu
             translated_message="application.invoices.bulk_import.errors.file_read_failed",
             context={"path_name": path.name, "error_type": type(exc).__name__},
         ) from exc
-    table = normalize_tabular_bytes(source_bytes)
+    try:
+        table = normalize_tabular_bytes(source_bytes)
+    except TabularSourceError as exc:
+        raise InvoiceValidationError(
+            "bulk invoice import file carries no readable table",
+            translated_message="application.invoices.bulk_import.errors.unreadable_table",
+            context={"path_name": path.name, "detail": str(exc)},
+        ) from exc
     resolution = resolve_bulk_import_columns(
         table.headers, mapper=mapper, required_fields=BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
     )

@@ -89,6 +89,7 @@ class ExtractedInvoiceFields(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     supplier_tax_id: str | None = Field(default=None)
+    customer_tax_id: str | None = Field(default=None)
     invoice_number: str | None = Field(default=None)
     invoice_date: str | None = Field(default=None)
     taxable_base: str | None = Field(default=None)
@@ -97,6 +98,7 @@ class ExtractedInvoiceFields(BaseModel):
     retencion_rate: str | None = Field(default=None)
     retencion_amount: str | None = Field(default=None)
     grand_total: str | None = Field(default=None)
+    regime_legend: str | None = Field(default=None)
     currency: str | None = Field(default=None)
 
 
@@ -120,6 +122,7 @@ class ExtractedFieldAnchors(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     supplier_tax_id: str | None = Field(default=None)
+    customer_tax_id: str | None = Field(default=None)
     invoice_number: str | None = Field(default=None)
     invoice_date: str | None = Field(default=None)
     taxable_base: str | None = Field(default=None)
@@ -128,6 +131,7 @@ class ExtractedFieldAnchors(BaseModel):
     retencion_rate: str | None = Field(default=None)
     retencion_amount: str | None = Field(default=None)
     grand_total: str | None = Field(default=None)
+    regime_legend: str | None = Field(default=None)
     currency: str | None = Field(default=None)
 
 
@@ -513,6 +517,7 @@ def ground_extracted_fields(
     """
     fields = response.fields
     supplier_tax_id = _ground_text(fields.supplier_tax_id, "supplier_tax_id")
+    customer_tax_id = _ground_text(fields.customer_tax_id, "customer_tax_id")
     invoice_number = _ground_text(fields.invoice_number, "invoice_number")
     invoice_date = _ground_text(fields.invoice_date, "invoice_date")
     taxable_base = _ground_numeric(fields.taxable_base, "taxable_base")
@@ -521,12 +526,14 @@ def ground_extracted_fields(
     retencion_rate = _ground_numeric(fields.retencion_rate, "retencion_rate")
     retencion_amount = _ground_numeric(fields.retencion_amount, "retencion_amount")
     grand_total = _ground_numeric(fields.grand_total, "grand_total")
+    regime_legend = _ground_text(fields.regime_legend, "regime_legend")
     currency = _ground_text(fields.currency, "currency")
 
     # Keyed by the ONE contract declaration, so a field added there without a
     # grounded value here raises rather than travelling with no provenance.
     grounded: Mapping[str, str | Decimal | None] = {
         "supplier_tax_id": supplier_tax_id,
+        "customer_tax_id": customer_tax_id,
         "invoice_number": invoice_number,
         "invoice_date": invoice_date,
         "taxable_base": taxable_base,
@@ -535,6 +542,7 @@ def ground_extracted_fields(
         "retencion_rate": retencion_rate,
         "retencion_amount": retencion_amount,
         "grand_total": grand_total,
+        "regime_legend": regime_legend,
         "currency": currency,
     }
     envelopes = tuple(
@@ -553,6 +561,7 @@ def ground_extracted_fields(
 
     return InvoiceDraft(
         supplier_tax_id=supplier_tax_id,
+        customer_tax_id=customer_tax_id,
         invoice_number=invoice_number,
         invoice_date=invoice_date,
         taxable_base=taxable_base,
@@ -561,6 +570,7 @@ def ground_extracted_fields(
         retencion_rate=retencion_rate,
         retencion_amount=retencion_amount,
         grand_total=grand_total,
+        regime_legend=regime_legend,
         currency=currency,
         provenance=envelopes,
         raw_text_length=raw_text_length,

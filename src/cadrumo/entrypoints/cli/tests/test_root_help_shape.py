@@ -188,7 +188,7 @@ def test_curated_help_covers_custody_and_audit_families() -> None:
 
     A surface omission is silent to the resolve and suggestion-conformance gates:
     they check that every cited command exists, never that a required family is
-    cited at all. This gate closes that hole for the families the Step names.
+    cited at all. This gate closes that hole for the named families below.
 
     A prefix matches a citation when the citation is the family verb itself or a
     child of it (``prefix`` or ``prefix`` + a space), so ``aeat config recover``

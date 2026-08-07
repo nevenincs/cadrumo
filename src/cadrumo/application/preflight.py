@@ -50,6 +50,7 @@ if TYPE_CHECKING:
 __all__ = [
     "HealthSeverity",
     "PreflightCheck",
+    "grade_provider_probe_result",
     "probe_auth_providers",
     "probe_portal_registry_health",
     "probe_registry_referential_integrity",
@@ -103,6 +104,49 @@ _UNCONFIGURED_PROBE_RESULTS = frozenset({"no_provider", "no_path_set", "identity
 _ERROR_PROBE_RESULTS = frozenset({"expired", "corrupt", "unreadable", "invalid_identity", "file_missing"})
 # ProviderProbeResult values that are a non-blocking advisory.
 _WARN_PROBE_RESULTS = frozenset({"expiring"})
+# The single ProviderProbeResult value that means the provider is configured and
+# sound. Kept a set so the four bands partition the enum and a newly added
+# member belongs to exactly one of them.
+_OK_PROBE_RESULTS = frozenset({"ok"})
+
+
+def grade_provider_probe_result(provider: str, result: str) -> tuple[HealthSeverity, bool, str]:
+    """Grade one ``ProviderProbeResult`` value into a doctor verdict.
+
+    The four declared bands partition
+    :class:`~application.auth.ProviderProbeResult`: a real misconfiguration is
+    ``ERROR``, a pre-expiry certificate is ``WARN``, and a sound or
+    not-configured-optional provider is ``OK``.
+
+    A value in none of them is graded ``ERROR`` rather than passed. It reports
+    a defect in this mapping — most likely a probe result added without a band
+    — and not a verdict about the operator's workstation; a doctor that renders
+    an ungraded state green gives the one answer an operator cannot act on.
+
+    Args:
+        provider: The :class:`~core.AuthProviderKind` value being graded, used
+            to select the concrete remediation for a red row.
+        result: The probe's typed result rendered as its string value.
+
+    Returns:
+        The severity, the healthy verdict, and the operator remediation
+        (empty when there is nothing to act on).
+    """
+    if result in _ERROR_PROBE_RESULTS:
+        return HealthSeverity.ERROR, False, _auth_error_remediation(provider, result)
+    if result in _WARN_PROBE_RESULTS:
+        return (
+            HealthSeverity.WARN,
+            True,
+            "renew the certificate before it expires (obtain a fresh FNMT bundle)",
+        )
+    if result in _UNCONFIGURED_PROBE_RESULTS or result in _OK_PROBE_RESULTS:
+        return HealthSeverity.OK, True, ""
+    return (
+        HealthSeverity.ERROR,
+        False,
+        "report this: the provider probe returned a state `aeat config check` cannot grade",
+    )
 
 
 def probe_auth_providers(*, settings: Settings | None = None) -> tuple[PreflightCheck, ...]:
@@ -115,7 +159,10 @@ def probe_auth_providers(*, settings: Settings | None = None) -> tuple[Preflight
     :class:`PreflightCheck`. A not-configured optional provider is ``OK``
     (not a fault); an expired / corrupt / unreadable certificate or an
     invalid Cl@ve identity is ``ERROR``; a certificate inside its
-    pre-expiry window is ``WARN``. The probe never raises.
+    pre-expiry window is ``WARN``. A result belonging to none of the four
+    declared bands is itself reported ``ERROR``, because an ungraded state
+    rendered green is the one doctor answer an operator cannot act on. The
+    probe never raises.
     """
     from .auth import probe_provider_configuration
 
@@ -136,19 +183,7 @@ def probe_auth_providers(*, settings: Settings | None = None) -> tuple[Preflight
             )
             continue
         result = str(probe.result)
-        if result in _ERROR_PROBE_RESULTS:
-            severity = HealthSeverity.ERROR
-            healthy = False
-            remediation = _auth_error_remediation(kind.value, result)
-        elif result in _WARN_PROBE_RESULTS:
-            severity = HealthSeverity.WARN
-            healthy = True
-            remediation = "renew the certificate before it expires (obtain a fresh FNMT bundle)"
-        else:
-            # OK or an unconfigured-optional state: both are non-faults.
-            severity = HealthSeverity.OK
-            healthy = True
-            remediation = ""
+        severity, healthy, remediation = grade_provider_probe_result(kind.value, result)
         rows.append(
             PreflightCheck(
                 check=check_id,

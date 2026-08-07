@@ -243,7 +243,7 @@ def test_a_large_household_still_raises_a_valid_advisory() -> None:
 
 
 def test_this_covers_the_state_the_sibling_undeclared_advisory_returns_early_on() -> None:
-    """The finding this Step exists to close, pinned as a relation between the two.
+    """The finding this test exists to close, pinned as a relation between the two.
 
     The sibling fires only on a ZERO aggregate with no descendiente facts, and
     returns empty once any descendiente fact exists. That early return reasons

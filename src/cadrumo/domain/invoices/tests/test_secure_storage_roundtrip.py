@@ -466,7 +466,7 @@ def test_record_lifecycle_timestamps_survive_encrypted_storage_roundtrip(
     canonical aggregate previously could not hold at all: WHEN the record was
     entered and last amended, as opposed to when the document was issued. A
     fold that dropped them would lose an audit fact silently, which is the
-    class of loss this campaign's conservation law exists to prevent.
+    class of loss this roundtrip's conservation invariant exists to prevent.
     """
 
     with isolated_runtime_profile(tmp_path=tmp_path):

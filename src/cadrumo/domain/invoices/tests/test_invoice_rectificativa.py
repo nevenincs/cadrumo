@@ -57,7 +57,7 @@ def _invoice(**overrides: Any) -> Invoice:
 
 
 def test_an_ordinary_invoice_defaults_to_the_ordinaria_class() -> None:
-    """Every invoice before this Step is, and remains, an ordinaria."""
+    """Every invoice before this guard is, and remains, an ordinaria."""
     invoice = _invoice()
 
     assert invoice.invoice_class is InvoiceClass.ORDINARIA

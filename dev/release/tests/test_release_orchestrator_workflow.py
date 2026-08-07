@@ -560,7 +560,8 @@ def test_an_unmapped_acquisition_lane_refuses_rather_than_dropping_its_run_id() 
     """A future lane with no output name must fail loudly, not silently vanish.
 
     This is the same defect class one step later: adding a lane without
-    plumbing its id would otherwise reproduce exactly the drop this Step fixes.
+    plumbing its id would otherwise reproduce exactly the drop this guard
+    fixes.
     """
     surface = _invocation_surface(_document(), "acquire")
 

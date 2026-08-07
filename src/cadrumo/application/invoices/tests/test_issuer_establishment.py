@@ -141,7 +141,7 @@ def test_the_kind_guard_holds_even_for_a_shape_invoice_itself_already_refuses() 
     ISSUED`` for every real ``Invoice``. That makes this predicate's ``kind``
     check currently unreachable through valid data: a test built only from
     real invoices could see it deleted and stay green, exactly the class of
-    silent, never-fired guard this campaign has been finding.
+    silent, never-fired guard that real-behaviour cases keep exposing.
 
     ``model_copy(update=...)`` bypasses pydantic validation (unlike
     reconstructing via ``Invoice(...)``), so it can force the

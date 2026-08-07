@@ -237,7 +237,7 @@ def _producer_created_invoice(
     :func:`create_catalogue_invoice` is the exact function both
     ``catalogue create`` and ``catalogue wizard`` call, so exercising
     ``retention_rate``/``retention_amount`` through it -- rather than a
-    hand-built ``Invoice.model_validate`` -- proves the producer this Step
+    hand-built ``Invoice.model_validate`` -- proves the producer this test
     wires, not merely that the model accepts the fields (which
     ``test_invoice_retencion_routing.py`` already proved at the model
     boundary).
@@ -246,8 +246,8 @@ def _producer_created_invoice(
     no shipped CLI verb can set a DOMESTIC IVA category on a catalogue
     invoice today (``catalogue create``/``wizard`` derive it only from an
     intra-community ``--operation-type``, which never resolves to a domestic
-    category) -- a separate, already-tracked gap this Step's Notes name, not
-    something this Step's producer is responsible for.
+    category) -- a separate, already-tracked gap, not
+    something this test's producer is responsible for.
     """
     result = create_catalogue_invoice(
         bucket_id=_BUCKET_ID,

@@ -7,9 +7,9 @@ the REAL adapter, plus an anti-tautology proof that a corrupted stored payload
 makes the load fail rather than silently re-defaulting.
 
 The line-carrying fields are populated NON-default throughout, and that is the
-point rather than thoroughness. Those fields are exactly what this campaign
-added to the draft; a fixture that left them empty would roundtrip a shape
-indistinguishable from the pre-campaign one and prove nothing about the part
+point rather than thoroughness. Those fields are exactly what was added to
+the draft; a fixture that left them empty would roundtrip a shape
+indistinguishable from the earlier shape and prove nothing about the part
 that is new.
 """
 
@@ -105,8 +105,8 @@ def test_a_line_carrying_draft_roundtrips_with_both_rates_intact(profile: TestRu
 
     The multi-rate breakdown is what makes this worth storing at all: a draft
     that lost its second rate on the way to disk would reconstruct as the
-    collapsed single-rate shape this campaign exists to remove, and would do it
-    silently.
+    collapsed single-rate shape this test exists to guard against, and would
+    do it silently.
     """
     written = write_extraction_draft(
         bucket_id=profile.bucket_id,

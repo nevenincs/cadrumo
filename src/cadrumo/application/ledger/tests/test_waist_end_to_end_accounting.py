@@ -15,11 +15,11 @@ the hop that lost it.
 **No model in CI, by construction rather than by configuration.** The fixture is
 a structured e-invoice, and the router sends a structured record to the exact
 parser -- so this document reaches no model at all. That is the routing control
-the ADR specifies, and it makes the whole chain deterministic: a per-hop
+the accepted design specifies, and it makes the whole chain deterministic: a per-hop
 accounting assertion over it is a statement about the pipeline rather than about
 a model's mood.
 
-**On the transcription hop.** The Step's hop list names transcription between
+**On the transcription hop.** The hop list names transcription between
 ingest and extraction. For an exact-parse fixture that hop does not exist, and
 its absence is the control, not a gap: a document that never becomes text for a
 model cannot be prompt-injected. Rather than fabricate a transcription this route
@@ -49,11 +49,15 @@ from ....application.aggregation import CalculationSourceContext
 from ....application.invoices import InvoiceCatalogueSourceResolver, create_catalogue_invoice
 from ....core import STRUCTURED_DOCUMENT_SHAPES, BindingSourceKind, Period
 from ....domain.attachments import AttachmentKind, AttachmentSource, add_attachment
-from ....domain.calculations.registry import INVOICE_BINDING_SOURCE_KINDS, bundled_authority
+from ....domain.calculations.registry import (
+    INVOICE_BINDING_SOURCE_KINDS,
+    ModeloRevision,
+    bundled_authority,
+)
+from ....domain.invoices import Invoice
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._closure_findings import closure_findings
-from .._evidence import MediaKind
 from .._evidence_draft import _extract_invoice_fields_from_structured_record
 from .._evidence_input import EvidenceInput, resolve_attachment_evidence_input
 
@@ -80,6 +84,19 @@ _DOCUMENT_FACTS: dict[str, object] = {
 #: class, where that difference in meaning is the defect under record.
 _PRINTED_CUOTA = Decimal("21.00")
 
+
+def _amount(key: str) -> Decimal:
+    """Return one document fact as the Decimal it is.
+
+    The census above is deliberately one mapping of mixed types, so reading a
+    money term out of it yields ``object`` and any arithmetic on it checks
+    nothing. Asserted rather than cast, so a fact that stops being a Decimal
+    fails here by name.
+    """
+    value = _DOCUMENT_FACTS[key]
+    assert isinstance(value, Decimal), f"{key} is {type(value).__name__}, not an amount"
+    return value
+
 #: The tax-id form the invoice boundary stores. The document states the VAT form
 #: with its country prefix; the catalogue stores the bare Spanish NIF. This is a
 #: normalisation, not a loss, and hop 5 asserts it AS a transformation so a
@@ -97,7 +114,6 @@ def _evidence() -> EvidenceInput:
     """Hop 1 -- ingest. Document bytes become the typed in-memory carrier."""
     data = _FIXTURE.read_bytes()
     return EvidenceInput(
-        media_kind=MediaKind.PDF,
         mime_type="application/xml",
         data=data,
         content_sha256=sha256(data).hexdigest(),
@@ -169,11 +185,24 @@ class TestHop2RoutingBypassesTranscriptionAndTheModel:
         )
 
     def test_the_shape_is_decided_on_the_bytes_not_the_declared_media_type(self) -> None:
-        """The label says PDF; the bytes say XML. Routing on the label is the defect."""
-        evidence = _evidence()
+        """The label says PDF; the bytes say XML. Routing on the label is the defect.
 
-        assert evidence.media_kind is MediaKind.PDF
-        assert evidence.document_shape in STRUCTURED_DOCUMENT_SHAPES
+        The mislabel is deliberate and carries the whole assertion: this carrier
+        announces ``application/pdf`` over a standalone structured XML invoice.
+        A read path trusting the declared media type would call it a PDF and send
+        it to prose extraction; the probe opens the bytes and routes it to the
+        exact reader.
+        """
+        data = _FIXTURE.read_bytes()
+        mislabelled = EvidenceInput(
+            mime_type="application/pdf",
+            data=data,
+            content_sha256=sha256(data).hexdigest(),
+            evidence_id="ev-waist-mislabelled",
+            attachment_id=None,
+        )
+
+        assert mislabelled.document_shape in STRUCTURED_DOCUMENT_SHAPES
 
 
 class TestHop3Extraction:
@@ -195,49 +224,60 @@ class TestHop3Extraction:
         assert band.taxable_base == _DOCUMENT_FACTS["taxable_base"]
         assert band.iva_amount == _PRINTED_CUOTA, "hop 3 extraction: the band carries the printed cuota"
 
-    def test_the_scalar_iva_amount_carries_cuota_plus_recargo(self) -> None:
-        """Recorded because the next hop reads this field as cuota ALONE.
+    def test_the_scalar_iva_amount_carries_the_cuota_alone(self) -> None:
+        """The scalar and the per-band figure now state the same thing.
 
-        The per-band figure is the printed cuota; the scalar is cuota plus
-        recargo. Both are defensible in isolation, and the disagreement between
-        them is exactly what the hop-4 class documents.
+        This assertion is inverted from the one that first recorded the defect.
+        The scalar used to carry cuota PLUS recargo, because the source format
+        states a combined output-tax total under a name the draft uses for the
+        cuota term; the next hop read it as cuota alone and added the recargo
+        again. The reader now takes the cuota from the per-band amount, whose
+        sibling element carries the surcharge, so the two figures agree by
+        construction rather than by coincidence.
         """
         draft = _extract_invoice_fields_from_structured_record(_evidence())
 
-        assert draft.iva_amount == _PRINTED_CUOTA + Decimal("5.20")
+        assert draft.iva_amount == _PRINTED_CUOTA
+        assert draft.recargo_amount == Decimal("5.20"), "the surcharge is carried, in its own term"
 
 
 class TestHop4Grounding:
-    """The two hops disagree about what ``iva_amount`` means, and it costs a false alarm.
+    """The two hops now agree about what ``iva_amount`` means. Inverted on the fix.
 
-    THIS IS A LIVE DEFECT, recorded rather than worked around. Hop 3 writes
-    ``iva_amount`` as cuota PLUS recargo; hop 4 reads it as cuota alone and adds
-    ``recargo_amount`` on top, so the recargo is counted twice and the closure
-    identity misses by exactly that amount.
+    This class was written to pin a LIVE defect, with the instruction that a pass
+    meant the double-count had been fixed and the class should be inverted. It
+    has been. What the defect was, kept because the shape is what makes the
+    regression legible: hop 3 wrote ``iva_amount`` as cuota PLUS recargo, hop 4
+    read it as cuota alone and added ``recargo_amount`` on top, and the closure
+    identity missed by exactly the surcharge. An arithmetically perfect document
+    -- 100,00 base, 21,00 cuota, 5,20 recargo, 126,20 total -- was reported
+    inconsistent, so every recargo de equivalencia invoice raised a spurious
+    blocking finding at the confirm boundary. A real and common Spanish regime,
+    refused on a correct invoice.
 
-    The document is arithmetically perfect -- 100,00 base, 21,00 cuota, 5,20
-    recargo, 126,20 total -- and it is reported as inconsistent. Every recargo de
-    equivalencia invoice therefore raises a spurious blocking finding at the
-    confirm boundary, and recargo is a real and common Spanish regime rather than
-    an edge case.
-
-    This is the exact defect class the waist gate exists to catch: neither hop is
-    wrong on its own, and no single-hop test could see it. The assertions below
-    pin the CURRENT behaviour so the defect is visible and so the fix reds this
-    class and forces the accounting to be restated. The fix belongs to the
-    modules that own the two hops, not to this gate.
+    Neither hop was wrong on its own and no single-hop test could see it, which
+    is the defect class this waist gate exists to catch. The fix landed in the
+    module that owns hop 3: the reader takes the cuota from the per-band amount
+    rather than from the combined total, so the term cannot acquire a surcharge.
+    The check at hop 4 was deliberately NOT relaxed -- it implements the
+    canonical identity correctly, and loosening it would have silenced real
+    closure failures along with this false one.
     """
 
-    def test_a_consistent_recargo_document_is_currently_reported_inconsistent(self) -> None:
+    def test_a_consistent_recargo_document_is_reported_consistent(self) -> None:
+        """The regression, driven end to end from the bundled document.
+
+        Keyed on the terms rather than on which finding kind is absent: two
+        different faults reach the same closure finding -- a document that omits
+        the recargo and one that double-counts it -- so asserting on the kind
+        alone could not tell the fixed state from either.
+        """
         draft = _extract_invoice_fields_from_structured_record(_evidence())
 
-        findings = closure_findings(draft)
-
-        assert findings, "if this passes, the double-count was fixed; invert this class"
-        closure = [item for item in findings if item.field == "grand_total"]
-        assert closure, "hop 4 grounding: the spurious finding lands on the total"
-        assert closure[0].expected == _DOCUMENT_FACTS["taxable_base"] + draft.iva_amount + Decimal("5.20")
-        assert closure[0].observed == _DOCUMENT_FACTS["grand_total"]
+        assert [item for item in closure_findings(draft) if item.field == "grand_total"] == []
+        iva_amount, recargo_amount = draft.iva_amount, draft.recargo_amount
+        assert iva_amount is not None and recargo_amount is not None, "the reader dropped a term entirely"
+        assert _amount("taxable_base") + iva_amount + recargo_amount == _amount("grand_total")
 
     def test_the_documents_own_arithmetic_actually_closes(self) -> None:
         """The proof that the finding above is spurious rather than a real defect."""
@@ -246,17 +286,22 @@ class TestHop4Grounding:
 
         assert base + _PRINTED_CUOTA + Decimal("5.20") == _DOCUMENT_FACTS["grand_total"]
 
-    def test_positive_control_the_check_stays_silent_when_the_meanings_agree(self) -> None:
-        """Feeding the cuota-only reading the check expects, the same document reconciles."""
-        draft = _extract_invoice_fields_from_structured_record(_evidence())
-        aligned = draft.model_copy(update={"iva_amount": _PRINTED_CUOTA})
+    def test_the_double_counted_shape_would_still_be_caught(self) -> None:
+        """The defect's own input shape, re-fed deliberately.
 
-        assert closure_findings(aligned) == (), "the check is sound; the two hops' meanings are not aligned"
+        The producer no longer emits it, so the only way to keep proving the
+        check would catch its return is to construct it: the cuota term carrying
+        the surcharge while the surcharge is also stated in its own slot.
+        """
+        draft = _extract_invoice_fields_from_structured_record(_evidence())
+        doubled = draft.model_copy(update={"iva_amount": _PRINTED_CUOTA + Decimal("5.20")})
+
+        assert closure_findings(doubled), "a term carrying the surcharge twice must still red"
 
     def test_positive_control_a_genuinely_broken_total_is_still_caught(self) -> None:
         """Without this, a check that fired on everything would satisfy the class above."""
         draft = _extract_invoice_fields_from_structured_record(_evidence())
-        broken = draft.model_copy(update={"iva_amount": _PRINTED_CUOTA, "grand_total": Decimal("999.99")})
+        broken = draft.model_copy(update={"grand_total": Decimal("999.99")})
 
         assert closure_findings(broken), "hop 4 grounding: a real inconsistency must still red"
 
@@ -265,7 +310,7 @@ class TestHop5ConfirmAndHop6Invoice:
     """The draft is confirmed into a persisted Invoice through the real path."""
 
     @staticmethod
-    def _confirm(runtime_profile: TestRuntimeProfile) -> object:
+    def _confirm(runtime_profile: TestRuntimeProfile) -> Invoice:
         draft = _extract_invoice_fields_from_structured_record(_evidence())
         return create_catalogue_invoice(
             bucket_id=_BUCKET_ID,
@@ -326,7 +371,7 @@ class TestHop5ConfirmAndHop6Invoice:
 class TestHop7WhereTheChainActuallyTerminates:
     """Modelo 303 is ledger-fed, so a confirmed Invoice does not reach it directly.
 
-    The Step names a hop from ``Invoice`` to the Modelo 303 observation. Measured
+    The hop list names a hop from ``Invoice`` to the Modelo 303 observation. Measured
     against the registry, that hop does not exist: the 303 revision declares its
     IVA inputs exclusively through ``ledger_iva_aggregation`` and carries NO
     invoice-source binding at all. An invoice reaches 303 only as evidence
@@ -340,7 +385,7 @@ class TestHop7WhereTheChainActuallyTerminates:
     """
 
     @staticmethod
-    def _revision() -> object:
+    def _revision() -> ModeloRevision:
         period = Period.from_year_and_code(2024, "1T")
         return bundled_authority().snapshot("303", filing_year=2024, period=str(period.code)).revision
 

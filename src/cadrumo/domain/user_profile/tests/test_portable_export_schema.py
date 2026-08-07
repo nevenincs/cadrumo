@@ -34,9 +34,9 @@ def _profile() -> UserProfileRecord:
 
 
 def _campaign_record() -> UserProfileRecord:
-    """A record populated with EVERY schema surface this campaign added.
+    """A record populated with EVERY schema surface the setup flow added.
 
-    The setup-flow campaign added three persisted surfaces: the
+    The setup flow added three persisted surfaces: the
     ``censo.divergencia.{n}.*`` cotejo divergence rows, the
     ``renta_family.descendiente.{n}.*`` descendant extensions, and the
     ``SETUP_INCOMPLETE`` lifecycle status. All three are carried by the

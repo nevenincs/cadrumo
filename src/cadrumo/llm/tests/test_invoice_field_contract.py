@@ -364,6 +364,7 @@ class TestContractParityAcrossBothDerivations:
         populated = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields(
                 supplier_tax_id="B44531218",
+                customer_tax_id="12345678Z",
                 invoice_number="2026-0142",
                 invoice_date="10/03/2026",
                 taxable_base="100,00",

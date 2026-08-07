@@ -12,7 +12,6 @@ from io import BytesIO
 
 import pytest
 
-from .._evidence import MediaKind
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import extract_evidence_text
 
@@ -32,9 +31,8 @@ def _text_pdf_bytes(line: str) -> bytes:
     return buf.getvalue()
 
 
-def _evidence_input(data: bytes, media_kind: MediaKind, mime_type: str) -> EvidenceInput:
+def _evidence_input(data: bytes, mime_type: str) -> EvidenceInput:
     return EvidenceInput(
-        media_kind=media_kind,
         mime_type=mime_type,
         data=data,
         content_sha256=hashlib.sha256(data).hexdigest(),
@@ -44,14 +42,14 @@ def _evidence_input(data: bytes, media_kind: MediaKind, mime_type: str) -> Evide
 
 def test_extracts_text_layer_from_pdf_bytes_on_host() -> None:
     pdf = _text_pdf_bytes(_INVOICE_LINE)
-    ev = _evidence_input(pdf, MediaKind.PDF, "application/pdf")
+    ev = _evidence_input(pdf, "application/pdf")
     text = extract_evidence_text(ev)
     assert "Factura Acme SL" in text
     assert "121,00" in text
 
 
 def test_image_evidence_has_no_text_layer() -> None:
-    ev = _evidence_input(b"\x89PNG\r\n\x1a\nfake-png-bytes", MediaKind.IMAGE, "image/png")
+    ev = _evidence_input(b"\x89PNG\r\n\x1a\nfake-png-bytes", "image/png")
     from .._evidence import PurchaseInvoiceEvidenceInputError
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError):

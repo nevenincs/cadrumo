@@ -1,6 +1,6 @@
 """The router reaches the grounding stages, and the upgrade actually happens.
 
-Every stage this campaign built was correct, gated and reached by nothing. These
+Every grounding stage was correct, gated and reached by nothing. These
 cases gate the connection itself: that the router's text path runs
 transcribe → extract → ground, and that the grounding stage converts a reader's
 unverified claim into a checked verdict.
@@ -25,7 +25,7 @@ import pytest
 from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from ....llm import LLMProviderError
 from .. import _evidence_draft as _router_module
-from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError
+from .._evidence import PurchaseInvoiceEvidenceInputError
 from .._evidence_draft import FieldProvenance, InvoiceDraft
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import transcribe_text_layer
@@ -50,7 +50,6 @@ def _control_transcription():
     payload = _CONTROL.read_bytes()
     return transcribe_text_layer(
         EvidenceInput(
-            media_kind=MediaKind.PDF,
             mime_type="application/pdf",
             data=payload,
             content_sha256=hashlib.sha256(payload).hexdigest(),
@@ -62,7 +61,6 @@ def _control_transcription():
 def _control_evidence() -> EvidenceInput:
     payload = _CONTROL.read_bytes()
     return EvidenceInput(
-        media_kind=MediaKind.PDF,
         mime_type="application/pdf",
         data=payload,
         content_sha256=hashlib.sha256(payload).hexdigest(),

@@ -65,7 +65,7 @@ def test_scoop_workflow_consumes_one_successful_commit_bound_cohort() -> None:
     source_gate = next(step for step in steps if step["name"] == "Verify source workflow identity")
     checkout = next(step for step in steps if step["name"] == "Checkout tested source commit")
     download = next(
-        step for step in steps if step["name"] == "Download and verify the tested cohorts from the smoke evidence draft"
+        step for step in steps if step["name"] == "Download the tested cohorts from the verified source run"
     )
 
     assert source_gate["env"]["SOURCE_COMMIT"] == "${{ inputs.source_commit }}"
@@ -84,19 +84,17 @@ def test_scoop_workflow_consumes_one_successful_commit_bound_cohort() -> None:
     assert "$run.head_sha -ne $env:SOURCE_COMMIT.ToLowerInvariant()" in source_gate["run"]
     assert checkout["with"]["ref"] == "${{ inputs.source_commit }}"
     assert checkout["with"]["persist-credentials"] is False
-    # The cohorts come hash-verified from the smoke run's evidence draft, with
-    # the tag DERIVED from the run-id input; the lane consumes the LINUX-built
-    # python cohort (wheels are py3-none-any; parity with the pre-transport
-    # unsuffixed artifact) plus the sealed full release cohort.
-    assert "dev.packaging.evidence_release verify" in download["run"]
-    assert '--tag "evidence-smoke-$env:SOURCE_RUN_ID"' in download["run"]
-    assert '--expect-workflow ".github/workflows/packaging-smoke.yml"' in download["run"]
-    assert '--pattern "cadrumo-python-cohort-linux.tar.gz"' in download["run"]
-    assert '--pattern "cadrumo-release-cohort.tar.gz"' in download["run"]
+    # The cohorts come from the source run's own artifacts, which bind them to
+    # that run by construction; the source-identity gate above is the whole
+    # provenance check. The lane consumes the LINUX-built python cohort
+    # (wheels are py3-none-any) plus the sealed full release cohort.
+    assert "gh run download" in download["run"]
+    assert "--name cadrumo-python-cohort-linux" in download["run"]
+    assert "--name cadrumo-release-cohort" in download["run"]
     # Least privilege: workflow-level stays read; only the uploader job holds
     # contents:write for the draft-release transport.
     assert document["permissions"] == {"actions": "read", "contents": "read"}
-    assert job["permissions"] == {"actions": "read", "contents": "write"}
+    assert job["permissions"] == {"actions": "read", "contents": "read"}
 
 
 def test_scoop_workflow_runs_the_real_native_lifecycle_without_rebuilding() -> None:
@@ -110,7 +108,7 @@ def test_scoop_workflow_runs_the_real_native_lifecycle_without_rebuilding() -> N
         step for step in steps if step["name"] == "Install and exercise Cadrumo in the lane user's Scoop profile"
     )
     publish = next(
-        step for step in steps if step["name"] == "Publish Scoop evidence to the run's evidence draft and seal it"
+        step for step in steps if step["name"] == "Stage the Scoop acquisition bundle"
     )
     commands = "\n".join(str(step.get("run", "")) for step in steps)
 
@@ -135,13 +133,9 @@ def test_scoop_workflow_runs_the_real_native_lifecycle_without_rebuilding() -> N
     assert "-Mode Container" not in commands
     assert "mcr.microsoft.com/windows/servercore" not in commands
     assert publish["if"] == "always() && steps.initialize.outputs.ready == 'true'"
-    # Evidence rides this run's OWN draft (rows + bundle + sealed manifest).
-    assert publish["env"]["EVIDENCE_TAG"] == "evidence-scoop-${{ github.run_id }}"
-    assert "gh release create $env:EVIDENCE_TAG --draft" in publish["run"]
-    assert "distribution-install-readiness" in publish["run"]
+    # Evidence rides this run's OWN artifacts; nothing reaches the releases API.
+    assert "gh release" not in publish["run"]
     assert "cadrumo-scoop-acquisition-evidence.tar.gz" in publish["run"]
-    assert "dev.packaging.evidence_release emit-manifest" in publish["run"]
-    assert "gh release upload $env:EVIDENCE_TAG evidence-manifest.json --clobber" in publish["run"]
     assert "uv build" not in commands
     assert "python -m build" not in commands
     assert "hatch build" not in commands

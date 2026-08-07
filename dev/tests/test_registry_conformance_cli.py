@@ -6,8 +6,8 @@ stubbed, skipped, or marked expected-to-fail.
 
 The proofs are written to FLIP AN ASSERTION rather than to kill a fixture. A
 test that only checks a function was called proves the wiring and none of the
-semantics, and this campaign's first review round caught exactly that weakness
-in a sibling gate. So: the ratchet is proved by moving ONE baseline counter and
+semantics, and an early review round caught exactly that weakness in a sibling
+gate. So: the ratchet is proved by moving ONE baseline counter and
 watching the same command on the same tree change its exit code; the
 absence-is-not-zero rule is proved by rendering two reports differing only in a
 ``None`` where the other has ``0.0`` and asserting the renders differ; the
@@ -16,7 +16,7 @@ it reach all three surfaces that must show it; and the stamp rollback is proved
 by making the post-write reload genuinely fail and asserting the manifest went
 back ON BYTES.
 
-That last one is the campaign's worked example of how a proof rots. It staged a
+That last one is a worked example of how a proof rots. It staged a
 malformed sibling fragment before calling the writer, but the pre-write check
 loads the same tree the post-write reload does, so the refusal landed BEFORE any
 write and the restore was never reached. Every assertion still passed, because a
@@ -1266,7 +1266,7 @@ def test_a_recorded_baseline_lands_as_the_bytes_it_serialised(
 
     Three assertions, in the order they matter. The file must not have existed
     and must exist non-empty afterwards, so the case cannot pass on a path
-    nothing wrote — the failure mode this campaign met three times on the stamp
+    nothing wrote — the failure mode caught three times on the stamp
     writer. The bytes must carry no carriage return, which is what flips: no
     value in the payload contains one, so any CR in the file was inserted by the
     write. And the bytes must equal the serialisation of the model the function
@@ -2234,7 +2234,7 @@ def test_a_ninety_first_revision_landing_unstamped_leaves_the_gate_green(
     validated_report: ConformanceReport,
     tmp_path: Path,
 ) -> None:
-    """The immediate failure this Step exists to remove, simulated end to end.
+    """The immediate failure this ratchet exists to remove, simulated end to end.
 
     Under the retired shape all three review counters were shrink-only ceilings
     pinned at the full population, so this exact arrival took every one of them
@@ -2389,8 +2389,8 @@ def test_the_writer_refuses_to_be_called_without_naming_a_registry_tree() -> Non
     ``TypeError`` from any other cause would satisfy a bare ``pytest.raises`` and
     prove nothing about this argument. No manifest assertion is made here on
     purpose: binding fails before the function body runs, so "the file is
-    unchanged" would hold however this code behaved — the always-true assertion
-    this campaign keeps finding.
+    unchanged" would hold however this code behaved — the always-true
+    assertion trap this class of test keeps falling into.
     """
     with pytest.raises(TypeError, match="registry_root"):
         stamp_revision(_STAMPED_MODELO, _STAMPED_REVISION, engineered_by="agent:opus-executor")  # type: ignore[call-arg]
@@ -2402,7 +2402,7 @@ def test_the_writer_refuses_to_be_called_without_naming_a_registry_tree() -> Non
 def test_the_stamp_command_refuses_when_no_registry_tree_is_named() -> None:
     """The forgotten flag no longer resolves to the shipped registry.
 
-    Before this Step the identical invocation wrote a fabricated agent review
+    Before this guard, the identical invocation wrote a fabricated agent review
     into the bundled Modelo 130 manifest. The byte assertion is load-bearing
     here, unlike at the writer boundary: this call really did reach a write path,
     so an unchanged shipped manifest is a fact about the refusal rather than

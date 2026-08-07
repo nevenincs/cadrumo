@@ -71,7 +71,7 @@ def test_the_fixture_identifiers_still_carry_the_properties_they_are_named_for()
 
 
 def test_the_measured_defect_shape_never_yields_a_first_match_identifier() -> None:
-    """THE case this Step exists for.
+    """THE case this test exists for.
 
     A page carrying the true supplier's checksum-failing CIF, an unrelated valid
     CIF, and the filer's own NIF must not resolve to any identifier at all. The

@@ -1,7 +1,7 @@
 """A text-layer document classifies on-host, with no cloud transport.
 
-This is the gate that must be green **before** the first cloud-deletion Step
-closes. The sequencing is a constraint rather than a preference: delete the
+This is the gate that must be green **before** any cloud read path is
+deleted. The sequencing is a constraint rather than a preference: delete the
 cloud path first and there is a window in which text-layer PDFs cannot be
 classified at all, which is a capability regression shipped to operators for
 however long the window lasts.
@@ -9,14 +9,14 @@ however long the window lasts.
 The proof is deliberately run against the real wiring rather than against a
 hand-built classifier. A test that constructed ``LocalTextLLMClassifier``
 itself would prove the class works and say nothing about whether the classify
-path reaches it -- which is precisely the failure mode this campaign's own
+path reaches it -- which is precisely the failure mode this module's own
 research records: three deliverables that shipped correct, tested, and
 unreferenced, because a unit test passes whether or not anything calls the
 code.
 
 No model runs here. The transport is asserted structurally and through an
 injected client, because running local inference crashed a development host and
-terminated four concurrent agent sessions; nothing in this campaign requires a
+terminated four concurrent agent sessions; nothing here requires a
 live model.
 """
 

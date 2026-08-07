@@ -326,8 +326,8 @@ def test_the_ungrounded_invoice_costs_the_taxpayer_in_both_directions_at_once() 
 # test that rewrites the code under test proves things about the patch rather
 # than about the shipped path. The complementary production-code mutations
 # (breaking the aggregators themselves and confirming this module reddens) are
-# run out of band and recorded in the Step's execution record, because they
-# cannot live in the suite without patching.
+# run out of band and recorded separately, because they cannot live in the
+# suite without patching.
 
 
 def test_a_disagreeing_iva_base_is_caught() -> None:

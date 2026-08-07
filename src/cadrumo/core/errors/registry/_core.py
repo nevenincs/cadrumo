@@ -118,6 +118,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.core.tabular.TabularSourceError",
+        ErrorCode(
+            code="REFUSED_TABULAR_SOURCE_UNREADABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_tabular_source_unreadable",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.core._optional_extras.MissingOptionalExtraError",
         ErrorCode(
             code="ERROR_OPTIONAL_EXTRA_MISSING",

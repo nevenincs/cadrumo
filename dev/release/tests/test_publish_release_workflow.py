@@ -928,8 +928,8 @@ def test_a_second_product_drops_into_each_shared_channel_as_one_more_file() -> N
     [
         # The PRE-CHANGE Scoop push: it targeted the product's own repository,
         # which held the repository count down only by giving every product its
-        # own bucket. This is the exact shape this campaign replaced, and the
-        # predicate must reject it.
+        # own bucket. This is the exact shape the shared-repository push was
+        # redesigned to replace, and the predicate must reject it.
         (
             "pre-change in-repository bucket push",
             'git -c http.extraheader="$auth" clone --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" "$work"\n'
@@ -954,7 +954,7 @@ def test_the_conformance_predicate_rejects_every_unsafe_push_shape(label: str, u
 
     A conformance test that passes vacuously proves nothing. Each case here is a
     push that would damage a sibling product's file in the shared repository --
-    including the literal pre-change shape this campaign replaced -- and the
+    including the literal pre-change shape the redesign replaced -- and the
     predicate must return at least one violation for every one of them.
     """
     violations = shared_repository_push_violations(unsafe_surface, product_path="bucket/cadrumo.json")

@@ -28,6 +28,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from ..core import ImageMediaType
 from ..core.config import LLMProvider
 from ..core.hashing import sha256_hex
+from ._consent import EvidenceConsentToken
 from ._errors import LLMValidationError
 
 _PROMPT_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
@@ -100,6 +101,15 @@ class LLMRequest(BaseModel):
     ``images`` carries transient
     :class:`~adapters.outbound.llm.MultimodalImageInput` payloads for
     local vision flows.
+
+    ``evidence_derived`` defaults to ``False`` because most requests carry no
+    taxpayer content at all -- a column-role mapping reads spreadsheet headers,
+    a corpus measurement reads a public synthetic document. The fail-closed
+    default lives one level up, at the evidence READERS, which mark every
+    request they build unless the caller names a public corpus: an unmarked
+    request is therefore a deliberate statement about the content, not an
+    omission. ``consent_token`` enters neither the cache key nor any persisted
+    record; it exists only between its minting site and the dispatch point.
     """
 
     model_config = ConfigDict(strict=True, frozen=True)
@@ -115,6 +125,18 @@ class LLMRequest(BaseModel):
     images: tuple[MultimodalImageInput, ...] = Field(
         default=(),
         description="On-host-prepared multimodal image inputs (empty for a text-only request).",
+    )
+    evidence_derived: bool = Field(
+        default=False,
+        description=(
+            "Whether this request's content derives from a taxpayer's evidence document. "
+            "Marked requests may not be dispatched off-host without a consent token."
+        ),
+    )
+    consent_token: EvidenceConsentToken | None = Field(
+        default=None,
+        exclude=True,
+        description="Per-invocation off-host consent proof; never persisted and never cached.",
     )
 
     @field_validator("prompt")

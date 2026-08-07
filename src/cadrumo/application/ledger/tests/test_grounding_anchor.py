@@ -19,7 +19,6 @@ from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from ....core.decimal import coerce_finite_european_decimal
 from .._closure_findings import closure_findings
 from .._document_transcription import DocumentTranscription, TranscriberIdentity
-from .._evidence import MediaKind
 from .._evidence_draft import FieldProvenance, InvoiceDraft
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import transcribe_text_layer
@@ -302,7 +301,6 @@ def test_grounding_runs_against_a_transcription_of_a_real_corpus_document() -> N
     payload = (_CORPUS / "zugferd_en16931_invoice.pdf").read_bytes()
     transcription = transcribe_text_layer(
         EvidenceInput(
-            media_kind=MediaKind.PDF,
             mime_type="application/pdf",
             data=payload,
             content_sha256=hashlib.sha256(payload).hexdigest(),

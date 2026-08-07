@@ -39,7 +39,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import suppress
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, override
 
 from pydantic import BaseModel, Field
 
@@ -48,8 +48,8 @@ from ...domain.iva import InvoiceKind
 
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ...core import HardwareProfile
     from ...core.config import Settings
+    from ..provisioning import HardwareProfile
     from ._evidence import PurchaseInvoiceEvidenceService
     from ._evidence_draft import InvoiceDraft
     from ._extraction_draft_store import StoredExtractionDraft
@@ -83,11 +83,14 @@ run shares one cause; that cause is stated once on the run.
 
 #: Every status a batch item can end in. Derived from the type rather than
 #: restated, so a status added to the alias cannot go unreported in the summary.
-BATCH_ITEM_STATUSES: frozenset[str] = frozenset(BatchItemStatus.__args__)
+#: Typed as the alias rather than as bare ``str`` so iterating it yields the
+#: literal the consumers expect; the wider annotation is what forced a
+#: suppression onto the summary comprehension.
+BATCH_ITEM_STATUSES: frozenset[BatchItemStatus] = frozenset(BatchItemStatus.__args__)
 
 #: The statuses that make a run "any item failed". Deliberately narrow: an item
 #: awaiting review has not failed, and a no-op is the idempotent success.
-FAILING_BATCH_ITEM_STATUSES: frozenset[str] = frozenset({"refused"})
+FAILING_BATCH_ITEM_STATUSES: frozenset[BatchItemStatus] = frozenset({"refused"})
 
 
 class BatchItemResult(BaseModel):
@@ -120,6 +123,7 @@ class BatchItemResult(BaseModel):
     refusal_code: str | None = None
     refusal_detail: str | None = None
 
+    @override
     def model_post_init(self, _context: object) -> None:
         """Tie a refusal to the reason that justifies it, in both directions.
 
@@ -233,7 +237,7 @@ class BatchRunResult(BaseModel):
         "none occurred", and the two are different things to an operator looking
         for the refusals.
         """
-        return {status: self.count_of(status) for status in sorted(BATCH_ITEM_STATUSES)}  # type: ignore[arg-type]  # CAST-RATIONALE-LITERAL-ITERATION: BATCH_ITEM_STATUSES is derived from the BatchItemStatus alias, so every member is a valid argument.
+        return {status: self.count_of(status) for status in sorted(BATCH_ITEM_STATUSES)}
 
 
 def batch_item_identity(*, content_address: str, direction: InvoiceKind) -> str:
@@ -427,9 +431,16 @@ def _assess_model_load_contention_once(
         selection = select_model_for_role(role, profile=profile)
         if not selection.selected or selection.runtime_id is None or selection.candidate is None:
             continue
+        # An unknown requirement cannot anchor an assessment. Passing it as zero
+        # would report the load admitted on evidence nobody has, which is the
+        # same fail-open the provision CLI carried; skipping matches the policy
+        # already stated above -- what cannot be judged is not a pause.
+        requirement = selection.candidate.memory_requirement_bytes
+        if requirement is None:
+            continue
         snapshot = assess_model_load_contention(
             selection.runtime_id,
-            selection.candidate.memory_requirement_bytes,
+            requirement,
             profile=profile,
             settings=settings,
         )

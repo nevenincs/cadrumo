@@ -276,3 +276,30 @@ def test_parse_still_reads_every_unambiguous_spelling(raw: str, expected: Decima
     path.write_text(f'casilla_code,value\n01,"{raw}"\n', encoding="utf-8")
 
     assert parse_casilla_value_spreadsheet(path) == {"01": expected}
+
+
+def test_parse_casilla_value_spreadsheet_reads_a_semicolon_delimited_csv(tmp_path: Path) -> None:
+    """A semicolon CSV is the ordinary Spanish export, not an edge case.
+
+    Without delimiter detection every row parses as one column, the header
+    aliases never match, and the whole sheet reads as a single unusable field.
+    """
+    source = tmp_path / "casillas-semicolon.csv"
+    source.write_text(
+        "casilla_code;value\n01;1234.56\n02;-78.90\n",
+        encoding="utf-8",
+    )
+
+    parsed = parse_casilla_value_spreadsheet(source)
+
+    assert parsed == {"01": Decimal("1234.56"), "02": Decimal("-78.90")}
+
+
+def test_parse_casilla_value_spreadsheet_decodes_a_bom_prefixed_csv(tmp_path: Path) -> None:
+    """A UTF-8 BOM must decide the codec rather than be read as a header character."""
+    source = tmp_path / "casillas-bom.csv"
+    source.write_bytes("casilla_code,value\n01,1234.56\n".encode("utf-8-sig"))
+
+    parsed = parse_casilla_value_spreadsheet(source)
+
+    assert parsed == {"01": Decimal("1234.56")}

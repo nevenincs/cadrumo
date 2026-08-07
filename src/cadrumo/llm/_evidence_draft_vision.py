@@ -56,6 +56,7 @@ from ..application.ledger import InvoiceDraft
 from ..core import FieldOrigin, Period
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
+from ._consent import EvidenceConsentToken
 from ._errors import LLMConfigError
 from ._invoice_extraction_prompt import (
     CompiledInvoiceExtractionPrompt,
@@ -89,6 +90,14 @@ class LocalVisionInvoiceFieldExtractor:
             injection for tests); default-constructed against the resolved
             settings otherwise.
         settings: Injected settings; defaults to ``load_settings()``.
+        consent_token: Per-invocation off-host consent proof, minted through
+            :func:`~llm._consent.mint_evidence_consent_token`. Required only for
+            an off-host read of real evidence; ``None`` is correct for every
+            on-host read.
+        public_corpus: Whether the pages handed to this reader come from the
+            public, synthetic measurement corpus rather than from a taxpayer's
+            document. Defaults to ``False`` -- the fail-closed direction, so a
+            caller that says nothing gets the gate.
     """
 
     def __init__(
@@ -99,9 +108,13 @@ class LocalVisionInvoiceFieldExtractor:
         client: LLMClient | None = None,
         settings: Settings | None = None,
         period: Period | None = None,
+        consent_token: EvidenceConsentToken | None = None,
+        public_corpus: bool = False,
     ) -> None:
         resolved_settings = settings if settings is not None else load_settings()
         self._provider = provider
+        self._consent_token = consent_token
+        self._public_corpus = public_corpus
         self._prompt: CompiledInvoiceExtractionPrompt = build_invoice_extraction_prompt(
             period=period if period is not None else default_extraction_period(),
         )
@@ -171,6 +184,8 @@ class LocalVisionInvoiceFieldExtractor:
             provider_override=self._provider,
             model_override=self._model,
             images=evidence_images,
+            evidence_derived=not self._public_corpus,
+            consent_token=self._consent_token,
         )
         response = asyncio.run(self._client.complete(request))
         parsed = parse_invoice_extraction_response(response.text)

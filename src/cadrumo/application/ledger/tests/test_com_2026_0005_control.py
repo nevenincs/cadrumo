@@ -35,7 +35,6 @@ import pytest
 
 from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from .._closure_findings import closure_findings
-from .._evidence import MediaKind
 from .._evidence_draft import InvoiceDraft
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import transcribe_text_layer
@@ -129,7 +128,6 @@ def test_the_layout_minimal_document_prints_both_identifiers() -> None:
     payload = path.read_bytes()
     transcription = transcribe_text_layer(
         EvidenceInput(
-            media_kind=MediaKind.PDF,
             mime_type="application/pdf",
             data=payload,
             content_sha256=hashlib.sha256(payload).hexdigest(),

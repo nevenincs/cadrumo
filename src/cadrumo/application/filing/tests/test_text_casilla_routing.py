@@ -143,7 +143,7 @@ def test_build_draft_refuses_ordinal_shaped_modelo_303_period_value() -> None:
     remedy for such a revision is recalculation, never coercion.
 
     Mutation check: routing ``decl.periodo`` back to the Decimal channel (the
-    ``data_type == "text"`` literal membership filter this campaign retired)
+    retired ``data_type == "text"`` literal membership filter)
     makes ``"1"`` parse as a Decimal and the build succeed, flipping this
     assertion from pass to fail.
     """

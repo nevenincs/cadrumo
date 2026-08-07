@@ -332,7 +332,7 @@ def test_second_filer_derivation_reads_a_spouse_record_when_status_is_absent() -
 
 @pytest.mark.parametrize("year", _ENGINE_FILING_YEARS)
 def test_anualidades_flag_reads_sin_derecho_for_a_capped_descendant(year: int) -> None:
-    """The one gap in this campaign that over-taxes rather than under-declares.
+    """The one gap in this file's coverage that over-taxes rather than under-declares.
 
     A descendant above the Art. 58.1 ceiling generates no mínimo, so the payer
     IS "sin derecho a la aplicación ... del mínimo por descendientes" and the

@@ -238,6 +238,7 @@ ignore_imports =
     cadrumo.llm.tests.test_client -> cadrumo.adapters.outbound.llm
     cadrumo.llm.tests.test_invoice_prompt_cache_binding -> cadrumo.adapters.outbound.llm
     cadrumo.llm.tests.test_injection_regression -> cadrumo.adapters.outbound.llm
+    cadrumo.llm.tests.test_evidence_consent_gate -> cadrumo.adapters.outbound.llm
     # ── One PRODUCTION edge, sanctioned and worth stating precisely ────────
     # LLMClient default-constructs the three core-side stores, which do resolve
     # secure storage. So the subpackage reaches persistence TRANSITIVELY even
@@ -431,10 +432,26 @@ ignore_imports =
     # behind the optional inference boundary.
     cadrumo.application.ledger._extracted_document_cache -> cadrumo.adapters.**
     cadrumo.application.ledger._extraction_draft_store -> cadrumo.adapters.**
+    # The confirmation record is the third of that same family and is pinned for
+    # the same reason, not as a convenience: it declares its own secure-object
+    # namespace and persists through SecureBoundRepository, so it IS a ledger
+    # store. Encrypted persistence is reached from the application layer
+    # throughout this codebase by design -- roughly 1300 such edges across 495
+    # modules -- and this one is a member of that ambient class rather than a
+    # new kind of coupling.
+    cadrumo.application.ledger._confirmation_record -> cadrumo.adapters.**
     # The read-time shape probe. DocumentShape is derived from a document's
     # own bytes by an INBOUND adapter, because reading an externally-authored
     # format is inbound-adapter work; the ledger consumes the answer.
     cadrumo.application.ledger._evidence_input -> cadrumo.adapters.inbound.einvoice
+    # The batch runner asks that same probe ONE question -- is this document
+    # structured, and therefore readable without loading a model -- and consumes
+    # the answer. Same shape and same justification as the pin above; it is the
+    # probe's own caller, not a second reader. Pinned rather than deferred
+    # behind a function-local import: the deferral would hide the edge from this
+    # contract without changing it, and an edge the linter cannot see is the one
+    # that arrives unreviewed.
+    cadrumo.application.ledger._batch_ingest -> cadrumo.adapters.inbound.einvoice
     # Same shape, same reason: the AEAT submission BATCH is read by the inbound
     # adapter (reading an externally-authored format is inbound-adapter work),
     # and this module is the projection that decides how many recipients a
@@ -443,20 +460,6 @@ ignore_imports =
     # obligation, so the constraint has to live where the projection does --
     # which means consuming the adapter's record type here.
     cadrumo.application.ledger._aeat_record_projection -> cadrumo.adapters.inbound.einvoice
-    # Same shape, same reason. An invoice book arrives in a dialect nobody
-    # controls -- delimiter, decimal convention, encoding, a metadata preamble,
-    # an appended TOTAL row -- and resolving that is reading an externally-
-    # authored format, which is inbound-adapter work. This module consumes the
-    # answer (a typed table) and never parses a byte itself. Pinned per origin
-    # rather than by widening the contract, so a NEW application module reaching
-    # the financial adapter still fails loudly.
-    #
-    # Worth revisiting rather than growing: this module ALSO reads .xlsx through
-    # openpyxl directly, so its file-reading half is arguably misplaced and the
-    # whole of it is a relocation candidate into adapters.inbound. That is a
-    # larger move than the Step that added this edge, and is recorded rather
-    # than attempted here.
-    cadrumo.application.invoices._bulk_import -> cadrumo.adapters.inbound.financial
     cadrumo.application.filing._history_repository -> cadrumo.adapters.**
     cadrumo.application.filing._import -> cadrumo.adapters.**
     cadrumo.application.filing._runtime_repository -> cadrumo.adapters.**

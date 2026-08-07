@@ -36,6 +36,16 @@ casilla_id = "iva.repercutido.reducido"
 [[revisions.2023-y-siguientes.formulas.expression.args]]
 casilla_id = "iva.repercutido.super-reducido"
 
+# The two RD-ley 4/2024 transitional rungs. The diseño's own printed sum for
+# casilla 27 enumerates their cuota boxes ([155] and [167]) alongside the
+# ordinary tiers, so splitting a transitional row out of its tier carrier and
+# omitting it here would move the cuota off the return entirely.
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.repercutido.reducido.transitorio"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "iva.repercutido.super-reducido.transitorio"
+
 [[revisions.2023-y-siguientes.formulas.expression.args]]
 casilla_id = "iva.autorepercutido.intracomunitaria"
 

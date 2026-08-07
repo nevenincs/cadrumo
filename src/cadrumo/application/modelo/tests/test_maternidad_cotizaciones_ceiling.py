@@ -15,10 +15,10 @@ and therefore under-declares.
 
 WHAT THESE TESTS ASSERT, AND WHY IT IS PHRASED THIS WAY. They assert THE CEILING
 -- that a pre-2023 filing year yields no deduccion and says so -- rather than
-asserting that this campaign introduced no un-ceilinged path. The un-ceilinged
-arithmetic PREDATES the campaign: the retired calculate-time flag computed
-`sum(min(meses x 100, 1200))` with no cotizaciones term at all, and what the
-campaign changed was the population reaching it, from operators who typed the flag
+asserting that this change introduced no un-ceilinged path. The un-ceilinged
+arithmetic PREDATES this change: the retired calculate-time flag computed
+`sum(min(meses x 100, 1200))` with no cotizaciones term at all, and what
+changed was the population reaching it, from operators who typed the flag
 to every operator with declared months. A guard phrased as "we introduce no
 un-ceilinged path" would therefore be satisfiable BY the defect it is meant to
 catch, which is the failure mode this file exists to avoid.
@@ -71,7 +71,7 @@ class TestCotizacionesCeilingYears:
     """A descendant the engine would otherwise grant must yield nothing before 2023."""
 
     def test_no_deduccion_is_granted_while_the_ceiling_applied(self) -> None:
-        """The over-grant this Step closes, one assertion per affected year.
+        """The over-grant this test closes, one assertion per affected year.
 
         The descendant is eligible on every other axis, so a granted figure here
         would be un-capped by the cotizaciones the statute required.

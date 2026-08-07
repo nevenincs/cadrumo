@@ -150,9 +150,8 @@ def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
     return buf.getvalue()
 
 
-def _evidence_input(data: bytes, media_kind: MediaKind, mime_type: str) -> EvidenceInput:
+def _evidence_input(data: bytes, mime_type: str) -> EvidenceInput:
     return EvidenceInput(
-        media_kind=media_kind,
         mime_type=mime_type,
         data=data,
         content_sha256=hashlib.sha256(data).hexdigest(),
@@ -167,7 +166,7 @@ def test_image_evidence_has_no_text_layer_and_refuses() -> None:
     that cannot be transcribed is a statement about the DOCUMENT, so it is the
     one case where escalating to a reader that works on pixels is right.
     """
-    ev = _evidence_input(b"\x89PNG\r\n\x1a\nfake-png-bytes", MediaKind.IMAGE, "image/png")
+    ev = _evidence_input(b"\x89PNG\r\n\x1a\nfake-png-bytes", "image/png")
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
         transcribe_text_layer(ev)

@@ -206,7 +206,7 @@ def test_the_predicate_default_withholds_rather_than_grants() -> None:
 
     The flag is keyword-only with a ``False`` default, so the failure mode of
     forgetting it is a withheld allowance rather than a granted one. That is the
-    direction this campaign's defaults rest on, and it is why the anualidades
+    direction this predicate's defaults rest on, and it is why the anualidades
     injector can pass ``False`` explicitly and be correct.
     """
     supporter = _child(convive_con_contribuyente=False, dependencia_economica=True)

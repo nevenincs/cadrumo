@@ -72,8 +72,8 @@ _PORTABLE_LEGS: dict[str, dict[str, object]] = {
         "evidence_asset": "packaging-smoke-evidence-macos.tar.gz",
     },
 }
-_COHORT_PUBLISH_STEP: Final = "Publish tested Cadrumo Python cohort to the run's evidence draft"
-_EVIDENCE_PUBLISH_STEP: Final = "Publish Cadrumo packaging smoke evidence to the run's evidence draft"
+_COHORT_PUBLISH_STEP: Final = "Archive the tested Cadrumo Python cohort"
+_EVIDENCE_PUBLISH_STEP: Final = "Stage Cadrumo packaging smoke evidence"
 
 
 def _run_command_lines(job: dict[str, object]) -> set[str]:
@@ -100,7 +100,7 @@ def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
     jobs = document["jobs"]
 
     # One dedicated cohort build that publishes the single immutable archive to
-    # the run's evidence draft (release-asset transport, not Actions storage).
+    # the run's own Actions artifacts.
     build = jobs["build-release-cohort"]
     assert build["runs-on"] == ["self-hosted", "Linux", "X64"]
     checkout = next(step for step in build["steps"] if str(step.get("uses", "")).startswith("actions/checkout@"))
@@ -109,13 +109,14 @@ def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
     assert "uv run --no-sync python -m dev.packaging.release_cohort build --output var/release-cohort" in build_commands
     build_surface = "\n".join(str(step.get("run", "")) for step in build["steps"] if "run" in step)
     assert "cadrumo-release-cohort.tar.gz" in build_surface
-    assert 'gh release upload "$EVIDENCE_TAG" cadrumo-release-cohort.tar.gz --clobber' in build_commands
+    build_uses = "\n".join(str(step.get("uses", "")) for step in build["steps"])
+    assert "actions/upload-artifact@" in build_uses
     # Deterministic archive per the ratified transport decision.
     assert "--sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner" in build_surface
 
     # Each OS leg needs the ONE build (so all rows bind one cohort id),
-    # downloads that cohort archive from the run's evidence draft, and emits
-    # its exact python-<os> row via the emitter tool onto the same draft.
+    # downloads that cohort archive from the run's artifacts, and emits its
+    # exact python-<os> row via the emitter tool as its own artifact.
     legs = {
         "oracle-emit-linux": ("python-linux-x86-64", ["self-hosted", "Linux", "X64"]),
         "oracle-emit-windows": ("python-windows-x86-64", ["self-hosted", "Windows", "X64"]),
@@ -129,26 +130,12 @@ def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
         assert "dev.packaging.oracle_emit_cohort" in surface
         assert f"--row-id {row_id}" in surface
         assert "--release-cohort-dir var/release-cohort" in surface
-        assert "gh release download" in surface
         assert "cadrumo-release-cohort.tar.gz" in surface
-        assert "gh release upload" in surface
-        for step in leg["steps"]:
-            env = step.get("env", {})
-            if "EVIDENCE_TAG" in env:
-                assert env["EVIDENCE_TAG"] == "evidence-smoke-${{ github.run_id }}"
+        assert "gh release" not in surface
+        leg_uses = "\n".join(str(step.get("uses", "")) for step in leg["steps"])
+        assert "actions/download-artifact@" in leg_uses
+        assert "actions/upload-artifact@" in leg_uses
 
-    # The terminal seal job covers every uploader and mints the manifest last.
-    seal = jobs["seal-evidence-manifest"]
-    assert set(seal["needs"]) == {
-        "cadrumo-packaging-smoke",
-        *_PORTABLE_LEGS,
-        "oracle-emit-linux",
-        "oracle-emit-windows",
-        "oracle-emit-macos",
-    }
-    seal_surface = "\n".join(str(step.get("run", "")) for step in seal["steps"] if "run" in step)
-    assert "dev.packaging.evidence_release emit-manifest" in seal_surface
-    assert 'gh release upload "$EVIDENCE_TAG" evidence-manifest.json --clobber' in seal_surface
 
 
 def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
@@ -162,7 +149,6 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
         "oracle-emit-linux",
         "oracle-emit-windows",
         "oracle-emit-macos",
-        "seal-evidence-manifest",
         # Not a campaign leg: it fails the run fast when a native leg's runner
         # is offline, which would otherwise queue rather than go red.
         "runner-queue-watchdog",

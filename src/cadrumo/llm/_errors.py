@@ -50,6 +50,18 @@ class LLMConfigError(LLMError):
     """Raised when :class:`~adapters.outbound.llm.LLMClient` configuration is invalid."""
 
 
+class LLMConsentError(LLMError):
+    """Raised when an off-host read of taxpayer evidence is refused.
+
+    Deliberately NOT a subclass of
+    :exc:`~adapters.outbound.llm.LLMConfigError`. A configuration fault says
+    "you routed this wrongly"; this says "you may not send this document off
+    this host", and a caller catching configuration faults to retry at another
+    provider must not silently swallow a confidentiality refusal
+    (``sensitive-financial-data-secure-storage-only``).
+    """
+
+
 class LLMValidationError(LLMError, ValueError):
     """Raised when an LLM-related object fails validation.
 

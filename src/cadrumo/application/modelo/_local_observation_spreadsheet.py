@@ -41,7 +41,12 @@ from ...core.decimal import (
     normalize_decimal_separators,
     try_parse_canonical_decimal,
 )
-from ...core.external_constants import CSV_ENCODING_FALLBACK_CHAIN, XLSX_EXTENSION
+from ...core.external_constants import XLSX_EXTENSION
+from ...core.tabular import (
+    TabularSourceError,
+    decode_tabular_bytes,
+    detect_tabular_delimiter,
+)
 from ._action_errors import ModeloLocalObservationError
 
 CSV_EXTENSIONS: Final[frozenset[str]] = frozenset({".csv", ".txt"})
@@ -196,21 +201,21 @@ def _cell(row: list[str], index: int) -> str:
 def _read_csv_rows(path: Path) -> list[list[str]]:
     source_bytes = path.read_bytes()
     text = _decode_bytes(source_bytes, path=path)
-    reader = csv.reader(io.StringIO(text))
+    delimiter = detect_tabular_delimiter(text) or ","
+    reader = csv.reader(io.StringIO(text), delimiter=delimiter)
     rows = [[cell.strip() for cell in row] for row in reader]
     return [row for row in rows if any(cell for cell in row)]
 
 
 def _decode_bytes(source_bytes: bytes, *, path: Path) -> str:
-    for candidate in CSV_ENCODING_FALLBACK_CHAIN:
-        try:
-            return source_bytes.decode(candidate)
-        except (LookupError, UnicodeDecodeError):
-            continue
-    raise ModeloLocalObservationError(
-        f"casilla-value spreadsheet {path} could not be decoded as utf-8/cp1252/iso-8859-1",
-        context={"path": str(path)},
-    )
+    try:
+        text, _, _ = decode_tabular_bytes(source_bytes)
+    except TabularSourceError as exc:
+        raise ModeloLocalObservationError(
+            f"casilla-value spreadsheet {path} could not be decoded as utf-8/cp1252/iso-8859-1",
+            context={"path": str(path)},
+        ) from exc
+    return text
 
 
 def _read_xlsx_rows(path: Path) -> list[list[str]]:

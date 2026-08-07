@@ -235,3 +235,47 @@ def test_csv_provider_decode_bytes_preferred_codec_wins_over_chain() -> None:
         text, winning_encoding = provider._decode_bytes(raw)
     assert winning_encoding == "utf-8"
     assert text == "hello"
+
+
+def test_csv_provider_bom_file_keeps_data_cells_intact_under_non_utf8_preference(tmp_path: Path) -> None:
+    """A UTF-8 BOM must decide the codec even when the configured preference is cp1252.
+
+    ``cp1252`` decodes any byte sequence at all, so a preference-first chain
+    accepts a BOM-prefixed UTF-8 file and mojibakes every accented data cell.
+    The header survives incidentally (``normalize_header`` strips the BOM), so
+    the damage only shows in the descriptions the operator reads back.
+    """
+    source = tmp_path / "bom-accents.csv"
+    source.write_bytes(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID,direction,source_jurisdiction\n"
+        "2026-04-17,Café Ibérico,Menú del día,48.40,EUR,n26-bom-accents,OUTGOING,ES\n".encode("utf-8-sig"),
+    )
+
+    with override_settings(financial_default_csv_encoding="cp1252"):
+        parsed_rows = tuple(CsvProvider().ingest(source))
+
+    assert len(parsed_rows) == 1
+    (parsed,) = parsed_rows
+    assert parsed.raw.counterparty == "Café Ibérico"
+    assert parsed.raw.description == "Menú del día"
+
+
+def test_csv_provider_sniffs_delimiter_below_a_metadata_preamble(tmp_path: Path) -> None:
+    """A comma-bearing preamble must not decide the delimiter for a semicolon table.
+
+    A leading-sample-window sniffer reads the metadata block as the table and
+    picks ``,``; scoring the whole file finds the wider consistent rectangle
+    the real header and data rows form under ``;``.
+    """
+    source = tmp_path / "preamble-semicolon.csv"
+    preamble = "\n".join(f"Extracto de cuenta,ES00 0000 0000 0000 0000 {index:04d}" for index in range(3))
+    source.write_text(
+        preamble + "\n"
+        "Fecha;Concepto;Importe;Divisa;Saldo\n"
+        "17/04/2026;Pago cuota autonomos;-48,40;EUR;1000,00\n",
+        encoding="utf-8",
+    )
+
+    validation = CsvProvider().validate_source(source)
+
+    assert "delimiter=';'" in (validation.detected_dialect or "")

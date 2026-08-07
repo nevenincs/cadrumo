@@ -14,13 +14,13 @@ from pathlib import Path
 import pytest
 
 from ......core import FieldRole
+from ......core.tabular import NormalizedTable
 from ......domain.transactions import TransactionDirection
 from ......tests import FIXTURES_DIR
 from .. import CsvProvider, MappedTabularProvider
 from .._base import InvalidFinancialSourceError
 from .._detection import _ordered_candidates, detect_provider
 from .._mapped_tabular import default_tabular_mapping_resolver
-from .._tabular_dialect import NormalizedTable
 from .._tabular_projection import ColumnRoleMapping
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

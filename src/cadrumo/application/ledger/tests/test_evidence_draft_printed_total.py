@@ -30,10 +30,12 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import FindingResolutionAction
 from ....core.config import Settings
 from ....domain.invoices import InvoiceClass
 from ....domain.iva import InvoiceKind, IvaCategory
-from .._evidence_draft import confirm_invoice_draft_from_evidence
+from .._confirmation_gate import FindingResolution, confirmation_blockers
+from .._evidence_draft import confirm_invoice_draft_from_evidence, extract_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import isolated_settings as isolated_settings
 from ._evidence_test_support import runtime_profile as runtime_profile
@@ -135,6 +137,39 @@ def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
     return buf.getvalue()
 
 
+def _operator_attestations(
+    *,
+    evidence_id: str,
+    isolated_settings: Settings,
+) -> tuple[FindingResolution, ...]:
+    """Answer each blocking finding this document raises, as the operator must.
+
+    The confirm boundary refuses a document with an unanswered finding, and a
+    recargo de equivalencia invoice raises an arithmetic-closure finding because
+    the reading path does not recover the surcharge as a component. These cases
+    are about the printed-total cross-check rather than about the gate, so the
+    operator step the gate mandates is performed here explicitly --- one
+    attestation per finding, each naming why the document is accepted as printed.
+
+    Deliberately built per finding rather than as a blanket clearance: a helper
+    that cleared the set unconditionally would be a bulk confirm reached through
+    the test suite.
+    """
+    draft = extract_invoice_draft_from_evidence(
+        bucket_id=_BUCKET_ID,
+        evidence_id=evidence_id,
+        settings=isolated_settings,
+    )
+    return tuple(
+        FindingResolution(
+            blocker_id=blocker.blocker_id,
+            action=FindingResolutionAction.ATTEST,
+            note="the document prints a recargo de equivalencia this reading path does not recover as a component",
+        )
+        for blocker in confirmation_blockers(draft)
+    )
+
+
 def _confirm(
     lines: tuple[str, ...],
     *,
@@ -154,6 +189,10 @@ def _confirm(
         evidence_id=record.evidence_id,
         counterparty_name="Acme Suministros SL",
         settings=isolated_settings,
+        resolutions=_operator_attestations(
+            evidence_id=record.evidence_id,
+            isolated_settings=isolated_settings,
+        ),
         invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
     )
 
@@ -228,6 +267,8 @@ def test_the_guarded_no_op_retry_still_reports_the_discrepancy(
     svc = _make_svc(isolated_settings, secure_objects)
     record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
 
+    attestations = _operator_attestations(evidence_id=record.evidence_id, isolated_settings=isolated_settings)
+
     def _run():
         return confirm_invoice_draft_from_evidence(
             counterparty_country="ES",
@@ -236,6 +277,7 @@ def test_the_guarded_no_op_retry_still_reports_the_discrepancy(
             evidence_id=record.evidence_id,
             counterparty_name="Acme Suministros SL",
             settings=isolated_settings,
+            resolutions=attestations,
             invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
         )
 
@@ -269,6 +311,10 @@ def _confirm_with(
         evidence_id=record.evidence_id,
         counterparty_name="Acme Suministros SL",
         settings=isolated_settings,
+        resolutions=_operator_attestations(
+            evidence_id=record.evidence_id,
+            isolated_settings=isolated_settings,
+        ),
         invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
         **overrides,
     )

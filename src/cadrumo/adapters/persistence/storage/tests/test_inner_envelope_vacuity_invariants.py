@@ -19,8 +19,8 @@ definition's own field carries ``ge=1``, so the comparison is unsatisfiable by
 construction. "A reader's constant equals its namespace's version" is likewise a
 tautology, because every reader DEFINES its constant as that namespace's version,
 so the assertion compares a value against its own definition. Both would report
-green forever while proving nothing, which is this campaign's own critical
-finding reproduced inside the gate meant to close it.
+green forever while proving nothing, which is exactly the vacuous-gate finding
+this module's own gate is built to catch reproduced inside itself.
 
 The relations are relations, never the literal ``1``. A per-namespace version
 bump is a legitimate, expected change — the durability machinery exists to
@@ -104,9 +104,9 @@ def test_the_envelope_bound_tracks_the_durability_floor() -> None:
     lowest declared namespace version. The two coincide today, but they come
     apart exactly when the machinery is used as designed: post-flip the floor
     freezes while namespaces bump, and a relation against the lowest declared
-    version would then red on a correct all-namespace bump — the wrong-reason
-    failure this campaign's governing ruling explicitly warned a gate must not
-    have. The floor is also the semantically correct partner: it is the lowest
+    version would then red on a correct all-namespace bump — exactly the
+    wrong-reason failure a durability gate must never have. The floor is also
+    the semantically correct partner: it is the lowest
     version every read path keeps readable, and the field bound is the lowest
     version the payload can represent. Those are one boundary seen from two
     sides, and they must move together.

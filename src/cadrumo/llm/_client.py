@@ -18,9 +18,11 @@ from pydantic import SecretStr
 
 from ..core.config import Settings
 from ..core.hashing import content_hash_hex
+from ..core.i18n import tr
 from ..core.logging import get_logger
 from ..core.time import now
-from ._errors import LLMCacheError, LLMConfigError
+from ._consent import EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY, provider_reads_off_host
+from ._errors import LLMCacheError, LLMConfigError, LLMConsentError
 
 if TYPE_CHECKING:
     # The three persistence-touching stores stay on the CORE side of the
@@ -49,6 +51,8 @@ from ._providers.base import _ProviderAdapter
 # optional-extra guard in _build_adapter.
 
 _LOGGER = get_logger(__name__)
+
+_EVIDENCE_CONSENT_DISPATCH_REFUSAL_LOCALE_KEY = "llm.evidence.consent.dispatch_refused"
 
 
 def _elapsed_ms(monotonic_start: float) -> int:
@@ -139,6 +143,7 @@ class LLMClient:
         """
         provider = request.provider_override or self._default_provider()
         model = request.model_override or self._default_model(provider)
+        self._require_evidence_consent(provider, request)
         request_id = self._request_id(request)
         cached = self.cache.read(request, provider, model)
         if cached is not None:
@@ -218,6 +223,49 @@ class LLMClient:
             completion.output_tokens,
         )
         return response
+
+    def _require_evidence_consent(self, provider: LLMProvider, request: LLMRequest) -> None:
+        """Refuse an off-host dispatch of taxpayer evidence without per-invocation consent.
+
+        The confidentiality boundary, enforced at the client's single dispatch
+        point for the reason the image boundary is: which requests may leave the
+        host is a property of the DISPATCH, never of each caller remembering to
+        pin a provider. A caller may still pin
+        :attr:`~adapters.outbound.llm.LLMProvider.LOCAL` as documentation, but
+        no pin is load-bearing -- ``extract_invoice_fields_from_text`` is
+        exported with none, and a reader constructed with a cloud provider
+        reaches the same line as every other request.
+
+        **Ordered before the cache read and before adapter construction, both
+        deliberately.** Before the cache read, so priming an entry under consent
+        cannot make a later unconsented invocation succeed. Before adapter
+        construction, so the refusal is the CONSENT refusal rather than a
+        missing-API-key configuration error -- an absent credential is an
+        accident that looks like a control, and a gate whose refusal is
+        indistinguishable from a misconfiguration cannot be relied on to have
+        fired.
+
+        The gestor bar is re-applied here rather than trusted from the token's
+        minting site: a deployment that bars off-host reading must refuse even
+        if a token reaches this point, because a defence that depends on the
+        caller having remembered is not a defence.
+
+        Args:
+            provider: The resolved provider this request would dispatch at.
+            request: The request, carrying its evidence marker and any token.
+
+        Raises:
+            LLMConsentError: When an evidence-derived request would be
+                dispatched off-host without a valid per-invocation consent
+                token, or in a gestor deployment at all.
+        """
+        if not request.evidence_derived or not provider_reads_off_host(provider):
+            return
+        if self.settings.cadrumo_evidence_gestor_mode or request.consent_token is None:
+            raise LLMConsentError(
+                tr(_EVIDENCE_CONSENT_DISPATCH_REFUSAL_LOCALE_KEY, provider=provider.value),
+                suggestion=tr(EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY),
+            )
 
     @staticmethod
     def _omit_unsupported_parameters(adapter: _ProviderAdapter, request: ProviderRequest) -> ProviderRequest:

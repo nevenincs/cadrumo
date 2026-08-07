@@ -163,11 +163,11 @@ def _untracked_files(root: Path) -> list[str]:
     """Return untracked, non-ignored paths -- the half ``git grep`` cannot see.
 
     ``git grep`` reads the tracked tree, so a file that has never been added is
-    invisible to it. That is not a theoretical gap: this campaign's own records
-    carried an account DNS zone id while untracked, and the gate was green for
-    the whole time they did. It can only ever have caught that leak after the
-    commit introducing it, by which point removing it is a history rewrite
-    rather than an edit.
+    invisible to it. That is not a theoretical gap: this repo's own records
+    once carried an account DNS zone id while untracked, and the gate was
+    green for the whole time it did. It can only ever have caught that leak
+    after the commit introducing it, by which point removing it is a history
+    rewrite rather than an edit.
     """
     result = subprocess.run(
         ["git", "ls-files", "--others", "--exclude-standard"],  # noqa: S607 - git from PATH like every dev gate
@@ -332,9 +332,10 @@ def test_no_cross_project_identifier_in_tracked_files() -> None:
 def test_no_banned_shape_in_untracked_files() -> None:
     """The half a tracked-only scan cannot see, and the shape of the real breach.
 
-    This campaign's own records carried an account DNS zone id while untracked,
-    and the gate was green throughout. A tracked-only scan can only catch that
-    after the commit that introduces it, when removal is a history rewrite.
+    This repo's own records once carried an account DNS zone id while
+    untracked, and the gate was green throughout. A tracked-only scan can
+    only catch that after the commit that introduces it, when removal is a
+    history rewrite.
     """
     root = _repo_root()
     offenders = _scan_untracked(

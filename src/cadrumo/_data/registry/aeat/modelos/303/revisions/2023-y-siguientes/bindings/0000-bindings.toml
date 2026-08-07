@@ -30,6 +30,7 @@ required_text = ["modelo 303"]
 [revisions.2023-y-siguientes.bindings.selector]
 categories = ["domestic_reduced"]
 rate_kinds = ["reduced"]
+applied_rates = ["0.10"]
 flow_direction = "repercutido"
 fact = "iva_amount_sum"
 
@@ -49,6 +50,7 @@ required_text = ["modelo 303"]
 [revisions.2023-y-siguientes.bindings.selector]
 categories = ["domestic_super_reduced"]
 rate_kinds = ["super_reduced"]
+applied_rates = ["0.04"]
 flow_direction = "repercutido"
 fact = "iva_amount_sum"
 

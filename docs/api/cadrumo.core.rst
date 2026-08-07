@@ -54,6 +54,7 @@ Submodules
    cadrumo.core._config_storage_route
    cadrumo.core._config_support
    cadrumo.core._config_timeouts
+   cadrumo.core._confirmation_gate
    cadrumo.core._credentials
    cadrumo.core._declaracion_idioma
    cadrumo.core._descendant_relacion
@@ -121,6 +122,7 @@ Submodules
    cadrumo.core.secure_object_write
    cadrumo.core.setup_answers
    cadrumo.core.storage_route_guidance
+   cadrumo.core.tabular
    cadrumo.core.text_fold
    cadrumo.core.tty
    cadrumo.core.wizard_catalogue

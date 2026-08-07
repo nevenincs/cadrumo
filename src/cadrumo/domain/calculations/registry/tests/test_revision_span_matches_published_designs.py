@@ -31,6 +31,22 @@ because that comparison needs the casilla-to-box mapping this module deliberatel
 avoids depending on. The two checks are complements: this one bounds the span,
 and a per-modelo offset gate (where the box numbers exist) bounds the contents.
 
+It also does NOT enforce the authoring policy that governs how a span is split.
+The accepted posture is to split only at boundaries inside a modelo's reachable
+filing window -- defined by prescripción, four years from the voluntary filing
+deadline (LGT arts. 66-67), computed at implementation time -- and to refuse
+export for years before the earliest split. This gate knows nothing of that. It
+compares designs across whatever span a revision CLAIMS, so it catches a span
+widened back over a boundary and objects to nothing if a revision is split where
+the window no longer requires one. The asymmetry is deliberate: this instrument
+guards byte-correctness, that policy guards authoring cost, and they answer
+different questions. Its silence about a split is not approval of the split.
+
+That window is itself dated and moves. Exercise 2021 prescribed on 2026-01-30,
+so a boundary that required a split in December 2025 does not require one now,
+and the next expiry shifts the answer again. Recompute it rather than reading a
+boundary set off any record, including this one.
+
 ANTI-VACUITY. A parser that cannot read a design returns the same answer as a
 design with no divergence, so silence has to be loud: a design file this module
 claims to read but extracts nothing from is a FAILURE, not a skip. Without that,
@@ -278,25 +294,51 @@ def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]
     """
     boundaries: dict[tuple[int, int], list[str]] = {}
 
+    lengths = _page_lengths_for(modelo_id)
+
+    def _record_count_delta(earlier: int, later: int) -> str | None:
+        """``'9 -> 10 records'`` when the design's record SET changed, else None."""
+        if earlier not in lengths or later not in lengths:
+            return None
+        before, after = len(lengths[earlier]), len(lengths[later])
+        return None if before == after else f"{before} -> {after} records"
+
     designs, _ = _designs_for(modelo_id)
     box_years = sorted(_claimed_years(revision, set(designs)))
     for earlier, later in zip(box_years, box_years[1:]):
-        before, after = designs[earlier], designs[later]
-        shared = set(before) & set(after)
-        moved = sorted(box for box in shared if before[box] != after[box])
+        before_boxes, after_boxes = designs[earlier], designs[later]
+        shared = set(before_boxes) & set(after_boxes)
+        moved = sorted(box for box in shared if before_boxes[box] != after_boxes[box])
         if moved:
-            sample = ", ".join(f"[{box}] {before[box]}->{after[box]}" for box in moved[:3])
-            boundaries.setdefault((earlier, later), []).append(
-                f"{len(moved)} of {len(shared)} shared boxes moved (e.g. {sample})"
-            )
+            sample = ", ".join(f"[{box}] {before_boxes[box]}->{after_boxes[box]}" for box in moved[:3])
+            note = f"{len(moved)} of {len(shared)} shared boxes moved (e.g. {sample})"
+            # A displacement count measured across a decomposition change is not a
+            # clean in-record figure: a box that migrated into a NEW record counts
+            # as "moved" alongside one that shifted within its own. Both are real
+            # movement, but comparing the magnitude against a same-record
+            # boundary's is comparing different quantities.
+            if _record_count_delta(earlier, later):
+                note += " -- NOT a clean in-record displacement: the record set also changed"
+            boundaries.setdefault((earlier, later), []).append(note)
 
-    lengths = _page_lengths_for(modelo_id)
     page_years = sorted(_claimed_years(revision, set(lengths)))
     for earlier, later in zip(page_years, page_years[1:]):
-        if lengths[earlier] != lengths[later]:
-            boundaries.setdefault((earlier, later), []).append(
-                f"page lengths differ: {lengths[earlier]} vs {lengths[later]}"
-            )
+        if lengths[earlier] == lengths[later]:
+            continue
+        delta = _record_count_delta(earlier, later)
+        # Say what a page-length change MEANS before showing the raw tuples. A
+        # record-count change is a different and larger event than a page growing,
+        # and stated as bare tuples it was under-read for hours by everyone
+        # looking at it, including its author.
+        headline = (
+            f"RECORD SET CHANGED ({delta}) -- the design's record decomposition differs, "
+            "so this is not an offset shift"
+            if delta
+            else "page byte-lengths differ, so something moved inside a record"
+        )
+        boundaries.setdefault((earlier, later), []).append(
+            f"{headline}: {lengths[earlier]} vs {lengths[later]}"
+        )
 
     return boundaries
 

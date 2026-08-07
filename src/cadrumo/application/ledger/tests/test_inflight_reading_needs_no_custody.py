@@ -31,7 +31,6 @@ from hashlib import sha256
 
 import pytest
 
-from .._evidence import MediaKind
 from .._evidence_input import EvidenceInput
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -41,7 +40,6 @@ _PDF_BYTES = b"%PDF-1.7\nin-flight evidence bytes\n"
 
 def _evidence() -> EvidenceInput:
     return EvidenceInput(
-        media_kind=MediaKind.PDF,
         mime_type="application/pdf",
         data=_PDF_BYTES,
         content_sha256=sha256(_PDF_BYTES).hexdigest(),

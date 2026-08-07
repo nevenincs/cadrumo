@@ -47,9 +47,9 @@ from ..atomic_write import (
     durable_write_batch,
 )
 
-_PERMISSION_PROBE_WRITES = 20
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_PERMISSION_PROBE_WRITES = 20
 
 _PIPE_PAYLOAD = bytes(range(256)) * 4096
 #: Hang guard for the reader thread's join, used INSIDE an already-booted child.

@@ -83,7 +83,11 @@ def test_anchor_matches_sphinx_ground_truth(headword: str, anchor: str) -> None:
     assert glossary_term_anchor(headword) == anchor
 
 
-_LEGAL_BASIS_RE = re.compile(r"\* Legal basis: `(?P<ref>[^<]+?) <")
+#: A grounding line reads ``Legal basis: `<citation> <url>`__ (``<ref>``)``: the
+#: citation carries the meaning and the catalogue id trails it, demoted but
+#: still present so the grounding stays traceable to the exact row. This gate
+#: reads the id, which is the thing a concept's ``legal_refs`` must match.
+_LEGAL_BASIS_RE = re.compile(r"\* Legal basis: `[^`]+ <[^>]+>`__ \(``(?P<ref>[^`]+)``\)")
 
 
 def _rendered_legal_refs_by_anchor() -> dict[str, set[str]]:

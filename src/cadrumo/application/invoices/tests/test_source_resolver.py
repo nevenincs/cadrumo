@@ -553,7 +553,6 @@ def test_unconverted_foreign_invoice_is_withheld_from_projection(
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] != Decimal("1000.00")
 
 
-@pytest.mark.unit
 def test_a_service_category_alone_resolves_its_m349_clave() -> None:
     """A record carrying the service category but NO operation_type still files.
 
@@ -579,7 +578,6 @@ def test_a_service_category_alone_resolves_its_m349_clave() -> None:
     assert _intracommunity_clave(received) == "I"
 
 
-@pytest.mark.unit
 def test_a_service_category_on_its_impossible_side_resolves_no_clave() -> None:
     """The directional half of the same branch.
 
@@ -642,7 +640,7 @@ def _clave_probe_invoice(kind: InvoiceKind, category: IvaCategory) -> Invoice:
 # They deliberately do NOT assert equality against a resolver wired to both
 # stores. That union double-counts an invoice held in both, so a union-equality
 # assertion would demand the canonical path reproduce the double-count -- it is
-# either unsatisfiable or it pins the very defect this campaign removes. Instead
+# either unsatisfiable or it pins the very defect being removed. Instead
 # each store is projected ALONE and both are asserted against one explicit
 # contract, so the contract is the thing conserved.
 # ---------------------------------------------------------------------------
@@ -1073,7 +1071,7 @@ def test_capability_parity_m347_declares_only_the_domestic_party(
 
 @pytest.mark.parametrize(("modelo_id", "period"), [("303", "1T"), ("390", "0A")])
 def test_the_invoice_stores_contribute_nothing_to_m303_or_m390(modelo_id: str, period: str) -> None:
-    """Scope guard, and the honest form of this Step's M303/M390 criterion.
+    """Scope guard, and the honest form of the M303/M390 criterion.
 
     Neither modelo declares a single invoice-sourced binding, so an equality
     assertion on their outputs would compare zero against zero and pass by

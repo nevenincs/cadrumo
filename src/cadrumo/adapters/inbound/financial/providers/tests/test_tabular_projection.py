@@ -17,8 +17,8 @@ import itertools
 import pytest
 
 from ......core import FieldRole
+from ......core.tabular import normalize_tabular_bytes, normalize_tabular_text
 from ......tests import FIXTURES_DIR
-from .._tabular_dialect import normalize_tabular_bytes, normalize_tabular_text
 from .._tabular_projection import ColumnRoleMapping, project_table
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]

@@ -136,7 +136,7 @@ def test_a_casilla_with_no_printed_number_is_refused_rather_than_mis_anchored() 
     missing for a reason no message names. Modelo 190's perceptor count carries a
     positional range in ``number`` and is the subject here with its
     ``form_number`` withheld, which is the state every affected casilla was in
-    before this campaign populated that field.
+    before that field was populated.
     """
     revision = _revision("190", 2024, "0A")
     profile = _numeric_profile("decl.total-percepciones")

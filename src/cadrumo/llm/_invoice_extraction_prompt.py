@@ -23,6 +23,11 @@ Where each number comes from:
   the RIRPF art. 95 parameters under ``registry/aeat/legal/``.
 * The no-printed-tax vocabulary: :data:`~domain.iva.NO_PRINTED_TAX_IVA_CATEGORIES`,
   derived from the canonical :class:`~domain.iva.IvaCategory` closed set.
+* The regime mentions: :data:`~domain.iva.REGIME_LEGENDS`, quoted from RD
+  1619/2012 art. 6.1's own guillemets in the bundled consolidated text. The
+  prompt asks the model to COPY one if printed, never to choose one -- a closed
+  list offered as a recognition aid, not as a menu, because selecting from it
+  would be the classification this stage does not do.
 
 **Shape is a design constraint.** The target is the lowest-bound vision-capable
 model, so the prompt is enumerated bullets and per-field micro-guidance, never
@@ -81,6 +86,7 @@ __all__ = [
     "default_extraction_period",
     "invoice_extraction_prompt_registry",
     "template_numeric_literals",
+    "template_unsourced_legend_phrases",
 ]
 
 _FINGERPRINT_LENGTH: Final[int] = 12
@@ -140,6 +146,13 @@ a deduction, so it may appear negative or in parentheses.
 printed rate; never move it onto a listed one.
 - Some documents carry no tax at all ({zero_cuota_reasons}). Then the rate and \
 the tax amount are both null. Never supply a rate the document does not print.
+
+Regime wording:
+- Spanish law makes an issuer PRINT a set phrase when a special regime applies. \
+If one of these appears, copy it into regime_legend exactly as printed: \
+{regime_legends}.
+- Copy only what is printed. If none appears, regime_legend is null. Never pick \
+the closest phrase, and never write one the document does not show.
 
 Return ONLY one JSON object with exactly these keys (no other text):
 {json_skeleton}
@@ -313,6 +326,52 @@ def _retencion_rate_pcts() -> tuple[Decimal, ...]:
     return tuple(sorted(rate * Decimal("100") for rate in statutory_activity_retencion_rates()))
 
 
+def _regime_legends() -> str:
+    """Return the mandated regime mentions as one quoted, comma-joined line.
+
+    Read from :data:`~domain.iva.REGIME_LEGENDS` rather than restated here, for
+    the same reason the rates are: the phrases are fixed by RD 1619/2012 art. 6.1
+    and a copy in the template would be a second home for a legal vocabulary,
+    drifting silently the moment the regulation's list moves.
+
+    Quoted, because the model is being told to copy a phrase and the quotes mark
+    where each one starts and ends -- a bare comma-joined line of Spanish prose
+    gives a small model no boundary to copy between.
+    """
+    from ..domain.iva import regime_legend_phrases
+
+    return ", ".join(f'"{phrase}"' for phrase in regime_legend_phrases())
+
+
+def template_unsourced_legend_phrases(template: str | None = None) -> tuple[str, ...]:
+    """Return any mandated legend phrase hardcoded in ``template``.
+
+    The literal scan's counterpart on the prose axis. A numeric scan cannot see
+    this class of drift at all: a statutory phrase written into the template is
+    not a digit, so the rate gate reports clean over it while a second, silently
+    diverging copy of the legal vocabulary ships inside the prompt.
+
+    Args:
+        template: Template text to scan. ``None`` reads the REGISTERED template
+            at call time, never a snapshot bound at import -- the same trap the
+            numeric scan was caught in, and the reason that gate now points at
+            the artefact that actually ships rather than at a module constant.
+
+    Returns:
+        The phrases found hardcoded, in declaration order. Empty is the passing
+        state, because the compiler substitutes them from the one declaration.
+    """
+    from ..domain.iva import regime_legend_phrases
+
+    scanned = (
+        invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID).template
+        if template is None
+        else template
+    )
+    folded = scanned.casefold()
+    return tuple(phrase for phrase in regime_legend_phrases() if phrase.casefold() in folded)
+
+
 def _zero_cuota_reasons() -> str:
     """Return the no-printed-tax category tokens as one comma-joined line.
 
@@ -384,6 +443,7 @@ def build_invoice_extraction_prompt(*, period: Period) -> CompiledInvoiceExtract
         iva_rates=_join_pcts(iva_rate_pcts),
         retencion_rates=_join_pcts(retencion_rate_pcts),
         zero_cuota_reasons=_zero_cuota_reasons(),
+        regime_legends=_regime_legends(),
         json_skeleton=_json_skeleton(),
     )
     return CompiledInvoiceExtractionPrompt(

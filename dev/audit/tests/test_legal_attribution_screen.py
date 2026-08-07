@@ -3,8 +3,8 @@
 The registry's evidence gate confirms a cited phrase is PRESENT in the cited
 file, which is why four filing-grade citations to another form's provision pass
 it. This screen exists to close that gap, so it is worth exactly as much as its
-ability to discriminate — and a screen with no test is the shape this campaign
-has spent its length removing.
+ability to discriminate — and a screen with no test is the untrustworthy shape
+this project must never ship.
 
 Every case drives the real detector over synthetic catalogue entries, so the
 assertions are about behaviour rather than about the shape of the source.

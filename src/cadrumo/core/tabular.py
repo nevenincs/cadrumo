@@ -6,6 +6,12 @@ summary rows separated out, and the detected dialect recorded. It answers
 "what shape is this file", never "what does this column mean" — role mapping is
 a separate step consuming this output, and no cell value is interpreted here.
 
+The contract lives in :mod:`cadrumo.core` because every layer meets a
+delimited export and none of them owns it: the inbound financial adapter
+normalizes a bank statement through it, and the application's bulk invoice
+import normalizes an invoice book through the same call. A per-layer copy would
+mean two delimiter sniffers disagreeing about the same operator file.
+
 Six axes vary across real operator exports and are each detected rather than
 assumed: the delimiter (``;``, ``,``, tab, ``|``), the decimal convention
 (Spanish comma or English dot), the byte encoding (including a UTF-8 BOM),
@@ -21,7 +27,9 @@ That is what lets a later step copy a cell without a lossy round trip.
 Normalization never refuses a file whole. A row whose field count differs from
 the table's is carried with a notice rather than dropped, an unreadable
 decimal convention is reported and defaulted, and only a source that cannot be
-decoded at all, or that yields no usable header, raises.
+decoded at all, or that yields no usable header, raises
+:class:`TabularSourceError`. Each consuming layer translates that refusal into
+its own operator-facing error taxonomy.
 
 See Also:
     :class:`~core.FieldRole`
@@ -40,15 +48,42 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core import fold_diacritics
-from .....core.config import load_settings
-from .....core.decimal import european_thousands_reading_is_ambiguous
-from .....core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
-from .....core.logging import get_logger
-from ._base import InvalidFinancialSourceError
+from ._models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .config import load_settings
+from .decimal import european_thousands_reading_is_ambiguous
+from .errors import CoreValidationError
+from .external_constants import CSV_ENCODING_FALLBACK_CHAIN
+from .logging import get_logger
+from .text_fold import fold_diacritics
+
+__all__ = [
+    "CANDIDATE_DELIMITERS",
+    "NormalizedRow",
+    "NormalizedTable",
+    "TabularDialect",
+    "TabularNotice",
+    "TabularNoticeCode",
+    "TabularSourceError",
+    "decode_tabular_bytes",
+    "detect_tabular_delimiter",
+    "normalize_tabular_bytes",
+    "normalize_tabular_text",
+]
 
 _logger = get_logger(__name__)
+
+
+class TabularSourceError(CoreValidationError):
+    """Raised when tabular bytes cannot be decoded or carry no usable table.
+
+    The three structural refusals normalization makes: no candidate codec
+    decoded the bytes, no candidate delimiter produced a rectangle, or no row
+    in the rectangle reads as a header. Consumers translate it into their own
+    layer's refusal — the financial providers into
+    ``InvalidFinancialSourceError``, the invoice bulk import into
+    ``InvoiceValidationError``.
+    """
+
 
 #: Delimiters a delimited-text export realistically uses. Each is scored
 #: against the whole file; the one producing the most consistent rectangle
@@ -183,7 +218,7 @@ def decode_tabular_bytes(source_bytes: bytes) -> tuple[str, str, TabularNotice |
         preferred codec was not the one that worked.
 
     Raises:
-        InvalidFinancialSourceError: No candidate codec decoded the bytes.
+        TabularSourceError: No candidate codec decoded the bytes.
     """
     preferred = load_settings().financial_default_csv_encoding.strip()
     if source_bytes.startswith(b"\xef\xbb\xbf"):
@@ -210,7 +245,7 @@ def decode_tabular_bytes(source_bytes: bytes) -> tuple[str, str, TabularNotice |
             )
         )
         return text, candidate, notice
-    raise InvalidFinancialSourceError(
+    raise TabularSourceError(
         f"tabular source could not be decoded as any of {', '.join(candidates)}",
     )
 
@@ -247,6 +282,42 @@ def _rectangle_score(parsed: list[tuple[int, list[str]]]) -> tuple[int, int]:
     return best_score, best_width
 
 
+def _best_delimiter_parse(
+    text: str,
+    quotechar: str,
+) -> tuple[int, int, str, list[tuple[int, list[str]]]] | None:
+    """Return ``(score, column_count, delimiter, parsed)`` for the winning delimiter.
+
+    ``None`` when no candidate produced a rectangle at all — a single-column
+    file, or one no candidate delimiter splits.
+    """
+    best: tuple[int, int, str, list[tuple[int, list[str]]]] | None = None
+    for delimiter in CANDIDATE_DELIMITERS:
+        parsed = _parse_with(text, delimiter, quotechar)
+        score, width = _rectangle_score(parsed)
+        if score == 0:
+            continue
+        if best is None or score > best[0]:
+            best = (score, width, delimiter, parsed)
+    return best
+
+
+def detect_tabular_delimiter(text: str, *, quotechar: str = '"') -> str | None:
+    """Return the delimiter that splits ``text`` into the most consistent rectangle.
+
+    Scored over the whole file rather than a leading sample window, so a
+    metadata preamble a sample-window sniffer would read as the table cannot
+    decide the delimiter for the data below it.
+
+    Returns:
+        The winning member of :data:`CANDIDATE_DELIMITERS`, or ``None`` when no
+        candidate produced a rectangle. A caller that must parse regardless
+        chooses its own fallback.
+    """
+    best = _best_delimiter_parse(text, quotechar)
+    return None if best is None else best[2]
+
+
 def _numeric_body(cell: str) -> str | None:
     """Return the digits-and-separators body of a printed amount, or ``None``.
 
@@ -258,7 +329,7 @@ def _numeric_body(cell: str) -> str | None:
     stripped = cell.strip()
     if not stripped or not _DIGIT_RUN_RE.search(stripped):
         return None
-    body = _CURRENCY_NOISE_RE.sub("", stripped).replace(" ", "").replace(" ", "")
+    body = _CURRENCY_NOISE_RE.sub("", stripped).replace(" ", "").replace(" ", "")
     if not body or _NUMERIC_EVIDENCE_RE.fullmatch(body) is None:
         return None
     return body
@@ -381,27 +452,20 @@ def normalize_tabular_text(text: str, *, encoding: str, quotechar: str = '"') ->
         The normalized table.
 
     Raises:
-        InvalidFinancialSourceError: The source carries no delimited rectangle,
-            or no row in it reads as a header.
+        TabularSourceError: The source carries no delimited rectangle, or no
+            row in it reads as a header.
     """
     notices: list[TabularNotice] = []
-    best: tuple[int, int, str, list[tuple[int, list[str]]]] | None = None
-    for delimiter in CANDIDATE_DELIMITERS:
-        parsed = _parse_with(text, delimiter, quotechar)
-        score, width = _rectangle_score(parsed)
-        if score == 0:
-            continue
-        if best is None or score > best[0]:
-            best = (score, width, delimiter, parsed)
+    best = _best_delimiter_parse(text, quotechar)
     if best is None:
-        raise InvalidFinancialSourceError(
+        raise TabularSourceError(
             f"tabular source carries no delimited rectangle under any of {CANDIDATE_DELIMITERS}",
         )
     _, column_count, delimiter, parsed = best
 
     header_index = _locate_header(parsed, column_count=column_count)
     if header_index is None:
-        raise InvalidFinancialSourceError(
+        raise TabularSourceError(
             f"tabular source has no row of {column_count} fields that reads as a header",
         )
     header_line, header_cells = parsed[header_index]
@@ -481,8 +545,8 @@ def normalize_tabular_bytes(source_bytes: bytes, *, quotechar: str = '"') -> Nor
     """Decode and normalize raw tabular bytes into a :class:`NormalizedTable`.
 
     Raises:
-        InvalidFinancialSourceError: The bytes cannot be decoded, carry no
-            delimited rectangle, or carry no header row.
+        TabularSourceError: The bytes cannot be decoded, carry no delimited
+            rectangle, or carry no header row.
     """
     text, encoding, encoding_notice = decode_tabular_bytes(source_bytes)
     table = normalize_tabular_text(text, encoding=encoding, quotechar=quotechar)
