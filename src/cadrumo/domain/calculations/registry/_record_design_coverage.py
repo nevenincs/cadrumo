@@ -590,6 +590,22 @@ def build_diseno_coverage_report(
     enforced at load while full-Diseño coverage is inventoried
     off-load-path.
 
+    The registry side keys on ``form_number`` where a casilla declares
+    one, falling back to ``number``. Both fields carry a box number, and
+    which one holds it is not uniform: a casilla whose ``id`` is a domain
+    name rather than a box number tends to repeat that id in ``number``
+    and record the official box in ``form_number``. Modelo 303's
+    ``iva.resultado-regimen-general`` is the worked example -- it IS box
+    46, exports to box 46, and was reported as an unauthored Diseño
+    casilla purely because the comparison read ``number`` and found the id
+    there.
+
+    This rescues only the casillas that record their box number somewhere.
+    A casilla whose ``number`` repeats its id and which declares no
+    ``form_number`` records the official box number nowhere, so nothing
+    can match it to the form; those remain in the coverage gap, which is
+    the honest report of their state.
+
     For a ``multi_segment`` modelo the comparison is segment-aware: a
     Diseño casilla under segment ``S`` is "covered" only when the
     registry declares a casilla with the same ``(S, number)`` metadata. For
@@ -604,7 +620,9 @@ def build_diseno_coverage_report(
         multi_segment: Whether the modelo uses segment-qualified casilla ids.
     """
     diseno = derive_diseno_coverage_casillas(path, multi_segment=multi_segment)
-    declared_metadata = {(casilla.segmento, casilla.number) for casilla in revision.casillas}
+    declared_metadata = {
+        (casilla.segmento, casilla.form_number or casilla.number) for casilla in revision.casillas
+    }
     covered: list[DerivedDisenoCasilla] = []
     gap: list[DerivedDisenoCasilla] = []
     for casilla in diseno:

@@ -439,3 +439,41 @@ def test_modelo_390_coverage_report_is_advisory_not_a_completeness_claim() -> No
         "annual form is under-modelled; if it no longer does, re-read this test rather "
         "than relaxing it -- it is not a completeness assertion"
     )
+
+
+def test_a_casilla_recording_its_box_in_form_number_counts_as_covered() -> None:
+    """The official box number is not always in ``number``, and coverage must follow it.
+
+    A casilla whose ``id`` is a domain name rather than a box number tends to
+    repeat that id in ``number`` and record the official box in ``form_number``.
+    Modelo 303's ``iva.resultado-regimen-general`` is exactly that: it IS box 46
+    on the form -- its own formula comment reads ``[64] = [46] + [58] + [76]``
+    and it exports to ``modelo-303-page-01-casilla-46`` -- while its ``number``
+    holds the id.
+
+    Keyed on ``number`` alone, the coverage report called box 46 an unauthored
+    Diseño casilla: a box the registry computes and exports, reported as
+    missing. This pins the fix in the direction that matters, and pins the
+    premise (the box lives in ``form_number``, not ``number``) so a later
+    normalisation of the two fields fails here rather than silently making the
+    fallback dead code.
+    """
+    modelos, catalogues = _committed_registry_tree()
+    modelo_303 = next(modelo for modelo in modelos if modelo.id == "303")
+    revision = next(rev for rev_id, rev in modelo_303.revisions.items() if "2023" in rev_id)
+
+    resultado = next(c for c in revision.casillas if c.id == "iva.resultado-regimen-general")
+    assert resultado.form_number == "46", "the premise: this casilla records its box in form_number"
+    assert resultado.number != "46", "if number now carries the box, this test's premise has moved"
+
+    source_ref = next(ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design")
+    corpus_path = bundled_path() / catalogues.sources[source_ref].corpus_path
+    multi_segment = any(c.segmento for c in revision.casillas)
+
+    report = build_diseno_coverage_report(corpus_path, modelo_303.id, revision, multi_segment=multi_segment)
+
+    assert not report.extraction_found_no_casillas, "the Modelo 303 Diseño must be readable at all"
+    gap_numbers = {casilla.number for casilla in report.coverage_gap_casillas}
+    covered_numbers = {casilla.number for casilla in report.covered_casillas}
+    assert "46" in covered_numbers, "box 46 is computed and exported; it must not read as unauthored"
+    assert "46" not in gap_numbers
