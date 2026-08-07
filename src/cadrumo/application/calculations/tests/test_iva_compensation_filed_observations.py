@@ -29,8 +29,8 @@ from .._iva_compensation_history import (
     seed_iva_compensation_period,
 )
 from ._iva_compensation_history_support import (
-    _M303_PRINTED_NUMBER_REFERENCE_CASES,
     _M303_POSTERIOR_CASILLA,
+    _M303_PRINTED_NUMBER_REFERENCE_CASES,
     _M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA,
     _M303_RESULTADO_CASILLA,
     _M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA,
