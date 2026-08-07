@@ -767,6 +767,68 @@ unconditional in effect — the wiring Step's gate must therefore include
 the lazy-requirement case (a domestic fixture deriving with supply nature
 UNKNOWN and no operator prompt).
 
+**Ruling (fourth amendment): territorial establishment — the evidence
+ladder, and why it is mostly not a document question.** The criteria
+require both parties' `IvaTerritorialScope`, a Spanish country code cannot
+separate the three IVA territories (peninsula/Balearics, Canarias under
+IGIC, Ceuta and Melilla under IPSI), and the commonest ingested document —
+a domestic invoice printing a bare `B`-CIF and no country — establishes
+neither party's scope from its face. Two inferences are rejected before
+the ruling: a checksum-valid Spanish identifier does NOT establish Spanish
+establishment (the validator's own non-resident leaders — `N` entidades no
+residentes, `L`/`M`, `X`/`Y`/`Z` — are the counter-population, and more
+deeply, registration is not *sede de actividad económica* under LIVA
+arts. 69–70); and absent or unreadable evidence NEVER resolves to the
+mainland — the peninsula is the majority population, so a default there is
+invisible in testing while silently misplacing Canarian and Ceutan
+parties. The ruling, four parts:
+
+- **The taxpayer's own side is never a document question.** One party on
+  every ingested invoice is the operator, whose territory is a
+  profile/censo fact — system-authoritative, declared once, consumed from
+  the profile authority like the own-regime facts of the second
+  amendment. An incomplete profile is a setup-time completeness refusal,
+  not a per-document prompt. This halves the problem by construction:
+  only the counterparty's scope is ever sought on the paper.
+- **The counterparty side fills from an ordered evidence ladder, first
+  decisive rung wins, each rung anchorable or system-authoritative:**
+  (1) a printed foreign tax-id prefix, mapped through the closed VAT
+  prefix vocabulary; (2) a printed address country, matched against a
+  bounded registry country vocabulary — the regime-legend shape,
+  deterministic lookup, never translation; (3) the Spanish postal-code
+  derivation, gated on country evidence positively naming Spain (the
+  partial join already landing is endorsed as this rung's guard — a
+  postal pattern alone presupposes what it must prove); (4) a
+  previously confirmed counterparty-level fact (next part). A ladder
+  exhausted without a decisive rung yields UNKNOWN, and UNKNOWN never
+  defaults — gated by a fixture (bare `B`-CIF, no country, no gated
+  postal evidence) that must produce UNKNOWN and never
+  `ES_PENINSULA_BALEARES`, mutation-proven.
+- **Establishment is a property of the counterparty entity, not of each
+  invoice — so the question is asked at most once per counterparty.**
+  When the ladder yields UNKNOWN on a branch that needs the answer, the
+  review gate surfaces one resolvable item and the operator's assertion
+  persists as a counterparty-level `OPERATOR`-provenance fact through the
+  `DeclaredFacts` channel, consumed by every subsequent document that
+  resolves to the same counterparty identity. This is what makes the
+  honest refusal ergonomically viable: not a question per domestic
+  invoice, but one question per new counterparty whose paper is
+  non-decisive. If no single counterparty-level home for such a fact
+  exists at wiring time, creating one is the implementing row — the
+  per-invoice `counterparty_country` field is not that home, and asking
+  per invoice is not the fallback.
+- **A statutory presumption may shorten the ladder later, but only as
+  grounded registry data.** A registration-implies-establishment
+  presumption (with the non-resident leaders as exclusions) is a legal
+  judgment: it enters, if ever, as registry data carrying `legal_refs`
+  to the specific BOE provision that establishes it, corpus-verified —
+  the statutory-citation shape — never as a code-level default. Until so
+  grounded, a bare Spanish identifier contributes nothing to the ladder.
+  Complementarily, the charged rate is issuer-asserted treatment
+  evidence: an invoice charging a mainland registry rate to a
+  confirmed-Canarian counterparty feeds the contradiction channel of the
+  third amendment; it never establishes territory.
+
 ### D9 — Stage-by-stage measurement: the map from stage to oracle
 
 Every stage has a named oracle in the corpus (key v5, sha256

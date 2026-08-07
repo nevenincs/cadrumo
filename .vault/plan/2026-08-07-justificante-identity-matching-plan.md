@@ -4,7 +4,7 @@ tags:
   - '#justificante-identity-matching'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:e9be9d1a11a9f5c3e6e6e88c03bd3a782d1805d36eecc82741f689910d1d3dc7'
+body_hash: 'sha256:3380e1940ff423762f428dbf911bcf4d54f4e9245d4bb9cfe16cace2fc56f5c9'
 tier: L2
 related:
   - '[[2026-08-07-justificante-identity-matching-adr]]'
@@ -87,7 +87,15 @@ Phase `P01` introduces. Before
 `P01.S05` begins, re-check whether the parallel-authored pinning test
 mentioned in the ADR's Constraints has landed elsewhere in the tree; if so,
 absorb and update that test in place rather than authoring a second one, per
-`aeat-agent-orchestration`'s in-scope-regression mandate.
+`aeat-agent-orchestration`'s in-scope-regression mandate. Before `P01.S11`
+begins, re-verify against a fresh `git show HEAD:src/cadrumo/adapters/outbound/aeat/sede/__init__.py`
+whether `extract_csv_from_url` already resolves through the facade — a peer
+landed this in the shared tree during this decision's review, so the row may
+already be satisfied. Every implementing row in this plan touches a shared,
+actively-contended worktree: commit each landed row with an explicit
+pathspec (never a bare `git commit`), and verify what was actually committed
+with `git show <sha> --numstat` after, not a pre-commit `git diff --cached`
+(TOCTOU), per `aeat-worktree-safety`.
 
 ## Verification
 
