@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:2aaee673962b9a18d33735c6cd01a77630b07eeb1026768c662d0f7cb6eb638e'
+body_hash: 'sha256:61b58363daee249ce317ee6ac1235d6580fbde599119de9826fd38bac5148a5a'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -898,7 +898,15 @@ its stage-isolation-measurement precondition on the grounds stated in D2;
 consent apparatus returns over the in-memory HTTP providers under an operator
 ruling, while the subprocess-family deletion, the on-host production default
 and the gestor bar all stand, and that ADR's status note is amended to record
-the partial supersession in the same change that lands the reinstated gate;
+the partial supersession in the same change that lands the reinstated gate.
+**`2026-06-10-llm-evidence-classification-adr`'s own "Partial supersession
+(2026-08-07)" section is also stale by the same reinstatement** — it states
+that D5 deleted the consent apparatus "outright" so the exception "no longer
+exists in the tree," which was true of D5 alone but is no longer true once
+D8a lands; that section needs the same follow-up note in the same change,
+not only `llm-package-split-adr`'s status line. Found by the 2026-08-07 ADR
+corpus reconciliation audit, which left it uncorrected because this record
+was still `proposed` at the time;
 supersedes in part `2026-08-06-llm-invoice-read-reconciliation-adr` (the
 extraction-side framing of the counterparty defect and the Spanish-label
 anchoring remedy), while consuming its direction threading and rename and

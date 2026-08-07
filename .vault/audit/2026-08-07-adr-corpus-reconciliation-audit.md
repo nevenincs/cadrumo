@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:a0bbacb68911f0858289eb512f73dd6f7df6cdc89c8db6cde0ed1e09d5607d18'
+body_hash: 'sha256:bf5b7e2a035e2a3ad20ec841c6e230fd675d7ba7ff8f90b8f136066d1eb20825'
 related: []
 ---
 # `adr-corpus-reconciliation` audit: `Reconciling the ADR corpus against HEAD`
@@ -169,12 +169,14 @@ The reason is a third, still-proposed record:
 2026-08-07-unstructured-document-ingestion-adr, section D8a, explicitly
 reinstates exactly these symbols behind a narrower consent gate scoped to the
 in-memory HTTP providers only (never the subprocess family, which stays
-deleted). D8a's own text states that the sibling ADR's status note is
-amended to record the partial supersession in the same change that lands the
-reinstated gate, referring to llm-evidence-classification-adr. That
-follow-up edit does not appear to have landed: the "Partial supersession"
-section in llm-evidence-classification-adr makes no mention of D8a or the
-reinstatement.
+deleted). D8a's own consolidated-supersessions paragraph commits to amending
+2026-08-06-llm-package-split-adr's status note (the ADR that carries D5, the
+decision D8a partially supersedes) "in the same change that lands the
+reinstated gate" - but as originally written it named only that record, not
+llm-evidence-classification-adr, even though llm-evidence-classification-adr
+is the file whose own prose asserts the now-false claim. Checked: neither
+follow-up had landed - llm-package-split-adr carries zero mention of D8a or
+the reinstatement either.
 
 This is a premise-superseded case in the dangerous direction the brief
 described: the record is internally consistent, was accurate when written,
@@ -184,37 +186,44 @@ of llm-evidence-classification-adr alone would conclude the cloud exception
 is categorically gone; it is not - it is narrower than before, but live and
 wired.
 
-Not corrected in place: unstructured-document-ingestion-adr is proposed,
-not accepted, so treating its D8a ruling as settled fact inside an already
-accepted sibling ADR would be a premature acceptance-by-proxy - exactly
-the kind of judgment call the reconciliation playbook reserves for human
-resolution rather than silent rewrite. Recommend the amendment noted below.
+Not corrected in place on llm-evidence-classification-adr itself:
+unstructured-document-ingestion-adr is proposed, not accepted, so treating
+its D8a ruling as settled fact inside an already accepted sibling ADR would
+be a premature acceptance-by-proxy - exactly the kind of judgment call the
+reconciliation playbook reserves for human resolution rather than silent
+rewrite.
+
+Applied instead: unstructured-document-ingestion-adr's own consolidated-
+supersessions paragraph (in its Consequences section) now explicitly names
+llm-evidence-classification-adr alongside llm-package-split-adr as needing
+the same follow-up note in the same change, and states plainly that this
+audit found it uncorrected while the record was still proposed. This puts
+the pointer where whoever ratifies D8a will see it directly, not only in
+this audit.
 
 ## Recommendations
 
-- Add a brief follow-up note to 2026-06-10-llm-evidence-classification-adr's
-  "Partial supersession (2026-08-07)" section stating that the cloud
-  exception was subsequently narrowed-and-reinstated by
-  2026-08-07-unstructured-document-ingestion-adr D8a (currently proposed),
-  scoped to in-memory HTTP providers only, and pointing at that record rather
-  than restating its content. This is a factual-currency fix, not a new
-  decision, and should land in the same change that ADR is (or is not)
-  accepted, per D8a's own stated intent. Left unapplied here because the
-  reinstating record has not itself been ratified.
+- When 2026-08-07-unstructured-document-ingestion-adr is ratified (or
+  rejected), land in the same change: a follow-up note on
+  2026-06-10-llm-evidence-classification-adr's "Partial supersession
+  (2026-08-07)" section, and the equivalent note on
+  2026-08-06-llm-package-split-adr's D5 status line, each stating that the
+  cloud exception was narrowed-and-reinstated by D8a, scoped to in-memory
+  HTTP providers only, pointing at that record rather than restating its
+  content. This is a factual-currency fix, not a new decision. The pointer
+  to do this now lives in D8a's own text (added by this reconciliation), not
+  only in this audit.
 
-- Open a .vault/plan Step (or small dedicated plan) enrolling the two
-  amendments' implementing work: the AIC re-route (with its two named
-  cross-modelo residues), the four-block rate-box precondition test, and the
-  art-161 recargo re-key plus its ADR-gated mismatch advisory. Currently
-  tracked only in an ephemeral coordination-fleet task board, which is
-  invisible to a future reader of the vault corpus and does not satisfy
-  plan-closure-requires-exec-records.
-
-- When 2026-08-07-unstructured-document-ingestion-adr is ratified or
-  rejected, its closing action should include landing the
-  llm-evidence-classification-adr follow-up note above in the same change
-  (as D8a itself already commits to), closing the drift identified in the
-  high-severity finding.
+- DONE (this reconciliation): opened
+  2026-08-07-adr-amendment-implementing-rows-plan (tier L1) enrolling the
+  three amendments' implementing work as Steps S02-S05: the AIC re-route
+  (with its two named cross-modelo residues), the four-block rate-box
+  precondition test, the art-161 recargo re-key (already landed at
+  d43bd3366a, recorded closed rather than pending), and the recargo mismatch
+  advisory (blocked on recargo-equivalencia-source-of-truth-adr reaching
+  accepted). These were previously tracked only in an ephemeral
+  coordination-fleet task board, invisible to a future reader of the vault
+  corpus and not satisfying plan-closure-requires-exec-records.
 
 No contradictions, duplications, or fragmented-decision clusters were found
 in the reconciled set beyond the one drift finding above. The corpus's
