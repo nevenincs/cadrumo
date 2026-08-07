@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-__all__ = ["STRUCTURED_DOCUMENT_SHAPES", "DocumentShape"]
+__all__ = ["AEAT_RECORD_BATCH_SHAPES", "STRUCTURED_DOCUMENT_SHAPES", "DocumentShape"]
 
 
 class DocumentShape(StrEnum):
@@ -40,6 +40,28 @@ class DocumentShape(StrEnum):
     PDF_EMBEDDED_XML = "pdf_embedded_xml"
     """PDF carrying a structured invoice as an embedded file (ZUGFeRD / Factur-X)."""
 
+    XML_AEAT_SII = "xml_aeat_sii"
+    """AEAT SII submission: a BATCH of ledger records, not one invoice document.
+
+    Deliberately not a member of :data:`STRUCTURED_DOCUMENT_SHAPES`. That set
+    routes a document into the single-invoice reader, and one SII file declares
+    its record collections at ``maxOccurs=10000``; routing a batch into a
+    singular reader would silently keep the first record and discard the rest.
+    Which family each record belongs to -- facturas emitidas, recibidas, a baja,
+    or one of the twelve non-invoice families -- is classified per RECORD, never
+    per file.
+    """
+
+    XML_AEAT_VERIFACTU = "xml_aeat_verifactu"
+    """VERI*FACTU submission: a batch of registro de facturacion records.
+
+    Not a member of :data:`STRUCTURED_DOCUMENT_SHAPES`, for the same reason as
+    :attr:`XML_AEAT_SII`. Its ``RegistroFactura`` is a CHOICE of ``RegistroAlta``
+    or ``RegistroAnulacion`` repeated to ``maxOccurs=1000``, so a single
+    submission may MIX registrations and cancellations and cannot be classified
+    from the file alone.
+    """
+
     PDF_TEXT_LAYER = "pdf_text_layer"
     """PDF with an extractable text layer but no structured record."""
 
@@ -61,8 +83,29 @@ STRUCTURED_DOCUMENT_SHAPES: frozenset[DocumentShape] = frozenset(
         DocumentShape.PDF_EMBEDDED_XML,
     },
 )
-"""Shapes carrying a structured record, readable exactly with no model.
+"""Shapes carrying a structured SINGLE-INVOICE record, readable with no model.
 
-Derived from the enum rather than hand-listed, so a new structured member
-cannot be added without a deliberate decision about its membership here.
+Membership means "one document, one invoice, readable by
+``parse_einvoice_document``". The AEAT record-batch shapes are excluded on
+purpose: they are equally structured and equally model-free, but they carry a
+COLLECTION of ledger records, so admitting them here would route a batch into a
+reader that returns one invoice and silently drop every record after the first.
+Their reader is a separate entry point with a collection return type.
+
+Hand-listed rather than derived, so adding a structured member forces a
+deliberate decision about which of the two readers it belongs to.
+"""
+
+AEAT_RECORD_BATCH_SHAPES: frozenset[DocumentShape] = frozenset(
+    {
+        DocumentShape.XML_AEAT_SII,
+        DocumentShape.XML_AEAT_VERIFACTU,
+    },
+)
+"""Shapes carrying a batch of AEAT ledger records rather than one invoice.
+
+These are FILING ARTEFACTS -- records the taxpayer has already declared to
+AEAT -- not invoice documents a counterparty issued. The distinction matters
+downstream: a record the filer produced is not evidence of what a counterparty
+billed, and this codebase draws that line sharply elsewhere.
 """

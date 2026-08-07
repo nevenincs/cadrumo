@@ -62,6 +62,7 @@ from ._creation import (
     CatalogueInvoiceCreateResult,
     build_catalogue_invoice,
     create_catalogue_invoice,
+    resolve_iva_rate_slot,
 )
 from ._issuer_establishment import issuer_established_in_tai, simplificada_requires_tax_id_for_domestic_issuer
 from ._lifecycle import (
@@ -156,6 +157,7 @@ __all__ = [
     "remove_catalogue_invoice",
     "resolve_catalogue_invoice",
     "resolve_catalogue_invoice_from_repository",
+    "resolve_iva_rate_slot",
     "simplificada_requires_tax_id_for_domestic_issuer",
     "update_catalogue_invoice",
     "verify_invoice_repository_links",

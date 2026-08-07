@@ -569,9 +569,7 @@ class TestHardenedTier:
         source = Path(atomic_write.__file__).read_text(encoding="utf-8")
         tree = ast.parse(source)
         called = {
-            node.func.id
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+            node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
         } | {
             node.func.attr
             for node in ast.walk(tree)

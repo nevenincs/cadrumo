@@ -194,12 +194,19 @@ def _require_operation_type_where_the_category_cannot_settle_it(
     )
 
 
-def _resolve_iva_rate_slot(iva_rate: Decimal | None) -> IvaRate:
-    """Map an operator-supplied integer IVA percentage to its rate slot.
+def resolve_iva_rate_slot(iva_rate: Decimal | None) -> IvaRate:
+    """Map a percentage to its rate slot, refusing one the taxonomy does not carry.
 
     ``None`` resolves to :attr:`IvaRate.EXEMPT` so a base-only invoice with no
     cuota is accepted. A percentage outside the closed slot taxonomy is refused
     with the accepted set named, never a bare "value invalid".
+
+    Public because the percentage does not only come from an operator: the
+    ledger's evidence-confirm path reads it off the document itself and needs
+    the SAME refusal. Two resolvers previously split that job between them and
+    disagreed about the outcome -- one raised a localised error naming the
+    accepted set, the other a raw English one -- so which message an operator
+    saw depended on whether their document happened to print a cuota.
     """
     if iva_rate is None:
         return IvaRate.EXEMPT
@@ -292,7 +299,7 @@ def build_catalogue_invoice(
     # SAME provider rate as its canonical "GBP" form, not silently miss the
     # rate and leave the invoice unstamped.
     currency = normalise_iso_4217_currency(currency)
-    rate_slot = _resolve_iva_rate_slot(iva_rate)
+    rate_slot = resolve_iva_rate_slot(iva_rate)
     # Resolve the cuota with the same default-date the Invoice line validator
     # uses (``iva_rate_percentage(self.iva_rate)``), so the synthesised
     # ``iva_amount`` matches the model's own re-derivation within tolerance and

@@ -29,6 +29,14 @@ from __future__ import annotations
 
 from ....core import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from ._parsers import ParsedEInvoice, ParsedEInvoiceLine, parse_einvoice_document
+from ._record_batch import (
+    AeatParty,
+    AeatRecordBatch,
+    AeatRecordFamily,
+    ParsedAeatRecord,
+    RefusedAeatRecord,
+    parse_aeat_record_batch,
+)
 from ._shape import EMBEDDED_XML_SUFFIXES, iter_pdf_embedded_files, probe_document_shape
 from ._xml import MAX_XML_DEPTH, MAX_XML_PAYLOAD_BYTES, EInvoiceXmlParseError, parse_hardened_xml
 
@@ -37,11 +45,17 @@ __all__ = [
     "MAX_XML_DEPTH",
     "MAX_XML_PAYLOAD_BYTES",
     "STRUCTURED_DOCUMENT_SHAPES",
+    "AeatParty",
+    "AeatRecordBatch",
+    "AeatRecordFamily",
     "DocumentShape",
     "EInvoiceXmlParseError",
+    "ParsedAeatRecord",
     "ParsedEInvoice",
     "ParsedEInvoiceLine",
+    "RefusedAeatRecord",
     "iter_pdf_embedded_files",
+    "parse_aeat_record_batch",
     "parse_einvoice_document",
     "parse_hardened_xml",
     "probe_document_shape",

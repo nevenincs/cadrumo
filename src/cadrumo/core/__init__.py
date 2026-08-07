@@ -114,13 +114,14 @@ from ._descendant_relacion import (
     ART_81_1_MATERNIDAD_RELACIONES,
     DescendantRelacion,
 )
-from ._document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+from ._document_shape import AEAT_RECORD_BATCH_SHAPES, STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from ._export_layout_format import ExportLayoutFormat
 from ._external_oracle_corpus import ExternalOracleCorpus
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._hex import HEX_PATTERN_16, HEX_PATTERN_64, HEX_PATTERN_128, Hex16Str, Hex64Str
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
+from ._image_media_type import ImageMediaType, detect_image_media_type
 from ._invoice_link import LinkInconsistencyDirection
 from ._irnr import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
@@ -287,6 +288,7 @@ __all__: list[str] = [
     "AEAT_CSV_MAX_LENGTH",
     "AEAT_CSV_MIN_LENGTH",
     "AEAT_CSV_PATTERN",
+    "AEAT_RECORD_BATCH_SHAPES",
     "ANTHROPIC_EXTRA",
     "ART_58_2_ENTITLING_RELACIONES",
     "ART_81_1_MATERNIDAD_RELACIONES",
@@ -360,6 +362,7 @@ __all__: list[str] = [
     "Hex16Str",
     "Hex64Str",
     "IdentityReferent",
+    "ImageMediaType",
     "IntracomOperationType",
     "LedgerSortField",
     "LedgerSortOrder",
@@ -414,6 +417,7 @@ __all__: list[str] = [
     "classify_post_filing_event_kind",
     "clear_pointer",
     "derive_result_disposition",
+    "detect_image_media_type",
     "elide_to_cap",
     "elided_prose",
     "exclusive_file_lock",

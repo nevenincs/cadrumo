@@ -101,7 +101,7 @@ from pydantic import BaseModel
 from ...adapters.inbound.einvoice import EInvoiceXmlParseError, parse_einvoice_document
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice
+from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice, resolve_iva_rate_slot
 from ...core import STRICT_FROZEN_CONFIG, STRUCTURED_DOCUMENT_SHAPES, MissingOptionalExtraError, ServiceCapability
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
@@ -895,29 +895,6 @@ def _require_confirmed_field(value: Decimal | str | None, *, field: str) -> Deci
     return value
 
 
-def _iva_rate_slot_for(rate: Decimal | None) -> IvaRate:
-    """Map a resolved percentage to its closed rate slot, refusing an unknown one.
-
-    Reuses the writer's own accepted-slot table rather than restating it, so
-    the confirm boundary and the direct writer cannot drift about which rates
-    exist. An unread or unsupported rate REFUSES here; letting it fall to the
-    exempt slot would mint a zero-cuota invoice against a document that printed
-    a cuota.
-    """
-    from ...domain.invoices import numeric_iva_rate_slots
-
-    if rate is None:
-        return IvaRate.EXEMPT
-    slot = numeric_iva_rate_slots().get(rate)
-    if slot is None:
-        accepted = ", ".join(format(value, "f") for value in sorted(numeric_iva_rate_slots()))
-        rendered = format(rate, "f")
-        raise PurchaseInvoiceEvidenceInputError(
-            f"iva_rate {rendered} is not a recognised IVA percentage (accepted: {accepted})",
-        )
-    return slot
-
-
 def _refuse_an_issued_document_the_filer_did_not_issue(
     *,
     kind: InvoiceKind,
@@ -1198,7 +1175,10 @@ def confirm_invoice_draft_from_evidence(
                 quantity=Decimal("1"),
                 unit_price=resolved_taxable_base,
                 subtotal=resolved_taxable_base,
-                iva_rate=_iva_rate_slot_for(resolved_iva_rate),
+                # The SAME resolver the writer below applies to the same value,
+                # so an unrepresentable percentage refuses identically whether
+                # or not the document printed a cuota.
+                iva_rate=resolve_iva_rate_slot(resolved_iva_rate),
                 iva_amount=iva_amount,
             ),
         )

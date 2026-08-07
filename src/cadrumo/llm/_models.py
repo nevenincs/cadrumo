@@ -24,6 +24,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ..core import ImageMediaType
 from ..core.config import LLMProvider
 from ._errors import LLMValidationError
 
@@ -34,12 +35,18 @@ class MultimodalImageInput(BaseModel):
     """One on-host-prepared image attached to a multimodal LLM request.
 
     Transient and in-memory only. Carries the base64-encoded image bytes the
-    provider adapter forwards to a local vision model and the content address
+    provider adapter forwards to a vision model and the content address
     (an attachment-store SHA-256) that
     :class:`~adapters.outbound.llm.LLMCache` folds into
     :class:`~adapters.outbound.llm.CacheKey`. The base64 payload is never
     persisted -- only its content address enters the cache key
     (``sensitive-financial-data-secure-storage-only``).
+
+    ``media_type`` has no default on purpose. A local runtime sniffs the bytes,
+    but a cloud provider validates the declared type against them and refuses
+    the pair when they disagree -- so a defaulted media type is exactly how a
+    JPEG attachment gets sent as a PNG and the read fails or, worse, is
+    silently misinterpreted. The producer knows what it built; it declares it.
     """
 
     model_config = ConfigDict(strict=True, frozen=True)
@@ -54,6 +61,32 @@ class MultimodalImageInput(BaseModel):
         repr=False,
         description="Base64-encoded image bytes forwarded to the provider; never persisted.",
     )
+    media_type: ImageMediaType = Field(
+        description="IANA media type of the encoded bytes, declared by the producer.",
+    )
+
+    @classmethod
+    def from_image_bytes(cls, data: bytes, media_type: ImageMediaType) -> MultimodalImageInput:
+        """Build one input from raw image bytes and their known media type.
+
+        The single place the base64 encoding and the content address are
+        derived, so a producer cannot pair one image's bytes with another's
+        digest.
+
+        Args:
+            data: Raw image bytes.
+            media_type: The type those bytes actually are -- from the producer's
+                own knowledge (a rasteriser emits PNG) or from
+                :func:`~core.detect_image_media_type`.
+
+        Returns:
+            The transient multimodal input carrying all three fields.
+        """
+        return cls(
+            content_sha256=sha256_hex(data),
+            base64_data=base64.b64encode(data).decode("ascii"),
+            media_type=media_type,
+        )
 
 
 class LLMRequest(BaseModel):
