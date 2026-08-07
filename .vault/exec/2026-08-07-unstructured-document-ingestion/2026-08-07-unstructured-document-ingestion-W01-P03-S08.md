@@ -5,44 +5,11 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:1d06f87b11802c5faae4c150bb773ce2317a561128c690f984674097b0ebf986'
+body_hash: 'sha256:92954132d3da7a3e8501866128677265e7edcdb7f098f8bdc93889e0684ced77'
 step_id: 'S08'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S08 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Add the projection-parity gate asserting every draft field survives to the confirm-surface payload, proven by mutation: drop one field from the projection and observe red and ## Scope
-
-- `src/cadrumo/application/ledger/tests` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Add the projection-parity gate asserting every draft field survives to the confirm-surface payload, proven by mutation: drop one field from the projection and observe red
 
@@ -89,17 +56,6 @@ Introducing commit, established by first-add archaeology: `4a941f78fc`.
 
 ## Verification
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
-
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
-
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
-
 Green at HEAD, sequential, cache disabled, default marker lane
 (`unit and not external_tool and not os_keychain`):
 
@@ -137,8 +93,6 @@ off-default, which the S06 fixture gate guarantees. The structural assertion is
 stronger still: it compares field sets and is independent of any fixture.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 The parity gate reaches from the application package into `entrypoints.cli`
 deliberately, and says so in its module docstring: the parity being asserted is
