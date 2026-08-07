@@ -1100,6 +1100,26 @@ def _matches_selected(name: str, selected: frozenset[str]) -> bool:
     return name in selected or any(candidate.split(":", 1)[0] == stem for candidate in selected)
 
 
+class _ContentionSnapshotBase(TypedDict):
+    """The fields every contention verdict shares, splatted into each branch.
+
+    Declared rather than left as an inferred mapping because the branches below
+    build the snapshot with ``**base``, and an untyped dict widens every value
+    to the union of all of them -- so the splat reads as passing an ``int``
+    where a model expects a tuple, and the one thing worth checking here, that
+    the shared fields match the model they feed, goes unchecked.
+    """
+
+    model: str
+    requirement_bytes: int
+    safety_margin_bytes: int
+    accelerator: AcceleratorKind
+    free_vram_bytes: int | None
+    free_system_memory_bytes: int | None
+    binding_free_bytes: int | None
+    residents: tuple[RuntimeResident, ...] | None
+
+
 class ContentionSnapshot(BaseModel):
     """The measured verdict on whether one model load is safe to perform right now.
 
@@ -1217,7 +1237,7 @@ def assess_model_load_contention(
     binding_free = binding_free_bytes(hardware)
     required = requirement_bytes + margin
 
-    base = {
+    base: _ContentionSnapshotBase = {
         "model": model,
         "requirement_bytes": requirement_bytes,
         "safety_margin_bytes": margin,

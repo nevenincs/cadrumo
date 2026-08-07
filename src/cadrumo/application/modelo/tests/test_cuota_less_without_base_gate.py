@@ -109,9 +109,9 @@ class _StubWorkUnit:
 def _findings(transactions: dict[str, Transaction], *, consumed: tuple[str, ...] | None = None):
     ids = tuple(transactions) if consumed is None else consumed
     return _cuota_less_without_base_findings(
-        target=_StubRevision(ids),  # type: ignore[arg-type]  # reason: the gate reads two fields
-        work_unit=_StubWorkUnit(),  # type: ignore[arg-type]  # reason: the gate reads bucket_id
-        transaction_repository=_StubRepository(transactions),  # type: ignore[arg-type]  # reason: load() only
+        target=_StubRevision(ids),  # ty: ignore[invalid-argument-type]  # reason: the gate reads two fields
+        work_unit=_StubWorkUnit(),  # ty: ignore[invalid-argument-type]  # reason: the gate reads bucket_id
+        transaction_repository=_StubRepository(transactions),  # ty: ignore[invalid-argument-type]  # reason: load() only
     )
 
 
