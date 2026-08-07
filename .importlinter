@@ -434,11 +434,18 @@ ignore_imports =
     cadrumo.application.ledger._extraction_draft_store -> cadrumo.adapters.**
     # The confirmation record is the third of that same family and is pinned for
     # the same reason, not as a convenience: it declares its own secure-object
-    # namespace and persists through SecureBoundRepository, so it IS a ledger
-    # store. Encrypted persistence is reached from the application layer
-    # throughout this codebase by design -- roughly 1300 such edges across 495
-    # modules -- and this one is a member of that ambient class rather than a
-    # new kind of coupling.
+    # namespace and subclasses SecureBoundRepository, so it IS a ledger store
+    # rather than a module reaching through to one. Inversion behind a
+    # repository protocol is therefore not available: fifteen application-layer
+    # SecureBoundRepository subclasses exist, four of them siblings in
+    # application/ledger alone, so relocating this one would make it the
+    # outlier rather than the model.
+    #
+    # Reaching encrypted persistence from the application layer is the ambient
+    # design here, not erosion: ~129 production application modules import
+    # adapters.persistence (rg -l over src/cadrumo/application, excluding tests
+    # and conftest). The count is given with its measurement because an
+    # unreproducible figure in a rationale rots into folklore.
     cadrumo.application.ledger._confirmation_record -> cadrumo.adapters.**
     # The read-time shape probe. DocumentShape is derived from a document's
     # own bytes by an INBOUND adapter, because reading an externally-authored
@@ -447,10 +454,10 @@ ignore_imports =
     # The batch runner asks that same probe ONE question -- is this document
     # structured, and therefore readable without loading a model -- and consumes
     # the answer. Same shape and same justification as the pin above; it is the
-    # probe's own caller, not a second reader. Pinned rather than deferred
-    # behind a function-local import: the deferral would hide the edge from this
-    # contract without changing it, and an edge the linter cannot see is the one
-    # that arrives unreviewed.
+    # probe's own caller, not a second reader. Its import is function-local, and
+    # the contract sees it anyway (grimp walks function bodies), so the pin
+    # records a reviewed decision rather than suppressing something that would
+    # otherwise have gone unnoticed.
     cadrumo.application.ledger._batch_ingest -> cadrumo.adapters.inbound.einvoice
     # Same shape, same reason: the AEAT submission BATCH is read by the inbound
     # adapter (reading an externally-authored format is inbound-adapter work),
