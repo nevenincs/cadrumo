@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:c9fba09ae62fed14d1376750ebf50961bc1eaa7ae7ff2d8a22f3992dc051f591'
+body_hash: 'sha256:d37feebff96dafa81911ee1f467cbb27ae978e85dedbb1f5fe4059c1d17492cb'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -63,7 +63,7 @@ Widens InvoiceDraft, attaches per-field provenance, and lands the projection-par
 - [x] `W01.P03.S08` - Add the projection-parity gate asserting every draft field survives to the confirm-surface payload, proven by mutation: drop one field from the projection and observe red; `src/cadrumo/application/ledger/tests`.
 - [x] `W01.P03.S09` - Guard the multi-recipient case at the projection consumer so a batch-read record carrying several recipients surfaces rather than silently picking one, gated by a multi-recipient fixture test, inherited requirement from the einvoice batch-reader lane; `src/cadrumo/application/ledger`.
 - [x] `W01.P03.S10` - Surface the provenance envelopes on every operator-facing extract and confirm JSON payload at parity with casilla grounding, gated by the JSON schema conformance suite; `src/cadrumo/entrypoints/cli`.
-- [ ] `W01.P03.S91` - Let the unstructured readers distinguish the two printed parties instead of recovering one identifier and parking it in supplier_tax_id, so an ISSUED invoice read by the text or vision path cannot name the filer as its own counterparty in the Modelo 347 and 349 totals AEAT reconciles against the other party's declaration, gated by a fixture whose printed customer differs from its printed supplier and an assertion that the wrong side is never silently selected. This is reader-side semantic imprecision and not a vocabulary rename, supplier and customer are the parties as printed pre-direction while counterparty is the non-filer party selected by kind post-direction, and a naming-parity gate refusing both vocabularies would red on that deliberate boundary and pressure a collapse that reintroduces the defect; `src/cadrumo/llm, src/cadrumo/application/ledger`.
+- [ ] `W01.P03.S91` - Let the unstructured readers report both printed parties and say which is which, then delete the cross-side fallback so an ISSUED invoice whose customer side was not read leaves the counterparty unset for the operator to supply rather than silently selecting the supplier. The stated harm does not reach the 347 and 349 totals today, two landed guards refuse it, but both fail open on a bucket whose profile carries no tax id, so a filing-grade identity currently rests on a guard that cannot run everywhere, and every ISSUED invoice read by the text or vision path refuses at confirm and needs a manual counterparty. Gated on a bucket whose profile has no tax id, the exact configuration where both guards return without refusing, so the property is proven by the selection logic and not by the guards, mutation-proven by restoring the fallback with the guards inert; `src/cadrumo/llm, src/cadrumo/application/ledger`.
 
 ## Wave `W02` - The document lane: acquisition, extraction, grounding, classification
 
