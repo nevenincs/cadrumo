@@ -41,12 +41,27 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     # Static counterpart to the ``__getattr__`` below. A type checker cannot see
-    # through module ``__getattr__``, so without this both lazily-resolved
-    # symbols degrade to ``object`` at every use site -- which reads as
+    # through module ``__getattr__`` -- neither the name checks nor the
+    # membership test against the export set -- so without this every lazily
+    # resolved symbol degrades to ``object`` at its use sites, which reads as
     # "not callable" at construction and "not allowed in a parameter
     # annotation" wherever one is declared. This block never executes, so the
     # import cycle the lazy resolution exists to break stays broken.
     from ._evidence_draft_vision import extract_invoice_fields_from_images
+    from ._suggestions import (
+        ExtractionPayload,
+        ExtractionProducer,
+        ExtractionSourceKind,
+        LLMClassificationSuggestion,
+        LLMProviderAvailability,
+        LLMSaturatedSuggestion,
+        LLMSplitApplyResult,
+        LLMSplitChildSuggestion,
+        LLMSplitSuggestion,
+        LLMSuggestionRejectionResult,
+        OperatorIvaDerivationResult,
+        SubprocessProvider,
+    )
     from ._vision_classifier import LocalVisionLLMClassifier
 
 from ._client import LLMClient
@@ -103,8 +118,10 @@ __all__ = [
     "LocalTextLLMClassifier",
     "LocalVisionLLMClassifier",
     "MultimodalImageInput",
+    "OperatorIvaDerivationResult",
     "PromptDefinition",
     "PromptRegistry",
+    "SubprocessProvider",
     "Translation",
     "UsageRecord",
     "UsageSummary",
@@ -138,9 +155,9 @@ close the loop at import time.
 
 
 def __getattr__(name: str) -> object:
-    """Resolve the two application-facing readers lazily.
+    """Resolve the application-facing readers and interchange DTOs lazily.
 
-    Only these two need deferring, and for one specific reason: both import
+    These need deferring for one specific reason: they import
     ``application.ledger`` for the draft and classification shapes they
     produce, while the ledger's own paths import this package to reach them --
     so an eager binding would close that loop at import time. Everything above
