@@ -16,7 +16,7 @@ supersedes:
   - '2026-06-10-ledger-invoice-unification-adr'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:3c54873ffb815b87939530c240ddfa7fc85576905834fd7e5b8e9eb956cc1be7'
+body_hash: 'sha256:aafc7fca0a42022f9579bd55287e7cdebb166413c69b8ce283ac2bb0e924dd7d'
 ---
 # `invoice-canonical-structure` adr: `One canonical invoice aggregate; delete the slim store` | (**status:** `accepted`)
 
@@ -537,6 +537,40 @@ thing standing between the deletion and a wrong filing.
 `created_at` / `updated_at` are audit metadata, not declarable facts. They are
 carried onto the canonical aggregate for parity, or their absence is recorded as
 a deliberate loss in the fold Step — either is acceptable, silence is not.
+
+**AMENDMENT (2026-08-07, on execution).** The `eu_iva_id` precondition was
+discharged by a different and stronger mechanism than the migration this
+decision specified, and the field was deliberately NOT added.
+
+`created_at` / `updated_at` did migrate onto the canonical aggregate as written.
+`eu_iva_id` did not. The reason is that the canonical model COUPLES
+`counterparty_country` to `counterparty_tax_id`: a non-ES country validates the
+tax id against that country's published NIF-IVA pattern, so the only
+representable party identity is already the one M349 must declare. The premise
+above — that "for an EU counterparty holding both a domestic NIF and an EU VAT
+ID, the slim store records both and declares the correct one; the rich aggregate
+cannot" — is true of the slim record precisely BECAUSE nothing there coupled the
+two fields, which is what forced it to carry a second identity and prefer it at
+projection time. The canonical aggregate refuses that shape outright.
+
+Adding `eu_iva_id` would therefore install a SECOND party-identity authority on
+the record: two fields that can disagree about who was invoiced, on the axis
+where a disagreement is a mis-declared intra-community operator. That is the
+duplication this campaign exists to remove, not a gap in it.
+
+The EL→GR mapping this decision was most concerned about survives in the core
+identity layer and was measured rather than assumed: country `GR` with
+`EL123456789` is accepted, country `GR` with `GR123456789` is refused naming the
+expected `EL` + 9 digits form, and country `DE` with `DE345678901` is accepted.
+The capability is conserved and the wrong prefix now fails loudly where the slim
+path would have accepted a mismatched pair.
+
+Both mechanisms are exercised: `test_canonical_invoice_refuses_the_tax_id_country_mismatch_slim_permits`
+pins the coupling, and the M349 declarable-coverage proof pins the declared party
+identity against a fixture-derived contract.
+
+Recorded because D-O otherwise reads as an unmet hard precondition, and a reader
+checking it against the tree finds an absent field with no explanation.
 
 **D-P — `InvoiceObservation.source_kind` loses its default.** The field carries
 `= BindingSourceKind.COLLECTIBLE_INVOICE` (`_invoice_bindings.py:86`). A direction

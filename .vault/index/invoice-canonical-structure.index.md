@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:3e2c51e1f10606109a05230ddf98ab67c41b035433cf7982cc62e6e63fe41a10'
+body_hash: 'sha256:fb066d062249e994bc9f5a76cb2bb487e071ecbf924f01ecdcb2b6c8d1d101e6'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -53,6 +53,7 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-plan]]'
   - '[[2026-08-06-invoice-canonical-structure-research]]'
   - '[[2026-08-07-invoice-canonical-structure-close-honesty-review-audit]]'
+  - '[[2026-08-07-invoice-canonical-structure-decision-coverage-map-audit]]'
   - '[[2026-08-07-invoice-canonical-structure-fragmentation-sweep-audit]]'
 ---
 
@@ -70,6 +71,7 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 
 - `2026-08-06-invoice-canonical-structure-audit` - `invoice-canonical-structure` audit: `Fresh-context honesty review of the campaign`
 - `2026-08-07-invoice-canonical-structure-close-honesty-review-audit` - `invoice-canonical-structure` audit: `Close honesty review: what a fresh inheritor finds behind the 38/38`
+- `2026-08-07-invoice-canonical-structure-decision-coverage-map-audit` - `invoice-canonical-structure` audit: `Decision-to-Step coverage: all 21 ADR decisions checked against the tree`
 - `2026-08-07-invoice-canonical-structure-fragmentation-sweep-audit` - `invoice-canonical-structure` audit: `Fragmentation sweep of the invoice and identifier surfaces`
 
 ### exec
