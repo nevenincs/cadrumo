@@ -169,6 +169,14 @@ CalculationSourceDiagnosticReason = Literal[
     # remedy is a ledger edit rather than a registry or resolver gap, and the one
     # the export gate later refuses on.
     "rate_boxes_underaccount_total",
+    # An operator-supplied casilla value that REPLACED a value the resolvers
+    # computed for the same casilla, where the two differ. Not an error: the
+    # operator wins by design, because the facts behind a regularizacion may
+    # live outside the ledger. What it discloses is that a derived figure was
+    # discarded, which nothing else on this path says out loud. Distinct from
+    # every unrouted reason: nothing here is missing from the return, one of two
+    # available figures was chosen over the other.
+    "operator_override_diverges_from_computed",
 ]
 
 
