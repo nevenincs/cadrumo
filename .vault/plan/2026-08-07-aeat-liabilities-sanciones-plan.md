@@ -4,7 +4,7 @@ tags:
   - '#aeat-liabilities-sanciones'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:3be9061aa0a66f07185d40f666af15090102664598f2d48a813db355cdcff258'
+body_hash: 'sha256:3f170ea4abcfef8ef96af8046adf165845e674406794e391f01916fa310d4a85'
 tier: L2
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
@@ -45,11 +45,11 @@ ships and a real specimen exists to validate a comparison against.
 
 ### Phase `P01` - Deuda domain type and closed enums
 
-Land the Deuda adapter schema model and its closed ObjetoTributario and Direccion StrEnums in core, buildable and testable with no AEAT specimen and no new legal grounding; situacion stays a provisional string field until P05 finalizes its closed member set from a real specimen.
+Land the Deuda adapter schema model and its closed ObjetoTributario and Direccion StrEnums in core, buildable and testable with no AEAT specimen and no new legal grounding. situacion ships a bounded str from birth, following the Declaracion.estado precedent, not a StrEnum, because it mirrors an AEAT free-text listing label the app does not control rather than an axis the app defines.
 
 - [ ] `P01.S01` - Add the closed ObjetoTributario StrEnum (interes de demora, recargo de apremio, sancion, liquidacion, other) to core, never reused or widened from PostFilingEventKind, verified by a new unit test asserting the closed member set; `src/cadrumo/core`.
 - [ ] `P01.S02` - Add the closed Direccion StrEnum (owed, refundable) to core as its own typed axis rather than a sign, mirroring the ledger contract amount-is-magnitude convention, verified by a unit test; `src/cadrumo/core`.
-- [ ] `P01.S03` - Add the Deuda adapter schema model in a new _deudas.py module mirroring Expediente placement and STRICT_FROZEN_CONFIG, with clave_liquidacion, objeto_tributario, importe_pendiente as a non-negative Decimal, direccion, periodo, a provisional situacion typed as str pending the specimen-dependent closed enum in P05, and mode Literal read, verified by a model validation unit test; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
+- [ ] `P01.S03` - Add the Deuda adapter schema model in a new _deudas.py module mirroring Expediente placement and STRICT_FROZEN_CONFIG, with clave_liquidacion, objeto_tributario, importe_pendiente as a non-negative Decimal, direccion, periodo, situacion as a bounded str following the Declaracion.estado precedent (never a StrEnum), and mode Literal read, verified by a model validation unit test; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
 
 ### Phase `P02` - DeudasService snapshot family
 
@@ -79,7 +79,7 @@ Expose aeat app live deudas list/view/latest over persisted snapshots, matching 
 
 Wire the live AEAT fetch once an operator authorises a specimen capture: the DOM-to-Deuda parse function, the guard real allowed_path_prefixes, the pull CLI verb, its PROFILE_BOUND_WRITE_VERB_PATHS entry, and the operator-orientation harness sweep. Every row here is blocked until the specimen exists and is not startable before then.
 
-- [ ] `P05.S13` - BLOCKED on an operator-authorised live specimen capture of Consultar deudas: determine the real Situacion closed member set from the captured page and finalize the Deuda situacion field from provisional str to the closed StrEnum; `src/cadrumo/core, src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
+- [ ] `P05.S13` - BLOCKED on an operator-authorised live specimen capture of Consultar deudas: observe the real situacion label vocabulary and confirm the str Field length bound is adequate, per the Declaracion.estado precedent, with no type change since situacion stays str; `no type change, situacion stays str; `src/cadrumo/core, src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
 - [ ] `P05.S14` - BLOCKED on the same specimen: write walk_deudas_consulta mapping the real DOM to Deuda rows, verified by a parse test against the captured fixture with sensitive fields never committed to the repo; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
 - [ ] `P05.S15` - BLOCKED on the same specimen: populate the guard real allowed_path_prefixes from the captured consulta path, verified by the guard test refusing every known payment and aplazamiento path observed in the specimen; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
 - [ ] `P05.S16` - BLOCKED on the same specimen: wire aeat app live deudas pull calling the walker and DeudasService capture, named pull never capture or refresh or fetch or sync per the CLI contract; `src/cadrumo/entrypoints/cli/_app_live_deudas_cli.py`.
@@ -160,7 +160,7 @@ audit records why a Step is a deferred carry-forward, per
   clean with no self-referencing placeholder and no missing `ca`/`hu` entry.
 
 Cross-cutting: at no point in P01-P05 does a persisted `Deuda` value reach a
-`BindingAggregation`, relation, or casilla resolution — grep
+`BindingAggregation`, relation, or casilla resolution - grep
 `BindingSourceKind` after P05 lands and confirm no new member references a
 post-filing enforcement concept, the same structural check the research used
 to establish the current gap.

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:df292b7c71ed118d9982f0a14a8040fcb438436e8906db515a76a6d9e690489b'
+body_hash: 'sha256:de6b242d4eeef7c3b37b58649395aef6d01c78995a16fd4831d7568696f8b62a'
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-research]]'
 ---
@@ -106,6 +106,26 @@ kept safe given its direct adjacency to AEAT's payment flow.
   partially staged `hu.yml`; any new locale key for this feature is blocked
   until that WIP lands, per the worktree-safety rule's prohibition on touching
   a file a peer is mid-write on.
+- `situacion` is a bare `str`, not a StrEnum, by design rather than as a
+  provisional gap. `aeat-architecture-boundaries`'s closed-value-set mandate
+  binds axes this application defines and fully enumerates (period codes,
+  auth providers, its own submission lifecycle — see `SubmissionStatus`,
+  `src/cadrumo/domain/submission/_models.py:72`, and `ModeloDraftStatus`,
+  `src/cadrumo/domain/submission/_protocols.py:83`, both closed StrEnums built
+  from AEAT's documented submission protocol). `situacion` is not that: it is
+  a free-text label AEAT prints on a read-only listing row, whose full
+  vocabulary this application does not control and cannot enumerate without
+  ongoing observation. The exact sibling for that shape already exists and
+  ships as `str`: `Declaracion.estado`
+  (`src/cadrumo/adapters/outbound/aeat/sede/_declarations_schema.py:25`,
+  `estado: str = Field(min_length=1, max_length=16)`), a status label scraped
+  from the same declarations-register listing table and compared by exact
+  string match elsewhere in that module rather than enum membership. `Deuda`
+  follows this precedent, not the submission-lifecycle one: `situacion` ships
+  `str` from birth, bounded by `Field(min_length=1, max_length=...)`, and
+  stays that shape permanently — P05's specimen-dependent row is to observe
+  real values and confirm the length bound, never to convert the field to an
+  enum.
 
 ## Considered options
 
@@ -190,10 +210,12 @@ liquidación / other, per `aeat-architecture-boundaries`'s closed-value-set
 mandate — never reused or widened from `PostFilingEventKind`), `importe`
 (non-negative `Decimal`, mirroring the ledger contract's amount-is-magnitude
 convention), a typed `direccion` axis (owed vs. refundable) carried as its own
-enum field rather than as sign, `periodo`, a closed `Situacion` StrEnum, and
-`mode: Literal["read"]` as the structural no-write marker. This model, its
-StrEnums, and their unit tests need no specimen and no new legal grounding —
-AEAT's reported `importe`/`situacion` strings are displayed as reported.
+enum field rather than as sign, `periodo`, `situacion` as a bounded `str` (not
+a StrEnum — see the Considerations entry on the `Declaracion.estado`
+precedent), and `mode: Literal["read"]` as the structural no-write marker.
+This model, its StrEnums, and their unit tests need no specimen and no new
+legal grounding — AEAT's reported `importe`/`situacion` strings are displayed
+as reported.
 
 **Snapshot service (unblocked today).** `DeudasService` /
 `PersistedDeudasSnapshot` / `DeudasCapture`, structured identically to
