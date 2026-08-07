@@ -30,11 +30,11 @@ import pytest
 from ._inventory import PROJECT_TEST_ROOTS, ast_for_path, project_test_modules, repo_relative
 from ._marker_metadata_patterns import CAMPAIGN_METADATA_CASES as _CAMPAIGN_METADATA_CASES
 from ._marker_metadata_patterns import CAMPAIGN_METADATA_PATTERNS as _CAMPAIGN_METADATA_PATTERNS
-from ._marker_metadata_patterns import PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES as _PRODUCTION_SCOPED_CASES
-from ._marker_metadata_patterns import PRODUCTION_SCOPED_CAMPAIGN_METADATA_PATTERNS as _PRODUCTION_SCOPED_PATTERNS
 from ._marker_metadata_patterns import PROCESS_PLAN_CASE as _PROCESS_PLAN_CASE
 from ._marker_metadata_patterns import PROCESS_SYMBOL_METADATA_CASES as _PROCESS_SYMBOL_METADATA_CASES
 from ._marker_metadata_patterns import PROCESS_SYMBOL_METADATA_PATTERNS as _PROCESS_SYMBOL_METADATA_PATTERNS
+from ._marker_metadata_patterns import PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES as _PRODUCTION_SCOPED_CASES
+from ._marker_metadata_patterns import PRODUCTION_SCOPED_CAMPAIGN_METADATA_PATTERNS as _PRODUCTION_SCOPED_PATTERNS
 from ._marker_metadata_patterns import RETIRED_SCRAMBLED_PLAN_PATTERN as _RETIRED_SCRAMBLED_PLAN_PATTERN
 from ._marker_metadata_patterns import MarkerScanScope as _MarkerScanScope
 from ._marker_metadata_patterns import PatternCase as _PatternCase
@@ -1269,9 +1269,7 @@ def test_production_source_does_not_cite_dated_vault_documents() -> None:
     production source.
     """
     violations = _production_campaign_metadata_violations()
-    assert not violations, (
-        "production modules must not name a dated vault document:\n" + "\n".join(violations)
-    )
+    assert not violations, "production modules must not name a dated vault document:\n" + "\n".join(violations)
 
 
 def test_production_scan_corpus_reaches_the_shipped_package() -> None:
