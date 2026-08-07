@@ -29,7 +29,8 @@ import pytest
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
-from ....domain.iva import InvoiceKind
+from ....domain.invoices import InvoiceClass
+from ....domain.iva import InvoiceKind, IvaCategory
 from .._evidence_draft import confirm_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import isolated_settings as isolated_settings
@@ -195,3 +196,100 @@ def test_the_guarded_no_op_retry_still_reports_the_discrepancy(
     assert second.created is False, "the retry must be the guarded no-op, not a second row"
     assert second.total_discrepancy is not None, "a retry must not clear the alert"
     assert second.total_discrepancy.difference == Decimal("5.20")
+
+
+def _confirm_with(
+    lines: tuple[str, ...],
+    *,
+    isolated_settings: Settings,
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+    filename: str,
+    **overrides: object,
+):
+    """Confirm with operator overrides, the boundary's widened parameter set."""
+    pdf_path = tmp_path / filename
+    pdf_path.write_bytes(_text_pdf_bytes(lines))
+    svc = _make_svc(isolated_settings, secure_objects)
+    record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
+    return confirm_invoice_draft_from_evidence(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.RECEIVED,
+        evidence_id=record.evidence_id,
+        counterparty_name="Acme Suministros SL",
+        settings=isolated_settings,
+        invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
+        **overrides,
+    )
+
+
+def test_a_declared_recargo_persists_and_clears_the_printed_total_discrepancy(
+    isolated_settings: Settings,
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+) -> None:
+    """The operator can now resolve the discrepancy the reader detects.
+
+    The sibling test above pins the state this closes: the document totals
+    126,20, the record could hold only 121,00, and the 5,20 recargo was
+    reported as an unresolvable discrepancy. The detector was right and the
+    operator had nowhere to put the answer.
+
+    BOTH halves are asserted deliberately. Persisting the recargo without
+    clearing the advisory would leave it firing on a now-correct record -- a
+    new false positive, and the kind that teaches operators to ignore the
+    alert that matters. Clearing it without persisting the recargo would be
+    worse: the under-declaration would be silent again.
+    """
+    result = _confirm_with(
+        _RECARGO_INVOICE_LINES,
+        isolated_settings=isolated_settings,
+        secure_objects=secure_objects,
+        tmp_path=tmp_path,
+        filename="factura_recargo_declarada.pdf",
+        recargo_amount=Decimal("5.20"),
+    )
+
+    assert result.invoice.recargo_amount == Decimal("5.20")
+    # The recargo rides INSIDE the invoice total (LIVA art. 161), so the record
+    # now equals what the document printed.
+    assert result.invoice.grand_total == Decimal("126.20")
+    assert result.total_discrepancy is None, "the advisory must not fire on a record that now matches the document"
+
+
+def test_the_confirm_boundary_carries_the_writer_regime_axes(
+    isolated_settings: Settings,
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+) -> None:
+    """Confirming from evidence reaches the same axes as direct entry.
+
+    Before this the confirm boundary accepted only the extraction draft's
+    field set, so an operator confirming a rectificativa or a
+    retención-bearing invoice from evidence had to abandon the evidence path
+    and re-enter the record by hand -- losing the attachment link that the
+    confirm path exists to create.
+    """
+    result = _confirm_with(
+        _RECARGO_INVOICE_LINES,
+        isolated_settings=isolated_settings,
+        secure_objects=secure_objects,
+        tmp_path=tmp_path,
+        filename="factura_regimen.pdf",
+        recargo_amount=Decimal("5.20"),
+        invoice_class=InvoiceClass.RECTIFICATIVA,
+        series="R",
+        rectifies_invoice_number="F-2026-0044",
+        retention_rate=Decimal("0.15"),
+        retention_amount=Decimal("15.00"),
+        iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+    )
+
+    invoice = result.invoice
+    assert invoice.invoice_class is InvoiceClass.RECTIFICATIVA
+    assert invoice.series == "R"
+    assert invoice.rectifies_invoice_number == "F-2026-0044"
+    assert invoice.retention_amount == Decimal("15.00")
+    assert invoice.iva_category is IvaCategory.DOMESTIC_GENERAL_21
+    # The retención is settled OUTSIDE the invoice total; only the recargo is in it.
+    assert invoice.grand_total == Decimal("126.20")

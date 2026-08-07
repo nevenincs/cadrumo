@@ -114,8 +114,8 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import IdentityError, tax_id_identity_token, validate_spanish_tax_id
 from ...core.parsing import parse_date, parse_iso8601_date
 from ...domain.attachments import link_attachment_invoice
-from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol
-from ...domain.iva import InvoiceKind
+from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceClass, InvoiceLine, IvaRate
+from ...domain.iva import InvoiceKind, IvaCategory
 from ..provisioning import probe_ollama_vision
 from ..user_profile import resolve_active_capability
 from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
@@ -779,6 +779,29 @@ def _require_confirmed_field(value: Decimal | str | None, *, field: str) -> Deci
     return value
 
 
+def _iva_rate_slot_for(rate: Decimal | None) -> IvaRate:
+    """Map a resolved percentage to its closed rate slot, refusing an unknown one.
+
+    Reuses the writer's own accepted-slot table rather than restating it, so
+    the confirm boundary and the direct writer cannot drift about which rates
+    exist. An unread or unsupported rate REFUSES here; letting it fall to the
+    exempt slot would mint a zero-cuota invoice against a document that printed
+    a cuota.
+    """
+    from ...application.invoices import numeric_iva_rate_slots
+
+    if rate is None:
+        return IvaRate.EXEMPT
+    slot = numeric_iva_rate_slots().get(rate)
+    if slot is None:
+        accepted = ", ".join(format(value, "f") for value in sorted(numeric_iva_rate_slots()))
+        rendered = format(rate, "f")
+        raise PurchaseInvoiceEvidenceInputError(
+            f"iva_rate {rendered} is not a recognised IVA percentage (accepted: {accepted})",
+        )
+    return slot
+
+
 def confirm_invoice_draft_from_evidence(
     *,
     bucket_id: str,
@@ -793,6 +816,15 @@ def confirm_invoice_draft_from_evidence(
     taxable_base: Decimal | None = None,
     iva_rate: Decimal | None = None,
     currency: str | None = None,
+    iva_amount: Decimal | None = None,
+    iva_category: IvaCategory | None = None,
+    operation_date: date | None = None,
+    retention_rate: Decimal | None = None,
+    retention_amount: Decimal | None = None,
+    recargo_amount: Decimal | None = None,
+    invoice_class: InvoiceClass = InvoiceClass.ORDINARIA,
+    series: str | None = None,
+    rectifies_invoice_number: str | None = None,
     notes: str = "",
     settings: Settings | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
@@ -836,6 +868,26 @@ def confirm_invoice_draft_from_evidence(
         currency: ISO-4217 currency code overriding the extracted one.
             When omitted, the currency printed on the document is used,
             falling back to euro only when the document shows none.
+        iva_amount: The cuota PRINTED on the document, when it differs from
+            base times rate. A printed figure is evidence and outranks a
+            recomputed one, so supplying it makes the persisted line carry it
+            exactly. The line invariants still apply, so a cuota the base and
+            rate cannot support refuses rather than overriding them.
+        iva_category: IVA treatment of the operation. Required for the renta
+            income lane to ground the record.
+        operation_date: Date the operation was performed, when it differs from
+            the issue date, letting the record reach a declared devengo rank.
+        retention_rate: RIRPF art. 95 withholding fraction, settled OUTSIDE
+            the invoice total.
+        retention_amount: The withheld figure. Accepted alone; required
+            whenever a rate is supplied.
+        recargo_amount: Recargo de equivalencia (LIVA art. 161), which rides
+            INSIDE the invoice total, unlike a retención.
+        invoice_class: Invoice class. A rectificativa also needs
+            ``rectifies_invoice_number``.
+        series: Invoice numbering series, when the issuer uses one.
+        rectifies_invoice_number: Number of the invoice a rectificativa
+            corrects.
         notes: Free-text operator notes carried onto the invoice.
         settings: Resolved ``Settings``; ``load_settings()`` when ``None``.
         invoice_repository: Optional injected
@@ -936,6 +988,24 @@ def confirm_invoice_draft_from_evidence(
             total_discrepancy=printed_total_discrepancy(draft=draft, invoice=existing),
         )
 
+    # A PRINTED cuota is evidence and outranks a recomputed one. When the
+    # operator states it, the line carries that exact figure rather than
+    # base * rate, so a document whose printed cuota differs by a cent from the
+    # arithmetic is recorded as it was issued. The line invariants still apply,
+    # so a cuota the base and rate cannot support refuses rather than being
+    # accepted as an override.
+    confirmed_lines = None
+    if iva_amount is not None:
+        confirmed_lines = (
+            InvoiceLine(
+                description=resolved_invoice_number or "Invoice",
+                quantity=Decimal("1"),
+                unit_price=resolved_taxable_base,
+                subtotal=resolved_taxable_base,
+                iva_rate=_iva_rate_slot_for(resolved_iva_rate),
+                iva_amount=iva_amount,
+            ),
+        )
     result = create_catalogue_invoice(
         bucket_id=bucket_id,
         kind=kind,
@@ -948,6 +1018,15 @@ def confirm_invoice_draft_from_evidence(
         iva_rate=resolved_iva_rate,
         currency=resolved_currency,
         notes=notes,
+        iva_category=iva_category,
+        operation_date=operation_date,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
+        recargo_amount=recargo_amount,
+        invoice_class=invoice_class,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        lines=confirmed_lines,
         repository=repository,
     )
     # Auto-link the source evidence/attachment to the newly minted invoice, closing
