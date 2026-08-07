@@ -127,8 +127,8 @@ def _manifest_toml(modelo_id: str, title: str) -> str:
         "# Presentation text is NOT declared here. A modelo's title and official name are\n"
         "# localizable values owned by the shared locale catalogues, and the schema rejects\n"
         "# them as unknown fields. Author them against the derived keys instead:\n"
-        f'#   python -m cadrumo.locales set es {modelo_locale_key(modelo_id, "title")} "{title}"\n'
-        f"#   python -m cadrumo.locales set es {modelo_locale_key(modelo_id, 'official_name')} "
+        f'#   python -m dev.locales set es {modelo_locale_key(modelo_id, "title")} "{title}"\n'
+        f"#   python -m dev.locales set es {modelo_locale_key(modelo_id, 'official_name')} "
         f'"TODO: official AEAT modelo {modelo_id} name"\n'
         "# Spanish is source-authoritative and load-blocking; repeat for en, ca and hu.\n"
         "[modelo]\n"
@@ -151,7 +151,7 @@ def _revision_toml(modelo_id: str, revision_id: str) -> str:
         "#\n"
         "# The revision label is a localizable value owned by the shared locale catalogues,\n"
         "# not a schema field; the loader rejects it here. Author it against the derived key:\n"
-        f"#   python -m cadrumo.locales set es {revision_locale_key(modelo_id, revision_id)} "
+        f"#   python -m dev.locales set es {revision_locale_key(modelo_id, revision_id)} "
         f'"TODO: human-readable label for revision {revision_id}"\n'
         f'[revisions."{revision_id}"]\n'
         "valid_from = 2026-01-01  # TODO: real applicability start date\n"

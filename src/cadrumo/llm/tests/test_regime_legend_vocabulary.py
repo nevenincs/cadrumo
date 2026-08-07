@@ -42,7 +42,7 @@ from typing import Final
 import pytest
 
 from ...core import FieldOrigin
-from ...domain.iva import REGIME_LEGENDS, IvaCategory, regime_legend_phrases
+from ...domain.iva import REGIME_LEGENDS, IvaCategory, RegimeLegend, regime_legend_phrases
 from .._invoice_extraction_prompt import (
     INVOICE_EXTRACTION_PROMPT_ID,
     build_invoice_extraction_prompt,
@@ -89,9 +89,9 @@ class TestTheVocabularyIsQuotedFromTheBundledRegulation:
         assert set(regime_legend_phrases()) == _corpus_mandated_mentions()
 
     @pytest.mark.parametrize("legend", REGIME_LEGENDS, ids=lambda legend: legend.provision)
-    def test_every_declared_phrase_occurs_verbatim_in_the_bundled_text(self, legend: object) -> None:
+    def test_every_declared_phrase_occurs_verbatim_in_the_bundled_text(self, legend: RegimeLegend) -> None:
         """Per row, so a failure names the provision rather than a set difference."""
-        assert legend.phrase in _corpus_mandated_mentions()  # type: ignore[attr-defined]
+        assert legend.phrase in _corpus_mandated_mentions()
 
     def test_the_reverse_charge_mention_is_the_one_that_declares_a_category(self) -> None:
         """Fixture anchor: pinned by member, so a rename cannot pass this vacuously.

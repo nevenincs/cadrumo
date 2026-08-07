@@ -852,9 +852,9 @@ def _ambiguous_relacion_hijo_ids(work_unit_id: str, contributing_hijo_ids: froze
     guarda y custodia by judicial resolución as a third assimilated category
     distinct from tutela and acogimiento — both mínimo-eligible, and both
     excluded from Art. 81.1 by the same manual, in terms, across every served
-    filing year. The relación axis has no member for either population today
-    (a representability decision recorded separately), so a filer with either
-    child has no truthful value but ``DESCENDIENTE`` to record — and that is
+    filing year. The relación axis has no member for either population today,
+    so a filer with either child has no truthful value but ``DESCENDIENTE``
+    to record — and that is
     also the value a filer with a genuine hijo gets by never being asked, since
     the fact is never written for the default even when the operator typed it
     explicitly. The two cases are indistinguishable at the stored fact; every

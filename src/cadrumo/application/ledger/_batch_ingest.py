@@ -428,19 +428,13 @@ def _assess_model_load_contention_once(
     from ...core import ModelRole
 
     for role in (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION):
-        selection = select_model_for_role(role, profile=profile)
-        if not selection.selected or selection.runtime_id is None or selection.candidate is None:
+        assessable = select_model_for_role(role, profile=profile).assessable_load
+        if assessable is None:
             continue
-        # An unknown requirement cannot anchor an assessment. Passing it as zero
-        # would report the load admitted on evidence nobody has, which is the
-        # same fail-open the provision CLI carried; skipping matches the policy
-        # already stated above -- what cannot be judged is not a pause.
-        requirement = selection.candidate.memory_requirement_bytes
-        if requirement is None:
-            continue
+        runtime_id, required_bytes = assessable
         snapshot = assess_model_load_contention(
-            selection.runtime_id,
-            requirement,
+            runtime_id,
+            required_bytes,
             profile=profile,
             settings=settings,
         )

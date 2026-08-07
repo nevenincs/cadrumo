@@ -25,6 +25,7 @@ Submodules
    cadrumo.application.ledger._closure_findings
    cadrumo.application.ledger._confirmation_gate
    cadrumo.application.ledger._confirmation_record
+   cadrumo.application.ledger._consent_withdrawal
    cadrumo.application.ledger._document_transcription
    cadrumo.application.ledger._evidence
    cadrumo.application.ledger._evidence_advisory

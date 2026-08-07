@@ -11,11 +11,15 @@ The load-bearing invariant: a capability may only NARROW the global safety
 floor, never widen it. The resolver is the single place this is computed; every
 gate routes through it.
 
-The one capability that carried an absolute safety-floor bar was
-``cloud_evidence_upload`` — gestor mode refused it regardless of any profile
-opt-in — and it was deleted along with the off-host read path it gated. Every
-surviving capability is on-host or non-sensitive, so no member currently needs
-a floor bar; the mechanism stays because the next one might.
+``cloud_evidence_upload`` is the one capability carrying an absolute
+safety-floor bar: gestor mode refuses it regardless of any profile opt-in,
+because a gestor never transmits a client's document. It is also the standing
+ELIGIBILITY bar for the off-host evidence read — a layer above the
+per-invocation acknowledgement — and
+:func:`cloud_evidence_upload_eligible_for_active_profile` is the single
+production reading of it that every consent-offering surface must route
+through. While the bar is off, :func:`~llm.mint_evidence_consent_token` refuses,
+so no surface can offer a gate that could succeed.
 """
 
 from __future__ import annotations
@@ -33,9 +37,17 @@ from ._orchestration import fact_value
 __all__ = [
     "CapabilityDecision",
     "CapabilitySource",
+    "cloud_evidence_upload_eligible_for_active_profile",
     "resolve_active_capability",
     "resolve_capability",
 ]
+
+#: Capabilities the global safety floor bars outright, whatever the profile
+#: fact says. Derived membership rather than an inline literal so the bar is
+#: one declaration the resolver and its gate both read: a member added here is
+#: gestor-barred everywhere the resolver runs, and there is no second list to
+#: forget.
+GESTOR_BARRED_CAPABILITIES = frozenset({ServiceCapability.CLOUD_EVIDENCE_UPLOAD})
 
 
 class CapabilitySource(StrEnum):
@@ -97,6 +109,17 @@ def resolve_capability(
     Returns:
         The resolved :class:`CapabilityDecision` carrying the posture and reason.
     """
+    # The floor is applied FIRST and returns, so a profile opt-in cannot even be
+    # read into the decision for a barred capability -- the "opted in" branch is
+    # unreachable rather than overridden, which is the difference between a bar
+    # and a strong default.
+    if capability in GESTOR_BARRED_CAPABILITIES and settings.cadrumo_evidence_gestor_mode:
+        return CapabilityDecision(
+            capability=capability,
+            enabled=False,
+            source=CapabilitySource.SAFETY_FLOOR,
+            reason=f"{capability.value} is barred in gestor mode: a gestor never transmits a client's document",
+        )
     # llm_vision / google_export: profile fact, else the conservative default. No
     # safety-floor bar — vision is on-host, google export is non-sensitive.
     fact = _parse_bool_fact(fact_value(profile_record, capability.schema_path))
@@ -134,6 +157,32 @@ def resolve_active_capability(
     resolved_settings = settings if settings is not None else load_settings()
     record = _active_profile_record()
     return resolve_capability(capability, profile_record=record, settings=resolved_settings)
+
+
+def cloud_evidence_upload_eligible_for_active_profile(*, settings: Settings | None = None) -> bool:
+    """Whether the active profile is eligible to be OFFERED the off-host consent gate.
+
+    The standing per-profile bar, distinct from the per-invocation
+    acknowledgement it sits above: eligibility asks "may this profile ever be
+    asked", the acknowledgement asks "does the operator agree to this one read".
+    Default off (:attr:`~core.ServiceCapability.CLOUD_EVIDENCE_UPLOAD` is the one
+    capability defaulting off) and gestor-barred outright, so the answer here is
+    ``False`` on an untouched deployment.
+
+    This is the SINGLE production reading of the bar. Every surface that would
+    offer the operator an off-host acknowledgement passes this function's result
+    into :func:`~llm.mint_evidence_consent_token`, which refuses when it is
+    ``False`` — so "the gate is never offered while the bar is off" is a property
+    of the minting path rather than of each surface remembering to hide a prompt.
+    A surface that skipped the check would still be unable to obtain a token.
+
+    Args:
+        settings: Optional resolved settings override; loaded when omitted.
+
+    Returns:
+        ``True`` only when the profile's resolved capability posture permits it.
+    """
+    return resolve_active_capability(ServiceCapability.CLOUD_EVIDENCE_UPLOAD, settings=settings).enabled
 
 
 def _active_profile_record() -> UserProfileRecord | None:

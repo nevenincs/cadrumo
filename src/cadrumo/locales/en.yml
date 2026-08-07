@@ -720,11 +720,14 @@ application:
     bulk_import:
       errors:
         file_read_failed: The bulk invoice import file could not be read.
+        formula_cell: The bulk invoice import file contains a formula cell at row
+          {row}, column {column}; formula cached values are not accepted.
         missing_columns: 'The bulk invoice import file is missing required columns:
           {missing_columns}'
+        unreadable_table: 'The bulk invoice import file carries no readable table:
+          {detail}'
         unsupported_extension: The bulk invoice import file must be .csv or .xlsx
           (got {extension}).
-        unreadable_table: 'The bulk invoice import file carries no readable table: {detail}'
     creation:
       errors:
         duplicate_invoice: 'An invoice with the same identity already exists in the
@@ -1820,6 +1823,22 @@ cli:
         unknown_disposal_regime: 'Unknown disposal regime {regime!r}; accepted: {accepted}'
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
+        batch_directory_help: Directory whose files are ingested. Combine with or
+          replace by repeated --file.
+        batch_file_help: One document to ingest. Repeat once per document; combines
+          with a directory.
+        batch_help: Ingest every document in a directory (or each --file) into evidence
+          and a reviewable draft, one typed result row per document.
+        batch_items_refused_message: Some documents were refused. Every other document
+          in the run still completed; the refused rows name what was seen.
+        batch_pending_review_message: Some drafts carry a finding a person must adjudicate
+          before an invoice is minted. They are held, not failed.
+        batch_progress_message: 'processed %{source}: %{status}'
+        batch_source_required: Supply a directory argument, one or more --file options,
+          or both.
+        batch_work_deferred_message: Some documents were not read because no reading
+          model could be run. Nothing was guessed from them and nothing failed; re-run
+          once the cause below is cleared.
         confirm_already_exists_message: An invoice with this identity already exists;
           returning it unchanged rather than creating a duplicate.
         confirm_counterparty_name_help: Counterparty display name (no extraction heuristic
@@ -1834,6 +1853,9 @@ cli:
           value).
         confirm_link_hint_message: Link this invoice to a ledger transaction with
           `aeat app ledger link`.
+        confirm_operation_type_help: 'Modelo 349 clave for an entrega intracomunitaria.
+          Required when the document states an intra-community supply: the category
+          cannot say whether it followed an exempt importation.'
         confirm_printed_total_mismatch_message: The total printed on the document
           does not match the total recorded. The recorded total is derived from the
           taxable base and the IVA rate, so a difference means the document carries
@@ -6238,6 +6260,8 @@ errors:
       Re-activate it with aeat config login NAME.
     refused_storage_unsecured_mode: The unsecured storage backend was requested without
       the required opt-in. It is not safe for real data.
+    refused_tabular_source_unreadable: The tabular file could not be decoded, or carries
+      no table with a header row.
     refused_taxation_comparison: The conjunta-vs-individual taxation comparison cannot
       be performed for this modelo or snapshot.
     refused_topic_not_found: The requested topic was not found.
@@ -6270,7 +6294,6 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
-    refused_tabular_source_unreadable: 'The tabular file could not be decoded, or carries no table with a header row.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -64572,9 +64595,17 @@ modelo:
           iva-cuota-repercutida-reducido:
             help: null
             label: Output VAT amount at the reduced rate (10%)
+          iva-cuota-repercutida-reducido-transitorio:
+            help: Transitional box under RD-ley 4/2024 for the reduced rate, coexisting
+              with the ordinary 10% reduced rate.
+            label: Output VAT amount at the transitional reduced rate (5%/7.5%)
           iva-cuota-repercutida-super-reducido:
             help: null
             label: Output VAT amount at the super-reduced rate (4%)
+          iva-cuota-repercutida-super-reducido-transitorio:
+            help: Transitional box under RD-ley 4/2024 for the super-reduced rate,
+              coexisting with the ordinary 4% super-reduced rate.
+            label: Output VAT amount at the transitional super-reduced rate (2%)
           iva-cuota-soportada-importaciones:
             help: null
             label: Deductible input VAT on imports of current goods
@@ -65459,9 +65490,17 @@ modelo:
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: Total output VAT calculated at the reduced 10% rate.
               label: Output VAT amount at the reduced rate (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: Transitional box under RD-ley 4/2024 for the reduced rate, coexisting
+                with the ordinary 10% reduced rate.
+              label: Output VAT amount at the transitional reduced rate (5%/7.5%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: Total output VAT calculated at the super-reduced 4% rate.
               label: Output VAT amount at the super-reduced rate (4%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: Transitional box under RD-ley 4/2024 for the super-reduced rate,
+                coexisting with the ordinary 4% super-reduced rate.
+              label: Output VAT amount at the transitional super-reduced rate (2%)
             x-d5r62bjiclpnar3kc5i6u:
               help: Result of the self-assessment after the Modelo 303 adjustment
                 formula.
@@ -66116,6 +66155,28 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
               help: null
               label: Equivalence surcharge at 0.5% - annual VAT due
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31.label
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8.label
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31.label
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
+              help: Declare the 1.4 % equivalence surcharge charged on sales to retailers
+                under the surcharge regime, on supplies taxed at the 10 % VAT rate
+                (LIVA art. 161.2). Reported in box 600.
+              label: Equivalence surcharge at 1.4 % - annual output amount
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg.label
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
+              help: Declare the 5.2 % equivalence surcharge charged on sales to retailers
+                under the surcharge regime, on supplies taxed at the 21 % VAT rate
+                (LIVA art. 161.1). Reported in box 602.
+              label: Equivalence surcharge at 5.2 % - annual output amount
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: null
               label: VAT charged at the reduced rate (10%) - annual

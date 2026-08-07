@@ -53,7 +53,7 @@ from ...domain.transactions import (
     derive_transaction_id,
     existing_transaction_import_fingerprints,
 )
-from ..transactions import LedgerImportDiagnostic, import_ledger_with_diagnostics
+from ..transactions import LedgerImportDiagnostic, classify_import_row, import_ledger_with_diagnostics
 from ._actions_common import (
     bucket_event_repository as _bucket_event_repository,
 )
@@ -163,8 +163,10 @@ def _evaluate_import_rows(
     :func:`~cadrumo.domain.transactions.derive_import_fingerprint` - a direction-
     and currency-qualified identity that is stable across both later edits of a
     transaction and a re-export of the same movement in a different file format.
-    This single classifier backs both the persisting import path and the
-    ``--dry-run`` preview, so the preview count is exact.
+    The import/skip verdict itself comes from
+    :func:`~cadrumo.application.transactions.classify_import_row`, which the
+    ``--verify`` diagnostics path consumes too, so the persisting path, the
+    ``--dry-run`` preview and the verify report all agree on what a row is.
     """
     existing_fingerprints = {
         fingerprint
@@ -176,6 +178,7 @@ def _evaluate_import_rows(
     skipped_refs: list[BucketTransactionRef] = []
     likely_duplicate_refs: list[BucketTransactionRef] = []
     batch_transaction_ids: set[str] = set()
+    batch_fingerprints: set[str] = set()
     for parsed in parsed_rows:
         raw = parsed.raw
         fingerprint = derive_import_fingerprint(raw, direction=parsed.direction)
@@ -192,11 +195,18 @@ def _evaluate_import_rows(
         # skip is a true content-id collision: two rows resolving to the SAME
         # transaction id cannot both persist (the catalogue keys on that id; the
         # later would overwrite the earlier), so the later is skipped to keep the
-        # count honest.
-        if fingerprint in existing_fingerprints:
-            skipped_refs.append(BucketTransactionRef(bucket_id=bucket_id, transaction_id=transaction_id))
-            continue
-        if transaction_id in batch_transaction_ids:
+        # count honest. That reasoning now lives in `classify_import_row`, which
+        # the ``--verify`` diagnostics path consumes too; it used to hold only
+        # here, and the diagnostics path reasoned the opposite way.
+        verdict = classify_import_row(
+            fingerprint=fingerprint,
+            transaction_id=transaction_id,
+            stored_fingerprints=existing_fingerprints,
+            batch_fingerprints=batch_fingerprints,
+            batch_transaction_ids=batch_transaction_ids,
+        )
+        batch_fingerprints.add(fingerprint)
+        if not verdict.imports:
             skipped_refs.append(BucketTransactionRef(bucket_id=bucket_id, transaction_id=transaction_id))
             continue
         fx_rate, value_in_eur, rate_source, rate_date = _apply_fx_conversion(raw, currency_normalizer)

@@ -43,6 +43,7 @@ Submodules
    cadrumo.core._capabilities
    cadrumo.core._casilla_id
    cadrumo.core._casilla_value_kind
+   cadrumo.core._classifier_input_source
    cadrumo.core._concept_lifecycle
    cadrumo.core._concepto_ingreso
    cadrumo.core._config_integration_fields
@@ -79,6 +80,7 @@ Submodules
    cadrumo.core._ledger_sort
    cadrumo.core._model_catalogue
    cadrumo.core._modelo
+   cadrumo.core._modelo_232_codigos
    cadrumo.core._models
    cadrumo.core._optional_extras
    cadrumo.core._period
@@ -126,3 +128,4 @@ Submodules
    cadrumo.core.text_fold
    cadrumo.core.tty
    cadrumo.core.wizard_catalogue
+   cadrumo.core.workbook

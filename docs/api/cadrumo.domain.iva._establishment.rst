@@ -1,7 +1,7 @@
-cadrumo.locales._fstring_registry module
+cadrumo.domain.iva._establishment module
 ========================================
 
-.. automodule:: cadrumo.locales._fstring_registry
+.. automodule:: cadrumo.domain.iva._establishment
    :members:
    :show-inheritance:
    :ignore-module-all:

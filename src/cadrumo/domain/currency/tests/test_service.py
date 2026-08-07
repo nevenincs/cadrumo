@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....adapters.outbound.fx import EcbReferenceRateProvider
+from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID, EcbReferenceRateProvider
 from ....tests.ecb_stub import ecb_csv_fetch
 from .._models import (
     CurrencyNormalizationStatus,
@@ -65,7 +65,10 @@ def test_currency_normalization_success() -> None:
     assert result.status == CurrencyNormalizationStatus.NORMALIZED
     assert result.eur_amount == (Decimal("100.00") * _ECB_2025_03_14_USD_RATE).quantize(Decimal("0.01"))
     assert result.rate == _ECB_2025_03_14_USD_RATE
-    assert result.rate_source == "provider"
+    # The rate authority by name, not the bare fact that a provider answered:
+    # "provider" duplicated the NORMALIZED status and named nothing an auditor
+    # could re-fetch the observation from.
+    assert result.rate_source == ECB_RATE_SOURCE_ID
     assert result.original == amount
 
 

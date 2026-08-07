@@ -58,10 +58,17 @@ class ServiceCapability(StrEnum):
             leaves the machine); opting out disables the vision read entirely.
         GOOGLE_EXPORT: Whether this profile may export modelo workbooks to Google
             Sheets/Drive. Default ON; opting out keeps exports offline-only.
+        CLOUD_EVIDENCE_UPLOAD: Whether this profile is ELIGIBLE to be offered the
+            off-host evidence-read consent gate at all. Default OFF, and barred
+            outright under gestor mode. This is the standing eligibility bar, a
+            layer above the per-invocation acknowledgement: while it is off no
+            token can be minted, so no surface offers the gate and "withdraw
+            consent for the future" is one profile setting.
     """
 
     LLM_VISION = "llm_vision"
     GOOGLE_EXPORT = "google_export"
+    CLOUD_EVIDENCE_UPLOAD = "cloud_evidence_upload"
 
     @property
     def schema_path(self) -> str:
@@ -72,11 +79,13 @@ class ServiceCapability(StrEnum):
     def default_enabled(self) -> bool:
         """Return the conservative default posture when no profile fact is set.
 
-        Every surviving capability defaults ON: on-host vision and Google export
-        are non-sensitive or local by construction. The one member that defaulted
-        OFF was cloud evidence upload -- the regulated off-host path -- and it was
-        deleted with the transport it gated, so no member needs a carve-out here
-        any more. The resolver still ANDs the global safety floor on top,
-        yielding a :class:`~application.user_profile.CapabilityDecision`.
+        On-host vision and Google export default ON: both are local or
+        non-sensitive by construction, so an unanswered question costs the
+        operator a working feature and nothing else.
+        :attr:`CLOUD_EVIDENCE_UPLOAD` is the one member that defaults OFF, and
+        for the opposite reason -- an unanswered question there would decide,
+        by silence, that a taxpayer's document may leave the machine. The
+        resolver ANDs the global safety floor on top, yielding a
+        :class:`~application.user_profile.CapabilityDecision`.
         """
-        return True
+        return self is not ServiceCapability.CLOUD_EVIDENCE_UPLOAD

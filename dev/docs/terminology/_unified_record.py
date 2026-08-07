@@ -15,7 +15,7 @@ of the five kind records into a :class:`SearchRecord`, deriving the per-kind
 ``id`` / ``title`` / ``target`` and the base ranking weight. The ranking
 authority is the user-first per-display-class ladder
 :data:`_DISPLAY_CLASS_BASE_WEIGHT` (user documentation first, then modelo,
-casilla, CLI, and dev-machinery pages last; ADR D8), so an injected record
+casilla, CLI, and dev-machinery pages last), so an injected record
 ranks by the display class :func:`derive_display_class` assigns it.
 :data:`_KIND_BASE_WEIGHT` is a derived legacy per-kind projection of that one
 table, retained only for the sweep-relevance reweight path that keys on record
@@ -82,8 +82,8 @@ class RankingTier(StrEnum):
 #: Highest sorts first:
 #: general-fact concept cards (``DOC``) lead, then modelo document cards, then
 #: casilla rows, then CLI records, and full-text ``TECHNICAL`` (api / dev
-#: machinery) pages rank last. This amends the parent ADR's per-kind D5 ladder
-#: in two ways only -- casilla now outranks cli, and the full-text tier splits
+#: machinery) pages rank last. This amends the prior per-kind ladder in two
+#: ways only -- casilla now outranks cli, and the full-text tier splits
 #: so dev-machinery pages sink below user documentation (a user-doc page is
 #: ``DOC`` and shares the top band, but the retained :class:`RankingTier`
 #: coarse axis keeps full-text pages below the term/navigation cards, so term
@@ -196,7 +196,7 @@ def _display_class_for(
 ) -> ResultDisplayClass:
     """Derive the display class from a record's kind, concept domain, and target.
 
-    The single derivation authority (ADR D7): CASILLA records are ``CASILLA``;
+    The single derivation authority: CASILLA records are ``CASILLA``;
     CLI records are ``CLI``; a CONCEPT card splits by Handbook domain -- a
     modelo-domain card is a ``MODELO`` document, every other domain (a
     general-fact concept: régimen, período, legal, concepto, ...) is a ``DOC``;

@@ -802,9 +802,11 @@ application:
         file_read_failed: No se pudo leer el archivo de importación masiva de facturas.
         missing_columns: 'Al archivo de importación masiva de facturas le faltan columnas
           obligatorias: {missing_columns}'
+        unreadable_table: 'El archivo de importación masiva de facturas no contiene
+          ninguna tabla legible: {detail}'
         unsupported_extension: El archivo de importación masiva de facturas debe ser
           .csv o .xlsx (se recibió {extension}).
-        unreadable_table: 'El archivo de importación masiva de facturas no contiene ninguna tabla legible: {detail}'
+        formula_cell: 'El archivo de importación masiva de facturas contiene una celda con fórmula en la fila {row}, columna {column}; no se aceptan los valores en caché de las fórmulas.'
     creation:
       errors:
         duplicate_invoice: 'Ya existe una factura con la misma identidad en el catálogo:
@@ -6711,6 +6713,8 @@ errors:
       Vuelve a activarla con aeat config login NAME.
     refused_storage_unsecured_mode: El almacenamiento sin cifrar se solicitó sin la
       habilitación necesaria. No es seguro para datos reales.
+    refused_tabular_source_unreadable: El archivo tabular no se pudo descodificar,
+      o no contiene ninguna tabla con fila de encabezado.
     refused_taxation_comparison: La comparación tributaria conjunta/individual no
       puede realizarse para este modelo o instantánea.
     refused_topic_not_found: No se encontró el tema solicitado.
@@ -6744,7 +6748,6 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    refused_tabular_source_unreadable: 'El archivo tabular no se pudo descodificar, o no contiene ninguna tabla con fila de encabezado.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -67304,9 +67307,17 @@ modelo:
           iva-cuota-repercutida-reducido:
             help: null
             label: Cuota IVA repercutido al tipo reducido (10%)
+          iva-cuota-repercutida-reducido-transitorio:
+            help: Casilla transitoria del RD-ley 4/2024 para el tipo reducido, que
+              convive con el tipo reducido ordinario del 10%.
+            label: Cuota IVA repercutido al tipo reducido transitorio (5%/7,5%)
           iva-cuota-repercutida-super-reducido:
             help: null
             label: Cuota IVA repercutido al tipo super-reducido (4%)
+          iva-cuota-repercutida-super-reducido-transitorio:
+            help: Casilla transitoria del RD-ley 4/2024 para el tipo super-reducido,
+              que convive con el tipo super-reducido ordinario del 4%.
+            label: Cuota IVA repercutido al tipo super-reducido transitorio (2%)
           iva-cuota-soportada-importaciones:
             help: null
             label: Cuota IVA soportado deducible en importaciones de bienes corrientes
@@ -68123,9 +68134,17 @@ modelo:
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: null
               label: Cuota IVA repercutido al tipo reducido (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: Casilla transitoria del RD-ley 4/2024 para el tipo reducido, que
+                convive con el tipo reducido ordinario del 10%.
+              label: Cuota IVA repercutido al tipo reducido transitorio (5%/7,5%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: null
               label: Cuota IVA repercutido al tipo super-reducido (4%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: Casilla transitoria del RD-ley 4/2024 para el tipo super-reducido,
+                que convive con el tipo super-reducido ordinario del 4%.
+              label: Cuota IVA repercutido al tipo super-reducido transitorio (2%)
             x-d5r62bjiclpnar3kc5i6u:
               help: null
               label: Resultado de la autoliquidacion ([66]+[77]+[68]-[78])

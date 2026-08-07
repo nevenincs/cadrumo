@@ -1512,7 +1512,12 @@ reviewed_at = 2026-05-21
 reviewed_by = "operator"
 notes = "Articulo 94 LIVA: operaciones que originan el derecho a deducir. Los sujetos pasivos podran deducir las cuotas del IVA soportadas en los supuestos en que las referidas operaciones hayan sido realizadas en el ejercicio de su actividad empresarial o profesional."
 required_text = [
-    "operaciones cuya realización origina el derecho a la deducción",
+    # Operative phrases from apartado Uno.1.c) and apartado Tres, chosen so a
+    # truncated excerpt cannot satisfy this check. The article title alone
+    # previously grounded it, and the bundled excerpt was in fact cut off
+    # mid-Uno in the pre-2021 redaction while the check passed.
+    "20 bis, 21, 22, 23, 24 y 25 de esta Ley",
+    "En ningún caso procederá la deducción de las cuotas en cuantía superior",
 ]
 
 [legal."ley-37-1992:art-95"]

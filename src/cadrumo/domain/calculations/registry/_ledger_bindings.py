@@ -674,8 +674,8 @@ def _iva_reachability_probe(selector: _IvaLedgerSelector) -> None:
     * It cannot catch a matcher that accepts the WRONG rows, only one that
       accepts none.
     * It cannot catch a resolver that aggregates correctly-matched rows
-      incorrectly. That is the residual blind spot the governing ADR names,
-      and no build-time data-free check can observe it.
+      incorrectly. That residual blind spot needs a data-carrying check, and
+      no build-time data-free check can observe it.
     """
     matcher = _iva_build_matcher(selector)
     probe = _IvaReachabilityProbeObservation(

@@ -76,9 +76,6 @@ _EXEMPTIONS: frozenset[str] = frozenset(
         # production-embedded documentation generator.
         "src/cadrumo/entrypoints/cli/_registry_corpus_payloads.py",
         "src/cadrumo/entrypoints/cli/_registry_payloads.py",
-        # `python -m` entry point; not pytest-importable surface.
-        # locales/__main__ dispatches into locales/cli.py.
-        "src/cadrumo/locales/__main__.py",
         # aeat app diagnostics: same _lazy(...) dispatch as the CLI verb
         # modules above; only reachable via the dynamically-dispatched
         # `_app_diagnostics` command module. Each is exercised end-to-end via

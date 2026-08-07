@@ -22,6 +22,15 @@ the most frequently occurring identifier on the page competes for the role it ca
 never hold. Comparison is on the normalised form, so a printed ``B-1234567-4``
 does not evade exclusion against a stored ``B12345674``.
 
+That exclusion asks an IDENTITY question, never a validity one, and routes
+through :func:`~core.identity.same_tax_identifier` -- the same predicate
+:func:`~application.invoices.counterparty_is_the_filer` uses, so a document
+cannot evade one while being caught by the other. Routing it through
+:func:`canonical_identity_token` instead makes it a validity question, and then
+a filer whose stored identifier is foreign, or Spanish with a bad control
+character, excludes nothing at all. The strict form remains correct for
+verifying a *candidate*; the two are not interchangeable.
+
 **A checksum failure is recorded, not silently dropped.** An identifier that fails
 its control character is a real fact about the document -- it is what makes the
 true supplier invisible to a validating scan -- so it surfaces as an
@@ -58,6 +67,7 @@ from ...core.identity import (
     IdentityError,
     nif_iva_format_for_country,
     normalise_nif_iva,
+    same_tax_identifier,
     validate_spanish_tax_id,
 )
 from ._evidence_draft import DraftDiscrepancyFinding, FieldAmbiguityCandidate, FieldProvenance
@@ -158,8 +168,13 @@ def canonical_identity_token(value: str, *, country_code: str | None = None) -> 
     return normalised if spec.pattern.match(normalised) else None
 
 
-def _excluded_as_own(token: str, taxpayer_tokens: frozenset[str]) -> bool:
-    return token in taxpayer_tokens
+def _own_identity_is_excludable(taxpayer_tax_id: str | None) -> bool:
+    """Return whether the filer's identifier is usable for exclusion at all.
+
+    Blank is not a value: a profile carrying whitespace has nothing to exclude,
+    and the note must say so rather than claim an exclusion that never ran.
+    """
+    return taxpayer_tax_id is not None and bool(normalise_nif_iva(taxpayer_tax_id))
 
 
 def resolve_counterparty_identity(
@@ -182,8 +197,9 @@ def resolve_counterparty_identity(
             break a tie -- breaking a tie by position is first-match under
             another name.
         taxpayer_tax_id: This profile's own identifier, excluded from candidacy.
-            ``None`` when unknown, which weakens the resolution and is reported
-            in the note rather than passed over.
+            Never required to be checksum-valid or Spanish -- exclusion is an
+            identity comparison. ``None`` or blank means unknown, which weakens
+            the resolution and is reported in the note rather than passed over.
         origin: How the candidates were obtained.
 
     Returns:
@@ -191,15 +207,21 @@ def resolve_counterparty_identity(
         deterministic finding raised on the way.
     """
     findings: list[DraftDiscrepancyFinding] = []
-
-    taxpayer_tokens: frozenset[str] = frozenset()
-    if taxpayer_tax_id is not None:
-        own = canonical_identity_token(taxpayer_tax_id)
-        if own is not None:
-            taxpayer_tokens = frozenset({own})
+    own_excludable = _own_identity_is_excludable(taxpayer_tax_id)
 
     verified: list[tuple[IdentityCandidate, str]] = []
     for candidate in candidates:
+        # Exclusion runs BEFORE verification, and on the checksum-free identity
+        # predicate, because "is this the filer's own identifier" is an identity
+        # question rather than a validity one. Routing it through
+        # `canonical_identity_token` made it a validity question, and a filer
+        # whose stored identifier is foreign -- or Spanish with a bad control
+        # character -- then excluded nothing at all, leaving the identifier that
+        # appears on every invoice in the corpus competing for the one role it
+        # can never hold. Excluding first also keeps the filer's own identifier
+        # from being reported as an unverifiable *counterparty*, which it is not.
+        if same_tax_identifier(candidate.value, taxpayer_tax_id):
+            continue
         token = canonical_identity_token(candidate.value, country_code=candidate.country_code)
         if token is None:
             # Recorded, never dropped: an identifier failing its control
@@ -215,8 +237,6 @@ def resolve_counterparty_identity(
                     ),
                 ),
             )
-            continue
-        if _excluded_as_own(token, taxpayer_tokens):
             continue
         verified.append((candidate, token))
 
@@ -237,7 +257,14 @@ def resolve_counterparty_identity(
                 DraftDiscrepancyFinding(
                     kind=DraftDiscrepancyKind.ROLE_UNRESOLVED,
                     field=field,
-                    detail="no verified identifier remained after excluding the filer's own identity",
+                    detail=(
+                        "no verified identifier remained after excluding the filer's own identity"
+                        if own_excludable
+                        else (
+                            "no verified identifier remained, and the filer's own identifier was "
+                            "not available to exclude"
+                        )
+                    ),
                 ),
             ),
         )
@@ -260,7 +287,7 @@ def resolve_counterparty_identity(
                 anchor=candidate.printed_anchor,
                 note=(
                     f"role evidence picks exactly one identifier: {candidate.role_evidence}"
-                    f"{_own_exclusion_note(taxpayer_tax_id)}"
+                    f"{_own_exclusion_note(own_excludable)}"
                 ),
             ),
             resolved=token,
@@ -314,7 +341,7 @@ def resolve_counterparty_identity(
             candidates=ambiguity,
             note=(
                 f"{len(competing)} verified identifiers remained and no role evidence picks exactly one"
-                f"{_own_exclusion_note(taxpayer_tax_id)}"
+                f"{_own_exclusion_note(own_excludable)}"
             ),
         ),
         findings=(
@@ -331,8 +358,16 @@ def resolve_counterparty_identity(
     )
 
 
-def _own_exclusion_note(taxpayer_tax_id: str | None) -> str:
-    """Return the clause stating whether the filer's own identity was excludable."""
-    if taxpayer_tax_id is None:
-        return " (the filer's own identifier was not supplied, so it could not be excluded)"
+def _own_exclusion_note(own_excludable: bool) -> str:
+    """Return the clause stating whether the filer's own identity was excluded.
+
+    Keyed on whether the exclusion actually ran, never on whether an argument
+    was passed. The two diverged once: an identifier that failed a Spanish
+    checksum produced an empty exclusion set while this note still read "after
+    excluding the filer's own identifier", so the operator was told a
+    load-bearing exclusion had been applied to a candidate pool that still
+    contained the filer.
+    """
+    if not own_excludable:
+        return " (the filer's own identifier was not available, so it could not be excluded)"
     return " after excluding the filer's own identifier"

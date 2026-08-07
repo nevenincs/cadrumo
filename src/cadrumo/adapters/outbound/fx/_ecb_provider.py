@@ -50,6 +50,12 @@ LOOKBACK_DAYS = 14
 #: Transport contract: given a URL, return the response body as text.
 RateFetch = Callable[[str], str]
 
+#: Identifier stamped on every record this provider converts. Names the ECB euro
+#: reference-rate series specifically, not merely "an exchange-rate provider",
+#: because the stamp's job is to let a later reader re-fetch the same published
+#: observation and re-derive the stored euro figure (Ley 46/1998 art. 36).
+ECB_RATE_SOURCE_ID = "ecb_reference"
+
 
 class EcbReferenceRateProvider:
     """EUR reference-rate provider backed by the live ECB Data Portal series."""
@@ -75,6 +81,11 @@ class EcbReferenceRateProvider:
         # Resolved results are memoized per (currency, date) so a ledger import
         # spanning many rows on few distinct dates issues few requests.
         self._resolved: dict[tuple[str, date], Decimal | None] = {}
+
+    @property
+    def rate_source_id(self) -> str:
+        """Return :data:`ECB_RATE_SOURCE_ID`, the stamped rate authority."""
+        return ECB_RATE_SOURCE_ID
 
     def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
         """Return the CCY->EUR rate for ``rate_date`` (or most-recent prior).

@@ -44,9 +44,11 @@ from ...core.decimal import (
 from ...core.external_constants import XLSX_EXTENSION
 from ...core.tabular import (
     TabularSourceError,
+    coerce_cell_text,
     decode_tabular_bytes,
     detect_tabular_delimiter,
 )
+from ...core.workbook import FORMULA_CELL_REFUSAL, first_formula_cell_column
 from ._action_errors import ModeloLocalObservationError
 
 CSV_EXTENSIONS: Final[frozenset[str]] = frozenset({".csv", ".txt"})
@@ -230,29 +232,21 @@ def _read_xlsx_rows(path: Path) -> list[list[str]]:
         worksheet = workbook.worksheets[0]
         rows: list[list[str]] = []
         for row_index, cells in enumerate(worksheet.iter_rows(), start=1):
-            for column_index, cell in enumerate(cells, start=1):
-                if cell.data_type == "f":
-                    raise ModeloLocalObservationError(
-                        f"casilla-value spreadsheet {path} contains formula cell at row {row_index}, "
-                        f"column {column_index}; formula cached values are not accepted",
-                        context={
-                            "path": str(path),
-                            "row": str(row_index),
-                            "column": str(column_index),
-                        },
-                    )
-            rows.append([_coerce_cell_text(cell.value) for cell in cells])
+            column_index = first_formula_cell_column(cells)
+            if column_index is not None:
+                raise ModeloLocalObservationError(
+                    f"casilla-value spreadsheet {path} contains formula cell at row {row_index}, "
+                    f"column {column_index}; {FORMULA_CELL_REFUSAL}",
+                    context={
+                        "path": str(path),
+                        "row": str(row_index),
+                        "column": str(column_index),
+                    },
+                )
+            rows.append([coerce_cell_text(cell.value, integral_floats_as_int=True) for cell in cells])
         return [row for row in rows if any(cell for cell in row)]
     finally:
         workbook.close()
-
-
-def _coerce_cell_text(value: object) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, float) and value.is_integer():
-        return str(int(value))
-    return str(value).strip()
 
 
 __all__ = [

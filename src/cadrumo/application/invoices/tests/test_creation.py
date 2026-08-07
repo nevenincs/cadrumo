@@ -53,6 +53,10 @@ class _CanonicalOnlyRateProvider:
     for the exact canonical uppercase token - proves the caller normalises
     before querying, rather than mocking the lookup itself."""
 
+    @property
+    def rate_source_id(self) -> str:
+        return "test_canonical_only"
+
     def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
         del rate_date
         return Decimal("1.2") if currency == "GBP" else None

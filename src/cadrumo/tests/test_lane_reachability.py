@@ -122,7 +122,7 @@ def test_every_test_ci_cannot_run_declares_why() -> None:
     a reader usually means, because a recipe no workflow invokes is a lane that
     has never run. Two of them proved it at once: ``just test-integration``
     (370 integration-marked modules under ``src/`` -- every cross-layer test in
-    the product) and ``just test-dev-tooling`` (nine ``dev/`` subsystems, whose
+    the product) and ``just test-dev-tooling`` (ten ``dev/`` subsystems, whose
     own recipe docstring says "the gates that no other lane reaches") were both
     declared, both healthy, and named by no workflow. The declared-lane gate
     reported full coverage over tests CI had never once executed.

@@ -118,6 +118,7 @@ from ...core import (
     FieldGroundingOutcome,
     FieldOrigin,
     ImageMediaType,
+    IntracomOperationType,
     MissingOptionalExtraError,
     ServiceCapability,
     detect_image_media_type,
@@ -128,6 +129,7 @@ from ...core.external_constants import DEFAULT_CURRENCY, XML_MIME_TYPE
 from ...core.identity import tax_id_identity_token
 from ...core.parsing import parse_iso8601_date
 from ...domain.attachments import link_attachment_invoice, normalize_media_type
+from ...domain.currency import ExchangeRateProvider
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceClass, InvoiceLine
 from ...domain.iva import (
     EUMemberState,
@@ -313,7 +315,38 @@ class FieldProvenance(BaseModel):
     anchor: str | None = None
     candidates: tuple[FieldAmbiguityCandidate, ...] = ()
     anchor_self_reported: bool = False
+    derived_from: tuple[str, ...] = ()
     note: str = ""
+
+    @model_validator(mode="after")
+    def _a_derived_value_cites_its_inputs_and_never_an_anchor(self) -> Self:
+        """Tie ``DERIVED`` to the inputs it followed from, and bar it from ANCHORED.
+
+        A derived value was never on the page, so there is nothing in the
+        document to point at and an ``ANCHORED`` stamp would assert a printed
+        form that does not exist. What an auditor needs instead is the input
+        set: the derivation is deterministic, so naming its inputs makes the
+        conclusion reproducible by hand, which is the derived equivalent of
+        showing the anchor.
+
+        Enforced in both directions, for the same reason the ambiguity rule is.
+        A ``DERIVED`` envelope with no inputs claims a conclusion it cannot show
+        its working for, and inputs recorded under any other origin describe a
+        derivation that did not happen.
+        """
+        if self.origin is FieldOrigin.DERIVED:
+            if self.grounding is FieldGroundingOutcome.ANCHORED:
+                raise ValueError(
+                    "a derived value cannot be ANCHORED: it was concluded from other values rather "
+                    "than read from the document, so no printed form anchors it",
+                )
+            if not self.derived_from:
+                raise ValueError("a derived value must record the inputs it was derived from")
+        elif self.derived_from:
+            raise ValueError(
+                f"derived_from is only meaningful for a derived value; got origin={self.origin.value!r}",
+            )
+        return self
 
     @model_validator(mode="after")
     def _a_self_reported_anchor_can_never_read_as_verified(self) -> Self:
@@ -811,6 +844,11 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
         currency=parsed.currency,
         recargo_amount=parsed.recargo_amount,
         iva_category=parsed.iva_category,
+        # The mention the document prints, carried on the model-free path too.
+        # It was reaching the operator only from the reading model, so the one
+        # path that recovers it EXACTLY -- no model, no anchor check needed,
+        # because the text is the record -- was the one that dropped it.
+        regime_legend=parsed.regime_legend,
         lines=tuple(
             InvoiceDraftLine(
                 description=line.description,
@@ -1218,6 +1256,7 @@ def confirm_invoice_draft_from_evidence(
     currency: str | None = None,
     iva_amount: Decimal | None = None,
     iva_category: IvaCategory | None = None,
+    operation_type: IntracomOperationType | None = None,
     operation_date: date | None = None,
     retention_rate: Decimal | None = None,
     retention_amount: Decimal | None = None,
@@ -1230,6 +1269,7 @@ def confirm_invoice_draft_from_evidence(
     confirmed_by: str = "operator",
     settings: Settings | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    rate_provider: ExchangeRateProvider | None = None,
 ) -> InvoiceConfirmationResult:
     """Re-extract one evidence reference and confirm it into a real :class:`Invoice`.
 
@@ -1277,6 +1317,12 @@ def confirm_invoice_draft_from_evidence(
             rate cannot support refuses rather than overriding them.
         iva_category: IVA treatment of the operation. Required for the renta
             income lane to ground the record.
+        operation_type: Modelo 349 clave for an entrega intracomunitaria. The
+            category alone cannot distinguish an ordinary supply (clave E) from
+            one following an exempt importation (clave M, or H through a fiscal
+            representative), and no document states which -- so the writer
+            demands it and only the operator can answer. Without this the
+            evidence path could confirm no intra-community invoice at all.
         operation_date: Date the operation was performed, when it differs from
             the issue date, letting the record reach a declared devengo rank.
         retention_rate: RIRPF art. 95 withholding fraction, settled OUTSIDE
@@ -1299,6 +1345,12 @@ def confirm_invoice_draft_from_evidence(
         settings: Resolved ``Settings``; ``load_settings()`` when ``None``.
         invoice_repository: Optional injected
             :class:`InvoiceCatalogueRepositoryProtocol` (testing seam).
+        rate_provider: The euro-conversion rate source for a foreign-currency
+            document. ``None`` uses the bundled ECB reference-rate provider,
+            which is the production path. Injectable because confirming a
+            foreign invoice otherwise reaches the ECB Data Portal over the
+            network, so the conversion policy could not be exercised without
+            it; a euro document never consults it at all.
 
     Returns:
         :class:`InvoiceConfirmationResult`: The persisted (or pre-existing)
@@ -1490,6 +1542,7 @@ def confirm_invoice_draft_from_evidence(
         notes=notes,
         recargo_amount=resolved_recargo_amount,
         lines=confirmed_lines,
+        rate_provider=rate_provider,
     )
     attachment_store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, resolved_settings))
     catalogue = repository.load()
@@ -1549,6 +1602,7 @@ def confirm_invoice_draft_from_evidence(
         currency=resolved_currency,
         notes=notes,
         iva_category=resolved_iva_category,
+        operation_type=operation_type,
         operation_date=operation_date,
         retention_rate=retention_rate,
         retention_amount=retention_amount,
@@ -1558,6 +1612,7 @@ def confirm_invoice_draft_from_evidence(
         rectifies_invoice_number=rectifies_invoice_number,
         lines=confirmed_lines,
         repository=repository,
+        rate_provider=rate_provider,
     )
     # Auto-link the source evidence/attachment to the newly minted invoice, closing
     # the provenance loop: the invoice is now discoverable from the evidence

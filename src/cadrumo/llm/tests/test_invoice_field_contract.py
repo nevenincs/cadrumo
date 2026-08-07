@@ -373,6 +373,7 @@ class TestContractParityAcrossBothDerivations:
                 retencion_rate="15",
                 retencion_amount="15,00",
                 grand_total="106,00",
+                regime_legend="inversión del sujeto pasivo",
                 currency="EUR",
             ),
             anchors=ExtractedFieldAnchors(),

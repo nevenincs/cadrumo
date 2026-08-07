@@ -396,6 +396,17 @@ class EvidenceConfirmResult(OutputSchema):
     payment_status: str
     linked_transaction_ids: list[str] = []
     notes: str = ""
+    # The euro conversion stamp and the euro projection of the totals, at
+    # parity with the catalogue surface through the shared field tuple. Every
+    # one is ``None`` on a euro invoice, and the eur trio is ``None`` on a
+    # foreign invoice no rate could be resolved for -- so the operator sees the
+    # unconverted state at confirm, which is where they can still act on it.
+    fx_rate: str | None = None
+    fx_rate_date: str | None = None
+    fx_rate_source: str | None = None
+    base_total_eur: str | None = None
+    iva_total_eur: str | None = None
+    grand_total_eur: str | None = None
     # The provenance of the DRAFT the confirmation was based on, carried onto
     # the confirm surface too. The persisted invoice above is the operator's
     # decision; these say what the document was read to say and how, so a later

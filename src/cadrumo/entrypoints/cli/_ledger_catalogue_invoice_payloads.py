@@ -63,6 +63,18 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     linked_transaction_ids: list[TransactionId] = Field(default_factory=list)
     notes: str = ""
     operation_type: IntracomOperationType | None = None
+    # The euro conversion stamp and the euro projection of the three totals.
+    # Present at parity with the evidence-confirm surface through the shared
+    # field tuple both projections read. A foreign invoice whose rate could not
+    # be resolved carries the stamp fields ``None`` AND the eur totals ``None``:
+    # the record says, on its face, that no euro figure exists for it rather
+    # than presenting the foreign face value as though it were euro.
+    fx_rate: Decimal | None = Field(default=None, gt=Decimal("0"))
+    fx_rate_date: date | None = None
+    fx_rate_source: str | None = Field(default=None, min_length=1)
+    base_total_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
+    iva_total_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
+    grand_total_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
 
     @model_validator(mode="after")
     def _validate_counterparty_identity(self) -> Self:

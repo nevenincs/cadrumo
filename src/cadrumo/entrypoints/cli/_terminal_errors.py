@@ -47,7 +47,6 @@ from ...core.errors import (
     get_error_exit_code,
     get_registered_error_code,
     render_error_json,
-    render_error_text,
 )
 
 _ABORTED_EXIT_CODE = 1
@@ -363,7 +362,7 @@ def _emit_crash(exc: Exception) -> NoReturn:
     defect. Forward it verbatim instead, with its own exit code.
     """
     from ...core.logging import OPERATOR_DOCUMENT_LOG_EXTRA, get_logger
-    from ._errors import CliUnexpectedBoundaryError, _unwrap_cadrumo_error, active_profile_label_for_error, write_stderr
+    from ._errors import CliUnexpectedBoundaryError, _unwrap_cadrumo_error, render_error_payload, write_stderr
 
     typed = _unwrap_cadrumo_error(exc)
     if typed is None:
@@ -388,11 +387,7 @@ def _emit_crash(exc: Exception) -> NoReturn:
         )
     boundary = typed if typed is not None else CliUnexpectedBoundaryError(exc)
     code = get_registered_error_code(boundary)
-    payload = (
-        render_error_json(boundary, active_profile=active_profile_label_for_error())
-        if _json_requested_for(exc)
-        else render_error_text(boundary)
-    )
+    payload = render_error_payload(boundary, as_json=_json_requested_for(exc))
     write_stderr(payload)
     sys.exit(get_error_exit_code(code.category))
 

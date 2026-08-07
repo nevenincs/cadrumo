@@ -107,7 +107,10 @@ nothing, so it raises the strong unmatched advisory.
 
 The residual limit, stated rather than left to be discovered: a shortfall landing
 on 15 % or 7 % is still indistinguishable from a real withholding and still passes
-silently. Closing that needs a declared retención, which the ADR rejected.
+silently. Closing that needs a declared retención, and requiring one was already
+rejected above for the same reason: the declared-first branch is not always
+reachable, and dropping the inference would under-declare a credit the taxpayer
+is genuinely owed.
 """
 
 from __future__ import annotations

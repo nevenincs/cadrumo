@@ -121,22 +121,10 @@ def _collect_date_binding_refs(expression: FormulaExpression, refs: list[Binding
         _collect_date_binding_refs(arg, refs)
 
 
-#: Formula operators that consume a binding leaf as a string-valued enum
-#: dispatch key (``args[1]``) rather than as a Decimal operand. The
-#: runtime resolves the ``args[1]`` binding of these ops from
-#: ``enum_binding_values`` (string channel); every other binding leaf is
-#: resolved from ``binding_values`` (Decimal channel).
-_ENUM_DISPATCH_OPS: frozenset[str] = frozenset(
-    {
-        "lookup_bracket_by_ccaa",
-        "lookup_parameter_by_entity_type",
-        "lookup_bracket_by_entity_type",
-    },
-)
-
 #: Map of op name -> arg index that carries the string-valued enum binding
-#: leaf. The default ``_ENUM_DISPATCH_OPS`` ops carry the binding at
-#: args[1].
+#: leaf. These ops consume that leaf as a string-valued dispatch key
+#: resolved from ``enum_binding_values``, rather than as a Decimal operand
+#: resolved from ``binding_values`` like every other binding leaf.
 _ENUM_DISPATCH_BINDING_ARG_INDEX: dict[str, int] = {
     "lookup_bracket_by_ccaa": 1,
     "lookup_parameter_by_entity_type": 1,

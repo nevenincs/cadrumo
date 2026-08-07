@@ -58,8 +58,10 @@ def test_the_advisory_becomes_a_notice_carrying_reason_remedy_and_message() -> N
     notices, lines = _work_calculate_source_advisory_output(_DiagnosticsOnly((_rate_box_diagnostic(),)))
 
     assert len(notices) == 1
-    assert notices[0].context["reason"] == _REASON
-    assert notices[0].context["source_kind"] == "ledger_iva_aggregation"
+    context = notices[0].context
+    assert context is not None, "the advisory reached the operator with no structured provenance"
+    assert context["reason"] == _REASON
+    assert context["source_kind"] == "ledger_iva_aggregation"
     assert notices[0].suggestion == _REMEDY
     assert notices[0].message == _MESSAGE
     assert len(lines) == 1

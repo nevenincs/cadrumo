@@ -781,6 +781,27 @@ class ModelSelection(BaseModel):
     remediation: str = ""
 
     @property
+    def assessable_load(self) -> tuple[str, int] | None:
+        """Return ``(runtime_id, required_bytes)`` when a load can be assessed at all.
+
+        ``None`` when this role selected nothing, or when the chosen candidate
+        declares no memory requirement. The second case matters as much as the
+        first and is easier to miss: an unknown requirement read as zero flows
+        into :func:`assess_model_load_contention` as the amount the model
+        needs, so the check reports the load ADMITTED on evidence nobody has.
+
+        Owned here because every caller was re-deriving the same three-part
+        guard -- selected, runtime id, candidate -- and each one that forgot the
+        fourth part (the requirement itself being optional) fail-opened in its
+        own way. A caller that cannot assess should say so rather than assess
+        against an invented number.
+        """
+        if not self.selected or self.runtime_id is None or self.candidate is None:
+            return None
+        requirement = self.candidate.memory_requirement_bytes
+        return None if requirement is None else (self.runtime_id, requirement)
+
+    @property
     def licence_advisory(self) -> str:
         """Return the localised non-commercial licence advisory, or an empty string.
 

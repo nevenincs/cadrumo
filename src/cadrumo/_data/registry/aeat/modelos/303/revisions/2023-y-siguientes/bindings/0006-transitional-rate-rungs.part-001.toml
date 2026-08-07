@@ -1,5 +1,25 @@
 # Transitional-rate rungs of the régimen-general devengado block.
 #
+# READ THIS BEFORE SPLITTING THIS REVISION. The rates these bindings pin --
+# 5 %, 7,5 % and 2 % -- are RD-ley 4/2024 transitional rates and are
+# WINDOW-BOUNDED TO 2024. 5 % runs to 30 September 2024; 7,5 % and 2 % run from
+# 1 October to 31 December 2024. From 1 January 2025 the foodstuffs list returns
+# to the ordinary 4 % and 10 % rates, and the 2025 and 2026 designs neutralise
+# the Tipo % constants on [154] and [166] to "00000" accordingly.
+#
+# So when this revision is split per AEAT design, these four bindings and the
+# casillas and formulas that hang off them belong to the revision covering 2024
+# and to NO OTHER. Copying them into a 2025- or 2026-covering revision would
+# leave rungs pinned to rates that cannot legally occur in that span -- dormant
+# at best, and a vehicle for a mis-declaration if anything later populates them.
+#
+# The split does NOT separate 5 % from 7,5 %, and must not be expected to: AEAT
+# reuses the ONE rung across the flip (Nota 8 changes the mandated constant
+# rather than opening a second rung), and the flip falls INSIDE the 2024-late
+# design at the 09/3T -> 10/4T 2024 period boundary. Only a sub-year
+# period-token partition could separate them, and even then the rung's identity
+# is "the transitional reducido rung", not either rate alone.
+#
 # The block is SIX base/Tipo%/cuota triplets, not three. AEAT fixes each rung's
 # rate itself: every Tipo % field in the diseño de registro is a `Constante`, so
 # a rung IS a rate and a row placed on the wrong rung publishes a rate the line

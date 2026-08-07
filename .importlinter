@@ -360,8 +360,8 @@ ignore_imports =
     # ── application → adapters (permitted by architecture ADR sec. 538) ──
     # application/ may import adapters/ for outbound wiring; full inversion
     # would require a major refactor and is deferred.
-    cadrumo.application.aggregation._modelo_bindings -> cadrumo.adapters.**
-    cadrumo.application.aggregation._oss_ioss -> cadrumo.adapters.**
+    cadrumo.application.aggregation._modelo_bindings -> cadrumo.adapters.persistence.**
+    cadrumo.application.aggregation._oss_ioss -> cadrumo.adapters.persistence.**
     cadrumo.application.aggregation._percepciones_observations_repository -> cadrumo.adapters.persistence.storage
     cadrumo.application.aggregation._retencion_observations_repository -> cadrumo.adapters.persistence.storage
     # _observation_window carries the shared replace-observations helper extracted from
@@ -370,21 +370,29 @@ ignore_imports =
     cadrumo.application.aggregation._observation_window -> cadrumo.adapters.persistence.storage
     cadrumo.application.aggregation._withholding_source -> cadrumo.adapters.persistence.storage
     cadrumo.application.auth._apoderado -> cadrumo.adapters.persistence.storage
-    cadrumo.application.auth._certificate_secret_backend -> cadrumo.adapters.**
-    cadrumo.application.auth._diagnostics -> cadrumo.adapters.**
-    cadrumo.application.auth._operator_probes -> cadrumo.adapters.**
-    cadrumo.application.auth._operator_scope -> cadrumo.adapters.**
-    cadrumo.application.auth._sessions -> cadrumo.adapters.**
-    cadrumo.application.bienes_inversion -> cadrumo.adapters.**
-    cadrumo.application.bucket_maintenance._manifest_digest -> cadrumo.adapters.**
-    cadrumo.application.bucket_maintenance._sandbox -> cadrumo.adapters.**
-    cadrumo.application.bucket_maintenance._service -> cadrumo.adapters.**
-    cadrumo.application.calculations._iva_compensation_annual_partition -> cadrumo.adapters.**
-    cadrumo.application.calculations._iva_compensation_history -> cadrumo.adapters.**
-    cadrumo.application.calculations._multi_year -> cadrumo.adapters.**
-    cadrumo.application.calculations._observations_repository -> cadrumo.adapters.**
-    cadrumo.application.calculations._relation_prefill -> cadrumo.adapters.**
-    cadrumo.application.diagnostics -> cadrumo.adapters.**
+    cadrumo.application.auth._certificate_secret_backend -> cadrumo.adapters.persistence.**
+    cadrumo.application.auth._diagnostics -> cadrumo.adapters.persistence.**
+    # AEAT authentication is an outbound integration and these modules are its
+    # callers, so the edges are pinned at the named outbound packages rather
+    # than a wildcard -- the sec. 538 outbound-wiring treatment.
+    cadrumo.application.auth._operator_probes -> cadrumo.adapters.outbound.aeat.auth
+    cadrumo.application.auth._operator_probes -> cadrumo.adapters.outbound.aeat.auth.certificate
+    cadrumo.application.auth._operator_probes -> cadrumo.adapters.persistence.**
+    cadrumo.application.auth._operator_scope -> cadrumo.adapters.persistence.**
+    cadrumo.application.auth._sessions -> cadrumo.adapters.outbound.aeat.auth
+    cadrumo.application.auth._sessions -> cadrumo.adapters.outbound.aeat.browser
+    cadrumo.application.auth._sessions -> cadrumo.adapters.persistence.**
+    cadrumo.application.bienes_inversion -> cadrumo.adapters.persistence.**
+    cadrumo.application.bucket_maintenance._manifest_digest -> cadrumo.adapters.persistence.**
+    cadrumo.application.bucket_maintenance._sandbox -> cadrumo.adapters.persistence.**
+    cadrumo.application.bucket_maintenance._service -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations._iva_compensation_annual_partition -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations._iva_compensation_history -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations._multi_year -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations._observations_repository -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations._relation_prefill -> cadrumo.adapters.persistence.**
+    cadrumo.application.diagnostics -> cadrumo.adapters.outbound.aeat.browser
+    cadrumo.application.diagnostics -> cadrumo.adapters.persistence.**
     cadrumo.application.diagnostics_run_health -> cadrumo.adapters.outbound.llm
     # The ledger draft path reaches the gated local-inference subpackage for a
     # scan-only document. Deferred inside the function, and pinned here for the
@@ -425,21 +433,33 @@ ignore_imports =
     # other test chain origins above rather than widened, so a NEW production
     # application -> llm edge still fails loudly.
     cadrumo.application.ledger.tests.test_evidence_corpus_parsing -> cadrumo.llm
-    cadrumo.application.evidence._service -> cadrumo.adapters.**
+    # The cloud-evidence eligibility bar is a consent gate that lives in the
+    # gated subpackage, so the test asserting when an upload is permitted has
+    # to reach it. Pinned like the test chain origins above; production
+    # application -> llm coupling stays zero and still fails loudly.
+    cadrumo.application.user_profile.tests.test_cloud_evidence_eligibility_bar -> cadrumo.llm
+    cadrumo.application.evidence._service -> cadrumo.adapters.persistence.**
     # Two ledger stores added by llm-package-split, same shape as the ledger
     # repositories pinned around them: derived financial data is STORAGE, so
     # it routes through the core's encrypted repository rather than living
     # behind the optional inference boundary.
-    cadrumo.application.ledger._extracted_document_cache -> cadrumo.adapters.**
-    cadrumo.application.ledger._extraction_draft_store -> cadrumo.adapters.**
+    cadrumo.application.ledger._extracted_document_cache -> cadrumo.adapters.persistence.**
+    cadrumo.application.ledger._extraction_draft_store -> cadrumo.adapters.persistence.**
     # The confirmation record is the third of that same family and is pinned for
     # the same reason, not as a convenience: it declares its own secure-object
-    # namespace and persists through SecureBoundRepository, so it IS a ledger
-    # store. Encrypted persistence is reached from the application layer
-    # throughout this codebase by design -- roughly 1300 such edges across 495
-    # modules -- and this one is a member of that ambient class rather than a
-    # new kind of coupling.
-    cadrumo.application.ledger._confirmation_record -> cadrumo.adapters.**
+    # namespace and subclasses SecureBoundRepository, so it IS a ledger store
+    # rather than a module reaching through to one. Inversion behind a
+    # repository protocol is therefore not available: fifteen application-layer
+    # SecureBoundRepository subclasses exist, four of them siblings in
+    # application/ledger alone, so relocating this one would make it the
+    # outlier rather than the model.
+    #
+    # Reaching encrypted persistence from the application layer is the ambient
+    # design here, not erosion: ~129 production application modules import
+    # adapters.persistence (rg -l over src/cadrumo/application, excluding tests
+    # and conftest). The count is given with its measurement because an
+    # unreproducible figure in a rationale rots into folklore.
+    cadrumo.application.ledger._confirmation_record -> cadrumo.adapters.persistence.**
     # The read-time shape probe. DocumentShape is derived from a document's
     # own bytes by an INBOUND adapter, because reading an externally-authored
     # format is inbound-adapter work; the ledger consumes the answer.
@@ -447,10 +467,10 @@ ignore_imports =
     # The batch runner asks that same probe ONE question -- is this document
     # structured, and therefore readable without loading a model -- and consumes
     # the answer. Same shape and same justification as the pin above; it is the
-    # probe's own caller, not a second reader. Pinned rather than deferred
-    # behind a function-local import: the deferral would hide the edge from this
-    # contract without changing it, and an edge the linter cannot see is the one
-    # that arrives unreviewed.
+    # probe's own caller, not a second reader. Its import is function-local, and
+    # the contract sees it anyway (grimp walks function bodies), so the pin
+    # records a reviewed decision rather than suppressing something that would
+    # otherwise have gone unnoticed.
     cadrumo.application.ledger._batch_ingest -> cadrumo.adapters.inbound.einvoice
     # Same shape, same reason: the AEAT submission BATCH is read by the inbound
     # adapter (reading an externally-authored format is inbound-adapter work),
@@ -460,23 +480,59 @@ ignore_imports =
     # obligation, so the constraint has to live where the projection does --
     # which means consuming the adapter's record type here.
     cadrumo.application.ledger._aeat_record_projection -> cadrumo.adapters.inbound.einvoice
-    cadrumo.application.filing._history_repository -> cadrumo.adapters.**
-    cadrumo.application.filing._import -> cadrumo.adapters.**
-    cadrumo.application.filing._runtime_repository -> cadrumo.adapters.**
-    cadrumo.application.inventory._service -> cadrumo.adapters.**
+    cadrumo.application.filing._history_repository -> cadrumo.adapters.persistence.**
+    cadrumo.application.filing._runtime_repository -> cadrumo.adapters.persistence.**
+    cadrumo.application.inventory._service -> cadrumo.adapters.persistence.**
+    # Reaches NO persistence: this pin sat between two repository modules and
+    # was wholly an inbound-adapter allowance. A justificante PDF is an
+    # externally-authored format, so lifting a filing out of its bytes is
+    # inbound-adapter work; this module validates and stores what the parse
+    # returned. Same class as the einvoice pins above, now stated.
+    cadrumo.application.filing._import -> cadrumo.adapters.inbound.justificante
     # Foreign-currency invoices are converted at creation time, so the invoice
     # creation path constructs the default ECB rate provider (the concrete
     # ExchangeRateProvider) — the outbound-wiring edge sec. 538 permits, pinned
     # at the narrow fx target rather than a broad adapters wildcard.
     cadrumo.application.invoices._creation -> cadrumo.adapters.outbound.fx
-    cadrumo.application.invoices._source_resolver -> cadrumo.adapters.**
-    cadrumo.application.ledger._actions_common -> cadrumo.adapters.**
-    cadrumo.application.ledger._actions_import -> cadrumo.adapters.**
-    cadrumo.application.ledger._evidence -> cadrumo.adapters.**
-    cadrumo.application.ledger._evidence_draft -> cadrumo.adapters.**
-    cadrumo.application.ledger._evidence_textlayer -> cadrumo.adapters.**
-    cadrumo.application.ledger._llm_classification -> cadrumo.adapters.**
-    cadrumo.application.ledger._llm_diagnostics -> cadrumo.adapters.**
+    cadrumo.application.invoices._source_resolver -> cadrumo.adapters.persistence.**
+    # ── application/ledger narrowed from `adapters.**` to the layer each module
+    #    actually reaches. A broad wildcard admits an INBOUND-adapter edge from
+    #    these modules without review, and that is the one class this contract
+    #    exists to surface: the three einvoice pins above were each justified by
+    #    name, while three more inbound edges sat inside these wildcards
+    #    unexamined. Narrowing is to keep the inbound class loud, not tidiness.
+    #    Each target below was read out of the module's runtime imports;
+    #    unmatched_ignore_imports_alerting = error fails a pin that overshoots. ──
+    cadrumo.application.ledger._actions_common -> cadrumo.adapters.persistence.**
+    cadrumo.application.ledger._evidence -> cadrumo.adapters.persistence.**
+    # Bank-statement rows arrive as the provider's own ParsedLedgerRow records,
+    # and this module classifies and imports them. Reading an externally-authored
+    # statement format is inbound-adapter work; the ledger consumes the answer --
+    # the same shape as the einvoice pins above. The type-only import is excluded
+    # from the graph; the runtime edge is two function-local imports that grimp
+    # sees and this pin therefore reviews.
+    cadrumo.application.ledger._actions_import -> cadrumo.adapters.persistence.**
+    cadrumo.application.ledger._actions_import -> cadrumo.adapters.inbound.financial.providers
+    # A fourth einvoice consumer, previously hidden inside a broad wildcard while
+    # its three siblings were individually reviewed. A structured e-invoice is
+    # read exactly by parse_einvoice_document and its parse failure is caught
+    # here; same justification as _evidence_input, _batch_ingest and
+    # _aeat_record_projection, now stated rather than assumed.
+    cadrumo.application.ledger._evidence_draft -> cadrumo.adapters.persistence.**
+    cadrumo.application.ledger._evidence_draft -> cadrumo.adapters.inbound.einvoice
+    # Reaches NO persistence at all: its former `adapters.**` pin was wholly an
+    # inbound-adapter allowance wearing a storage-shaped label. Lifting a PDF's
+    # text layer out of bytes is inbound-adapter work; this module decides what
+    # the extracted text means as evidence.
+    cadrumo.application.ledger._evidence_textlayer -> cadrumo.adapters.inbound.pdf
+    # Outbound wiring, the sec. 538 edge, pinned at the narrow llm target rather
+    # than a broad adapters wildcard -- the same treatment the fx rate provider
+    # above already gets. Classification records run telemetry through the
+    # outbound recorder; diagnostics folds that recorder's encrypted usage log.
+    cadrumo.application.ledger._llm_classification -> cadrumo.adapters.persistence.**
+    cadrumo.application.ledger._llm_classification -> cadrumo.adapters.outbound.llm
+    cadrumo.application.ledger._llm_diagnostics -> cadrumo.adapters.persistence.**
+    cadrumo.application.ledger._llm_diagnostics -> cadrumo.adapters.outbound.llm
     # ── arch-remediation-ports-inversion: usage_ratios persistence relocated to
     #    adapters.persistence.profile.usage_ratios; the ledger callers now import
     #    the adapter directly (narrow target keeps the source-module set flat) ──
@@ -491,51 +547,88 @@ ignore_imports =
     #    caller); application/entrypoint callers import the adapter directly ──
     cadrumo.application.calculations._cross_period_clean_state -> cadrumo.adapters.persistence.profile.justificante
     cadrumo.application.modelo._external_import_actions -> cadrumo.adapters.persistence.profile.justificante
-    cadrumo.application.ledger._review_projection -> cadrumo.adapters.**
-    cadrumo.application.ledger._rule_repository -> cadrumo.adapters.**
-    cadrumo.application.live -> cadrumo.adapters.**
-    cadrumo.application.live._borrador_100 -> cadrumo.adapters.**
-    cadrumo.application.live._errors -> cadrumo.adapters.**
-    cadrumo.application.live._expedientes -> cadrumo.adapters.**
+    cadrumo.application.ledger._review_projection -> cadrumo.adapters.persistence.**
+    cadrumo.application.ledger._rule_repository -> cadrumo.adapters.persistence.**
+    # ── application/live, registry and diagnostics narrowed from `adapters.**`
+    #    to what each module reaches. This package DRIVES the AEAT Sede and its
+    #    authentication: an outbound edge here is the package's purpose, not an
+    #    incidental reach, and is pinned at the named outbound package rather
+    #    than a wildcard -- the sec. 538 outbound-wiring treatment the fx rate
+    #    provider already gets. Three modules also consume an INBOUND parse:
+    #    a justificante PDF is an externally-authored format, so lifting a
+    #    filing out of its bytes is inbound-adapter work and this layer
+    #    consumes the answer -- the same class as the einvoice pins above,
+    #    previously admitted by the wildcard without review. ──
+    cadrumo.application.live -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live._borrador_100 -> cadrumo.adapters.persistence.**
+    cadrumo.application.live._errors -> cadrumo.adapters.outbound.aeat.auth
+    cadrumo.application.live._errors -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live._expedientes -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live._expedientes -> cadrumo.adapters.persistence.**
     cadrumo.application.live._filed_capture_finalizer -> cadrumo.adapters.outbound.aeat.sede
-    cadrumo.application.live._filed_data -> cadrumo.adapters.**
-    cadrumo.application.live._filed_data_capture -> cadrumo.adapters.**
-    cadrumo.application.live._filed_observation_persistence -> cadrumo.adapters.**
-    cadrumo.application.live._iva_remote_state -> cadrumo.adapters.**
-    cadrumo.application.live._justificante -> cadrumo.adapters.**
-    cadrumo.application.live._notifications -> cadrumo.adapters.**
-    cadrumo.application.live._session -> cadrumo.adapters.**
-    cadrumo.application.live._snapshot_base -> cadrumo.adapters.**
-    cadrumo.application.live._verify -> cadrumo.adapters.**
-    cadrumo.application.modelo._borrador_binding -> cadrumo.adapters.**
-    cadrumo.application.modelo._m036_lifecycle -> cadrumo.adapters.**
-    cadrumo.application.modelo._reconcile -> cadrumo.adapters.**
-    cadrumo.application.prorrata_register -> cadrumo.adapters.**
-    cadrumo.application.registry -> cadrumo.adapters.**
-    cadrumo.application.repair_integrity -> cadrumo.adapters.**
-    cadrumo.application.state_projection -> cadrumo.adapters.**
-    cadrumo.application.storage.calc_sheets._parity_harness -> cadrumo.adapters.**
-    cadrumo.application.user_profile._aggregate -> cadrumo.adapters.**
-    cadrumo.application.user_profile._bundle -> cadrumo.adapters.**
-    cadrumo.application.user_profile._bundle_encryption -> cadrumo.adapters.**
-    cadrumo.application.user_profile._capabilities -> cadrumo.adapters.**
-    cadrumo.application.user_profile._custody -> cadrumo.adapters.**
-    cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.**
-    cadrumo.application.user_profile._language_resolver -> cadrumo.adapters.**
+    cadrumo.application.live._filed_data -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live._filed_data_capture -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live._filed_observation_persistence -> cadrumo.adapters.inbound.justificante
+    cadrumo.application.live._filed_observation_persistence -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live._filed_observation_persistence -> cadrumo.adapters.persistence.**
+    cadrumo.application.live._iva_remote_state -> cadrumo.adapters.outbound.aeat.auth
+    cadrumo.application.live._iva_remote_state -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live._iva_remote_state -> cadrumo.adapters.persistence.**
+    cadrumo.application.live._justificante -> cadrumo.adapters.inbound.justificante
+    cadrumo.application.live._justificante -> cadrumo.adapters.persistence.**
+    cadrumo.application.live._notifications -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.live._notifications -> cadrumo.adapters.persistence.**
+    cadrumo.application.live._session -> cadrumo.adapters.outbound.aeat.auth
+    cadrumo.application.live._snapshot_base -> cadrumo.adapters.persistence.**
+    cadrumo.application.live._verify -> cadrumo.adapters.persistence.**
+    cadrumo.application.modelo._borrador_binding -> cadrumo.adapters.persistence.**
+    cadrumo.application.modelo._m036_lifecycle -> cadrumo.adapters.persistence.**
+    # Reconciliation compares a filed declaracion and its justificante against
+    # the local calculation. Both arrive as externally-authored documents an
+    # INBOUND adapter parses; this module consumes those parses and owns only
+    # the comparison. Same class as the einvoice pins, previously admitted by
+    # a broad wildcard without review.
+    cadrumo.application.modelo._reconcile -> cadrumo.adapters.inbound.declaracion
+    cadrumo.application.modelo._reconcile -> cadrumo.adapters.inbound.justificante
+    cadrumo.application.modelo._reconcile -> cadrumo.adapters.persistence.**
+    cadrumo.application.prorrata_register -> cadrumo.adapters.persistence.**
+    cadrumo.application.registry -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.repair_integrity -> cadrumo.adapters.persistence.**
+    cadrumo.application.state_projection -> cadrumo.adapters.persistence.**
+    # The Sheets parity harness drives the outbound Google client; the export
+    # mirror is one-way, so this reaches no persistence at all.
+    cadrumo.application.storage.calc_sheets._parity_harness -> cadrumo.adapters.outbound.google
+    cadrumo.application.user_profile._aggregate -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._bundle -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._bundle_encryption -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._capabilities -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._custody -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._language_resolver -> cadrumo.adapters.persistence.**
     # ── 2026-04-30-aeat-restructure-adr: the login/logout session lifecycle
     #    reaches only the master-key session primitives and the persistence
     #    storage error taxonomy; pinned narrow instead of a wildcard exception ──
     cadrumo.application.user_profile._login_session -> cadrumo.adapters.persistence.storage.errors
     cadrumo.application.user_profile._login_session -> cadrumo.adapters.persistence.storage.master_key
-    cadrumo.application.user_profile._orchestration -> cadrumo.adapters.**
-    cadrumo.application.user_profile._profile_repository -> cadrumo.adapters.**
-    cadrumo.application.user_profile._repository -> cadrumo.adapters.**
-    cadrumo.application.verification._verify -> cadrumo.adapters.**
-    cadrumo.application.workflow._adapters -> cadrumo.adapters.**
-    cadrumo.application.workflow._models -> cadrumo.adapters.**
-    cadrumo.application.workflow._persistence -> cadrumo.adapters.**
-    cadrumo.application.workflow._profile_bucket_scan -> cadrumo.adapters.**
-    cadrumo.application.workflow._profile_health -> cadrumo.adapters.**
+    cadrumo.application.user_profile._orchestration -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._profile_repository -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._repository -> cadrumo.adapters.persistence.**
+    # Reaches NO persistence: the second pin in this sweep whose storage-shaped
+    # label permitted only an inbound edge. Verification reads the taxpayer's
+    # filed declaracion through the inbound parse and checks it against the
+    # engine; the parse is inbound-adapter work and the check is this layer's.
+    cadrumo.application.verification._verify -> cadrumo.adapters.inbound.declaracion
+    cadrumo.application.workflow._adapters -> cadrumo.adapters.outbound.aeat.auth
+    cadrumo.application.workflow._adapters -> cadrumo.adapters.outbound.aeat.sede
+    # The workflow model surface reports whether a browser session can be
+    # established, so it names the outbound browser adapter alongside its
+    # persistence reach.
+    cadrumo.application.workflow._models -> cadrumo.adapters.outbound.aeat.browser
+    cadrumo.application.workflow._models -> cadrumo.adapters.persistence.**
+    cadrumo.application.workflow._persistence -> cadrumo.adapters.persistence.**
+    cadrumo.application.workflow._profile_bucket_scan -> cadrumo.adapters.persistence.**
+    cadrumo.application.workflow._profile_health -> cadrumo.adapters.persistence.**
     # The shared secure-SQL test helper wraps the real persistence adapter for
     # roundtrip-discipline tests; ignoring its adapter edge breaks the layer
     # path for every application/domain test that routes fixtures through it.

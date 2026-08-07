@@ -15,3 +15,4 @@ Submodules
 
    cadrumo.application.transactions._diagnostics
    cadrumo.application.transactions._import
+   cadrumo.application.transactions._import_classification

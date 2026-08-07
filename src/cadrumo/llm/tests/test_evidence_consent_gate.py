@@ -30,7 +30,8 @@ from queue import Queue
 from typing import override
 
 import pytest
-from pydantic import SecretStr
+from pydantic import BaseModel, SecretStr
+from pydantic_core import PydanticSerializationError
 
 from ...adapters.outbound.llm import LLMCache, UsageRecorder
 from ...core.config import LLMProvider, override_settings
@@ -42,6 +43,7 @@ from .. import (
     LLMRequest,
     TextInvoiceFieldExtractor,
     cloud_evidence_read_permitted,
+    extract_invoice_fields_from_text,
     mint_evidence_consent_token,
 )
 from .._client import LLMClient as _ClientUnderInspection
@@ -109,7 +111,10 @@ def _serve_openai() -> Iterator[tuple[str, Queue[str]]]:
             payload = {
                 "id": "chatcmpl-loopback",
                 "model": "gpt-4.1",
-                "choices": [{"message": {"content": "off-host completion"}}],
+                # A parsable empty extraction object, so a case that runs the full
+                # reader does not fail on the stub's reply shape instead of on the
+                # boundary it is testing.
+                "choices": [{"message": {"content": "{}"}}],
                 "usage": {"prompt_tokens": 11, "completion_tokens": 3},
             }
             encoded = json.dumps(payload).encode("utf-8")
@@ -220,6 +225,35 @@ def test_the_unpinned_text_reader_cannot_reach_around_the_gate(tmp_path: Path) -
     assert bodies.qsize() == 0
 
 
+def test_the_router_wrapper_pins_local_by_expression_not_by_omission() -> None:
+    """The wrapper the evidence router calls STATES its pin.
+
+    ``extract_invoice_fields_from_text`` takes no provider argument, so today it
+    is pinned on-host by construction -- which is the right answer reached the
+    weakest possible way. Widening this signature with a pass-through
+    ``provider`` would open the off-host route for every router call with no
+    diff line that looks like a confidentiality change.
+
+    Asserted over the AST rather than by calling it: the property is that the
+    pin is WRITTEN, and a behavioural test passes identically whether the value
+    was stated or inherited from a default, which is precisely the distinction
+    this case exists to make.
+    """
+    tree = ast.parse(textwrap.dedent(inspect.getsource(extract_invoice_fields_from_text)))
+    pinned = [
+        keyword
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        for keyword in node.keywords
+        if keyword.arg == "provider"
+    ]
+    assert pinned, (
+        "the router wrapper no longer states its provider pin. Restore it, or -- if the pin was "
+        "deliberately widened -- confirm the dispatch-point consent gate still refuses the off-host "
+        "route, because that refusal and not this pin is what keeps the document on the host."
+    )
+
+
 # ── The positive controls ────────────────────────────────────────────────────
 
 
@@ -235,7 +269,7 @@ def test_the_consented_route_reaches_the_provider(tmp_path: Path) -> None:
     with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
         response = asyncio.run(_client(settings).complete(_evidence_request(token=_CONSENTED)))
 
-    assert response.text == "off-host completion"
+    assert response.text == "{}"
     assert bodies.qsize() == 1
 
 
@@ -251,7 +285,31 @@ def test_an_unmarked_request_is_not_gated(tmp_path: Path) -> None:
     with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
         response = asyncio.run(_client(settings).complete(request))
 
-    assert response.text == "off-host completion"
+    assert response.text == "{}"
+    assert bodies.qsize() == 1
+
+
+def test_the_public_corpus_escape_reaches_the_provider_through_the_reader(tmp_path: Path) -> None:
+    """POSITIVE CONTROL for the reach-around case, through the same class.
+
+    Its sibling refusal builds a ``TextInvoiceFieldExtractor`` at a cloud
+    provider -- which is exactly what widening the router wrapper with a
+    pass-through ``provider`` would produce -- and asserts nothing reaches the
+    endpoint. This case differs from it in ONE variable, the evidence marker,
+    and reaches the endpoint. Without it, that refusal is equally satisfied by a
+    reader that can no longer dispatch at all.
+    """
+    settings = _settings(tmp_path)
+    with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+        extractor = TextInvoiceFieldExtractor(
+            provider=LLMProvider.OPENAI,
+            model="gpt-4.1",
+            settings=settings,
+            client=_client(settings),
+            public_corpus=True,
+        )
+        extractor.extract(evidence_text="Factura 2026-001\nBase imponible 100,00 EUR")
+
     assert bodies.qsize() == 1
 
 
@@ -270,13 +328,14 @@ def test_a_local_evidence_read_needs_no_consent() -> None:
 
 
 @pytest.mark.parametrize(
-    ("permitted", "gestor", "acknowledged"),
+    ("permitted", "gestor", "profile_eligible", "acknowledged"),
     [
-        (False, False, False),
-        (False, False, True),
-        (True, False, False),
-        (True, True, True),
-        (False, True, True),
+        (permitted, gestor, eligible, acknowledged)
+        for permitted in (False, True)
+        for gestor in (False, True)
+        for eligible in (False, True)
+        for acknowledged in (False, True)
+        if not (permitted and not gestor and eligible and acknowledged)
     ],
 )
 def test_a_token_cannot_be_minted_unless_every_condition_holds(
@@ -284,18 +343,30 @@ def test_a_token_cannot_be_minted_unless_every_condition_holds(
     *,
     permitted: bool,
     gestor: bool,
+    profile_eligible: bool,
     acknowledged: bool,
 ) -> None:
-    """Every combination short of all-three refuses to mint.
+    """Every combination short of all-four refuses to mint.
 
-    Enumerated rather than sampled, so a future reordering of the gate's
-    conditions cannot leave one of them unexercised.
+    Enumerated exhaustively rather than sampled, so a future reordering of the
+    gate's conditions cannot leave one of them unexercised. The one permitting
+    combination is excluded by the comprehension's filter and asserted
+    positively in the next test, so the two together partition all sixteen
+    states -- no state is untested and none is tested for both outcomes.
+
+    The standing PER-PROFILE eligibility bar is the fourth condition: deployment
+    opt-in and profile eligibility are separate questions, because one machine
+    can serve several taxpayers and one of them permitting an off-host read must
+    not decide it for the others.
     """
     settings = _settings(tmp_path, cloud_upload_permitted=permitted, gestor_mode=gestor)
-    assert cloud_evidence_read_permitted(settings, acknowledged=acknowledged) is False
+    assert (
+        cloud_evidence_read_permitted(settings, profile_eligible=profile_eligible, acknowledged=acknowledged) is False
+    )
     with pytest.raises(LLMConsentError):
         mint_evidence_consent_token(
             settings=settings,
+            profile_eligible=profile_eligible,
             acknowledged=acknowledged,
             surface="aeat app ledger evidence extract",
             evidence_content_address="b" * 64,
@@ -303,11 +374,12 @@ def test_a_token_cannot_be_minted_unless_every_condition_holds(
 
 
 def test_the_only_permitting_combination_mints(tmp_path: Path) -> None:
-    """POSITIVE CONTROL for the minting side: all three conditions mint a token."""
+    """POSITIVE CONTROL for the minting side: all four conditions mint a token."""
     settings = _settings(tmp_path, cloud_upload_permitted=True)
-    assert cloud_evidence_read_permitted(settings, acknowledged=True) is True
+    assert cloud_evidence_read_permitted(settings, profile_eligible=True, acknowledged=True) is True
     token = mint_evidence_consent_token(
         settings=settings,
+        profile_eligible=True,
         acknowledged=True,
         surface="aeat app ledger evidence extract",
         evidence_content_address="c" * 64,
@@ -323,6 +395,30 @@ def test_the_token_refuses_every_serialization_path() -> None:
     for dump in (_CONSENTED.model_dump, _CONSENTED.model_dump_json):
         with pytest.raises(LLMConsentError):
             dump()
+
+
+def test_a_container_that_forgets_to_exclude_the_token_still_cannot_dump_it() -> None:
+    """The REGISTERED serializer, exercised where it is the only thing refusing.
+
+    :class:`LLMRequest` marks ``consent_token`` ``exclude=True``, so a request
+    dump omits the token without the serializer being consulted at all -- which
+    means the request path proves nothing about the serializer, and a proof
+    built there would pass for the wrong reason. Defence-in-depth reads exactly
+    like vacuity from the outside.
+
+    The container below is the case the exclude does NOT cover: a future model
+    that holds a token and forgets the exclude. That is where the registered
+    serializer is the only refusal left, so that is where it is worth asserting.
+    """
+
+    class _ForgetfulContainer(BaseModel):
+        token: EvidenceConsentToken
+
+    holder = _ForgetfulContainer(token=_CONSENTED)
+    with pytest.raises((LLMConsentError, PydanticSerializationError)):
+        holder.model_dump()
+    with pytest.raises((LLMConsentError, PydanticSerializationError)):
+        holder.model_dump_json()
 
 
 def test_a_request_dump_carries_no_token() -> None:

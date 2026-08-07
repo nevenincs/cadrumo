@@ -20,7 +20,7 @@ from ...core.external_constants import (
     DEFAULT_CURRENCY,
 )
 from ...core.identity import BucketId, TransactionId
-from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction
+from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
 from ...domain.iva import (
     EUMemberState,
     InputClassification,
@@ -155,10 +155,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     @field_validator("currency", mode="before")
     @classmethod
     def _normalise_currency(cls, value: object) -> str:
-        normalised = str(value).strip().upper()
-        if len(normalised) != 3 or not normalised.isalpha():
-            raise ValueError("currency must be a three-letter ISO 4217 code")
-        return normalised
+        return normalise_iso_4217_currency(value)
 
     @field_validator("attachment_ids")
     @classmethod

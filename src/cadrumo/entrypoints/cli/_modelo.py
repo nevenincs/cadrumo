@@ -14,7 +14,6 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Annotated
 
-import click
 import typer
 
 from ...application.modelo import (
@@ -51,7 +50,7 @@ from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
 from ...core.external_constants import OutputLanguage
-from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId, RegistryValidationError, validated_casilla_id
 from ...domain.modelos import CalculationRevision, CalculationRevisionAmendmentKind, WorkUnit
@@ -155,8 +154,6 @@ from ._modelo_work_verification_cli import register_work_verification_commands
 from ._modelo_work_wizard_cli import register_work_wizard_commands
 
 _log = get_logger(__name__)
-
-_OUTPUT_LANGUAGE_CLI = click.Choice(SUPPORTED_OUTPUT_LANGUAGES)
 
 
 app = typer.Typer(

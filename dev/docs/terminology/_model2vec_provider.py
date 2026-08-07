@@ -59,7 +59,7 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
 
     Construction is intentionally explicit and fail-closed.  The model path
     must already exist as a directory, and the metadata must name the exact
-    model revision/licence/dimension selected by the ADR.  The provider package
+    model revision/licence/dimension pinned for this deployment.  The provider package
     version is checked against the installed environment.  Every provider,
     model, and tokenizer role must have explicit local manifest evidence before
     the provider package is imported.

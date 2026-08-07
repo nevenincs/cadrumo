@@ -25,6 +25,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....domain.iva import InvoiceKind, IvaCategory
 from .. import Invoice, InvoiceLine, IvaRate, PaymentStatus, decompose_invoice
 
@@ -180,7 +181,12 @@ def test_recargo_and_retencion_sit_on_opposite_sides_of_the_identity() -> None:
 
 def test_the_recargo_converts_to_euro_with_the_rest_of_the_invoice() -> None:
     """A foreign-currency recargo is converted, not passed through as face value."""
-    invoice = _invoice(currency="USD", fx_rate=Decimal("0.90"), fx_rate_date=date(2026, 3, 15))
+    invoice = _invoice(
+        currency="USD",
+        fx_rate=Decimal("0.90"),
+        fx_rate_date=date(2026, 3, 15),
+        fx_rate_source=ECB_RATE_SOURCE_ID,
+    )
 
     assert invoice.recargo_amount_eur == Decimal("46.80")
 

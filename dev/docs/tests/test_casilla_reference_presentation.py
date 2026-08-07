@@ -1,22 +1,22 @@
 """Presentation contracts for the generated casilla reference pages.
 
-The pages are where a search result lands, so they carry two obligations the
-anchor-parity gate does not cover:
+The pages are where a search result lands, and there is no per-casilla prose to
+land on, so they carry two obligations the anchor-parity gate does not cover:
 
-- **One language per page.** The projection carries every supported language's
-  label and help; a page built under one ``CADRUMO_DOCS_LANGUAGE`` must render
-  ONLY that language, falling back to the Spanish invariant marked ``lang="es"``
-  where a locale authored nothing. Rendering all four at once made every entry a
-  four-language dump.
-- **Meaning outranks machine vocabulary.** The registry's own identifiers
-  (casilla id, semantic role, binding/formula ids, source refs, revisions) stay
-  on the page for an operator but are demoted into the collapsed disclosure, and
-  every legal ref renders as a named link into the generated legal reference
-  rather than a raw catalogue token.
+- **One language, never a substitute.** A page built under one
+  ``CADRUMO_DOCS_LANGUAGE`` renders ONLY that language's schema localizations. A
+  string the build language does not author is OMITTED, never filled from
+  Spanish or from another locale - a substituted string reads as though the
+  reader's language were covered when it is not.
+- **The substance is compiled from the schema.** What a filer needs is how the
+  box gets filled: entered, calculated from named other boxes, or filled from a
+  named source. Those come from ``input_kind``, the ``formula`` expression and
+  the ``binding`` source taxonomy, and must reach the page - with the registry's
+  own identifiers demoted, and legal refs linked rather than printed raw.
 
-Records are constructed here rather than projected so each contract is driven by
-values this module supplies: the assertions then read the renderer's behaviour,
-never a locale catalogue's current contents.
+Records and compiled facts are constructed here rather than projected, so each
+contract is driven by values this module supplies: the assertions then read the
+renderer's behaviour, never a catalogue's current contents.
 """
 
 from __future__ import annotations
@@ -26,11 +26,21 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import Modelo
+from cadrumo.core import BindingSourceKind, Modelo
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry import InputKind
+from cadrumo.domain.calculations.registry import CasillaConstraints, InputKind
 
-from ..casilla_reference import _display_language, _legal_provision_display, render_casilla_reference
+from ..casilla_reference import (
+    _BINDING_SOURCE_DISPLAY,
+    EMPTY_SCHEMA,
+    CasillaFacts,
+    CompiledSchema,
+    ModeloOverview,
+    _display_language,
+    _handbook_definitions,
+    _legal_provision_display,
+    render_casilla_reference,
+)
 from ..legal_reference import legal_reference_target, load_legal_provisions
 from ..terminology._casilla_anchor import casilla_page_anchor
 from ..terminology._search_record import CasillaSearchRecord
@@ -59,29 +69,45 @@ def _record(**overrides: object) -> CasillaSearchRecord:
     """One fully populated casilla record with every language authored."""
     fields: dict[str, object] = {
         "descriptions": dict(_LABELS),
-        "modelo": Modelo.M390,
-        "casilla_id": "iva.anual.soportado.interiores",
+        "modelo": Modelo.M130,
+        "casilla_id": "03",
         "localized_help": dict(_HELP),
         "data_type": "money",
-        "input_kind": InputKind.BOUND,
+        "input_kind": InputKind.COMPUTED,
         "required": True,
-        "binding": "modelo-390-iva-soportado-interiores",
-        "number": "0630",
-        "segmento": "T1",
-        "section": ("iva", "anual", "deducible"),
-        "semantic_role": "iva_cuota_soportada_interiores",
+        "formula_id": "modelo-130-rendimiento-neto",
+        "number": "03",
+        "section": ("actividades_economicas",),
+        "semantic_role": "irpf_rendimiento_neto",
         "legal_refs": ("ley-37-1992:art-92",),
-        "source_refs": ("aeat-dr-390-2025",),
-        "source_revisions": ("2010-y-siguientes",),
+        "source_refs": ("aeat-dr-130-2025",),
+        "source_revisions": ("2025",),
     }
     fields.update(overrides)
     return CasillaSearchRecord(**fields)  # type: ignore[arg-type]
 
 
-def _render(records: tuple[CasillaSearchRecord, ...], language: OutputLanguage) -> str:
-    result = render_casilla_reference(_REPO_ROOT, records=records, language=language)
+def _schema(
+    facts: dict[tuple[str, str], CasillaFacts] | None = None,
+    overview: ModeloOverview | None = None,
+) -> CompiledSchema:
+    return CompiledSchema(
+        casillas=facts or {},
+        modelos={Modelo.M130.value: overview} if overview is not None else {},
+    )
+
+
+def _render(
+    records: tuple[CasillaSearchRecord, ...],
+    language: OutputLanguage,
+    schema: CompiledSchema = EMPTY_SCHEMA,
+) -> str:
+    result = render_casilla_reference(_REPO_ROOT, records=records, language=language, schema=schema)
     assert len(result.pages) == 1
     return result.pages[0].rst
+
+
+# ── One language, never a substitute ─────────────────────────────────────────
 
 
 @pytest.mark.parametrize("language", list(OutputLanguage))
@@ -98,22 +124,27 @@ def test_page_renders_only_the_build_language(language: OutputLanguage) -> None:
 
 
 @pytest.mark.parametrize("language", [OutputLanguage.EN, OutputLanguage.CA, OutputLanguage.HU])
-def test_absent_locale_falls_back_to_spanish_and_declares_it(language: OutputLanguage) -> None:
-    """A language with no authored string shows Spanish, marked ``lang="es"``."""
+def test_absent_locale_omits_the_string_rather_than_substituting(language: OutputLanguage) -> None:
+    """A language with no authored string gets none - Spanish is not a fallback."""
     spanish_only = _record(
         descriptions={OutputLanguage.ES: _LABELS[OutputLanguage.ES]},
         localized_help={OutputLanguage.ES.value: _HELP[OutputLanguage.ES.value]},
     )
     rst = _render((spanish_only,), language)
-    assert f'casilla-card__title" lang="es">{_LABELS[OutputLanguage.ES]}' in rst
-    assert f'casilla-card__help" lang="es">{_HELP[OutputLanguage.ES.value]}' in rst
+    assert _LABELS[OutputLanguage.ES] not in rst
+    assert _HELP[OutputLanguage.ES.value] not in rst
+    assert "casilla-card__title" not in rst
+    assert "casilla-card__help" not in rst
+    # The entry still exists and is still addressable, just unlabelled.
+    assert f'id="{casilla_page_anchor(spanish_only.modelo, spanish_only.casilla_id)}"' in rst
 
 
-def test_authored_locale_is_never_marked_as_a_fallback() -> None:
-    """A language that DID author the string carries no ``lang`` override."""
-    rst = _render((_record(),), OutputLanguage.CA)
-    assert f'casilla-card__title">{_LABELS[OutputLanguage.CA]}' in rst
-    assert 'lang="es"' not in rst
+def test_unlabelled_entry_keeps_its_number_and_its_grounding() -> None:
+    """An entry with no label in this language is not dropped from the page."""
+    spanish_only = _record(descriptions={OutputLanguage.ES: _LABELS[OutputLanguage.ES]}, localized_help={})
+    rst = _render((spanish_only,), OutputLanguage.HU)
+    assert '<span class="casilla-card__number">03</span>' in rst
+    assert "Ley 37/1992, art. 92" in rst
 
 
 def test_default_language_is_the_shared_build_signal() -> None:
@@ -125,10 +156,169 @@ def test_default_language_is_the_shared_build_signal() -> None:
     assert _display_language() == docs_build_language(os.environ)
 
 
+def test_handbook_definitions_are_read_per_language_and_never_shared() -> None:
+    """Each language reads its own curated definitions, with no cross-fill.
+
+    Structural only: a modelo present in two languages must not carry the same
+    string in both (that would be one language's prose serving another), and the
+    per-language maps are independently derived rather than one copied map.
+    """
+    per_language = {language: _handbook_definitions(language) for language in OutputLanguage}
+    spanish = per_language[OutputLanguage.ES]
+    assert spanish, "no approved modelo concept authored a Spanish definition"
+    for language, definitions in per_language.items():
+        if language is OutputLanguage.ES:
+            continue
+        shared = {key for key in definitions if definitions[key] == spanish.get(key)}
+        assert not shared, f"{language.value} reuses the Spanish definition for {sorted(shared)}"
+
+
+# ── The substance: how the box gets filled ───────────────────────────────────
+
+
+def test_binding_source_display_covers_the_whole_taxonomy() -> None:
+    """Every binding source kind has a phrase, so none renders blank.
+
+    Keyed on the enum rather than a count, so adding a kind reds this gate
+    instead of silently shipping a casilla whose fill explanation says nothing.
+    """
+    assert set(_BINDING_SOURCE_DISPLAY) == {member.value for member in BindingSourceKind}
+
+
+def test_computed_casilla_names_the_boxes_it_derives_from() -> None:
+    """A derivation renders as linked box numbers, never as the formula id."""
+    target = _record()
+    inputs = (
+        _record(casilla_id="01", number="01", input_kind=InputKind.MANUAL, formula_id=None),
+        _record(casilla_id="02", number="02", input_kind=InputKind.MANUAL, formula_id=None),
+    )
+    schema = _schema({(Modelo.M130.value, "03"): CasillaFacts(formula_inputs=("01", "02"))})
+    rst = _render((*inputs, target), OutputLanguage.EN, schema)
+
+    assert "casilla-fill--computed" in rst
+    for casilla_id in ("01", "02"):
+        anchor = casilla_page_anchor(Modelo.M130, casilla_id)
+        assert f'href="#{anchor}" title="{casilla_id}">{casilla_id}</a>' in rst
+    assert " and " in rst.partition("casilla-derives-from")[2]
+    assert "modelo-130-rendimiento-neto" not in rst.partition("casilla-card__internals")[0]
+
+
+def test_bound_casilla_names_the_source_that_fills_it() -> None:
+    """A bound casilla answers "filled from what", not merely "bound"."""
+    record = _record(input_kind=InputKind.BOUND, formula_id=None, binding="modelo-130-ingresos")
+    facts = CasillaFacts(binding_sources=(BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION.value,))
+    rst = _render((record,), OutputLanguage.EN, _schema({(Modelo.M130.value, "03"): facts}))
+
+    assert "casilla-fill--bound" in rst
+    assert _BINDING_SOURCE_DISPLAY[BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION.value] in rst
+
+
+def test_alternate_binding_sources_are_offered_as_alternatives() -> None:
+    """Alternate bindings read as another way the same box may be filled."""
+    record = _record(input_kind=InputKind.BOUND, formula_id=None, binding="modelo-130-ingresos")
+    facts = CasillaFacts(
+        binding_sources=(
+            BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION.value,
+            BindingSourceKind.PREVIOUS_FILING.value,
+        ),
+    )
+    rst = _render((record,), OutputLanguage.EN, _schema({(Modelo.M130.value, "03"): facts}))
+    assert _BINDING_SOURCE_DISPLAY[BindingSourceKind.PREVIOUS_FILING.value] in rst
+    assert ", or " in rst
+
+
+@pytest.mark.parametrize(
+    ("input_kind", "marker"),
+    [
+        (InputKind.MANUAL, "casilla-fill--manual"),
+        (InputKind.INFORMATIONAL, "casilla-fill--informational"),
+    ],
+)
+def test_every_casilla_states_how_it_is_filled(input_kind: InputKind, marker: str) -> None:
+    """The fill explanation is unconditional; no casilla is silent about it."""
+    rst = _render((_record(input_kind=input_kind, formula_id=None),), OutputLanguage.EN)
+    assert marker in rst
+
+
+def test_constraints_render_as_what_a_filer_may_enter() -> None:
+    """Authored value constraints become a readable range, not a schema dump."""
+    constraints = CasillaConstraints(
+        sign="non_negative",
+        min_value=0,
+        max_value=100,
+        legal_refs=("ley-37-1992:art-92",),
+        source_refs=("aeat-dr-130-2025",),
+    )
+    facts = CasillaFacts(constraints=constraints)
+    rst = _render((_record(),), OutputLanguage.EN, _schema({(Modelo.M130.value, "03"): facts}))
+    assert "Between 0 and 100" in rst
+
+
+def test_printed_box_number_wins_over_the_record_design_number() -> None:
+    """The badge shows the box a reader sees; the record-design value is demoted."""
+    record = _record(casilla_id="iva.anual.total", number="iva.anual.total")
+    facts = CasillaFacts(form_number="64")
+    rst = _render((record,), OutputLanguage.EN, _schema({(Modelo.M130.value, "iva.anual.total"): facts}))
+
+    above, _, below = rst.partition('<details class="casilla-card__internals">')
+    assert '<span class="casilla-card__number">64</span>' in above
+    assert "Record-design number" in below
+    assert "iva.anual.total" not in above
+
+
+# ── Modelo identity ──────────────────────────────────────────────────────────
+
+
+def _overview(**overrides: object) -> ModeloOverview:
+    fields: dict[str, object] = {
+        "title": "IRPF pago fraccionado",
+        "official_name": "Modelo 130. Pago fraccionado.",
+        "definition": None,
+        "tax_domain": "irpf",
+        "cadence": "quarterly",
+        "legal_refs": ("ley-37-1992:art-92",),
+    }
+    fields.update(overrides)
+    return ModeloOverview(**fields)  # type: ignore[arg-type]
+
+
+def test_modelo_page_leads_with_the_curated_definition_when_one_exists() -> None:
+    """An approved Handbook definition is the modelo's opening statement."""
+    definition = "Curated statement of what this modelo is."
+    rst = _render((_record(),), OutputLanguage.EN, _schema(overview=_overview(definition=definition)))
+    assert f'<p class="modelo-overview__definition">{definition}</p>' in rst
+    assert "Modelo 130. Pago fraccionado." in rst
+
+
+def test_modelo_page_without_a_definition_still_characterises_the_modelo() -> None:
+    """No curated prose means compiled facts, never a fabricated description."""
+    rst = _render((_record(),), OutputLanguage.EN, _schema(overview=_overview()))
+    assert "modelo-overview__definition" not in rst
+    assert "IRPF" in rst
+    assert "Filed quarterly" in rst
+    assert "1 casillas in 1 sections" in rst
+    assert "1 calculated" in rst
+
+
+def test_modelo_page_survives_an_unresolved_overview() -> None:
+    """A modelo the schema could not compile still renders its casillas."""
+    rst = _render((_record(),), OutputLanguage.EN)
+    assert "Modelo 130" in rst
+    assert "modelo-overview__name" not in rst
+    assert '<span class="casilla-card__number">03</span>' in rst
+
+
+# ── Legal grounding ──────────────────────────────────────────────────────────
+
+
 def test_legal_refs_link_into_the_generated_legal_reference() -> None:
     """Each ref renders as a named link resolving to the legal generator's target."""
-    record = _record()
-    result = render_casilla_reference(_REPO_ROOT, records=(record,), language=OutputLanguage.EN)
+    result = render_casilla_reference(
+        _REPO_ROOT,
+        records=(_record(),),
+        language=OutputLanguage.EN,
+        schema=EMPTY_SCHEMA,
+    )
     rst = result.pages[0].rst
 
     provisions = {provision.legal_id: provision for provision in load_legal_provisions(_REPO_ROOT)}
@@ -152,7 +342,12 @@ def test_legal_refs_link_into_the_generated_legal_reference() -> None:
 def test_unresolvable_ref_still_renders_and_is_not_counted_as_a_link() -> None:
     """D6: grounding is never dropped, but an unlinkable ref is not a link."""
     record = _record(legal_refs=("ley-37-1992:art-92", "no-such-norm-1-2000:art-1"))
-    result = render_casilla_reference(_REPO_ROOT, records=(record,), language=OutputLanguage.EN)
+    result = render_casilla_reference(
+        _REPO_ROOT,
+        records=(record,),
+        language=OutputLanguage.EN,
+        schema=EMPTY_SCHEMA,
+    )
     rst = result.pages[0].rst
     anchor = casilla_page_anchor(record.modelo, record.casilla_id)
 
@@ -176,41 +371,27 @@ def test_provision_display_reads_the_official_instrument_name(legal_id: str, exp
     assert _legal_provision_display(legal_id, provisions[legal_id]) == expected
 
 
+# ── Structure ────────────────────────────────────────────────────────────────
+
+
 def test_machine_identifiers_are_confined_to_the_disclosure() -> None:
     """Registry vocabulary stays on the page, below the fold of a ``<details>``."""
-    record = _record(formula_id="modelo-390-total-cuota-devengada")
+    record = _record(binding=None)
     rst = _render((record,), OutputLanguage.EN)
     disclosure = rst.partition('<details class="casilla-card__internals">')
     assert disclosure[1], "the registry-identifier disclosure is missing"
     above, below = disclosure[0], disclosure[2]
 
-    for identifier in (
-        str(record.casilla_id),
-        str(record.semantic_role),
-        str(record.binding),
-        str(record.formula_id),
-        record.source_refs[0],
-        record.source_revisions[0],
-    ):
+    for identifier in (str(record.semantic_role), str(record.formula_id), record.source_refs[0]):
         assert identifier in below
         assert identifier not in above
-
-
-def test_card_leads_with_the_number_and_the_filing_facts() -> None:
-    """The head is the official number and label; the chips are filer-facing."""
-    rst = _render((_record(),), OutputLanguage.EN)
-    head = rst.partition('<details class="casilla-card__internals">')[0]
-    assert '<span class="casilla-card__number">0630</span>' in head
-    assert "casilla-fact--bound" in head
-    assert "casilla-fact--required" in head
-    assert "Segmento T1" in head
 
 
 def test_sections_carry_jump_targets_matching_the_page_nav() -> None:
     """Every section in the jump list resolves to an anchor emitted on the page."""
     records = (
         _record(),
-        _record(casilla_id="decl.ejercicio", number="ejercicio", section=("declarante",)),
+        _record(casilla_id="09", number="09", section=("resultado_final",)),
     )
     rst = _render(records, OutputLanguage.EN)
     linked = set(re.findall(r'href="#(section-[a-z0-9-]+)"', rst))
@@ -223,13 +404,13 @@ def test_colliding_section_anchors_are_a_build_failure() -> None:
     """Two section paths folding to one jump target are refused, never merged."""
     from ..casilla_reference import CasillaReferenceError, _section_anchor
 
-    underscored = ("iva", "anual_deducible")
-    hyphenated = ("iva", "anual-deducible")
+    underscored = ("irpf", "resultado_final")
+    hyphenated = ("irpf", "resultado-final")
     assert _section_anchor(underscored) == _section_anchor(hyphenated)
 
     records = (
         _record(section=underscored),
-        _record(casilla_id="decl.ejercicio", number="ejercicio", section=hyphenated),
+        _record(casilla_id="09", number="09", section=hyphenated),
     )
     with pytest.raises(CasillaReferenceError):
         _render(records, OutputLanguage.EN)

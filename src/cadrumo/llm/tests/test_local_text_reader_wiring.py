@@ -119,9 +119,14 @@ def test_the_text_model_default_sits_under_the_declared_hardware_floor() -> None
         candidate = model_candidate(configured)
         assert candidate is not None, f"the {role.value} default {configured!r} is not catalogued"
         assert candidate.serves(role)
-        assert candidate.memory_requirement_bytes < floor, (
-            f"the {role.value} default {configured!r} declares "
-            f"{candidate.memory_requirement_bytes} bytes against a floor of {floor}"
+        # The requirement is optional on the catalogue entry, and an undeclared
+        # one has already fail-opened twice elsewhere -- read as zero, it makes
+        # a contention check report admitted on evidence nobody has. A shipped
+        # default must declare it, so that is asserted here rather than assumed.
+        requirement = candidate.memory_requirement_bytes
+        assert requirement is not None, f"the {role.value} default {configured!r} declares no memory requirement"
+        assert requirement < floor, (
+            f"the {role.value} default {configured!r} declares {requirement} bytes against a floor of {floor}"
         )
 
     # The text roles must stay hostable on a machine provisioned for the vision
@@ -130,5 +135,11 @@ def test_the_text_model_default_sits_under_the_declared_hardware_floor() -> None
     text = model_candidate(settings.cadrumo_llm_ollama_text_model)
     mapping = model_candidate(settings.cadrumo_llm_ollama_mapping_model)
     assert vision is not None and text is not None and mapping is not None
-    assert text.memory_requirement_bytes <= vision.memory_requirement_bytes
-    assert mapping.memory_requirement_bytes <= text.memory_requirement_bytes
+    vision_bytes, text_bytes, mapping_bytes = (
+        vision.memory_requirement_bytes,
+        text.memory_requirement_bytes,
+        mapping.memory_requirement_bytes,
+    )
+    assert vision_bytes is not None and text_bytes is not None and mapping_bytes is not None
+    assert text_bytes <= vision_bytes
+    assert mapping_bytes <= text_bytes

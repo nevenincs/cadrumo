@@ -1,6 +1,6 @@
 """Focused unit tests for the profile-key normaliser.
 
-`_normalise_key` is the SOLE canonical-form rule for profile-key
+`normalise_key` is the SOLE canonical-form rule for profile-key
 lookups. The docstring of `_normalise.py` is explicit: callers
 import this function (or `ProfileKey.normalise`, which forwards
 here) and never re-implement the rule. Every profile-key lookup

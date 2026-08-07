@@ -11,14 +11,12 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-import click
 import typer
 
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.external_constants import OutputLanguage as _OutputLanguage
-from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.json_contract import Notice as _Notice
 from ....core.json_contract import NoticeSeverity as _NoticeSeverity
@@ -83,8 +81,6 @@ repair_app = typer.Typer(
     no_args_is_help=False,
     invoke_without_command=True,
 )
-
-_OUTPUT_LANGUAGE_CLI = click.Choice(_SUPPORTED_OUTPUT_LANGUAGES)
 
 
 @app.callback()

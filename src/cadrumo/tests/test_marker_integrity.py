@@ -1290,31 +1290,88 @@ def test_production_scan_corpus_reaches_the_shipped_package() -> None:
     assert {"adapters", "application", "core", "domain", "entrypoints"} <= relative_parts
 
 
-def test_production_scan_detects_a_dated_stem_citation_in_production_source() -> None:
+@pytest.mark.parametrize(
+    ("citation", "expected_fragment"),
+    [
+        (
+            "Governed by 2026-05-27-schema-hardening-casilla-continuity-contract-adr.",
+            "continuity-contract-adr",
+        ),
+        ("Governed by .vault/adr/2026-05-27-schema-hardening-adr.md.", ".vault/adr/"),
+        ("Rationale recorded under .vault/research/x.md.", ".vault/research/"),
+    ],
+)
+def test_production_scan_detects_a_document_citation_in_production_source(
+    citation: str,
+    expected_fragment: str,
+) -> None:
     """The widened scope detects in production what it previously could not see.
 
-    Run through the real scanner against a module docstring of exactly the
-    shape that shipped in production source before this scope existed. The
-    same source scanned with an empty pattern selection is the negative
+    Each case is a module docstring of exactly the shape that shipped in
+    production source before this scope existed, run through the real scanner
+    against a synthetic in-memory source rather than a planted file — a file
+    written under ``src`` is capturable by a landing sweep even when it is new,
+    and a probe that ships is worse than one that proves nothing.
+
+    The same source scanned with an empty pattern selection is the negative
     control: the detection is the scope's doing, not the walker's.
     """
     probe_path = _SRC_CADRUMO / "domain" / "_scope_probe.py"
-    source = (
-        '"""Ledger binding contract.\n'
-        "\n"
-        "Governed by 2026-05-27-schema-hardening-casilla-continuity-contract-adr.\n"
-        '"""\n'
-        "\n"
-        "VALUE = 1\n"
-    )
+    source = f'"""Ledger binding contract.\n\n{citation}\n"""\n\nVALUE = 1\n'
     ranges = _docstring_ranges_for_tree(ast.parse(source))
 
     detected = _campaign_metadata_violations_for_ranges(probe_path, source, ranges, _PRODUCTION_SCOPED_PATTERNS)
     undetected = _campaign_metadata_violations_for_ranges(probe_path, source, ranges, ())
 
     assert len(detected) == 1, f"the production-scoped scan missed the citation: {detected}"
-    assert "continuity-contract-adr" in detected[0]
+    assert expected_fragment in detected[0]
     assert not undetected, "the walker alone reported the citation, so the scope proves nothing"
+
+
+def test_the_vault_path_family_is_load_bearing_in_the_production_scope() -> None:
+    """A vault PATH with no dated stem is caught only because that family was widened.
+
+    The isolating control. Most real citations carry both shapes at once — a
+    vault directory path AND a dated document stem inside it — so such a probe
+    is caught by the dated-stem family alone and proves nothing about this one.
+    Stripping the date is what leaves the vault-path family as the only pattern
+    that can fire.
+    """
+    probe_path = _SRC_CADRUMO / "domain" / "_scope_probe.py"
+    source = '"""Invoice kind resolution.\n\nRationale under .vault/research/invoice-kind-notes.md.\n"""\n\nVALUE = 1\n'
+    ranges = _docstring_ranges_for_tree(ast.parse(source))
+    dated_stem_only = tuple(case.pattern for case in _PRODUCTION_SCOPED_CASES if ".vault/" not in case.pattern.pattern)
+
+    detected = _campaign_metadata_violations_for_ranges(probe_path, source, ranges, _PRODUCTION_SCOPED_PATTERNS)
+    without_the_family = _campaign_metadata_violations_for_ranges(probe_path, source, ranges, dated_stem_only)
+
+    assert dated_stem_only, "the comparison subset is empty, so it cannot show the vault family carrying the catch"
+    assert len(detected) == 1, f"the widened scope missed a bare vault-path citation: {detected}"
+    assert not without_the_family, "the dated-stem family already caught it, so this probe isolates nothing"
+
+
+def test_production_scan_ignores_prose_that_names_no_vault_document() -> None:
+    """The vault-path family's reach stops at prose that cites nothing.
+
+    Its near-misses are the whole reason the family is safe in production: a
+    module may say a decision lives in the vault, or name a reference
+    implementation, without naming a document. Asserted through the real
+    scanner rather than against the bare pattern, so the noqa stripping and the
+    docstring-range walk are in the path too.
+    """
+    probe_path = _SRC_CADRUMO / "domain" / "_scope_probe.py"
+    source = (
+        '"""Invoice kind resolution.\n'
+        "\n"
+        "This follows an open decision recorded in the vault; the reference\n"
+        "implementation lives there too, and the audit trail explains why.\n"
+        '"""\n'
+        "\n"
+        "VALUE = 1\n"
+    )
+    ranges = _docstring_ranges_for_tree(ast.parse(source))
+
+    assert not _campaign_metadata_violations_for_ranges(probe_path, source, ranges, _PRODUCTION_SCOPED_PATTERNS)
 
 
 def test_production_scope_excludes_the_families_that_false_fire_on_domain_prose() -> None:
@@ -1332,14 +1389,13 @@ def test_production_scope_excludes_the_families_that_false_fire_on_domain_prose(
         "recorded in the ADR",
         "Ste" + "p 4 of the campaign",
         "carried in W01.P02.S03",
-        "cite .vault/plan/x",
     )
     for probe in test_scoped_only:
         assert any(pattern.search(probe) for pattern in _CAMPAIGN_METADATA_PATTERNS), (
             f"{probe!r} is matched by no pattern at all, so its exclusion from production measures nothing"
         )
         assert not any(pattern.search(probe) for pattern in _PRODUCTION_SCOPED_PATTERNS), (
-            f"{probe!r} reached the production scope; only the dated-document-stem family was widened"
+            f"{probe!r} reached the production scope; only the document-naming families were widened"
         )
 
     # Real domain prose from the shipped tree that the noisy families flag and

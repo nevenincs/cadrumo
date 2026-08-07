@@ -327,9 +327,9 @@ def _m232_row(index: int) -> Modelo232VinculadaRow:
         nif=f"A1234567{index}",
         nombre=f"Vinculada {index}",
         pais="ES",
-        tipo_vinculacion="1",
+        tipo_vinculacion="A",
         tipo_operacion="01",
-        metodo="PCNC",
+        metodo="1A",
         importe=Decimal(f"{index}25000"),
     )
 

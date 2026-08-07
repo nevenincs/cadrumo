@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any, Protocol
 
 import typer
 from pydantic import ValidationError
@@ -66,6 +66,7 @@ if TYPE_CHECKING:
     # as lazy strings so the state-free CLI surface (test_lazy_command_tree) pays
     # no runtime registry-import cost, while pyrefly and the any-param ratchet see
     # the concrete result/record types instead of a bare ``Any``.
+    from ...application.aggregation import CalculationSourceDiagnostic
     from ...application.modelo import ModeloWorkCalculationServiceResult
     from ...domain.modelos import CalculationRevision, WorkUnit
 
@@ -582,8 +583,21 @@ def _work_calculate_authorization_output(
     )
 
 
+class _CarriesSourceDiagnostics(Protocol):
+    """The one attribute the projector below actually reads.
+
+    Declared structurally because that is what the function depends on. Naming
+    the whole calculation envelope in the signature claimed a coupling the body
+    does not have, and forced anything exercising this hop to build a persisted
+    result -- which would run the persistence path rather than this projection.
+    """
+
+    @property
+    def source_diagnostics(self) -> tuple[CalculationSourceDiagnostic, ...]: ...
+
+
 def _work_calculate_source_advisory_output(
-    calculation_result: ModeloWorkCalculationServiceResult,
+    calculation_result: _CarriesSourceDiagnostics,
 ) -> tuple[list[Notice], list[str]]:
     """Project NON-blocking source diagnostics into notices + human lines.
 

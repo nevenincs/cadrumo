@@ -125,6 +125,14 @@ CAMPAIGN_METADATA_CASES: tuple[PatternCase, ...] = (
     # subdirectories and missed the other six. Widened to the full set
     # (adr, audit, exec, index, plan, reference, research); "ad" + "r" stays
     # split for the same self-match reason as every other entry in this table.
+    #
+    # Production-scoped, on the same evidence as the dated-stem entry below: a
+    # literal vault PATH is the most direct form of the citation the mandate
+    # reverses, it carries no domain meaning a tax module could want, and the
+    # exhaustive read over the non-test modules under ``src/cadrumo`` found no
+    # legitimate use. The near-misses are what keep the reach honest -- prose
+    # that merely mentions a vault, a reference implementation or an audit
+    # trail names no document and stays clean.
     PatternCase(
         re.compile(r"\.vault/(?:ad" + r"r|audit|exec|index|plan|reference|research)\b", re.IGNORECASE),
         (
@@ -137,8 +145,9 @@ CAMPAIGN_METADATA_CASES: tuple[PatternCase, ...] = (
             "cite .vault/research/x",
         ),
         ("the vault adr folder", "the reference implementation lives in the vault", "review the audit trail"),
+        scope=MarkerScanScope.TEST_AND_PRODUCTION_MODULES,
     ),
-    # The one entry scanned in ordinary production source as well as in tests.
+    # Scanned in ordinary production source as well as in tests.
     # A dated document stem NAMES a specific record in this repo's own vault,
     # which is the citation direction "Code Stands Alone" reverses, and the
     # shape carries no domain meaning a tax module could want: the exhaustive

@@ -36,8 +36,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
-from ....domain.calculations.registry import ModeloRevision, bundled_authority
+from ....core import Modelo, Period
+from ....domain.calculations.registry import ModeloRevision, bundled_authority, selector_as_dict
 from ....domain.iva import EUMemberState, IvaRateKind, rate_kinds_for_declared_rate
 from ....domain.transactions import (
     BusinessClassification,
@@ -49,7 +49,6 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ....core import Modelo
 from .. import aggregate_iva_ledger_observations
 from .._iva_ledger import resolve_iva_ledger_binding_values
 
@@ -254,20 +253,28 @@ def test_the_narrowed_rate_sets_are_exhaustive_against_the_rate_table() -> None:
     rate to the table without giving it a rung reds this.
     """
     revision = _revision()
-    rungs_by_tier: dict[IvaRateKind, set[Decimal]] = {}
+    # ``None`` is the rate-blind marker -- that tier's rung covers everything it
+    # admits, which is not the same as covering nothing. Declared in the type so
+    # the distinction is not carried by a suppression.
+    rungs_by_tier: dict[IvaRateKind, set[Decimal] | None] = {}
     for binding in revision.bindings:
         if not binding.id.startswith("modelo-303-iva-repercutido-") or not binding.id.endswith("-cuota"):
             continue
-        selector = binding.selector if isinstance(binding.selector, dict) else dict(binding.selector)
-        rates = selector.get("applied_rates")
-        for kind in selector["rate_kinds"]:
+        axes = selector_as_dict(binding)
+        rates = axes.get("applied_rates")
+        assert rates is None or isinstance(rates, (list, tuple)), "applied_rates is not a sequence"
+        rate_kinds = axes["rate_kinds"]
+        assert isinstance(rate_kinds, (list, tuple)), "rate_kinds is not a sequence"
+        for kind in rate_kinds:
             tier = IvaRateKind(kind)
             # A rate-blind rung covers everything its tier admits.
             rungs_by_tier.setdefault(tier, set())
             if rates is None:
-                rungs_by_tier[tier] = None  # type: ignore[assignment]
-            elif rungs_by_tier[tier] is not None:
-                rungs_by_tier[tier].update(Decimal(str(r)) for r in rates)
+                rungs_by_tier[tier] = None
+            else:
+                covered = rungs_by_tier[tier]
+                if covered is not None:
+                    covered.update(Decimal(str(rate)) for rate in rates)
 
     probe_dates = (date(2024, 3, 1), _EARLIER_WINDOW, date(2024, 11, 1), date(2025, 6, 1), date(2026, 6, 1))
     candidates = [Decimal(n) / Decimal("1000") for n in range(0, 300, 5)]

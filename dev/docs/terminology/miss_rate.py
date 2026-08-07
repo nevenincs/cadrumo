@@ -1,17 +1,17 @@
 """Developer CLI: write the canonical held-out miss-rate report.
 
-Mirrors the ``sweep`` / ``coverage`` developer-CLI pattern. The close-review
-of the docs-terminology-search next wave (2026-07-13 audit, NIT-2) found the
-committed miss-rate report artifacts were produced ad hoc; this module is the
-committed, reproducible writer, so a report regenerates byte-comparably from
-the committed mapping and held-out corpus alone.
+Mirrors the ``sweep`` / ``coverage`` developer-CLI pattern. A close review of
+the docs-terminology-search next wave found the committed miss-rate report
+artifacts were produced ad hoc; this module is the committed, reproducible
+writer, so a report regenerates byte-comparably from the committed mapping
+and held-out corpus alone.
 
 Usage::
 
     python -m dev.docs.terminology.miss_rate report --output PATH --note TEXT
 
-The threshold is the ratified ADR D3 default and cannot be supplied by a
-caller; a superseding decision must change this source contract.
+The threshold is a fixed default and cannot be supplied by a caller; changing
+it means changing this source contract, not passing a flag.
 """
 
 from __future__ import annotations

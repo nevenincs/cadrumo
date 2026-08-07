@@ -182,7 +182,7 @@ class TextInvoiceFieldExtractor:
 
     @property
     def decided_by(self) -> str:
-        """Provenance stamp for this extractor's transport.
+        """Provenance stamp: transport, reader, model, and the rates compiled in.
 
         Distinct from the vision stamp so a persisted record always says which
         reader produced the fields. The model segment is ``configured`` when the
@@ -192,8 +192,19 @@ class TextInvoiceFieldExtractor:
         The trailing rate-provenance token answers the question the model name
         cannot: the prompt now enumerates registry-resolved rates, so which
         rates were in force for this read is part of how the figure was reached.
+
+        **The transport segment is DERIVED from the provider actually used**,
+        matching the vision reader. It was previously absent, so this stamp
+        could not say whether a read had left the host -- and a model name does
+        not answer that, because a vendor model identifier reveals the vendor
+        only to a reader who already knows the catalogue. A consent withdrawal
+        enumerates cloud-derived artefacts BY this segment, so a stamp that
+        omits it makes a withdrawal silently incomplete: the artefact that most
+        needs re-deriving is the one the survey cannot see.
         """
-        return f"llm:text-extract:{self._model or 'configured'}:rates-{self._compiled_prompt().rate_provenance}"
+        transport = "local" if self._provider is LLMProvider.LOCAL else self._provider.value.lower()
+        model = self._model or "configured"
+        return f"llm:{transport}-text-extract:{model}:rates-{self._compiled_prompt().rate_provenance}"
 
     def extract(self, *, evidence_text: str) -> InvoiceDraft:
         """Read ``evidence_text`` and return the grounded draft.
@@ -264,6 +275,22 @@ def extract_invoice_fields_from_text(
 ) -> InvoiceDraft:
     """Convenience wrapper: build a :class:`TextInvoiceFieldExtractor` and extract.
 
+    This is the entry point the evidence router calls, and it takes no provider
+    argument. The provider is therefore pinned LOCAL, and the pin is written out
+    below rather than inherited from the extractor's default: a pin held by NOT
+    passing an argument is the weakest possible statement of a confidentiality
+    property, because widening this signature with a pass-through ``provider``
+    would open the off-host route for every router call without a single diff
+    line that looks like a confidentiality change.
+
+    The pin is documentation, not the boundary. Widening this signature cannot
+    actually send a taxpayer's document off-host, because the extractor marks
+    every request it builds as evidence-derived and
+    :meth:`~adapters.outbound.llm.LLMClient._require_evidence_consent` refuses a
+    marked request at any off-host provider without a per-invocation consent
+    token. That is the property to preserve if this signature ever changes: the
+    refusal lives below this function, not in it.
+
     Args:
         evidence_text: The document's text representation.
         model: Optional model override.
@@ -272,5 +299,5 @@ def extract_invoice_fields_from_text(
     Returns:
         :class:`InvoiceDraft`: The grounded, best-effort extracted fields.
     """
-    extractor = TextInvoiceFieldExtractor(model=model, settings=settings)
+    extractor = TextInvoiceFieldExtractor(model=model, settings=settings, provider=LLMProvider.LOCAL)
     return extractor.extract(evidence_text=evidence_text)

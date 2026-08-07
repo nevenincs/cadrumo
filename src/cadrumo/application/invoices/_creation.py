@@ -397,9 +397,9 @@ def build_catalogue_invoice(
         rate_provider=rate_provider or default_ecb_rate_provider(),
     )
     if fx_stamp is not None:
-        rate, rate_date = fx_stamp
-        invoice_payload["fx_rate"] = format(rate, "f")
-        invoice_payload["fx_rate_date"] = rate_date.isoformat()
+        invoice_payload["fx_rate"] = format(fx_stamp.rate, "f")
+        invoice_payload["fx_rate_date"] = fx_stamp.rate_date.isoformat()
+        invoice_payload["fx_rate_source"] = fx_stamp.source
     return Invoice.model_validate(invoice_payload)
 
 

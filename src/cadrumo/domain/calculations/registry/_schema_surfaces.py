@@ -699,6 +699,7 @@ class ExportFieldDefinition(RegistryModel):
     padding: Literal["left_zero", "left_space", "right_space", "none"]
     justification: Literal["left", "right", "none"]
     date_format: str | None = None
+    decimals: int | None = Field(default=None, ge=0)
     signed: bool
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -719,7 +720,32 @@ class ExportFieldDefinition(RegistryModel):
             raise RegistryValidationError(f"export field {self.id!r} must declare computed_key")
         if self.kind == CasillaFieldKind.FILLER and self.length is None:
             raise RegistryValidationError(f"export field {self.id!r} filler must declare length")
+        self._validate_decimals()
         return self
+
+    def _validate_decimals(self) -> None:
+        """Require an explicit scale on every decimal field.
+
+        AEAT fixed-width slots carry decimals implicitly: the diseño de registro
+        declares them as "N enteros y M decimales" filling the whole slot, with
+        no separator byte.  The scale is not derivable from the length -- Modelo
+        200 pairs length 9 with 2 decimals and length 7 with 4 -- so it has to be
+        declared per field, and a field that omits it cannot be rendered.
+        """
+        if self.kind == CasillaFieldKind.FILLER:
+            return
+        if self.data_type == "decimal":
+            if self.decimals is None:
+                raise RegistryValidationError(f"decimal export field {self.id!r} must declare decimals")
+            if self.length is not None and self.decimals >= self.length:
+                raise RegistryValidationError(
+                    f"decimal export field {self.id!r} declares {self.decimals} decimals "
+                    f"which leaves no integer digits in its {self.length}-byte slot",
+                )
+        elif self.decimals is not None:
+            raise RegistryValidationError(
+                f"export field {self.id!r} declares decimals but its data_type is {self.data_type!r}",
+            )
 
 
 class RecordDiscriminator(RegistryModel):

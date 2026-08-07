@@ -65,11 +65,10 @@ does not govern active naming. The following sources define the release mechanic
   promote-without-rebuild from the retained cohort bytes.
 - [`.github/workflows/packaging-smoke.yml`](.github/workflows/packaging-smoke.yml) —
   runs the three-OS artifact checks, builds the immutable full release cohort once per
-  run and publishes it (`cadrumo-release-cohort.tar.gz`) to the run's draft evidence
-  release `evidence-smoke-<run id>`, mints the per-OS oracle `DistributionEvidence`
-  rows onto the same draft, and seals an `evidence-manifest.json` binding the run
-  identity to every asset's SHA-256. Its run id is the identity anchor for every
-  downstream dispatch.
+  run and uploads it (`cadrumo-release-cohort.tar.gz`) as a run artifact, and mints the
+  per-OS oracle `DistributionEvidence` rows as their own artifacts. Its run id is the
+  identity anchor for every downstream dispatch, and — because an artifact belongs to
+  its producing run by construction — also the container those bytes live in.
 - [`docs/_release_checklist.yaml`](docs/_release_checklist.yaml) — soak timing,
   versioning scheme, hotfix cycle times, and rollback triggers.
 - [`docs/_release_notes_template.md`](docs/_release_notes_template.md) and
@@ -95,13 +94,19 @@ must prove that both companion versions match the core distribution.
 A successful `Cadrumo Packaging Smoke` run builds the cohort once from a clean source
 snapshot. It retains the three wheels, the root source distribution,
 `python-cohort.json`, the full release-cohort archive, the installed CLI and MCP
-oracle evidence, and the per-OS `DistributionEvidence` records as assets on the run's
-draft evidence release (`evidence-smoke-<run id>`), sealed by its
-`evidence-manifest.json`. Draft releases carry no Actions-storage retention window;
-they persist until the evidence GC (`evidence-gc.yml`, keep-3-per-lane) collects
-them. The cohort manifest binds the source commit, version, filenames, and SHA-256
+oracle evidence, and the per-OS `DistributionEvidence` records as artifacts of that
+run. The cohort manifest binds the source commit, version, filenames, and SHA-256
 digest of every distribution file. The publication authority consumes those retained
 bytes without rebuilding them.
+
+**Artifacts expire, and that bounds the promotion window.** Retention is 90 days (the
+maximum this account allows), counted from the smoke run, after which the run is no
+longer promotable and the campaign must be re-run to mint fresh bytes. Nothing warns
+you as the window closes: a promotion attempted past it fails at download, not with a
+message about expiry. Promote well inside 90 days, and treat a smoke run older than
+that as gone rather than stale. A release **candidate** held for a multi-day soak is
+deliberately exempt — it rides its own draft release precisely because it must outlive
+this clock (see `dev/release/release_candidate.py`).
 
 ## Day one: enrolling a new product in the account distribution standard
 
@@ -532,11 +537,13 @@ for a rehearsal):
 **Gate 2 — validate (no rebuild).** Verifies the source run identity (success,
 `packaging-smoke.yml`, `push`, `main`, same repo, matching `head_sha`) and, with parity
 checks, each acquisition run (`packaging-scoop.yml` / `packaging-homebrew.yml`,
-`workflow_dispatch`, same repo, success). Downloads and hash-verifies the **sealed**
-release cohort archive (`cadrumo-release-cohort.tar.gz` from the smoke evidence draft —
-the single source of every channel's bytes, PyPI included) and aggregates every required
-`DistributionEvidence` row from its authoritative draft — up to 3 python from the smoke
-draft, 1 scoop, 3 homebrew, and the 4 operator `claude-*` rows, as the claimed channels
+`workflow_dispatch`, same repo, success). Identity is checked BEFORE a byte is pulled,
+and it is the whole provenance binding: an artifact cannot be attached to a run that did
+not produce it. Downloads the **sealed** release cohort archive
+(`cadrumo-release-cohort.tar.gz` from the smoke run's artifacts — the single source of
+every channel's bytes, PyPI included) and aggregates every required
+`DistributionEvidence` row from its authoritative run — up to 3 python from the smoke
+run, 1 scoop, 3 homebrew, and the 4 operator `claude-*` rows, as the claimed channels
 demand. The per-OS smoke build cohorts are deliberately NOT part of the publication
 chain. Re-points `promote_python_cohort --emit-version-only` at the sealed cohort's
 `python/` bytes to guard the PyPI version against overwrite and emit the version. Runs
@@ -551,8 +558,8 @@ only with every required row present and verified.
 (**OP-9**, see Operator actions below), is a standing GitHub setting the job's own logic
 neither reads nor requires — there is no `operator-preflight` job checking it. The
 publish job re-downloads and re-verifies the sealed cohort archive and every evidence
-row/manifest from the same drafts (never rebuilds), runs the fail-closed
-`evidence_release leak-sweep` over everything about to be attached (residual runner
+row from the same identity-verified runs (never rebuilds), runs the fail-closed
+`evidence_leak_sweep` over everything about to be attached (residual runner
 metadata hard-fails the promotion), and:
 
 - Publishes all 6 distributions to PyPI from the sealed cohort's `python/` subdir (the

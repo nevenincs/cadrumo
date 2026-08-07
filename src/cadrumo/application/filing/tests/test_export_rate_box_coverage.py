@@ -59,11 +59,15 @@ _REDUCIDO_TOTAL = _cid("iva.anual.repercutido.reducido")
 _BOX_10 = _cid("iva.anual.repercutido.tipo-10.cuota")
 _BOX_5 = _cid("iva.anual.repercutido.tipo-5.cuota")
 
-_M390_PROVIDER_ARGS = {"filing_year": 2025, "period": "0A", "modelos": ("390",)}
-
-
 def _real_provider() -> RegistrySchemaAccessor:
-    return _schema_provider(**_M390_PROVIDER_ARGS)  # type: ignore[arg-type]
+    """Build the real Modelo 390 provider for the annual period.
+
+    Called with its arguments named rather than splatted from a shared dict:
+    the dict inferred every value as the union of all of them, so the call
+    checked nothing and needed a suppression ty does not read to reach the
+    function at all.
+    """
+    return _schema_provider(filing_year=2025, period="0A", modelos=("390",))
 
 
 def _provider_without_partitions() -> RegistrySchemaAccessor:

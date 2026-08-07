@@ -412,7 +412,10 @@ def assemble_related_party_observations(
                     counterparty_legal_name=_coerce_text(fields.get("counterparty_legal_name")),
                     country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
                     transaction_date=default_date,
-                    operation_kind_code=_coerce_text(fields.get("operation_kind_code"), default="01") or "01",
+                    # No invented default: "01" is a real clave (bienes
+                    # tangibles), so substituting it for an absent value
+                    # would declare an operation kind the row never carried.
+                    operation_kind_code=_coerce_text(fields.get("operation_kind_code")),
                     transfer_pricing_method_code=_coerce_text(fields.get("transfer_pricing_method_code")),
                     amount=coerce_decimal(fields.get("amount"), default=Decimal("0")),
                 ),

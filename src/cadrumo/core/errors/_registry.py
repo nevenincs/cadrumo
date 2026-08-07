@@ -21,16 +21,20 @@ from __future__ import annotations
 import json
 import logging as _logging_stdlib
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum, StrEnum
 from pathlib import PurePath
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
 from ..redaction import redact_for_log
+
+if TYPE_CHECKING:
+    from ..json_contract import Notice
 
 # cadrumo.core.logging.get_logger triggers configure_logging() → config → cadrumo.core.errors,
 # creating a circular import at module load. Use the stdlib getter here; the root
@@ -371,6 +375,7 @@ def render_error_json(
     trace_id: str | None = None,
     active_profile: str | None = None,
     command: str | None = None,
+    notices: Sequence[Notice] = (),
 ) -> str:
     """Serialize ``error`` to a deterministic single-line JSON document.
 
@@ -388,12 +393,19 @@ def render_error_json(
     active taxpayer profile (the identity anchor), ``None`` for a
     non-profile-bound failure or when the CLI error boundary cannot resolve it;
     the ``core`` layer never scans profile manifests, so the CLI boundary
-    resolves the label and passes it here. The
+    resolves the label and passes it here. ``notices`` carries the same typed
+    diagnostics the success envelope's ``notices`` channel does — the
+    sandbox-active indicator above all, so a failure inside a discardable
+    sandbox bucket is distinguishable from the same failure against the
+    operator's real profile. ``core`` never resolves them for the same reason it
+    never resolves ``active_profile``: it may not scan buckets. ``status`` stays
+    :attr:`EnvelopeStatus.ERROR` regardless of notice severity — this document
+    reports a failure, and no notice can soften that. The
     :data:`core.json_contract.ENVELOPE_SCHEMA_VERSION` import is function-local
     to avoid the ``json_contract`` <-> ``errors`` import cycle
     (``json_contract`` imports :class:`CadrumoError`).
     """
-    from ..json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus
+    from ..json_contract import ENVELOPE_SCHEMA_VERSION, EnvelopeStatus, jsonable_output_payload
 
     envelope = build_error_envelope(error, context=context, trace_id=trace_id)
     document = {
@@ -402,7 +414,7 @@ def render_error_json(
         "active_profile": active_profile,
         "status": EnvelopeStatus.ERROR.value,
         "error": envelope.model_dump(mode="json"),
-        "notices": [],
+        "notices": [jsonable_output_payload(notice) for notice in notices],
     }
     return json.dumps(document, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
 

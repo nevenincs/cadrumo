@@ -456,11 +456,20 @@ def _parse_integer(field: ExportFieldDefinition, raw: str) -> Decimal:
 
 
 def _parse_decimal(raw: str, field: ExportFieldDefinition) -> Decimal:
-    text = normalize_decimal_separators(raw.strip(), strip_thousands=False)
+    """Read an implicit-decimal slot back at the scale the field declares.
+
+    The counterpart of the writer: the slot carries digits only, so the decimal
+    point is restored by shifting rather than read from the payload.
+    """
+    if field.decimals is None:
+        raise RegistryValidationError(f"decimal export field {field.id!r} must declare decimals")
+    text = raw.strip()
     if not text:
         return Decimal("0")
+    if not text.isdigit():
+        raise RegistryValidationError(f"decimal export field {field.id!r} contains non-digit data")
     try:
-        return Decimal(text)
+        return Decimal(int(text)).scaleb(-field.decimals)
     except InvalidOperation as exc:
         raise RegistryValidationError(f"decimal export field {field.id!r} contains invalid decimal data") from exc
 

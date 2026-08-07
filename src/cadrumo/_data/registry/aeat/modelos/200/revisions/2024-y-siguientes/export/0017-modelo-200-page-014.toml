@@ -428,6 +428,7 @@ length = 4
 kind = "casilla"
 casilla_id = "DP200014:00558"
 data_type = "decimal"
+decimals = 2
 required = false
 padding = "left_zero"
 justification = "right"

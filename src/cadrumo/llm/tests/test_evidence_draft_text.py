@@ -300,7 +300,7 @@ class TestExtractorRequestShape:
         extractor = TextInvoiceFieldExtractor(model="some-text-model", settings=load_settings())
 
         assert extractor._build_request("Invoice 42").model_override == "some-text-model"
-        assert extractor.decided_by.startswith("llm:text-extract:some-text-model:")
+        assert extractor.decided_by.startswith("llm:local-text-extract:some-text-model:")
 
 
 class TestExtractorPinsTheHostByDefault:
@@ -349,7 +349,7 @@ class TestExtractorPinsTheHostByDefault:
         extractor = TextInvoiceFieldExtractor(settings=load_settings())
 
         assert extractor._build_request("Invoice 42").model_override is not None
-        assert not extractor.decided_by.startswith("llm:text-extract:configured:")
+        assert not extractor.decided_by.startswith("llm:local-text-extract:configured:")
 
     def test_a_cloud_provider_naming_no_model_is_refused(self) -> None:
         """A refusal, not merely a default, so configuration cannot silently bypass it.

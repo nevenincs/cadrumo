@@ -205,7 +205,7 @@ def _mark_excluded_pages(html_root: Path) -> int:
 def _page_display_class(rel_path: str) -> str:
     """Classify a built page's path onto the shipped ``display_class`` value.
 
-    Reuses the single page-path derivation authority (ADR D7): rather than
+    Reuses the single page-path derivation authority: rather than
     re-implementing the ``cli/`` -> ``cli`` / ``api/`` -> ``technical`` / else
     ``doc`` split (the forbidden re-derivation), it constructs a minimal
     PAGE-kind :class:`SearchRecord` whose ``target`` is the page path and reads
@@ -249,7 +249,7 @@ def _mark_page_display_classes(html_root: Path) -> int:
     Every other built page carries its path-derived class into the index as a
     ``display_class`` meta ONLY -- deliberately NOT a ``weight`` key, so the
     weight-sorted card pass keeps dropping full-text pages (they must not
-    pollute the injected-card band; ADR D8). The JS reads the class to order
+    pollute the injected-card band). The JS reads the class to order
     full-text pages within their band (user docs above dev machinery) and to
     render the per-class icon. Idempotent and a no-op when the tree is absent.
 

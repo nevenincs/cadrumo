@@ -4,7 +4,7 @@
 declared anywhere in :data:`WIZARD_FLOWS` (titles, prompts, helps,
 choice labels and descriptions, plus the fixed error keys the runtime
 raises) and the wizard-derived flag-help keys, returning the tuple of
-keys that fail to resolve in any of the four locale catalogues.
+keys that fail to resolve in any supported locale catalogue.
 
 ``audit_cli_translations`` runs the same locale-resolution sweep over
 every ``cli.<group>.*`` translation key referenced at a ``tr(...)``
@@ -20,11 +20,9 @@ import re
 from collections.abc import Iterable
 from pathlib import Path
 
-from ...core.i18n import tr
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ._catalogue import WIZARD_FLOWS
 from ._models import WizardFlow, WizardQuestion
-
-_LOCALES: tuple[str, ...] = ("en", "es", "ca", "hu")
 
 _FIXED_RUNTIME_KEYS: tuple[str, ...] = ("wizard.setup.errors.missing_required_flags",)
 
@@ -89,7 +87,7 @@ def audit_wizard_translations() -> tuple[str, ...]:
     keys = _walk_keys(WIZARD_FLOWS)
     missing: list[str] = []
     for key in keys:
-        for locale in _LOCALES:
+        for locale in SUPPORTED_OUTPUT_LANGUAGES:
             if not _resolves_in(locale, key):
                 missing.append(f"{locale}:{key}")
     return tuple(missing)
@@ -136,7 +134,7 @@ def audit_cli_translations() -> tuple[str, ...]:
     """
     missing: list[str] = []
     for key in cli_keys_referenced_in_source():
-        for locale in _LOCALES:
+        for locale in SUPPORTED_OUTPUT_LANGUAGES:
             if not _resolves_in(locale, key):
                 missing.append(f"{locale}:{key}")
     return tuple(missing)

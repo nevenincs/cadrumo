@@ -129,6 +129,20 @@ _SHARED_INVOICE_FIELDS: tuple[str, ...] = (
     "payment_status",
     "linked_transaction_ids",
     "notes",
+    # The euro conversion and its provenance. A foreign-currency invoice
+    # rendered as totals plus a currency code told the operator nothing about
+    # whether those figures had reached euro at all -- and an unconverted
+    # invoice is precisely the one held back from the modelo totals, so the
+    # surface stayed silent on the fact that most needed saying. All six are
+    # ``None`` on a euro invoice (nothing was converted) and the eur trio is
+    # ``None`` on a foreign invoice with no resolvable rate, which is what makes
+    # the refusal visible rather than merely correct.
+    "fx_rate",
+    "fx_rate_date",
+    "fx_rate_source",
+    "base_total_eur",
+    "iva_total_eur",
+    "grand_total_eur",
 )
 
 

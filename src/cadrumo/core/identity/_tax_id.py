@@ -24,6 +24,7 @@ from ._documents import (
     _cif_check_value,
     nif_check_letter,
 )
+from ._nif_iva import normalise_nif_iva
 
 _NIE_LEADERS = {"X": "0", "Y": "1", "Z": "2"}
 _PREFIXED_NIF_LEADERS = {"K", "L", "M"}
@@ -58,6 +59,43 @@ def tax_id_identity_token(value: str) -> str:
         The trimmed, uppercased identifier.
     """
     return value.strip().upper()
+
+
+def same_tax_identifier(left: str | None, right: str | None) -> bool:
+    """Return whether two declared identifiers name the same bearer.
+
+    The one "is this the same identifier" predicate. It asserts **no checksum**,
+    which is the whole point: the question is identity, not validity, so a
+    foreign identifier, or a Spanish one whose control character does not check
+    out, must still be comparable. A comparison routed through
+    :func:`validate_spanish_tax_id` answers ``False`` for both of those by
+    returning nothing to compare, which reads as "different bearer" when the
+    truth is "unverifiable identifier".
+
+    Comparison is on the separator-stripped form
+    (:func:`~core.identity.normalise_nif_iva`), so a printed ``B-1234567-4``
+    matches a stored ``B12345674``. That is deliberately looser than
+    :func:`tax_id_identity_token`, which stays trim-and-uppercase because it
+    keys stored objects and must never merge two characters-differ identifiers
+    into one row; this predicate keys nothing.
+
+    Args:
+        left: One identifier as declared, or ``None``.
+        right: The other identifier as declared, or ``None``.
+
+    Returns:
+        ``True`` only when both sides carry a non-blank value and those values
+        are the same identifier. An absent or blank side answers ``False``:
+        absence is not a match, and this predicate must never turn "nothing to
+        compare" into "the same".
+    """
+    if left is None or right is None:
+        return False
+    left_token = normalise_nif_iva(left)
+    right_token = normalise_nif_iva(right)
+    if not left_token or not right_token:
+        return False
+    return left_token == right_token
 
 
 def validate_spanish_tax_id(value: str) -> str:

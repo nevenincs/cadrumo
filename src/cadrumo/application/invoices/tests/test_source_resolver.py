@@ -10,6 +10,7 @@ from typing import Any
 
 import pytest
 
+from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import StorageValidationError
 from ....core import M347_THRESHOLD_EUR, BindingSourceKind, IntracomOperationType, Period
@@ -77,6 +78,7 @@ def _invoice(
     currency: str = "EUR",
     fx_rate: Decimal | None = None,
     fx_rate_date: date | None = None,
+    fx_rate_source: str | None = None,
     operation_type: IntracomOperationType | None = None,
 ) -> Invoice:
     from ....domain.invoices import derive_invoice_id
@@ -124,6 +126,7 @@ def _invoice(
         linked_transaction_ids=linked_transaction_ids,
         fx_rate=fx_rate,
         fx_rate_date=fx_rate_date,
+        fx_rate_source=fx_rate_source,
         operation_type=operation_type,
     )
 
@@ -496,6 +499,7 @@ def test_converted_foreign_invoice_projects_its_euro_value_not_its_face_value(
         currency="GBP",
         fx_rate=gbp_rate,
         fx_rate_date=date(2026, 1, 15),
+        fx_rate_source=ECB_RATE_SOURCE_ID,
     )
     repository.save(InvoiceCatalogue.from_invoices((converted,)))
     snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")

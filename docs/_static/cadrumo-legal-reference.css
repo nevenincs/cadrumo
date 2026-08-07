@@ -8,6 +8,14 @@
 
 /* --- Legal provision entries ------------------------------------------- */
 
+/* Search results deep-link to a provision anchor, so arrival lands mid-page.
+   The margin keeps the citation heading clear of the sticky page chrome
+   instead of tucked under it. */
+span[id^='legal-'] {
+  display: block;
+  scroll-margin-top: 2.5rem;
+}
+
 .cadrumo-legal-force {
   font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
@@ -20,23 +28,16 @@
   margin: 0;
 }
 
-/* The authored catalogue note: the only human summary of the provision, and
-   the first thing a reader needs. */
-.cadrumo-legal-summary p {
-  font-size: 1.0625rem;
-  line-height: 1.6;
-  color: var(--color-foreground-primary);
-  margin: 0 0 1rem;
-}
-
-/* Verbatim wording extracted from the official text: set apart so it can never
-   be misread as the documentation's own prose. */
+/* Verbatim wording extracted from the official text. It is Spanish inside an
+   otherwise non-Spanish page and carries lang="es"; the styling sets it apart
+   so it can never be misread as the documentation's own prose. */
 .cadrumo-legal-wording {
   border-left: 3px solid var(--color-brand-content);
   padding: 0.1rem 0 0.1rem 1rem;
   margin: 0 0 1.15rem;
 }
 
+.cadrumo-legal-wording > .cadrumo-legal-wording-label,
 .cadrumo-legal-wording > p:first-child {
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -50,6 +51,7 @@
   margin: 0;
   padding: 0;
   border: 0;
+  background: none;
   font-style: italic;
   color: var(--color-foreground-secondary);
 }

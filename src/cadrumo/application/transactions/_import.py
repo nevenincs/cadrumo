@@ -6,10 +6,13 @@ existing :class:`TransactionCatalogue` and an iterable of
 diagnostics for parser-empty, duplicate, calendar-gap, and original-file checks
 during import verification.
 
-Duplicate detection uses the stable
-:func:`~cadrumo.domain.transactions.derive_import_fingerprint` identity so
-the dry-run diagnostics match the persistence path used by ledger import
-actions.
+Duplicate detection routes through
+:func:`~cadrumo.application.transactions.classify_import_row`, the same verdict
+the persisting ledger import path consumes, so the diagnostics and the
+persistence path cannot disagree about what a row is. They did: this module once
+counted a fingerprint repeated within one file as skipped while the persisting
+path imported both rows, so ``--verify`` reported a duplicate the import would
+never skip. An intra-batch repeat is therefore an advisory here, not a skip.
 """
 
 from __future__ import annotations
@@ -27,7 +30,6 @@ from ...core.logging import get_logger
 from ...domain.transactions import (
     RawTransaction,
     TransactionCatalogue,
-    derive_import_fingerprint,
     derive_transaction_id,
     existing_transaction_import_fingerprints,
 )
@@ -36,6 +38,7 @@ from ._diagnostics import (
     LedgerImportDiagnosticKind,
     build_ledger_import_diagnostic,
 )
+from ._import_classification import ImportRowVerdict, classify_import_row
 
 _logger = get_logger(__name__)
 
@@ -61,8 +64,8 @@ def import_ledger_with_diagnostics(
     source_path: Path,
     raw_transactions: Iterable[RawTransaction],
     existing_catalogue: TransactionCatalogue,
+    import_fingerprints: Iterable[str],
     original_source_path: Path | None = None,
-    import_fingerprints: Iterable[str] | None = None,
 ) -> LedgerImportResult:
     """Evaluate an imported stream against the four diagnostic checks.
 
@@ -71,10 +74,16 @@ def import_ledger_with_diagnostics(
         raw_transactions: Unmerged raw transactions emitted by the provider.
         existing_catalogue: The current :class:`TransactionCatalogue` used for
             import-fingerprint duplicate detection.
+        import_fingerprints: One import fingerprint per raw row, derived by the
+            caller with the flow direction the provider read at the parse
+            boundary. Required rather than defaulted: a fingerprint derived
+            here would carry no direction, and
+            :func:`~cadrumo.domain.transactions.derive_import_fingerprint`
+            substitutes the literal ``UNSPECIFIED`` discriminator for a missing
+            one, which can never equal a stored direction-qualified fingerprint.
+            Dedup would then fail open and read every row as new.
         original_source_path: Optional original file path to record when it is
             present on disk.
-        import_fingerprints: Optional per-row import fingerprints derived by
-            the caller from parse-boundary facts such as transaction direction.
 
     Returns:
         An immutable :class:`~cadrumo.application.transactions.LedgerImportResult`
@@ -85,14 +94,11 @@ def import_ledger_with_diagnostics(
     skipped_count = 0
 
     rows = tuple(raw_transactions)
-    row_fingerprints = (
-        tuple(import_fingerprints)
-        if import_fingerprints is not None
-        else tuple(derive_import_fingerprint(raw) for raw in rows)
-    )
+    row_fingerprints = tuple(import_fingerprints)
     if len(row_fingerprints) != len(rows):
         raise ValueError("import_fingerprints must contain one fingerprint per raw transaction")
     seen_fingerprints: set[str] = set()
+    seen_transaction_ids: set[str] = set()
     # The duplicate check keys on the stable import fingerprint — the
     # same identity the persisting import path deduplicates on — so a
     # verify run's preview agrees with what a real import would do,
@@ -119,8 +125,14 @@ def import_ledger_with_diagnostics(
     for raw, fingerprint in zip(rows, row_fingerprints, strict=True):
         tx_id = derive_transaction_id(raw)
 
-        if fingerprint in existing_fingerprints:
-            skipped_count += 1
+        verdict = classify_import_row(
+            fingerprint=fingerprint,
+            transaction_id=tx_id,
+            stored_fingerprints=existing_fingerprints,
+            batch_fingerprints=seen_fingerprints,
+            batch_transaction_ids=seen_transaction_ids,
+        )
+        if verdict is ImportRowVerdict.DUPLICATE_OF_STORED:
             diagnostics.append(
                 build_ledger_import_diagnostic(
                     kind=LedgerImportDiagnosticKind.DUPLICATE,
@@ -130,8 +142,20 @@ def import_ledger_with_diagnostics(
                     affected_transaction_ids=(tx_id,),
                 ),
             )
-        elif fingerprint in seen_fingerprints:
-            skipped_count += 1
+        elif verdict is ImportRowVerdict.COLLIDING_TRANSACTION_ID:
+            diagnostics.append(
+                build_ledger_import_diagnostic(
+                    kind=LedgerImportDiagnosticKind.DUPLICATE,
+                    severity=BaseSeverity.WARNING,
+                    message=tr("transactions.import.batch_id_collision"),
+                    source_path=source_path,
+                    affected_transaction_ids=(tx_id,),
+                ),
+            )
+        elif verdict is ImportRowVerdict.REPEATED_IN_BATCH:
+            # Advisory, not a skip: both rows import. The message says so, because
+            # a "duplicate" the operator assumes was dropped is how a real
+            # double-count in the source file goes unreviewed.
             diagnostics.append(
                 build_ledger_import_diagnostic(
                     kind=LedgerImportDiagnosticKind.DUPLICATE,
@@ -141,9 +165,13 @@ def import_ledger_with_diagnostics(
                     affected_transaction_ids=(tx_id,),
                 ),
             )
-        else:
+
+        if verdict.imports:
             imported_count += 1
-            seen_fingerprints.add(fingerprint)
+            seen_transaction_ids.add(tx_id)
+        else:
+            skipped_count += 1
+        seen_fingerprints.add(fingerprint)
 
         date = raw.value_date or raw.booked_date
         if date:

@@ -53,6 +53,7 @@ from ...core.errors import (
     render_error_json,
     render_error_text,
 )
+from ...core.json_contract import Notice
 from ...core.logging import get_logger
 from ...core.redaction import redact_for_cli_output
 from ...domain.user_profile import StoredProfileDriftError
@@ -469,6 +470,57 @@ def active_profile_label_for_error() -> str | None:
         return None
 
 
+def sandbox_notice_for_error() -> Notice | None:
+    """Return the sandbox-active :class:`Notice` for an error document, best-effort.
+
+    The success envelope carries this indicator on both its JSON ``notices``
+    channel and its text banner line, so without it here a failure inside a
+    discardable sandbox bucket renders byte-identically to the same failure
+    against the operator's real profile. Delegates to the one resolver the
+    success path uses
+    (:func:`~cadrumo.application.operator_output.sandbox_notice_for_active_bucket`)
+    and collapses any failure to ``None`` for the same reason
+    :func:`active_profile_label_for_error` does: resolving a purely-advisory
+    indicator must never mask the original error being reported.
+    """
+    try:
+        from ...application.operator_output import sandbox_notice_for_active_bucket
+
+        return sandbox_notice_for_active_bucket()
+    except Exception:  # the sandbox indicator must never break error emit
+        _log.debug("cli error boundary: sandbox notice resolution failed", exc_info=True)
+        return None
+
+
+def render_error_payload(error: BaseException, *, as_json: bool, command: str | None = None) -> str:
+    """Render ``error`` to its stderr payload, carrying the sandbox indicator.
+
+    The single renderer both terminal funnels use — the command boundary's
+    :func:`_emit_error_and_exit` and the process boundary's
+    :func:`_terminal_errors._emit_crash` — so the two cannot drift on which
+    spine fields an error document carries. In JSON mode the sandbox
+    :class:`Notice` rides the ``notices`` channel; in text mode the same notice
+    renders through
+    :func:`~cadrumo.application.operator_output.sandbox_banner_line`, the same
+    formatter the text-mode success path uses, so the banner is byte-identical
+    across success and failure.
+    """
+    notice = sandbox_notice_for_error()
+    if as_json:
+        return render_error_json(
+            error,
+            active_profile=active_profile_label_for_error(),
+            command=command,
+            notices=() if notice is None else (notice,),
+        )
+    text = render_error_text(error)
+    if notice is None:
+        return text
+    from ...application.operator_output import sandbox_banner_line
+
+    return f"{sandbox_banner_line(notice)}\n{text}"
+
+
 def _command_identifier_from_path(command_path: str) -> str | None:
     """Map a click ``command_path`` to the dotted envelope command identifier.
 
@@ -529,17 +581,14 @@ def _emit_error_and_exit(error: CadrumoError) -> Never:
     :class:`~typer.Exit` with the category-mapped exit code. In JSON mode
     the shared-spine ``active_profile`` identity anchor and the dotted
     ``command`` identifier are resolved best-effort and injected into the
-    error document.
+    error document; the sandbox indicator rides both output modes via
+    :func:`render_error_payload`.
     """
     code = get_registered_error_code(error)
-    payload = (
-        render_error_json(
-            error,
-            active_profile=active_profile_label_for_error(),
-            command=_active_command_identifier(),
-        )
-        if json_output_requested()
-        else render_error_text(error)
+    payload = render_error_payload(
+        error,
+        as_json=json_output_requested(),
+        command=_active_command_identifier(),
     )
     write_stderr(payload)
     raise typer.Exit(code=get_error_exit_code(code.category)) from error

@@ -45,6 +45,11 @@ _THIRD_VALID_CIF = "B10000016"
 #: why a validating scan walks past it and reaches the unrelated one.
 _SUPPLIER_CIF_FAILING_CHECKSUM = "B17283945"
 
+#: A filer whose own identifier is a French VAT number. Nothing about a Spanish
+#: filing obligation requires the filer's stored identifier to be Spanish, and
+#: no checksum-asserting exclusion can see this one at all.
+_FOREIGN_OWN_VAT = "FR52422961982"
+
 
 def _resolve(candidates: tuple[IdentityCandidate, ...], *, own: str | None = _OWN_NIF):
     return resolve_counterparty_identity(
@@ -68,6 +73,8 @@ def test_the_fixture_identifiers_still_carry_the_properties_they_are_named_for()
     assert validate_spanish_tax_id(_OWN_NIF) == _OWN_NIF
     with pytest.raises(IdentityError):
         validate_spanish_tax_id(_SUPPLIER_CIF_FAILING_CHECKSUM)
+    with pytest.raises(IdentityError):
+        validate_spanish_tax_id(_FOREIGN_OWN_VAT)
 
 
 def test_the_measured_defect_shape_never_yields_a_first_match_identifier() -> None:
@@ -216,6 +223,79 @@ def test_the_own_identifier_exclusion_survives_printed_separators() -> None:
 
     assert resolution.resolved == _UNRELATED_VALID_CIF
     assert not any(c.value == _OWN_NIF for c in resolution.provenance.candidates)
+
+
+def test_a_foreign_filer_identifier_still_excludes_the_filer_from_candidacy() -> None:
+    """Exclusion is identity, not validity.
+
+    A profile whose own identifier is a French VAT number cannot pass the AEAT
+    control-character algorithm, so an exclusion routed through the checksum
+    validator produces an EMPTY exclusion set -- and the identifier printed on
+    every invoice this filer holds competes for the counterparty role. Here the
+    filer's own id is the only one carrying role evidence, so if it is not
+    excluded it RESOLVES, naming the filer as their own supplier.
+    """
+    resolution = _resolve(
+        (
+            IdentityCandidate(
+                value=_FOREIGN_OWN_VAT,
+                country_code="FR",
+                role_evidence="printed under 'Fournisseur'",
+            ),
+            IdentityCandidate(value=_UNRELATED_VALID_CIF),
+        ),
+        own=_FOREIGN_OWN_VAT,
+    )
+
+    assert resolution.resolved != _FOREIGN_OWN_VAT, "the filer was named as their own counterparty"
+    assert resolution.resolved is None
+    assert _FOREIGN_OWN_VAT not in {c.value for c in resolution.provenance.candidates}
+
+
+def test_a_checksum_invalid_filer_identifier_still_excludes_the_filer() -> None:
+    """The stored own id need not verify for the exclusion to run.
+
+    A Spanish identifier stored with a wrong control character is unverifiable,
+    not unknown -- and a strict-validator exclusion silently drops it, leaving
+    the filer in the pool.
+    """
+    resolution = _resolve(
+        (
+            IdentityCandidate(
+                value=_SUPPLIER_CIF_FAILING_CHECKSUM,
+                role_evidence="printed under 'Proveedor'",
+            ),
+            IdentityCandidate(value=_UNRELATED_VALID_CIF),
+        ),
+        own=_SUPPLIER_CIF_FAILING_CHECKSUM,
+    )
+
+    assert resolution.resolved is None
+    assert not any(
+        f.kind is DraftDiscrepancyKind.IDENTITY_UNVERIFIED for f in resolution.findings
+    ), "the filer's own identifier was reported as an unverifiable counterparty"
+
+
+def test_the_exclusion_note_reports_the_actual_exclusion_not_the_arguments_presence() -> None:
+    """A note claiming an exclusion that did not run is worse than no note.
+
+    The provenance clause is the only operator-facing signal that the filer was
+    removed from candidacy. Keyed on ``taxpayer_tax_id is not None`` it read
+    "after excluding the filer's own identifier" for every unusable stored id.
+    """
+    unusable = _resolve(
+        (IdentityCandidate(value=_UNRELATED_VALID_CIF, role_evidence="under 'Proveedor'"),),
+        own="   ",
+    )
+
+    assert "could not be excluded" in unusable.provenance.note
+    assert "after excluding the filer's own identifier" not in unusable.provenance.note
+
+    usable = _resolve(
+        (IdentityCandidate(value=_UNRELATED_VALID_CIF, role_evidence="under 'Proveedor'"),),
+        own=_OWN_NIF,
+    )
+    assert "after excluding the filer's own identifier" in usable.provenance.note
 
 
 def test_an_unknown_own_identifier_is_reported_rather_than_passed_over() -> None:

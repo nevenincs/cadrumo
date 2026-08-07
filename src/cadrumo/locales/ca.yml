@@ -796,11 +796,15 @@ application:
     bulk_import:
       errors:
         file_read_failed: No s'ha pogut llegir el fitxer d'importació massiva de factures.
+        formula_cell: El fitxer d'importació massiva de factures conté una cel·la
+          amb fórmula a la fila {row}, columna {column}; no s'accepten els valors
+          en memòria cau de les fórmules.
         missing_columns: 'Al fitxer d''importació massiva de factures li falten columnes
           obligatòries: {missing_columns}'
+        unreadable_table: 'El fitxer d''importació massiva de factures no conté cap
+          taula llegible: {detail}'
         unsupported_extension: El fitxer d'importació massiva de factures ha de ser
           .csv o .xlsx (s'ha rebut {extension}).
-        unreadable_table: 'El fitxer d''importació massiva de factures no conté cap taula llegible: {detail}'
     creation:
       errors:
         duplicate_invoice: 'Ja existeix una factura amb la mateixa identitat al catàleg:
@@ -6670,6 +6674,8 @@ errors:
       Torna a activar-la amb aeat config login NAME.
     refused_storage_unsecured_mode: L'emmagatzematge sense xifrar s'ha sol·licitat
       sense l'habilitació necessària. No és segur per a dades reals.
+    refused_tabular_source_unreadable: El fitxer tabular no s'ha pogut descodificar,
+      o no conté cap taula amb fila de capçalera.
     refused_taxation_comparison: La comparació tributària conjunta/individual no es
       pot realitzar per a aquest model o instantània.
     refused_topic_not_found: No s'ha trobat el tema sol·licitat.
@@ -6702,7 +6708,6 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
-    refused_tabular_source_unreadable: 'El fitxer tabular no s''ha pogut descodificar, o no conté cap taula amb fila de capçalera.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -64966,9 +64971,17 @@ modelo:
           iva-cuota-repercutida-reducido:
             help: null
             label: Quota d'IVA repercutit al tipus reduït (10%)
+          iva-cuota-repercutida-reducido-transitorio:
+            help: Casella transitòria del RD-ley 4/2024 per al tipus reduït, que conviu
+              amb el tipus reduït ordinari del 10%.
+            label: Quota d’IVA repercutit al tipus reduït transitori (5%/7,5%)
           iva-cuota-repercutida-super-reducido:
             help: null
             label: Quota d'IVA repercutit al tipus superreduït (4%)
+          iva-cuota-repercutida-super-reducido-transitorio:
+            help: Casella transitòria del RD-ley 4/2024 per al tipus superreduït,
+              que conviu amb el tipus superreduït ordinari del 4%.
+            label: Quota d’IVA repercutit al tipus superreduït transitori (2%)
           iva-cuota-soportada-importaciones:
             help: null
             label: Quota d'IVA suportat deduïble en importacions de béns corrents
@@ -65875,9 +65888,16 @@ modelo:
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: Total d'IVA repercutit calculat al tipus reduït del 10%.
               label: Quota d'IVA repercutit al tipus reduït (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: Casella transitòria del RD-ley 4/2024 per al tipus reduït, que
+                conviu amb el tipus reduït ordinari del 10%.
+              label: Quota d’IVA repercutit al tipus reduït transitori (5%/7,5%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: Total d'IVA repercutit calculat al tipus superreduït del 4%.
               label: Quota d'IVA repercutit al tipus superreduït (4%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng.help
+              label: Quota d’IVA repercutit al tipus superreduït transitori (2%)
             x-d5r62bjiclpnar3kc5i6u:
               help: Resultat de l'autoliquidació després de la fórmula d'ajust del
                 Modelo 303.

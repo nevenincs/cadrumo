@@ -141,6 +141,7 @@ if TYPE_CHECKING:
     from ._capabilities import (
         CapabilityDecision,
         CapabilitySource,
+        cloud_evidence_upload_eligible_for_active_profile,
         resolve_active_capability,
         resolve_capability,
     )
@@ -522,7 +523,13 @@ _LAZY_EXPORTS: dict[str, str] = {
         ("._profile_repository", ("ProfileRepository", "TAX_ID_FACT_PATH")),
         (
             "._capabilities",
-            ("CapabilityDecision", "CapabilitySource", "resolve_active_capability", "resolve_capability"),
+            (
+                "CapabilityDecision",
+                "CapabilitySource",
+                "cloud_evidence_upload_eligible_for_active_profile",
+                "resolve_active_capability",
+                "resolve_capability",
+            ),
         ),
         ("._integrity", ("ProfileIntegrityError",)),
         (
@@ -639,6 +646,7 @@ __all__ = [
     "censo_divergence_notice",
     "change_passphrase",
     "close_profile_session_artefacts",
+    "cloud_evidence_upload_eligible_for_active_profile",
     "complete_setup_with_lifecycle_span",
     "create_recovery_code",
     "decrypt_profile_bundle_with_passphrase",

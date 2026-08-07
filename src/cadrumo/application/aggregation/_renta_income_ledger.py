@@ -1019,10 +1019,10 @@ def _income_withheld_amount(
     """
     if not has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
         return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NOT_APPLICABLE)
-    # Declared-first. A retención the linked invoice states is the figure the
-    # document carries; the inference below reconstructs one from what reached
-    # the bank. Preferring the declared figure is the ADR's own ordering, and it
-    # needs no bound because nothing was inferred.
+    # Declared-first, by design. A retención the linked invoice states is the
+    # figure the document carries; the inference below reconstructs one from
+    # what reached the bank. The declared figure is preferred and needs no
+    # bound because nothing was inferred.
     if evidence is not None and evidence.retencion_amount is not None and evidence.retencion_amount > Decimal("0"):
         return _WithheldInference(
             evidence.retencion_amount,

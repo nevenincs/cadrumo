@@ -8,9 +8,9 @@ from pathlib import Path
 from typing import NamedTuple
 
 import pytest
+from dev.locales import LocaleManager
 
 from .....core.errors import ERROR_REGISTRY, CadrumoError, get_registered_error_code
-from .....locales.manager import LocaleManager
 from .....tests import (
     SRC_CADRUMO,
     ast_for_path,

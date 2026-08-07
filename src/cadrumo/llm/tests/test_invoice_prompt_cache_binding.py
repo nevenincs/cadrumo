@@ -120,7 +120,7 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         extractor = TextInvoiceFieldExtractor(model="some-text-model", period=_ANNUAL_2026)
         compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
 
-        assert extractor.decided_by == f"llm:text-extract:some-text-model:rates-{compiled.rate_provenance}"
+        assert extractor.decided_by == f"llm:local-text-extract:some-text-model:rates-{compiled.rate_provenance}"
 
     def test_a_different_rate_period_produces_a_different_stamp(self) -> None:
         """The discriminating control: the stamp moves when the rates move."""

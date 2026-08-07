@@ -35,13 +35,23 @@ before being carried into ``detail_rows`` on the ``CalculationRevision``.
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
-from typing import Annotated, Literal
+from enum import StrEnum
+from types import MappingProxyType
+from typing import Annotated, Final, Literal
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, Field, StringConstraints, ValidationInfo, field_validator, model_validator
 
-from ...core import M210_TIPO_RENTA_CODE_PROJECTION, M347_THRESHOLD_EUR, STRICT_FROZEN_CONFIG, M210PayerMode
+from ...core import (
+    M210_TIPO_RENTA_CODE_PROJECTION,
+    M347_THRESHOLD_EUR,
+    STRICT_FROZEN_CONFIG,
+    M210PayerMode,
+    MetodoValoracion,
+    TipoOperacionVinculada,
+    TipoVinculacion,
+)
 from ...core.errors import CadrumoError
 from ...core.identity import nif_iva_format_for_country
 
@@ -117,52 +127,20 @@ class Modelo184MemberRow(BaseModel):
 # One row per related-party transaction group.
 # ---------------------------------------------------------------------------
 
-# Closed catalogue of válid tipo_vinculacion codes per M232 form.
-_M232_TIPO_VINCULACION = Literal[
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-]
+# The three coded fields' value sets are AEAT's published Tablas A, C and B
+# of the diseño de registro DR23200. They are declared once in ``core`` --
+# see :class:`~core.TipoVinculacion`, :class:`~core.TipoOperacionVinculada`
+# and :class:`~core.MetodoValoracion` -- because the registry's own
+# related-party observation is typed with the same sets.
 
-# Closed catalogue of valid tipo_operacion codes per M232 form.
-_M232_TIPO_OPERACION = Literal[
-    "01",
-    "02",
-    "03",
-    "04",
-    "05",
-    "06",
-    "07",
-    "08",
-    "09",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
-]
-
-# Closed catalogue of transfer-pricing method codes per M232 / LIS art. 18.
-_M232_METODO = Literal["CUP", "RPM", "CPM", "PS", "TNMM", ""]
+_M232_CODE_SETS: Final[Mapping[str, type[StrEnum]]] = MappingProxyType(
+    {
+        "tipo_vinculacion": TipoVinculacion,
+        "tipo_operacion": TipoOperacionVinculada,
+        "metodo": MetodoValoracion,
+    },
+)
+"""Field name to its DR23200 code set, read by the hydrating validator."""
 
 
 class Modelo232VinculadaRow(BaseModel):
@@ -170,6 +148,11 @@ class Modelo232VinculadaRow(BaseModel):
 
     Fields mirror the related_party_operation binding source declared in
     ``232/revisions/2018-y-siguientes/bindings/0218…0223-*.toml``.
+
+    The three coded fields carry the closed catalogues AEAT's diseño de
+    registro DR23200 publishes as Tablas A, C and B — off-catalogue codes are
+    refused here rather than travelling into a fichero field that cannot hold
+    them.
 
     Parity assertions:
     * ``nif`` → ``counterparty_tax_id`` (binding: modelo-232-related-party-row-nif)
@@ -186,9 +169,9 @@ class Modelo232VinculadaRow(BaseModel):
     nif: _NifStr
     nombre: _NameStr = Field(default="")
     pais: _IsoCountryCode = Field(default="ES")
-    tipo_vinculacion: str = Field(default="1", min_length=1, max_length=2)
-    tipo_operacion: str = Field(default="01", min_length=1, max_length=2)
-    metodo: str = Field(default="", max_length=6)
+    tipo_vinculacion: TipoVinculacion = TipoVinculacion.NO_DECLARADO
+    tipo_operacion: TipoOperacionVinculada = TipoOperacionVinculada.NO_DECLARADO
+    metodo: MetodoValoracion = MetodoValoracion.NO_DECLARADO
     importe: Decimal
 
     @field_validator("pais")
@@ -205,10 +188,25 @@ class Modelo232VinculadaRow(BaseModel):
             raise ValueError("nif cannot be blank")
         return value.upper()
 
-    @field_validator("metodo")
+    @field_validator("tipo_vinculacion", "tipo_operacion", "metodo", mode="before")
     @classmethod
-    def _metodo_uppercase(cls, value: str) -> str:
-        return value.upper()
+    def _hydrate_m232_codigo(cls, value: object, info: ValidationInfo) -> object:
+        """Hydrate the operator's text into its typed DR23200 code set.
+
+        The CLI delivers `--row vinculada k=v` as plain strings and the model is
+        strict, so this is the boundary that turns a token into a member. An
+        off-catalogue token is refused here rather than by the strict-instance
+        check, so the message can name the codes AEAT actually publishes instead
+        of only reporting the wrong type.
+        """
+        if not isinstance(value, str):
+            return value
+        code_set = _M232_CODE_SETS[info.field_name]
+        try:
+            return code_set(value.upper())
+        except ValueError:
+            accepted = ", ".join(repr(str(member)) for member in code_set)
+            raise ValueError(f"{info.field_name} must be one of {accepted}; got {value!r}") from None
 
 
 # ---------------------------------------------------------------------------

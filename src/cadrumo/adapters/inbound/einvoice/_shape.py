@@ -16,21 +16,33 @@ from __future__ import annotations
 from io import BytesIO
 from xml.etree.ElementTree import Element
 
-from ....core import DocumentShape
+from ....core import DocumentShape, detect_image_media_type
+from ....core.errors import CoreValidationError
 from ._xml import EInvoiceXmlParseError, parse_hardened_xml
 
 __all__ = ["EMBEDDED_XML_SUFFIXES", "iter_pdf_embedded_files", "probe_document_shape"]
 
 _PDF_MAGIC = b"%PDF-"
-_IMAGE_MAGICS: tuple[bytes, ...] = (
-    b"\xff\xd8\xff",  # JPEG
-    b"\x89PNG\r\n\x1a\n",  # PNG
-    b"GIF87a",
-    b"GIF89a",
-    b"BM",  # BMP
-    b"II*\x00",  # TIFF little-endian
-    b"MM\x00*",  # TIFF big-endian
-)
+
+
+def _is_image(data: bytes) -> bool:
+    """Return whether the bytes are an image this product can actually read.
+
+    Delegates to :func:`~core.detect_image_media_type`, the single sniffer, so
+    the probe's notion of "image" and the vision transport's cannot diverge.
+    A local magic-byte tuple here diverged in BOTH directions: it omitted WebP,
+    which it structurally could not express because a single-offset
+    ``startswith`` cannot match a magic split across offsets 0 and 8, so a WebP
+    receipt probed ``UNKNOWN`` and was refused at admission despite
+    :class:`~core.ImageMediaType` carrying a member for exactly that case; and
+    it admitted BMP and TIFF, which the sniffer refuses, so those passed
+    admission and raised later against evidence already accepted.
+    """
+    try:
+        detect_image_media_type(data)
+    except CoreValidationError:
+        return False
+    return True
 
 EMBEDDED_XML_SUFFIXES: tuple[str, ...] = (
     "factur-x.xml",
@@ -218,7 +230,7 @@ def probe_document_shape(data: bytes, *, has_text_layer: bool | None = None) -> 
         if has_text_layer is False:
             return DocumentShape.PDF_SCAN
         return DocumentShape.PDF_TEXT_LAYER
-    if data.startswith(_IMAGE_MAGICS):
+    if _is_image(data):
         return DocumentShape.IMAGE
     shape = _xml_shape(data)
     return shape if shape is not None else DocumentShape.UNKNOWN

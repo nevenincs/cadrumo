@@ -1,37 +1,51 @@
 /* Casilla reference presentation. Owned by the casilla reference surface.
  *
  * The generated per-modelo pages (dev/docs/casilla_reference.py) are the
- * landing place for a search result, so a reader arrives cold. The design
- * ranks the page by what a taxpayer needs first: the official box number and
- * its label, the prose saying what goes in it, the filing facts as scannable
- * chips, the law as named links, and the registry's own identifiers folded
- * away in a disclosure.
+ * landing place for a search result, so a reader arrives cold and there is no
+ * per-casilla prose to lean on. The design therefore ranks each entry by the
+ * question a filer actually has: what box is this (number + label), HOW does it
+ * get filled (entered / calculated from other boxes / filled from your
+ * records), what shape of value and is it mandatory, what law establishes it -
+ * and the registry's own identifiers folded away in a disclosure.
  *
  * Tokens come from the Furo skeleton (--color-*) and the Cadrumo theme layer
  * (--cadrumo-radius-*), so light and dark both track the site.
  */
 
-/* ── Page lead and section jump list ──────────────────────────────────── */
+/* ── Modelo overview ──────────────────────────────────────────────────── */
 
-.casilla-page-intro {
-  margin: 0 0 1.5rem;
+.modelo-overview {
+  margin: 0 0 1.25rem;
 }
 
-.casilla-page-lead {
+.modelo-overview__name {
   margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--color-foreground-secondary);
+}
+
+.modelo-overview__definition {
+  margin: 0.6rem 0 0;
   font-size: 1.05rem;
-  line-height: 1.55;
+  line-height: 1.6;
   color: var(--color-foreground-primary);
 }
 
-.casilla-page-count {
-  margin: 0.35rem 0 0;
-  font-family: var(--font-stack--monospace);
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--color-foreground-muted);
+.modelo-overview__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.4rem;
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
 }
+
+.modelo-overview .casilla-card__legal {
+  margin-top: 0.7rem;
+}
+
+/* ── Page lead and section jump list ──────────────────────────────────── */
 
 .casilla-section-nav {
   margin: 0 0 2.5rem;
@@ -140,6 +154,63 @@
   color: var(--color-foreground-secondary);
 }
 
+/* ── How the box gets filled (the substance of an entry) ──────────────── */
+
+.casilla-fill {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.45rem;
+  align-items: baseline;
+  margin: 0.55rem 0 0;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  border-left: 2px solid var(--color-background-border);
+  border-radius: 0 var(--cadrumo-radius-s, 6px) var(--cadrumo-radius-s, 6px) 0;
+  background: light-dark(var(--color-background-secondary), rgb(0 0 0 / 18%));
+}
+
+.casilla-fill__kind {
+  font-weight: 600;
+  color: var(--color-foreground-primary);
+}
+
+.casilla-fill__detail {
+  color: var(--color-foreground-secondary);
+}
+
+.casilla-fill--computed {
+  border-left-color: light-dark(#6f9a82, #6f9a82);
+}
+
+.casilla-fill--bound {
+  border-left-color: light-dark(#6e93ad, #6e93ad);
+}
+
+.casilla-fill--manual {
+  border-left-color: var(--color-brand-content);
+}
+
+.casilla-fill--informational {
+  border-left-color: var(--color-foreground-muted);
+}
+
+.casilla-derives-from {
+  display: inline;
+}
+
+.casilla-derives-from__ref {
+  font-family: var(--font-stack--monospace);
+  font-size: 0.82rem;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.casilla-fact--internal {
+  font-style: italic;
+}
+
 /* ── Filing facts ─────────────────────────────────────────────────────── */
 
 .casilla-card__facts {
@@ -160,16 +231,6 @@
   background: var(--color-background-secondary);
   border: 1px solid var(--color-background-border);
   border-radius: 999px;
-}
-
-.casilla-fact--computed {
-  color: light-dark(#2c5f45, #9cd3b3);
-  border-color: light-dark(#a9cdb8, #3c5f4c);
-}
-
-.casilla-fact--bound {
-  color: light-dark(#2a5470, #9ec7e2);
-  border-color: light-dark(#a7c4d8, #395a70);
 }
 
 .casilla-fact--required {
@@ -198,7 +259,7 @@
 .casilla-card__legal-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 0.5rem;
+  gap: 0.15rem 1.1rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -208,11 +269,6 @@
   margin: 0;
 }
 
-.casilla-card__legal-list li + li::before {
-  margin-right: 0.5rem;
-  color: var(--color-foreground-muted);
-  content: "·";
-}
 
 .casilla-legal-ref {
   font-size: 0.85rem;

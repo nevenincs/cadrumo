@@ -160,7 +160,7 @@ def test_assemble_related_party_reads_operation_kind_and_method() -> None:
         RowSetCellEdit(binding="modelo-232-related-party-row-name", row_index=1, value="Counter SL"),
         RowSetCellEdit(binding="modelo-232-related-party-row-country", row_index=1, value="ES"),
         RowSetCellEdit(binding="modelo-232-related-party-row-operation-kind", row_index=1, value="01"),
-        RowSetCellEdit(binding="modelo-232-related-party-row-tpr-method", row_index=1, value="CUP"),
+        RowSetCellEdit(binding="modelo-232-related-party-row-tpr-method", row_index=1, value="1A"),
         RowSetCellEdit(binding="modelo-232-related-party-row-amount", row_index=1, value=Decimal("50000")),
     )
 
@@ -170,7 +170,7 @@ def test_assemble_related_party_reads_operation_kind_and_method() -> None:
     obs = observations[0]
     assert obs.counterparty_tax_id == "A12345678"
     assert obs.operation_kind_code == "01"
-    assert obs.transfer_pricing_method_code == "CUP"
+    assert obs.transfer_pricing_method_code == "1A"
     assert obs.amount == Decimal("50000")
 
 

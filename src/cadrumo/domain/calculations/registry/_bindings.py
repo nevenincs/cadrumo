@@ -864,6 +864,9 @@ class _ManualInputSelector(BaseModel):
     field: str | None = Field(default=None, min_length=1, max_length=128)
     offset: int | None = Field(default=None, ge=1)
     length: int | None = Field(default=None, ge=1)
+    # implicit-decimal scale of a record-field slot, declared per the diseno de
+    # registro because the width alone does not imply it
+    decimals: int | None = Field(default=None, ge=0)
     # both shapes
     data_type: _ManualInputDataType
 

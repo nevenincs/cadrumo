@@ -88,6 +88,7 @@ from ._errors import (
     ProrrataInputError,
     ProrrataSectorError,
 )
+from ._establishment import SPAIN_COUNTRY_CODE, territorial_scope_for_country
 from ._flow import (
     DEDUCIBLE_FLOW_DIRECTIONS,
     DEVENGADA_FLOW_DIRECTIONS,
@@ -197,6 +198,7 @@ __all__ = [
     "REGIME_LEGENDS",
     "REGIME_PERIODICITY",
     "SEPA_ZONE_COUNTRY_CODES",
+    "SPAIN_COUNTRY_CODE",
     "CustomerTaxStatus",
     "DeductionScope",
     "EUMemberState",
@@ -301,6 +303,7 @@ __all__ = [
     "settlement_sides_for_flow",
     "split_gross_at_rate",
     "sum_deductible_amounts",
+    "territorial_scope_for_country",
     "validate_prorrata_reference",
     "verify_catalogue",
 ]

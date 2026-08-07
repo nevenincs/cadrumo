@@ -56,8 +56,15 @@ document and no gap exists. Counting those would inflate the population with
 entries that are correct, which is the over-claim this floor exists to avoid.
 """
 
-_HEADING_ONLY_CEILING: Final[int] = 32
+_HEADING_ONLY_CEILING: Final[int] = 31
 """Entries whose required_text is satisfied by the heading alone, measured 2026-08-07.
+
+Lowered 32 -> 31 the same day, when ``ley-37-1992:art-94`` -- the entry this
+gate was built from -- was actually corrected: its excerpt was refreshed from
+the live BOE consolidated text (it had been cut off mid-apartado Uno in the
+pre-RDL-7/2021 redaction, missing apartados Dos and Tres entirely) and its
+``required_text`` requoted onto two operative phrases, one from Uno.1.c) and
+one from Tres.
 
 Shrink-only. Every one is stamped ``review_status = "reviewed"``, which is what
 makes the population worth pinning: the stamp says a human checked it, and the
@@ -154,22 +161,45 @@ def test_the_ceiling_is_not_stale_slack() -> None:
 def test_the_measurement_would_notice_a_body_phrase() -> None:
     """Anti-tautology: the sweep must distinguish a heading quote from a body quote.
 
-    Every assertion above counts entries the predicate selects. If the predicate
-    matched everything, or nothing, both tests would still pass on a stable
-    corpus and prove nothing. This pins that it separates the two cases on real
-    bundled text.
+    Every assertion above counts entries the predicate selects. If the
+    predicate matched everything, or nothing, both tests would still pass on a
+    stable corpus and prove nothing. This pins that it separates the two cases
+    on real bundled text, by driving BOTH sides.
+
+    ``ley-37-1992:art-94`` is the worked example this gate was built from and
+    is now the CORRECTED side: its excerpt was refreshed from live BOE and its
+    required_text requoted onto the operative provision, so it must no longer
+    be selected. ``ley-37-1992:art-20`` is the uncorrected side -- the LIVA
+    exemptions article, grounded by a phrase that survives any truncation of
+    its 30,000 characters -- so it must still be selected. An entry moving
+    across that line without the ceiling moving is exactly the drift the
+    ratchet exists to catch.
     """
-    entries = {key: entry for key, entry in _legal_entries()}
+    entries = dict(_legal_entries())
+    selected = {key for key, _ in _heading_only_entries()}
+
     art_94 = entries.get("ley-37-1992:art-94")
     assert art_94 is not None, "the worked example this gate was built from has gone"
-
     text = _excerpt_text(str(art_94["corpus_ref"]))
     assert text is not None
     heading = text[:_HEADING_WINDOW].lower()
 
-    # Its own required_text is the title, and lands in the heading.
-    assert all(str(phrase).lower() in heading for phrase in art_94["required_text"])
-    # A phrase from the operative point does NOT, which is what the gate asks for.
-    operative = "prestaciones de servicios sujetas y no exentas"
-    assert operative in text.lower(), "the excerpt no longer carries the operative phrase this pins"
-    assert operative not in heading, "the heading window has grown to swallow the operative text"
+    # Its phrases now come from the body, so at least one falls outside the heading.
+    assert not all(str(phrase).lower() in heading for phrase in art_94["required_text"]), (
+        "art. 94 was requoted onto its operative provision; a required_text that fits "
+        "entirely in the heading means the correction was reverted"
+    )
+    assert "ley-37-1992:art-94" not in selected, "the corrected entry must leave the population"
+
+    # And the refreshed excerpt must still carry the apartados the truncation dropped,
+    # which is what made the heading-only grounding dangerous rather than merely weak.
+    lowered = text.lower()
+    assert "en ningún caso procederá la deducción" in lowered, "apartado Tres is missing again"
+    assert "20 bis, 21, 22, 23, 24 y 25" in lowered, "the exempt-operations point is missing again"
+
+    # The other side: an entry still grounded on its title must still be selected,
+    # or the predicate has stopped selecting anything and the ceiling is vacuous.
+    assert "ley-37-1992:art-20" in selected, (
+        "the predicate no longer selects a known heading-only entry, so the counts above "
+        "would pass on an empty population"
+    )

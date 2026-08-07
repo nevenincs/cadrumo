@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from typing import TypeIs
 
 import pytest
 
@@ -75,7 +76,7 @@ def _compiled_patterns(module_path: Path) -> tuple[str, ...]:
         if alias.name == "compile"
     }
 
-    def _is_compile_call(node: ast.AST) -> bool:
+    def _is_compile_call(node: ast.AST) -> TypeIs[ast.Call]:
         if not isinstance(node, ast.Call):
             return False
         func = node.func

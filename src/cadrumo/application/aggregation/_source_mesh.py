@@ -153,6 +153,14 @@ CalculationSourceDiagnosticReason = Literal[
     # from `unrouted_observation` because the remedy is different: that one
     # needs a binding, this one needs a conversion rate on the record.
     "unconverted_foreign_currency",
+    # An invoice whose declared IVA treatment and whose counterparty contradict
+    # each other: an intra-community supply to a third country, or an export to
+    # a member state. Routing on the category alone would declare volume the
+    # taxpayer never supplied that way, so the line is withheld -- and this
+    # reason exists so the withholding is reported rather than silent. The
+    # bank-transaction path returns a typed gate issue for the same shape; the
+    # invoice projector returns observations, so it reports through here.
+    "invoice_category_counterparty_mismatch",
     "official_box_unpopulated",
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",

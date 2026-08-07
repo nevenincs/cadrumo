@@ -98,6 +98,7 @@ class ParsedEInvoice:
         "iva_category",
         "lines",
         "recargo_amount",
+        "regime_legend",
         "shape",
         "supplier_name",
         "supplier_tax_id",
@@ -119,6 +120,12 @@ class ParsedEInvoice:
         self.grand_total: Decimal | None = None
         self.recargo_amount: Decimal | None = None
         self.iva_category: str | None = None
+        # The statutory mention the document itself prints, copied verbatim.
+        # Transcriptive evidence, never a classification: the category code
+        # already says what the record MEANS, while this says what the issuer
+        # WROTE. The two are read from different elements precisely so a
+        # disagreement between them stays visible to the operator.
+        self.regime_legend: str | None = None
         self.lines: list[ParsedEInvoiceLine] = []
         self.iva_breakdown: list[tuple[Decimal | None, Decimal | None, Decimal | None]] = []
 
@@ -258,6 +265,14 @@ def _parse_cii(root: Element) -> ParsedEInvoice:
     if docs:
         parsed.invoice_number = _first_text(docs[0], "ID")
         parsed.invoice_date = _first_text(docs[0], "DateTimeString")
+        # CII's document-level IncludedNote is the BT-22 counterpart of UBL's
+        # cbc:Note, scoped to the ExchangedDocument so a line-level note cannot
+        # be mistaken for the document's statutory mention.
+        for note in _find_all(docs[0], "IncludedNote"):
+            content = _first_text(note, "Content")
+            if content:
+                parsed.regime_legend = content
+                break
     for party_name, target in (("SellerTradeParty", "supplier"), ("BuyerTradeParty", "customer")):
         found = _find_all(root, party_name)
         if found:
@@ -279,6 +294,8 @@ def _parse_cii(root: Element) -> ParsedEInvoice:
             parsed.iva_breakdown.append((rate, base, amount))
             if parsed.iva_category is None:
                 parsed.iva_category = _category_for(_first_text(tax, "CategoryCode"))
+            if parsed.regime_legend is None:
+                parsed.regime_legend = _first_text(tax, "ExemptionReason")
     for item in _find_all(root, "IncludedSupplyChainTradeLineItem"):
         rate = None
         for tax in _find_all(item, "ApplicableTradeTax"):
@@ -312,6 +329,16 @@ def _parse_ubl(root: Element) -> ParsedEInvoice:
             parsed.invoice_date = child.text.strip()
         if _local(child.tag) == "DocumentCurrencyCode" and child.text:
             parsed.currency = child.text.strip()
+        # A document-level cbc:Note is where UBL carries the statutory mention
+        # an issuer prints (EN16931 BT-22). Read as free text in the document's
+        # OWN language, never matched against a Spanish phrase list: an
+        # intra-community invoice states its exemption in the issuer's
+        # language, and a phrase match would silently recover nothing there
+        # while appearing to work on every domestic document.
+        if _local(child.tag) == "Note" and child.text and parsed.regime_legend is None:
+            parsed.regime_legend = child.text.strip() or None
+    if parsed.regime_legend is None:
+        parsed.regime_legend = _first_text(root, "TaxExemptionReason")
     for party_tag, target in (("AccountingSupplierParty", "supplier"), ("AccountingCustomerParty", "customer")):
         found = _find_all(root, party_tag)
         if found:
@@ -377,6 +404,12 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
     for issue in _find_all(invoice, "InvoiceIssueData"):
         parsed.invoice_date = _first_text(issue, "IssueDate")
         parsed.currency = _first_text(issue, "InvoiceCurrencyCode")
+    # Facturae states the statutory mention as a LegalLiterals/LegalReference
+    # free-text line, the national counterpart of the EN16931 note.
+    for literals in _find_all(invoice, "LegalLiterals"):
+        parsed.regime_legend = _first_text(literals, "LegalReference")
+        if parsed.regime_legend is not None:
+            break
     total_output_tax: Decimal | None = None
     for totals in _find_all(invoice, "InvoiceTotals"):
         parsed.taxable_base = _decimal(_first_text(totals, "TotalGrossAmountBeforeTaxes"))

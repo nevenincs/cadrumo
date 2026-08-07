@@ -552,7 +552,7 @@ _RESULT_PAYLOAD_PREFIXES: tuple[str, ...] = ("result.", "result[")
 def result_frame_asserts_result_payload(sequence: ParsedSequence) -> bool:
     """Whether the sequence's ``@result`` frame asserts the result PAYLOAD.
 
-    The tightened @result contract (ADR D4) requires at least one ``@expect`` on
+    The tightened @result contract requires at least one ``@expect`` on
     the result payload — a ``result.<path>`` / ``result[...]`` json-path — so a
     sequence verifies the MEANING of its final output, not merely that the process
     exited (``exit_code``) or that the envelope status equals a value (``status``,
