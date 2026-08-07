@@ -4,7 +4,7 @@ tags:
   - '#history-onboarding'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:d77258c4dfd3615d56b7fd6d0b0f4c9b3aa56eb1d548f6d6ee9a4c5e126de439'
+body_hash: 'sha256:c58a27761316382dc30e527f1b79ee66b1f2860dd8b8c2c06392689f9b32d0bb'
 tier: L2
 related:
   - '[[2026-08-07-history-onboarding-adr]]'
@@ -40,6 +40,24 @@ real signal worth an advisory (`P03.S19`), while an `AEAT_REGISTER_OPTIONS`-only
 rows is reported as a plain negative, never an anomaly, because that signal's informativeness is
 still unconfirmed.
 
+Both worlds are handled without needing to know which one applies at build time: if the combobox
+is genuinely NIF-scoped, it purely widens coverage; if it is a static universal list, every walked
+pair is still captured correctly (each per-pair search is independently authenticated and
+taxpayer-scoped through the existing `capture_filed_data` search regardless of the combobox's own
+scoping), so accuracy never degrades either way. What changes is only what the report may honestly
+claim about pairs that returned nothing. `P01.S20` adds a cheap, offline, zero-extra-cost
+self-diagnosing heuristic (`classify_register_scoping_signal`) that compares the combobox's modelo
+set against the profile's `confidently_excluded` set: a confidently-excluded modelo appearing with
+populated ejercicios is real evidence the list is not filtered per taxpayer (`LIKELY_UNIVERSAL`);
+a combobox modelo set that stays entirely inside `surfaced | advised` is weak supportive evidence
+of NIF-scoping (`LIKELY_NIF_SCOPED`); neither observed condition is `INCONCLUSIVE`. This is a
+label, never a resolved boolean, and it never proves scoping either way. Per the operator's
+instruction, `FiledHistoryOnboardingResult` (`P03.S06`) carries NO numeric completeness percentage
+or fraction computed over `AEAT_REGISTER_OPTIONS`-tagged pairs; instead it carries the
+`scoping_signal` label and a prose `denominator_note` worded per that label, so an operator is
+never shown a confidence number implying an unconfirmed AEAT-sourced set represents their own
+history.
+
 It does not restate or duplicate the sibling plans it depends on: `[[2026-08-07-declarations-register-pagination-adr]]`
 owns its own self-contained L1 plan for parser-level pagination detection, executing independently
 (this plan's coverage report consumes that sibling's per-pair completeness signal once it lands,
@@ -52,11 +70,12 @@ re-decide it, and no Step here touches that register.
 
 Every verification gate below uses the repository's existing synthetic-HTML fixture pattern
 (the same shape as `declaraciones-modelo-100-paginated-synthetic.html`); no Step in this plan
-performs or requires a live authenticated AEAT session. A live-account confidence check of the
-`AEAT_REGISTER_OPTIONS` combobox's NIF-scoping is explicitly out of scope for this plan and
-requires separate operator sign-off not yet given; the design does not depend on that check ever
-resolving, because `PROFILE_APPLICABILITY` ships as the load-bearing signal regardless of its
-outcome.
+performs or requires a live authenticated AEAT session, including the scoping heuristic, which is
+a pure function over data already fetched for another authorised purpose. A live-account
+confidence check of the `AEAT_REGISTER_OPTIONS` combobox's true NIF-scoping is explicitly out of
+scope for this plan and requires separate operator sign-off not yet given; the design does not
+depend on that check ever resolving, because `PROFILE_APPLICABILITY` ships as the load-bearing
+signal regardless of its outcome.
 
 ## Steps
 
@@ -70,6 +89,7 @@ Land dual-tier availability discovery: a taxpayer-specific PROFILE_APPLICABILITY
 - [ ] `P01.S04` - add the aeat app live filed discover verb emitting the availability report as the envelope result plus the live-scope caveat Notice, verified by test_documented_command_conformance.py and a new JSON-schema conformance case; `src/cadrumo/entrypoints/cli/_app_live.py`.
 - [ ] `P01.S17` - add expected_filed_declaration_grid deriving a taxpayer-specific candidate modelo and ejercicio grid from TaxpayerProfile applicability and activity_start_date, verified by a test asserting the grid matches a hand-built profile fixture's expected modelos and year span; `src/cadrumo/application/live/_filed_data_capture.py`.
 - [ ] `P01.S18` - add FiledHistoryDiscoveryReport combining the AEAT_REGISTER_OPTIONS combobox signal and the PROFILE_APPLICABILITY expected grid into one provenance-tagged walk set per (modelo, ejercicio) pair, verified by a test asserting a pair present in both signals carries both provenance tags and a pair present in only one carries only that tag; `src/cadrumo/application/live/_filed_data_capture.py`.
+- [ ] `P01.S20` - add classify_register_scoping_signal comparing the AEAT_REGISTER_OPTIONS modelo set against the profile's confidently_excluded set from build_obligation_coverage, returning LIKELY_UNIVERSAL, LIKELY_NIF_SCOPED or INCONCLUSIVE, verified by three synthetic-fixture tests, one per classification, none asserting a resolved boolean; `src/cadrumo/application/live/_filed_data_capture.py`.
 
 ### Phase `P02` - Provenance parity proof
 
@@ -84,7 +104,7 @@ new kind.
 Sequence discovery, bulk filed capture, IVA wallet reconciliation and notificaciones pull behind
 one standalone pull-all verb, with a re-capture divergence diff surfaced as a standing advisory.
 
-- [ ] `P03.S06` - add the FiledHistoryOnboardingResult typed result model carrying per-pair outcomes, IVA wallet reconciliation status, notificaciones pull status and the divergence Notice list, verified by a strict roundtrip test; `src/cadrumo/entrypoints/cli/_app_live_payloads.py`.
+- [ ] `P03.S06` - add the FiledHistoryOnboardingResult typed result model carrying per-pair outcomes, IVA wallet reconciliation status, notificaciones pull status, the divergence Notice list, the CoverageScopingSignal classification and a prose denominator_note field, and no numeric completeness percentage or fraction over AEAT_REGISTER_OPTIONS-tagged pairs, verified by a strict roundtrip test plus a test asserting the model schema carries no percentage or fraction field; `src/cadrumo/entrypoints/cli/_app_live_payloads.py`.
 - [ ] `P03.S07` - add the re-capture divergence diff comparing a fresh FiledDeclaracionObservation against the prior stamped observation for the same modelo, ejercicio and period key, verified by a test that re-captures a fixture with one changed casilla value and asserts exactly one WARNING Notice naming that casilla; `src/cadrumo/application/live/_filed_data_capture.py`.
 - [ ] `P03.S08` - add the pull_filed_history orchestration service walking the FiledHistoryDiscoveryReport union grid, calling capture_filed_data_bulk over it, then capture_iva_compensation_wallet and reconcile_iva_compensation_wallet, then the existing notificaciones pull, verified by an integration test against synthetic fixtures for every stage asserting the composed FiledHistoryOnboardingResult reflects every stage's outcome; `src/cadrumo/application/live/_filed_data_capture.py`.
 - [ ] `P03.S09` - add the aeat app live filed pull-all verb, verified by test_documented_command_conformance.py and a new JSON-schema conformance case; `src/cadrumo/entrypoints/cli/_app_live.py`.
@@ -112,18 +132,19 @@ separate row.
 P01 has no dependency on any other Phase and can start immediately. Within P01, `S01` (models)
 blocks `S02` (AEAT_REGISTER_OPTIONS reader) and `S17` (PROFILE_APPLICABILITY grid), which can run
 in parallel with each other once `S01` closes; `S18` (the union report) depends on both `S02` and
-`S17`; `S03` (service wrapper) depends on `S02`; `S04` (CLI verb) depends on `S03` and `S18`. P02
-depends only on the existing `capture_filed_data` path (already shipped) and can run in parallel
-with P01. P03 depends on P01 closing in full (needs `S18`'s union report shape) and on the
-provenance settlement recorded by P02, so P03 does not start until both close; within P03, `S06`
-(result model) and `S07` (divergence diff) can run in parallel with each other, `S08`
-(orchestration) depends on both plus `S18`, `S19` (expected-but-not-found advisory) depends on
-`S08`, and `S09`-`S10` (CLI verb, write-guard enrollment) depend on `S08`. P04 depends on P03
-closing (the CLI verb and its identifiers must exist before the sweep can reference them); within
-P04, `S11` (overview Notice) is independent of `S13`-`S16` and may run in parallel with them.
-`S12` (locale rows) additionally carries a standing dependency on the shared locale catalogues
-settling any unrelated in-flight peer write before it lands, independent of this plan's own
-internal ordering.
+`S17`; `S20` (scoping heuristic) depends only on `S02` and `S17` (it reads their output, not
+`S18`'s union) and may run in parallel with `S18`; `S03` (service wrapper) depends on `S02`; `S04`
+(CLI verb) depends on `S03`, `S18` and `S20`. P02 depends only on the existing
+`capture_filed_data` path (already shipped) and can run in parallel with P01. P03 depends on P01
+closing in full (needs `S18`'s union report shape and `S20`'s signal) and on the provenance
+settlement recorded by P02, so P03 does not start until both close; within P03, `S06` (result
+model) and `S07` (divergence diff) can run in parallel with each other, `S08` (orchestration)
+depends on both plus `S18`, `S19` (expected-but-not-found advisory) depends on `S08`, and
+`S09`-`S10` (CLI verb, write-guard enrollment) depend on `S08`. P04 depends on P03 closing (the
+CLI verb and its identifiers must exist before the sweep can reference them); within P04, `S11`
+(overview Notice) is independent of `S13`-`S16` and may run in parallel with them. `S12` (locale
+rows) additionally carries a standing dependency on the shared locale catalogues settling any
+unrelated in-flight peer write before it lands, independent of this plan's own internal ordering.
 
 This plan's Phases are independent of the sibling `declarations-register-pagination` plan's
 Phases; no Step here blocks on that plan's Steps, and no Step there blocks on this plan.
@@ -133,7 +154,9 @@ Phases; no Step here blocks on that plan's Steps, and no Step there blocks on th
 The plan is complete when every Step above is closed (`- [x]`) and its named gate is green:
 every new pydantic model passes a strict roundtrip test; every new adapter and service function
 is verified against synthetic-HTML fixtures, never a live AEAT session; the union report tags
-each pair with the correct provenance set; the expected-but-not-found advisory fires only for
+each pair with the correct provenance set; the scoping heuristic classifies each of its three
+synthetic fixtures correctly and the result model carries no percentage or fraction field over
+`AEAT_REGISTER_OPTIONS`-tagged pairs; the expected-but-not-found advisory fires only for
 `PROFILE_APPLICABILITY` pairs and never for `AEAT_REGISTER_OPTIONS`-only pairs; every new CLI verb
 passes `test_documented_command_conformance.py` and its JSON-schema conformance case; the
 write-guard enrollment test recognises `app live filed pull-all` as profile-bound; the locale gate

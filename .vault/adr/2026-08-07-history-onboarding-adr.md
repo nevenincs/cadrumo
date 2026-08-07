@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:b15606a4981eca598eb919caa22fa347679228e9fb51832bb4842c8ade57dc57'
+body_hash: 'sha256:ed8fa52337323b100fd691f88b9705f8e21d0a12a257f79eb9c9c84fd4df1e93'
 related:
   - "[[2026-08-07-history-onboarding-reference]]"
   - "[[2026-08-07-declarations-register-pagination-adr]]"
@@ -66,6 +66,53 @@ plain negative, never an anomaly, because that signal's informativeness for THIS
 unconfirmed. The verified-scoping upgrade, if a future authorised probe confirms it, promotes
 `AEAT_REGISTER_OPTIONS` results to the same advisory treatment; it is not a precondition for the
 design to exist or ship.
+
+**Both worlds, made explicit.** If the combobox IS NIF-scoped, `AEAT_REGISTER_OPTIONS` genuinely
+widens `PROFILE_APPLICABILITY` with pairs the profile's declared facts could not predict (an
+undeclared activity, an obligation the operator answered incompletely) — a pure coverage gain. If
+the combobox is a STATIC UNIVERSAL list, walking it still captures real, correctly-scoped rows for
+every pair (each per-pair search is independently authenticated and NIF-scoped through the
+existing `capture_filed_data` search, which is unaffected by whether the DROPDOWN's own option
+enumeration is universal) — so accuracy of what is captured never degrades in either world. What
+changes between worlds is only what the REPORT may honestly claim about the pairs that returned
+NOTHING: in the NIF-scoped world a zero-row `AEAT_REGISTER_OPTIONS` pair is a genuine negative; in
+the universal world it is uninformative, because AEAT offering the option proves nothing about
+this taxpayer. The design does not need to know which world it is in to behave correctly — it
+needs to know which world it is in only to decide how to WORD the report, which is why the
+provenance tag, not a resolved boolean, is what the report carries forward.
+
+**A cheap, offline, self-diagnosing heuristic exists, and it is worth a row.** Search by MEANING
+for a graded-confidence-by-arithmetic precedent surfaced
+`_retencion_rate_advisory.py:365` (`inferred_retencion_rate_unmatched` / `_sectoral_rate_unconfirmed`
+/ silent) — three outcomes from one arithmetic comparison, ranked by how strong the match is,
+never asserted as certain. The same shape applies here: `build_obligation_coverage`'s
+`confidently_excluded` set (modelos the profile POSITIVELY answers "no" for — `NOT_APPLICABLE` /
+`ATTRIBUTION_PASS_THROUGH`, e.g. Impuesto sobre Sociedades for a natural-person profile) is a
+structural impossibility list. If the combobox offers a `confidently_excluded` modelo AND its
+ejercicio sub-list comes back non-empty, that is real evidence the list is not filtered per
+taxpayer (AEAT would not populate candidate years for a form this taxpayer's own declared facts
+make categorically inapplicable) — classify `LIKELY_UNIVERSAL`. If every combobox modelo instead
+falls inside `surfaced | advised` (never `confidently_excluded`), that is weak supportive evidence
+of NIF-scoping — classify `LIKELY_NIF_SCOPED`. If the profile has no `confidently_excluded`
+modelos to test against, or the combobox returns no options at all, classify `INCONCLUSIVE`. This
+heuristic needs no separate live access beyond the authenticated session discovery already opens
+for its own purpose (reading the combobox), so it is not a new probe requiring additional
+authorisation, and it is fully unit-testable against a synthetic combobox fixture asserting each
+of the three classifications. It upgrades or downgrades confidence; it never proves scoping either
+way, and the report must say so.
+
+**The report renders words, never a number, when provenance is uncertain.** Per the operator's
+instruction, an operator must never be shown a completeness figure implying the AEAT-sourced set
+represents "your history" when that has not been established. Concretely: `FiledHistoryOnboardingResult`
+carries NO numeric completeness percentage or fraction computed over `AEAT_REGISTER_OPTIONS`-tagged
+pairs, ever. It carries `scoping_signal: CoverageScopingSignal` (the heuristic's classification)
+and a prose `denominator_note` field stating, in each case: `LIKELY_UNIVERSAL` — "some offered
+pairs may not relate to you; only the pairs matching your declared obligations are used to flag a
+possible gap"; `LIKELY_NIF_SCOPED` — "AEAT's offered options are consistent with your declared
+obligations, but this has not been independently verified"; `INCONCLUSIVE` — "AEAT's offered
+options could not be checked against your declared obligations." The only number the report ever
+asserts confidently is the `PROFILE_APPLICABILITY`-tagged coverage (found vs. expected against the
+taxpayer's own declared facts), because that denominator's provenance is never in question.
 
 **This is a different completeness axis than the sibling pagination decision
 (`[[2026-08-07-declarations-register-pagination-adr]]`).** That ADR scopes whether one
@@ -146,6 +193,17 @@ primitive every other capture caller also uses unchanged.
    taxpayer-specific one.** Accepted: ships today, never asserts more than it can prove, and
    upgrades cleanly if the live-scoping question is later settled in `AEAT_REGISTER_OPTIONS`'s
    favour.
+6. **No self-diagnosing heuristic; wait for an authorised live specimen.** Rejected: leaves a
+   cheap, buildable, zero-extra-cost signal on the table for an indeterminate wait. **A hard
+   boolean "is this NIF-scoped" heuristic decided from one comparison.** Rejected: one comparison
+   cannot prove a negative (a taxpayer whose declared profile happens to have no
+   `confidently_excluded` modelo produces no evidence either way, and asserting `NIF_SCOPED` from
+   silence would be a false confidence claim of exactly the kind this whole task exists to avoid).
+   **A three-way graded classification (`LIKELY_UNIVERSAL` / `LIKELY_NIF_SCOPED` / `INCONCLUSIVE`),
+   surfaced as a label the report reads from, never resolved into a boolean.** Accepted, mirroring
+   the graded-confidence shape `_retencion_rate_advisory.py` already uses for a structurally
+   similar problem (inferring a fact from indirect arithmetic evidence, ranked by strength, never
+   asserted as certain).
 
 ## Constraints
 
@@ -165,6 +223,11 @@ primitive every other capture caller also uses unchanged.
   negative, but an *absent* option cannot yet be positively distinguished from "the combobox
   never lists ejercicios the taxpayer didn't file" versus "the combobox lists every ejercicio
   regardless."
+- `FiledHistoryOnboardingResult` and `FiledDeclarationAvailabilityReport` MUST NOT carry a numeric
+  completeness percentage or fraction computed over `AEAT_REGISTER_OPTIONS`-tagged pairs, in this
+  ADR or any later revision, without a new ADR amendment recording that live NIF-scoping has been
+  confirmed. The scoping heuristic's output is a label (`CoverageScopingSignal`), never a resolved
+  boolean, and the report's uncertainty-facing text is prose (`denominator_note`), never a number.
 - Every new verb needs its own line in `PROFILE_BOUND_WRITE_VERB_PATHS`
   (`storage_write_policy.py:122`) if it writes, plus a hand-swept pass through the
   error-registry `default_suggestion` fields, cross-period `next_action` builders,
@@ -205,17 +268,27 @@ not-yet-authorised follow-up, tracked as an open item in Consequences, not as an
 1b. **`FiledHistoryDiscoveryReport`** (new, `application/live/_filed_data_capture.py`): unions (1)
    and (1a) into one walk grid, tagging each `(modelo, ejercicio)` pair with the provenance
    signal(s) that nominated it.
+1c. **`classify_register_scoping_signal`** (new, `application/live/_filed_data_capture.py`):
+   compares (1)'s combobox modelo set against the profile's `confidently_excluded` set from
+   `build_obligation_coverage`. Returns `CoverageScopingSignal.LIKELY_UNIVERSAL` when a
+   confidently-excluded modelo appears with a non-empty ejercicio sub-list,
+   `CoverageScopingSignal.LIKELY_NIF_SCOPED` when every combobox modelo falls inside
+   `surfaced | advised`, else `CoverageScopingSignal.INCONCLUSIVE`. Pure function over data (1)
+   and (1a) already fetched; no new AEAT surface, no separate authorisation.
 2. **`aeat app live filed discover`** (new CLI verb, `filed` group): thin wrapper composing (1),
-   (1a) and (1b), emits the tagged union report as the envelope result plus the live-scope caveat
-   (Constraints, below) as a `Notice`.
+   (1a), (1b) and (1c), emits the tagged union report plus the scoping signal as the envelope
+   result, and the live-scope caveat (Constraints, below) worded per the signal, never numerically,
+   as a `Notice`.
 3. **`aeat app live filed pull-all`** (new CLI verb, `filed` group): sequences (1b) ->
    `capture_filed_data_bulk` over the union grid -> `capture_iva_compensation_wallet` /
    `reconcile_iva_compensation_wallet` -> the existing notificaciones pull -> one
-   `FiledHistoryOnboardingResult` envelope carrying per-pair outcomes, the re-capture divergence
-   diff as `WARNING` `Notice`s, the expected-but-not-found advisory for `PROFILE_APPLICABILITY`
-   pairs with no captured rows, and the sibling pagination ADR's per-pair completeness signal once
-   that decision lands (interim: raw `row_count`, no within-page completeness assertion). Enrolled
-   in `PROFILE_BOUND_WRITE_VERB_PATHS` as `app live filed pull-all`.
+   `FiledHistoryOnboardingResult` envelope carrying per-pair outcomes, `scoping_signal` and
+   `denominator_note` (prose, per Constraints - never a numeric completeness figure over
+   `AEAT_REGISTER_OPTIONS`-tagged pairs), the re-capture divergence diff as `WARNING` `Notice`s,
+   the expected-but-not-found advisory for `PROFILE_APPLICABILITY` pairs with no captured rows,
+   and the sibling pagination ADR's per-pair completeness signal once that decision lands
+   (interim: raw `row_count`, no within-page completeness assertion). Enrolled in
+   `PROFILE_BOUND_WRITE_VERB_PATHS` as `app live filed pull-all`.
 4. **Re-capture divergence diff** (new, orchestration layer only, invoked from (3)): compares each
    freshly captured `FiledDeclaracionObservation`'s casilla values against the prior stamped
    observation for the same key, and on any changed value emits a `WARNING` `Notice` naming the
