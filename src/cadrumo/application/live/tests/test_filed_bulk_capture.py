@@ -18,7 +18,7 @@ from .. import (
     list_filed_data_bulk,
 )
 from .._errors import LiveIvaSurfaceTimeoutError
-from .._filed_data_capture import _await_filed_register_walk
+from .._filed_data_capture import _await_filed_register_walk, _walk_or_failure_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -198,3 +198,60 @@ def test_truncated_register_read_reuses_the_per_pair_failure_taxonomy() -> None:
     assert "declares 8 in total" in row.message
     assert "under-reported filing history" in row.message
     assert not row.message.endswith("…"), "the refusal wording overran the row's message bound and lost its tail"
+
+
+async def _refusing_walk() -> tuple[Declaracion, ...]:
+    """A real walk coroutine that refuses the way a truncated register read does."""
+    raise SedeParseError(
+        "declaraciones register modelo 100 ejercicio 2026 rendered 3 row(s) but its pager "
+        "declares 8 in total; refusing an under-reported filing history",
+        context={"modelo": "100", "ejercicio": 2026, "rendered_count": 3, "declared_total": 8},
+    )
+
+
+async def _one_declaration_walk() -> tuple[Declaracion, ...]:
+    """A real walk coroutine that succeeds, standing for a healthy pair."""
+    return (_declaration(),)
+
+
+def test_walk_failure_is_absorbed_into_a_row_and_signals_the_pair_be_skipped() -> None:
+    """A refusing walk yields no rows and one failure row; a healthy walk is untouched.
+
+    This covers the PER-PAIR arm only: the failure becomes a typed row and the
+    helper returns None so its caller skips that pair. Cross-pair continuation --
+    that the sweep goes on to the next pair -- lives in the bulk functions behind
+    the live-session gate and is NOT proven here.
+
+    Both coroutines are real: one raises the genuine refusal a truncated register
+    read produces, the other returns a real `Declaracion`. Nothing is stubbed and
+    no production path is patched.
+    """
+    failures: list[FiledDataCaptureFailureRow] = []
+
+    refused = asyncio.run(
+        _walk_or_failure_row(
+            _refusing_walk(),
+            modelo="100",
+            year=2026,
+            timeout_ms=5_000,
+            failures=failures,
+        ),
+    )
+
+    assert refused is None, "an absorbed failure must signal the pair be skipped rather than yield rows"
+    assert len(failures) == 1
+    assert failures[0].error_type == "SedeParseError"
+    assert "declares 8 in total" in failures[0].message
+
+    healthy = asyncio.run(
+        _walk_or_failure_row(
+            _one_declaration_walk(),
+            modelo="303",
+            year=2025,
+            timeout_ms=5_000,
+            failures=failures,
+        ),
+    )
+
+    assert healthy == (_declaration(),), "a healthy walk must return its rows unchanged"
+    assert len(failures) == 1, "a healthy walk must not add a failure row"

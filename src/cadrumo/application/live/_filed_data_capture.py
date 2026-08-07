@@ -40,7 +40,6 @@ from typing import TypedDict
 
 from ...adapters.outbound.aeat.sede import (
     Declaracion,
-    DeclaracionesRegisterSession,
     FiledDeclaracionObservation,
     FiledDeclaracionObservationStore,
     capture_previous_filing_observations,
@@ -184,14 +183,20 @@ async def _await_filed_register_walk(
 
 
 async def _walk_or_failure_row(
-    register: DeclaracionesRegisterSession,
+    awaitable: Awaitable[tuple[Declaracion, ...]],
     *,
     modelo: str,
     year: int,
     timeout_ms: int,
     failures: list[FiledDataCaptureFailureRow],
 ) -> tuple[Declaracion, ...] | None:
-    """Walk one modelo/year register query, recording a failure row on error.
+    """Absorb one modelo/year register query's failure into a row, or return its rows.
+
+    Takes the walk awaitable rather than the register that produces it: the
+    register was only ever used to build this one coroutine, so the narrower
+    parameter drops a dependency the helper never needed and lets the absorption
+    arm be exercised with a real coroutine, the way the sibling
+    :func:`_await_filed_register_walk` already is.
 
     Shared bulk-path arm behind :func:`list_filed_data_bulk` and
     :func:`capture_filed_data_bulk`: on any walk failure the exception is folded
@@ -207,7 +212,7 @@ async def _walk_or_failure_row(
     """
     try:
         return await _await_filed_register_walk(
-            register.walk(modelo=modelo, ejercicio=year),
+            awaitable,
             modelo=modelo,
             year=year,
             timeout_ms=timeout_ms,
@@ -381,7 +386,7 @@ async def list_filed_data_bulk(
     ):
         for code, year in query_pairs:
             declarations = await _walk_or_failure_row(
-                register,
+                register.walk(modelo=code, ejercicio=year),
                 modelo=code,
                 year=year,
                 timeout_ms=walk_timeout_ms,
@@ -529,7 +534,7 @@ async def capture_filed_data_bulk(
     ):
         for code, year in query_pairs:
             declarations = await _walk_or_failure_row(
-                register,
+                register.walk(modelo=code, ejercicio=year),
                 modelo=code,
                 year=year,
                 timeout_ms=walk_timeout_ms,
