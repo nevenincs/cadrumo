@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping
 from decimal import Decimal
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ....core.aggregation import BindingSourceKind
 from ._errors import RegistryValidationError
@@ -45,7 +45,21 @@ class BindingFixedExportSelector(BaseModel):
     offset: OneBasedExportOffset
     length: int = Field(ge=1)
     data_type: BindingExportDataType
+    decimals: int | None = Field(default=None, ge=0)
     field: str | None = Field(default=None, min_length=1, max_length=128)
+
+    @model_validator(mode="after")
+    def _require_declared_scale(self) -> BindingFixedExportSelector:
+        if self.data_type == "decimal" and self.decimals is None:
+            raise RegistryValidationError(
+                f"decimal binding export projection into record {self.record!r} must declare decimals",
+            )
+        if self.data_type != "decimal" and self.decimals is not None:
+            raise RegistryValidationError(
+                f"binding export projection into record {self.record!r} declares decimals "
+                f"but its data_type is {self.data_type!r}",
+            )
+        return self
 
 
 class BindingRowExportSelector(BaseModel):
@@ -81,6 +95,7 @@ class _BindingExportProjection(BaseModel):
     offset: OneBasedExportOffset | None = None
     length: int | None = Field(default=None, ge=1)
     data_type: BindingExportDataType | None = None
+    decimals: int | None = Field(default=None, ge=0)
     field: str | None = Field(default=None, min_length=1, max_length=128)
 
     def export_selector(self, *, binding_id: str) -> BindingExportSelector | None:
@@ -108,6 +123,7 @@ class _BindingExportProjection(BaseModel):
                 offset=self.offset,
                 length=self.length,
                 data_type=self.data_type,
+                decimals=self.decimals,
                 field=self.field,
             )
         if fixed_count:

@@ -25,6 +25,7 @@ length = 7
 kind = "casilla"
 casilla_id = "00103"
 data_type = "decimal"
+decimals = 4
 required = false
 padding = "left_zero"
 justification = "right"

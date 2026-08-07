@@ -296,6 +296,7 @@ def _export_field_from_binding(
         kind=CasillaFieldKind.BINDING,
         binding=binding.id,
         data_type=selector.data_type,
+        decimals=selector.decimals,
         required=False,
         padding=_padding_for_binding_data_type(selector.data_type),
         justification=_justification_for_binding_data_type(selector.data_type),
