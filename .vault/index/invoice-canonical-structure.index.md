@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:fb066d062249e994bc9f5a76cb2bb487e071ecbf924f01ecdcb2b6c8d1d101e6'
+body_hash: 'sha256:5a748b7c3a768063c12bd54434ccfac66296010d8a1d256ad5b4d818e75361d2'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -55,6 +55,7 @@ related:
   - '[[2026-08-07-invoice-canonical-structure-close-honesty-review-audit]]'
   - '[[2026-08-07-invoice-canonical-structure-decision-coverage-map-audit]]'
   - '[[2026-08-07-invoice-canonical-structure-fragmentation-sweep-audit]]'
+  - '[[2026-08-07-invoice-canonical-structure-iva-treatment-axis-adr]]'
 ---
 
 # `invoice-canonical-structure` feature index
@@ -66,6 +67,7 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 ### adr
 
 - `2026-08-06-invoice-canonical-structure-adr` - `invoice-canonical-structure` adr: `One canonical invoice aggregate; delete the slim store` | (**status:** `accepted`)
+- `2026-08-07-invoice-canonical-structure-iva-treatment-axis-adr` - `invoice-canonical-structure` adr: `Where the IVA treatment axis lives on a multi-operation factura` | (**status:** `proposed`)
 
 ### audit
 
