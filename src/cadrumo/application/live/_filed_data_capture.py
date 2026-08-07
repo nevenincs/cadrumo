@@ -52,7 +52,7 @@ from ...adapters.outbound.aeat.sede import (
     shared_playwright,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import FiledHistoryDiscoverySignal, Period, require_active_bucket_id
+from ...core import FiledHistoryDiscoverySignal, Period, RegisterScopingSignal, require_active_bucket_id
 from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import ValidatedRegistryAuthority
 from ._errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
@@ -942,6 +942,59 @@ def expected_filed_declaration_grid(
     )
 
 
+def classify_register_scoping_signal(
+    profile: TaxpayerProfile,
+    availability: FiledDeclarationAvailabilityReport,
+    *,
+    today: date,
+) -> RegisterScopingSignal:
+    """Say what the offered modelo set SUGGESTS about its own scoping, for free.
+
+    The question this addresses -- is the declaraciones register's option list
+    scoped to the authenticated NIF, or a static universal catalogue -- cannot be
+    settled without an authorised live probe against an account with real filing
+    history. Nobody has authorised one, and the design never depended on it
+    resolving. What it does have is a cheap, offline, taxpayer-specific
+    discriminator nobody was reading: if the register offers a modelo the
+    taxpayer's own declared facts positively EXCLUDE, the list is offering
+    something this taxpayer cannot have filed, which is what a universal
+    catalogue looks like.
+
+    The result is advisory only and changes nothing about what is walked. The
+    offered set is unioned in additively either way, so a reading here can
+    neither widen nor narrow the grid, and it MUST NOT be rendered as a settled
+    answer -- see :class:`~core.RegisterScopingSignal`, whose members are all
+    hedges precisely so that it cannot be.
+
+    The evidence is asymmetric, and so is the confidence.
+    :attr:`~core.RegisterScopingSignal.LIKELY_UNIVERSAL` is a positive
+    observation: an excluded modelo was offered. Its counterpart is only ever the
+    ABSENCE of that observation, which a universal catalogue also produces for a
+    taxpayer whose profile excludes nothing the register lists -- so it stays
+    ``LIKELY_NIF_SCOPED``, never confirmation.
+
+    Args:
+        profile: The taxpayer's declared profile, supplying the
+            positively-excluded modelo set.
+        availability: The register's offered option set.
+        today: Reference date for applicability evaluation.
+
+    Returns:
+        The :class:`~core.RegisterScopingSignal` reading.
+        :attr:`~core.RegisterScopingSignal.INCONCLUSIVE` when either side of the
+        comparison is empty, because then the comparison discriminates nothing.
+    """
+    from ..overview import build_obligation_coverage
+
+    offered = {item.modelo for item in availability.items}
+    excluded = set(build_obligation_coverage(profile, (), today=today).confidently_excluded)
+    if not offered or not excluded:
+        return RegisterScopingSignal.INCONCLUSIVE
+    if offered & excluded:
+        return RegisterScopingSignal.LIKELY_UNIVERSAL
+    return RegisterScopingSignal.LIKELY_NIF_SCOPED
+
+
 def filed_history_discovery_report(
     *,
     expected: ExpectedFiledDeclarationGrid,
@@ -1001,6 +1054,7 @@ __all__ = [
     "capture_filed_data_bulk",
     "capture_report_path",
     "capture_source_filed_data",
+    "classify_register_scoping_signal",
     "discover_filed_history",
     "expected_filed_declaration_grid",
     "filed_data_capture_failure_row",
