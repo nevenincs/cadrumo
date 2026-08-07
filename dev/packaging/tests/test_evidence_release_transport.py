@@ -1,13 +1,16 @@
-"""Cross-workflow structural gates for the release-asset evidence transport.
+"""Cross-workflow structural gates for the packaging evidence transport.
 
-The release-asset transport decision moved every inter-workflow payload off Actions
-artifact storage (quota-broken on the private Free plan) onto per-run draft
-releases in the reserved ``evidence-*`` tag namespace. These gates pin the
-transport invariants that span workflows: no packaging workflow may fall back
-to artifact actions, every packaging-side release create is a draft in the
-reserved namespace, publish-release derives evidence tags from its run-id
-inputs, write permission stays job-scoped, checkouts never persist
-credentials, and the GC workflow is dispatch-only with a dry-run default.
+Inter-workflow payloads — the sealed release cohort, the per-OS smoke cohorts,
+and the per-row ``DistributionEvidence`` records — ride Actions artifacts. They
+briefly rode per-run draft releases instead, because artifact storage was
+quota-capped while the repository was private on a Free plan; the repository is
+public now, that storage is free, and the draft namespace only put machine
+scaffolding on the owner's releases page.
+
+These gates pin the invariants that span workflows. The load-bearing one is the
+first: no packaging workflow may reach the releases API or hold the permission
+that would let it. Exactly one job in the repository creates a release — the
+human-armed publication gate — and it creates the one real ``v<version>``.
 """
 
 from __future__ import annotations
@@ -27,7 +30,7 @@ _PACKAGING_WORKFLOWS: Final = (
     "packaging-homebrew.yml",
     "packaging-claude.yml",
 )
-_TRANSPORT_WORKFLOWS: Final = (*_PACKAGING_WORKFLOWS, "publish-release.yml", "evidence-gc.yml")
+_TRANSPORT_WORKFLOWS: Final = (*_PACKAGING_WORKFLOWS, "publish-release.yml")
 
 
 def _document(name: str) -> dict[str, Any]:
@@ -42,126 +45,95 @@ def _run_surface(document: dict[str, Any]) -> str:
     return "\n".join(str(step.get("run", "")) for step in _steps(document))
 
 
-@pytest.mark.parametrize("workflow", _PACKAGING_WORKFLOWS)
-def test_no_packaging_workflow_uses_actions_artifact_storage(workflow: str) -> None:
-    """Cohort and evidence payloads never ride quota-capped artifact storage."""
-    document = _document(workflow)
-    offending = [
-        str(step.get("uses"))
-        for step in _steps(document)
-        if "upload-artifact" in str(step.get("uses", "")) or "download-artifact" in str(step.get("uses", ""))
-    ]
-    assert offending == [], f"{workflow} still uses Actions artifact storage: {offending}"
-    assert "gh run download" not in _run_surface(document), workflow
-
-
-_EXPECTED_CREATOR_JOB: Final = {
-    "packaging-smoke.yml": "build-release-cohort",
-    "packaging-scoop.yml": "cadrumo-scoop-acquisition",
-    "packaging-homebrew.yml": "create-evidence-draft",
-    "packaging-claude.yml": "cadrumo-claude-acquisition",
-}
+def _invocations(surface: str, verb: str) -> list[str]:
+    """Command lines only — workflow prose legitimately DESCRIBES a verb."""
+    return [line.strip() for line in surface.splitlines() if line.strip().startswith(verb)]
 
 
 @pytest.mark.parametrize("workflow", _PACKAGING_WORKFLOWS)
-def test_every_packaging_release_create_is_an_evidence_draft(workflow: str) -> None:
-    """Packaging workflows only ever create DRAFT releases in the reserved namespace."""
-    document = _document(workflow)
-    creates = [line.strip() for line in _run_surface(document).splitlines() if "gh release create" in line]
-    assert creates, f"{workflow} must create its evidence draft"
-    for line in creates:
-        assert "--draft" in line, line
-        assert "EVIDENCE_TAG" in line, line
-        # A draft reserves no tag ref, so a suppressed create can still mint a
-        # duplicate — creators must probe-then-create, never create-or-ignore.
-        assert "|| true" not in line, line
-    # Tags for the SMOKE draft (consumed by acquisition lanes) may coexist with
-    # the workflow's own lane tag; the workflow's own creates all target its
-    # own lane tag derived from THIS run's id.
-    lane = workflow.removeprefix("packaging-").removesuffix(".yml")
-    own_tag = f"evidence-{lane}-${{{{ github.run_id }}}}"
-    create_step_tags = {
-        str(step["env"]["EVIDENCE_TAG"])
-        for step in _steps(document)
-        if isinstance(step.get("env"), dict)
-        and "EVIDENCE_TAG" in step["env"]
-        and "gh release create" in str(step.get("run", ""))
-    }
-    assert create_step_tags == {own_tag}, create_step_tags
+def test_no_packaging_workflow_touches_the_releases_api(workflow: str) -> None:
+    """No packaging workflow creates, uploads to, or reads a GitHub release.
+
+    This is the invariant the whole conversion exists to hold: CI must not put
+    machine scaffolding on the repository's releases page. Asserted on
+    invocation lines so a comment may still name the verb it warns against.
+    """
+    surface = _run_surface(_document(workflow))
+    for verb in ("gh release create", "gh release upload", "gh release view", "gh release download"):
+        assert _invocations(surface, verb) == [], f"{workflow} still calls {verb!r}"
 
 
 @pytest.mark.parametrize("workflow", _PACKAGING_WORKFLOWS)
-def test_exactly_one_creator_job_per_workflow(workflow: str) -> None:
-    """Single-creator topology: concurrent creates would mint duplicate drafts.
+def test_no_packaging_job_can_write_repository_contents(workflow: str) -> None:
+    """Least privilege carries the invariant above even if a verb slips back.
 
-    Drafts reserve no tag ref (cli/cli#4270 and siblings), so exactly one job
-    per workflow creates the run's draft; every other uploader is upload-only
-    and waits on the creator through the ``needs:`` graph.
+    ``contents: write`` is the permission that makes the releases API reachable
+    at all, so no packaging job may hold it — at workflow or job level.
     """
     document = _document(workflow)
-    creator_jobs = [
-        job_name
-        for job_name, job in document["jobs"].items()
-        if "gh release create" in "\n".join(str(step.get("run", "")) for step in (job.get("steps") or []))
-    ]
-    assert creator_jobs == [_EXPECTED_CREATOR_JOB[workflow]], (workflow, creator_jobs)
-
-
-def test_smoke_uploaders_wait_on_the_sole_creator() -> None:
-    """Every smoke uploader job needs: build-release-cohort before it uploads."""
-    document = _document("packaging-smoke.yml")
+    assert (document.get("permissions") or {}).get("contents") != "write", workflow
     for job_name, job in document["jobs"].items():
-        if job_name in {"build-release-cohort", "seal-evidence-manifest"}:
-            continue
-        needs = job.get("needs")
-        needs_list = [needs] if isinstance(needs, str) else list(needs or [])
-        assert "build-release-cohort" in needs_list, job_name
-    homebrew = _document("packaging-homebrew.yml")
-    matrix_needs = homebrew["jobs"]["cadrumo-homebrew-acquisition"]["needs"]
-    assert matrix_needs == "create-evidence-draft"
+        granted = (job.get("permissions") or {}).get("contents")
+        assert granted != "write", f"{workflow}:{job_name} still grants contents:write"
 
 
-def test_only_publish_release_gate3_creates_a_non_draft_release() -> None:
-    """The single published v* release comes from the environment-protected publish job."""
-    document = _document("publish-release.yml")
-    publish_surface = "\n".join(str(step.get("run", "")) for step in (document["jobs"]["publish"].get("steps") or []))
+@pytest.mark.parametrize("workflow", _PACKAGING_WORKFLOWS)
+def test_packaging_payloads_ride_artifacts(workflow: str) -> None:
+    """Every packaging workflow moves its payloads through Actions artifacts."""
+    document = _document(workflow)
+    uses = [str(step.get("uses", "")) for step in _steps(document)]
+    artifact_steps = [entry for entry in uses if "upload-artifact" in entry or "download-artifact" in entry]
+    cross_workflow = "gh run download" in _run_surface(document)
+    assert artifact_steps or cross_workflow, f"{workflow} moves no payload through artifacts"
+    for entry in artifact_steps:
+        assert "@" in entry and len(entry.split("@")[1]) == 40, f"{workflow} pins {entry} to a tag, not a SHA"
+
+
+def test_only_the_publication_gate_creates_a_release() -> None:
+    """Exactly one job in the repository creates a release: the armed publish gate."""
+    creators: list[tuple[str, str]] = []
+    for path in sorted(_WORKFLOWS_DIR.glob("*.yml")):
+        document = yaml.safe_load(path.read_text(encoding="utf-8"))
+        for job_name, job in (document.get("jobs") or {}).items():
+            surface = "\n".join(str(step.get("run", "")) for step in (job.get("steps") or []))
+            if _invocations(surface, "gh release create"):
+                creators.append((path.name, job_name))
+    assert creators == [("publish-release.yml", "publish")], creators
+    publish_surface = "\n".join(
+        str(step.get("run", "")) for step in (_document("publish-release.yml")["jobs"]["publish"].get("steps") or [])
+    )
     assert 'gh release create "v$VERSION"' in publish_surface
-    for job_name, job in document["jobs"].items():
-        if job_name == "publish":
-            continue
-        job_surface = "\n".join(str(step.get("run", "")) for step in (job.get("steps") or []))
-        # Invocation lines only, because workflow prose legitimately DESCRIBES
-        # a draft-create command without running one. (The original instance
-        # was the retired operator-preflight refusal text; the distinction
-        # outlives it, since any comment may quote the verb.)
-        invocations = [line for line in job_surface.splitlines() if line.strip().startswith("gh release create")]
-        assert invocations == [], (job_name, invocations)
+
+
+def test_no_workflow_creates_a_draft_release() -> None:
+    """The reserved evidence-* draft namespace is retired, not merely emptied."""
+    for path in sorted(_WORKFLOWS_DIR.glob("*.yml")):
+        surface = path.read_text(encoding="utf-8")
+        assert "--draft" not in surface, f"{path.name} still creates a draft release"
+        assert "evidence-smoke-" not in surface, f"{path.name} still names an evidence draft tag"
 
 
 def test_debug_diagnostics_never_enter_the_row_aggregation() -> None:
-    """debug-* draft assets are diagnostics, never promotable evidence rows.
+    """debug-* artifacts are diagnostics, never promotable evidence rows.
 
-    A promoted run is green, but a re-run attempt's draft can retain
-    attempt-1 debug debris; both publish gates therefore exclude debug-*
-    from the flat row aggregation the readiness gate validates.
+    A promoted run is green, but a re-run attempt can retain attempt-1 debug
+    debris; every row aggregation therefore excludes debug-* by name.
     """
     document = _document("publish-release.yml")
     for job_name in ("validate", "publish"):
         surface = "\n".join(str(step.get("run", "")) for step in (document["jobs"][job_name].get("steps") or []))
-        manifest_excludes = surface.count("! -name 'evidence-manifest.json'")
+        aggregations = surface.count("-name '*.json'")
         debug_excludes = surface.count("! -name 'debug-*'")
-        assert manifest_excludes > 0, job_name
-        # Every row aggregation that filters out the manifest filters out
-        # debug-* alongside it.
-        assert debug_excludes == manifest_excludes, (job_name, manifest_excludes, debug_excludes)
+        assert aggregations > 0, job_name
+        assert debug_excludes == aggregations, (job_name, aggregations, debug_excludes)
 
 
 def test_gate3_attaches_only_sweep_passed_evidence() -> None:
     """Gate 3 leak-sweeps every evidence asset BEFORE anything can be attached.
 
-    Reconciled D9: rows are scrubbed at mint time; the sweep is the fail-closed
-    publication tripwire (verify-then-refuse, no rewriting) over the attach
-    directory, and the v-release create comes only after it.
+    Rows are scrubbed at mint time; the sweep is the fail-closed publication
+    tripwire (verify-then-refuse, no rewriting) over the attach directory, and
+    the v-release create comes only after it.
     """
     document = _document("publish-release.yml")
     surface = "\n".join(str(step.get("run", "")) for step in (document["jobs"]["publish"].get("steps") or []))
@@ -175,25 +147,36 @@ def test_gate3_attaches_only_sweep_passed_evidence() -> None:
     assert '"$RELEASE_COHORT_DIR" "$EVIDENCE_FINAL_DIR/attach" -type f' in surface
 
 
-def test_publish_release_derives_evidence_tags_from_run_id_inputs() -> None:
-    """The run id stays the operator's only handle; evidence tags are derived."""
+def test_promotion_verifies_run_identity_before_downloading_anything() -> None:
+    """The run id stays the operator's only handle, and it is checked first.
+
+    An artifact belongs to its producing run by construction, so run identity
+    IS the provenance binding — which makes the order load-bearing: every
+    ``gh run download`` must sit behind an Actions-API identity assertion that
+    pins the workflow path and a successful conclusion.
+    """
     document = _document("publish-release.yml")
-    inputs = set(document[True]["workflow_dispatch"]["inputs"])
-    # No free-form evidence-tag input beyond the operator's claude release
-    # (which has no backing run to derive from).
-    assert not {name for name in inputs if "tag" in name or name.startswith("evidence")}
-    surface = _run_surface(document)
-    assert "evidence-smoke-$PACKAGING_RUN_ID" in surface
-    assert "evidence-scoop-$SCOOP_RUN_ID" in surface
-    assert "evidence-homebrew-$HOMEBREW_RUN_ID" in surface
+    for job_name in ("validate", "publish"):
+        surface = "\n".join(str(step.get("run", "")) for step in (document["jobs"][job_name].get("steps") or []))
+        if "gh run download" not in surface:
+            continue
+        assert "actions/runs/" in surface, job_name
+        # The path may be a literal or a shell parameter of the local verify
+        # helper; either way the smoke path and a conclusion check must appear,
+        # and the API call must precede the first download.
+        assert ".github/workflows/packaging-smoke.yml" in surface, job_name
+        assert "conclusion" in surface, job_name
+        assert surface.index("actions/runs/") < surface.index("gh run download"), job_name
+    # Both jobs need actions:read to reach another run's artifacts, and neither
+    # may reach them with a broader grant than that.
+    for job_name in ("validate", "publish"):
+        assert (document["jobs"][job_name].get("permissions") or {}).get("actions") == "read", job_name
 
 
 @pytest.mark.parametrize("workflow", _TRANSPORT_WORKFLOWS)
-def test_contents_write_is_job_scoped_and_checkouts_drop_credentials(workflow: str) -> None:
-    """Least privilege: workflow-level read; write only on uploader jobs; no persisted token."""
+def test_checkouts_never_persist_credentials(workflow: str) -> None:
+    """A persisted token would let any later step push commits, tags or releases."""
     document = _document(workflow)
-    top_level = document.get("permissions", {})
-    assert top_level.get("contents") != "write", f"{workflow} grants contents:write workflow-wide"
     for job_name, job in document["jobs"].items():
         for step in job.get("steps") or []:
             if str(step.get("uses", "")).startswith("actions/checkout@"):
@@ -206,14 +189,12 @@ def test_windows_transport_steps_pin_shell_pwsh() -> None:
 
     The setup actions rewrite PSModulePath for pwsh, which breaks Windows
     PowerShell 5.1 module auto-loading on the self-hosted runner (observed
-    live: ``Get-FileHash is not recognized``). Transport steps (anything
-    touching ``gh release`` or the evidence_release helper) must therefore
-    pin pwsh explicitly rather than rely on default shell resolution.
+    live: ``Get-FileHash is not recognized``).
     """
     for workflow in _PACKAGING_WORKFLOWS:
         for step in _steps(_document(workflow)):
             run = str(step.get("run", ""))
-            if "gh release" not in run and "evidence_release" not in run:
+            if "gh run download" not in run and "tar -" not in run:
                 continue
             shell = step.get("shell")
             assert shell in (None, "pwsh"), (workflow, step.get("name"), shell)
@@ -229,34 +210,25 @@ def test_windows_transport_steps_pin_shell_pwsh() -> None:
         assert claude_steps[step_name] == "pwsh", (step_name, claude_steps[step_name])
 
 
-def test_uploader_jobs_hold_job_level_contents_write() -> None:
-    """Every job that uploads to a draft carries its own contents:write grant."""
-    for workflow in _PACKAGING_WORKFLOWS:
-        document = _document(workflow)
-        for job_name, job in document["jobs"].items():
-            job_surface = "\n".join(str(step.get("run", "")) for step in (job.get("steps") or []))
-            if "gh release upload" in job_surface or "gh release create" in job_surface:
-                assert (job.get("permissions") or {}).get("contents") == "write", (workflow, job_name)
-
-
-def test_acquisition_lanes_pin_the_linux_python_cohort_archive() -> None:
+def test_acquisition_lanes_pin_the_linux_python_cohort() -> None:
     """Decision pinned: every acquisition lane consumes the LINUX-built cohort.
 
-    Wheels are py3-none-any, and the pre-transport lanes all downloaded the
-    unsuffixed Linux artifact; the release-asset spelling keeps that parity.
+    Wheels are py3-none-any, and every lane has always consumed the Linux
+    cohort; the artifact spelling keeps that parity.
     """
     for workflow in ("packaging-scoop.yml", "packaging-homebrew.yml", "packaging-claude.yml"):
         surface = _run_surface(_document(workflow))
-        assert "cadrumo-python-cohort-linux.tar.gz" in surface, workflow
-        assert "cadrumo-python-cohort-windows.tar.gz" not in surface, workflow
-        assert "cadrumo-python-cohort-macos.tar.gz" not in surface, workflow
+        assert "cadrumo-python-cohort-linux" in surface, workflow
+        assert "cadrumo-python-cohort-windows" not in surface, workflow
+        assert "cadrumo-python-cohort-macos" not in surface, workflow
 
 
 def test_oracle_emit_row_ids_stay_pairwise_disjoint() -> None:
-    """The three oracle legs upload rows whose asset basenames cannot collide.
+    """The three oracle legs emit rows whose basenames cannot collide.
 
-    Row files are ``{row_id}-{evidence_id}.json``; distinct row ids per leg
-    keep the shared smoke draft collision-free.
+    Row files are ``{row_id}-{evidence_id}.json``; the publish gates flatten
+    every lane's rows into one directory, so distinct row ids per leg keep
+    that aggregation collision-free.
     """
     document = _document("packaging-smoke.yml")
     row_ids = []
@@ -269,22 +241,18 @@ def test_oracle_emit_row_ids_stay_pairwise_disjoint() -> None:
     assert len(set(row_ids)) == 3, row_ids
 
 
-def test_evidence_gc_workflow_is_dispatch_only_with_dry_run_default() -> None:
-    """The GC is operator-armed: dispatch-only, dry-run default, helper-driven."""
-    document = _document("evidence-gc.yml")
-    triggers = document[True]
-    assert set(triggers) == {"workflow_dispatch"}
-    dry_run = triggers["workflow_dispatch"]["inputs"]["dry_run"]
-    assert dry_run["type"] == "boolean"
-    assert dry_run["default"] is True
-    keep = triggers["workflow_dispatch"]["inputs"]["keep_per_workflow"]
-    assert keep["default"] == "3"
-    surface = _run_surface(document)
-    # The retention decision lives in tested Python (namespace refusal, K per
-    # lane, protected tags), never inline shell.
-    assert "dev.packaging.evidence_release" in surface
-    assert "--apply" in surface
-    assert 'if [[ "$DRY_RUN" != "true" ]]' in surface
-    gc_job = document["jobs"]["gc"]
-    assert gc_job["runs-on"] == ["self-hosted", "Linux", "X64"]
-    assert gc_job["permissions"] == {"contents": "write"}
+def test_artifact_names_stay_pairwise_disjoint_within_a_workflow() -> None:
+    """Two jobs uploading the same artifact name would clobber each other.
+
+    Draft releases forced a single-creator topology to dodge a duplicate-tag
+    race; artifacts have no such race, but they DO collide on name, so the
+    per-leg suffixes are what keep concurrent matrix legs independent.
+    """
+    for workflow in _PACKAGING_WORKFLOWS:
+        document = _document(workflow)
+        names = [
+            str((step.get("with") or {}).get("name"))
+            for step in _steps(document)
+            if "upload-artifact" in str(step.get("uses", ""))
+        ]
+        assert len(names) == len(set(names)), (workflow, names)
