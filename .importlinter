@@ -398,14 +398,12 @@ ignore_imports =
     # edge that is not a DTO consumer still fails loudly.
     cadrumo.application.ledger._llm_review_workflow -> cadrumo.llm
     cadrumo.application.ledger.tests.test_extraction_interchange -> cadrumo.llm
-    cadrumo.application.ledger.tests.test_llm_evidence_no_split -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_evidence_split -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_evidence_split_apply -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_reject -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_reject_split -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_review_workflow -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_saturation -> cadrumo.llm
-    cadrumo.application.ledger.tests.test_llm_saturation_apply -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_saturation_operator -> cadrumo.llm
     # Test-module chain origin: the corpus-parsing test exercises the on-host
     # rasteriser, which now lives in the gated subpackage. Pinned like the
