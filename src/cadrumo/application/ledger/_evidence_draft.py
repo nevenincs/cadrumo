@@ -985,7 +985,7 @@ def confirm_invoice_draft_from_evidence(
     *,
     bucket_id: str,
     kind: InvoiceKind,
-    counterparty_country: str = "ES",
+    counterparty_country: str,
     evidence_id: str | None = None,
     attachment_id: str | None = None,
     counterparty_tax_id: str | None = None,

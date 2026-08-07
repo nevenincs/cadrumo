@@ -485,6 +485,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         repo = self._repo(secure_objects)
 
         confirmation = confirm_invoice_draft_from_evidence(
+            counterparty_country="ES",
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,
@@ -524,6 +525,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         svc = _make_svc(isolated_settings, secure_objects)
         record = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_path).record
         confirmation = confirm_invoice_draft_from_evidence(
+            counterparty_country="ES",
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,
@@ -556,6 +558,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         repo = self._repo(secure_objects)
 
         first = confirm_invoice_draft_from_evidence(
+            counterparty_country="ES",
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,
@@ -566,6 +569,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         assert first.created is True
 
         second = confirm_invoice_draft_from_evidence(
+            counterparty_country="ES",
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,
@@ -592,6 +596,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         repo = self._repo(secure_objects)
 
         confirmation = confirm_invoice_draft_from_evidence(
+            counterparty_country="ES",
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,
@@ -630,6 +635,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         repo = self._repo(secure_objects)
 
         confirmation = confirm_invoice_draft_from_evidence(
+            counterparty_country="ES",
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,
@@ -659,6 +665,7 @@ class TestConfirmInvoiceDraftFromEvidence:
 
         with pytest.raises(PurchaseInvoiceEvidenceInputError):
             confirm_invoice_draft_from_evidence(
+                counterparty_country="ES",
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.RECEIVED,
                 evidence_id=record.evidence_id,
@@ -699,6 +706,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         # no tax id to compare against.
         with pytest.raises((InvoiceValidationError, ValidationError, PurchaseInvoiceEvidenceInputError)):
             confirm_invoice_draft_from_evidence(
+                counterparty_country="ES",
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.RECEIVED,
                 evidence_id=record.evidence_id,
@@ -726,6 +734,7 @@ class TestConfirmInvoiceDraftFromEvidence:
 
         empty_dir = tmp_path_factory.mktemp("no-write-expected-confirm")
         confirm_invoice_draft_from_evidence(
+            counterparty_country="ES",
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,
@@ -756,6 +765,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         repo = self._repo(secure_objects)
 
         confirmation = confirm_invoice_draft_from_evidence(
+            counterparty_country="ES",
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,
@@ -783,6 +793,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         repo = self._repo(secure_objects)
 
         confirmation = confirm_invoice_draft_from_evidence(
+            counterparty_country="ES",
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             attachment_id=record.attachment_id,
@@ -813,6 +824,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         repo = self._repo(secure_objects)
 
         first = confirm_invoice_draft_from_evidence(
+            counterparty_country="ES",
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,
@@ -823,6 +835,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         assert first.created is True
 
         second = confirm_invoice_draft_from_evidence(
+            counterparty_country="ES",
             bucket_id=_BUCKET_ID,
             kind=InvoiceKind.RECEIVED,
             evidence_id=record.evidence_id,

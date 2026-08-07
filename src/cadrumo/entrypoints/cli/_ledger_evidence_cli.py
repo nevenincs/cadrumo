@@ -514,7 +514,7 @@ def _register_evidence_confirm_command() -> None:
             ),
         ),
         country_code: str = typer.Option(
-            "ES",
+            ...,
             "--country-code",
             help=tr(
                 "cli.app.ledger.invoice.catalogue.country_code_help",
