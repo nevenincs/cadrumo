@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:d61a4e2208c1eb54a52773a6d4dbb597ee9df6e2c0956f67c9739a8a071d187f'
+body_hash: 'sha256:19c7bfb66c03ff854d0908f283ad3db83e74ddb398a4a242539b2a5c799919d2'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -83,9 +83,9 @@ Fully grounded work correctly waiting on an operator ruling. No code moves here 
 
 Track the classifier disposition and the shared-index decision against the records that already carry them, without opening competing ones.
 
-- [ ] `W04.P06.S14` - Attach the classify_iva disposition to question one of the llm-invoice-read-reconciliation ADR rather than opening a competing record; `.vault/adr/2026-08-06-llm-invoice-read-reconciliation-adr.md`.
+- [x] `W04.P06.S14` - Attach the classify_iva disposition to question one of the llm-invoice-read-reconciliation ADR rather than opening a competing record; `.vault/adr/2026-08-06-llm-invoice-read-reconciliation-adr.md`.
 - [ ] `W04.P06.S15` - Fix the R13 wrong-clave mapping with its own M349-surface gate, required only if the ruling makes the classifier wireable; `src/cadrumo/domain/iva/_classification.py`.
-- [ ] `W04.P06.S30` - Correct the pending ruling's premise, question one reasons from a single closed rate-to-category mapping while three exist and only one is the invoice-path mapping it means; `.vault/adr/2026-08-06-llm-invoice-read-reconciliation-adr.md`.
+- [x] `W04.P06.S30` - Correct the pending ruling's premise, question one reasons from a single closed rate-to-category mapping while three exist and only one is the invoice-path mapping it means; `.vault/adr/2026-08-06-llm-invoice-read-reconciliation-adr.md`.
 
 ## Wave `W05` - Full-suite failure triage
 
