@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#executable-parity-evidence-tier-contract'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:cc1dfeecf9f0b190f90f48735e8cf699e2c99497eb264e836ef444601a6c8c1a'
 related:

@@ -37,18 +37,69 @@ inward past its own tier.
 
 from __future__ import annotations
 
-__all__ = ["LocalVisionLLMClassifier", "extract_invoice_fields_from_images"]
+from ._client import LLMClient
+from ._errors import (
+    LLMCacheError,
+    LLMConfigError,
+    LLMError,
+    LLMPdfRasterisationError,
+    LLMProviderError,
+    LLMRateLimitError,
+)
+from ._models import (
+    CachedEntry,
+    CacheKey,
+    CacheStats,
+    LLMProvider,
+    LLMRequest,
+    LLMResponse,
+    MultimodalImageInput,
+    PromptDefinition,
+    PromptRegistry,
+    Translation,
+    UsageRecord,
+    UsageSummary,
+)
+from ._providers import rasterise_pdf_pages_to_base64_png
+from ._retention import select_retention_removal_keys
+
+__all__ = [
+    "CacheKey",
+    "CacheStats",
+    "CachedEntry",
+    "LLMCacheError",
+    "LLMClient",
+    "LLMConfigError",
+    "LLMError",
+    "LLMPdfRasterisationError",
+    "LLMProvider",
+    "LLMProviderError",
+    "LLMRateLimitError",
+    "LLMRequest",
+    "LLMResponse",
+    "LocalVisionLLMClassifier",
+    "MultimodalImageInput",
+    "PromptDefinition",
+    "PromptRegistry",
+    "Translation",
+    "UsageRecord",
+    "UsageSummary",
+    "extract_invoice_fields_from_images",
+    "rasterise_pdf_pages_to_base64_png",
+    "select_retention_removal_keys",
+]
 
 
 def __getattr__(name: str) -> object:
-    """Resolve the package's public surface lazily.
+    """Resolve the two application-facing readers lazily.
 
-    Deferred on purpose. The vision extractor imports ``application.ledger``
-    for the draft shape it produces, while the ledger's own draft path imports
-    this package to reach the reader -- so an eager facade would close that
-    loop at import time. Lazy resolution keeps exactly one canonical home per
-    symbol and one import path for consumers, which is what the ownership rule
-    requires; it governs WHERE a symbol lives, never WHEN its module executes.
+    Only these two need deferring, and for one specific reason: both import
+    ``application.ledger`` for the draft and classification shapes they
+    produce, while the ledger's own paths import this package to reach them --
+    so an eager binding would close that loop at import time. Everything above
+    is bound eagerly because nothing in it reaches back into the application
+    layer. Lazy resolution governs WHEN a module executes, never WHERE a symbol
+    lives: each still has exactly one canonical home and one import path.
     """
     if name == "LocalVisionLLMClassifier":
         from ._vision_classifier import LocalVisionLLMClassifier

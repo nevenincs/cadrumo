@@ -6,7 +6,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:ce59b89cb92b5a26a24416b8b7f68c5d08ba88dd37e23d71496cd7658b6b1b00'
+body_hash: 'sha256:3f1a1683f6a8025f16ac680975074cd346e325bc307f046bc0d8525fd043df0f'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
@@ -72,6 +72,10 @@ related:
   - '[[2026-08-06-user-docs-search-consolidation-final-implementation-review-audit]]'
   - '[[2026-08-06-user-docs-search-consolidation-legal-corpus-resolver-review-audit]]'
   - '[[2026-08-06-user-docs-search-consolidation-p02-s32-audit]]'
+  - '[[2026-08-06-user-docs-search-consolidation-rung2-alias-scoped-sweep-audit]]'
+  - '[[2026-08-06-user-docs-search-consolidation-rung2-alias-sweep-plumbing-audit]]'
+  - '[[2026-08-07-user-docs-search-consolidation-p02-s04-matrix-artifact-review-audit]]'
+  - '[[2026-08-07-user-docs-search-consolidation-p02-s06-acceptance-provenance-gate-audit]]'
 ---
 
 # `user-docs-search-consolidation` feature index
@@ -112,6 +116,10 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-06-user-docs-search-consolidation-final-implementation-review-audit` - `user-docs-search-consolidation` audit: `final implementation review`
 - `2026-08-06-user-docs-search-consolidation-legal-corpus-resolver-review-audit` - 2026-08-06-user-docs-search-consolidation-legal-corpus-resolver-review-audit
 - `2026-08-06-user-docs-search-consolidation-p02-s32-audit` - `user-docs-search-consolidation` audit: `P02.S32 formal code review`
+- `2026-08-06-user-docs-search-consolidation-rung2-alias-scoped-sweep-audit` - `user-docs-search-consolidation` audit: `Rung 2 alias scoped sweep review`
+- `2026-08-06-user-docs-search-consolidation-rung2-alias-sweep-plumbing-audit` - `user-docs-search-consolidation` audit: `Rung-2 alias-authority sweep plumbing review`
+- `2026-08-07-user-docs-search-consolidation-p02-s04-matrix-artifact-review-audit` - `user-docs-search-consolidation` audit: `P02.S04 matrix artifact review`
+- `2026-08-07-user-docs-search-consolidation-p02-s06-acceptance-provenance-gate-audit` - `user-docs-search-consolidation` audit: `P02.S06 acceptance provenance gate review`
 
 ### exec
 

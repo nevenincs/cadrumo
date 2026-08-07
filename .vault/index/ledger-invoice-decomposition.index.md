@@ -6,7 +6,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:8cfecdd2bf1025b4dd4d8f3bcfdedb5f6bbaffb79c11c1c0414d22aae76554a3'
+body_hash: 'sha256:5018b2a9101e31eb140c1eb5f2ecfc1757e3566b812c816bad35c16b4e506e8d'
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-P01-S01]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P01-S02]]'
@@ -53,13 +53,19 @@ related:
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S43]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S44]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S45]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S46]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S47]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S48]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S49]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S50]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S51]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S52]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S53]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S56]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S57]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S58]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S60]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S61]]'
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
   - '[[2026-08-05-ledger-invoice-decomposition-loader-fingerprint-format-trap-audit]]'
   - '[[2026-08-05-ledger-invoice-decomposition-plan]]'
@@ -129,13 +135,19 @@ Auto-generated index of all documents tagged with `#ledger-invoice-decomposition
 - `2026-08-05-ledger-invoice-decomposition-P06-S43` - Let a factura rectificativa name what it corrects, so the cuota rectification LIVA article 89 requires becomes representable
 - `2026-08-05-ledger-invoice-decomposition-P06-S44` - Key the counterparty tax-id requirement to the three cases article 6.1.d enumerates, and in those same cases require a structurally-valid NIF-IVA rather than any tax id, so an intra-community supply stops accepting a domestic number
 - `2026-08-05-ledger-invoice-decomposition-P06-S45` - Represent pagos anticipados so a prepayment devengues on collection for the amount received, honouring the article 25 exclusion
+- `2026-08-05-ledger-invoice-decomposition-P06-S46` - Wire the invoice decomposition contract to a consumer so its defect verdicts reach an operator, since it classifies nothing today and the aggregation paths each carry their own inline guard set instead
 - `2026-08-05-ledger-invoice-decomposition-P06-S47` - Wire route_invoice_retenciones into the invoice lifecycle so a received invoice's retencion reaches Modelo 111, asserting the filed figure moves rather than that the projection returns a value
+- `2026-08-05-ledger-invoice-decomposition-P06-S48` - Thread the operation date into period attribution with a declared rank marker naming which source produced it, surfaced identically on the pull and calculate paths
 - `2026-08-05-ledger-invoice-decomposition-P06-S49` - Drive one accumulative invoice life through Modelo 303 and 390 and through Modelo 130 and 100 across several periods, asserting the same operation lands in one period on both the quarterly and annual sides
 - `2026-08-05-ledger-invoice-decomposition-P06-S50` - Refuse a suite of deliberately degraded invoices, each asserting its own specific refusal rather than that something failed, covering the falsified-total, netted-retencion, contradicted-operation-date, referentless-rectificativa and over-threshold-simplificada cases
 - `2026-08-05-ledger-invoice-decomposition-P06-S51` - Bundle RD 1619/2012 art. 4 and refuse a factura simplificada for an entrega intracomunitaria exenta (art. 4.4.a), declaring the amount-threshold and sector-list eligibility axis unverified pending an ADR amendment
 - `2026-08-05-ledger-invoice-decomposition-P06-S52` - Carry recargo de equivalencia inside the ledger transaction totals identity, so the substrate Modelo 303 and 130 actually read stops refusing the truthful row and accepting the falsified one
 - `2026-08-05-ledger-invoice-decomposition-P06-S53` - Refuse a missing --total-amount on the slim invoice add CLI verb instead of silently defaulting the total to zero, since the total drives whether a counterparty is declared at all under the RD 1065/2007 art. 31 Modelo 347 threshold
 - `2026-08-05-ledger-invoice-decomposition-P06-S56` - Join the non-deductible share of a fact's input IVA to the IRPF-deductible cost basis via a new RentaDeductibilityContext.iva_deduction_ratio axis, grounded on the AEAT Manual practico Renta 2024 medico radiologo nota 7 worked example (activity exempt from IVA, no right to deduct), leaving the axis unwired from any production taxpayer-fact source as a named follow-up
+- `2026-08-05-ledger-invoice-decomposition-P06-S57` - Wire RentaDeductibilityContext.iva_deduction_ratio to a real producer: a wholly EXENTO iva.regime profile fact resolves to zero, otherwise the bucket's ProrrataRegister whole-entity entry contributes its in-force provisional percentage, mirroring the resolution the M303 side already applies
+- `2026-08-05-ledger-invoice-decomposition-P06-S58` - Extend the iva_deduction_ratio wiring to the M130 quarterly gasto path: aggregate_renta_gasto_ledger_from_repositories now resolves the same ratio through the shared _resolve_iva_deduction_ratio, for the same ejercicio, so M130 and M100 cannot diverge on it
+- `2026-08-05-ledger-invoice-decomposition-P06-S60` - Reground telefonia_fija to LIRPF art. 30.2.5.b's own suministros enumeration (agua, gas, electricidad, telefonia e Internet), moving it into HOME_OFFICE_SUMINISTROS with the statutory 0.30 multiplier it was missing, since it previously deducted at the raw home-area ratio with no censo-consistency guard
+- `2026-08-05-ledger-invoice-decomposition-P06-S61` - Move arrendamiento_vivienda_afecto from PREMISES into HOME_OFFICE_OWNERSHIP as the renter's parallel to amortizacion/ibi/comunidad_vivienda_afecto, correcting its citation from the suministros-only art. 30.2.5.b to the general art. 29.2 partial-affectation doctrine plus art. 28.1, and dropping its stray default_ratio so it now requires an explicit operator ratio like its true siblings
 
 ### plan
 

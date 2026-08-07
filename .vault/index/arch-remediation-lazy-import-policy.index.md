@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-lazy-import-policy'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:b2d686882d911368f212a2bacf9c43f76fd9c74eb89bf5b681ee112c9004bac3'
 related:

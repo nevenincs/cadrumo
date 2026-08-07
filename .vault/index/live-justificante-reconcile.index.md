@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-justificante-reconcile'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:fc856216ee3dd245603eef105f0d5c2b754d0c13bc22004649ecfaf7862a3770'
 related:

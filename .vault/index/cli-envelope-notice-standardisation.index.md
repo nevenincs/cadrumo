@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-envelope-notice-standardisation'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:7ced31eeccd6ab100655f93b97a4e35bdc759ac3ecd7b40933b58ee649b87654'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-721-cripto-data-fidelity'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:428eb15f52f388d8d1673c09d4082f8912434f20332737c33b91cc042dc9de7e'
 related:

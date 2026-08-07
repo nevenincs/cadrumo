@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-190-percepciones-count'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:f6c4aa822b4de31e3350f3cb36395e81fcf566be32fa3f4792e6412f264f3409'
 related:

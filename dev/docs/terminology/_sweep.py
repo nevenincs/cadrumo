@@ -232,8 +232,17 @@ def enumerate_query_vocabulary(
                     _add_query(queries, concept.concept_id, form, section.language, is_hidden=True)
 
     authority = query_alias_authority if query_alias_authority is not None else load_query_alias_authority()
+    authority_for_validation = authority
+    if wanted is not None:
+        # A concept-scoped sweep is a legitimate test/diagnostic boundary.  A
+        # global authority entry must not be validated against the deliberately
+        # smaller canonical-query set, otherwise an unrelated alias makes the
+        # subset fail before its own entries are selected below.
+        authority_for_validation = authority.model_copy(
+            update={"entries": tuple(entry for entry in authority.entries if entry.concept_id in wanted)}
+        )
     validate_query_alias_authority(
-        authority,
+        authority_for_validation,
         handbook=resolved,
         canonical_queries=((query.concept_id, query.language, query.query) for query in queries.values()),
     )
@@ -448,6 +457,7 @@ def run_sweep(
     repo_root: Path | None = None,
     handbook: TerminologyHandbook | None = None,
     concept_ids: Iterable[str] | None = None,
+    query_alias_authority: Rung2QueryAliasAuthority | None = None,
     resolver: TargetResolver | None = None,
     search_record_projection: SearchRecordProjection | None = None,
     max_results: int = DEFAULT_MAX_RESULTS,
@@ -470,6 +480,9 @@ def run_sweep(
             inferred project root.
         handbook: The Handbook to enumerate; defaults to the bundled load.
         concept_ids: Optional concept-id subset (the bounded test path).
+        query_alias_authority: Optional explicit, validated authority for
+            independently ratified aliases. When omitted, the enumerator loads
+            the committed authority through its existing default boundary.
         resolver: A pre-built resolver (reused across queries to avoid
             re-projecting the casilla / concept indices per query).
         search_record_projection: The complete authoritative Pagefind/Rung-2
@@ -485,7 +498,11 @@ def run_sweep(
     Returns:
         The :class:`SweepResult` -- one mapping per query, plus run provenance.
     """
-    queries = enumerate_query_vocabulary(handbook, concept_ids=concept_ids)
+    queries = enumerate_query_vocabulary(
+        handbook,
+        concept_ids=concept_ids,
+        query_alias_authority=query_alias_authority,
+    )
     root = repo_root if repo_root is not None else _default_repo_root()
 
     if reindex:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ci-runner-standardization'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:30194862b45dc15069bf279050464635d973503a07a201e14711419f642a0321'
 related:

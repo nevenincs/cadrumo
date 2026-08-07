@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#user-profile-lazy-import'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:c35c52a65560edbc1a5c0c4319dc22f16c104a4a918222baee7938043e00056f'
 related:

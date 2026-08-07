@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calendar-semantics'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:0a96111e0addede7e24c0d3897100df8f95edfce063ca1b2735f4f5222ccbc80'
 related:

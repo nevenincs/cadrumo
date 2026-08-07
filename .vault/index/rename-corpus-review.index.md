@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#rename-corpus-review'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:ec290d1e7c63ac9477b6f4bc461245fd742f84261834844a6afa2ac15bc61837'
 related:

@@ -456,6 +456,7 @@ def verify_modelo_parity(
     # CAST-RATIONALE-GOOGLE-DISCOVERY-BUILD: discovery is an optional,
     # dynamically imported third-party module; the local protocol above pins
     # the exact Sheets factory contract consumed by this harness.
+    # nosemgrep: no-cast-in-domain-application
     discovery_builder = cast(_SheetsDiscoveryBuilder, discovery_module.build)
     sheets_service = discovery_builder("sheets", "v4", credentials=credentials, cache_discovery=False)
     _seed_inputs_into_sheet(sheets_service, apply_result.spreadsheet_id, plan, scenario, snapshot)

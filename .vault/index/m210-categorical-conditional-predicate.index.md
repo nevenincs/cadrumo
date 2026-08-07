@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m210-categorical-conditional-predicate'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:18af1c13692ea13f5c25fe2dcc424098eba3d97b9ca5e4897dcf35870dc56569'
 related:

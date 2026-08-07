@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-latency-budget'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:1e0be3406271e6b334e2ab78e544aa532a343addcd3ba82d207e387e2c4f5858'
 related:

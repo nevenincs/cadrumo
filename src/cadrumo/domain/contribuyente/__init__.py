@@ -160,6 +160,7 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
             # CAST-RATIONALE-TAX-RESIDENCE-CHANGE-HISTORY: isinstance narrows to
             # list but not its element type; pydantic re-validates each element
             # against the field's declared item type after this coercion.
+            # nosemgrep: no-cast-in-domain-application
             return tuple(cast(list[object], value))
         return value
 

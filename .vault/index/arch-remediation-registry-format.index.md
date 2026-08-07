@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-registry-format'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:d4e88680eb7dec3ee88438e75fb78be1e687ef47835c76f32af2cddb51344700'
+body_hash: 'sha256:8e5488df445c0e1db14fc331c5e4e2397224c59b16bc4ded2e9fc178b06ba1d4'
 related:
   - '[[2026-07-02-arch-remediation-registry-format-P01-S01]]'
   - '[[2026-07-02-arch-remediation-registry-format-P01-S02]]'
@@ -31,6 +31,8 @@ related:
   - '[[2026-07-03-arch-remediation-registry-format-audit]]'
   - '[[2026-07-06-arch-remediation-registry-format-research]]'
   - '[[2026-08-05-arch-remediation-registry-format-casilla-fragment-content-naming-audit]]'
+  - '[[2026-08-05-arch-remediation-registry-format-casilla-section-order-adr]]'
+  - '[[2026-08-05-arch-remediation-registry-format-plan]]'
 ---
 
 # `arch-remediation-registry-format` feature index
@@ -42,6 +44,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-registry-fo
 ### adr
 
 - `2026-07-02-arch-remediation-registry-format-adr` - `arch-remediation-registry-format` adr: `registry revision format convergence: fragmented layout as the single authoring format` | (**status:** `accepted`)
+- `2026-08-05-arch-remediation-registry-format-casilla-section-order-adr` - `arch-remediation-registry-format` adr: `casilla section order is an ungated presentational concern; the export rule states only the enforced parity set` | (**status:** `accepted`)
 
 ### audit
 
@@ -72,6 +75,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-registry-fo
 ### plan
 
 - `2026-07-02-arch-remediation-registry-format-plan` - `arch-remediation-registry-format` plan
+- `2026-08-05-arch-remediation-registry-format-plan` - `arch-remediation-registry-format` plan
 
 ### research
 

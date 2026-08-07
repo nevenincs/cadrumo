@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#trilingual-i18n'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:b4a6a81fb101d285579aadc3f18882013f15dbbc024e968da9efdc262b38e284'
 related:

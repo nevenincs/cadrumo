@@ -97,6 +97,7 @@ def _selector_profile_keys(binding: DataBindingDefinition) -> tuple[str, ...]:
         # CAST-RATIONALE-PROFILE-GROUNDING-COMPOSITE-KEYS: isinstance narrows to
         # list/tuple but not the element type; each item is coerced via str()
         # below regardless of its actual type.
+        # nosemgrep: no-cast-in-domain-application
         keys.extend(str(item) for item in cast(list[object] | tuple[object, ...], composite_raw) if item)
     return tuple(keys)
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:854d2794a6581d8f92b9fcf7f6ba275e9635245e4c69819372693aaa6cff46b1'
+body_hash: 'sha256:eec6858f48c89776f2a79bf9f43480a6d8995596c1d314a9410544d5462f4934'
 step_id: 'S05'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -65,3 +65,9 @@ The source client-side cosine bridge and fail-closed browser path were exercised
 ### 2026-08-06 explicit LUNA EXTRA HIGH review
 
 Fresh vaultspec-rag exact-source grounding of the current controller confirmed fail-closed bundle loading, bounded token coverage/cosine/margin checks, five-result capping, structured-casilla and Pagefind precedence, and shared palette/search-page wiring. The live semantic search service was unavailable during its code-index rebuild, so no unavailable search result was treated as evidence. An explicit LUNA EXTRA HIGH review found no P02.S05 source defect and changed no files; node syntax and scoped diff validation passed. P02.S05 remains open for an accepted shipped matrix/bundle, measured acceptance and locale/kind parity, and built-surface behavioural proof; browser enablement and deployment remain deferred.
+
+### 2026-08-07 LUNA EXTRA HIGH continuation
+
+Fresh supported `vaultspec-rag` code/vault grounding confirmed that P02.S05's source implementation is already present in the shared controller. The fail-closed config and bundle validation, cosine candidate generation, five-result cap, semantic composition, and both `initPalette` and `initSearchPage` host paths are wired through the same controller. The worker ran `node --check`, scoped `git diff --check`, and focused controller contract checks successfully.
+
+No JavaScript change was justified. P02.S05 remains open because source presence is not shipped acceptance: it still requires an accepted provenance-stamped matrix/bundle/config, held-out and locale/kind evidence, built-surface browser proof, and deployment evidence. The semantic tier remains dormant while the browser configuration is not accepted.

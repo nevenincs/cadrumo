@@ -51,8 +51,13 @@ def test_empty_text_override_error_is_typed_registered_and_localized() -> None:
 def test_m210_tipo_renta_accepts_a_declared_code_and_projects_to_its_concept() -> None:
     # A declared official code is accepted and PROJECTED to the TipoRentaIrnr
     # rate-concept token the engine keys on (code 18 -> pension, 01 -> general).
-    assert _projected_m210_tipo_renta_code(_validated_m210_official_tipo_renta_code("18", key="tipo_renta")) == "pension"
-    assert _projected_m210_tipo_renta_code(_validated_m210_official_tipo_renta_code("  01 ", key="tipo_renta")) == "general"
+    assert (
+        _projected_m210_tipo_renta_code(_validated_m210_official_tipo_renta_code("18", key="tipo_renta")) == "pension"
+    )
+    assert (
+        _projected_m210_tipo_renta_code(_validated_m210_official_tipo_renta_code("  01 ", key="tipo_renta"))
+        == "general"
+    )
 
 
 def test_m210_tipo_renta_fetch_gated_code_refuses_as_fetch_gated_not_invalid() -> None:

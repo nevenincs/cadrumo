@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#finding-coverage'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:d7f40bdcf7de72fe078b9e7037d6348883f8ae69cfbdd14f9f9c791efdada6a4'
 related:

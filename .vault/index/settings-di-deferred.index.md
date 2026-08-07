@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#settings-di-deferred'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:b899ad1786574373923d636fbdc8757e713cee7c864117ce9721249cd5863d9e'
 related:

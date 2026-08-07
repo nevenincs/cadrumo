@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-100-casilla'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:99bf5b094c5c8bf28e98d087afe0646ebfc75bf1f5415c4b6e84ecf3fe3d8e8f'
 related:

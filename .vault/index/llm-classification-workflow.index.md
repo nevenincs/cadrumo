@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#llm-classification-workflow'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:9a40f7383c28923b49136d6a0562447bcbe498132341c4a35282a7de73adc06e'
 related:

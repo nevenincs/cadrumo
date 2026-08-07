@@ -7,18 +7,7 @@ import json
 
 import pytest
 
-from ...core.config import load_settings
-from ...domain.categories import SpendingCategory
-from ...domain.iva import IvaCategory
-from ...domain.transactions import (
-    BusinessClassification,
-    LLMClassificationResponse,
-    TransactionValidationError,
-    prompt_spec_with_saturation_fields,
-)
-from ...tests.secure_sql import TestRuntimeProfile
 from ...application.ledger._llm_classification import _classify_with_evidence, _ResolvedEvidence
-from .._vision_classifier import LocalVisionLLMClassifier
 from ...application.ledger.tests._llm_vision_evidence_support import (
     _json_array,
     _json_object,
@@ -29,6 +18,17 @@ from ...application.ledger.tests._llm_vision_evidence_support import (
 from ...application.ledger.tests._llm_vision_evidence_support import (
     profile as profile,
 )
+from ...core.config import load_settings
+from ...domain.categories import SpendingCategory
+from ...domain.iva import IvaCategory
+from ...domain.transactions import (
+    BusinessClassification,
+    LLMClassificationResponse,
+    TransactionValidationError,
+    prompt_spec_with_saturation_fields,
+)
+from ...tests.secure_sql import TestRuntimeProfile
+from .._vision_classifier import LocalVisionLLMClassifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:af3bad6c4a8ffc98f2b59869efb57309615aae79a99721ec4780bdc1bd5ce175'
+body_hash: 'sha256:f63fb6016749a04adf18fee61ac2b6408cffbac9aa855a8a84b7bd6fd3b730d3'
 related:
   - '[[2026-08-06-iva-catalogue-prose-grounding-adr]]'
   - '[[2026-08-06-iva-catalogue-prose-grounding-research]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#iva-catalogue-prose-groundin
 
 ### adr
 
-- `2026-08-06-iva-catalogue-prose-grounding-adr` - `iva-catalogue-prose-grounding` ADR: catalogue prose is stored inline, not indirected through locale keys
+- `2026-08-06-iva-catalogue-prose-grounding-adr` - `iva-catalogue-prose-grounding` adr: `catalogue prose is stored inline, not indirected through locale keys` | (**status:** `accepted`)
 
 ### research
 

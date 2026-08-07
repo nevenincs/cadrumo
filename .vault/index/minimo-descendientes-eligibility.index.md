@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#minimo-descendientes-eligibility'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:b6739c94bbbe42d258892ca17c87e7137ed548b50f701bdf0c21d4cad0153051'
+body_hash: 'sha256:ff7c47bd5b3cf29e32acf8cd478446b8c0c07de9a413656280b026afe2fd5a11'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -53,6 +53,7 @@ related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S46]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S47]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S48]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S49]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-audit]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
@@ -129,6 +130,7 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-04-minimo-descendientes-eligibility-P04-S46` - Cut two over-cap advisories under the diagnostic message limit
 - `2026-08-04-minimo-descendientes-eligibility-P04-S47` - 2026-08-04-minimo-descendientes-eligibility-P04-S47
 - `2026-08-04-minimo-descendientes-eligibility-P04-S48` - Stop the calculate boundary projecting an internal ValidationError to the generic CLI-validation refusal, because the operator is told to check arguments that are correct while the real cause reaches only the error log, which is the same defect S20 fixed for the descendiente add verb still live on calculate
+- `2026-08-04-minimo-descendientes-eligibility-P04-S49` - 2026-08-04-minimo-descendientes-eligibility-P04-S49
 
 ### plan
 

@@ -50,7 +50,7 @@ class _AnthropicSdk:
 
 
 def _load_anthropic_sdk() -> _AnthropicSdk:
-    from .....core import ANTHROPIC_EXTRA, MissingOptionalExtraError, require_optional_extra
+    from ...core import ANTHROPIC_EXTRA, MissingOptionalExtraError, require_optional_extra
 
     try:
         require_optional_extra(ANTHROPIC_EXTRA)

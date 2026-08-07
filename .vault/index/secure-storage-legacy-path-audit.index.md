@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#secure-storage-legacy-path-audit'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:e6edad008d261e372aab4d5db07fc1fcb9bab7b7d48180beeef42663b0fb315f'
 related:

@@ -11,7 +11,7 @@ validators surface :exc:`~adapters.outbound.llm.LLMValidationError`.
 
 from __future__ import annotations
 
-from ....core.errors import CadrumoError
+from ..core.errors import CadrumoError
 
 
 class LLMError(CadrumoError):

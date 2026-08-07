@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calendar-live-operational-hardening'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:1a7586627f2c6e6f2f6b239933e51e048678952eedef05851348e4d166712738'
 related:

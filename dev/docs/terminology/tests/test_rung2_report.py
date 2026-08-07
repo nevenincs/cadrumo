@@ -211,6 +211,32 @@ def test_failed_measurement_cannot_cross_the_acceptance_boundary() -> None:
             "fully covered query count",
         ),
         (
+            Rung2ReportCoverage,
+            {
+                "query_count": 32,
+                "total_query_token_count": 31,
+                "total_covered_token_count": 31,
+                "fully_covered_query_count": 0,
+                "zero_covered_query_count": 0,
+                "below_minimum_coverage_query_count": 0,
+                "aggregate_coverage_ratio": 1.0,
+            },
+            "total query token count",
+        ),
+        (
+            Rung2ReportCoverage,
+            {
+                "query_count": 32,
+                "total_query_token_count": 32,
+                "total_covered_token_count": 32,
+                "fully_covered_query_count": 32,
+                "zero_covered_query_count": 1,
+                "below_minimum_coverage_query_count": 1,
+                "aggregate_coverage_ratio": 1.0,
+            },
+            "cannot overlap",
+        ),
+        (
             Rung2ReportTopFiveLoss,
             {"case_count": 32, "query_count_with_loss": 1, "total_lost_record_count": 0, "query_loss_rate": 0.0},
             "top-five loss rate",

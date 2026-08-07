@@ -428,9 +428,7 @@ def _ungrounded_diagnostics(
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Every ungrounded-substrate advisory on a resolution, keyed on the reason code."""
     return tuple(
-        diagnostic
-        for diagnostic in resolution.diagnostics
-        if diagnostic.reason == "ungrounded_income_substrate"
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "ungrounded_income_substrate"
     )
 
 

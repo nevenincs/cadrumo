@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-authority-verb-conformance-s09-review'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:2483c2dea5bd79b1d1725377b4d3dad894c99bf4207e03137af98b8a57a6a1de'
 related:

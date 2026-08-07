@@ -14,8 +14,8 @@ from typing import override
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-from .....core.config import load_settings
-from .....core.logging import get_logger
+from ...core.config import load_settings
+from ...core.logging import get_logger
 from .._errors import LLMConfigError
 from .._models import LLMProvider
 from .base import (

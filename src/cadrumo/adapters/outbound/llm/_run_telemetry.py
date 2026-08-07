@@ -58,8 +58,8 @@ from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes
 from ....core.time import UtcInstant, now
-from ._errors import LLMCacheError
-from ._retention import select_retention_removal_keys
+from ....llm import LLMCacheError
+from ....llm import select_retention_removal_keys
 
 __all__ = ["LLMRunRecord", "LLMRunTelemetryRecorder", "LLMRunTelemetrySummary"]
 

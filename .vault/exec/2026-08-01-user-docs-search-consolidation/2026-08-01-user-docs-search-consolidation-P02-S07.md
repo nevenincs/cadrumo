@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-05'
-modified: '2026-08-06'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:35547909f3afebf89492e0a69ab6a32ba79ca74d7d5b1de2500d6c21d00480e6'
+body_hash: 'sha256:3a71fced05e72cdc3dfdc48bde0c0790f6dbf5204160b0219c946b34986e8e91'
 step_id: 'S07'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -98,6 +98,62 @@ Read-only classification of the ten below-floor queries found no current Handboo
 The four-locale committed relevance surface was checked without changing it: ES has 91 mappings over 49 concepts, EN 17 over 15 concepts, CA 1 over 1 concept, and HU 3 over 3 concepts. This is source-side locale evidence only; it is not a substitute for the outstanding built/deployed per-root parity gates.
 
 The SOL disposition is to close none of P02.S04-P02.S07. The minimum safe continuation is to obtain independent RAG-grounded ratification evidence for any domain alias candidate, or obtain a separately approved ADR amendment before changing representation/coverage semantics, then recompile the same accepted matrix and rerun the existing gates. No source correction is justified by this failure classification. Deployment is also not evidenced: the current AWS session is expired and the accepted Rung-2/build gates are not green.
+
+### 2026-08-06 LUNA MAX authorized provider continuation
+
+Fresh vaultspec-rag grounding and a local pinned-provider run completed without source edits. The local dev environment used model2vec==0.8.2 and the immutable Potion revision e7421cd79c75fc506b88bb75723ae0a234994720; raw provider/model/tokenizer manifests were verified before provider import. The temporary bundle contained 112 queries, 152 query tokens, and 8,505 records; matrix size was 254,588 bytes and bundle size was 2,135,413 bytes with raw SHA-256 b3902f8a0f90b19eac82a75051a0d5c57485797fde9d96d3a820f36a4401335f. It was not promoted, committed, or enabled.
+
+Focused contract verification returned 67 passed; real Pagefind/controller integration returned 4 passed; Ruff, basedpyright, Node syntax, and scoped diff checks passed. The semantic replay was 22/32 hits (miss rate 0.3125) with 92/123 query-token coverage (0.7479674796747967), including 10 below the 0.8 floor. The captured full ladder remains 15/32 (miss rate 0.53125). P02.S04-P02.S07, P02.S31, and P02.S32 remain open; browser configuration stays disabled and deployment was not attempted.
+
+### 2026-08-06 LUNA EXTRA HIGH semantic-result invariant hardening
+
+Fresh vaultspec-rag grounding over the browser-equivalent evaluator and accepted Rung-2 ordering contract identified a concrete fail-closed gap: semantic result models did not enforce the aggregate coverage bound, unique record ids, deterministic score/weight/UTF-8 ordering, or the fixed five-result cap. The LUNA EXTRA HIGH worker corrected only `dev/docs/terminology/_rung2_evaluation.py`; `_rung2_acceptance.py` was reviewed and unchanged.
+
+The worker reported focused Rung-2 verification at `40 passed`, Ruff clean, basedpyright clean (`0 errors, 0 warnings, 0 notes`), scoped diff-check clean, and direct rejection probes for six candidates and invalid ordering/coverage. No held-out report or accepted artifact was produced.
+
+P02.S07 remains open. The standing provider-backed replay remains rejected at 22/32 semantic hits (`0.3125` miss rate), 15/32 composed hits, and 92/123 aggregate token coverage (`0.7479674796747967`); the browser configuration stays disabled and fail-closed.
+
+### 2026-08-06 current compile does not change the acceptance verdict
+
+The same fresh `vaultspec-rag`-grounded provider compile passed the bridge after the bounded cross-axis weight correction, but it is build evidence only. It does not rerun or improve held-out semantic/composed-ladder metrics, quantization-drift measurement, or the browser/licence gate. The current standing evidence therefore remains the previously recorded rejected Rung-2 result; the temporary bundle was not promoted or enabled. P02.S07 remains open.
+
+### 2026-08-06 current browser ladder does not clear the acceptance gate
+
+The independent Playwright/Pagefind capture recorded in P02.S31 was replayed against the current temporary pinned-provider bundle. The full composed ladder reached `16/32` held-out hits and `16/32` misses (`0.5000` miss-rate). The semantic-only replay of that same bundle reached `22/32` (`0.3125` miss-rate); aggregate token coverage remained `92/123 = 0.7479674796747967`, with 20 fully covered cases, 10 below the `0.8` minimum, and 0 zero-covered cases.
+
+This current measurement is useful evidence that the bridge correction and provider compile are operational, but it is not a new standing acceptance report. The local Pagefind build is not hash-linked to a promoted bundle, and quantization/top-five loss, licence provenance/size, and four-locale/per-kind parity evidence are not all accepted. The composed miss-rate remains above the ratified `0.10` bar. The committed report was therefore intentionally not overwritten, the temporary bundle was not promoted or enabled, and P02.S07 remains open.
+
+### 2026-08-07 authoritative full-bundle semantic remeasurement
+
+The authoritative input assembler now succeeds, so the fresh full bundle—not the earlier manifest-reuse diagnostic—was loaded through `load_rung2_search_bundle` and replayed under the ratified policy. It contains 8,505 manifest records and 2,138,574 canonical bytes. Semantic replay produced 22/32 hits and 10/32 misses (`0.3125` miss rate); coverage was 93/123 tokens (`0.7560975609756098`), with 20 fully covered queries, 10 below the 0.8 minimum, and 0 zero-covered queries. All ten semantic misses abstained as `insufficient-coverage`.
+
+The previous independently captured Pagefind observations are not persisted outside the local build tree; therefore the prior 16/32 composed-ladder result remains diagnostic evidence against its earlier temporary bundle and is not silently relabeled as a fresh full-bundle ladder report. No new lexical observations were fabricated. The standing report remains rejected/disabled, P02.S07 remains open, and no browser enablement, artifact promotion, commit, push, or deployment occurred.
+
+### 2026-08-06 alias remeasurement remains diagnostic
+
+Following fresh `vaultspec-rag` grounding and the live `ServiceRagSearchClient` alias sweep, the independent authority admits only Spanish `autonomos` -> `modelo 130`. Recompiling from the current relevance and authority inputs produced 113 vocabulary queries, 153 query tokens, and 113 mappings with zero failures; the bundle is 2,137,428 bytes.
+
+The held-out evaluator remains unchanged at 22/32 hits and a 0.3125 miss rate. The new alias improves the `modelo 130 para autonomos` case from 2/4 to 3/4 tokens, but the case still misses `para`; the acceptance threshold is therefore not met. The measurement is recorded as a diagnostic result only, with no held-out-term promotion, threshold relaxation, or baseline replacement. P02.S07 remains open pending a valid Rung-2/browser composed-ladder measurement and standing-baseline decision.
+
+### 2026-08-06 current alias bundle replay detail
+
+A direct source-only replay of the current temporary alias bundle through `evaluate_rung2_held_out` produced 22/32 semantic hits, 10 misses, and a 0.3125 miss rate. The bound coverage evidence is 93/123 query tokens (`0.7560975609756098`), with 20 fully covered queries, 0 zero-covered queries, and 10 below the 0.8 minimum. The query-set version remains 1 and the bundle artifact SHA-256 is `ed69c3b6a6d9f92e77ad25cd5aaf9fd76694f3e5daa57369251a21302e14778f`. This is a reproducible diagnostic replay, not a new standing report: the composed Pagefind ladder for this exact bundle, independent float32/int8 loss evidence, and accepted locale/kind parity are not all hash-linked and accepted.
+
+A fresh exact-bundle semantic rerun after the focused contract suite confirms query-set version `1`, 22/32 hits, 10/32 misses (`0.3125`), and coverage `93/123 = 0.7560975609756098`; all ten misses abstain as `insufficient-coverage`. The previous `rung2-report.json` was intentionally left unchanged because its lexical observations belong to an earlier artifact and no fresh Pagefind observation file exists for this exact bundle. Mixing those measurements would create a false baseline. P02.S07 remains open.
+
+### 2026-08-07 current-head authoritative semantic replay
+
+After the current-head compiler completed, the fresh full bundle was loaded through `load_rung2_search_bundle` and evaluated against query-set version 1 with the explicit policy `minimum_coverage_ratio=0.8`, `cosine_floor=0.75`, `runner_up_margin=0.05`, and result cap 5. The diagnostic bundle contains 8,516 manifest records, 114 matrix rows/terms, 2,141,633 bytes, and artifact SHA-256 `7907fd6ad903dcb1189286b181639c5e816b061adc4e697497e489f32c6f254d`. Replay produced 22/32 semantic hits and 10/32 misses (`0.3125` miss rate), with 93/123 covered query tokens (`0.7560975609756098`), 22 fully covered rows, 10 below the 0.8 floor, and 0 zero-covered rows. All ten misses abstained as `insufficient-coverage`: `cuando presento el modelo 303`, `que es la prorrata especial`, `modelo 130 para autonomos`, `resumen anual de retenciones de mis trabajadores`, `como funciona la ventanilla unica de iva`, `impuesto de sociedades a pagar este ano`, `factura de la luz deducible`, `dar de alta un autonomo en hacienda`, `vender a francia sin iva`, and `libro de ingresos y gastos`.
+
+This is reproducible diagnostic evidence that the current compiler/provider seam operates; it does not satisfy the ratified 0.10 miss-rate or 0.8 coverage gates, and it is not a new standing report. The bundle was not promoted, the browser tier remains disabled/fail-closed, and no locale parity, full-ladder Pagefind capture, or deployment claim is made. P02.S07 remains open.
+
+### 2026-08-07 current HEAD semantic replay confirmation
+
+The exact bundle compiled from `HEAD 9e6e552fee` was reloaded and replayed under the existing explicit policy. It remains 22/32 hits, 10/32 misses, and `0.3125` miss rate, with 93/123 covered query tokens (`0.7560975609756098`), 22 fully covered rows, 10 below the 0.8 floor, and 0 zero-covered rows. Every miss remains `insufficient-coverage`. This is diagnostic evidence only: the 0.10 miss-rate gate is not met, no full-ladder observation is hash-linked to this bundle, the browser tier remains disabled, and P02.S07 remains open.
+
+### 2026-08-07 pushed HEAD d24ae2fdee semantic replay
+
+The exact diagnostic bundle compiled from pushed `HEAD d24ae2fdee` was reloaded under the existing explicit policy. It produced 22/32 hits, 10/32 misses, and `0.3125` miss rate, with 93/123 covered query tokens (`0.7560975609756098`), 22 fully covered rows, 10 below the 0.8 floor, and 0 zero-covered rows; all misses were `insufficient-coverage`. This confirms the semantic result is unchanged at the pushed HEAD, but it remains above the ratified 0.10 gate and has no hash-linked current full-ladder Pagefind capture. The browser tier remains disabled and P02.S07 remains open.
 
 ## Notes
 

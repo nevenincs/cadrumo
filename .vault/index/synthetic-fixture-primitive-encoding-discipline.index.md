@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#synthetic-fixture-primitive-encoding-discipline'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:f4a0456826535ee599fa9b65fc21c3b7fb77d68b30a53fb1847131cb732e02cc'
 related:

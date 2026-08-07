@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-workbook-parity-boundary'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:99e8961614111efbd0205b97d9a4869813eadcd622903472e77ff62caa580be4'
 related:

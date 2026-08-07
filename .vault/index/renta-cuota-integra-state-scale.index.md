@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#renta-cuota-integra-state-scale'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:2554a53182f7ad0f709247c95fa1ecb7efb247e99cbc0aa9e8ecd0bfa1741f7b'
 related:

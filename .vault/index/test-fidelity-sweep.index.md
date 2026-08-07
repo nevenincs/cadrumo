@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#test-fidelity-sweep'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:dcba11db7813e5ab6cb63a0e6d1fd196030e935e55e68787777e380883d973a1'
 related:

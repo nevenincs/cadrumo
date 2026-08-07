@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#audits-resolution'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:514153d40887d5712071717d4476a3d2b87e06c3ac57769c2fc25ab7d6c2eca3'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#corpus-strict-gate'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:02d0692f2b457d1cffe63c92559ef125fa5f64a69d5bf89d390abc15aada206e'
 related:

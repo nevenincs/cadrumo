@@ -76,6 +76,7 @@ from ...domain.transactions import (
     resolve_split_proposer,
     set_classification,
 )
+from ...llm import LocalVisionLLMClassifier
 from ._actions_common import (
     build_bucket_event as _build_bucket_event,
 )
@@ -116,7 +117,6 @@ from ._llm_suggestions import (
     OperatorIvaDerivationResult,
 )
 from ._models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult, SplitChildCommand
-from ...llm import LocalVisionLLMClassifier
 
 _logger = get_logger(__name__)
 

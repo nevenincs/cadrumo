@@ -9,6 +9,8 @@ Coordinates :class:`~adapters.outbound.llm.LLMRequest` inputs,
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import json
 import time
 from datetime import datetime
@@ -16,12 +18,26 @@ from uuid import uuid4
 
 from pydantic import SecretStr
 
-from ....core.config import Settings
-from ....core.hashing import sha256_hex
-from ....core.logging import get_logger
-from ....core.time import now
-from ._cache import LLMCache
+from ..core.config import Settings
+from ..core.hashing import sha256_hex
+from ..core.logging import get_logger
+from ..core.time import now
+
 from ._errors import LLMCacheError, LLMConfigError
+
+if TYPE_CHECKING:
+    # The three persistence-touching stores stay on the CORE side of the
+    # boundary (they resolve secure storage; this package must not). They are
+    # injected here, so the client needs their TYPES but never constructs
+    # them at import time. Type-only imports keep the annotation honest while
+    # leaving the runtime edge deferred, which is what breaks the cycle the
+    # split creates: the stores import this package for the shared error and
+    # model types, and the client refers back to them.
+    from ..adapters.outbound.llm import (
+        LLMCache,
+        LLMRunTelemetryRecorder,
+        UsageRecorder,
+    )
 from ._models import LLMProvider, LLMRequest, LLMResponse, PromptRegistry
 from ._pricing import estimate_cost_usd
 from ._providers import (
@@ -31,11 +47,9 @@ from ._providers import (
     ProviderRequest,
 )
 from ._providers.base import _ProviderAdapter
-from ._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 
 # AnthropicAdapter stays lazy here so provider construction remains behind the
 # optional-extra guard in _build_adapter.
-from ._usage import UsageRecorder
 
 _LOGGER = get_logger(__name__)
 
@@ -219,7 +233,7 @@ class LLMClient:
         """
         try:
             self.run_telemetry_recorder.record(
-                LLMRunRecord(
+                _llm_run_record()(
                     run_id=uuid4().hex,
                     caller=self.caller,
                     provider=provider,
@@ -258,7 +272,7 @@ class LLMClient:
             # The Anthropic-API provider needs the optional `anthropic` extra. Guard
             # before the lazy import so a missing extra is an instructive
             # LLMConfigError, not a deep ModuleNotFoundError.
-            from ....core import ANTHROPIC_EXTRA, MissingOptionalExtraError, require_optional_extra
+            from ..core import ANTHROPIC_EXTRA, MissingOptionalExtraError, require_optional_extra
 
             try:
                 require_optional_extra(ANTHROPIC_EXTRA)
@@ -307,3 +321,16 @@ class LLMClient:
         payload = request.model_dump(mode="json", exclude_none=True)
         material = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
         return sha256_hex(material.encode("utf-8"))
+
+
+def _llm_run_record() -> type:
+    """Resolve ``LLMRunRecord`` from the core-side telemetry store, deferred.
+
+    The record type lives with the store that persists it, on the core side of
+    the boundary. Imported through that package's public facade at call time
+    rather than at module load, so the import cycle the split creates never
+    closes (see the TYPE_CHECKING block above for why the edge exists at all).
+    """
+    from ..adapters.outbound.llm import LLMRunRecord
+
+    return LLMRunRecord

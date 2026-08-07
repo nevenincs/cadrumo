@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#corpus-registry-packaging'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:8361fcbe319233c2c9be32c84e0b85649f85937bd1fc8c7eff71dda0047c4719'
 related:

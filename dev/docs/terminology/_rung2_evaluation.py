@@ -144,12 +144,29 @@ class Rung2SemanticCandidateResult(BaseModel):
 
     query_tokens: tuple[str, ...]
     covered_token_count: int = Field(ge=0)
-    candidates: tuple[Rung2SemanticCandidate, ...]
+    candidates: tuple[Rung2SemanticCandidate, ...] = Field(max_length=5)
     status: Rung2CandidateStatus
 
     @model_validator(mode="after")
     def _enforce_status_candidates(self) -> Rung2SemanticCandidateResult:
         """Make abstention status and candidate payload mutually exclusive."""
+        if self.covered_token_count > len(self.query_tokens):
+            raise ValueError("covered token count cannot exceed query token count")
+        candidate_ids = tuple(candidate.record_id for candidate in self.candidates)
+        if len(candidate_ids) != len(set(candidate_ids)):
+            raise ValueError("semantic candidates cannot contain duplicate record ids")
+        expected_order = tuple(
+            sorted(
+                self.candidates,
+                key=lambda candidate: (
+                    -candidate.semantic_score,
+                    -candidate.semantic_ranking_weight,
+                    candidate.record_id.encode(_UTF_8),
+                ),
+            ),
+        )
+        if self.candidates != expected_order:
+            raise ValueError("semantic candidates must use deterministic score and UTF-8 record-id order")
         if self.status is Rung2CandidateStatus.CANDIDATES:
             if not self.candidates:
                 raise ValueError("candidate status requires at least one semantic candidate")

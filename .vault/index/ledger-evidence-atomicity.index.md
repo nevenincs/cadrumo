@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-evidence-atomicity'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:49b02911910279510d3b55cc33b7d93d48988f96d2f801d16b24137d29a9b750'
 related:

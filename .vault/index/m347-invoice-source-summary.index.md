@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m347-invoice-source-summary'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:62661013beefd8f6b61c8309f51da2921688cbe8904a921b4f6e612702247b2e'
 related:

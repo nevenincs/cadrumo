@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#settings-route-derivation-cost'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:9585dab5b83e8eb033c2663a6a730f18bb51f46797ccdac60b7c582bd60ba2d4'
 related:

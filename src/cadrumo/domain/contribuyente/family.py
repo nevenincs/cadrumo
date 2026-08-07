@@ -409,6 +409,7 @@ class DescendantInfo(BaseModel):
         # Untyped by construction: this is raw pre-validation input, and
         # pydantic re-validates every value against the declared field type
         # immediately after.
+        # nosemgrep: no-cast-in-domain-application
         raw = cast("dict[str, object]", data)
         if raw.get("relacion") is not None:
             return raw
@@ -1369,6 +1370,7 @@ class RentaFamilyProfile(BaseModel):
             # to list but not its element type; pydantic re-validates each
             # element against the field's declared item type after this
             # coercion.
+            # nosemgrep: no-cast-in-domain-application
             return tuple(cast("list[object]", value))
         return value
 
@@ -1379,6 +1381,7 @@ class RentaFamilyProfile(BaseModel):
             # CAST-RATIONALE-DESCENDIENTES-COERCION: isinstance narrows to list
             # but not its element type; pydantic re-validates each element
             # against the field's declared item type after this coercion.
+            # nosemgrep: no-cast-in-domain-application
             return tuple(cast("list[object]", value))
         return value
 

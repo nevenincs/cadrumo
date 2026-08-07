@@ -131,6 +131,7 @@ class CoverageManifest(BaseModel):
         seen: set[str] = set()
         # CAST-RATIONALE-NAMESPACES-ITERABLE: isinstance narrows to Iterable but
         # not its element type; each item is validated as str in the loop.
+        # nosemgrep: no-cast-in-domain-application
         for item in cast(Iterable[object], value):
             if not isinstance(item, str):
                 raise ValueError("namespaces must contain strings only")
@@ -151,6 +152,7 @@ class CoverageManifest(BaseModel):
         # CAST-RATIONALE-ROW-COUNTS-MAPPING: isinstance narrows to Mapping but
         # not its type parameters; each key/value pair is validated in the
         # loop below.
+        # nosemgrep: no-cast-in-domain-application
         for raw_namespace, raw_count in cast(Mapping[object, object], value).items():
             if not isinstance(raw_namespace, str):
                 raise ValueError("row count namespaces must be strings")

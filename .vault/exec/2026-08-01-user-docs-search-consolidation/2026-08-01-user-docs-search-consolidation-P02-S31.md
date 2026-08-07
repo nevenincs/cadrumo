@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:8b40c1b959227f34337dae94648e4e66dea1f97be2b6440f0791d48a0f7b6b40'
+body_hash: 'sha256:575706c444e4bab10add0b4b91eb7a1e4efb079622da5c33c239524b4a60a949'
 step_id: 'S31'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -75,3 +75,25 @@ The real Pagefind capture does not close the held-out miss-rate gate. P02.S31 re
 ### 2026-08-06 formal review synchronization
 
 The formal LUNA MAX code review recorded PASS with only low-severity findings across evaluator invariants, deterministic ordering, the Pagefind id/data-url join, D8 preservation, security/licence boundaries, and shared-worktree scope. The complete browser integration selection was independently rerun as `uv run --no-sync pytest -q -m integration dev/docs/tests/test_palette_ranking.py dev/docs/tests/test_search_page_inline_ladder.py dev/docs/tests/test_search_page_fulltext_class_ranking.py`, returning `4 passed in 38.89s`. This review does not close P02.S31 or the Rung-2 acceptance gate.
+
+### 2026-08-06 LUNA MAX continuation
+
+The existing real Pagefind capture and corrected ephemeral-id/data-url join were rechecked against the temporary provider run. The four-locale/record-kind acceptance boundary remains unproven for a shippable Rung-2 artifact, and the rejected 15/32 composed ladder is preserved as evidence. No source change or plan closure is claimed.
+
+### 2026-08-06 independent browser lexical capture and composed-ladder replay
+
+A real Playwright browser session captured the Pagefind observations for all 32 held-out queries against the local full-injection build at `C:\\Users\\hello\\AppData\\Local\\Temp\\aeat-p02-ladder-311c7392176449ff924a75d44def8817`. The capture followed the source controller contract: sequential Pagefind weight-sorted card search (first 12) followed by normal relevance search (first 6), retaining only records with an opaque `record_id`, the shipped page-band ranks, title-match strength, pass origin, and relevance rank. The run was local and was not a deployment or live-root probe.
+
+The captured observations were bound to `Rung2LadderObservation` and replayed with the current pinned-provider temporary bundle `953ec0851fbbcd43afb460c23a33bf584e6c171a2afee32adb9f966bc3dd7fa2`. The composed ladder produced 32 cases, 16 hits, and 16 misses: held-out miss-rate `0.5000`. The same run measured aggregate token coverage of `92/123 = 0.7479674796747967`, with 20 fully covered cases, 10 below the `0.8` minimum, and 0 zero-covered cases. This is worse than the current bundle's semantic-only diagnostic (`22/32`, `0.3125`) and remains materially above the ratified `0.10` miss-rate bar.
+
+This is reproducible browser measurement evidence, not an acceptance result: the Pagefind build is a local diagnostic build and is not a hash-linked promoted bundle; quantization/top-five loss, licence provenance/size, and per-locale/per-kind gates remain open. No artifact was promoted, enabled, committed, or deployed. P02.S31 remains open pending an accepted hash-linked full-ladder report.
+
+### 2026-08-07 current-checkout build timeout
+
+A fresh diagnostic build was attempted against the then-current shared checkout using `CADRUMO_DOCS_PAGEFIND_MODE=full`, `CADRUMO_DOCS_SKIP_SEQUENCE_CHECK=1`, `CADRUMO_DOCS_JOBS=1`, and `uv run --no-sync python -m dev.docs.build --scope user`. The build populated a partial temporary tree but did not produce `pagefind/pagefind-entry.json` within the ten-minute execution budget. The exact build processes were then stopped after command-line verification; no repository files, generated artefacts, browser configuration, or deployment targets were changed. The partial tree is not treated as evidence, and P02.S31 remains open.
+
+### 2026-08-07 current pushed-head browser capture
+
+Fresh vaultspec-rag grounding and an exact current Pagefind capture were followed by replay through the production Rung-2 ladder comparator. The temporary full-injection tree contained 302 HTML pages and 8,516 unified records; the diagnostic bundle artifact hash was `7907fd6ad903dcb1189286b181639c5e816b061adc4e697497e489f32c6f254d`. The real browser capture covered all 32 held-out queries. Composed results were 16/32 hits and 16/32 misses (miss rate `0.5000`); the same bundle's semantic-only replay was 22/32 hits (miss rate `0.3125`) with 93/123 covered query tokens.
+
+For `modelo 303`, the weighted Pagefind pass does contain `concept:modelo-303`, but legal `DOC` records carry the declared 1.0 weight while the modelo concept carries the declared 0.9 weight. The RAG-grounded D8/R9 contract therefore retains the observed band ordering; no ranking, legal weight, or coverage-threshold change is justified. The evidence remains diagnostic: no bundle promotion, browser enablement, standing-baseline replacement, or plan closure is claimed.

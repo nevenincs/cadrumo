@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m390-annual-autoconsumo-promotor-source'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
 body_hash: 'sha256:78a7a85e47bd855486e1ab1c07ad63441e0d2942bc15950e3ef9e9b5e2aa208b'
 related:
