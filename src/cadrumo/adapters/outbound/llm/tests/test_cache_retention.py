@@ -26,10 +26,9 @@ import pytest
 from .....adapters.persistence.storage import secure_object_repository_for_active_bucket
 from .....core.classification import SensitivityClass
 from .....core.redaction import default_rules_for_class, redact_structured
+from .....llm import CachedEntry, LLMProvider, LLMRequest, LLMResponse
 from .. import LLMCache
-from .....llm import LLMProvider, LLMRequest, LLMResponse
 from .._cache import _CACHE_NAMESPACE, _CACHE_VERSION
-from .....llm import CachedEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
