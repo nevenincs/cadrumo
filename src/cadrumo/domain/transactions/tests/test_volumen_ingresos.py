@@ -18,6 +18,7 @@ import pytest
 
 from ....core import INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE, ConceptoIngreso, TipoActividad
 from ....core.resources import resources
+from .._tipo_actividad_partitions import tipo_actividad_code_set
 from .._volumen_ingresos import counts_toward_volumen_de_ingresos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -97,15 +98,8 @@ def test_the_art_110_activity_selector_is_not_the_art_95_one() -> None:
     a Modelo 131 casilla is the specific mistake this asserts against: it carries no
     forestal code, so a forestal filer's whole quarterly volume would vanish.
     """
-    parameters = resources().legal_parameters.singleton
-    art_110 = frozenset(
-        TipoActividad(token.strip()) for token in parameters[_ACTIVITY_PARAM].value.split(",") if token.strip()
-    )
-    art_95_agrarian = frozenset(
-        TipoActividad(token.strip())
-        for token in parameters["rirpf-art-95:selector-m036-actividades-agricolas-ganaderas"].value.split(",")
-        if token.strip()
-    )
+    art_110 = tipo_actividad_code_set(_ACTIVITY_PARAM)
+    art_95_agrarian = tipo_actividad_code_set("rirpf-art-95:selector-m036-actividades-agricolas-ganaderas")
 
     assert TipoActividad.B03_FORESTAL in art_110
     assert TipoActividad.B03_FORESTAL not in art_95_agrarian
@@ -126,8 +120,7 @@ def test_pesquera_is_absent_and_that_is_the_form_talking_not_the_article() -> No
     modelling an activity this form cannot present -- and would then face the
     ``B04`` mejillón question that the current set deliberately never raises.
     """
-    parameter = resources().legal_parameters.singleton[_ACTIVITY_PARAM]
-    declared = frozenset(TipoActividad(token.strip()) for token in parameter.value.split(",") if token.strip())
+    declared = tipo_actividad_code_set(_ACTIVITY_PARAM)
 
     assert TipoActividad.B05_PESQUERA not in declared
     assert TipoActividad.B04_PRODUCCION_DE_MEJILLON not in declared

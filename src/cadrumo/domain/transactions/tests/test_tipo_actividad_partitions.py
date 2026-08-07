@@ -17,12 +17,13 @@ from typing import Final
 import pytest
 
 from ....core import IAE_SUBJECT_TIPOS_ACTIVIDAD, NON_IAE_SUBJECT_TIPOS_ACTIVIDAD, TipoActividad
+from ...deadlines import IrpfActivityKind
 from .._errors import TransactionValidationError
 from .._tipo_actividad_partitions import (
-    Art95ActivityPartition,
+    _ART_95_SELECTORS,
     _code_set,
-    art_95_partition_for,
-    load_tipo_actividad_partitions,
+    irpf_activity_kind_for,
+    load_tipo_actividad_selectors,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -53,30 +54,24 @@ def test_every_partition_is_declared_including_the_one_no_code_selects() -> None
     no codes keeps the gap where a reader looks for the mapping; dropping the
     entry would make the file read as a complete partition of art. 95.
     """
-    partitions = load_tipo_actividad_partitions()
+    selectors = load_tipo_actividad_selectors()
+    engorde = "rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura"
 
-    assert set(partitions) == set(Art95ActivityPartition)
-    assert partitions[Art95ActivityPartition.GANADERA_ENGORDE_PORCINO_AVICULTURA] == frozenset()
-    assert all(
-        partitions[partition]
-        for partition in Art95ActivityPartition
-        if partition is not Art95ActivityPartition.GANADERA_ENGORDE_PORCINO_AVICULTURA
-    )
+    assert set(selectors) == set(_ART_95_SELECTORS)
+    assert selectors[engorde] == frozenset()
+    assert all(codes for parameter_id, codes in selectors.items() if parameter_id != engorde)
 
 
 def test_no_code_selects_two_partitions() -> None:
     """A code selects at most one partition, so a rate lookup cannot be ambiguous."""
-    partitions = load_tipo_actividad_partitions()
-    selected = [code for codes in partitions.values() for code in codes]
+    selected = [code for codes in load_tipo_actividad_selectors().values() for code in codes]
 
     assert len(selected) == len(set(selected))
 
 
 def test_every_selected_code_is_a_real_modelo_036_code() -> None:
     """Selectors draw from the closed code set, never a free-form token."""
-    partitions = load_tipo_actividad_partitions()
-
-    for codes in partitions.values():
+    for codes in load_tipo_actividad_selectors().values():
         assert all(isinstance(code, TipoActividad) for code in codes)
 
 
@@ -90,8 +85,8 @@ def test_artisticas_partitions_as_professional_because_art_95_2_a_says_so() -> N
     that paragraph the ``A04`` half would be a guess, which is why this assertion
     names it.
     """
-    assert art_95_partition_for(TipoActividad.A04_ARTISTICAS_Y_DEPORTIVAS) is Art95ActivityPartition.PROFESIONAL
-    assert art_95_partition_for(TipoActividad.A05_PROFESIONALES) is Art95ActivityPartition.PROFESIONAL
+    assert irpf_activity_kind_for(TipoActividad.A04_ARTISTICAS_Y_DEPORTIVAS) is IrpfActivityKind.PROFESIONAL
+    assert irpf_activity_kind_for(TipoActividad.A05_PROFESIONALES) is IrpfActivityKind.PROFESIONAL
 
 
 def test_ganaderia_independiente_partitions_agrarian_across_the_iae_split() -> None:
@@ -106,9 +101,9 @@ def test_ganaderia_independiente_partitions_agrarian_across_the_iae_split() -> N
     assert TipoActividad.A02_GANADERIA_INDEPENDIENTE in IAE_SUBJECT_TIPOS_ACTIVIDAD
     assert TipoActividad.B02_GANADERA in NON_IAE_SUBJECT_TIPOS_ACTIVIDAD
     assert (
-        art_95_partition_for(TipoActividad.A02_GANADERIA_INDEPENDIENTE)
-        is art_95_partition_for(TipoActividad.B02_GANADERA)
-        is Art95ActivityPartition.AGRICOLA_GANADERA
+        irpf_activity_kind_for(TipoActividad.A02_GANADERIA_INDEPENDIENTE)
+        is irpf_activity_kind_for(TipoActividad.B02_GANADERA)
+        is IrpfActivityKind.SECTORIAL
     )
 
 
@@ -129,7 +124,7 @@ def test_codes_art_95_fixes_no_rate_for_select_nothing(tipo: TipoActividad) -> N
     one. Returning ``None`` for them is correct; folding them into any partition
     would apply a rate the article does not fix for that activity.
     """
-    assert art_95_partition_for(tipo) is None
+    assert irpf_activity_kind_for(tipo) is None
 
 
 def test_parser_refuses_a_token_that_is_not_a_modelo_036_code() -> None:

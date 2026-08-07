@@ -74,6 +74,7 @@ Submodules
    cadrumo.domain.calculations.registry._profile_grounding
    cadrumo.domain.calculations.registry._queries
    cadrumo.domain.calculations.registry._query_reports
+   cadrumo.domain.calculations.registry._rate_box_partition
    cadrumo.domain.calculations.registry._record_design
    cadrumo.domain.calculations.registry._record_design_coverage
    cadrumo.domain.calculations.registry._record_design_schema
@@ -85,7 +86,6 @@ Submodules
    cadrumo.domain.calculations.registry._retenciones_bindings
    cadrumo.domain.calculations.registry._runtime_graph
    cadrumo.domain.calculations.registry._scenario_filing_period
-   cadrumo.domain.calculations.registry._scenarios
    cadrumo.domain.calculations.registry._schedules
    cadrumo.domain.calculations.registry._schema
    cadrumo.domain.calculations.registry._schema_base
@@ -116,6 +116,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_cross_revision_contiguity
    cadrumo.domain.calculations.registry._validate_dependency_sections
    cadrumo.domain.calculations.registry._validate_evidence
+   cadrumo.domain.calculations.registry._validate_export_exemption
    cadrumo.domain.calculations.registry._validate_exports
    cadrumo.domain.calculations.registry._validate_extraction_profiles
    cadrumo.domain.calculations.registry._validate_formulas

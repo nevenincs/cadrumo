@@ -446,14 +446,22 @@ class CalculationSourceIssue(BaseModel):
 
     Resolver diagnostics are useful calculate-time operator feedback, but a
     filing-grade verification runs later against the persisted calculation
-    revision.  This narrow envelope carries a source observation that could not
-    be consumed by any declared binding, without misrepresenting that
-    observation as source provenance for a computed output.
+    revision.  This narrow envelope carries a source condition that reached no
+    binding, without misrepresenting it as source provenance for a computed
+    output.
+
+    Two conditions qualify, and both must survive to the persisted revision
+    because both describe a value absent from the filing.
+    ``unrouted_observation`` is a row no binding consumes at all.
+    ``unrouted_declarable_quantity`` is an independent quantity that consumed
+    rows carry and no binding drawing that quantity reaches — the row-keyed
+    screens are silent on it by construction, so a verify or export gate that
+    saw only the row condition would read their silence as confirmation.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    reason: Literal["unrouted_observation"]
+    reason: Literal["unrouted_observation", "unrouted_declarable_quantity"]
     binding_source: BindingSourceKind
     message: str = Field(min_length=1, max_length=512)
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)

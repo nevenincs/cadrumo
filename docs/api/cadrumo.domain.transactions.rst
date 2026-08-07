@@ -29,3 +29,4 @@ Submodules
    cadrumo.domain.transactions._retencion_parameters
    cadrumo.domain.transactions._service
    cadrumo.domain.transactions._tipo_actividad_partitions
+   cadrumo.domain.transactions._volumen_ingresos

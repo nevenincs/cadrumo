@@ -65,6 +65,9 @@ See Also:
         supplies an expected casilla value for independent reconciliation.
     :class:`ExportLayoutFormat`: Wire shape a registry export layout declares,
         closing the value set every export consumer used to re-spell.
+    :class:`ExportExemptionReason`: Why a manifest casilla files no slot on the
+        official record, so exemption from the completeness gate is declared
+        data rather than an unexplained absence.
     :class:`DeclaracionIdioma`: Languages AEAT's declaration ``Aux/Idioma``
         element accepts, which are not the application's own output languages.
     :class:`CasillaValueKind`: How an observed casilla value is meant to be read,
@@ -119,11 +122,16 @@ from ._descendant_relacion import (
     DescendantRelacion,
 )
 from ._document_shape import AEAT_RECORD_BATCH_SHAPES, STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+from ._draft_discrepancy import DraftDiscrepancyKind
+from ._export_exemption_reason import ExportExemptionReason
 from ._export_layout_format import ExportLayoutFormat
 from ._external_oracle_corpus import ExternalOracleCorpus
+from ._field_grounding import FieldGroundingOutcome
 from ._field_origin import FieldOrigin
+from ._field_role import FieldRole
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
+from ._hardware import AcceleratorKind, ContentionCause
 from ._hex import HEX_PATTERN_16, HEX_PATTERN_64, HEX_PATTERN_128, Hex16Str, Hex64Str
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
 from ._image_media_type import ImageMediaType, detect_image_media_type
@@ -346,6 +354,7 @@ __all__: list[str] = [
     "STRICT_FROZEN_CONFIG",
     "STRUCTURED_DOCUMENT_SHAPES",
     "UNMODELED_OBLIGATIONS",
+    "AcceleratorKind",
     "AmendmentKindRegime",
     "AmendmentLiabilityDirection",
     "Art104TresExclusion",
@@ -358,17 +367,22 @@ __all__: list[str] = [
     "CompatibilityRegime",
     "ConceptLifecycle",
     "ConceptoIngreso",
+    "ContentionCause",
     "ConvenioOverrideKind",
     "CorpusAnchorResolutionError",
     "DeclaracionIdioma",
     "DescendantRelacion",
     "DocumentShape",
+    "DraftDiscrepancyKind",
     "ElidedProse",
+    "ExportExemptionReason",
     "ExportLayoutFormat",
     "ExternalOracleCorpus",
     "ExternalPathDeclaration",
     "ExternalPathRole",
+    "FieldGroundingOutcome",
     "FieldOrigin",
+    "FieldRole",
     "FilingPeriodCode",
     "FingerprintParticipation",
     "ForeignAssetObligationGroup",

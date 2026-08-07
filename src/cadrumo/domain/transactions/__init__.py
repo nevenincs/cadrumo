@@ -174,9 +174,9 @@ from ._service import (
     snapshot_classification_state,
 )
 from ._tipo_actividad_partitions import (
-    Art95ActivityPartition,
-    art_95_partition_for,
-    load_tipo_actividad_partitions,
+    irpf_activity_kind_for,
+    load_tipo_actividad_selectors,
+    tipo_actividad_code_set,
 )
 from ._volumen_ingresos import counts_toward_volumen_de_ingresos
 
@@ -222,7 +222,6 @@ __all__ = [
     "PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING",
     "RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING",
     "RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING",
-    "Art95ActivityPartition",
     "BucketTransactionRef",
     "BusinessClassification",
     "CategoryChoice",
@@ -272,7 +271,6 @@ __all__ = [
     "TransactionNotFoundError",
     "TransactionPersistenceError",
     "TransactionValidationError",
-    "art_95_partition_for",
     "build_split_prompt",
     "catalogue",
     "counts_toward_volumen_de_ingresos",
@@ -287,11 +285,12 @@ __all__ = [
     "find_transaction",
     "has_activity_irpf_category",
     "has_employment_irpf_category",
+    "irpf_activity_kind_for",
     "is_classified",
     "ledger_irpf_category_catalogue",
     "link_invoice",
     "load_retencion_actividades_rates",
-    "load_tipo_actividad_partitions",
+    "load_tipo_actividad_selectors",
     "maximum_supported_activity_retencion_rate",
     "normalise_movement_reference",
     "normalize_irpf_category",
@@ -306,6 +305,7 @@ __all__ = [
     "set_classification",
     "snapshot_classification_state",
     "statutory_activity_retencion_rates",
+    "tipo_actividad_code_set",
     "transaction_eligible_date_span",
     "transaction_filing_date",
     "transaction_index_object_key",

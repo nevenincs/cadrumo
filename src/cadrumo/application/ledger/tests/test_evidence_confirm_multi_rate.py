@@ -128,3 +128,36 @@ def test_the_invoice_level_identity_holds_exactly_on_the_parsed_document(
     # than three constants agreeing with each other.
     assert sum(line.subtotal for line in invoice.lines) == invoice.base_total
     assert sum(line.iva_amount for line in invoice.lines) == invoice.iva_total
+
+
+def test_re_confirming_the_two_rate_document_is_a_guarded_no_op(
+    isolated_settings: Settings,
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+) -> None:
+    """A second confirm returns the existing invoice rather than refusing.
+
+    ``invoice_id`` hashes ``grand_total``, and the guarded-retry lookup is done
+    against a CANDIDATE invoice built separately from the one actually written.
+    A candidate built without the per-rate lines totals 150,00 where the record
+    it is meant to find totals 176,00, so the lookup hashes to an id nothing in
+    the catalogue holds. The retry then falls through to the writer's
+    duplicate-identity refusal -- an operator retry that raises instead of
+    returning the invoice it already minted, which is precisely what the
+    idempotency guard exists to prevent.
+    """
+    first = _confirm_the_two_rate_document(
+        isolated_settings=isolated_settings,
+        secure_objects=secure_objects,
+        tmp_path=tmp_path,
+    )
+    second = _confirm_the_two_rate_document(
+        isolated_settings=isolated_settings,
+        secure_objects=secure_objects,
+        tmp_path=tmp_path,
+    )
+
+    assert first.created is True
+    assert second.created is False, "the retry refused or minted instead of matching the existing record"
+    assert second.invoice.invoice_id == first.invoice.invoice_id
+    assert second.invoice.iva_total == _EXPECTED_IVA

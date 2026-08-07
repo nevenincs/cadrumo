@@ -45,7 +45,6 @@ CANONICAL_LAYOUT_PACKAGES: tuple[str, ...] = (
     "cadrumo.adapters.inbound.borrador",
     "cadrumo.adapters.inbound.declaracion",
     "cadrumo.adapters.inbound.justificante",
-    "cadrumo.adapters.inbound.sanitizer",
     "cadrumo.adapters.inbound.financial",
     "cadrumo.adapters.inbound.financial.providers",
     "cadrumo.adapters.outbound",

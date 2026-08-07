@@ -64,10 +64,37 @@ CAMPAIGN_METADATA_CASES: tuple[PatternCase, ...] = (
     PatternCase(re.compile(r"\bAD" + r"R\b"), ("recorded in the ADR",), ("address parsing",)),
     PatternCase(re.compile(r"\bP" + r"R\b"), ("landed in PR",), ("PRINT mode",)),
     PatternCase(re.compile(r"\b[Pp]hase[- ][A-Za-z0-9]"), ("phase-2 rollout",), ("phases of the moon",)),
-    PatternCase(re.compile(r"\.vault/ad" + r"r", re.IGNORECASE), ("see .vault/adr/x",), ("the vault adr folder",)),
+    # Originally only ``.vault/adr`` -- a real audit citation under
+    # ``.vault/reference/`` shipped in a test-module docstring and passed this
+    # gate clean, because the pattern covered one of the vault's seven
+    # subdirectories and missed the other six. Widened to the full set
+    # (adr, audit, exec, index, plan, reference, research); "ad" + "r" stays
+    # split for the same self-match reason as every other entry in this table.
     PatternCase(
-        re.compile(r"[0-9]{4}-[0-9]{2}-[0-9]{2}[-_a-z0-9]*ad" + r"r", re.IGNORECASE),
-        ("2026-07-25-thing-adr",),
+        re.compile(r"\.vault/(?:ad" + r"r|audit|exec|index|plan|reference|research)\b", re.IGNORECASE),
+        (
+            "see .vault/adr/x",
+            "cite .vault/audit/x",
+            "cite .vault/exec/x",
+            "cite .vault/index/x",
+            "cite .vault/plan/x",
+            "cite .vault/reference/2026-05-15-linkage-design-audit-reference.md",
+            "cite .vault/research/x",
+        ),
+        ("the vault adr folder", "the reference implementation lives in the vault", "review the audit trail"),
+    ),
+    PatternCase(
+        re.compile(
+            r"[0-9]{4}-[0-9]{2}-[0-9]{2}[-_a-z0-9]*(?:ad" + r"r|audit|plan|reference|research)\b",
+            re.IGNORECASE,
+        ),
+        (
+            "2026-07-25-thing-adr",
+            "2026-07-25-thing-audit",
+            "2026-07-25-thing-plan",
+            "2026-07-25-thing-reference",
+            "2026-07-25-thing-research",
+        ),
         ("2026-07-25 release notes",),
     ),
 )

@@ -32,6 +32,7 @@ import pytest
 
 from .._csv import CsvProvider
 from .._detection import _ordered_candidates
+from .._mapped_tabular import MappedTabularProvider
 from .._ofx import OfxProvider
 from .._pdf_n26 import PdfN26Provider
 from .._xlsx import XlsxProvider
@@ -114,16 +115,23 @@ def test_ordered_candidates_unknown_content_falls_back_to_default_ordering(tmp_p
     assert isinstance(candidates[0], CsvProvider)
 
 
-def test_ordered_candidates_returns_all_four_providers_in_every_branch(tmp_path: Path) -> None:
-    """Every branch returns a 4-tuple covering all four provider
-    classes — the dispatcher never returns a partial candidate list,
-    so the caller can always exhaust the chain before reporting
-    no-match."""
+def test_ordered_candidates_covers_every_provider_in_every_branch(tmp_path: Path) -> None:
+    """Every branch offers every exact provider, then the mapping lane last.
+
+    Gated on the property rather than a tally: a hardcoded candidate count
+    encodes the moment it was written, so enrolling a provider makes the test
+    fail for saying nothing about coverage. What must hold is that no exact
+    parser is dropped from the chain, and that the mapping fallback trails all
+    of them — ordering it earlier would let an inferred parse shadow a
+    deterministic one on a known bank export.
+    """
     target = tmp_path / "statement.csv"
     target.write_bytes(b"date,amount\n")
 
     candidates = _ordered_candidates(target)
-
-    assert len(candidates) == 4
     provider_types = {type(p) for p in candidates}
-    assert provider_types == {CsvProvider, XlsxProvider, OfxProvider, PdfN26Provider}
+
+    assert provider_types >= {CsvProvider, XlsxProvider, OfxProvider, PdfN26Provider}
+    assert len(candidates) == len(provider_types), "each provider is offered exactly once"
+    assert isinstance(candidates[-1], MappedTabularProvider)
+    assert not any(isinstance(provider, MappedTabularProvider) for provider in candidates[:-1])

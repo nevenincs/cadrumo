@@ -400,6 +400,17 @@ def _register_evidence_extract_command() -> None:
             f"iva_amount\t{draft.iva_amount if draft.iva_amount is not None else '-'}",
             f"grand_total\t{draft.grand_total if draft.grand_total is not None else '-'}",
             f"currency\t{draft.currency if draft.currency is not None else '-'}",
+            f"retencion_rate\t{draft.retencion_rate if draft.retencion_rate is not None else '-'}",
+            f"retencion_amount\t{draft.retencion_amount if draft.retencion_amount is not None else '-'}",
+            f"suplidos_amount\t{draft.suplidos_amount if draft.suplidos_amount is not None else '-'}",
+            f"suggested_kind\t{draft.suggested_kind.value if draft.suggested_kind is not None else '-'}",
+            f"transcription_sha256\t{draft.transcription_sha256 or '-'}",
+            # The text surface cannot carry a per-field envelope legibly, so it
+            # carries the COUNT and the JSON payload carries the envelopes. A
+            # count of zero is honest -- it says no provenance was recorded, not
+            # that the values were exact.
+            f"provenance_fields\t{len(draft.provenance)}",
+            f"discrepancies\t{len(draft.discrepancies)}",
             f"raw_text_length\t{draft.raw_text_length}",
         ]
         # `extract_invoice_draft_from_evidence` raises when the resolved PDF has
@@ -614,6 +625,12 @@ def _run_evidence_confirm(
         "attachment_id": attachment_id,
         "created": result.created,
         **_catalogue_invoice_shared_fields(invoice),
+        # Read off the draft the confirmation was based on, so the how-was-this-
+        # obtained record reaches the operator on the confirm surface too and not
+        # only on extract. `result.draft` is the pre-override extraction, which is
+        # exactly the thing the provenance describes.
+        "provenance": [envelope.model_dump(mode="json") for envelope in result.draft.provenance],
+        "discrepancies": [finding.model_dump(mode="json") for finding in result.draft.discrepancies],
     }
     lines = [
         f"bucket_id\t{bucket_id}",

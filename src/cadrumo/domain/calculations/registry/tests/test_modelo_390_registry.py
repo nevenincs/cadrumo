@@ -302,6 +302,12 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
     through the sibling ``modelo-303-iva-*-base`` bindings. They aggregate the
     ``base_amount`` of the very same observation sets their cuota siblings
     aggregate, and feed no annual total — the totals sum cuotas.
+
+    The ``*-tipo-*`` entries are the rate-specific BOX layer: one binding per
+    official rate box, each admitting a single ``applied_rate``. They complement
+    the rate-blind tier bindings rather than replacing them -- the tier bindings
+    keep feeding the annual total and therefore keep rows whose rate the ledger
+    never recorded, which a rate-specific binding deliberately drops.
     """
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions["2010-y-siguientes"]
@@ -313,6 +319,20 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
         "modelo-390-iva-repercutido-general-base",
         "modelo-390-iva-repercutido-reducido-base",
         "modelo-390-iva-repercutido-super-reducido-base",
+        "modelo-390-iva-repercutido-tipo-21-base",
+        "modelo-390-iva-repercutido-tipo-21-cuota",
+        "modelo-390-iva-repercutido-tipo-10-base",
+        "modelo-390-iva-repercutido-tipo-10-cuota",
+        "modelo-390-iva-repercutido-tipo-7-5-base",
+        "modelo-390-iva-repercutido-tipo-7-5-cuota",
+        "modelo-390-iva-repercutido-tipo-5-base",
+        "modelo-390-iva-repercutido-tipo-5-cuota",
+        "modelo-390-iva-repercutido-tipo-4-base",
+        "modelo-390-iva-repercutido-tipo-4-cuota",
+        "modelo-390-iva-repercutido-tipo-2-base",
+        "modelo-390-iva-repercutido-tipo-2-cuota",
+        "modelo-390-iva-repercutido-tipo-0-base",
+        "modelo-390-iva-repercutido-tipo-0-cuota",
         "modelo-390-iva-soportado-interiores-cuota",
         "modelo-390-iva-soportado-interiores-base",
         "modelo-390-iva-soportado-importaciones-cuota",

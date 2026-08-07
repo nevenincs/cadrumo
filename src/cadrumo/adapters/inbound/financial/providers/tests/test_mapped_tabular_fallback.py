@@ -1,0 +1,187 @@
+"""The mapping lane is enrolled strictly after the exact fixed-layout providers.
+
+An exact layout match is a deterministic read of a known structure; the mapping
+lane's read depends on a column-role mapping decided per file. So the ordering
+is the control, not the lane's capability — and the test that matters proves the
+lane *would* have taken a known bank export had it been offered it first.
+"""
+
+from __future__ import annotations
+
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from ......core import FieldRole
+from ......domain.transactions import TransactionDirection
+from ......tests import FIXTURES_DIR
+from .. import CsvProvider, MappedTabularProvider
+from .._base import InvalidFinancialSourceError
+from .._detection import _ordered_candidates, detect_provider
+from .._mapped_tabular import default_tabular_mapping_resolver
+from .._tabular_dialect import NormalizedTable
+from .._tabular_projection import ColumnRoleMapping
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+_FIXTURES = FIXTURES_DIR / "financial"
+_TABULAR = _FIXTURES / "tabular-dialects"
+
+#: A known bank export the exact CSV provider parses today.
+_KNOWN_BANK_FIXTURE = _FIXTURES / "bbva-sample.csv"
+#: An export of no fixed layout the product recognises: neobank column names,
+#: dot decimals, an ISO date and an exchange-rate column with no role.
+_UNKNOWN_FORMAT_FIXTURE = _TABULAR / "bank_neobank_2026Q1.csv"
+
+#: The role of each column of the unknown-format export, in column order. This
+#: is the data a mapping step supplies; the lane consumes it, it does not
+#: derive it.
+_NEOBANK_ROLES = (
+    FieldRole.INVOICE_DATE,
+    FieldRole.UNMAPPED,
+    FieldRole.COUNTERPARTY_NAME,
+    FieldRole.NOTES,
+    FieldRole.UNMAPPED,
+    FieldRole.GRAND_TOTAL,
+    FieldRole.CURRENCY,
+    FieldRole.UNMAPPED,
+)
+
+#: The same for the known bank export, so the shadowing test can prove the lane
+#: is capable of taking that file and is held back only by the ordering.
+_KNOWN_BANK_ROLES = (
+    FieldRole.INVOICE_DATE,
+    FieldRole.UNMAPPED,
+    FieldRole.NOTES,
+    FieldRole.GRAND_TOTAL,
+    FieldRole.UNMAPPED,
+    FieldRole.CURRENCY,
+)
+
+
+def _resolver(roles: tuple[FieldRole, ...]):
+    """Return a resolver supplying ``roles`` for whatever table it is handed."""
+
+    def resolve(table: NormalizedTable) -> ColumnRoleMapping | None:
+        if len(table.headers) != len(roles):
+            return None
+        return ColumnRoleMapping(roles=roles)
+
+    return resolve
+
+
+def test_mapping_lane_is_last_for_every_source_shape() -> None:
+    """The fallback trails every exact provider, whatever the file looks like."""
+    shapes = (
+        Path("statement.csv"),
+        Path("statement.xlsx"),
+        Path("statement.ofx"),
+        Path("statement.pdf"),
+        _UNKNOWN_FORMAT_FIXTURE,
+        _KNOWN_BANK_FIXTURE,
+    )
+    for path in shapes:
+        candidates = _ordered_candidates(path)
+        assert isinstance(candidates[-1], MappedTabularProvider), path.name
+        mapped_positions = [
+            index for index, provider in enumerate(candidates) if isinstance(provider, MappedTabularProvider)
+        ]
+        assert mapped_positions == [len(candidates) - 1], path.name
+
+
+def test_known_bank_fixture_still_takes_the_exact_provider() -> None:
+    """A recognised bank export must keep its deterministic exact parse."""
+    provider = detect_provider(_KNOWN_BANK_FIXTURE)
+    assert isinstance(provider, CsvProvider)
+    rows = list(provider.ingest(_KNOWN_BANK_FIXTURE))
+    assert rows
+    assert rows[0].direction is TransactionDirection.INCOMING
+    assert rows[0].raw.amount == Decimal("1500.25")
+
+
+def test_the_mapping_lane_would_take_the_known_bank_fixture_if_offered_it_first() -> None:
+    """The ordering is what protects the exact provider, not the lane's incapacity.
+
+    This is the load-bearing assertion of the enrolment. If the lane were
+    incapable of reading the known export, ordering it last would be
+    protecting nothing and the ordering test above would pass vacuously.
+    """
+    lane = MappedTabularProvider(mapping_resolver=_resolver(_KNOWN_BANK_ROLES))
+    validation = lane.validate_source(_KNOWN_BANK_FIXTURE)
+    assert validation.is_valid, validation.warnings
+    assert list(lane.ingest(_KNOWN_BANK_FIXTURE))
+
+
+def test_unknown_format_fixture_is_refused_by_every_exact_provider() -> None:
+    """No exact provider claims the unknown export — the precondition for reaching the lane."""
+    for provider in _ordered_candidates(_UNKNOWN_FORMAT_FIXTURE)[:-1]:
+        assert not provider.validate_source(_UNKNOWN_FORMAT_FIXTURE).is_valid, provider.name
+
+
+def test_unknown_format_fixture_reaches_the_mapping_lane() -> None:
+    """Detection consults the lane for the unknown export, and it imports under a mapping."""
+    candidates = _ordered_candidates(_UNKNOWN_FORMAT_FIXTURE)
+    assert isinstance(candidates[-1], MappedTabularProvider)
+
+    lane = MappedTabularProvider(mapping_resolver=_resolver(_NEOBANK_ROLES))
+    validation = lane.validate_source(_UNKNOWN_FORMAT_FIXTURE)
+    assert validation.is_valid, validation.warnings
+
+    rows = list(lane.ingest(_UNKNOWN_FORMAT_FIXTURE))
+    assert len(rows) == 12
+    assert rows[0].direction is TransactionDirection.OUTGOING
+    assert rows[0].raw.amount == Decimal("469.52")
+    assert rows[0].raw.currency == "EUR"
+    assert rows[1].direction is TransactionDirection.INCOMING
+    assert rows[1].raw.amount == Decimal("4596.00")
+
+
+def test_unmapped_columns_are_reported_rather_than_refusing_the_file() -> None:
+    """Three columns carry no role; the export still imports and says which."""
+    lane = MappedTabularProvider(mapping_resolver=_resolver(_NEOBANK_ROLES))
+    validation = lane.validate_source(_UNKNOWN_FORMAT_FIXTURE)
+    assert validation.is_valid
+    unmapped = [warning for warning in validation.warnings if "not mapped to a role" in warning]
+    assert len(unmapped) == 3
+    assert any("exchange_rate" in warning for warning in unmapped)
+
+
+def test_lane_without_an_installed_resolver_reports_rather_than_guesses() -> None:
+    """With no mapping available the lane declines and says why; it never invents roles."""
+    assert default_tabular_mapping_resolver() is None
+    lane = MappedTabularProvider()
+    validation = lane.validate_source(_UNKNOWN_FORMAT_FIXTURE)
+    assert not validation.is_valid
+    assert any("no column-role mapping resolver" in warning for warning in validation.warnings)
+    with pytest.raises(InvalidFinancialSourceError, match="no column-role mapping resolver"):
+        list(lane.ingest(_UNKNOWN_FORMAT_FIXTURE))
+
+
+def test_a_mapping_missing_a_required_role_is_refused_with_the_role_named() -> None:
+    """A mapping with no amount column cannot produce movements, and says so."""
+    roles = tuple(FieldRole.UNMAPPED if role is FieldRole.GRAND_TOTAL else role for role in _NEOBANK_ROLES)
+    lane = MappedTabularProvider(mapping_resolver=_resolver(roles))
+    validation = lane.validate_source(_UNKNOWN_FORMAT_FIXTURE)
+    assert not validation.is_valid
+    assert any("grand_total" in warning for warning in validation.warnings)
+
+
+def test_one_unparseable_row_does_not_refuse_the_whole_file(tmp_path: Path) -> None:
+    """A bad row is reported and skipped; every other row still imports."""
+    source = (
+        "fecha;concepto;importe\n"
+        "01/02/2026;Compra uno;-10,00\n"
+        "no-es-fecha;Compra dos;-20,00\n"
+        "03/02/2026;Compra tres;-30,00\n"
+    )
+    path = tmp_path / "unknown_export.csv"
+    path.write_bytes(source.encode("utf-8"))
+    lane = MappedTabularProvider(
+        mapping_resolver=_resolver((FieldRole.INVOICE_DATE, FieldRole.NOTES, FieldRole.GRAND_TOTAL)),
+    )
+    validation = lane.validate_source(path)
+    assert validation.is_valid
+    assert any("line 3 cannot be imported" in warning for warning in validation.warnings)
+    rows = list(lane.ingest(path))
+    assert [row.raw.amount for row in rows] == [Decimal("10.00"), Decimal("30.00")]

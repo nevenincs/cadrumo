@@ -44,7 +44,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -148,6 +148,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry import RegistrySnapshot
     from ..aggregation import (
         CalculationSourceDiagnostic,
+        CalculationSourceDiagnosticReason,
         CalculationSourceResolution,
         ForeignAssetIngestObservation,
     )
@@ -1106,27 +1107,59 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     )
 
 
+#: The reason a persisted :class:`CalculationSourceIssue` may carry.
+_DurableUnroutedReason = Literal["unrouted_observation", "unrouted_declarable_quantity"]
+
+
+def _durable_unrouted_reason(reason: CalculationSourceDiagnosticReason) -> _DurableUnroutedReason | None:
+    """Narrow a diagnostic reason to the durable subset, or ``None``.
+
+    Both durable reasons describe a value ABSENT from the filing, which is what
+    a verification or export gate reading the persisted revision needs; every
+    other reason is calculate-time operator feedback that dies with the
+    response. Written as explicit comparisons rather than a set membership test
+    so the narrowing is one the type checker can follow — a mismatch between the
+    durable set and the persisted model's own ``Literal`` then fails to compile
+    instead of at the first calculation that raises the new reason.
+    """
+    if reason == "unrouted_observation":
+        return "unrouted_observation"
+    if reason == "unrouted_declarable_quantity":
+        return "unrouted_declarable_quantity"
+    return None
+
+
 def _unrouted_source_issues(
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...],
 ) -> tuple[CalculationSourceIssue, ...]:
-    """Project non-consumed source observations into durable revision issues.
+    """Project unrouted source conditions into durable revision issues.
 
     The application diagnostic remains the calculate response, while the domain
     issue keeps the same source kind and actionable text available to a later
     verification/export lifecycle gate.  Provenance intentionally excludes
-    these rows because no binding consumed them.
+    these rows because no binding consumed the value they describe.
+
+    Both unrouted reasons are carried. Projecting only the ROW condition would
+    leave the quantity condition evaporating with the calculate response, so a
+    later gate would see a clean persisted revision for exactly the case the
+    row-keyed screens cannot report — the silence the quantity screen exists to
+    break, restored one layer down.
     """
-    return tuple(
-        CalculationSourceIssue(
-            reason="unrouted_observation",
-            binding_source=diagnostic.binding_source,
-            message=diagnostic.message,
-            resolver_id=diagnostic.resolver_id,
-            source_ref=diagnostic.source_ref,
+    issues: list[CalculationSourceIssue] = []
+    for diagnostic in source_diagnostics:
+        reason = _durable_unrouted_reason(diagnostic.reason)
+        if reason is None or diagnostic.binding_source is None:
+            continue
+        issues.append(
+            CalculationSourceIssue(
+                reason=reason,
+                binding_source=diagnostic.binding_source,
+                message=diagnostic.message,
+                resolver_id=diagnostic.resolver_id,
+                source_ref=diagnostic.source_ref,
+            ),
         )
-        for diagnostic in source_diagnostics
-        if diagnostic.reason == "unrouted_observation" and diagnostic.binding_source is not None
-    )
+    return tuple(issues)
 
 
 def _merge_detail_row_binding_values(

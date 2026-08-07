@@ -1,0 +1,18 @@
+"BBVA - Detalle de movimientos"
+
+"Cuenta:";"ES91 2100 0418 4502 0005 1332"
+"Fecha de extraccion:";"18/02/2026"
+
+"Fecha";"F.Valor";"Concepto";"Movimiento";"Importe";"Divisa";"Disponible";"Observaciones"
+"08/01/2026";"08/01/2026";"Pago tarjeta 5423 SUMINISTROS ARANDA SL VALLADOLID";"Cargo";"-469,52";"EUR";"5.730,48";""
+"09/01/2026";"09/01/2026";"Transferencia recibida TALLERES BERROCAL SA, ref 2026/0009";"Abono";"4.596,00";"EUR";"10.326,48";""
+"13/01/2026";"13/01/2026";"Recibo IBERLUZ COMERCIALIZADORA, S.A.U.";"Cargo";"-541,19";"EUR";"9.785,29";""
+"15/01/2026";"15/01/2026";"Compra CASA PERICO, MADRID";"Cargo";"-38,06";"EUR";"9.747,23";""
+"19/01/2026";"19/01/2026";"Nomina enero";"Cargo";"-2.180,44";"EUR";"7.566,79";""
+"22/01/2026";"22/01/2026";"Adeudo SEPA ONDA MOVIL TELECOM SL";"Cargo";"-141,23";"EUR";"7.425,56";""
+"27/01/2026";"27/01/2026";"Traspaso a cuenta de ahorro";"Cargo";"-1.500,00";"EUR";"5.925,56";""
+"30/01/2026";"30/01/2026";"Comision mantenimiento";"Cargo";"-12,00";"EUR";"5.913,56";""
+"03/02/2026";"03/02/2026";"Ingreso efectivo oficina 0418";"Abono";"640,00";"EUR";"6.553,56";""
+"05/02/2026";"05/02/2026";"Devolucion recibo, con ""nota"" entre comillas";"Abono";"141,23";"EUR";"6.694,79";""
+"11/02/2026";"11/02/2026";"Compra ES ROBLEDAL GUADARRAMA, gasoleo";"Cargo";"-94,62";"EUR";"6.600,17";""
+"17/02/2026";"17/02/2026";"Transferencia emitida DISTRIBUCIONES ALMANZORA SL";"Cargo";"-902,79";"EUR";"5.697,38";""

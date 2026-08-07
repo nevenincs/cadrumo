@@ -85,6 +85,7 @@ from ...domain.filing import (
 from ...domain.submission import ModeloDraftStatus
 from ._export_parity import (
     assert_export_mirrors_manifest,
+    assert_rate_boxes_account_for_total,
     assert_xml_declaration_aux_declared,
     did_page_suppressed,
 )
@@ -357,6 +358,11 @@ def export_draft(
     # completeness manifest still must not write a declaration missing its
     # mandatory identity block.
     assert_xml_declaration_aux_declared(layout)
+    # Unconditional for the same reason, and transport-independent: a rate
+    # breakdown that does not reach its own declared total is false in either
+    # encoding, so this one is not scoped to the fixed-width blank-slot case
+    # below.
+    assert_rate_boxes_account_for_total(subview.rate_box_partitions, draft=draft)
     if subview.completeness_manifest is not None:
         assert_export_mirrors_manifest(
             layout,

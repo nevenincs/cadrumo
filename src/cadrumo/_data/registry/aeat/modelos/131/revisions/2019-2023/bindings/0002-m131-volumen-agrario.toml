@@ -1,0 +1,28 @@
+# Modelo 131 casilla 05: volumen de ingresos del trimestre de las actividades
+# agricolas, ganaderas y forestales, que la casilla 06 multiplica por el 2 por
+# ciento del art 110.1.c.
+#
+# Los dos filtros que separan esta agregacion de la del Modelo 130 son legales,
+# no incidentales, y viven en la proyeccion porque deciden que filas EXISTEN
+# como observaciones, no que observaciones reclama un binding:
+#
+#  - actividad: solo las filas cuyo tipo de actividad del Modelo 036 figura en
+#    el selector rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-
+#    agrario-objetiva. Una fila sin actividad declarada NO entra: el silencio no
+#    puede significar agrario, porque encaminaria el ingreso de un declarante no
+#    agrario a una casilla agraria.
+#  - concepto: se excluyen subvenciones de capital e indemnizaciones, segun
+#    rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario. Las
+#    subvenciones CORRIENTES si computan, y las instrucciones AEAT del modelo lo
+#    dicen expresamente.
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-volumen-ingresos-agrario"
+source = "ledger_renta_income_aggregation"
+selector = { modelo = "131", target_casilla_id = "05", fact = "ingresos_integros_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".bindings.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["volumen de ingresos del trimestre"]

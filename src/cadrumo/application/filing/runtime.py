@@ -69,6 +69,7 @@ from ...domain.calculations.registry import (
     LegalRefId,
     ModeloDefinition,
     ModeloRevision,
+    RateBoxPartition,
     RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
@@ -76,6 +77,7 @@ from ...domain.calculations.registry import (
     SourceRefId,
     ValidatedRegistryAuthority,
     collect_registry_tree_fingerprints,
+    derive_rate_box_partitions,
     expression_casilla_refs,
     registry_scalar_value_type,
     revision_reference_identity_failures,
@@ -247,6 +249,19 @@ class RegistryModeloSubview:
     deadline_window_ids: tuple[str, ...]
     completeness_manifest: CalculationCompletenessManifest | None
     casilla_record_metadata: tuple[CasillaRecordMetadata, ...] = ()
+    rate_box_partitions: tuple[RateBoxPartition, ...] = ()
+    """Two-layer rate partitions the revision declares: one rate-blind total
+    casilla and the rate-specific casillas that break it down.
+
+    A derivation, not a second copy of the binding set: the whole ledger-IVA
+    binding tuple would make this a shadow snapshot, so what is carried is only
+    the pairing the export gate needs. The gate refuses a return whose rate boxes
+    account for less than their total, and it cannot re-derive the pairing itself
+    without a revision it does not hold.
+
+    Empty for every revision declaring no rate-specific binding, which is every
+    revision until a modelo splits a tier casilla into its box and total layers.
+    """
     profile_export_bindings: tuple[DataBindingDefinition, ...] = ()
     """Profile bindings that declare an address on the exported record.
 
@@ -703,6 +718,7 @@ def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
                 key=lambda binding: binding.id,
             ),
         ),
+        rate_box_partitions=derive_rate_box_partitions(snapshot.revision),
     )
 
 

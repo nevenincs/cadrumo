@@ -6,10 +6,9 @@ the already-declared ``defusedxml``, needs no GPU, adds no licence exposure and
 is available on a default install with no optional extra enabled.
 
 That is why these readers sit in the deterministic core rather than behind the
-inference boundary, and why they sit in ``adapters/inbound/`` beside the seven
+inference boundary, and why they sit in ``adapters/inbound/`` beside the six
 sibling packages that already parse externally-authored formats -- ``pdf``,
-``financial``, ``borrador``, ``censo``, ``declaracion``, ``justificante`` and
-``sanitizer``.
+``financial``, ``borrador``, ``censo``, ``declaracion`` and ``justificante``.
 
 The routing order this package enables is itself a control, and is recorded as
 one so a later change optimising for latency does not discard it: **a document

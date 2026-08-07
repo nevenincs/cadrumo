@@ -90,6 +90,9 @@ def _impatriado_transaction(
     irpf_category: str | None = "trabajo",
     direction: TransactionDirection = TransactionDirection.INCOMING,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
+    business_pct: Decimal | None = None,
+    taxable_base: Decimal | None = None,
+    iva_amount: Decimal | None = None,
     value_date: date = date(2024, 3, 1),
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
 ) -> Transaction:
@@ -117,6 +120,9 @@ def _impatriado_transaction(
             "group_label": None,
             "source_jurisdiction": source_jurisdiction,
             "business_classification": business_classification,
+            "business_pct": business_pct,
+            "taxable_base": taxable_base,
+            "iva_amount": iva_amount,
             "irpf_category": irpf_category,
             "lifecycle_state": lifecycle_state,
             "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
@@ -258,6 +264,65 @@ def test_registry_binding_resolves_es_source_total_into_base() -> None:
 
     binding_id: BindingId = "modelo-151-impatriado-base-liquidable-general"
     assert resolved[binding_id] == Decimal("120000.00")
+
+
+def _mixed_and_business_binding_values() -> tuple[Decimal, Decimal]:
+    """Resolve the M151 base binding for one receipt classified BUSINESS, then MIXED.
+
+    One invoice, two classifications, driven end to end from a
+    :class:`~domain.transactions.Transaction` through the real aggregation and
+    the real registry binding, so nothing under test is hand-built.
+    """
+    revision = load_modelo_directory(_M151_REGISTRY_DIR).revisions["2015-y-siguientes"]
+    binding_id: BindingId = "modelo-151-impatriado-base-liquidable-general"
+    resolved: list[Decimal] = []
+    for classification, pct in (
+        (BusinessClassification.BUSINESS, None),
+        (BusinessClassification.MIXED, Decimal("0.5")),
+    ):
+        row = _impatriado_transaction(
+            "affectation-row",
+            # 2000 base + 420 IVA on one Spanish-source activity receipt.
+            amount=Decimal("2420.00"),
+            source_jurisdiction="ES",
+            irpf_category="actividad_economica",
+            business_classification=classification,
+            business_pct=pct,
+            taxable_base=Decimal("2000.00"),
+            iva_amount=Decimal("420.00"),
+        )
+        aggregation = aggregate_impatriado_income_ledger(
+            TransactionCatalogue.from_transactions((row,)),
+            bucket_id="test",
+            period=_ANNUAL_2024,
+        )
+        resolved.append(
+            resolve_ledger_impatriado_income_aggregation_binding_values(revision, aggregation.observations)[binding_id],
+        )
+    return resolved[0], resolved[1]
+
+
+def test_partial_affectation_never_divides_the_impatriado_base() -> None:
+    """A MIXED classification must not shrink the impatriado base of one receipt.
+
+    Art. 93.2 LIRPF determines the impatriado's deuda tributaria by the TRLIRNR
+    rules for rentas obtained without establecimiento permanente, and TRLIRNR
+    art. 24.1 (RDLeg 5/2004) fixes that base as "su importe íntegro ... sin que
+    sean de aplicación los porcentajes multiplicadores ni las reducciones". A
+    business-usage percentage applied to an ingreso is exactly such a porcentaje
+    multiplicador, so the same receipt declares the same base under either
+    classification.
+
+    Asserted at the BINDING the M151 filing reads, not at the observation, and
+    expressed as an equality between two classifications rather than against a
+    figure recomputed from the code under test.
+    """
+    business_base, mixed_base = _mixed_and_business_binding_values()
+
+    assert mixed_base == business_base
+    # Pins the shared figure to the invoice's own IVA-exclusive base imponible,
+    # so the equality above cannot be satisfied by both halving.
+    assert business_base == Decimal("2000.00")
 
 
 def test_repository_backed_aggregation_reports_out_of_period_catalogue_transactions(

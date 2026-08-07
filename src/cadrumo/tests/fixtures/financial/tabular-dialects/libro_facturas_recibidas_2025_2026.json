@@ -1,0 +1,10 @@
+{
+  "output_sha256": "ace72401c07e6e27221450661a04becf1dce4b61b4c6f4108bbb3fb4d7c227b9",
+  "output_size_bytes": 1326,
+  "provenance": "synthetic_generated",
+  "role": "dialect_normalization_anchor",
+  "licence": "CC0-1.0",
+  "structural_difficulty": [
+    "Received-invoice book: tab separated, comma decimals, latin-1, CRLF; the last row carries the printed (incorrect) total on purpose"
+  ]
+}

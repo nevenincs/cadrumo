@@ -7,9 +7,7 @@ tier — which ``dev/packaging/verify_distribution_identity.py`` pins byte-exact
 nothing guarded these metadata strings, so they had drifted independently. This
 gate asserts they stay reconciled: the canonical sentence lives verbatim in the
 PyPI package summary and the Scoop generator, and the Homebrew ``desc`` (kept
-terse per Homebrew's style guide) is the canonical's leading clause. See the
-distribution-description-reconciliation appendix in
-``.vault/reference/2026-07-19-post-release-distribution-reference.md``.
+terse per Homebrew's style guide) is the canonical's leading clause.
 """
 
 from __future__ import annotations

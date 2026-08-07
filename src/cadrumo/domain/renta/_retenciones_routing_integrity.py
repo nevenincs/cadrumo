@@ -8,13 +8,15 @@ resolved value is redirected onto casilla 06 -- retenciones e ingresos a
 cuenta soportados -- by a hardcoded application-layer constant
 (:data:`RENTA_130_RETENCIONES_OUTPUT_CASILLA`, read by
 ``application.aggregation._modelo_bindings._m130_retenciones_backend_inputs``).
-A hardcoded casilla routed to outside the registry is exactly the class of
-hazard `.vault/reference/2026-05-15-linkage-design-audit-reference.md`
-finding T-05 identifies; this module closes it the same way T-05's own
-closed example does (:mod:`cadrumo.domain.renta._first_slice_routing_integrity`):
-the constant stays, and a snapshot-time cross-domain check confirms it names
-a real casilla on the revision before any calculation can silently write a
-value nowhere the filed form will ever read it.
+A hardcoded casilla routed to outside the registry is a routing-integrity
+hazard: nothing stops the constant from drifting out of sync with a revision
+that drops or renumbers the casilla it names, and that drift fails silently
+-- the value simply lands nowhere the filed form reads. This module closes
+it the same way :mod:`cadrumo.domain.renta._first_slice_routing_integrity`
+closes the equivalent M100 hazard: the constant stays, and a snapshot-time
+cross-domain check confirms it names a real casilla on the revision before
+any calculation can silently write a value nowhere the filed form will ever
+read it.
 
 This check is owned by the ``renta`` domain because the routing fact is
 renta domain knowledge -- M130 pago fraccionado retención a cuenta is a

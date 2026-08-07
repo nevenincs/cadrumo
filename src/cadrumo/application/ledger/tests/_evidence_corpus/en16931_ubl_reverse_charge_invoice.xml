@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  EN16931 UBL, domestic reverse charge (LIVA art. 84.Uno.2) as a Spanish
+  supplier issues it: a taxable base with a ZERO cuota, because the recipient
+  self-assesses the tax rather than the issuer repercuting it.
+
+  UNTDID 5305 category code AE at 0.00 percent is what carries that fact.
+  Nothing else on the document distinguishes it from an exempt or a zero-rated
+  supply, since all three print a base and no cuota. The code, and only the
+  code, can be trusted to say which one it is.
+-->
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:CustomizationID>urn:cen.eu:en16931:2017</cbc:CustomizationID>
+  <cbc:ID>UBL-2024-0077</cbc:ID>
+  <cbc:IssueDate>2024-11-18</cbc:IssueDate>
+  <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
+  <cbc:DocumentCurrencyCode>EUR</cbc:DocumentCurrencyCode>
+  <cbc:Note>Inversion del sujeto pasivo - art. 84.Uno.2 LIVA</cbc:Note>
+
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyName>
+        <cbc:Name>Constructora Ejemplo SL</cbc:Name>
+      </cac:PartyName>
+      <cac:PartyTaxScheme>
+        <cbc:CompanyID schemeID="VA">ESB12345674</cbc:CompanyID>
+        <cac:TaxScheme>
+          <cbc:ID>VAT</cbc:ID>
+        </cac:TaxScheme>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <cbc:CompanyID schemeID="VA">ESX1234567L</cbc:CompanyID>
+        <cac:TaxScheme>
+          <cbc:ID>VAT</cbc:ID>
+        </cac:TaxScheme>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="EUR">0.00</cbc:TaxAmount>
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="EUR">2000.00</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="EUR">0.00</cbc:TaxAmount>
+      <cac:TaxCategory>
+        <cbc:ID>AE</cbc:ID>
+        <cbc:Percent>0.00</cbc:Percent>
+        <cbc:TaxExemptionReasonCode>VATEX-EU-AE</cbc:TaxExemptionReasonCode>
+        <cac:TaxScheme>
+          <cbc:ID>VAT</cbc:ID>
+        </cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="EUR">2000.00</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="EUR">2000.00</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="EUR">2000.00</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="EUR">2000.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="C62">1</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="EUR">2000.00</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Name>Ejecucion de obra de rehabilitacion</cbc:Name>
+      <cac:ClassifiedTaxCategory>
+        <cbc:ID>AE</cbc:ID>
+        <cbc:Percent>0.00</cbc:Percent>
+        <cac:TaxScheme>
+          <cbc:ID>VAT</cbc:ID>
+        </cac:TaxScheme>
+      </cac:ClassifiedTaxCategory>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="EUR">2000.00</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+</Invoice>

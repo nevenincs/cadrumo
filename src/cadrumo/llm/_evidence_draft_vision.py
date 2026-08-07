@@ -53,9 +53,15 @@ from __future__ import annotations
 import asyncio
 
 from ..application.ledger import InvoiceDraft
+from ..core import Period
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._errors import LLMConfigError
+from ._invoice_extraction_prompt import (
+    CompiledInvoiceExtractionPrompt,
+    build_invoice_extraction_prompt,
+    default_extraction_period,
+)
 from ._invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ._models import LLMProvider, LLMRequest, MultimodalImageInput
 
@@ -63,27 +69,6 @@ __all__ = [
     "LocalVisionInvoiceFieldExtractor",
     "extract_invoice_fields_from_images",
 ]
-
-_FIELD_EXTRACTION_PROMPT = """\
-You are transcribing fields from a scanned Spanish invoice image. Look at the \
-image and copy each field's value EXACTLY as printed. Do not calculate, infer, \
-estimate, or guess any value. If a field is not visibly printed on the document, \
-its value is null.
-
-Return ONLY one JSON object with exactly these keys (no other text):
-{
-  "supplier_tax_id": <string or null, the supplier's NIF/NIE/CIF exactly as printed>,
-  "invoice_number": <string or null, the invoice number exactly as printed>,
-  "invoice_date": <string or null, the invoice date exactly as printed, e.g. "10/03/2026">,
-  "taxable_base": <string or null, the "base imponible" amount exactly as printed, e.g. "100,00">,
-  "iva_rate": <string or null, the IVA percentage exactly as printed, e.g. "21">,
-  "iva_amount": <string or null, the IVA cuota amount exactly as printed, e.g. "21,00">,
-  "grand_total": <string or null, the invoice total amount exactly as printed, e.g. "121,00">,
-  "currency": <string or null, the ISO-4217 code for the currency the amounts \
-are printed in, e.g. "EUR", "USD", "GBP". Read it from the printed symbol or \
-code next to the amounts. If no currency is shown anywhere, null>
-}
-"""
 
 
 class LocalVisionInvoiceFieldExtractor:
@@ -113,9 +98,13 @@ class LocalVisionInvoiceFieldExtractor:
         provider: LLMProvider = LLMProvider.LOCAL,
         client: LLMClient | None = None,
         settings: Settings | None = None,
+        period: Period | None = None,
     ) -> None:
         resolved_settings = settings if settings is not None else load_settings()
         self._provider = provider
+        self._prompt: CompiledInvoiceExtractionPrompt = build_invoice_extraction_prompt(
+            period=period if period is not None else default_extraction_period(),
+        )
         if provider is LLMProvider.LOCAL:
             self._model = model if model is not None else resolved_settings.cadrumo_llm_ollama_vision_model
         elif model is None:
@@ -143,16 +132,25 @@ class LocalVisionInvoiceFieldExtractor:
 
     @property
     def decided_by(self) -> str:
-        """Provenance stamp for this extractor's transport (distinct from classification).
+        """Provenance stamp: transport, model, AND the rates the prompt was compiled from.
 
         The transport half is DERIVED from the provider actually used, never
         written as a constant. A stamp is the only durable record of how a
         figure was reached, so one that says ``local`` for a read served
         off-host is worse than no stamp at all: it answers the audit question
         confidently and wrongly.
+
+        The same reasoning extends the stamp past the model. Now that the prompt
+        enumerates registry-resolved rates, two reads by the same model under
+        different filing periods are different reads, and a stamp naming only
+        the model cannot answer "under which rates was this figure read?". The
+        trailing
+        :attr:`~llm._invoice_extraction_prompt.CompiledInvoiceExtractionPrompt.rate_provenance`
+        token carries the resolved period and the compiled prompt's content
+        fingerprint, so a registry change that moves a rate moves the stamp.
         """
         transport = "local" if self._provider is LLMProvider.LOCAL else self._provider.value.lower()
-        return f"llm:{transport}-vision:{self._model}"
+        return f"llm:{transport}-vision:{self._model}:rates-{self._prompt.rate_provenance}"
 
     def extract(self, *, evidence_images: tuple[MultimodalImageInput, ...]) -> InvoiceDraft:
         """Read ``evidence_images`` with the local vision model and return a grounded draft.
@@ -169,7 +167,7 @@ class LocalVisionInvoiceFieldExtractor:
             passed grounded re-validation; everything else is ``None``.
         """
         request = LLMRequest(
-            prompt=_FIELD_EXTRACTION_PROMPT,
+            prompt=self._prompt.text,
             provider_override=self._provider,
             model_override=self._model,
             images=evidence_images,
@@ -189,6 +187,7 @@ def extract_invoice_fields_from_images(
     model: str | None = None,
     provider: LLMProvider = LLMProvider.LOCAL,
     settings: Settings | None = None,
+    period: Period | None = None,
 ) -> InvoiceDraft:
     """Convenience wrapper: build a :class:`LocalVisionInvoiceFieldExtractor` and extract.
 
@@ -201,9 +200,11 @@ def extract_invoice_fields_from_images(
             route stays on-host; naming another provider is the caller's
             explicit, per-invocation decision to read off-host.
         settings: Optional resolved settings override.
+        period: Optional filing period whose registry-resolved rates the prompt
+            enumerates; defaults to the current annual period.
 
     Returns:
         :class:`InvoiceDraft`: The grounded, best-effort extracted fields.
     """
-    extractor = LocalVisionInvoiceFieldExtractor(model=model, provider=provider, settings=settings)
+    extractor = LocalVisionInvoiceFieldExtractor(model=model, provider=provider, settings=settings, period=period)
     return extractor.extract(evidence_images=evidence_images)

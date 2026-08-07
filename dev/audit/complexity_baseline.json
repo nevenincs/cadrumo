@@ -10,7 +10,6 @@
       "src/cadrumo/adapters/inbound/declaracion/_parser.py::_resolve_value_word": 21,
       "src/cadrumo/adapters/inbound/declaracion/tests/_verification_chain_support.py::_assert_annual_relation_closure_chain": 14,
       "src/cadrumo/adapters/inbound/pdf/_scrub.py::scrub_text": 13,
-      "src/cadrumo/adapters/inbound/sanitizer/_pipeline.py::sanitize_pdf": 15,
       "src/cadrumo/adapters/outbound/aeat/auth/_clave_movil.py::ClaveMovilAuthProvider._active_profile_diagnostic_context": 13,
       "src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_page_flow.py::_ClaveMovilPageFlowMixin._assert_push_wait_state": 12,
       "src/cadrumo/adapters/outbound/aeat/auth/certificate.py::load_certificate": 12,

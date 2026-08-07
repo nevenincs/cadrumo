@@ -136,6 +136,48 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
     return tuple(resolved_layouts)
 
 
+def fixed_width_record_casilla_ids(records: Sequence[ExportRecordDefinition]) -> frozenset[CasillaId]:
+    """Return the casillas ``records`` address by casilla id in a fixed-width layout.
+
+    A fixed-width record addresses a casilla through a ``CASILLA``-kind field, or
+    through the ``row_field_casilla_ids`` mapping that names which casilla a
+    repeated binding row's slot belongs to. This is the sole derivation of that
+    set, shared by two callers that must never disagree about it:
+
+    - the pre-write parity gate
+      (:func:`~application.filing.boe_representable_casilla_ids`), which passes
+      only the records this filing's disposition actually emits, so a casilla the
+      disposition suppresses is not demanded; and
+    - the registry-build export-exemption gate
+      (:func:`~domain.calculations.registry.validate_export_exemption_declarations`),
+      which passes EVERY declared record, so a casilla addressed on any
+      disposition needs no exemption reason.
+
+    The two scopes are deliberate and the build scope is the wider one: build
+    time knows no disposition, and demanding a reason from a casilla some
+    disposition does file would be a false refusal.
+
+    A casilla addressed only through a ``BINDING``-kind field is NOT in this set —
+    such a field names the binding, not the casilla, so no casilla-keyed scan can
+    see it. That is a real representation channel, not an oversight, which is why
+    :attr:`~core.ExportExemptionReason.FILED_VIA_BINDING_FIELD` exists to declare
+    it rather than the scan being widened to guess at it.
+
+    Args:
+        records: The fixed-width export records to scan.
+
+    Returns:
+        Frozen set of casilla ids the records address by casilla id.
+    """
+    addressed: set[CasillaId] = set()
+    for record in records:
+        for field in record.fields:
+            if field.kind == CasillaFieldKind.CASILLA and field.casilla_id is not None:
+                addressed.add(field.casilla_id)
+        addressed.update(record.row_field_casilla_ids.values())
+    return frozenset(addressed)
+
+
 def export_fields_overlap(left: ExportFieldDefinition, right: ExportFieldDefinition) -> bool:
     if left.offset is None or left.length is None or right.offset is None or right.length is None:
         return False
@@ -376,5 +418,6 @@ __all__ = [
     "ResolvedExportLayout",
     "derive_export_layouts_from_bindings",
     "export_fields_for_casilla",
+    "fixed_width_record_casilla_ids",
     "resolve_export_layout",
 ]

@@ -143,6 +143,14 @@ def test_modelo_390_export_produces_fichero_boe_from_real_registry(tmp_path: Pat
             "iva.anual.repercutido.general": Decimal("18000.00"),
             "iva.anual.repercutido.reducido": Decimal("2100.50"),
             "iva.anual.repercutido.super-reducido": Decimal("420.00"),
+            # The rate-specific box layer, which is what actually reaches the
+            # official record: the three tier casillas above are now rate-BLIND
+            # totals carrying no export field, and a draft that fills a total
+            # while leaving its boxes empty declares a breakdown short of its
+            # own total, which the export gate refuses.
+            "iva.anual.repercutido.tipo-21.cuota": Decimal("18000.00"),
+            "iva.anual.repercutido.tipo-10.cuota": Decimal("2100.50"),
+            "iva.anual.repercutido.tipo-4.cuota": Decimal("420.00"),
             "iva.anual.soportado.interiores": Decimal("9800.25"),
             "iva.anual.soportado.importaciones": Decimal("650.00"),
             "iva.anual.autorepercutido.intracomunitaria": Decimal("300.00"),

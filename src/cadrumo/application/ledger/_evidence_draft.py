@@ -95,8 +95,9 @@ from __future__ import annotations
 import re
 from datetime import date
 from decimal import Decimal
+from typing import Self
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.inbound.einvoice import EInvoiceXmlParseError, parse_einvoice_document
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -105,6 +106,9 @@ from ...application.invoices import build_catalogue_invoice, create_catalogue_in
 from ...core import (
     STRICT_FROZEN_CONFIG,
     STRUCTURED_DOCUMENT_SHAPES,
+    DraftDiscrepancyKind,
+    FieldGroundingOutcome,
+    FieldOrigin,
     ImageMediaType,
     MissingOptionalExtraError,
     ServiceCapability,
@@ -143,6 +147,9 @@ from ._evidence_reference import (
 from ._evidence_textlayer import extract_evidence_text
 
 __all__ = [
+    "DraftDiscrepancyFinding",
+    "FieldAmbiguityCandidate",
+    "FieldProvenance",
     "InvoiceConfirmationResult",
     "InvoiceDraft",
     "InvoiceDraftLine",
@@ -264,6 +271,128 @@ class InvoiceDraftRateBreakdown(BaseModel):
     recargo_amount: Decimal | None = None
 
 
+class FieldAmbiguityCandidate(BaseModel):
+    """One competing reading a grounding pass could not decide between.
+
+    Recorded rather than resolved. An ambiguity collapsed by taking the first
+    match is indistinguishable downstream from a fact, so the candidates travel
+    to the operator, who is the only party with the document in front of them.
+
+    Attributes:
+        value: The candidate reading, as a string. Deliberately not the field's
+            own type: a candidate exists precisely because the value could not
+            be established, and coercing an undecided reading into a
+            ``Decimal`` or a ``date`` would assert the parse that was in
+            question.
+        anchor: The verbatim printed form this candidate was read from, or
+            ``None`` when the candidate is a normalisation of another reading
+            rather than a distinct occurrence.
+        note: Why this candidate competed, in operator-facing terms.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: str
+    anchor: str | None = None
+    note: str = ""
+
+
+class FieldProvenance(BaseModel):
+    """The provenance envelope for exactly one field of a draft.
+
+    Per FIELD, not per document. A draft is routinely assembled from several
+    readers -- a structured record for the parties, an arithmetic derivation for
+    a cuota, an operator correction at confirm -- so a single document-level
+    stamp would claim one origin for values that did not share one. That is the
+    laundering this record exists to prevent: an exactly-read value must stay
+    distinguishable from a model-read one all the way to the operator's screen.
+
+    Carries no numeric confidence, deliberately and permanently. See
+    :class:`~core.FieldOrigin` and :class:`~core.FieldGroundingOutcome` for the
+    two axes that are facts: how the value was obtained, and what checking it
+    survived.
+
+    Attributes:
+        field: Name of the :class:`InvoiceDraft` field this envelope describes.
+            Validated against the draft's own fields rather than a hand-listed
+            enum, so a renamed or removed draft field invalidates its stale
+            envelopes instead of leaving them pointing at nothing.
+        origin: How the value was obtained.
+        grounding: What verification the value passed, or failed.
+        anchor: The verbatim printed form the value was read from, exactly as it
+            appears in the source -- ``"1.234,56 €"``, not ``1234.56``. This is
+            the whole anti-fabrication mechanism: a value nobody can point at in
+            the document has ``None`` here and an ``UNANCHORED`` outcome, and
+            the operator sees both.
+        candidates: Competing readings, when the grounding outcome is
+            ``AMBIGUOUS``. Empty otherwise.
+        note: Operator-facing explanation, e.g. which identity contradicted the
+            value.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    field: str = Field(min_length=1)
+    origin: FieldOrigin
+    grounding: FieldGroundingOutcome
+    anchor: str | None = None
+    candidates: tuple[FieldAmbiguityCandidate, ...] = ()
+    note: str = ""
+
+    @model_validator(mode="after")
+    def _ambiguity_carries_its_candidates(self) -> Self:
+        """Tie the ``AMBIGUOUS`` outcome to the candidates that justify it.
+
+        Both directions are enforced. An ``AMBIGUOUS`` envelope with fewer than
+        two candidates asserts an ambiguity it cannot show, and candidates under
+        any other outcome record competing readings while claiming the field was
+        decided -- each is a stamp that says something the record does not
+        support.
+        """
+        if self.grounding is FieldGroundingOutcome.AMBIGUOUS:
+            if len(self.candidates) < 2:
+                raise ValueError("an ambiguous field must record at least two competing candidates")
+        elif self.candidates:
+            raise ValueError(
+                f"candidates are only meaningful for an ambiguous field; got grounding={self.grounding.value!r}",
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _anchor_matches_the_outcome(self) -> Self:
+        """Refuse an ``ANCHORED`` claim with no anchor to show for it."""
+        if self.grounding is FieldGroundingOutcome.ANCHORED and self.anchor is None:
+            raise ValueError("an anchored field must carry the verbatim anchor it was anchored to")
+        return self
+
+
+class DraftDiscrepancyFinding(BaseModel):
+    """One deterministic check the read document failed.
+
+    Distinct from :class:`PrintedTotalDiscrepancy`, which compares the document
+    against the invoice that was actually WRITTEN and therefore only exists at
+    confirm. This record is a finding about the document alone, available the
+    moment it is read, so the operator meets it during review rather than after
+    a record has been minted from it.
+
+    Attributes:
+        kind: Which identity failed.
+        field: The draft field the finding is about, or ``None`` when the
+            finding is about a relationship between several.
+        detail: Operator-facing explanation naming the figures involved.
+        expected: What the identity required, when the check is arithmetic.
+        observed: What the document stated instead.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    kind: DraftDiscrepancyKind
+    field: str | None = None
+    detail: str = ""
+    expected: Decimal | None = None
+    observed: Decimal | None = None
+
+
 class InvoiceDraft(BaseModel):
     """Best-effort invoice fields extracted from an on-host PDF text layer.
 
@@ -303,6 +432,32 @@ class InvoiceDraft(BaseModel):
             invoice silently read as euro would carry its face value into a
             filing unconverted, so an absent marker must stay absent and be
             resolved by the operator.
+        retencion_rate: IRPF retención percentage as a whole-number Decimal, or
+            ``None``. Carried beside the amount rather than derived from it: a
+            document may print either, and deriving the missing half would
+            manufacture a figure the document does not state.
+        retencion_amount: IRPF withheld at source. Subtracted from the total to
+            reach the cash actually paid, so a draft that drops it reconciles
+            against the wrong figure.
+        suplidos_amount: Sums advanced on the customer's behalf. Outside the
+            base imponible by law, so folding them into the base over-declares
+            IVA on money that was never the issuer's revenue.
+        suggested_kind: Which side of the invoice the filer is on, as the
+            reading path SUGGESTS it. Never the decision: the draft is
+            deliberately pre-direction data and the direction is decided by the
+            operator at confirm, where ``--kind`` selects the counterparty side.
+            A suggestion the operator does not act on has no effect.
+        transcription_sha256: Content address of the stage-one transcription
+            this draft was read from, tying the draft to the exact artefact that
+            produced it. The address, never the text: a transcription holds the
+            document's readable contents and has exactly one sanctioned durable
+            route (:class:`~application.ledger.DocumentTranscription`), so
+            embedding it here would open a second one.
+        provenance: One :class:`FieldProvenance` envelope per field the reading
+            path established. Absent for a field means no envelope was recorded,
+            which is itself reviewable -- it never means the value was exact.
+        discrepancies: Deterministic checks the document failed, available at
+            read time rather than at confirm.
         raw_text_length: Length of the on-host extracted text, kept as an
             honest signal of how much source material the heuristics had to
             work with (zero means the PDF carried no usable text layer for
@@ -325,10 +480,43 @@ class InvoiceDraft(BaseModel):
     grand_total: Decimal | None = None
     currency: str | None = None
     recargo_amount: Decimal | None = None
+    retencion_rate: Decimal | None = None
+    retencion_amount: Decimal | None = None
+    suplidos_amount: Decimal | None = None
     lines: tuple[InvoiceDraftLine, ...] = ()
     iva_breakdown: tuple[InvoiceDraftRateBreakdown, ...] = ()
     iva_category: str | None = None
+    suggested_kind: InvoiceKind | None = None
+    transcription_sha256: str | None = Field(default=None, min_length=64, max_length=64)
+    provenance: tuple[FieldProvenance, ...] = ()
+    discrepancies: tuple[DraftDiscrepancyFinding, ...] = ()
     raw_text_length: int = 0
+
+    @model_validator(mode="after")
+    def _provenance_names_real_fields(self) -> Self:
+        """Refuse an envelope naming a field this draft does not have.
+
+        The provenance tuple is keyed by field NAME rather than by a parallel
+        enum on purpose: an enum would be a second declaration of the draft's
+        own shape and would drift the first time a field is renamed, leaving
+        envelopes that validate while describing nothing. Validating against
+        ``model_fields`` cannot drift, because there is only one declaration.
+
+        Duplicates are refused for the same reason an ambiguity is: two
+        envelopes for one field are two provenance claims, and nothing
+        downstream can say which is the record's answer.
+        """
+        seen: set[str] = set()
+        for envelope in self.provenance:
+            if envelope.field not in type(self).model_fields:
+                known = ", ".join(sorted(type(self).model_fields))
+                raise ValueError(
+                    f"provenance names unknown draft field {envelope.field!r}; known fields are: {known}",
+                )
+            if envelope.field in seen:
+                raise ValueError(f"provenance carries two envelopes for field {envelope.field!r}")
+            seen.add(envelope.field)
+        return self
 
 
 def _find_currency(text: str) -> str | None:
@@ -1149,6 +1337,43 @@ def confirm_invoice_draft_from_evidence(
             suggestion="aeat app ledger evidence extract --evidence-id <id>",
         )
 
+    # A PRINTED cuota is evidence and outranks a recomputed one. When the
+    # operator states it, the line carries that exact figure rather than
+    # base * rate, so a document whose printed cuota differs by a cent from the
+    # arithmetic is recorded as it was issued. The line invariants still apply,
+    # so a cuota the base and rate cannot support refuses rather than being
+    # accepted as an override.
+    #
+    # Resolved BEFORE the idempotency candidate, not just before the write: the
+    # candidate's derived id hashes the totals, so a candidate built without the
+    # lines and the recargo hashes to an id the real record will never carry.
+    # The guarded-retry lookup then misses every time and the re-confirm reaches
+    # the writer's duplicate-identity refusal instead of returning the existing
+    # invoice unchanged (`aeat-cli-contract`).
+    operator_overrode_the_amounts = taxable_base is not None or iva_rate is not None or iva_amount is not None
+    confirmed_lines = _confirmed_lines_from_the_document(
+        draft=draft,
+        invoice_number=resolved_invoice_number,
+        taxable_base=resolved_taxable_base,
+        iva_rate=resolved_iva_rate,
+        iva_amount=iva_amount,
+        operator_overrode_the_amounts=operator_overrode_the_amounts,
+    )
+    # The recargo de equivalencia is a real cuota the issuer owes (LIVA art.
+    # 161) and Modelo 303 sums it in its own devengado tiers. A structured
+    # document states it exactly and the writer already models it as riding
+    # inside the invoice total, so forwarding only the operator's override
+    # dropped the whole figure whenever they did not retype what they were
+    # confirming. An explicit override still wins, as it does on every field.
+    resolved_recargo_amount = recargo_amount if recargo_amount is not None else draft.recargo_amount
+    if operator_overrode_the_amounts:
+        # An override is a statement about the whole invoice. Keeping a
+        # document-read recargo beside operator-restated totals would leave two
+        # disagreeing authorities on the same figures, which is the reason the
+        # per-rate split is skipped on that path too.
+        resolved_recargo_amount = recargo_amount
+    resolved_iva_category = iva_category if iva_category is not None else _category_stated_by_the_document(draft)
+
     repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     candidate = build_catalogue_invoice(
         bucket_id=bucket_id,
@@ -1162,6 +1387,8 @@ def confirm_invoice_draft_from_evidence(
         iva_rate=resolved_iva_rate,
         currency=resolved_currency,
         notes=notes,
+        recargo_amount=resolved_recargo_amount,
+        lines=confirmed_lines,
     )
     attachment_store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, resolved_settings))
     catalogue = repository.load()
@@ -1184,51 +1411,6 @@ def confirm_invoice_draft_from_evidence(
             total_discrepancy=printed_total_discrepancy(draft=draft, invoice=existing),
         )
 
-    # A PRINTED cuota is evidence and outranks a recomputed one. When the
-    # operator states it, the line carries that exact figure rather than
-    # base * rate, so a document whose printed cuota differs by a cent from the
-    # arithmetic is recorded as it was issued. The line invariants still apply,
-    # so a cuota the base and rate cannot support refuses rather than being
-    # accepted as an override.
-    confirmed_lines = None
-    operator_overrode_the_amounts = taxable_base is not None or iva_rate is not None or iva_amount is not None
-    if len(draft.iva_breakdown) > 1 and not operator_overrode_the_amounts:
-        # A document that charges more than one rate cannot be represented by a
-        # single base and cuota pair. The parsers read the per-rate split
-        # exactly; collapsing it here would lose WHICH part of the base carried
-        # which rate, and the totals would still agree -- which is what makes
-        # the loss quiet. Modelo 303 sums cuota devengada per tier, so a
-        # collapsed invoice declares into one tier what belongs in two.
-        #
-        # Skipped entirely when the operator overrode any amount: an explicit
-        # override is a statement about the whole invoice, and silently keeping
-        # a per-rate split beside it would leave two disagreeing authorities on
-        # the same figures.
-        confirmed_lines = tuple(
-            InvoiceLine(
-                description=f"{resolved_invoice_number or 'Invoice'} - IVA {entry.iva_rate}%",
-                quantity=Decimal("1"),
-                unit_price=entry.taxable_base,
-                subtotal=entry.taxable_base,
-                iva_rate=resolve_iva_rate_slot(entry.iva_rate),
-                iva_amount=entry.iva_amount,
-            )
-            for entry in draft.iva_breakdown
-        )
-    elif iva_amount is not None:
-        confirmed_lines = (
-            InvoiceLine(
-                description=resolved_invoice_number or "Invoice",
-                quantity=Decimal("1"),
-                unit_price=resolved_taxable_base,
-                subtotal=resolved_taxable_base,
-                # The SAME resolver the writer below applies to the same value,
-                # so an unrepresentable percentage refuses identically whether
-                # or not the document printed a cuota.
-                iva_rate=resolve_iva_rate_slot(resolved_iva_rate),
-                iva_amount=iva_amount,
-            ),
-        )
     result = create_catalogue_invoice(
         bucket_id=bucket_id,
         kind=kind,
@@ -1241,11 +1423,11 @@ def confirm_invoice_draft_from_evidence(
         iva_rate=resolved_iva_rate,
         currency=resolved_currency,
         notes=notes,
-        iva_category=iva_category,
+        iva_category=resolved_iva_category,
         operation_date=operation_date,
         retention_rate=retention_rate,
         retention_amount=retention_amount,
-        recargo_amount=recargo_amount,
+        recargo_amount=resolved_recargo_amount,
         invoice_class=invoice_class,
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
@@ -1270,6 +1452,118 @@ def confirm_invoice_draft_from_evidence(
         created=True,
         total_discrepancy=printed_total_discrepancy(draft=draft, invoice=result.invoice),
     )
+
+
+def _category_stated_by_the_document(draft: InvoiceDraft) -> IvaCategory | None:
+    """Return the IVA treatment the document's own record declares, or ``None``.
+
+    The UNTDID 5305 tax-category code is a fact only a structured reader can
+    recover: it is IN the document and no regex or vision reader can supply it.
+    Dropping it here is not a missing label but a missing declaration. A
+    domestic reverse charge, an exempt supply and a zero-rated supply all print
+    a base and no cuota, so once the code is gone the record cannot be told
+    apart from an ordinary zero-cuota supply -- and the self-assessed output IVA
+    a reverse charge obliges, which Modelo 303 collects in its own inversión del
+    sujeto pasivo tier, is never assessed at all.
+
+    A standard-rated supply maps to the empty string rather than a member: the
+    rate itself carries the meaning there and there is no special category to
+    state, so it resolves to ``None`` exactly as an absent code does.
+
+    An unrecognised token also resolves to ``None`` rather than raising. The
+    parser only ever writes values from its own closed UNTDID mapping, so a
+    token outside it means that mapping changed shape; refusing the whole
+    confirm over a label the operator can supply themselves would block a
+    filing the rest of the record fully supports.
+
+    Args:
+        draft: The re-run extraction being confirmed.
+
+    Returns:
+        The stated :class:`~domain.iva.IvaCategory`, or ``None`` when the
+        document states no special category.
+    """
+    stated = (draft.iva_category or "").strip()
+    if not stated:
+        return None
+    try:
+        return IvaCategory(stated)
+    except ValueError:
+        return None
+
+
+def _confirmed_lines_from_the_document(
+    *,
+    draft: InvoiceDraft,
+    invoice_number: str,
+    taxable_base: Decimal,
+    iva_rate: Decimal | None,
+    iva_amount: Decimal | None,
+    operator_overrode_the_amounts: bool,
+) -> tuple[InvoiceLine, ...] | None:
+    """Build the confirmed lines from what the document itself declared.
+
+    Returns ``None`` when nothing better than the writer's own base-times-rate
+    derivation is available, which is the correct outcome for a text or vision
+    reader: those recover printed totals, not a tax breakdown.
+
+    The per-rate breakdown is used whenever the document states one, at ANY
+    length. A single entry is not the harmless case it looks like: the
+    structured readers populate the breakdown and never the draft's flat
+    ``iva_rate``, so a one-rate structured document reached the writer with no
+    rate at all and resolved to the base-only EXEMPT slot -- minting a
+    zero-cuota invoice out of a document that plainly charged one. Reading the
+    breakdown at length one is what recovers that rate; reading it at length two
+    or more is additionally what preserves WHICH part of the base carried which
+    rate, since Modelo 303 sums cuota devengada per tier.
+
+    Args:
+        draft: The re-run extraction being confirmed.
+        invoice_number: Resolved invoice number, used to label the lines.
+        taxable_base: Resolved taxable base the lines must sum back to.
+        iva_rate: Resolved IVA percentage, or ``None``.
+        iva_amount: The operator-supplied printed cuota, or ``None``.
+        operator_overrode_the_amounts: Whether the operator restated any of the
+            base, rate or cuota.
+
+    Returns:
+        The lines to hand the writer, or ``None`` to let it derive one line.
+    """
+    if draft.iva_breakdown and not operator_overrode_the_amounts:
+        # Every entry must state both halves of its subtotal. A partial
+        # breakdown is not silently completed here: deriving the missing cuota
+        # would put this function's arithmetic in place of the document's own
+        # figure, which is the opposite of reading the record exactly. The
+        # fall-through keeps the pre-existing behaviour, and the printed-total
+        # cross-check still reports the shortfall.
+        entries = draft.iva_breakdown
+        if all(entry.taxable_base is not None and entry.iva_amount is not None for entry in entries):
+            return tuple(
+                InvoiceLine(
+                    description=f"{invoice_number or 'Invoice'} - IVA {entry.iva_rate}%",
+                    quantity=Decimal("1"),
+                    unit_price=entry.taxable_base,
+                    subtotal=entry.taxable_base,
+                    iva_rate=resolve_iva_rate_slot(entry.iva_rate),
+                    iva_amount=entry.iva_amount,
+                )
+                for entry in entries
+            )
+    if iva_amount is not None:
+        return (
+            InvoiceLine(
+                description=invoice_number or "Invoice",
+                quantity=Decimal("1"),
+                unit_price=taxable_base,
+                subtotal=taxable_base,
+                # The SAME resolver the writer applies to the same value, so an
+                # unrepresentable percentage refuses identically whether or not
+                # the document printed a cuota.
+                iva_rate=resolve_iva_rate_slot(iva_rate),
+                iva_amount=iva_amount,
+            ),
+        )
+    return None
 
 
 def _resolve_confirmed_invoice_date(invoice_date: date | None, draft: InvoiceDraft) -> date:

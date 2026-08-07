@@ -1,0 +1,259 @@
+"""The fichero-BOE export exemption must be declared, never left to absence.
+
+The completeness gate demands a value on disk for every manifest casilla that is
+a calculation RESULT or is schema-required, intersected with the casillas the
+official record addresses. A casilla outside that intersection is exempt — and
+that exemption used to be expressed by ABSENCE alone, which reads identically
+whether the casilla genuinely files no slot or was simply never annotated. The
+second case is a silent under-declaration.
+
+These tests pin the closure of that hole. They run against the BUNDLED registry
+rather than a hand-built fixture, because the property under test is about the
+shipped corpus: a synthetic revision could satisfy every assertion here while the
+real tree carried an undeclared exemption.
+
+Every assertion is paired with a mutation that must red it. A gate whose test
+still passes with the mechanism removed asserts nothing, and this gate's whole
+subject is a defect that hides by looking like nothing.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from .....core import ExportExemptionReason, ExportLayoutFormat
+from .._authority import ValidatedRegistryAuthority
+from .._schema import ModeloRevision
+from .._validate_export_exemption import validate_export_exemption_declarations
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _gate(revision: ModeloRevision) -> list[str]:
+    """Run the export-exemption gate over one revision and return its failures."""
+    failures: list[str] = []
+    validate_export_exemption_declarations(failures, prefix="modelo T revision R", revision=revision)
+    return failures
+
+
+def _fixed_width_revisions(
+    authority: ValidatedRegistryAuthority,
+) -> list[tuple[str, str, ModeloRevision]]:
+    """Return every bundled revision declaring a fixed-width export layout."""
+    found: list[tuple[str, str, ModeloRevision]] = []
+    for modelo in authority.modelos:
+        for revision_id, revision in modelo.revisions.items():
+            if any(layout.format is ExportLayoutFormat.FIXED_WIDTH for layout in revision.export_layouts):
+                found.append((modelo.id, revision_id, revision))
+    return found
+
+
+def _replace_casilla(revision: ModeloRevision, casilla_id: str, **updates: object) -> ModeloRevision:
+    """Return ``revision`` with one casilla's fields overridden.
+
+    Uses ``model_copy`` on the real loaded objects rather than a stub, so the
+    mutation exercises the production validator against production data.
+    """
+    casillas = tuple(
+        casilla.model_copy(update=updates) if casilla.id == casilla_id else casilla for casilla in revision.casillas
+    )
+    return revision.model_copy(update={"casillas": casillas})
+
+
+def test_bundled_registry_declares_every_load_bearing_export_exemption(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """No bundled fixed-width revision leaves a load-bearing exemption undeclared.
+
+    This is the shipped-corpus invariant. It is not a tautology over the gate: a
+    casilla whose reason is missing produces a failure here, which is exactly what
+    the pre-annotation tree did for eighteen casillas across eight revisions.
+    """
+    offenders: list[str] = []
+    for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
+        offenders.extend(_gate(revision))
+    assert offenders == []
+
+
+def test_removing_a_declared_reason_reds_the_gate(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """MUTATION: strip a real declared reason and the gate must refuse.
+
+    Proves the clean result above is produced BY the annotations rather than by a
+    gate that never fires. Runs over every bundled casilla that actually carries a
+    reason, so the proof covers the whole annotated set, not one specimen.
+    """
+    checked = 0
+    for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
+        for casilla in revision.casillas:
+            if casilla.export_exemption_reason is None:
+                continue
+            stripped = _replace_casilla(revision, casilla.id, export_exemption_reason=None)
+            failures = _gate(stripped)
+            assert any(repr(casilla.id) in failure for failure in failures), (
+                f"stripping the reason from {casilla.id!r} did not red the gate"
+            )
+            checked += 1
+    assert checked > 0, "no bundled casilla declares an export exemption reason; the mutation proved nothing"
+
+
+def test_a_forgotten_annotation_is_detected(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """POSITIVE CONTROL: plant a genuinely forgotten annotation and find it.
+
+    The adjudication behind this feature concluded that the bundled tree contains
+    zero forgotten annotations. A clean negative is worth nothing without a
+    demonstration that the method WOULD find one, so this plants the real defect
+    shape: a formula-bearing manifest casilla the record no longer addresses,
+    carrying no reason — precisely what a casilla that should reach a box but was
+    never given an export field looks like.
+
+    The control covers scope rather than a single specimen: it plants the defect
+    independently in every bundled fixed-width revision that has a candidate.
+    """
+    planted = 0
+    for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
+        manifest = revision.completeness_manifest
+        if manifest is None:
+            continue
+        manifest_ids = {entry.casilla_id for entry in manifest.casillas}
+        candidate = next(
+            (
+                casilla
+                for casilla in revision.casillas
+                if casilla.id in manifest_ids
+                and casilla.formula is not None
+                and casilla.export_refs
+                and not casilla.internal_only
+            ),
+            None,
+        )
+        if candidate is None:
+            continue
+        # Drop every export field addressing the candidate: the layout stops
+        # carrying it while nothing declares why. Baseline first, so a revision
+        # that was already red cannot masquerade as a detection.
+        assert _gate(revision) == []
+        layouts = tuple(
+            layout.model_copy(
+                update={
+                    "records": tuple(
+                        record.model_copy(
+                            update={
+                                "fields": tuple(field for field in record.fields if field.casilla_id != candidate.id),
+                                "row_field_casilla_ids": {
+                                    row_field: casilla_id
+                                    for row_field, casilla_id in record.row_field_casilla_ids.items()
+                                    if casilla_id != candidate.id
+                                },
+                            },
+                        )
+                        for record in layout.records
+                    ),
+                },
+            )
+            for layout in revision.export_layouts
+        )
+        wounded = revision.model_copy(update={"export_layouts": layouts})
+        failures = _gate(wounded)
+        assert any(repr(candidate.id) in failure for failure in failures), (
+            f"planted forgotten annotation on {candidate.id!r} went undetected"
+        )
+        planted += 1
+    assert planted > 0, "no revision offered a plantable candidate; the control proved nothing"
+
+
+def test_feeds_addressed_casilla_claim_is_verified_not_trusted(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """MUTATION: the one reason asserting the figure IS filed must be checked.
+
+    ``FEEDS_ADDRESSED_CASILLA`` claims the value reaches the record through a
+    downstream box. Accepting that on the author's word would reopen the hole
+    under a new name, so the gate walks the formula graph. Re-labelling a casilla
+    that genuinely reaches no addressed casilla must therefore refuse.
+    """
+    relabelled = 0
+    for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
+        for casilla in revision.casillas:
+            if casilla.export_exemption_reason is not ExportExemptionReason.NOT_IN_RECORD_DESIGN:
+                continue
+            mutated = _replace_casilla(
+                revision,
+                casilla.id,
+                export_exemption_reason=ExportExemptionReason.FEEDS_ADDRESSED_CASILLA,
+            )
+            failures = _gate(mutated)
+            assert any(repr(casilla.id) in failure and "no formula chain" in failure for failure in failures), (
+                f"{casilla.id!r} claims to feed an addressed casilla and the gate believed it"
+            )
+            relabelled += 1
+    assert relabelled > 0, "no NOT_IN_RECORD_DESIGN casilla was available to re-label"
+
+
+def test_declared_feeds_addressed_casilla_reasons_really_do_reach_a_box(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """Every bundled ``FEEDS_ADDRESSED_CASILLA`` declaration survives its own check.
+
+    The companion to the mutation above: the check is strict enough to refuse a
+    false claim AND permissive enough to accept the true ones the tree makes, so
+    it is a discriminator rather than a blanket refusal.
+    """
+    accepted = 0
+    for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
+        for casilla in revision.casillas:
+            if casilla.export_exemption_reason is ExportExemptionReason.FEEDS_ADDRESSED_CASILLA:
+                accepted += 1
+    assert accepted > 0, "no bundled casilla declares FEEDS_ADDRESSED_CASILLA"
+    # The corpus-wide gate above already ran clean, which is the acceptance proof;
+    # this pins that the accepted population is non-empty so that clean run is not
+    # vacuous for this member.
+
+
+def test_a_casilla_the_record_addresses_may_not_declare_an_exemption() -> None:
+    """A reason contradicting an export_refs declaration is refused at schema level."""
+    from .._errors import RegistryValidationError
+    from .._schema import CasillaDefinition
+
+    with pytest.raises(RegistryValidationError, match="not exempt"):
+        CasillaDefinition(
+            id="probe",
+            number="probe",
+            localization_keys=("modelo.probe.label",),
+            section=["probe"],
+            export_refs=("some-export-field",),
+            export_exemption_reason=ExportExemptionReason.NOT_IN_RECORD_DESIGN,
+            legal_refs=["ley-37-1992:art-99"],
+            source_refs=["aeat-dr-303-2025"],
+        )
+
+
+def test_pre_populated_by_aeat_is_documented_dormant_not_silently_unused(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """``PRE_POPULATED_BY_AEAT`` has no bundled user, and this pins WHY.
+
+    The member exists for the Modelo 100 casilla 0599 case, where AEAT fills the
+    box from third-party Modelo 190 data the application does not hold. It has no
+    user because this gate binds the fixed-width transport only, and Modelo 100
+    exports ``xml_dictionary`` — an absent element there is legitimately absent,
+    so there is no blank-slot hazard to be exempt from.
+
+    Pinning the reason keeps the member honestly dormant rather than silently so:
+    the day Modelo 100 gains a fixed-width layout, this test reds and forces the
+    question to be answered rather than rediscovered.
+    """
+    users = [
+        casilla.id
+        for modelo in registry_authority.modelos
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+        if casilla.export_exemption_reason is ExportExemptionReason.PRE_POPULATED_BY_AEAT
+    ]
+    assert users == []
+    modelo_100 = registry_authority.modelo("100")
+    formats = {layout.format for revision in modelo_100.revisions.values() for layout in revision.export_layouts}
+    assert ExportLayoutFormat.FIXED_WIDTH not in formats

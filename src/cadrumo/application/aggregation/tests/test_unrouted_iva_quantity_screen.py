@@ -33,7 +33,13 @@ from ....domain.calculations.registry import (
     unrouted_ledger_iva_quantities,
     unsupported_ledger_iva_observations,
 )
-from ....domain.iva import IvaCategory
+from ....domain.iva import (
+    InvoiceKind,
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaRateKind,
+    derive_flow_for_classification,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -64,6 +70,35 @@ _M303_REVISION_ID = "2023-y-siguientes"
 @cache
 def _m303_revision() -> ModeloRevision:
     return resources().modelos.get("303").revisions[_M303_REVISION_ID]
+
+
+@cache
+def _revision(modelo_id: str) -> ModeloRevision:
+    """The committed revision governing each modelo's IVA ledger bindings."""
+    revisions = resources().modelos.get(modelo_id).revisions
+    return revisions[_M303_REVISION_ID if modelo_id == "303" else "2010-y-siguientes"]
+
+
+def _row(category: IvaCategory) -> IvaLedgerObservation:
+    """One purchase row of ``category``, with the flow direction PRODUCTION derives.
+
+    ``derive_flow_for_classification`` routes every reverse-charge category to
+    ``INVERSION_SUJETO_PASIVO`` regardless of invoice direction. Hand-setting
+    ``SOPORTADO`` screens a shape the projection never emits and manufactures
+    findings from the fixture's own error — which is exactly what an earlier
+    probe of this residue did.
+    """
+    return IvaLedgerObservation(
+        ledger_id=f"residue-{category.value}",
+        transaction_date=date(2024, 6, 1),
+        category=category,
+        rate_kind=IvaRateKind.GENERAL,
+        flow_direction=derive_flow_for_classification(category=category, invoice_direction=InvoiceKind.RECEIVED),
+        cash_accounting_treatment=IvaCashAccountingTreatment.NONE,
+        base_amount=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+        recargo_amount=Decimal("0"),
+    )
 
 
 def _sale(
@@ -126,11 +161,15 @@ def _observations(*transactions: Transaction) -> tuple[IvaLedgerObservation, ...
 def _revision_without_fact(revision: ModeloRevision, fact: str) -> ModeloRevision:
     """Return ``revision`` with every ``ledger_iva_aggregation`` binding drawing ``fact`` removed.
 
-    Models the regression under test: a revision that draws a row's other
-    quantities while never declaring a binding for this one. Modelo 390 is the
-    standing real instance for ``base_amount_sum``, but the assertion is pinned
-    on the stripped revision rather than on M390's current declarations so that
-    closing that gap in the registry cannot turn this test into a false claim.
+    Models one of the two shapes the screen catches: a revision declaring no
+    binding for this fact at all. Pinning on a stripped revision rather than on
+    a modelo that happens to lack the fact today was the right call and has
+    already paid — Modelo 390 was the standing instance for ``base_amount_sum``
+    and the annual-form campaign closed it. A test keyed on that state would now
+    be asserting something false about a correctly-modelled form.
+
+    The other shape, a fact declared by bindings that reach only SOME rows, is
+    covered by the partitioned tests below against the committed revision.
     """
     kept = [
         binding
@@ -148,7 +187,12 @@ def test_the_committed_revision_draws_every_quantity_its_rows_carry() -> None:
 
 
 def test_a_revision_drawing_no_base_surfaces_the_whole_base() -> None:
-    """The Modelo 390 shape: cuota and recargo drawn, base imponible drawn by nothing."""
+    """A revision declaring no base binding at all reports the whole base.
+
+    The simpler of the two shapes: the fact reaches no binding on the revision,
+    so every row carrying it is uncovered. Modelo 390 was the standing real
+    instance until the annual-form campaign declared its base boxes.
+    """
     revision = _revision_without_fact(_m303_revision(), "base_amount_sum")
     rows = _observations(
         _sale("s-1", base="1000.00", iva="210.00"),
@@ -257,7 +301,7 @@ def test_the_advisory_reaches_the_resolver_envelope(tmp_path: Path) -> None:
         )
 
     advisories = [
-        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_iva_quantity"
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
     ]
     assert len(advisories) == 1, "a revision drawing no base must surface exactly one advisory"
     assert "base_amount_sum" in advisories[0].message
@@ -288,5 +332,176 @@ def test_the_committed_revision_raises_no_advisory_in_the_envelope(tmp_path: Pat
         )
 
     assert not [
-        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_iva_quantity"
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
     ]
+
+
+def _reverse_charge_purchase() -> Transaction:
+    """An intra-community acquisition: cuota self-assessed, base imponible carried.
+
+    The flow direction is NOT set here. ``derive_flow_for_classification``
+    routes every reverse-charge category to ``INVERSION_SUJETO_PASIVO``
+    regardless of invoice direction, and the projection applies it — a fixture
+    that hand-set ``SOPORTADO`` would screen a shape production never emits and
+    manufacture findings from its own error.
+    """
+    raw = RawTransaction(
+        provider_transaction_id="aic-1",
+        booked_date=date(2025, 2, 10),
+        value_date=date(2025, 2, 10),
+        amount=Decimal("1000.00"),
+        currency="EUR",
+        counterparty="Proveedor UE",
+        description="adquisicion intracomunitaria",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="c" * 64,
+            source_row_index=2,
+            source_format=SourceFormat.MANUAL,
+            ingested_at=_NOW,
+            provider_name="manual",
+        ),
+        raw_fields={"row": "aic-1"},
+    )
+    return Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.BUSINESS,
+            "taxable_base": Decimal("1000.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("210.00"),
+            "iva_category": IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            "lifecycle_state": TransactionLifecycleState.ACTIVE,
+            "classified_at": _NOW,
+            "classified_by": "manual",
+        },
+    )
+
+
+def test_a_partitioned_fact_is_screened_per_row_not_per_revision() -> None:
+    """The live Modelo 303 gap a flat coverage set cannot see.
+
+    Modelo 303 declares eight ``base_amount_sum`` bindings, so "is this fact
+    drawn" answers yes for every row. But those bindings select the domestic
+    tiers, intra-community supplies and exports, while the cuota bindings ALSO
+    reach the reverse-charge and import categories. An intra-community
+    acquisition's base imponible is therefore reached by no base binding at all,
+    on the COMMITTED revision, with no fact stripped by this test.
+
+    A flat drawn-set is silent here, which is the same defect the quantity
+    screen exists to catch, one level in: coverage must be asked per row and per
+    fact, never per fact alone.
+    """
+    rows = _observations(_reverse_charge_purchase())
+
+    unrouted = unrouted_ledger_iva_quantities(_m303_revision(), rows)
+
+    assert [entry.fact for entry in unrouted] == ["base_amount_sum"]
+    assert unrouted[0].total == Decimal("1000.00")
+    # The cuota IS reached, by a binding selecting this row's category. Asserted
+    # so the test cannot pass by reporting everything.
+    assert "iva_amount_sum" not in {entry.fact for entry in unrouted}
+
+
+def test_the_row_screen_is_silent_on_the_partitioned_gap() -> None:
+    """Proved, not asserted: the row screen cannot report the case above.
+
+    The reverse-charge row IS consumed -- by the cuota bindings that select its
+    category -- so the row-keyed screen sees nothing wrong while its base
+    imponible reaches no binding.
+    """
+    rows = _observations(_reverse_charge_purchase())
+
+    assert unsupported_ledger_iva_observations(_m303_revision(), rows) == ()
+    assert unrouted_ledger_iva_quantities(_m303_revision(), rows) != ()
+
+
+def test_an_ordinary_domestic_row_stays_silent_on_the_committed_revision() -> None:
+    """Anti-false-fire control for the per-row coverage change.
+
+    Per-row screening is strictly more sensitive than the flat set it replaced,
+    so the risk it introduces is firing on the ordinary case and training
+    operators to ignore the advisory. A domestic sale and a domestic purchase
+    are both fully covered on the committed revision and must stay silent.
+    """
+    sale = _observations(_sale("dom-sale", base="1000.00", iva="210.00"))
+    assert unrouted_ledger_iva_quantities(_m303_revision(), sale) == ()
+
+
+@pytest.mark.parametrize("modelo_id", ["303", "390"])
+def test_the_import_and_reverse_charge_base_residue_is_reported_on_both_modelos(modelo_id: str) -> None:
+    """The residue that survives a modelo declaring the fact, pinned on both.
+
+    Modelo 390 declared no ``base_amount_sum`` binding at all until the
+    annual-form campaign added its base boxes. Closing that gap is exactly what
+    would have BLINDED a screen keyed on the fact alone: ``base_amount_sum``
+    became "drawn" for M390, and the import and reverse-charge rows whose base
+    is still reached by nothing would have gone quiet.
+
+    Both modelos are asserted together because the residue is the same three
+    categories on each, and pinning only the modelo that happened to be broken
+    first is how this test would rot the next time a campaign lands.
+    """
+    revision = _revision(modelo_id)
+
+    reported = {
+        category: [entry.fact for entry in unrouted_ledger_iva_quantities(revision, [_row(category)])]
+        for category in (
+            IvaCategory.IMPORT_THIRD_COUNTRY,
+            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        )
+    }
+
+    assert all(facts == ["base_amount_sum"] for facts in reported.values()), reported
+    # The domestic tiers ARE covered on both modelos, so the screen must be
+    # silent there. Without this the test would pass on a screen that reports
+    # every row of every category.
+    assert unrouted_ledger_iva_quantities(revision, [_row(IvaCategory.DOMESTIC_GENERAL)]) == ()
+
+
+def test_the_advisory_names_the_categories_carrying_the_residue(tmp_path: Path) -> None:
+    """The residue must be attributable, not merely reported.
+
+    A fact can be drawn for some categories and undrawn for others: Modelo 390 and
+    Modelo 303 both draw ``base_amount_sum`` for the domestic tiers while import
+    and the two reverse-charge categories carry it undrawn. An advisory naming only
+    the fact tells an operator base is missing without saying where, so a partially
+    closed gap reads as wholly open -- and, once the domestic half lands, the same
+    message would read as wholly closed to anyone diffing it.
+
+    Naming the categories is what lets a later reader tell a genuine remainder from
+    a regression. Asserted against the COMMITTED Modelo 303 revision with no fact
+    stripped, so it is the live residue rather than a manufactured one.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        repository.save(TransactionCatalogue.from_transactions((_reverse_charge_purchase(),)))
+        resolution = LedgerIvaAggregationSourceResolver(transaction_repository=repository).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="303",
+                filing_year=2025,
+                period=_Q1_2025,
+                revision=_m303_revision(),
+            ),
+        )
+
+    advisories = [
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
+    ]
+    assert len(advisories) == 1, "the live reverse-charge base residue must surface exactly one advisory"
+    message = advisories[0].message
+    assert "base_amount_sum" in message
+    assert "intra_community_acquisition_reverse_charge" in message, (
+        "the advisory must NAME the category carrying the undrawn quantity; without it a reader "
+        "cannot tell which categories remain open from which are genuinely closed"
+    )
+    # Anti-vacuity: the covered domestic tiers must NOT appear. An advisory naming
+    # every category would satisfy the assertion above while telling a reader
+    # nothing, and would falsely implicate categories whose base IS drawn.
+    for covered in ("domestic_general", "domestic_reduced", "domestic_super_reduced"):
+        assert covered not in message, f"{covered} draws base on this revision and must not be blamed"

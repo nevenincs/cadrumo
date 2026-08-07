@@ -11,3 +11,4 @@ formula = "modelo-131-2019-2023-saldo-negativo-fin-periodo"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_exemption_reason = "not_in_record_design"

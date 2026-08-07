@@ -193,25 +193,31 @@ class IrpfActivityKind(StrEnum):
     spend names on splits that select the same figure and then have to be kept
     true.
 
-    Operator-declared today, but no longer because the authority is missing.
-    That was true when this enum landed and is not any more: the bundled Modelo
-    036 instrucciones carry the tipo-de-actividad code table AND the sentence
-    binding each IAE sección to its activity class, which is exactly the
-    granularity RIRPF art. 95.2.a keys on ("las actividades incluidas en las
-    Secciones Segunda y Tercera"). The correspondence is grounded in the
-    registry as the ``rirpf-art-95:selector-m036-*`` parameters -- data with its
-    own ``legal_refs``, not an if-chain -- so a derivation is now possible in
-    principle. What is still missing is the INPUT: no field on this profile
-    holds an M036 tipo-de-actividad code, so nothing can feed the selectors yet.
+    Operator-declared OR derived, and the derivation now exists. This paragraph
+    used to say the authority was there but the input was missing, which was true
+    when it was written: the bundled Modelo 036 instrucciones carry the
+    tipo-de-actividad code table and the sentence binding each IAE sección to its
+    activity class -- exactly the granularity RIRPF art. 95.2.a keys on ("las
+    actividades incluidas en las Secciones Segunda y Tercera") -- and the
+    correspondence is registry data as the ``rirpf-art-95:selector-m036-*``
+    parameters, with their own ``legal_refs`` rather than an if-chain. What was
+    absent was a field holding a code.
 
-    Two limits on that derivation, both declared rather than latent. The M036
-    table's finest ganadero grain is B02, so the art. 95.4.1.º engorde de
-    porcino/avicultura carve-out is not selectable and its parameter carries a
-    deliberately EMPTY code set. And ``iae_epigraph`` cannot stand in for the
-    code: the same instrucciones state the epígrafe is filled "solo para las
-    actividades comprendidas dentro de los códigos de actividad A01, A02, A03,
-    A04 y A05", so it is blank for precisely the B-series agrarian filers a
-    sectorial discriminator would need to identify.
+    A ledger row now holds one. :func:`~domain.transactions.irpf_activity_kind_for`
+    reads the registry selectors and returns a member of THIS enum, deliberately
+    rather than a second classifier of its own: the apartado-level detail that
+    agrícola/ganadera comes from art. 95.4.2.º and forestal from art. 95.5, both
+    yielding 2 %, stays on the registry parameters where its ``legal_refs`` live.
+
+    One limit is declared rather than latent. The Modelo 036 table's finest
+    ganadero grain is B02, so the art. 95.4.1.º engorde de porcino/avicultura
+    carve-out is not selectable and its parameter carries a deliberately EMPTY
+    code set; both it and the general agrarian case return ``SECTORIAL``, which is
+    right for both, and which of the two sectoral figures applies is not settled
+    from this axis. ``iae_epigraph`` cannot narrow it either: the same
+    instrucciones state the epígrafe is filled "solo para las actividades
+    comprendidas dentro de los códigos de actividad A01, A02, A03, A04 y A05", so
+    it is blank for precisely the B-series agrarian filers.
 
     KNOWN GAP in the two-member shape. Four of the ten codes -- A01 Arrendadores,
     A03 Resto empresariales, B04 Producción de mejillón, B05 Pesquera -- select

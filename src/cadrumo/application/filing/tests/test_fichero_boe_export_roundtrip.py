@@ -141,6 +141,14 @@ def _modelo_390_case() -> _RoundtripCase:
             _cid("iva.anual.repercutido.general"): Decimal("18000.00"),
             _cid("iva.anual.repercutido.reducido"): Decimal("2100.50"),
             _cid("iva.anual.repercutido.super-reducido"): Decimal("420.00"),
+            # The rate-specific box layer. The three tier casillas above are the
+            # rate-BLIND totals and no longer carry an export field, so they are
+            # not re-readable from the file at all; these are what the record
+            # actually files, and a total without its boxes is the shortfall the
+            # export gate refuses.
+            _cid("iva.anual.repercutido.tipo-21.cuota"): Decimal("18000.00"),
+            _cid("iva.anual.repercutido.tipo-10.cuota"): Decimal("2100.50"),
+            _cid("iva.anual.repercutido.tipo-4.cuota"): Decimal("420.00"),
             _cid("iva.anual.soportado.interiores"): Decimal("9800.25"),
             _cid("iva.anual.soportado.importaciones"): Decimal("650.00"),
             _cid("iva.anual.autorepercutido.intracomunitaria"): Decimal("300.00"),
@@ -157,7 +165,7 @@ def _modelo_390_case() -> _RoundtripCase:
             "presenter_nif": "12345678Z",
         },
         output_name="modelo-390-roundtrip.txt",
-        key_casillas=(_cid("iva.anual.repercutido.general"), _cid("iva.anual.cuota-devengada-total")),
+        key_casillas=(_cid("iva.anual.repercutido.tipo-21.cuota"), _cid("iva.anual.cuota-devengada-total")),
     )
 
 

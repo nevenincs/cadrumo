@@ -34,6 +34,7 @@ from ._validate_dependency_sections import (
     validate_relation_section,
 )
 from ._validate_evidence import EvidenceValidator
+from ._validate_export_exemption import validate_export_exemption_declarations
 from ._validate_exports import validate_export_layout_section
 from ._validate_formulas import validate_formula_section
 from ._validate_helpers import missing_refs as _missing_refs
@@ -181,6 +182,11 @@ def _validate_revision_surface_sections(
         legal_refs=legal_refs,
         source_refs=source_refs,
         evidence=evidence,
+    )
+    validate_export_exemption_declarations(
+        failures,
+        prefix=prefix,
+        revision=revision,
     )
     validate_extraction_profile_section(
         failures,

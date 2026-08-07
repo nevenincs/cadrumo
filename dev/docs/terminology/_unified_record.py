@@ -93,6 +93,10 @@ _DISPLAY_CLASS_BASE_WEIGHT: dict[ResultDisplayClass, float] = {
     ResultDisplayClass.DOC: 1.0,
     ResultDisplayClass.MODELO: 0.9,
     ResultDisplayClass.CASILLA: 0.8,
+    # A BOE article or Orden GROUNDS a modelo/casilla surface rather than
+    # answering the operator's question, so it ranks below both. Aliasing it
+    # to DOC (1.0) put every legal provision above the very cards it grounds.
+    ResultDisplayClass.LEGAL: 0.75,
     ResultDisplayClass.CLI: 0.7,
     ResultDisplayClass.TECHNICAL: 0.5,
 }
@@ -209,7 +213,7 @@ def _display_class_for(
             return ResultDisplayClass.MODELO
         return ResultDisplayClass.DOC
     if kind is SearchRecordKind.LEGAL:
-        return ResultDisplayClass.DOC
+        return ResultDisplayClass.LEGAL
     path = target.split("#", 1)[0].lstrip("/")
     if path.startswith("cli/"):
         return ResultDisplayClass.CLI

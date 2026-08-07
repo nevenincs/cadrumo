@@ -20,6 +20,8 @@ Submodules
    cadrumo.application.ledger._actions_lifecycle
    cadrumo.application.ledger._actions_manual
    cadrumo.application.ledger._actions_split_merge
+   cadrumo.application.ledger._aeat_record_projection
+   cadrumo.application.ledger._document_transcription
    cadrumo.application.ledger._evidence
    cadrumo.application.ledger._evidence_advisory
    cadrumo.application.ledger._evidence_draft

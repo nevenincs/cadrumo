@@ -71,6 +71,7 @@ Submodules
    cadrumo.application.modelo._projection
    cadrumo.application.modelo._prorrata_regularizacion_advisory
    cadrumo.application.modelo._quickfile
+   cadrumo.application.modelo._rate_box_advisory
    cadrumo.application.modelo._reconcile
    cadrumo.application.modelo._reconcile_casilla
    cadrumo.application.modelo._reconciliation_records

@@ -23,6 +23,7 @@ from ._binding_selector_utils import (
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._ids import BindingId
+from ._ledger_binding_resolution import independent_quantity_facts
 from ._m347_threshold import m347_declarable_party_ids
 from ._schema import DataBindingDefinition, ModeloRevision
 
@@ -226,6 +227,57 @@ _InvoiceFact = Literal["operator_count", "base_sum", "invoice_total_sum", "recti
 _INVOICE_FACTS: frozenset[_InvoiceFact] = frozenset(
     {"operator_count", "base_sum", "invoice_total_sum", "rectified_base_delta_sum", "row_field"},
 )
+#: The invoice facts that are SCALAR MONEY MEASURES, and so are the only ones a
+#: quantity screen could ever fold. ``operator_count`` counts parties rather than
+#: measuring money, and ``row_field`` projects one column of a detail row rather
+#: than aggregating anything; neither is a quantity, so neither is classified
+#: below. Restricting the classified set is deliberate: declaring a non-quantity
+#: "independent" would hand a future screen a fact it cannot sum.
+_INVOICE_SCALAR_MEASURE_FACTS: frozenset[str] = frozenset(
+    {"base_sum", "invoice_total_sum", "rectified_base_delta_sum"},
+)
+
+#: Facts that re-measure the SAME magnitude, each with the reason it does so.
+#:
+#: ``base_sum`` and ``invoice_total_sum`` are two readings of one invoice's
+#: magnitude, and a revision declares whichever its modelo's law requires. The
+#: registry bears this out symmetrically: M347 draws ``invoice_total_sum`` and
+#: never ``base_sum``, M349 draws ``base_sum`` and never ``invoice_total_sum``.
+#: That mirror is why the pair is a classification rather than two coincidences
+#: -- either omission read alone looks like a gap.
+_INVOICE_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = {
+    "base_sum": (
+        "measures the invoice as its taxable base, IVA excluded; the reading Modelo 349 uses, "
+        "because an intra-EU supply carries no repercutido IVA and the recapitulative statement "
+        "declares the base. One of two magnitude measures a revision picks between"
+    ),
+    "invoice_total_sum": (
+        "measures the same invoice as its total with IVA included; the reading Modelo 347 uses, "
+        "whose declared magnitude is the importe total de la operación. The IVA-inclusive sibling "
+        "of base_sum, never declared alongside it"
+    ),
+}
+
+#: DERIVED as the complement, exactly as the ledger families derive theirs, so the
+#: two cannot drift apart -- and so the shared helper's refusals apply here too: a
+#: classified fact outside the supported set, or one carrying a blank reason, fails
+#: at import.
+#:
+#: NO QUANTITY SCREEN RUNS ON THE INVOICE FAMILY TODAY. This declaration is
+#: deliberately authored ahead of one. The classification is a reading of AEAT law
+#: rather than anything derivable from the code, so recording it here is the point:
+#: whoever extends the screen inherits the reasoning instead of re-deriving it under
+#: time pressure, and mis-classifying a genuinely independent quantity as an
+#: alternative measure is the one direction no check can catch.
+#:
+#: ``rectified_base_delta_sum`` is INDEPENDENT: a rectification delta is a separate
+#: declared quantity, not a third reading of the invoice's magnitude, so a revision
+#: declaring either magnitude measure still needs it drawn separately.
+_INVOICE_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = independent_quantity_facts(
+    _INVOICE_SCALAR_MEASURE_FACTS,
+    _INVOICE_ALTERNATIVE_MEASURE_FACTS,
+)
+
 _M347_DECLARANTE_SUMMARY_RECORD = "m347_declarante_summary"
 
 _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(

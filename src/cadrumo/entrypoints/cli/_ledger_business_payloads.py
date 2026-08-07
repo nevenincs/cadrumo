@@ -256,6 +256,47 @@ class EvidenceDraftRateBreakdownPayload(OutputSchema):
     recargo_amount: str | None = None
 
 
+class EvidenceFieldAmbiguityCandidatePayload(OutputSchema):
+    """One competing reading a grounding pass could not decide between."""
+
+    value: str
+    anchor: str | None = None
+    note: str = ""
+
+
+class EvidenceFieldProvenancePayload(OutputSchema):
+    """How ONE draft field was obtained and what checking it survived.
+
+    At parity with casilla grounding (``aeat-calculation-grounding``): the
+    provenance the reading path established travels all the way to the operator
+    rather than stopping at the application boundary. Without it the operator
+    sees a value and cannot tell whether a parser read it out of the document's
+    own machine-readable record or a vision model read it off a rendered page --
+    and those warrant different scrutiny before a filing is built on them.
+
+    Carries no numeric confidence, and none may be added: a model's estimate of
+    its own output is not evidence about that output. ``origin`` and
+    ``grounding`` are facts about what ran.
+    """
+
+    field: str
+    origin: str
+    grounding: str
+    anchor: str | None = None
+    candidates: list[EvidenceFieldAmbiguityCandidatePayload] = []
+    note: str = ""
+
+
+class EvidenceDraftDiscrepancyPayload(OutputSchema):
+    """One deterministic check the read document failed, shown at review time."""
+
+    kind: str
+    field: str | None = None
+    detail: str = ""
+    expected: str | None = None
+    observed: str | None = None
+
+
 @register_schema("ledger.evidence.extract")
 class EvidenceExtractResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence extract``.
@@ -292,9 +333,24 @@ class EvidenceExtractResult(OutputSchema):
     # breakdown -- and a recargo de equivalencia (LIVA art. 161) invisible at
     # the confirm step, which is where the operator is meant to catch it.
     recargo_amount: str | None = None
+    # Retención, suplidos and the direction suggestion are read from the
+    # document and were previously discarded on the way to this payload. A
+    # retención the operator cannot see is a figure they cannot subtract to
+    # reach the cash actually paid, and suplidos folded into the base
+    # over-declare IVA on money that was never the issuer's revenue.
+    retencion_rate: str | None = None
+    retencion_amount: str | None = None
+    suplidos_amount: str | None = None
     lines: list[EvidenceDraftLinePayload] = []
     iva_breakdown: list[EvidenceDraftRateBreakdownPayload] = []
     iva_category: str | None = None
+    # A SUGGESTION, never the decision. Direction is decided by the operator at
+    # confirm through --kind; surfacing the reading path's reading of it lets
+    # them disagree with something specific instead of guessing unaided.
+    suggested_kind: str | None = None
+    transcription_sha256: str | None = None
+    provenance: list[EvidenceFieldProvenancePayload] = []
+    discrepancies: list[EvidenceDraftDiscrepancyPayload] = []
     raw_text_length: int = 0
 
 
@@ -328,3 +384,11 @@ class EvidenceConfirmResult(OutputSchema):
     payment_status: str
     linked_transaction_ids: list[str] = []
     notes: str = ""
+    # The provenance of the DRAFT the confirmation was based on, carried onto
+    # the confirm surface too. The persisted invoice above is the operator's
+    # decision; these say what the document was read to say and how, so a later
+    # reader can tell an exactly-parsed figure from a model-read one without
+    # re-running the extraction (D5: nothing launders a vision read into an
+    # exact-looking one).
+    provenance: list[EvidenceFieldProvenancePayload] = []
+    discrepancies: list[EvidenceDraftDiscrepancyPayload] = []

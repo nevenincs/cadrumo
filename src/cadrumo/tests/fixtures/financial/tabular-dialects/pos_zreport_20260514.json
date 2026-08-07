@@ -1,0 +1,10 @@
+{
+  "output_sha256": "71ff67f67c8f22bf89c2378d24afeac479f1c851f27d32eea02271e5528a920a",
+  "output_size_bytes": 417,
+  "provenance": "synthetic_generated",
+  "role": "dialect_normalization_anchor",
+  "licence": "CC0-1.0",
+  "structural_difficulty": [
+    "Point-of-sale Z report"
+  ]
+}

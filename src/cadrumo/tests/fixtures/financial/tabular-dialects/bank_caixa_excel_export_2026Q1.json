@@ -1,0 +1,10 @@
+{
+  "output_sha256": "0cb171b3e4aa9ae5975915b1d106878c7bf0e528347dcd5c7bdac6983b27c01a",
+  "output_size_bytes": 1020,
+  "provenance": "synthetic_generated",
+  "role": "dialect_normalization_anchor",
+  "licence": "CC0-1.0",
+  "structural_difficulty": [
+    "Spreadsheet-exported bank statement"
+  ]
+}
