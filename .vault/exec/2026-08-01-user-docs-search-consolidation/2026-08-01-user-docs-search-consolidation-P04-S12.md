@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-06'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:3f4f77f7b52dab5216ac97043a9bce353581cd9946aa9e735307f513d6b95c9a'
+body_hash: 'sha256:2874b2c954ed887909b07ff7a6d7409a03856461d2ee9e86c003c4bfcbf88937'
 step_id: 'S12'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -49,3 +49,24 @@ The longer retry of `uv run --no-sync python -m dev.docs.build --strict docs/con
 ### 2026-08-06 current strict build sequence-golden failure
 
 The current strict retry cleared the registry legal-corpus validation after the bounded resolver and sidecar repair. It then reached the sequence-golden gate and exited with code 1 on nine divergences caused by concurrent peer changes (invoice option requirements, category ordering, profile-history ordering, ledger split behavior, and localized registry output). This is not a legal-search failure; the step remains open until a later full build is green.
+
+### 2026-08-07 read-only live-root re-probe
+
+A read-only GET probe of the four public documentation roots returned:
+
+- `https://cadrumo.neve.md/docs/`: HTTP 200.
+- `https://cadrumo.neve.md/docs/es/`: HTTP 404.
+- `https://cadrumo.neve.md/docs/ca/`: HTTP 404.
+- `https://cadrumo.neve.md/docs/hu/`: HTTP 404.
+
+No deployment, cache invalidation, or live mutation was attempted. P04.S12 remains open; the three localized roots are still not proven reachable.
+
+### 2026-08-07 current local parity confirmation
+
+The current shared-tree local integration gate `uv run --no-sync pytest -q -m integration dev/docs/tests/test_deployment_search_parity.py` returned `25 passed in 541.71s`, exercising `en`, `es`, `ca`, and `hu` through the production local Pagefind path. This does not alter the live-root result: `/docs/` returned HTTP 200 while `/docs/es/`, `/docs/ca/`, and `/docs/hu/` returned HTTP 404 on the read-only probe. P04.S12 remains open; no deploy, cache invalidation, or live mutation was attempted.
+
+### 2026-08-07 current all-locale local parity rerun
+
+The authorized real-behaviour integration gate `uv run --no-sync pytest -q -m integration dev/docs/tests/test_deployment_search_parity.py` completed with `25 passed in 383.05s (0:06:23)`, exercising `en`, `es`, `ca`, and `hu` through the production local Pagefind path. This confirms the local full-record projection remains present across all four roots.
+
+The live read-only probe remains unchanged: `/docs/` returned 200, while `/docs/es/`, `/docs/ca/`, and `/docs/hu/` returned 404. AWS STS authentication remains expired, so P04.S12 remains open and no deploy or cache invalidation was attempted.

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-06'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:7b1be357efda083570300689ff9e7301611679e66689c9a81a16c35ee522a6c0'
+body_hash: 'sha256:fc0217e3780347666a530deaad02ad4b60e9103ce369089a2aed05c57a75e271'
 step_id: 'S04'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -138,6 +138,68 @@ A fresh temporary compile over current inputs produced 8,498 records, 112 querie
 
 Fresh vaultspec-rag exact-source grounding confirmed the model-agnostic compiler/input/provenance boundary; the live semantic service was unavailable while its watcher rebuilt the code index, so no unavailable search result was treated as evidence. An explicit LUNA MAX review found no additional P02.S04 source defect and changed no files. The focused real Rung-2 contract suite returned 67 passed; Ruff, basedpyright (0 errors, 0 warnings, 0 notes), and scoped diff validation passed. The remaining blocker is acceptance of a pinned provider-backed committed artifact: the temporary approximately 2.13 MB bundle measures 22/32 semantic hits (0.3125 miss rate) and 92/123 token coverage, with ten queries below the minimum. P02.S04 remains open; no artifact was promoted, no browser enablement or deployment occurred.
 
+### 2026-08-06 LUNA MAX authorized provider continuation
+
+Fresh vaultspec-rag grounding and a local pinned-provider run completed without source edits. The local dev environment used model2vec==0.8.2 and the immutable Potion revision e7421cd79c75fc506b88bb75723ae0a234994720; raw provider/model/tokenizer manifests were verified before provider import. The temporary bundle contained 112 queries, 152 query tokens, and 8,505 records; matrix size was 254,588 bytes and bundle size was 2,135,413 bytes with raw SHA-256 b3902f8a0f90b19eac82a75051a0d5c57485797fde9d96d3a820f36a4401335f. It was not promoted, committed, or enabled.
+
+Focused contract verification returned 67 passed; real Pagefind/controller integration returned 4 passed; Ruff, basedpyright, Node syntax, and scoped diff checks passed. The semantic replay was 22/32 hits (miss rate 0.3125) with 92/123 query-token coverage (0.7479674796747967), including 10 below the 0.8 floor. The captured full ladder remains 15/32 (miss rate 0.53125). P02.S04-P02.S07, P02.S31, and P02.S32 remain open; browser configuration stays disabled and deployment was not attempted.
+
+### 2026-08-06 LUNA EXTRA HIGH bridge contract hardening
+
+Fresh vaultspec-rag grounding over the accepted Rung-2 bridge, manifest, and browser contracts identified a concrete source invariant gap: bridge targets could carry a ranking weight that disagreed with the authoritative record manifest. The LUNA EXTRA HIGH worker corrected only `dev/docs/terminology/_rung2_bridge.py` to reject that mismatch during bundle validation and compilation.
+
+The worker reported focused Rung-2 verification at `40 passed`, Ruff clean, basedpyright clean (`0 errors, 0 warnings, 0 notes`), scoped diff-check clean, and direct rejection probes for mismatched bridge weights and over-limit semantic candidates. No matrix artifact was promoted, the browser remains disabled, and deployment was not performed.
+
+This hardens the source contract but does not close P02.S04: accepted provider/artifact, licence, measured threshold, and held-out acceptance evidence remain absent.
+
+### 2026-08-06 current pinned-provider compile after bridge correction
+
+Fresh `vaultspec-rag` grounding over the accepted Rung-2 ADR, P02.S04 execution evidence, the source contract, `_sweep.py`, `_unified_record.py`, and `_rung2_bridge.py` confirmed that `TermTargetRef.ranking_weight` is query-specific laundered RAG relevance while `RecordManifestEntry.ranking_weight` is the authoritative projection's base display-band weight. They are distinct axes; requiring equality rejected valid current mappings. The LUNA Extra High correction removed only those two cross-axis equality checks and preserved manifest identity, kind/target parity, finite weights, duplicate rejection, deterministic ordering, hashes, and bundle invariants.
+
+The pinned local Potion/model2vec provider then compiled the current project inputs successfully into the temporary operator path `C:\Users\hello\AppData\Local\Temp\aeat-rung2-current-20260806\bundle.json`. Direct post-write validation confirmed 2,135,413 serialized bytes, bundle schema 3, matrix schema 4, 112 vocabulary terms, 152 query-token rows, 8,505 manifest records, and artifact SHA-256 `953ec0851fbbcd43afb460c23a33bf584e6c171a2afee32adb9f966bc3dd7fa2`. The initial command exited only in its reporting line after the writer had completed because it referenced a non-existent matrix attribute; direct JSON validation is the authoritative postcondition. No repository artifact was promoted, committed, enabled, or deployed.
+
+P02.S04 remains open: compile success is necessary but does not establish held-out relevance acceptance, quantization evidence, licence-gate closure, browser enablement, or deployment readiness.
+
+### 2026-08-06 current local provider recompile
+
+Fresh vaultspec-rag grounding over the accepted Rung-2 report contract, the current compiler/input boundary, and the provider manifest contract preceded this run. Using the already-attested local evidence under the session temp directory, the current source checkout compiled a new diagnostic bundle from the committed relevance source; no network fetch, dependency installation, live RAG sweep, repository artifact write, browser enablement, or deployment was performed.
+
+The local provider lane validated model2vec==0.8.2, minishlab/potion-multilingual-128M at immutable revision e7421cd79c75fc506b88bb75723ae0a234994720, MIT provenance, and dimension 256. The current raw-byte roots were provider 929a7ee94295436f3befb3f0836cf45c587fd91f34fe3f3f8f4039a5e126c4d7, model snapshot 869266e7140deabcaa3e5e0e69c7e017af5507d07006114690bb05d3ab06c9d6, tokenizer vocabulary 16d9434a6dba49dffd2a831ceb73bcbab2662b32d7bd3d0c4a2544e3b4c22d3b, and tokenizer configuration 83ae8f6fbf3124bd6d7e8d7c62677067f5cdd3885f377a7a787e8daa4f353299. The assembled inputs were 112 vocabulary rows, 152 query-token rows, 112 sweep mappings, and 0 failed queries.
+
+The temporary schema-v3 bundle is 2,135,413 canonical bytes, below the 3,000,000-byte envelope. The file SHA-256 is d9f17a4fecb487cd3f608ff4bb2e77a208ae40edac01dc7134c1b139a4e021d8; its self-attested bundle artifact is 2d384027b334b9788d6bdf7dc3e7abc9e9f41c250253aac6743c72c98b2126dc. The matrix is schema v4 / 254,588 bytes / 752e299e798e209d06ba87601de8cce6547683bf2b10d6b21b1fabc5a5e05abe; the bridge is 26,108 bytes / 030cc8404e988cb843b70c387854ff78d5937eb0d8ea0d441e00e862f4a8229c; the record manifest contains 8,505 records, 1,853,920 canonical bytes, and records root 725e40c411d84018bc1ba64031440cedc97d48ed75a40a1201f9da2737da3256. Input provenance binds relevance source 4e686b6b4dda2c525358e5b02213f9664683c032dfc9c809da54b5f844377226 and the empty authority source 0b75e8bb03129e6ec1ec74093bda7fcecbbf2d2180159c4c14964a47bf7b0d5e.
+
+Held-out semantic evidence remains 22/32 hits, miss rate 0.3125, with 10 insufficient-coverage rows; the artifact is diagnostic and is not promoted or wired into the browser. P02.S04 therefore remains open for an accepted measured artifact and dependent P02.S05/P02.S06/P02.S07 closure.
+
+### 2026-08-06 current authority compile replay
+
+Using the same locally pinned `model2vec==0.8.2` provider and `minishlab/potion-multilingual-128M` revision `e7421cd79c75fc506b88bb75723ae0a234994720`, the current alias-authority inputs compiled successfully in a temporary diagnostic destination. The bundle contains 113 vocabulary queries, 153 query tokens, 113 mappings, zero failed queries, 8,505 manifest records, and 2,137,428 serialized bytes. Bundle SHA-256 is `f3a166d9c65eafda976e4e9e47d6cce136eaec3a185e61e359b3bb827726c939`; the self-attested bundle artifact is `ed69c3b6a6d9f92e77ad25cd5aaf9fd76694f3e5daa57369251a21302e14778f`; matrix SHA-256 is `f0aa6dca74d2e60478d815a73649c233ad4a2c178bd14881bce6c01978ad7632`; bridge SHA-256 is `83fedff0c441f26f1df3303b8663dd42ede243c7cb8c48a36f0527c934dea395`; and the manifest record root remains `725e40c411d84018bc1ba64031440cedc97d48ed75a40a1201f9da2737da3256`.
+
+This is compiler/provider evidence only. The artifact remains temporary and the step stays open until the committed artifact, licence/provenance gate, browser acceptance, and standing report are all proven.
+
+### 2026-08-07 current-head provider compile
+
+The current authoritative project projection was compiled through `compile_project_rung2_search_bundle` with the pinned provider evidence already described in this record. The compile completed successfully on the current checkout after peer commits `85c25a02ca` and `676ade47f6`; the temporary bundle contains 8,516 manifest records, 114 matrix rows/terms, 2,141,633 serialized bytes, and bundle artifact SHA-256 `7907fd6ad903dcb1189286b181639c5e816b061adc4e697497e489f32c6f254d`. The bundle was loaded and validated as a diagnostic artifact only; it was not promoted to committed search data, enabled in the browser, or deployed. P02.S04 remains open pending the full artifact/licence/size/locale acceptance chain.
+
+### 2026-08-07 current HEAD recompile confirmation
+
+The current checkout was recompiled again after the shared worktree advanced to `HEAD 9e6e552fee`. The exact pinned-provider compile remains reproducible: 8,516 manifest records, 114 matrix rows/terms, 153 query tokens, 2,141,633 serialized bytes, and bundle SHA-256 `7907fd6ad903dcb1189286b181639c5e816b061adc4e697497e489f32c6f254d`. This confirms the prior diagnostic bundle identity is unchanged by the current peer commits; it remains a temporary, unpromoted artifact. P02.S04 remains open.
+
+### 2026-08-07 pushed HEAD d24ae2fdee recompile
+
+The shared branch is now at `HEAD d24ae2fdee7f34784cd4f1c628e7f8874b123cba`, equal to `origin/main` at measurement time. The same pinned-provider compile completed with an unchanged diagnostic identity: 8,516 manifest records, 114 matrix rows/terms, 153 query tokens, 2,141,633 serialized bytes, bundle SHA-256 `7907fd6ad903dcb1189286b181639c5e816b061adc4e697497e489f32c6f254d`. This remains a temporary diagnostic bundle and is not promoted into the shared source tree or browser configuration. P02.S04 remains open.
+
+### 2026-08-07 committed matrix artifact and loader parity
+
+The exact generated matrix was promoted as the isolated commit `10bddc3ac1` (`feat(search): commit rung2 matrix artifact`); no peer WIP was included. The committed file is `src/cadrumo/_data/terminology/evaluation/rung2-matrix.json`, 257,393 bytes, file SHA-256 `cfd853a4473c4c7c0ea2bf27efae36291b7d338c7a0fa64ea5db15669024218`, and internal artifact SHA-256 `d102c30db0a589854ac6ee4d0f1609d689a9dd5e5b23b61fe5063e3a1f6bbfda`.
+
+A production-loader validation after the commit passed against the authoritative temporary full bundle: matrix schema 4, 114 vocabulary rows, 153 query-token rows, dimension 256; bundle schema 3, 8,505 manifest records, 2,138,574 canonical bytes, and bundle SHA-256 `1cb0bb6761bfb54a5a768d202fef0b9b85d3a38de99b34f92297cf2204d47f12`. `build_rung2_compilation_inputs()` assembled 114 queries/vocabulary rows, 153 query tokens, two alias-authority entries, and zero failed queries. Matrix bytes equal bundle matrix bytes, and both assembled vocabularies and token inventories equal the committed matrix.
+
+This advances the matrix from untracked to committed reviewable data but does not close P02.S04: the current full-bundle semantic replay remains diagnostic at 22/32 hits, 10/32 misses (`0.3125`), with 93/123 covered tokens (`0.7560975609756098`) against the `0.8` floor; the browser acceptance configuration remains disabled and dependent locale, licence/quantization, full-ladder, and deployment gates remain open.
+
+### 2026-08-07 current-head bundle round trip
+
+The newer current-head temporary full bundle `C:\Users\hello\AppData\Local\Temp\aeat-rung2-current-20260807-ad997\bundle-full-current.json` also loads through the production validator. It is schema 3, 2,141,633 canonical bytes, artifact SHA-256 `7907fd6ad903dcb1189286b181639c5e816b061adc4e697497e489f32c6f254d`, with 8,516 manifest records, 114 bridge terms, and 153 query-token rows. Its nested matrix is byte-equal to the committed matrix (`d102c30db0a589854ac6ee4d0f1609d689a9dd5e5b23b61fe5063e3a1f6bbfda`). This confirms current-head loader/link parity; it remains temporary and does not change the rejected acceptance result.
+
 ## 2026-08-05 source continuation: browser-recognizable query-token contract
 
 The source seam now distinguishes candidate result rows from the separate
@@ -216,3 +278,33 @@ The independently verified provider lane used model2vec==0.8.2, minishlab/potion
 The report is materialized at src/cadrumo/_data/terminology/evaluation/rung2-report.json, but the temporary bundle is intentionally not promoted or wired into the browser: held-out recall and all-locale artifact acceptance do not pass. P02.S04 therefore remains open for the committed accepted matrix/bundle and dependent P02.S05/P02.S06/runtime closure.
 
 Focused verification passed: uv run --no-sync pytest -q dev/docs/terminology/tests/test_rung2_report.py dev/docs/terminology/tests/test_rung2_evaluation.py returned 13 passed in 4.31s; scoped Ruff, basedpyright, and git diff --check passed. No deployment or browser enablement occurred.
+
+## 2026-08-06 live RAG sweep refresh
+
+A fresh live `ServiceRagSearchClient` sweep was run with `uv run --no-sync python -m dev.docs.terminology.sweep --no-reindex --timeout 60 --out C:\\Users\\hello\\AppData\\Local\\Temp\\aeat-live-sweep-20260806.json`. It covered 112 queries over 49 concepts with 112 mapped, 0 empty, and 0 failed; the temporary JSON SHA-256 is `336e1bb7da755ac492712fe036c341c1196e9a237d503e105ae9e94960319b69`. The committed relevance source remains `4e686b6b4dda2c525358e5b02213f9664683c032dfc9c809da54b5f844377226`; query sets and target payloads are unchanged across the eight differing rows, with only dropped/collapsed counts and one cluster/ordering consequence differing. The temporary result is diagnostic only and was not promoted, committed, or enabled.
+
+## 2026-08-07 pinned matrix artifact continuation
+
+Fresh supported `vaultspec-rag` grounding over the P02.S04 plan/audit, accepted Rung-2 research, compiler/provider seams, and the current input contract preceded the artifact handoff. LUNA MAX materialized the current provider-backed matrix without changing the provider/compiler source or unrelated peer WIP.
+
+The new worktree artifact `src/cadrumo/_data/terminology/evaluation/rung2-matrix.json` is schema version 4 with 114 vocabulary rows, 153 query-token rows, dimension 256, and 257,393 canonical bytes. Its file SHA-256 is `cfd853a4473c4c7c0ea2bf27efae36291b7d338c7a0fa64ea5db15669024218`; its internal canonical artifact SHA-256 is `d102c30db0a589854ac6ee4d0f1609d689a9dd5e5b23b61fe5063e3a1f6bbfda`. The provenance records Potion multilingual 128M at immutable revision `e7421cd79c75fc506b88bb75723ae0a234994720`, MIT, model2vec `0.8.2` with source SHA-256 `929a7ee94295436f3befb3f0836cf45c587fd91f34fe3f3f8f4039a5e126c4d7`, and tokenizers `0.23.1` with the previously ratified vocabulary/config hashes. The worker reports a production-loader round trip, Ruff, basedpyright, and five focused contract checks passing.
+
+The artifact is currently untracked shared-worktree WIP; no commit or push was performed. It therefore is not yet committed reviewable data and cannot close P02.S04. The full project bundle remains blocked by the unrelated `StopIteration` while resolving `CalculationSourceDiagnostic` in `src/cadrumo/application/aggregation/_modelo_bindings.py`; that peer-owned file was not touched. The matrix-only artifact must not enable the browser tier or be treated as a deployed search surface.
+
+The formal review is recorded in `.vault/audit/2026-08-07-user-docs-search-consolidation-p02-s04-matrix-artifact-review-audit.md`. The feature-scoped VaultSpec check is clean with zero errors and zero warnings after the audit hygiene fix. P02.S04 remains open pending an authorized commit/handoff, authoritative full-bundle compilation, accepted remeasurement, and the downstream locale/deployment gates.
+
+### 2026-08-07 authoritative full-bundle continuation
+
+Fresh vaultspec-rag grounding was repeated through the supported code route (`vaultspec-rag search --type code`); the configured MCP `codebase` alias still rejects with `unknown_source_type`, so no alias bypass or reindex was used.
+
+The earlier full-bundle assembly blocker is cleared in the current shared worktree. `build_rung2_compilation_inputs()` now assembled the authoritative closed vocabulary, token inventory, laundered sweep, and manifest with 114 queries, 114 vocabulary rows, 153 query-token rows, 8,505 manifest records, 2 ratified alias-authority entries, and 0 failed queries. The pinned-provider compiler then wrote a canonical temporary bundle at `C:\Users\hello\AppData\Local\Temp\aeat-rung2-current-20260806\bundle-full-current.json`.
+
+The repository loader round-trip passed for the exact bytes: schema v3, 2,138,574 serialized bytes, bundle artifact SHA-256 `1cb0bb6761bfb54a5a768d202fef0b9b85d3a38de99b34f92297cf2204d47f12`, file SHA-256 `0899c5cda51c32291d05d8274feda23c85ba814b54ad0de9d697760f44d04e99`, matrix artifact SHA-256 `d102c30db0a589854ac6ee4d0f1609d689a9dd5e5b23b61fe5063e3a1f6bbfda`, and query-token fingerprint `fce9c72d9da9cb5865aa76c752ff9778cd3af5f79728f91b4a267eaa6366e643`.
+
+Browser-equivalent semantic replay against this fresh full bundle produced 32 cases, 22 hits, 10 misses, miss-rate `0.3125`, and aggregate token coverage `93/123 = 0.7560975609756098`; 20 queries were fully covered, 10 were below the `0.8` policy minimum, and none had zero coverage. The ten misses abstained for insufficient coverage; this does not justify lowering the policy or adding held-out terms.
+
+P02.S04 remains open because the bundle is still temporary/unshipped and the acceptance ladder remains unproven. No browser enablement, generated-artifact promotion, deployment, commit, or push occurred.
+
+Focused contract continuation: fresh supported `vaultspec-rag` grounding used code request `d46079ebc7784e8dbc24843bd6b2c3b` for the shared cosine seam and combined code/vault request `50ccf8560b6543f08b39b3a11b1e533d` for the Diseño boundary. The full bundle was loaded and its canonical matrix compared with `src/cadrumo/_data/terminology/evaluation/rung2-matrix.json`; exact equality and loader round-trip passed. The validated bundle is 2,138,574 bytes with 8,505 manifest records, 114 bridge terms, 153 query-token rows, bundle SHA-256 `0899c5cda51c32291d05d8274feda23c85ba814b54ad0de9d697760f44d04e99`, and matrix artifact SHA-256 `d102c30db0a589854ac6ee4d0f1609d689a9dd5e5b23b61fe5063e3a1f6bbfda`.
+
+The focused real-behaviour contract suite returned `83 passed in 55.81s`. P02.S04 remains open because the matrix is uncommitted shared-worktree WIP and no release or browser enablement is authorized by this evidence.

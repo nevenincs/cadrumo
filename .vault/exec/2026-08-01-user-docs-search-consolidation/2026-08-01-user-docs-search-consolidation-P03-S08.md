@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-05'
-modified: '2026-08-06'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:5883497f924912b91ea8295473c79ad5f5bf913dd28fe84f501806f296719576'
+body_hash: 'sha256:5f9dde2a6c8d80d737810f404130e3e65c5d1ee9b1a4e3f007a10d8c6163a016'
 step_id: 'S08'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -64,3 +64,53 @@ The longer retry of `uv run --no-sync python -m dev.docs.build --strict docs/con
 ### 2026-08-06 current strict build sequence-golden failure
 
 The current strict retry cleared the registry legal-corpus validation after the bounded resolver and sidecar repair. It then reached the sequence-golden gate and exited with code 1 on nine divergences caused by concurrent peer changes (invoice option requirements, category ordering, profile-history ordering, ledger split behavior, and localized registry output). This is not a legal-search failure; the step remains open until a later full build is green.
+
+### 2026-08-06 current four-locale Pagefind parity recheck
+
+Fresh vaultspec-rag grounding over the localized build and deployment-parity contracts was followed by the corrected real integration selector:
+
+- `uv run --no-sync pytest -q dev/docs/tests/test_deployment_search_parity.py` collected zero tests under the repository default marker filter; this was treated as unverified.
+- `uv run --no-sync pytest -q -m integration dev/docs/tests/test_deployment_search_parity.py` returned `25 passed in 473.55s`.
+
+The run exercised the current production Pagefind/deployment-parity path for the English, Spanish, Catalan, and Hungarian roots and proved local per-root search parity. It does not close P03.S08: strict full builds remain a separate red gate and no live deployment/root probe was performed.
+
+### 2026-08-06 current four-locale integration parity recheck
+
+After the current scoped sweep-plumbing change, the explicit integration selector was rerun:
+
+- `uv run --no-sync pytest -q -m integration dev/docs/tests/test_deployment_search_parity.py` returned `25 passed in 392.01s`.
+- The run exercised the local English, Spanish, Catalan, and Hungarian Pagefind/deployment-parity path.
+
+This confirms the local four-locale parity boundary remains green. It does not close P03.S08: strict full builds remain a separate red gate, and no live deployment or live-root probe was performed.
+
+### 2026-08-06 four-locale built-site parity rerun
+
+The explicit integration gate `uv run --no-sync pytest -q -m integration dev/docs/tests/test_deployment_search_parity.py` completed with `25 passed in 465.35s (0:07:45)`. The behavioural build/probe covered the English, Spanish, Catalan, and Hungarian roots (`en`, `es`, `ca`, `hu`). This is fresh built-site evidence only: the live root probes and deployment proof remain outstanding, so P03.S08 stays open.
+
+### 2026-08-07 current shared-tree four-locale parity rerun
+
+After fresh supported vaultspec-rag grounding over the per-root Pagefind contract, the real integration gate `uv run --no-sync pytest -q -m integration dev/docs/tests/test_deployment_search_parity.py` completed with `25 passed in 541.71s (0:09:01)`. The production local build/probe covered all four roots: `en`, `es`, `ca`, and `hu`, including per-root corpus/index parity and localized concept/casilla recall.
+
+This is current local built-site evidence only. Strict user builds remain a separate red gate, the public `es`, `ca`, and `hu` roots still require live proof, and P03.S08 remains open pending the deployment-side evidence owned by P04.S12/P04.S13. No generated artifact was promoted and no deployment was performed.
+
+#### 2026-08-07 explicit strict locale matrix
+
+The declared `just docs-langs` recipe stopped at the Spanish user-scope build with exit code 1, before reaching the remaining locale loop. The three explicit follow-up commands were then run independently: `just docs-lang en`, `just docs-lang ca`, and `just docs-lang hu`. All four locale builds (`es`, `en`, `ca`, `hu`) reached the sequence-golden gate and failed with the same shared-WIP contract divergences: twelve CLI-sequence failures centered on legal-reference ordering/contents, invoice output additions, and the changed workstation dependency surface. The builds did not reach a green Pagefind/deployable artifact. No sequence goldens, translations, legal data, invoice code, or deployment state were changed; P03.S08 remains open pending a green strict build and live-root evidence.
+
+#### 2026-08-07 current-commit explicit strict locale rerun
+
+After peer commits `85c25a02ca` and `676ade47f6`, the strict locale matrix was rerun on the current checkout. `just docs-langs` stopped at `es` with exit code 1; explicit `just docs-lang en`, `just docs-lang ca`, and `just docs-lang hu` also each exited 1. All four reached the sequence-golden gate and reported the same twelve CLI-sequence divergences, including legal-reference ordering/content drift, profile-history ordering, invoice output additions, and the workstation dependency surface. No locale reached a green deployable build; no goldens, translations, legal data, or peer source were changed. P03.S08 remains open.
+
+### 2026-08-07 current HEAD explicit four-locale strict rerun
+
+The strict locale matrix was rerun against the shared checkout at `HEAD 9e6e552fee`. `just docs-langs` stopped at Spanish with exit code 1; explicit `just docs-lang en`, `just docs-lang ca`, and `just docs-lang hu` also each exited 1. All four reached the sequence-golden gate rather than failing at locale loading or source projection. The common divergences are the expanded legal-reference payload/order, profile-history ordering, invoice output fields (`invoice_class`, `series`, `rectifies_invoice_number`, `recargo_amount`, `iva_category`), and the workstation `model-runtime-hardware-floor` dependency surface; English additionally exposed a Windows log-rotation permission warning during sequence execution. No goldens, translations, legal data, or peer source were changed. No locale reached a green deployable build, so P03.S08 remains open and deployment remains deferred.
+
+### 2026-08-07 locale-run shared-worktree boundary
+
+The locale matrix ran while parallel work advanced the branch from the recorded `9e6e552fee` state to pushed `d24ae2fdee`; the invocations were not a commit-pinned release build. Nevertheless, every observed invocation exited 1 at the sequence-golden gate: `docs-langs` stopped at `es`, and explicit `en`, `ca`, and `hu` each failed. The result is therefore a current shared-worktree red signal, not a claim that one immutable commit was tested. A commit-pinned green four-locale build remains outstanding.
+
+### 2026-08-07 current all-locale local parity rerun
+
+The authorized real-behaviour integration gate `uv run --no-sync pytest -q -m integration dev/docs/tests/test_deployment_search_parity.py` completed with `25 passed in 383.05s (0:06:23)`. It exercised the production local Pagefind path for all four build languages: `en`, `es`, `ca`, and `hu`.
+
+This establishes current local per-root parity only. P03.S08 remains open because the strict language builds still have known sequence-golden divergences and the corresponding deployed roots have not been proven reachable; no live result is inferred from this local pass.
