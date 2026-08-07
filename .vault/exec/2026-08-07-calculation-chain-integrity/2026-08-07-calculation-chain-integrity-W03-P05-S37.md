@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:e8a20ef3ccc5604c16cb5068e8478c4da2e2121d52ee34ccb305a0ae7ed79e38'
+body_hash: 'sha256:a9056f95ba5fea665f9da451079c35ea6fa0a2c506b57144a1c77939427b0e43'
 step_id: 'S37'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
@@ -14,49 +14,36 @@ related:
 
 ## Outcome
 
-**FETCH-GATED**, using the project's established disposition for a step that needs an official artefact the tree does not carry. The gate is not a deferral: the Modelo 210 precedent shows the same marker resolved by fetching, bundling and sha256-pinning the named document.
+**Done. The artefact is bundled.** The gate was never really a fetch gate — it was a discovery gate wearing a fetch gate's clothes, and the thing nobody could find was not missing, it was filed somewhere else.
 
-## What is missing, verified from the source workbook
+## Why every sweep came back empty
 
-`W03.P04` reported the code table absent, reading the extracted markdown. That reading was re-taken here against the **workbooks themselves**, because a file-shape assumption is exactly what undercounts a bundled corpus:
+The Modelo 036 diseño de registro names field 403 only as `Tabla` and enumerates nothing. Sweeping the bundled diseño corpus for the values therefore found nothing, and the natural next move — re-fetch the diseño — was checked and confirms the negative directly: the AEAT diseño index page links exactly one file for Modelo 036, `DR036v43.xlsx`, with no table annex.
 
-- All five bundled M036 workbooks carry only page sheets (`Pag. 0` through `Pag. 10`). There is no `Tabla` sheet in any of them.
-- Searching every cell of every sheet for the activity vocabulary returns the field declaration and nothing else:
+The table is published in the **instrucciones**, not with the diseño. That is the whole finding.
 
-      [Pag. 4]  6 | 76 | 3 | An | Actividad. Tipo de actividad.  [403]  |  Tabla
+## What was bundled
 
-- The omission is legible rather than accidental. Neighbouring fields enumerate their code sets inline in that same column — the IVA régimen especial agricultura field beside it spells out `1 - incluido/2- excluido/3- renuncia/4-revocacion/5-baja`. This one says only `Tabla`.
-- The IRPF section repeats the field per activity slot at `[613]` and `[614]`, also three alphanumeric characters, also table-sourced.
+Two AEAT sede pages, both under the guía práctica for the modelo censal 036:
 
-So the value set genuinely lives in a document AEAT publishes alongside the diseño, not inside it.
+    anexos/anexo-03-instrucciones-modelo-036/cumplimentacion-modelo/pagina-4.html
+    capitulo-04-actividades-economicas-locales/cumplimentacion-declaracion-actividades-economicas-locales/actividad.html
 
-## Why the existing sync tool does not close this
+Both were bundled rather than one. They are independent pages that carry the table identically today, so a later re-fetch finding them disagreeing is a signal worth being able to see.
 
-`dev/corpus/sync_aeat_record_design_corpus.py` synchronises the **diseño de registro** indexes from the Sede static-files endpoint. The M036 diseño is already bundled and is the very artefact that declines to enumerate the table. The tool would re-fetch what is already here.
+Ten codes, introduced by `Código/Tipo de actividad: se cumplimentará de acuerdo con las siguientes tablas.`
 
-## The artefact is now LOCATED
+- **Sujetas a IAE:** `A01` Arrendadores de Bienes inmuebles, `A02` Ganadería independiente, `A03` Resto empresariales, `A04` Artísticas y Deportivas, `A05` Profesionales
+- **No sujetas a IAE:** `B01` Agrícola, `B02` Ganadera, `B03` Forestal, `B04` Producción de mejillón, `B05` Pesquera
 
-The discovery half of this gate is retired. The table is published in the M036
-**instrucciones** on the AEAT sede guía práctica, not with the diseño workbook,
-which is why every sweep of the bundled diseño corpus came back empty. Two sede
-pages carry it identically (cross-checked):
+`PROVENANCE.md` follows the `modelo_131` convention: per-file table, sha256 for the two new captures, source URLs, the AEAT `2026-03-26` publication stamp, and the re-fetch protocol.
 
-- `.../guia-practica-cumplimentacion-modelo-censal-036/anexos/anexo-03-instrucciones-modelo-036/cumplimentacion-modelo/pagina-4.html`
-- `.../guia-practica-cumplimentacion-modelo-censal-036/capitulo-04-actividades-economicas-locales/cumplimentacion-declaracion-actividades-economicas-locales/actividad.html`
+## A second clause that came free
 
-introduced by `Código/Tipo de actividad: se cumplimentará de acuerdo con las
-siguientes tablas.` and carrying ten codes: `A01`-`A05` for IAE activities and
-`B01`-`B05` for non-IAE ones.
+The capitulo-04 page also says, of the epígrafe/sección IAE field, that it is filled *solo para las actividades comprendidas dentro de los códigos de actividad A01, A02, A03, A04 y A05*.
 
-The AEAT diseño index page was also checked directly and confirms the negative:
-it links exactly one file for Modelo 036, `DR036v43.xlsx`, with no table annex.
+That is AEAT stating directly that the IAE epígrafe is absent for every B-series filer — the agrarian ones. `W03.P04` had observed empirically that `iae_epigraph` is systematically empty for exactly those filers; this is the authority behind the observation, and it closes off the obvious fallback discriminator before anyone spends time on it.
 
-## Why it was not fetched ad hoc
+## Note on the scope field
 
-Bundling a corpus artefact carries provenance discipline the precedent makes explicit: a per-modelo `manifest.json` entry with stored path, sha256, byte count and source URL, so the record-design catalogue gate can resolve it. Pulling a page with an arbitrary fetch and dropping the bytes in would create exactly the artefact-outside-the-declared-manifest condition that `W05.P07.S32` was written about.
-
-## What unblocks, once it lands
-
-`S38` grounds the code-to-partition mapping against it, `S11` places the activity-type axis that mapping populates, and `S13` aggregates M130 casilla 08 using that axis. All three are marked with their blocker so none is attempted first.
-
-The alternative — inferring the partition from the codes without the table — is the fabricated-grounding failure `legal-grounding-verifies-bundled-authoritative-corpus` names, and it would sit underneath a rate screen where nothing downstream could detect it.
+The row named `_data/corpus/aeat_official/disenos_registro/modelo_036/`, which is where the artefact was assumed to belong. It landed under `instructions/modelo_036/` instead, beside the folleto and the other M036 instruction captures, because that is what it is.
