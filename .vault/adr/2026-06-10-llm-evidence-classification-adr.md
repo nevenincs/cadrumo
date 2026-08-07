@@ -4,7 +4,7 @@ tags:
   - '#llm-evidence-classification'
 date: '2026-06-10'
 modified: '2026-08-07'
-body_hash: 'sha256:3f3c866d822185dffc1b9af50383ee8183b4c9baade173d9cac96c13a0cbeabd'
+body_hash: 'sha256:6185cce18998871c1d1fd577f7228cdef1e0a7e0aa4f04a50a3f4c802b8f6326'
 related:
   - "[[2026-06-10-llm-evidence-classification-research]]"
   - "[[2026-06-04-llm-ledger-classification-adr]]"
@@ -13,7 +13,7 @@ related:
   - "[[2026-04-17-attachment-service-adr]]"
 ---
 
-# `llm-evidence-classification` adr: `Evidence-aware LLM ledger classification (Stage-3): on-host/local-first reading; cloud only behind a consent gate; splitting in scope` | (**status:** `accepted, partially superseded`)
+# `llm-evidence-classification` adr: `Evidence-aware LLM ledger classification (Stage-3): on-host/local-first reading; cloud only behind a consent gate; splitting in scope` | (**status:** `accepted`)
 
 > **DECISION 2026-06-10 (operator ruling, binding).** The first draft treated taking
 > decrypted sensitive evidence out of secure storage (a decrypted temp file for the

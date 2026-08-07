@@ -5,11 +5,11 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:624832578a5c597f09b2f78833d83cc5e3bfd623c19f91965b4049e68a0eb534'
+body_hash: 'sha256:be6f6fe0def6631a6a3c750a7c79b3fb263be0aa6d4d6e3a2475ce6c42295e6f'
 related:
   - '[[2026-08-07-stray-concept-sweep-audit]]'
 ---
-# `stray-concept-sweep` adr: representing a purchase refund on the IVA ledger axis (**status:** `proposed`)
+# `stray-concept-sweep` adr: `representing a purchase refund on the IVA ledger axis` | (**status:** `proposed`)
 
 ## Context
 
