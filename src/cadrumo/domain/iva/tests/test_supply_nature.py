@@ -118,9 +118,12 @@ def test_an_article_number_without_its_statute_derives_nothing() -> None:
     return the wrong law's answer.
     """
     assert match_statutory_citations("Operación exenta según art. 21") == ()
-    assert derive_supply_nature_from_citation(
-        printed_citation="Operación exenta según art. 21",
-    ).outcome is SupplyNatureDerivationOutcome.ABSENT
+    assert (
+        derive_supply_nature_from_citation(
+            printed_citation="Operación exenta según art. 21",
+        ).outcome
+        is SupplyNatureDerivationOutcome.ABSENT
+    )
 
     # The same sentence, qualified, does derive -- so the empty result above is
     # the qualifier's doing and not a broken matcher.
@@ -159,12 +162,18 @@ def test_free_prose_describing_the_lines_derives_nothing() -> None:
     because a table that answered these would answer the ambiguous ones too and
     give back no way to tell which kind of answer it produced.
     """
-    assert derive_supply_nature_from_citation(
-        printed_citation="Servicios de consultoría informática prestados durante marzo",
-    ).outcome is SupplyNatureDerivationOutcome.ABSENT
-    assert derive_supply_nature_from_citation(
-        printed_citation="Suministro de material de oficina: 40 cajas de folios",
-    ).outcome is SupplyNatureDerivationOutcome.ABSENT
+    assert (
+        derive_supply_nature_from_citation(
+            printed_citation="Servicios de consultoría informática prestados durante marzo",
+        ).outcome
+        is SupplyNatureDerivationOutcome.ABSENT
+    )
+    assert (
+        derive_supply_nature_from_citation(
+            printed_citation="Suministro de material de oficina: 40 cajas de folios",
+        ).outcome
+        is SupplyNatureDerivationOutcome.ABSENT
+    )
 
 
 def test_an_article_governing_both_limbs_establishes_nothing_while_reporting_what_it_read() -> None:
