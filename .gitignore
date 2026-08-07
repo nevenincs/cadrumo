@@ -388,6 +388,11 @@ cache/
 # Root-level captured command/gate output dumps (e.g. test_docs_output.txt
 # from an ad-hoc docs-gate run). Never a durable repo artifact.
 /*_output.txt
+# Any other loose root-level .txt drop (sl.txt, ret.txt, and whatever the next
+# agent names its scratch listing). The repo root carries no durable .txt, so
+# ad-hoc names do not each need their own rule. Already-tracked files are
+# unaffected by this.
+/*.txt
 # Root-level Playwright/browser accessibility-tree snapshot dumps
 # (e.g. rail-snap.md). Never a durable repo artifact.
 /*-snap.md
