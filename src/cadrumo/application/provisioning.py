@@ -1082,7 +1082,16 @@ def cadrumo_selected_models(settings: Settings | None = None) -> frozenset[str]:
     contention snapshot and never acted on.
     """
     resolved = settings if settings is not None else load_settings()
-    return frozenset({resolved.cadrumo_llm_ollama_vision_model, resolved.cadrumo_llm_ollama_text_model})
+    # Every configured role, not a hand-picked pair: a role whose model is left
+    # out here is one Cadrumo can load but never release, so the set is the
+    # union of the role settings and grows with them.
+    return frozenset(
+        {
+            resolved.cadrumo_llm_ollama_vision_model,
+            resolved.cadrumo_llm_ollama_text_model,
+            resolved.cadrumo_llm_ollama_mapping_model,
+        }
+    )
 
 
 def _matches_selected(name: str, selected: frozenset[str]) -> bool:

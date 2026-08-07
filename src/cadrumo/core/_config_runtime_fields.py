@@ -66,6 +66,21 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
             "selects from the registry allow-list; it never emits a regulated number"
         ),
     )
+    cadrumo_llm_ollama_mapping_model: str = Field(
+        default=default_model_runtime_id(ModelRole.COLUMN_ROLE_MAPPING),
+        description=(
+            "Local Ollama model used to name what each column of a delimited table "
+            "holds, from its header strings alone. Deliberately its own setting rather "
+            "than sharing the text one: column-role mapping is strictly EASIER than the "
+            "text read -- a selection over a short closed vocabulary given a handful of "
+            "short headers, not a document read -- so it must be sizeable DOWN "
+            "independently. Sharing the field would silently drag it upward the next "
+            "time the text role needs a larger model. It defaults to the same qwen3:1.7b "
+            "(Apache-2.0, ~1.4 GB), so it introduces no new hardware floor and no second "
+            "model to pull. This model never emits a regulated number; it selects from "
+            "the closed column-role vocabulary"
+        ),
+    )
     cadrumo_llm_model_runtime_memory_floor_bytes: int = Field(
         default=8 * 1024**3,
         gt=0,

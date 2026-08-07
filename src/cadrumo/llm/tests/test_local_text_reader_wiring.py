@@ -98,13 +98,37 @@ def test_the_text_model_default_sits_under_the_declared_hardware_floor() -> None
     loads and thrashes, or is killed mid-read, and the operator sees an
     unexplained timeout. A default that exceeded its own declared floor would
     make the probe report a capable machine for a model it cannot run.
+
+    Asserted as the PROPERTY, read from the catalogue, rather than against
+    pinned model names. The pinned form reddened the moment the defaults moved
+    for an unrelated reason (a licence correction), which taught nothing about
+    the floor and had to be swept by hand; the property survives any default
+    that still respects it.
     """
+    from ...core import ModelRole, model_candidate
     from ...core.config import load_settings
 
     settings = load_settings()
+    floor = settings.cadrumo_llm_model_runtime_memory_floor_bytes
 
-    assert settings.cadrumo_llm_ollama_text_model == "qwen2.5:3b"
-    # The text sibling of the vision default: a machine provisioned for one is
-    # provisioned for the other.
-    assert settings.cadrumo_llm_ollama_vision_model.startswith("qwen2.5")
-    assert settings.cadrumo_llm_model_runtime_memory_floor_bytes >= 8 * 1024**3
+    for configured, role in (
+        (settings.cadrumo_llm_ollama_text_model, ModelRole.TEXT_EXTRACTION),
+        (settings.cadrumo_llm_ollama_vision_model, ModelRole.VISION_TRANSCRIPTION),
+        (settings.cadrumo_llm_ollama_mapping_model, ModelRole.COLUMN_ROLE_MAPPING),
+    ):
+        candidate = model_candidate(configured)
+        assert candidate is not None, f"the {role.value} default {configured!r} is not catalogued"
+        assert candidate.serves(role)
+        assert candidate.memory_requirement_bytes < floor, (
+            f"the {role.value} default {configured!r} declares "
+            f"{candidate.memory_requirement_bytes} bytes against a floor of {floor}"
+        )
+
+    # The text roles must stay hostable on a machine provisioned for the vision
+    # default, so neither may be the heavier model.
+    vision = model_candidate(settings.cadrumo_llm_ollama_vision_model)
+    text = model_candidate(settings.cadrumo_llm_ollama_text_model)
+    mapping = model_candidate(settings.cadrumo_llm_ollama_mapping_model)
+    assert vision is not None and text is not None and mapping is not None
+    assert text.memory_requirement_bytes <= vision.memory_requirement_bytes
+    assert mapping.memory_requirement_bytes <= text.memory_requirement_bytes

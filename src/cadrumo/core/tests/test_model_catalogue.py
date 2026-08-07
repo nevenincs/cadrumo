@@ -71,6 +71,7 @@ def test_shipped_settings_defaults_are_the_catalogued_commercial_defaults() -> N
     for field_value, role in (
         (settings.cadrumo_llm_ollama_vision_model, ModelRole.VISION_TRANSCRIPTION),
         (settings.cadrumo_llm_ollama_text_model, ModelRole.TEXT_EXTRACTION),
+        (settings.cadrumo_llm_ollama_mapping_model, ModelRole.COLUMN_ROLE_MAPPING),
     ):
         candidate = model_candidate(field_value)
         assert candidate is not None, f"settings default {field_value!r} is not in the catalogue"
@@ -167,6 +168,37 @@ def test_default_runtime_ids_resolve_and_serve_their_role() -> None:
         candidate = model_candidate(default_model_runtime_id(role))
         assert candidate is not None
         assert candidate.serves(role)
+
+
+def test_column_role_mapping_is_served_only_by_text_candidates() -> None:
+    """The mapper reads header strings, so a vision model is the wrong tier for it.
+
+    A delimited export already IS text. Admitting a vision candidate to this
+    role would let selection resolve the easiest job in the product to the
+    heaviest model class it knows, which is the exact direction the operator
+    directive bars.
+    """
+    mapping = candidates_for_role(ModelRole.COLUMN_ROLE_MAPPING)
+    assert mapping
+    for candidate in mapping:
+        assert not candidate.serves(ModelRole.VISION_TRANSCRIPTION), (
+            f"{candidate.runtime_id} serves column-role mapping and vision transcription; "
+            f"the mapper must not be able to resolve to a vision-tier model"
+        )
+
+
+def test_the_mapping_default_is_no_heavier_than_the_text_default() -> None:
+    """Column-role mapping is the easier job, so it must never cost more.
+
+    Pins the sizing argument itself rather than the model name: mapping is a
+    selection over a short closed vocabulary, text extraction is a document
+    read, and a mapping default above the text default would mean the easier
+    task had silently been sized up.
+    """
+    mapping = model_candidate(default_model_runtime_id(ModelRole.COLUMN_ROLE_MAPPING))
+    text = model_candidate(default_model_runtime_id(ModelRole.TEXT_EXTRACTION))
+    assert mapping is not None and text is not None
+    assert mapping.memory_requirement_bytes <= text.memory_requirement_bytes
 
 
 def test_model_candidate_returns_none_for_an_uncatalogued_id() -> None:

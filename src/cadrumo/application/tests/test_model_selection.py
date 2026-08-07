@@ -352,6 +352,26 @@ def test_the_shipped_settings_defaults_are_what_selection_resolves_to() -> None:
     profile = _cuda_profile(14 * _GIB)
     vision = select_model_for_role(ModelRole.VISION_TRANSCRIPTION, profile=profile)
     text = select_model_for_role(ModelRole.TEXT_EXTRACTION, profile=profile)
+    mapping = select_model_for_role(ModelRole.COLUMN_ROLE_MAPPING, profile=profile)
     assert vision.runtime_id == settings.cadrumo_llm_ollama_vision_model
     assert text.runtime_id == settings.cadrumo_llm_ollama_text_model
+    assert mapping.runtime_id == settings.cadrumo_llm_ollama_mapping_model
     assert model_candidate(settings.cadrumo_llm_ollama_vision_model) is not None
+
+
+def test_the_mapping_role_never_resolves_to_a_vision_tier_model() -> None:
+    """On a machine with headroom for anything, the easiest job still gets the small model.
+
+    The concrete regression this guards: the mapper shipped inheriting the
+    general LLM default, a frontier-tier cloud model, for a task that reads a
+    handful of header strings. Selection must not be able to reproduce that on
+    the local tier either.
+    """
+    resolved = select_model_for_role(ModelRole.COLUMN_ROLE_MAPPING, profile=_cuda_profile(14 * _GIB))
+    assert resolved.selected
+    assert resolved.candidate is not None
+    assert not resolved.candidate.serves(ModelRole.VISION_TRANSCRIPTION)
+
+    text = select_model_for_role(ModelRole.TEXT_EXTRACTION, profile=_cuda_profile(14 * _GIB))
+    assert text.candidate is not None
+    assert resolved.candidate.memory_requirement_bytes <= text.candidate.memory_requirement_bytes

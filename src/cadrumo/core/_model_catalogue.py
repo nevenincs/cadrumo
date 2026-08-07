@@ -75,20 +75,31 @@ class ModelRole(StrEnum):
     """The distinct jobs a local model is selected for.
 
     Kept as roles rather than as one "the local model" axis because the
-    capability bars differ: two of the three need image input, and the text
-    role must be satisfiable on a machine that cannot host a vision model at
-    all. Each role resolves independently through
+    capability bars differ, and they differ in BOTH directions: only vision
+    transcription needs image input, and the two text roles must be satisfiable
+    on a machine that cannot host a vision model at all. Each role resolves
+    independently through
     :func:`~application.provisioning.select_model_for_role`.
+
+    The two text roles are not one role. Column-role mapping is *strictly
+    easier* than text extraction -- a selection over a short closed vocabulary
+    given a handful of short header strings, against reading a whole document's
+    text layer -- so it is kept separate precisely so it can be sized DOWN
+    independently rather than inheriting the harder role's model.
 
     Members:
         VISION_TRANSCRIPTION: Reading a scanned or photographed document page.
         TEXT_EXTRACTION: Classifying an already-extracted text layer.
-        TABULAR_MAPPING: Mapping a rendered table's cells to typed columns.
+        COLUMN_ROLE_MAPPING: Naming what each column of a delimited table
+            holds, from its header strings alone. A naming problem over text,
+            never a transcription problem over an image -- a delimited export
+            already IS text, so rasterising one to read it would be the defect,
+            not the design.
     """
 
     VISION_TRANSCRIPTION = "vision_transcription"
     TEXT_EXTRACTION = "text_extraction"
-    TABULAR_MAPPING = "tabular_mapping"
+    COLUMN_ROLE_MAPPING = "column_role_mapping"
 
 
 class LicenceVerification(StrEnum):
@@ -296,7 +307,7 @@ advised operator override rather than through automatic selection.
 MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
     ModelCandidate(
         runtime_id="moondream:1.8b",
-        roles=frozenset({ModelRole.VISION_TRANSCRIPTION, ModelRole.TABULAR_MAPPING}),
+        roles=frozenset({ModelRole.VISION_TRANSCRIPTION}),
         memory_requirement_bytes=1_700_000_000,
         max_context_tokens=2_048,
         licence=APACHE_2_0,
@@ -310,7 +321,7 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
     ),
     ModelCandidate(
         runtime_id="qwen3-vl:2b",
-        roles=frozenset({ModelRole.VISION_TRANSCRIPTION, ModelRole.TABULAR_MAPPING}),
+        roles=frozenset({ModelRole.VISION_TRANSCRIPTION}),
         memory_requirement_bytes=1_900_000_000,
         max_context_tokens=256_000,
         licence=APACHE_2_0,
@@ -322,7 +333,7 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
     ),
     ModelCandidate(
         runtime_id="qwen2.5vl:3b",
-        roles=frozenset({ModelRole.VISION_TRANSCRIPTION, ModelRole.TABULAR_MAPPING}),
+        roles=frozenset({ModelRole.VISION_TRANSCRIPTION}),
         memory_requirement_bytes=3_200_000_000,
         max_context_tokens=125_000,
         licence=QWEN_RESEARCH,
@@ -335,7 +346,7 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
     ),
     ModelCandidate(
         runtime_id="qwen2.5vl:7b",
-        roles=frozenset({ModelRole.VISION_TRANSCRIPTION, ModelRole.TABULAR_MAPPING}),
+        roles=frozenset({ModelRole.VISION_TRANSCRIPTION}),
         memory_requirement_bytes=6_000_000_000,
         max_context_tokens=125_000,
         licence=APACHE_2_0,
@@ -347,19 +358,22 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
     ),
     ModelCandidate(
         runtime_id="qwen3:1.7b",
-        roles=frozenset({ModelRole.TEXT_EXTRACTION}),
+        roles=frozenset({ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING}),
         memory_requirement_bytes=1_400_000_000,
         max_context_tokens=40_000,
         licence=APACHE_2_0,
         notes=(
-            "The text default. Replaces qwen2.5:3b for the same reason the vision default "
-            "flipped: the incumbent carries the Qwen Research licence. Licence read at "
-            "https://huggingface.co/Qwen/Qwen3-1.7B"
+            "The default for both text roles. Replaces qwen2.5:3b for the same reason the "
+            "vision default flipped: the incumbent carries the Qwen Research licence. It "
+            "also serves column-role mapping, which needs no larger model and no higher "
+            "memory floor -- a machine already provisioned for the text read is provisioned "
+            "for the mapper, so the mapper adds no hardware requirement at all. Licence "
+            "read at https://huggingface.co/Qwen/Qwen3-1.7B"
         ),
     ),
     ModelCandidate(
         runtime_id="qwen2.5:3b",
-        roles=frozenset({ModelRole.TEXT_EXTRACTION}),
+        roles=frozenset({ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING}),
         memory_requirement_bytes=1_900_000_000,
         max_context_tokens=32_768,
         licence=QWEN_RESEARCH,
@@ -376,7 +390,7 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
 DEFAULT_MODEL_BY_ROLE: Final[Mapping[ModelRole, str]] = {
     ModelRole.VISION_TRANSCRIPTION: "qwen3-vl:2b",
     ModelRole.TEXT_EXTRACTION: "qwen3:1.7b",
-    ModelRole.TABULAR_MAPPING: "qwen3-vl:2b",
+    ModelRole.COLUMN_ROLE_MAPPING: "qwen3:1.7b",
 }
 """The runtime id each role falls back to, and the source of the settings defaults.
 
