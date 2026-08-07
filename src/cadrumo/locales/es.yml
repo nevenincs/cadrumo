@@ -2283,12 +2283,6 @@ cli:
         state_help: 'Filtro de estado del snapshot: active, superseded, discarded
           o all'
         view_help: Mostrar un snapshot del borrador del modelo 100
-      deudas:
-        app_help: Instantáneas de deudas AEAT de solo lectura
-        latest_help: Muestra la instantánea de deudas más reciente
-        list_help: Lista las instantáneas de deudas guardadas
-        snapshot_id_help: Identificador de la instantánea, o un prefijo sin ambigüedad
-        view_help: Muestra una instantánea de deudas
       expediente_help: Identificador de expediente AEAT
       expedientes:
         app_help: Snapshots de expedientes AEAT de solo lectura
@@ -2317,13 +2311,6 @@ cli:
           solo amplía el recorrido: un par ausente de ella no prueba que no se presentara
           nada.'
         list_help: Listar declaraciones presentadas sin descargar artefactos
-        pull_all_help: Descargar en una sola pasada el historial que AEAT tiene de
-          este contribuyente.
-        pull_all_limit_help: Limita cuántas declaraciones se capturan en esta pasada.
-        pull_all_pairs_refused: '{count} par(es) de modelo/ejercicio no se pudieron
-          leer y NO se han contado como vacíos: {pairs}. Vuelva a ejecutar la orden
-          para reintentarlo; una lectura rechazada no prueba que no se presentara
-          nada.'
         pull_help: Descarga datos de declaraciones presentadas del registro autenticado
           de AEAT.
         pull_modelo_help: Limita esta descarga a este modelo.
@@ -6835,6 +6822,10 @@ errors:
       de antigüedad de la cartera y vuelva a intentarlo.
     refused_ledger_confirmation_blocked: Este documento tiene hallazgos que una persona
       debe resolver antes de poder confirmarlo.
+    refused_ledger_counterparty_establishment_conflict: Esta contraparte ya está confirmada
+      como establecida en otro territorio; retire el hecho confirmado antes de sustituirlo.
+    refused_ledger_counterparty_establishment_input: No se puede confirmar un hecho
+      de establecimiento con un identificador de contraparte que no valida.
     refused_ledger_evidence_input: Un dato de evidencia indicado infringe el contrato
       de la factura de compra. Corrige la entrada y vuelve a intentarlo.
     refused_ledger_evidence_not_found: No existe ninguna evidencia de factura de compra
@@ -7314,25 +7305,6 @@ live:
     target_period_year_mismatch: El año objetivo no coincide con el ejercicio del
       periodo objetivo.
     year_range_invalid: El rango de ejercicios indicado no es válido.
-  filed:
-    pull_all:
-      denominator_note_profile: Medido frente a {expected} par(es) que los datos declarados
-        por el contribuyente esperan. Otros {offered_only} par(es) proceden solo de
-        la lista de opciones que ofrece AEAT y no sustentan ninguna afirmación de
-        cobertura.
-      denominator_note_register_only: 'Sin denominador específico del contribuyente:
-        los {offered_only} par(es) recorridos proceden de la lista de opciones que
-        ofrece AEAT, cuyo alcance para este NIF no está confirmado. Esta pasada no
-        mide nada.'
-      expected_but_not_found: 'Su perfil declarado espera una presentación en {count}
-        par(es) de modelo/ejercicio donde el registro de AEAT no devolvió ninguna:
-        {pairs}. Compruebe si llegaron a presentarse.'
-      found_more_than_expected: El registro de AEAT contiene {raw_count} presentaciones
-        del modelo {modelo} {period} {ejercicio}; se conservó el registro más reciente
-        ({expediente}) y {superseded} anterior(es) quedaron sustituidas.
-      recapture_divergence: 'Volver a capturar el modelo {modelo} {period} {ejercicio}
-        cambió {count} valor(es) de casilla observados anteriormente: {casillas}.
-        AEAT puede tener una declaración rectificada.'
 llm:
   evidence:
     consent:

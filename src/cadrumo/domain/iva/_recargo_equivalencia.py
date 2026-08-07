@@ -44,7 +44,6 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError, IvaValidationError
-from ._schema import IvaRateKind
 
 
 class LivaArt161RecargoRates(BaseModel):

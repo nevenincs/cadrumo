@@ -547,6 +547,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.ledger._counterparty_establishment.CounterpartyEstablishmentInputError",
+        ErrorCode(
+            code="REFUSED_LEDGER_COUNTERPARTY_ESTABLISHMENT_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_counterparty_establishment_input",
+            default_suggestion="aeat app ledger evidence review list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.ledger._counterparty_establishment.CounterpartyEstablishmentConflictError",
+        ErrorCode(
+            code="REFUSED_LEDGER_COUNTERPARTY_ESTABLISHMENT_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_counterparty_establishment_conflict",
+            default_suggestion="aeat app ledger evidence review list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.ledger._evidence.PurchaseInvoiceEvidenceInputError",
         ErrorCode(
             code="REFUSED_LEDGER_EVIDENCE_INPUT",

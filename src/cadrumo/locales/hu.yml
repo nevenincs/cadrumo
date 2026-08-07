@@ -2220,12 +2220,6 @@ cli:
         state_help: 'Pillanatkép-állapot szűrő: active, superseded, discarded vagy
           all.'
         view_help: Egyetlen Modelo 100 borrador pillanatkép megjelenítése.
-      deudas:
-        app_help: AEAT deudas pillanatképek, csak olvasásra
-        latest_help: A legutóbbi deudas pillanatkép megjelenítése
-        list_help: Listázza a tárolt deudas pillanatképeket
-        snapshot_id_help: Pillanatkép azonosító, vagy egyértelmű előtag
-        view_help: Egy deudas pillanatkép megtekintése
       expediente_help: AEAT expediente azonosító.
       expedientes:
         app_help: Csak olvasható AEAT expediente pillanatképek.
@@ -2252,11 +2246,6 @@ cli:
           szélesíti a bejárást: egy hiányzó pár nem bizonyítja, hogy semmit sem nyújtottak
           be.'
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
-        pull_all_help: Egy menetben letölti az adózó AEAT-nál tárolt előzményeit.
-        pull_all_limit_help: Korlátozza, hány bevallást rögzít ez a menet.
-        pull_all_pairs_refused: '{count} modelo/ejercicio pár nem volt olvasható,
-          és NEM üresként jelentettük őket: {pairs}. Futtassa újra az újrapróbálkozáshoz;
-          az elutasítás nem bizonyítja, hogy semmit sem nyújtottak be.'
         pull_help: Letölti a benyújtott nyilatkozatok adatait a hitelesített AEAT
           nyilvántartásból.
         pull_modelo_help: Korlátozza ezt a letöltést erre a modellre.
@@ -6696,6 +6685,10 @@ errors:
       újra.
     refused_ledger_confirmation_blocked: Ezen a dokumentumon olyan észrevételek vannak,
       amelyeket embernek kell megválaszolnia a megerősítés előtt.
+    refused_ledger_counterparty_establishment_conflict: Ez a partner már megerősítetten
+      más területen letelepedett; a csere előtt vonja vissza a megerősített tényt.
+    refused_ledger_counterparty_establishment_input: A letelepedési tény nem erősíthető
+      meg olyan partnerazonosítóval, amely nem érvényes.
     refused_ledger_evidence_input: Egy megadott igazolás-bemenet sérti a vásárlási
       számla szerződést. Javítsa a bemenetet, és próbálja újra.
     refused_ledger_evidence_not_found: Nem létezik vásárlási számla igazolás a megadott
@@ -7165,23 +7158,6 @@ live:
     target_period_year_mismatch: A célidőszak éve nem egyezik.
     year_range_invalid: A kezdő évnek kisebbnek vagy egyenlőnek kell lennie a záró
       évvel.
-  filed:
-    pull_all:
-      denominator_note_profile: '{expected} pár alapján mérve, amelyeket az adózó
-        saját bejelentett adatai várnak. További {offered_only} pár kizárólag az AEAT
-        által felajánlott listából származik, és nem támaszt alá lefedettségi állítást.'
-      denominator_note_register_only: 'Nincs adózóspecifikus nevező: mind a {offered_only}
-        bejárt pár az AEAT által felajánlott listából származik, amelynek e NIF-re
-        való szűkítése nincs megerősítve. Ez a menet semmit sem mér.'
-      expected_but_not_found: 'A bejelentett profilja {count} modelo/ejercicio pár
-        esetén vár benyújtást, ahol az AEAT nyilvántartása egyet sem adott vissza:
-        {pairs}. Ellenőrizze, benyújtották-e ezeket.'
-      found_more_than_expected: Az AEAT nyilvántartása {raw_count} benyújtást tartalmaz
-        a {modelo} modelo {period} {ejercicio} időszakára; a legutóbbi bejegyzés ({expediente})
-        maradt meg, és {superseded} korábbi felülíródott.
-      recapture_divergence: 'A {modelo} modelo {period} {ejercicio} újbóli rögzítése
-        {count} korábban megfigyelt casilla-értéket változtatott meg: {casillas}.
-        Az AEAT-nál javított bevallás lehet.'
 llm:
   evidence:
     consent:

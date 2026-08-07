@@ -106,7 +106,7 @@ from typing import TYPE_CHECKING, Final, NoReturn, Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.inbound.einvoice import EInvoiceXmlParseError, parse_einvoice_document
+from ...adapters.inbound.einvoice import EInvoiceXmlParseError, ParsedEInvoice, parse_einvoice_document
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice, resolve_iva_rate_slot
@@ -114,6 +114,7 @@ from ...core import (
     PDF_CONTAINER_SHAPES,
     STRICT_FROZEN_CONFIG,
     STRUCTURED_DOCUMENT_SHAPES,
+    DocumentShape,
     DraftDiscrepancyKind,
     FieldGroundingOutcome,
     FieldOrigin,
@@ -901,6 +902,92 @@ def _refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:
     )
 
 
+# Draft field -> the attribute the parsed record carries it under. Every entry
+# is a value copied straight out of the document's own record, so every entry
+# earns an envelope; a derived or assembled value would not belong here.
+_STRUCTURED_ENVELOPE_FIELDS: Final = (
+    "supplier_tax_id",
+    "supplier_name",
+    "supplier_postal_code",
+    "customer_tax_id",
+    "customer_name",
+    "customer_postal_code",
+    "invoice_number",
+    "invoice_series",
+    "invoice_date",
+    "currency",
+    "taxable_base",
+    "iva_amount",
+    "grand_total",
+    "recargo_amount",
+    "regime_legend",
+)
+
+# The element a field is read from, per document shape, for the operator's note.
+# Populated only where the path has been confirmed against a real specimen of
+# that format: a path stated from memory would be a navigation instruction that
+# sends an operator to an element the document does not have, and a wrong
+# location is worse than none because it reads as authoritative. Fields absent
+# here fall back to naming the shape and the field, which is always true.
+_STRUCTURED_ELEMENT_PATHS: Final[dict[str, dict[DocumentShape, str]]] = {
+    "supplier_postal_code": {
+        DocumentShape.XML_FACTURAE: "SellerParty/AddressInSpain/PostCode",
+        DocumentShape.XML_UBL: "cac:AccountingSupplierParty/cac:PostalAddress/cbc:PostalZone",
+        DocumentShape.XML_CII: "ram:SellerTradeParty/ram:PostalTradeAddress/ram:PostcodeCode",
+    },
+    "customer_postal_code": {
+        DocumentShape.XML_FACTURAE: "BuyerParty/AddressInSpain/PostCode",
+        DocumentShape.XML_UBL: "cac:AccountingCustomerParty/cac:PostalAddress/cbc:PostalZone",
+        DocumentShape.XML_CII: "ram:BuyerTradeParty/ram:PostalTradeAddress/ram:PostcodeCode",
+    },
+}
+
+
+def _structured_element_path(field: str, *, shape: DocumentShape) -> str:
+    """Return where in the record *field* was read from, for the operator's note."""
+    known = _STRUCTURED_ELEMENT_PATHS.get(field, {}).get(shape)
+    return known if known is not None else f"the {shape.value} record's {field}"
+
+
+def _structured_provenance(*, parsed: ParsedEInvoice, evidence: EvidenceInput) -> tuple[FieldProvenance, ...]:
+    """Return one provenance envelope per value the record actually stated.
+
+    Built for the same reason the reading lanes build theirs: provenance travels
+    every boundary to the operator, and this path carried none at all -- so the
+    values with the strongest claim in the system, read exactly with no model
+    anywhere near them, were the only ones arriving with no origin.
+
+    Only fields the record STATED get an envelope. An absent field has nothing to
+    describe, and an envelope asserting an origin for a value that was never
+    there would be provenance about nothing.
+
+    The anchor check runs against the record's own decoded text rather than a
+    transcription, because a machine-readable document has none -- see
+    :func:`~application.ledger.ground_structured_value` for why that is a
+    separate entry point rather than a synthesised transcription.
+    """
+    # Function-local for the same cycle-break reason the semantic path's
+    # grounding import is: the anchor module reaches back into this one for
+    # the envelope types. Read it exactly as if it were at module scope.
+    from ._grounding_anchor import ground_structured_value
+
+    source_text = evidence.data.decode("utf-8", errors="replace")
+    envelopes: list[FieldProvenance] = []
+    for field in _STRUCTURED_ENVELOPE_FIELDS:
+        value = getattr(parsed, field, None)
+        if value is None:
+            continue
+        envelopes.append(
+            ground_structured_value(
+                field=field,
+                value=value,
+                element_path=_structured_element_path(field, shape=parsed.shape),
+                source_text=source_text,
+            ),
+        )
+    return tuple(envelopes)
+
+
 def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> InvoiceDraft:
     """Read a structured e-invoice exactly into the line-carrying draft.
 
@@ -959,6 +1046,7 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
             for rate, base, cuota in parsed.iva_breakdown
         ),
         raw_text_length=len(evidence.data),
+        provenance=_structured_provenance(parsed=parsed, evidence=evidence),
     )
 
     # Exactness is not correctness, and conflating the two is what left this path

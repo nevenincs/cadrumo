@@ -10,13 +10,16 @@ compensation came from.
 
 from __future__ import annotations
 
+import ast
+import importlib
+from pathlib import Path
 from types import ModuleType
 
 import pytest
 
+from .... import application, domain
 from ....core import validated_casilla_id
-from ....domain import iva_compensation as iva_compensation_policy
-from .. import _binding_prefill, _iva_compensation_casillas, _iva_compensation_history
+from .. import _iva_compensation_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -30,13 +33,10 @@ _SHARED_M303_CONSTANTS = (
     "M303_RESULTADO_FINAL_CASILLA",
 )
 
-#: Every module that names a compensation casilla token: the two calculations
-#: consumers and the domain carry-forward policy that decides the figures.
-_TOKEN_NAMING_MODULES = (
-    _binding_prefill,
-    _iva_compensation_history,
-    iva_compensation_policy,
-)
+#: The packages swept for modules that name a compensation casilla token. Both
+#: layers that model the compensation chain, production modules only: test
+#: support legitimately types casilla ids into fixtures.
+_SWEPT_PACKAGES = (application, domain)
 
 
 def _authority_by_token() -> dict[str, str]:
@@ -48,28 +48,96 @@ def _authority_by_token() -> dict[str, str]:
     return tokens
 
 
+def _module_name_for(source: Path, *, package: ModuleType) -> str:
+    root = Path(package.__file__).parent  # ty: ignore[invalid-argument-type]
+    relative = source.relative_to(root).with_suffix("")
+    parts = relative.parts[:-1] if relative.name == "__init__" else relative.parts
+    return ".".join((package.__name__, *parts))
+
+
+def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
+    """Discover every production module that names a compensation casilla token.
+
+    Discovery is an AST sweep for the two ways a module can name a token -- a
+    string literal equal to one, or an import of an authority constant -- and it
+    replaces a hand-listed tuple of subjects. The list this supersedes named
+    three modules while nine twin declarations stood outside it, one set of them
+    on the live local filing path; a gate whose subjects are enumerated cannot
+    see a tenth twin appear in a module nobody thought to add.
+
+    The sweep parses rather than imports, so a module is discovered whether or
+    not importing it is cheap, and only the discovered few are then imported for
+    the identity verdict.
+    """
+    tokens = set(_authority_by_token())
+    authority_names = set(_iva_compensation_casillas.__all__)
+    discovered: dict[str, ModuleType] = {}
+    for package in _SWEPT_PACKAGES:
+        root = Path(package.__file__).parent  # ty: ignore[invalid-argument-type]
+        for source in sorted(root.rglob("*.py")):
+            if "tests" in source.parts:
+                continue
+            tree = ast.parse(source.read_text(encoding="utf-8"))
+            literal = any(
+                isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in tokens
+                for node in ast.walk(tree)
+            )
+            imported = any(
+                isinstance(node, ast.ImportFrom)
+                and any(alias.name in authority_names for alias in node.names)
+                for node in ast.walk(tree)
+            )
+            if not (literal or imported):
+                continue
+            name = _module_name_for(source, package=package)
+            discovered[name] = importlib.import_module(name)
+    return tuple(discovered.values())
+
+
+_TOKEN_NAMING_MODULES = _discover_token_naming_modules()
+
+
+def test_the_sweep_finds_the_declaring_authority_itself() -> None:
+    """Discovery is non-vacuous, proven by the one module it cannot fail to find.
+
+    The authority declares the vocabulary as literals, so a sweep that returns
+    it is reaching real source. A sweep that silently matched nothing -- a wrong
+    package root, a changed layout -- would otherwise leave every parametrised
+    identity check with no cases and the gate green over nine twins.
+    """
+    assert _authority_by_token(), "the authority exports no tokens, so every check below is vacuous"
+    assert _iva_compensation_casillas in _TOKEN_NAMING_MODULES
+
+
 @pytest.mark.parametrize("module", _TOKEN_NAMING_MODULES, ids=lambda module: module.__name__.rsplit(".", 1)[-1])
 def test_no_module_declares_a_second_object_for_an_authority_token(module: ModuleType) -> None:
     """A module naming a compensation casilla holds the authority's object, not a twin.
 
     Identity, not equality: two independently declared constants comparing equal
     today is exactly the state that drifted, because a rename applies to one and
-    silently leaves the other resolving.
+    silently leaves the other resolving. The consequence is not cosmetic -- the
+    local filing path re-stamps the end-of-period available casilla for a
+    refunded period, so a module resolving a stale literal stops finding the row
+    it must correct and a refunded period carries its full generated credit into
+    the next quarter.
 
-    This checks the drift property rather than an inventory of which module
-    imports which constant. An inventory asserts something the code is free to
-    change for good reasons -- a consumer that stops reading a casilla directly
-    because a policy now derives it for them -- and it went stale for exactly
-    that reason, reddening on a correct change while never noticing that the
-    domain policy held its own twin of four of these tokens all along. A module
-    that simply does not name a token is silent here; a module that names it
-    with its own object fails.
+    This checks the drift property rather than an inventory, in both directions
+    now. An inventory of which module imports which constant asserts something
+    the code is free to change for good reasons -- a consumer that stops reading
+    a casilla directly because a policy now derives it for them -- and it went
+    stale for exactly that reason. An inventory of which modules to WATCH has
+    the same defect one level up, and had it: it named three while the domain
+    policy held its own twin of four tokens and three further modules held nine
+    between them. The subjects are now discovered, so a module that does not
+    name a token is absent rather than passing, and a new one is watched the
+    moment it names one.
 
     One blind spot, stated rather than papered over: CPython interns short
     string literals, so a twin declaration of the bare-numeric token
     ``M303_RESULTADO_FINAL_CASILLA`` ("71") is the SAME object as the
-    authority's and passes this check. Identity cannot discriminate there for
-    any owner; only the dotted registry ids are covered.
+    authority's and passes this check. Discovery does not close that -- it finds
+    such a module, and the identity verdict then cannot discriminate its twin.
+    Only the dotted registry ids are covered.
     """
     authority = _authority_by_token()
     named = {

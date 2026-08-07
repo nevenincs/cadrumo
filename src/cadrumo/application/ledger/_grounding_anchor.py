@@ -94,6 +94,7 @@ __all__ = [
     "ground_ambiguous_candidates",
     "ground_anchored_value",
     "ground_self_reported_anchor",
+    "ground_structured_value",
     "normalise_for_anchor_search",
     "printed_excerpt_occurs",
     "strip_printed_unit",
@@ -298,6 +299,31 @@ def evaluate_anchor(
         to a different value is ``CONTRADICTED``, which is a stronger and more
         actionable statement than merely failing to ground.
     """
+    return _evaluate_anchor_against(value=value, anchor=anchor, source_text=transcription.text, source="transcription")
+
+
+def _evaluate_anchor_against(
+    *,
+    value: Decimal | str,
+    anchor: str,
+    source_text: str,
+    source: str,
+) -> AnchorEvaluation:
+    """Run the anchor check against any source text, naming it in the detail.
+
+    The check itself is the same two-part test wherever the text came from: the
+    anchor must OCCUR in the source, and the value must equal the deterministic
+    parse of the anchor. What differs between reading lanes is only which text is
+    authoritative -- a transcription for a rendered page, the record's own bytes
+    for a machine-readable document -- so that is the parameter, and the lanes
+    share one implementation rather than growing two that can drift.
+
+    Args:
+        value: The typed value the reader proposes.
+        anchor: The verbatim form claimed as its source.
+        source_text: The authoritative text to look for the anchor in.
+        source: What that text is, for the operator-facing detail line.
+    """
     if not anchor.strip():
         return AnchorEvaluation(
             outcome=FieldGroundingOutcome.UNANCHORED,
@@ -305,7 +331,7 @@ def evaluate_anchor(
             detail="the candidate carries no anchor, so nothing in the document can be pointed at",
         )
 
-    haystack = normalise_for_anchor_search(transcription.text)
+    haystack = normalise_for_anchor_search(source_text)
     needle = normalise_for_anchor_search(anchor)
     anchor_found = _occurs_as_a_whole_printed_token(needle, haystack)
 
@@ -313,7 +339,7 @@ def evaluate_anchor(
         return AnchorEvaluation(
             outcome=FieldGroundingOutcome.UNANCHORED,
             anchor_found=False,
-            detail=f"the anchor {anchor!r} does not occur in the document's transcription",
+            detail=f"the anchor {anchor!r} does not occur in the document's {source}",
         )
 
     if isinstance(value, str):
@@ -353,6 +379,65 @@ def evaluate_anchor(
         parsed_anchor=parsed,
         parse_was_vacuous=normalise_for_anchor_search(str(value)) == needle,
         detail=f"anchored to {anchor!r}, which parses to {parsed}",
+    )
+
+
+def ground_structured_value(
+    *,
+    field: str,
+    value: Decimal | str,
+    element_path: str,
+    source_text: str,
+) -> FieldProvenance:
+    """Return the envelope for one value read from a document's own record.
+
+    The structured sibling of :func:`ground_anchored_value`, and here for the same
+    reason: a path that constructs a :class:`FieldProvenance` itself and hand-sets
+    ``ANCHORED`` is asserting the check instead of running it. It is a separate
+    entry point rather than a parameter on that one because the transcription this
+    module normally checks against does not exist for a machine-readable document
+    -- there are no pages, no reading order and no transcriber -- and a
+    :class:`~application.ledger.DocumentTranscription` synthesised to satisfy the
+    signature would have to state a page count and a reader that never existed.
+    Both routes run the same two-part check underneath.
+
+    **The anchor is the record's own verbatim text, never the element path.** The
+    anchor field means the form the value was read from, and a downstream consumer
+    reads it as evidence about what the document states. A schema path is a
+    location: true, useful, and not evidence. It rides in the note instead, where
+    an operator can still use it to find the value and nothing can mistake it for
+    a printed form.
+
+    **The check is real, not ceremonial.** The parser produced the value; this
+    looks for its verbatim form in the source bytes independently, and re-derives
+    a numeric value from the anchor. A projection that mangled a figure on the way
+    through, or a reader that pointed at an element the document does not carry,
+    fails it. What it cannot do is prove the reader chose the RIGHT element -- the
+    same limit the transcription lane has, where an anchor found somewhere in the
+    page does not prove it was found in the right place.
+
+    Args:
+        field: Name of the :class:`~application.ledger.InvoiceDraft` field.
+        value: The typed value the parser produced.
+        element_path: Where in the record it came from, for the operator's note.
+        source_text: The record's own text, decoded from the source bytes.
+
+    Returns:
+        The envelope, stamped :attr:`~core.FieldOrigin.EXACT_STRUCTURED`.
+    """
+    anchor = value if isinstance(value, str) else str(value)
+    evaluation = _evaluate_anchor_against(
+        value=value,
+        anchor=anchor,
+        source_text=source_text,
+        source="record",
+    )
+    return FieldProvenance(
+        field=field,
+        origin=FieldOrigin.EXACT_STRUCTURED,
+        grounding=evaluation.outcome,
+        anchor=anchor if evaluation.anchor_found else None,
+        note=f"read from {element_path}; {evaluation.detail}",
     )
 
 

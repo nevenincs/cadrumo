@@ -148,3 +148,33 @@ def test_the_anchor_is_the_printed_form_and_never_the_element_path(
     assert "/" not in postal.anchor
     # The location is still recorded, just not where evidence goes.
     assert "PostCode" in postal.note
+
+
+def test_an_assembled_value_is_not_vouched_for_as_verbatim(
+    isolated_settings: Settings,
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+) -> None:
+    """A value the reader BUILT cannot claim to have been read verbatim.
+
+    The discriminating case, and it was found in the bundled corpus rather than
+    manufactured. Facturae states a natural person's name across three elements,
+    and the reader joins them into the single display name the document means --
+    so the assembled string appears nowhere in the record, and the check refuses
+    to vouch for it. That is the mechanism working, not a defect in it: the
+    joined name is the right value to carry and the wrong thing to call verbatim.
+
+    Without this case the anchor check could be satisfied on every field of the
+    corpus, and a check that never fails is indistinguishable from one that is
+    hardcoded to pass.
+    """
+    draft = _draft(_corpus_xml(), settings=isolated_settings, objects=secure_objects, tmp_path=tmp_path)
+
+    by_field = {envelope.field: envelope for envelope in draft.provenance}
+    supplier = by_field["supplier_name"]
+
+    assert draft.supplier_name is not None
+    assert supplier.grounding is FieldGroundingOutcome.UNANCHORED
+    assert supplier.anchor is None
+    # The value still reaches the operator; only the claim about it is withheld.
+    assert supplier.origin is FieldOrigin.EXACT_STRUCTURED

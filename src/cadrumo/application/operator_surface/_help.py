@@ -652,6 +652,14 @@ def _app_help() -> HelpDocument:
                         command="aeat app live filed pull-sources",
                         description=tr("cli.operator_surface.help.app.live_filed_capture_sources"),
                     ),
+                    HelpEntry(
+                        command="aeat app live filed discover",
+                        description=tr("cli.operator_surface.help.app.live_filed_discover"),
+                    ),
+                    HelpEntry(
+                        command="aeat app live filed pull-all",
+                        description=tr("cli.operator_surface.help.app.live_filed_pull_all"),
+                    ),
                 ),
             ),
         ),

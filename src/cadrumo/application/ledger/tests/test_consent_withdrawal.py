@@ -84,9 +84,19 @@ def _seed_transcription(profile: TestRuntimeProfile, *, text: str = "Factura Acm
     )
 
 
-def _local_reader(transcribed_text: str, /) -> tuple[InvoiceDraft, str]:
-    """An on-host reader: consumes the cached text, stamps a local transport."""
-    assert transcribed_text, "the reader must receive the cached transcription, not an empty string"
+def _local_reader(transcription: DocumentTranscription, /) -> tuple[InvoiceDraft, str]:
+    """An on-host reader: consumes the cached transcription, stamps a local transport.
+
+    Takes the ARTEFACT, matching the protocol. The parameter was a bare string
+    until the semantic stage began consuming the transcription, and the
+    truthiness assertion that guarded it then became near-vacuous: every model
+    instance is truthy, so it passed for any object at all. Asserting on the
+    cached TEXT restores what it was checking -- that the reader is handed the
+    transcription that was stored, rather than something reconstructed.
+    """
+    assert transcription.text.startswith("Factura Acme SL"), (
+        "the reader must receive the CACHED transcription, not a reconstructed or empty one"
+    )
     return InvoiceDraft(), _LOCAL_STAMP
 
 
@@ -120,7 +130,9 @@ def test_an_unreadable_stamp_is_surfaced_rather_than_assumed_clean() -> None:
     """
     assert artefact_is_cloud_derived(()) is True, "an unestablished transport must be surfaced"
     assert artefact_is_cloud_derived(("openai",)) is True
-    assert artefact_is_cloud_derived((LOCAL_TRANSPORT_LABEL, "openai")) is True, "any off-host field makes the document off-host"
+    assert artefact_is_cloud_derived((LOCAL_TRANSPORT_LABEL, "openai")) is True, (
+        "any off-host field makes the document off-host"
+    )
     assert artefact_is_cloud_derived((LOCAL_TRANSPORT_LABEL,)) is False
 
 

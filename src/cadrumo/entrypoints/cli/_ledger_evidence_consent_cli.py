@@ -41,6 +41,7 @@ from ._ledger_business_payloads import (
 )
 
 _UNRECALLABLE_LOCALE_KEY = "cli.app.ledger.evidence.consent.bytes_unrecallable"
+_NO_HISTORY_LOCALE_KEY = "cli.app.ledger.evidence.consent.no_history"
 _LIST_HELP_LOCALE_KEY = "cli.app.ledger.evidence.consent.list_help"
 _REDERIVE_HELP_LOCALE_KEY = "cli.app.ledger.evidence.consent.rederive_help"
 _REDERIVED_LOCALE_KEY = "cli.app.ledger.evidence.consent.rederived"
@@ -61,6 +62,26 @@ def _unrecallable_notice() -> Notice:
         code="evidence_consent_bytes_unrecallable",
         severity=NoticeSeverity.WARNING,
         message=tr(_UNRECALLABLE_LOCALE_KEY),
+    )
+
+
+def _no_history_notice() -> Notice:
+    """Build the affirmative "nothing has left this host" notice.
+
+    An empty survey has to SAY it is empty. Rows absent from a listing is not a
+    statement -- an operator who sees none cannot tell "nothing was ever sent
+    off-host" from "this verb did not report", and that indistinguishability is
+    how a crash on this exact surface went unnoticed until a lane probing a real
+    instance found it.
+
+    INFO rather than WARNING: an empty history is the desired posture, not a
+    problem. It rides the shared notice channel rather than a bespoke result
+    field, per the envelope contract, so the text and JSON surfaces cannot drift.
+    """
+    return Notice(
+        code="evidence_consent_no_history",
+        severity=NoticeSeverity.INFO,
+        message=tr(_NO_HISTORY_LOCALE_KEY),
     )
 
 
@@ -102,12 +123,18 @@ def _register_consent_list_command() -> None:
             f"{'-' if row.rederivable_on_host is None else row.rederivable_on_host}\t{row.provenance_stamp}"
             for row in survey.cloud_derived_artefacts
         )
+        # The caveat is unconditional; the empty statement is conditional on
+        # there genuinely being nothing, so it reports a fact rather than always
+        # firing over a listing that just showed something.
+        notices = [_unrecallable_notice()]
+        if not survey.consented_dispatches and not survey.cloud_derived_artefacts:
+            notices.append(_no_history_notice())
         _emit_envelope(
             ctx,
             command="ledger.evidence.consent.list",
             result=EvidenceConsentListResult.model_validate(payload),
             lines=lines,
-            notices=[_unrecallable_notice()],
+            notices=notices,
         )
 
 
@@ -153,8 +180,14 @@ def _register_consent_rederive_command() -> None:
                 read_on_host=_on_host_reader(),
             )
         except ValueError as exc:
-            _bad(tr(_REDERIVE_REFUSED_LOCALE_KEY, detail=str(exc)))
-            return
+            # RAISED, not merely constructed. `_bad` returns the exception rather
+            # than raising it, so calling it bare built an instructive refusal and
+            # threw it away: every re-derivation failure -- unknown artefact,
+            # absent cached transcription, a reader stamping a cloud transport --
+            # exited zero with nothing printed. Silence is the worst possible
+            # answer here, because the operator's next move is to trust that the
+            # artefact came back on-host when it never did.
+            raise _bad(tr(_REDERIVE_REFUSED_LOCALE_KEY, detail=str(exc))) from exc
         _emit_envelope(
             ctx,
             command="ledger.evidence.consent.rederive",

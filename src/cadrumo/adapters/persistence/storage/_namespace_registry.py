@@ -574,6 +574,27 @@ LEDGER_CONFIRMATION_RECORD_NAMESPACE = SecureObjectNamespaceDefinition(
     custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 
+LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="ledger_counterparty_establishment",
+    namespace="cadrumo.application.ledger.counterparty_establishment",
+    owner="cadrumo.application.ledger",
+    # An establishment fact names one of the taxpayer's trading counterparties
+    # and states where that party is established. The record therefore carries a
+    # counterparty tax identifier and a territorial claim about it, which is the
+    # same disclosure the confirmed invoice carries -- so it is stored at
+    # FINANCIAL sensitivity rather than at an audit-only classification.
+    #
+    # The object key is a digest of the canonical identifier rather than the
+    # identifier itself: an object key is addressing metadata, and putting a
+    # taxpayer's counterparty NIF in one would place a real tax identifier
+    # outside the encrypted payload.
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{counterparty_key}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
+)
+
 LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
     key="ledger_classification_rules",
     namespace="cadrumo.ledger.classification.rules",
@@ -1110,6 +1131,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         LEDGER_EXTRACTED_DOCUMENT_CACHE_NAMESPACE,
         LEDGER_EXTRACTION_DRAFT_NAMESPACE,
         LEDGER_CONFIRMATION_RECORD_NAMESPACE,
+        LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE,
         LEDGER_CLASSIFICATION_RULES_NAMESPACE,
         LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE,
         LIVE_M036_DECLARATION_NAMESPACE,
@@ -1170,6 +1192,7 @@ __all__ = [
     "IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE",
     "IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE",
     "LEDGER_CLASSIFICATION_RULES_NAMESPACE",
+    "LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE",
     "LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE",
     "LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE",
     "LIVE_DEUDAS_SNAPSHOT_NAMESPACE",
