@@ -8,14 +8,28 @@ thing: that a Playwright driver process reached an OS-terminal state within a
 bounded wait, rather than being merely detached or leaked. The message is the
 only part that is genuinely per-caller, so it is the only parameter.
 
-Deliberately preserves ``psutil.pid_exists`` rather than switching to the
-canonical :func:`~core.pid_is_alive`. That helper exists and would be the
-better probe on Windows -- it distinguishes a terminated-but-cached PID from a
-live one through ``OpenProcess``/``GetExitCodeProcess``, which a PID-existence
-check cannot -- but swapping it here changes what these live browser tests
-observe, and that is a behaviour decision rather than part of collapsing four
-copies into one. Raised separately; this module deliberately changes nothing
-about the probe.
+Probes with the canonical :func:`~core.pid_is_alive` rather than
+``psutil.pid_exists``. The distinction is not academic on the platform these
+tests run on: a PID-existence check reports a terminated-but-cached PID as
+still present until Windows reclaims the PID, while ``pid_is_alive`` asks
+``OpenProcess``/``GetExitCodeProcess`` whether the process actually exited.
+That is the exact case this loop is built around -- a driver that has
+terminated but whose PID the kernel has not yet released.
+
+The failure it removes is a false NEGATIVE, which is the expensive direction.
+A probe that keeps reporting a dead driver as alive does not let a leak
+through; it spins to the deadline and fails, so the symptom is an
+intermittently failing lifecycle test rather than a missed defect. Those get
+re-run, then marked slow, then weakened -- and the wall that was supposed to
+catch a genuinely leaked process is gone by attrition rather than by decision.
+Asking the kernel whether the process exited makes the wait terminate for the
+reason it is testing.
+
+``pid_is_alive`` treats an unreadable probe (permission denied, a PID this
+process cannot query) as ALIVE. That bias was chosen for lock reclamation,
+where assuming alive is the safe error, and it is also the safe error here: an
+unreadable PID fails this wait rather than passing it, so the helper still
+cannot green a leak it could not see.
 """
 
 from __future__ import annotations
@@ -23,8 +37,9 @@ from __future__ import annotations
 import asyncio
 import time
 
-import psutil
 import pytest
+
+from .....core import pid_is_alive
 
 #: Bound shared by every caller. Generous: these tests race a real Playwright
 #: driver teardown, so the wait must survive a slow machine without flaking,
@@ -59,7 +74,7 @@ async def wait_for_process_exit(
     """
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
-        if not psutil.pid_exists(pid):
+        if not pid_is_alive(pid):
             return
         await asyncio.sleep(_POLL_INTERVAL_SECONDS)
     pytest.fail(f"Playwright driver process {pid} remained alive after {after}")
