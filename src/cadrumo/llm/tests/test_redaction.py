@@ -23,8 +23,8 @@ from pathlib import Path
 
 import pytest
 
+from ...adapters.outbound.llm import LLMCache, UsageRecorder
 from ...tests.secure_sql import TestRuntimeProfile, read_db_at_rest_bytes
-from ...adapters.outbound.llm import LLMCache
 from .._models import (
     CachedEntry,
     LLMProvider,
@@ -32,7 +32,6 @@ from .._models import (
     LLMResponse,
     UsageRecord,
 )
-from ...adapters.outbound.llm import UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

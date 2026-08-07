@@ -9,11 +9,10 @@ Coordinates :class:`~adapters.outbound.llm.LLMRequest` inputs,
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import json
 import time
 from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 from pydantic import SecretStr
@@ -22,7 +21,6 @@ from ..core.config import Settings
 from ..core.hashing import sha256_hex
 from ..core.logging import get_logger
 from ..core.time import now
-
 from ._errors import LLMCacheError, LLMConfigError
 
 if TYPE_CHECKING:
@@ -85,9 +83,16 @@ class LLMClient:
         usage_recorder: UsageRecorder | None = None,
         run_telemetry_recorder: LLMRunTelemetryRecorder | None = None,
         prompt_registry: PromptRegistry | None = None,
-        caller: str = "cadrumo.adapters.outbound.llm.client",
+        caller: str = "cadrumo.llm.client",
         prompt_id: str = "adhoc",
     ) -> None:
+        # Deferred: the three persistence-touching stores live on the CORE side
+        # of the boundary and import this package for the shared error and model
+        # types, so binding them at module load would close the cycle. Resolved
+        # here, at construction, through that package's public facade -- the
+        # sanctioned cycle-break target, never a private submodule.
+        from ..adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
+
         self.settings = settings or Settings()
         self.cache = cache or LLMCache(root_dir=self.settings.cadrumo_llm_cache_dir)
         self.usage_recorder = usage_recorder or UsageRecorder(root_dir=self.settings.cadrumo_llm_usage_dir)

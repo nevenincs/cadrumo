@@ -319,7 +319,7 @@ def _run_vision_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
     """
     import httpx
 
-    from .llm import LLMProviderError
+    from ...llm import LLMProviderError
     from ...domain.transactions import LLMClassifierError
 
     try:
