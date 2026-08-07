@@ -625,11 +625,6 @@ def ledger_classify(
     apply: bool = typer.Option(False, "--apply", help=tr("cli.ledger.classify.apply_help")),
     saturate: bool = typer.Option(False, "--saturate", help=tr("cli.ledger.classify.saturate_help")),
     read_evidence: bool = typer.Option(False, "--read-evidence", help=tr("cli.ledger.classify.read_evidence_help")),
-    evidence_acknowledged: bool = typer.Option(
-        False,
-        "--evidence-acknowledged",
-        help=tr("cli.ledger.classify.evidence_acknowledged_help"),
-    ),
     vision_model: str | None = typer.Option(
         None,
         "--vision-model",
@@ -669,7 +664,6 @@ def ledger_classify(
             apply=apply,
             actor=actor,
             read_evidence=read_evidence,
-            evidence_acknowledged=evidence_acknowledged,
             vision_model=vision_model,
             reject=reject,
             reason=reason or "",
@@ -686,7 +680,6 @@ def ledger_classify(
             "apply": apply,
             "actor": actor,
             "read_evidence": read_evidence,
-            "evidence_acknowledged": evidence_acknowledged,
             "vision_model": vision_model,
             "reject": reject,
             "reason": reason or "",

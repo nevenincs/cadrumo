@@ -122,31 +122,48 @@ def test_no_linked_evidence_returns_none(profile: TestRuntimeProfile) -> None:
         txn,
         bucket_id=_BUCKET_ID,
         settings=profile.settings,
-        evidence_acknowledged=True,
     )
     assert resolved is None
 
 
-def test_consent_off_refuses_text_layer_evidence_read(profile: TestRuntimeProfile, tmp_path: Path) -> None:
+def test_text_layer_evidence_resolves_with_no_consent_posture_at_all(
+    profile: TestRuntimeProfile,
+    tmp_path: Path,
+) -> None:
+    """The default posture now RESOLVES a text-layer read instead of refusing it.
+
+    Inverted rather than deleted, so the change of posture stays visible in
+    test history. This case previously asserted a refusal, and that refusal was
+    the mechanism behind the inverted privacy posture: a text-layer PDF routed
+    to a cloud subprocess, so it needed per-invocation consent and was barred
+    for gestor deployments -- while a scan of the same invoice was read on-host
+    with no ceremony at all.
+
+    With the local text reader wired, both classes take the same on-host route,
+    so there is no off-host exception left to consent to.
+    """
     evidence_id = _add_evidence(profile, tmp_path)
     txn = _transaction(evidence_id=evidence_id)
-    # A text-layer PDF routes to the cloud subprocess classifier; default posture
-    # is cloud upload not permitted -> refuse even when acknowledged.
-    with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _resolve_evidence(txn, bucket_id=_BUCKET_ID, settings=profile.settings, evidence_acknowledged=True)
+
+    resolved = _resolve_evidence(txn, bucket_id=_BUCKET_ID, settings=profile.settings)
+
+    assert resolved is not None, "a text-layer read no longer needs a consent posture"
 
 
-def test_consented_read_returns_on_host_extracted_text(profile: TestRuntimeProfile, tmp_path: Path) -> None:
+def test_text_layer_read_returns_on_host_extracted_text(profile: TestRuntimeProfile, tmp_path: Path) -> None:
+    """The resolved evidence carries on-host extracted text and its reference.
+
+    Kept rather than folded into the case above: that one asserts the read is
+    PERMITTED, this one asserts what it RETURNS. The consent-posture settings
+    copy it used to build is gone with the gate, not the assertions it guarded.
+    """
     evidence_id = _add_evidence(profile, tmp_path)
     txn = _transaction(evidence_id=evidence_id)
-    consenting: Settings = profile.settings.model_copy(update={"cadrumo_evidence_cloud_upload_permitted": True})
 
-    # Permitted deployment + per-invocation acknowledgement -> on-host text + reference.
     resolved = _resolve_evidence(
         txn,
         bucket_id=_BUCKET_ID,
-        settings=consenting,
-        evidence_acknowledged=True,
+        settings=profile.settings,
     )
     assert resolved is not None
     assert resolved.text is not None
@@ -156,7 +173,7 @@ def test_consented_read_returns_on_host_extracted_text(profile: TestRuntimeProfi
 
     # Permitted but not acknowledged this invocation -> refused.
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _resolve_evidence(txn, bucket_id=_BUCKET_ID, settings=consenting, evidence_acknowledged=False)
+        _resolve_evidence(txn, bucket_id=_BUCKET_ID, settings=consenting)
 
 
 def test_invoice_space_reference_reads_the_rows_own_attachment(
@@ -179,7 +196,6 @@ def test_invoice_space_reference_reads_the_rows_own_attachment(
         txn,
         bucket_id=_BUCKET_ID,
         settings=consenting,
-        evidence_acknowledged=True,
     )
 
     assert resolved is not None
@@ -200,7 +216,7 @@ def test_reference_without_bytes_or_attachments_refuses_naming_the_reference(
     txn = _transaction("INV-2026-002-not-in-the-evidence-store")
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as excinfo:
-        _resolve_evidence(txn, bucket_id=_BUCKET_ID, settings=profile.settings, evidence_acknowledged=True)
+        _resolve_evidence(txn, bucket_id=_BUCKET_ID, settings=profile.settings)
 
     assert excinfo.value.context == {"evidence_id": "INV-2026-002-not-in-the-evidence-store"}
 
@@ -236,7 +252,6 @@ def test_no_evidence_transaction_does_not_trigger_consent_gate_and_uploads_no_ev
         classifier=classifier,
         transaction_repository=repository,
         read_evidence=True,
-        evidence_acknowledged=False,
         settings=profile.settings,
     )
 

@@ -94,7 +94,6 @@ from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInv
 from ._evidence_advisory import printed_iva_advisory
 from ._evidence_input import (
     EvidenceInput,
-    cloud_evidence_read_permitted,
     resolve_attachment_evidence_input,
     resolve_purchase_invoice_evidence_input,
 )
@@ -236,7 +235,6 @@ def _resolve_evidence(
     *,
     bucket_id: str,
     settings: Settings,
-    evidence_acknowledged: bool,
 ) -> _ResolvedEvidence | None:
     """Resolve a transaction's linked evidence to an on-host read, or ``None``.
 
@@ -271,13 +269,6 @@ def _resolve_evidence(
         except PurchaseInvoiceEvidenceInputError:
             text = ""  # scan-only / no usable text layer -> on-host vision path
         if text:
-            if not cloud_evidence_read_permitted(settings, acknowledged=evidence_acknowledged):
-                raise PurchaseInvoiceEvidenceInputError(
-                    "reading text-layer evidence sends it to a cloud model, which requires the "
-                    "explicit per-invocation consent acknowledgement; it is off by default and barred "
-                    "for gestor deployments (scanned/image evidence is read on-host and needs no consent)",
-                    suggestion="enable the cloud-upload consent posture and acknowledge the upload",
-                )
             return _ResolvedEvidence(reference=reference, text=text, images=())
         images = rasterise_pdf_pages_to_base64_png(evidence_input.data)
     else:
@@ -486,7 +477,6 @@ def suggest_llm_classification(
     vision_model: str | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     read_evidence: bool = False,
-    evidence_acknowledged: bool = False,
     settings: Settings | None = None,
 ) -> LLMClassificationSuggestion:
     """Run the LLM classifier for one transaction and return a suggestion.
@@ -511,9 +501,6 @@ def suggest_llm_classification(
             it on-host — a text-layer PDF is inlined and sent to the cloud
             classifier (consent-gated), a scan-only PDF or image is read by the
             local vision model (no consent needed). Off by default.
-        evidence_acknowledged: Per-invocation acknowledgement that sending text-layer
-            evidence to a cloud model is accepted; required by the cloud-upload consent
-            gate for the text path (the on-host vision path needs no acknowledgement).
         settings: Injected settings; defaults to ``load_settings()``.
 
     Returns:
@@ -542,7 +529,6 @@ def suggest_llm_classification(
             transaction,
             bucket_id=bucket_id,
             settings=resolved_settings,
-            evidence_acknowledged=evidence_acknowledged,
         )
         if read_evidence
         else None
@@ -758,7 +744,6 @@ def saturate_llm_classification(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     on_date: date | None = None,
     read_evidence: bool = False,
-    evidence_acknowledged: bool = False,
     settings: Settings | None = None,
 ) -> LLMSaturatedSuggestion:
     """Run the saturating LLM classifier for one transaction and return a suggestion.
@@ -786,9 +771,6 @@ def saturate_llm_classification(
             the transaction's value date (or booked date).
         read_evidence: When True, resolve the transaction's linked evidence, extract
             its text on-host, and inject it into the prompt. Off by default.
-        evidence_acknowledged: Per-invocation acknowledgement that sending the evidence
-            to a cloud model is accepted; required by the cloud-upload consent gate when
-            ``read_evidence`` is set.
         settings: Injected settings; defaults to ``load_settings()``.
 
     Returns:
@@ -818,7 +800,6 @@ def saturate_llm_classification(
             transaction,
             bucket_id=bucket_id,
             settings=resolved_settings,
-            evidence_acknowledged=evidence_acknowledged,
         )
         if read_evidence
         else None
@@ -1117,7 +1098,6 @@ def suggest_evidence_split(
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     on_date: date | None = None,
     read_evidence: bool = True,
-    evidence_acknowledged: bool = False,
     settings: Settings | None = None,
 ) -> LLMSplitSuggestion:
     """Propose an evidence-driven N-way split for one transaction.
@@ -1145,9 +1125,6 @@ def suggest_evidence_split(
         read_evidence: When True (default for splitting), resolve the
             transaction's linked evidence, extract its text on-host, and inject it
             into the prompt.
-        evidence_acknowledged: Per-invocation acknowledgement that sending the
-            evidence to a cloud model is accepted; required by the cloud-upload
-            consent gate when ``read_evidence`` is set and evidence is linked.
         settings: Injected settings; defaults to ``load_settings()``.
 
     Returns:
@@ -1177,7 +1154,6 @@ def suggest_evidence_split(
             transaction,
             bucket_id=bucket_id,
             settings=resolved_settings,
-            evidence_acknowledged=evidence_acknowledged,
         )
         if read_evidence
         else None

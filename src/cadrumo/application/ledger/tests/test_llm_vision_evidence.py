@@ -53,7 +53,6 @@ def test_scan_only_pdf_resolves_to_images_gestor_allowed_no_consent(
         _transaction(evidence_id),
         bucket_id=_BUCKET_ID,
         settings=gestor,
-        evidence_acknowledged=False,
     )
     assert resolved is not None
     assert resolved.text is None
@@ -69,7 +68,6 @@ def test_image_evidence_resolves_to_images(profile: TestRuntimeProfile, tmp_path
         _transaction(evidence_id),
         bucket_id=_BUCKET_ID,
         settings=profile.settings,
-        evidence_acknowledged=False,
     )
     assert resolved is not None
     assert resolved.text is None
@@ -117,7 +115,6 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
             _transaction(evidence_id),
             bucket_id=_BUCKET_ID,
             settings=profile.settings,
-            evidence_acknowledged=False,
         )
     assert "vision" in str(raised.value).lower()
     assert "llm_vision on" in (raised.value.suggestion or "")
