@@ -294,7 +294,15 @@ def test_modelo_390_construct_requires_recargo_grounding() -> None:
 def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> None:
     """Modelo 390 declares the same IVA flow-direction binding pattern as
     Modelo 303 — the annual resumen aggregates the same flows over the
-    full ejercicio rather than per quarter."""
+    full ejercicio rather than per quarter.
+
+    The ``*-base`` entries are the base-imponible half of that pattern: the
+    AEAT Diseño de Registros pairs a "Base imponible" box with every "Cuota"
+    box of the Reg. ordinario block, and Modelo 303 already draws its base
+    through the sibling ``modelo-303-iva-*-base`` bindings. They aggregate the
+    ``base_amount`` of the very same observation sets their cuota siblings
+    aggregate, and feed no annual total — the totals sum cuotas.
+    """
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions["2010-y-siguientes"]
     iva_binding_ids = {binding.id for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
@@ -302,7 +310,11 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
         "modelo-390-iva-repercutido-general-cuota",
         "modelo-390-iva-repercutido-reducido-cuota",
         "modelo-390-iva-repercutido-super-reducido-cuota",
+        "modelo-390-iva-repercutido-general-base",
+        "modelo-390-iva-repercutido-reducido-base",
+        "modelo-390-iva-repercutido-super-reducido-base",
         "modelo-390-iva-soportado-interiores-cuota",
+        "modelo-390-iva-soportado-interiores-base",
         "modelo-390-iva-soportado-importaciones-cuota",
         "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
         "modelo-390-iva-recargo-equivalencia-general-cuota",
