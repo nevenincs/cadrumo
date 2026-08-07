@@ -176,6 +176,10 @@ def test_zugferd_two_rate_document_does_not_collapse_to_one_pair() -> None:
     # may not accumulate into the invoice-level total.
     assert bases == parsed.taxable_base
     assert cuotas == parsed.iva_amount
+    # Both operands are optional; without these the sum raises on None instead of
+    # the assertion naming which component the parse failed to produce.
+    assert parsed.taxable_base is not None
+    assert parsed.iva_amount is not None
     assert parsed.taxable_base + parsed.iva_amount == parsed.grand_total
 
 

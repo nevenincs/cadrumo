@@ -27,6 +27,7 @@ import json
 from collections.abc import Iterator
 from io import BytesIO
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -93,7 +94,7 @@ def _add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str) -> s
     return json.loads(added.output)["result"]["evidence_id"]
 
 
-def _confirm(evidence_id: str) -> dict:
+def _confirm(evidence_id: str) -> dict[str, Any]:
     confirmed = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",

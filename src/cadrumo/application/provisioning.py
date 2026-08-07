@@ -286,7 +286,7 @@ def read_total_system_memory_bytes() -> int | None:
         status = _MemoryStatusEx()
         status.dwLength = ctypes.sizeof(_MemoryStatusEx)
         try:
-            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):  # type: ignore[attr-defined]
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
                 return int(status.ullTotalPhys)
         except (OSError, AttributeError):
             return None

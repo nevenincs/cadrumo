@@ -855,8 +855,8 @@ def _refuse_an_issued_document_the_filer_did_not_issue(
         profile = load_active_taxpayer_profile(workflow_state_repository().load())
     except WizardStatusError:
         return
-    if profile is None:
-        return
+    # The loader raises rather than returning None, and that failure is already
+    # handled by the except clause above, so the former None guard was unreachable.
     if counterparty_is_the_filer(counterparty_tax_id=extracted_supplier_tax_id, profile=profile):
         return
     raise PurchaseInvoiceEvidenceInputError(

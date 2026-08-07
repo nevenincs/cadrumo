@@ -270,7 +270,10 @@ def build_catalogue_invoice(
     # NOT_SUBJECT resolve to None and carry a zero cuota.
     pct = iva_rate_percentage(rate_slot)
     if lines:
-        if not all(isinstance(item, InvoiceLine) for item in lines):
+        # Deliberate runtime guard on a boundary sequence: the annotation does not
+        # constrain what a caller actually passes, and a foreign element would reach
+        # the totals arithmetic before anything noticed.
+        if not all(isinstance(item, InvoiceLine) for item in lines):  # pyright: ignore[reportUnnecessaryIsInstance]
             raise InvoiceValidationError("lines must be InvoiceLine records")
         base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
         iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))

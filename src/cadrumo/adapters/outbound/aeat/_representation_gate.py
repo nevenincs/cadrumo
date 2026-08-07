@@ -32,7 +32,7 @@ screen:
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
-from typing import NoReturn, cast
+from typing import NoReturn, Protocol, cast
 
 from bs4 import BeautifulSoup
 
@@ -142,7 +142,18 @@ def continue_button_selectors(
     return tuple(selectors)
 
 
-async def click_first_matching_selector(page: object, selectors: tuple[str, ...]) -> None:
+class ClickablePage(Protocol):
+    """The one page capability :func:`click_first_matching_selector` requires.
+
+    Declared rather than accepting ``object`` and reaching through it: the
+    function needs exactly one method, and saying so lets a caller pass any page
+    that provides it while keeping the call site checkable.
+    """
+
+    async def click(self, selector: str) -> None: ...
+
+
+async def click_first_matching_selector(page: ClickablePage, selectors: tuple[str, ...]) -> None:
     """Click the first selector in ``selectors`` that resolves.
 
     Tries each selector via ``page.click`` in order, catching
@@ -165,7 +176,7 @@ async def click_first_matching_selector(page: object, selectors: tuple[str, ...]
     last_error: PlaywrightError | None = None
     for selector in selectors:
         try:
-            await page.click(selector)  # type: ignore[attr-defined]
+            await page.click(selector)
             return
         except PlaywrightError as exc:
             last_error = exc
@@ -266,7 +277,10 @@ async def dismiss_pre303_alert_modal_if_present(
             on_declined_hidden_modal()
         return
     selectors = continue_button_selectors(alert_modal_selector, alert_continue_button_text, scoped_to_shown=True)
-    await click_first_matching_selector(page, selectors)
+    # The getattr probes above already established that this page provides
+    # click; this function stays duck-typed by design, returning early for a
+    # page that does not, so the capability is proven here rather than declared.
+    await click_first_matching_selector(cast("ClickablePage", page), selectors)
 
 
 __all__ = [

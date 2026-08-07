@@ -725,7 +725,10 @@ def _clave_probe_invoice(kind: InvoiceKind, category: IvaCategory) -> Invoice:
         iva_rate=IvaRate.EXEMPT,
         iva_amount=Decimal("0.00"),
     )
-    return Invoice(
+    # invoice_id is omitted deliberately: a before-validator on the model derives
+    # it from the identity-bearing fields, so supplying one here would test a
+    # different construction path than production uses.
+    return Invoice(  # ty: ignore[missing-argument]
         kind=kind,
         invoice_number="CLAVE/1",
         issued_at=date(2026, 2, 1),

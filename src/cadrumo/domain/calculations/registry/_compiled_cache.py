@@ -46,7 +46,7 @@ import typing
 from collections.abc import Iterable, Iterator
 from functools import cache
 from pathlib import Path
-from typing import Final, NamedTuple, TypeGuard
+from typing import Final, NamedTuple, TypeGuard, cast
 
 from pydantic import BaseModel
 
@@ -513,7 +513,10 @@ def _is_two_object_tuple(value: object) -> TypeGuard[tuple[object, object]]:
     """Narrow an untyped pickle tuple to the expected two-item envelope."""
     if not isinstance(value, tuple):
         return False
-    return len(value) == 2
+    # Narrowing an object to tuple yields no element type; the guard only asks how
+    # many items the envelope carries, so the elements stay opaque by design.
+    items = cast("tuple[object, ...]", value)
+    return len(items) == 2
 
 
 def _read_cache_bytes(path: Path) -> bytes | None:

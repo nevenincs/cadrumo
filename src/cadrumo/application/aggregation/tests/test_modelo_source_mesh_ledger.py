@@ -66,6 +66,7 @@ from .. import (
     aggregate_oss_ioss_bindings,
     merge_source_resolutions,
 )
+from .._source_mesh import CalculationSourceResolution
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -397,7 +398,7 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
     )
     invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
 
-    def _resolve(code: str) -> object:
+    def _resolve(code: str) -> CalculationSourceResolution:
         return LedgerIvaAggregationSourceResolver(
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
@@ -419,7 +420,7 @@ def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1
 
     # Q2 holds the issue date and nothing else: the invoice already devengo'd.
     q2_resolution = _resolve("2T")
-    assert q2_resolution.diagnostics == ()  # type: ignore[attr-defined]
+    assert q2_resolution.diagnostics == ()
     assert exc_info.value.context["invoice_count"] == "1"
     assert exc_info.value.context["invoice_domestic_iva_excess_by_binding"] == {
         "modelo-303-iva-repercutido-general-cuota": "2100.00",

@@ -179,7 +179,10 @@ def _decision_payload_digest(decision: IvaCompensationReconciliationDecision) ->
 
 
 def _require_observation_period(period: Period) -> Period:
-    if not isinstance(period, Period):
+    # Deliberate runtime guard: annotations are not enforced at call time and this
+    # value composes a persisted observation key, so a wrong type would surface as
+    # an unreadable record rather than a refusal here.
+    if not isinstance(period, Period):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise ObservationKeyError(f"period must be a cadrumo.core.Period instance, got {type(period).__name__}")
     return period
 
