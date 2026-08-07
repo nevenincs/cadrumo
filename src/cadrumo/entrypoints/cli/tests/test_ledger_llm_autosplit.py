@@ -21,7 +21,7 @@ from ....core.config import override_settings
 from ....core.json_contract import NoticeSeverity
 from ....domain.categories import SpendingCategory
 from ....domain.transactions import BusinessClassification
-from ....llm import LLMClassificationSuggestion, SubprocessProvider
+from ....llm import LLMClassificationSuggestion
 from ....tests.cli_envelope import unwrap_cli_result as _json_result
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
@@ -82,7 +82,7 @@ def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
 
 def test_auto_split_requires_read_evidence(tmp_path: Path) -> None:
     tx = _import_one_transaction(tmp_path)
-    result = _invoke(["app", "ledger", "classify", tx, "--llm", "claude", "--auto-split"])
+    result = _invoke(["app", "ledger", "classify", tx, "--llm", "--auto-split"])
     assert result.exit_code != 0
     assert "--read-evidence" in result.output
 
@@ -98,7 +98,7 @@ def test_auto_split_requires_read_evidence(tmp_path: Path) -> None:
 def test_classify_reject_and_apply_are_mutually_exclusive(tmp_path: Path, extra_flags: list[str]) -> None:
     tx = _import_one_transaction(tmp_path)
     result = _invoke(
-        ["app", "ledger", "classify", tx, "--llm", "claude", "--reject", "--apply", *extra_flags],
+        ["app", "ledger", "classify", tx, "--llm", "--reject", "--apply", *extra_flags],
     )
     assert result.exit_code != 0
     assert "--reject" in result.output and "--apply" in result.output
@@ -107,7 +107,7 @@ def test_classify_reject_and_apply_are_mutually_exclusive(tmp_path: Path, extra_
 def test_split_recommendation_notice_is_info_with_exact_runnable_action() -> None:
     transaction_id = "txn-contract"
 
-    notice = split_recommendation_notice(transaction_id, provider=SubprocessProvider.CLAUDE)
+    notice = split_recommendation_notice(transaction_id)
 
     assert notice.severity is NoticeSeverity.INFO
     assert notice.code == "ledger.classify.split_recommended"
@@ -121,7 +121,6 @@ def test_list_hide_llm_rejected_retains_unrelated_rows(tmp_path: Path) -> None:
     rejected_id, unrelated_id = _import_two_transactions(tmp_path)
     suggestion = LLMClassificationSuggestion(
         transaction_id=rejected_id,
-        provider=None,
         provenance="llm:recorded-review-input",
         classification=BusinessClassification.BUSINESS,
         category=SpendingCategory.MATERIAL_OFICINA,

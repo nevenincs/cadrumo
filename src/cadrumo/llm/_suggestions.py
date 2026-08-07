@@ -48,21 +48,12 @@ from ..domain.iva import IvaCategory
 from ..domain.transactions import BusinessClassification
 
 
-class SubprocessProvider(StrEnum):
-    """Subprocess LLM provider names accepted by the classify surface."""
-
-    CLAUDE = "claude"
-    ANTIGRAVITY = "antigravity"
-    CODEX = "codex"
-
-
 class LLMClassificationSuggestion(BaseModel):
     """One LLM classification suggestion for a transaction, not yet persisted."""
 
     model_config = _STRICT_FROZEN
 
     transaction_id: str = Field(min_length=1)
-    provider: SubprocessProvider | None = None
     provenance: str = Field(min_length=1)
     classification: BusinessClassification
     category: SpendingCategory | None = None
@@ -78,16 +69,6 @@ class LLMClassificationSuggestion(BaseModel):
         return self.multiple_components is True
 
 
-class LLMProviderAvailability(BaseModel):
-    """Whether one subprocess LLM provider has a usable CLI on ``PATH``."""
-
-    model_config = _STRICT_FROZEN
-
-    provider: SubprocessProvider
-    cli_binary: str = Field(min_length=1)
-    available: bool
-    resolved_path: str | None = None
-
 
 class LLMSaturatedSuggestion(BaseModel):
     """A saturated LLM suggestion: business decision plus grounded tax substrate."""
@@ -95,7 +76,6 @@ class LLMSaturatedSuggestion(BaseModel):
     model_config = _STRICT_FROZEN
 
     transaction_id: str = Field(min_length=1)
-    provider: SubprocessProvider | None = None
     provenance: str = Field(min_length=1)
     classification: BusinessClassification
     category: SpendingCategory | None = None
@@ -158,7 +138,6 @@ class LLMSplitSuggestion(BaseModel):
     model_config = _STRICT_FROZEN
 
     transaction_id: str = Field(min_length=1)
-    provider: SubprocessProvider | None = None
     provenance: str = Field(min_length=1)
     reason: str = Field(min_length=1)
     parent_amount: Decimal
@@ -199,14 +178,12 @@ class LLMSuggestionRejectionResult(BaseModel):
 
 __all__ = [
     "LLMClassificationSuggestion",
-    "LLMProviderAvailability",
     "LLMSaturatedSuggestion",
     "LLMSplitApplyResult",
     "LLMSplitChildSuggestion",
     "LLMSplitSuggestion",
     "LLMSuggestionRejectionResult",
     "OperatorIvaDerivationResult",
-    "SubprocessProvider",
 ]
 
 

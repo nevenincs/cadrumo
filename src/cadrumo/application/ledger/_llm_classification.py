@@ -18,8 +18,6 @@ rebuilding the classifier. The contract is deliberately thin:
   profile audit trail through a
   :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository` as a
   ``ledger.transaction.classified`` event.
-* :func:`available_llm_providers` reports which subprocess providers have a
-  usable CLI on ``PATH`` so the CLI can refuse instructively rather than crash.
 
 Hallucination containment stays inside the engine: the classifier's
 ``classify`` runs the allow-list-guarded
@@ -42,7 +40,6 @@ is looked up from the registry and the base and amount are derived with
 from __future__ import annotations
 
 import base64
-import shutil
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -75,7 +72,6 @@ from ...domain.transactions import (
 )
 from ...llm import (
     LLMClassificationSuggestion,
-    LLMProviderAvailability,
     LLMSaturatedSuggestion,
     LLMSplitApplyResult,
     LLMSplitChildSuggestion,
@@ -84,7 +80,6 @@ from ...llm import (
     LocalTextLLMClassifier,
     LocalVisionLLMClassifier,
     OperatorIvaDerivationResult,
-    SubprocessProvider,
     rasterise_pdf_pages_to_base64_png,
 )
 from ._actions_common import (
@@ -122,46 +117,6 @@ _BUCKET_EVENT_PAYLOAD_VERSION = 1
 
 
 # The CLI binary each subprocess provider shells out to. Used by
-# :func:`available_llm_providers` to probe PATH without spawning the process.
-# ``antigravity`` resolves to the ``agy`` binary.
-_PROVIDER_CLI_BINARY: dict[SubprocessProvider, str] = {
-    SubprocessProvider.CLAUDE: "claude",
-    SubprocessProvider.ANTIGRAVITY: "agy",
-    SubprocessProvider.CODEX: "codex",
-}
-
-
-def available_llm_providers() -> tuple[LLMProviderAvailability, ...]:
-    """Report which subprocess LLM providers are usable on this host.
-
-    Probes ``PATH`` for each provider's CLI binary with ``shutil.which``
-    (no process is spawned). The CLI surfaces this so an operator can discover
-    which providers are installed before classifying.
-
-    Returns:
-        One :class:`~llm._suggestions.LLMProviderAvailability`
-        per :class:`~llm._suggestions.SubprocessProvider`, ordered
-        by enum declaration.
-    """
-    listings: list[LLMProviderAvailability] = []
-    for provider in SubprocessProvider:
-        binary = _PROVIDER_CLI_BINARY[provider]
-        resolved = shutil.which(binary)
-        listings.append(
-            LLMProviderAvailability(
-                provider=provider,
-                cli_binary=binary,
-                available=resolved is not None,
-                resolved_path=resolved,
-            ),
-        )
-    return tuple(listings)
-
-
-def is_llm_provider_available(provider: SubprocessProvider) -> bool:
-    """Return whether ``provider``'s CLI binary is resolvable on ``PATH``."""
-    return shutil.which(_PROVIDER_CLI_BINARY[provider]) is not None
-
 
 
 @dataclass(frozen=True)
@@ -184,6 +139,20 @@ class _ResolvedEvidence:
     def is_images(self) -> bool:
         """Whether this evidence routes to the on-host vision reader."""
         return bool(self.images)
+
+
+def _transport_from_provenance(provenance: str) -> str:
+    """Return the transport segment of an ``llm:<transport>:<model>`` stamp.
+
+    The suggestion used to carry a separate ``provider`` enum field, redundant
+    with the stamp even before the cloud providers were deleted and meaningless
+    once the axis collapsed to the local runtime. The audit payload keeps its
+    ``provider`` key -- consumers read it -- but derives the value from the one
+    place that records which transport actually read the document, so the two
+    can no longer disagree.
+    """
+    parts = provenance.split(":")
+    return parts[1] if len(parts) >= 3 else provenance
 
 
 def _bytes_bearing_evidence_input(
@@ -317,12 +286,18 @@ def _run_on_host_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
         raise LLMClassifierError(f"on-host model reading failed: {detail}. Fix: {fix}") from exc
 
 
-def _record_subprocess_run[T](run: Callable[[], T], *, provider: str) -> T:
-    """Run a subprocess CLI classify/split call, recording local run-timing telemetry.
+def _record_injected_classifier_run[T](run: Callable[[], T], *, provider: str) -> T:
+    """Run an INJECTED classifier call, recording local run-timing telemetry.
 
-    Wraps the subprocess classifier harness calls (which
-    stay pure and time-unaware, per hexagonal layering -- the domain layer must
-    not import the storage-touching recorder). Records duration and outcome via
+    Renamed from ``_record_subprocess_run`` when the cloud subprocess transport
+    was deleted: no production path spawns a process any more, and the only
+    callers left supply their own classifier. The name described a transport
+    that no longer exists, which is the kind of stale prose this campaign kept
+    tripping over.
+
+    Wraps the injected classifier's call (classifiers stay pure and
+    time-unaware, per hexagonal layering -- the domain layer must not import the
+    storage-touching recorder). Records duration and outcome via
     :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`, mirroring the
     recording :class:`~adapters.outbound.llm.LLMClient.complete` performs
     for the on-host vision transport. A run-telemetry write failure never masks
@@ -343,11 +318,11 @@ def _record_subprocess_run[T](run: Callable[[], T], *, provider: str) -> T:
                 LLMRunRecord(
                     run_id=uuid4().hex,
                     caller="cadrumo.application.ledger.llm_classification",
-                    provider=provider,
                     duration_ms=max(0, round((time.monotonic() - clock_start) * 1000)),
                     succeeded=succeeded,
                     error_kind=error_kind,
                     started_at=started_at,
+                    provider=provider,
                 ),
             )
         except LLMCacheError:
@@ -410,7 +385,7 @@ def _classify_with_evidence(
             lambda: local_text.classify(transaction, evidence_text=text),
             settings=settings,
         ), local_text.decided_by
-    return _record_subprocess_run(
+    return _record_injected_classifier_run(
         lambda: text_classifier.classify(transaction, evidence_text=text),
         provider=text_classifier.decided_by,
     ), text_classifier.decided_by
@@ -450,7 +425,7 @@ def _split_with_evidence(
             context={"transaction_id": transaction.transaction_id},
         )
     text = evidence.text if evidence is not None else None
-    return _record_subprocess_run(
+    return _record_injected_classifier_run(
         lambda: proposer.propose_split(transaction, evidence_text=text),
         provider=proposer.decided_by,
     ), proposer.decided_by
@@ -460,7 +435,6 @@ def suggest_llm_classification(
     *,
     bucket_id: str,
     transaction_id: str,
-    provider: SubprocessProvider | None,
     classifier: LLMClassifier | None = None,
     vision_classifier: LocalVisionLLMClassifier | None = None,
     vision_model: str | None = None,
@@ -529,15 +503,14 @@ def suggest_llm_classification(
         settings=resolved_settings,
     )
     _logger.info(
-        "llm suggest: transaction=%s provider=%s classification=%s confidence=%s",
+        "llm suggest: transaction=%s decided_by=%s classification=%s confidence=%s",
         transaction_id,
-        provider.value if provider is not None else "local-vision",
+        provenance,
         response.classification.value,
         response.confidence,
     )
     return LLMClassificationSuggestion(
         transaction_id=transaction_id,
-        provider=provider,
         provenance=provenance,
         classification=response.classification,
         category=response.category,
@@ -658,7 +631,7 @@ def apply_llm_classification(
             "classification": classification.value,
             "category_id": category_id or "",
             "classified_by": suggestion.provenance,
-            "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
+            "provider": _transport_from_provenance(suggestion.provenance),
             "confidence": format(suggestion.confidence, "f"),
             "mutation_kind": "llm_classification",
         },
@@ -712,7 +685,6 @@ def saturate_llm_classification(
     *,
     bucket_id: str,
     transaction_id: str,
-    provider: SubprocessProvider | None,
     classifier: LLMClassifier | None = None,
     vision_classifier: LocalVisionLLMClassifier | None = None,
     vision_model: str | None = None,
@@ -807,14 +779,13 @@ def saturate_llm_classification(
     _logger.info(
         "llm saturate: transaction=%s provider=%s classification=%s iva_category=%s derivable=%s",
         transaction_id,
-        provider.value if provider is not None else "local-vision",
+        provenance,
         response.classification.value,
         response.iva_category.value if response.iva_category is not None else "",
         rate_derivable,
     )
     return LLMSaturatedSuggestion(
         transaction_id=transaction_id,
-        provider=provider,
         provenance=provenance,
         classification=response.classification,
         category=response.category,
@@ -1058,7 +1029,6 @@ def suggest_evidence_split(
     *,
     bucket_id: str,
     transaction_id: str,
-    provider: SubprocessProvider | None,
     proposer: LLMSplitProposer | None = None,
     vision_classifier: LocalVisionLLMClassifier | None = None,
     vision_model: str | None = None,
@@ -1170,12 +1140,11 @@ def suggest_evidence_split(
     _logger.info(
         "llm split suggest: transaction=%s provider=%s children=%d",
         transaction_id,
-        provider.value if provider is not None else "local-vision",
+        provenance,
         len(children),
     )
     return LLMSplitSuggestion(
         transaction_id=transaction_id,
-        provider=provider,
         provenance=provenance,
         reason=response.reason,
         parent_amount=transaction.raw.amount,
@@ -1493,7 +1462,7 @@ def reject_llm_suggestion(
         }
         if isinstance(suggestion, LLMSaturatedSuggestion) and suggestion.iva_category is not None:
             payload["iva_category"] = suggestion.iva_category.value
-    payload["provider"] = suggestion.provider.value if suggestion.provider is not None else "local-vision"
+    payload["provider"] = _transport_from_provenance(suggestion.provenance)
     payload["provenance"] = suggestion.provenance
     payload["operator_reason"] = reason
     payload["source_command"] = source_command
@@ -1541,21 +1510,17 @@ def reject_llm_suggestion(
 
 __all__ = [
     "LLMClassificationSuggestion",
-    "LLMProviderAvailability",
     "LLMSaturatedSuggestion",
     "LLMSplitApplyResult",
     "LLMSplitChildSuggestion",
     "LLMSplitSuggestion",
     "LLMSuggestionRejectionResult",
     "OperatorIvaDerivationResult",
-    "SubprocessProvider",
     "apply_evidence_classification",
     "apply_evidence_split",
     "apply_llm_classification",
     "apply_saturated_llm_classification",
-    "available_llm_providers",
     "derive_operator_iva_substrate",
-    "is_llm_provider_available",
     "reject_llm_suggestion",
     "saturate_llm_classification",
     "suggest_evidence_split",

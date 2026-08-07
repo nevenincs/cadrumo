@@ -98,7 +98,6 @@ def test_suggest_llm_classification_records_one_run_on_success(profile: TestRunt
     suggestion = suggest_llm_classification(
         bucket_id=_BUCKET_ID,
         transaction_id=txn.transaction_id,
-        provider=None,
         classifier=classifier,
         transaction_repository=repository,
         settings=profile.settings,
@@ -131,7 +130,6 @@ def test_suggest_llm_classification_records_one_run_on_failure(profile: TestRunt
         suggest_llm_classification(
             bucket_id=_BUCKET_ID,
             transaction_id=txn.transaction_id,
-            provider=None,
             classifier=classifier,
             transaction_repository=repository,
             settings=profile.settings,

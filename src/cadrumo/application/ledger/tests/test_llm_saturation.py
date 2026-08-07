@@ -24,7 +24,7 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....domain.iva import IvaCategory
-from ....llm import LLMSaturatedSuggestion, SubprocessProvider
+from ....llm import LLMSaturatedSuggestion
 from .. import (
     saturate_llm_classification,
 )
@@ -60,7 +60,6 @@ def test_suggest_derives_substrate_from_selected_category(
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.DOMESTIC_GENERAL_21),
         transaction_repository=repository,
     )
@@ -86,7 +85,6 @@ def test_suggest_zero_rated_category_derives_zero_iva(
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.DOMESTIC_ZERO),
         transaction_repository=repository,
     )
@@ -106,7 +104,6 @@ def test_suggest_non_derivable_category_surfaces_reason_not_a_guess(
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY),
         transaction_repository=repository,
     )

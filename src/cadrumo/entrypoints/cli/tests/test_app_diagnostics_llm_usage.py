@@ -71,7 +71,6 @@ def _seed_runs() -> None:
             LLMRunRecord(
                 run_id=run_id,
                 caller="cadrumo.application.ledger.llm_classification",
-                provider=provider,
                 model=model,
                 duration_ms=duration_ms,
                 succeeded=succeeded,

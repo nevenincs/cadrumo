@@ -28,7 +28,6 @@ from ...application.ledger import (
     apply_evidence_classification,
     derive_operator_iva_substrate,
     execute_reviewed_decision,
-    is_llm_provider_available,
     ledger_transaction_payload,
     ledger_transaction_review_status,
     saturate_llm_classification,
@@ -51,7 +50,6 @@ from ...llm import (
     LLMSplitApplyResult,
     LLMSplitSuggestion,
     LLMSuggestionRejectionResult,
-    SubprocessProvider,
 )
 from ._common import _bad, _emit_envelope, _state, _tx_repo
 from ._ledger_support import _ledger_validation_bad, _parse_decimal, _resolve_id
@@ -135,7 +133,7 @@ def emit_llm_rejection(
     _emit_envelope(ctx, command="ledger.classify", result=payload, lines=lines, notices=[notice])
 
 
-def split_recommendation_notice(transaction_id: str, *, provider: SubprocessProvider | None) -> Notice:
+def split_recommendation_notice(transaction_id: str) -> Notice:
     """Build the typed ``info`` :class:`Notice` recommending an evidence-driven split.
 
     Fired when the evidence read judged the invoice multi-component. The
@@ -143,10 +141,7 @@ def split_recommendation_notice(transaction_id: str, *, provider: SubprocessProv
     the provider the operator used (``aeat-cli-contract``;
     the recommendation rides the Notice channel, never a bespoke result field).
     """
-    provider_flag = f" --llm {provider.value}" if provider is not None else ""
-    command = (
-        f"aeat app ledger classify {transaction_id} --read-evidence --saturate --auto-split --apply{provider_flag}"
-    )
+    command = f"aeat app ledger classify {transaction_id} --read-evidence --saturate --auto-split --apply"
     return Notice(
         severity=NoticeSeverity.INFO,
         code="ledger.classify.split_recommended",
@@ -191,7 +186,6 @@ def dispatch_autosplit(
     transaction_id: str | None,
     classification: BusinessClassification | None,
     file: str | None,
-    provider: SubprocessProvider | None,
     apply: bool,
     actor: str | None,
     read_evidence: bool,
@@ -241,18 +235,6 @@ def dispatch_autosplit(
                 default="A transaction id is required when --file is not provided.",
             ),
         )
-    if provider is not None and not is_llm_provider_available(provider):
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_provider_unavailable",
-                provider=provider.value,
-                default=(
-                    f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
-                    f"Install the {provider.value!r} CLI and ensure it is on PATH, "
-                    "or run 'aeat config check' to confirm the local model runtime is reachable."
-                ),
-            ),
-        )
 
     state = _state()
     transaction_repository = _tx_repo(state)
@@ -262,7 +244,6 @@ def dispatch_autosplit(
         suggestion = suggest_evidence_split(
             bucket_id=bucket_id,
             transaction_id=resolved_id,
-            provider=provider,
             transaction_repository=transaction_repository,
             read_evidence=True,
             vision_model=vision_model,
@@ -469,7 +450,6 @@ def _validate_classify_llm_options(
     reject: bool,
     apply: bool,
     transaction_id: str | None,
-    provider: SubprocessProvider | None,
 ) -> str:
     """Reject the manual-override combination, the reject/apply conflict, a missing id, and an unavailable provider.
 
@@ -504,20 +484,6 @@ def _validate_classify_llm_options(
                 default="A transaction id is required when --file is not provided.",
             ),
         )
-    if provider is not None and not is_llm_provider_available(provider):
-        # Instructive refusal: name the provider and the CLI it needs on PATH,
-        # never a crash. The subprocess backend shells to a local CLI binary.
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_provider_unavailable",
-                provider=provider.value,
-                default=(
-                    f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
-                    f"Install the {provider.value!r} CLI and ensure it is on PATH, "
-                    "or run 'aeat config check' to confirm the local model runtime is reachable."
-                ),
-            ),
-        )
     return transaction_id
 
 
@@ -542,7 +508,6 @@ def _render_classify_llm_preview(
     ctx: typer.Context,
     *,
     suggestion: LLMClassificationSuggestion,
-    provider: SubprocessProvider | None,
 ) -> None:
     """Emit the non-persisting stage-1 classify suggestion. Approve = --apply, reject = --reject."""
     from ._ledger_llm_payloads import LedgerClassifyLlmSuggestResult
@@ -558,7 +523,7 @@ def _render_classify_llm_preview(
     ]
     notices: list[Notice] = []
     if suggestion.recommends_split:
-        notice = split_recommendation_notice(suggestion.transaction_id, provider=provider)
+        notice = split_recommendation_notice(suggestion.transaction_id)
         notices.append(notice)
         lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.suggestion}")
     _emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines, notices=notices)
@@ -580,7 +545,6 @@ def _render_saturate_llm_preview(
     ctx: typer.Context,
     *,
     suggestion: LLMSaturatedSuggestion,
-    provider: SubprocessProvider | None,
 ) -> None:
     """Emit the non-persisting saturated classify suggestion (model picks IVA category, system derives numbers)."""
     from ._ledger_llm_payloads import LedgerClassifyLlmSaturateResult
@@ -617,7 +581,7 @@ def _render_saturate_llm_preview(
     lines.append(tr("cli.ledger.classify.llm_review_hint"))
     notices: list[Notice] = []
     if suggestion.recommends_split:
-        notice = split_recommendation_notice(suggestion.transaction_id, provider=provider)
+        notice = split_recommendation_notice(suggestion.transaction_id)
         notices.append(notice)
         lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.suggestion}")
     _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
@@ -630,7 +594,6 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
     classification: BusinessClassification | None,
     file: str | None,
     transaction_id: str | None,
-    provider: SubprocessProvider | None,
     apply: bool,
     actor: str | None,
     read_evidence: bool,
@@ -651,7 +614,6 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
         reject=reject,
         apply=apply,
         transaction_id=transaction_id,
-        provider=provider,
     )
 
     state = _state()
@@ -661,7 +623,6 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
         suggestion = suggest_fn(
             bucket_id=transaction_repository.bucket_id,
             transaction_id=resolved_id,
-            provider=provider,
             transaction_repository=transaction_repository,
             read_evidence=read_evidence,
             vision_model=vision_model,
@@ -696,7 +657,6 @@ def ledger_classify_llm(
     classification: BusinessClassification | None,
     file: str | None,
     business_pct: str | None,
-    provider: SubprocessProvider | None,
     apply: bool,
     actor: str | None,
     read_evidence: bool = False,
@@ -721,7 +681,6 @@ def ledger_classify_llm(
         classification=classification,
         file=file,
         transaction_id=transaction_id,
-        provider=provider,
         apply=apply,
         actor=actor,
         read_evidence=read_evidence,
@@ -734,7 +693,7 @@ def ledger_classify_llm(
     suggestion, transaction_repository = prologue
 
     if not apply:
-        _render_classify_llm_preview(ctx, suggestion=suggestion, provider=provider)
+        _render_classify_llm_preview(ctx, suggestion=suggestion)
         return
 
     try:
@@ -762,7 +721,6 @@ def ledger_saturate_llm(
     classification: BusinessClassification | None,
     file: str | None,
     business_pct: str | None,
-    provider: SubprocessProvider | None,
     apply: bool,
     actor: str | None,
     read_evidence: bool = False,
@@ -789,7 +747,6 @@ def ledger_saturate_llm(
         classification=classification,
         file=file,
         transaction_id=transaction_id,
-        provider=provider,
         apply=apply,
         actor=actor,
         read_evidence=read_evidence,
@@ -804,7 +761,7 @@ def ledger_saturate_llm(
     iva_category_value = suggestion.iva_category.value if suggestion.iva_category is not None else None
 
     if not apply:
-        _render_saturate_llm_preview(ctx, suggestion=suggestion, provider=provider)
+        _render_saturate_llm_preview(ctx, suggestion=suggestion)
         return
 
     try:

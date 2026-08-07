@@ -10,7 +10,6 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....domain.iva import IvaCategory
 from ....domain.transactions import BusinessClassification, TransactionValidationError
-from ....llm import SubprocessProvider
 from .. import (
     apply_saturated_llm_classification,
     saturate_llm_classification,
@@ -36,7 +35,6 @@ def test_apply_persists_derived_substrate_with_llm_provenance(
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.DOMESTIC_GENERAL_21),
         transaction_repository=repository,
     )
@@ -72,7 +70,6 @@ def test_apply_non_derivable_persists_category_without_numbers(
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY),
         transaction_repository=repository,
     )
@@ -102,7 +99,6 @@ def test_apply_mixed_without_business_pct_refuses(
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         classifier=_saturating_subprocess_classifier(
             classification=BusinessClassification.MIXED,
             iva_category=IvaCategory.DOMESTIC_GENERAL_21,
@@ -131,7 +127,6 @@ def test_apply_mixed_uses_proposed_business_pct(
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         classifier=_saturating_subprocess_classifier(
             classification=BusinessClassification.MIXED,
             iva_category=IvaCategory.DOMESTIC_GENERAL_21,

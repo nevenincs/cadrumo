@@ -12,7 +12,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.buckets import BucketEventType
 from ....domain.categories import SpendingCategory
 from ....domain.transactions import BusinessClassification, TransactionLifecycleState, TransactionValidationError
-from ....llm import LLMClassificationSuggestion, SubprocessProvider
+from ....llm import LLMClassificationSuggestion
 from .. import (
     apply_evidence_split,
     reject_llm_suggestion,
@@ -34,7 +34,6 @@ __all__ = ["repositories"]
 def _classification_suggestion(tx_id: str) -> LLMClassificationSuggestion:
     return LLMClassificationSuggestion(
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         provenance="llm:claude:test-model",
         classification=BusinessClassification.BUSINESS,
         category=SpendingCategory.MATERIAL_OFICINA,
@@ -51,7 +50,6 @@ def test_reject_split_suggestion_records_kind_split(
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
@@ -88,7 +86,6 @@ def test_reject_non_active_transaction_raises(
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,

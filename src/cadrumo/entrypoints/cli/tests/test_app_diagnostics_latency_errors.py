@@ -79,7 +79,6 @@ def _seed_error_runs() -> None:
             LLMRunRecord(
                 run_id=f"err-{index}",
                 caller="cadrumo.application.ledger.llm_classification",
-                provider=provider,
                 model="test-model",
                 duration_ms=100,
                 succeeded=False,
