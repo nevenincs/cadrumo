@@ -1937,6 +1937,11 @@ cli:
         view_help: Vásárlásiszámla-bizonyíték megjelenítése.
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót a bizonyíték törléséhez.
+        field_contradicted: '{field}: a dokumentumban ''{anchor}'' szerepel, ami nem egyezik a mezőhöz rögzített értékkel. {detail}'
+        field_ambiguous: '{field}: több olvasat versengett, és nem lehetett dönteni közülük ({candidates}). Válasszon egyet ahelyett, hogy a piszkozatot változatlanul elfogadná.'
+        field_anchor_self_reported: '{field}: az olvasó szerint ezt a(z) ''{anchor}'' helyről olvasta, de ezt az állítást ugyanaz az olvasó tette, amely az értéket előállította, így semmi független nem erősítette meg.'
+        field_anchor_not_found: '{field}: az olvasó a(z) ''{anchor}'' elemre mutat, amely nem szerepel a dokumentum átiratában. Egy normalizált érték jogosan megbukhat ezen a keresésen, ezért ellenőrizze a mezőt ahelyett, hogy megerősítettnek tekintené.'
+        field_no_anchor: '{field}: az olvasó semmit nem jelölt meg a dokumentumban, így nincs nyomtatott alak, amelyhez ez az érték ellenőrizhető lenne.'
       inventory:
         actividad_id_help: Gazdasági tevékenység azonosítója.
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.

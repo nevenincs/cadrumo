@@ -1998,6 +1998,11 @@ cli:
         view_help: Mostra un justificant de factura de compra
         yes_help: Confirma l'eliminació del justificant
         yes_required: Has de passar --yes per eliminar un justificant
+        field_contradicted: '{field}: el document indica ''{anchor}'', que no coincideix amb el valor registrat per a aquest camp. {detail}'
+        field_ambiguous: '{field}: diverses lectures van competir i no s''ha pogut decidir entre ({candidates}). Trieu-ne una en lloc d''acceptar l''esborrany tal com és.'
+        field_anchor_self_reported: '{field}: el lector afirma haver-ho llegit de ''{anchor}'', però aquesta afirmació prové del mateix lector que va produir el valor, així que res independent no ho ha confirmat.'
+        field_anchor_not_found: '{field}: el lector assenyala ''{anchor}'', que no apareix en la transcripció del document. Un valor normalitzat pot fallar aquesta cerca legítimament, així que reviseu el camp en lloc de suposar que va ser corroborat.'
+        field_no_anchor: '{field}: el lector no va oferir res en el document a què assenyalar, així que no hi ha forma impresa amb què contrastar aquest valor.'
       inventory:
         actividad_id_help: Identificador de l'activitat econòmica
         create_help: Crea un llibre d'existències per a una activitat i exercici

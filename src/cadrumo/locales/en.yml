@@ -1862,6 +1862,11 @@ cli:
         view_help: Show purchase invoice evidence
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence
+        field_contradicted: '{field}: the document reads ''{anchor}'', which does not agree with the value recorded for this field. {detail}'
+        field_ambiguous: '{field}: several readings competed and none could be decided between ({candidates}). Choose one rather than accepting the draft as read.'
+        field_anchor_self_reported: '{field}: the reader reports having read this from ''{anchor}'', but that claim came from the same reader that produced the value, so nothing independent has confirmed it.'
+        field_anchor_not_found: '{field}: the reader points at ''{anchor}'', which does not occur in the document''s transcription. A normalised value can fail this search legitimately, so check the field rather than assuming it was corroborated.'
+        field_no_anchor: '{field}: the reader offered nothing in the document to point at, so there is no printed form to check this value against.'
       inventory:
         actividad_id_help: Economic activity identifier
         create_help: Create an inventory ledger for one activity and tax year
