@@ -2026,6 +2026,8 @@ cli:
         group_help: Registres de factures de negoci (emeses o rebudes)
         import_all_refused: 'importació massiva de factures fallida: totes les files
           van ser rebutjades; no es va crear cap factura'
+        import_column_role_not_applied: 'no s''ha aplicat un rol de columna proposat:
+          {detail}'
         import_file_help: Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, i opcionalment
           iva_rate/currency/country_code/notes).
@@ -2071,7 +2073,6 @@ cli:
           amb aquesta identitat (%{invoice_id}); no s''ha creat res.'
         yes_help: Confirma l'eliminació de la factura
         yes_required: Has de passar --yes per eliminar una factura
-        import_column_role_not_applied: 'no s''ha aplicat un rol de columna proposat: {detail}'
       prorrata:
         activity_code_help: Codi d'activitat CNAE / IAE agrupat en aquest sector (repetible,
           com a mínim un).
