@@ -70,7 +70,11 @@ from ...domain.invoices import (
     invoice_line_to_iva_observation,
 )
 from ...domain.modelos import Modelo210AgrupacionRentaRow
-from ...domain.renta import RENTA_130_RETENCIONES_OUTPUT_CASILLA, RentaDeductibleExpenseObservation
+from ...domain.renta import (
+    RENTA_130_RETENCIONES_BINDING_ID,
+    RENTA_130_RETENCIONES_OUTPUT_CASILLA,
+    RentaDeductibleExpenseObservation,
+)
 from ...domain.transactions import (
     OutOfWindowTransactionSummary,
     TransactionCatalogueRepositoryProtocol,
@@ -138,7 +142,6 @@ _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
         IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION,
     },
 )
-_M130_RETENCIONES_BINDING_ID: BindingId = "modelo-130-actividad-economica-retenciones-cumulative"
 _M210_RENDIMIENTOS_INTEGROS_CASILLA: CasillaId = validated_casilla_id(
     "rendimientos_integros",
     surface="_M210_RENDIMIENTOS_INTEGROS_CASILLA",
@@ -748,7 +751,7 @@ def _m130_retenciones_backend_inputs(
     """
     if str(context.modelo) != Modelo.M130.value:
         return {}
-    value = binding_values.get(_M130_RETENCIONES_BINDING_ID)
+    value = binding_values.get(RENTA_130_RETENCIONES_BINDING_ID)
     if value is None:
         return {}
     return {RENTA_130_RETENCIONES_OUTPUT_CASILLA: value}
