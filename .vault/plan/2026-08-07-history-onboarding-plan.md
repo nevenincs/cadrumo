@@ -4,7 +4,7 @@ tags:
   - '#history-onboarding'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:6ff59804258fcac2526925007755341995881c1db758ab61cc1ca524d7b938dc'
+body_hash: 'sha256:1d1c0ac7e2cdb5c7ed9b8d54a059cdd0ffaf5166d1b1770998e5d3064913d7cf'
 tier: L2
 related:
   - '[[2026-08-07-history-onboarding-adr]]'
@@ -121,6 +121,7 @@ Prove that a bulk-discovered historical capture stamps the same official Observa
 - [x] `P02.S26` - add a pinning test proving the justificante match predicate rejects a receipt whose embedded presentation identifier is receipt-shaped while the register row's expediente id is register-shaped even though modelo ejercicio period and tax identity all agree, so no evidence is stamped, verified by the test going red when the predicate's presentation-identifier comparison is dropped; `src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py`.
 - [x] `P02.S27` - add a test pinning that tipo_solicitud reaches the raw filed-declaration observation metadata while the persisted calculation-observation source metadata omits it, verified by the test going red once the carry-through row lands and by a mutation adding the key to the persisted metadata; `src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py`.
 - [x] `P02.S28` - author a synthetic no-results declaraciones-register fixture in the AEAT empty-body grid shape, verified by a listbox parser test asserting the page parses to zero rows and reports itself not truncated so a clean empty register answer stays distinguishable from a short read; `src/cadrumo/tests/fixtures/aeat-sede, src/cadrumo/adapters/outbound/aeat/sede/tests`.
+- [x] `P02.S29` - restore the Modelo 303 filed-observation carry after a peer commit read a generated attribute the derivation never declared, adding the refunded-aware generated component to M303CompensationAvailableDerivation so available equals posterior plus generated on every basis, and repairing the posterior-absent fallback that silently dropped a declared negative resultado's credit to zero, verified by the 13 restored capture tests plus an out-of-tree mutation zeroing generated while leaving available correct; `src/cadrumo/domain/iva_compensation/_filed_derivation.py, src/cadrumo/application/calculations/_iva_compensation_history.py`.
 
 ### Phase `P03` - Onboarding orchestration verb
 
