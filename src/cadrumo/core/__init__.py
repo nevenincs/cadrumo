@@ -123,6 +123,7 @@ from ._descendant_relacion import (
     ART_81_1_MATERNIDAD_RELACIONES,
     DescendantRelacion,
 )
+from ._deuda_direccion import DeudaDireccion
 from ._document_shape import (
     AEAT_RECORD_BATCH_SHAPES,
     PDF_CONTAINER_SHAPES,
@@ -417,6 +418,7 @@ __all__: list[str] = [
     "DeclaracionIdioma",
     "DeploymentLicencePosture",
     "DescendantRelacion",
+    "DeudaDireccion",
     "DocumentShape",
     "DraftDiscrepancyKind",
     "ElidedProse",
