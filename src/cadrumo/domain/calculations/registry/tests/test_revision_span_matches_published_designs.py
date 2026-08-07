@@ -135,7 +135,16 @@ _DESIGN_ROOT_PARTS = ("corpus", "aeat_official", "disenos_registro")
 # The extracted design tables render one field per row as
 # "order | offset | length | kind | description [box] | ... ".
 _BOX_MARKER = re.compile(r"\[(\d{1,4})\]")
-_DESIGN_YEAR = re.compile(r"ejercicio-(\d{4})")
+_DESIGN_YEAR = re.compile(r"ejercicio-(\d{4})(?:-y-(\d{4}))?")
+#: A design filename may name TWO explicit ejercicios ("ejercicio-2015-y-2016"),
+#: and the corpus holds four such spans (2007-y-2008, 2008-y-2009, 2015-y-2016,
+#: 2019-y-2020). Taking only the first match attributed the design to its opening
+#: year and left the second attributed to NOTHING -- 2016 and 2020 each had a
+#: bundled design and no year claiming it. "y-siguientes" is deliberately NOT
+#: expanded: its span is open-ended, so enumerating it would invent years.
+#: The orden year in a filename ("orden-hap-2373-2014-...-ejercicio-2018") is not
+#: a coverage year and must never be read as one, which is why this anchors on
+#: "ejercicio-" rather than scanning for any four-digit run.
 #: Case-INSENSITIVE on purpose. AEAT writes both `Reservado para la AEAT` and
 #: `RESERVADO PARA LA A.E.A.T.`, and a case-sensitive substring test silently
 #: misses the uppercase form -- which reads a reserved block's own growth as a
@@ -169,10 +178,39 @@ def _sources_by_year(modelo_id: str) -> tuple[tuple[int, Path], ...]:
     """``(design year, source path)`` pairs, first source per year winning."""
     seen: dict[int, Path] = {}
     for path in _design_sources(modelo_id):
-        matched = _DESIGN_YEAR.search(path.name)
-        if matched is not None and _design_sheets(path):
-            seen.setdefault(int(matched.group(1)), path)
+        if not _design_sheets(path):
+            continue
+        for year in _design_years(path.name):
+            seen.setdefault(year, path)
     return tuple(sorted(seen.items()))
+
+
+def _design_years(name: str) -> tuple[int, ...]:
+    """Every ejercicio a design filename explicitly claims, in order."""
+    matched = _DESIGN_YEAR.search(name)
+    if matched is None:
+        return ()
+    return tuple(int(group) for group in matched.groups() if group is not None)
+
+
+def _designs_by_year(modelo_id: str) -> dict[int, tuple[Path, ...]]:
+    """``{year: every readable design source claiming it}`` -- one to MANY.
+
+    AEAT splits an ejercicio mid-course, so a year can have two designs that differ
+    in byte layout. Modelo 303 does it three times: 2018, 2021 and 2024 each ship a
+    "hasta periodo N" design and a "desde/a partir de periodo N" one. The year-keyed
+    maps below keep the FIRST by filename sort and silently discard the other, so a
+    caller asking what a year looked like gets an arbitrary half with no signal a
+    second exists. This map keeps both, so a consumer deriving epoch boundaries can
+    see the split rather than land a boundary on the wrong side of it.
+    """
+    grouped: dict[int, list[Path]] = {}
+    for path in _design_sources(modelo_id):
+        if not _design_sheets(path):
+            continue
+        for year in _design_years(path.name):
+            grouped.setdefault(year, []).append(path)
+    return {year: tuple(paths) for year, paths in sorted(grouped.items())}
 
 
 def _design_sources(modelo_id: str) -> list[Path]:
@@ -255,13 +293,13 @@ def _parse_design(path: Path) -> dict[str, int]:
             boxes = _BOX_MARKER.findall(field.description)
             if not boxes:
                 continue
-        # A field's OWN number is the LAST bracket on its row. Formula totals cite
-        # their operands first -- "Total cuota devengada ([152]+[167]+...) [27]"
-        # -- so first-match keying would file the total under an operand, and
-        # requiring a single bracket would drop it entirely. Modelo 303 has
-        # eleven such rows, including its three most load-bearing totals; Modelo
-        # 390 has none, which is why this only surfaced on the second modelo.
-        #
+            # A field's OWN number is the LAST bracket on its row. Formula totals cite
+            # their operands first -- "Total cuota devengada ([152]+[167]+...) [27]"
+            # -- so first-match keying would file the total under an operand, and
+            # requiring a single bracket would drop it entirely. Modelo 303 has
+            # eleven such rows, including its three most load-bearing totals; Modelo
+            # 390 has none, which is why this only surfaced on the second modelo.
+            #
             # A box can also appear once per régimen segment at the same offset; keep
             # the first and never overwrite, so a later segment cannot mask a move.
             #
@@ -291,10 +329,7 @@ def _page_lengths(path: Path) -> tuple[str, ...]:
     sheets = _design_sheets(path)
     if len(sheets) == 1 and sheets[0].name == _PDF_FLATTENED_SHEET:
         return ()
-    lengths = tuple(
-        "variable" if sheet.total_positions is None else str(sheet.total_positions)
-        for sheet in sheets
-    )
+    lengths = tuple("variable" if sheet.total_positions is None else str(sheet.total_positions) for sheet in sheets)
     if lengths:
         return lengths
     derivative = path.with_name(path.name + ".extracted.md")
@@ -330,12 +365,11 @@ def _page_lengths_for(modelo_id: str) -> dict[int, tuple[str, ...]]:
     """``{design year: page-length sequence}`` for every readable design."""
     lengths: dict[int, tuple[str, ...]] = {}
     for path in _design_sources(modelo_id):
-        matched = _DESIGN_YEAR.search(path.name)
-        if matched is None:
-            continue
         found = _page_lengths(path)
-        if found:
-            lengths.setdefault(int(matched.group(1)), found)
+        if not found:
+            continue
+        for year in _design_years(path.name):
+            lengths.setdefault(year, found)
     return lengths
 
 
@@ -349,15 +383,12 @@ def _designs_for(modelo_id: str) -> tuple[dict[int, dict[str, int]], dict[int, s
     parsed: dict[int, dict[str, int]] = {}
     unreadable: dict[int, str] = {}
     for path in _design_sources(modelo_id):
-        matched = _DESIGN_YEAR.search(path.name)
-        if matched is None:
-            continue
-        year = int(matched.group(1))
         table = _parse_design(path)
-        if table:
-            parsed.setdefault(year, table)
-        elif year not in parsed:
-            unreadable.setdefault(year, path.name)
+        for year in _design_years(path.name):
+            if table:
+                parsed.setdefault(year, table)
+            elif year not in parsed:
+                unreadable.setdefault(year, path.name)
     return parsed, unreadable
 
 
@@ -483,14 +514,11 @@ def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]
         # and stated as bare tuples it was under-read for hours by everyone
         # looking at it, including its author.
         headline = (
-            f"RECORD SET CHANGED ({delta}) -- the design's record decomposition differs, "
-            "so this is not an offset shift"
+            f"RECORD SET CHANGED ({delta}) -- the design's record decomposition differs, so this is not an offset shift"
             if delta
             else "page byte-lengths differ, so something moved inside a record"
         )
-        boundaries.setdefault((earlier, later), []).append(
-            f"{headline}: {lengths[earlier]} vs {lengths[later]}"
-        )
+        boundaries.setdefault((earlier, later), []).append(f"{headline}: {lengths[earlier]} vs {lengths[later]}")
 
     # THIRD SIGNAL: a slot RETIRED into reserved space. It moves no box and
     # changes no page length -- the reserved block absorbs the freed bytes
@@ -546,8 +574,7 @@ def test_no_revision_spans_a_design_relayout() -> None:
         if not boundaries:
             continue
         detail = "; ".join(
-            f"{earlier}/{later} ({' + '.join(evidence)})"
-            for (earlier, later), evidence in sorted(boundaries.items())
+            f"{earlier}/{later} ({' + '.join(evidence)})" for (earlier, later), evidence in sorted(boundaries.items())
         )
         violations.append(
             f"modelo {modelo.id} revision {revision_id!r} spans {len(boundaries)} re-layout(s) "
@@ -558,3 +585,55 @@ def test_no_revision_spans_a_design_relayout() -> None:
         "filings at the wrong byte offsets. Split each revision at every boundary listed; "
         "splitting at only the ones one signal saw leaves the rest live:\n  " + "\n  ".join(violations)
     )
+
+
+def test_every_ejercicio_a_design_names_is_attributed_to_it() -> None:
+    """A design naming two ejercicios must be attributed to BOTH.
+
+    ``ejercicio-(\d{4})`` taken as a first match attributed a two-year design to
+    its opening year only, so Modelo 303's 2015-y-2016 and 2019-y-2020 designs
+    left 2016 and 2020 claimed by nothing -- years the corpus covers and the
+    enumeration reported as unmeasured.
+
+    The emptiness guard is deliberate: the subject of this assertion is a map
+    built by globbing a directory, and a glob that matches nothing would satisfy
+    every ``for`` below vacuously.
+    """
+    by_year = _designs_by_year("303")
+    assert by_year, "no Modelo 303 design was enumerated at all; the assertions below would be vacuous"
+    for year in (2015, 2016, 2019, 2020):
+        assert year in by_year, f"{year} is covered by a bundled design but attributed to nothing"
+
+
+def test_a_year_aeat_split_mid_course_keeps_both_of_its_designs() -> None:
+    """AEAT split three Modelo 303 ejercicios mid-course; both halves must survive.
+
+    The year-keyed maps keep the first design by filename sort and discard the
+    rest, so a consumer deriving an epoch boundary from "the 2024 design" reads
+    an arbitrary half of a year that has two incompatible layouts.
+
+    Counted by CONTENT, not by path: the corpus bundles three of these designs
+    twice under names differing only by a truncated extension, and a path count
+    would report the duplicate as a second design and pass while proving nothing.
+    """
+    by_year = _designs_by_year("303")
+    assert by_year, "no Modelo 303 design was enumerated at all"
+    for year in (2018, 2021, 2024):
+        distinct = {path.read_bytes() for path in by_year.get(year, ())}
+        assert len(distinct) >= 2, (
+            f"{year} should carry two distinct Modelo 303 designs (AEAT split it mid-course) "
+            f"but {len(distinct)} distinct payload(s) survived enumeration"
+        )
+
+
+def test_the_orden_year_in_a_filename_is_not_read_as_a_coverage_year() -> None:
+    """``orden-hap-2373-2014-...-ejercicio-2018`` covers 2018, not 2014.
+
+    The negative control for the widened attribution: anchoring on ``ejercicio-``
+    rather than scanning for four-digit runs is what keeps a legislative
+    instrument's own year out of the coverage map.
+    """
+    assert _design_years("13-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-salvo.xlsx") == (2018,)
+    assert _design_years("10-303-orden-hap-2373-2014-ejercicio-2015-y-2016-247-kb-xlsx.xlsx") == (2015, 2016)
+    assert _design_years("02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021.xlsx") == (2022,)
+    assert _design_years("07-303-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf") == ()
