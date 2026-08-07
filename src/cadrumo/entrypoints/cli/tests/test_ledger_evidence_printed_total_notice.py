@@ -98,6 +98,7 @@ def _confirm(evidence_id: str) -> dict[str, Any]:
     confirmed = _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "received",
             "--counterparty-name", "Acme Suministros SL",
