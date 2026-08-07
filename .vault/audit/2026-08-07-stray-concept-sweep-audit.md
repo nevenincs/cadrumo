@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:149a5a5de9a918469194dd008e4d6e3810848c72cc8ce5ebfd4f95642063e688'
+body_hash: 'sha256:42b7987dcb24822d8d55bf9c58dd344f1ced6369bd4a6b41c6d6d54967cab7df'
 related: []
 ---
 # `stray-concept-sweep` audit: disposition at HEAD
@@ -219,3 +219,97 @@ one was found, and it is L4: `operation_kind` was admitted by a rule
 (membership in the modelo's clave set), and the gap between the two was a silent
 drop rather than an error. Every other duplicate mapping examined agreed with
 its canonical source value-for-value at HEAD.
+
+## Second pass: systematic fragmentation sweep
+
+A follow-on sweep ran 18 semantic queries across the substrate axes where a
+duplicate authority would change a filed figure, each hit confirmed with `rg`
+and — where the answer was contested — by executing the code rather than
+reading it. Recorded in full, negatives included, so the sweep is falsifiable.
+
+### One new finding: the euro-conversion stamp is declared twice
+
+`application/invoices/_creation.py:349` `_stamp_fx_conversion` and
+`application/ledger/_business_operation_invoice.py:490` `_resolve_fx_stamp` are
+two private declarations of one policy. Both cite the same law (Ley 46/1998
+art. 36), both convert at the invoice/issue date, both call the same
+`default_ecb_rate_provider()`, both skip a euro invoice, and both deliberately
+leave a foreign invoice unstamped rather than defaulting when the rate cannot be
+resolved. They differ only in shape: one takes a `date` and mutates a payload
+dict, the other parses an ISO string and returns a tuple.
+
+Driven against one fake provider they agree on every case, including both
+failure modes:
+
+| currency | `_stamp_fx_conversion` | `_resolve_fx_stamp` |
+|---|---|---|
+| `EUR` | unstamped | unstamped |
+| `USD` | `0.92` / `2026-03-15` | `0.92` / `2026-03-15` |
+| `GBP` | `1.17` / `2026-03-15` | `1.17` / `2026-03-15` |
+| `XYZ` (unknown) | unstamped | unstamped |
+
+So this is **drift, not a live disagreement**, and belongs in the same class as
+the rate tables rather than with the defects. What makes it worth recording is
+that nothing binds them: `rg` finds each symbol only in its own module, so there
+is no parity test, and the *rate source* is properly centralised (one
+`EcbReferenceRateProvider` under `adapters/outbound/fx`) while the *stamping
+policy* around it is not. The fail-unstamped decision is the load-bearing part —
+it is what stops a fabricated rate reaching a filed euro amount — and it is
+currently a convention held identically in two places by nobody's enforcement.
+Both sites sit inside the invoice campaign's working set, so this belongs as a
+Step there, not as a foreign edit.
+
+### Axes swept and confirmed clean
+
+Each of these was a live hypothesis that a second authority existed; each was
+refuted against HEAD.
+
+- **Euro-cent rounding.** `core.money.round_to_cents` is the sole
+  implementation; `apply_rounding` in the formula runtime composes it rather
+  than re-deriving, and `money-2` names it explicitly.
+- **NIF / NIE / CIF check letters.** `core/identity` holds two modules that look
+  like duplicates. They are not: `_NIF_LETTERS` is declared exactly once
+  (`_documents.py:35`) and `_tax_id.py` imports `nif_check_letter` from it. The
+  docstring claiming this was verified true rather than taken on trust.
+- **Period boundaries.** `domain/period.py` `period_start_date` /
+  `period_end_date` look like a second boundary authority against
+  `Period.start_date` / `.end_date`, which `period-filter-single-boundary-authority`
+  would forbid. They **delegate** to `Period` for every period carrying a date
+  span, and hand-code only the Modelo 202 instalment tokens `1P`/`2P`/`3P`,
+  which `Period` deliberately has no span for. A genuine extension, not a
+  duplicate.
+- **The M347 declaration floor.** Four sites apply it, which looked like the
+  strongest candidate in the sweep — a `>` versus `>=` split at exactly
+  €3,005.06 would be a live defect. It is instead the **reference-good pattern**:
+  one `M347_THRESHOLD_EUR` constant in `core/external_constants.py`, an AST
+  centralisation gate asserting each of the five consumer modules imports it
+  from `cadrumo.core` and forbidding the bare literal, and the four comparisons
+  are `>` (declarable) against `<=` (refuse) — complementary predicates on one
+  boundary, not an off-by-one.
+- **IVA base/cuota split.** `split_gross_at_rate` in `domain/iva/_saturation.py`
+  is the single inverse-split primitive.
+- **Recargo de equivalencia rates.** One registry-backed loader
+  (`domain/iva/_recargo_equivalencia.py`) exposing `recargo_rate_for`.
+- **Invoice totals.** The base/cuota/total identity is enforced only by
+  `Invoice`'s own model validators.
+- **Operator diagnostics.** One `Notice` on the envelope spine, with the
+  no-bespoke-field conformance gate already enforcing it.
+- **Revision selection.** `select_revision` is canonical; `_work_addressing`
+  explicitly delegates the assertion to it rather than re-deriving.
+- **Business proportion.** The single `_business_proportion.py` dispatch, as the
+  first-pass register reported.
+- **Enum coercion.** One generic `_enum_or_none`; the other two similarly-named
+  helpers do different jobs.
+- **Currency conversion itself.** One provider, one protocol, one normalization
+  service — only the stamping policy above is duplicated.
+
+### What this pass suggests about where fragmentation actually lives
+
+The negatives are as informative as the finding. Every axis with a **named
+constant plus a gate** (the M347 threshold, the money primitive, the notice
+channel) came back clean, and every duplicate found in both passes was a
+**private helper encoding a policy** — `_invoice_kind_for` ×3, the two FX
+stamps, the two rate-tier tables, `_NUMERIC_IVA_RATE_SLOTS`. The pattern is
+consistent: values get centralised in this codebase, decisions do not. A helper
+whose name starts with an underscore and whose body encodes a rule is where the
+next duplicate will be, and none of the existing gates look for that shape.
