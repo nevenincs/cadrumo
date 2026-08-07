@@ -255,9 +255,7 @@ def modelo_720_declared_observation(
             The independent valuation counterpart this declaration is tested
             against.
     """
-    refs_by_casilla = {
-        casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas
-    }
+    refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
     observations: list[CasillaObservation] = []
     for casilla_id in _M720_VALUATION_CASILLA_GROUPS:
         raw = revision.input_values_by_casilla_id.get(casilla_id)
@@ -325,9 +323,7 @@ def modelo_720_evidence_observation(
             group = foreign_asset_obligation_group(asset_class)
             totals[group] = totals.get(group, Decimal("0")) + value
 
-    refs_by_casilla = {
-        casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas
-    }
+    refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
     observations: list[CasillaObservation] = []
     for group, total in totals.items():
         casilla_id = _M720_GROUP_VALUATION_CASILLAS.get(group)
@@ -370,9 +366,7 @@ def modelo_720_prior_baseline_observation(
     the re-declaration advisory silent rather than comparing against a
     fabricated zero baseline.
     """
-    refs_by_casilla = {
-        casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas
-    }
+    refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
     observations: list[CasillaObservation] = []
     for binding in modelo_revision.bindings:
         if binding.source != BindingSourceKind.PREVIOUS_FILING:

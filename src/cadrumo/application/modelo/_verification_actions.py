@@ -138,9 +138,9 @@ from ._iva_wallet_gate import (
 )
 from ._ledger_drift_gate import ledger_drift_findings
 from ._m210_agrupacion_renta import m210_agrupacion_renta_verification_findings
-from ._m720_redeclaration_gate import modelo_720_redeclaration_findings
 from ._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
 from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
+from ._m720_redeclaration_gate import modelo_720_redeclaration_findings
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from ._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
 from ._registry_resources import authority_via_resources as _authority_via_resources
