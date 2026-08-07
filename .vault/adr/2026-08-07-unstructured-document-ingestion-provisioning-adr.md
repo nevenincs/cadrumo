@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:0000000000000000000000000000000000000000000000000000000000000000'
+body_hash: 'sha256:36f906f61536bd78c98e3a67e5e20c0245b58f683751808be2bd4a7486151d63'
 related:
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
   - '[[2026-08-06-llm-package-split-ingest-cascade-reference]]'
@@ -186,6 +186,21 @@ acceptance case is executable without inference: against the current
 machine's live readings, the detector must refuse, and against injected
 post-quiesce readings, it must permit.
 
+Admission control is the full shape, not the single check. **Concurrency is
+bounded:** a configured in-process concurrent-inference limit (default one)
+queues or refuses further requests with a typed busy refusal, because two
+concurrent vision reads on consumer hardware are the same OOM by another
+route. **A peer process holding the device is a first-class observation, not
+an error:** the contention snapshot distinguishes the runtime's own
+residents (`/api/ps`) from other processes' device usage (a free-VRAM
+shortfall not explained by residents), and the refusal names which is which,
+because the remediation differs — unload a model versus close another
+application. **Teardown under pressure is explicit and self-scoped:** the
+provision verb family gains an unload action for Cadrumo-selected models,
+the contention refusal names it when residents explain the shortfall, and
+Cadrumo never evicts or interferes with another process's device usage —
+pressure caused by a peer is reported and refused, never "managed".
+
 ### D4 — the typed model catalogue and adaptive, licence-aware selection
 
 A single typed catalogue declares, per model role (vision transcription, text
@@ -207,6 +222,29 @@ with one home beside the settings it informs — not registry data (it encodes
 no tax semantics) and not scattered docstring prose (the current state, where
 the licence constraint is invisible).
 
+**Selection is bounded from below, not maximised.** By operator directive
+the design point is the weakest vision-capable model that clears the
+capability bar — the 2B–4B on-host class, with the cloud Haiku tier as its
+measurement proxy — never the strongest model the hardware could hold. The
+catalogue's quality reference for each candidate is its measured baseline
+at that discipline, and an operator override upward is a choice the
+selection surfaces, not a default it drifts toward.
+
+**Per-model parameter support is a first-class capability axis, beside
+vision support.** Two shipped defects share one shape — a request field the
+transport assumed universal: the `images` field silently dropped by three
+of four adapters until the `supports_images` boundary landed, and
+`temperature` sent unconditionally (`llm/_providers/anthropic.py:195,204`,
+populated always by `llm/_client.py:156-159`), which current top-tier
+models reject with a 400, so the product can presently reach only Sonnet
+4.6 and older. The provider capability model therefore declares, per
+adapter and per model where vendors differ, which request parameters are
+supported; the dispatch omits unsupported parameters rather than sending
+assumed defaults, and the capability declaration is data enforced at the
+same single dispatch point as the image and consent boundaries, proven the
+same way (send the unsupported field, observe the typed refusal, never the
+vendor 400).
+
 ### D5 — lifecycle: explicit verbs, no implicit pulls, no daemon ownership
 
 A verb family under the existing `config` root — `aeat config provision` —
@@ -220,6 +258,20 @@ instructive refusal naming `ollama serve`, never a spawn. Inference paths
 never pull implicitly — a multi-gigabyte download is an explicit operator
 action, and the inference-time behaviour on a missing model remains the
 typed refusal naming the provision verb.
+
+Deinstallation is the same verb family run backwards, and it is designed
+rather than assumed: a remove action deletes a pulled model through the
+runtime's delete API and reports the freed bytes; removing the `[llm]` extra
+is a package operation (`pip uninstall` of the extra's closure) after which
+every guarded surface returns to the instructive install refusal — that is
+the already-tested absent state, so deinstallation cannot strand a
+half-working surface. What removal never touches: persisted records.
+Transcriptions, drafts, provenance stamps and classifications derived from
+model reads remain valid history — a stamp naming a removed model is honest
+provenance, not a dangling reference — and the doctor reports a
+partially-installed state (extra present but models unpulled, or models
+resident for an absent extra) as its own detectable row with the remediation
+in whichever direction the operator intends.
 
 ### D6 — retry and backoff, scoped to the transient
 
@@ -340,8 +392,9 @@ consumed unchanged. The dependency-provisioning and product-packaging ADRs
 are extended, not contradicted.
 
 **Deliberately out of scope.** Daemon supervision and service management;
-non-NVIDIA VRAM probing; automatic model eviction or unloading (the runtime
-owns residency; the detector only refuses new load); GPU scheduling across
+non-NVIDIA VRAM probing; *automatic* model eviction (D3's teardown is an
+explicit operator unload of Cadrumo-selected models, never a background
+eviction, and never another process's memory); GPU scheduling across
 concurrent agents (a development-fleet concern, not a product concern); and
 the separate `cadrumo-llm` distribution, which stays behind package-split
 D2's precondition.

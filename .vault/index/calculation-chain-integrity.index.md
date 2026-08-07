@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:55316bfd80e1d7e8ca4cd6139559a3b2232d233d3ba68247d3f05f0a110496ad'
+body_hash: 'sha256:6ae588ab8d82d0a101ae92a576f434280389095a347c645516e2ebf9ed9c4e60'
 related:
   - '[[2026-08-07-calculation-chain-integrity-W01-P01-S01]]'
   - '[[2026-08-07-calculation-chain-integrity-W01-P01-S02]]'
@@ -29,6 +29,7 @@ related:
   - '[[2026-08-07-calculation-chain-integrity-W03-P05-S37]]'
   - '[[2026-08-07-calculation-chain-integrity-W03-P05-S38]]'
   - '[[2026-08-07-calculation-chain-integrity-W04-P06-S14]]'
+  - '[[2026-08-07-calculation-chain-integrity-W04-P06-S15]]'
   - '[[2026-08-07-calculation-chain-integrity-W04-P06-S30]]'
   - '[[2026-08-07-calculation-chain-integrity-W05-P07-S16]]'
   - '[[2026-08-07-calculation-chain-integrity-W05-P07-S17]]'
@@ -113,6 +114,7 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 - `2026-08-07-calculation-chain-integrity-W03-P05-S37` - `calculation-chain-integrity` exec W03.P05.S37
 - `2026-08-07-calculation-chain-integrity-W03-P05-S38` - `calculation-chain-integrity` exec W03.P05.S38
 - `2026-08-07-calculation-chain-integrity-W04-P06-S14` - `calculation-chain-integrity` exec W04.P06.S14
+- `2026-08-07-calculation-chain-integrity-W04-P06-S15` - `calculation-chain-integrity` exec W04.P06.S15
 - `2026-08-07-calculation-chain-integrity-W04-P06-S30` - `calculation-chain-integrity` exec W04.P06.S30
 - `2026-08-07-calculation-chain-integrity-W05-P07-S16` - Classify each candidate-genuine suite failure as defect, environment artefact, or caused by this session's landings, with evidence
 - `2026-08-07-calculation-chain-integrity-W05-P07-S17` - `calculation-chain-integrity` exec W05.P07.S17

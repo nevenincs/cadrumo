@@ -4,11 +4,12 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:bd13a5663a7edb45f408311c28028288539ddf9eff09eb2467b8149fbfda7f39'
+body_hash: 'sha256:94f6bd51862e168399a16c2443c22bd86994f9f2d25cc4c19db116b4bae52ade'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
   - '[[2026-08-07-unstructured-document-ingestion-provisioning-adr]]'
+  - '[[2026-08-07-unstructured-document-ingestion-operations-adr]]'
   - '[[2026-08-06-llm-package-split-adr]]'
   - '[[2026-06-15-dependency-provisioning-adr]]'
   - '[[2026-06-28-product-packaging-adr]]'
@@ -22,7 +23,9 @@ Build the transcription-anchored semantic ingestion pipeline the governing ADR d
 
 ## Description
 
-Executes the unstructured-document-ingestion ADR (decisions D1 through D9): the four-stage pipeline behind the exactness probe, the anti-fabrication construction (anchoring, role resolution, arithmetic closure), the per-field provenance envelope, the widened loss-forbidden `InvoiceDraft` waist, the tabular column-role mapping lane, the engine abstraction under the amended gated-cloud ruling, and the two-lane measurement design. The package-split ADR governs the custody and boundary obligations W01 inherits, the canonical-invoice ADR governs the confirm boundary W02 P07 feeds, and the reconciliation ADR contributes the direction threading and counterparty rename consumed in W01 P03 and W02 P07.
+Executes the unstructured-document-ingestion ADR (decisions D1 through D9): the four-stage pipeline behind the exactness probe, the anti-fabrication construction (anchoring, role resolution, arithmetic closure), the per-field provenance envelope, the widened loss-forbidden `InvoiceDraft` waist, the tabular column-role mapping lane, the engine abstraction under the amended gated-cloud ruling, and the two-lane measurement design. The package-split ADR governs the custody and boundary obligations W01 inherits, the canonical-invoice ADR governs the confirm boundary W02 P07 feeds, and the reconciliation ADR contributes the direction threading and counterparty rename consumed in W01 P03 and W02 P07. The pipeline ADR amendment D8a governs W05 (the reinstated consent gate, partially superseding the executed package-split D5). The provisioning ADR (same feature, provisioning topic) governs W06 (its D1 through D7) and W07 (its D8 and D9), with the accepted dependency-provisioning and product-packaging ADRs as the contracts those waves extend. The operations ADR (same feature, operations topic) governs W08 (batch, its D1), W09 (review and ledger end-to-end, its D2 and D4) and W10 (consent lifecycle, deinstallation, conformance, its D3 and D5 plus the provisioning ADR D5).
+
+This is an epic executing a three-record ADR cluster, which is the sanctioned roll-up shape. The tier stays L3 deliberately rather than L4: L4 requires a truthful external project-management association in the Epic intent block, and this project has no project board - work is tracked through issues, worktrees and the vault pipeline only, and no external association exists for this epic to declare. Inventing one would satisfy the letter of the tier and falsify its point; the wave structure carries the epic's coordination instead, and a promotion to L4 is a one-verb change if a real association is later created.
 
 Grounding against HEAD at authoring time, so no Step re-plans landed work: the canonical-format lane is closed and in HEAD (Facturae series, the discarded-counterparty projection fix, party names across Facturae, CII and UBL, the xml ingest crash fix, the vision-routing regression fix, and the whole VeriFactu and SII foundation with its batch reader, schema-derived mandatory enforcement, two-method CI oracle, payload probe, shape members and bundled schemas). None of that appears as work here. Two Steps in W02 P05 are closed at authoring time because the peer lane (unstructured-ingest-lead) already landed them, verified against HEAD rather than taken on report: the images-capability refusal boundary (`llm/_client.py`, `supports_images`, verified by `test_vision_capability_boundary.py`) and the Anthropic in-memory multimodal transport (`llm/_providers/anthropic.py`). They carry no exec records in this plan; this paragraph is the explicit record of why they are closed. The same lane owns the stage-2 product surface Step (W02.P05.S14), which is in flight and stays open until it lands. Two facts shape sequencing: stage 2 does not exist as a product surface today (the vision path collapses reading and reasoning into one image-to-fields call, and the text path uses no model), and `EvidenceInput` is not yet on the `application.ledger` facade, so W01.P01.S03 is a precondition of every consuming change.
 
@@ -81,6 +84,9 @@ Lands the anchored candidate schema and the local extraction surface, and record
 - [x] `W02.P05.S15` - Refuse an images-carrying request on an adapter that does not forward them via the supports_images capability boundary, landed at HEAD by the peer lane and verified by test_vision_capability_boundary.py; `src/cadrumo/llm/_client.py`.
 - [x] `W02.P05.S16` - Carry the gated cloud multimodal transport on the Anthropic in-memory HTTP adapter for the measurement engine, landed at HEAD by the peer lane and verified by the capability-boundary suite; `src/cadrumo/llm/_providers/anthropic.py`.
 - [ ] `W02.P05.S17` - Refuse cloud provider selection on real-evidence paths absent the explicit per-invocation consent acknowledgement, default-off and gestor-barred, gated by refusal tests on both the extract and confirm surfaces; `src/cadrumo/llm`.
+- [ ] `W02.P05.S77` - Declare the field-form contract once and compile it into both the extraction prompt and the grounding validators (a rate as a bare number, amounts preserving the printed decimal separator, dates exactly as printed), resolving the printed-percent mismatch, gated by a contract-parity test proving prompt guidance and validator vocabulary derive from one declaration; `src/cadrumo/llm`.
+- [ ] `W02.P05.S78` - Build the prompt compiler in the application layer: template plus registry-resolved IVA and retencion rates for the filing year and period plus IvaCategory members, handed to the extension as data, with no numeric rate literal in any template, gated by the model-free anti-drift gate proven by mutation in both directions; `src/cadrumo/application/ledger`.
+- [ ] `W02.P05.S79` - Fold the compiled prompt hash and its registry revision into the LLM cache key and the provenance stamp so a cached response cannot outlive a revision change and an audit can answer under which rates a figure was read, gated by cache-key collision tests and a provenance roundtrip; `src/cadrumo/llm/_client.py`.
 
 ### Phase `W02.P06` - S3 grounding and the regex deletion
 
@@ -136,6 +142,8 @@ Builds the key-pinned harness and produces the stage baselines and recorded acce
 - [ ] `W04.P10.S37` - Measure the S4 category baseline over the 59 category-scorable documents only, with the acquired-real set excluded by category_scorable false; `dev`.
 - [ ] `W04.P10.S38` - Measure the tabular mapping baseline over the six csv_dialect descriptors, nine CSV exports and the libro registro header; `dev`.
 - [ ] `W04.P10.S39` - Record the acceptance floors from the first measured baselines with the key hash, and wire subsequent harness runs to compare against them; `dev`.
+- [ ] `W04.P10.S81` - Report the model tier beside every harness figure, record the claude-sonnet-4-6 REC-DOM-IMG-008 result (7 of 8, zero fabricated) as an upper reference point, and re-establish the baseline at the Haiku-tier proxy and the 2B-4B on-host class, gated by the harness refusing a result row missing its tier; `dev`.
+- [ ] `W04.P10.S82` - Measure whether fewer fields per call outperforms all fields at once at the design-target tier, resolving the S2 call-shape question by a recorded comparison at fixed key hash and tier rather than by assertion; `dev`.
 
 ## Wave `W05` - The reinstated consent gate
 
@@ -162,6 +170,8 @@ Lands the free-resource and VRAM-aware hardware profile and the fail-closed cont
 - [ ] `W06.P12.S45` - Add the HardwareProfile probe carrying free system memory, accelerator presence, and NVML-backed total and free VRAM, with unknown reported as unverified on diagnostic rows, gated by injected-measurement tests covering every branch; `src/cadrumo/application/provisioning.py`.
 - [ ] `W06.P12.S46` - Add live contention detection at the dispatch choke point comparing the selected model declared requirement plus margin against free headroom and the runtime resident set, fail-closed on unreadable figures, gated by the live-machine refusal case plus an injected post-quiesce permit case, proven by mutation; `src/cadrumo/llm/_client.py`.
 - [ ] `W06.P12.S47` - Surface the hardware profile and contention snapshot rows in aeat config check, gated by the check payload conformance tests; `src/cadrumo/entrypoints/cli/_config`.
+- [ ] `W06.P12.S58` - Bound in-process inference concurrency (default one) with a typed busy refusal or deterministic queueing, gated by a two-concurrent-request test proving exactly one proceeds; `src/cadrumo/llm/_client.py`.
+- [ ] `W06.P12.S59` - Distinguish runtime residents from peer-process device usage in the contention snapshot and add the explicit unload action for Cadrumo-selected models, with the refusal naming which remediation applies, gated by injected readings covering both causes and an unload-path test, never touching another process; `src/cadrumo/application/provisioning.py`.
 
 ### Phase `W06.P13` - The model catalogue, adaptive selection, and the licence flip
 
@@ -170,6 +180,7 @@ Lands the typed licence-aware catalogue, adaptive per-role selection, and the Ap
 - [ ] `W06.P13.S48` - Author the typed per-role model catalogue declaring runtime id, memory requirement, SPDX licence with an explicit commercial-use flag verified against publisher text, and measured-baseline reference, gated by catalogue validation tests; `src/cadrumo/core`.
 - [ ] `W06.P13.S49` - Implement adaptive selection resolving each role to the best candidate fitting the measured hardware tier and the licence posture, with an operator override surfacing a visible licence advisory on a non-commercial candidate, gated by selection-matrix tests over injected profiles; `src/cadrumo/application/provisioning.py`.
 - [ ] `W06.P13.S50` - Flip the default vision model to the Apache-2.0 candidate and add the licence gate asserting no default candidate in any role carries a commercial-use bar, proven by mutation; `src/cadrumo/core/_config_runtime_fields.py`.
+- [ ] `W06.P13.S80` - Add per-model parameter support to the transport capability axis and omit unsupported parameters at the dispatch point (the unconditional temperature currently draws a vendor 400 from top-tier models), gated by adapter tests proving the typed refusal replaces the vendor error and the parameter is absent from the wire shape; `src/cadrumo/llm/_providers`.
 
 ### Phase `W06.P14` - Lifecycle verbs, retry, and degradation
 
@@ -192,9 +203,57 @@ Lands the uniform extra guards, the import contracts, the completed extra closur
 - [ ] `W07.P15.S56` - Add the absent-llm packaging smoke lane: install the core cohort without the extra, drive every inference-adjacent surface, and assert each refusal is the declared install guidance rather than a ModuleNotFoundError; `dev/packaging`.
 - [ ] `W07.P15.S57` - Prove the tabular split behaviour: a known fixed-layout file imports fully on a core-only install while an unknown vocabulary refuses at the mapping call with the install hint, gated by fixtures on both sides; `src/cadrumo/adapters/inbound/financial`.
 
+## Wave `W08` - Batch ingestion
+
+Delivers the bounded batch run the operations ADR D1 decides: per-item typed results with no batch abort, idempotent re-run riding the evidence idempotency guard and the transcription cache, deterministic ordering, batch-wide contention pacing and rate limits, notice-channel progress, and secure-storage-only batch state. Depends on W01 through W03 for the pipeline and W06 for admission control. Governed by the operations ADR D1.
+
+### Phase `W08.P16` - The bounded batch run
+
+Lands the batch verb family with per-item truth, idempotent resume, deterministic ordering, and contention-aware pacing.
+
+- [ ] `W08.P16.S60` - Add the batch verb family accepting a directory or repeated --file and executing the full per-item pipeline into typed per-item result rows, never aborting on one item, with exit status reflecting any-item failure, gated by a poisoned-item fixture batch completing and reporting the refusal row; `src/cadrumo/entrypoints/cli`.
+- [ ] `W08.P16.S61` - Derive per-item idempotency keys from content address plus direction riding the evidence idempotency guard so a re-run reports no-op rows, gated by a double-run producing byte-identical result sets with no second lifecycle event; `src/cadrumo/application/ledger`.
+- [ ] `W08.P16.S62` - Order batch items deterministically by content address, gated by shuffled input directories producing identical reports; `src/cadrumo/application/ledger`.
+- [ ] `W08.P16.S63` - Pace inference batch-wide: a standing contention refusal pauses the inference lane while every non-inference item completes, and cloud rate limits with the shared backoff apply across the run, gated by an injected-contention fixture completing deterministic items and reporting paused ones; `src/cadrumo/application/ledger`.
+- [ ] `W08.P16.S64` - Report progress through the notice channel in text mode and complete typed row sets in JSON mode, gated by the envelope schema conformance suite; `src/cadrumo/entrypoints/cli`.
+- [ ] `W08.P16.S65` - Persist any batch state through secure storage only, with no spool, journal or progress file, gated by the sensitive-persistence gate scan and an anti-tautology proof; `src/cadrumo/application/ledger`.
+
+## Wave `W09` - The review process and ledger end-to-end
+
+Delivers the human review gate the operations ADR D2 decides (blocking findings block, corrections are assertions, confirmations carry provenance) and the D4 end-to-end waist guarantee from ingest to the Modelo 303 observation. Depends on W02 and the canonical-invoice writer. Governed by the operations ADR D2 and D4.
+
+### Phase `W09.P17` - Review gate and the end-to-end waist
+
+Lands the review surface, the blocking-findings gate, assertion-shaped corrections, confirmation provenance, and the ingest-to-M303 field-accounting gate.
+
+- [ ] `W09.P17.S66` - Add the review list and filter verbs surfacing per-field value, origin, verbatim anchor, grounding outcome, ambiguity candidates, findings and suggestions, gated by documented-command and JSON schema conformance; `src/cadrumo/entrypoints/cli`.
+- [ ] `W09.P17.S67` - Make blocking findings block: an unresolved closure discrepancy, ambiguous identity or unresolved direction refuses confirm until each named finding carries an explicit per-finding resolution, with no bulk confirm flag, gated by refusal tests per finding class; `src/cadrumo/application/ledger`.
+- [ ] `W09.P17.S68` - Record corrections as assertions: an operator override re-stamps the field OPERATOR while the confirmation record retains the prior value and origin, gated by a roundtrip asserting both values survive; `src/cadrumo/application/ledger`.
+- [ ] `W09.P17.S69` - Persist the confirmation provenance record naming the confirmer, time, overridden fields, finding resolutions, and the evidence and transcription content addresses, gated by a strict roundtrip with every defaultable field non-default; `src/cadrumo/application/ledger`.
+- [ ] `W09.P17.S70` - Add the end-to-end waist gate: an exact-parse fixture travels ingest, transcription, extraction, grounding, confirm, Invoice and the Modelo 303 observation with per-hop field accounting and no model in CI, proven by mutation at each hop; `src/cadrumo/application/ledger/tests`.
+
+## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
+
+Delivers the consent ledger, the per-profile eligibility bar, the honest withdrawal verb with local re-derivation, model removal and partial-state detection, the artifact-level uninstall proof, and the conformance sweep binding every new verb. Depends on W05 for the gate and W06 and W07 for provisioning and packaging. Governed by the operations ADR D3 and D5 and the provisioning ADR D5.
+
+### Phase `W10.P18` - Consent ledger, withdrawal, removal, and conformance
+
+Lands the consent ledger and eligibility bar, the withdrawal and re-derivation verbs, model removal with partial-state detection, the uninstall proof, and the verb conformance sweep.
+
+- [ ] `W10.P18.S71` - Append a consent-ledger entry at the dispatch choke point in the same path that honours a token, refusing transmission when the append fails, gated by mutation: break the append and the dispatch must refuse; `src/cadrumo/llm/_client.py`.
+- [ ] `W10.P18.S72` - Add the per-profile cloud-consent eligibility bar, default off and gestor-locked off, with no consent gate offered on any surface while off, gated by a surface sweep test and a config check row; `src/cadrumo/application/user_profile`.
+- [ ] `W10.P18.S73` - Add the withdrawal verb: list consent-ledger entries, state plainly that transmitted bytes cannot be recalled, mark cloud-derived artefacts, and offer local re-derivation from the cached transcription that re-stamps provenance without rewriting history, gated by a re-derivation test; `src/cadrumo/entrypoints/cli`.
+- [ ] `W10.P18.S74` - Add the model remove action reporting freed bytes and the doctor row detecting partially-installed states in both directions (extra without models, models without extra), gated by doctor row tests; `src/cadrumo/application/provisioning.py`.
+- [ ] `W10.P18.S75` - Extend the packaging smoke lane with the uninstall step proving every guarded surface returns to the instructive install refusal after the extra is removed; `dev/packaging`.
+- [ ] `W10.P18.S76` - Sweep every W08 through W10 verb for the pull and --file naming standard, envelope and notice conformance, and documented-command coverage, gated by the conformance suites red-green proven on one deliberate violation; `src/cadrumo/entrypoints/cli`.
+
 ## Parallelization
 
-Waves are sequenced by default: W01 before W02 and W03, W04 last. W03 may start once W01 is complete and W02 P06 has landed its grounding primitives (S18 through S21), since the tabular lane consumes them at S30; the rest of W03 shares no files with W02. Within W01, P01 and P02 may run in parallel; P03 depends on both. Within W02, P04 and P05 may run in parallel after W01; P06 depends on both (S22, the regex deletion, additionally depends on S14, the wired semantic reader, and must never land before it, mirroring the package-split D5 window discipline); P07 depends on P06. Within W04, P09 may start as soon as W02 P06 lands; P10 depends on P09 for the fixture bundle and on the stages it measures. Hard ordering inside phases: S03 (the facade promotion) precedes every Step that imports `EvidenceInput`, S13 precedes S14, S31 precedes S32 and S33. S14 is owned by the in-flight unstructured-ingest-lead lane; before any edit near its surface, run `git diff` on the target files and abort on non-authored WIP.
+Waves are sequenced by default: W01 before W02 and W03, W04 last. W03 may start once W01 is complete and W02 P06 has landed its grounding primitives (S18 through S21), since the tabular lane consumes them at S30; the rest of W03 shares no files with W02. Within W01, P01 and P02 may run in parallel; P03 depends on both. Within W02, P04 and P05 may run in parallel after W01; P06 depends on both (S22, the regex deletion, additionally depends on S14, the wired semantic reader, and must never land before it, mirroring the package-split D5 window discipline); P07 depends on P06. Within W04, P09 may start as soon as W02 P06 lands; P10 depends on P09 for the fixture bundle and on the stages it measures. Hard ordering inside phases: S03 (the facade promotion) precedes every Step that imports `EvidenceInput`, S13 precedes S14, S31 precedes S32 and S33. The prompt-compilation trio is ordered S77 then S78 then S79, and S14 consumes the compiled prompt and form contract, so S77 and S78 land before S14 closes; S81 precedes every P10 baseline Step so no figure is recorded without its tier; S82 rides the S36 harness run at the design-target tier. S14 is owned by the in-flight unstructured-ingest-lead lane; before any edit near its surface, run `git diff` on the target files and abort on non-authored WIP.
+
+For the later waves: W05 is independent of W02 through W04 and may run as soon as its owner is free, except S41 which shares `llm/_client.py` with S46 and S52 and must coordinate on that file. Within W05, S40 and S41 land as one atomic commit (the deletion gate must never list symbols the tree carries), S42 follows S41, S43 rides the same commit as S40 or later, S44 lands with the gate, never before it. W06 phases run in order (P12 before P13 selection needs the profile, P14 last); S46 and S52 touch the same dispatch module as S41 and are sequenced after it. W07 depends on W06 P13 (the catalogue) for S55's closure list and may otherwise run beside P14. No Step in W05 through W07 loads, pulls or invokes a model; the contention detector and provision verbs are developed against injected measurements and probe endpoints only.
+
+W08 depends on W02, W03 and W06 (admission control, S58 and S59 included) and on the evidence idempotency guard; its Steps are internally sequenced S60 before S61 through S65. W09 depends on W02 P06 and P07 and on the canonical-invoice writer at HEAD; S70 (the end-to-end gate) lands last in the wave. W10 depends on W05 (the gate and ledger share the choke point: S71 extends S41's code path and is sequenced after it), on W06 P14 for removal mechanics, and on W07 for the packaging lane S75 extends. The model prohibition extends to W08 through W10: batch, review, consent and removal are all developed and gated against fixtures, injected measurements and the cached-transcription path, with no inference anywhere in CI.
 
 ## Sequencing hazards
 
@@ -210,3 +269,12 @@ The plan is complete when every Step is closed and the following hold, each a ve
 - The measured lane has produced and persisted baselines for S1, S2, S4 and the tabular mapping, each naming key sha256 e2db6a499f6f0ffafa4cf44084f433962dd3f8a0f6f0a65facaf7df07bb38593, the model identity and revision, and the engine route, with the Spanish optimism caveat attached to every Spanish figure, and the acceptance floors recorded (S39).
 - The full-tree quality gates are green on the owner surface: `uv run --no-sync pytest --collect-only -q` collects clean, the import-hygiene and layering gates pass, and the JSON schema and documented-command conformance suites pass for every touched CLI surface. A red full-tree gate is triaged for ownership before any Step is closed against it.
 - No Step is closed without a matching exec record, except W02.P05.S15 and S16, whose closure rationale is recorded in the Description (landed at HEAD by the peer lane before this plan existed, verified by the capability-boundary suite).
+- The reinstated consent gate is proven at the choke point: an evidence-derived request with a cloud provider and no consent token refuses on every entry surface including the unpinned text reader, and the re-scoped deletion gate is red when the consent check is removed and red when a subprocess-family symbol returns.
+- The contention detector refuses against the motivating live-machine readings (under 4 GB free of 16 GB with a resident service) and permits against injected post-quiesce readings, with no model loaded or invoked by any test.
+- The licence gate is red when any default catalogue candidate carries a commercial-use bar, and the shipped default vision model resolves to an Apache-2.0 candidate.
+- The absent-llm packaging smoke lane passes: every inference-adjacent surface on a core-only install refuses with the declared install guidance, and the known fixed-layout tabular fixture imports fully with no extra installed.
+- A poisoned-item batch completes with a per-item refusal row and an any-item-failure exit status, and a double-run over the same input is byte-identical with no second lifecycle event.
+- A draft carrying any blocking finding class refuses confirm until each finding is explicitly resolved, and no bulk-confirm path exists on any surface.
+- The consent ledger is proven complete by mutation (a broken append refuses the dispatch), the eligibility bar off means no consent gate is offered anywhere, and the withdrawal re-derivation re-stamps a cloud-derived artefact from the cached transcription without rewriting its history.
+- The end-to-end waist gate is red when a field is dropped at any hop from ingest to the Modelo 303 observation, and green at HEAD on the exact-parse fixture.
+- The anti-drift gate is red when any prompt template carries a numeric rate literal and red when compiled output diverges from what the registry resolves for the year, on a host running no model; and every persisted harness figure names its model tier alongside the key hash.

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:badbd63e63a1908b2c6b3e61b08d14e24bd1d434263b7339da9b2374a5d75574'
+body_hash: 'sha256:9811a23b606e41ad739024636acc2f0337bab6d2d8b62a4d91e457f954e7c30f'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -530,6 +530,70 @@ routes through core secure storage (D9), and the persistence gates keep
 scanning the code (D10/D11). Nothing in this pipeline adds a file-writing
 transport, and the S1 cache is encrypted by construction.
 
+### D8b — the prompt is a compiled, registry-derived, tier-bounded artefact
+
+**The design target is the weakest vision-capable model, by operator
+directive** ("every LLM route must be tested on the lowest-bound,
+lowest-tier vision-capable models... Haiku tier please... assume the model
+has a very low context"). The shipping on-host class is 2B–4B; the cloud
+Haiku tier is the measurement *proxy* for that class, never an upgrade
+path, and a prompt validated on a frontier model proves nothing about the
+model that ships. Token budget is therefore a hard architectural
+constraint: per-field guidance over prose, closed enumerations over
+description, and the expected *form* of each value stated rather than
+narrated.
+
+**The extraction prompt is a compiled artefact, never a string literal.**
+The template carries no numeric rate literal; permitted IVA and retención
+rates are resolved at compile time from `ValidatedRegistryAuthority` for
+the document's filing year and period, and permitted categories from the
+`IvaCategory` StrEnum. This is `aeat-registry-authority-flow` applied, not
+a preference: a hardcoded `21` inside a prompt is a registry value inlined
+in the least-audited location in the codebase, and it silently reads one
+year's document under another year's rates. The enumeration is also the
+low-context answer — it converts an inference problem into a selection
+problem, which is exactly what a simple model can do. **The compiler runs
+in the application layer**, which already holds the authority, and the
+extension receives the compiled prompt as data — the dependency direction
+of the package boundary is preserved, and the compiler works on a host
+with no extra installed.
+
+**The field-form contract is declared once and compiled into both sides.**
+The live worked example that forces this decision: the prompt demands
+"copy each value EXACTLY as printed", the document prints `IVA (21%)`, the
+model correctly returns `21%`, and grounding rejects it for containing the
+character the document printed — the model penalised for obeying. The
+resolution is a single declared form vocabulary (a rate is a bare number;
+an amount preserves the printed decimal separator; a date is exactly as
+printed) compiled into the prompt's per-field guidance AND consumed by the
+grounding validators, so the two cannot disagree by construction. Values
+stay *copied*, never computed, so anti-fabrication survives the form
+guidance.
+
+**Closed lists do not weaken anchoring.** An enumerated permitted set
+constrains the VALUE; the anchor still proves the SOURCE: every extracted
+field, enumerated or free, must carry its verbatim printed fragment and
+that fragment must occur in the transcription. A value that is in the
+permitted list but absent from the document still refuses. Stated
+explicitly because this is the exact seam where anti-fabrication could be
+silently traded for selection convenience.
+
+**Three mechanical consequences are decided here, not deferred.** The
+compiled prompt's hash participates in the LLM cache key alongside the
+evidence content address, or a response cached under one revision's rates
+survives a revision change as a silent wrong answer. Provenance stamps
+record the compiled-prompt provenance — the registry revision whose values
+were compiled — beside the model identity, so an audit can answer "under
+which rates was this read". And a model-free anti-drift gate asserts both
+that no template carries a numeric rate literal and that compiled output
+equals what the registry resolves for the year, mutation-provable in both
+directions on a host that can run no model.
+
+**One question is named as measurable, not decided:** whether a low-context
+model extracts better over fewer fields per call than all fields at once.
+It has architectural consequences for S2's call shape and is resolved by
+the D9 harness at the design-target tier, never by assertion.
+
 ### D9 — Stage-by-stage measurement: the map from stage to oracle
 
 Every stage has a named oracle in the corpus (key v5, sha256
@@ -552,8 +616,17 @@ inference:
 
 - **The measured lane (offline).** Model-bearing stages (S1 vision, S2, the
   mapping call) are measured by a harness run against the corpus, results
-  persisted with the key hash, model identity and revision — the discipline
-  the package-split ADR's own figure-tracing established. Two engine routes
+  persisted with the key hash, model identity, revision **and model tier** —
+  a figure without its tier is as unfalsifiable as one without its key
+  hash, and per D8b the baseline tier is the design target (Haiku-tier
+  cloud proxy, 2B–4B on-host class), with stronger models recorded as
+  reference points only. The first such reference point exists: a
+  `claude-sonnet-4-6` read of `REC-DOM-IMG-008` scored 7 of 8 with zero
+  wrong and zero fabricated fields in 4.4 s against the v5 key, its single
+  miss being the printed-percent form mismatch D8b resolves, established by
+  probing raw output rather than inferred. That figure bounds the pipeline
+  from above; the shipping baseline is re-established at the design-target
+  tier. Two engine routes
   serve this lane under D8's amendment: the gated cloud engine, which
   removes the GPU-headroom dependency entirely for the stages a cloud
   provider can serve (admissible because the corpus is public and carries no
@@ -678,7 +751,11 @@ hardening pass, already named by the package-split ADR for its own campaign.
 re-extraction cheap (re-run S2 on a cached transcription when a model
 improves, without re-reading bytes), gives audits a durable answer to "what
 did the reader see", and is the natural substrate for the batch and resume
-verbs the package-split ADR cleared ground for.
+verbs the package-split ADR cleared ground for — which are no longer merely
+a pathway: the sibling operations record of this feature
+(`2026-08-07-unstructured-document-ingestion-operations-adr`) claims batch
+ingestion, the human review process, the consent lifecycle and
+deinstallation as decided scope over this pipeline.
 
 ## Codification candidates
 
