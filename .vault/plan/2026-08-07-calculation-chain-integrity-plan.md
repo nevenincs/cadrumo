@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:a9e2bf6aac0b5b5dd5952bc6052d2c3208f243555c9ab0401db41b2958e9a6b9'
+body_hash: 'sha256:fdd44c123f0e2d9d51cc6b35b31a01e68af410600ac07249070a42c9b15e69f2'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -13,6 +13,7 @@ related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
   - '[[2026-08-07-calculation-chain-integrity-research]]'
 ---
+
 # `calculation-chain-integrity` plan
 
 ## Steps
@@ -58,8 +59,8 @@ RIRPF art. 95 fixes retencion rates on an axis the domain does not model. Three 
 
 Establish which of the profile field, the per-transaction marker, and the registry casilla is canonical, and record the ruling before any field is added.
 
-- [ ] `W03.P04.S09` - Reconcile the three existing candidate placements for the activity-type axis rather than adding a fourth, naming which is canonical; `src/cadrumo/domain/transactions/_models.py`.
-- [ ] `W03.P04.S10` - Record the placement ruling against the accepted silent-zero-base-aggregation ADR that already defers on this axis; `.vault/adr/`.
+- [x] `W03.P04.S09` - Reconcile the three existing candidate placements for the activity-type axis rather than adding a fourth, naming which is canonical; `src/cadrumo/domain/transactions/_models.py`.
+- [x] `W03.P04.S10` - Record the placement ruling against the accepted silent-zero-base-aggregation ADR that already defers on this axis; `.vault/adr/`.
 
 ### Phase `W03.P05` - Land the axis and its dependents
 
@@ -79,7 +80,7 @@ Track the classifier disposition and the shared-index decision against the recor
 
 - [ ] `W04.P06.S14` - Attach the classify_iva disposition to question one of the llm-invoice-read-reconciliation ADR rather than opening a competing record; `.vault/adr/2026-08-06-llm-invoice-read-reconciliation-adr.md`.
 - [ ] `W04.P06.S15` - Fix the R13 wrong-clave mapping with its own M349-surface gate, required only if the ruling makes the classifier wireable; `src/cadrumo/domain/iva/_classification.py`.
-- [ ] `W04.P06.S30` - Correct the pending ruling's premise, question one reasons from a single closed rate-to-category mapping while three exist and only one is the invoice-path mapping it means; ``.vault/adr/2026-08-06-llm-invoice-read-reconciliation-adr.md``.
+- [ ] `W04.P06.S30` - Correct the pending ruling's premise, question one reasons from a single closed rate-to-category mapping while three exist and only one is the invoice-path mapping it means; `.vault/adr/2026-08-06-llm-invoice-read-reconciliation-adr.md`.
 
 ## Wave `W05` - Full-suite failure triage
 
@@ -95,6 +96,8 @@ Separate real defects from measurement artefacts with evidence, fixing anything 
 - [ ] `W05.P07.S21` - Diagnose the ledger evidence-extract extra-forbidden regression on recargo_amount, lines, iva_breakdown and iva_category before fixing either side, getting the direction wrong would paper over a data-loss regression as test staleness; `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_extract_cli.py`.
 - [ ] `W05.P07.S22` - Land the mechanical ratchet and rationale-marker fixes confirmed new since the pre-tonight baseline, each completing an already-argued intent rather than making a new decision; `src/cadrumo/`.
 - [ ] `W05.P07.S23` - Rule whether the new einvoice XML parse error derives from the project error base or declares a bare-base rationale, a domain call not a mechanical fix; `src/cadrumo/adapters/inbound/einvoice/_xml.py`.
+- [ ] `W05.P07.S31` - Classify the serial-lane perf-budget miss against a quiet baseline, measured P95 3.906 CPU-s against a 3.0 budget on a box that ran a large agent fleet all night; `src/cadrumo/application/aggregation/tests/test_ledger_scale_benchmark.py`.
+- [ ] `W05.P07.S32` - Classify the packaging cohort inventory drift, six errors share one root cause where a stray gitignore sits in the build output directory outside the declared manifest; `dev/packaging/`.
 
 ## Wave `W06` - Standing canonicalisation and dedup sweep
 
@@ -108,5 +111,8 @@ Run the sweep over the surfaces this campaign touches, where three parallel-auth
 - [ ] `W06.P08.S25` - Sweep the IVA category and clave surfaces by meaning, subjection and operation-type are separate axes and a third encoding of either is the failure to find; `src/cadrumo/domain/iva/`.
 - [ ] `W06.P08.S26` - Sweep the observation-to-casilla routing surface by meaning, a binding declares its match key in the registry while its destination lives in application code; `src/cadrumo/domain/calculations/registry/`.
 - [ ] `W06.P08.S27` - Record each sweep as a near-neighbour proven not to cover the case or a fragmented authority named, never as a bare no-duplicates-found; `.vault/audit/`.
-- [ ] `W06.P08.S28` - Collapse the three hand-maintained rate-to-IVA-category tables onto one canonical rate-kind table plus the existing accessor, after the adjacent retencion work clears the shared module; ``src/cadrumo/domain/iva/_classification.py``.
-- [ ] `W06.P08.S29` - Promote the canonical rate-kind mapping or an accessor onto the domain iva facade before any application-layer consumer reads it, it is private today and cross-package code must not dot into it; ``src/cadrumo/domain/iva/__init__.py``.
+- [ ] `W06.P08.S28` - Collapse the three hand-maintained rate-to-IVA-category tables onto one canonical rate-kind table plus the existing accessor, after the adjacent retencion work clears the shared module; `src/cadrumo/domain/iva/_classification.py`.
+- [ ] `W06.P08.S29` - Promote the canonical rate-kind mapping or an accessor onto the domain iva facade before any application-layer consumer reads it, it is private today and cross-package code must not dot into it; `src/cadrumo/domain/iva/__init__.py`.
+- [ ] `W06.P08.S33` - Rule whether the cash-accounting exclusion set is scoped by the LIVA art 163 duodecies Uno territorial clause or enumerates only its Dos carve-outs, six members are Dos letters and one is a Uno scope case with nothing distinguishing them; ``src/cadrumo/application/aggregation/_iva_ledger.py``.
+- [ ] `W06.P08.S34` - Check the OSS declaration path before adding the second not-subject member to the cash-accounting exclusion, doing so newly refuses OSS rows for a taxpayer who also uses cash accounting and that combination is live; ``src/cadrumo/application/aggregation/``.
+- [ ] `W06.P08.S35` - Answer whether an invoice with no declared operation type can legitimately need the five claves the category fallback cannot emit, if not the fallback is correct by scope and must say so; ``src/cadrumo/application/invoices/_source_resolver.py``.
