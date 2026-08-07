@@ -119,9 +119,12 @@ from ._descendant_relacion import (
     DescendantRelacion,
 )
 from ._document_shape import AEAT_RECORD_BATCH_SHAPES, STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+from ._draft_discrepancy import DraftDiscrepancyKind
 from ._export_layout_format import ExportLayoutFormat
 from ._external_oracle_corpus import ExternalOracleCorpus
+from ._field_grounding import FieldGroundingOutcome
 from ._field_origin import FieldOrigin
+from ._field_role import FieldRole
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._hex import HEX_PATTERN_16, HEX_PATTERN_64, HEX_PATTERN_128, Hex16Str, Hex64Str
@@ -363,12 +366,15 @@ __all__: list[str] = [
     "DeclaracionIdioma",
     "DescendantRelacion",
     "DocumentShape",
+    "DraftDiscrepancyKind",
     "ElidedProse",
     "ExportLayoutFormat",
     "ExternalOracleCorpus",
     "ExternalPathDeclaration",
     "ExternalPathRole",
+    "FieldGroundingOutcome",
     "FieldOrigin",
+    "FieldRole",
     "FilingPeriodCode",
     "FingerprintParticipation",
     "ForeignAssetObligationGroup",
