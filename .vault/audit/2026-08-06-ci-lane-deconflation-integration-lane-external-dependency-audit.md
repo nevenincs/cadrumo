@@ -103,29 +103,36 @@ immediately re-checking it fails again, which is the discriminator between a sta
 recording and an unstable producer. The output carries the same events in a different
 order, all sharing one timestamp because the documentation sandbox freezes the clock.
 
-The first diagnosis offered here was wrong and is corrected. It claimed the ordering
-sorts on the timestamp alone and wants a secondary key. It does not: the canonical
-order key is already a pair of timestamp and event identifier, and its own docstring
-describes precisely this hazard and why the identifier breaks the tie. That mechanism
-is sound and needs no change.
+This finding has now carried two wrong diagnoses, and both are corrected here
+because a diagnostic copied forward with a bad first step is worse than none.
 
-The real cause sits one level down. The tie-breaking identifier is content-addressed,
-derived from the event body, and the body carries a profile identifier that is
-generated afresh on every sandbox run. The recorded output masks that identifier to a
-placeholder, so two runs render what look like identical events in a different order
-while their true sort keys genuinely differ. The ordering is deterministic for a fixed
-dataset and unstable across runs that mint new identifiers, which is why refreshing and
-immediately re-checking still fails.
+The first claimed the event ordering sorts on timestamp alone and wants a secondary
+key. False: the canonical order key is already a pair of timestamp and event
+identifier, and its own docstring describes this exact hazard.
 
-That points the repair at the documentation harness rather than at the audit-trail
-ordering: a sandbox that seeded a fixed profile identifier would make the whole
-sequence reproducible without touching production ordering semantics. Not attempted
-here, and deliberately so, because the wrong repair was nearly committed on the first
-reading and the harness is owned elsewhere.
+The second claimed the tie-breaking identifier varies because the documentation
+sandbox mints a fresh profile identifier each run. Also false: the sandbox pins a
+fixed identifier through the canonical create, and its own docstring states that this
+is precisely what makes profile-derived output deterministic.
 
-This is worth fixing on its own merit rather than for this campaign: while it stands,
-the documentation lane can never be green, and a permanently red lane is one everyone
-learns to ignore.
+What is established by measurement rather than inference:
+
+Two consecutive refreshes of the same sequence produce goldens carrying the same
+events in a different order. The line multiset is identical; only the sequence
+differs. No identifier anywhere in the two recordings differs, though the recorded
+text masks identifiers, so that is weak evidence rather than proof. The affected
+frame is text-mode, so its envelope is empty and comparing envelopes proves nothing -
+a trap worth naming, since an empty-versus-empty comparison reads as agreement.
+
+The two reordered lines are the lifecycle and maintenance events that one rename
+co-emits by design, sharing an instant under the sandbox's frozen clock. So the
+ordering rests entirely on the tie-break, and the tie-break is not producing a stable
+order across runs. Why it does not is unresolved.
+
+The repair is not attempted, and this time the reason is that the cause is not yet
+known rather than that the fix is risky. Two plausible explanations have already
+proved wrong on inspection; a third guess implemented without measurement would most
+likely join them.
 
 ### docs-lane-teaches-an-export-that-cannot-succeed | high | The Modelo 100 export refuses for want of an authoritative value, and the docs teach it as working
 
