@@ -510,6 +510,18 @@ def _render_modelo_page(
         grouped.setdefault(record.section, []).append(record)
     section_counts = [(section, len(items)) for section, items in grouped.items()]
 
+    # Two distinct registry section paths can fold to one anchor slug (``a_b``
+    # and ``a-b`` both give ``section-a-b``), which would ship a page whose jump
+    # target is ambiguous. Refuse it the same way a casilla anchor collision is
+    # refused, never silently emitting the duplicate id.
+    section_anchors = [_section_anchor(section) for section, _count in section_counts]
+    if len(set(section_anchors)) != len(section_anchors):
+        duplicates = sorted({anchor for anchor in section_anchors if section_anchors.count(anchor) > 1})
+        raise CasillaReferenceError(
+            f"modelo {modelo}: duplicate section anchor(s) {duplicates}; "
+            "registry section paths must fold to a unique per-page anchor"
+        )
+
     blocks: list[str] = [
         header + title,
         _page_intro(modelo, section_counts, len(records)),

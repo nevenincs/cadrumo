@@ -217,3 +217,19 @@ def test_sections_carry_jump_targets_matching_the_page_nav() -> None:
     emitted = set(re.findall(r'casilla-section-anchor" id="(section-[a-z0-9-]+)"', rst))
     assert linked
     assert linked == emitted
+
+
+def test_colliding_section_anchors_are_a_build_failure() -> None:
+    """Two section paths folding to one jump target are refused, never merged."""
+    from ..casilla_reference import CasillaReferenceError, _section_anchor
+
+    underscored = ("iva", "anual_deducible")
+    hyphenated = ("iva", "anual-deducible")
+    assert _section_anchor(underscored) == _section_anchor(hyphenated)
+
+    records = (
+        _record(section=underscored),
+        _record(casilla_id="decl.ejercicio", number="ejercicio", section=hyphenated),
+    )
+    with pytest.raises(CasillaReferenceError):
+        _render(records, OutputLanguage.EN)
