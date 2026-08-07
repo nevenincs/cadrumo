@@ -7,10 +7,19 @@ over the transcription no matter which reader proposed the value.
 
 The check has TWO parts, and both matter:
 
-**The anchor must occur in the transcription.** Not the value -- the anchor, the
-verbatim printed form the reader claims to have read. The transcription
-deliberately preserves printed forms (``2.420,00`` stays ``2.420,00``), so this
-search runs against the evidence rather than against a normalised rewrite of it.
+**The anchor must occur in the transcription AS A WHOLE PRINTED TOKEN.** Not the
+value -- the anchor, the verbatim printed form the reader claims to have read.
+The transcription deliberately preserves printed forms (``2.420,00`` stays
+``2.420,00``), so this search runs against the evidence rather than against a
+normalised rewrite of it.
+
+The token boundary is load-bearing rather than tidy. A plain substring search --
+which this module originally did -- lets a short figure anchor inside any longer
+figure ending the same way: ``0,00`` occurs inside ``100,00``, ``1,00`` inside
+``21,00``, bare ``00`` inside almost any amount. An injected zero total needed no
+cleverness at all to ground, because most real invoices carry some amount ending
+in ``,00``. That made the check certify "these digits appear somewhere", which
+for short numeric forms is close to vacuous -- structurally weaker than it read.
 
 **The typed value must equal the deterministic parse of that anchor.** The value
 is NOT required to be byte-identical to the anchor -- anchor ``21%`` with value
@@ -30,10 +39,24 @@ requires the anchor to occur in the document, so the fabrication bound holds; bu
 the parse half is vacuous there, and :attr:`AnchorEvaluation.parse_was_vacuous`
 says so rather than letting the outcome read stronger than it is.
 
-What this module does NOT do: decide that a grounded value is CORRECT. Anchoring
-bounds fabrication to transcription error. On a vision path the transcription is
-itself model-produced, so an anchored value survived two reads that agreed rather
-than one unchecked guess -- a real improvement, and not a proof.
+**What this module does NOT do, stated so it is not trusted for more.** It
+decides that a printed form is PRESENT. It does not decide that the form plays
+the ROLE claimed for it, and it does not decide the value is correct. An injected
+sentence that prints its own plausible figure passes this check honestly -- the
+figure really is on the page.
+
+The guarantee is therefore **the conjunction of two legs, never this one alone**:
+the anchor check establishes presence, and
+:func:`~application.ledger.closure_findings` establishes that the monetary set
+closes. An injected total that is anchored still reds the arithmetic identity,
+because the other figures on the document do not reach it. A suite that gated
+only the anchor property would imply a guarantee the code does not provide, and
+that is exactly how a check ends up trusted for more than it does.
+
+Anchoring bounds fabrication to transcription error. On a vision path there is no
+independent transcription at all -- see
+:func:`ground_self_reported_anchor` -- so the bound is weaker still and the
+outcome says so.
 
 See Also:
     :class:`~application.ledger.FieldProvenance`
@@ -73,6 +96,60 @@ __all__ = [
 #: ``1.234,56`` and ``1234,56`` stay distinct -- which they must, because the
 #: separator is the evidence the decimal reading rests on.
 _WHITESPACE_RUN = re.compile(r"\s+")
+
+#: Characters that continue a printed NUMBER. An anchor whose numeric edge sits
+#: against one of these is a fragment of a longer figure, not a figure.
+#:
+#: This set is the whole boundary rule and it is deliberately tiny. A plain
+#: substring search made the anchor check close to vacuous for short numeric
+#: forms: ``0,00`` occurs inside ``100,00``, ``1,00`` inside ``21,00``, and bare
+#: ``00`` inside almost any amount. An injected zero total therefore grounded
+#: against a large share of real invoices, because most carry some amount ending
+#: in ``,00`` -- which turned D4's structural anti-fabrication check into an
+#: assertion that the digits appear *somewhere*.
+_NUMBER_CONTINUATION = frozenset("0123456789.,")
+
+
+def _is_numeric_edge(character: str) -> bool:
+    """Return whether *character* participates in a printed number."""
+    return character in _NUMBER_CONTINUATION
+
+
+def _occurs_as_a_whole_printed_token(needle: str, haystack: str) -> bool:
+    """Return whether *needle* occurs in *haystack* as a complete printed token.
+
+    Boundary-aware rather than substring: an occurrence counts only when the
+    anchor is not a fragment of a longer number. The rule is applied per EDGE
+    and only where that edge is numeric, so non-numeric anchors (an invoice
+    number, a party name) keep ordinary substring behaviour and a figure carrying
+    a currency symbol or a trailing percent still matches.
+
+    Every occurrence is examined, and one clean occurrence is enough: a document
+    may print the same figure as a fragment in one place and as a whole token in
+    another, and the second is a genuine anchor.
+
+    Args:
+        needle: The normalised anchor.
+        haystack: The normalised transcription text.
+
+    Returns:
+        ``True`` when at least one occurrence has clean boundaries.
+    """
+    if not needle:
+        return False
+
+    leading_is_numeric = _is_numeric_edge(needle[0])
+    trailing_is_numeric = _is_numeric_edge(needle[-1])
+
+    start = haystack.find(needle)
+    while start != -1:
+        end = start + len(needle)
+        before_ok = not (leading_is_numeric and start > 0 and _is_numeric_edge(haystack[start - 1]))
+        after_ok = not (trailing_is_numeric and end < len(haystack) and _is_numeric_edge(haystack[end]))
+        if before_ok and after_ok:
+            return True
+        start = haystack.find(needle, start + 1)
+    return False
 
 
 def normalise_for_anchor_search(text: str) -> str:
@@ -152,7 +229,7 @@ def evaluate_anchor(
 
     haystack = normalise_for_anchor_search(transcription.text)
     needle = normalise_for_anchor_search(anchor)
-    anchor_found = needle in haystack
+    anchor_found = _occurs_as_a_whole_printed_token(needle, haystack)
 
     if not anchor_found:
         return AnchorEvaluation(

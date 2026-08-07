@@ -15,10 +15,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import FieldGroundingOutcome, FieldOrigin
+from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from .._closure_findings import closure_findings
 from .._document_transcription import DocumentTranscription, TranscriberIdentity
 from .._evidence import MediaKind
-from .._evidence_draft import FieldProvenance
+from .._evidence_draft import FieldProvenance, InvoiceDraft
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import transcribe_text_layer
 from .._grounding_anchor import (
@@ -368,3 +369,166 @@ def test_the_text_lane_anchor_is_not_marked_self_reported() -> None:
 
     assert envelope.grounding is FieldGroundingOutcome.ANCHORED
     assert envelope.anchor_self_reported is False
+
+
+# ---------------------------------------------------------------------------
+# The anchor boundary: a short figure must not anchor inside a longer one
+# ---------------------------------------------------------------------------
+
+_AMOUNTS_TEXT = "Base imponible 100,00\nIVA 21% 21,00\nTOTAL 121,00 EUR\n"
+
+
+def test_an_injected_zero_total_does_not_anchor_inside_a_printed_amount() -> None:
+    """The near miss, preserved as an assertion rather than stepped around.
+
+    A plain substring search grounds ``0,00`` against a document printing
+    ``100,00``. That is not a fixture quirk: most real invoices carry some
+    amount ending in ``,00``, so an injected zero total grounded against a large
+    share of the corpus with no cleverness at all -- which made D4's structural
+    check certify little more than "these digits appear somewhere".
+    """
+    evaluation = evaluate_anchor(
+        value=Decimal("0.00"),
+        anchor="0,00",
+        transcription=_transcription(_AMOUNTS_TEXT),
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.UNANCHORED
+    assert evaluation.anchor_found is False
+
+
+@pytest.mark.parametrize(
+    ("anchor", "value"),
+    [
+        ("0,00", Decimal("0.00")),
+        ("1,00", Decimal("1.00")),
+        ("00", Decimal("0")),
+        ("20,00", Decimal("20.00")),
+        ("21,0", Decimal("21.0")),
+    ],
+)
+def test_a_fragment_of_a_longer_printed_figure_never_anchors(anchor: str, value: Decimal) -> None:
+    """Generalised past the one figure that exposed it."""
+    evaluation = evaluate_anchor(
+        value=value,
+        anchor=anchor,
+        transcription=_transcription(_AMOUNTS_TEXT),
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.UNANCHORED, f"{anchor!r} anchored inside a longer figure"
+
+
+@pytest.mark.parametrize(
+    ("anchor", "value"),
+    [
+        ("100,00", Decimal("100.00")),
+        ("21,00", Decimal("21.00")),
+        ("121,00", Decimal("121.00")),
+        ("21", Decimal("21")),
+    ],
+)
+def test_a_whole_printed_token_still_anchors(anchor: str, value: Decimal) -> None:
+    """Positive control: the boundary rule must not become refuse-everything.
+
+    Without this, the fragment cases above would be satisfied by a check that
+    never grounds anything.
+    """
+    evaluation = evaluate_anchor(
+        value=value,
+        anchor=anchor,
+        transcription=_transcription(_AMOUNTS_TEXT),
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
+
+
+def test_a_genuine_zero_standing_alone_still_anchors() -> None:
+    """The figure the boundary rule must NOT collateral-damage.
+
+    A retención of zero is a real, common figure. Rejecting it would trade one
+    false negative class for another.
+    """
+    evaluation = evaluate_anchor(
+        value=Decimal("0.00"),
+        anchor="0,00",
+        transcription=_transcription("Retencion IRPF 0,00 EUR\n"),
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
+
+
+def test_a_thousands_separated_figure_anchors_only_as_the_whole_number() -> None:
+    """``234,56`` is a fragment of ``1.234,56``; the full form is the anchor."""
+    doc = _transcription("Total factura 1.234,56 EUR\n")
+
+    assert evaluate_anchor(value=Decimal("234.56"), anchor="234,56", transcription=doc).outcome is (
+        FieldGroundingOutcome.UNANCHORED
+    )
+    assert evaluate_anchor(value=Decimal("1234.56"), anchor="1.234,56", transcription=doc).outcome is (
+        FieldGroundingOutcome.ANCHORED
+    )
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Total EUR100,00 pagado",
+        "100,00 es el total",
+        "el total es 100,00",
+        "Total 100,00% aplicado",
+    ],
+)
+def test_non_numeric_neighbours_do_not_block_a_genuine_anchor(text: str) -> None:
+    """A currency symbol, a trailing percent, and the text edges are not digits.
+
+    The boundary rule keys on characters that continue a NUMBER, so it must not
+    fire on punctuation or on the start and end of the text.
+    """
+    evaluation = evaluate_anchor(
+        value=Decimal("100.00"),
+        anchor="100,00",
+        transcription=_transcription(text),
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
+
+
+def test_one_clean_occurrence_is_enough_even_beside_a_fragment_occurrence() -> None:
+    """A figure printed both as a fragment and standing alone still anchors."""
+    evaluation = evaluate_anchor(
+        value=Decimal("21.00"),
+        anchor="21,00",
+        transcription=_transcription("Subtotal 121,00\nCuota 21,00\n"),
+    )
+
+    assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
+
+
+def test_the_anchor_check_alone_is_not_the_anti_fabrication_guarantee() -> None:
+    """The conjunction is the guarantee: presence, plus arithmetic closure.
+
+    An injected figure that really is printed on the page passes the anchor
+    check honestly -- the check establishes PRESENCE, never that the figure
+    plays the role claimed for it. What catches it is the second leg: the
+    monetary set no longer closes.
+
+    Asserted here rather than left to prose, so this suite cannot be read as
+    crediting the anchor check with a guarantee it does not provide.
+    """
+    injected = "Base imponible 100,00\nIVA 21% 21,00\nTOTAL 890,00 EUR\n"
+    anchored = evaluate_anchor(
+        value=Decimal("890.00"),
+        anchor="890,00",
+        transcription=_transcription(injected),
+    )
+
+    assert anchored.outcome is FieldGroundingOutcome.ANCHORED, "the injected total really is printed"
+
+    obeyed = InvoiceDraft(
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+        grand_total=Decimal("890.00"),
+    )
+    kinds = {finding.kind for finding in closure_findings(obeyed)}
+
+    assert DraftDiscrepancyKind.ARITHMETIC_CLOSURE in kinds, "the second leg must catch what the anchor cannot"
