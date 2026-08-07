@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#llm-package-split'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:bcc968ee104335d1d05996d185d7bf82558a29993a43863773bc72fcca1745e0'
 related:

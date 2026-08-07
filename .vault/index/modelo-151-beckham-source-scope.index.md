@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-151-beckham-source-scope'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:1a69dfb0c691ef3c2ac8180d33b8fa25beb3dcdc2cb55b123e0e98c476e6421e'
 related:

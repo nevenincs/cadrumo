@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calculation-engine-foundations'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:7178ee1770ae22e04dfb9febac5aba927321a473b4d59f0b8eb1bee9202cdd59'
 related:

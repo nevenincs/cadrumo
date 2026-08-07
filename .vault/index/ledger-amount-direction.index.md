@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-amount-direction'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:7313dbc16513f0e63b4cc07f871e1d4097e625fdc236892e834d906a83537a79'
 related:

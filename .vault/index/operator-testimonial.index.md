@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#operator-testimonial'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:51bbdd6b32c1d322fb998e947fca71d8ad08f0890560fe969fd46ec66c7bfc63'
 related:

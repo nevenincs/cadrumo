@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#secure-backend-passkey-safety'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:076135c44fe070e7343715b2c55389f7abfaeee156185105aa196f9b0654b403'
 related:

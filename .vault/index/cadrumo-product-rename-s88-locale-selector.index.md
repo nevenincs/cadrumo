@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cadrumo-product-rename-s88-locale-selector'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:891de0ec0b3b32f831100f2ccff5fe96ed14705914e98228b9638a0bc42e728e'
 related:

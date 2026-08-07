@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-record-design-boundary'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:62bb2bbeaf2a82bcd222d29cb6d06d9b3af357cefdad48eb694962baee5a99de'
 related:

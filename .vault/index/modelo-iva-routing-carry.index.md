@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-iva-routing-carry'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:e10106ad9a19fb818a8471305174f1d03a574c84a9050f4f86647f866dfc58d0'
 related:

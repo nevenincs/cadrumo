@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#prorrata-art104-tres-exclusions'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:e8f1bdedb506aaac50f665740c4a384e5227ae02473ac1ef8af8cd422deb245b'
 related:

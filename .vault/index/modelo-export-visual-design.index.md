@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-export-visual-design'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:0123dc341756bc517ec88e6982d1ccb71a6ce9051ec995e2afa5103e63a4c274'
 related:

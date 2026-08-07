@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#declaracion-extraction-architecture'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:4c9c7459c2317c0b6cbca8124d133f565bf41e9a81a1241da59be831719ef45c'
 related:

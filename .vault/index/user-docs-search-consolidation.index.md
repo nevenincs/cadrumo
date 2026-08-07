@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#user-docs-search-consolidation'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:3f1a1683f6a8025f16ac680975074cd346e325bc307f046bc0d8525fd043df0f'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#wizard-registration-bootstrap'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:bc92ccce0b36b80c0806db15103f3bd07dc51a843cd793414722f5e9abcf3d15'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#tax-domain-taxonomy-extension'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:ea17790ccd2e5c72a982e8bd73b01b120e453e8fdc4ad5df8ee7e3a2ca8126d1'
 related:

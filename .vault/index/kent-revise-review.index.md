@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#kent-revise-review'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:b1821787c369d6fd5d72722f92c2bb4c9868e05ab7b8024476f2352749a413e0'
 related:

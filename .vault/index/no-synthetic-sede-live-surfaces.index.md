@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#no-synthetic-sede-live-surfaces'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:4067b9bfac6e67c75a8d8d443686e0e5f52a72cc18dec29042b1bbc686c5bb76'
 related:

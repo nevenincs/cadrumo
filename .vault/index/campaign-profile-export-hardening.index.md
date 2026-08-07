@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#campaign-profile-export-hardening'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:593deaabbcc06538a73d0411056c4ea0aafe68f16793a7b9b2fb692a4b51dda8'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#coverage-canonicalisation'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:b5b3b48eede0a40a23bfef26ef3d49ed90c9fd9a5b4e8d230eab4f720b37c0be'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#prorrata-sectores-diferenciados'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:ecc86cad4d5a340e43b7b6f64725e68873a582c87f5fc870f50556ec7df45d34'
 related:

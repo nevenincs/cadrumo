@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#domain-profile-rename'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:1f54ff61f2c18a32228169de1e0b3086e919bfad7ae3c5cb93f6fa7676150fe2'
 related:

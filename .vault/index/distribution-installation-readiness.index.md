@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#distribution-installation-readiness'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:adc71ee84ffcc6f1784104a8c8dcdc50c1c2271d1cce71e0e50c44a2ebb73c0e'
 related:

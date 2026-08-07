@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-workflow-redesign'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:b47bf5e9a983b7411280daaa70595f7f46133533ef3c99f241a1cb907d021889'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#multi-activity-profile'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:29c108105fd705a982219d18d068a539dcbd5df3e6bad496c0412e14982c4751'
 related:

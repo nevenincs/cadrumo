@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-educational-surface'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:2a621643db0240fef03830881b7b78cfd0b77808765187ccf7ea6ec738a9ec05'
 related:

@@ -3,16 +3,19 @@ generated: true
 tags:
   - '#index'
   - '#ci-lane-deconflation'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:caef5ee335d3ca73234833a3f4686a02a1d993f96c2d22e460d7affe847ace35'
+body_hash: 'sha256:3fa412faccd192ba727d428766d3f94b2a591027610c4c0c32eb63f5bb66bca7'
 related:
+  - '[[2026-08-05-ci-lane-deconflation-P01-S02]]'
+  - '[[2026-08-05-ci-lane-deconflation-P01-S03]]'
   - '[[2026-08-05-ci-lane-deconflation-P01-S04]]'
   - '[[2026-08-05-ci-lane-deconflation-P01-S05]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S06]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S07]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S08]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S09]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S22]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S23]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S11]]'
@@ -22,6 +25,7 @@ related:
   - '[[2026-08-05-ci-lane-deconflation-P03-S18]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S19]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S15]]'
+  - '[[2026-08-05-ci-lane-deconflation-P04-S16]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S17]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S20]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S21]]'
@@ -36,6 +40,7 @@ related:
   - '[[2026-08-05-ci-lane-deconflation-schema-size-instrument-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
   - '[[2026-08-06-ci-lane-deconflation-close-honesty-review-audit]]'
+  - '[[2026-08-06-ci-lane-deconflation-integration-lane-external-dependency-audit]]'
 ---
 
 # `ci-lane-deconflation` feature index
@@ -55,6 +60,7 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 
 - `2026-08-05-ci-lane-deconflation-step-check-attribution-audit` - `ci-lane-deconflation` audit: `the reserialisation finding is disproved and its cause misattributed`
 - `2026-08-06-ci-lane-deconflation-close-honesty-review-audit` - `ci-lane-deconflation` audit: `what a fresh reader would find missing, vague, or unverified`
+- `2026-08-06-ci-lane-deconflation-integration-lane-external-dependency-audit` - `ci-lane-deconflation` audit: `integration parallel lane depends on a live ECB service`
 
 ### exec
 
@@ -72,12 +78,16 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-05-ci-lane-deconflation-P04-S25` - Sweep for tests relying on the English CLI env override for help text, it is inert against the cached Click tree so any such test asserts against whatever language the tree was built in
 - `2026-08-05-ci-lane-deconflation-P04-S26` - Require an exec record whose evidence is a passing test to state the selection that produced it, three agents in one day nearly accepted a marker expression that selected nothing and exited zero
 - `2026-08-05-ci-lane-deconflation-P04-S27` - Rule on whether the schema-size gate should measure emitted content, its docstring calls itself a proxy for structured content while it directly measures the definition bytes a client actually loads
+- `2026-08-05-ci-lane-deconflation-P01-S02` - Verify the frontend lane passes on a runner under Node 22, its first run refused npm ci because jest-dom 7.0.0 requires node 22 and the manifest under-declares at 20.19
+- `2026-08-05-ci-lane-deconflation-P01-S03` - Dispatch ci-full for its first ever execution and record the result, its run count is zero so every claim about its steps is structural rather than observed
 - `2026-08-05-ci-lane-deconflation-P01-S05` - Decide what to do about the already-pushed branch, a peer snapshot pushed it so the original decision is moot and the live question is whether the published history needs remediation
 - `2026-08-05-ci-lane-deconflation-P02-S06` - Close the entrypoints CLI integration failures, measured at 18 across 8 modules with 138 passing, and regenerate the set from two intersected runs rather than one
 - `2026-08-05-ci-lane-deconflation-P02-S07` - Reshape overview.calendar profiles to a per-profile summary with detail behind a per-profile call, the resource_link this row first prescribed is refused because resolution re-runs a read verb over persisted state while this verb is computed from a clock
 - `2026-08-05-ci-lane-deconflation-P02-S08` - Measure the dev tooling gates at a clean HEAD, the local count of 55 is contaminated because 32 belong to an uncommitted peer legal entry and the true figure is nearer 23
+- `2026-08-05-ci-lane-deconflation-P02-S09` - Flip continue-on-error off the integration parallel step once its backlog closes, the step is deterministic so it can go blocking independently of the serial pass
 - `2026-08-05-ci-lane-deconflation-P03-S13` - Decide the strength class for casillas 0529 and 0531, promoting them to the coverage-gated class raises the denominator and could flip verdicts on legitimate filings so it needs domain grounding
 - `2026-08-05-ci-lane-deconflation-P03-S19` - State in the filing-period consistency validator's own docstring which coordinates it no longer covers and why, a test enforces the fact but the explanation belongs at the validator
+- `2026-08-05-ci-lane-deconflation-P04-S16` - Re-pin the model-facing description digest once the description sources settle, the gate forbids re-pinning from a dirty tree and the locale and CLI help surfaces are actively churning
 - `2026-08-05-ci-lane-deconflation-P04-S17` - Record a finding about the 204 semantic-dedup exec records rather than remediating them, all 204 carry empty Description Outcome and Notes and were bulk-scaffolded in one commit so 0 resolve to an implementing commit, and unchecking would assert work the tree shows was done
 
 ### plan

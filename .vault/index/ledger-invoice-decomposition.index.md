@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#ledger-invoice-decomposition'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:5018b2a9101e31eb140c1eb5f2ecfc1757e3566b812c816bad35c16b4e506e8d'
+body_hash: 'sha256:a818c4c6e356ddd2485eb5ffcde7009b38cc2c15db0bd027e76854ad7e2d1f5c'
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-P01-S01]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P01-S02]]'
@@ -72,6 +72,7 @@ related:
   - '[[2026-08-05-ledger-invoice-decomposition-reference]]'
   - '[[2026-08-05-ledger-invoice-decomposition-research]]'
   - '[[2026-08-06-ledger-invoice-decomposition-iva-deduction-ratio-producer-research]]'
+  - '[[2026-08-07-ledger-invoice-decomposition-catalogue-surface-conflict-audit]]'
 ---
 
 # `ledger-invoice-decomposition` feature index
@@ -87,6 +88,7 @@ Auto-generated index of all documents tagged with `#ledger-invoice-decomposition
 ### audit
 
 - `2026-08-05-ledger-invoice-decomposition-loader-fingerprint-format-trap-audit` - `ledger-invoice-decomposition` audit: `loader fingerprint format trap`
+- `2026-08-07-ledger-invoice-decomposition-catalogue-surface-conflict-audit` - `ledger-invoice-decomposition` audit: P06.S55 targets a surface another campaign is retiring
 
 ### exec
 

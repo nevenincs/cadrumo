@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-drift-validator-blocking-gap'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:775ebeef6e2abd2abcac83030fff20fe3f917fdf51a44924158f38d0cffcd265'
 related:

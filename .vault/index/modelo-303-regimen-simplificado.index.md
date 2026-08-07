@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-303-regimen-simplificado'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:5636f361902d35d168b1c03bef2d5cebbb62c31c3a22d6cf3701ca471285ddee'
 related:

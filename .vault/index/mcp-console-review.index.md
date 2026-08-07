@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mcp-console-review'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:da613587ff578b8e854d5bd33b2dcfd3e0d5f33f79067a64967e8d86118f9332'
 related:

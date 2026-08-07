@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#verify-ledger-drift-gate'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:50bff37385e15306557deb7b5690c8ddde075a43afe3b56d92e49d6c372b93e4'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-invoice-unification'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:0bad556dd2892c40d94629291eb784884c8754019bedcc38d28e0ec99cd2b22a'
 related:

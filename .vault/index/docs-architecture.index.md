@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-architecture'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:ff2679fec711c27c2009a8ef98f625c0bad3b1cf949485c1100eda99439abdfe'
 related:

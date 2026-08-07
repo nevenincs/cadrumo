@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-authority-quality-backlog'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:09e643675a16dd6b117306da39bcf2e0125350545899f7cdaa9f6656484b6468'
 related:

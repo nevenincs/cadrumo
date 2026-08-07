@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#storage-encryption'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:7f0e5f422df00302164e7c61a74f16b53d898400e333f4de187f8ed4e12302ee'
 related:

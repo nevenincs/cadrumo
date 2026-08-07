@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#pareja-de-hecho-civil-status'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:2a200209313df362fd01c5315dbe555ac3175070c51261ef549132dc2e23a065'
 related:

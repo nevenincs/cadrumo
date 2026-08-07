@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cadrumo-product-rename-s52-version-remediation'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:a3731ea979274bc2fda28a62040ffe0760261b25353b95dbc3ca25d6135f4e23'
 related:

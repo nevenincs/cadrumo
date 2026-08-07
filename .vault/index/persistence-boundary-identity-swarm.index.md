@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#persistence-boundary-identity-swarm'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:38d5a57e4937bfcfa18d34a6329f60e395d7f5da597614e58629a9ffa8d17cf3'
 related:

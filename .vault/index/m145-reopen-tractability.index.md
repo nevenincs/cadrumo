@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m145-reopen-tractability'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:65fc1a8c07c953513acec0129ebbf3f2d94b41fddb1ebd96c30572004fac2dec'
 related:

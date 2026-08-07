@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#non-resident-axis'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:f76acc56712b85ced81b0a37d6658776606ecb806fb298fa43e688a535efe80a'
 related:

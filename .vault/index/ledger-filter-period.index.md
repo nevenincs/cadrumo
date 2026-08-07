@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-filter-period'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:b36748ef70e44bd84dc8dff04ea4cc9271198abae96fd3db744d91147e937dd2'
 related:

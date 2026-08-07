@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#prorrata-art105-cinco-interrupted'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:18906468015e1d23d2b092d9afe835c414271a617e76567d5510367b2bca4cdc'
 related:

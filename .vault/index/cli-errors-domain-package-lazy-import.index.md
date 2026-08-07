@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-errors-domain-package-lazy-import'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:c6919a70c22fd35179d3c0f5d4c6fc06f44ff5268558f39127efb60d605022a2'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#attachment-service'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:63faeeb0a952a040cf4d7e3d4f98a2fb582b003435a12904830f58de0610cd6d'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#justificante-reframing'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:c55c46dcd434355acb19223122bf46143f3d4d76bed2869011b95d6fad46426a'
 related:

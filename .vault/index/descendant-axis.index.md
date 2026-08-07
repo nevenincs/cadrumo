@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#descendant-axis'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:e2dc7a830f36677bea3be905c20938153f25142369f647b2fd1e00064a443dcd'
 related:

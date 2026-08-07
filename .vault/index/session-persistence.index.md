@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#session-persistence'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:c7a6702584a626ee13750372c39614f439877b2c0d4d2d043c5d0f3f75af1061'
 related:

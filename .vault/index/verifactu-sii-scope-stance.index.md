@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#verifactu-sii-scope-stance'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:cefc55fb0999b90c9c47316709eaf3be0fd3656024fc8ebe24098551443da4ca'
 related:

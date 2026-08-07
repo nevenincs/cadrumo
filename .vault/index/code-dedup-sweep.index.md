@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#code-dedup-sweep'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:1a867f46bb6f6a71c6821337ec0046cab7c1574dd1b92700498b5bcd111ab102'
+body_hash: 'sha256:1b1763349b916c5ed8e148af063b6fe7668056f7d76ac1bfa8863948087bf64e'
 related:
   - '[[2026-07-25-code-dedup-sweep-S01]]'
   - '[[2026-07-25-code-dedup-sweep-S02]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-07-25-code-dedup-sweep-adr]]'
   - '[[2026-07-25-code-dedup-sweep-plan]]'
   - '[[2026-07-25-code-dedup-sweep-rag-inventory-audit]]'
+  - '[[2026-08-07-code-dedup-sweep-d1-1-binding-validator-refutation-audit]]'
 ---
 
 # `code-dedup-sweep` feature index
@@ -32,6 +33,7 @@ Auto-generated index of all documents tagged with `#code-dedup-sweep`.
 ### audit
 
 - `2026-07-25-code-dedup-sweep-rag-inventory-audit` - `code-dedup-sweep` audit: `semantic duplication sweep: 29-searcher RAG inventory`
+- `2026-08-07-code-dedup-sweep-d1-1-binding-validator-refutation-audit` - `code-dedup-sweep` audit: `D1-1 dual binding-validator convention: refuted`
 
 ### exec
 

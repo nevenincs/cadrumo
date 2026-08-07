@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#n26-data-source'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:aab93d4673b4f6fa685ff591f0ee62e1b3d7049757397af4431184b94d0ba015'
 related:

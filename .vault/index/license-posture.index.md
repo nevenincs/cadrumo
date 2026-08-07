@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#license-posture'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:eade7f5a177a8ca864767167ad372df36548978a5ce7c0ece233845652fe95f1'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#dt-12-rescate-plan-pensiones'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:4b47f8a1c84ad2c8641affc41bc713ddbf2bb5d52023b93d063a8cb9cec863e8'
 related:

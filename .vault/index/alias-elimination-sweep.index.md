@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#alias-elimination-sweep'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:5870e77785377b7e81dbb2d44bb6060c5896b33ac497ca0173e2cc956c4f6747'
 related:

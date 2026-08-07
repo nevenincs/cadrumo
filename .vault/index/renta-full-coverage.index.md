@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#renta-full-coverage'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:1275c74a6b6c8e34aaa897f11e145ea9e1dc97e07cff4b07a4e40cb704fdd565'
 related:

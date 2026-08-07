@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#bindings-interface-hardening'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:36efeaebffeeb392312a586097e99ac0882dd41459712e4fce08f6ddb3040b3e'
 related:

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:7974ed4abf22e23646508ef949f90ab3056bbcaadd40eed86f156b53bfffbd42'
+body_hash: 'sha256:63c9c4cfad818b321c8f91fc97251fa47f8824595d66dadbb58f7ec7d2365d3b'
 related:
   - '[[2026-08-07-calculation-chain-integrity-W02-P02-S05]]'
   - '[[2026-08-07-calculation-chain-integrity-W02-P02-S06]]'
@@ -32,7 +32,7 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 
 - `2026-08-07-calculation-chain-integrity-activity-type-placement-adr` - `calculation-chain-integrity` adr: `Activity-type axis placement: the value is a profile activity row, the transaction carries a reference` | (**status:** `proposed`)
 - `2026-08-07-calculation-chain-integrity-adr` - `calculation-chain-integrity` adr: `Roll-up sequencing and scope for the silent-zero/silent-overclaim remediation waves` | (**status:** `accepted`)
-- `2026-08-07-calculation-chain-integrity-binding-output-casilla-declaration-adr` - `calculation-chain-integrity` adr: `Whether a binding selector may declare a match casilla distinct from its output casilla` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
+- `2026-08-07-calculation-chain-integrity-binding-output-casilla-declaration-adr` - `calculation-chain-integrity` adr: `Whether a binding selector may declare a match casilla distinct from its output casilla` | (**status:** `proposed`)
 
 ### audit
 

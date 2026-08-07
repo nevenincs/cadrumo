@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#pdf-sanitizer'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:d3edc688ad6e0834cce744c5b03ac4c86d6563ed079ff297adde4a367a91b411'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#account-distribution-standard'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
 body_hash: 'sha256:960cb2374e1889c4847cd97d12587cb812df5f829b38dde4d0f0d3b8358d5c8e'
 related:
