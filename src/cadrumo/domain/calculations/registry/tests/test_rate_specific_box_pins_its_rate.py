@@ -20,6 +20,18 @@ future design is covered the day the corpus is updated, and no roster of
 casillas can go stale. A hardcoded list would encode today and detect nothing
 tomorrow.
 
+The set is a UNION over every bundled design year, which carries one assumption
+worth stating: that a box number's rate-keyed-ness is stable across years. It
+has to be a union, because the ``Tipo N%`` column does not exist in the older
+designs at all -- Modelo 390's 2018 sheet says only "Recargo de equivalencia -
+Cuota [36]", and the rate label first appears in 2022. So a box is recognised
+here from whichever years label it, and applied to casillas regardless of year.
+Measured support for the assumption: that modelo's recargo box SET is unchanged
+across 2016-2022, so [36] means the same rung throughout. If a future design
+ever reused a number for a differently-keyed box, this union would mis-classify
+it, and that is the shape of error to look for first if this gate ever fires on
+something that looks correct.
+
 WHAT THIS DOES NOT CHECK, so its silence is not read as coverage:
 
 Casillas carrying no official box number are invisible to it. That is not an
