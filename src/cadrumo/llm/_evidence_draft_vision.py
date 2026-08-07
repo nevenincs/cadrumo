@@ -47,7 +47,6 @@ See Also:
 from __future__ import annotations
 
 import asyncio
-import base64
 import re
 from decimal import Decimal
 
@@ -57,7 +56,6 @@ from ..application.ledger import InvoiceDraft, PurchaseInvoiceEvidenceInputError
 from ..core import STRICT_FROZEN_CONFIG
 from ..core.config import Settings, load_settings
 from ..core.decimal import coerce_finite_european_decimal, european_thousands_reading_is_ambiguous
-from ..core.hashing import sha256_hex
 from ..core.identity import IdentityError, validate_spanish_tax_id
 from ..core.parsing import parse_date
 from ._client import LLMClient
@@ -312,31 +310,25 @@ class LocalVisionInvoiceFieldExtractor:
         """Provenance stamp for this extractor's transport (distinct from classification)."""
         return f"llm:local-vision:{self._model}"
 
-    def extract(self, *, evidence_images: tuple[str, ...]) -> InvoiceDraft:
+    def extract(self, *, evidence_images: tuple[MultimodalImageInput, ...]) -> InvoiceDraft:
         """Read ``evidence_images`` with the local vision model and return a grounded draft.
 
         Args:
-            evidence_images: In-memory base64 page/image renders of the evidence
-                (from :func:`~adapters.outbound.llm.rasterise_pdf_pages_to_base64_png`
-                for a scan-only PDF, or the raw image bytes base64-encoded for an
-                image attachment).
+            evidence_images: In-memory page/image renders of the evidence, each
+                carrying its declared media type (built by the caller from
+                :func:`~adapters.outbound.llm.rasterise_pdf_pages_to_base64_png`
+                for a scan-only PDF, or from the raw bytes of an image
+                attachment).
 
         Returns:
             :class:`InvoiceDraft`: Every field the model transcribed AND that
             passed grounded re-validation; everything else is ``None``.
         """
-        images = tuple(
-            MultimodalImageInput(
-                content_sha256=sha256_hex(base64.b64decode(encoded)),
-                base64_data=encoded,
-            )
-            for encoded in evidence_images
-        )
         request = LLMRequest(
             prompt=_FIELD_EXTRACTION_PROMPT,
             provider_override=LLMProvider.LOCAL,
             model_override=self._model,
-            images=images,
+            images=evidence_images,
         )
         response = asyncio.run(self._client.complete(request))
         parsed = parse_vision_extraction_response(response.text)
@@ -348,7 +340,7 @@ class LocalVisionInvoiceFieldExtractor:
 
 
 def extract_invoice_fields_from_images(
-    evidence_images: tuple[str, ...],
+    evidence_images: tuple[MultimodalImageInput, ...],
     *,
     model: str | None = None,
     settings: Settings | None = None,
@@ -356,7 +348,8 @@ def extract_invoice_fields_from_images(
     """Convenience wrapper: build a :class:`LocalVisionInvoiceFieldExtractor` and extract.
 
     Args:
-        evidence_images: In-memory base64 page/image renders of the evidence.
+        evidence_images: In-memory page/image renders of the evidence, each
+            carrying its declared media type.
         model: Optional vision model override.
         settings: Optional resolved settings override.
 

@@ -159,8 +159,9 @@ class LLMClient:
                 else self.settings.cadrumo_llm_default_temperature
             ),
             timeout_s=self.settings.cadrumo_llm_default_timeout_s,
-            images=tuple(image.base64_data for image in request.images),
+            images=request.images,
         )
+        self._require_image_support(adapter, provider_request)
         run_started_at = now()
         run_clock_start = time.monotonic()
         try:
@@ -216,6 +217,50 @@ class LLMClient:
             completion.output_tokens,
         )
         return response
+
+    @staticmethod
+    def _require_image_support(adapter: _ProviderAdapter, request: ProviderRequest) -> None:
+        """Refuse a vision request routed at an adapter that cannot carry images.
+
+        :class:`~adapters.outbound.llm.ProviderRequest` carries ``images`` for
+        EVERY provider, but only an adapter declaring ``supports_images``
+        actually puts them on the wire. Without this gate a text-only adapter
+        drops them
+        silently and asks the model to read a document it was never sent -- and
+        the model answers confidently from nothing. A plausible fabricated
+        reading of an invoice is the costliest failure this product has, so the
+        boundary refuses rather than degrades.
+
+        Enforced here, at the client's single dispatch point, rather than inside
+        each adapter: the same reasoning
+        :func:`~adapters.outbound.llm.post_provider_request` records for the
+        transport boundary -- a property of the dispatch, never of each
+        adapter's memory to catch.
+
+        Args:
+            adapter: The resolved provider adapter about to run the request.
+            request: The normalized request, carrying any image inputs.
+
+        Raises:
+            LLMConfigError: When the request carries images and the adapter does
+                not forward them. This is a configuration fault with an
+                operator-facing fix (route the vision read at a provider that
+                supports it), not a provider or transport failure.
+        """
+        if not request.images or adapter.supports_images:
+            return
+        provider = adapter.provider.value
+        msg = (
+            f"Provider {provider!r} cannot accept images, but this request carries "
+            f"{len(request.images)} image input(s); it would be sent as a text-only prompt."
+        )
+        raise LLMConfigError(
+            message=msg,
+            suggestion=(
+                "Route the vision read at a provider that forwards images "
+                "(set CADRUMO_LLM_PROVIDER, or pass provider_override on the request)."
+            ),
+        )
 
     def _record_run_telemetry(
         self,

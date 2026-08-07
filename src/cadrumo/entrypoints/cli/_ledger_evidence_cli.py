@@ -517,7 +517,7 @@ def _register_evidence_confirm_command() -> None:
             ...,
             "--country-code",
             help=tr(
-                "cli.app.ledger.invoice.catalogue.country_code_help",
+                "cli.app.ledger.invoice.country_code_help",
                 default="Counterparty ISO 3166-1 alpha-2 country code.",
             ),
         ),

@@ -23,7 +23,9 @@ from typing import ClassVar, override
 import pytest
 from PIL import Image
 
+from ...core import ImageMediaType
 from ...core.config import override_settings
+from .._models import MultimodalImageInput
 from .._providers.base import ProviderRequest
 from .._providers.local import LocalAdapter, rasterise_pdf_pages_to_base64_png
 
@@ -75,7 +77,10 @@ class _ObservedOllamaRequest(BaseHTTPRequestHandler):
 
 def test_local_adapter_forwards_rasterised_images_to_loopback() -> None:
     """The LocalAdapter sends the rasterised base64 images on the Ollama images field."""
-    images = rasterise_pdf_pages_to_base64_png(_scan_only_pdf())
+    images = tuple(
+        MultimodalImageInput.from_base64(page, ImageMediaType.PNG)
+        for page in rasterise_pdf_pages_to_base64_png(_scan_only_pdf())
+    )
     events: Queue[dict[str, object]] = Queue()
     _ObservedOllamaRequest.events = events
     server = ThreadingHTTPServer(("127.0.0.1", 0), _ObservedOllamaRequest)
@@ -109,7 +114,7 @@ def test_local_adapter_forwards_rasterised_images_to_loopback() -> None:
     user_message = messages[-1]
     assert isinstance(user_message, Mapping)
     assert user_message.get("role") == "user"
-    assert user_message.get("images") == list(images)
+    assert user_message.get("images") == [image.base64_data for image in images]
     assert completion.text == "vision read"
     assert completion.input_tokens == 11
     assert completion.output_tokens == 4

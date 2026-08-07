@@ -48,6 +48,7 @@ from uuid import uuid4
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
+from ...core import ImageMediaType, detect_image_media_type
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware, now
@@ -79,6 +80,7 @@ from ...llm import (
     LLMSuggestionRejectionResult,
     LocalTextLLMClassifier,
     LocalVisionLLMClassifier,
+    MultimodalImageInput,
     OperatorIvaDerivationResult,
     rasterise_pdf_pages_to_base64_png,
 )
@@ -124,7 +126,7 @@ class _ResolvedEvidence:
     """A transaction's linked evidence resolved for an on-host read.
 
     Exactly one read mode is populated: ``text`` for a text-layer PDF (inlined into
-    the prompt and fed to the cloud subprocess classifier, consent-gated) or base64
+    the prompt and fed to the cloud subprocess classifier, consent-gated) or
     ``images`` for a scan-only PDF / image (read in memory by the LOCAL vision
     model, on-host, gestor-allowed). The ``images`` are transient
     FINANCIAL-derived bytes and MUST never be persisted or logged
@@ -133,7 +135,7 @@ class _ResolvedEvidence:
 
     reference: str
     text: str | None
-    images: tuple[str, ...]
+    images: tuple[MultimodalImageInput, ...]
 
     @property
     def is_images(self) -> bool:
@@ -228,9 +230,20 @@ def _resolve_evidence(
             text = ""  # scan-only / no usable text layer -> on-host vision path
         if text:
             return _ResolvedEvidence(reference=reference, text=text, images=())
-        images = rasterise_pdf_pages_to_base64_png(evidence_input.data)
+        images = tuple(
+            MultimodalImageInput.from_base64(page, ImageMediaType.PNG)
+            for page in rasterise_pdf_pages_to_base64_png(evidence_input.data)
+        )
     else:
-        images = (base64.b64encode(evidence_input.data).decode("ascii"),)
+        # An attachment is whatever format the operator supplied, so the type is
+        # detected from the bytes and an unsupported one refuses here rather than
+        # travelling to a provider under a guessed label.
+        images = (
+            MultimodalImageInput.from_base64(
+                base64.b64encode(evidence_input.data).decode("ascii"),
+                detect_image_media_type(evidence_input.data),
+            ),
+        )
     # The on-host vision read is the only path that reaches here. Gate it on the
     # profile's llm_vision capability — opting out disables scanned/image reading
     # entirely (a typed refusal, never a silent skip).

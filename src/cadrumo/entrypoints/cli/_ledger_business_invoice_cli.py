@@ -33,7 +33,7 @@ from ...core import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.invoices import InvoiceClass, InvoiceValidationError
+from ...domain.invoices import Invoice, InvoiceClass, InvoiceValidationError
 from ...domain.iva import InvoiceKind, IvaCategory
 from ._common import (
     _bad,
@@ -184,6 +184,67 @@ def _catalogue_invoice_payload(invoice) -> dict[str, object]:
     return payload
 
 
+def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
+    """Surface RD 1619/2012 art. 6.1.d case 3.º as an advisory, never a refusal.
+
+    Case 3.º asks for the destinatario's NIF on a DOMESTIC factura simplificada
+    whose issuer is established in the TAI. The predicate that evaluates it has
+    shipped, tested and exported, with no production caller -- so the operator
+    was never told. This is that caller.
+
+    Deliberately advisory. An ordinary domestic ticket with no identified
+    customer is common and legitimate practice, and the predicate rests on a
+    residency approximation that is over-strict for a Canarias, Ceuta or
+    Melilla issuer. Refusing here would block lawful invoices; saying nothing
+    leaves a filer unaware of a real requirement. The Notice channel is the one
+    that fits, which is what the predicate's own docstring instructs.
+
+    Returns no notice when the profile cannot be resolved: an advisory whose
+    premise could not be evaluated must not be asserted.
+    """
+    if invoice.counterparty_tax_id is not None:
+        return []
+    # Function-local for the cycle reason the sibling profile-backed advisories
+    # document: the profile package reaches back into this layer.
+    from ...application.invoices import simplificada_requires_tax_id_for_domestic_issuer
+    from ...application.user_profile import UserProfileLifecycleRepository, projection_for_taxpayer
+    from ...core import resolve_active_bucket_id
+    from ...domain.user_profile import ProfileNotFoundError
+
+    bucket_id = resolve_active_bucket_id()
+    if bucket_id is None:
+        return []
+    try:
+        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return []
+    except (OSError, ValueError):
+        # A degraded profile read must not fail an invoice that is already
+        # recorded; the advisory simply goes unsaid.
+        return []
+    if not simplificada_requires_tax_id_for_domestic_issuer(invoice, projection_for_taxpayer(record)):
+        return []
+    return [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code="ledger.invoice.simplificada_tax_id_expected",
+            message=(
+                "This factura simplificada names no counterparty NIF. For a domestic "
+                "operation issued by a taxpayer established in the TAI, RD 1619/2012 "
+                "art. 6.1.d case 3.o expects the destinatario's NIF. The invoice was "
+                "recorded; add the NIF with `aeat app ledger invoice update` if the "
+                "customer identified themselves."
+            ),
+            suggestion=f"aeat app ledger invoice update {invoice.invoice_id} --counterparty-nif <NIF>",
+            context={
+                "invoice_id": invoice.invoice_id,
+                "invoice_class": invoice.invoice_class.value,
+                "legal_ref": "rd-1619-2012:art-6.1.d",
+            },
+        ),
+    ]
+
+
 def _catalogue_invoice_lines(invoice) -> list[str]:
     return [
         f"invoice_id\t{invoice.invoice_id}",
@@ -227,7 +288,19 @@ _CatalogueKindOpt = Annotated[
         ),
     ),
 ]
-_CatalogueCounterpartyNifOpt = Annotated[str, typer.Option("--counterparty-nif")]
+#: The destinatario's NIF. Optional because RD 1619/2012 art. 7 does not require
+#: it on a factura simplificada -- that relief is the point of the simplified
+#: form. The domain has always accepted its absence for an ISSUED SIMPLIFICADA;
+#: only this option forced one, so the state the art. 6.1.d advisory evaluates
+#: could not be reached through the CLI at all. Every other class still refuses
+#: an absent id at the domain boundary, with the accepted set named.
+_CatalogueCounterpartyNifOpt = Annotated[str | None, typer.Option("--counterparty-nif")]
+
+#: The wizard keeps the NIF REQUIRED. It is a guided flow that assembles a
+#: complete record field by field and validates the id as it goes, so an absent
+#: one is an unanswered question rather than the deliberate omission that a
+#: simplificada represents on the direct `add` path.
+_WizardCounterpartyNifOpt = Annotated[str, typer.Option("--counterparty-nif")]
 _CatalogueCounterpartyNameOpt = Annotated[str, typer.Option("--counterparty-name")]
 _CatalogueInvoiceNumberOpt = Annotated[str, typer.Option("--invoice-number")]
 _CatalogueInvoiceDateOpt = Annotated[
@@ -245,7 +318,7 @@ _CatalogueCountryCodeOpt = Annotated[
     typer.Option(
         "--country-code",
         help=tr(
-            "cli.app.ledger.invoice.catalogue.country_code_help",
+            "cli.app.ledger.invoice.country_code_help",
             default=(
                 "Counterparty ISO 3166-1 alpha-2 country code. Required:"
                 " it routes both informativas, so it is never assumed."
@@ -287,7 +360,7 @@ _CatalogueInvoiceClassOpt = Annotated[
     typer.Option(
         "--invoice-class",
         help=tr(
-            "cli.app.ledger.invoice.catalogue.invoice_class_help",
+            "cli.app.ledger.invoice.invoice_class_help",
             default=(
                 "Invoice class. A rectificativa also requires"
                 " --rectifies-invoice-number naming the invoice it corrects."
@@ -301,7 +374,7 @@ _CatalogueSeriesOpt = Annotated[
     typer.Option(
         "--series",
         help=tr(
-            "cli.app.ledger.invoice.catalogue.series_help",
+            "cli.app.ledger.invoice.series_help",
             default="Invoice numbering series, when the issuer uses one.",
         ),
     ),
@@ -312,7 +385,7 @@ _CatalogueRectifiesOpt = Annotated[
     typer.Option(
         "--rectifies-invoice-number",
         help=tr(
-            "cli.app.ledger.invoice.catalogue.rectifies_help",
+            "cli.app.ledger.invoice.rectifies_help",
             default="Number of the invoice this rectificativa corrects.",
         ),
     ),
@@ -323,7 +396,7 @@ _CatalogueRecargoOpt = Annotated[
     typer.Option(
         "--recargo",
         help=tr(
-            "cli.app.ledger.invoice.catalogue.recargo_help",
+            "cli.app.ledger.invoice.recargo_help",
             default=(
                 "Recargo de equivalencia charged on top of the cuota (LIVA art. 161)."
                 " It rides inside the invoice total, unlike a retención."
@@ -337,7 +410,7 @@ _CatalogueIvaCategoryOpt = Annotated[
     typer.Option(
         "--iva-category",
         help=tr(
-            "cli.app.ledger.invoice.catalogue.iva_category_help",
+            "cli.app.ledger.invoice.iva_category_help",
             default="IVA treatment of the operation. Required for a renta income calculation to ground it.",
         ),
     ),
@@ -348,7 +421,7 @@ _CatalogueRetentionRateOpt = Annotated[
     typer.Option(
         "--retention-rate",
         help=tr(
-            "cli.app.ledger.invoice.catalogue.retention_rate_help",
+            "cli.app.ledger.invoice.retention_rate_help",
             default=(
                 "RIRPF art. 95.1 retención fraction withheld by the payer"
                 " (0.15 for the general 15%, or 0.07 during the inicio-de-actividad"
@@ -362,7 +435,7 @@ _CatalogueRetentionAmountOpt = Annotated[
     typer.Option(
         "--retention-amount",
         help=tr(
-            "cli.app.ledger.invoice.catalogue.retention_amount_help",
+            "cli.app.ledger.invoice.retention_amount_help",
             default=(
                 "Amount of IRPF retención withheld by the payer, in euros."
                 " May be supplied alone, or alongside --retention-rate."
@@ -375,14 +448,13 @@ _CatalogueRetentionAmountOpt = Annotated[
 @invoice_app.command(
     "add",
     help=tr(
-        "cli.app.ledger.invoice.catalogue.create_help",
+        "cli.app.ledger.invoice.add_help",
         default="Create a linkable reconciliation invoice in the catalogue.",
     ),
 )
 def invoice_add(
     ctx: typer.Context,
     kind: _CatalogueKindOpt,
-    counterparty_nif: _CatalogueCounterpartyNifOpt,
     counterparty_name: _CatalogueCounterpartyNameOpt,
     invoice_number: _CatalogueInvoiceNumberOpt,
     invoice_date: _CatalogueInvoiceDateOpt,
@@ -395,6 +467,7 @@ def invoice_add(
     retention_rate: _CatalogueRetentionRateOpt = None,
     retention_amount: _CatalogueRetentionAmountOpt = None,
     invoice_class: _CatalogueInvoiceClassOpt = None,
+    counterparty_nif: _CatalogueCounterpartyNifOpt = None,
     series: _CatalogueSeriesOpt = None,
     rectifies_invoice_number: _CatalogueRectifiesOpt = None,
     recargo: _CatalogueRecargoOpt = None,
@@ -465,20 +538,21 @@ def invoice_add(
         command="ledger.invoice.add",
         result=CatalogueInvoiceCreateResult.model_validate(_catalogue_invoice_payload(result.invoice)),
         lines=_catalogue_invoice_lines(result.invoice),
+        notices=_simplificada_tax_id_notices(result.invoice),
     )
 
 
 @invoice_app.command(
     "wizard",
     help=tr(
-        "cli.app.ledger.invoice.catalogue.wizard_help",
+        "cli.app.ledger.invoice.wizard_help",
         default="Guided, non-interactive manual entry when extraction is unavailable.",
     ),
 )
 def invoice_wizard(
     ctx: typer.Context,
     kind: _CatalogueKindOpt,
-    counterparty_nif: _CatalogueCounterpartyNifOpt,
+    counterparty_nif: _WizardCounterpartyNifOpt,
     counterparty_name: _CatalogueCounterpartyNameOpt,
     invoice_number: _CatalogueInvoiceNumberOpt,
     invoice_date: _CatalogueInvoiceDateOpt,
@@ -552,7 +626,7 @@ def invoice_wizard(
     notices: list[Notice] = []
     if wizard_result.already_existed:
         noop_message = tr(
-            "cli.app.ledger.invoice.catalogue.wizard_idempotent_noop",
+            "cli.app.ledger.invoice.wizard_idempotent_noop",
             invoice_id=wizard_result.invoice.invoice_id,
             default=(
                 "Idempotent no-op: an invoice with this identity already exists "
@@ -581,7 +655,7 @@ def invoice_wizard(
 @invoice_app.command(
     "import",
     help=tr(
-        "cli.app.ledger.invoice.catalogue.import_help",
+        "cli.app.ledger.invoice.import_help",
         default="Bulk-create catalogue invoices from a CSV or XLSX file.",
     ),
 )
@@ -591,7 +665,7 @@ def invoice_import(
         ...,
         "--file",
         help=tr(
-            "cli.app.ledger.invoice.catalogue.import_file_help",
+            "cli.app.ledger.invoice.import_file_help",
             default=(
                 "Path to a CSV or XLSX file of invoice rows (counterparty_nif, "
                 "counterparty_name, invoice_number, invoice_date, taxable_base, "
@@ -626,7 +700,7 @@ def invoice_import(
     if not file.exists():
         raise _bad(
             tr(
-                "cli.app.ledger.invoice.catalogue.import_file_not_found",
+                "cli.app.ledger.invoice.import_file_not_found",
                 path=str(file),
                 default=f"File not found: {file}",
             ),
@@ -649,7 +723,7 @@ def invoice_import(
         lines.append(f"  refused\trow={failure.row_number}\tfield={failure.field}\treason={failure.reason}")
     if result.rows > 0 and result.created == 0 and result.refused:
         message = tr(
-            "cli.app.ledger.invoice.catalogue.import_all_refused",
+            "cli.app.ledger.invoice.import_all_refused",
             default="bulk invoice import failed: every row was refused; no invoices were created",
         )
         lines.insert(1, message)
@@ -683,7 +757,7 @@ def invoice_import(
 @invoice_app.command(
     "list",
     help=tr(
-        "cli.app.ledger.invoice.catalogue.list_help",
+        "cli.app.ledger.invoice.list_help",
         default="List reconciliation catalogue invoices.",
     ),
 )
@@ -728,7 +802,7 @@ def invoice_list(
 @invoice_app.command(
     "view",
     help=tr(
-        "cli.app.ledger.invoice.catalogue.view_help",
+        "cli.app.ledger.invoice.view_help",
         default="Show one reconciliation catalogue invoice by id or unambiguous prefix.",
     ),
 )
@@ -737,7 +811,7 @@ def invoice_view(
     invoice_id: str = typer.Argument(
         ...,
         help=tr(
-            "cli.app.ledger.invoice.catalogue.invoice_id_help",
+            "cli.app.ledger.invoice.invoice_id_help",
             default="Catalogue invoice id (or unambiguous prefix).",
         ),
     ),
@@ -763,7 +837,7 @@ def invoice_view(
 @invoice_app.command(
     "remove",
     help=tr(
-        "cli.app.ledger.invoice.catalogue.remove_help",
+        "cli.app.ledger.invoice.remove_help",
         default="Delete one reconciliation catalogue invoice.",
     ),
 )
@@ -772,7 +846,7 @@ def invoice_remove(
     invoice_id: str = typer.Argument(
         ...,
         help=tr(
-            "cli.app.ledger.invoice.catalogue.invoice_id_help",
+            "cli.app.ledger.invoice.invoice_id_help",
             default="Catalogue invoice id (or unambiguous prefix).",
         ),
     ),

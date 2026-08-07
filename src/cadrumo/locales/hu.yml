@@ -1965,10 +1965,8 @@ cli:
         valuation_preview_help: Zárópreparát és értékesítési önköltség előnézete.
         year_help: Adóév.
       invoice:
+        add_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
         catalogue:
-          country_code_help: 'Az ügyfél ISO 3166-1 alfa-2 országkódja. Kötelező: mindkét
-            adatszolgáltatás útválasztását meghatározza, ezért soha nem feltételezzük.'
-          create_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
           import_all_refused: 'a számlák tömeges importálása sikertelen: minden sor
             elutasításra került; nem jött létre számla'
           import_file_help: Elérési út egy CSV vagy XLSX fájlhoz, amely számlasorokat
@@ -1999,12 +1997,26 @@ cli:
             elérhető.
           wizard_idempotent_noop: 'Idempotens no-op: már létezik ilyen azonosságú
             számla (%{invoice_id}); semmi sem jött létre.'
+        country_code_help: 'Az ügyfél ISO 3166-1 alfa-2 országkódja. Kötelező: mindkét
+          adatszolgáltatás útválasztását meghatározza, ezért soha nem feltételezzük.'
         group_help: Üzleti számlák nyilvántartása (kiállított vagy beérkezett).
+        import_all_refused: 'a számlák tömeges importálása sikertelen: minden sor
+          elutasításra került; nem jött létre számla'
+        import_file_help: Elérési út egy CSV vagy XLSX fájlhoz, amely számlasorokat
+          tartalmaz (counterparty_nif, counterparty_name, invoice_number, invoice_date,
+          taxable_base, valamint opcionálisan iva_rate/currency/country_code/notes).
+        import_file_not_found: 'A fájl nem található: {path}'
+        import_help: Katalógusszámlák tömeges létrehozása CSV vagy XLSX fájlból.
+        invoice_class_help: A számla osztálya. A rectificativa emellett a --rectifies-invoice-number
+          megadását is megköveteli, amely a javított számlát nevezi meg.
         invoice_date_help: A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN),
           pl. 2026-01-15.
-        invoice_id_help: Számla azonosítója (vagy egyértelmű előtag).
+        invoice_id_help: Katalógusbeli számla azonosítója (vagy egyértelmű előtag).
+        iva_category_help: Az ügylet áfakezelése. Szükséges ahhoz, hogy egy renta-számítás
+          megalapozhassa.
         kind_help: 'Számla típusa: kiállított (vevő tartozik) vagy beérkezett (szállítónak
           tartozol).'
+        list_help: Az egyeztetési katalógus számláinak listázása.
         operation_date_help: A teljesites (termekertekesites vagy szolgaltatasnyujtas)
           idopontja (EEEE-HH-NN). Ez a LIVA 75. cikke szerinti adofizetesi kotelezettseg
           keletkezesenek napja, amely meghatarozza, melyik idoszakban kell az adot
@@ -2016,7 +2028,23 @@ cli:
           címzettcseréje'
         operation_type_invalid: 'A --operation-type értéke csak a következők egyike
           lehet: {valid}'
+        recargo_help: Az adótételre felszámított recargo de equivalencia (LIVA 161.
+          cikk). A retencióval ellentétben a számla végösszegén belül szerepel.
+        rectifies_help: Annak a számlának a száma, amelyet ez a rectificativa javít.
+        remove_help: Egy egyeztetési katalógusbeli számla törlése.
+        retention_amount_help: A kifizető által levont IRPF visszatartás összege euróban.
+          Megadható önállóan, vagy a --retention-rate paraméterrel együtt.
+        retention_rate_help: A RIRPF 95.1. cikke szerinti visszatartási hányad, amelyet
+          a kifizető von le (0,15 az általános 15%-hoz, vagy 0,07 a tevékenység megkezdésének
+          időszakában). A --retention-amount megadása kötelező; önmagában a hányad
+          megadása elutasításra kerül.
+        series_help: A számla sorozatjele, ha a kibocsátó használ ilyet.
         update_help: Üzleti számla adatainak frissítése.
+        view_help: Egy egyeztetési katalógusbeli számla megjelenítése azonosító vagy
+          egyértelmű előtag alapján.
+        wizard_help: Irányított, nem interaktív kézi bevitel, ha a kinyerés nem elérhető.
+        wizard_idempotent_noop: 'Idempotens no-op: már létezik ilyen azonosságú számla
+          (%{invoice_id}); semmi sem jött létre.'
         yes_help: Üzleti számla törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót az üzleti számla törléséhez.
       prorrata:

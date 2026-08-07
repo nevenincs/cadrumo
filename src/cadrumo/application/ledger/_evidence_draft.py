@@ -102,7 +102,14 @@ from ...adapters.inbound.einvoice import EInvoiceXmlParseError, parse_einvoice_d
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice, resolve_iva_rate_slot
-from ...core import STRICT_FROZEN_CONFIG, STRUCTURED_DOCUMENT_SHAPES, MissingOptionalExtraError, ServiceCapability
+from ...core import (
+    STRICT_FROZEN_CONFIG,
+    STRUCTURED_DOCUMENT_SHAPES,
+    ImageMediaType,
+    MissingOptionalExtraError,
+    ServiceCapability,
+    detect_image_media_type,
+)
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.decimal import coerce_finite_european_decimal
@@ -110,9 +117,14 @@ from ...core.external_constants import DEFAULT_CURRENCY, XML_MIME_TYPE
 from ...core.identity import IdentityError, tax_id_identity_token, validate_spanish_tax_id
 from ...core.parsing import parse_date, parse_iso8601_date
 from ...domain.attachments import link_attachment_invoice, normalize_media_type
-from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceClass, InvoiceLine, IvaRate
+from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceClass, InvoiceLine
 from ...domain.iva import InvoiceKind, IvaCategory
-from ...llm import LLMPdfRasterisationError, LLMProviderError, rasterise_pdf_pages_to_base64_png
+from ...llm import (
+    LLMPdfRasterisationError,
+    LLMProviderError,
+    MultimodalImageInput,
+    rasterise_pdf_pages_to_base64_png,
+)
 from ..provisioning import probe_ollama_vision
 from ..user_profile import resolve_active_capability
 from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
@@ -638,11 +650,22 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
         from ...llm import extract_invoice_fields_from_images
 
         if evidence.media_kind is MediaKind.PDF:
-            images = rasterise_pdf_pages_to_base64_png(evidence.data)
+            images = tuple(
+                MultimodalImageInput.from_base64(page, ImageMediaType.PNG)
+                for page in rasterise_pdf_pages_to_base64_png(evidence.data)
+            )
         else:
             import base64
 
-            images = (base64.b64encode(evidence.data).decode("ascii"),)
+            # An attachment is whatever format the operator supplied, so the type is
+            # detected from the bytes; an unsupported one refuses here rather than
+            # travelling to a provider under a guessed label.
+            images = (
+                MultimodalImageInput.from_base64(
+                    base64.b64encode(evidence.data).decode("ascii"),
+                    detect_image_media_type(evidence.data),
+                ),
+            )
         return extract_invoice_fields_from_images(images, settings=settings)
     except MissingOptionalExtraError as exc:
         # Ordered ahead of the runtime-failure branch deliberately. A missing

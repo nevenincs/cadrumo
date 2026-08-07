@@ -36,6 +36,7 @@ from ...application.ledger.tests._llm_vision_evidence_support import (
     _run_against_loopback_ollama,
 )
 from ...application.ledger.tests._llm_vision_evidence_support import profile as profile
+from ...core import ImageMediaType
 from ...core.config import load_settings
 from ...core.decimal import coerce_finite_european_decimal
 from ...tests.secure_sql import TestRuntimeProfile
@@ -46,6 +47,7 @@ from .._evidence_draft_vision import (
     extract_invoice_fields_from_images,
     parse_vision_extraction_response,
 )
+from .._models import MultimodalImageInput
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["profile"]
@@ -218,7 +220,7 @@ class TestLocalVisionInvoiceFieldExtractor:
 
     def test_extracts_grounded_fields_from_a_real_vision_response(self, profile: TestRuntimeProfile) -> None:
         _ = profile
-        images = (base64.b64encode(_png_image()).decode("ascii"),)
+        images = (MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),)
 
         def _call() -> InvoiceDraft:
             extractor = LocalVisionInvoiceFieldExtractor(model="qwen-test")
@@ -238,7 +240,7 @@ class TestLocalVisionInvoiceFieldExtractor:
         body = _json_object(observed["body"])
         messages = _json_array(body["messages"])
         user_message = _json_object(messages[-1])
-        assert user_message["images"] == list(images)
+        assert user_message["images"] == [image.base64_data for image in images]
 
     def test_decided_by_names_the_model(self) -> None:
         extractor = LocalVisionInvoiceFieldExtractor(model="qwen2.5vl:3b", settings=load_settings())
@@ -247,7 +249,7 @@ class TestLocalVisionInvoiceFieldExtractor:
     def test_partial_fields_ground_and_missing_fields_stay_none(self, profile: TestRuntimeProfile) -> None:
         """A real vision response that only reads some fields never fabricates the rest."""
         _ = profile
-        images = (base64.b64encode(_png_image()).decode("ascii"),)
+        images = (MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),)
         partial = json.dumps(
             {
                 "supplier_tax_id": None,

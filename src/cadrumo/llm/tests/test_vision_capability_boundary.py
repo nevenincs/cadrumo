@@ -1,0 +1,277 @@
+"""The transport boundary refuses a vision request an adapter cannot carry.
+
+``ProviderRequest.images`` is populated for every provider, but only an adapter
+declaring ``supports_images`` puts them on the wire. Before this boundary
+existed, routing a vision read at a cloud provider dropped the images silently
+and sent a text-only prompt: the model was asked to read an invoice it had never
+been shown, and answered confidently from nothing. No exception, no warning, a
+plausible fabricated figure.
+
+These tests hold that shut. Nothing here is mocked, stubbed, or patched: the
+refusal crosses the real :class:`LLMClient` and a real adapter, the text-only
+success crosses a real HTTP transport to a loopback endpoint, and the Anthropic
+payload is the payload the adapter actually builds.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import base64
+import json
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
+from http import HTTPStatus
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from io import BytesIO
+from pathlib import Path
+from queue import Queue
+from threading import Thread
+from typing import override
+
+import pytest
+from PIL import Image
+from pydantic import SecretStr, ValidationError
+
+from ...adapters.outbound.llm import LLMCache, UsageRecorder
+from ...core import ImageMediaType
+from ...core.config import LLMProvider, override_settings
+from ...tests.fixtures.settings import EnvFileFreeSettings
+from .. import LLMClient, LLMConfigError, LLMRequest, MultimodalImageInput
+from .._providers import GeminiAdapter, LocalAdapter, OpenAIAdapter, ProviderRequest
+from .._providers.anthropic import build_user_content
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+_PROMPT = "Read the attached invoice and report the total."
+
+
+def _png_image() -> MultimodalImageInput:
+    """Encode a small real PNG as one multimodal input."""
+    buffer = BytesIO()
+    Image.new("RGB", (12, 12), "white").save(buffer, format="PNG")
+    return MultimodalImageInput.from_base64(
+        base64.b64encode(buffer.getvalue()).decode("ascii"),
+        ImageMediaType.PNG,
+    )
+
+
+def _settings(tmp_path: Path, *, openai_chat_url: str | None = None) -> EnvFileFreeSettings:
+    """Settings whose provider credentials exist but whose endpoints stay on this host."""
+    base = EnvFileFreeSettings(
+        cadrumo_llm_provider=LLMProvider.LOCAL,
+        cadrumo_llm_model="gpt-oss",
+        cadrumo_llm_cache_dir=tmp_path / "cache",
+        cadrumo_llm_usage_dir=tmp_path / "usage",
+        cadrumo_llm_run_telemetry_dir=tmp_path / "run-telemetry",
+        cadrumo_llm_openai_api_key=SecretStr("sk-loopback-only"),
+        cadrumo_llm_gemini_api_key=SecretStr("gemini-loopback-only"),
+    )
+    if openai_chat_url is None:
+        return base
+    return base.model_copy(update={"cadrumo_llm_openai_chat_completions_url": openai_chat_url})
+
+
+def _client(settings: EnvFileFreeSettings) -> LLMClient:
+    return LLMClient(
+        settings=settings,
+        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
+        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
+    )
+
+
+@contextmanager
+def _serve_openai() -> Iterator[tuple[str, Queue[dict[str, object]]]]:
+    """Run a loopback endpoint speaking the OpenAI Chat Completions shape."""
+    events: Queue[dict[str, object]] = Queue()
+
+    class _Endpoint(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:
+            body = self.rfile.read(int(self.headers.get("content-length", "0")))
+            events.put({"body": json.loads(body.decode("utf-8"))})
+            payload = json.dumps(
+                {
+                    "id": "chatcmpl-loopback",
+                    "model": "gpt-4.1",
+                    "choices": [{"message": {"content": " text-only completion "}}],
+                    "usage": {"prompt_tokens": 9, "completion_tokens": 3},
+                },
+            ).encode("utf-8")
+            self.send_response(HTTPStatus.OK)
+            self.send_header("content-type", "application/json")
+            self.send_header("content-length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+
+        @override
+        def log_message(self, format: str, *args: object) -> None:
+            """Silence stdlib request logging during tests."""
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _Endpoint)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield f"http://127.0.0.1:{server.server_port}/v1/chat/completions", events
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+class TestTextOnlyProviderRefusesImages:
+    """The safety-critical case: images must never be dropped in silence."""
+
+    def test_a_vision_request_at_a_text_only_provider_refuses(self, tmp_path: Path) -> None:
+        """Routing images at OpenAI raises, naming the provider and the images.
+
+        The refusal must be reachable WITHOUT a network call -- it fires before
+        dispatch, so no loopback endpoint is served here. If the guard were
+        absent the request would leave for api.openai.com carrying only the
+        prompt, which is precisely the silent discard being prevented.
+        """
+        settings = _settings(tmp_path)
+        request = LLMRequest(
+            prompt=_PROMPT,
+            provider_override=LLMProvider.OPENAI,
+            images=(_png_image(),),
+        )
+        with pytest.raises(LLMConfigError) as caught:
+            asyncio.run(_client(settings).complete(request))
+        message = str(caught.value)
+        assert LLMProvider.OPENAI.value in message
+        assert "cannot accept images" in message
+        assert caught.value.suggestion is not None
+
+    def test_the_refusal_also_covers_gemini(self, tmp_path: Path) -> None:
+        """The second text-only adapter is gated by the same one guard.
+
+        Named explicitly rather than left implied: the whole point of declaring
+        capability as class data enforced at one dispatch point is that a
+        second text-only adapter needs no code of its own to be safe.
+        """
+        settings = _settings(tmp_path)
+        request = LLMRequest(
+            prompt=_PROMPT,
+            provider_override=LLMProvider.GEMINI,
+            images=(_png_image(),),
+        )
+        with pytest.raises(LLMConfigError) as caught:
+            asyncio.run(_client(settings).complete(request))
+        assert LLMProvider.GEMINI.value in str(caught.value)
+
+    def test_a_text_only_request_at_a_text_only_provider_still_succeeds(self, tmp_path: Path) -> None:
+        """The guard is scoped to image-bearing requests and regresses nothing.
+
+        A real HTTP round trip through the real OpenAI adapter to a loopback
+        endpoint, so this fails if the guard ever widened to refuse an ordinary
+        text completion.
+        """
+        with _serve_openai() as (endpoint, events):
+            settings = _settings(tmp_path, openai_chat_url=endpoint)
+            request = LLMRequest(prompt=_PROMPT, provider_override=LLMProvider.OPENAI)
+            with override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+                response = asyncio.run(_client(settings).complete(request))
+
+        assert response.text == "text-only completion"
+        assert response.provider is LLMProvider.OPENAI
+        observed = events.get_nowait()
+        body = observed["body"]
+        assert isinstance(body, Mapping)
+        messages = body.get("messages")
+        assert isinstance(messages, list)
+        assert messages[-1] == {"role": "user", "content": _PROMPT}
+
+
+class TestDeclaredImageCapability:
+    """Capability is data on the adapter class, not per-adapter memory."""
+
+    def test_only_the_adapters_that_forward_images_declare_support(self) -> None:
+        """The declaration matches which adapters actually read ``request.images``.
+
+        Anchored to the real classes rather than a hand-listed set of names, so
+        a new adapter defaults to text-only and a rename cannot make this pass
+        vacuously.
+        """
+        from .._providers.anthropic import AnthropicAdapter
+
+        assert AnthropicAdapter.supports_images is True
+        assert LocalAdapter.supports_images is True
+        assert OpenAIAdapter.supports_images is False
+        assert GeminiAdapter.supports_images is False
+
+
+class TestAnthropicMultimodalPayload:
+    """The Anthropic adapter builds a real Messages API content-block list."""
+
+    def test_images_precede_the_text_and_carry_the_declared_media_type(self) -> None:
+        """One base64 image block per input, then exactly one text block."""
+        first = _png_image()
+        second = MultimodalImageInput.from_base64(first.base64_data, ImageMediaType.JPEG)
+        request = ProviderRequest(
+            request_id="req",
+            model="claude-opus-5",
+            prompt=_PROMPT,
+            system=None,
+            max_tokens=64,
+            temperature=0.0,
+            timeout_s=3,
+            images=(first, second),
+        )
+
+        content = build_user_content(request)
+
+        assert isinstance(content, list)
+        assert [block["type"] for block in content] == ["image", "image", "text"]
+        assert content[0] == {
+            "type": "image",
+            "source": {"type": "base64", "media_type": "image/png", "data": first.base64_data},
+        }
+        # The SECOND block proves the media type is carried per image from the
+        # input that declared it, rather than assumed once for the whole request:
+        # same bytes, different declaration, different block.
+        assert content[1] == {
+            "type": "image",
+            "source": {"type": "base64", "media_type": "image/jpeg", "data": second.base64_data},
+        }
+        assert content[2] == {"type": "text", "text": _PROMPT}
+
+    def test_a_text_only_request_keeps_the_bare_string_content(self) -> None:
+        """The text path is byte-identical to what it was before images existed."""
+        request = ProviderRequest(
+            request_id="req",
+            model="claude-opus-5",
+            prompt=_PROMPT,
+            system=None,
+            max_tokens=64,
+            temperature=0.0,
+            timeout_s=3,
+        )
+        assert build_user_content(request) == _PROMPT
+
+
+class TestMultimodalImageInputDeclaresItsMediaType:
+    """A defaulted media type is how a JPEG gets sent as a PNG."""
+
+    def test_construction_without_a_media_type_refuses(self) -> None:
+        """The field is required: there is no format to fall back to."""
+        # Built as a mapping so the omission is a RUNTIME fact the validator must
+        # catch, not a static-typing artefact a checker would reject first.
+        without_media_type = {"content_sha256": "a" * 64, "base64_data": "QQ=="}
+        with pytest.raises(ValidationError) as caught:
+            MultimodalImageInput.model_validate(without_media_type)
+        assert "media_type" in str(caught.value)
+
+    def test_an_unrecognised_media_type_refuses(self) -> None:
+        """The axis is a closed enum, so a free-form string cannot slip through."""
+        bmp_declared = {"content_sha256": "a" * 64, "base64_data": "QQ==", "media_type": "image/bmp"}
+        with pytest.raises(ValidationError):
+            MultimodalImageInput.model_validate(bmp_declared)
+
+    def test_the_content_address_is_the_digest_of_the_decoded_bytes(self) -> None:
+        """The constructor derives the address, so payload and digest cannot diverge."""
+        from ...core.hashing import sha256_hex
+
+        buffer = BytesIO()
+        Image.new("RGB", (4, 4), "white").save(buffer, format="PNG")
+        raw = buffer.getvalue()
+        built = MultimodalImageInput.from_base64(base64.b64encode(raw).decode("ascii"), ImageMediaType.PNG)
+        assert built.content_sha256 == sha256_hex(raw)

@@ -18,6 +18,7 @@ helpers raise :exc:`~adapters.outbound.llm.LLMValidationError`.
 
 from __future__ import annotations
 
+import base64
 import re
 from datetime import date, datetime
 from decimal import Decimal
@@ -26,6 +27,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ..core import ImageMediaType
 from ..core.config import LLMProvider
+from ..core.hashing import sha256_hex
 from ._errors import LLMValidationError
 
 _PROMPT_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
@@ -66,25 +68,26 @@ class MultimodalImageInput(BaseModel):
     )
 
     @classmethod
-    def from_image_bytes(cls, data: bytes, media_type: ImageMediaType) -> MultimodalImageInput:
-        """Build one input from raw image bytes and their known media type.
+    def from_base64(cls, base64_data: str, media_type: ImageMediaType) -> MultimodalImageInput:
+        """Build one input from encoded image bytes and their known media type.
 
-        The single place the base64 encoding and the content address are
-        derived, so a producer cannot pair one image's bytes with another's
-        digest.
+        The single place the content address is derived, so a producer cannot
+        pair one image's payload with another's digest. The address is the
+        SHA-256 of the DECODED bytes, matching the attachment store's own
+        content addressing.
 
         Args:
-            data: Raw image bytes.
+            base64_data: Base64-encoded image bytes.
             media_type: The type those bytes actually are -- from the producer's
-                own knowledge (a rasteriser emits PNG) or from
-                :func:`~core.detect_image_media_type`.
+                own knowledge (the page rasteriser only ever emits PNG) or from
+                :func:`~core.detect_image_media_type` over the raw bytes.
 
         Returns:
             The transient multimodal input carrying all three fields.
         """
         return cls(
-            content_sha256=sha256_hex(data),
-            base64_data=base64.b64encode(data).decode("ascii"),
+            content_sha256=sha256_hex(base64.b64decode(base64_data)),
+            base64_data=base64_data,
             media_type=media_type,
         )
 

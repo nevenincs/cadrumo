@@ -18,6 +18,7 @@ from ...application.ledger.tests._llm_vision_evidence_support import (
 from ...application.ledger.tests._llm_vision_evidence_support import (
     profile as profile,
 )
+from ...core import ImageMediaType
 from ...core.config import load_settings
 from ...domain.categories import SpendingCategory
 from ...domain.iva import IvaCategory
@@ -27,6 +28,7 @@ from ...domain.transactions import (
     prompt_spec_with_saturation_fields,
 )
 from ...tests.secure_sql import TestRuntimeProfile
+from .._models import MultimodalImageInput
 from .._vision_classifier import LocalVisionLLMClassifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -47,7 +49,7 @@ def test_vision_classifier_classifies_from_images(profile: TestRuntimeProfile) -
             "business_pct": None,
         },
     )
-    images = (base64.b64encode(_png_image()).decode("ascii"),)
+    images = (MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),)
 
     def _call() -> LLMClassificationResponse:
         classifier = LocalVisionLLMClassifier(spec=prompt_spec_with_saturation_fields(), model="llava-test")
@@ -61,7 +63,7 @@ def test_vision_classifier_classifies_from_images(profile: TestRuntimeProfile) -
     body = _json_object(observed["body"])
     messages = _json_array(body["messages"])
     user_message = _json_object(messages[-1])
-    assert user_message["images"] == list(images)
+    assert user_message["images"] == [image.base64_data for image in images]
 
 
 def test_image_evidence_classifies_with_no_provider(profile: TestRuntimeProfile) -> None:
@@ -80,7 +82,7 @@ def test_image_evidence_classifies_with_no_provider(profile: TestRuntimeProfile)
     evidence = _ResolvedEvidence(
         reference="ev-1",
         text=None,
-        images=(base64.b64encode(_png_image()).decode("ascii"),),
+        images=(MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),),
     )
 
     def _call() -> tuple[LLMClassificationResponse, str]:
@@ -135,7 +137,7 @@ def test_vision_connection_error_becomes_a_typed_refusal_with_fix(profile: TestR
     evidence = _ResolvedEvidence(
         reference="ev-1",
         text=None,
-        images=(base64.b64encode(_png_image()).decode("ascii"),),
+        images=(MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),),
     )
     unreachable_settings = load_settings().model_copy(
         update={
@@ -174,7 +176,7 @@ def test_vision_model_override_selects_the_named_model(profile: TestRuntimeProfi
     evidence = _ResolvedEvidence(
         reference="ev-1",
         text=None,
-        images=(base64.b64encode(_png_image()).decode("ascii"),),
+        images=(MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),),
     )
 
     def _call() -> tuple[LLMClassificationResponse, str]:
