@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:1e223fc1332b5c4488d6f08b98c48042153d8301e87b14b23bd5298551a6b99d'
+body_hash: 'sha256:e144fe0010ffaf20de63b80469a9313cf2aee7ed322c7f4a39091ddf44ad33b6'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -92,9 +92,9 @@ Lands the anchored candidate schema and the local extraction surface, and record
 
 Lands the deterministic grounding stage and deletes the Spanish-label regex extractor once the semantic reader is wired.
 
-- [ ] `W02.P06.S18` - Enforce the anchor check: a candidate grounds only when its anchor occurs in the transcription and the typed value equals the deterministic parse of that anchor, proven by mutation with an off-document value observing red; `src/cadrumo/application/ledger`.
-- [ ] `W02.P06.S19` - Resolve identity roles deterministically, excluding the taxpayer own NIF from counterparty candidacy and surfacing AMBIGUOUS with all candidates when role evidence does not pick exactly one, gated by the OP-PUR-COM-2026-0005_layout-minimal fixture never yielding a first-match id; `src/cadrumo/application/ledger`.
-- [ ] `W02.P06.S20` - Emit arithmetic-closure findings over the identities total equals base plus cuota plus recargo plus suplido, cash equals total minus retencion, and per-rate sums, gated by both COM-2026-0005 fixture entries producing a blocking 890.00 versus 927.22 finding; `src/cadrumo/application/ledger`.
+- [x] `W02.P06.S18` - Enforce the anchor check: a candidate grounds only when its anchor occurs in the transcription and the typed value equals the deterministic parse of that anchor, proven by mutation with an off-document value observing red; `src/cadrumo/application/ledger`.
+- [x] `W02.P06.S19` - Resolve identity roles deterministically, excluding the taxpayer own NIF from counterparty candidacy and surfacing AMBIGUOUS with all candidates when role evidence does not pick exactly one, gated by the OP-PUR-COM-2026-0005_layout-minimal fixture never yielding a first-match id; `src/cadrumo/application/ledger`.
+- [x] `W02.P06.S20` - Emit arithmetic-closure findings over the identities total equals base plus cuota plus recargo plus suplido, cash equals total minus retencion, and per-rate sums, gated by both COM-2026-0005 fixture entries producing a blocking 890.00 versus 927.22 finding; `src/cadrumo/application/ledger`.
 - [ ] `W02.P06.S21` - Route per-field degradation advisories through the typed Notice channel naming what was seen and why it was rejected, gated by envelope conformance tests; `src/cadrumo/entrypoints/cli`.
 - [ ] `W02.P06.S22` - Delete the Spanish-label regex extractor family and its tests after the semantic reader is wired, gated by clean collection, zero remaining label-regex references, and the bundled fixtures passing through the new path; `src/cadrumo/application/ledger/_evidence_draft.py`.
 
