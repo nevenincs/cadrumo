@@ -147,7 +147,6 @@ the GROI oracle), `code-health-report.yml` (informational dashboard).
 | `workflows/packaging-smoke.yml` | Full campaign; sole source of promotable evidence |
 | `workflows/packaging-scoop.yml` / `packaging-homebrew.yml` / `packaging-claude.yml` | Dispatch-only acquisition lanes consuming a tested cohort |
 | `workflows/publish-release.yml` | T3: sole publication authority (Gates 1–3) |
-| `workflows/evidence-gc.yml` | Dispatch-only bounded GC of evidence drafts |
 | `workflows/agent-harness-eval.yml` | Merge-time gate on the operator agent harness |
 | `workflows/aeat-drift-detector.yml` | Weekly live AEAT (tax agency) selector parity |
 | `workflows/code-health-report.yml` | Monthly informational health dashboard |
