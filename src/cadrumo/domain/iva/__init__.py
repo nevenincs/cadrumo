@@ -12,7 +12,7 @@ The facade exposes closed identifiers such as :class:`IvaCategory`,
 :class:`IvaFlowDirection`, and :class:`IvaSettlementSide`; loaders and lookups
 such as :func:`load_iva_catalogues`, :func:`resolve_catalogue`,
 :func:`load_iva_rate_table`, :func:`lookup_rate`, :func:`load_recargo_rates`,
-and :func:`recargo_rate_for`; and the classification axis stack
+and :func:`recargo_rate_for_applied_rate`; and the classification axis stack
 (:class:`IvaTerritorialScope`, :class:`CustomerTaxStatus`,
 :class:`TransactionKind`, :class:`InvoiceKind`) resolved by
 :func:`classify_iva` into :class:`IvaClassificationResult`.
@@ -165,7 +165,6 @@ from ._recargo_equivalencia import (
     RecargoRateRecord,
     load_recargo_rate_table,
     load_recargo_rates,
-    recargo_rate_for,
     recargo_rate_for_applied_rate,
 )
 from ._refund_eligibility import (
@@ -184,6 +183,7 @@ from ._saturation import (
 from ._schema import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EVIDENCE_EXEMPT_IVA_CATEGORIES,
+    M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES,
     NO_PRINTED_TAX_IVA_CATEGORIES,
     EUMemberState,
     IvaCashAccountingPaymentEvidence,
@@ -225,6 +225,7 @@ __all__ = [
     "IVA_CATEGORY_COMPONENTS",
     "LAST_FILING_PERIOD_TOKENS",
     "LIVA_CITATION_QUALIFIERS",
+    "M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES",
     "NO_PRINTED_TAX_IVA_CATEGORIES",
     "REGIME_LEGENDS",
     "REGIME_PERIODICITY",
@@ -339,7 +340,6 @@ __all__ = [
     "place_of_supply_rule",
     "rate_kind_for_domestic_category",
     "rate_kinds_for_declared_rate",
-    "recargo_rate_for",
     "recargo_rate_for_applied_rate",
     "refund_disposition_available",
     "refund_eligibility_reason",
