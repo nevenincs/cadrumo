@@ -114,6 +114,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from decimal import Decimal
+from enum import Enum, auto
 from typing import Final
 
 from ...core.aggregation import (
@@ -157,12 +158,25 @@ _INFERRED_WITHHOLDING_MARKERS: frozenset[LedgerWithholdingDerivation] = frozense
     },
 )
 
+
 #: Sentinel for "the profile hint has not been read yet", distinct from the
 #: ``None`` the probe itself returns for "read, but the profile is silent". The
 #: probe touches storage, so it is resolved lazily on the first sectoral match
 #: and reused: a calculation with no sectoral match must not pay for a profile
 #: load, and one with many must not repeat it.
-_UNRESOLVED_HINT: Final = object()
+class _UnresolvedHint(Enum):
+    """Single-member sentinel for a sectoral hint not yet read.
+
+    An ``object()`` sentinel cannot be narrowed by an identity test, so every
+    consumer downstream saw the hint widened to include it. An enum member
+    narrows, which lets the declared ``bool | None`` boundary hold at the call
+    sites without changing what the sentinel does.
+    """
+
+    TOKEN = auto()
+
+
+_UNRESOLVED_HINT: Final = _UnresolvedHint.TOKEN
 
 #: Cent tolerance for the amount comparison: the statutory withholding is a single
 #: ``base * rate`` product rounded once to cents (money-2), so the maximum honest
@@ -270,7 +284,10 @@ def _profile_suggests_sectoral_activity(bucket_id: str | None) -> bool | None:
         # A degraded profile read must not take down a calculation that has
         # already produced its figures; the advisory simply loses its hint.
         return None
-    profile = projection_for_taxpayer(record if record is not None else {})
+    # The repository raises on every failure path and never returns None, so the
+    # former ``else {}`` fallback was unreachable. Failures arrive through the
+    # except clause above, which is where the degraded-read handling lives.
+    profile = projection_for_taxpayer(record)
     if profile.iva_regime is IVARegime.REAGP:
         return True
     if profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA:
