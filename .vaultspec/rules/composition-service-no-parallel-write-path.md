@@ -1,49 +1,34 @@
----
-name: composition-service-no-parallel-write-path
----
+# A composition service never re-implements an existing write path
 
-# Composition service never re-implements an existing write path
+When a new application-layer service exposes an operator-facing verb
+corresponding to an existing single-writer primitive, the service MUST delegate
+the write to that primitive — preserving its atomicity and its lifecycle-event
+emission — and MUST NOT re-implement the write path.
 
-## Rule
+The service emits its own surface-level event **in addition to** the primitive's
+lifecycle event. The two are intentionally distinct: the lifecycle event records
+the data change, the surface event records the operator's verb invocation, and a
+later query distinguishing "record relabelled" from "operator invoked the verb"
+depends on both existing.
 
-When a new application-layer service exposes an operator-facing verb that
-corresponds to an existing single-writer primitive, the service MUST delegate the
-write to that primitive (preserving its atomicity and lifecycle-event emission) and
-MUST NOT re-implement the write path. The service emits its own surface-level event
-in addition to the primitive's lifecycle event; the two events are intentionally
-distinct (lifecycle records the data change, surface records the operator's verb
-invocation).
-
-## Why
-
-The BucketMaintenanceService design pass (`2026-06-03-cli-workflow-redesign-adr`)
-found every method except ``search`` already had an authoritative primitive (the
-cross-store rename, the soft/hard delete split, the ``serialize_profile_bundle`` /
-``deserialize_profile_bundle`` assembly), so a naive re-implementation would
-re-introduce the torn-write risk the single-writer contracts eliminate and create
-shadow lifecycle-event emission. The two-event co-emission (``PROFILE_RENAMED`` plus
-``BUCKET_RENAMED`` per rename) is a deliberate audit feature: a later query
-distinguishing "record relabelled" from "operator invoked the verb" relies on the two
-events being distinct.
+A naive re-implementation re-introduces the torn-write risk the single-writer
+contracts eliminate, and creates shadow lifecycle-event emission.
 
 ## How
 
-- **Good:** ``BucketMaintenanceService.rename`` calls the top-level re-export
-  ``rename_profile`` then appends ``BUCKET_RENAMED``; the inner
-  ``ProfileRepository.rename`` keeps emitting ``PROFILE_RENAMED``, so the two events
-  co-emit per action. ``delete`` composes ``delete_profile_with_lifecycle_span``
-  (soft tombstone) and ``remove_profile_bucket_directory`` (hard erase), emitting
-  ``BUCKET_DELETED`` between them, with the ``confirmed=True`` + active-bucket
-  refusals at the service boundary so a programmatic caller gets the same guarantees
-  the CLI ``--yes`` flag passes through.
-- **Bad:** a ``rename`` that opens its own bucket session, decrypts/mutates
-  ``display_name``/re-encrypts, then separately rewrites the manifest label —
-  re-implementing the cross-store atomicity ``ProfileRepository.rename`` holds (a
-  crash between writes drifts the stores); or a ``delete`` that loops over
-  secure-object rows directly, bypassing the soft-tombstone primitive and losing the
-  ``PROFILE_TOMBSTONED`` event downstream consumers depend on.
+- **Good:** a maintenance service's `rename` calls the top-level `rename_profile`
+  re-export then appends its own `BUCKET_RENAMED`, while the inner repository
+  keeps emitting `PROFILE_RENAMED`, so the two co-emit per action. Its `delete`
+  composes the soft-tombstone primitive and the hard-erase primitive, emitting
+  `BUCKET_DELETED` between them, with the confirmation and active-bucket refusals
+  at the service boundary so a programmatic caller gets the same guarantees the
+  CLI flag passes through.
+- **Bad:** a `rename` that opens its own bucket session, decrypts, mutates,
+  re-encrypts, then separately rewrites the manifest label — re-implementing the
+  cross-store atomicity the repository holds, so a crash between writes drifts
+  the stores.
+- **Bad:** a `delete` looping over secure-object rows directly, bypassing the
+  soft-tombstone primitive and losing the tombstone event downstream consumers
+  depend on.
 
-## Source
-
-ADR ``2026-06-03-cli-workflow-redesign-adr`` (composition pattern); research and
-exec record of the same feature.
+Source: ADR `2026-06-03-cli-workflow-redesign-adr`.

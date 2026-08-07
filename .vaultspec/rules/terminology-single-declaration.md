@@ -1,18 +1,36 @@
----
-name: terminology-single-declaration
----
+# Terminology Handbook: one declaration, preserved by scaffold
 
-# Terminology Single Declaration
+## One declaration
 
-## Rule
-
-Every user-facing domain term must be enrolled once in the Terminology Handbook and referenced from docs through that entry; never redeclare an enrolled term's definition in prose or maintain a parallel hand-authored glossary.
-
-## Why
-
-The accepted `2026-06-10-docs-terminology-search-adr` identifies four unsynchronised terminology stores as the failure mode this feature removes. D7 makes the generated glossary and `:term:` references the enforcement surface, so inline redefinitions recreate the drift the Handbook exists to prevent.
+Every user-facing domain term is enrolled once in the Terminology Handbook and
+referenced from docs through that entry. Never redeclare an enrolled term's
+definition in prose, and never maintain a parallel hand-authored glossary — four
+unsynchronised terminology stores were the failure mode the Handbook removes.
 
 ## How
 
-- Good: Add or update a concept fragment under `src/cadrumo/_data/terminology/concepts/`, then use `:term:` references in docs prose.
-- Bad: Define "prorrata" in a how-to paragraph while also keeping a Handbook concept and generated glossary entry for `prorrata`.
+- **Good:** add or update a concept fragment under
+  `src/cadrumo/_data/terminology/concepts/`, then use `:term:` references in docs
+  prose.
+- **Bad:** defining a term in a how-to paragraph while a Handbook concept and a
+  generated glossary entry for it also exist.
+
+## Scaffold preserves, never clobbers
+
+Every scaffold run must preserve curated fields verbatim, scaffold new entries as
+**empty drafts**, and retire vanished entries as **tombstones** with
+`replaced_by`. Generated discovery and human curation share the same TOML
+authoring tree, so clobbering curated prose, inventing definitions, or deleting
+vanished records breaks reviewability and the immutable-id model.
+
+## How
+
+- **Good:** a new registry enrolment creates a draft concept with empty curated
+  prose, while an existing concept keeps its hand-edited definitions and aliases
+  unchanged.
+- **Bad:** a scaffold run rewriting a curated description from source labels,
+  guessing a definition, or removing a concept file because the source
+  disappeared.
+
+Source: ADR `2026-06-10-docs-terminology-search-adr` (D3, D7). Companion:
+`glossary-concepts-are-taxpayer-facing`.

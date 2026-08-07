@@ -5,40 +5,30 @@ trigger: always_on
 
 # Binding aggregation is a typed model with a closed op enum
 
-## Rule
-
 A registry binding's aggregation MUST be the typed `BindingAggregation` model
 carrying a closed `BindingAggregationOp` enum declared in `cadrumo.core`, never a
 free-form `Mapping`. No call site may re-parse `aggregation.get("op")` from a raw
 mapping or pick its own local default: the single `binding_aggregation_op(binding)`
 accessor returns the typed op and applies the one declared per-family default in
-one place. A new op value is added to the enum, so the typed field validates it at
-registry build.
+one place. A new op value is added to the enum, so the typed field validates it
+at registry build.
 
-## Why
-
-`aggregation` was a free-form mapping and `op` was re-derived from it at roughly
-ten sites with **divergent silent defaults** — one default for the scalar-folding
-families, another for the detail-record families. The effective default was
-therefore source-dependent and unauditable, and an unknown op was caught only at
-resolve time. Typing the model rejects an unknown op at build; one accessor makes
-the per-family default declared data rather than scattered string literals.
+`aggregation` was a free-form mapping and `op` was re-derived at roughly ten
+sites with **divergent silent defaults** — one for the scalar-folding families,
+another for the detail-record families — so the effective default was
+source-dependent and unauditable, and an unknown op was caught only at resolve
+time.
 
 ## How
 
-- **Good:** read a binding's op via `binding_aggregation_op(binding)`, which
-  applies the declared default for that binding's source when `aggregation` is
-  `None`.
 - **Bad:** `str((binding.aggregation or {}).get("op", "sum"))` inline in a
-  resolver — this re-introduces the untyped re-parse and a local default.
+  resolver — the untyped re-parse plus a local default.
 - **Bad:** widening `aggregation` back to a bare mapping, or stuffing arbitrary
   keys beyond the typed model.
 
 The relation and formula-expression `op` axes are separate concepts and are out
 of scope.
 
-## Source
-
-ADR `2026-06-14-bindings-interface-hardening-adr` (decision B). Exercised by
-`test_binding_aggregation.py`. Companion: `aeat-architecture-boundaries` (closed
-value sets are enums in `core`).
+Full binding contract: `binding-validation-single-contract`. Source: ADR
+`2026-06-14-bindings-interface-hardening-adr` (decision B); gate
+`test_binding_aggregation.py`.

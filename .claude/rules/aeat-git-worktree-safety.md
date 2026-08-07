@@ -3,81 +3,81 @@ name: aeat-git-worktree-safety
 trigger: always_on
 ---
 
-# AEAT git and worktree safety — ABSOLUTE PROHIBITION
+# Worktree safety and commit discipline — ABSOLUTE
 
-This worktree runs many concurrent agents from independent campaigns holding
-uncommitted work in the index and working tree at all times. Any destructive Git
-operation can silently destroy a peer agent's hours of in-flight work. **The
-commands below are categorically forbidden — there are no debugging exceptions,
-no "I'll pop it back" exceptions, no "just to isolate the failure" exceptions.**
+Many concurrent agents hold uncommitted work in this shared tree at all times.
+Any destructive Git operation can silently destroy hours of a peer's in-flight
+work.
 
-## Forbidden commands
+## Forbidden, with no debugging exception
 
-- `git stash` in any form (`push`, `pop`, `apply`, `drop`, `save`, `store`,
-  `clear`, `create`, or bare). Stash captures every concurrent campaign's WIP
-  into one blob; pop conflicts partially apply and strand peer work.
-- `git reset` in any form, including with a `<paths>` pathspec.
-- `git checkout <path>` / `git checkout -- <path>` (file restore or discard),
-  and `git restore` in any form.
-- `git checkout <branch>` / `git switch <branch>`. The worktree is pinned to its
-  branch.
-- `git clean` in any form.
-- `git rebase` in any form, and `git commit --amend` (a peer commit may have
-  landed on HEAD since yours).
-- `git revert <sha>` against any commit that is not your own from this session.
-- `git push --force` / `--force-with-lease`.
-- `git worktree remove` / `prune`, and forced branch deletion (`git branch -D`).
-- `rm -rf` / `Remove-Item -Recurse -Force` against any tracked path or any
-  directory containing tracked paths.
-- **Deleting, moving, truncating or renaming anything under `.git/`, including
-  `.git/index.lock`.** Diagnose a held lock by its mtime — advancing means
-  contention, frozen means the holder died — and report it. Never remove it.
+`git stash` (any form), `git reset` (any form, including with a pathspec),
+`git checkout <path>`/`<branch>`, `git switch`, `git restore`, `git clean`,
+`git rebase`, `git commit --amend`, `git revert` of a commit that is not your
+own from this session, `git push --force`, `git worktree remove`/`prune`,
+`git branch -D`, and `rm -rf` against any tracked path.
 
-## No exceptions
+Also forbidden: deleting, moving, truncating or renaming anything under `.git/`,
+**including `.git/index.lock`**. Diagnose a held lock by its mtime — advancing
+means contention, frozen means the holder died — and report it either way.
 
-If you are tempted because *"I just need to isolate whether this failure is mine
-or pre-existing"* — **NO.** Investigate by inspection: `git diff -- <files>`,
-`git log -- <files>`, run the specific test in isolation. To compare against a
-committed version without `checkout` or `stash`, copy the working file aside,
-`Write` the `git show HEAD:<file>` bytes in place, test, then restore your copy.
+If you are blocked and reaching for these, STOP and report. "Blocked because I
+would need to stash" is acceptable; stashing is not. Investigate by inspection
+instead (`git diff`, `git log`, `git show HEAD:<path>`); to compare against a
+committed version, copy the working file aside, `Write` the HEAD bytes in place,
+test, restore.
 
-If it is *"I'll pop it right back"*, *"it's just my own files"*, or *"the
-pre-tool-use hook will allow it"* — **NO.** You cannot guarantee a peer has not
-written into the same file between your stash and your pop.
+## Commits take more than you name
 
-If you are genuinely blocked and reaching for these tools, **STOP and report**.
-"Blocked because I would need to stash" is acceptable; stashing is not.
+**A bare `git commit` takes the entire index**, including every peer file staged
+by another agent — `git add -- <paths>` does not protect you, the *commit* needs
+the pathspec. **`git commit -- <paths>` takes WORKING-TREE content** for those
+paths, which silently defeats an apply-cached staging.
 
-## Allowed operations
+- **Clean, unentangled file:** go straight to `git commit -- <path>`. Do not
+  `git add` at all; the add window is itself exposure.
+- **File carrying peer WIP:** use the apply-cached drive below and finish with a
+  **verified-index bare commit**.
+- **Verify AFTER, never before.** A pre-commit `git diff --cached` is TOCTOU. Cite
+  `git show <sha> --numstat`.
+- Before pathspec-committing any `__init__.py` or package facade, diff it against
+  HEAD — a facade accumulates several agents' edits.
+- Never over-stage and then "undo" with `git reset`; there is no reset escape
+  hatch.
 
-- Read-only: `git status`, `git diff` (any form), `git log` (including `-S`,
-  `--grep`, `-- <path>`), `git show <sha>`, `git stash list`, `git ls-files`,
-  `git branch --show-current`, `git rev-parse`, `git merge-base`.
-- `git add -- <explicit pathspec>` for files you authored. Never `git add -A`,
-  `git add .`, or `git add -p`.
-- `git commit -- <explicit pathspec>` for files you authored, or a
-  verified-index bare commit after an apply-cached staging. Message via `-m` or
-  `-F`.
-- `git apply --cached` and `git apply --cached --reverse` — the sanctioned way
-  to stage and unstage an own-edits-only patch on a contended file.
-- `git fetch` (read-only), `git pull --ff-only` on `main` only when authorised.
-- `git push` (without `--force`) of your own branch's new commits — after
-  checking `git log origin..HEAD`, because a push carries all ancestors
-  including a peer's hold-for-now commit.
+## Uncommitted work with no reachable owner is live peer WIP
 
-## Other worktree discipline
+Never discard or overwrite it — not with a destructive verb, and not with a
+`Write`-from-HEAD either; the mechanism is irrelevant. Re-appearance after a
+discard is proof of life. A prior authorization to discard an *orphaned* change
+does not extend to a *proven-live* one.
 
-Keep worktrees on disk permanently. Do not move, delete, or rewrite another
-agent's workspace. Report stale or merged worktrees as inventory only.
+**The apply-cached drive** is the sanctioned way to land your own change in a
+contended file: `git show HEAD:<path>` into a scratch copy (capture bytes, not
+decoded text); apply only your edits to it; produce a HEAD-anchored own-only
+patch with `git diff` and write it in binary; `git apply --cached --check` then
+`git apply --cached`; confirm the staged set carries zero foreign markers,
+derived from the patch itself by allowlist; then commit the index. Unstage with
+`git apply --cached --reverse`.
 
-Name branches `<type>/<issue>-<subject>` with `feature`, `bug`, or `chore`. Name
-worktree folders with the slash flattened to a dash. Provision new worktrees from
-main: create the branch, push upstream immediately, sync all dependency groups,
-refresh the lockfile, install vaultspec, then return to main.
+It updates the index and HEAD and **never the working tree**, so afterwards the
+working copy is stale and looks like ordinary WIP. Always build an edit from
+`git show HEAD:<file>`, never from the working copy, on any file peers touch.
 
-## Consequences
+A whole-tree-validating change (a registry re-stamp) validates against the dirty
+tree, so it genuinely waits. Hold; do not force.
 
-A forbidden command run by a dispatched agent is logged as a security incident,
-escalated to the operator, and that agent's session is treated as compromised —
-its output is reviewed for unrelated destructive side effects before any of its
-work is trusted.
+`git push` carries all ancestors — check `git log origin..HEAD` first.
+
+## Worktree inventory
+
+Keep worktrees on disk permanently; never move, delete or rewrite another
+agent's workspace. Report stale or merged worktrees as inventory only. Name
+branches `<type>/<issue>-<subject>` with `feature`, `bug`, or `chore`, and
+worktree folders with the slash flattened to a dash. Provision from main: create
+the branch, push upstream, sync dependency groups, refresh the lockfile, install
+vaultspec, return to main.
+
+A forbidden command run by a dispatched agent is a security incident: it is
+escalated, and that agent's output is reviewed for unrelated destructive side
+effects before any of its work is trusted.

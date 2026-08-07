@@ -1,22 +1,58 @@
----
-name: aeat-architecture-boundaries
-trigger: always_on
----
-
 # AEAT architecture boundaries
 
-Place Python application code under `src/cadrumo/`. Do not add top-level Python packages, ad-hoc module roots, or hidden parallel implementations.
+## Placement
 
-Expose validated boundary data through pydantic v2 models. Use strict config where practical. Do not expose bare `dict[str, Any]` for persisted records, wire payloads, configuration, CLI input, MCP messages, LLM responses, or fixtures.
+Place Python application code under `src/cadrumo/`. Do not add top-level Python
+packages, ad-hoc module roots, or hidden parallel implementations. Keep the
+accepted hexagonal direction: domain logic independent from adapters, and
+inbound, outbound, persistence, application, entrypoint and core
+responsibilities separated. Keep the CLI root surface to `config` and `app` —
+never a third root command family.
 
-Preserve the accepted hexagonal direction. Keep domain logic independent from adapters. Keep inbound, outbound, persistence, application, entrypoint, and core responsibilities separated.
+Every Python test file lives under a `tests/` directory at the narrowest owning
+package. A naked `test_*.py` beside implementation modules pollutes the code
+namespace and is forbidden.
 
-Keep the CLI root surface to `config` and `app`. Do not add a third root command family.
+## Typed boundaries
 
-Do not introduce shims, compatibility layers, deprecation paths, or duplicate legacy APIs. Move callers to the canonical path instead.
+Expose validated boundary data through pydantic v2 models, with strict config
+where practical. Do not expose bare `dict[str, Any]` for persisted records, wire
+payloads, configuration, CLI input, MCP messages, LLM responses, or fixtures.
 
-Land every symbol relocation in one atomic explicit-path commit. The canonical-site move, every consumer update, every fixture update, and every `__all__` baseline update share one git index and one commit. Run `uv run --no-sync pytest --collect-only -q` immediately before the commit and observe clean collection. Never split the canonical-site move from the consumer sweep across commits. Never reintroduce a re-export as a temporary bridge. One Step = one symbol = one atomic commit. Tag the commit subject with `relocation:<symbol>` so audits can grep history for the canonical-home decisions.
+**Type every constant-like axis.** Closed value sets — period codes, output
+languages, lifecycle states, source kinds, auth providers — MUST be a StrEnum
+(or `Literal` where appropriate) in `core/`. Production code and CLI handlers
+accept and emit enum members, not raw strings; registry TOML stays free-form and
+the loader hydrates the typed enum at the boundary; tests assert against enum
+members.
 
-Type every constant-like axis. Closed value sets (period codes, output languages, lifecycle states, source kinds, auth providers, etc.) MUST be declared as StrEnum (or Literal where appropriate) in `core/` per the core-authority ADR. Production code and CLI handlers MUST accept and emit enum members, not raw strings. The registry TOML stays free-form per the registry-authority-flow rule; the loader hydrates the typed enum at boundary. Tests MUST assert against enum members.
+**Hint accepted values at the CLI boundary.** Every Typer argument whose value
+is a closed enum declares that enum as its type, so click renders the accepted
+set on parse failure. A late registry-driven refusal is acceptable for axes that
+depend on dynamic registry data, but it MUST list the accepted set — never a bare
+"value invalid".
 
-Hint accepted values at the CLI boundary. Every Typer argument whose value is a closed enum MUST declare that enum as its type so click renders `Choice([...])` and surfaces the accepted-value set on parse failure. Late, registry-driven refusals (e.g. modelo-period-revision combinatorial checks) are acceptable for axes that depend on dynamic registry data, but the refusal MUST list the accepted set in the error message — never a bare "value invalid" without options. The CLI gate is the operator's first instructive surface. Never make it a silent black hole.
+## No shims
+
+Do not introduce shims, compatibility layers, deprecation paths, or duplicate
+legacy APIs. Move callers to the canonical path instead.
+
+**A new service must delegate to an existing single-writer primitive rather than
+re-implementing its write path.** The service emits its own surface-level event
+in addition to the primitive's lifecycle event; the two are intentionally
+distinct (lifecycle records the data change, surface records the operator's verb
+invocation). Re-implementing re-introduces the torn-write risk the primitive
+eliminates and creates shadow event emission.
+
+## Relocations are atomic
+
+Land every symbol relocation in ONE explicit-path commit: the canonical-site
+move, every consumer update, every fixture update, and every `__all__` baseline
+update share one git index and one commit. Run
+`uv run --no-sync pytest --collect-only -q` immediately before and observe clean
+collection. Never split the move from the consumer sweep across commits, and
+never reintroduce a re-export as a temporary bridge. One Step = one symbol = one
+atomic commit; tag the subject `relocation:<symbol>` so audits can grep history.
+
+Companions: `service-imports-via-top-level-reexports`, `no-legacy-compatibility`,
+`aeat-source-hygiene`.
