@@ -66084,11 +66084,9 @@ modelo:
                 super-reduced rate tier, whatever percentage each transaction carried.
               label: Taxable base of output VAT - standard regime - 4% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: 'Declare the taxable base of domestic ordinary-regime transactions
+              help: Declare the taxable base of domestic ordinary-regime transactions
                 charged at the 0 % rate. Real Decreto-ley 4/2024, article 1, applied
-                this rate to basic foodstuffs from 1 July to 30 September 2024. Do
-                not enter exempt transactions here: they are declared in their own
-                section.'
+                this rate to basic foodstuffs from 1 July to 30 September 2024.
               label: Taxable base of output VAT - standard regime - 0% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
               help: Declare the output VAT charged at the 0 % rate on the taxable

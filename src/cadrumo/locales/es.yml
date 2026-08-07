@@ -68800,11 +68800,10 @@ modelo:
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 4% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: 'Declara la base imponible de las operaciones interiores del régimen
+              help: Declara la base imponible de las operaciones interiores del régimen
                 ordinario gravadas al tipo del 0 %. El Real Decreto-ley 4/2024, artículo
                 1, aplicó este tipo a los alimentos básicos desde el 1 de julio hasta
-                el 30 de septiembre de 2024. No incluyas aquí las operaciones exentas:
-                se declaran en su propio apartado.'
+                el 30 de septiembre de 2024.
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 0% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:

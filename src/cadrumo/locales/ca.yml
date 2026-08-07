@@ -66506,11 +66506,10 @@ modelo:
                 operació.
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 4% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: 'Declara la base imposable de les operacions interiors del règim
+              help: Declara la base imposable de les operacions interiors del règim
                 ordinari gravades al tipus del 0 %. El Reial decret llei 4/2024, article
-                1, va aplicar aquest tipus als aliments bàsics des de l''1 de juliol
-                fins al 30 de setembre de 2024. No hi incloguis les operacions exemptes:
-                es declaren en el seu propi apartat.'
+                1, va aplicar aquest tipus als aliments bàsics des de l'1 de juliol
+                fins al 30 de setembre de 2024.
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 0% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
               help: Declara la quota d'IVA repercutida al tipus del 0 % sobre la base

@@ -66623,11 +66623,10 @@ modelo:
               label: Fizetendő áfa adóalapja - általános szabályozás - 4%-os kulcs
                 - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: 'Vallja be a belföldi általános szabályozás szerinti, 0 %-os adókulccsal
+              help: Vallja be a belföldi általános szabályozás szerinti, 0 %-os adókulccsal
                 adózó ügyletek adóalapját. A 4/2024. sz. királyi törvényerejű rendelet
                 1. cikke ezt az adókulcsot az alapvető élelmiszerekre 2024. július
-                1-jétől 2024. szeptember 30-ig alkalmazta. Az adómentes ügyleteket
-                ne itt tüntesse fel: azoknak saját rovatuk van.'
+                1-jétől 2024. szeptember 30-ig alkalmazta.
               label: Fizetendő áfa adóalapja - általános szabályozás - 0%-os kulcs
                 - éves
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
