@@ -5,12 +5,12 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:8d9321678f97933fcac46058f869b3b42ee0a5c5850f75e1c73443006cb22d14'
+body_hash: 'sha256:1bc104503eaace9083ef583bc947bf7a10deb71d12a9a7defde0527c088ef30d'
 related:
   - "[[2026-08-07-rate-box-evidence-assertion-research]]"
 ---
 
-# `rate-box-evidence-assertion` adr: `an official box asserts only what the evidence determines; the return preserves the whole` | (**status:** `proposed`)
+# `rate-box-evidence-assertion` adr: `an official box asserts only what the evidence determines; the return preserves the whole` | (**status:** `accepted`)
 
 ## Problem Statement
 
