@@ -56,6 +56,7 @@ def _fully_populated_draft() -> InvoiceDraft:
         iva_amount=Decimal("210.00"),
         grand_total=Decimal("1262.00"),
         currency="EUR",
+        regime_legend="régimen especial del criterio de caja",
         recargo_amount=Decimal("52.00"),
         retencion_rate=Decimal("15"),
         retencion_amount=Decimal("150.00"),
