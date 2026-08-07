@@ -18,6 +18,7 @@ from ....iva import (
     IvaRateKind,
     IvaTerritorialScope,
     TransactionKind,
+    category_cuota_is_zero_by_law,
     classify_iva,
     derive_flow_for_classification,
 )
@@ -350,6 +351,24 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
         if category in non_declarable or category in CUOTA_LESS_M303_IVA_CATEGORIES:
             continue
         invoice_direction = InvoiceKind.RECEIVED if category in received_categories else InvoiceKind.ISSUED
+        # Cuota-less-by-law is a (category, SIDE) fact, while
+        # CUOTA_LESS_M303_IVA_CATEGORIES is keyed on the category alone, so the
+        # skip above cannot express it. Domestic reverse charge forces the
+        # distinction: the recipient self-assesses a real cuota, while the
+        # supplier repercutes nothing under LIVA art. 84.Uno.2. Synthesising a
+        # cuota on the supplier's side builds an operation that cannot exist --
+        # the row the ingest guard refuses -- so the advisory would flag an
+        # impossible probe rather than an unrouted euro.
+        #
+        # Flip to the side that bears the cuota rather than dropping the category:
+        # skipping it would leave the reverse-charge tail probed on NEITHER side,
+        # which is the coverage this module exists to assert.
+        if category_cuota_is_zero_by_law(category, invoice_direction):
+            invoice_direction = (
+                InvoiceKind.RECEIVED if invoice_direction is InvoiceKind.ISSUED else InvoiceKind.ISSUED
+            )
+            if category_cuota_is_zero_by_law(category, invoice_direction):
+                continue
         flow = derive_flow_for_classification(category=category, invoice_direction=invoice_direction)
         probe_tier = rate_for_category.get(category, IvaRateKind.GENERAL)
         observation = _observation(
