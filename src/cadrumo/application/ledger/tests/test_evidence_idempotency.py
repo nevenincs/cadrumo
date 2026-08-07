@@ -97,11 +97,10 @@ def test_a_same_key_readd_with_divergent_content_names_every_changed_field() -> 
     guard's clothes. The close review of this rule's origin campaign caught
     exactly that, on a field the match had omitted.
     """
+    from datetime import UTC, datetime
     from decimal import Decimal
 
     from .._evidence import PurchaseInvoiceEvidence, _divergent_evidence_fields
-
-    from datetime import UTC, datetime
 
     stamp = datetime(2024, 11, 15, 9, 0, tzinfo=UTC)
     prior = PurchaseInvoiceEvidence(
