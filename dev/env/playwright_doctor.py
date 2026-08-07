@@ -1,10 +1,10 @@
 """Probe whether the workstation satisfies the CONFIGURED Playwright browser channel.
 
-This is the ``just playwright-doctor`` recipe: the health check ADR
-``2026-04-12-playwright-anti-bot-adr`` (line 36) requires but the justfile never
-built. AEAT browser automation is pinned to ``channel: "chrome"`` in New Headless
-mode for anti-bot fingerprint reasons (that ADR); bundled Chromium is the explicit
-fallback only if system Chrome breaks. This probe reads the ACTUAL configured
+This is the ``just playwright-doctor`` recipe: the health check the anti-bot
+channel pinning decision requires but the justfile never built. AEAT browser
+automation is pinned to ``channel: "chrome"`` in New Headless mode for anti-bot
+fingerprint reasons; bundled Chromium is the explicit fallback only if system
+Chrome breaks. This probe reads the ACTUAL configured
 channel (``cadrumo.core.config.Settings.cadrumo_browser_channel``) rather than
 hardcoding ``"chrome"``, so it stays correct when an operator overrides the channel
 via ``CADRUMO_BROWSER_CHANNEL``.
@@ -34,7 +34,7 @@ from cadrumo.core.config import load_settings
 def remediation_for_channel(channel: str) -> str:
     """Return the exact, actionable remediation command for a channel launch failure.
 
-    The ``chrome`` channel is the ADR-mandated default; Playwright does not
+    The ``chrome`` channel is the mandated default; Playwright does not
     download a private Chrome copy for it, it installs/detects the SYSTEM Google
     Chrome (via the OS package manager on Linux, which typically needs root/apt
     access), so its remediation spells that constraint out. Every other channel

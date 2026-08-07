@@ -22,8 +22,9 @@ ventas al por menor, hostelería, or peluquería) and an AEAT-discretionary
 authorisation for other cases (art. 4.3). Neither axis is modelled: the record
 has no field naming which of the closed sector list an operation belongs to,
 and the AEAT authorisation is a live administrative fact no document field
-could ever state. That gap is declared, not silently assumed away -- see the
-governing ADR.
+could ever state. That gap is declared, not silently assumed away: eligibility
+resting on sector membership or a live AEAT authorisation is out of scope for
+this record and must be judged by the taxpayer before filing.
 """
 
 from __future__ import annotations

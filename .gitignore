@@ -409,6 +409,13 @@ cache/
 # Underscore-prefixed one-shot agent run workspaces (persona reruns, m303/m390
 # capture dirs) — carry secrets/*.key/*.kdf/*.db; ephemeral, never in git.
 /_scratch*/
+# The same hazard at the REPO ROOT, where a local run materialises the real
+# thing: secrets/ holds the master key, its KDF parameters and lock, and
+# cadrumo-storage/ holds the encrypted buckets with their per-bucket DEKs.
+# This is live key material and taxpayer financial data. The _scratch*/ rule
+# above covered only the sandbox copies; these paths had no rule at all.
+/secrets/
+/cadrumo-storage/
 # Absolute-path filenames whose colon was UTF-8-encoded past the /C\:* pattern
 # (accidental Windows temp path captured as a repo-root filename).
 /C*AppData*

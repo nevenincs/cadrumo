@@ -197,7 +197,10 @@ class InvoiceCatalogueSourceResolver:
         )
         catalogue_observed_items: list[tuple[Invoice, InvoiceObservation]] = []
         incoherent: list[tuple[Invoice, InvoiceDecomposition]] = []
+        withheld_for_conversion: list[Invoice] = []
         for invoice in source_invoices:
+            if _is_unconverted_foreign_invoice(invoice):
+                withheld_for_conversion.append(invoice)
             observation = _invoice_observation(invoice, context=context)
             if observation is None:
                 continue
@@ -224,6 +227,11 @@ class InvoiceCatalogueSourceResolver:
                 ),
             ),
             diagnostics=_m349_incoherence_diagnostics(incoherent, resolver_id=self.resolver_id)
+            + _unconverted_foreign_diagnostics(
+                withheld_for_conversion,
+                context=context,
+                resolver_id=self.resolver_id,
+            )
             + (
                 _m349_inferred_clave_diagnostics(
                     [invoice for invoice, _ in catalogue_observed],
@@ -435,6 +443,45 @@ def _m349_incoherence_diagnostics(
             ),
         )
         for invoice, verdict in incoherent
+    )
+
+
+def _unconverted_foreign_diagnostics(
+    invoices: Sequence[Invoice],
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return one advisory per invoice withheld for want of a euro conversion.
+
+    Excluding the AMOUNT is settled and correct: a foreign invoice with no
+    resolved rate has an unknown euro value, and declaring its face value as
+    euro would be a mis-declaration rather than a conservative one.
+
+    Excluding it in SILENCE is the defect. The operation is real and declarable
+    -- the euro figure is what is missing, not the operation -- so an
+    informativa that simply omits it leaves the operator filing an incomplete
+    return with nothing on any surface saying so. This is the same principle
+    :func:`_m349_incoherence_diagnostics` already states: a missing record is an
+    under-declaration whether it was dropped by a contradiction or by silence.
+    """
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="unconverted_foreign_currency",
+            source_kind=str(_invoice_source_kind(invoice)),
+            resolver_id=resolver_id,
+            source_ref=f"invoice:{invoice.invoice_id}",
+            message=(
+                f"invoice {invoice.invoice_number!r} is denominated in {invoice.currency} with no "
+                f"resolved euro rate, so it is NOT declared on this Modelo {context.modelo}; its "
+                "euro value is unknown and declaring the foreign amount as euro would misstate it"
+            ),
+            remedy=(
+                "Record the euro conversion rate on the invoice, then recalculate so the "
+                "operation reaches the declaration"
+            ),
+        )
+        for invoice in invoices
     )
 
 

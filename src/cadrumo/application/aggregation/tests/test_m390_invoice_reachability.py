@@ -1,9 +1,10 @@
-"""Can an invoice-only bucket reach a filed Modelo 390? (P05.S22)
+"""Can an invoice-only bucket reach a filed Modelo 390?
 
-The rest of `P05` assumes it can. That assumption is load-bearing: if an
-invoice-only bucket could NOT reach a filed M390, adding an M390-scoped
-invoice-versus-ledger screen would be guarding a path nobody can walk, and the
-Step that adds one would need re-scoping rather than executing.
+Generalising the invoice-versus-ledger screen to cover every applicable modelo
+assumes it can. That assumption is load-bearing: if an invoice-only bucket
+could NOT reach a filed M390, adding an M390-scoped invoice-versus-ledger
+screen would be guarding a path nobody can walk, and the work adding one would
+need re-scoping rather than executing.
 
 The answer is YES, and this module encodes it structurally rather than as prose,
 so it reddens if any of the three facts that make it true stops holding.
@@ -11,10 +12,10 @@ so it reddens if any of the three facts that make it true stops holding.
 Three facts, together sufficient:
 
 1. The invoice-versus-ledger screen was scoped to M303 and returned
-   immediately for every other modelo, leaving M390 unguarded. **P05.S25
-   closed that**, and the first assertion below now pins the screen as
-   covering M390 rather than skipping it -- this module reddened when the gap
-   was closed, which is what encoding the answer as a test is for.
+   immediately for every other modelo, leaving M390 unguarded. **Generalising
+   the screen closed that**, and the first assertion below now pins the screen
+   as covering M390 rather than skipping it -- this module reddened when the
+   gap was closed, which is what encoding the answer as a test is for.
 2. M390 declares no invoice-sourced binding at all, so a bucket's invoices
    contribute nothing to its values and their absence cannot show up there.
 3. Both sides of the `390`-to-`303` reconciliation BLOCKING_RULE root in the
@@ -53,7 +54,7 @@ def _revision(modelo_id: str, period: str):
 
 
 def test_the_invoice_versus_ledger_screen_now_covers_m390() -> None:
-    """Fact 1, as closed by P05.S25: M390 is screened, not skipped.
+    """Fact 1, as closed by generalising the screen: M390 is screened, not skipped.
 
     This assertion is the inverse of the one this module first carried. It
     asserted the screen returned immediately for M390 -- the gap that made the

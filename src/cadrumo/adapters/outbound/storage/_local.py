@@ -441,6 +441,20 @@ class LocalFileSystemProvider:
 
         actual_hash = sha256_hex(payload)
         stored_hash = str(sidecar.get("content_hash", ""))
+        if not stored_hash:
+            # A sidecar with no digest cannot be verified against, and
+            # ProviderObjectMetadata.content_hash is min_length=1, so the only
+            # alternatives are to refuse or to invent a value. This used to
+            # invent one -- `stored_hash or f"sha256-{actual_hash}"` -- which
+            # handed the caller a digest computed from whatever bytes were on
+            # disk, indistinguishable from one that had actually been checked.
+            # `put` refuses a blank content_hash, so reaching here means the
+            # sidecar was truncated or edited outside the application.
+            raise OutboundStorageIntegrityError(
+                f"sidecar {sidecar_path} carries no content_hash; storage corrupt",
+                context={"sidecar_path": str(sidecar_path), "path": str(target_path)},
+                translated_message="adapters.outbound.storage.local.errors.sidecar_malformed",
+            )
         # The stored hash may be a vendor-prefixed string ("sha256-XXX")
         # or a bare hex digest; we accept either as long as the digest
         # portion matches. The local policy verifies any non-empty digest.
@@ -467,7 +481,7 @@ class LocalFileSystemProvider:
             object_key_hmac=hmac_clean,
             provider_object_id=str(target_path),
             byte_length=byte_length,
-            content_hash=stored_hash or f"sha256-{actual_hash}",
+            content_hash=stored_hash,
             written_at=written_at,
         )
         return payload, metadata

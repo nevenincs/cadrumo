@@ -17,7 +17,9 @@ Submodules
    cadrumo.adapters.inbound.financial.providers._constants
    cadrumo.adapters.inbound.financial.providers._csv
    cadrumo.adapters.inbound.financial.providers._detection
+   cadrumo.adapters.inbound.financial.providers._mapped_tabular
    cadrumo.adapters.inbound.financial.providers._ofx
    cadrumo.adapters.inbound.financial.providers._pdf_n26
    cadrumo.adapters.inbound.financial.providers._tabular_dialect
+   cadrumo.adapters.inbound.financial.providers._tabular_projection
    cadrumo.adapters.inbound.financial.providers._xlsx

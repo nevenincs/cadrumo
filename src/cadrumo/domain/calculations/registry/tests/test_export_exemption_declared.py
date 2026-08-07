@@ -20,6 +20,7 @@ subject is a defect that hides by looking like nothing.
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from .....core import ExportExemptionReason, ExportLayoutFormat
 from .._authority import ValidatedRegistryAuthority
@@ -29,10 +30,12 @@ from .._validate_export_exemption import validate_export_exemption_declarations
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _gate(revision: ModeloRevision) -> list[str]:
+def _gate(revision: ModeloRevision, modelo_id: str = "303") -> list[str]:
     """Run the export-exemption gate over one revision and return its failures."""
     failures: list[str] = []
-    validate_export_exemption_declarations(failures, prefix="modelo T revision R", revision=revision)
+    validate_export_exemption_declarations(
+        failures, prefix="modelo T revision R", modelo_id=modelo_id, revision=revision
+    )
     return failures
 
 
@@ -70,8 +73,8 @@ def test_bundled_registry_declares_every_load_bearing_export_exemption(
     the pre-annotation tree did for eighteen casillas across eight revisions.
     """
     offenders: list[str] = []
-    for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
-        offenders.extend(_gate(revision))
+    for modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
+        offenders.extend(_gate(revision, modelo_id))
     assert offenders == []
 
 
@@ -85,12 +88,12 @@ def test_removing_a_declared_reason_reds_the_gate(
     reason, so the proof covers the whole annotated set, not one specimen.
     """
     checked = 0
-    for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
+    for modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
         for casilla in revision.casillas:
             if casilla.export_exemption_reason is None:
                 continue
             stripped = _replace_casilla(revision, casilla.id, export_exemption_reason=None)
-            failures = _gate(stripped)
+            failures = _gate(stripped, modelo_id)
             assert any(repr(casilla.id) in failure for failure in failures), (
                 f"stripping the reason from {casilla.id!r} did not red the gate"
             )
@@ -114,7 +117,7 @@ def test_a_forgotten_annotation_is_detected(
     independently in every bundled fixed-width revision that has a candidate.
     """
     planted = 0
-    for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
+    for modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
         manifest = revision.completeness_manifest
         if manifest is None:
             continue
@@ -135,7 +138,7 @@ def test_a_forgotten_annotation_is_detected(
         # Drop every export field addressing the candidate: the layout stops
         # carrying it while nothing declares why. Baseline first, so a revision
         # that was already red cannot masquerade as a detection.
-        assert _gate(revision) == []
+        assert _gate(revision, modelo_id) == []
         layouts = tuple(
             layout.model_copy(
                 update={
@@ -157,7 +160,7 @@ def test_a_forgotten_annotation_is_detected(
             for layout in revision.export_layouts
         )
         wounded = revision.model_copy(update={"export_layouts": layouts})
-        failures = _gate(wounded)
+        failures = _gate(wounded, modelo_id)
         assert any(repr(candidate.id) in failure for failure in failures), (
             f"planted forgotten annotation on {candidate.id!r} went undetected"
         )
@@ -176,7 +179,7 @@ def test_feeds_addressed_casilla_claim_is_verified_not_trusted(
     that genuinely reaches no addressed casilla must therefore refuse.
     """
     relabelled = 0
-    for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
+    for modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
         for casilla in revision.casillas:
             if casilla.export_exemption_reason is not ExportExemptionReason.NOT_IN_RECORD_DESIGN:
                 continue
@@ -185,8 +188,8 @@ def test_feeds_addressed_casilla_claim_is_verified_not_trusted(
                 casilla.id,
                 export_exemption_reason=ExportExemptionReason.FEEDS_ADDRESSED_CASILLA,
             )
-            failures = _gate(mutated)
-            assert any(repr(casilla.id) in failure and "no formula chain" in failure for failure in failures), (
+            failures = _gate(mutated, modelo_id)
+            assert any(repr(casilla.id) in failure and "Either wire the chain" in failure for failure in failures), (
                 f"{casilla.id!r} claims to feed an addressed casilla and the gate believed it"
             )
             relabelled += 1
@@ -213,22 +216,70 @@ def test_declared_feeds_addressed_casilla_reasons_really_do_reach_a_box(
     # vacuous for this member.
 
 
-def test_a_casilla_the_record_addresses_may_not_declare_an_exemption() -> None:
-    """A reason contradicting an export_refs declaration is refused at schema level."""
-    from .._errors import RegistryValidationError
+def _revalidate(casilla: object, **updates: object) -> object:
+    """Re-run strict schema validation over a real casilla with fields overridden.
+
+    ``model_copy`` deliberately skips validation, so a contradiction test must
+    round-trip through ``model_validate`` to exercise the model validator.
+    """
     from .._schema import CasillaDefinition
 
-    with pytest.raises(RegistryValidationError, match="not exempt"):
-        CasillaDefinition(
-            id="probe",
-            number="probe",
-            localization_keys=("modelo.probe.label",),
-            section=["probe"],
-            export_refs=("some-export-field",),
-            export_exemption_reason=ExportExemptionReason.NOT_IN_RECORD_DESIGN,
-            legal_refs=["ley-37-1992:art-99"],
-            source_refs=["aeat-dr-303-2025"],
-        )
+    payload = dict(casilla.__dict__)
+    payload.update(updates)
+    return CasillaDefinition.model_validate(payload)
+
+
+def test_a_casilla_the_record_addresses_may_not_declare_an_exemption(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """A reason contradicting an export_refs declaration is refused at schema level.
+
+    Built from a REAL bundled casilla so the contradiction is the only thing under
+    test; a hand-rolled fixture could fail validation for an unrelated reason and
+    read as a pass.
+    """
+    exported = next(
+        casilla
+        for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority)
+        for casilla in revision.casillas
+        if casilla.export_refs and not casilla.internal_only
+    )
+    # Control: the untouched casilla revalidates cleanly, so the refusal below is
+    # caused by the contradiction and not by the round-trip itself.
+    _revalidate(exported)
+    # pydantic wraps the model validator's RegistryValidationError.
+    with pytest.raises(ValidationError, match="not exempt"):
+        _revalidate(exported, export_exemption_reason=ExportExemptionReason.NOT_IN_RECORD_DESIGN)
+
+
+def test_an_internal_only_casilla_may_not_also_declare_a_reason(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """``internal_only`` already asserts its exemption, so a second one is refused.
+
+    Two mechanisms saying the same thing is how a divergence starts: a later
+    author could set them inconsistently and neither would be authoritative.
+    """
+    internal = next(
+        casilla
+        for modelo in registry_authority.modelos
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+        if casilla.internal_only
+    )
+    _revalidate(internal)
+    with pytest.raises(ValidationError, match="already asserts"):
+        _revalidate(internal, export_exemption_reason=ExportExemptionReason.INTERNAL_INTERMEDIATE)
+
+
+def test_an_unknown_reason_token_is_refused_at_the_loader_boundary() -> None:
+    """An unrecognised TOML token refuses at hydration, naming the accepted set."""
+    from .._errors import RegistryValidationError
+    from .._schema_export_exemption import _coerce_export_exemption_reason
+
+    assert _coerce_export_exemption_reason("not_in_record_design") is ExportExemptionReason.NOT_IN_RECORD_DESIGN
+    with pytest.raises(RegistryValidationError, match="not a recognised ExportExemptionReason"):
+        _coerce_export_exemption_reason("probably_fine")
 
 
 def test_pre_populated_by_aeat_is_documented_dormant_not_silently_unused(

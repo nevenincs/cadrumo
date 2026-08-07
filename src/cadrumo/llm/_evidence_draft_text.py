@@ -50,7 +50,7 @@ from __future__ import annotations
 import asyncio
 
 from ..application.ledger import InvoiceDraft, PurchaseInvoiceEvidenceInputError
-from ..core import Period
+from ..core import FieldOrigin, Period
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._invoice_extraction_prompt import (
@@ -168,7 +168,17 @@ class TextInvoiceFieldExtractor:
         # `raw_text_length` reports how much source material the reader had to
         # work with, matching the text-layer heuristic path's semantics -- here
         # that is the document text handed in, not the model's reply.
-        return ground_extracted_fields(parsed, raw_text_length=len(evidence_text))
+        #
+        # TEXT_LAYER, not VISION: a model read the MEANING here, but it read it
+        # off text some earlier stage had already extracted, so the characters
+        # behind every value came from the document rather than from a
+        # rasterised page. Claiming VISION would overstate how the bytes were
+        # acquired; the probabilistic step is recorded by the grounding outcome.
+        return ground_extracted_fields(
+            parsed,
+            raw_text_length=len(evidence_text),
+            origin=FieldOrigin.TEXT_LAYER,
+        )
 
     def _build_request(self, evidence_text: str) -> LLMRequest:
         """Build the completion request for ``evidence_text``.

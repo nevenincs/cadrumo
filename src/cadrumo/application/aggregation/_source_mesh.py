@@ -144,6 +144,15 @@ CalculationSourceDiagnosticReason = Literal[
     # separating the two. Raised only when the bucket also holds an importation,
     # so it cannot fire on a taxpayer for whom "E" is the only available clave.
     "m349_clave_inferred_from_category",
+    # An invoice denominated in a foreign currency with no resolved euro rate,
+    # withheld from an informativa because its euro value is unknown. Excluding
+    # the AMOUNT is correct -- declaring the foreign face value as euro would
+    # misstate it. What this reason exists for is the OPERATION: it is real and
+    # declarable, only its euro figure is missing, so an informativa that simply
+    # omits it leaves the operator filing an incomplete return. Kept distinct
+    # from `unrouted_observation` because the remedy is different: that one
+    # needs a binding, this one needs a conversion rate on the record.
+    "unconverted_foreign_currency",
     "official_box_unpopulated",
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",

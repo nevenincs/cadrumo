@@ -8,6 +8,29 @@ object and re-check it on read. This module centralises the
 :func:`strip_sha256_prefix` convention and the :func:`verify_content_hash`
 compare-and-raise kernel so the two backends share one integrity contract; each
 backend keeps its own message, context, and verification policy.
+
+One duty is applied by ONE backend only, and it is declared here rather than
+left to be re-derived as an oversight. :func:`require_full_sha256_content_hash`
+is called by the Drive backend and not by the local one, so Drive refuses
+metadata that does not carry a full valid SHA-256 while local does not check
+the digest's SHAPE at all -- it compares whatever non-empty digest the sidecar
+holds, and :func:`verify_content_hash` is a documented no-op on an empty one.
+
+Measured rather than assumed, when the asymmetry was reviewed: ``put`` refuses
+a blank ``content_hash`` on both backends, so the application cannot create an
+unverifiable object through its own write path; the malformed-but-non-empty
+values ``put`` does accept already raise on read for both; and the local read
+path now refuses a sidecar carrying no digest outright rather than inventing
+one. What remains uncovered on local is a sidecar whose digest is present,
+non-empty and structurally wrong in a way that still matches the payload --
+which requires an editor who could equally rewrite the digest to match, so the
+check would not stop them either.
+
+The residue is therefore "local does not detect sidecar CORRUPTION by digest
+shape", worth catching only if that case becomes real rather than
+hypothetical. Deliberately not closed by tightening local, because doing so is
+a behaviour change against a hole the application cannot open. Revisit if a
+corruption report ever arrives.
 """
 
 from __future__ import annotations

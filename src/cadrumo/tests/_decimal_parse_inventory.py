@@ -10,6 +10,50 @@ for it. Every such call must route through the canonical grammar
 (:func:`~core.decimal.try_parse_canonical_decimal`) or the tolerant coercion
 helper (:func:`~core.decimal.coerce_decimal`) instead.
 
+Why a second rule keyed on the DESTINATION, not the helper
+----------------------------------------------------------
+
+The paragraph above names two acceptable destinations, and one of them is
+acceptable only for one kind of input. :func:`~core.decimal.coerce_decimal`
+does not consult :func:`~core.decimal.european_thousands_reading_is_ambiguous`;
+it reaches ``Decimal(str(value))`` directly, so ``coerce_decimal("1.000")``
+returns ``Decimal('1.000')`` — one euro, from an operator who meant a thousand.
+The ratchet built to stop unvalidated text parses therefore *blesses by name* a
+destination that silently resolves the one shape that carries the defect. A new
+text boundary could satisfy the rule above and ship exactly what it exists to
+catch, and this repo has paid for that twice: the module docstring of
+:mod:`~application.invoices._bulk_import` records an operator's ``12.500`` euros
+read as twelve fifty on a threshold field, and a live ``--set iva_amount=1.000``
+becoming one euro was fixed at the ``--set`` money boundary.
+
+:func:`tolerant_coercion_text_sites` closes it by asking a different question:
+not *which helper is called*, but *can the argument be operator text*. The three
+separator-safe destinations are named in :data:`SEPARATOR_SAFE_DESTINATIONS`;
+:data:`TOLERANT_DECIMAL_COERCERS` names the two that are not. A provably-``str``
+argument reaching a tolerant coercer must either be rewritten onto a safe
+destination or carry a :data:`DECIMAL_TEXT_RATIONALE_MARKER` declaration AT the
+site saying why the separator convention is externally fixed.
+
+The declaration lives at the call site rather than in a path-keyed mapping, and
+that is a deliberate divergence from rule 3's ``_STRING_PARSE_EXEMPTIONS``. The
+shape is the fixture-provenance one: the artefact declares its own provenance
+and the gate cross-checks the declaration against physical evidence — here, the
+AST site the marker sits beside. A declaration with no site beneath it fails
+:func:`stale_decimal_text_rationale_markers`, so a fixed site cannot leave a
+rubber stamp behind, and a path-or-line key cannot rot into one because there is
+no key. The operative reason is that reasoning kept away from the code decays:
+this campaign hit five separate instances of prose asserting a state the tree no
+longer carried, and the arguments that survived did so because their author put
+them in a docstring beside the code rather than in a record elsewhere.
+
+A per-symbol grep for ``coerce_decimal`` cannot do this job. Of seven sites
+classified by hand, three are correct uses that a symbol sweep reports as
+violations — a 43% false-positive rate, which is the rate at which a detector
+stops being read. Keying on the argument's provable type instead drops those
+three out of the reported set by construction rather than by exemption: the
+bank-statement importer's float branch, the bulk-import float branch, and the
+integer/float arm of the worksheet coercer are all non-``str`` and never appear.
+
 Why the argument's *type* is the discriminator
 ----------------------------------------------
 
@@ -29,13 +73,30 @@ tree is not annotated densely enough at those sites for it to become so — see
   or annotated assignment of an enclosing scope;
 * a name assigned from any of the above (folded to a fixed point, so
   ``text = raw.strip()`` then ``Decimal(text)`` is still seen);
-* a loop target over a ``Mapping[..., str]`` / ``Sequence[str]`` iterable.
+* a loop target over a ``Mapping[..., str]`` / ``Sequence[str]`` iterable;
+* a name narrowed by an enclosing ``if isinstance(name, str):`` test, inside that
+  branch only. This is a real narrowing rather than a guess, and it is what lets
+  the destination rule see the worksheet coercer's text arm while leaving its
+  ``isinstance(raw, (int, float))`` arm alone. The negative branch is NOT
+  narrowed and an early-return guard (``if not isinstance(v, str): return``) is
+  not followed, because both need flow-sensitivity this walk does not have; the
+  cost is missed sites, never invented ones.
 
 Integer widening is consequently never reported, so the gate needs no allowlist
 entry for the many legitimate ``Decimal(<int>)`` sites.
 
 What this detector does NOT see: attribute access
 -------------------------------------------------
+
+**The destination rule inherits this blindness in full, and a green from it is
+therefore not a coverage claim.** :func:`tolerant_coercion_text_sites` reuses
+:func:`_expression_is_str` unchanged, so it catches a ``str``-annotated parameter
+— the shape of the ``--set`` money defect — and is structurally unable to see
+``coerce_decimal(record.amount)`` however ``amount`` is declared. Read a passing
+run as "no *resolvable* text reaches a tolerant coercer undeclared", never as
+"no text does". The measurement below is why the missing branch was not
+attempted, and it applies verbatim to the new rule: nothing about asking a
+different question makes an attribute's type any more decidable.
 
 Every rule above resolves a *name*. ``Decimal(casilla.value)`` resolves nothing:
 :func:`_expression_is_str` has no ``ast.Attribute`` branch, so an attribute falls
@@ -157,6 +218,88 @@ from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 
 from ._inventory import leaf_name
+
+TOLERANT_DECIMAL_COERCERS: frozenset[str] = frozenset({"coerce_decimal", "coerce_decimal_strict"})
+"""Coercers that reach ``Decimal(str(value))`` without a separator judgement.
+
+Both resolve ``"1.000"`` to ``Decimal('1.000')``. They are correct for
+machine-produced text, whose separator convention is fixed by the format that
+produced it, and wrong for operator text, whose convention is the operator's.
+``coerce_decimal_strict`` is here for the same reason as its sibling: it differs
+only in raising rather than returning a default, so excluding it would leave the
+identical misread reachable under a second name — which is the by-name blessing
+this rule exists to remove.
+"""
+
+SEPARATOR_SAFE_DESTINATIONS: tuple[str, ...] = (
+    "try_parse_canonical_decimal",
+    "coerce_finite_european_decimal",
+    "_normalise_amount_digits",
+)
+"""The destinations a provably-``str`` value may reach, and why each is safe.
+
+``try_parse_canonical_decimal`` and ``coerce_finite_european_decimal`` both
+consult :func:`~core.decimal.european_thousands_reading_is_ambiguous`, and differ
+only in what they do with an ambiguous token: the first refuses so the operator
+retypes, the second yields no value so the confirm path asks.
+``_normalise_amount_digits`` in the bank-statement importer is the third, and it
+is safe for a different reason — it takes ``decimal_sep`` as a parameter rather
+than inferring one, so the caller's resolved-or-declared separator governs and
+nothing is guessed. It is named here rather than left unlisted because a
+destination this rule does not name reads as unsanctioned, and the statement
+import path would then be reported on the rule's first run for doing the right
+thing.
+"""
+
+DECIMAL_TEXT_RATIONALE_MARKER = "DECIMAL-TEXT-RATIONALE-"
+"""Marker declaring why a tolerant coercer may receive text at one call site.
+
+Placed on the call line or in the comment block immediately above it, following
+the tree's existing ``CAST-RATIONALE-`` convention. Every occurrence must sit
+beside a site the detector really reports, or
+:func:`stale_decimal_text_rationale_markers` fails.
+"""
+
+_ISINSTANCE_NARROWING_IS_RULE_THREE_PENDING = (
+    "domain/calculations/registry/_bindings.py:_decimal_from_json_string",
+    "domain/iva/_schema.py:_coerce_decimal_field",
+    "domain/transactions/_models.py:_coerce_inbound",
+    "domain/transactions/_models.py:_coerce_decimal_field",
+)
+"""Rule-3 sites the ``isinstance`` narrowing would newly surface, and why it is not fed there yet.
+
+The narrowing is truthful for both rules — a name inside ``if isinstance(v,
+str):`` really is a ``str`` — so the only reason rule 3 does not consume it is
+sequencing, and the honest thing is to record the sequencing rather than to
+imply the two rules disagree about types.
+
+Feeding it to rule 3 was measured, not assumed: it surfaces exactly the four
+functions above (six call sites, three of them in one ``_coerce_inbound``). All
+six are the same shape — a pydantic ``mode="before"`` validator re-hydrating a
+``Decimal`` this application itself serialised to JSON, so the text is canonical
+dot-decimal and no separator reading is in question. They are clean, and each
+would take an exemption entry rather than a fix.
+
+They are not landed here because rule 3 is independently red at the time of
+writing on two failures this change neither causes nor owns — a bare
+``Decimal(str)`` in ``application/calculations/_foreign_asset_redeclaration.py``
+and a rule-3 exemption for ``application/ledger/_evidence_draft.py`` whose site a
+peer has since removed. Adding six exemptions into a gate already red for
+someone else's reasons buries their triage under mine. Flip the narrowing on for
+rule 3 by passing ``str_names | narrowed`` at the ``Decimal`` branch in
+:func:`_visit_scope`, once those two are owned.
+"""
+
+_CORE_DECIMAL_MODULE_SUFFIX = "core.decimal"
+"""Import module suffix identifying the canonical decimal package.
+
+Matched as a suffix because every consumer imports it relatively
+(``from ...core.decimal import coerce_decimal``), which
+:func:`~tests._inventory.import_binding_map` deliberately does not resolve — a
+relative origin depends on the importing module's package position. Matching the
+module tail resolves the alias spelling (``coerce_decimal_strict as
+_coerce_decimal_strict`` is live in the tree) without inventing an origin.
+"""
 
 STRING_ONLY_METHODS: frozenset[str] = frozenset(
     {
@@ -339,32 +482,107 @@ def _is_single_argument_decimal_call(node: ast.AST) -> bool:
     )
 
 
+def _isinstance_str_narrowed_names(test: ast.expr) -> set[str]:
+    """Return names an ``if`` test proves to be ``str`` throughout its positive branch.
+
+    Only a whole-test conjunction narrows: ``isinstance(v, str) and ...`` does,
+    ``isinstance(v, str) or ...`` does not, and ``isinstance(v, (int, float))``
+    does not. A tuple of alternatives narrows only when every alternative is
+    ``str``.
+    """
+    narrowed: set[str] = set()
+    pending: list[ast.expr] = [test]
+    while pending:
+        node = pending.pop()
+        if isinstance(node, ast.BoolOp) and isinstance(node.op, ast.And):
+            pending.extend(node.values)
+            continue
+        if not (
+            isinstance(node, ast.Call)
+            and leaf_name(node.func) == "isinstance"
+            and len(node.args) == 2
+            and isinstance(node.args[0], ast.Name)
+        ):
+            continue
+        classes = node.args[1]
+        options = classes.elts if isinstance(classes, ast.Tuple) else [classes]
+        if options and all(isinstance(option, ast.Name) and option.id == "str" for option in options):
+            narrowed.add(node.args[0].id)
+    return narrowed
+
+
+def _coercer_bindings(tree: ast.Module) -> dict[str, str]:
+    """Return local name -> canonical coercer name for every tolerant-coercer import.
+
+    Resolves the alias spelling, so ``coerce_decimal_strict as
+    _coerce_decimal_strict`` is matched by what it *is* rather than by how it is
+    spelled — the failure mode the sibling cast ratchet records as its own open
+    blind spot.
+    """
+    bindings: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom) or not node.module:
+            continue
+        if not node.module.endswith(_CORE_DECIMAL_MODULE_SUFFIX):
+            continue
+        for alias in node.names:
+            if alias.name in TOLERANT_DECIMAL_COERCERS:
+                bindings[alias.asname or alias.name] = alias.name
+    return bindings
+
+
 def _visit_scope(
     body: Sequence[ast.stmt],
     inherited: frozenset[str],
     node: ast.AST | None,
     found: list[tuple[int, str]],
+    coercions: list[tuple[int, str, str]],
+    coercer_bindings: Mapping[str, str],
 ) -> None:
-    """Record string-parsing ``Decimal`` calls in one scope, then recurse into nested ones."""
+    """Record text-parsing ``Decimal`` and tolerant-coercer calls in one scope.
+
+    Both rules share one walk and one :func:`_expression_is_str`, because they
+    share one type judgement; splitting them would let the two drift on what
+    counts as text. They differ in exactly one declared place — the
+    ``isinstance`` narrowing feeds only the coercer rule, for the reason given
+    on :data:`_ISINSTANCE_NARROWING_IS_RULE_THREE_PENDING`.
+    """
     str_names = _scope_str_names(body, inherited, node)
     nested: list[ast.FunctionDef | ast.AsyncFunctionDef] = []
 
-    def walk(current: ast.AST) -> None:
+    def walk(current: ast.AST, narrowed: frozenset[str]) -> None:
         if isinstance(current, ast.FunctionDef | ast.AsyncFunctionDef):
             nested.append(current)
+            return
+        if isinstance(current, ast.If):
+            walk(current.test, narrowed)
+            positive = narrowed | _isinstance_str_narrowed_names(current.test)
+            for statement in current.body:
+                walk(statement, frozenset(positive))
+            for statement in current.orelse:
+                walk(statement, narrowed)
             return
         if _is_single_argument_decimal_call(current):
             assert isinstance(current, ast.Call)
             argument = current.args[0]
             if not isinstance(argument, ast.Constant) and _expression_is_str(argument, str_names):
                 found.append((current.lineno, _enclosing_name(node)))
+        elif isinstance(current, ast.Call) and current.args:
+            coercer = coercer_bindings.get(leaf_name(current.func))
+            argument = current.args[0]
+            if (
+                coercer is not None
+                and not isinstance(argument, ast.Constant)
+                and _expression_is_str(argument, str_names | narrowed)
+            ):
+                coercions.append((current.lineno, _enclosing_name(node), coercer))
         for child in ast.iter_child_nodes(current):
-            walk(child)
+            walk(child, narrowed)
 
     for statement in body:
-        walk(statement)
+        walk(statement, frozenset())
     for function in nested:
-        _visit_scope(function.body, str_names, function, found)
+        _visit_scope(function.body, str_names, function, found, coercions, coercer_bindings)
 
 
 def _enclosing_name(node: ast.AST | None) -> str:
@@ -373,13 +591,30 @@ def _enclosing_name(node: ast.AST | None) -> str:
     return "<module>"
 
 
+def _scan_module(tree: ast.AST) -> tuple[list[tuple[int, str]], list[tuple[int, str, str]]]:
+    if not isinstance(tree, ast.Module):
+        return [], []
+    found: list[tuple[int, str]] = []
+    coercions: list[tuple[int, str, str]] = []
+    _visit_scope(tree.body, frozenset(), None, found, coercions, _coercer_bindings(tree))
+    return found, coercions
+
+
 def string_parse_decimal_sites(tree: ast.AST) -> tuple[tuple[int, str], ...]:
     """Return ``(lineno, enclosing function name)`` for each string-parsing ``Decimal`` call."""
-    if not isinstance(tree, ast.Module):
-        return ()
-    found: list[tuple[int, str]] = []
-    _visit_scope(tree.body, frozenset(), None, found)
+    found, _ = _scan_module(tree)
     return tuple(sorted(set(found)))
+
+
+def tolerant_coercion_text_sites(tree: ast.AST) -> tuple[tuple[int, str, str], ...]:
+    """Return ``(lineno, enclosing function, coercer)`` where text reaches a tolerant coercer.
+
+    The reported set is exactly the provably-``str`` arguments: a float, int or
+    already-``Decimal`` argument never appears, which is what keeps the three
+    correct machine-numeric call sites out of the report without an exemption.
+    """
+    _, coercions = _scan_module(tree)
+    return tuple(sorted(set(coercions)))
 
 
 def string_parse_decimal_violations(
@@ -409,10 +644,91 @@ def string_parse_decimal_violations(
     return violations
 
 
+def declaration_line_indices(lines: Sequence[str], lineno: int) -> frozenset[int]:
+    """Return the zero-based line indices a site's declaration may occupy.
+
+    The site's own line, plus the unbroken run of comment and blank lines
+    immediately above it — the same adjacency the tree's ``CAST-RATIONALE-``
+    ratchet uses. Returning the index *set* rather than a boolean is what lets
+    the staleness check run in the opposite direction: a marker is live exactly
+    when some site's set contains it.
+    """
+    index = lineno - 1
+    if index < 0 or index >= len(lines):
+        return frozenset()
+    covered = {index}
+    scan = index - 1
+    while scan >= 0:
+        stripped = lines[scan].strip()
+        if stripped == "" or stripped.startswith("#"):
+            covered.add(scan)
+            scan -= 1
+            continue
+        break
+    return frozenset(covered)
+
+
+def _marker_line_indices(lines: Sequence[str]) -> frozenset[int]:
+    return frozenset(index for index, line in enumerate(lines) if DECIMAL_TEXT_RATIONALE_MARKER in line)
+
+
+def tolerant_coercion_text_violations(
+    items: Iterable[tuple[Path, ast.AST, Sequence[str]]],
+    *,
+    display_root: Path,
+) -> list[str]:
+    """Return ``path:lineno (function, coercer)`` for undeclared text coercions.
+
+    Args:
+        items: ``(path, AST, source lines)`` triples to scan.
+        display_root: Root the reported paths are made relative to, so the gate's
+            own proofs can scan a synthetic module without monkeypatching the
+            production scan surface.
+    """
+    violations: list[str] = []
+    for path, tree, lines in items:
+        relative = path.relative_to(display_root).as_posix()
+        markers = _marker_line_indices(lines)
+        for lineno, function, coercer in tolerant_coercion_text_sites(tree):
+            if declaration_line_indices(lines, lineno) & markers:
+                continue
+            violations.append(f"{relative}:{lineno} (in {function}, {coercer})")
+    return violations
+
+
+def stale_decimal_text_rationale_markers(
+    items: Iterable[tuple[Path, ast.AST, Sequence[str]]],
+    *,
+    display_root: Path,
+) -> list[str]:
+    """Return ``path:lineno`` for every declaration that governs no reported site.
+
+    The cross-check that keeps the at-the-site declaration from becoming the
+    path-keyed allowlist it replaces: a marker left behind by a fixed or deleted
+    call is a rubber stamp waiting to launder the next one added beside it.
+    """
+    stale: list[str] = []
+    for path, tree, lines in items:
+        relative = path.relative_to(display_root).as_posix()
+        governed: set[int] = set()
+        for lineno, _, _ in tolerant_coercion_text_sites(tree):
+            governed |= declaration_line_indices(lines, lineno)
+        for index in sorted(_marker_line_indices(lines) - governed):
+            stale.append(f"{relative}:{index + 1}")
+    return stale
+
+
 __all__ = [
+    "DECIMAL_TEXT_RATIONALE_MARKER",
+    "SEPARATOR_SAFE_DESTINATIONS",
     "STRING_ONLY_METHODS",
+    "TOLERANT_DECIMAL_COERCERS",
     "annotation_element_is_str",
     "annotation_is_str",
+    "declaration_line_indices",
+    "stale_decimal_text_rationale_markers",
     "string_parse_decimal_sites",
     "string_parse_decimal_violations",
+    "tolerant_coercion_text_sites",
+    "tolerant_coercion_text_violations",
 ]

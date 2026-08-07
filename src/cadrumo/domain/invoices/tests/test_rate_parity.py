@@ -208,6 +208,33 @@ def test_transitional_slots_refuse_outside_their_statutory_window() -> None:
     assert iva_rate_percentage(IvaRate.RATE_4, outside) == Decimal("0.04")
 
 
+def test_a_zero_rated_line_resolves_on_every_date_the_registry_cannot_speak_for() -> None:
+    """RATE_0 must never be refused for want of a registry zero record.
+
+    This pins a live defect, not a hypothetical. The in-force check resolves a
+    slot against the registry, and the ES zero coverage is deliberately partial:
+    ``rates.toml`` registers only the RD-ley 4/2024 zero window and states in its
+    own comment that the indefinite art. 91.Cuatro 0 % (entregas de donativos,
+    Ley 49/2002) is intentionally NOT registered, because a flat ``kind = "zero"``
+    record cannot be bounded to donativos and an open one would zero-rate every
+    domestic supply.
+
+    A missing zero record therefore means "this registry cannot say", not "no
+    zero-rated supply was lawful that day". Testing in-force against it refused
+    RATE_0 at EVERY date, which made a zero-rated invoice unrecordable outside a
+    single 2024 quarter -- while the CLI still offered the slot.
+
+    The dates span all three regions deliberately: before the registered zero
+    window, inside it, and long after. Only the middle one has a record, so the
+    other two are the ones that were failing.
+    """
+    for on_date in (date(2024, 3, 15), date(2024, 8, 15), date(2026, 6, 1)):
+        assert iva_rate_percentage(IvaRate.RATE_0, on_date) == Decimal("0"), (
+            f"RATE_0 must resolve on {on_date.isoformat()}: the registry's silence about a zero tier is "
+            "incomplete coverage, not a statement that zero-rating was unlawful"
+        )
+
+
 def test_slot_resolution_gate_would_catch_a_tier_default_substitution() -> None:
     """Mutation proof for the resolution gate: it fails when a slot resolves its tier's rate.
 
@@ -220,11 +247,21 @@ def test_slot_resolution_gate_would_catch_a_tier_default_substitution() -> None:
     on_date = date(2024, 11, 15)
     slots = numeric_iva_rate_slots()
 
-    tier_substituted = {
-        member: lookup_rate(EUMemberState.ES, kind, on_date).pct / Decimal("100")
-        for percentage, member in slots.items()
-        if (kind := iva_rate_kind(member)) is not None
-    }
+    # A tier the registry cannot resolve on this date is skipped rather than
+    # allowed to raise. The ZERO tier is exactly that: rates.toml registers only
+    # the RD-ley 4/2024 zero window and deliberately omits the indefinite
+    # art. 91.Cuatro 0%, so lookup_rate refuses for it. That is a gap in the
+    # substitution being probed, not a slot escaping the probe -- RATE_0 names
+    # 0 % and no tier default could differ from it anyway.
+    tier_substituted: dict[IvaRate, Decimal] = {}
+    for member in slots.values():
+        kind = iva_rate_kind(member)
+        if kind is None:
+            continue
+        try:
+            tier_substituted[member] = lookup_rate(EUMemberState.ES, kind, on_date).pct / Decimal("100")
+        except IvaRateNotFoundError:
+            continue
 
     disagreeing = {
         member.name

@@ -23,13 +23,16 @@ from decimal import Decimal
 import pytest
 
 from ...application.ledger import PurchaseInvoiceEvidenceInputError
+from ...core import FieldOrigin
 from ...core.config import load_settings
 from .._evidence_draft_text import (
     TextInvoiceFieldExtractor,
     build_text_field_extraction_prompt,
 )
 from .._invoice_field_grounding import (
+    ExtractedFieldAnchors,
     ExtractedInvoiceFields,
+    ExtractedInvoiceResponse,
     ground_extracted_fields,
     parse_invoice_extraction_response,
 )
@@ -41,7 +44,7 @@ _SPANISH_CIF = "B12345674"
 _SPANISH_NIF = "45678912S"
 
 
-def _fields(**overrides: str | None) -> ExtractedInvoiceFields:
+def _fields(**overrides: str | None) -> ExtractedInvoiceResponse:
     payload: dict[str, str | None] = {
         "supplier_tax_id": _SPANISH_CIF,
         "invoice_number": "2026-0142",
@@ -53,12 +56,19 @@ def _fields(**overrides: str | None) -> ExtractedInvoiceFields:
         "currency": "EUR",
     }
     payload.update(overrides)
-    return ExtractedInvoiceFields.model_validate_json(json.dumps(payload))
+    return ExtractedInvoiceResponse(
+        fields=ExtractedInvoiceFields.model_validate_json(json.dumps(payload)),
+        anchors=ExtractedFieldAnchors(),
+    )
 
 
 def _grounded_tax_id(raw: str) -> str | None:
     """Return what the grounding layer makes of ``raw``, through the real draft path."""
-    return ground_extracted_fields(_fields(supplier_tax_id=raw), raw_text_length=10).supplier_tax_id
+    return ground_extracted_fields(
+        _fields(supplier_tax_id=raw),
+        raw_text_length=10,
+        origin=FieldOrigin.TEXT_LAYER,
+    ).supplier_tax_id
 
 
 class TestForeignCounterpartyTaxIdsSurviveGrounding:
@@ -192,6 +202,7 @@ class TestCannedResponseParsesAndGrounds:
         draft = ground_extracted_fields(
             parse_invoice_extraction_response(response),
             raw_text_length=512,
+            origin=FieldOrigin.TEXT_LAYER,
         )
 
         assert draft.supplier_tax_id == "IE9825613K"
@@ -218,7 +229,11 @@ class TestCannedResponseParsesAndGrounds:
             },
         )
 
-        draft = ground_extracted_fields(parse_invoice_extraction_response(response), raw_text_length=64)
+        draft = ground_extracted_fields(
+            parse_invoice_extraction_response(response),
+            raw_text_length=64,
+            origin=FieldOrigin.TEXT_LAYER,
+        )
 
         assert draft.supplier_tax_id == "DE811569869"
         assert draft.invoice_date is None
@@ -230,7 +245,7 @@ class TestCannedResponseParsesAndGrounds:
     def test_a_chatty_model_wrapping_its_json_in_prose_still_parses(self) -> None:
         wrapped = f"Sure! Here you go:\n```json\n{json.dumps({'invoice_number': 'A-1'})}\n```"
 
-        assert parse_invoice_extraction_response(wrapped).invoice_number == "A-1"
+        assert parse_invoice_extraction_response(wrapped).fields.invoice_number == "A-1"
 
 
 class TestFabricatedValuesAreDroppedRatherThanTrusted:
@@ -252,18 +267,24 @@ class TestFabricatedValuesAreDroppedRatherThanTrusted:
         ],
     )
     def test_a_hallucinated_value_grounds_to_none(self, field: str, fabricated: str) -> None:
-        draft = ground_extracted_fields(_fields(**{field: fabricated}), raw_text_length=10)
+        draft = ground_extracted_fields(
+            _fields(**{field: fabricated}), raw_text_length=10, origin=FieldOrigin.TEXT_LAYER
+        )
 
         assert getattr(draft, field) is None
 
     def test_an_ambiguous_amount_is_dropped_rather_than_read_a_hundredfold_light(self) -> None:
         """``1.234`` could be one thousand two hundred or one point two three."""
-        draft = ground_extracted_fields(_fields(taxable_base="1.234"), raw_text_length=10)
+        draft = ground_extracted_fields(
+            _fields(taxable_base="1.234"), raw_text_length=10, origin=FieldOrigin.TEXT_LAYER
+        )
 
         assert draft.taxable_base is None
 
     def test_dropping_one_fabricated_field_does_not_discard_the_grounded_ones(self) -> None:
-        draft = ground_extracted_fields(_fields(currency="US Dollars"), raw_text_length=10)
+        draft = ground_extracted_fields(
+            _fields(currency="US Dollars"), raw_text_length=10, origin=FieldOrigin.TEXT_LAYER
+        )
 
         assert draft.currency is None
         assert draft.supplier_tax_id == _SPANISH_CIF

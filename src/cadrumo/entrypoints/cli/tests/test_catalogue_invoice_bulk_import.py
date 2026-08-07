@@ -302,8 +302,14 @@ def test_bulk_import_file_not_found_refuses_cleanly(tmp_path: Path) -> None:
     assert "not found" in result.output.lower() or "no encontrado" in result.output.lower()
 
 
-def test_bulk_import_unknown_column_is_refused(tmp_path: Path) -> None:
-    """An unrecognised column name refuses the whole file before any writes."""
+def test_bulk_import_unknown_column_is_reported_and_the_row_still_imports(tmp_path: Path) -> None:
+    """An unrecognised column is reported through the notice channel, not refused.
+
+    This assertion was inverted. The importer used to refuse the whole file for
+    a single column it did not recognise, so a book carrying every required
+    field plus one extra imported nothing at all. The extra column must be named
+    to the operator and the row must land.
+    """
     csv_path = tmp_path / "invoices.csv"
     csv_path.write_text(
         "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,bogus_column\n"
@@ -312,13 +318,33 @@ def test_bulk_import_unknown_column_is_refused(tmp_path: Path) -> None:
     )
 
     result = invoke_cached_cli(
-        ["app", "ledger", "invoice", "import", "--file", str(csv_path), "--kind", "received"],
+        ["--format", "json", "app", "ledger", "invoice", "import", "--file", str(csv_path), "--kind", "received"],
     )
-    assert result.exit_code != 0
+    assert result.exit_code == 0, result.output
+    assert "bogus_column" in result.output
 
     listed = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "invoice", "list", "--kind", "received"],
     )
     listed_payload = _json_result(listed.output)
     rows = _get_list_value(listed_payload, "rows")
-    assert not any(isinstance(row, dict) and row.get("invoice_number") == "2026-BOGUS-001" for row in rows)
+    assert any(isinstance(row, dict) and row.get("invoice_number") == "2026-BOGUS-001" for row in rows)
+
+
+def test_bulk_import_still_refuses_a_file_with_no_required_column(tmp_path: Path) -> None:
+    """Positive control: dropping the refuse-whole must not remove every refusal.
+
+    Without this, the test above would pass equally against an importer that
+    accepted anything at all.
+    """
+    csv_path = tmp_path / "no_base.csv"
+    csv_path.write_text(
+        "counterparty_nif,counterparty_name,invoice_number,invoice_date\n"
+        + f"{_RECEIVED_COUNTERPARTY_CIF},Papeleria Sol SL,2026-NOBASE-001,2026-03-10\n",
+        encoding="utf-8",
+    )
+
+    result = invoke_cached_cli(
+        ["app", "ledger", "invoice", "import", "--file", str(csv_path), "--kind", "received"],
+    )
+    assert result.exit_code != 0

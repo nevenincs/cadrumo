@@ -104,6 +104,7 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice, resolve_iva_rate_slot
 from ...core import (
+    PDF_CONTAINER_SHAPES,
     STRICT_FROZEN_CONFIG,
     STRUCTURED_DOCUMENT_SHAPES,
     DraftDiscrepancyKind,
@@ -122,7 +123,13 @@ from ...core.identity import IdentityError, tax_id_identity_token, validate_span
 from ...core.parsing import parse_date, parse_iso8601_date
 from ...domain.attachments import link_attachment_invoice, normalize_media_type
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceClass, InvoiceLine
-from ...domain.iva import InvoiceKind, IvaCategory
+from ...domain.iva import (
+    EUMemberState,
+    InvoiceKind,
+    IvaCategory,
+    domestic_categories_by_rate_kind,
+    rate_kinds_for_declared_rate,
+)
 from ...llm import (
     LLMPdfRasterisationError,
     LLMProviderError,
@@ -131,7 +138,7 @@ from ...llm import (
 )
 from ..provisioning import probe_ollama_vision
 from ..user_profile import resolve_active_capability
-from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
+from ._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
 from ._evidence_input import (
     EvidenceInput,
     resolve_attachment_evidence_input,
@@ -326,6 +333,12 @@ class FieldProvenance(BaseModel):
             the operator sees both.
         candidates: Competing readings, when the grounding outcome is
             ``AMBIGUOUS``. Empty otherwise.
+        anchor_self_reported: ``True`` when the anchor was asserted by the same
+            reader that produced the value, with nothing independent to check it
+            against -- the vision lane, which reads image to fields in one call
+            and has no transcription. Such an anchor is recorded because it is
+            still useful to an operator, but it can never carry an ``ANCHORED``
+            outcome; see the validator below.
         note: Operator-facing explanation, e.g. which identity contradicted the
             value.
     """
@@ -337,7 +350,36 @@ class FieldProvenance(BaseModel):
     grounding: FieldGroundingOutcome
     anchor: str | None = None
     candidates: tuple[FieldAmbiguityCandidate, ...] = ()
+    anchor_self_reported: bool = False
     note: str = ""
+
+    @model_validator(mode="after")
+    def _a_self_reported_anchor_can_never_read_as_verified(self) -> Self:
+        """Refuse an ``ANCHORED`` outcome on an anchor nothing independent confirmed.
+
+        The two reading lanes do not supply the same STRENGTH of evidence, and
+        collapsing them is how an anti-fabrication check becomes decoration.
+
+        On the text lane the anchor is matched against a transcription produced
+        by a different reader than the one that proposed the value, so the match
+        is a genuine external check. On the vision lane there is no transcription
+        at all -- the model reads image to fields in one call -- so the anchor is
+        the model's own claim about what it saw. Matching that claim against the
+        model's own reply confirms only that the model is self-consistent, which
+        a fabricating model also is.
+
+        Enforcing the invariant HERE rather than in the checker means no reading
+        path can launder a self-reported anchor into a verified-looking one, even
+        by constructing the envelope directly. When a vision transcription stage
+        lands, that path stops setting this flag and earns ``ANCHORED`` through
+        the same check the text lane already passes -- no change to this rule.
+        """
+        if self.anchor_self_reported and self.grounding is FieldGroundingOutcome.ANCHORED:
+            raise ValueError(
+                "a self-reported anchor cannot be ANCHORED: the anchor was asserted by the same "
+                "reader that produced the value, so nothing independent confirmed it",
+            )
+        return self
 
     @model_validator(mode="after")
     def _ambiguity_carries_its_candidates(self) -> Self:
@@ -725,7 +767,7 @@ def extract_invoice_draft_from_evidence(
             # broken can still be read by the text or vision path.
             pass
     _refuse_an_unrecognised_xml_document(evidence_input)
-    if evidence_input.media_kind is MediaKind.PDF:
+    if evidence_input.document_shape in PDF_CONTAINER_SHAPES:
         try:
             return extract_invoice_fields(evidence_input)
         except PurchaseInvoiceEvidenceInputError:
@@ -837,7 +879,7 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
     try:
         from ...llm import extract_invoice_fields_from_images
 
-        if evidence.media_kind is MediaKind.PDF:
+        if evidence.document_shape in PDF_CONTAINER_SHAPES:
             images = tuple(
                 MultimodalImageInput.from_base64(page, ImageMediaType.PNG)
                 for page in rasterise_pdf_pages_to_base64_png(evidence.data)
@@ -1373,6 +1415,21 @@ def confirm_invoice_draft_from_evidence(
         # per-rate split is skipped on that path too.
         resolved_recargo_amount = recargo_amount
     resolved_iva_category = iva_category if iva_category is not None else _category_stated_by_the_document(draft)
+    if resolved_iva_category is None and not operator_overrode_the_amounts:
+        # A document charging an ordinary rate states the category code for
+        # "standard rate", which by design carries no special treatment: the
+        # rate itself is the meaning. That left the record with no declared IVA
+        # treatment at all, which the decomposition contract refuses -- so the
+        # renta income path counted the row's bank cash instead of its ingresos
+        # integros, dropping the base, the cuota and the retencion.
+        #
+        # Resolved from the rate the document states, never assumed. Skipped
+        # when the operator restated the amounts, for the same reason the
+        # per-rate split is: their figures are the authority, not the reader's.
+        resolved_iva_category = _domestic_category_from_the_declared_rate(
+            draft,
+            invoice_date=resolved_invoice_date,
+        )
 
     repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     candidate = build_catalogue_invoice(
@@ -1452,6 +1509,66 @@ def confirm_invoice_draft_from_evidence(
         created=True,
         total_discrepancy=printed_total_discrepancy(draft=draft, invoice=result.invoice),
     )
+
+
+def _domestic_category_from_the_declared_rate(draft: InvoiceDraft, *, invoice_date: date) -> IvaCategory | None:
+    """Return the domestic IVA category the document's own rate denotes, or ``None``.
+
+    Composed from two shipped authorities rather than a new table.
+    :func:`~domain.iva.rate_kinds_for_declared_rate` answers which tier a
+    declared rate WAS on a given date, against the registered rate records; it
+    returns a tuple because that question can legitimately have more than one
+    answer, so a caller detects ambiguity instead of picking one.
+    :func:`~domain.iva.domestic_categories_by_rate_kind` is the single authority
+    for which domestic category a tier denotes -- three independent copies of
+    that mapping existed before it was promoted, so re-deriving it here would
+    make a fourth.
+
+    The date is load-bearing and is the invoice's own issue date, not today's.
+    A tier's rate changes by statute, so resolving a 2024 document against
+    today's table would answer about a rate it was never charged at.
+
+    Declines, rather than approximating, in three cases:
+
+    - **More than one rate.** One invoice carries one category field and a
+      two-tier document has two answers. Picking either declares part of the
+      base under a rate it was not charged at, and picking by size is an
+      invention. Which category a multi-rate invoice takes is a modelling
+      decision this resolution does not make.
+    - **A recargo de equivalencia.** The rate resolves cleanly, but a supply
+      carrying a recargo may belong to the ordinary domestic tier or to the
+      recargo category, and the decomposition contract accepts BOTH -- so a
+      wrong pick would be caught nowhere downstream. That is exactly the shape
+      that must not be guessed.
+    - **An unregistered or ambiguous rate.** A rate that was not a registered
+      Spanish rate on the issue date is a real refusal rather than a lookup
+      failure, and a rate matching two tiers is the ambiguity the tuple exists
+      to surface.
+
+    Declining is visible: the record stays undeclared, the decomposition reports
+    it, and the renta income path raises an advisory. A guess would not be.
+
+    Args:
+        draft: The re-run extraction being confirmed.
+        invoice_date: The resolved issue date the rate must be read against.
+
+    Returns:
+        The resolved :class:`~domain.iva.IvaCategory`, or ``None`` when the
+        document does not settle it unambiguously.
+    """
+    if len(draft.iva_breakdown) != 1:
+        return None
+    entry = draft.iva_breakdown[0]
+    if entry.iva_rate is None:
+        return None
+    if entry.recargo_amount is not None or draft.recargo_amount is not None:
+        return None
+    # The lookup takes the rate as a FRACTION, matching how a transaction stores
+    # it; the draft carries the bare percentage the document prints.
+    tiers = rate_kinds_for_declared_rate(EUMemberState.ES, entry.iva_rate / Decimal("100"), invoice_date)
+    if len(tiers) != 1:
+        return None
+    return domestic_categories_by_rate_kind().get(tiers[0])
 
 
 def _category_stated_by_the_document(draft: InvoiceDraft) -> IvaCategory | None:
@@ -1536,18 +1653,26 @@ def _confirmed_lines_from_the_document(
         # figure, which is the opposite of reading the record exactly. The
         # fall-through keeps the pre-existing behaviour, and the printed-total
         # cross-check still reports the shortfall.
-        entries = draft.iva_breakdown
-        if all(entry.taxable_base is not None and entry.iva_amount is not None for entry in entries):
+        # Pair each entry with its narrowed amounts in one pass, so the guard and
+        # the use are the same expression. An `all(...)` check ahead of a
+        # comprehension proves the same thing to a reader but not to a checker,
+        # which then cannot tell this from a genuine optional dereference.
+        priced = [
+            (entry, entry.taxable_base, entry.iva_amount)
+            for entry in draft.iva_breakdown
+            if entry.taxable_base is not None and entry.iva_amount is not None
+        ]
+        if len(priced) == len(draft.iva_breakdown):
             return tuple(
                 InvoiceLine(
                     description=f"{invoice_number or 'Invoice'} - IVA {entry.iva_rate}%",
                     quantity=Decimal("1"),
-                    unit_price=entry.taxable_base,
-                    subtotal=entry.taxable_base,
+                    unit_price=taxable_base,
+                    subtotal=taxable_base,
                     iva_rate=resolve_iva_rate_slot(entry.iva_rate),
-                    iva_amount=entry.iva_amount,
+                    iva_amount=iva_amount,
                 )
-                for entry in entries
+                for entry, taxable_base, iva_amount in priced
             )
     if iva_amount is not None:
         return (

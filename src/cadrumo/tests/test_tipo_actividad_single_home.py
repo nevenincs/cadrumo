@@ -1,24 +1,23 @@
 """A Modelo 036 tipo de actividad is STORED in exactly one place.
 
-This gate exists because the shipped placement contradicts its own decision
-record, and the contradiction is harmless today and harmful later.
+This gate exists because the shipped placement contradicts the accepted design
+for this fact, and the contradiction is harmless today and harmful later.
 
-``2026-08-07-calculation-chain-integrity-activity-type-placement-adr`` considers
-carrying the activity TYPE VALUE on the transaction and rejects it: the type is a
-fact AEAT records per activity slot, so copying it onto every row "duplicates an
-upstream declaration and will drift from it". Its accepted shape puts the value on
-a per-activity profile row and has the transaction carry a *reference* to the slot.
+The activity TYPE is a fact AEAT records per activity slot, so copying its
+VALUE onto every transaction row "duplicates an upstream declaration and will
+drift from it". The accepted shape puts the value on a per-activity profile row
+and has the transaction carry a *reference* to the slot instead.
 
-What shipped is the value, on the row. That was defensible — both that ADR and the
-multi-activity profile ADR it depends on are ``proposed``, no profile activity row
-exists in the tree, and waiting would have blocked the Modelo 131 agrarian
-aggregation behind two unaccepted records. It is not defensible indefinitely.
+What shipped is the value, on the row. That was defensible — no per-activity
+profile row exists in the tree yet, and waiting would have blocked the Modelo
+131 agrarian aggregation behind unbuilt infrastructure. It is not defensible
+indefinitely.
 
 Today nothing is duplicated, because there is no upstream declaration to duplicate.
 The moment a per-activity profile row lands carrying its own tipo de actividad,
-``Transaction.tipo_actividad`` becomes a second home for one fact, and the drift the
-ADR predicted starts. Nothing else would notice: both fields would be individually
-correct and would diverge only for a taxpayer who edited one.
+``Transaction.tipo_actividad`` becomes a second home for one fact, and the
+predicted drift starts. Nothing else would notice: both fields would be
+individually correct and would diverge only for a taxpayer who edited one.
 
 So this gate fails at exactly that moment, and tells the author what to do. It is a
 tripwire on a dated hazard, not a style rule.

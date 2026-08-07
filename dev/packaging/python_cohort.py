@@ -264,7 +264,7 @@ def _stamp_bundled_verdict_into_build_tree(build_root: Path) -> str:
     Written before ``uv build`` so the cadrumo wheel ships
     ``_data/registry/aeat-validation-verdict.json`` beside the registry tree; a
     fingerprint-matched install then skips runtime registry validation on its
-    very first touch (ADR mcp-call-latency D1). Computed against the extracted
+    very first touch. Computed against the extracted
     build tree, which is byte-identical to what the wheel packages, so the
     install-stable (relative-path + size + version) key matches at runtime. The
     verdict certifies only that the build validated this release's immutable

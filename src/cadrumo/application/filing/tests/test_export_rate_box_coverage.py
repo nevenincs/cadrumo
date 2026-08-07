@@ -7,14 +7,23 @@ sum to the whole, and AEAT reconciles those boxes against that total. The
 application never files, so the artefact leaves the write door for a human to
 submit with nothing behind it.
 
-These tests drive the real ``export_draft`` against a real Modelo 390 registry
-draft. The partition is supplied on the subview exactly as the runtime
-projection supplies it, and its three casillas stand in for a split tier: the
-registry half that declares real box-layer casillas lands separately, and the
-gate must be provably correct BEFORE it can refuse anything. What is under test
-here is the gate's behaviour given a partition, not which partitions Modelo 390
-declares -- that derivation is pinned in
-``domain/calculations/registry/tests/test_rate_box_partition.py``.
+These tests drive the real ``export_draft`` against the real Modelo 390 registry
+and the real partitions its subview projects -- no constructed partition, no
+substituted subview, except in the one case that is ABOUT the absence of
+partitions. Everything before this file was proved on revisions built to the
+split shape; this is where the gate meets registry data it did not choose.
+
+Why this file exists in the shape it does
+------------------------------------------
+
+The shared Modelo 390 export fixture had to be updated when the split landed: it
+populated the tier totals and left every rate box empty, which post-split is
+exactly the refusal condition. That is the shape most likely to be a test quietly
+relaxed to match new behaviour, so the update is defended here rather than left
+to intent. :func:`test_blanking_one_rate_box_refuses_and_names_it` and
+:func:`test_boxes_short_of_their_total_refuse_by_the_exact_shortfall` are the
+assertions that make the fixture change safe: if the fixture had been made to
+pass rather than made correct, both would be green with the gate doing nothing.
 """
 
 from __future__ import annotations
@@ -25,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import CasillaId, RateBoxPartition, validated_casilla_id
+from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing import FilingExportError, ModeloDraft, ModeloValueKind
 from .._export import export_draft
 from ..runtime import RegistrySchemaAccessor
@@ -37,50 +46,63 @@ from ._export_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_TOTAL_CASILLA: CasillaId = validated_casilla_id(
-    "iva.anual.repercutido.general",
-    surface="test.rate_box.total",
-)
-_BOX_A: CasillaId = validated_casilla_id("iva.anual.repercutido.reducido", surface="test.rate_box.box")
-_BOX_B: CasillaId = validated_casilla_id("iva.anual.repercutido.super-reducido", surface="test.rate_box.box")
 
-_PARTITION = RateBoxPartition(
-    total_casilla_id=_TOTAL_CASILLA,
-    box_casilla_ids=(_BOX_A, _BOX_B),
-    rate_kinds=("general",),
-    fact="iva_amount_sum",
-)
+def _cid(value: str) -> CasillaId:
+    return validated_casilla_id(value, surface="test.rate_box.casilla")
 
 
-def _provider_with_partition(*, partitions: tuple[RateBoxPartition, ...]) -> RegistrySchemaAccessor:
-    """A real Modelo 390 provider carrying ``partitions`` on its subview.
+#: The rate-blind total layer: fed by bindings that do not discriminate on rate,
+#: so they keep every row including those whose rate was never recorded. These
+#: casillas file no official box.
+_REDUCIDO_TOTAL = _cid("iva.anual.repercutido.reducido")
+#: Two of the reducido tier's three boxes, the ones the shared fixture populates.
+_BOX_10 = _cid("iva.anual.repercutido.tipo-10.cuota")
+_BOX_5 = _cid("iva.anual.repercutido.tipo-5.cuota")
 
-    ``replace`` on the projected subview is how this suite already substitutes a
-    registry projection (see ``_provider_without_export_layout``); the field is
-    the same one ``_subview_from_snapshot`` fills.
+_M390_PROVIDER_ARGS = {"filing_year": 2025, "period": "0A", "modelos": ("390",)}
+
+
+def _real_provider() -> RegistrySchemaAccessor:
+    return _schema_provider(**_M390_PROVIDER_ARGS)  # type: ignore[arg-type]
+
+
+def _provider_without_partitions() -> RegistrySchemaAccessor:
+    """A real Modelo 390 provider with its partition projection emptied.
+
+    The one substitution in this file, and it is the subject of its own test
+    rather than a convenience: every revision in the tree that has not split a
+    tier casilla is in this state, and none of them may acquire a new refusal.
     """
-    provider = _schema_provider(filing_year=2025, period="0A", modelos=("390",))
+    provider = _real_provider()
     subview = provider.get_subview("390")
     return RegistrySchemaAccessor(
         collections=provider.collections,
-        subviews={**provider.subviews, "390": replace(subview, rate_box_partitions=partitions)},
+        subviews={**provider.subviews, "390": replace(subview, rate_box_partitions=())},
         source_root=provider.source_root,
         sources=provider.sources,
     )
 
 
-def _with_values(draft: ModeloDraft, values: dict[CasillaId, Decimal]) -> ModeloDraft:
-    """Return ``draft`` with the named casillas carrying ``values``.
+def _with_values(draft: ModeloDraft, values: dict[CasillaId, Decimal | None]) -> ModeloDraft:
+    """Return ``draft`` with the named casillas set, ``None`` demoting to EMPTY.
 
-    Every named casilla is asserted present first: a typo'd id would otherwise
-    leave the draft's real value in place and quietly test a different return
-    than the one the test name claims.
+    EMPTY is the real production shape for "nothing here": ``build_draft`` emits
+    a row for every declared casilla, so a blanked box keeps its id and loses
+    only its value. Every named casilla is asserted present first, because a
+    typo'd id would otherwise leave the fixture's own value in place and quietly
+    test a different return than the test name claims.
     """
     present = {value.casilla_id for value in draft.values}
     missing = sorted(casilla_id for casilla_id in values if casilla_id not in present)
     assert not missing, f"draft does not declare {missing}"
     updated = tuple(
-        value.model_copy(update={"value": values[value.casilla_id], "kind": ModeloValueKind.COMPUTED})
+        value.model_copy(
+            update=(
+                {"value": None, "kind": ModeloValueKind.EMPTY}
+                if values[value.casilla_id] is None
+                else {"value": values[value.casilla_id], "kind": ModeloValueKind.COMPUTED}
+            ),
+        )
         if value.casilla_id in values
         else value
         for value in draft.values
@@ -88,64 +110,137 @@ def _with_values(draft: ModeloDraft, values: dict[CasillaId, Decimal]) -> Modelo
     return draft.model_copy(update={"values": updated})
 
 
-def test_a_breakdown_reaching_its_total_exports(tmp_path: Path) -> None:
-    """Every row carried a rate, so the boxes account for the whole total.
+def test_the_real_registry_projects_the_partitions_this_file_relies_on() -> None:
+    """Anchor: every assertion below is vacuous if the split is not declared.
 
-    The direction a refusal that fired unconditionally would fail. Without this
-    the suite could not tell a correct gate from one that blocks every Modelo
-    390 export ever attempted.
+    Six partitions -- general, reducido and super-reducido, each over base and
+    cuota -- come off the live subview, and the reducido cuota tier carries the
+    three boxes the shortfall cases below draw on. Without this, a registry
+    change that dropped the split would make the refusal tests pass by never
+    reaching the gate at all.
     """
-    provider = _provider_with_partition(partitions=(_PARTITION,))
-    draft = _with_values(
-        _approved_modelo_390_registry_draft(),
-        {_TOTAL_CASILLA: Decimal("2520.50"), _BOX_A: Decimal("2100.50"), _BOX_B: Decimal("420.00")},
-    )
+    partitions = _real_provider().get_subview("390").rate_box_partitions
+
+    assert len(partitions) == 6
+    reducido = next(part for part in partitions if part.total_casilla_id == _REDUCIDO_TOTAL)
+    assert set(reducido.box_casilla_ids) >= {_BOX_10, _BOX_5}
+    assert reducido.rate_kinds == ("reduced",)
+
+
+def test_the_populated_fixture_exports_against_the_real_partitions(tmp_path: Path) -> None:
+    """Every tier's boxes reach its total, so the breakdown accounts for the whole.
+
+    The direction a refusal that fired unconditionally would fail, now measured
+    against registry data rather than a constructed partition. Without this the
+    suite could not tell a correct gate from one that blocks every Modelo 390
+    export ever attempted.
+    """
     output = tmp_path / "modelo-390.txt"
 
-    receipt = export_draft(draft, output_path=output, headers=_modelo_390_export_headers(), schema_provider=provider)
+    receipt = export_draft(
+        _approved_modelo_390_registry_draft(),
+        output_path=output,
+        headers=_modelo_390_export_headers(),
+        schema_provider=_real_provider(),
+    )
 
     assert output.exists()
     assert receipt.file_sha256
 
 
-def test_a_breakdown_short_of_its_total_is_refused_before_any_bytes(tmp_path: Path) -> None:
-    """The unaccounted 79.50 refuses the export, and no file is written.
+def test_blanking_one_rate_box_refuses_and_names_it(tmp_path: Path) -> None:
+    """The assertion that makes the fixture update safe rather than convenient.
 
-    The refusal must precede the write for the same reason the completeness gate
-    does: an operator handed a file believes they hold a filing artefact, and a
-    valid digest over structurally inconsistent bytes proves only that the bytes
-    are the bytes.
+    The shared fixture was changed to populate the box layer BECAUSE this gate
+    reddened it. If that change had made the fixture pass rather than made it
+    correct, this test would be green with the gate doing nothing: blanking the
+    5 % box drops 500.00 out of a 2100.50 tier, and the refusal must fire and
+    name the tier it fired on.
     """
-    provider = _provider_with_partition(partitions=(_PARTITION,))
-    draft = _with_values(
-        _approved_modelo_390_registry_draft(),
-        {_TOTAL_CASILLA: Decimal("2600.00"), _BOX_A: Decimal("2100.50"), _BOX_B: Decimal("420.00")},
-    )
+    draft = _with_values(_approved_modelo_390_registry_draft(), {_BOX_5: None})
     output = tmp_path / "modelo-390.txt"
 
     with pytest.raises(FilingExportError) as excinfo:
-        export_draft(draft, output_path=output, headers=_modelo_390_export_headers(), schema_provider=provider)
+        export_draft(
+            draft,
+            output_path=output,
+            headers=_modelo_390_export_headers(),
+            schema_provider=_real_provider(),
+        )
 
     message = str(excinfo.value)
-    assert "79.50" in message
-    assert _TOTAL_CASILLA in message
+    assert _REDUCIDO_TOTAL in message
+    assert "500.00" in message
+    assert _BOX_5 in message
     assert not output.exists()
+
+
+def test_boxes_short_of_their_total_refuse_by_the_exact_shortfall(tmp_path: Path) -> None:
+    """Genuinely short, not empty: the arithmetic, not merely the presence.
+
+    The gate's stated purpose is refusing a return whose rate boxes sum BELOW its
+    declared total, so a case where every box carries a value and the sum still
+    falls short is the one that exercises the subtraction. 1600.50 + 250.00
+    against a 2100.50 tier leaves 250.00 unaccounted, and that figure must appear
+    rather than a rounded or restated one.
+    """
+    draft = _with_values(_approved_modelo_390_registry_draft(), {_BOX_5: Decimal("250.00")})
+    output = tmp_path / "modelo-390.txt"
+
+    with pytest.raises(FilingExportError) as excinfo:
+        export_draft(
+            draft,
+            output_path=output,
+            headers=_modelo_390_export_headers(),
+            schema_provider=_real_provider(),
+        )
+
+    message = str(excinfo.value)
+    assert "leaving 250.00 unaccounted" in message
+    assert not output.exists()
+
+
+def test_boxes_exceeding_their_total_are_not_this_gate_s_condition(tmp_path: Path) -> None:
+    """Exact equality is not the invariant, and must not be read as one.
+
+    Boxes summing ABOVE their tier total is a different defect -- rate boxes
+    whose declared rates overlap, so one row lands in two -- and this gate
+    deliberately does not claim to detect it. Refusing here would name the wrong
+    condition and send the operator to a ledger repair that would not fix it. The
+    test exists so a later reader does not tighten the comparison to equality and
+    believe they are strengthening the gate.
+    """
+    draft = _with_values(_approved_modelo_390_registry_draft(), {_BOX_5: Decimal("900.00")})
+    output = tmp_path / "modelo-390.txt"
+
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers=_modelo_390_export_headers(),
+        schema_provider=_real_provider(),
+    )
+
+    assert output.exists()
+    assert receipt.file_sha256
 
 
 def test_a_revision_declaring_no_partition_is_untouched(tmp_path: Path) -> None:
     """The gate is a no-op wherever the two-layer shape is not declared.
 
-    Every revision in the tree is in this state until a modelo splits a tier
-    casilla, so this is the case that must not acquire a new refusal.
+    Every revision that has not split a tier casilla is in this state, so this is
+    the case that must not acquire a new refusal. The draft here is a genuinely
+    short one -- the 5 % box blanked -- so the pass is the absence of partitions
+    doing the work, not the absence of a shortfall.
     """
-    provider = _provider_with_partition(partitions=())
-    draft = _with_values(
-        _approved_modelo_390_registry_draft(),
-        {_TOTAL_CASILLA: Decimal("2600.00"), _BOX_A: Decimal("2100.50"), _BOX_B: Decimal("420.00")},
-    )
+    draft = _with_values(_approved_modelo_390_registry_draft(), {_BOX_5: None})
     output = tmp_path / "modelo-390.txt"
 
-    receipt = export_draft(draft, output_path=output, headers=_modelo_390_export_headers(), schema_provider=provider)
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers=_modelo_390_export_headers(),
+        schema_provider=_provider_without_partitions(),
+    )
 
     assert output.exists()
     assert receipt.file_sha256

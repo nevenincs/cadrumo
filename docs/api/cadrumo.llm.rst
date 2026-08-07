@@ -22,6 +22,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.llm._client
+   cadrumo.llm._column_role_mapping
    cadrumo.llm._errors
    cadrumo.llm._evidence_draft_text
    cadrumo.llm._evidence_draft_vision

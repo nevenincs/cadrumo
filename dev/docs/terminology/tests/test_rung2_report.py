@@ -1,4 +1,4 @@
-"""Real-behaviour checks for the strict P02.S07 standing-report contract."""
+"""Real-behaviour checks for the strict rung-2 standing-report contract."""
 
 from __future__ import annotations
 

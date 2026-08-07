@@ -28,7 +28,7 @@ from decimal import Decimal
 
 import pytest
 
-from ...core import Period
+from ...core import FieldOrigin, Period
 from ...domain.iva import EUMemberState, load_iva_rate_table
 from ...domain.transactions import statutory_activity_retencion_rates
 from .._invoice_extraction_prompt import (
@@ -37,11 +37,17 @@ from .._invoice_extraction_prompt import (
     default_extraction_period,
     template_numeric_literals,
 )
-from .._invoice_field_contract import INVOICE_FIELD_CONTRACTS, InvoiceFieldForm
+from .._invoice_field_contract import (
+    INVOICE_FIELD_CONTRACTS,
+    InvoiceFieldForm,
+    anchor_key_for_field,
+)
 from .._invoice_field_grounding import (
     _NUMERIC_GROUNDING_BY_FORM,
     _TEXT_GROUNDING_BY_FORM,
+    ExtractedFieldAnchors,
     ExtractedInvoiceFields,
+    ExtractedInvoiceResponse,
     ground_extracted_fields,
     parse_invoice_extraction_response,
 )
@@ -87,15 +93,17 @@ class TestTheTemplateCarriesNoRegulatoryLiteral:
 class TestCompiledEnumerationsComeFromTheRegistry:
     """The compiled numbers equal what the owning authority resolves for the period."""
 
-    def test_iva_rates_equal_every_registered_spanish_rate_overlapping_the_period(self) -> None:
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+    @pytest.mark.parametrize("period", [_ANNUAL_2026, _Q4_2024], ids=["annual-2026", "q4-2024"])
+    def test_iva_rates_equal_every_registered_spanish_rate_overlapping_the_period(self, period: Period) -> None:
+        """Asserted on two periods whose law differs, so one hardcoded tuple cannot satisfy both."""
+        compiled = build_invoice_extraction_prompt(period=period)
 
         expected = sorted(
             {
                 record.pct
                 for record in load_iva_rate_table()[EUMemberState.ES]
-                if record.effective_from <= _ANNUAL_2026.end_date
-                and (record.effective_until is None or record.effective_until >= _ANNUAL_2026.start_date)
+                if record.effective_from <= period.end_date
+                and (record.effective_until is None or record.effective_until >= period.start_date)
             },
         )
 
@@ -166,7 +174,11 @@ class TestContractParityAcrossBothDerivations:
 
         as_json = re.sub(r"<[^>]*>", "null", skeleton, flags=re.DOTALL)
 
-        assert json.loads(as_json) == dict.fromkeys(contract.field_name for contract in INVOICE_FIELD_CONTRACTS)
+        assert json.loads(as_json) == dict.fromkeys(
+            key
+            for contract in INVOICE_FIELD_CONTRACTS
+            for key in (contract.field_name, anchor_key_for_field(contract.field_name))
+        )
 
     def test_every_declared_form_has_exactly_one_grounding_validator(self) -> None:
         """The two typed tables cover the form enum exactly and without overlap."""
@@ -180,18 +192,21 @@ class TestContractParityAcrossBothDerivations:
 
     def test_the_grounder_grounds_exactly_the_declared_fields(self) -> None:
         """Every declared field reaches the draft; a field it cannot is caught here."""
-        populated = ExtractedInvoiceFields(
-            supplier_tax_id="B44531218",
-            invoice_number="2026-0142",
-            invoice_date="10/03/2026",
-            taxable_base="100,00",
-            iva_rate="21",
-            iva_amount="21,00",
-            grand_total="121,00",
-            currency="EUR",
+        populated = ExtractedInvoiceResponse(
+            fields=ExtractedInvoiceFields(
+                supplier_tax_id="B44531218",
+                invoice_number="2026-0142",
+                invoice_date="10/03/2026",
+                taxable_base="100,00",
+                iva_rate="21",
+                iva_amount="21,00",
+                grand_total="121,00",
+                currency="EUR",
+            ),
+            anchors=ExtractedFieldAnchors(),
         )
 
-        draft = ground_extracted_fields(populated, raw_text_length=10)
+        draft = ground_extracted_fields(populated, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER)
 
         for contract in INVOICE_FIELD_CONTRACTS:
             assert getattr(draft, contract.field_name) is not None, contract.field_name
@@ -202,30 +217,38 @@ class TestThePrintedPercentSignNoLongerLosesTheRate:
 
     The resolution is unit normalisation, not looser grounding. A percent sign is
     a unit marker, not a digit, so the number that remains is still the printed
-    one -- copied, never computed -- and the ANCHOR is untouched, which is what
-    ADR ``2026-08-07-unstructured-document-ingestion-adr`` D4 asks for.
+    one -- copied, never computed -- and the ANCHOR stays the untouched printed
+    text, distinct from the normalised numeric value.
     """
 
     @pytest.mark.parametrize("printed", ["21%", "21 %", "21percent", "21 pct", " 21% "])
     def test_a_rate_carrying_its_printed_unit_still_grounds(self, printed: str) -> None:
-        fields = ExtractedInvoiceFields(iva_rate=printed)
+        fields = ExtractedInvoiceResponse(
+            fields=ExtractedInvoiceFields(iva_rate=printed), anchors=ExtractedFieldAnchors()
+        )
 
-        assert ground_extracted_fields(fields, raw_text_length=10).iva_rate == Decimal("21")
+        assert ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER).iva_rate == Decimal(
+            "21"
+        )
 
     def test_the_anchor_keeps_the_printed_form_while_the_value_is_bare(self) -> None:
-        """Anchor and value become explicitly distinct, which serves D4 anchoring."""
-        fields = ExtractedInvoiceFields(iva_rate="21%")
+        """Anchor and value become explicitly distinct: the anchor keeps the printed text."""
+        fields = ExtractedInvoiceResponse(
+            fields=ExtractedInvoiceFields(iva_rate="21%"), anchors=ExtractedFieldAnchors()
+        )
 
-        draft = ground_extracted_fields(fields, raw_text_length=10)
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER)
 
-        assert fields.iva_rate == "21%"
+        assert fields.fields.iva_rate == "21%"
         assert draft.iva_rate == Decimal("21")
 
     def test_a_percent_sign_on_a_monetary_amount_is_still_a_misread(self) -> None:
         """The tolerance is scoped to the rate form; an amount is not a percentage."""
-        fields = ExtractedInvoiceFields(taxable_base="100,00%", grand_total="121%")
+        fields = ExtractedInvoiceResponse(
+            fields=ExtractedInvoiceFields(taxable_base="100,00%", grand_total="121%"), anchors=ExtractedFieldAnchors()
+        )
 
-        draft = ground_extracted_fields(fields, raw_text_length=10)
+        draft = ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER)
 
         assert draft.taxable_base is None
         assert draft.grand_total is None
@@ -233,9 +256,11 @@ class TestThePrintedPercentSignNoLongerLosesTheRate:
     @pytest.mark.parametrize("printed", ["21%%", "%21", "21% de IVA", "twenty-one percent", "%"])
     def test_a_rate_that_is_not_merely_unit_suffixed_still_drops(self, printed: str) -> None:
         """Exactly one trailing unit is stripped; anything else fails the authority."""
-        fields = ExtractedInvoiceFields(iva_rate=printed)
+        fields = ExtractedInvoiceResponse(
+            fields=ExtractedInvoiceFields(iva_rate=printed), anchors=ExtractedFieldAnchors()
+        )
 
-        assert ground_extracted_fields(fields, raw_text_length=10).iva_rate is None
+        assert ground_extracted_fields(fields, raw_text_length=10, origin=FieldOrigin.TEXT_LAYER).iva_rate is None
 
 
 class TestTheSafetyPropertiesSurviveCompilation:
@@ -300,7 +325,11 @@ class TestCannedResponsesStillDropFabricatedValues:
             },
         )
 
-        draft = ground_extracted_fields(parse_invoice_extraction_response(response), raw_text_length=10)
+        draft = ground_extracted_fields(
+            parse_invoice_extraction_response(response),
+            raw_text_length=10,
+            origin=FieldOrigin.TEXT_LAYER,
+        )
 
         for contract in INVOICE_FIELD_CONTRACTS:
             assert getattr(draft, contract.field_name) is None, contract.field_name
@@ -308,7 +337,11 @@ class TestCannedResponsesStillDropFabricatedValues:
     def test_an_ambiguous_thousands_reading_is_dropped_rather_than_chosen(self) -> None:
         response = json.dumps({"taxable_base": "1.234", "grand_total": "121,00"})
 
-        draft = ground_extracted_fields(parse_invoice_extraction_response(response), raw_text_length=10)
+        draft = ground_extracted_fields(
+            parse_invoice_extraction_response(response),
+            raw_text_length=10,
+            origin=FieldOrigin.TEXT_LAYER,
+        )
 
         assert draft.taxable_base is None
         assert draft.grand_total == Decimal("121")

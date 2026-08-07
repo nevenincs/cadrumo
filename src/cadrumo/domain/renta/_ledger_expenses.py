@@ -416,7 +416,14 @@ def evaluate_renta_deductibility(
     elif rule.kind is ProportionalityKind.REQUIRES_EXCLUSIVE_USE:
         if context.exclusive_use_confirmed:
             applied_ratio = Decimal("1")
-            deductible_abs = fact.gross_amount
+            # The confirmation gates WHETHER the cost is deductible, never what
+            # the deductible cost is, so this reads the same basis its five
+            # sibling branches do. Deducting the IVA-inclusive gross here would
+            # claim the input IVA a second time: the activity already recovers
+            # it as cuota soportada on Modelo 303, and only the share it has no
+            # right to deduct is real acquisition cost (PGC NRV 12.ª) -- which
+            # is exactly what ``_deductible_basis_amount`` folds in.
+            deductible_abs = deductible_basis
         else:
             status = RentaDeductibilityStatus.INELIGIBLE
             reason = "exclusive use not confirmed"

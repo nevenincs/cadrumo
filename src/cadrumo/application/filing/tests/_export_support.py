@@ -100,8 +100,14 @@ _M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA = _casilla_id("iva.anual.repercutido.su
 # box. A draft populating a tier total while leaving its boxes empty declares a
 # breakdown that does not account for its own total, which the export gate
 # refuses -- so a coherent post-split fixture has to carry both layers.
+#
+# The reducido tier is deliberately split across TWO of its three boxes. What
+# the gate reads is the SUM against the tier total; a fixture giving every tier
+# exactly one box would let per-box exact equality read as the invariant, and it
+# is not one.
 _M390_REPERCUTIDO_TIPO_21_CUOTA_CASILLA = _casilla_id("iva.anual.repercutido.tipo-21.cuota")
 _M390_REPERCUTIDO_TIPO_10_CUOTA_CASILLA = _casilla_id("iva.anual.repercutido.tipo-10.cuota")
+_M390_REPERCUTIDO_TIPO_5_CUOTA_CASILLA = _casilla_id("iva.anual.repercutido.tipo-5.cuota")
 _M390_REPERCUTIDO_TIPO_4_CUOTA_CASILLA = _casilla_id("iva.anual.repercutido.tipo-4.cuota")
 _M390_SOPORTADO_INTERIORES_CASILLA = _casilla_id("iva.anual.soportado.interiores")
 _M390_SOPORTADO_IMPORTACIONES_CASILLA = _casilla_id("iva.anual.soportado.importaciones")
@@ -624,7 +630,8 @@ def _approved_modelo_390_registry_draft():
             _M390_REPERCUTIDO_REDUCIDO_CASILLA: Decimal("2100.50"),
             _M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA: Decimal("420.00"),
             _M390_REPERCUTIDO_TIPO_21_CUOTA_CASILLA: Decimal("18000.00"),
-            _M390_REPERCUTIDO_TIPO_10_CUOTA_CASILLA: Decimal("2100.50"),
+            _M390_REPERCUTIDO_TIPO_10_CUOTA_CASILLA: Decimal("1600.50"),
+            _M390_REPERCUTIDO_TIPO_5_CUOTA_CASILLA: Decimal("500.00"),
             _M390_REPERCUTIDO_TIPO_4_CUOTA_CASILLA: Decimal("420.00"),
             _M390_SOPORTADO_INTERIORES_CASILLA: Decimal("9800.25"),
             _M390_SOPORTADO_IMPORTACIONES_CASILLA: Decimal("650.00"),

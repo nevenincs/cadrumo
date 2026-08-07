@@ -9,7 +9,6 @@ from typing import Annotated
 import typer
 
 from ..core.external_constants import OutputLanguage
-from ..core.i18n import tr
 from ._status import CatalogueStatusRecord, catalogue_status
 from .manager import (
     LocaleAuditResult,
@@ -19,7 +18,7 @@ from .manager import (
     LocalePlaceholderMismatch,
 )
 
-app = typer.Typer(name="locales", help=tr("cli.locales.app_help"), no_args_is_help=True)
+app = typer.Typer(name="locales", help="Audit and scaffold locale catalogues", no_args_is_help=True)
 
 
 def _default_manager() -> LocaleManager:
@@ -48,21 +47,17 @@ def _echo_audit(result: LocaleAuditResult) -> None:
 def _echo_file_audit(file_result: LocaleFileAudit) -> None:
     """Echo one catalogue's key-set and scalar findings."""
     if file_result.ok:
-        typer.echo(tr("locales.cli.audit.file_ok", locale_file=file_result.locale_file))
+        typer.echo(f"{file_result.locale_file}: ok")
         return
     if file_result.codebase_missing or file_result.codebase_extra:
         typer.echo(
-            tr(
-                "locales.cli.audit.file_drift",
-                locale_file=file_result.locale_file,
-                missing_count=len(file_result.codebase_missing),
-                extra_count=len(file_result.codebase_extra),
-            ),
+            f"{file_result.locale_file}: missing={len(file_result.codebase_missing)} "
+            f"extra={len(file_result.codebase_extra)}",
         )
     for key in file_result.codebase_missing:
-        typer.echo(tr("locales.cli.audit.key_missing", key=key))
+        typer.echo(f"  missing {key}")
     for key in file_result.codebase_extra:
-        typer.echo(tr("locales.cli.audit.key_extra", key=key))
+        typer.echo(f"  extra {key}")
     for key in file_result.inter_locale_missing:
         typer.echo(f"inter-locale missing file={file_result.locale_file} key={key}")
     for violation in file_result.scalar_violations:
@@ -111,7 +106,7 @@ def scaffold(
     ctx: typer.Context,
     check: Annotated[
         bool,
-        typer.Option("--check", help=tr("cli.locales.scaffold_check_help")),
+        typer.Option("--check", help="Report drift without writing locale files"),
     ] = False,
 ) -> None:
     """Update locale files so they match concrete codebase translation keys."""
@@ -120,22 +115,22 @@ def scaffold(
         return
     manager = ctx.obj if isinstance(ctx.obj, LocaleManager) else _default_manager()
     manager.scaffold()
-    typer.echo(tr("locales.cli.scaffold_updated"))
+    typer.echo("locale scaffold updated")
 
 
 @app.command("set")
 def set_value(
     locale: Annotated[
         str,
-        typer.Argument(help=tr("cli.locales.set_locale_help", default="Locale code to update.")),
+        typer.Argument(help="Locale code to update (e.g. en, es, ca)."),
     ],
     key: Annotated[
         str,
-        typer.Argument(help=tr("cli.locales.set_key_help", default="Dotted locale key to update.")),
+        typer.Argument(help="Dotted locale key to set."),
     ],
     value: Annotated[
         str,
-        typer.Argument(help=tr("cli.locales.set_value_help", default="Replacement locale value.")),
+        typer.Argument(help="Replacement locale value."),
     ],
 ) -> None:
     """Set one locale string leaf."""
@@ -143,7 +138,7 @@ def set_value(
         path = _default_manager().set_locale_value(locale, key, value)
     except LocaleError as exc:
         raise typer.BadParameter(str(exc)) from exc
-    typer.echo(tr("locales.cli.set.updated", locale_file=path.name, key=key))
+    typer.echo(f"updated {path.name}:{key}")
 
 
 @app.command("set-batch")
@@ -151,10 +146,7 @@ def set_batch(
     manifest: Annotated[
         Path,
         typer.Argument(
-            help=tr(
-                "cli.locales.set_batch_manifest_help",
-                default="JSON object mapping locale codes to dotted-key scalar maps.",
-            ),
+            help="JSON object mapping locale codes to dotted-key scalar maps.",
         ),
     ],
 ) -> None:
@@ -186,19 +178,16 @@ def set_batch(
 def allow_identical(
     locale: Annotated[
         str,
-        typer.Argument(help=tr("cli.locales.allow_identical_locale_help", default="Locale code to update.")),
+        typer.Argument(help="Locale code to update."),
     ],
     key: Annotated[
         str,
-        typer.Argument(help=tr("cli.locales.allow_identical_key_help", default="Dotted locale key to exempt.")),
+        typer.Argument(help="Dotted locale key to exempt."),
     ],
     reason: Annotated[
         str,
         typer.Argument(
-            help=tr(
-                "cli.locales.allow_identical_reason_help",
-                default="Why this string is legitimately identical to its canonical source.",
-            )
+            help="Why this string is legitimately identical to its canonical source.",
         ),
     ],
 ) -> None:
@@ -207,9 +196,7 @@ def allow_identical(
         path = _default_manager().allow_identical(locale, key, reason)
     except LocaleError as exc:
         raise typer.BadParameter(str(exc)) from exc
-    # ``locale`` is tr()'s reserved rendering-locale meta-kwarg, so the
-    # catalogue token for the exempted locale must travel as locale_code.
-    typer.echo(tr("locales.cli.allow_identical.recorded", allowlist_file=path.name, locale_code=locale, key=key))
+    typer.echo(f"recorded {path.name}:{locale}:{key}")
 
 
 @app.command("canonicalize-product-identity")
@@ -217,7 +204,7 @@ def canonicalize_product_identity(
     ctx: typer.Context,
     locale: Annotated[
         OutputLanguage | None,
-        typer.Option("--locale", help=tr("cli.locales.canonicalize_product_identity.locale_help")),
+        typer.Option("--locale", help="Update only this supported locale catalogue."),
     ] = None,
 ) -> None:
     """Normalize stale command prefixes in selected catalogues."""
@@ -233,11 +220,11 @@ def canonicalize_product_identity(
 def remove_value(
     locale: Annotated[
         str,
-        typer.Argument(help=tr("cli.locales.remove_locale_help", default="Locale code to update.")),
+        typer.Argument(help="Locale code to update."),
     ],
     key: Annotated[
         str,
-        typer.Argument(help=tr("cli.locales.remove_key_help", default="Dotted locale key to remove.")),
+        typer.Argument(help="Dotted locale key to remove."),
     ],
 ) -> None:
     """Remove one locale string leaf."""
@@ -245,7 +232,7 @@ def remove_value(
         path = _default_manager().remove_locale_value(locale, key)
     except LocaleError as exc:
         raise typer.BadParameter(str(exc)) from exc
-    typer.echo(tr("locales.cli.remove.removed", locale_file=path.name, key=key))
+    typer.echo(f"removed {path.name}:{key}")
 
 
 __all__ = ["app"]

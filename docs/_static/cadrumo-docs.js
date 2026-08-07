@@ -1492,8 +1492,8 @@
      * user-doc page (`doc`) floats above a dev-machinery page (`technical`)
      * WITHIN the full-text band. Every value sits in (0, 1) — comfortably below
      * the card band (tierRank 1 + weight, ≥ 1.7) — so cards always lead; the
-     * order mirrors the shipped weight ladder (doc > modelo > casilla > cli >
-     * technical). This CONSUMES the shipped class; it never re-derives it. */
+     * order mirrors the shipped weight ladder (doc > modelo > casilla > legal >
+     * cli > technical). This CONSUMES the shipped class; it never re-derives it. */
     var PAGE_BAND_RANK = {
       doc: 0.4,
       modelo: 0.35,

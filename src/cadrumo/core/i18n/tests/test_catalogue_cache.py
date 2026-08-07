@@ -186,3 +186,61 @@ def test_end_to_end_tr_self_heals_across_all_three_corruption_modes(tmp_path: Pa
         # memo scoped to this test's now-torn-down tmp_path into a later test
         # in the same worker process.
         _render._packaged_locale_map.cache_clear()
+
+
+def test_tr_survives_a_storage_root_settings_cannot_construct_over(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``tr()`` must never fail because the cache's location cannot be resolved.
+
+    Regression pin: the cache's location is resolved through
+    ``storage_path()``, which constructs a full ``Settings()`` -- a
+    dependency the original (pre-cache) ``tr()`` never had, since it only
+    ever read a packaged resource via ``importlib.resources``. ``Settings()``
+    construction can raise for reasons that have nothing to do with
+    translation (here: a real retired-product-state ``aeat.db`` under the
+    active storage root, which ``core._config_state_root.refuse_former_product_database``
+    correctly refuses). Because ``tr()`` is called from a MODULE-LEVEL
+    statement in ``entrypoints/cli/__init__.py`` (``help=tr(...)``), before
+    the CLI's own command-dispatch error boundary is active, an unguarded
+    exception here would crash the whole process, including plain
+    ``--help`` -- confirmed live via
+    ``entrypoints/cli/tests/test_root_help_shape.py``'s subprocess-level
+    fixtures. This is the fast, direct-call counterpart to that proof.
+
+    Uses ``monkeypatch.setenv`` + ``_constructed_settings.cache_clear()``
+    rather than ``override_settings`` -- the latter constructs a
+    ``Settings`` at its own ``__enter__`` (to validate the override), which
+    would raise before this test ever reaches its assertion. The env var is
+    exactly what the real CLI subprocess fixture sets.
+    """
+    import sqlite3
+
+    from ..._config_state_root import FormerProductStateError
+    from ...config import Settings, _constructed_settings
+    from ...i18n import tr
+    from .. import _render
+
+    former_root = tmp_path / "former-product-state"
+    former_root.mkdir()
+    with sqlite3.connect(former_root / "aeat.db"):
+        pass
+
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(former_root))
+    _constructed_settings.cache_clear()
+    _render._packaged_locale_map.cache_clear()
+    try:
+        # Confirm the fixture is real: constructing Settings() directly
+        # against this root does raise, so the test proves tr() survives a
+        # genuine failure, not an unreachable one.
+        with pytest.raises(FormerProductStateError):
+            Settings()
+
+        rendered = tr("cli.root.app_help", locale="es")
+    finally:
+        _constructed_settings.cache_clear()
+        _render._packaged_locale_map.cache_clear()
+
+    assert rendered
+    assert rendered != "cli.root.app_help", "tr() must return the real translated string, not a key-echo fallback"

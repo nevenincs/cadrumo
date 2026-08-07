@@ -1,0 +1,13 @@
+{
+  "provenance": "synthetic_generated",
+  "kind": "pdf_invoice_text_layer",
+  "source": "cadrumo-evidence-corpus",
+  "corpus_doc_id": "OP-PUR-COM-2026-0005_layout-minimal",
+  "corpus_path": "operator/corpus/purchase/pdf/COM-2026-0005_layout-minimal.pdf",
+  "corpus_manifest_sha256": "e2db6a499f6f0ffafa4cf44084f433962dd3f8a0f6f0a65facaf7df07bb38593",
+  "licence": "CC0-1.0",
+  "producer": "ReportLab PDF Library - (opensource)",
+  "notes": "The deliberately-defective control document, in its text-layer rendering; the camera-photo sidecar covers the same document photographed. Declared synthetic_generated because the corpus manifest attests origin=generated, synthetic=true for these exact bytes -- NOT because of the /Producer string, which is the generic ReportLab signature and is recorded here so the gate can bind the claim to the file. The bytes carry no cadrumo aeat-test-fixture-generator signature: this document was rendered by the external corpus tooling, not by an in-tree generator, so the signature discriminator does not apply and must not be forced. The content address is the physical evidence instead. FOUR DEFECTS ARE DELIBERATE and must never be repaired or normalised: the CIF B1234567X fails its control character, the invoice number is SIN-NUMERO, the document prints no per-rate breakdown, and the printed total 890,00 disagrees with base 766,30 plus cuota 160,92 = 927,22. This is the corpus's only proof that the grounding stage can report a failure at all, so anything reporting it clean has a gap. printed_total and grand_total are distinct fields throughout this corpus and agree everywhere except here.",
+  "sha256": "ffea3053adbc998c850ac3253b10b929ba2594b580b39a5c546eaa71aea984d2",
+  "bytes": 85457
+}

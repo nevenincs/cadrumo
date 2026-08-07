@@ -108,7 +108,14 @@ def _invoice(
                 quantity=Decimal("1"),
                 unit_price=base_total,
                 subtotal=base_total,
-                iva_rate=IvaRate.RATE_0,
+                # EXEMPT, not RATE_0. An intra-community supply is exempt under
+                # LIVA art. 25 -- no IVA applies to it. RATE_0 means something
+                # different: that a zero-PERCENT tier was charged, which the
+                # invoice validates against the rate table on the devengo date.
+                # Spain has no standing zero tier, so RATE_0 here asserted a
+                # rate that was not in force and refused every fixture dated
+                # outside the 2024 temporary food window.
+                iva_rate=IvaRate.EXEMPT,
                 iva_amount=Decimal("0"),
             ),
         ),
@@ -929,13 +936,13 @@ def test_an_invoice_naming_another_bucket_is_still_excluded(
 
 
 # ---------------------------------------------------------------------------
-# Capability-parity proof (invoice-canonical-structure P01.S31)
+# Capability-parity proof
 #
 # One bucket exercising the capabilities that reach a declaration, projected
 # through the canonical path, asserted at MODELO-OUTPUT level rather than at
-# fact level (which P01.S01 already covers).
+# fact level (already covered elsewhere).
 #
-# The Step's criterion also named M303 and M390. Measured at HEAD, neither
+# The criterion also named M303 and M390. Measured at HEAD, neither
 # modelo declares a single invoice-sourced binding -- only M347 (one fragment)
 # and M349 (three) do. An equality assertion on those two modelos would
 # therefore compare zero against zero and pass by construction, proving
@@ -1149,7 +1156,7 @@ def test_the_intra_community_service_categories_exist_and_map_to_their_claves() 
 
 
 # ---------------------------------------------------------------------------
-# Decomposition parity across the fold (invoice-canonical-structure P01.S33)
+# Decomposition parity across the fold
 #
 # The decomposition contract is calc-facing and has only ever seen natively
 # rich records. The fold routes a new population into it, so what happens to a
@@ -1393,3 +1400,54 @@ def test_a_stated_operation_type_is_never_disclosed_as_inferred(
     repository.save(InvoiceCatalogue.from_invoices((stated, _third_country_import())))
 
     assert _inferred_clave_reasons(_m349_resolution(repository)) == []
+
+
+def test_an_unconverted_foreign_invoice_is_excluded_but_reported(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """Excluding the amount is right; excluding it in silence is not.
+
+    A foreign-currency invoice with no resolved euro rate must never be declared
+    at its face value -- that part is settled, and the sibling test above pins
+    it. But the OPERATION is still real and still declarable: a GBP
+    intracommunity supply to a German customer belongs on the recapitulativa
+    whatever the euro figure turns out to be.
+
+    Dropping it silently leaves the operator filing a Modelo 349 that omits an
+    operation, with nothing on any surface saying so. The resolver's own
+    incoherence advisory states the principle it must follow here: a missing
+    intracomunitaria is an under-declaration whether it was dropped by a
+    contradiction or by silence.
+    """
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    unconverted = _invoice(
+        bucket_id=_BUCKET_ID,
+        invoice_number="F-2026-012",
+        issued_at=date(2026, 1, 15),
+        counterparty_tax_id="DE123456789",
+        base_total=Decimal("1000.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        currency="GBP",
+    )
+    repository.save(InvoiceCatalogue.from_invoices((unconverted,)))
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+
+    resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="349",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    assert resolution.diagnostics, (
+        "the invoice was withheld from Modelo 349 with no advisory: the operator "
+        "files a recapitulativa missing a real operation and is never told"
+    )
+    reported = [d for d in resolution.diagnostics if unconverted.invoice_id in d.source_ref]
+    assert reported, f"no advisory names the withheld invoice: {[d.source_ref for d in resolution.diagnostics]}"
+    # The advisory has to say what to DO about it. An operator who cannot act on
+    # the message is no better off than one who never saw it.
+    assert reported[0].remedy, "the advisory names the problem but not the remedy"

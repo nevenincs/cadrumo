@@ -79,7 +79,7 @@ class RankingTier(StrEnum):
 
 
 #: The single declared user-first base-weight ladder, keyed by display class
-#: (ADR ``2026-07-15-docs-terminology-search-adr`` D8). Highest sorts first:
+#: Highest sorts first:
 #: general-fact concept cards (``DOC``) lead, then modelo document cards, then
 #: casilla rows, then CLI records, and full-text ``TECHNICAL`` (api / dev
 #: machinery) pages rank last. This amends the parent ADR's per-kind D5 ladder
@@ -105,7 +105,7 @@ _DISPLAY_CLASS_BASE_WEIGHT: dict[ResultDisplayClass, float] = {
 #: reweight path (``_resolution._reweight``) that keys on record kind rather
 #: than the fully-derived display class. CONCEPT collapses to the general-fact
 #: ``DOC`` band (a per-hit reweight has no Handbook domain to split on), legal
-#: provisions use the same user-facing ``DOC`` band, and a
+#: provisions carry their own ``LEGAL`` band beneath casilla, and a
 #: full-text PAGE hit collapses to the ``TECHNICAL`` floor. Derived so the
 #: per-kind values can never drift from the one declared table.
 _KIND_TO_DISPLAY_CLASS: dict[SearchRecordKind, ResultDisplayClass] = {
@@ -113,7 +113,7 @@ _KIND_TO_DISPLAY_CLASS: dict[SearchRecordKind, ResultDisplayClass] = {
     SearchRecordKind.CASILLA: ResultDisplayClass.CASILLA,
     SearchRecordKind.CLI: ResultDisplayClass.CLI,
     SearchRecordKind.PAGE: ResultDisplayClass.TECHNICAL,
-    SearchRecordKind.LEGAL: ResultDisplayClass.DOC,
+    SearchRecordKind.LEGAL: ResultDisplayClass.LEGAL,
 }
 
 _KIND_BASE_WEIGHT: dict[SearchRecordKind, float] = {
@@ -463,7 +463,7 @@ def _from_legal(record: LegalSearchRecord, sweep_score: float | None) -> SearchR
         # page/anchor authority is the same one that emits the destination;
         # the BOE permalink remains destination provenance in typed metadata.
         target=record.target,
-        ranking_weight=normalise_display_class_weight(ResultDisplayClass.DOC, sweep_score),
+        ranking_weight=normalise_display_class_weight(ResultDisplayClass.LEGAL, sweep_score),
         search_aliases=record.search_aliases,
         metadata=SearchRecordMetadata(
             legal_id=record.legal_id,

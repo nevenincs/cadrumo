@@ -492,7 +492,36 @@ def _packaged_locale_map(locale: str) -> dict[str, str | None]:
     raw_source = resource.read_bytes()
     source_digest = compute_source_digest(raw_source)
 
-    cached = read_catalogue_cache(locale, source_digest=source_digest)
+    # The cache is a pure optimisation over a lookup that must never fail:
+    # `tr()` is called from a MODULE-LEVEL statement in
+    # entrypoints/cli/__init__.py (`help=tr("cli.root.app_help")`), which
+    # runs at import time, before the CLI's own command-dispatch error
+    # boundary (run_standalone_with_error_contract) is active. Resolving the
+    # cache's on-disk location depends on Settings(), which can raise for
+    # reasons that have nothing to do with translation (observed:
+    # FormerProductStateError when the storage root holds a retired
+    # database) -- an exception here would escape uncaught and crash the
+    # whole process, including plain `--help`. Catch broadly and fall back
+    # to the always-available packaged-resource parse rather than risk that;
+    # this restores the can't-fail property `tr()` had before the cache
+    # existed, when it only ever read a packaged resource directly.
+    #
+    # NOTE for a future reader: this is a narrow fix, not a structural one.
+    # The module-level `help=tr(...)` call is still unprotected by the CLI's
+    # error boundary for ANY other exception a future `tr()` dependency
+    # might raise. Moving the boundary earlier (wrapping module import, not
+    # just command dispatch) is a deliberate, separate decision -- it
+    # touches every entrypoint and startup path -- and should not be made
+    # incidentally while fixing this one call site.
+    try:
+        cached = read_catalogue_cache(locale, source_digest=source_digest)
+    except Exception:
+        _log.debug(
+            "Locale catalogue cache lookup failed for %r; falling back to the packaged YAML parse",
+            locale,
+            exc_info=True,
+        )
+        cached = None
     if cached is not None:
         return cached
 
@@ -501,7 +530,14 @@ def _packaged_locale_map(locale: str) -> dict[str, str | None]:
         locale,
     )
     flat = _flatten_translations(_load_locale_yaml(StringIO(raw_source.decode("utf-8"))))
-    write_catalogue_cache(locale, source_digest=source_digest, flat=flat)
+    try:
+        write_catalogue_cache(locale, source_digest=source_digest, flat=flat)
+    except Exception:
+        _log.debug(
+            "Locale catalogue cache write failed for %r; continuing without a warm cache",
+            locale,
+            exc_info=True,
+        )
     return flat
 
 

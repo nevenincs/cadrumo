@@ -43,6 +43,7 @@ import pytest
 from .._edit import (
     EditClause,
     _coerce_decimal,
+    _coerce_invoice_amount,
     _coerce_invoice_iva_rate,
     _coerce_invoice_retention_rate,
     _coerce_path,
@@ -239,3 +240,42 @@ def test_ensure_known_keys_accepts_allowed_keys_and_rejects_scope_tagged_unknown
 
     assert exc_info.value.reason == "unknown-key-ledger"
     assert "nonsense=value" in exc_info.value.raw_token
+
+
+def test_an_invoice_money_amount_refuses_the_ambiguous_thousands_shape() -> None:
+    """``--set iva.amount=1.000`` is one euro or one thousand and must not be guessed.
+
+    The invoice IVA and retention AMOUNTS reached ``coerce_decimal``, which
+    RESOLVES that text as one euro instead of refusing it, while the invoice
+    BASE eleven lines away already used the canonical grammar. Within one file
+    the base was protected and the amounts were not, so an operator meaning a
+    thousand euros wrote one onto an invoice feeding IVA aggregation, silently.
+    """
+    for scope in ("invoice-iva-amount", "invoice-retention-amount"):
+        with pytest.raises(EditParseError):
+            _coerce_invoice_amount(EditClause(key="iva.amount", raw_value="1.000"), scope=scope)
+
+
+def test_an_unambiguous_invoice_money_amount_still_parses() -> None:
+    """Anti-over-refusal control: the guard is a shape rule, not a precision rule.
+
+    Without this, tightening the amounts to refuse everything would satisfy the
+    test above. ``1000.00`` is the value the operator meant, and ``0.50`` has a
+    lead of zero that was never a thousands group.
+    """
+    clause = EditClause(key="iva.amount", raw_value="1000.00")
+    assert _coerce_invoice_amount(clause, scope="invoice-iva-amount") == Decimal("1000.00")
+    half = EditClause(key="retention.amount", raw_value="0.50")
+    assert _coerce_invoice_amount(half, scope="invoice-retention-amount") == Decimal("0.50")
+
+
+def test_an_invoice_rate_keeps_the_tolerant_helper() -> None:
+    """The severity split, pinned so a later sweep does not "consistency"-fix it.
+
+    A trailing zero cannot misread a rate: ``12.500`` and ``12.5`` are the same
+    percentage, where on a magnitude the same text is a thousandfold error. The
+    rate path therefore still accepts a three-decimal form, and pinning it
+    states that this is a decision rather than an oversight.
+    """
+    clause = EditClause(key="retention.rate", raw_value="15.000")
+    assert _coerce_decimal(clause, scope="invoice-retention-rate") == Decimal("15.000")

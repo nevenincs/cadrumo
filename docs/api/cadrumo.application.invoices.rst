@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.invoices._bulk_import
+   cadrumo.application.invoices._bulk_import_columns
    cadrumo.application.invoices._creation
    cadrumo.application.invoices._issuer_establishment
    cadrumo.application.invoices._lifecycle

@@ -21,11 +21,13 @@ guards share one registry.
 from __future__ import annotations
 
 import contextlib
+import json
 import os
 import sys
-from collections.abc import Mapping
+import time
+from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import cast
+from typing import TypedDict, cast
 
 import httpx
 from pydantic import BaseModel, Field
@@ -35,11 +37,20 @@ from ..core import (
     STRICT_FROZEN_CONFIG,
     AcceleratorKind,
     ContentionCause,
+    DeploymentLicencePosture,
     ExternalPathRole,
+    HardwareTier,
+    ModelCandidate,
+    ModelRole,
+    ModelSelectionAdvisory,
     OptionalExtra,
+    candidates_for_role,
+    hardware_tier_for_free_bytes,
+    model_candidate,
     optional_extra_available,
 )
 from ..core.config import Settings, load_settings
+from ..core.i18n import tr
 
 __all__ = [
     "OPTIONAL_EXTRAS",
@@ -50,11 +61,17 @@ __all__ = [
     "ContentionSnapshot",
     "DependencyStatus",
     "HardwareProfile",
+    "HardwareTier",
+    "ModelSelection",
     "OptionalExtra",
+    "PullOutcome",
+    "PullProgress",
+    "ReadinessOutcome",
     "RuntimeResident",
     "SystemMemoryReading",
     "UnloadOutcome",
     "assess_model_load_contention",
+    "binding_free_bytes",
     "cadrumo_selected_models",
     "probe_hardware_profile",
     "probe_local_inference_hardware",
@@ -63,13 +80,26 @@ __all__ = [
     "probe_optional_extra",
     "probe_optional_extras",
     "probe_playwright_browser",
+    "pull_runtime_model",
     "read_accelerator",
     "read_runtime_residents",
     "read_system_memory",
+    "select_model_for_role",
     "unload_runtime_model",
+    "verify_model_ready",
 ]
 
 _OLLAMA_PROBE_TIMEOUT_S = 2.0
+
+# A model fetch is a multi-gigabyte download over an operator's connection, so
+# it gets its own generous bound rather than the 2s probe timeout, which exists
+# to keep a doctor row responsive and would abort every real pull.
+_OLLAMA_PULL_TIMEOUT_S = 3600.0
+
+# Readiness asks whether a LOADED model answers. A cold load of a small vision
+# model is tens of seconds on this class of hardware, so the bound is generous
+# enough not to report a working model as unready while still bounded.
+_OLLAMA_READINESS_TIMEOUT_S = 120.0
 
 
 class DependencyStatus(BaseModel):
@@ -396,9 +426,9 @@ def probe_model_runtime_hardware_floor(
                 f"{resolved.cadrumo_llm_ollama_vision_model!r}"
             ),
             remediation=(
-                "use a smaller local vision model (set cadrumo_llm_ollama_vision_model to "
-                "moondream for low-memory hardware), or lower "
-                "cadrumo_llm_model_runtime_memory_floor_bytes if this machine is known good"
+                "resolve the vision role against this machine with select_model_for_role, which "
+                "names the weakest catalogued candidate that still clears the capability bar, or "
+                "lower cadrumo_llm_model_runtime_memory_floor_bytes if this machine is known good"
             ),
         )
     return DependencyStatus(
@@ -631,6 +661,27 @@ def probe_hardware_profile(
     )
 
 
+def binding_free_bytes(profile: HardwareProfile) -> int | None:
+    """Return free memory in the arena that actually binds a model load, or ``None``.
+
+    The one place the arena rule lives, shared by
+    :func:`assess_model_load_contention` (which acts on it) and
+    :func:`select_model_for_role` (which plans against it), so the two can never
+    disagree about which figure binds. A device load is bound by device memory,
+    a measured-accelerator-free machine by system memory, and an *unmeasurable*
+    accelerator by nothing that may be trusted -- which is ``None``, and is why
+    :attr:`~core.AcceleratorKind.UNKNOWN` does not fall through to system
+    memory: a card this build cannot read may still be holding the memory a
+    load needs.
+    """
+    kind = profile.accelerator.kind
+    if kind is AcceleratorKind.NVIDIA_CUDA:
+        return profile.free_vram_bytes
+    if kind is AcceleratorKind.NONE:
+        return profile.memory.free_bytes
+    return None
+
+
 def _gib(value: int | None) -> str:
     """Render a byte count as GiB for an operator-facing row, or ``unverified`` when unknown."""
     return "unverified" if value is None else f"{value / 1024**3:.1f} GiB"
@@ -671,6 +722,280 @@ def probe_local_inference_hardware(profile: HardwareProfile | None = None) -> De
             ),
         )
     return DependencyStatus(service="local-inference-hardware", available=True, detail=detail)
+
+
+class ModelSelection(BaseModel):
+    """Which model a role resolved to, and everything the operator should know about it.
+
+    A *planning* result, not an admission decision. It answers "which model
+    should this role use on this machine"; whether that model may be loaded
+    right now is :func:`assess_model_load_contention`'s question, asked later
+    and against readings taken at that moment. Keeping the two apart is what
+    lets selection stay useful on a machine whose headroom is momentarily gone.
+
+    ``selected`` false means no catalogued candidate cleared the bars, and
+    ``runtime_id`` is then ``None`` rather than a fallback -- naming a model
+    that cannot serve the role would push the failure into inference, where it
+    surfaces as a timeout instead of as a refusal.
+
+    ``advisories`` is never empty for an override that carries a licence,
+    context or headroom concern. An override is honoured, because the operator's
+    explicit setting outranks the catalogue's preference -- but it is never
+    honoured silently.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    role: ModelRole
+    runtime_id: str | None = None
+    candidate: ModelCandidate | None = None
+    posture: DeploymentLicencePosture
+    tier: HardwareTier
+    binding_free_bytes: int | None = Field(default=None, ge=0)
+    required_context_tokens: int = Field(gt=0)
+    safety_margin_bytes: int = Field(ge=0)
+    override_applied: bool = False
+    selected: bool
+    advisories: tuple[ModelSelectionAdvisory, ...] = ()
+    detail: str = ""
+    remediation: str = ""
+
+    @property
+    def licence_advisory(self) -> str:
+        """Return the localised non-commercial licence advisory, or an empty string.
+
+        Non-empty exactly when
+        :attr:`~core.ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED` is
+        present, which automatic selection can never produce -- so this string
+        appearing is itself the signal that an override reached past the
+        commercial posture.
+        """
+        if ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED not in self.advisories:
+            return ""
+        candidate = self.candidate
+        if candidate is None:
+            return ""
+        return tr(
+            "provisioning.model.licence.non_commercial_advisory",
+            model=candidate.runtime_id,
+            licence=candidate.licence.name,
+        )
+
+
+class _SelectionContext(TypedDict):
+    """The fields every :class:`ModelSelection` branch shares.
+
+    A TypedDict rather than a bare mapping so the splat below stays checked:
+    every return path in this surface builds one ``ModelSelection`` from a
+    common context plus its own outcome fields, and an untyped splat would let a
+    renamed or mistyped shared field through to runtime.
+    """
+
+    role: ModelRole
+    posture: DeploymentLicencePosture
+    tier: HardwareTier
+    binding_free_bytes: int | None
+    required_context_tokens: int
+    safety_margin_bytes: int
+
+
+def select_model_for_role(
+    role: ModelRole,
+    *,
+    profile: HardwareProfile | None = None,
+    settings: Settings | None = None,
+    override: str | None = None,
+    posture: DeploymentLicencePosture = DeploymentLicencePosture.COMMERCIAL,
+) -> ModelSelection:
+    """Resolve ``role`` to the weakest catalogued model that clears every bar.
+
+    **Bounded from below, never maximised.** Candidates are ordered by ascending
+    memory requirement and the FIRST survivor wins, so a machine with headroom
+    to spare still gets the small model. A larger model is an operator's
+    explicit choice, which is why nothing here ranks on capability above the
+    floor.
+
+    Three bars, applied in this order and each for a different reason:
+
+    * **Context window.** A model whose window cannot hold the configured
+      request window is excluded on *capability*, not preference -- it cannot do
+      the job at any price.
+    * **Licence.** Under a ``COMMERCIAL`` posture a candidate whose publisher
+      text bars commercial use is not eligible. This is the bar that moved the
+      shipped default.
+    * **Measured headroom.** Requirement plus the configured safety margin
+      against free memory in the binding arena.
+
+    An unmeasurable machine does **not** refuse here, and that is deliberate
+    rather than a softening of the fail-closed rule: refusing to *name* a model
+    because headroom is momentarily unreadable would break provisioning on
+    exactly the machines that most need to pull one, while the load itself is
+    still failed closed by :func:`assess_model_load_contention` at the act. The
+    selection says so with
+    :attr:`~core.ModelSelectionAdvisory.FIT_UNVERIFIED`.
+
+    Args:
+        role: The role to resolve.
+        profile: Measured hardware; probed when omitted.
+        settings: Settings carrying the context window and safety margin; loaded
+            when omitted.
+        override: An operator-named runtime id that outranks selection. Honoured
+            even when uncatalogued or licence-barred, always with advisories.
+        posture: The deployment's licence posture; commercial by default,
+            because that is what this product is.
+
+    Returns:
+        A :class:`ModelSelection`. Never raises: an unsatisfiable role returns
+        ``selected`` false carrying the reason and a remediation.
+    """
+    resolved = settings if settings is not None else load_settings()
+    hardware = profile if profile is not None else probe_hardware_profile()
+    free = binding_free_bytes(hardware)
+    tier = hardware_tier_for_free_bytes(free)
+    required_context = resolved.cadrumo_llm_ollama_num_ctx
+    margin = resolved.cadrumo_llm_contention_safety_margin_bytes
+    base = _SelectionContext(
+        role=role,
+        posture=posture,
+        tier=tier,
+        binding_free_bytes=free,
+        required_context_tokens=required_context,
+        safety_margin_bytes=margin,
+    )
+
+    if override is not None:
+        return _selection_from_override(
+            override,
+            base=base,
+            posture=posture,
+            free=free,
+            margin=margin,
+            context=required_context,
+        )
+
+    eligible = [
+        candidate
+        for candidate in candidates_for_role(role)
+        if candidate.max_context_tokens >= required_context and candidate.permitted_under(posture)
+    ]
+    if not eligible:
+        return ModelSelection(
+            **base,
+            selected=False,
+            detail=(
+                f"no catalogued {role.value} candidate both holds the configured "
+                f"{required_context}-token request window and carries a licence permitting "
+                f"{posture.value} use"
+            ),
+            remediation=(
+                "lower cadrumo_llm_ollama_num_ctx if the smaller window still fits the prompt, "
+                "or name a model explicitly and accept the advisories it carries"
+            ),
+        )
+
+    fitting = [
+        candidate for candidate in eligible if free is None or candidate.memory_requirement_bytes + margin <= free
+    ]
+    if not fitting:
+        smallest = eligible[0]
+        needed = smallest.memory_requirement_bytes + margin
+        return ModelSelection(
+            **base,
+            selected=False,
+            advisories=(ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM,),
+            detail=(
+                f"{_gib(free)} free on a {tier.value} machine is short of the {_gib(needed)} the "
+                f"smallest eligible {role.value} candidate {smallest.runtime_id!r} needs "
+                f"({_gib(smallest.memory_requirement_bytes)} requirement plus a {_gib(margin)} margin)"
+            ),
+            remediation=(
+                "close what is holding the memory, or unload a Cadrumo-selected resident model, "
+                "then retry; there is no smaller catalogued candidate that clears the capability bar"
+            ),
+        )
+
+    chosen = fitting[0]
+    advisories: list[ModelSelectionAdvisory] = []
+    if free is None:
+        advisories.append(ModelSelectionAdvisory.FIT_UNVERIFIED)
+    detail = (
+        f"{role.value} resolves to {chosen.runtime_id!r} ({_gib(chosen.memory_requirement_bytes)}, "
+        f"{chosen.licence.spdx_id}) -- the weakest catalogued candidate holding the "
+        f"{required_context}-token window on a {tier.value} machine with {_gib(free)} free"
+    )
+    return ModelSelection(
+        **base,
+        runtime_id=chosen.runtime_id,
+        candidate=chosen,
+        selected=True,
+        advisories=tuple(advisories),
+        detail=detail,
+        remediation=(
+            "install the NVML reader (pip install cadrumo[llm]) so fit can be verified before the pull"
+            if free is None
+            else ""
+        ),
+    )
+
+
+def _selection_from_override(
+    override: str,
+    *,
+    base: _SelectionContext,
+    posture: DeploymentLicencePosture,
+    free: int | None,
+    margin: int,
+    context: int,
+) -> ModelSelection:
+    """Honour an operator-named model, attaching every concern it carries.
+
+    The override always wins -- an operator who names a model has made a
+    decision this function is not entitled to overturn. What it is entitled to
+    do is refuse to be quiet about it, which is the whole of this helper.
+    """
+    candidate = model_candidate(override)
+    if candidate is None:
+        return ModelSelection(
+            **base,
+            runtime_id=override,
+            selected=True,
+            override_applied=True,
+            advisories=(
+                ModelSelectionAdvisory.OVERRIDE_NOT_IN_CATALOGUE,
+                ModelSelectionAdvisory.LICENCE_UNVERIFIED,
+            ),
+            detail=(
+                f"{override!r} was named explicitly but is not in the model catalogue, so neither "
+                f"its licence nor its fit on this machine could be judged"
+            ),
+            remediation=(
+                "add the model to the core model catalogue with its publisher-verified licence, "
+                "or select a catalogued candidate"
+            ),
+        )
+
+    advisories: list[ModelSelectionAdvisory] = []
+    if not candidate.permitted_under(posture):
+        advisories.append(ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED)
+    if candidate.max_context_tokens < context:
+        advisories.append(ModelSelectionAdvisory.OVERRIDE_BELOW_CONTEXT_FLOOR)
+    if free is None:
+        advisories.append(ModelSelectionAdvisory.FIT_UNVERIFIED)
+    elif candidate.memory_requirement_bytes + margin > free:
+        advisories.append(ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM)
+
+    return ModelSelection(
+        **base,
+        runtime_id=candidate.runtime_id,
+        candidate=candidate,
+        selected=True,
+        override_applied=True,
+        advisories=tuple(advisories),
+        detail=(
+            f"{candidate.runtime_id!r} ({_gib(candidate.memory_requirement_bytes)}, "
+            f"{candidate.licence.spdx_id}) was named explicitly and overrides selection"
+        ),
+    )
 
 
 class RuntimeResident(BaseModel):
@@ -757,13 +1082,42 @@ def cadrumo_selected_models(settings: Settings | None = None) -> frozenset[str]:
     contention snapshot and never acted on.
     """
     resolved = settings if settings is not None else load_settings()
-    return frozenset({resolved.cadrumo_llm_ollama_vision_model, resolved.cadrumo_llm_ollama_text_model})
+    # Every configured role, not a hand-picked pair: a role whose model is left
+    # out here is one Cadrumo can load but never release, so the set is the
+    # union of the role settings and grows with them.
+    return frozenset(
+        {
+            resolved.cadrumo_llm_ollama_vision_model,
+            resolved.cadrumo_llm_ollama_text_model,
+            resolved.cadrumo_llm_ollama_mapping_model,
+        }
+    )
 
 
 def _matches_selected(name: str, selected: frozenset[str]) -> bool:
     """Return whether a resident model name is one Cadrumo selected, ignoring the tag suffix."""
     stem = name.split(":", 1)[0]
     return name in selected or any(candidate.split(":", 1)[0] == stem for candidate in selected)
+
+
+class _ContentionSnapshotBase(TypedDict):
+    """The fields every contention verdict shares, splatted into each branch.
+
+    Declared rather than left as an inferred mapping because the branches below
+    build the snapshot with ``**base``, and an untyped dict widens every value
+    to the union of all of them -- so the splat reads as passing an ``int``
+    where a model expects a tuple, and the one thing worth checking here, that
+    the shared fields match the model they feed, goes unchecked.
+    """
+
+    model: str
+    requirement_bytes: int
+    safety_margin_bytes: int
+    accelerator: AcceleratorKind
+    free_vram_bytes: int | None
+    free_system_memory_bytes: int | None
+    binding_free_bytes: int | None
+    residents: tuple[RuntimeResident, ...] | None
 
 
 class ContentionSnapshot(BaseModel):
@@ -880,13 +1234,10 @@ def assess_model_load_contention(
     free_vram = hardware.free_vram_bytes
     free_ram = hardware.memory.free_bytes
     on_device = kind is AcceleratorKind.NVIDIA_CUDA
-    # The binding arena follows the measured accelerator kind: a device load is
-    # bound by device memory, a CPU-only machine by system memory, and an
-    # unmeasurable accelerator by nothing that can be trusted.
-    binding_free = free_vram if on_device else (free_ram if kind is AcceleratorKind.NONE else None)
+    binding_free = binding_free_bytes(hardware)
     required = requirement_bytes + margin
 
-    base = {
+    base: _ContentionSnapshotBase = {
         "model": model,
         "requirement_bytes": requirement_bytes,
         "safety_margin_bytes": margin,
@@ -954,9 +1305,7 @@ def assess_model_load_contention(
 
     selected = cadrumo_selected_models(resolved)
     resident_bytes = _attributed_resident_bytes(resident_set, on_device=on_device)
-    unloadable = tuple(
-        resident.name for resident in resident_set if _matches_selected(resident.name, selected)
-    )
+    unloadable = tuple(resident.name for resident in resident_set if _matches_selected(resident.name, selected))
     unloadable_bytes = _attributed_resident_bytes(
         resident_set,
         on_device=on_device,
@@ -1111,6 +1460,225 @@ def unload_runtime_model(
         unloaded=True,
         was_resident=True,
         detail=f"released {model!r} from the local runtime",
+    )
+
+
+class PullProgress(BaseModel):
+    """One progress report from an in-flight model fetch.
+
+    ``total_bytes`` is absent early in a pull, before the runtime has resolved
+    the manifest, so a renderer must tolerate a percentless report rather than
+    computing a ratio against zero.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    status: str = ""
+    completed_bytes: int | None = Field(default=None, ge=0)
+    total_bytes: int | None = Field(default=None, ge=0)
+
+    @property
+    def percent(self) -> int | None:
+        """Return whole-percent progress, or ``None`` when the total is not yet known."""
+        if not self.total_bytes or self.completed_bytes is None:
+            return None
+        return min(100, int(self.completed_bytes * 100 / self.total_bytes))
+
+
+class PullOutcome(BaseModel):
+    """The result of an explicit model fetch, including a fetch that never started.
+
+    ``contention`` is populated when the pre-fetch admission check refused, and
+    is the reason no bytes moved. Keeping the snapshot rather than flattening it
+    to a string is what lets the caller name WHICH cause applied -- unloading a
+    resident Cadrumo selected and closing a peer application are different
+    instructions and only one of them is ours to offer.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    model: str = Field(min_length=1)
+    pulled: bool
+    contention: ContentionSnapshot | None = None
+    bytes_fetched: int | None = Field(default=None, ge=0)
+    detail: str = ""
+    remediation: str = ""
+
+
+def pull_runtime_model(
+    model: str,
+    requirement_bytes: int,
+    *,
+    profile: HardwareProfile | None = None,
+    settings: Settings | None = None,
+    on_progress: Callable[[PullProgress], None] | None = None,
+) -> PullOutcome:
+    """Fetch ``model`` into the local runtime, refusing BEFORE any bytes move.
+
+    The admission check runs first and a refusal returns without contacting the
+    runtime at all. That ordering is the point of the action: a multi-gigabyte
+    download that completes and then cannot be loaded has spent the operator's
+    bandwidth to arrive at the refusal it could have been given immediately.
+
+    Never raises, in keeping with every other action here. An unreachable
+    runtime is a typed outcome naming ``ollama serve`` -- this function does not
+    start a daemon, and nothing on this path pulls implicitly: reaching it at
+    all requires an operator to have asked.
+
+    Args:
+        model: Runtime identifier to fetch.
+        requirement_bytes: The model's declared memory requirement, checked
+            against measured headroom before fetching.
+        profile: A measured hardware profile; probed when omitted.
+        settings: Resolved settings; loaded when omitted.
+        on_progress: Called for each progress report the runtime emits. Failures
+            in the callback are the caller's to handle; nothing here swallows
+            them.
+
+    Returns:
+        A :class:`PullOutcome`. ``pulled`` false with ``contention`` populated
+        means the fetch was refused before it began.
+    """
+    resolved = settings if settings is not None else load_settings()
+    snapshot = assess_model_load_contention(model, requirement_bytes, profile=profile, settings=resolved)
+    if not snapshot.admitted:
+        return PullOutcome(
+            model=model,
+            pulled=False,
+            contention=snapshot,
+            detail=snapshot.detail,
+            remediation=snapshot.remediation,
+        )
+
+    url = _ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "pull")
+    fetched: int | None = None
+    try:
+        with (
+            httpx.Client(timeout=_OLLAMA_PULL_TIMEOUT_S) as client,
+            client.stream("POST", url, json={"model": model, "stream": True}) as response,
+        ):
+            response.raise_for_status()
+            for line in response.iter_lines():
+                progress = _pull_progress(line)
+                if progress is None:
+                    continue
+                if progress.completed_bytes is not None:
+                    fetched = progress.completed_bytes
+                if on_progress is not None:
+                    on_progress(progress)
+    except httpx.HTTPError as exc:
+        return PullOutcome(
+            model=model,
+            pulled=False,
+            bytes_fetched=fetched,
+            detail=f"the local model runtime could not be reached to fetch {model!r} ({exc.__class__.__name__})",
+            remediation="start the local model runtime with 'ollama serve', then retry",
+        )
+    return PullOutcome(
+        model=model,
+        pulled=True,
+        bytes_fetched=fetched,
+        detail=f"{model!r} is present in the local runtime",
+    )
+
+
+def _pull_progress(line: str) -> PullProgress | None:
+    """Parse one NDJSON progress line, or ``None`` when it carries no report."""
+    text = line.strip()
+    if not text:
+        return None
+    try:
+        payload = json.loads(text)
+    except ValueError:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    # CAST-RATIONALE-OLLAMA-PULL-PAYLOAD: json.loads returns Any; isinstance
+    # narrows to dict but not its type parameters.
+    # nosemgrep: no-cast-in-domain-application
+    row = cast(dict[str, object], payload)
+    completed = row.get("completed")
+    total = row.get("total")
+    status = row.get("status")
+    return PullProgress(
+        status=status if isinstance(status, str) else "",
+        completed_bytes=completed if isinstance(completed, int) and completed >= 0 else None,
+        total_bytes=total if isinstance(total, int) and total >= 0 else None,
+    )
+
+
+class ReadinessOutcome(BaseModel):
+    """Whether a model is loaded and actually answering, not merely present.
+
+    ``resident`` and ``answered`` are separate claims on purpose. A model can be
+    present on disk and not loaded, or loaded and too slow to be useful, and an
+    operator debugging a stalled read needs to know which of the two they have.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    model: str = Field(min_length=1)
+    ready: bool
+    resident: bool = False
+    answered: bool = False
+    elapsed_ms: int | None = Field(default=None, ge=0)
+    detail: str = ""
+    remediation: str = ""
+
+
+def verify_model_ready(
+    model: str,
+    *,
+    settings: Settings | None = None,
+    timeout_s: float | None = None,
+) -> ReadinessOutcome:
+    """Confirm ``model`` is resident and answers a trivial prompt within a bound.
+
+    The prompt is deliberately minimal and its CONTENT is irrelevant -- this
+    verifies the transport and the load, not the model's quality, so nothing
+    here inspects what came back beyond the fact that something did.
+
+    Never raises. An unreachable runtime names ``ollama serve``; a model that is
+    absent names the provision verb rather than pulling it, because an implicit
+    multi-gigabyte fetch triggered by a verification command is exactly what the
+    lifecycle design forbids.
+    """
+    resolved = settings if settings is not None else load_settings()
+    bound = timeout_s if timeout_s is not None else _OLLAMA_READINESS_TIMEOUT_S
+    residents = read_runtime_residents(resolved)
+    if residents is None:
+        return ReadinessOutcome(
+            model=model,
+            ready=False,
+            detail="the local model runtime could not be reached",
+            remediation="start the local model runtime with 'ollama serve', then retry",
+        )
+    resident = any(_matches_selected(entry.name, frozenset({model})) for entry in residents)
+
+    url = _ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "generate")
+    started = time.monotonic()
+    try:
+        with httpx.Client(timeout=bound) as client:
+            response = client.post(url, json={"model": model, "prompt": "ok", "stream": False})
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        elapsed = int((time.monotonic() - started) * 1000)
+        return ReadinessOutcome(
+            model=model,
+            ready=False,
+            resident=resident,
+            elapsed_ms=elapsed,
+            detail=f"{model!r} did not answer within {bound:g}s ({exc.__class__.__name__})",
+            remediation=f"aeat config provision pull --model {model}",
+        )
+    elapsed = int((time.monotonic() - started) * 1000)
+    return ReadinessOutcome(
+        model=model,
+        ready=True,
+        resident=resident,
+        answered=True,
+        elapsed_ms=elapsed,
+        detail=f"{model!r} answered in {elapsed} ms",
     )
 
 

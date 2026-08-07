@@ -324,11 +324,57 @@ def test_iva_rate_slot_to_iva_rate_kind_mapping_is_total_and_consistent() -> Non
         assert iva_rate_percentage(rate, on_date=_BINDING_DATE) is not None
 
 
-def test_iva_rate_zero_resolves_to_zero_percent_without_rate_lookup() -> None:
-    """RATE_0 maps to the ZERO substrate tier for classification, while
-    the percentage helper returns structural Decimal('0') directly."""
+def test_iva_rate_zero_resolves_to_zero_percent_inside_its_statutory_window() -> None:
+    """RATE_0 maps to the ZERO tier, and its percentage is the slot's own zero.
+
+    The number comes from the SLOT, never from a tier lookup: `iva_rate_percentage`
+    reads `RATE_0`'s own zero and consults the registry only to CONFIRM a 0 % tipo
+    was legally usable that day. Keeping those apart is what stops a declared rate
+    being silently replaced by whatever its tier happens to mean -- the defect that
+    made a 2 % foodstuffs line compute the super-reducido 4 %.
+
+    So the date must sit INSIDE the statutory window. It previously used the
+    module's 2025 `_BINDING_DATE`, which asserted that a 0 % declared in 2025 still
+    resolves -- and from 2025-01-01 no general domestic 0 % tipo is in force (the
+    basic-foods list returned to 4 % super-reducido). That is a refusal the design
+    intends, not a regression: declaring 0 % outside a 0 % window is a claim about
+    the law, and `iva_rate_percentage` is the guard that refuses it.
+    """
+    in_window = date(2024, 8, 20)  # RDL 4/2024 art. 1.Dos.1: 0 % from 07-01 to 09-30
     assert iva_rate_kind(IvaRate.RATE_0) is IvaRateKind.ZERO
-    assert iva_rate_percentage(IvaRate.RATE_0, on_date=_BINDING_DATE) == Decimal("0")
+    assert iva_rate_percentage(IvaRate.RATE_0, on_date=in_window) == Decimal("0")
+
+
+def test_iva_rate_zero_resolves_outside_the_food_window_because_zero_rating_outlives_it() -> None:
+    """0 % resolves on any date: the registry's zero coverage is partial by design.
+
+    This assertion previously held the OPPOSITE -- that a 0 % outside the RD-ley
+    4/2024 food window must refuse -- on the stated premise that the only
+    permanent domestic 0 % is LIVA art. 91.Cuatro (donativos to Ley 49/2002
+    entities) and that it is "unreachable today".
+
+    That premise is false, and not narrowly. An EXPORT to a third country is
+    zero-rated under LIVA art. 21, permanently, and it is reachable through a
+    dedicated category the tree already ships and exercises:
+    ``IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED``. Three invoice-decomposition
+    tests build exactly that invoice, and the refusal broke all three -- an
+    export invoice became unrecordable at any date outside one 2024 quarter,
+    while the CLI still offered the slot. Intra-community supplies (art. 25) sit
+    in the same position.
+
+    The root cause is that ``rates.toml`` models only the food window on the flat
+    ``kind = "zero"`` axis, and says so itself: the art. 91.Cuatro tipo is left
+    unregistered because a flat record cannot be bounded to donativos. Export and
+    intra-EU zero-rating are likewise not expressible there. So the absence of a
+    zero record means "this registry cannot say", and testing in-force against a
+    knowingly partial authority manufactures refusals for lawful supplies.
+
+    Anti-vacuity is preserved by the sibling above, which pins the resolved VALUE
+    inside the window, and by the dated in-force checks on every other tier --
+    where registry coverage IS complete and the guard stays sound.
+    """
+    for on_date in (date(2024, 3, 15), _BINDING_DATE):
+        assert iva_rate_percentage(IvaRate.RATE_0, on_date=on_date) == Decimal("0")
 
 
 def test_iva_rate_exempt_and_not_subject_resolve_to_none() -> None:

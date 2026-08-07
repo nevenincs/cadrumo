@@ -429,6 +429,14 @@ def test_non_deductible_profiles_cannot_become_observations() -> None:
 
 
 def test_exclusive_use_profiles_require_confirmation() -> None:
+    """Confirmation gates deductibility; it does not widen the basis to the gross.
+
+    The fixture's 200.00 gross is a 179.00 base plus 21.00 of input IVA. That
+    IVA is recovered as cuota soportada on Modelo 303, so it is not an IRPF
+    gasto: the expected 179.00 is the fact's own IVA-exclusive base, which is
+    what every sibling proportionality branch deducts. Asserting the gross here
+    would claim the 21.00 twice.
+    """
     fact = _fact(category=SpendingCategory.MATERIAL_OFICINA, amount=Decimal("200.00"))
     profile = _profile(
         SpendingCategory.MATERIAL_OFICINA,
@@ -444,7 +452,9 @@ def test_exclusive_use_profiles_require_confirmation() -> None:
 
     assert missing.status is RentaDeductibilityStatus.INELIGIBLE
     assert confirmed.status is RentaDeductibilityStatus.ELIGIBLE
-    assert confirmed.deductible_amount == Decimal("200.00")
+    assert confirmed.deductible_amount == fact.taxable_base == Decimal("179.00")
+    # The 21.00 of input IVA stays out of the gasto rather than vanishing.
+    assert confirmed.non_deductible_amount == Decimal("21.00")
 
 
 def test_first_slice_routes_every_eligible_category_to_a_real_casilla() -> None:

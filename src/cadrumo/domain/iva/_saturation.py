@@ -259,7 +259,7 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
             rate_kind=None,
             reason=_NON_DERIVABLE_REASONS[category],
         )
-    coexisting = coexisting_tier_rates(EUMemberState.ES, rate_kind, date(2024, 10, 15))
+    coexisting = coexisting_tier_rates(EUMemberState.ES, rate_kind, on_date)
     if coexisting:
         return IvaRateResolution(
             category=category,

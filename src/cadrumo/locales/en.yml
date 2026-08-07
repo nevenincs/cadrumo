@@ -192,9 +192,6 @@ adapters:
           namespace_forbidden_characters: Google Drive storage namespace {namespace}
             contains forbidden path characters.
           namespace_not_found: Google Drive namespace {namespace} was not found.
-          object_key_hmac_blank: Google Drive object key HMAC must not be blank.
-          object_key_hmac_forbidden_characters: Google Drive object key HMAC {object_key_hmac}
-            contains forbidden characters.
           object_not_found: Google Drive object {object_key_hmac} was not found in
             namespace {namespace}.
           request_failed: Google Drive request {action} failed with status {status}.
@@ -222,9 +219,6 @@ adapters:
             forbidden path characters.
           namespace_not_found: Local storage namespace {namespace} was not found.
           object_delete_permission: Local storage could not delete object payload.
-          object_key_hmac_blank: Local storage object key HMAC must not be blank.
-          object_key_hmac_forbidden_characters: Local storage object key HMAC {object_key_hmac}
-            contains forbidden characters.
           object_not_found: Local storage object {object_key_hmac} was not found in
             namespace {namespace}.
           payload_commit_failed: Local storage could not commit object payload atomically.
@@ -728,7 +722,6 @@ application:
         file_read_failed: The bulk invoice import file could not be read.
         missing_columns: 'The bulk invoice import file is missing required columns:
           {missing_columns}'
-        unknown_columns: 'The bulk invoice import file contains unknown columns: {unknown_columns}'
         unsupported_extension: The bulk invoice import file must be .csv or .xlsx
           (got {extension}).
     creation:
@@ -1901,6 +1894,8 @@ cli:
           iva_rate/currency/country_code/notes).
         import_file_not_found: 'File not found: {path}'
         import_help: Bulk-create catalogue invoices from a CSV or XLSX file.
+        import_unmapped_columns: 'columns not imported because no invoice field matched
+          them: {columns}'
         invoice_class_help: Invoice class. A rectificativa also requires --rectifies-invoice-number
           naming the invoice it corrects.
         invoice_date_help: Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.
@@ -3689,6 +3684,23 @@ cli:
       validate_name_help: Optional profile label to validate; defaults to the active
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
+    provision:
+      help: 'Manage local inference provisioning: report, pull models, verify readiness.'
+      no_model: No model is available for that role on this machine. Run 'aeat config
+        provision report' to see why.
+      pull:
+        help: Download a model into the local runtime. Refuses before downloading
+          when it could not be loaded.
+        model_help: Runtime identifier of the model to download. Defaults to the model
+          selected for the role.
+      report:
+        help: Report measured hardware, the model selected per role, and whether it
+          can be loaded now.
+      role_help: cli.config.provision.role_help
+      verify:
+        help: Verify a model is loaded and answers a trivial prompt within a time
+          bound.
+        model_help: cli.config.provision.verify.model_help
     recover:
       errors:
         recovery_code_rejected: The recovery code did not open the recovery wrapper;
@@ -4565,21 +4577,6 @@ cli:
       llm_rejected_notice: The most recent LLM suggestion for this transaction was
         rejected; classify it manually when ready.
       transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
-  locales:
-    allow_identical_key_help: Dotted locale key to exempt.
-    allow_identical_locale_help: Locale code to update.
-    allow_identical_reason_help: Why this string is legitimately identical to English.
-    app_help: Audit and scaffold locale catalogues
-    canonicalize_product_identity:
-      locale_help: Update only this supported locale catalogue.
-    remove_key_help: Dotted locale key to remove.
-    remove_locale_help: Locale code to update.
-    scaffold_check_help: Report drift without writing locale files
-    set_batch_manifest_help: JSON object mapping locale codes to dotted-key scalar
-      maps.
-    set_key_help: Dotted locale key to set.
-    set_locale_help: Locale code to update (e.g. en, es, ca).
-    set_value_help: Replacement locale value.
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose, and --debug are mutually exclusive.
@@ -5546,7 +5543,6 @@ errors:
     error_resources_validation: A bundled application file failed strict validation.
     error_retention: Could not evaluate the tax-record retention policy.
     error_review: A review error occurred.
-    error_sanitization: An error occurred while sanitizing the document.
     error_sede: An error occurred in the AEAT electronic Sede.
     error_sede_browser_adapter_type: The browser page object returned an unexpected
       type at the Sede adapter boundary.
@@ -5658,7 +5654,6 @@ errors:
     fail_repair_decision_not_found: The requested repair-remediation decision does
       not exist.
     fail_review_source_load: The source file is present but could not be parsed.
-    fail_sanitization_source_parse: The source PDF could not be opened for sanitization.
     fail_secure_storage: A secure-storage error occurred.
     fail_sede_justificante_fetch: The receipt PDF download from the AEAT Sede failed,
       or the file is malformed.
@@ -6179,12 +6174,6 @@ errors:
       the syntax of the filter provided.'
     refused_review_kind_reserved: The `--kind` value provided is reserved and cannot
       be used.
-    refused_sanitization_already_sanitized: The source document has already been sanitized.
-    refused_sanitization_signature_present: The source PDF carries a digital signature.
-      Modifying it would invalidate the signature; human review is required.
-    refused_sanitization_unknown_surface: A personal-data surface was detected that
-      the sanitizer cannot handle. Human review is required.
-    refused_sanitization_validation: The sanitizer parameters failed validation.
     refused_source_mesh_invariant: 'Refused: source mesh invariant violation.'
     refused_storage_bucket_already_present: The import collides with a storage bucket
       that already exists.
@@ -6548,20 +6537,6 @@ live:
     target_period_year_mismatch: The target year does not match the target period's
       filing year.
     year_range_invalid: From-year must be less than or equal to to-year.
-locales:
-  cli:
-    allow_identical:
-      recorded: recorded {allowlist_file}:{locale_code}:{key}
-    audit:
-      file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
-      file_ok: '%{locale_file}: ok'
-      key_extra: '  extra %{key}'
-      key_missing: '  missing %{key}'
-    remove:
-      removed: removed %{locale_file}:%{key}
-    scaffold_updated: locale scaffold updated
-    set:
-      updated: updated %{locale_file}:%{key}
 mcp:
   call:
     timeout: '''{command}'' exceeded the {tier}-tier time limit ({seconds}s) and was
@@ -66071,7 +66046,8 @@ modelo:
               help: null
               label: VAT charged at the standard rate (21%) - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
-              help: null
+              help: Add up the taxable base of domestic output transactions in the
+                general rate tier, whatever percentage each transaction carried.
               label: Taxable base of output VAT - standard regime - 21% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
               help: null
@@ -66086,19 +66062,24 @@ modelo:
               help: null
               label: VAT charged at the reduced rate (10%) - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
-              help: null
+              help: Add up the taxable base of domestic output transactions in the
+                reduced rate tier, whatever percentage each transaction carried.
               label: Taxable base of output VAT - standard regime - 10% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
               label: VAT charged at the super-reduced rate (4%) - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
-              help: null
+              help: Add up the taxable base of domestic output transactions in the
+                super-reduced rate tier, whatever percentage each transaction carried.
               label: Taxable base of output VAT - standard regime - 4% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: null
+              help: Declare the taxable base of domestic ordinary-regime transactions
+                charged at the 0 % rate. Real Decreto-ley 4/2024, article 1, applied
+                this rate to basic foodstuffs from 1 July to 30 September 2024.
               label: Taxable base of output VAT - standard regime - 0% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
-              help: null
+              help: Declare the output VAT charged at the 0 % rate on the taxable
+                base in box 700. A 0 % rate yields no VAT, so this amount is zero.
               label: Output VAT amount - standard regime - 0% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
               help: Declare the taxable base of domestic ordinary-regime transactions
@@ -66109,10 +66090,15 @@ modelo:
                 taxable base in box 03.
               label: Output VAT amount - standard regime - 10% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
-              help: null
+              help: 'Declare the taxable base of basic foodstuffs charged at 2 %:
+                common bread, bread-making flours, milk, cheese, eggs, fruit, vegetables,
+                pulses, tubers, natural cereals and olive oils. Real Decreto-ley 4/2024,
+                article 1, set this rate from 1 October to 31 December 2024.'
               label: Taxable base of output VAT - standard regime - 2% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
-              help: null
+              help: Declare the output VAT charged at 2 % on the taxable base in box
+                667. Real Decreto-ley 4/2024, article 1, set this rate from 1 October
+                to 31 December 2024.
               label: Output VAT amount - standard regime - 2% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
               help: Declare the taxable base of domestic ordinary-regime transactions
@@ -66131,10 +66117,14 @@ modelo:
                 the taxable base in box 01.
               label: Output VAT amount - standard regime - 4% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
-              help: null
+              help: Declare the taxable base of seed oils and pasta charged at 5 %.
+                Real Decreto-ley 4/2024, article 1, set this rate from 1 July to 30
+                September 2024.
               label: Taxable base of output VAT - standard regime - 5% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
-              help: null
+              help: Declare the output VAT charged at 5 % on the taxable base in box
+                702. Real Decreto-ley 4/2024, article 1, set this rate from 1 July
+                to 30 September 2024.
               label: Output VAT amount - standard regime - 5% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
               help: Declare the taxable base of seed oils and pasta charged at 7,5
@@ -66142,7 +66132,9 @@ modelo:
                 to 31 December 2024.
               label: Taxable base of output VAT - standard regime - 7,5% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
-              help: null
+              help: Declare the output VAT charged at 7,5 % on the taxable base in
+                box 669. Real Decreto-ley 4/2024, article 1, set this rate from 1
+                October to 31 December 2024.
               label: Output VAT amount - standard regime - 7,5% rate - annual
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
@@ -66155,7 +66147,8 @@ modelo:
               help: null
               label: VAT borne on ordinary domestic transactions - annual
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
-              help: null
+              help: Add up the taxable base of current domestic purchases of goods
+                and services carrying input VAT, across the three domestic rate tiers.
               label: Taxable base of deductible VAT - total current domestic purchases
                 of goods and services - annual
           construct:
@@ -66579,7 +66572,7 @@ profile:
           label: Tax ID (NIF/NIE/CIF)
       irpf:
         activity_kind:
-          label: profile.schema.field.irpf.activity_kind.label
+          label: Activity type
         art109_activity_income_withholding_ge_70pct:
           label: Meets Art. 109 RIRPF 70% exception
         estimation_regime:
@@ -66855,6 +66848,12 @@ profile:
         title: Withholding payer obligations
   validation:
     required_field_missing: Required profile field missing.
+provisioning:
+  model:
+    licence:
+      non_commercial_advisory: Model %{model} is covered by the %{licence}, which
+        does not permit commercial use. You named it explicitly, so Cadrumo will use
+        it, but a commercial filing practice needs a separate licence from the publisher.
 review:
   adapters:
     errors:

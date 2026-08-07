@@ -33,14 +33,19 @@ See Also:
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Callable, Mapping
 from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
-from ..application.ledger import InvoiceDraft, PurchaseInvoiceEvidenceInputError
-from ..core import STRICT_FROZEN_CONFIG
+from ..application.ledger import (
+    FieldProvenance,
+    InvoiceDraft,
+    PurchaseInvoiceEvidenceInputError,
+)
+from ..core import STRICT_FROZEN_CONFIG, FieldGroundingOutcome, FieldOrigin
 from ..core.decimal import coerce_finite_european_decimal, european_thousands_reading_is_ambiguous
 from ..core.identity import (
     IdentityError,
@@ -49,10 +54,17 @@ from ..core.identity import (
     validate_spanish_tax_id,
 )
 from ..core.parsing import parse_date
-from ._invoice_field_contract import InvoiceFieldForm, contract_for_field
+from ._invoice_field_contract import (
+    ANCHOR_KEY_SUFFIX,
+    INVOICE_FIELD_CONTRACTS,
+    InvoiceFieldForm,
+    contract_for_field,
+)
 
 __all__ = [
+    "ExtractedFieldAnchors",
     "ExtractedInvoiceFields",
+    "ExtractedInvoiceResponse",
     "ground_extracted_fields",
     "parse_invoice_extraction_response",
 ]
@@ -86,23 +98,85 @@ class ExtractedInvoiceFields(BaseModel):
     currency: str | None = Field(default=None)
 
 
+class ExtractedFieldAnchors(BaseModel):
+    """The verbatim printed substring the model read each field from.
+
+    Deliberately a mirror of :class:`ExtractedInvoiceFields` rather than extra
+    attributes on it. The two carry different KINDS of claim: a field holds the
+    value in its declared form, an anchor holds the form the document actually
+    printed, and the whole anti-fabrication argument rests on being able to
+    compare them. Folded into one model that comparison becomes an attribute
+    naming convention; kept apart it is a type.
+
+    Every attribute is an optional string for the same reason the value side is:
+    the model returns strings, and nothing here rejects or rewrites one. An
+    anchor that does not occur in the document is caught by the anchor check
+    (:func:`~application.ledger.evaluate_anchor`), never by this schema, because
+    that check needs the document and this schema does not have it.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    supplier_tax_id: str | None = Field(default=None)
+    invoice_number: str | None = Field(default=None)
+    invoice_date: str | None = Field(default=None)
+    taxable_base: str | None = Field(default=None)
+    iva_rate: str | None = Field(default=None)
+    iva_amount: str | None = Field(default=None)
+    grand_total: str | None = Field(default=None)
+    currency: str | None = Field(default=None)
+
+
+class ExtractedInvoiceResponse(BaseModel):
+    """One reading model's complete reply: every value beside its printed anchor.
+
+    The parser's single return type. Splitting the reply into two models but
+    returning them as one object keeps the pairing structural -- a caller cannot
+    hold values without the anchors that justify them, which is exactly the
+    separation that let a value travel to a filing with nothing to point at.
+
+    Attributes:
+        fields: The transcribed values, before grounded re-validation.
+        anchors: The printed form each value was read from.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    fields: ExtractedInvoiceFields
+    anchors: ExtractedFieldAnchors
+
+
 def _extract_json_object(text: str) -> str | None:
     match = _JSON_OBJECT_RE.search(text)
     return match.group(0) if match else None
 
 
-def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceFields:
-    """Parse a reading model's raw completion text into :class:`ExtractedInvoiceFields`.
+def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
+    """Parse a reading model's raw completion text into values and their anchors.
+
+    The prompt asks for one flat object carrying each field beside its
+    ``<field>_anchor`` sibling, so the flat reply is split here into the two
+    typed halves. Splitting on the declared suffix rather than on a second
+    hand-written key list means the prompt and the parser cannot ask for and
+    read different keys.
+
+    A model that returns only the value keys parses cleanly with empty anchors:
+    that is a reply with nothing to point at, which the grounding stage records
+    honestly rather than a malformed one to reject. A key matching neither a
+    declared field nor a declared anchor IS rejected -- an unrecognised key is a
+    model inventing structure, and tolerating it here would let a fabricated
+    field ride along unnoticed.
 
     Args:
         text: Raw completion text from the reading model.
 
     Returns:
-        :class:`ExtractedInvoiceFields`: The parsed (but not yet grounded) fields.
+        :class:`ExtractedInvoiceResponse`: The parsed (but not yet grounded)
+        values and the printed anchors they were read from.
 
     Raises:
-        PurchaseInvoiceEvidenceInputError: When no JSON object is present or the
-            object fails schema validation.
+        PurchaseInvoiceEvidenceInputError: When no JSON object is present, the
+            object is not a JSON object, or either half fails schema validation.
     """
     payload = _extract_json_object(text)
     if payload is None:
@@ -111,7 +185,31 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceFields:
             suggestion="aeat app ledger evidence extract --evidence-id <id>",
         )
     try:
-        return ExtractedInvoiceFields.model_validate_json(payload)
+        raw = json.loads(payload)
+    except ValueError as exc:
+        raise PurchaseInvoiceEvidenceInputError(
+            f"invoice reading model response was not valid JSON: {str(exc)[:200]}",
+            suggestion="aeat app ledger evidence extract --evidence-id <id>",
+        ) from exc
+    if not isinstance(raw, dict):
+        raise PurchaseInvoiceEvidenceInputError(
+            f"invoice reading model response was not a JSON object: {type(raw).__name__}",
+            suggestion="aeat app ledger evidence extract --evidence-id <id>",
+        )
+
+    values: dict[str, object] = {}
+    anchors: dict[str, object] = {}
+    for key, value in raw.items():
+        if key.endswith(ANCHOR_KEY_SUFFIX):
+            anchors[key[: -len(ANCHOR_KEY_SUFFIX)]] = value
+        else:
+            values[key] = value
+
+    try:
+        return ExtractedInvoiceResponse(
+            fields=ExtractedInvoiceFields.model_validate(values),
+            anchors=ExtractedFieldAnchors.model_validate(anchors),
+        )
     except ValueError as exc:
         raise PurchaseInvoiceEvidenceInputError(
             f"invoice reading model response failed schema validation: {str(exc)[:200]}",
@@ -246,9 +344,10 @@ def _grounded_percentage(raw: str | None) -> Decimal | None:
     printed -- copied, never computed. Nothing about anti-fabrication is
     weakened: the anchor
     (:attr:`ExtractedInvoiceFields.iva_rate`) still holds ``"21%"`` verbatim for
-    a later closure check to point at, so anchor and value become explicitly
-    distinct, which is what ADR ``2026-08-07-unstructured-document-ingestion-adr``
-    D4 asks for. Exactly one trailing unit is stripped; a value carrying digits
+    a later closure check to point at, so anchor and value stay explicitly
+    distinct rather than collapsing into one field that could silently
+    launder a transcription error into a computed figure. Exactly one
+    trailing unit is stripped; a value carrying digits
     after the sign, or any other stray character, still fails the decimal
     authority and drops to ``None``.
 
@@ -326,7 +425,57 @@ def _ground_numeric(raw: str | None, field_name: str) -> Decimal | None:
     return _NUMERIC_GROUNDING_BY_FORM[contract_for_field(field_name).form](raw)
 
 
-def ground_extracted_fields(fields: ExtractedInvoiceFields, *, raw_text_length: int) -> InvoiceDraft:
+def _read_provenance(
+    *,
+    field_name: str,
+    value: str | Decimal | None,
+    anchor: str | None,
+    origin: FieldOrigin,
+) -> FieldProvenance | None:
+    """Return the envelope recording how ``field_name`` was read, or ``None``.
+
+    ``None`` when the field carries no grounded value: an envelope describes a
+    value's provenance, and a field the grounder dropped has no value to
+    describe. The absence is itself reviewable -- the draft's own contract says
+    a missing envelope never means the value was exact.
+
+    The outcome is always :attr:`~core.FieldGroundingOutcome.UNANCHORED`, and
+    that is a deliberate under-claim rather than a placeholder. The model
+    REPORTING an anchor is a claim about the document, not a check against it;
+    the check belongs to :func:`~application.ledger.evaluate_anchor`, which
+    needs the transcription this stage does not hold. ``UNANCHORED`` is the only
+    member that is true here: ``ANCHORED`` would assert a search nobody ran,
+    ``RECONCILED`` an independent identity nobody consulted, ``CONTRADICTED`` a
+    disagreement nobody found, and ``AMBIGUOUS`` is refused outright by the
+    envelope without two competing candidates.
+
+    The anchor still rides along, which is the point of the record: it is the
+    claim a later stage verifies. Carrying it under an unverified outcome
+    matches how the anchor check itself reports a contradiction -- the printed
+    form the operator needs to see survives the outcome that failed.
+    """
+    if value is None:
+        return None
+    claimed = anchor.strip() if anchor is not None else ""
+    return FieldProvenance(
+        field=field_name,
+        origin=origin,
+        grounding=FieldGroundingOutcome.UNANCHORED,
+        anchor=claimed or None,
+        note=(
+            f"the reading model reported {claimed!r} as the printed form; not yet checked against the document"
+            if claimed
+            else "the reading model reported no printed form for this value"
+        ),
+    )
+
+
+def ground_extracted_fields(
+    response: ExtractedInvoiceResponse,
+    *,
+    raw_text_length: int,
+    origin: FieldOrigin,
+) -> InvoiceDraft:
     """Re-validate the model's transcribed strings into a grounded :class:`InvoiceDraft`.
 
     Each field is grounded through the validator its DECLARED form selects
@@ -340,22 +489,69 @@ def ground_extracted_fields(fields: ExtractedInvoiceFields, *, raw_text_length: 
     ``None`` rather than trusted -- the same "never fabricate" discipline the
     text-layer heuristics apply.
 
+    Every field that survives grounding also gets a
+    :class:`~application.ledger.FieldProvenance` envelope carrying the verbatim
+    anchor the model reported for it, so no value reaches the operator without
+    the printed form it claims to have come from.
+
     Args:
-        fields: The parsed, not-yet-grounded transcription. Left untouched: it
-            carries the verbatim printed anchors.
+        response: The parsed, not-yet-grounded reply. Left untouched: its anchor
+            half carries the verbatim printed forms.
         raw_text_length: How much source material the reader had to work with.
+        origin: How these values were obtained. Required rather than defaulted:
+            a reader that could omit it would silently claim whichever origin was
+            most convenient, and the exact-versus-probabilistic distinction is
+            the one thing the record exists to keep honest.
 
     Returns:
-        :class:`InvoiceDraft`: The grounded draft.
+        :class:`InvoiceDraft`: The grounded draft, one provenance envelope per
+        field that carries a value.
     """
+    fields = response.fields
+    supplier_tax_id = _ground_text(fields.supplier_tax_id, "supplier_tax_id")
+    invoice_number = _ground_text(fields.invoice_number, "invoice_number")
+    invoice_date = _ground_text(fields.invoice_date, "invoice_date")
+    taxable_base = _ground_numeric(fields.taxable_base, "taxable_base")
+    iva_rate = _ground_numeric(fields.iva_rate, "iva_rate")
+    iva_amount = _ground_numeric(fields.iva_amount, "iva_amount")
+    grand_total = _ground_numeric(fields.grand_total, "grand_total")
+    currency = _ground_text(fields.currency, "currency")
+
+    # Keyed by the ONE contract declaration, so a field added there without a
+    # grounded value here raises rather than travelling with no provenance.
+    grounded: Mapping[str, str | Decimal | None] = {
+        "supplier_tax_id": supplier_tax_id,
+        "invoice_number": invoice_number,
+        "invoice_date": invoice_date,
+        "taxable_base": taxable_base,
+        "iva_rate": iva_rate,
+        "iva_amount": iva_amount,
+        "grand_total": grand_total,
+        "currency": currency,
+    }
+    envelopes = tuple(
+        envelope
+        for contract in INVOICE_FIELD_CONTRACTS
+        if (
+            envelope := _read_provenance(
+                field_name=contract.field_name,
+                value=grounded[contract.field_name],
+                anchor=getattr(response.anchors, contract.field_name),
+                origin=origin,
+            )
+        )
+        is not None
+    )
+
     return InvoiceDraft(
-        supplier_tax_id=_ground_text(fields.supplier_tax_id, "supplier_tax_id"),
-        invoice_number=_ground_text(fields.invoice_number, "invoice_number"),
-        invoice_date=_ground_text(fields.invoice_date, "invoice_date"),
-        taxable_base=_ground_numeric(fields.taxable_base, "taxable_base"),
-        iva_rate=_ground_numeric(fields.iva_rate, "iva_rate"),
-        iva_amount=_ground_numeric(fields.iva_amount, "iva_amount"),
-        grand_total=_ground_numeric(fields.grand_total, "grand_total"),
-        currency=_ground_text(fields.currency, "currency"),
+        supplier_tax_id=supplier_tax_id,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        iva_amount=iva_amount,
+        grand_total=grand_total,
+        currency=currency,
+        provenance=envelopes,
         raw_text_length=raw_text_length,
     )

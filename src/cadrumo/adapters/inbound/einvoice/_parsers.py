@@ -204,6 +204,10 @@ def _decimal(raw: str | None) -> Decimal | None:
     silent-``None``-on-failure contract is the correct one, not
     ``try_parse_canonical_decimal``'s operator-grammar validation.
     """
+    # DECIMAL-TEXT-RATIONALE-EINVOICE-XML: the separator convention is fixed by
+    # the format, not chosen by a writer. UBL and Facturae both specify a
+    # dot-decimal xsd:decimal amount with no thousands grouping, so the
+    # ``1.000`` that is ambiguous in operator text is unambiguously one here.
     return coerce_decimal(raw)
 
 

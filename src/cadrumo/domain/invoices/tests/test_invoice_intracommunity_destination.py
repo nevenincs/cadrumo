@@ -107,8 +107,8 @@ def test_a_non_eu_destination_is_not_refused_by_this_guard() -> None:
 def test_the_guard_fires_even_when_the_category_alone_would_not_require_a_tax_id() -> None:
     """The contradiction is in the declared country itself, not in whether a tax id is required.
 
-    A SIMPLIFICADA with this category would otherwise require a tax id under
-    P06.S44's rule; supplying a valid one does not rescue an ES destination.
+    A SIMPLIFICADA with this category would otherwise require a tax id;
+    supplying a valid one does not rescue an ES destination.
     """
     with pytest.raises(ValidationError, match="must name a destination other than Spain"):
         _invoice(counterparty_country="ES", counterparty_tax_id="B12345674")

@@ -183,11 +183,7 @@ def _validate_revision_surface_sections(
         source_refs=source_refs,
         evidence=evidence,
     )
-    validate_export_exemption_declarations(
-        failures,
-        prefix=prefix,
-        revision=revision,
-    )
+    validate_export_exemption_declarations(failures, prefix=prefix, modelo_id=modelo_id, revision=revision)
     validate_extraction_profile_section(
         failures,
         prefix=prefix,

@@ -284,6 +284,12 @@ class EvidenceFieldProvenancePayload(OutputSchema):
     grounding: str
     anchor: str | None = None
     candidates: list[EvidenceFieldAmbiguityCandidatePayload] = []
+    # Whether the anchor was asserted by the reader that produced the value. The
+    # operator MUST be able to tell the two apart: an anchor matched against an
+    # independently produced transcription is evidence, while one a model
+    # reported about its own output is a claim. Both are worth showing; showing
+    # them identically is what would make the check decoration.
+    anchor_self_reported: bool = False
     note: str = ""
 
 

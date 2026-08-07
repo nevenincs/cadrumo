@@ -52,11 +52,13 @@ from ...domain.invoices import find_invoice, find_unmatched
 from ._bulk_import import (
     BULK_INVOICE_IMPORT_ALLOWED_COLUMNS,
     BULK_INVOICE_IMPORT_REQUIRED_COLUMNS,
+    BulkImportSourceRow,
     BulkInvoiceImportResult,
     BulkInvoiceImportRow,
     BulkInvoiceImportRowFailure,
+    BulkInvoiceImportSource,
     import_invoices_from_rows,
-    read_bulk_invoice_import_rows,
+    read_bulk_invoice_import_source,
 )
 from ._creation import (
     CatalogueInvoiceCreateResult,
@@ -112,9 +114,11 @@ from ._wizard import InvoiceWizardFieldError, InvoiceWizardResult, create_invoic
 __all__ = [
     "BULK_INVOICE_IMPORT_ALLOWED_COLUMNS",
     "BULK_INVOICE_IMPORT_REQUIRED_COLUMNS",
+    "BulkImportSourceRow",
     "BulkInvoiceImportResult",
     "BulkInvoiceImportRow",
     "BulkInvoiceImportRowFailure",
+    "BulkInvoiceImportSource",
     "CatalogueInvoiceCreateResult",
     "CatalogueInvoicePatch",
     "CatalogueInvoiceRemoveResult",
@@ -151,7 +155,7 @@ __all__ = [
     "project_invoice_payment_matches",
     "project_invoice_review",
     "project_invoice_reviews",
-    "read_bulk_invoice_import_rows",
+    "read_bulk_invoice_import_source",
     "reconcile_invoice_catalogues",
     "reconcile_invoice_repositories",
     "remove_catalogue_invoice",

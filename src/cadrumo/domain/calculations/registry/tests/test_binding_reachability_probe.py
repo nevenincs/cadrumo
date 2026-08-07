@@ -1,6 +1,6 @@
 """Reachability probes: a binding that can never match anything is refused at build.
 
-The silent-zero class this Wave targets: a binding whose selector matches no
+The silent-zero class this guards against: a binding whose selector matches no
 observation resolves to zero for every taxpayer, forever, and is
 indistinguishable from a taxpayer who genuinely had none of that thing. No
 runtime ledger data can surface it, because the defect IS the absence of

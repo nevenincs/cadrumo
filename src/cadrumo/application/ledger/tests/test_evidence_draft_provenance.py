@@ -185,8 +185,9 @@ def test_the_draft_carries_no_numeric_confidence_axis() -> None:
     """No field on the draft family may hold a model's opinion of its own output.
 
     Gated on the property rather than on a field tally: any future field whose
-    name reads as a self-reported score fails here, which is the axis the ADR
-    rules out permanently.
+    name reads as a self-reported score fails here. A model's confidence in its
+    own output is never a substitute for grounded verification and must not be
+    persisted as if it were one.
     """
     forbidden = ("confidence", "score", "probability", "certainty", "likelihood")
     for model in (InvoiceDraft, FieldProvenance, FieldAmbiguityCandidate, DraftDiscrepancyFinding):
