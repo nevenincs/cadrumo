@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:ca7aaa52a08dcb2c149e53cadb87a17e6c986ed8649763b0b3ecf1ac618dfc4c'
+body_hash: 'sha256:7438bbbc2489611eda60b4ab0ac5dab0a7da7852d5a6d845bc81fc60636c6f93'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -35,6 +35,7 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-P04-S17]]'
   - '[[2026-08-06-invoice-canonical-structure-P04-S18]]'
   - '[[2026-08-06-invoice-canonical-structure-P04-S19]]'
+  - '[[2026-08-06-invoice-canonical-structure-P04-S20]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-audit]]'
   - '[[2026-08-06-invoice-canonical-structure-lane-discovery-sweep-research]]'
@@ -86,6 +87,7 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 - `2026-08-06-invoice-canonical-structure-P04-S17` - Delete the dead second Invoice writer and its tests outright rather than routing it, because the live bulk importer already routes canonically and routing would create a third import surface
 - `2026-08-06-invoice-canonical-structure-P04-S18` - Rename InvoiceLine.category_id to state what it is, first confirming whether the preflight site using category_id with the spending-taxonomy meaning shares a serialised key with it or is unrelated, and sweeping data consumers as well as callers
 - `2026-08-06-invoice-canonical-structure-P04-S19` - Add the plausibility gate at the confirm boundary refusing a document confirmed as ISSUED that was not plausibly issued by this taxpayer, mirroring the hard gate that already refuses an ISSUED invoice as purchase evidence
+- `2026-08-06-invoice-canonical-structure-P04-S20` - Retire InvoiceKindOption and type the CLI kind option directly on InvoiceKind, in one atomic explicit-path commit across all thirteen sites
 
 ### plan
 

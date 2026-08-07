@@ -4,7 +4,7 @@ tags:
   - '#invoice-canonical-structure'
 date: '2026-08-06'
 modified: '2026-08-07'
-body_hash: 'sha256:c56d9f1a0bccd2006bf7c053c8c0c62aaac67a819927de95bc76b2e201a082d2'
+body_hash: 'sha256:40d097f560b8126177be79a31df561a2bdb1e313431b012ba4b0a37413ed3aed'
 tier: L2
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
@@ -94,7 +94,7 @@ Delete the dead second Invoice writer, rename the misleading category token, add
 - [x] `P04.S17` - Delete the dead second Invoice writer and its tests outright rather than routing it, because the live bulk importer already routes canonically and routing would create a third import surface; `src/cadrumo/application/invoices/_importing.py`.
 - [x] `P04.S18` - Rename InvoiceLine.category_id to state what it is, first confirming whether the preflight site using category_id with the spending-taxonomy meaning shares a serialised key with it or is unrelated, and sweeping data consumers as well as callers; `src/cadrumo/domain/invoices/_models.py`.
 - [x] `P04.S19` - Add the plausibility gate at the confirm boundary refusing a document confirmed as ISSUED that was not plausibly issued by this taxpayer, mirroring the hard gate that already refuses an ISSUED invoice as purchase evidence; `src/cadrumo/application/ledger/_evidence_draft.py`.
-- [ ] `P04.S20` - Retire InvoiceKindOption and type the CLI kind option directly on InvoiceKind, in one atomic explicit-path commit across all thirteen sites; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
+- [x] `P04.S20` - Retire InvoiceKindOption and type the CLI kind option directly on InvoiceKind, in one atomic explicit-path commit across all thirteen sites; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
 - [ ] `P04.S21` - Relocate InvoiceKind from the iva domain to the invoices domain keeping its name, as one atomic explicit-path commit tagged relocation carrying every consumer, fixture and __all__ update plus a regenerated apidocs scaffold; `src/cadrumo/domain/iva/_classification.py`.
 
 ### Phase `P05` - Close the M303 screen blind spots and give M390 an equivalent
