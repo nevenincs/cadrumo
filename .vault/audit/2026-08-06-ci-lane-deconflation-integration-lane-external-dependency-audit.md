@@ -199,42 +199,42 @@ so the substitution is not the one-line swap it appears to be. Left for someone 
 the modelo context, since a wrong consolidation here changes what the CLI refuses on a
 real filing surface.
 
-### semgrep-rules-and-codebase-convention-disagree-on-form | high | An unenforced gate and a parallel convention collided the first time the gate ran
+### semgrep-cast-rule-promises-an-escape-it-does-not-implement | high | The rule's message documents a justification path its pattern cannot honour
 
 Clearing the typecheck gate let the full lane reach its semgrep step, which had never
-executed. It reports thirty-eight blocking findings under two rules: casts in the
-domain and application layers, and type-checker suppressions without an inline
-justification.
+executed. It reported forty-two blocking findings under two rules. Twenty-two were
+suppressions lacking an inline rationale and are now fixed: the codebase had justified
+them in a tagged block above the line, and that rationale is now also inline, with the
+tag preserved so both forms name the same case. Four of the forty-two were introduced
+by this campaign and were fixed rather than deferred.
 
-Thirty-seven of the thirty-eight are not undocumented. They carry a formal convention -
-a rationale block directly above the line, tagged with a marker naming the case, for
-instance a cast rationale explaining that an isinstance check narrows a mapping but
-cannot check its type parameters. The convention is in active use: a peer commit added
-another instance during this session.
+Twenty remain, all casts in the domain and application layers, and they cannot be
+fixed the same way. The rule's own message tells the reader that a genuinely
+irreducible cast "must carry an inline justification comment naming the rule and the
+reason". Its pattern is a bare cast call with no exception, so a justified cast is
+flagged identically to an unjustified one. The message promises an escape the
+implementation does not have. Every one of the twenty already carries a tagged
+cast-rationale block explaining, typically, that an isinstance check narrows a mapping
+or sequence but cannot check its type parameters.
 
-So the gate's intent is already satisfied and its form is not. The suppression rule
-wants the rationale on the same line as the directive; the codebase puts it in a block
-above. The cast rule bans casts in those layers outright, while the architecture rules
-permit a documented third-party boundary cast and ask only that it be justified inline.
-The semgrep rule is therefore stricter than the architecture rule it enforces, which is
-the same shape as a type checker reporting intra-package private reaches that the
-import rules explicitly allow.
+Complying with the message was attempted and measured rather than argued. Inlining
+each existing rationale produced sixteen line-length violations, with lines reaching
+two hundred characters against a limit of a hundred and twenty; eight of the twenty
+sites have under forty characters of room for any reason at all. So the form the
+message asks for does not fit the code it governs, and the attempt was reverted.
 
-The reason this surfaced only now is that the step had never run. The rules were
-committed but unenforced, and the codebase developed its convention in parallel without
-either side learning of the other.
+Three resolutions exist and the choice is not obvious. The pattern could grow the
+exception its message already documents, which makes the implementation match the
+stated policy but relaxes a gate on the strength of what the code already does. The
+twenty casts could be restructured, though an annotated binding does not narrow what
+the checkers report as unknown, so each would become a justified suppression instead -
+trading a documented cast for a documented suppression without changing what is
+actually escaped. Or the rule could accept the block convention the codebase already
+uses, keeping one home for each rationale.
 
-This needs a ruling rather than a repair, and it is genuinely two-sided. Reformatting
-thirty-seven documented sites to carry a second, inline copy of a rationale already
-stated above them duplicates the documentation and lengthens lines that already carry
-three suppressions. Teaching the rules to accept the established marker convention
-keeps one home for the rationale, but relaxes a gate on the strength of what the code
-already does, which is the reasoning that lets real debt through.
-
-The four findings this campaign introduced were fixed rather than deferred, so the
-count is thirty-eight rather than forty-two. Those four were genuine: two were casts
-placed in a layer that bans them, added without checking whether the layer permitted
-them.
+This is recorded rather than decided because every path changes a gate or twenty
+production sites, and the rule's own text is the evidence that its author intended an
+escape to exist.
 
 ## Recommendations
 
