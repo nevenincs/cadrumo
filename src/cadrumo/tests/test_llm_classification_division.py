@@ -86,9 +86,10 @@ def test_core_run_health_diagnostics_does_not_depend_on_the_optional_subpackage(
     for node in ast.walk(tree):
         # `adapters.outbound.llm` is the CORE-side store package and is fine;
         # the bare `llm` top-level package is the optional one and is not.
-        parts = node.module.split(".") if isinstance(node, ast.ImportFrom) and node.module else []
-        if "llm" in parts and "adapters" not in parts:
-            reaches.append(f"line {node.lineno}: from {node.module}")
+        if isinstance(node, ast.ImportFrom) and node.module:
+            parts = node.module.split(".")
+            if "llm" in parts and "adapters" not in parts:
+                reaches.append(f"line {node.lineno}: from {node.module}")
         if isinstance(node, ast.Import):
             reaches.extend(
                 f"line {node.lineno}: import {alias.name}"
