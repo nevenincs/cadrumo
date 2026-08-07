@@ -190,6 +190,7 @@ def test_concurrent_mutation_between_read_and_guarded_update_is_refused(tmp_path
         finally:
             event.remove(engine, "before_cursor_execute", _side_write)
 
+        assert raised.value.context is not None
         assert raised.value.context["current_revision_id"] == forged_revision
         # The refused batch rolled back: the concurrent revision survives.
         with sqlite3.connect(db_path) as con:

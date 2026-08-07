@@ -7,7 +7,7 @@ from collections.abc import Iterable, Iterator, Sequence
 from datetime import datetime
 from typing import NamedTuple, Protocol, cast
 
-from sqlalchemy import Engine, bindparam, delete, insert, inspect, select, text, update
+from sqlalchemy import Engine, Table, bindparam, delete, insert, inspect, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -84,6 +84,18 @@ _CAS_CONFLICT_POLICY = "compare-and-swap"
 #: metadata, batch existence). Well under SQLite's bound-variable ceiling, and
 #: large enough that a 20k-row batch costs ~40 reads instead of 20k.
 _OBJECT_KEY_SELECT_CHUNK = 500
+
+
+def _secure_objects_table() -> Table:
+    """Return the ``secure_objects`` :class:`~sqlalchemy.Table` for Core DML.
+
+    ``__table__`` is a ``Table`` at runtime, but the SQLAlchemy stubs widen
+    its declared type to ``FromClause``, which the ``insert``/``update``
+    constructors do not accept. The assertion narrows it for the checker.
+    """
+    table = _orm.SecureObjectRow.__table__
+    assert isinstance(table, Table)
+    return table
 
 
 class _PreviousRowMetadata(NamedTuple):
@@ -1326,7 +1338,7 @@ class SecureObjectRepository:
         if not insert_rows:
             return
         try:
-            session.execute(insert(_orm.SecureObjectRow.__table__), list(insert_rows))
+            session.execute(insert(_secure_objects_table()), list(insert_rows))
         except IntegrityError as exc:
             if len(insert_rows) == 1:
                 # CAST-RATIONALE-SECURE-OBJECTS-INSERT-ROW-SHAPE: this funnel
@@ -1370,7 +1382,7 @@ class SecureObjectRepository:
         """
         if not update_rows:
             return
-        table = _orm.SecureObjectRow.__table__
+        table = _secure_objects_table()
         guarded = [row for row in update_rows if row["b_guard_revision_id"] is not None]
         # A stored row without a revision id cannot be lineage-guarded; the
         # write path has stamped every row from birth, so such a row is
@@ -1406,13 +1418,13 @@ class SecureObjectRepository:
     ) -> None:
         """Name the row whose stored revision moved under a guarded update."""
         row_ids = [cast(int, row["b_id"]) for row in guarded]
-        stored = dict(
-            session.execute(
-                select(_orm.SecureObjectRow.id, _orm.SecureObjectRow.revision_id).where(
-                    _orm.SecureObjectRow.id.in_(row_ids),
-                ),
-            ).all(),
-        )
+        stored: dict[int, str | None] = {}
+        for stored_id, stored_revision_id in session.execute(
+            select(_orm.SecureObjectRow.id, _orm.SecureObjectRow.revision_id).where(
+                _orm.SecureObjectRow.id.in_(row_ids),
+            ),
+        ):
+            stored[int(stored_id)] = stored_revision_id
         for row in guarded:
             row_id = cast(int, row["b_id"])
             current = stored.get(row_id)
