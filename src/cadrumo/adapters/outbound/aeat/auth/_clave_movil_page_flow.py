@@ -26,7 +26,6 @@ from typing import TYPE_CHECKING, NoReturn
 from urllib.parse import urlsplit
 from uuid import uuid4
 
-
 from .....core.config import unwrap_optional_secret
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
@@ -37,6 +36,7 @@ from ....persistence.storage import (
     CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
     secure_object_repository_for_active_bucket,
 )
+from .._html import parse_html
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from .._representation_gate import (
     dismiss_pre303_alert_modal_if_present,

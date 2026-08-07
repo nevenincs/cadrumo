@@ -131,13 +131,12 @@ def test_declared_size_matches_the_bytes_actually_committed(matrix: dict[str, ob
     """
     on_disk = MATRIX_PATH.stat().st_size
     assert matrix["serialized_bytes"] == on_disk, (
-        f"matrix declares serialized_bytes={matrix['serialized_bytes']} "
-        f"but the committed file is {on_disk} bytes"
+        f"matrix declares serialized_bytes={matrix['serialized_bytes']} but the committed file is {on_disk} bytes"
     )
 
 
 def test_matrix_is_reviewable_plain_data(matrix: dict[str, object]) -> None:
-    """"Reviewable plain data" is a term of the carve-out, not a description.
+    """ "Reviewable plain data" is a term of the carve-out, not a description.
 
     Rows carry an explicit term, an int8 vector and a scalar, so a human can read
     what shipped. An opaque blob would satisfy every other assertion here.
@@ -148,9 +147,7 @@ def test_matrix_is_reviewable_plain_data(matrix: dict[str, object]) -> None:
 
     rows = matrix.get("rows")
     assert isinstance(rows, list) and rows, "matrix.rows must carry the reviewable vocabulary rows"
-    assert len(rows) == matrix.get("vocabulary_count"), (
-        "matrix.vocabulary_count must equal the rows actually shipped"
-    )
+    assert len(rows) == matrix.get("vocabulary_count"), "matrix.vocabulary_count must equal the rows actually shipped"
 
     first = rows[0]
     assert isinstance(first, dict), "each row must be a readable object, not a packed blob"

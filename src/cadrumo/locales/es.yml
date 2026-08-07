@@ -867,10 +867,12 @@ application:
   live:
     deudas:
       errors:
-        bucket_id_blank: application.live.deudas.errors.bucket_id_blank
+        bucket_id_blank: El identificador del bucket de deudas no puede estar vacío.
         snapshot_id_blank: application.live.deudas.errors.snapshot_id_blank
-        snapshot_not_found: application.live.deudas.errors.snapshot_not_found
-        snapshot_prefix_ambiguous: application.live.deudas.errors.snapshot_prefix_ambiguous
+        snapshot_not_found: No hay ninguna instantánea de deudas que coincida con
+          el identificador solicitado.
+        snapshot_prefix_ambiguous: El prefijo de la instantánea de deudas coincide
+          con varias instantáneas.
     expedientes:
       errors:
         bucket_id_blank: El identificador del bucket de expedientes no puede estar
@@ -2050,7 +2052,9 @@ cli:
           del que extraer los datos.
         extract_help: Lee los campos de una factura en PDF en el propio equipo y genera
           un borrador para revisar.
-        extract_off_host_needs_content_address: cli.app.ledger.evidence.extract_off_host_needs_content_address
+        extract_off_host_needs_content_address: Este justificante no tiene huella
+          de contenido, por lo que una lectura fuera del equipo no puede registrarse
+          sobre los bytes que enviaría.
         extract_off_host_needs_evidence_id: 'Una lectura fuera del equipo debe indicar
           --evidence-id: el consentimiento se registra sobre la huella de contenido
           del documento, que un identificador de adjunto no aporta.'
@@ -6823,7 +6827,8 @@ errors:
       con el identificador indicado.
     refused_live_borrador_snapshot_not_found: No existe ningún snapshot del borrador
       de Modelo 100 con el identificador indicado.
-    refused_live_deudas_snapshot_not_found: errors.refused.refused_live_deudas_snapshot_not_found
+    refused_live_deudas_snapshot_not_found: No existe ningún snapshot de deudas con
+      el identificador indicado.
     refused_live_expedientes_snapshot_not_found: No existe ningún snapshot de expedientes
       con el identificador indicado.
     refused_live_justificante_capture_snapshot_not_found: No existe ninguna captura

@@ -35,8 +35,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BUCKET_ID = "certificate-real-boundary"
 
 
-
-
 def _certificate_session() -> AeatSession:
     current = datetime.now(UTC)
     return AeatSession(

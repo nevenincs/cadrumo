@@ -1,10 +1,12 @@
 # Spanish sub-national IVA territories, keyed by the postal-code prefix that
 # identifies them on a printed document.
 #
-# WHY THIS TABLE EXISTS. Ley 37/1992 art. 3.Dos defines the territorio de
-# aplicacion del impuesto as the peninsula and the Balearic Islands. The Canary
-# Islands (IGIC) and Ceuta and Melilla (IPSI) are outside it, so an operation
-# involving a party established there is not subject to LIVA at all. A country
+# WHY THIS TABLE EXISTS. Ley 37/1992 art. 3.Dos, numero 1.o, letras a) and b)
+# put Ceuta y Melilla and Canarias OUTSIDE the territorio de aplicacion del
+# impuesto -- the first as territory outside the customs union, the second as
+# territory excluded from turnover-tax harmonisation. The Canary Islands charge
+# IGIC and Ceuta and Melilla charge IPSI, so an operation involving a party
+# established there is not subject to LIVA at all. A country
 # code cannot separate them: "ES" names the Member State while the territory
 # inside it stays undetermined, which is why the country resolver deliberately
 # returns nothing for a Spanish code and why this axis had to exist separately.
@@ -32,10 +34,15 @@
 # geography rather than tax law, published by Correos and used unchanged by the
 # AEAT's own censal address forms; it is not a value this repository can point
 # at a bundled BOE text for, and it is recorded here rather than inlined in code
-# so that it is reviewable in one place. Ley 37/1992 art. 3 is NOT currently in
-# the bundled corpus -- arts. 1 and 102 are -- so the citation below resolves to
-# the provision by identifier only. Bundling art. 3 would let the evidence gate
-# validate this entry the way it validates the rate tables.
+# so that it is reviewable in one place.
+#
+# WHERE THE BALEARS SIT, AND WHY THEY ARE NOT QUOTED. Art. 3 does not name them.
+# Apartado Uno sets the ambito espacial as el territorio espanol "incluyendo en
+# el las islas adyacentes", and apartado Dos excludes Canarias, Ceuta y Melilla
+# and nothing else Spanish; the Balears are therefore inside the TAI by adjacency
+# plus non-exclusion. "Islands are outside" is the plausible wrong generalisation
+# this table is shaped to refuse -- prefixes 07 (Illes Balears) are deliberately
+# absent from the excluded set, which is what places them inside.
 
 [[territory]]
 postal_prefixes = ["35", "38"]

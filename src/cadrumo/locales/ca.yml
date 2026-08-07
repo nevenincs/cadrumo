@@ -865,9 +865,12 @@ application:
     deudas:
       errors:
         bucket_id_blank: application.live.deudas.errors.bucket_id_blank
-        snapshot_id_blank: application.live.deudas.errors.snapshot_id_blank
-        snapshot_not_found: application.live.deudas.errors.snapshot_not_found
-        snapshot_prefix_ambiguous: application.live.deudas.errors.snapshot_prefix_ambiguous
+        snapshot_id_blank: L'identificador de la instantània de deutes no pot estar
+          buit.
+        snapshot_not_found: No hi ha cap instantània de deutes que coincideixi amb
+          l'identificador sol·licitat.
+        snapshot_prefix_ambiguous: El prefix de la instantània de deutes coincideix
+          amb diverses instantànies.
     expedientes:
       errors:
         bucket_id_blank: L'identificador del bucket d'expedients no pot estar buit.
@@ -2040,7 +2043,9 @@ cli:
           del qual extreure les dades.
         extract_help: Llegeix els camps d'una factura en PDF al mateix equip i genera
           un esborrany per revisar.
-        extract_off_host_needs_content_address: cli.app.ledger.evidence.extract_off_host_needs_content_address
+        extract_off_host_needs_content_address: Aquest justificant no té empremta
+          de contingut, de manera que una lectura fora de l'equip no es pot registrar
+          sobre els bytes que enviaria.
         extract_off_host_needs_evidence_id: 'Una lectura fora de l''equip ha d''indicar
           --evidence-id: el consentiment es registra sobre l''empremta de contingut
           del document, que un identificador d''adjunt no aporta.'

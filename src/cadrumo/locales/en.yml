@@ -784,9 +784,9 @@ application:
   live:
     deudas:
       errors:
-        bucket_id_blank: application.live.deudas.errors.bucket_id_blank
-        snapshot_id_blank: application.live.deudas.errors.snapshot_id_blank
-        snapshot_not_found: application.live.deudas.errors.snapshot_not_found
+        bucket_id_blank: Deudas bucket id must not be blank.
+        snapshot_id_blank: Deudas snapshot id must not be blank.
+        snapshot_not_found: No deudas snapshot matches the requested id.
         snapshot_prefix_ambiguous: application.live.deudas.errors.snapshot_prefix_ambiguous
     expedientes:
       errors:
@@ -1900,7 +1900,9 @@ cli:
           to --evidence-id).
         extract_evidence_id_help: Purchase invoice evidence record id to extract from.
         extract_help: Read an invoice PDF's fields on-host into a reviewable draft.
-        extract_off_host_needs_content_address: cli.app.ledger.evidence.extract_off_host_needs_content_address
+        extract_off_host_needs_content_address: This evidence record carries no content
+          address, so an off-host read cannot be recorded against the bytes it would
+          transmit.
         extract_off_host_needs_evidence_id: 'An off-host read must name --evidence-id:
           consent is recorded against the document''s content address, which an attachment
           id does not carry.'
@@ -6353,7 +6355,8 @@ errors:
       identifier provided.
     refused_live_borrador_snapshot_not_found: No Modelo 100 borrador snapshot exists
       with the identifier provided.
-    refused_live_deudas_snapshot_not_found: errors.refused.refused_live_deudas_snapshot_not_found
+    refused_live_deudas_snapshot_not_found: No deudas snapshot exists with the identifier
+      provided.
     refused_live_expedientes_snapshot_not_found: No expedientes snapshot exists with
       the identifier provided.
     refused_live_justificante_capture_snapshot_not_found: No captured justificante

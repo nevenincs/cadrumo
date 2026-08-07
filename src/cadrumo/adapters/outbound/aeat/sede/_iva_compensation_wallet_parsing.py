@@ -34,6 +34,7 @@ from .....domain.calculations.registry import (
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
+from .._html import parse_html
 from ._adapter_utils import bounded_text, normalize_display_text, normalize_response_text, redacted_url
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._schema import IvaCompensationWalletObservation, IvaCompensationWalletRow

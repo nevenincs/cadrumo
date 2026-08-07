@@ -53,6 +53,7 @@ from .....domain.calculations.registry import (
     registry_snapshot_id,
     relation_source_requirements,
 )
+from .._html import parse_html
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response

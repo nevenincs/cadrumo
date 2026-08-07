@@ -44,6 +44,7 @@ from .....core.time import now
 from .....domain.calculations.registry import (
     RemoteStateGuardPolicy,
 )
+from .._html import parse_html
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._adapter_utils import assert_read_http_for

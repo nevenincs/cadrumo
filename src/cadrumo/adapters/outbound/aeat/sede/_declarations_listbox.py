@@ -12,6 +12,7 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import Period
 from .....core.i18n import tr
 from .....core.logging import get_logger
+from .._html import parse_html
 from ._adapter_utils import normalize_response_text
 from ._declarations_schema import Declaracion
 from ._errors import SedeFailureMode, SedeParseError, SedeValidationError

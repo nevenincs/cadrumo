@@ -34,7 +34,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from typing import NoReturn, Protocol, cast
 
-
+from ._html import parse_html
 from ._playwright import PlaywrightError
 
 

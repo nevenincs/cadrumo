@@ -454,6 +454,25 @@ def test_an_ordinary_domestic_invoice_is_never_asked_for_the_customer_status() -
     assert assembly.assembled, [m.field for m in assembly.missing]
 
 
+def test_an_unestablished_status_is_stamped_as_unresolved_not_as_a_business() -> None:
+    """The safety asymmetry, asserted on the VALUE and not merely on the verdict.
+
+    Where the probe certifies indifference, a substantive placeholder would reach
+    the same category — so a category-only assertion cannot see this, and did not:
+    swapping the placeholder to ``B2B_IVA_REGISTERED`` left every other gate in
+    this file green. The harm is not the verdict but the record. The criteria
+    carry the status onward to whatever reads the field rather than the category,
+    so a substantive placeholder writes a claim about the customer that nobody
+    made, on the commonest document there is.
+    """
+    assembly = _domestic(asserted_customer_tax_status=None, supply_nature=None)
+
+    assert assembly.criteria is not None
+    assert assembly.criteria.customer_tax_status is CustomerTaxStatus.UNKNOWN, (
+        f"an unestablished status was stamped as {assembly.criteria.customer_tax_status}"
+    )
+
+
 def test_the_undetermined_status_placeholder_never_changes_the_outcome() -> None:
     """Asserting it assembled leaves the placeholder unguarded.
 

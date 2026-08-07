@@ -51,6 +51,7 @@ from .....domain.calculations.registry import (
     assert_remote_operation_allowed as _assert_remote_operation_allowed,
 )
 from .....domain.justificante import JustificanteVerificationError as _JustificanteVerificationError
+from .._html import parse_html
 from .._playwright import PlaywrightError as _PlaywrightError
 from ..sede import BrowserAdapterTypeError as _BrowserAdapterTypeError
 

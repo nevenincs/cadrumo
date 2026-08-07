@@ -32,6 +32,7 @@ from .....domain.calculations.registry import (
     RemoteOperation,
     assert_remote_operation_allowed,
 )
+from .._html import parse_html
 from .._playwright import PlaywrightError
 from .._representation_gate import (
     dismiss_pre303_alert_modal_if_present,

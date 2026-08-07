@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-
 from .....core.hashing import sha256_hex
+from .._html import parse_html
 from .._playwright import PlaywrightError
 from ._adapter_utils import bounded_text, normalize_response_text, redacted_url
 from ._declarations_listbox import _NO_RESULTS_TEXT, _has_class
