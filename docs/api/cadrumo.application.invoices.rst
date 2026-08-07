@@ -15,7 +15,6 @@ Submodules
 
    cadrumo.application.invoices._bulk_import
    cadrumo.application.invoices._creation
-   cadrumo.application.invoices._importing
    cadrumo.application.invoices._lifecycle
    cadrumo.application.invoices._linking
    cadrumo.application.invoices._projection
