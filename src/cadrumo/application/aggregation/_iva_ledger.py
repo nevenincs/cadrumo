@@ -1647,9 +1647,16 @@ def _rate_table_covers(on_date: date) -> bool:
     one -- no record for any member state starts before 2024 -- so a
     transaction dated earlier cannot be classified whatever rate it carries,
     and telling its filer that their rate is unsupported sends them to correct
-    a figure that was right. Reads the same table
-    :func:`_iva_rate_kind_for` reads rather than a duplicated floor constant,
-    so the two cannot disagree about what is covered.
+    a figure that was right.
+
+    Asks the registry rather than restating a floor constant that could drift
+    from it. It reads only TIER-DEFINING rates, via :func:`lookup_rate`, while
+    :func:`_iva_rate_kind_for` reads every rate including the coexisting
+    temporary ones -- so a date covered solely by a temporary record would
+    report uncovered here. That cannot arise today, because every temporary
+    window sits inside a year the tier-defining records already span, and it is
+    the safe direction anyway: the worst outcome is an unsupported-rate refusal
+    naming the rate instead of one naming the year.
     """
     for kind in domestic_categories_by_rate_kind():
         try:
