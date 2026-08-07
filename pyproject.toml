@@ -549,6 +549,13 @@ convention = "google"
 # `dev/` holds contributor-only developer tooling (quality gates, audits,
 # docs build); print() is the canonical CLI output surface for these.
 "dev/**/*.py" = ["T20"]
+# Test modules anywhere under dev/, on the same audience reasoning as the
+# bundled `src/cadrumo/**/tests/**` exemption above: docstring rules are scoped
+# out of the test surface, and tests are excluded from autodoc either way. The
+# rule reads the surface rather than the location, which is what the sibling
+# `dev/docs/**` entry already assumed -- a test package relocated INTO dev/ from
+# src/ otherwise loses an exemption it never stopped qualifying for.
+"dev/**/tests/**/*.py" = ["D"]
 # Developer quality/docs/audit runners invoke fixed tool argv or explicit
 # wrapper argv; Ruff's subprocess heuristic cannot infer those local contracts.
 "dev/audit/complexity.py" = ["S603"]
