@@ -10,7 +10,7 @@ import pytest
 
 from ......core.config import Settings
 from ...browser import Profile, create_browser_session
-from ...tests._process_support import wait_for_process_exit
+from ...tests import wait_for_process_exit
 from .._authenticator_types import AeatSession
 from .._browser_lifecycle import (
     _CloseIntentBarrier,

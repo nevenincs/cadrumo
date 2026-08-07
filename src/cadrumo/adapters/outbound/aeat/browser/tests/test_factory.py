@@ -10,7 +10,7 @@ import pytest
 
 from ......core.config import Settings
 from ...auth import BrowserSessionLike
-from ...tests._process_support import wait_for_process_exit
+from ...tests import wait_for_process_exit
 from .. import BrowserError, Profile, create_browser_session, opened_browser_page, shared_playwright_runtime
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

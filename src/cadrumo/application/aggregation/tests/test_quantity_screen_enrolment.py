@@ -29,8 +29,7 @@ import pytest
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
-from ....domain.calculations.registry import ModeloRevision
-from ....domain.calculations.registry._ledger_binding_resolution import screened_quantity_families
+from ....domain.calculations.registry import ModeloRevision, screened_quantity_families
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -188,7 +187,7 @@ def _resolve_renta(repository: TransactionCatalogueRepository) -> CalculationSou
 _ENROLLED: tuple[_EnrolledFamily, ...] = (
     _EnrolledFamily(
         family="ledger-IVA",
-        reason="unrouted_declarable_iva_quantity",
+        reason="unrouted_declarable_quantity",
         dropped_fact="base_amount_sum",
         resolve=_resolve_iva,
     ),

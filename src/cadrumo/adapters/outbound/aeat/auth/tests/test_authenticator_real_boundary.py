@@ -16,7 +16,7 @@ from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
 from ......tests.secure_sql import isolated_runtime_profile
 from ...browser import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
-from ...tests._process_support import wait_for_process_exit
+from ...tests import wait_for_process_exit
 from .. import (
     AEAT_SESSION_IDLE_TTL,
     AeatAuthenticator,
