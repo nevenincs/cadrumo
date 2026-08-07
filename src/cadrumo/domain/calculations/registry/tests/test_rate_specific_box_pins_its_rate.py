@@ -1,0 +1,184 @@
+"""A casilla exported to a rate-specific official box must pin that rate.
+
+``rate_kinds`` and ``applied_rates`` are independent axes. A tier is not a rate:
+on 2024 dates the reducido tier legitimately carries 10 %, 7,5 % and 5 %, and the
+super-reducido tier carries 4 % and 2 %. So a binding that constrains only the
+TIER, feeding a casilla whose official AEAT box names a RATE, sums several rates
+into one box and leaves its siblings empty. That is wrong mechanically, without
+needing to know what the taxpayer filed.
+
+This is the third shape of one defect found in a single campaign -- the Reg.
+ordinario tier merge, a cuota over-declaration on the 2024 temporary rates, and
+the recargo de equivalencia block -- so it is a property of the binding
+vocabulary rather than three incidents, and worth a gate rather than a fourth
+fix.
+
+WHICH BOXES ARE RATE-SPECIFIC IS READ FROM THE DESIGN, NOT LISTED HERE. AEAT
+labels those rows itself: a box whose description declares ``Tipo N%`` is
+rate-keyed by its own text. Deriving the set that way means a new rung in a
+future design is covered the day the corpus is updated, and no roster of
+casillas can go stale. A hardcoded list would encode today and detect nothing
+tomorrow.
+
+WHAT THIS DOES NOT CHECK, so its silence is not read as coverage:
+
+Casillas carrying no official box number are invisible to it. That is not an
+oversight but the same vocabulary mismatch this modelo has billed for repeatedly
+-- casillas are addressed semantically, the design numerically, and where a
+casilla states no number nothing can decide which box it feeds. Six such fields
+exist on Modelo 390's export layout alone.
+
+It also cannot see a box whose narrowing axis does not exist. Where the design
+splits a quantity on a dimension the domain has no field for -- bienes de
+inversión is the measured case -- the binding cannot pin it and no
+selector-shaped rule can detect the merge. That is a taxonomy gap, and this gate
+is blind to it by construction.
+
+And it says nothing about rate-BLIND casillas, which are correct and necessary:
+the total layer must catch every row including those whose rate was never
+recorded. A blind binding on a TOTAL box is the design, not a defect.
+
+See :func:`~domain.calculations.registry.derive_rate_box_partitions` for the
+runtime counterpart, which derives the same two-layer shape from a revision to
+compute the coverage shortfall the calculate advisory and the export refusal
+share. This module asserts the structural precondition that shape assumes.
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+import pytest
+
+from .....core.resources import bundled_path
+from .._authority import ValidatedRegistryAuthority
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+# "... - Tipo 7,5% - Cuota [670]" -- AEAT's own label declares the rate.
+_RATE_KEYED_ROW = re.compile(r"Tipo\s+[\d,]+\s*%.*?\[(\d{1,4})\]")
+
+
+def _authority() -> ValidatedRegistryAuthority:
+    return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
+
+
+def _design_files(modelo_id: str) -> list[Path]:
+    directory = bundled_path("corpus", "aeat_official", "disenos_registro", f"modelo_{modelo_id}")
+    return sorted(directory.glob("files/*.extracted.md")) if directory.is_dir() else []
+
+
+def _rate_specific_boxes(modelo_id: str) -> set[str]:
+    """Box numbers the design itself labels with a rate, across every bundled year."""
+    boxes: set[str] = set()
+    for path in _design_files(modelo_id):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        boxes.update(_RATE_KEYED_ROW.findall(text))
+    return boxes
+
+
+def _pinned_rates(binding) -> tuple[object, ...] | None:  # noqa: ANN001 - registry model
+    """The binding's ``applied_rates`` narrowing, or None when it has no such axis."""
+    selector = getattr(binding, "selector", None)
+    return getattr(selector, "applied_rates", None) if selector is not None else None
+
+
+def _selector_supports_rates(binding) -> bool:  # noqa: ANN001 - registry model
+    selector = getattr(binding, "selector", None)
+    return selector is not None and hasattr(selector, "applied_rates")
+
+
+def _offenders() -> list[str]:
+    """Every casilla on a rate-labelled box whose binding constrains no rate."""
+    offenders: list[str] = []
+    for modelo in _authority().modelos:
+        rate_boxes = _rate_specific_boxes(modelo.id)
+        if not rate_boxes:
+            continue
+        for revision_id, revision in modelo.revisions.items():
+            bindings = {binding.id: binding for binding in revision.bindings}
+            for casilla in revision.casillas:
+                number = (casilla.number or "").strip()
+                if number not in rate_boxes or casilla.binding is None:
+                    continue
+                binding = bindings.get(casilla.binding)
+                # A binding whose selector has no rate axis at all is a different
+                # source kind entirely; it is out of scope rather than passing.
+                if binding is None or not _selector_supports_rates(binding):
+                    continue
+                if not _pinned_rates(binding):
+                    offenders.append(
+                        f"modelo {modelo.id} revision {revision_id!r}: casilla {casilla.id!r} is "
+                        f"exported to box [{number}], which the design labels with a rate, but its "
+                        f"binding {binding.id!r} pins no applied_rates -- it sums every rate in its "
+                        "tier into one rate's box"
+                    )
+    return offenders
+
+
+def _guarded_casillas() -> list[str]:
+    """Every casilla this module can actually see: it declares a rate-keyed box."""
+    seen: list[str] = []
+    for modelo in _authority().modelos:
+        rate_boxes = _rate_specific_boxes(modelo.id)
+        if not rate_boxes:
+            continue
+        for revision in modelo.revisions.values():
+            seen.extend(
+                casilla.id for casilla in revision.casillas if (casilla.number or "").strip() in rate_boxes
+            )
+    return seen
+
+
+def test_the_parser_reads_rate_keyed_boxes_from_the_design() -> None:
+    """Anti-vacuity: if nothing parses, every check below agrees with everything.
+
+    Scoped to "at least one modelo", not "every modelo", because a design that
+    declares no rate-keyed box is a real and legitimate shape rather than a parse
+    failure -- Modelo 303 carries its rate as a design constant in a column
+    instead of labelling boxes with it, so it is genuinely out of scope here. A
+    per-modelo assertion would report that correct difference as a broken parser.
+    """
+    parsed = {modelo.id: len(_rate_specific_boxes(modelo.id)) for modelo in _authority().modelos}
+    assert any(parsed.values()), (
+        "no rate-labelled box parsed for ANY modelo; the design label shape or the corpus path has "
+        f"moved and this module now checks nothing. Per-modelo counts: {parsed}"
+    )
+
+
+def test_the_gate_can_see_something_to_guard() -> None:
+    """The second anti-vacuity half, and the one that states this gate's real reach.
+
+    A casilla is visible here only if it declares a rate-keyed box NUMBER. That
+    is a narrow population, and narrower than the defect: the three Modelo 390
+    recargo casillas that demonstrably merge rates carry no number at all, so
+    this module cannot see them. **Its blind spot and the defect's cause are the
+    same fact** -- a casilla nobody gave a box number is a casilla nobody checked
+    against the box's own label, which is how the merge survived.
+
+    So read this gate as a REGRESSION LOCK on boxes already identified, not as a
+    detector of the existing class. It fails if that population empties, which
+    would mean the numbers were removed and the lock silently released.
+    """
+    guarded = _guarded_casillas()
+    assert guarded, (
+        "no casilla declares a rate-keyed official box number, so this gate guards nothing; "
+        "either the box numbers were removed or the design parse has broken"
+    )
+
+
+def test_a_casilla_on_a_rate_keyed_box_pins_its_rate() -> None:
+    """A rate-keyed box must be fed by a binding that admits exactly that rate.
+
+    A tier is not a rate. Constraining only the tier while writing to a box the
+    design labels with a rate merges several rates into one official figure and
+    leaves the sibling boxes empty -- a false breakdown on a filed artefact,
+    detectable from the registry and the corpus alone.
+    """
+    offenders = _offenders()
+    assert not offenders, (
+        "these casillas write a rate-labelled official box from a binding that constrains only "
+        "the tier, so several rates are summed into one box:\n  " + "\n  ".join(offenders)
+    )
