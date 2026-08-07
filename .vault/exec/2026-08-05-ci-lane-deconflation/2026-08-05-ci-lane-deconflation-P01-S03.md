@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#ci-lane-deconflation'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:f0865b7479ddb76b98d2833ccb3051a0fbf2d51dc616cd4318bdbf3be18fe4dc'
+body_hash: 'sha256:0bf98333cd91faa73c2e8fc18b9bcd0a89ba06b1aeaa04e46bba96b0c6d7c343'
 step_id: 'S03'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S03 and 2026-08-05-ci-lane-deconflation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Dispatch ci-full for its first ever execution and record the result, its run count is zero so every claim about its steps is structural rather than observed and ## Scope
-
-- `.github/workflows/ci-full.yml` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Dispatch ci-full for its first ever execution and record the result, its run count is zero so every claim about its steps is structural rather than observed
 

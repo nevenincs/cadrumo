@@ -3,32 +3,13 @@ tags:
   - '#audit'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:5b737a92874a06cabd7075b6620e52f69b8914a207a630b831768d4671c7e462'
+body_hash: 'sha256:186692c158f80d2538548330e1d7796273b9c5adaa7255f3903bf284d97138ad'
 related:
   - "[[2026-08-06-llm-package-split-adr]]"
   - "[[2026-08-06-llm-package-split-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace llm-package-split with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `llm-package-split` audit: `Enforcement gaps, the vacuous-green defect class, and the disposition register`
 
@@ -51,15 +32,6 @@ run at any point: a prior session's inference crashed the development host and t
 concurrent agent sessions, so every measurement here is a static analysis of captured results.
 
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### Enforcement gaps, the vacuous-green defect class, and the disposition register | {level} | {summary}
-
-     followed by a paragraph carrying the detail. Enforcement gaps, the vacuous-green defect class, and the disposition register is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### enumerated-gate-tier-fails-open | critical | The strictest secure-storage gate reports success for a surface that does not exist or has been emptied
 

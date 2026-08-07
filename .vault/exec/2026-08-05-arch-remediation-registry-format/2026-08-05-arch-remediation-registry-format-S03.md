@@ -5,43 +5,11 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:8db1d8805e97ce7f73ad2c36b2baff7107131f236c5bf9410face6314fd33bf8'
+body_hash: 'sha256:28f96ef85fa8c4d117b0c22d80a6fb025612e6bcaac0b4f3fa956403f0256152'
 step_id: 'S03'
 related:
   - "[[2026-08-05-arch-remediation-registry-format-plan]]"
 ---
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace arch-remediation-registry-format with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S03 and 2026-08-05-arch-remediation-registry-format-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Record in the workbook parity gate docstring that section order is deliberately unasserted, so a future reader does not re-add the claim from the rule history and ## Scope
-
-- `src/cadrumo/application/storage/calc_sheets/tests/test_modelo_export_parity.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Record in the workbook parity gate docstring that section order is deliberately unasserted, so a future reader does not re-add the claim from the rule history
 

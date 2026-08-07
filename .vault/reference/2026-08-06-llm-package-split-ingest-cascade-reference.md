@@ -3,38 +3,14 @@ tags:
   - '#reference'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:edfb8e170b24c38e97ffc1d2447a7bee3d19817b0bb9798ffa7655d95f8fa33d'
+body_hash: 'sha256:77292d521ead2e4cf8483a1482c564af8ce640c4ad85925709ac0c641e46f4c4'
 related:
   - "[[2026-08-06-llm-package-split-adr]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #reference) and one feature tag.
-     Replace llm-package-split with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `llm-package-split` reference: `Ingest cascade blueprint, format coverage, and injection posture`
-
-<!-- Brief description of what was researched and what sources were consulted.
-
-Include any concrete references to files, line numbers, modules, etc. This is
-the information that coding agents will consult during implementation. -->
 
 ## Summary
 

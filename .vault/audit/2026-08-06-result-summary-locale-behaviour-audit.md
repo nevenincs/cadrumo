@@ -9,8 +9,6 @@ body_hash: 'sha256:4e14329feb44fae578b92c1a5dc10b858cd54563a37b5ccafefb7cb7db12f
 related: []
 ---
 
-
-
 # `result-summary-locale-behaviour` audit: `Result-summary label locale behaviour: measured, not adjudicated`
 
 ## Scope

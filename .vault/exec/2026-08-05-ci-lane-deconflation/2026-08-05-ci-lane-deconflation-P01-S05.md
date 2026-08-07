@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#ci-lane-deconflation'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:1ea2e2f70b6e445b92a5de6aaf990cba3500c0605b40bc5c98814b6ed9a8cc8e'
+body_hash: 'sha256:40f9764f5dd0c979116015d5bb0d4ad5e6704756dbc69b1e50a47f78cefd6bf6'
 step_id: 'S05'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S05 and 2026-08-05-ci-lane-deconflation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Decide what to do about the already-pushed branch, a peer snapshot pushed it so the original decision is moot and the live question is whether the published history needs remediation and ## Scope
-
-- `origin/main` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Decide what to do about the already-pushed branch, a peer snapshot pushed it so the original decision is moot and the live question is whether the published history needs remediation
 
@@ -106,17 +73,6 @@ Both path-escaping forms are absent from the current tree while the backslash fo
 present in the published commit, which is the exact split the scrub commit's message
 claims. Patterns were compared with `-F` on both sides so a metacharacter could not match
 a filename in place of the token.
-
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
-
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
-
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
 
 ## Notes
 
