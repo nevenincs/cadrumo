@@ -40,6 +40,7 @@ import pytest
 from .....core.i18n import lookup_translation, lookup_translation_entry
 from .....core.resources import resources
 from .._modelo_localization import resolve_modelo_localization
+from .._schema_surfaces import CasillaDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -62,7 +63,7 @@ class _Witness(NamedTuple):
     continuity_value: str
 
 
-def _chain_for(casilla, field: str) -> tuple[str, ...]:  # noqa: ANN001 - registry model
+def _chain_for(casilla: CasillaDefinition, field: str) -> tuple[str, ...]:
     """The ordered key chain the production accessors resolve for this field.
 
     ``help`` is derived from the label chain exactly as
@@ -94,7 +95,11 @@ def _witnesses() -> list[_Witness]:
                         if lookup_translation(keys[0], locale=locale) is not None:
                             continue
                         later = next(
-                            (value for key in keys[1:] if (value := lookup_translation(key, locale=locale)) is not None),
+                            (
+                                value
+                                for key in keys[1:]
+                                if (value := lookup_translation(key, locale=locale)) is not None
+                            ),
                             None,
                         )
                         if later is None:
@@ -133,7 +138,11 @@ def _contested_chains() -> list[tuple[tuple[str, ...], str, str, str]]:
                     for locale in ("es", *_TARGET_LOCALES):
                         occurrence = lookup_translation(keys[0], locale=locale)
                         continuity = next(
-                            (value for key in keys[1:] if (value := lookup_translation(key, locale=locale)) is not None),
+                            (
+                                value
+                                for key in keys[1:]
+                                if (value := lookup_translation(key, locale=locale)) is not None
+                            ),
                             None,
                         )
                         if occurrence is not None and continuity is not None and occurrence != continuity:
@@ -141,7 +150,7 @@ def _contested_chains() -> list[tuple[tuple[str, ...], str, str, str]]:
     return contested
 
 
-def _casilla(witness: _Witness):  # noqa: ANN201 - registry model
+def _casilla(witness: _Witness) -> CasillaDefinition:
     revision = resources().modelos.get(witness.modelo_id).revisions[witness.revision_id]
     return next(casilla for casilla in revision.casillas if casilla.id == witness.casilla_id)
 
@@ -220,9 +229,7 @@ def test_a_valueless_key_does_not_stop_the_chain() -> None:
     witness = _witnesses()[0]
     valueless_key = witness.keys[0]
     present, value = lookup_translation_entry(valueless_key, locale=witness.locale)
-    assert present and value is None, (
-        f"{valueless_key!r} is no longer the present-but-valueless shape this test needs"
-    )
+    assert present and value is None, f"{valueless_key!r} is no longer the present-but-valueless shape this test needs"
 
     resolved = resolve_modelo_localization(witness.keys, locale=witness.locale, required=False)
 
