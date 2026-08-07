@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:b9a2b6982262691932babe8271a3fbf78c76c7918518d7e87464d3af0002dfbb'
+body_hash: 'sha256:badbd63e63a1908b2c6b3e61b08d14e24bd1d434263b7339da9b2374a5d75574'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -443,12 +443,35 @@ under the *detected* dialect.
 
 The pipeline binds to `LLMClient` and the `LLMProvider` enum only, with
 role-named model settings (a transcription vision model, an extraction text
-model, a mapping model — each defaulting sensibly, each overridable). It is
-local-only per the package-split ADR's D5; whether the local runtime serves
-the model on GPU or CPU is Ollama's deployment concern, invisible at this
-seam — today's GPU contention constrains *when measurement runs*, never the
-architecture. The hardware floor is declared and probed through that ADR's
-D6 capability probe, refusing with a typed shortfall rather than thrashing.
+model, a mapping model — each defaulting sensibly, each overridable). The
+production binding is **on-host by default**: whether the local runtime
+serves the model on GPU or CPU is Ollama's deployment concern, invisible at
+this seam — today's GPU contention constrains *when measurement runs*, never
+the architecture. The hardware floor is declared and probed through the
+package-split ADR's D6 capability probe, refusing with a typed shortfall
+rather than thrashing.
+
+**Amended by operator ruling ("gated cloud is ok for measurement"):** a
+gated cloud engine is admissible behind the same abstraction, and the two
+halves of the ruling are separately load-bearing. First, **cloud as a
+measurement engine is sanctioned** for runs against the public corpus:
+without it S1 is unmeasurable in practice — no cloud multimodal transport
+exists today (`llm/_providers/{anthropic,openai,gemini}.py` carry zero
+`images` references; only `local.py` reads them), multimodal is
+local-Ollama-only, and the GPU is unusable under a resident service — and
+the corpus is public, synthetic and licence-clean, carrying no taxpayer
+data, which is what makes the route admissible rather than a
+confidentiality breach. Standing up the cloud multimodal transport (the
+in-memory HTTP providers only, never a subprocess or file-writing route —
+consistent with the accepted 2026-06-10 ruling and untouched by the
+package-split ADR's deletion of the subprocess family) is therefore
+authorised work. Second, **cloud is NOT the production binding.** Production
+defaults stay on-host; any off-host route over real taxpayer documents
+carries the consent gate `sensitive-financial-data-secure-storage-only`
+requires — explicit, per-invocation, default-off, gestor-barred, in-memory
+only, no decrypted bytes reaching disk. Which provider a run selects stays
+configuration behind `LLMProvider`; the confidentiality guarantee is an
+operator directive and is not weakened by this amendment.
 Confidentiality survives by inheritance, not re-argument: images and text
 move as in-memory base64/strings through the existing client, the subpackage
 holds no storage handle (D3 of the split ADR), every persisted intermediate
@@ -477,10 +500,17 @@ Two honest lanes, because the corpus is external and CI cannot run local
 inference:
 
 - **The measured lane (offline).** Model-bearing stages (S1 vision, S2, the
-  mapping call) are measured by a harness run against the corpus with the
-  fleet quiesced, results persisted with the key hash, model identity and
-  revision — the discipline the package-split ADR's own figure-tracing
-  established. Acceptance floors are set from the *first measured baseline*
+  mapping call) are measured by a harness run against the corpus, results
+  persisted with the key hash, model identity and revision — the discipline
+  the package-split ADR's own figure-tracing established. Two engine routes
+  serve this lane under D8's amendment: the gated cloud engine, which
+  removes the GPU-headroom dependency entirely for the stages a cloud
+  provider can serve (admissible because the corpus is public and carries no
+  taxpayer data), and local-engine runs with the fleet quiesced, which
+  remain required for one purpose the cloud route cannot substitute —
+  measuring the floors of the production on-host models themselves. A
+  cloud-measured S1 characterises the pipeline design and gives a baseline;
+  it says nothing about what the shipped local model recovers. Acceptance floors are set from the *first measured baseline*
   at plan time, not invented in this record; the one floor set here by
   construction is that the anchored-fabrication rate on S3-passing fields is
   zero, because a counterexample is a grounding bug, not a model quality
@@ -519,6 +549,17 @@ unconstrained selection; the remedy is to make the unconstrained selection
 inexpressible. The per-field provenance envelope follows the same logic:
 facts about how a value was obtained, rather than a model's opinion of
 itself.
+
+Two independent lanes have since corroborated the defect class the grounding
+stage exists to close: the text path reads 57 documents and raises on none,
+so "read successfully with few fields" is indistinguishable from "could not
+read this layout"; and the canonical lane found thirteen unmapped record
+families silently skipped, so an unsupported submission presented as an
+empty batch reporting nothing wrong. The general form — a reader that
+degrades silently is worse than one that fails, because success and partial
+success present identically to the operator — is exactly what D4's
+per-field, loud, operator-resolvable degradation and S3's findings channel
+are built against.
 
 Widening `InvoiceDraft` rather than replacing it keeps one waist and honours
 no-parallel-write-paths; making the waist loss-forbidden is what converts the
