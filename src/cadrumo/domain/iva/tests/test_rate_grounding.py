@@ -101,7 +101,10 @@ def test_every_shipped_rate_resolves_registry_legal_and_source_evidence() -> Non
     table = load_iva_rate_table()
     rates = tuple(rate for member_rates in table.values() for rate in member_rates)
 
-    assert len(rates) == 64
+    # 64 tier-defining rates plus the three RDL 4/2024 coexisting food rates
+    # (2 % and 7,5 % for Oct-Dec 2024, 5 % for Jul-Sep 2024). The 0 % arm needs
+    # no record: ZERO is its own tier and already classifies.
+    assert len(rates) == 67
     assert all(rate.legal_refs for rate in rates if rate.member_state is EUMemberState.ES)
     assert all(not rate.legal_refs for rate in rates if rate.member_state is not EUMemberState.ES)
     assert all(rate.source_refs for rate in rates if rate.member_state is not EUMemberState.ES)

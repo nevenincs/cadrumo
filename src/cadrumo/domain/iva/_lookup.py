@@ -9,6 +9,7 @@ queries into :class:`IvaRateRecord` records loaded by
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 from ._catalogue import resolve_catalogue
 from ._errors import IvaCatalogueError, IvaCategoryNotFoundError, IvaRateNotFoundError
@@ -44,6 +45,13 @@ def lookup_rate(
         raise IvaRateNotFoundError(f"no rates registered for member_state={member_state.value!r}")
     for rate in rates:
         if rate.kind is not kind:
+            continue
+        # A coexisting rate cannot answer "what is this tier's rate" -- it
+        # applied to part of the tier's supplies while the rest stayed on the
+        # ordinary one, and no bundled AEAT surface carries the goods axis that
+        # would separate them. Returning it here would answer a question it
+        # cannot, for the far larger set of supplies that never moved.
+        if rate.supersedes_tier_default:
             continue
         if rate.effective_from > on_date:
             continue
@@ -108,4 +116,53 @@ def _render_citation(category: IvaCategory, catalogue: IvaCatalogue) -> str:
     return f"{reference.document_id}, {article}: {citation.quoted_text}"
 
 
-__all__ = ["cite", "lookup_rate"]
+def rate_kinds_for_declared_rate(
+    member_state: EUMemberState,
+    declared_rate: Decimal,
+    on_date: date,
+) -> tuple[IvaRateKind, ...]:
+    """Return every tier whose registered rate equals ``declared_rate`` on ``on_date``.
+
+    The inverse of :func:`lookup_rate`, and a genuinely different question. That
+    one asks "what does this tier mean now" and must answer with exactly one
+    rate; this asks "is this declared rate a legitimate one, and for which
+    tier", which can legitimately have more than one answer -- a statute may put
+    a temporary rate on part of a tier's supplies while the rest stay on the
+    ordinary one, so 2 % and 4 % were both correct super-reducido rates in late
+    2024 (RDL 4/2024 art. 1).
+
+    Callers previously simulated this by iterating the tiers and calling
+    :func:`lookup_rate` once each, comparing percentages. That works only while
+    the tier-to-rate mapping is one-to-one per date, and silently stops finding
+    a legitimate rate the moment a statute breaks that -- which is how a
+    correctly-declared 2 % row came to be refused as an unsupported rate.
+
+    Args:
+        member_state: The member state whose rates are searched.
+        declared_rate: The rate as a FRACTION (``Decimal("0.21")`` for 21 %),
+            matching how a transaction stores it rather than how the registry
+            does.
+        on_date: The date the rate must have been in force.
+
+    Returns:
+        Matching tiers, ordered by their declaration in the registry. Empty when
+        the rate was not a registered Spanish rate on that date -- which is a
+        real refusal, not a lookup failure.
+    """
+    rates = load_iva_rate_table().get(member_state)
+    if not rates:
+        return ()
+    matched: list[IvaRateKind] = []
+    for rate in rates:
+        if rate.effective_from > on_date:
+            continue
+        if rate.effective_until is not None and on_date > rate.effective_until:
+            continue
+        if rate.pct / Decimal("100") != declared_rate:
+            continue
+        if rate.kind not in matched:
+            matched.append(rate.kind)
+    return tuple(matched)
+
+
+__all__ = ["cite", "lookup_rate", "rate_kinds_for_declared_rate"]

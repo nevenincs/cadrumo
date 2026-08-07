@@ -103,7 +103,7 @@ from ._invoice_classification import (
     classify_invoice_line_for_iva,
     invoice_line_to_iva_observation,
 )
-from ._lookup import cite, lookup_rate
+from ._lookup import cite, lookup_rate, rate_kinds_for_declared_rate
 from ._m303_settlement import (
     is_m303_annual_settlement_period,
     m303_annual_settlement_order_key,
@@ -284,6 +284,7 @@ __all__ = [
     "m303_annual_settlement_period_order",
     "m303_annual_settlement_period_tokens",
     "rate_kind_for_domestic_category",
+    "rate_kinds_for_declared_rate",
     "recargo_rate_for",
     "refund_disposition_available",
     "refund_eligibility_reason",

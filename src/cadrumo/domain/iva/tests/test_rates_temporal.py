@@ -69,9 +69,22 @@ def test_es_pre_2024_lookup_raises() -> None:
 
 
 def test_committed_registry_has_no_overlapping_windows() -> None:
+    """No two TIER-DEFINING rates claim the same tier at the same moment.
+
+    Scoped to records that define what a tier means, mirroring the loader's own
+    rule. A ``supersedes_tier_default`` rate exists precisely to overlap: a
+    statute applied it to part of a tier's supplies while the rest stayed on the
+    ordinary rate, so both are simultaneously correct and neither replaces the
+    other. Asserting over those would reject the shape the registry is meant to
+    carry; asserting only over them would let two genuine tier definitions
+    collide, which is the ambiguity ``lookup_rate`` depends on this invariant to
+    prevent.
+    """
     for member_state, rates in load_iva_rate_table().items():
         by_kind: dict[IvaRateKind, list[tuple[date, date]]] = {}
         for rate in rates:
+            if rate.supersedes_tier_default:
+                continue
             by_kind.setdefault(rate.kind, []).append((rate.effective_from, rate.effective_until or date.max))
         for kind, windows in by_kind.items():
             ordered = sorted(windows)

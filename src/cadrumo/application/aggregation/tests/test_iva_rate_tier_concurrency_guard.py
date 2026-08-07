@@ -72,19 +72,44 @@ def test_a_standard_rate_still_classifies_inside_the_temporary_windows(
     assert resolved.value == expected_tier
 
 
-@pytest.mark.parametrize("rate", [Decimal("0.02"), Decimal("0.075"), Decimal("0.05")])
-def test_the_temporary_rates_are_not_yet_representable(rate: Decimal) -> None:
-    """Documents the gap this guard exists to keep honest, and bounds it.
+@pytest.mark.parametrize(
+    ("rate", "expected_tier"),
+    [(Decimal("0.02"), "super_reduced"), (Decimal("0.075"), "reduced")],
+)
+def test_the_temporary_rates_now_classify_in_their_own_window(rate: Decimal, expected_tier: str) -> None:
+    """The gap closed: these rates were legally correct and are now representable.
 
-    These rates were legally correct inside their windows and the table cannot
-    hold them, so the rows carrying them are refused rather than mis-declared --
-    visibly, via a diagnostic the operator sees, not silently.
-
-    This assertion is expected to INVERT when the concurrency question is
-    settled and the records land. Flipping it is the deliberate signal that the
-    gap closed; the tests above are the ones that must never change.
+    This assertion is the INVERTED form of the one this module shipped with,
+    which asserted the same rates resolved to ``None``. Flipping it is the
+    deliberate signal that the concurrency question was settled -- they coexist
+    with their tier's ordinary rate rather than replacing it -- rather than a
+    test quietly relaxed to match new behaviour.
     """
-    assert _iva_rate_kind_for(rate, on_date=_IN_WINDOW) is None
+    resolved = _iva_rate_kind_for(rate, on_date=_IN_WINDOW)
+
+    assert resolved is not None
+    assert resolved.value == expected_tier
+
+
+@pytest.mark.parametrize(
+    ("rate", "on_date"),
+    [
+        # The Oct-Dec step, asked inside the Jul-Sep window.
+        (Decimal("0.02"), _EARLIER_WINDOW),
+        # Both steps, asked after the measure expired on 2025-01-01.
+        (Decimal("0.02"), date(2025, 6, 1)),
+        (Decimal("0.075"), date(2025, 6, 1)),
+        (Decimal("0.05"), date(2025, 6, 1)),
+    ],
+)
+def test_a_temporary_rate_does_not_leak_outside_its_window(rate: Decimal, on_date: date) -> None:
+    """Each step is confined to the dates its article fixes.
+
+    Without this the records could be dated wrongly -- or open-ended -- and every
+    test above would still pass, because they only ever ask inside the windows.
+    A 2 % sale dated June 2025 is not a legitimate Spanish rate and must refuse.
+    """
+    assert _iva_rate_kind_for(rate, on_date=on_date) is None
 
 
 def test_zero_is_already_representable_so_the_gap_is_three_rates_not_four() -> None:

@@ -454,3 +454,57 @@ kind = "reduced"
 pct = "9.5"
 effective_from = 2025-07-01
 source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+# --------------------------------------------------------------------------
+# RDL 4/2024 art. 1 (BOE-A-2024-12944): temporary rates on certain foodstuffs.
+#
+# These COEXIST with their tier's ordinary rate rather than replacing it -- the
+# measure moved specific goods (alimentos de primera necesidad, aceite de oliva,
+# aceites de semilla, pastas alimenticias) while every other supply in the same
+# tier stayed where it was. Hence supersedes_tier_default = true: they are
+# excluded from lookup_rate, which must keep answering with the tier's ordinary
+# rate, and from the no-overlap rule, which exists to keep that answer
+# unambiguous.
+#
+# They are GOODS-BLIND by measurement, not by omission: neither the Modelo 390
+# nor the Modelo 303 diseno de registro carries any goods axis (zero mentions of
+# aliment, comestible, aceite, pasta or producto), so the declaration has
+# nowhere to put a goods distinction and a rate table that carried one would
+# hold information no AEAT box can receive. An operator declaring 2 % on a
+# non-foodstuff is wrong under the decree either way; before these records that
+# row was REFUSED rather than validated, so admitting it is strictly better
+# without adding a blind spot.
+#
+# The 0 % arm gets NO record, and that is load-bearing rather than an
+# omission: ZERO is its own tier and a 0 % sale already classifies there. A
+# 0 % super-reducido record was written and removed after the guard caught
+# it -- it made an August 2024 zero-rated sale resolve to super_reducido
+# instead of zero, changing which category the row declares under.
+# --------------------------------------------------------------------------
+
+[[rates]]
+member_state = "es"
+kind = "reduced"
+pct = "5"
+effective_from = 2024-07-01
+effective_until = 2024-09-30
+legal_refs = ["real-decreto-ley-4-2024:art-1"]
+supersedes_tier_default = true
+
+[[rates]]
+member_state = "es"
+kind = "super_reduced"
+pct = "2"
+effective_from = 2024-10-01
+effective_until = 2024-12-31
+legal_refs = ["real-decreto-ley-4-2024:art-1"]
+supersedes_tier_default = true
+
+[[rates]]
+member_state = "es"
+kind = "reduced"
+pct = "7.5"
+effective_from = 2024-10-01
+effective_until = 2024-12-31
+legal_refs = ["real-decreto-ley-4-2024:art-1"]
+supersedes_tier_default = true
