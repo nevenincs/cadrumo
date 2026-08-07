@@ -1,0 +1,119 @@
+---
+tags:
+  - '#plan'
+  - '#m303-carry-reconciliation'
+date: '2026-08-07'
+modified: '2026-08-07'
+body_hash: 'sha256:5124082ab02f3a0bd4dc6c7f27a00903b7a6eb85f1c9647c83dca8f4e44562d7'
+tier: L1
+related:
+  - '[[2026-06-21-m303-carry-reconciliation-adr]]'
+---
+
+# `m303-carry-reconciliation` plan
+
+Close the two reach-and-duplication findings a code review raised against the
+refunded-aware carry fix, without touching its arithmetic.
+
+## Description
+
+The review of the Modelo 303 refunded-aware carry fix returned REVISION
+REQUIRED on two grounds, neither of them about the figures. The money
+arithmetic, the legal grounding and the absent-posterior reading all checked
+out under execution: the identity `available == posterior + generated` holds on
+every branch, and the governing ADR says verbatim what the fix claims, with
+RD 1624/1992 art. 30 and Ley 37/1992 art. 116 both present. This plan does not
+reopen any of that.
+
+The first finding is that the repaired drift gate watches a hand-listed tuple
+of three modules. The gate's own stated reasoning for replacing an import
+inventory was that an inventory asserts something the code is free to change,
+and that reasoning applies verbatim to its own subject list. Nine twin
+declarations of the compensation vocabulary survive outside the watched set,
+three of them in the module that sits on the live local filing path. Rename the
+end-of-period available casilla in a later revision and the watched modules get
+rebound while that module keeps resolving its stale literal, so the refunded
+rewrite silently stops finding the row it must re-stamp and a refunded period
+carries its full generated credit into the next quarter with no gate red. That
+is the exact drift the gate is named for, one module over. Step `S01` replaces
+the subject list with discovery and rebinds the twins.
+
+The second finding is that the same live local filing module encodes the
+refunded rule by hand rather than through the derivation this fix made
+canonical, so a regulatory change lands in one place and not the other. It also
+rewrites only the value, leaving the formula id, operand refs and operand
+values intact, so a refunded local observation asserts the provenance
+`87 + generada` beside a posterior-only figure. The sede path does the
+deliberate opposite and refuses when refs and formula disagree, so two paths
+handle one case incompatibly and the local one ships a provenance claim its own
+figure contradicts. Step `S02` routes it through the canonical derivation and
+drops the contradicted provenance.
+
+Step `S03` removes an algebraically vacuous assertion in the derivation's own
+disposition test, where `generated` is defined as `available - posterior` on the
+resultado basis and the identity therefore cannot fail. Step `S04` records four
+deferred findings as follow-up rows without implementing them.
+
+One correction the plan carries forward: the existing compensation tests are
+NOT grounded parity. Their fixtures are synthetic hand-built observed-casilla
+rows with authored figures; what is real is the shape, the canonical casilla ids
+and the source locators naming the official boxes. They are legitimate wiring
+and invariant coverage, but they would not fail if the AEAT formula were wrong.
+No Step here may describe them as grounded, and no new test may manufacture
+decimal expectations and call itself parity.
+
+## Steps
+
+- [ ] `S01` - Discover token-naming modules by AST scan instead of a hand-listed tuple, and rebind the nine surviving twin declarations to the authority; `src/cadrumo/application/calculations/tests/test_iva_compensation_casillas.py src/cadrumo/application/calculations/__init__.py src/cadrumo/application/calculations/_iva_compensation_annual_partition.py src/cadrumo/application/modelo/_filed_revision_observation.py src/cadrumo/application/modelo/_iva_wallet_gate.py`.
+- [ ] `S02` - Route the local filing path refunded rewrite through the canonical derivation and drop the contradicted formula provenance to match the sede path; `src/cadrumo/application/modelo/_filed_revision_observation.py src/cadrumo/application/modelo/tests`.
+- [ ] `S03` - Replace the algebraically vacuous available equals posterior plus generated assertion on the resultado basis with an independent check; `src/cadrumo/domain/iva_compensation/tests/test_filed_derivation_disposition.py`.
+- [ ] `S04` - Record the four deferred review findings as follow-up rows without implementing them; `.vault/plan/2026-08-07-m303-carry-reconciliation-plan.md`.
+- [ ] `S05` - DEFERRED - report a refunded basis rather than resultado once disposition recovery from the justificante Tipo de declaracion makes the branch reachable; `src/cadrumo/domain/iva_compensation/_filed_derivation.py`.
+- [ ] `S06` - DEFERRED - assert the disposition-blind available reconstruction in the annual partition instead of relying on a transitive upstream rewrite in another package; `src/cadrumo/application/calculations/_iva_compensation_annual_partition.py`.
+- [ ] `S07` - DEFERRED - refuse a persisted compensation pair where a directly filed disponible casilla overwrites available without generated following it; `src/cadrumo/application/calculations/_iva_compensation_history.py`.
+- [ ] `S08` - DEFERRED - feed the recovered refund disposition into the IVA wallet gate, the fourth unimplemented implementation bullet of the governing decision record; `src/cadrumo/application/modelo/_iva_wallet_gate.py`.
+
+## Parallelization
+
+`S01` and `S02` both edit the local filing observation module and carry a hard
+ordering: `S01` rebinds its casilla constants to the authority and `S02` then
+consumes the canonical derivation that names those same constants, so `S01`
+lands first. `S03` touches only the domain disposition test and is independent
+of both. `S04` is documentation-only and independent.
+
+Each of `S01` and `S02` is one atomic commit. Within `S01` the gate and the
+rebinding cannot be split: the gate reds until the twins are rebound, so both
+halves must be present in the working tree simultaneously and land together.
+
+## Verification
+
+The plan is complete when every Step is closed and each of the following holds.
+
+The drift gate names no module list and no module count: its subjects are
+discovered from the source tree, and adding a tenth twin in a module no one
+edited today reds it. The gate's per-module non-vacuity guard survives, so a
+module naming nothing cannot pass silently. The documented CPython
+short-literal interning limitation stays recorded honestly, because a twin of
+the bare-numeric token is the same object and identity cannot discriminate
+there.
+
+No production module outside the declaring authority holds its own object for a
+compensation casilla token. The nine surviving twins are rebound, and every
+cross-package consumer imports through the owning package's public facade
+rather than a private module.
+
+The local filing refunded rewrite calls the canonical derivation rather than
+re-deriving the rule, and a refunded row carries no formula id and no operand
+refs, matching the sede path that refuses a refs-versus-formula disagreement. A
+test asserts the local and sede paths agree on the provenance shape for the same
+refunded case.
+
+Every gate added here is proven to bite: where the defect is live the assertion
+is written first and observed to red against unmodified code, and where a
+mutation is required it is delivered as a pytest plugin loaded from outside the
+repository with `-n0` passed explicitly, since the project's addopts inject
+`-n auto` and a mutation applied in the controlling session never reaches xdist
+workers.
+
+The touched modules pass in isolation with owner triage recorded against the
+pre-existing unrelated reds on this tree, which are not remediated here.

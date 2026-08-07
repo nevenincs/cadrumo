@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:02a23b35aa3bdec1607d2b673d6c9b68427904eb250ce1e0c00d9d5f529d9954'
+body_hash: 'sha256:d029aa4b86764132fa02eeff02c09569c5057b87b9523fea73f3f5aaa05c8bb3'
 related:
   - '[[2026-08-07-stray-concept-sweep-audit]]'
   - '[[2026-08-07-stray-concept-sweep-iva-purchase-refund-representation-adr]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#stray-concept-sweep`.
 
 ### adr
 
-- `2026-08-07-stray-concept-sweep-iva-purchase-refund-representation-adr` - `stray-concept-sweep` adr: representing a purchase refund on the IVA ledger axis (**status:** `proposed`)
+- `2026-08-07-stray-concept-sweep-iva-purchase-refund-representation-adr` - `stray-concept-sweep` adr: `representing a purchase refund on the IVA ledger axis` | (**status:** `proposed`)
 
 ### audit
 

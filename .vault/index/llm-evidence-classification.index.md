@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:e78aaef7c6872814b411a0b532d44ab89ff2403303790a233b44760778ac7871'
+body_hash: 'sha256:c37a5454563c9c3945843cfe651c869e907debe4e1d8d64d264b8ec45b7c46f8'
 related:
   - '[[2026-06-10-llm-evidence-classification-W01-P01-S01]]'
   - '[[2026-06-10-llm-evidence-classification-W01-P01-S02]]'
@@ -57,7 +57,7 @@ Auto-generated index of all documents tagged with `#llm-evidence-classification`
 
 ### adr
 
-- `2026-06-10-llm-evidence-classification-adr` - `llm-evidence-classification` adr: `Evidence-aware LLM ledger classification (Stage-3): on-host/local-first reading; cloud only behind a consent gate; splitting in scope` | (**status:** `accepted, partially superseded`)
+- `2026-06-10-llm-evidence-classification-adr` - `llm-evidence-classification` adr: `Evidence-aware LLM ledger classification (Stage-3): on-host/local-first reading; cloud only behind a consent gate; splitting in scope` | (**status:** `accepted`)
 - `2026-06-13-llm-evidence-classification-adr` - `llm-evidence-classification` adr: `Default local vision model bound to consumer-grade hardware` | (**status:** `accepted`)
 
 ### audit
