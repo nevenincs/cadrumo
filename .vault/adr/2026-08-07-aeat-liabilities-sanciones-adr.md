@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:c3ba8fc65a013c47c9c35eb0af2e8e37bdde87a6bf38a5c3284ec07a15fc276c'
+body_hash: 'sha256:df292b7c71ed118d9982f0a14a8040fcb438436e8906db515a76a6d9e690489b'
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-research]]'
 ---
@@ -181,9 +181,11 @@ rule already carves out ("Already-public pre-rule identifiers keep their
 names"); this record does not retroactively rename it, and does not treat it
 as license to name a new family in English.
 
-**Domain type (unblocked today).** A `Deuda` pydantic model under `core/`
-carries: `clave_liquidacion` (validated identifier), a closed
-`ObjetoTributario` StrEnum (interés de demora / recargo de apremio / sanción /
+**Domain type (unblocked today).** A `Deuda` pydantic model in a new adapter
+schema module, mirroring `Expediente`'s placement
+(`src/cadrumo/adapters/outbound/aeat/sede/_schema.py`), carries:
+`clave_liquidacion` (validated identifier), a closed `ObjetoTributario`
+StrEnum declared in `core/` (interés de demora / recargo de apremio / sanción /
 liquidación / other, per `aeat-architecture-boundaries`'s closed-value-set
 mandate — never reused or widened from `PostFilingEventKind`), `importe`
 (non-negative `Decimal`, mirroring the ledger contract's amount-is-magnitude
