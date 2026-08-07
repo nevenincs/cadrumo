@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:071ebfba18127c049bf2cf23e745c06ac94780a2fd2fec67ed9962348eb13787'
+body_hash: 'sha256:f6c029a7e538d4a198fa5b36d37010755beb3d932a4a12b8d83377640fbe4fe1'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -72,8 +72,8 @@ Implement the canonical placement, then unblock the retencion regimen filter and
 - [ ] `W03.P05.S11` - BLOCKED on S38 which is blocked on S37 - W03.P04 established the M036 tipo-de-actividad code table is absent from the bundled corpus and the only bundled enumeration, the Modelo 840 IAE set of Empresarial, Profesional and Artistica, resolves one boundary of the four the art. 95 rate partition needs, so a placement landed now would carry a vocabulary that cannot select a rate; `src/cadrumo/domain/transactions/`.
 - [x] `W03.P05.S12` - Narrow the statutory-rate advisory to the rates a taxpayer can lawfully be subject to, restoring the flat-fee catch measured lost; `src/cadrumo/application/aggregation/_retencion_rate_advisory.py`.
 - [ ] `W03.P05.S13` - BLOCKED on S11, do not attempt first - casilla 08 is the agrarian quarterly volume and the ledger carries no activity-type axis to separate agrarian income from estimacion directa, so aggregating it today would feed the same rows into both casilla 01 and casilla 08 and double-count rather than close the silent zero; `src/cadrumo/application/aggregation/`.
-- [ ] `W03.P05.S37` - Refresh the corpus to bundle the M036 tipo-de-actividad code table the diseno points at, the field is declared but its value set is absent and the mapping cannot be authored against what ships; `src/cadrumo/_data/corpus/aeat_official/`.
-- [ ] `W03.P05.S38` - Ground the code-to-art-95-partition mapping in the registry with its own legal refs once the table lands, never inferred in code, and plan for the refreshed table proving unable to serve at all; `src/cadrumo/_data/registry/aeat/legal/`.
+- [ ] `W03.P05.S37` - FETCH-GATED (fetch: the AEAT Modelo 036 tipo-de-actividad code table the diseno de registro field 403 names only as Tabla, published with the M036 instrucciones rather than inside the diseno workbook) - bundle it under the modelo_036 corpus directory with its per-modelo manifest sha256 and source URL, following the Modelo 210 layout_authority precedent, verified at HEAD as absent from all five bundled M036 workbooks whose sheets are page sheets only; `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_036/`.
+- [ ] `W03.P05.S38` - FETCH-GATED behind S37 - ground the code-to-art-95-partition mapping in the registry with its own legal_refs once the table lands, never inferred in code, and plan for the refreshed table proving unable to serve at all, in which case the partition needs a different authority rather than a fabricated mapping; `src/cadrumo/_data/registry/aeat/legal/`.
 
 ## Wave `W04` - Decision-blocked dispositions
 
