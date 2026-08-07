@@ -24,6 +24,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -42,12 +43,16 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....tests.secure_sql import isolated_runtime_profile
 from .. import aggregate_iva_ledger_observations
+from .._modelo_bindings import LedgerIvaAggregationSourceResolver
+from .._source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2025, 2, 10, 12, 0, tzinfo=UTC)
 _Q1_2025 = Period.from_year_and_code(2025, "1T")
+_BUCKET_ID = "28282828-2828-4828-8828-282828282828"
 
 #: The Modelo 303 revision that governs the period above. It declares all three
 #: IVA facts, which is what makes it the right control: an advisory here would
@@ -223,3 +228,64 @@ def test_the_screen_reads_the_revision_it_is_given() -> None:
 
     assert unrouted_ledger_iva_quantities(committed, rows) == ()
     assert unrouted_ledger_iva_quantities(stripped, rows) != ()
+
+
+def test_the_advisory_reaches_the_resolver_envelope(tmp_path: Path) -> None:
+    """The screen is wired, not merely written.
+
+    Everything above calls the screen directly, so all of it would still pass
+    with the resolver never invoking it -- the failure mode where a correct
+    screen ships switched off. This drives the real
+    :class:`LedgerIvaAggregationSourceResolver` end to end from a stored
+    transaction and asserts the advisory arrives in its diagnostics envelope
+    carrying the amount and its attribution.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        repository.save(
+            TransactionCatalogue.from_transactions((_sale("s-1", base="1000.00", iva="210.00"),)),
+        )
+        resolution = LedgerIvaAggregationSourceResolver(transaction_repository=repository).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="303",
+                filing_year=2025,
+                period=_Q1_2025,
+                revision=_revision_without_fact(_m303_revision(), "base_amount_sum"),
+            ),
+        )
+
+    advisories = [
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_iva_quantity"
+    ]
+    assert len(advisories) == 1, "a revision drawing no base must surface exactly one advisory"
+    assert "base_amount_sum" in advisories[0].message
+    assert "1000.00" in advisories[0].message, "the advisory must name the amount that goes undeclared"
+    assert advisories[0].resolver_id == "ledger_iva_aggregation"
+
+
+def test_the_committed_revision_raises_no_advisory_in_the_envelope(tmp_path: Path) -> None:
+    """Anti-false-fire control on the wired path.
+
+    The test above would pass just as well if the resolver emitted the advisory
+    unconditionally. Against the real Modelo 303 revision, which draws all three
+    quantities, the envelope must carry none.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        repository.save(
+            TransactionCatalogue.from_transactions((_sale("s-1", base="1000.00", iva="210.00"),)),
+        )
+        resolution = LedgerIvaAggregationSourceResolver(transaction_repository=repository).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="303",
+                filing_year=2025,
+                period=_Q1_2025,
+                revision=_m303_revision(),
+            ),
+        )
+
+    assert not [
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_iva_quantity"
+    ]
