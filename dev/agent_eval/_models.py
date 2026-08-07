@@ -54,7 +54,7 @@ from itertools import pairwise
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core.json_contract import EnvelopeStatus
+from cadrumo.core.json_contract import EnvelopeStatus
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 

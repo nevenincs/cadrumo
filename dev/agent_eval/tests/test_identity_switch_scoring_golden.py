@@ -22,8 +22,8 @@ from pathlib import Path
 
 import pytest
 
-from ....application.operator_surface import command_classification
-from ....entrypoints.mcp import (
+from cadrumo.application.operator_surface import command_classification
+from cadrumo.entrypoints.mcp import (
     IDENTITY_READ_CONSOLE_TOOLS,
     SessionIdentityState,
     identity_gate_refusal,

@@ -8,8 +8,8 @@ eval tests do not grow parallel orchestration logic.
 
 from __future__ import annotations
 
-from ....entrypoints.cli import command_schema_refs
-from ....tests.modelo_cli import create_modelo_work_unit_via_cli
+from cadrumo.entrypoints.cli import command_schema_refs
+from cadrumo.tests.modelo_cli import create_modelo_work_unit_via_cli
 
 
 def valid_cli_commands() -> frozenset[str]:

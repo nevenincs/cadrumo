@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....entrypoints.mcp import faithfulness_check
+from cadrumo.entrypoints.mcp import faithfulness_check
 from .. import (
     GoldenScenario,
     LiveInvariantVerdict,

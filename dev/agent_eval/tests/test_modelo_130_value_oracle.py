@@ -29,8 +29,8 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import resources
-from ....domain.calculations.registry import (
+from cadrumo.core.resources import resources
+from cadrumo.domain.calculations.registry import (
     RegistryCalculationResult,
     calculate_registry_snapshot,
 )

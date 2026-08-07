@@ -36,10 +36,10 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....application.user_profile import UserProfileLifecycleRepository, profile_storage_session
-from ....core import resolve_active_bucket_id
-from ....domain.transactions import (
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.application.user_profile import UserProfileLifecycleRepository, profile_storage_session
+from cadrumo.core import resolve_active_bucket_id
+from cadrumo.domain.transactions import (
     BusinessClassification,
     RawProvenance,
     RawTransaction,
@@ -48,11 +48,11 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
-from ....entrypoints.mcp import faithfulness_check
-from ....tests.cli_envelope import require_schema_envelope
-from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from cadrumo.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from cadrumo.entrypoints.mcp import faithfulness_check
+from cadrumo.tests.cli_envelope import require_schema_envelope
+from cadrumo.tests.cli_runner import invoke_cached_cli
+from cadrumo.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from .. import NarrationFaithfulness, load_scenario, run_golden_scenario
 from ._real_cli_support import create_m130_work_unit, valid_cli_commands
 

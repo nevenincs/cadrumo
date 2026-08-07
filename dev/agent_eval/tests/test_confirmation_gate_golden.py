@@ -50,15 +50,15 @@ from pathlib import Path
 import mcp.types as mcp_types
 import pytest
 
-from ....application.operator_surface import COMMAND_RISK, CommandRiskDeclaration
-from ....entrypoints.mcp import (
+from cadrumo.application.operator_surface import COMMAND_RISK, CommandRiskDeclaration
+from cadrumo.entrypoints.mcp import (
     ConfirmationPolicy,
     McpToolDescriptor,
     build_server,
     build_tool_descriptors,
     confirmation_for_tool,
 )
-from ....tests import connected_server_and_client_session as connect
+from cadrumo.tests import connected_server_and_client_session as connect
 from .. import ConfirmationGateCheck, ConfirmationTier, load_scenario, run_golden_scenario
 from ._real_cli_support import valid_cli_commands
 

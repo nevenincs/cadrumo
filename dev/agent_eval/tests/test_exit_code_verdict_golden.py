@@ -26,11 +26,11 @@ from typing import Any
 
 import pytest
 
-from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....application.user_profile import profile_storage_session
-from ....core import resolve_active_bucket_id
-from ....core.json_contract import EnvelopeStatus
-from ....domain.transactions import (
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.application.user_profile import profile_storage_session
+from cadrumo.core import resolve_active_bucket_id
+from cadrumo.core.json_contract import EnvelopeStatus
+from cadrumo.domain.transactions import (
     BusinessClassification,
     RawProvenance,
     RawTransaction,
@@ -39,9 +39,9 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....tests.cli_envelope import require_schema_envelope
-from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from cadrumo.tests.cli_envelope import require_schema_envelope
+from cadrumo.tests.cli_runner import invoke_cached_cli
+from cadrumo.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .. import ExitCodeScenario, check_exit_code_scenario
 from ._real_cli_support import valid_cli_commands
 

@@ -37,7 +37,7 @@ from typing import TYPE_CHECKING, ClassVar, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.external_constants import UTF_8_ENCODING as _UTF_8
+from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from ._models import (
     ElicitationAction,
     LiveElicitationRecord,

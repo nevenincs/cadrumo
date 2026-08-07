@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.resources import resources
+from cadrumo.core.resources import resources
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

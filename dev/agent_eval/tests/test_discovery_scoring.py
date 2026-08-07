@@ -25,7 +25,7 @@ from typing import TypedDict, Unpack
 
 import pytest
 
-from ....entrypoints.mcp import build_tool_descriptors
+from cadrumo.entrypoints.mcp import build_tool_descriptors
 from .. import (
     LiveToolCallRecord,
     LiveTrajectory,

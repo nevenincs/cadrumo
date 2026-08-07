@@ -42,12 +42,12 @@ from typing import Any
 
 import pytest
 
-from ....application.user_profile import UserProfileLifecycleRepository
-from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
-from ....tests.cli_envelope import require_schema_envelope
-from ....tests.cli_runner import invoke_cached_cli
-from ....tests.modelo_cli import create_modelo_work_unit_via_cli
-from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from cadrumo.application.user_profile import UserProfileLifecycleRepository
+from cadrumo.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from cadrumo.tests.cli_envelope import require_schema_envelope
+from cadrumo.tests.cli_runner import invoke_cached_cli
+from cadrumo.tests.modelo_cli import create_modelo_work_unit_via_cli
+from cadrumo.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from .. import UnderDeclarationScenario, check_under_declaration_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
