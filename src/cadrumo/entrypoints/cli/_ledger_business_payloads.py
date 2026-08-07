@@ -290,6 +290,10 @@ class EvidenceFieldProvenancePayload(OutputSchema):
     # reported about its own output is a claim. Both are worth showing; showing
     # them identically is what would make the check decoration.
     anchor_self_reported: bool = False
+    # Mirrors FieldProvenance.derived_from. A DERIVED value cites the inputs it
+    # was computed from in place of an anchor, so the operator can see what a
+    # derivation stood on rather than only that it happened.
+    derived_from: list[str] = []
     note: str = ""
 
 

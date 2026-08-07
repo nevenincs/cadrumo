@@ -69839,7 +69839,9 @@ topic:
     title: VERI*FACTU
 transactions:
   import:
-    message_053465: Transacción duplicada detectada dentro del archivo importado.
+    batch_id_collision: 'Fila omitida: coincide con el identificador de otra fila del mismo archivo.'
+    message_053465: Firma de transacción repetida dentro del archivo importado; ambas filas se
+      importan - revise si hay duplicidad.
     message_082074: Transacción duplicada ya presente en el libro mayor.
     message_185962: El archivo de origen no contiene transacciones válidas.
     message_829073: 'Posible hueco en el historial: más de 35 días entre transacciones.'

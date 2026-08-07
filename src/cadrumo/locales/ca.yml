@@ -67517,7 +67517,10 @@ topic:
     title: VERI*FACTU
 transactions:
   import:
-    message_053465: Transacció duplicada detectada dins de l'arxiu importat.
+    batch_id_collision: 'Fila omesa: coincideix amb l''identificador d''una altra fila del mateix
+      fitxer.'
+    message_053465: Signatura de transacció repetida dins del fitxer importat; ambdues files s'importen
+      - reviseu si hi ha duplicitat.
     message_082074: Transacció duplicada ja present al llibre major.
     message_185962: L'arxiu d'origen no conté transaccions vàlides.
     message_829073: 'Possible buit: més de 35 dies entre transaccions.'

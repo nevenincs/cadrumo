@@ -67695,7 +67695,10 @@ topic:
     title: VERI*FACTU
 transactions:
   import:
-    message_053465: Ismétlődő tranzakció észlelve az importált fájlban.
+    batch_id_collision: 'Kihagyott sor: ugyanazzal az azonosítóval rendelkezik, mint egy másik
+      sor ebben a fájlban.'
+    message_053465: Ismétlődő tranzakció-aláírás az importált fájlban; mindkét sor importálásra
+      kerül - ellenőrizze a kettős könyvelést.
     message_082074: Ismétlődő tranzakció már szerepel a főkönyvben.
     message_185962: A forrásfájl nem tartalmaz érvényes tranzakciót.
     message_829073: 'Lehetséges hiány: a tranzakciók között több mint 35 nap telt

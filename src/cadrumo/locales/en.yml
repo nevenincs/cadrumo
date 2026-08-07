@@ -67115,7 +67115,10 @@ topic:
     title: VERI*FACTU
 transactions:
   import:
-    message_053465: Duplicate transaction detected within imported file.
+    batch_id_collision: 'Row skipped: it resolves to the same identifier as another row in this
+      file.'
+    message_053465: Repeated transaction signature within the imported file; both rows import
+      - review for a double-count.
     message_082074: Duplicate transaction already in ledger.
     message_185962: The source file contains no valid transactions.
     message_829073: 'Potential gap: more than 35 days between transactions.'
