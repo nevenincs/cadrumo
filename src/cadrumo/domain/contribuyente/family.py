@@ -1649,15 +1649,30 @@ class RentaFamilyProfile(BaseModel):
         (:meth:`DescendantInfo.guarderia_qualifying_meses`); the Art. 81.1 side
         is only a COUNT, because the record stores how many months the mother
         qualified and never which ones. So this is a genuine intersection on one
-        side and an upper bound on the other, and it over-states only when the
-        two spans do not overlap — a mother qualifying January to April against
-        nursery paid September to October. That residual is disclosed to the
-        operator rather than presented as measured. It stops being an
-        approximation once the Art. 81.1 side stores WHICH months the mother
-        qualified rather than how many, which is a persisted-shape change beyond
-        this method. The bound is preferred to a flat per-child cap, which
-        over-grants every mid-year birth and every partial-year enrolment
-        outright.
+        side and an upper bound on the other.
+
+        It over-states whenever the two month sets DIFFER, not merely when they
+        are disjoint — the manual's own caso a settles the scope. A mother
+        entitled May to August against nursery paid January to June intersects
+        in two months (May and June) and AEAT prints ``1.000 ÷ 12 × 2 =
+        166,67``; a count-based ``min(4, 6)`` yields four and 333,33. Partial
+        overlap is the common shape, not the exotic one, so this residual is
+        wider than a disjoint-spans edge case.
+
+        The direction is an OVER-grant of the deducción, which under-declares
+        tax. Note it runs OPPOSITE to the turning-three defect this same
+        function once carried, where dropping the pre-birthday months
+        under-granted and over-taxed. One function, two histories, two
+        directions: do not assume a single error direction here.
+
+        It stops being an approximation only once the Art. 81.1 side stores
+        WHICH months the mother qualified rather than how many. That is a
+        persisted-shape change — the fact is a lone scalar from the CLI payload
+        through the fact round-trip to this record — and no cleverer arithmetic
+        on counts can substitute for it, because the disjoint and overlapping
+        cases present this method with identical inputs. The bound is preferred
+        to a flat per-child cap, which over-grants every mid-year birth and
+        every partial-year enrolment outright.
 
         *cap_anual* is a registry ``money`` parameter the caller resolves per
         filing year; this method performs no euro-figure lookup of its own
