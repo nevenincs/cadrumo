@@ -34,7 +34,7 @@ from ....core import AcceleratorKind
 from ....core.config import load_settings, override_settings
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._batch_ingest import run_evidence_batch
+from .._batch_ingest import BatchRunResult, run_evidence_batch
 from .._evidence import PurchaseInvoiceEvidenceService
 from .._extraction_draft_store import load_extraction_drafts
 from ._loopback_reader import serving_a_loopback_reader
@@ -119,7 +119,7 @@ def _measurable_headroom() -> HardwareProfile:
     )
 
 
-def _run(profile: TestRuntimeProfile, folder: Path) -> object:
+def _run(profile: TestRuntimeProfile, folder: Path) -> BatchRunResult:
     return run_evidence_batch(
         bucket_id=_BUCKET_ID,
         sources=[folder],
@@ -502,25 +502,25 @@ class TestInferencePacing:
         folder = tmp_path / "retry"
         folder.mkdir()
         (folder / _SCAN).write_bytes((_CORPUS / _SCAN).read_bytes())
-        common = {
-            "bucket_id": _BUCKET_ID,
-            "sources": [folder],
-            "direction": InvoiceKind.RECEIVED,
-            "settings": runtime_profile.settings,
-        }
+        def _over_the_folder(profile: HardwareProfile) -> BatchRunResult:
+            """Run the same folder twice, varying only the hardware it sees.
 
-        paused = run_evidence_batch(
-            **common,
-            bucket_event_repository=_events(runtime_profile),
-            profile=self._contended(),
-        )
+            Spelled out rather than splatted from a shared dict, which widened
+            every argument to the union of all of them and checked none of them.
+            """
+            return run_evidence_batch(
+                bucket_id=_BUCKET_ID,
+                sources=[folder],
+                direction=InvoiceKind.RECEIVED,
+                settings=runtime_profile.settings,
+                bucket_event_repository=_events(runtime_profile),
+                profile=profile,
+            )
+
+        paused = _over_the_folder(self._contended())
         # The contention clears; the same folder is re-run, exactly as an
         # operator would after acting on the remediation.
-        later = run_evidence_batch(
-            **common,
-            bucket_event_repository=_events(runtime_profile),
-            profile=_measurable_headroom(),
-        )
+        later = _over_the_folder(_measurable_headroom())
 
         assert paused.items[0].status == "paused"
         assert later.items[0].status != "paused", "once the contention clears, the deferred item must be attempted"

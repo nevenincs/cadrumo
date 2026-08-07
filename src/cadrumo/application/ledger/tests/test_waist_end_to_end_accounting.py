@@ -49,7 +49,12 @@ from ....application.aggregation import CalculationSourceContext
 from ....application.invoices import InvoiceCatalogueSourceResolver, create_catalogue_invoice
 from ....core import STRUCTURED_DOCUMENT_SHAPES, BindingSourceKind, Period
 from ....domain.attachments import AttachmentKind, AttachmentSource, add_attachment
-from ....domain.calculations.registry import INVOICE_BINDING_SOURCE_KINDS, bundled_authority
+from ....domain.calculations.registry import (
+    INVOICE_BINDING_SOURCE_KINDS,
+    ModeloRevision,
+    bundled_authority,
+)
+from ....domain.invoices import Invoice
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._closure_findings import closure_findings
@@ -78,6 +83,19 @@ _DOCUMENT_FACTS: dict[str, object] = {
 #: draft's ``iva_amount``, which carries cuota PLUS recargo -- see the hop-4
 #: class, where that difference in meaning is the defect under record.
 _PRINTED_CUOTA = Decimal("21.00")
+
+
+def _amount(key: str) -> Decimal:
+    """Return one document fact as the Decimal it is.
+
+    The census above is deliberately one mapping of mixed types, so reading a
+    money term out of it yields ``object`` and any arithmetic on it checks
+    nothing. Asserted rather than cast, so a fact that stops being a Decimal
+    fails here by name.
+    """
+    value = _DOCUMENT_FACTS[key]
+    assert isinstance(value, Decimal), f"{key} is {type(value).__name__}, not an amount"
+    return value
 
 #: The tax-id form the invoice boundary stores. The document states the VAT form
 #: with its country prefix; the catalogue stores the bare Spanish NIF. This is a
@@ -257,10 +275,9 @@ class TestHop4Grounding:
         draft = _extract_invoice_fields_from_structured_record(_evidence())
 
         assert [item for item in closure_findings(draft) if item.field == "grand_total"] == []
-        assert (
-            _DOCUMENT_FACTS["taxable_base"] + draft.iva_amount + draft.recargo_amount
-            == (_DOCUMENT_FACTS["grand_total"])
-        )
+        iva_amount, recargo_amount = draft.iva_amount, draft.recargo_amount
+        assert iva_amount is not None and recargo_amount is not None, "the reader dropped a term entirely"
+        assert _amount("taxable_base") + iva_amount + recargo_amount == _amount("grand_total")
 
     def test_the_documents_own_arithmetic_actually_closes(self) -> None:
         """The proof that the finding above is spurious rather than a real defect."""
@@ -293,7 +310,7 @@ class TestHop5ConfirmAndHop6Invoice:
     """The draft is confirmed into a persisted Invoice through the real path."""
 
     @staticmethod
-    def _confirm(runtime_profile: TestRuntimeProfile) -> object:
+    def _confirm(runtime_profile: TestRuntimeProfile) -> Invoice:
         draft = _extract_invoice_fields_from_structured_record(_evidence())
         return create_catalogue_invoice(
             bucket_id=_BUCKET_ID,
@@ -368,7 +385,7 @@ class TestHop7WhereTheChainActuallyTerminates:
     """
 
     @staticmethod
-    def _revision() -> object:
+    def _revision() -> ModeloRevision:
         period = Period.from_year_and_code(2024, "1T")
         return bundled_authority().snapshot("303", filing_year=2024, period=str(period.code)).revision
 
