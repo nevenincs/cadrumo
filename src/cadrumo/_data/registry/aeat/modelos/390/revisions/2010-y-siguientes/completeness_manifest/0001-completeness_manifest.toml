@@ -116,6 +116,30 @@ casilla_id = "iva.anual.repercutido.recargo.super-reducido"
 number = "iva.anual.repercutido.recargo.super-reducido"
 
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-5-2.cuota"
+number = "602"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-1-4.cuota"
+number = "600"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-1.cuota"
+number = "694"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.cuota"
+number = "666"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-5.cuota"
+number = "36"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-26.cuota"
+number = "692"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.resultado-regimen-general"
 number = "iva.anual.resultado-regimen-general"
 
