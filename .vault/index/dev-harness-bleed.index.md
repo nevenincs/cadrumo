@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:fd2862adfa28546b0f2093c89510800f767c2244d78b781cf9abd73f31df181c'
+body_hash: 'sha256:9dcc41a829cce41304b6dd83381d04e72ef862b25568d9b695d6742b9be3f8ef'
 related:
   - '[[2026-08-07-dev-harness-bleed-adr]]'
   - '[[2026-08-07-dev-harness-bleed-research]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#dev-harness-bleed`.
 
 ### adr
 
-- `2026-08-07-dev-harness-bleed-adr` - `dev-harness-bleed` adr: `locales tooling boundary` | (**status:** `proposed`)
+- `2026-08-07-dev-harness-bleed-adr` - `dev-harness-bleed` adr: `locales tooling boundary` | (**status:** `accepted`)
 
 ### research
 
