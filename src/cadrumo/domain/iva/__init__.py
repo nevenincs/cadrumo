@@ -88,7 +88,11 @@ from ._errors import (
     ProrrataInputError,
     ProrrataSectorError,
 )
-from ._establishment import SPAIN_COUNTRY_CODE, territorial_scope_for_country
+from ._establishment import (
+    SPAIN_COUNTRY_CODE,
+    territorial_scope_for_country,
+    territorial_scope_for_spanish_postal_code,
+)
 from ._flow import (
     DEDUCIBLE_FLOW_DIRECTIONS,
     DEVENGADA_FLOW_DIRECTIONS,
@@ -271,7 +275,6 @@ __all__ = [
     "LegendDerivation",
     "LegendDerivationOutcome",
     "LivaArt161RecargoRates",
-    "RecargoRateRecord",
     "OssIossRegime",
     "ProrrataError",
     "ProrrataInputDeduction",
@@ -283,6 +286,7 @@ __all__ = [
     "ProrrataResult",
     "ProrrataSector",
     "ProrrataSectorError",
+    "RecargoRateRecord",
     "RefundElection",
     "RefundEligibilityReason",
     "RegimeLegend",
@@ -350,6 +354,7 @@ __all__ = [
     "sum_deductible_amounts",
     "supply_nature_is_required",
     "territorial_scope_for_country",
+    "territorial_scope_for_spanish_postal_code",
     "validate_prorrata_reference",
     "verify_catalogue",
 ]
