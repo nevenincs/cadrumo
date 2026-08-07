@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:411ca2c09cf5ed1c91e6975286cb1158cda81d961edbf29af7a40ca14d7d0c61'
+body_hash: 'sha256:6cfbc5f952991b471b6c228d8cd0ecec13ff4991d74c2fd89e8d8c2c34509069'
 related:
   - '[[2026-07-25-code-dedup-sweep-S01]]'
   - '[[2026-07-25-code-dedup-sweep-S02]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-07-25-code-dedup-sweep-adr]]'
   - '[[2026-07-25-code-dedup-sweep-plan]]'
   - '[[2026-07-25-code-dedup-sweep-rag-inventory-audit]]'
+  - '[[2026-08-07-code-dedup-sweep-coverage-map-audit]]'
   - '[[2026-08-07-code-dedup-sweep-d1-1-binding-validator-refutation-audit]]'
   - '[[2026-08-07-code-dedup-sweep-status-header-audit]]'
 ---
@@ -34,6 +35,7 @@ Auto-generated index of all documents tagged with `#code-dedup-sweep`.
 ### audit
 
 - `2026-07-25-code-dedup-sweep-rag-inventory-audit` - `code-dedup-sweep` audit: `semantic duplication sweep: 29-searcher RAG inventory`
+- `2026-08-07-code-dedup-sweep-coverage-map-audit` - `code-dedup-sweep` audit: `Sweep coverage map: what was swept, what was not, and why fifteen near-neighbours are not gaps`
 - `2026-08-07-code-dedup-sweep-d1-1-binding-validator-refutation-audit` - `code-dedup-sweep` audit: `D1-1 dual binding-validator convention: refuted`
 - `2026-08-07-code-dedup-sweep-status-header-audit` - `code-dedup-sweep` audit: `status header for the 2026-07-25 rag inventory audit`
 

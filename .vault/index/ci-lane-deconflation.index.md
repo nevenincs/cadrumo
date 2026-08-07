@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:3fa412faccd192ba727d428766d3f94b2a591027610c4c0c32eb63f5bb66bca7'
+body_hash: 'sha256:4464111baf2366c2bad0ece2e54fc1d6276cfea8e2c8bbf0453a077096735099'
 related:
   - '[[2026-08-05-ci-lane-deconflation-P01-S02]]'
   - '[[2026-08-05-ci-lane-deconflation-P01-S03]]'
@@ -41,6 +41,7 @@ related:
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
   - '[[2026-08-06-ci-lane-deconflation-close-honesty-review-audit]]'
   - '[[2026-08-06-ci-lane-deconflation-integration-lane-external-dependency-audit]]'
+  - '[[2026-08-07-ci-lane-deconflation-docs-lane-golden-staleness-audit]]'
 ---
 
 # `ci-lane-deconflation` feature index
@@ -61,6 +62,7 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-05-ci-lane-deconflation-step-check-attribution-audit` - `ci-lane-deconflation` audit: `the reserialisation finding is disproved and its cause misattributed`
 - `2026-08-06-ci-lane-deconflation-close-honesty-review-audit` - `ci-lane-deconflation` audit: `what a fresh reader would find missing, vague, or unverified`
 - `2026-08-06-ci-lane-deconflation-integration-lane-external-dependency-audit` - `ci-lane-deconflation` audit: `integration parallel lane depends on a live ECB service`
+- `2026-08-07-ci-lane-deconflation-docs-lane-golden-staleness-audit` - `ci-lane-deconflation` audit: the docs lane is red on stale goldens, not on nondeterminism
 
 ### exec
 
