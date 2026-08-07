@@ -37,6 +37,7 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._batch_ingest import run_evidence_batch
 from .._evidence import PurchaseInvoiceEvidenceService
 from .._extraction_draft_store import load_extraction_drafts
+from ._loopback_reader import serving_a_loopback_reader
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -65,6 +66,24 @@ _POISON = "adversarial_malformed.pdf"
 _SCAN = "scanned_invoice_from_commons_1.pdf"
 
 _GIB = 1024**3
+_SUPPLIER_CIF = "B12345674"
+
+
+def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
+    """Build a real text-layer PDF, so the document genuinely needs a reader."""
+    from io import BytesIO
+
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+
+    buf = BytesIO()
+    page = canvas.Canvas(buf, pagesize=A4)
+    y = 760
+    for line in lines:
+        page.drawString(72, y, line)
+        y -= 20
+    page.save()
+    return buf.getvalue()
 
 
 @pytest.fixture
@@ -548,6 +567,72 @@ class TestInferencePacing:
         # it. A hard-coded "provision pull" would have sent them to download a
         # model they may already have.
         assert "ollama serve" in result.inference_pause.remediation.lower()
+
+    def test_a_document_needing_a_reader_is_read_when_one_is_there(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """The positive control this class was missing, and the reason it was missing.
+
+        Every other inference-path assertion here is a NEGATIVE — paused, or
+        refused. All of them would still pass against a runner that could never
+        read anything at all, because this host has no reader and the absence is
+        indistinguishable from a lane that is simply broken. Until something
+        proves a document actually gets READ, "the lane opens" is unmeasured.
+
+        A real loopback endpoint supplies the reply, so the router, the provider
+        client and the socket are all production code and no model runs.
+        """
+        pdf = _text_pdf_bytes(
+            (
+                "Factura de Suministros Batch SL",
+                f"NIF: {_SUPPLIER_CIF}",
+                "Numero de factura: 2026-0777",
+                "Fecha: 2026-04-02",
+                "Base imponible: 100,00",
+                "IVA 21%: 21,00",
+                "Total factura: 121,00",
+            ),
+        )
+        folder = tmp_path / "readable"
+        folder.mkdir()
+        (folder / "factura.pdf").write_bytes(pdf)
+
+        with serving_a_loopback_reader(
+            (
+                (
+                    "2026-0777",
+                    {
+                        "supplier_tax_id": _SUPPLIER_CIF,
+                        "invoice_number": "2026-0777",
+                        "invoice_date": "2026-04-02",
+                        "taxable_base": "100,00",
+                        "iva_rate": "21",
+                        "iva_amount": "21,00",
+                        "grand_total": "121,00",
+                    },
+                ),
+            ),
+        ):
+            result = run_evidence_batch(
+                bucket_id=_BUCKET_ID,
+                sources=[folder],
+                direction=InvoiceKind.RECEIVED,
+                settings=load_settings(),
+                bucket_event_repository=_events(runtime_profile),
+                profile=_measurable_headroom(),
+            )
+
+        assert result.inference_pause is None, "a reachable reader must leave the lane open"
+        assert not result.any_deferred
+        assert result.items[0].status in {"ingested", "pending_review"}, (
+            f"a document with a reader available must be READ, not {result.items[0].status}"
+        )
+        drafts = load_extraction_drafts(_BUCKET_ID, load_settings()).drafts
+        assert drafts and drafts[0].draft.invoice_number == "2026-0777", (
+            "the draft must carry what the reader actually returned"
+        )
 
     def test_a_run_of_structured_records_never_pauses_and_never_probes(
         self,
