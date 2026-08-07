@@ -24,6 +24,7 @@ from pydantic import Field, SecretStr
 
 from ._config_integration_fields import CadrumoIntegrationSettings
 from ._config_support import LLMProvider
+from ._model_catalogue import ModelRole, ModelRuntime, default_model_runtime_id
 
 
 class CadrumoLlmSettings(CadrumoIntegrationSettings):
@@ -35,8 +36,18 @@ class CadrumoLlmSettings(CadrumoIntegrationSettings):
         description="Default LLM provider name",
     )
     cadrumo_llm_model: str = Field(
-        default="claude-sonnet-4-6",
-        description="Default LLM model identifier",
+        default=default_model_runtime_id(ModelRole.TEXT_EXTRACTION, ModelRuntime.CLOUD_ANTHROPIC),
+        description=(
+            "Default LLM model identifier -- the last-resort fallback for any request "
+            "that names no model and belongs to no declared role. It previously carried "
+            "a hand-typed frontier-tier identifier, which made it the single point where "
+            "every unrouted call silently reached the most expensive tier available; the "
+            "value is now read from the core model catalogue's lowest-bound capable "
+            "cloud default. Prefer a role-named setting "
+            "(cadrumo_llm_cloud_vision_model and siblings) over this field: a caller "
+            "resolving through a role gets a model chosen for its job, while this one is "
+            "only a floor"
+        ),
     )
     cadrumo_llm_anthropic_api_key: SecretStr | None = Field(
         default=None,

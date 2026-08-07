@@ -3,7 +3,7 @@ from __future__ import annotations
 from pydantic import Field
 
 from ._config_timeouts import CadrumoTimeoutSettings
-from ._model_catalogue import ModelRole, default_model_runtime_id
+from ._model_catalogue import ModelRole, ModelRuntime, default_model_runtime_id
 
 
 class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
@@ -79,6 +79,37 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
             "(Apache-2.0, ~1.4 GB), so it introduces no new hardware floor and no second "
             "model to pull. This model never emits a regulated number; it selects from "
             "the closed column-role vocabulary"
+        ),
+    )
+    cadrumo_llm_cloud_vision_model: str = Field(
+        default=default_model_runtime_id(ModelRole.VISION_TRANSCRIPTION, ModelRuntime.CLOUD_ANTHROPIC),
+        description=(
+            "Hosted model used to read scanned/image evidence when a request is "
+            "routed off-host. The cloud counterpart of "
+            "cadrumo_llm_ollama_vision_model, and it exists for the same reason the "
+            "local roles do: without a role-named cloud setting every off-host read "
+            "falls through to the single global cadrumo_llm_model, so each new cloud "
+            "consumer silently re-inherits whatever tier that happens to name. "
+            "Defaults to the lowest-bound capable current Claude model"
+        ),
+    )
+    cadrumo_llm_cloud_text_model: str = Field(
+        default=default_model_runtime_id(ModelRole.TEXT_EXTRACTION, ModelRuntime.CLOUD_ANTHROPIC),
+        description=(
+            "Hosted model used to classify an already-extracted text layer off-host. "
+            "The cloud counterpart of cadrumo_llm_ollama_text_model. This model reads "
+            "only extracted text and selects from the registry allow-list; it never "
+            "emits a regulated number"
+        ),
+    )
+    cadrumo_llm_cloud_mapping_model: str = Field(
+        default=default_model_runtime_id(ModelRole.COLUMN_ROLE_MAPPING, ModelRuntime.CLOUD_ANTHROPIC),
+        description=(
+            "Hosted model used to name what each column of a delimited table holds. "
+            "The cloud counterpart of cadrumo_llm_ollama_mapping_model, kept separate "
+            "for the same reason: column-role mapping is the easiest job in the "
+            "product and must be sizeable DOWN independently rather than inheriting a "
+            "harder role's model"
         ),
     )
     cadrumo_llm_model_runtime_memory_floor_bytes: int = Field(

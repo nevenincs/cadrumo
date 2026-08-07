@@ -42,6 +42,7 @@ from ..core import (
     HardwareTier,
     ModelCandidate,
     ModelRole,
+    ModelRuntime,
     ModelSelectionAdvisory,
     OptionalExtra,
     candidates_for_role,
@@ -291,7 +292,18 @@ class SystemMemoryReading(BaseModel):
 
 
 def _windows_memory_status() -> tuple[int, int] | None:
-    """Return ``(total, available)`` physical bytes from ``GlobalMemoryStatusEx``, or ``None``."""
+    """Return ``(total, available)`` physical bytes from ``GlobalMemoryStatusEx``, or ``None``.
+
+    Returns ``None`` off Windows. The early exit is what establishes the
+    platform inside THIS function's body: a type checker narrows on
+    ``sys.platform``, and a guard at the call site is invisible to it, so
+    ``ctypes.windll`` -- which exists only in the Windows typeshed stubs -- reads
+    as a missing attribute when the tree is analysed for Linux. The runtime
+    behaviour is unchanged; the caller already treats ``None`` as "not measured".
+    """
+    if sys.platform != "win32":  # pragma: no cover - the CI runner is Linux
+        return None
+
     import ctypes
 
     class _MemoryStatusEx(ctypes.Structure):
@@ -747,6 +759,7 @@ class ModelSelection(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     role: ModelRole
+    runtime: ModelRuntime
     runtime_id: str | None = None
     candidate: ModelCandidate | None = None
     posture: DeploymentLicencePosture
@@ -792,6 +805,7 @@ class _SelectionContext(TypedDict):
     """
 
     role: ModelRole
+    runtime: ModelRuntime
     posture: DeploymentLicencePosture
     tier: HardwareTier
     binding_free_bytes: int | None
@@ -806,6 +820,7 @@ def select_model_for_role(
     settings: Settings | None = None,
     override: str | None = None,
     posture: DeploymentLicencePosture = DeploymentLicencePosture.COMMERCIAL,
+    runtime: ModelRuntime = ModelRuntime.LOCAL_OLLAMA,
 ) -> ModelSelection:
     """Resolve ``role`` to the weakest catalogued model that clears every bar.
 
@@ -843,6 +858,11 @@ def select_model_for_role(
             even when uncatalogued or licence-barred, always with advisories.
         posture: The deployment's licence posture; commercial by default,
             because that is what this product is.
+        runtime: Which runtime to resolve against; on-host by default, because
+            the on-host route is the one the product prefers and the one that
+            keeps evidence on the operator's machine. A hosted runtime skips the
+            headroom bar (nothing runs here) and keeps the capability and licence
+            bars, which apply wherever the prompt is served.
 
     Returns:
         A :class:`ModelSelection`. Never raises: an unsatisfiable role returns
@@ -856,6 +876,7 @@ def select_model_for_role(
     margin = resolved.cadrumo_llm_contention_safety_margin_bytes
     base = _SelectionContext(
         role=role,
+        runtime=runtime,
         posture=posture,
         tier=tier,
         binding_free_bytes=free,
@@ -875,7 +896,7 @@ def select_model_for_role(
 
     eligible = [
         candidate
-        for candidate in candidates_for_role(role)
+        for candidate in candidates_for_role(role, runtime)
         if candidate.max_context_tokens >= required_context and candidate.permitted_under(posture)
     ]
     if not eligible:
@@ -893,12 +914,19 @@ def select_model_for_role(
             ),
         )
 
+    # A hosted candidate has no local weights, so the headroom bar does not
+    # apply to it -- comparing this machine's free memory against a model that
+    # never touches it would refuse a route that cannot fail that way.
     fitting = [
-        candidate for candidate in eligible if free is None or candidate.memory_requirement_bytes + margin <= free
+        candidate
+        for candidate in eligible
+        if candidate.memory_requirement_bytes is None
+        or free is None
+        or candidate.memory_requirement_bytes + margin <= free
     ]
     if not fitting:
         smallest = eligible[0]
-        needed = smallest.memory_requirement_bytes + margin
+        needed = (smallest.memory_requirement_bytes or 0) + margin
         return ModelSelection(
             **base,
             selected=False,
@@ -916,7 +944,7 @@ def select_model_for_role(
 
     chosen = fitting[0]
     advisories: list[ModelSelectionAdvisory] = []
-    if free is None:
+    if free is None and chosen.memory_requirement_bytes is not None:
         advisories.append(ModelSelectionAdvisory.FIT_UNVERIFIED)
     detail = (
         f"{role.value} resolves to {chosen.runtime_id!r} ({_gib(chosen.memory_requirement_bytes)}, "
@@ -979,7 +1007,9 @@ def _selection_from_override(
         advisories.append(ModelSelectionAdvisory.LICENCE_COMMERCIAL_USE_BARRED)
     if candidate.max_context_tokens < context:
         advisories.append(ModelSelectionAdvisory.OVERRIDE_BELOW_CONTEXT_FLOOR)
-    if free is None:
+    if candidate.memory_requirement_bytes is None:
+        pass  # hosted: nothing runs on this machine, so there is no fit to judge
+    elif free is None:
         advisories.append(ModelSelectionAdvisory.FIT_UNVERIFIED)
     elif candidate.memory_requirement_bytes + margin > free:
         advisories.append(ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM)
