@@ -596,9 +596,18 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
     # ... plus a reverse-charge operation now routed to box 13 + 37.
     # Self-assessed IVA: the bank gross equals the base (no IVA charged on the
     # invoice); the cuota is self-assessed.
+    #
+    # OUTGOING, because boxes 13 and 37 belong to the RECIPIENT of an art.
+    # 84.Uno.2 operation and this fixture is written for the recipient. It was
+    # INCOMING -- a sale the taxpayer ISSUED -- which is the supplier's side and
+    # contradicts the docstring above. The fixture passed anyway only because the
+    # flow derivation discarded invoice direction for reverse-charge categories,
+    # so both sides collapsed onto the recipient's treatment. Once direction is
+    # honoured the two stop being interchangeable and the fixture has to name
+    # which side it means.
     reverse_charge = _iva_transaction(
         "domestic-reverse-charge",
-        direction=TransactionDirection.INCOMING,
+        direction=TransactionDirection.OUTGOING,
         amount=Decimal("200.00"),
         taxable_base=Decimal("200.00"),
         iva_amount=Decimal("42.00"),

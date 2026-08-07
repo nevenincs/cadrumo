@@ -1927,6 +1927,9 @@ cli:
           érték megtartásához).
         confirm_link_hint_message: Kapcsold össze ezt a számlát egy könyvelési tétellel
           a `aeat app ledger link` paranccsal.
+        confirm_operation_type_help: 'A 349-es modell kulcsa kozossegen beluli termekertekesiteshez.
+          Kotelezo, ha a dokumentum kozossegen beluli ertekesitest jelol: a kategoria
+          nem mondja meg, hogy adomentes behozatalt kovetett-e.'
         confirm_printed_total_mismatch_message: A dokumentumon szereplő végösszeg
           nem egyezik a rögzített végösszeggel. A rögzített végösszeg az adóalapból
           és az áfakulcsból származik, ezért az eltérés azt jelenti, hogy a dokumentum
@@ -1999,7 +2002,6 @@ cli:
         view_help: Vásárlásiszámla-bizonyíték megjelenítése.
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót a bizonyíték törléséhez.
-        confirm_operation_type_help: 'A 349-es modell kulcsa kozossegen beluli termekertekesiteshez. Kotelezo, ha a dokumentum kozossegen beluli ertekesitest jelol: a kategoria nem mondja meg, hogy adomentes behozatalt kovetett-e.'
       inventory:
         actividad_id_help: Gazdasági tevékenység azonosítója.
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.
@@ -66701,20 +66703,26 @@ modelo:
               label: 0,5%-os egyenértékűségi pótlék - éves keletkezett ÁFA
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31.label
+              label: Egyenértékűségi felár, 0.26 %-os kulcs - éves fizetendő összeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8.label
+              help: A felár hatálya alá tartozó kiskereskedőknek történő, 4 %-os áfakulccsal
+                adózó értékesítésekre felszámított 0.5 %-os egyenértékűségi felár
+                összege (LIVA art. 161.3). A(z) 36. rovatban kell bevallani.
+              label: Egyenértékűségi felár, 0.5 %-os kulcs - éves fizetendő összeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31.label
+              help: A felár hatálya alá tartozó kiskereskedőknek történő, 5 %-os áfakulccsal
+                adózó értékesítésekre felszámított 0.62 %-os egyenértékűségi felár
+                összege (RDL 4/2024 art. 1). A(z) 666. rovatban kell bevallani.
+              label: Egyenértékűségi felár, 0.62 %-os kulcs - éves fizetendő összeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
               help: A felár hatálya alá tartozó kiskereskedőknek történő, 10 %-os
                 áfakulccsal adózó értékesítésekre felszámított 1.4 %-os egyenértékűségi
                 felár összege (LIVA art. 161.2). A(z) 600. rovatban kell bevallani.
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8.label
+              label: Egyenértékűségi felár, 1.4 %-os kulcs - éves fizetendő összeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg.help
+              help: A felár hatálya alá tartozó kiskereskedőknek történő, 7.5 %-os
+                áfakulccsal adózó értékesítésekre felszámított 1 %-os egyenértékűségi
+                felár összege (RDL 4/2024 art. 1). A(z) 694. rovatban kell bevallani.
               label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg.label
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
               help: A felár hatálya alá tartozó kiskereskedőknek történő, 21 %-os
@@ -66841,6 +66849,22 @@ modelo:
                 adóalapját, a három belföldi adókulcs összesítésével.
               label: Levonható áfa adóalapja - belföldi folyó termék- és szolgáltatásbeszerzések
                 összesen - éves
+            x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
+              help: Összegzi az általános, kedvezményes és szuperkedvezményes kulcsok
+                szerinti fizetendő áfát, valamint a Közösségen belüli beszerzésekre
+                önszámlázott áfát, a felár nélkül (47. rovat).
+              label: Áfa alapok és összegek összesen - Fizetendő adó (Reg. ordinario)
+                - éves
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
+              help: A masik tagallamba torteno termekertekesites osszege, amely a
+                spanyol afatorveny 25. cikke alapjan adomentes. Ne tuntesse fel az
+                unios vallalkozasoknak nyujtott szolgaltatasokat.
+              label: Közösségen belüli termékértékesítés
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
+              help: A spanyol afatorveny 21. cikke alapjan adomentes termekexport
+                es a 22. cikk alapjan adomentes, exporttal egy tekintet ala eso ugyletek
+                osszege.
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so.label
           construct:
             modelo-390-iva-resumen-anual:
               field:
@@ -67695,10 +67719,9 @@ topic:
     title: VERI*FACTU
 transactions:
   import:
-    batch_id_collision: 'Kihagyott sor: ugyanazzal az azonosítóval rendelkezik, mint egy másik
-      sor ebben a fájlban.'
-    message_053465: Ismétlődő tranzakció-aláírás az importált fájlban; mindkét sor importálásra
-      kerül - ellenőrizze a kettős könyvelést.
+    batch_id_collision: 'Kihagyott sor: ugyanazzal az azonosítóval rendelkezik, mint
+      egy másik sor ebben a fájlban.'
+    message_053465: Ismétlődő tranzakció észlelve az importált fájlban.
     message_082074: Ismétlődő tranzakció már szerepel a főkönyvben.
     message_185962: A forrásfájl nem tartalmaz érvényes tranzakciót.
     message_829073: 'Lehetséges hiány: a tranzakciók között több mint 35 nap telt

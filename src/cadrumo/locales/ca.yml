@@ -1957,16 +1957,26 @@ cli:
           {accepted}'
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
+        batch_directory_help: Directori els fitxers del qual s'ingressen. Combina'l
+          amb --file repetit o substitueix-lo per aquest.
+        batch_file_help: Un document a ingressar. Repeteix l'opció una vegada per
+          document; es combina amb un directori.
+        batch_help: Ingressa cada document d'un directori (o cada --file) com a evidència
+          i esborrany revisable, amb una fila de resultat per document.
+        batch_items_refused_message: S'han rebutjat alguns documents. La resta de
+          documents de l'execució s'han completat igualment; les files rebutjades
+          indiquen què s'ha trobat.
+        batch_pending_review_message: Alguns esborranys contenen una troballa que
+          una persona ha de resoldre abans de crear una factura. Estan retinguts,
+          no fallits.
+        batch_progress_message: 'processat %{source}: %{status}'
+        batch_source_required: Indica un argument de directori, una o més opcions
+          --file, o tots dos.
+        batch_work_deferred_message: Alguns documents no s'han llegit perquè no s'ha
+          pogut executar cap model de lectura. No se n'ha endevinat cap valor i res
+          no ha fallat; torna a executar quan es resolgui la causa indicada.
         confirm_already_exists_message: Ja existeix una factura amb aquesta identitat;
           es retorna sense canvis en lloc de crear-ne un duplicat.
-        batch_directory_help: 'Directori els fitxers del qual s''ingressen. Combina''l amb --file repetit o substitueix-lo per aquest.'
-        batch_file_help: 'Un document a ingressar. Repeteix l''opció una vegada per document; es combina amb un directori.'
-        batch_help: 'Ingressa cada document d''un directori (o cada --file) com a evidència i esborrany revisable, amb una fila de resultat per document.'
-        batch_items_refused_message: 'S''han rebutjat alguns documents. La resta de documents de l''execució s''han completat igualment; les files rebutjades indiquen què s''ha trobat.'
-        batch_pending_review_message: 'Alguns esborranys contenen una troballa que una persona ha de resoldre abans de crear una factura. Estan retinguts, no fallits.'
-        batch_progress_message: 'processat %{source}: %{status}'
-        batch_source_required: 'Indica un argument de directori, una o més opcions --file, o tots dos.'
-        batch_work_deferred_message: 'Alguns documents no s''han llegit perquè no s''ha pogut executar cap model de lectura. No se n''ha endevinat cap valor i res no ha fallat; torna a executar quan es resolgui la causa indicada.'
         confirm_counterparty_name_help: Nom de la contrapart (sense heuristica d'extracció
           encara; normalment obligatori).
         confirm_counterparty_nif_help: Sobreescriu el NIF del proveïdor extret.
@@ -1979,6 +1989,7 @@ cli:
           el valor extret).
         confirm_link_hint_message: Vincula aquesta factura a un moviment del llibre
           amb `aeat app ledger link`.
+        confirm_operation_type_help: cli.app.ledger.evidence.confirm_operation_type_help
         confirm_printed_total_mismatch_message: El total imprès al document no coincideix
           amb el total registrat. El total registrat es deriva de la base imposable
           i del tipus d'IVA, de manera que una diferència significa que el document
@@ -66565,6 +66576,33 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
               help: null
               label: Recàrrec d'equivalència tipus 0,5% - Quota meritada anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31.help
+              label: Recàrrec d'equivalència tipus 0,26 % - Quota meritada anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8.help
+              label: Recàrrec d'equivalència tipus 0,5 % - Quota meritada anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
+              help: Declara la quota de recàrrec d'equivalència al 0,62 % repercutida
+                en les vendes a comerciants minoristes acollits al règim de recàrrec,
+                sobre lliuraments gravats al tipus d'IVA del 5 % (RDL 4/2024 art.
+                1). Es consigna a la casella 666.
+              label: Recàrrec d'equivalència tipus 0,62 % - Quota meritada anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
+              help: Declara la quota de recàrrec d'equivalència al 1,4 % repercutida
+                en les vendes a comerciants minoristes acollits al règim de recàrrec,
+                sobre lliuraments gravats al tipus d'IVA del 10 % (LIVA art. 161.2).
+                Es consigna a la casella 600.
+              label: Recàrrec d'equivalència tipus 1,4 % - Quota meritada anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg.help
+              label: Recàrrec d'equivalència tipus 1 % - Quota meritada anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
+              help: Declara la quota de recàrrec d'equivalència al 5,2 % repercutida
+                en les vendes a comerciants minoristes acollits al règim de recàrrec,
+                sobre lliuraments gravats al tipus d'IVA del 21 % (LIVA art. 161.1).
+                Es consigna a la casella 602.
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8.label
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: null
               label: Quota d'IVA repercutit al tipus reduït (10%) - anual
@@ -66667,6 +66705,18 @@ modelo:
                 de béns i serveis amb IVA suportat, agregant els tres tipus interiors.
               label: Base imposable d’IVA deduïble - Total operacions interiors corrents
                 de béns i serveis - anual
+            x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg.help
+              label: Total bases i quotes IVA - Quota (Reg. ordinari) - anual
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
+              help: 'Import dels lliuraments de béns a un altre Estat membre, exempts
+                per l''article 25 de la Llei de l''IVA. No hi incloeu els serveis
+                prestats a empresaris de la UE: no estan subjectes a Espanya i es
+                declaren com a operacions no subjectes.'
+              label: Lliuraments intracomunitaris de bens
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so.label
           construct:
             modelo-390-iva-resumen-anual:
               field:
@@ -67517,10 +67567,9 @@ topic:
     title: VERI*FACTU
 transactions:
   import:
-    batch_id_collision: 'Fila omesa: coincideix amb l''identificador d''una altra fila del mateix
-      fitxer.'
-    message_053465: Signatura de transacció repetida dins del fitxer importat; ambdues files s'importen
-      - reviseu si hi ha duplicitat.
+    batch_id_collision: 'Fila omesa: coincideix amb l''identificador d''una altra
+      fila del mateix fitxer.'
+    message_053465: Transacció duplicada detectada dins de l'arxiu importat.
     message_082074: Transacció duplicada ja present al llibre major.
     message_185962: L'arxiu d'origen no conté transaccions vàlides.
     message_829073: 'Possible buit: més de 35 dies entre transaccions.'

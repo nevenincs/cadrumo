@@ -111,16 +111,30 @@ class IvaFlowDirection(StrEnum):
             consumer-electronics RC, services received from EU
             non-established suppliers); the same operation lands as
             both a repercutido and a soportado entry in the books.
+        OPERACION_CON_INVERSION: The SUPPLIER's side of an operation
+            that triggers inversión del sujeto pasivo. The supplier
+            makes a sujeta y no exenta supply and repercutes nothing,
+            because LIVA art. 84.Uno.2.º makes the recipient the sujeto
+            pasivo; so the operation is turnover that settles on
+            NEITHER side. Distinct from
+            :attr:`INVERSION_SUJETO_PASIVO`, which is the recipient's
+            side of the same operation.
+
+            The member exists because that is a fourth state rather
+            than the absence of the other three, and because the axis
+            previously could not express it: a supplier's reverse-charge
+            invoice was routed to :attr:`INVERSION_SUJETO_PASIVO` and
+            self-assessed as though the supplier were the recipient.
     """
 
     REPERCUTIDO = "repercutido"
     SOPORTADO = "soportado"
     INVERSION_SUJETO_PASIVO = "inversion_sujeto_pasivo"
+    OPERACION_CON_INVERSION = "operacion_con_inversion"
 
 
-_REVERSE_CHARGE_CATEGORIES: frozenset[IvaCategory] = frozenset(
+_RECIPIENT_ONLY_REVERSE_CHARGE_CATEGORIES: frozenset[IvaCategory] = frozenset(
     {
-        IvaCategory.DOMESTIC_REVERSE_CHARGE,
         IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
         # A B2B service received from an EU supplier sits in the same
         # position as the goods acquisition above: art. 69.Uno.1.o locates
@@ -131,10 +145,20 @@ _REVERSE_CHARGE_CATEGORIES: frozenset[IvaCategory] = frozenset(
         IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
     },
 )
-"""IVA categories that route to ``INVERSION_SUJETO_PASIVO`` regardless of the
-invoice direction. The substrate's classifier emits these values from
-the rule set R01-R03 (domestic RC) and R11/R13 (intra-community
-acquisitions / EU services received)."""
+"""Reverse-charge categories that route to ``INVERSION_SUJETO_PASIVO`` on EITHER
+invoice direction, because only the recipient's side exists.
+
+Both are ACQUISITIONS. The supplier's counterpart of an intra-community
+acquisition is a different category entirely (an exempt art. 25 supply, or an
+operation not located in Spain), so no invoice direction can put this taxpayer on
+the supplying side of one of these. Direction is therefore genuinely irrelevant
+here, and collapsing it is correct.
+
+``DOMESTIC_REVERSE_CHARGE`` is deliberately NOT a member. A domestic art. 84.Uno.2
+operation has both of its sides in Spain, so the same category legitimately
+describes a supply this taxpayer MADE and a purchase it RECEIVED -- and those
+settle differently. It is handled by direction in
+:func:`derive_flow_for_classification`."""
 
 
 def derive_flow_for_classification(
@@ -167,7 +191,11 @@ def derive_flow_for_classification(
     Returns:
         The :class:`IvaFlowDirection` that matches the classification.
     """
-    if category in _REVERSE_CHARGE_CATEGORIES:
+    if category in _RECIPIENT_ONLY_REVERSE_CHARGE_CATEGORIES:
+        return IvaFlowDirection.INVERSION_SUJETO_PASIVO
+    if category is IvaCategory.DOMESTIC_REVERSE_CHARGE:
+        if invoice_direction is InvoiceKind.ISSUED:
+            return IvaFlowDirection.OPERACION_CON_INVERSION
         return IvaFlowDirection.INVERSION_SUJETO_PASIVO
     if invoice_direction is InvoiceKind.ISSUED:
         return IvaFlowDirection.REPERCUTIDO
@@ -198,10 +226,18 @@ _FLOW_TO_SETTLEMENT_SIDES: dict[IvaFlowDirection, frozenset[IvaSettlementSide]] 
     IvaFlowDirection.REPERCUTIDO: frozenset({IvaSettlementSide.DEVENGADA}),
     IvaFlowDirection.SOPORTADO: frozenset({IvaSettlementSide.DEDUCIBLE}),
     IvaFlowDirection.INVERSION_SUJETO_PASIVO: frozenset({IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE}),
+    IvaFlowDirection.OPERACION_CON_INVERSION: frozenset(),
 }
 """Closed mapping from flow direction to the settlement side(s) it
 contributes to. INVERSION_SUJETO_PASIVO is the only flow that contributes to
-both sides on the same operation (LIVA art. 84.Uno.2 mechanism)."""
+both sides on the same operation (LIVA art. 84.Uno.2 mechanism).
+
+OPERACION_CON_INVERSION is the only flow that contributes to NEITHER, and the
+empty set is the whole point rather than a placeholder: the supplier in a
+reverse-charge operation repercutes no cuota and bears none, so the operation is
+turnover that belongs in volumen de operaciones and in no cuota total. Routing it
+to either side invents a figure -- to DEVENGADA an output cuota never charged, to
+DEDUCIBLE a deduction of input IVA never borne."""
 
 _DEVENGADA_FLOWS: frozenset[IvaFlowDirection] = frozenset(
     flow for flow, sides in _FLOW_TO_SETTLEMENT_SIDES.items() if IvaSettlementSide.DEVENGADA in sides

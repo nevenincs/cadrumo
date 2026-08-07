@@ -66154,14 +66154,18 @@ modelo:
               help: null
               label: Equivalence surcharge at 0.5% - annual VAT due
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31.label
+              help: Declare the 0.26 % equivalence surcharge charged on sales to retailers
+                under the surcharge regime, on supplies taxed at the 2 % VAT rate
+                (RDL 4/2024 art. 1). Reported in box 692.
+              label: Equivalence surcharge at 0.26 % - annual output amount
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8.help
+              help: Declare the 0.5 % equivalence surcharge charged on sales to retailers
+                under the surcharge regime, on supplies taxed at the 4 % VAT rate
+                (LIVA art. 161.3). Reported in box 36.
               label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8.label
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31.label
+              label: Equivalence surcharge at 0.62 % - annual output amount
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
               help: Declare the 1.4 % equivalence surcharge charged on sales to retailers
                 under the surcharge regime, on supplies taxed at the 10 % VAT rate
@@ -66272,6 +66276,17 @@ modelo:
                 and services carrying input VAT, across the three domestic rate tiers.
               label: Taxable base of deductible VAT - total current domestic purchases
                 of goods and services - annual
+            x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
+              help: Sums the IVA cuota devengada across the general, reducido and
+                super-reducido rates plus autorepercutida in intra-community acquisitions,
+                excluding recargo de equivalencia (box 47).
+              label: Total IVA bases and cuotas - Cuota (Reg. ordinario) - annual
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so.help
+              label: Intra-Community supplies of goods
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so.label
           construct:
             modelo-390-iva-resumen-anual:
               field:
@@ -67115,10 +67130,10 @@ topic:
     title: VERI*FACTU
 transactions:
   import:
-    batch_id_collision: 'Row skipped: it resolves to the same identifier as another row in this
-      file.'
-    message_053465: Repeated transaction signature within the imported file; both rows import
-      - review for a double-count.
+    batch_id_collision: 'Row skipped: it carries the same transaction identifier as
+      another row in this file.'
+    message_053465: Repeated transaction signature within the imported file; both
+      rows import - review for a double-count.
     message_082074: Duplicate transaction already in ledger.
     message_185962: The source file contains no valid transactions.
     message_829073: 'Potential gap: more than 35 days between transactions.'
