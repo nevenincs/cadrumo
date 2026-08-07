@@ -609,3 +609,40 @@ def test_log_extra_materialised_extra_survives_the_real_logging_pipeline() -> No
     assert record_attributes["modelo"] == "303"
     assert record_attributes["period"] == "1T"
     assert record_attributes["observation_count"] == 5
+
+
+def test_secret_scrubbing_redacts_a_value_that_merely_contains_a_placeholder() -> None:
+    """An inline secret beside a placeholder must not ride out on the placeholder's back.
+
+    A sensitive value is exempted from redaction only when it is nothing but a
+    ``%``-format placeholder. A value that merely *contains* one still carries
+    its literal secret, so the literal is redacted while the placeholder stays
+    in place for the pending ``%``-format pass.
+    """
+    for case_id, message, args, leaked in (
+        ("trailing-placeholder", "token=abc123 %s", ("ok",), "abc123"),
+        ("leading-placeholder", "token=%s-abc123", ("ok",), "abc123"),
+        ("bare-secret-with-later-arg", "oauth_refresh_token=refresh-123 status=%s", ("ok",), "refresh-123"),
+    ):
+        rendered = _render_info(message, *args)
+        assert leaked not in rendered, case_id
+        assert "<redacted>" in rendered, case_id
+
+
+def test_secret_scrubbing_preserves_placeholder_arity_so_the_record_still_formats() -> None:
+    """Redacting around a placeholder must leave every format slot intact.
+
+    ``record.msg`` is scrubbed before ``%``-formatting runs. A scrub that
+    consumed a placeholder would leave more args than slots and the stdlib
+    would discard the whole line, turning a redaction fix into silent log loss.
+    """
+    rendered = _render_info("token=abc123 %s", "visible-status")
+    assert "abc123" not in rendered
+    assert "visible-status" in rendered
+
+
+def test_secret_scrubbing_leaves_a_pure_placeholder_value_untouched() -> None:
+    """A bare ``key=%s`` format string keeps its slot; the arg is scrubbed instead."""
+    rendered = _render_info("credential=%s status=%s", "operator-secret", "ok")
+    assert "operator-secret" not in rendered
+    assert "status=ok" in rendered

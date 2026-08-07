@@ -136,8 +136,10 @@ _SENSITIVE_ASSIGNMENT_RE = re.compile(
 )
 _BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+\b")
 _LLM_KEY_RE = re.compile(r"\b(?:sk-ant-|sk-proj-|sk-live-|sk-test-|sk-)[A-Za-z0-9_-]+\b")
-_PERCENT_PLACEHOLDER_VALUE_RE = re.compile(r"^%[-#+ 0-9.]*[a-zA-Z]$")
-_PERCENT_PLACEHOLDER_RE = re.compile(r"(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>%[-#+ 0-9.]*[a-zA-Z])")
+_PLACEHOLDER_PATTERN = r"%[-#+ 0-9.]*[a-zA-Z]"
+_PERCENT_PLACEHOLDER_ONLY_RE = re.compile(_PLACEHOLDER_PATTERN)
+_PERCENT_PLACEHOLDER_VALUE_RE = re.compile(rf"^{_PLACEHOLDER_PATTERN}$")
+_PERCENT_PLACEHOLDER_RE = re.compile(rf"(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>{_PLACEHOLDER_PATTERN})")
 
 #: Base64 payload embedded in a ``data:`` URI, the shape a vision request uses
 #: when the image travels inline rather than as a bare field.
@@ -199,6 +201,35 @@ def _redacted_value(key: str | None, value: str) -> str:
     return "<redacted>"
 
 
+def _redact_around_placeholders(key: str | None, value: str) -> str:
+    """Redact a sensitive assignment's value, preserving its %-format placeholders.
+
+    A record's ``msg`` is scrubbed before ``%``-formatting runs, so a
+    placeholder dropped here would leave the record with more args than slots
+    and the whole line would be lost to a formatting error. Placeholders are
+    therefore kept verbatim and only the literal runs around them are redacted
+    -- which is exactly where an inline secret sits when a message mixes a
+    real value with a placeholder, as in ``token=abc123 %s``.
+
+    A value that is nothing but a placeholder carries no secret and is
+    returned untouched, which is the ``credential=%s`` format-string shape the
+    paired :func:`_scrub_positional_args` pass redacts at the argument instead.
+    """
+    if _PERCENT_PLACEHOLDER_VALUE_RE.fullmatch(value.strip()):
+        return value
+    marker = _redacted_value(key, value)
+    pieces: list[str] = []
+    cursor = 0
+    for placeholder in _PERCENT_PLACEHOLDER_ONLY_RE.finditer(value):
+        if value[cursor : placeholder.start()].strip():
+            pieces.append(marker)
+        pieces.append(placeholder.group(0))
+        cursor = placeholder.end()
+    if value[cursor:].strip():
+        pieces.append(marker)
+    return "".join(pieces) if pieces else marker
+
+
 def _scrub_text(value: str, *, key: str | None = None) -> str:
     """Redact sensitive fragments from a free-form string."""
     if not value:
@@ -210,12 +241,8 @@ def _scrub_text(value: str, *, key: str | None = None) -> str:
     scrubbed = redact_for_log(scrubbed)
     scrubbed = _SENSITIVE_ASSIGNMENT_RE.sub(
         lambda match: (
-            match.group(0)
-            if _PERCENT_PLACEHOLDER_RE.search(match.group("value"))
-            else (
-                f"{match.group('key')}{match.group('separator')}"
-                f"{_redacted_value(match.group('key'), match.group('value'))}"
-            )
+            f"{match.group('key')}{match.group('separator')}"
+            f"{_redact_around_placeholders(match.group('key'), match.group('value'))}"
         ),
         scrubbed,
     )
