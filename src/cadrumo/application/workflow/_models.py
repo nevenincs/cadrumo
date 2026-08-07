@@ -175,7 +175,11 @@ class DeclaracionPointer(BaseModel):
 
 def _period_identity_segment(period: Period) -> str:
     """Return the stable non-combined identity segment for ``period``."""
-    if not isinstance(period, Period):
+    # Deliberate runtime guard: annotations are not enforced at call time, and this
+    # segment lands in a persisted identity, so a wrong type here would be discovered
+    # as a corrupt key rather than a refusal. The check is redundant to the checker
+    # and load-bearing at runtime.
+    if not isinstance(period, Period):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise TypeError(f"period must be a cadrumo.core.Period instance, got {type(period).__name__}")
     return f"{period.filing_year}:{period.registry_token}"
 
