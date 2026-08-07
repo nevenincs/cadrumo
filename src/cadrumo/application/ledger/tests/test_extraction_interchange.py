@@ -90,7 +90,7 @@ def test_free_text_never_crosses_the_boundary() -> None:
         ("producer", None),
     ],
 )
-def test_every_single_field_mutation_reddens(field: str, value: object) -> None:
+def test_every_single_field_mutation_reddens(field: str, value: Any) -> None:
     """Anti-tautology: mutate one field, assert the refusal fires.
 
     A refusal that never fires is indistinguishable from no refusal at all.
