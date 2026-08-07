@@ -80,16 +80,26 @@ __all__ = [
     "CacheKey",
     "CacheStats",
     "CachedEntry",
+    "ExtractionPayload",
+    "ExtractionProducer",
+    "ExtractionSourceKind",
     "LLMCacheError",
+    "LLMClassificationSuggestion",
     "LLMClient",
     "LLMConfigError",
     "LLMError",
     "LLMPdfRasterisationError",
     "LLMProvider",
+    "LLMProviderAvailability",
     "LLMProviderError",
     "LLMRateLimitError",
     "LLMRequest",
     "LLMResponse",
+    "LLMSaturatedSuggestion",
+    "LLMSplitApplyResult",
+    "LLMSplitChildSuggestion",
+    "LLMSplitSuggestion",
+    "LLMSuggestionRejectionResult",
     "LocalTextLLMClassifier",
     "LocalVisionLLMClassifier",
     "MultimodalImageInput",
@@ -104,6 +114,29 @@ __all__ = [
 ]
 
 
+_SUGGESTION_EXPORTS = frozenset({
+    "ExtractionPayload",
+    "ExtractionProducer",
+    "ExtractionSourceKind",
+    "LLMClassificationSuggestion",
+    "SubprocessProvider",
+    "LLMProviderAvailability",
+    "LLMSaturatedSuggestion",
+    "LLMSplitApplyResult",
+    "LLMSplitChildSuggestion",
+    "LLMSplitSuggestion",
+    "LLMSuggestionRejectionResult",
+    "OperatorIvaDerivationResult",
+})
+"""Interchange DTOs resolved lazily from :mod:`._suggestions`.
+
+They live HERE rather than in the ledger because every LLM definition belongs
+to this package; the ledger consumes them. Lazy because the DTO module reaches
+back into ``application.ledger`` for one result type, so an eager binding would
+close the loop at import time.
+"""
+
+
 def __getattr__(name: str) -> object:
     """Resolve the two application-facing readers lazily.
 
@@ -115,6 +148,10 @@ def __getattr__(name: str) -> object:
     layer. Lazy resolution governs WHEN a module executes, never WHERE a symbol
     lives: each still has exactly one canonical home and one import path.
     """
+    if name in _SUGGESTION_EXPORTS:
+        from . import _suggestions
+
+        return getattr(_suggestions, name)
     if name == "LocalVisionLLMClassifier":
         from ._vision_classifier import LocalVisionLLMClassifier
 

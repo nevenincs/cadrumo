@@ -32,13 +32,15 @@ from ....domain.transactions import (
     TransactionLifecycleState,
     TransactionValidationError,
 )
-from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from ....llm import (
     LLMClassificationSuggestion,
-    LLMProvider,
     LLMSaturatedSuggestion,
     LLMSplitApplyResult,
     LLMSplitSuggestion,
+    SubprocessProvider,
+)
+from ....tests.secure_sql import isolated_runtime_profile
+from .. import (
     apply_evidence_split,
     apply_llm_classification,
     saturate_llm_classification,
@@ -121,7 +123,7 @@ def _seed_parent(repository: TransactionCatalogueRepository) -> str:
 def _classification_suggestion(tx_id: str) -> LLMClassificationSuggestion:
     return LLMClassificationSuggestion(
         transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
+        provider=SubprocessProvider.CLAUDE,
         provenance="llm:claude:test-model",
         classification=BusinessClassification.BUSINESS,
         category=SpendingCategory.MATERIAL_OFICINA,
@@ -260,7 +262,7 @@ def _saturated_suggestion(repository: TransactionCatalogueRepository, tx_id: str
     return saturate_llm_classification(
         bucket_id=repository.bucket_id,
         transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
+        provider=SubprocessProvider.CLAUDE,
         classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.DOMESTIC_GENERAL_21),
         transaction_repository=repository,
     )
@@ -276,7 +278,7 @@ def _split_suggestion(
     return suggest_evidence_split(
         bucket_id=repository.bucket_id,
         transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
+        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=proposal),
         transaction_repository=repository,
         read_evidence=False,

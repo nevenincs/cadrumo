@@ -14,8 +14,6 @@ import typer
 from pydantic import ValidationError
 
 from ...application.ledger import (
-    LLMProvider,
-    LLMSplitApplyResult,
     PurchaseInvoiceEvidenceInputError,
     SplitChildCommand,
     archive_manual_transaction,
@@ -40,11 +38,13 @@ from ...domain.transactions import (
     TransactionValidationError,
     is_classified,
 )
+from ...llm import LLMProvider, LLMSplitApplyResult
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
 from ._ledger_support import _emit_update_result, _ledger_validation_bad, _resolve_id
 
 if TYPE_CHECKING:
-    from ...application.ledger import LLMSplitSuggestion, ManualLedgerTransactionResult
+    from ...application.ledger import ManualLedgerTransactionResult
+    from ...llm import LLMSplitSuggestion
     from ._ledger_payloads import LedgerSplitChildIdPayload, LedgerSplitChildProposalPayload
 
 

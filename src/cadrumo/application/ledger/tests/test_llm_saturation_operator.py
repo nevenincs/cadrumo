@@ -11,7 +11,8 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
 from ....domain.transactions import BusinessClassification, TransactionValidationError
-from .. import OperatorIvaDerivationResult, derive_operator_iva_substrate
+from ....llm import OperatorIvaDerivationResult
+from .. import derive_operator_iva_substrate
 from ._llm_saturation_support import (
     _BUCKET,
     _NOW,

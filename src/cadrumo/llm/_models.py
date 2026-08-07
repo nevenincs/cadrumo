@@ -21,22 +21,13 @@ from __future__ import annotations
 import re
 from datetime import date, datetime
 from decimal import Decimal
-from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ..core.config import LLMProvider
 from ._errors import LLMValidationError
 
 _PROMPT_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
-
-
-class LLMProvider(StrEnum):
-    """Supported providers selected by :class:`~adapters.outbound.llm.LLMClient`."""
-
-    ANTHROPIC = "ANTHROPIC"
-    OPENAI = "OPENAI"
-    GEMINI = "GEMINI"
-    LOCAL = "LOCAL"
 
 
 class MultimodalImageInput(BaseModel):

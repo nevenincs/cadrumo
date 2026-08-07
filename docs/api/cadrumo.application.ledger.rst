@@ -20,7 +20,6 @@ Submodules
    cadrumo.application.ledger._actions_lifecycle
    cadrumo.application.ledger._actions_manual
    cadrumo.application.ledger._actions_split_merge
-   cadrumo.application.ledger._business_operation_invoice
    cadrumo.application.ledger._evidence
    cadrumo.application.ledger._evidence_advisory
    cadrumo.application.ledger._evidence_draft
@@ -32,7 +31,6 @@ Submodules
    cadrumo.application.ledger._llm_classification
    cadrumo.application.ledger._llm_diagnostics
    cadrumo.application.ledger._llm_review_workflow
-   cadrumo.application.ledger._llm_suggestions
    cadrumo.application.ledger._models
    cadrumo.application.ledger._participation_read
    cadrumo.application.ledger._preflight

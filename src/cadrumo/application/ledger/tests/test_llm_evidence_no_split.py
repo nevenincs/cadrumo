@@ -12,8 +12,8 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
 from ....domain.transactions import BusinessClassification, TransactionLifecycleState, TransactionValidationError
+from ....llm import SubprocessProvider
 from .. import (
-    LLMProvider,
     apply_evidence_classification,
     apply_evidence_split,
     suggest_evidence_split,
@@ -44,7 +44,7 @@ def test_single_child_suggestion_does_not_recommend_split(
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
+        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=_single_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
@@ -64,7 +64,7 @@ def test_apply_evidence_split_refuses_a_no_split_verdict(
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
+        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=_single_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
@@ -88,7 +88,7 @@ def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
+        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=_single_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
@@ -124,7 +124,7 @@ def test_apply_evidence_classification_refuses_a_multi_child_split(
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
+        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,

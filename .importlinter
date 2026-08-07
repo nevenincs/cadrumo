@@ -392,6 +392,21 @@ ignore_imports =
     cadrumo.application.ledger._evidence_draft -> cadrumo.llm
     cadrumo.application.ledger._llm_classification -> cadrumo.llm
     cadrumo.application.ledger._llm_diagnostics -> cadrumo.llm
+    # The interchange DTOs are canonically owned by cadrumo.llm, so every
+    # ledger consumer of them is an application -> adapter-tier edge. Pinned
+    # per origin rather than by widening the contract, so a NEW production
+    # edge that is not a DTO consumer still fails loudly.
+    cadrumo.application.ledger._llm_review_workflow -> cadrumo.llm
+    cadrumo.application.ledger.tests.test_extraction_interchange -> cadrumo.llm
+    cadrumo.application.ledger.tests.test_llm_evidence_no_split -> cadrumo.llm
+    cadrumo.application.ledger.tests.test_llm_evidence_split -> cadrumo.llm
+    cadrumo.application.ledger.tests.test_llm_evidence_split_apply -> cadrumo.llm
+    cadrumo.application.ledger.tests.test_llm_reject -> cadrumo.llm
+    cadrumo.application.ledger.tests.test_llm_reject_split -> cadrumo.llm
+    cadrumo.application.ledger.tests.test_llm_review_workflow -> cadrumo.llm
+    cadrumo.application.ledger.tests.test_llm_saturation -> cadrumo.llm
+    cadrumo.application.ledger.tests.test_llm_saturation_apply -> cadrumo.llm
+    cadrumo.application.ledger.tests.test_llm_saturation_operator -> cadrumo.llm
     # Test-module chain origin: the corpus-parsing test exercises the on-host
     # rasteriser, which now lives in the gated subpackage. Pinned like the
     # other test chain origins above rather than widened, so a NEW production
@@ -410,7 +425,6 @@ ignore_imports =
     cadrumo.application.invoices._source_resolver -> cadrumo.adapters.**
     cadrumo.application.ledger._actions_common -> cadrumo.adapters.**
     cadrumo.application.ledger._actions_import -> cadrumo.adapters.**
-    cadrumo.application.ledger._business_operation_invoice -> cadrumo.adapters.**
     cadrumo.application.ledger._evidence -> cadrumo.adapters.**
     cadrumo.application.ledger._evidence_draft -> cadrumo.adapters.**
     cadrumo.application.ledger._evidence_textlayer -> cadrumo.adapters.**
@@ -593,7 +607,6 @@ ignore_imports =
     cadrumo.application.inventory._service -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.ledger._actions_common -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.ledger._actions_split_merge -> cadrumo.adapters.persistence.profile.buckets
-    cadrumo.application.ledger._business_operation_invoice -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.ledger._evidence -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.ledger._llm_classification -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.ledger._review_projection -> cadrumo.adapters.persistence.profile.buckets

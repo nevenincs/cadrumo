@@ -51,7 +51,7 @@ from ._config_support import (
     AEAT_CERTIFICATE_PROTECTED_PATH,  # noqa: F401 - public certificate route authority
     AEAT_CERTIFICATE_PROTECTED_URL,  # noqa: F401 - public certificate route authority
     JustificanteParserBackendSetting,
-    LLMProviderSetting,  # noqa: F401 - public re-export from cadrumo.core.config
+    LLMProvider,  # noqa: F401 - public re-export from cadrumo.core.config
     SecretStoreBackend,
     StorageRouteClassification,
     StorageRouteKind,  # noqa: F401 - public re-export from cadrumo.core.config

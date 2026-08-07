@@ -22,7 +22,7 @@ import pytest
 from pydantic import SecretStr
 
 from ...adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
-from ...core.config import LLMProviderSetting, override_settings
+from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from .. import LLMClient, LLMProviderError, LLMRateLimitError, LLMRequest
 
@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 def _settings(tmp_path: Path) -> EnvFileFreeSettings:
     return EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProviderSetting.LOCAL,
+        cadrumo_llm_provider=LLMProvider.LOCAL,
         cadrumo_llm_model="gpt-oss",
         cadrumo_llm_cache_dir=tmp_path / "probe-cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
@@ -183,7 +183,7 @@ def test_client_records_run_telemetry_on_provider_failure(tmp_path: Path) -> Non
 def test_secretstr_masks_llm_keys_in_settings_repr() -> None:
     """LLM API keys should never appear in repr or serialized JSON."""
     settings = EnvFileFreeSettings(
-        cadrumo_llm_provider=LLMProviderSetting.ANTHROPIC,
+        cadrumo_llm_provider=LLMProvider.ANTHROPIC,
         cadrumo_llm_model="claude-sonnet-4-6",
         cadrumo_llm_anthropic_api_key=SecretStr("sk-test-secret"),
     )
