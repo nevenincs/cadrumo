@@ -279,10 +279,10 @@ def _module_exists(dotted_path: str) -> bool:
         return False
 
 
-def test_all_66_namespace_rows_use_cadrumo_owners_and_preserve_six_authority_segments() -> None:
+def test_all_67_namespace_rows_use_cadrumo_owners_and_preserve_six_authority_segments() -> None:
     definitions = STORAGE_NAMESPACE_REGISTRY.namespaces
 
-    assert len(definitions) == 66
+    assert len(definitions) == 67
     assert all(
         definition.namespace.startswith(("cadrumo.", "cadrumo-test.", "cadrumo-tests.")) for definition in definitions
     )
