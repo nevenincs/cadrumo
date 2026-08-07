@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:9a2a338745c34c473cdaaba3c576a82f29d4480989c1ab0f41cbae6d52718f66'
+body_hash: 'sha256:73dbd55c87d89b6e7d1c6318932717d4df2f64bc552bbf806e1dc4ac88c0fff0'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -283,6 +283,7 @@ Lands the review surface, the blocking-findings gate, assertion-shaped correctio
 - [ ] `W09.P17.S132` - Derive each party territorial residency from the transcribed postal code, since the contract now carries a supplier and a customer postal code and the domain resolver can turn a Spanish code into its territory, but nothing joins them so neither residency resolves for a Spanish party on the real path and the classification assembly still refuses an ordinary domestic invoice. This is the last producer between the read path and the assembly answering, so the held minting convergence stays blocked until it lands. Hold the safety asymmetry through the join: an absent or unreadable code resolves to nothing rather than to the mainland, and a party whose residency cannot be established must refuse rather than be assumed domestic; `src/cadrumo/application/ledger`.
 - [ ] `W09.P17.S133` - Report a missing rate tier as a missing classifier input, since a domestic operation lacking one refuses through the criteria model raising and the assembly reports the status and kind gaps while never naming the tier itself, so an operator sees an incomplete gap list and fixes one axis at a time. Pre-existing rather than introduced by the laziness work that surfaced it; `src/cadrumo/application/ledger`.
 - [ ] `W09.P17.S134` - Distinguish the three situations the country-code resolver collapses into one, since it returns nothing for an absent code, a malformed code and a Spanish code alike and the caller cannot tell them apart, so the assembly refusal branches on truthiness and reports that a malformed code names Spain, which is false. Pre-existing and small, and it becomes load-bearing the moment anything gates the postal join on whether the country evidence positively names Spain; `src/cadrumo/domain/iva`.
+- [ ] `W09.P17.S135` - Make the structural status-blindness sweep prove it exercised its own assertion, since the counter increments before the skip so the count assertion equals the loop bounds unconditionally and cannot fail, while the inner assertion runs only on shapes matching a non-fallthrough rule and nothing requires any shape to. Proven vacuous by emptying the rule table so every shape fell through, after which the gate still passed. Latent rather than live today because forty-seven of the hundred swept shapes reach a real rule, but it sits on the test described as the stronger structural guarantee and a future narrowing of the table would degrade it silently into an assertion-free loop. Count the shapes that actually exercise the assertion and gate on that, dropping the tautological line rather than replacing it with another; `src/cadrumo/application/ledger`.
 
 ## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
 
