@@ -240,3 +240,57 @@ def test_the_core_draft_path_routes_a_structured_document_to_the_exact_reader() 
     assert draft.supplier_tax_id == "DE123456789"
     assert draft.taxable_base == Decimal("473.00")
     assert draft.grand_total == Decimal("529.87")
+
+
+def test_the_ubl_fixture_parses_both_rates_and_selects_the_vat_identifier() -> None:
+    """S19: EN16931 UBL, the half of the standard a CII-only reader returns nothing for.
+
+    Nothing in the bundled corpus exercised UBL before this fixture, so the UBL
+    parser shipped unread against any real document. Two rates on purpose: a
+    single-rate document cannot detect the multi-rate collapse, which is the
+    defect the per-rate breakdown exists to prevent.
+    """
+    parsed = parse_einvoice_document(_read("en16931_ubl_two_rate_invoice.xml"))
+
+    assert parsed.shape is DocumentShape.XML_UBL
+    assert parsed.invoice_number == "UBL-2024-0042", "the document's own ID, not a guideline identifier"
+    assert parsed.supplier_tax_id == "ESB12345674", "the schemeID=VA id, not the 0088 party identifier"
+    assert parsed.currency == "EUR"
+
+    rates = sorted(rate for rate, _b, _c in parsed.iva_breakdown if rate is not None)
+    assert rates == [Decimal("10.00"), Decimal("21.00")]
+    assert len(parsed.lines) == 2
+
+    bases = sum((b for _r, b, _c in parsed.iva_breakdown if b is not None), Decimal(0))
+    cuotas = sum((c for _r, _b, c in parsed.iva_breakdown if c is not None), Decimal(0))
+    assert bases == parsed.taxable_base
+    assert cuotas == parsed.iva_amount
+    assert parsed.taxable_base + parsed.iva_amount == parsed.grand_total
+
+
+def test_the_facturae_fixture_reads_recargo_and_does_not_double_count_its_taxes() -> None:
+    """S20: Facturae 3.2.x, plus the double-count this fixture caught on arrival.
+
+    Facturae states taxes TWICE -- once at invoice level and again per line --
+    so a descendant walk collects both and reports every band twice. A
+    single-rate invoice then looks like a two-rate one and the invoice-level
+    identity fails on a perfectly well-formed document. The parser now scopes to
+    the invoice-level block; this asserts the count, which is the only thing
+    that distinguishes the fix from the bug.
+
+    The recargo assertion matters for its own reason: the draft grew a recargo
+    slot because a peer-landed discrepancy check had begun firing with nowhere
+    for the operator to resolve it. A slot with no document that states one
+    would have shipped untested against real structure.
+    """
+    parsed = parse_einvoice_document(_read("facturae_32_recargo_invoice.xml"))
+
+    assert parsed.shape is DocumentShape.XML_FACTURAE
+    assert parsed.invoice_number == "FAC-2024-0007"
+    assert parsed.supplier_tax_id == "ESB12345674"
+    assert parsed.recargo_amount == Decimal("5.20")
+
+    assert len(parsed.iva_breakdown) == 1, "invoice-level taxes only; the per-line block must not double-count"
+    rate, base, cuota = parsed.iva_breakdown[0]
+    assert (rate, base, cuota) == (Decimal("21.00"), Decimal("100.00"), Decimal("21.00"))
+    assert base == parsed.taxable_base

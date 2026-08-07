@@ -306,7 +306,17 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
         parsed.taxable_base = _decimal(_first_text(totals, "TotalGrossAmountBeforeTaxes"))
         parsed.iva_amount = _decimal(_first_text(totals, "TotalTaxOutputs"))
         parsed.grand_total = _decimal(_first_text(totals, "InvoiceTotal"))
-    for tax in _find_all(invoice, "Tax"):
+    # Facturae states taxes TWICE: once at invoice level under TaxesOutputs and
+    # again per line under Items/InvoiceLine/TaxesOutputs. A descendant walk
+    # collects both and double-counts every rate -- the invoice-level breakdown
+    # then reports each band twice, so a single-rate invoice looks like a
+    # two-rate one and the identity check fails on a document that is perfectly
+    # well formed. Scope to the INVOICE-level block only.
+    header_taxes: list[Element] = []
+    for node in invoice:
+        if _local(node.tag) == "TaxesOutputs":
+            header_taxes.extend(child for child in node if _local(child.tag) == "Tax")
+    for tax in header_taxes:
         rate = _decimal(_first_text(tax, "TaxRate"))
         base = None
         amount = None
