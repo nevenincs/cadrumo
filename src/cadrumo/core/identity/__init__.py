@@ -18,6 +18,9 @@ intentionally tiny:
 * :func:`tax_id_identity_token` and :data:`TaxIdIdentityToken` — the shared
   comparison form for identifiers whose bearer may not be Spanish, used
   wherever a grouping key and a storage key must agree.
+* :func:`same_tax_identifier` — the shared "these name the same bearer"
+  predicate, checksum-free and separator-insensitive, for the places that
+  compare an identifier rather than key on it.
 
 The module lives in :mod:`core` because identity validation is a
 domain concern, not a persistence concern. The persistence layer's
@@ -50,7 +53,12 @@ from ._nif_iva import (
 )
 from ._profile import ProfileId
 from ._profile_label import ProfileLabel
-from ._tax_id import nif_check_letter, tax_id_identity_token, validate_spanish_tax_id
+from ._tax_id import (
+    nif_check_letter,
+    same_tax_identifier,
+    tax_id_identity_token,
+    validate_spanish_tax_id,
+)
 
 SnapshotId = _Hex64Str
 """Hex-64 content-addressed snapshot identity.
@@ -129,6 +137,7 @@ __all__ = [
     "nif_iva_format_for_country",
     "nif_iva_prefix_for_country",
     "normalise_nif_iva",
+    "same_tax_identifier",
     "tax_id_identity_token",
     "validate_identity",
     "validate_spanish_tax_id",

@@ -43,7 +43,7 @@ See Also:
 
 from __future__ import annotations
 
-from ...core.identity import tax_id_identity_token
+from ...core.identity import same_tax_identifier
 from ...domain.deadlines import TaxpayerProfile
 
 __all__ = ["counterparty_is_the_filer"]
@@ -52,12 +52,13 @@ __all__ = ["counterparty_is_the_filer"]
 def counterparty_is_the_filer(*, counterparty_tax_id: str | None, profile: TaxpayerProfile) -> bool:
     """Return whether ``counterparty_tax_id`` names the taxpayer in ``profile``.
 
-    Compares on :func:`~core.identity.tax_id_identity_token`, the canonical
-    "are these the same identifier" form, rather than a local trim-and-uppercase.
-    That helper deliberately asserts no checksum, which is right here: the
-    question is identity, not validity, and a profile carrying a foreign or
-    otherwise non-Spanish identifier must still be comparable against a document
-    that prints it.
+    Compares on :func:`~core.identity.same_tax_identifier`, the one shared
+    "these name the same bearer" predicate -- the same one the evidence reader's
+    own-identity exclusion consumes, so a document that evades one cannot evade
+    the other. That helper deliberately asserts no checksum, which is right
+    here: the question is identity, not validity, and a profile carrying a
+    foreign or otherwise non-Spanish identifier must still be comparable against
+    a document that prints it.
 
     Args:
         counterparty_tax_id: The counterparty identifier about to be recorded,
@@ -71,9 +72,4 @@ def counterparty_is_the_filer(*, counterparty_tax_id: str | None, profile: Taxpa
         answers ``False`` -- absence is not a match, and this predicate must not
         turn "nothing to compare" into "the same".
     """
-    if counterparty_tax_id is None:
-        return False
-    own = profile.tax_id
-    if not own:
-        return False
-    return tax_id_identity_token(counterparty_tax_id) == tax_id_identity_token(own)
+    return same_tax_identifier(counterparty_tax_id, profile.tax_id)
