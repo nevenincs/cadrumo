@@ -134,6 +134,30 @@ def _validate_invoice_number(raw: str) -> str:
     return stripped
 
 
+def _validate_operation_date(raw: str) -> date:
+    """Validate the declared devengo date, reported under its own field name.
+
+    Named separately from the invoice date rather than sharing that validator
+    so a malformed value is reported against ``operation_date``. The guided
+    verb's whole contract is that every field failure is attributed and
+    accumulated; a refusal naming the wrong field would send the operator to
+    correct a value that was already correct.
+    """
+    try:
+        value = parse_iso8601_date(raw)
+    except ValueError as exc:
+        raise _WizardFieldError(
+            field="operation_date",
+            reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
+        ) from exc
+    if value is None:
+        raise _WizardFieldError(
+            field="operation_date",
+            reason=f"must be an ISO-8601 date (YYYY-MM-DD), got {raw!r}",
+        )
+    return value
+
+
 def _validate_invoice_date(raw: str) -> date:
     try:
         value = parse_iso8601_date(raw)
@@ -267,6 +291,7 @@ def create_invoice_via_wizard(
     taxable_base: str,
     iva_rate: str | None,
     currency: str,
+    operation_date: str | None = None,
     country_code: str = "ES",
     notes: str = "",
     iva_category: IvaCategory | None = None,
@@ -291,6 +316,10 @@ def create_invoice_via_wizard(
         counterparty_name: Raw counterparty display name.
         invoice_number: Raw AEAT-significant invoice number.
         invoice_date: Raw ISO-8601 invoice date string.
+        operation_date: Raw ISO-8601 date the operation was performed, when it
+            differs from the issue date. Supplying it lets the record reach a
+            DECLARED devengo rank; omitting it leaves the issue date standing
+            as a proxy, which is a weaker basis for period attribution.
         taxable_base: Raw non-negative decimal taxable base string.
         iva_rate: Raw decimal IVA percentage string, or ``None``/blank for a
             base-only (exempt) invoice.
@@ -346,6 +375,13 @@ def create_invoice_via_wizard(
         resolved_date = _validate_invoice_date(invoice_date)
     except _WizardFieldError as exc:
         field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
+
+    resolved_operation_date: date | None = None
+    if operation_date is not None:
+        try:
+            resolved_operation_date = _validate_operation_date(operation_date)
+        except _WizardFieldError as exc:
+            field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
 
     resolved_base: Decimal | None = None
     try:
@@ -443,6 +479,7 @@ def create_invoice_via_wizard(
         notes=notes,
         iva_category=iva_category,
         operation_type=operation_type,
+        operation_date=resolved_operation_date,
         retention_rate=resolved_retention_rate,
         retention_amount=resolved_retention_amount,
         repository=repo,

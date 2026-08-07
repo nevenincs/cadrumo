@@ -768,6 +768,7 @@ def catalogue_wizard(
     iva_rate: _CatalogueIvaRateOpt = None,
     currency: _CatalogueCurrencyOpt = DEFAULT_CURRENCY,
     operation_type: _CatalogueOperationTypeOpt = None,
+    operation_date: _CatalogueOperationDateOpt = None,
     retention_rate: _CatalogueRetentionRateOpt = None,
     retention_amount: _CatalogueRetentionAmountOpt = None,
     invoice_class: _CatalogueInvoiceClassOpt = None,
@@ -816,6 +817,7 @@ def catalogue_wizard(
             notes=notes,
             iva_category=resolved_iva_category,
             operation_type=parsed_operation_type,
+            operation_date=operation_date,
             retention_rate=retention_rate,
             retention_amount=retention_amount,
         )
