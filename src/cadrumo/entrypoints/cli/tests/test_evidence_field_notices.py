@@ -16,7 +16,7 @@ import pytest
 from ....application.ledger import FieldProvenance
 from ....application.ledger._evidence_draft import FieldAmbiguityCandidate
 from ....core import FieldGroundingOutcome, FieldOrigin
-from ....core.json_contract import NoticeSeverity, derive_status
+from ....core.json_contract import Notice, NoticeSeverity, derive_status
 from .._evidence_field_notices import DEGRADED_GROUNDING_OUTCOMES, field_degradation_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -86,6 +86,20 @@ def _anchored() -> FieldProvenance:
     )
 
 
+def _context(notice: Notice) -> dict[str, str]:
+    """Return a degradation notice's context, asserting the channel populated it.
+
+    ``Notice.context`` is optional on the envelope model, and every assertion
+    below indexed it directly -- reading as though the field were guaranteed
+    while proving nothing about it. Every degradation notice names at least the
+    field it concerns, so an absent context is a defect. Stated once here, so a
+    builder that stopped populating it fails with that sentence rather than a
+    subscript error somewhere downstream.
+    """
+    assert notice.context is not None, f"{notice.code} reached the operator with no context"
+    return notice.context
+
+
 def test_the_degraded_set_is_derived_from_the_vocabulary() -> None:
     """A new grounding outcome is reported by default, not silently ignored.
 
@@ -116,7 +130,7 @@ def test_every_degraded_field_produces_exactly_one_notice() -> None:
     notices = field_degradation_notices(degraded)
 
     assert len(notices) == len(degraded)
-    assert [notice.context["field"] for notice in notices] == [envelope.field for envelope in degraded]
+    assert [_context(notice)["field"] for notice in notices] == [envelope.field for envelope in degraded]
 
 
 def test_an_unchecked_anchor_is_never_reported_as_a_failed_check() -> None:
@@ -137,8 +151,8 @@ def test_an_unchecked_anchor_is_never_reported_as_a_failed_check() -> None:
     assert self_reported.code != checked.code
     assert self_reported.code == "ledger.evidence.field.anchor_self_reported"
     assert checked.code == "ledger.evidence.field.anchor_not_found"
-    assert self_reported.context["anchor_self_reported"] == "true"
-    assert checked.context["anchor_self_reported"] == "false"
+    assert _context(self_reported)["anchor_self_reported"] == "true"
+    assert _context(checked)["anchor_self_reported"] == "false"
     assert "nothing independent" in self_reported.message
     assert "does not occur" in checked.message
 
@@ -150,27 +164,27 @@ def test_a_missing_anchor_is_distinct_from_an_anchor_that_was_not_found() -> Non
 
     assert offered_nothing.code == "ledger.evidence.field.no_anchor"
     assert offered_nothing.code != offered_something.code
-    assert "anchor" not in offered_nothing.context
+    assert "anchor" not in _context(offered_nothing)
 
 
 def test_each_notice_names_what_was_seen() -> None:
     """The printed form the reader claims to have read reaches the operator."""
     contradicted = field_degradation_notices([_contradicted()])[0]
-    assert contradicted.context["anchor"] == "1.234,56"
+    assert _context(contradicted)["anchor"] == "1.234,56"
     assert "1.234,56" in contradicted.message
 
     ambiguous = field_degradation_notices([_ambiguous()])[0]
     assert "A82645177" in ambiguous.message
     assert "B17283946" in ambiguous.message
-    assert ambiguous.context["candidate_count"] == "2"
+    assert _context(ambiguous)["candidate_count"] == "2"
 
 
 def test_each_notice_names_why_the_value_was_not_accepted() -> None:
     """The outcome and the origin travel with every report, not just the field name."""
     for envelope in (_contradicted(), _ambiguous(), _self_reported(), _anchor_not_found(), _no_anchor()):
         notice = field_degradation_notices([envelope])[0]
-        assert notice.context["outcome"] == envelope.grounding.value
-        assert notice.context["origin"] == envelope.origin.value
+        assert _context(notice)["outcome"] == envelope.grounding.value
+        assert _context(notice)["origin"] == envelope.origin.value
 
 
 def test_a_disagreement_and_an_undecided_reading_are_warnings() -> None:
@@ -198,7 +212,7 @@ def test_notices_follow_provenance_order() -> None:
     """The report reads in the order the draft's fields were assembled."""
     envelopes = [_no_anchor(), _contradicted(), _ambiguous()]
     notices = field_degradation_notices(envelopes)
-    assert [notice.context["field"] for notice in notices] == ["currency", "taxable_base", "supplier_tax_id"]
+    assert [_context(notice)["field"] for notice in notices] == ["currency", "taxable_base", "supplier_tax_id"]
 
 
 def test_both_evidence_surfaces_emit_the_degradation_notices() -> None:

@@ -17,6 +17,7 @@ from ....domain.iva import InvoiceKind
 from .._batch_ingest import (
     BATCH_ITEM_STATUSES,
     BatchItemResult,
+    BatchItemStatus,
     batch_item_identity,
     order_batch_items,
     order_batch_sources,
@@ -30,14 +31,28 @@ _B = "b" * 64
 _C = "c" * 64
 
 
-def _item(address: str, status: str, **kwargs: object) -> BatchItemResult:
-    direction = kwargs.pop("direction", InvoiceKind.RECEIVED)
+def _item(
+    address: str,
+    status: BatchItemStatus,
+    *,
+    direction: InvoiceKind = InvoiceKind.RECEIVED,
+    refusal_code: str | None = None,
+    refusal_detail: str | None = None,
+) -> BatchItemResult:
+    """Build one row, naming the fields a case varies.
+
+    Spelled out rather than forwarded through ``**kwargs: object``, which
+    erased every value to ``object`` and needed two suppressions to reach the
+    constructor at all -- so the helper type-checked nothing about the rows the
+    assertions below are built from.
+    """
     return BatchItemResult(
         content_address=address,
         identity=batch_item_identity(content_address=address, direction=direction),
         direction=direction,
-        status=status,  # type: ignore[arg-type]
-        **kwargs,  # type: ignore[arg-type]
+        status=status,
+        refusal_code=refusal_code,
+        refusal_detail=refusal_detail,
     )
 
 
