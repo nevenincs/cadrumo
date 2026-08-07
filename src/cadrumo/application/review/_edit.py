@@ -138,15 +138,35 @@ def _coerce_decimal(clause: EditClause, *, scope: str) -> Decimal:
     return result
 
 
-def _coerce_invoice_taxable_base(clause: EditClause) -> Decimal:
-    """Parse the invoice taxable base with the same euro-cent contract as creation."""
+def _coerce_invoice_amount(clause: EditClause, *, scope: str) -> Decimal:
+    """Parse an invoice MONEY amount under the euro-cent contract used at creation.
+
+    Every magnitude goes through the canonical grammar rather than
+    :func:`_coerce_decimal`, because the tolerant helper RESOLVES the ambiguous
+    Spanish thousands shape instead of refusing it: ``coerce_decimal("1.000")``
+    answers one euro where the operator may have meant one thousand. That is not
+    hypothetical here -- ``core.decimal._grammar`` records an operator's
+    ``12.500`` euros being read as twelve fifty on a threshold field by exactly
+    this route, which is why the ambiguity check was moved into the canonical
+    parser.
+
+    Rates deliberately keep the tolerant helper. A trailing zero cannot misread
+    a rate, since ``12.500`` and ``12.5`` are the same percentage; on a
+    magnitude the same text is a thousandfold error. The split is by what the
+    value MEANS, not by which helper was nearest.
+    """
     result = try_parse_canonical_decimal(clause.raw_value, max_fraction_digits=2)
     if result is None:
         raise EditParseError(
             f"--set {clause.key}={clause.raw_value}",
-            reason="invalid-value-invoice-base",
+            reason=f"invalid-value-{scope}",
         )
     return result
+
+
+def _coerce_invoice_taxable_base(clause: EditClause) -> Decimal:
+    """Parse the invoice taxable base with the same euro-cent contract as creation."""
+    return _coerce_invoice_amount(clause, scope="invoice-base")
 
 
 _INVOICE_IVA_RATE_ALLOWED: frozenset[Decimal] = numeric_iva_rate_percentages()
@@ -441,13 +461,13 @@ class InvoiceEditSpec(BaseModel):
             elif clause.key == InvoiceEditKey.IVA_RATE:
                 iva_rate = _coerce_invoice_iva_rate(clause)
             elif clause.key == InvoiceEditKey.IVA_AMOUNT:
-                iva_amount = _coerce_decimal(clause, scope="invoice-iva-amount")
+                iva_amount = _coerce_invoice_amount(clause, scope="invoice-iva-amount")
             elif clause.key == InvoiceEditKey.IVA_CATEGORY:
                 iva_category = clause.raw_value
             elif clause.key == InvoiceEditKey.RETENTION_RATE:
                 retention_rate = _coerce_invoice_retention_rate(clause)
             elif clause.key == InvoiceEditKey.RETENTION_AMOUNT:
-                retention_amount = _coerce_decimal(clause, scope="invoice-retention-amount")
+                retention_amount = _coerce_invoice_amount(clause, scope="invoice-retention-amount")
             elif clause.key == InvoiceEditKey.PAYMENT_ID:
                 payment_id = clause.raw_value
             elif clause.key == InvoiceEditKey.REFERENCE:
