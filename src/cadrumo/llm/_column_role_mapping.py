@@ -52,11 +52,11 @@ from functools import cache
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..core import FieldRole
+from ..core import FieldRole, ModelRole
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
-from ._errors import LLMValidationError
-from ._models import LLMRequest
+from ._errors import LLMConfigError, LLMValidationError
+from ._models import LLMProvider, LLMRequest
 
 #: Identifier under which this capability's calls are recorded in LLM usage and
 #: run telemetry, so a mapping call is attributable separately from a read.
@@ -426,15 +426,31 @@ class SemanticColumnRoleMapper:
     which engine answers -- an on-host runtime or a gated hosted one -- is
     configuration rather than a fact this class holds.
 
-    The mapping role wants the SMALLEST capable model: the task is a selection
-    over a short closed vocabulary from a handful of short strings, which is
-    within reach of a 2B-4B class local model. Leaving ``model`` unset uses the
-    active provider's configured model; a caller that wants the mapping role
-    pinned below the deployment default passes it here.
+    **The model comes from the role, never from the general default.** Left to
+    itself the client would answer a mapping call on
+    ``cadrumo_llm_model`` -- a frontier hosted model -- for a task that is
+    selecting among a handful of short strings. So the model is resolved
+    through :func:`~application.provisioning.select_model_for_role` against
+    :attr:`~core.ModelRole.COLUMN_ROLE_MAPPING`, which names the WEAKEST catalogued
+    candidate clearing the capability, licence and headroom bars on this
+    machine. Re-pointing that role in the catalogue re-points this lane with no
+    edit here.
+
+    A role-resolved model is an on-host runtime id, so it is paired with the
+    LOCAL provider: the pairing is the point, and sending an Ollama id to a
+    hosted API would fail at the transport. A caller that pins ``model``
+    explicitly owns that pairing and gets no provider override; a caller that
+    pins ``provider`` gets exactly what it asked for. That is the seam the
+    measurement lane runs its gated cloud engine through, and it is the only
+    way off-host.
 
     Args:
-        model: Optional model identifier override; ``None`` uses the configured
-            model for whichever provider is active.
+        model: Optional runtime id, honoured over the role resolution. Passed
+            to selection as the operator override, so a licence-barred or
+            uncatalogued choice is still honoured -- and still advised on.
+        provider: Optional provider override. ``None`` pairs a role-resolved
+            model with LOCAL, and leaves an explicitly pinned ``model`` on
+            whichever provider is configured.
         client: Injected client (dependency injection for callers holding one);
             default-constructed against the resolved settings otherwise.
         settings: Injected settings; defaults to ``load_settings()``.
@@ -444,11 +460,13 @@ class SemanticColumnRoleMapper:
         self,
         *,
         model: str | None = None,
+        provider: LLMProvider | None = None,
         client: LLMClient | None = None,
         settings: Settings | None = None,
     ) -> None:
         resolved_settings = settings if settings is not None else load_settings()
-        self._model = model
+        self._model = model if model is not None else self._role_model(resolved_settings)
+        self._provider = provider if provider is not None else (None if model is not None else LLMProvider.LOCAL)
         self._client = (
             client
             if client is not None
@@ -459,15 +477,34 @@ class SemanticColumnRoleMapper:
             )
         )
 
+    @staticmethod
+    def _role_model(settings: Settings) -> str:
+        """Resolve the tabular-mapping role to a runtime id on this machine.
+
+        Deferred import: the selection surface sits in the application tier,
+        which reaches back into this package, so an eager binding would close
+        that loop at import time.
+
+        Raises:
+            LLMConfigError: When no catalogued candidate clears the bars here.
+                Naming a model that cannot serve would push the failure into
+                inference, where it reaches the operator as a timeout instead
+                of as a refusal carrying its own remediation.
+        """
+        from ..application.provisioning import select_model_for_role
+
+        selection = select_model_for_role(ModelRole.COLUMN_ROLE_MAPPING, settings=settings)
+        if not selection.selected or selection.runtime_id is None:
+            raise LLMConfigError(
+                message=selection.detail or "no catalogued model can serve the tabular-mapping role on this machine",
+                suggestion=selection.remediation or None,
+            )
+        return selection.runtime_id
+
     @property
     def decided_by(self) -> str:
-        """Provenance stamp naming how a mapping was reached.
-
-        ``configured`` when the caller pinned nothing, because the effective
-        model is then the active provider's default rather than a fact this
-        object holds.
-        """
-        return f"llm:column-role-map:{self._model or 'configured'}"
+        """Provenance stamp naming the model a mapping was reached with."""
+        return f"llm:column-role-map:{self._model}"
 
     def map(self, headers: Sequence[str]) -> ColumnRoleProposal:
         """Establish the roles of ``headers``, one call for the whole file.
@@ -489,14 +526,14 @@ class SemanticColumnRoleMapper:
     def _build_request(self, headers: Sequence[str]) -> LLMRequest:
         """Build the completion request for one table's headers.
 
-        Carries no ``provider_override``: the active provider is whatever the
-        caller configured. Temperature is pinned to zero because role
-        assignment has one right answer per column.
+        Temperature is pinned to zero because role assignment has one right
+        answer per column.
         """
         return LLMRequest(
             prompt=build_column_role_mapping_prompt(headers),
             max_tokens=_MAX_REPLY_TOKENS,
             temperature=_MAPPING_TEMPERATURE,
+            provider_override=self._provider,
             model_override=self._model,
         )
 
@@ -505,16 +542,18 @@ def map_column_roles(
     headers: Sequence[str],
     *,
     model: str | None = None,
+    provider: LLMProvider | None = None,
     settings: Settings | None = None,
 ) -> ColumnRoleProposal:
     """Convenience wrapper: build a :class:`SemanticColumnRoleMapper` and map once.
 
     Args:
         headers: The header cells, in column order.
-        model: Optional model override.
+        model: Optional runtime id, honoured over the role resolution.
+        provider: Optional provider override.
         settings: Optional resolved settings override.
 
     Returns:
         The positional mapping plus every column that was not established.
     """
-    return SemanticColumnRoleMapper(model=model, settings=settings).map(headers)
+    return SemanticColumnRoleMapper(model=model, provider=provider, settings=settings).map(headers)

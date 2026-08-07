@@ -28,7 +28,8 @@ from typing import override
 
 import pytest
 
-from ...core import FieldRole
+from ...application.provisioning import select_model_for_role
+from ...core import FieldRole, ModelRole
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from .. import (
@@ -364,6 +365,55 @@ def _mapper(tmp_path: Path, endpoint: str) -> Iterator[SemanticColumnRoleMapper]
     )
     with override_settings(cadrumo_llm_ollama_chat_url=endpoint):
         yield SemanticColumnRoleMapper(client=LLMClient(settings=settings), settings=settings)
+
+
+def test_the_role_decides_the_model_not_the_general_default(tmp_path: Path) -> None:
+    """The mapping call goes to the role's model, never to ``cadrumo_llm_model``.
+
+    The general default is a frontier hosted model. Answering a
+    short-string selection task on it is the standing directive's exact
+    prohibition, and the settings below pin a distinct general model so that
+    inheriting it would be visible here rather than merely unlikely.
+    """
+    expected = select_model_for_role(ModelRole.COLUMN_ROLE_MAPPING).runtime_id
+
+    with _serve_ollama(_full_libro_registro_reply()) as (endpoint, events), _mapper(tmp_path, endpoint) as mapper:
+        mapper.map(_libro_registro_headers())
+
+    body = events.get_nowait()["body"]
+    assert isinstance(body, dict)
+    assert body["model"] == expected
+    assert body["model"] != "gpt-oss", "the mapping call inherited the general model setting"
+
+
+def test_an_explicitly_pinned_model_outranks_the_role(tmp_path: Path) -> None:
+    """A caller that names a model owns the choice; the role does not override it.
+
+    This is the seam the measurement lane runs a gated engine through, so it
+    has to be reachable without editing this module.
+    """
+    settings = EnvFileFreeSettings(
+        cadrumo_llm_provider=LLMProvider.LOCAL,
+        cadrumo_llm_model="gpt-oss",
+        cadrumo_llm_cache_dir=tmp_path / "cache",
+        cadrumo_llm_usage_dir=tmp_path / "usage",
+        cadrumo_llm_run_telemetry_dir=tmp_path / "run-telemetry",
+    )
+    with (
+        _serve_ollama(_full_libro_registro_reply()) as (endpoint, events),
+        override_settings(cadrumo_llm_ollama_chat_url=endpoint),
+    ):
+        mapper = SemanticColumnRoleMapper(
+            model="operator-pinned-model",
+            provider=LLMProvider.LOCAL,
+            client=LLMClient(settings=settings),
+            settings=settings,
+        )
+        mapper.map(_libro_registro_headers())
+
+    body = events.get_nowait()["body"]
+    assert isinstance(body, dict)
+    assert body["model"] == "operator-pinned-model"
 
 
 def test_the_libro_registro_headers_map_over_the_real_client(tmp_path: Path) -> None:
