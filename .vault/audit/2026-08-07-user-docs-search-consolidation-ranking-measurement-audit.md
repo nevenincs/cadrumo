@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:b61093a5bab9ce33a358436a0900890951034691dbb0585bf6dda4ee780e4438'
+body_hash: 'sha256:fb48a0457944fd576d7d742224f964d03d2e26c864c9a09f9066a16e85d4fa80'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
 ---
@@ -57,6 +57,38 @@ The reader passes the raw query straight to Pagefind with no relaxation, so a re
 A second, smaller cause is genuine vocabulary and morphology mismatch: `penalty late filing` returns 0 because the corpus says recargo and sancion, and the Spanish `presento` returns 0 while the corpus carries other forms of the same verb. Only this residue is what a semantic tier would answer.
 
 **A corpus-frequency heuristic was tested as a language-agnostic way to drop function words, and it does not work.** Document frequency does not separate the two classes in this corpus: `my` matches 23 records while the content word `VAT` matches 180, and `quarterly` matches 1883 against `how` at 1862. Any relaxation must therefore be driven by an explicit per-language function-word authority or by progressive term relaxation, not by a frequency threshold. Recording the negative result so it is not re-attempted.
+
+### RANK-005 | OPEN | Cross-lingual search fails on vocabulary coverage, not on the model or the ladder
+
+The operator's requirement is that the same concept entered in any of the four languages returns the same results. The precompiled tier is built for exactly that -- a multilingual static embedding matrix, MIT-licensed, whose vocabulary already spans all four languages. Measured, the mechanism works and the data does not reach it.
+
+Term labels across the 49 approved concepts: **es 49, en 17, ca 3, hu 3**. Exactly three concepts carry a term in all four languages, so three is the entire testable population, and that scarcity is itself the finding. Querying each language's term against the shipped matrix and the committed relevance mapping, with no model involved:
+
+| concept | result |
+|---|---|
+| casilla | es/en/ca/hu return the same record set |
+| prorrata-especial | es/en/ca/hu return the same record set |
+| prorrata | es/en/ca agree; hu returns nothing |
+
+The single failure is the corrupt Hungarian row described below. So cross-lingual retrieval succeeds wherever the vocabulary exists in the language, and the gap is authoring coverage rather than model quality, ladder composition or normalisation.
+
+Directional only, measured against the locally cached model revision rather than the pinned one: description-level hu-to-es retrieval 57.1% top-1 and 77.6% top-5; en-to-es 71.4% and 91.8%. The es-to-es figure is an identity control and the ca-to-es figure is inflated by Catalan's lexical closeness to Spanish; neither is evidence about the tier.
+
+**The tier should not ship in its current shape.** 114 vocabulary rows against 8,507 injected records means most queries never reach the matrix at all, which is why the composed ladder measured worse than the lexical baseline it would supplement. Enabling it would ship a regression. Making it real is an authoring programme of several hundred terms across four languages, with Catalan and Hungarian starting from three each -- not a code change. The honest alternatives are to fund that or to delete the tier and keep documentation search lexical.
+
+### RANK-006 | FIXED | A corrupt Hungarian term embedded the wrong concept
+
+The prorrata concept carried the Hungarian term `aranyositas`. That is not an accent-stripped spelling of `arányosítás` but a different word: `arány` is ratio, `arany` is gold, so the stored string meant gilding. Because a matrix row's vector is computed from the term string as written, that row encoded the wrong concept -- a silent retrieval fault rather than a display defect, and invisible to any check that only asks whether a term is present.
+
+Corrected to `arányosítás`. Two consequences are recorded rather than resolved: the shipped matrix still carries the row compiled from the corrupt string, because a faithful recompile requires the pinned model revision which is absent from the local cache and whose deliberate fetch is an operator decision; and the committed relevance mapping still keys that entry by the old string. The mapping was deliberately NOT hand-edited, because its `dropped_count` is score-derived and a rename would fabricate provenance. The correct remediation is a re-sweep, which is itself blocked on the 39 Spanish scaffold placeholders recorded below.
+
+### RANK-007 | OPEN | Scaffold placeholders block documentation generation, and recur
+
+Generation of the casilla reference pages fails on missing source-locale labels. Measured registry-wide against the loaded authority, 19,558 casilla label keys resolve to **39 Spanish gaps -- 38 M390 intra-community acquisition rate tiers and one M303 continuidad key -- and every one is a self-referencing scaffold placeholder** rather than an absent key.
+
+The placeholder stores the key as its own value, so it satisfies every existence and truthiness check while the resolver correctly refuses it. That is why the defect recurs unnoticed: running `scaffold` to declare keys without filling values produces a state that reads as present and behaves as missing. Three separate occurrences were observed and cleared during one session, and a fourth appeared within the hour.
+
+Only the source locale gates generation, so the other three languages do not block. They are nonetheless far behind: of the same 19,558 keys, en is short 10,490, ca 10,324 and hu 10,525 -- roughly 46% covered against Spanish at 99.8%. Since the pages now deliberately render one language and refuse to fall back, a reader in those languages meets a hard failure rather than Spanish text across more than half the corpus. That is a consequence of doing the localization correctly and is currently unowned.
 
 ## Recommendations
 
