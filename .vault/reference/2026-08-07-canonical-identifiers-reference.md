@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:11a602c4ff4a1225bc1993eb055ddc8bd425c718352cca1fc2887d41c8183d92'
+body_hash: 'sha256:c578b80cdf1739a831ca1fad254f4203dc6d86ad19a26084408e6cf312394a86'
 related:
   - "[[2026-08-07-justificante-identity-matching-adr]]"
 ---
@@ -137,6 +137,77 @@ tree today. Enrolling it under a canonical taxonomy is new capture-and-persist
 work, not a retype of an existing field, and the ADR must treat it as
 explicitly scoped in or out rather than assumed covered by "the taxonomy now
 exists."
+
+## Classification census: AEAT-issued and app-derived membership
+
+Promoted here from a coordinating session's `classified589.csv` (produced by
+a separate AST classification pass over the 589-field surface) because a
+plan Step's execution record cannot reconcile against a scratchpad artefact
+living in another agent's session — a different agent's scratchpad
+directory is not a shared or durable location, so a reconciliation gate
+pointing at it is unmeetable by any executor. This table is the durable,
+version-controlled substitute; plan Steps reconcile against THIS section,
+never the scratchpad path. Per-name counts below are attributed to that
+census as reported and are NOT independently re-derived here, except where
+marked "verified" — those were confirmed by direct grep against `HEAD` in
+this session (command output, not re-typed by hand).
+
+**AEAT-issued names (target: a new `IdentifierNamespace.AEAT_*` member and
+alias each), 62 sites across the census's 24 names:**
+
+| field name | approx. sites | target alias | status |
+| --- | --- | --- | --- |
+| `expediente_id` | 11 (sede) + 1 (iva_compensation) + 1 (wire) = 13 | `AeatExpedienteId` | verified: `sede/_schema.py` lines 100-135, 158-172, 455-471; `iva_compensation/_carry_forward.py` ~line 66; `entrypoints/cli/_app_live_payloads.py:614-638` |
+| `csv` | 3 divergent declarations + 2 bare | `AeatCsv` | verified: `core/_aeat_csv.py`, `domain/justificante/_schema.py:22,76`, `sede/_schema.py:148-181` |
+| `presentation_id` | 1 (plus the conflation sites) | `AeatPresentationId` | verified: `domain/justificante/_schema.py:80` |
+| `clave_liquidacion` | 1 (NOT in the 589 — suffix-less noun, AST heuristic miss) | `AeatClaveLiquidacion` | verified: `Deuda.clave_liquidacion` |
+| `certificado_id` | not separately counted | `AeatCertificadoId` | verified: `sede/_notifications.py`, docstring "Nº de certificado, 13-digit or longer" |
+| `display_number` | 5 | `AeatBoxNumber` | per census, not independently re-verified |
+| `form_number`, `from_number`, `to_number` | not separately counted | `AeatBoxNumber` | per census, not independently re-verified |
+| `tax_id` | 6 | `SubjectTaxId` (self/profile-owned) | per census |
+| `profile_tax_id` | included above | `SubjectTaxId` | verified already correctly typed at `domain/filing/_schema.py:261,394` — EXCLUDE this site from the retype Step, it is done |
+| `spouse_tax_id` | not separately counted | `SubjectTaxId` | per census |
+| `supplier_tax_id` | 6 | `TaxIdIdentityToken` (counterparty-facing) | per census |
+| `customer_tax_id` | 5 | `TaxIdIdentityToken` | per census |
+| `party_tax_id` | 4 | `TaxIdIdentityToken` | per census |
+| `counterparty_tax_id` | 2 | `TaxIdIdentityToken` | per census |
+| `donor_tax_id`, `member_tax_id` | not separately counted | `TaxIdIdentityToken` | per census |
+| `official_tipo_renta_code` (M210) | 5 | `StrEnum`, not `IdentifierNamespace` | per census |
+| `operation_kind_code`, `asset_class_code` (M720) | not separately counted | `StrEnum`, not `IdentifierNamespace` | per census |
+
+**App-derived names (target: alias FROM an existing or newly-declared
+app-derived primitive), 302 sites across the census's names:**
+
+| field name | approx. sites | target alias | status |
+| --- | --- | --- | --- |
+| `transaction_id` | 30 | `TransactionId` (exists) | verified: real file list gathered by grep in `application/ledger/`, `application/aggregation/`, `domain/transactions/`, `entrypoints/cli/`, `llm/` (see plan `W04.P06.S29`/`S30` for the file groupings actually used) |
+| `bucket_id` | 24 | `BucketId` (exists) | verified: file list spans `adapters/persistence/`, `application/`, `core/`, `domain/`, `entrypoints/cli/` — far wider than the census count suggests many sites are function parameters, not model fields; the plan's `W04.P06.S31` scope is model-field-only, matching the census's own methodology |
+| `invoice_id` | 16 | `InvoiceId` (exists) | verified: file list in `application/invoices/`, `domain/invoices/`, `entrypoints/cli/` |
+| `bucket_event_id` | 7 | `BucketEventId` (exists, declared in `domain/buckets/_event.py`, NOT `core/identity/`) | verified: `domain/buckets/_event.py:28` aliases `Hex64Str` already; consumers in `application/modelo/_reconciliation_records.py`, `entrypoints/cli/_ledger_payloads.py`, `entrypoints/cli/_modelo_payloads.py` |
+| `revision_id` | 12 (UNDETERMINED by the census, deliberately not app-derived-classified) | split between `CalculationRevisionId` and new `RegistryRevisionId` per-site | verified: `registry_snapshot_id_for()` at `domain/calculations/registry/_snapshot_coordinate.py:54` takes the registry version-tag meaning, not hex-64 |
+| `short_work_unit_id` | 3 | `Hex16Str` (exists) | per census |
+| `short_calculation_revision_id` | 2 | `Hex16Str` (exists) | per census |
+| `registry_snapshot_id` | 3 | new `RegistrySnapshotId` | per census; explicitly NOT `core.identity.SnapshotId` |
+| `registry_revision_id` | not separately counted | new `RegistryRevisionId` | per census |
+
+**Remaining buckets, summarised by count with notable members named:** 128
+UNDETERMINED (`revision_id`'s 12 are the only ones individually resolved
+above; the rest need the same per-site treatment before enrollment); 72
+NOT_AN_IDENTIFIER (`Declaracion.estado`, `Deuda.situacion` are the
+adjudicated, must-stay-excluded members; the census's other 70 were not
+individually named here); 25 deliberately FREE_TEXT, split into three
+sub-populations per the ADR's Amendment: AEAT-bounded prose (`estado`,
+`situacion`), counterparty-issued document numbers (`invoice_number`), and
+externally-controlled non-AEAT identifiers (`file_id`, `spreadsheet_id`,
+`folder_id` from Google; `serial_number` from PKI; `spdx_id`; possibly
+`finca_identifier` from Catastro, unconfirmed).
+
+**Known limitation of this table, stated rather than hidden:** every count
+not marked "verified" is relayed from the coordinating census as reported
+in chat, not independently re-derived by an AST tool in this session. A
+plan Step consuming this table must still enumerate the exact files it
+touches in its own execution record — this table bounds the SET of names
+and approximate sizes, not a byte-exact per-file manifest.
 
 ## The conflation: three call sites, one wrong contract
 

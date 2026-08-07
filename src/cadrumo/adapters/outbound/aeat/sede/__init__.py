@@ -94,6 +94,7 @@ from ._declarations import (
     walk_declarations_register,
 )
 from ._declarations_observations import observed_casillas_from_submitted_file
+from ._declarations_remote import extract_csv_from_url
 from ._deudas import (
     DEUDAS_READ_SURFACE,
     Deuda,
@@ -200,6 +201,7 @@ __all__ = [
     "collect_renta_web_open_observation",
     "deudas_read_path_prefixes",
     "discover_filed_declaration_availability",
+    "extract_csv_from_url",
     "extract_renta_web_open_summary_value",
     "fetch_censal_datos",
     "fetch_iva_compensation_wallet",

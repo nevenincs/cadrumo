@@ -787,7 +787,7 @@ application:
         bucket_id_blank: Deudas bucket id must not be blank.
         snapshot_id_blank: Deudas snapshot id must not be blank.
         snapshot_not_found: No deudas snapshot matches the requested id.
-        snapshot_prefix_ambiguous: application.live.deudas.errors.snapshot_prefix_ambiguous
+        snapshot_prefix_ambiguous: The deudas snapshot prefix matches multiple snapshots.
     expedientes:
       errors:
         bucket_id_blank: Expedientes bucket id must not be blank.

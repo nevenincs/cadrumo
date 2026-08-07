@@ -240,13 +240,16 @@ def test_the_advisory_stays_silent_when_the_category_never_appears(tmp_path: Pat
     ]
 
 
-def test_mutation_stripping_the_domestic_general_binding_reds_the_negative_control(tmp_path: Path) -> None:
+def test_mutation_stripping_the_intra_community_supply_binding_reds_the_negative_control(tmp_path: Path) -> None:
     """Mutation proof, from an isolated scratch copy (never the tracked tree).
 
-    Strips the domestic-general ``base_amount_sum`` binding from a scratch
-    copy of the registry and confirms the screen then reports
-    ``DOMESTIC_GENERAL`` as unroutable -- proving the detector actually reads
-    the bindings rather than returning a fixed answer.
+    ``INTRA_COMMUNITY_SUPPLY`` is drawn by exactly ONE ``base_amount_sum``
+    binding on this revision (unlike ``DOMESTIC_GENERAL``, which several
+    bindings cover redundantly), so retargeting its sole binding's category
+    genuinely strips all coverage rather than leaving a second binding to
+    mask the mutation. Confirms the screen then reports
+    ``INTRA_COMMUNITY_SUPPLY`` as unroutable -- proving the detector actually
+    reads the bindings rather than returning a fixed answer.
     """
     bundled_root = bundled_path("registry", "aeat")
     scratch_root = tmp_path / "registry-mutant" / "aeat"
@@ -266,10 +269,10 @@ def test_mutation_stripping_the_domestic_general_binding_reds_the_negative_contr
         / "revisions"
         / _M303_REVISION_ID
         / "bindings"
-        / "0004-domestic-base.part-001.toml"
+        / "0003-intracom-export-base.part-001.toml"
     )
     original = bindings_path.read_text(encoding="utf-8")
-    mutated = original.replace('categories = ["domestic_general"]', 'categories = ["domestic_reduced"]')
+    mutated = original.replace('categories = ["intra_community_supply"]', 'categories = ["domestic_general"]', 1)
     assert mutated != original, "the mutation target string was not found -- test is stale"
     bindings_path.write_text(mutated, encoding="utf-8")
 
@@ -277,6 +280,6 @@ def test_mutation_stripping_the_domestic_general_binding_reds_the_negative_contr
     mutated_revision = next(m for m in modelos if m.id == "303").revisions[_M303_REVISION_ID]
 
     unroutable = structurally_unroutable_iva_base_categories(mutated_revision)
-    assert IvaCategory.DOMESTIC_GENERAL in unroutable, (
-        "stripping the only binding drawing domestic_general's base must red the negative control"
+    assert IvaCategory.INTRA_COMMUNITY_SUPPLY in unroutable, (
+        "stripping the only binding drawing intra_community_supply's base must red the negative control"
     )

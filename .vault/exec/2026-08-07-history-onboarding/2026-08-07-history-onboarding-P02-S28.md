@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:d655b2f058b20141b863df1b6d9ac69e442d9c5e8d30a88188f7ea382349d56e'
+body_hash: 'sha256:50765583e66778708e66901f295c8e003c29cfb07c539872b82f58d5203323be'
 step_id: 'S28'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
@@ -55,3 +55,7 @@ which is precisely the confusion the test guards against.
 
 The fixture carries no pager section. Whether the register ever paginates is
 unsettled and nothing here asserts either way.
+
+The mutation was re-run explicitly serialised with `-n0` after the project default
+was found to inject `-n auto --dist=loadfile`: verdict unchanged, still red. The
+unmutated module runs green serialised, confirming the restored state.

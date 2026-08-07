@@ -601,7 +601,6 @@ def _justificante_matches_capture_axis(
         modelo=snapshot.modelo,
         filing_year=snapshot.filing_year,
         period=snapshot.period,
-        presentation_id=snapshot.expediente_id,
     )
 
 
@@ -679,7 +678,6 @@ def register_capture_as_filing_evidence(
         justificante,
         current,
         expected_tax_id=expected_tax_id,
-        presentation_id=snapshot.expediente_id,
     ):
         raise LiveApplicationInputError(
             f"captured justificante {snapshot.csv!r} does not match current filing record "
@@ -775,14 +773,12 @@ def _justificante_matches_filing_record(
     filing: ModeloRecord,
     *,
     expected_tax_id: str,
-    presentation_id: str | None = None,
 ) -> bool:
     return justificante.matches_filing_target(
         modelo=str(filing.modelo),
         filing_year=filing.filing_year,
         period=filing.period,
         tax_id=expected_tax_id,
-        presentation_id=presentation_id,
     )
 
 

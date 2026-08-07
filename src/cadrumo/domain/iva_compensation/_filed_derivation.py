@@ -32,6 +32,9 @@ from ...core import CasillaId, validated_casilla_id
 from ._carry_forward import derive_303_compensation_available
 
 
+_ZERO = Decimal("0")
+
+
 def _casilla_id(value: str) -> CasillaId:
     return validated_casilla_id(value, surface="Modelo 303 compensation derivation casilla constant")
 
@@ -44,9 +47,23 @@ M303_COMPENSATION_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-ge
 
 @dataclass(frozen=True, slots=True)
 class M303CompensationAvailableDerivation:
-    """One policy-authoritative available-compensation result from filed casillas."""
+    """One policy-authoritative available-compensation result from filed casillas.
+
+    ``available`` is the carry the period leaves behind, and ``generated`` is the
+    credit the period itself created and carries — the two components of the same
+    decomposition, so ``available == posterior + generated`` holds on every
+    branch, including a refunded one (where ``generated`` is zero).
+
+    ``generated`` is carried here rather than recomputed by the caller because
+    the disposition governs BOTH numbers. A consumer that reads ``available``
+    from this derivation and derives the generated credit itself gets the
+    refunded case right in one field and wrong in the other, and the two land in
+    one :class:`IvaCompensationPeriodState` written by one constructor — so
+    nothing downstream can tell which of the pair to believe.
+    """
 
     available: Decimal
+    generated: Decimal
     basis: Literal["generated", "resultado"]
     operand_refs: tuple[CasillaId, ...]
     operand_values: tuple[Decimal, ...]
@@ -74,7 +91,8 @@ def derive_m303_compensation_available_from_casillas(
             posterior-only balance that survives a refund.
 
     Returns:
-        The derivation, or ``None`` when the inputs are absent.
+        The derivation — the available carry and the generated component that
+        produced it — or ``None`` when the inputs are absent.
     """
     posterior = casilla_values.get(M303_COMPENSATION_POSTERIOR_CASILLA)
     if posterior is None:
@@ -88,12 +106,14 @@ def derive_m303_compensation_available_from_casillas(
             # registry formula's projection by the callers.
             return M303CompensationAvailableDerivation(
                 available=posterior,
+                generated=_ZERO,
                 basis="resultado",
                 operand_refs=(),
                 operand_values=(),
             )
         return M303CompensationAvailableDerivation(
             available=posterior + generated,
+            generated=generated,
             basis="generated",
             operand_refs=(M303_COMPENSATION_POSTERIOR_CASILLA, M303_COMPENSATION_GENERADA_CASILLA),
             operand_values=(posterior, generated),
@@ -101,12 +121,19 @@ def derive_m303_compensation_available_from_casillas(
     resultado = casilla_values.get(M303_COMPENSATION_RESULTADO_CASILLA)
     if resultado is None:
         return None
+    available = derive_303_compensation_available(
+        posterior=posterior,
+        resultado=resultado,
+        refunded=refunded,
+    )
     return M303CompensationAvailableDerivation(
-        available=derive_303_compensation_available(
-            posterior=posterior,
-            resultado=resultado,
-            refunded=refunded,
-        ),
+        available=available,
+        # The generated component is read back OUT of the pure policy's answer
+        # rather than recomputed from ``resultado`` here. ``max(0, -resultado)``
+        # and its refunded zeroing are that policy's rule, and a second copy of
+        # it in this module is how the two would drift apart on the next
+        # regulatory change to the conversion.
+        generated=available - posterior,
         basis="resultado",
         operand_refs=(),
         operand_values=(),

@@ -30,6 +30,7 @@ from .._iva_compensation_history import (
 )
 from ._iva_compensation_history_support import (
     _M303_PRINTED_NUMBER_REFERENCE_CASES,
+    _M303_POSTERIOR_CASILLA,
     _M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA,
     _M303_RESULTADO_CASILLA,
     _M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA,
@@ -140,6 +141,39 @@ def test_iva_compensation_modelo_error_round_trips_through_build_error_envelope(
     assert envelope.retryable is False
     assert envelope.suggestion == "aeat app live iva-wallet history"
     assert envelope.message != "IVA compensation history only accepts Modelo 303 observations"
+
+
+def test_a_filing_with_no_posterior_casilla_still_carries_the_credit_it_generated() -> None:
+    """A negative result generates carry-forward whether or not casilla 87 was declared.
+
+    The canonical filed-casilla derivation declines a filing that declares no
+    ``iva.compensacion-pendiente-periodos-posteriores``, because its two
+    AEAT-fetched callers read that as "do not stamp the availability casilla".
+    This projection has no such choice to make: both amount fields of the
+    period state are non-optional, and a period that declared a quota a
+    compensar generated that credit regardless. Losing it here under-states the
+    carry, which over-taxes the taxpayer one period later -- the direction
+    nothing else in the chain watches.
+    """
+    observation = _filed_303_compensation_observation(
+        filing_year=2025,
+        period="4T",
+        resultado=Decimal("-100.00"),
+    )
+    without_posterior = observation.model_copy(
+        update={
+            "casillas": tuple(
+                casilla for casilla in observation.casillas if casilla.casilla_id != _M303_POSTERIOR_CASILLA
+            ),
+        },
+    )
+    assert len(without_posterior.casillas) == len(observation.casillas) - 1, "the fixture still declares a posterior"
+
+    state = iva_compensation_state_from_filed_observation(without_posterior)
+
+    assert state.pending_for_later_amount is None
+    assert state.generated_amount == Decimal("100.00")
+    assert state.available_end_amount == Decimal("100.00")
 
 
 def test_iva_compensation_state_from_filed_observation_raises_for_non_303_modelo() -> None:

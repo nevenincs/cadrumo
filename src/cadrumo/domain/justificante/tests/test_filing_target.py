@@ -24,7 +24,11 @@ def _receipt(**updates: object) -> Justificante:
         "modelo": "303",
         "ejercicio": "2025",
         "period": _PERIOD,
-        "presentation_id": "EXP-2025-1T",
+        # A receipt-shaped Número de justificante. It used to be an
+        # expediente-shaped literal, which read as evidence that a register
+        # expediente id belongs in this field; it does not, and no assertion
+        # below consumes this value as a matching axis.
+        "presentation_id": "30320250415ABCD1234EFGH5678",
         "presented_at": _PRESENTED_AT,
         "tax_id": "X1234567L",
         "verification_url": TypeAdapter(AnyHttpUrl).validate_python(JUSTIFICANTE_FILING_TARGET_VERIFY_URL_FIXTURE),
@@ -37,20 +41,22 @@ def _receipt(**updates: object) -> Justificante:
 
 
 @pytest.mark.parametrize(
-    ("updates", "presentation_id", "expected"),
+    ("updates", "expected"),
     (
-        ({"modelo": " 303 "}, "exp-2025-1t", True),
-        ({"modelo": "130"}, "EXP-2025-1T", False),
-        ({"ejercicio": "2024"}, "EXP-2025-1T", False),
-        ({"period": Period.from_year_and_code(2025, "2T")}, "EXP-2025-1T", False),
-        ({"tax_id": "Y7654321Z"}, "EXP-2025-1T", False),
-        ({}, "different-expediente", False),
-        ({"presentation_id": None}, "different-expediente", True),
+        ({"modelo": " 303 "}, True),
+        ({"modelo": "130"}, False),
+        ({"ejercicio": "2024"}, False),
+        ({"period": Period.from_year_and_code(2025, "2T")}, False),
+        ({"tax_id": "Y7654321Z"}, False),
+        # The receipt's own presentation identifier is not a matching axis, so
+        # neither carrying a different one nor carrying none at all changes the
+        # verdict. These two cases previously asserted the opposite.
+        ({"presentation_id": "30320250415ZZZZ9999YYYY8888"}, True),
+        ({"presentation_id": None}, True),
     ),
 )
 def test_matches_filing_target_uses_one_normalised_axis_matrix(
     updates: dict[str, object],
-    presentation_id: str,
     expected: bool,
 ) -> None:
     receipt = _receipt(**updates)
@@ -61,7 +67,40 @@ def test_matches_filing_target_uses_one_normalised_axis_matrix(
             filing_year=2025,
             period=_PERIOD,
             tax_id=" x1234567l ",
-            presentation_id=presentation_id,
         )
         is expected
+    )
+
+
+def test_matches_filing_target_refuses_a_presentation_identifier_argument() -> None:
+    """The predicate accepts no receipt-identifier axis, and says so at call time.
+
+    Every caller that ever populated such a parameter passed a register
+    expediente id, which is a different AEAT namespace from anything printed on
+    a receipt, so the comparison could never agree and every real receipt was
+    rejected. Verifying the receipt is now the caller's own csv comparison
+    against an independently obtained csv.
+
+    This asserts the removal itself rather than the behaviour it removed: a
+    future author reintroducing the argument gets a ``TypeError`` here, which a
+    docstring warning on a live parameter could not deliver.
+    """
+    receipt = _receipt()
+
+    with pytest.raises(TypeError, match="presentation_id"):
+        receipt.matches_filing_target(  # type: ignore[call-arg]
+            modelo="303",
+            filing_year=2025,
+            period=_PERIOD,
+            tax_id="X1234567L",
+            presentation_id="202530300000101A",
+        )
+
+    # Anchor: the same call without the argument is accepted, so the TypeError
+    # above is about the parameter and not about an unrelatedly broken call.
+    assert receipt.matches_filing_target(
+        modelo="303",
+        filing_year=2025,
+        period=_PERIOD,
+        tax_id="X1234567L",
     )

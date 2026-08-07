@@ -204,21 +204,25 @@ def test_the_selector_url_percent_encodes_the_target_into_the_provider_template(
     assert "/" not in provider._selector_url(_TARGET_PATH).removeprefix(template.split("{target}")[0])
 
 
-def test_the_two_selector_url_templates_currently_hold_the_same_value(tmp_path: Path) -> None:
-    """Records an observed fact, not an endorsement of it.
+def test_both_providers_dispatch_through_the_one_shared_clave_selector(tmp_path: Path) -> None:
+    """The shared ``aut=CP`` selector is correct for both methods, not a Móvil defect.
 
     ``aeat_clave_sede_access_url_template`` and
-    ``aeat_clave_permanente_sede_access_url_template`` are two settings
-    names holding one byte-identical value, ending ``aut=CP``. So the
-    Móvil provider dispatches through the same Cl@ve selector parameter as
-    Permanente.
+    ``aeat_clave_permanente_sede_access_url_template`` hold one
+    byte-identical value ending ``aut=CP``, which reads at first glance
+    like Móvil dispatching through Permanente's parameter.
 
-    Whether that is correct is an AEAT question this suite cannot answer,
-    and changing an authentication dispatch parameter without official
-    grounding would be inventing behaviour. It is pinned so that an
-    extraction collapsing the two settings into one is a deliberate,
-    visible act rather than an accident — and so that grounding the Móvil
-    value later reds a test that names the reason.
+    It is not. ``aut=CP`` selects Cl@ve as the identity *system* at AEAT's
+    ``SelectorAccesos`` page; the Cl@ve gateway then branches to the
+    method-specific screen — QR/push for Móvil, the DNI/NIE + password
+    form for Permanente. The Móvil template carrying this value is
+    recorded as live-tested against AEAT, and the same template is
+    consumed by the censal and IVA-wallet sede readers, neither of which
+    is a Móvil feature.
+
+    Pinned as an equality so the shared selector stays deliberate: if AEAT
+    ever makes ``aut`` method-specific, this reds and names the reason
+    rather than one provider silently drifting.
     """
 
     movil = _movil(tmp_path)
