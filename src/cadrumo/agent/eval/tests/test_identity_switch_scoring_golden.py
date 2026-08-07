@@ -10,7 +10,7 @@ so it scores the real gate, never a re-implementation.
 
 No mocks: every trajectory is built from the real ``LiveTrajectory`` /
 ``LiveToolCallRecord`` models and every decision is the real ``identity_gate_refusal``
-run over a real ``SessionIdentityState`` (``no-tautological-calculation-tests``,
+run over a real ``SessionIdentityState`` (``aeat-quality-gates``,
 ``aeat-quality-gates``). The anti-tautology proof (a switch-then-mutate-without-reconfirm
 trajectory MUST fail the scenario) mirrors ``test_discovery_scoring.py``'s never-reached
 guard and ``test_active_profile_confirmation_golden.py``'s missing-confirmation guard.

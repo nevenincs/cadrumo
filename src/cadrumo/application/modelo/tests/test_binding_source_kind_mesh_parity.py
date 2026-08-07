@@ -123,7 +123,7 @@ def test_reserved_mesh_members_are_not_routed_or_deferred() -> None:
 # answering "where does source X resolve" for every BindingSourceKind member,
 # built from the LIVE enrolled set (no hard-coded dispositions). These assertions
 # bind it to the enum and to the owned / deferred / reserved sets, making
-# no-dormant-source-resolvers enforceable across the union.
+# aeat-calculation-aggregation enforceable across the union.
 
 
 def test_disposition_registry_covers_every_enum_member() -> None:

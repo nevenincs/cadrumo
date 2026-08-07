@@ -43,7 +43,7 @@ FILING_YEAR = 2024
 
 # Art. 58 figures for the exercised filing year, read from the registry rather
 # than restated: a literal here would decouple these cases from the parameters
-# the engine actually resolves (`aeat-schema-central-config`).
+# the engine actually resolves (`aeat-registry-authority-flow`).
 _MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS = registry_birth_order_amounts(FILING_YEAR)
 _MENOR_TRES = registry_menor_tres_supplement(FILING_YEAR)
 _FALLECIMIENTO = registry_fallecimiento_amount(FILING_YEAR)

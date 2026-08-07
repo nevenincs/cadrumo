@@ -220,7 +220,7 @@ def test_registry_formula_runtime_preserves_signed_intermediate_results_from_off
       a refund is carried elsewhere). The ``>= 0`` assertion exercises
       that declared floor, not a derived value.
 
-    Per the no-tautological-calculation-tests rule this is the
+    Per the aeat-quality-gates rule this is the
     "structural assertion" alternative: it would fail if the registry
     formula graph were wrong against AEAT, yet manufactures no Decimal
     expectation from the formula under test.

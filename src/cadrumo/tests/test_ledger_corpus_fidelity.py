@@ -11,7 +11,7 @@ The oracle states each row's expected typed facts and target bucket; the
 pipelines independently route and gate from the typed fields. The assertions
 verify routing/gating/normalization (the system under test) against the oracle's
 independent expectation -- they do NOT re-compute registry tax formulas
-(per ``no-tautological-calculation-tests``).
+(per ``aeat-quality-gates``).
 
 See Also:
     Fixture corpus

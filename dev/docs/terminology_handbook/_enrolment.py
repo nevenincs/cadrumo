@@ -139,7 +139,7 @@ def _walk_modelos() -> Iterator[EnrolmentCandidate]:
 
     Excluding them creates and deletes nothing. It narrows the candidate set to
     the forms this product actually models, which is what
-    ``glossary-concepts-are-taxpayer-facing`` asks of an approved concept.
+    ``aeat-documentation`` asks of an approved concept.
     """
     from cadrumo.core import NON_REGISTRY_MODELOS, Modelo
 

@@ -585,7 +585,7 @@ def _resolved_minimo_descendientes_thresholds(
     euros") and Art. 61 norma 2ª ("presenten declaración por este Impuesto con
     rentas superiores a 1.800 euros") state, resolved for the snapshot's filing
     year exactly as the birth-order tranches are. They are never Python
-    literals (`aeat-schema-central-config`).
+    literals (`aeat-registry-authority-flow`).
 
     Returns ``None`` when the revision declares neither parameter, which leaves
     the caller to skip the derivation rather than evaluate eligibility against
@@ -667,7 +667,7 @@ def _inject_derived_minimo_descendientes_facts(
     :meth:`~cadrumo.domain.contribuyente.RentaFamilyProfile.minimo_descendientes_estatal`
     (a CCAA-agnostic birth-order-tranche aggregator despite its name — it takes
     the tranche amounts as caller-supplied parameters, never a hardcoded euro
-    figure per `aeat-schema-central-config`):
+    figure per `aeat-registry-authority-flow`):
 
     * the ESTATAL aggregate, from the revision's ``renta-{year}-minimo-
       descendientes-{suffix}-{year}`` Art. 58 parameters, projected onto

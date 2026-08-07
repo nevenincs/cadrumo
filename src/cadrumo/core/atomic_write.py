@@ -304,6 +304,14 @@ def atomic_write_hardened_bytes(path: Path, data: bytes, *, mode: int = _HARDENE
             os.close(fd)
         _replace_and_fsync(tmp_path, path)
         created = False
+        # Deliberately NO per-file ACL call here. ``mode`` covers POSIX; on
+        # Windows the target's ACL comes from its parent directory, hardened
+        # ONCE at creation with inheritance flags (see
+        # ``core.file_permissions.restrict_directory_permissions``). A per-file
+        # ``icacls`` strip was measured at ~28 ms/write, which is O(N)
+        # subprocess spawns across the blob and journal writers — minutes of
+        # pure overhead at the record counts this store is built for. Directory
+        # inheritance gives the same confidentiality at O(1).
     except BaseException as exc:
         _log.error(
             "atomic_write: hardened-tier write failed target=%s error_type=%s",

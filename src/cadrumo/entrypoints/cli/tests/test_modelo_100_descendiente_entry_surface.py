@@ -12,7 +12,7 @@ backend (``isolated_cli_runtime_profile``) — no mocks, no monkeypatched backen
 * ``test_descendiente_add_then_calculate_computes_the_registry_tranche`` declares one
   descendant via the new CLI command, calculates a Modelo 100 revision, and asserts
   casilla ``0513`` equals the registry's own first-tranche parameter (not a
-  hand-duplicated literal — ``no-tautological-calculation-tests``).
+  hand-duplicated literal — ``aeat-quality-gates``).
 * ``test_undeclared_descendientes_advisory_fires_when_0513_is_zero`` proves the
   companion non-blocking advisory (`no-silent-under-declaration`) surfaces when a
   profile with NO declared descendiente facts resolves 0513 to zero, and that it
@@ -499,7 +499,7 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
     not a re-derivation of the formula under test — the registry parameter is
     cross-checked against it rather than substituted for it, so a formula that
     prorated wrongly cannot drag the expectation along with it
-    (`no-tautological-calculation-tests`).
+    (`aeat-quality-gates`).
 
     The mother qualified in four months and the guardería was paid in two, so
     Art. 81.3's simultaneity intersection is two months and the annual ceiling

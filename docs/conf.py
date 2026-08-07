@@ -726,7 +726,7 @@ nitpick_ignore_regex = [
     (r"py:.*", r"^(Playwright|Page|BrowserContext|Locator|Response)$"),
     # Project anchors referenced by bare short name (per the docstring-anchor
     # convention; qualifying a bare anchor is barred by
-    # core-struct-docstring-links) whose short name the auto short-reference
+    # aeat-documentation) whose short name the auto short-reference
     # resolver cannot uniquely map: ``CCAA`` (documented under more than one
     # public package) and ``earliest_safe_erase_date``.
     (r"py:.*", r"^(CCAA|earliest_safe_erase_date)$"),

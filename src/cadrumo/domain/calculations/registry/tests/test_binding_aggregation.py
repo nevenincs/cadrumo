@@ -7,7 +7,7 @@ re-parses with their divergent ``sum``-vs-``rows`` silent defaults, collapsing
 them onto one typed op enum and one declared per-family default.
 
 These tests assert structure, validation, and the declared default mapping —
-never a hand-computed Decimal (per no-tautological-calculation-tests). The
+never a hand-computed Decimal (per aeat-quality-gates). The
 per-family default expectations are the plan's declared contract (detail-record
 families fold to ``rows``; every other source folds to ``sum``), enumerated
 independently here from the accessor under test. The anti-tautology proof

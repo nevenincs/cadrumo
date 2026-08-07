@@ -106,7 +106,7 @@ class MinimoDescendientesThresholds(BaseModel):
 
     Both are registry ``money`` parameters the caller resolves for the filing
     year being computed; this domain layer performs no euro-figure lookup of
-    its own (`aeat-schema-central-config`). Carrying them as one required
+    its own (`aeat-registry-authority-flow`). Carrying them as one required
     argument rather than two optional ones is deliberate: an optional threshold
     would let a caller silently skip half the law and inflate the mínimo, which
     is the exact defect this record exists to close.
@@ -1344,7 +1344,7 @@ class RentaFamilyProfile(BaseModel):
     (:meth:`RentaFamilyProfile.incremento_guarderia_0613` computes each child's
     own ``min(cap_anual / 12 × meses, su gasto)`` and sums them; this figure caps
     that sum). The annual cap is a registry ``money`` parameter resolved by the
-    caller, never a literal here (`aeat-schema-central-config`).
+    caller, never a literal here (`aeat-registry-authority-flow`).
 
     Default ``0`` (cap not declared; guardería incremento will be zero).
     """
@@ -1523,7 +1523,7 @@ class RentaFamilyProfile(BaseModel):
 
         *cap_anual* is a registry ``money`` parameter the caller resolves per
         filing year; this method performs no euro-figure lookup of its own
-        (`aeat-schema-central-config`).
+        (`aeat-registry-authority-flow`).
 
         Returns ``Decimal("0")`` when no descendant qualifies, which is the
         legally correct zero rather than an under-declaration.
@@ -1772,7 +1772,7 @@ class RentaFamilyProfile(BaseModel):
         *birth_order_amounts*, *menor_tres_supplement*, *fallecimiento_amount*
         and *thresholds* are registry ``money`` parameters the caller resolves
         per filing year; this domain method performs no euro-figure lookup of
-        its own (`aeat-schema-central-config`).
+        its own (`aeat-registry-authority-flow`).
 
         Returns ``Decimal("0")`` when no descendant is Art. 58.1-eligible
         (including an empty ``descendientes`` tuple) — the legally correct

@@ -22,7 +22,7 @@ its escala) persists year-over-year within the window, so the same cuota rule
 applies to two consecutive in-window ejercicios. The two enrolled years (2024,
 2025) sit inside one taxpayer's window.
 
-Grounding (non-tautological — A5 / no-tautological-calculation-tests):
+Grounding (non-tautological — A5 / aeat-quality-gates):
 the expected cuota is derived from the BOE escala arithmetic (art. 93.2.e.1º),
 NOT by re-running the registry formula. For a base liquidable general of
 700.000 €: cuota = 600.000 × 0,24 + (700.000 − 600.000) × 0,47 = 144.000 +

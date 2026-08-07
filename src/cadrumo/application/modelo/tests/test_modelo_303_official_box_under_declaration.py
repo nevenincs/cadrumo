@@ -27,7 +27,7 @@ repositories, real registry authority, real calculation engine and verify gate. 
 mocks/stubs/skips/xfail. The two seeded transactions carry DISTINCT non-equal cuotas
 so a copy/contamination cannot satisfy the equality assertions, and each box-equals-
 source assertion is registry-authoritative (the source is itself the registry-
-computed value, never a hand-summed Decimal — no-tautological-calculation-tests).
+computed value, never a hand-summed Decimal — aeat-quality-gates).
 """
 
 from __future__ import annotations
@@ -495,8 +495,8 @@ def test_each_projected_box_has_exactly_one_producing_formula() -> None:
     Each official box is produced by EXACTLY ONE projection formula whose
     expression is the single semantic casilla-id leaf — no binding, no relation,
     no second formula. One value keeps one aggregation path
-    (one-aggregation-path-pull-equals-calculate,
-    calculation-source-canonical-mechanism), so the pull path and the calculate
+    (aeat-calculation-aggregation,
+    aeat-calculation-aggregation), so the pull path and the calculate
     path (both of which run the one formula graph) cannot diverge.
     """
     from collections import Counter

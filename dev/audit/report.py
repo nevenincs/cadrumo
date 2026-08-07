@@ -32,7 +32,7 @@ model:
 
 This module does not re-implement any scanner; it shells out to / imports the
 existing tools and applies one shared severity vocabulary on top. See
-``no-dormant-source-resolvers`` / ``composition-service-no-parallel-write-path``
+``aeat-calculation-aggregation`` / ``aeat-architecture-boundaries``
 for why composition-over-reimplementation is the mandated shape here.
 
 Usage::

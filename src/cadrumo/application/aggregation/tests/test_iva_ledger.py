@@ -831,6 +831,30 @@ def test_a_date_outside_the_rate_table_blames_the_year_not_the_rate() -> None:
     assert "not what needs correcting" in result.issues[0].detail
 
 
+def test_the_applied_rate_survives_tier_resolution() -> None:
+    """Two lines of one tier at different rates stay distinguishable.
+
+    Modelo 390 carries one box per rate per window where Modelo 303 carries one
+    per tier, because a tier's rate can change inside a filing year. Resolving to
+    the tier and discarding the value made those boxes unpopulatable: two lines
+    arrived downstream identical apart from their amounts.
+    """
+    general = _transaction("row-21", iva_rate=Decimal("0.21"), iva_amount=Decimal("21.00"))
+    reduced = _transaction("row-10", iva_rate=Decimal("0.10"), iva_amount=Decimal("10.00"))
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((general, reduced)),
+        period=_Q2_2026,
+    )
+
+    by_rate = {observation.applied_rate: observation for observation in result.observations}
+    assert set(by_rate) == {Decimal("0.21"), Decimal("0.10")}
+    # The tier is still carried, unchanged -- the value rides ALONGSIDE it, and a
+    # reader must not conclude one replaced the other.
+    assert by_rate[Decimal("0.21")].rate_kind is IvaRateKind.GENERAL
+    assert by_rate[Decimal("0.10")].rate_kind is IvaRateKind.REDUCED
+
+
 def test_a_covered_date_with_a_non_canonical_rate_still_blames_the_rate() -> None:
     """The discriminator's other side: inside coverage, the rate is the fault.
 

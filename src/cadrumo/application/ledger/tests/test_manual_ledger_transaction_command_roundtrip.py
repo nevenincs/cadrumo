@@ -1,6 +1,6 @@
 """Strict JSON roundtrip test for :class:`ManualLedgerTransactionCommand`.
 
-The discipline rule (``aeat-roundtrip-discipline``) requires a dedicated
+The discipline rule (``aeat-quality-gates``) requires a dedicated
 ``model_dump_json`` / ``model_validate_json`` test for every persistence-
 shaped pydantic model that flows over the wire. The manual-ledger
 command is the application-layer record produced by ``_command_from_patch``

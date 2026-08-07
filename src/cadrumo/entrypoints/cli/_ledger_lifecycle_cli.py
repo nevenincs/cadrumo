@@ -38,7 +38,7 @@ from ...domain.transactions import (
     TransactionValidationError,
     is_classified,
 )
-from ...llm import LLMProvider, LLMSplitApplyResult
+from ...llm import LLMSplitApplyResult, SubprocessProvider
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
 from ._ledger_support import _emit_update_result, _ledger_validation_bad, _resolve_id
 
@@ -751,7 +751,7 @@ def ledger_split(
         "--child-description",
         help=tr("cli.ledger.split.child_description_help"),
     ),
-    llm: LLMProvider | None = typer.Option(
+    llm: SubprocessProvider | None = typer.Option(
         None,
         "--llm",
         help=tr(
@@ -911,7 +911,7 @@ def _validate_split_llm_options(
     *,
     child_amount: list[str],
     child_description: list[str],
-    provider: LLMProvider | None,
+    provider: SubprocessProvider | None,
     apply: bool,
     yes: bool,
 ) -> None:
@@ -1040,7 +1040,7 @@ def _ledger_split_llm(
     transaction_id: str,
     child_amount: list[str],
     child_description: list[str],
-    provider: LLMProvider | None,
+    provider: SubprocessProvider | None,
     apply: bool,
     read_evidence: bool,
     vision_model: str | None,

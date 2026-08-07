@@ -6,9 +6,9 @@ an operator (or an autonomous LLM operator per the agent-harness contract) can
 now run ``evidence confirm`` against a stored evidence record and mint a real
 :class:`~domain.invoices.Invoice` in the reconciliation catalogue, with
 any extracted field overridable and a same-identity re-confirm collapsing to a
-guarded no-op (``single-subject-mutation-is-idempotent-guarded``). The write
+guarded no-op (``aeat-cli-contract``). The write
 itself is delegated to the sole sanctioned catalogue-invoice writer
-(``composition-service-no-parallel-write-path``); this test suite asserts the
+(``aeat-architecture-boundaries``); this test suite asserts the
 confirm path never re-implements that write.
 
 Every case drives the real Typer CLI tree, a real encrypted bucket session,

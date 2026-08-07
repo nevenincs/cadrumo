@@ -479,7 +479,7 @@ async def capture_justificante_snapshot_outcome(
 def __getattr__(name: str):
     """Lazy-load the heavy service classes through the package boundary.
 
-    Promoted per the ``service-imports-via-top-level-reexports``
+    Promoted per the ``aeat-architecture-boundaries``
     rule so CLI handlers and other consumers consume these symbols
     through ``cadrumo.application.live`` rather than dotting into
     ``_verify`` / ``_notifications`` / ``_expedientes``. Lazy

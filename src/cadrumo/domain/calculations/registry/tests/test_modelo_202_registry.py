@@ -377,7 +377,7 @@ def test_committed_modelo_202_modalidad_40_3_resultado_reflects_b2_only_filer() 
     """A B2-only filer's resultado previo (clave 26) now reaches clave 32, not zero.
 
     This is a graph-wiring / runtime-execution proof, not a re-derivation of
-    LIS tax law (`no-tautological-calculation-tests`): claves 27-31 are held
+    LIS tax law (`aeat-quality-gates`): claves 27-31 are held
     at their neutral values (0 bonificaciones/retenciones/pagos previos, 100%
     volumen territorio comun) so the only quantity under test is whether the
     clave 26 leaf is live in the clave 32 dependency graph. Before the fix,
@@ -426,7 +426,7 @@ def test_committed_modelo_202_minimo_a_ingresar_cn_10m_remains_unguarded() -> No
     The LIS pago-fraccionado minimo floor for INCN >= EUR 10.000.000 groups is
     now GROUNDED on clave 33 via ``ley-27-2014:da-14`` (disposicion adicional
     decimocuarta, redaccion vigente del art. 71 de la Ley 6/2018), closing the
-    ``registry-calculation-legal-grounding`` gap previously
+    ``aeat-calculation-grounding`` gap previously
     identified; the value now cites the provision that establishes it, not only
     the framework art-40/40-3/29/30/105 mechanics.
 

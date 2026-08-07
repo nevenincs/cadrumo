@@ -239,7 +239,7 @@ def _build_sar_catalogue_notice(
     and its carried registry namespaces; this info :class:`Notice` points the
     subject at both derived sets (carried on the response and machine-readably in
     ``context``) rather than re-enumerating a static list the CLI would own and
-    let drift, per ``cli-notices-are-the-only-diagnostic-channel``.
+    let drift, per ``aeat-cli-contract``.
 
     The notice states the omissions rather than claiming completeness. The bundle
     ships under the structured custody profile, so whole namespaces stay in
@@ -546,7 +546,7 @@ def _build_export_sensitivity_notice(out: Path) -> Notice:
     the operator's only signal that the file is sensitive financial data: it
     names the contents, the exact path written, and instructs deletion after
     transfer. Routed through the typed :class:`Notice` channel per
-    ``cli-notices-are-the-only-diagnostic-channel``; the ``sensitive-financial
+    ``aeat-cli-contract``; the ``sensitive-financial
     -data-secure-storage-only`` rule's portability carve-out is what makes the
     cleartext write permissible, and this warning is its floor.
     """
@@ -830,7 +830,7 @@ def _build_import_active_switch_notice(target_label: str) -> Notice:
     A gestor importing a client mid-session would otherwise be silently
     switched onto that client. This non-blocking ``info`` :class:`Notice`
     makes the switch explicit and tells the operator how to switch back,
-    per ``cli-notices-are-the-only-diagnostic-channel``.
+    per ``aeat-cli-contract``.
     """
     return Notice(
         severity=NoticeSeverity.INFO,

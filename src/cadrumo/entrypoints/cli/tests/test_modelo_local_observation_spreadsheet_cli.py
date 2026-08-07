@@ -47,7 +47,7 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
 
     Drives the real CLI, persists into the real encrypted observation store,
     and confirms the stamped source kind stays non-official
-    (``local-filed-observations-are-non-official-evidence``) while still
+    (``no-silent-under-declaration``) while still
     feeding the ``previous_filing`` calculation-prefill resolver.
     """
     sheet = tmp_path / "m100-2024.csv"

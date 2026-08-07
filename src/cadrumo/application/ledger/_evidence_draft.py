@@ -53,10 +53,10 @@ extraction, applies any operator-supplied field overrides (extraction is
 best-effort -- every field may be corrected), and delegates the actual write to
 :func:`~application.invoices.create_catalogue_invoice` -- the sole sanctioned
 :class:`~domain.invoices.Invoice` writer
-(``composition-service-no-parallel-write-path``). A confirm keyed on the same
+(``aeat-architecture-boundaries``). A confirm keyed on the same
 evidence/attachment reference and the same resolved fields is a guarded no-op
 that returns the existing invoice rather than raising or duplicating
-(``single-subject-mutation-is-idempotent-guarded``); a same-reference confirm
+(``aeat-cli-contract``); a same-reference confirm
 whose resolved fields genuinely differ from the already-stored invoice mints a
 second, distinct invoice record (a different content-derived
 :attr:`~domain.invoices.Invoice.invoice_id`) rather than silently
@@ -958,10 +958,10 @@ def confirm_invoice_draft_from_evidence(
     corrected before the record is minted. The resulting identity fields are
     handed to :func:`~application.invoices.create_catalogue_invoice`, the
     single sanctioned :class:`Invoice` writer
-    (``composition-service-no-parallel-write-path``); this function never
+    (``aeat-architecture-boundaries``); this function never
     writes the catalogue itself.
 
-    Idempotent-guarded (``single-subject-mutation-is-idempotent-guarded``): the
+    Idempotent-guarded (``aeat-cli-contract``): the
     persisted :attr:`~domain.invoices.Invoice.invoice_id` is a stable hash of
     ``(kind, invoice_number, issued_at, counterparty_tax_id, currency,
     grand_total)`` — a confirm carrying identical resolved fields to an
@@ -1096,7 +1096,7 @@ def confirm_invoice_draft_from_evidence(
     catalogue = repository.load()
     existing = catalogue.get(candidate.invoice_id)
     if existing is not None:
-        # Guarded idempotent retry (single-subject-mutation-is-idempotent-guarded):
+        # Guarded idempotent retry (aeat-cli-contract):
         # the confirm's resolved identity fields hash to an invoice already in the
         # catalogue -- return it unchanged rather than raising or re-writing. The
         # source evidence link is re-asserted (a no-op when already present,
@@ -1159,7 +1159,7 @@ def confirm_invoice_draft_from_evidence(
     # (`Attachment.linked_invoice_ids`) and vice versa (`Invoice.invoice_id` is what
     # was just recorded). `link_attachment_invoice` re-persists through the same
     # sanctioned `AttachmentStoreProtocol.write_manifest` path
-    # (`composition-service-no-parallel-write-path`); it never re-implements the
+    # (`aeat-architecture-boundaries`); it never re-implements the
     # attachment write.
     link_attachment_invoice(
         attachment_store,

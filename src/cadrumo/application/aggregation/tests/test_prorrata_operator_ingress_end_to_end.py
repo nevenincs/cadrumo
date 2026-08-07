@@ -23,7 +23,7 @@ unapportioned aggregate.
 
 Expected values derive from the LIVA art. 106.Uno reglas and the art. 101
 per-sector rule, never from the ``deductible_percentage_for`` substrate under
-test (no-tautological-calculation-tests).
+test (aeat-quality-gates).
 """
 
 from __future__ import annotations

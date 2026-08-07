@@ -20,7 +20,7 @@ from pydantic import ValidationError
 from ....adapters.persistence.storage import LLM_CACHE_NAMESPACE, secure_object_repository_for_active_bucket
 from ....core.classification import SensitivityClass
 from ....core.config import load_settings
-from ....core.hashing import sha256_hex
+from ....core.hashing import content_hash_hex, sha256_hex
 from ....core.logging import get_logger
 from ....core.redaction import default_rules_for_class, redact_structured
 from ....core.time import now
@@ -87,9 +87,7 @@ class LLMCache:
             "image_content_addresses": [image.content_sha256 for image in request.images],
         }
         prompt_hash = sha256_hex(prompt_material.encode("utf-8"))
-        args_hash = sha256_hex(
-            json.dumps(args_payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8"),
-        )
+        args_hash = content_hash_hex(args_payload)
         return CacheKey(provider=provider, model=model, prompt_hash=prompt_hash, args_hash=args_hash)
 
     def read(self, request: LLMRequest, provider: LLMProvider, model: str) -> LLMResponse | None:

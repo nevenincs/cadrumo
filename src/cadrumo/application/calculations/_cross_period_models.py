@@ -164,7 +164,7 @@ def _period_strictly_before_activity_start(period: Period, activity_start_date: 
     gate (``closes_on < activity_start_date``,
     :func:`domain.deadlines._engine`) against the same operator-declared
     field. The comparison is routed through :class:`Period` boundary authority
-    (:attr:`Period.end_date`) per ``period-filter-single-boundary-authority`` - no
+    (:attr:`Period.end_date`) per ``aeat-registry-authority-flow`` - no
     parallel inclusion math.
 
     A period whose span contains the activity-start date returns ``False`` (it is

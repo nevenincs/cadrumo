@@ -9,7 +9,7 @@ in the tree would have broken that identity check on sight.
 
 That cross-reference is gone (``test_status_frontend_gate.py`` now reaches
 only the public facade, correctly — a private-import is exactly what
-``service-imports-via-top-level-reexports`` forbids), and nothing replaced
+``aeat-architecture-boundaries`` forbids), and nothing replaced
 its enforcement. What is left is a docstring claim: *"there is one
 ``mask_profile_field``"*. A second implementation — under any name, in any
 module — would leave every existing test green, because they all call the

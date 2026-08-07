@@ -91,7 +91,7 @@ def build_google_credentials(*, profile: str) -> Credentials:
       :func:`~adapters.outbound.google.resolve_impersonated_credentials`
       with the persisted
       :class:`~adapters.outbound.google.GoogleImpersonationConfig`
-      (per ``composition-service-no-parallel-write-path``: this factory
+      (per ``aeat-architecture-boundaries``: this factory
       never re-implements ADC discovery or impersonation wrapping).
 
     Imports the upstream Google libraries lazily so unit tests for the

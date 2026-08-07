@@ -254,7 +254,7 @@ def audit_registry_relation_handoff_applicability(
             for period in selector.periods:
                 # Resolve law-determined, then assert-equal against the revision
                 # this loop is already on -- never inject revision.id as the
-                # selector (revision-resolution-is-law-determined). Injecting it
+                # selector (aeat-registry-authority-flow). Injecting it
                 # here would silently mask a revision whose own period_selector
                 # does not self-consistently resolve back to itself; asserting
                 # instead turns that into a loud registry-validation failure. A

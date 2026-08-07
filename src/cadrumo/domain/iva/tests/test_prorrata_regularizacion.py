@@ -1,6 +1,6 @@
 """Annual prorrata-general regularización (LIVA arts. 104-105).
 
-Grounding discipline (``no-tautological-calculation-tests``): the definitive
+Grounding discipline (``aeat-quality-gates``): the definitive
 percentage is produced by the art-104 substrate (:func:`compute_prorrata_general`
 via :func:`compute_prorrata_definitiva_anual`, which rounds UP per art. 104.Dos),
 and the expected regularización cuota is derived from the art-105.Cuatro legal

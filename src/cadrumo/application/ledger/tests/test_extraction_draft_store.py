@@ -113,7 +113,11 @@ def test_a_line_carrying_draft_roundtrips_with_both_rates_intact(profile: TestRu
     stored = reloaded.drafts[0]
     assert len(stored.draft.lines) == 2
     assert len(stored.draft.iva_breakdown) == 2
-    assert sorted(b.iva_rate for b in stored.draft.iva_breakdown) == [Decimal("10"), Decimal("21")]
+    rates = [b.iva_rate for b in stored.draft.iva_breakdown]
+    # A missing rate is a real roundtrip failure, so it is asserted before the
+    # sort rather than being allowed to surface as an ordering TypeError.
+    assert all(rate is not None for rate in rates), f"a stored breakdown row lost its rate: {rates}"
+    assert sorted(rate for rate in rates if rate is not None) == [Decimal("10"), Decimal("21")]
     assert stored.draft.recargo_amount == Decimal("5.20")
     assert stored.extractor == "en16931-ubl"
 

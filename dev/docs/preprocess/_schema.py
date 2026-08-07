@@ -13,7 +13,7 @@ specified to carry, so migration to the upstream hook is a mechanical
 re-serialisation rather than a re-extraction.
 
 Provenance is declared data cross-checked against physical evidence (the
-``fixture-provenance-declared-in-sidecar`` discipline): the sidecar records
+``aeat-quality-gates`` discipline): the sidecar records
 the origin file's POSIX-relative path and its content hash, the extractor
 id and version, and the extraction run identifier, so a stale or
 mis-extracted sidecar (origin hash no longer matching the file on disk) is

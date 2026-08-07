@@ -413,6 +413,16 @@ ignore_imports =
     # application -> llm edge still fails loudly.
     cadrumo.application.ledger.tests.test_evidence_corpus_parsing -> cadrumo.llm
     cadrumo.application.evidence._service -> cadrumo.adapters.**
+    # Two ledger stores added by llm-package-split, same shape as the ledger
+    # repositories pinned around them: derived financial data is STORAGE, so
+    # it routes through the core's encrypted repository rather than living
+    # behind the optional inference boundary.
+    cadrumo.application.ledger._extracted_document_cache -> cadrumo.adapters.**
+    cadrumo.application.ledger._extraction_draft_store -> cadrumo.adapters.**
+    # The read-time shape probe. DocumentShape is derived from a document's
+    # own bytes by an INBOUND adapter, because reading an externally-authored
+    # format is inbound-adapter work; the ledger consumes the answer.
+    cadrumo.application.ledger._evidence_input -> cadrumo.adapters.inbound.einvoice
     cadrumo.application.filing._history_repository -> cadrumo.adapters.**
     cadrumo.application.filing._import -> cadrumo.adapters.**
     cadrumo.application.filing._runtime_repository -> cadrumo.adapters.**

@@ -9,7 +9,7 @@ the ledger roundtrips through the encrypted boundary with strict equality,
 confirm the ledger is real ciphertext at rest, confirm a second
 ``mark_consumed`` for the same nonce is refused as a replay, and confirm a
 corrupted on-disk payload is refused at load (the anti-tautology proof required
-by ``aeat-roundtrip-discipline``).
+by ``aeat-quality-gates``).
 
 See Also:
     :class:`~application.modelo.RecipientReplayGuardRepository`:

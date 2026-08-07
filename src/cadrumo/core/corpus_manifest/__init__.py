@@ -31,7 +31,6 @@ an integrity gate, not an authenticity gate; :mod:`._bundle_signing`
 from __future__ import annotations
 
 import io
-import json
 import zipfile
 from collections.abc import Iterator
 from datetime import datetime
@@ -42,6 +41,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..errors import CoreValidationError as _CoreValidationError
+from ..hashing import canonical_json_bytes as _canonical_json_bytes
 from ..hashing import hash_file as _hash_file
 from ..hashing import sha256_hex as _sha256_hex
 from ..logging import get_logger as _get_logger
@@ -260,9 +260,12 @@ def _canonical_manifest_body(
 ) -> bytes:
     """Build the canonical bytes the ``manifest_sha256`` digests over.
 
-    Stable across reads because ``json.dumps`` with ``sort_keys=True``
-    + ``separators=(",", ":")`` + ISO timestamp formatting yields the
-    same bytes for the same logical input.
+    Serialised through :func:`~cadrumo.core.hashing.canonical_json_bytes`, the
+    project's one canonical-JSON form, so the same logical input yields the same
+    bytes on every read. This previously restated that serialisation inline and
+    passed ``ensure_ascii=False``, which the shared helper does not — a
+    non-ASCII corpus path therefore hashed differently here than under every
+    other content-addressed digest in the tree.
     """
     payload = {
         "manifest_version": manifest_version,
@@ -277,7 +280,7 @@ def _canonical_manifest_body(
             for entry in entries
         ],
     }
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return _canonical_json_bytes(payload)
 
 
 def _validate_raw_manifest_payload(raw: str | bytes) -> CorpusManifest:

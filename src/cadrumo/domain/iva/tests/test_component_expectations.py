@@ -19,7 +19,7 @@ here:
 
 No test here asserts a Decimal produced by the rule under test — the table
 carries no amounts. The assertions are structural, referential, and
-cross-declaration, per ``no-tautological-calculation-tests``.
+cross-declaration, per ``aeat-quality-gates``.
 
 See Also:
     :mod:`domain.iva._components`

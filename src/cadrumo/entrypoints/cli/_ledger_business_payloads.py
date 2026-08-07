@@ -2,7 +2,7 @@
 
 Extracted from :mod:`~entrypoints.cli._ledger_payloads` to keep that
 module under its size budget (`aeat-architecture-boundaries`,
-`registry-resolver-family-extraction`); follows the same split pattern the
+`aeat-architecture-boundaries`); follows the same split pattern the
 module's own docstring documents for
 :mod:`~entrypoints.cli._ledger_rule_payloads`,
 :mod:`~entrypoints.cli._ledger_llm_payloads`, and
@@ -298,7 +298,7 @@ class EvidenceConfirmResult(OutputSchema):
     catalogue :class:`~domain.invoices.Invoice` -- mirroring
     ``CatalogueInvoiceRecordPayload`` -- plus the resolved evidence reference
     and a ``created`` flag distinguishing a fresh write
-    (``single-subject-mutation-is-idempotent-guarded``) from a same-identity
+    (``aeat-cli-contract``) from a same-identity
     guarded retry.
     """
 

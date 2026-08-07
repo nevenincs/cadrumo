@@ -24,13 +24,13 @@ from ....domain.transactions import (
     RawProvenance,
     RawTransaction,
     SourceFormat,
-    SubprocessLLMClassifier,
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._llm_classification import suggest_llm_classification
+from ._subprocess_classifier_support import SubprocessLLMClassifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

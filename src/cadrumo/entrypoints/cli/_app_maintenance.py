@@ -19,7 +19,7 @@ This module is the transport adapter over
 :class:`~entrypoints.cli._app_maintenance_payloads.ProfileBundleReconcileResult`
 through :func:`_emit_envelope`, and reports both halves of the outcome through
 the typed :class:`Notice` channel per
-``cli-notices-are-the-only-diagnostic-channel``.
+``aeat-cli-contract``.
 """
 
 from __future__ import annotations

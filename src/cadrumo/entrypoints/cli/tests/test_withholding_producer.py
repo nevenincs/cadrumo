@@ -4,7 +4,7 @@ The CLI ``aggregate`` path parses ``--withholding-observation`` JSON into typed
 :class:`WithholdingObservation` rows, and for Modelo 190 persists them to the
 dedicated encrypted store the percepciones-count resolver later reads — so the
 pull and calculate surfaces read ONE source
-(``one-aggregation-path-pull-equals-calculate``). Mirrors the RET-1
+(``aeat-calculation-aggregation``). Mirrors the RET-1
 ``--retencion-observation`` producer.
 """
 

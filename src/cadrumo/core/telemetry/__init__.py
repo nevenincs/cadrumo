@@ -8,7 +8,7 @@ call. This package is the one deliberate, narrow exception -- a REMOTE
 telemetry tier an operator may opt into to help improve the project.
 
 The consent gate mirrors
-:func:`~application.ledger.cloud_evidence_read_permitted`'s shape
+the retired evidence cloud-read gate's shape
 exactly (gestor-mode absolute bar -> deployment opt-in -> tier -> per-
 invocation acknowledgement, all ANDed, never sticky). The payload contract is
 a closed, code-authored allowlist

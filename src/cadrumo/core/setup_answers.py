@@ -244,6 +244,7 @@ SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = {
     "has_employees": SetupFieldSpec("withholding.has_employees", bool, "false"),
     "incn_prior_12_months": SetupFieldSpec("taxpayer_type.incn_prior_12_months", str),
     "irpf_estimation_regime": SetupFieldSpec("irpf.estimation_regime", str),
+    "irpf_activity_kind": SetupFieldSpec("irpf.activity_kind", str),
     "irpf_income_categories": SetupFieldSpec("taxpayer_type.irpf_income_categories", str),
     "irpf_special_regime": SetupFieldSpec("irpf.special_regime", str),
     "irpf_special_regime_start_date": SetupFieldSpec("irpf.special_regime_start_date", str),
@@ -547,6 +548,7 @@ class SetupAnswers(BaseModel):
     pays_capital_income_with_retencion: bool = False
     modelo_111_no_retenciones_periods: str = ""
     irpf_estimation_regime: Any = ""
+    irpf_activity_kind: Any = ""
     objective_estimation_modulos_iae_epigraph: str = ""
     objective_estimation_modulos_module_1_units: str = ""
     objective_estimation_modulos_module_2_units: str = ""
@@ -667,6 +669,23 @@ class SetupAnswers(BaseModel):
             return irpf_estimation_regime_cls(value)
         raise ProfileAnswerTypeError(
             "irpf_estimation_regime must be an IrpfEstimationRegime member, string token, or blank",
+        )
+
+    @field_validator("irpf_activity_kind", mode="before")
+    @classmethod
+    # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR: Pydantic
+    # field_validator(mode='before') requires -> Any; actual return is always
+    # a typed StrEnum/enum member.
+    def _parse_irpf_activity_kind(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
+        if value == "":
+            return ""
+        irpf_activity_kind_cls = _m().IrpfActivityKind
+        if isinstance(value, irpf_activity_kind_cls):
+            return value
+        if isinstance(value, str):
+            return irpf_activity_kind_cls(value)
+        raise ProfileAnswerTypeError(
+            "irpf_activity_kind must be an IrpfActivityKind member, string token, or blank",
         )
 
     @field_validator("situacion_familiar", mode="before")

@@ -159,7 +159,7 @@ class RegistryQueryService:
         boundary. A caller in the application layer joins this inventory against
         the disposition registry (``build_binding_source_dispositions``) to
         prove that every declared source kind is enrolled or explicitly deferred,
-        never silently blank (the ``no-dormant-source-resolvers`` connectivity
+        never silently blank (the ``aeat-calculation-aggregation`` connectivity
         contract).
 
         Returns:
@@ -205,7 +205,7 @@ class RegistryQueryService:
         deprecation (support-removal) decisions, and declared AEAT-portal
         cross-references — every field read or folded directly from the
         loaded registry, never hand-maintained (see
-        ``no-dormant-source-resolvers`` / ``no-silent-under-declaration``).
+        ``aeat-calculation-aggregation`` / ``no-silent-under-declaration``).
 
         Returns:
             A :class:`~domain.calculations.registry._query_reports.ModeloSupportMatrixReport`

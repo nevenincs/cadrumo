@@ -199,7 +199,7 @@ _LIVE_TEST_OPT_IN_SCAN_ROOTS = (
 #: The campaign-metadata scan exists to catch a comment or docstring pointing at
 #: this repo's own process history — a numbered campaign-container id, a dated
 #: decision-record filename, a fixed process-review phrase — landing in
-#: ordinary source, the leak `aeat-source-hygiene` and the vaultspec
+#: ordinary source, the leak `aeat-architecture-boundaries` and the vaultspec
 #: "Code Stands Alone" mandate forbid. A dev-tooling gate that audits the vault
 #: authoring pipeline is not that leak: its docstring names the pipeline's own
 #: execution-unit and record-linkage nouns because that IS the mechanism under

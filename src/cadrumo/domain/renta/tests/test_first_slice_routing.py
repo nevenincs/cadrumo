@@ -105,7 +105,7 @@ def test_every_spending_category_routes_to_a_first_slice_casilla() -> None:
     :data:`FIRST_SLICE_EXPENSE_CASILLAS` would silently drop that
     expense class from the annual filing while the M130 quarterly
     path still accepted it (``no-silent-under-declaration``,
-    ``no-dormant-source-resolvers``).
+    ``aeat-calculation-aggregation``).
     """
 
     unrouted = [category for category in SpendingCategory if expected_casilla_for_category(category) is None]

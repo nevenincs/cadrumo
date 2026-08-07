@@ -721,7 +721,7 @@ def _missing_calculation_bindings_for_readiness(
     so readiness must not report it as missing. Both surfaces read the one
     shared authority (:func:`relation_prefill_period_zero_default_binding_ids`)
     so the readiness missing set and the calculate refusal set agree by
-    construction (``one-aggregation-path-pull-equals-calculate``).
+    construction (``aeat-calculation-aggregation``).
     """
     from ..domain.calculations.registry import (
         enum_consumed_binding_ids,

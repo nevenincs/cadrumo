@@ -1442,7 +1442,7 @@
      *
      * Hand-authored inline SVG, one per display class, matching the file's
      * existing 16×16 stroke/viewBox idiom (magnifier, chevron, copy). No
-     * icon-font, no external asset (`shipped-search-licence-clean`). Full-text
+     * icon-font, no external asset (`aeat-documentation`). Full-text
      * page hits carry a path-derived class too (build-side page-meta stamping,
      * ADR D8); a record with no shipped class (a nav title, or an older index)
      * degrades to no icon rather than a guessed one. */

@@ -9,7 +9,7 @@ are read transiently into memory at export, and are NEVER written to
 plaintext, logs, or a side store.
 
 This file locks the secure-storage boundary for those new financial
-fields with the discipline ``aeat-roundtrip-discipline`` mandates:
+fields with the discipline ``aeat-quality-gates`` mandates:
 
 - A populated roundtrip: every refund-account fact at a NON-DEFAULT
   value survives a real encrypted save/load cycle with strict pydantic
@@ -170,7 +170,7 @@ def test_corrupting_the_persisted_iban_surfaces_on_reload(
 ) -> None:
     """Anti-tautology proof: a corrupted on-disk IBAN surfaces as inequality.
 
-    The pattern follows ``aeat-roundtrip-discipline``: save a populated
+    The pattern follows ``aeat-quality-gates``: save a populated
     record through the real encrypted boundary, surgically mutate the
     JSON envelope to corrupt the persisted IBAN fact value, reload
     through the real decrypt/parse pipeline, and assert the reloaded

@@ -17,7 +17,7 @@ and the same per-callback error boundary produce the same stdout success
 document and the same stderr error document; the ONLY difference from the
 subprocess is that the terminating ``SystemExit`` is caught here rather than
 ending a process. Envelope assembly is never re-implemented
-(``composition-service-no-parallel-write-path``); this module only chooses where
+(``aeat-architecture-boundaries``); this module only chooses where
 the CLI runs, never what it emits. :func:`parse_cli_envelope` is the single
 transport-neutral parser both paths feed their completed run through, so the two
 transports cannot fork the result shape.

@@ -18,6 +18,9 @@ rather than a tidiness item.
 
 from __future__ import annotations
 
+from decimal import Decimal
+from typing import TypedDict
+
 import pytest
 
 from .._evidence import (
@@ -27,6 +30,28 @@ from .._evidence import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+class _EvidenceIdFields(TypedDict):
+    """The content half of the evidence-id inputs, minus ``created_at``.
+
+    Declared so the splat below carries its real shape. It previously went
+    through a ``dict[str, object]`` behind a type-ignore, which suppressed the
+    one thing worth checking here: that the fields held constant across the two
+    calls are the fields the id actually derives from. A drift in the
+    signature would otherwise stay invisible.
+    """
+
+    bucket_id: str
+    source_sha256: str
+    media_kind: MediaKind
+    supplier: str | None
+    invoice_number: str | None
+    invoice_date: str | None
+    taxable_base: Decimal | None
+    iva_rate: Decimal | None
+    iva_amount: Decimal | None
+    notes: str
 
 _BUCKET = "bucket-idem"
 
@@ -71,7 +96,7 @@ def test_the_keyless_derivation_still_folds_the_clock_deliberately() -> None:
     """
     from datetime import UTC, datetime
 
-    fields: dict[str, object] = {
+    fields: _EvidenceIdFields = {
         "bucket_id": _BUCKET,
         "source_sha256": "a" * 64,
         "media_kind": MediaKind.PDF,
@@ -83,8 +108,8 @@ def test_the_keyless_derivation_still_folds_the_clock_deliberately() -> None:
         "iva_amount": None,
         "notes": "",
     }
-    early = derive_purchase_invoice_evidence_id(created_at=datetime(2024, 11, 15, 9, 0, tzinfo=UTC), **fields)  # type: ignore[arg-type]
-    later = derive_purchase_invoice_evidence_id(created_at=datetime(2024, 11, 15, 9, 1, tzinfo=UTC), **fields)  # type: ignore[arg-type]
+    early = derive_purchase_invoice_evidence_id(created_at=datetime(2024, 11, 15, 9, 0, tzinfo=UTC), **fields)
+    later = derive_purchase_invoice_evidence_id(created_at=datetime(2024, 11, 15, 9, 1, tzinfo=UTC), **fields)
 
     assert early != later, "the keyless path is deliberately additive; two instants are two records"
 

@@ -43,6 +43,8 @@ from ..atomic_write import (
     atomic_write_text,
 )
 
+_PERMISSION_PROBE_WRITES = 20
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _PIPE_PAYLOAD = bytes(range(256)) * 4096
@@ -542,3 +544,32 @@ class TestHardenedTier:
 
         assert target.read_bytes() == b"OLD-SECRET"
         assert _tmp_leftovers(tmp_path) == []
+
+    def test_hardened_tier_adds_no_per_write_permission_subprocess(self, tmp_path: Path) -> None:
+        """Writing N secret-bearing files must not cost N subprocess spawns.
+
+        The confidentiality boundary for durable writes is the storage tree's
+        directory ACL, applied ONCE at creation by
+        :func:`~cadrumo.core.file_permissions.restrict_directory_permissions`.
+        This tier must therefore stay free of any per-file hardening call.
+
+        A per-file ``icacls.exe`` strip was measured at ~28 ms/write on Windows.
+        The blob writer runs this tier once per stored attachment and the
+        journal writer once per entry, so at the record counts this store is
+        built for that is O(N) subprocess spawns -- minutes of overhead on a
+        bulk evidence import, for a property directory inheritance already
+        provides. The budget below is deliberately far below a single spawn:
+        it fails if anyone reintroduces one, and is not a latency benchmark.
+        """
+        budget_seconds = 0.010 * _PERMISSION_PROBE_WRITES
+
+        started = time.perf_counter()
+        for index in range(_PERMISSION_PROBE_WRITES):
+            atomic_write_hardened_bytes(tmp_path / f"secret{index}.bin", b"\x00key-material\xff")
+        elapsed = time.perf_counter() - started
+
+        assert elapsed < budget_seconds, (
+            f"{_PERMISSION_PROBE_WRITES} hardened writes took {elapsed:.2f}s "
+            f"(budget {budget_seconds:.2f}s) — a per-write permission subprocess "
+            "has been reintroduced; harden the directory once instead"
+        )

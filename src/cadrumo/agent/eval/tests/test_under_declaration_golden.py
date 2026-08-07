@@ -32,7 +32,7 @@ not merely that the predicate exists in the registry.
 
 No mocks: every seeded profile fact and every response value is what the real
 registry engine plus the real CLI envelope serializer produced
-(``no-tautological-calculation-tests``, ``aeat-quality-gates``).
+(``aeat-quality-gates``, ``aeat-quality-gates``).
 """
 
 from __future__ import annotations

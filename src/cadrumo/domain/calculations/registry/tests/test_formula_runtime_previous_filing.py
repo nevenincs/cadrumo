@@ -148,7 +148,7 @@ def test_relation_requirements_cover_all_source_periods_for_annual_summary(
 def test_relation_resolves_annual_summary_from_all_source_periods(
     committed_modelo_180_snapshot: RegistrySnapshot,
 ) -> None:
-    # Per .claude/rules/no-tautological-calculation-tests.md, we do not assert
+    # Per .claude/rules/aeat-quality-gates.md, we do not assert
     # base-anual / retenciones-anual equal the author's hand-summation of the
     # synthetic inputs; the runtime's `op = "sum"` aggregator and the author
     # would share the same arithmetic. Instead this test asserts the canonical

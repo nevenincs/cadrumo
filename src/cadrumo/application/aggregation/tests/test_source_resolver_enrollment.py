@@ -1,6 +1,6 @@
 """Reflective gate: every discoverable source-mesh resolver is enrolled or classified.
 
-The rule (no-dormant-source-resolvers, aeat-architecture-boundaries): every class
+The rule (aeat-calculation-aggregation, aeat-architecture-boundaries): every class
 that satisfies the :class:`ModeloSourceResolver` structural protocol
 (``resolver_id`` + ``owned_sources`` + ``resolve``) and is reachable from a
 package public surface (``__all__``), or is an explicitly enrolled real-source

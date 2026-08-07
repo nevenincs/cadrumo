@@ -12,7 +12,7 @@ per-casilla external oracle KINDS are bundled today, enumerated by
 * the AEAT Manual practico worked-example oracle corpus
   (`corpus/manual_oracles/`), whose `expected_by_casilla_id` carries figures
   quoted verbatim from a bundled AEAT manual's own caso practico table (see
-  `fixture-provenance-declared-in-sidecar` for the sibling PDF-fixture
+  `aeat-quality-gates` for the sibling PDF-fixture
   provenance discipline this mirrors).
 
 This gate protects that hard-won grounding in both directions: every casilla
@@ -27,8 +27,8 @@ test-local machinery: the same facts answer "how much of this registry is
 independently checked" for governance tooling, and this module is the gate that
 holds the relation at zero. It reads the compiled registry tree through the
 non-validating loader so it survives concurrent peer registry churn per
-`registry-revision-content-inline-or-fragmented` and
-`full-tree-gate-must-distinguish-owner`.
+`aeat-registry-authority-flow` and
+`aeat-worktree-safety`.
 
 Modelo-agnostic: every bundled oracle payload names its own modelo and filing
 year, and the fold resolves the applicable revision for every modelo the
@@ -84,7 +84,7 @@ def test_every_declared_externally_grounded_casilla_has_oracle_evidence() -> Non
     either a Renta WEB Open replay or a bundled AEAT-manual worked-example oracle. It
     fails loudly if a grounding tier is asserted with no independent AEAT oracle
     behind it - the guard against a fabricated grounding claim
-    (`aeat-safety-legal-gates`, `no-tautological-calculation-tests`). Runs across
+    (`sensitive-financial-data-secure-storage-only`, `aeat-quality-gates`). Runs across
     every modelo in the registry tree, not just M100.
     """
     audit = audit_bundled_external_grounding()

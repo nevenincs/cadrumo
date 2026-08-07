@@ -294,7 +294,7 @@ def test_dropping_a_persisted_corporate_tax_fact_surfaces_on_reload(
 ) -> None:
     """Anti-tautology proof: stripping the persisted INCN fact must surface.
 
-    The pattern follows ``aeat-roundtrip-discipline``: save a populated
+    The pattern follows ``aeat-quality-gates``: save a populated
     record through the real encrypted boundary, surgically mutate the
     JSON envelope to remove the INCN fact, reload through the real
     path, and assert the reloaded :class:`TaxpayerProfile` no longer

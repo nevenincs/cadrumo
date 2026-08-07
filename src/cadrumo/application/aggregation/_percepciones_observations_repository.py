@@ -13,7 +13,7 @@ source so the calculate path could compute the distinct count instead of falling
 back to the wrong quarterly sum. This module is that source: it persists each
 clave-bearing :class:`WithholdingObservation` keyed by ``(modelo, filing_year,
 period)`` plus the per-perceptor-clave identity, so the pull and calculate
-surfaces read ONE store (``one-aggregation-path-pull-equals-calculate``).
+surfaces read ONE store (``aeat-calculation-aggregation``).
 
 Sensitivity is :class:`~adapters.persistence.storage.SensitivityClass`
 ``FINANCIAL`` — perceptor NIFs are identity-bearing financial data, stored

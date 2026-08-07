@@ -87,16 +87,6 @@ def test_llm_invalid_provider_lists_choices(tmp_path: Path) -> None:
     assert "claude" in result.output and "antigravity" in result.output and "codex" in result.output
 
 
-def test_providers_lists_availability(tmp_path: Path) -> None:
-    result = _invoke(["--format", "json", "app", "ledger", "providers"])
-    assert result.exit_code == 0, result.output
-    payload = _json_result(result)
-    names = {p["provider"] for p in payload["providers"]}
-    assert names == {"claude", "antigravity", "codex"}
-    for p in payload["providers"]:
-        assert isinstance(p["available"], bool)
-
-
 @pytest.mark.parametrize(
     "payload",
     (

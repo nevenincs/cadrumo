@@ -9,7 +9,7 @@ wrote. See :mod:`._residual_identity_scan` for the argument in full.
 
 SCOPE, AND WHY IT IS PROVENANCE-DRIVEN RATHER THAN A LIST. Only fixtures whose
 sidecar declares ``provenance = "real_corpus"`` are scanned. That is not an
-exemption list -- the project rule ``fixture-provenance-declared-in-sidecar``
+exemption list -- the project rule ``aeat-quality-gates``
 forbids hardcoding per-fixture exceptions in test source, and this is the
 opposite: the scope is READ from each sidecar, so a new real specimen is
 enrolled automatically the moment it lands.
@@ -59,7 +59,7 @@ and the reasons are structural rather than aesthetic:
   artefacts under the package root, so an in-memory specimen is outside the
   scope by construction. A committed one would have to be taught to the scanner,
   and a scanner that knows about a specific specimen is the per-fixture
-  allowlist ``fixture-provenance-declared-in-sidecar`` forbids, whatever it is
+  allowlist ``aeat-quality-gates`` forbids, whatever it is
   called.
 - Nothing is lost by it: ``sanitize_pdf`` takes bytes, not a path, so the
   end-to-end path is identical either way.

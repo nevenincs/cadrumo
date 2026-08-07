@@ -35,7 +35,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         detail=(
             "manifest.toml: [modelo] id, tax_domain, cadence, jurisdiction, legal_refs, "
             "source_refs. legal_refs must resolve against the legal catalogue "
-            "(aeat-schema-central-config) and source_refs against the source catalogue. "
+            "(aeat-registry-authority-flow) and source_refs against the source catalogue. "
             "The title and official name are localizable values, not schema fields: author "
             "them in the shared locale catalogues with 'python -m cadrumo.locales set', "
             "against the derived keys the scaffolded manifest names in its header comment."
@@ -54,7 +54,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         detail=(
             "revisions/<revision-id>/casillas/*.toml: one CasillaDefinition per box, each "
             "carrying legal_refs to the specific binding provision that establishes it "
-            "(registry-calculation-legal-grounding), not just the framework article, and "
+            "(aeat-calculation-grounding), not just the framework article, and "
             "source_refs to the AEAT Diseño / procedure that defines its number/segment."
         ),
     ),
@@ -71,9 +71,9 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         detail=(
             "revisions/<revision-id>/bindings/*.toml: a DataBindingDefinition per casilla "
             "fed from the ledger, profile, counterpart, or another modelo. Use the single "
-            "canonical BindingSourceKind taxonomy (binding-source-kind-single-taxonomy) and "
+            "canonical BindingSourceKind taxonomy (aeat-registry-bindings) and "
             "enroll a new source resolver in the live calculate mesh "
-            "(no-dormant-source-resolvers) rather than leaving it dormant."
+            "(aeat-calculation-aggregation) rather than leaving it dormant."
         ),
     ),
     ChecklistItem(
@@ -93,7 +93,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
             "computed / reconcile-when-present casillas and any BLOCKING_RULE or ADVISORY "
             "verification_predicates (no-silent-under-declaration); ground every predicate "
             "against a bundled AEAT-authoritative oracle before marking it "
-            "externally_grounded (verification-grounding-needs-oracle-evidence)."
+            "externally_grounded (no-silent-under-declaration)."
         ),
     ),
     ChecklistItem(
@@ -118,7 +118,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         detail=(
             "src/cadrumo/locales/{es,en,ca,hu}.yml: derived casilla labels and "
             "help text via `python -m cadrumo.locales scaffold/set` "
-            "(modelo-locales-cli-authority) — never create revision-local locale files or "
+            "(aeat-locales-cli) — never create revision-local locale files or "
             "hand-edit catalogue YAML. Spanish in es.yml is the official Casilla source; "
             "non-Spanish values derive from that source through the shared key resolver."
         ),
@@ -128,7 +128,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         detail=(
             "src/cadrumo/core/_modelo.py: add the new modelo's Modelo.M<code> member so "
             "production code references it through the enum, never a bare string literal "
-            "(modelo-identifiers-use-core-enum); the registry-parity gate binds enum "
+            "(aeat-registry-authority-flow); the registry-parity gate binds enum "
             "members to registry_modelo_codes()."
         ),
     ),
@@ -136,7 +136,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         title="Write real-behavior tests and regenerate generated docs",
         detail=(
             "Add roundtrip/structural tests under the owning domain tests/ folder "
-            "(tests-live-under-domain-tests-folders, no-tautological-calculation-tests); "
+            "(aeat-architecture-boundaries, aeat-quality-gates); "
             "regenerate docs/api stubs (`python -m dev.docs.apidocs scaffold`) and modelo "
             "coverage docs if the new modelo introduces new public symbols."
         ),

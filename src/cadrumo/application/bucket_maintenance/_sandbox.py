@@ -12,7 +12,7 @@ this module adds nothing to that guarantee, it only composes the existing
 single-writer primitives behind an experiment-lifecycle vocabulary.
 
 The service delegates every write to an existing primitive
-(``composition-service-no-parallel-write-path``):
+(``aeat-architecture-boundaries``):
 
 - :func:`~application.user_profile.register_active_profile` (via the
   ``config profile create`` / ``duplicate`` atomic-create span) provisions
@@ -631,7 +631,7 @@ def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
     primitives the portable-bundle import path
     (:func:`~application.user_profile.deserialize_profile_bundle`) uses
     for ledger/work-unit/:class:`CalculationRevision`/:class:`ModeloRecord`
-    filing-record restore (``composition-service-no-parallel-write-path``): this function does not
+    filing-record restore (``aeat-architecture-boundaries``): this function does not
     reimplement a write path, it selects which of those existing upserts to
     run for the requested scope. Every upsert keys on the row's own
     content-addressed or natural id, so re-running a merge against unchanged

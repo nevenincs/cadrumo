@@ -1394,10 +1394,19 @@ def ensure_storage_tree(settings: Settings | None = None) -> Path:
                 f"Cadrumo could not create the state directory {target}: {exc}",
             ) from exc
 
-    try:
-        root.chmod(STORAGE_ROOT_MODE)
-    except (OSError, NotImplementedError):  # pragma: no cover - platform-dependent
-        _LOGGER.debug("could not restrict permissions on %s; relying on filesystem ACLs", root)
+    # Harden the ROOT once, with inheritance, rather than each file as it is
+    # written. ``chmod`` alone is POSIX-only: on NTFS it sets little beyond the
+    # read-only bit and the tree keeps inheriting the parent's ACL, so the
+    # earlier "relying on filesystem ACLs" fallback was relying on exactly the
+    # inherited ACL it meant to replace. The directory helper covers both
+    # platforms and, on Windows, grants ``(OI)(CI)F`` so every file written
+    # into the tree afterwards inherits the restriction at zero per-write cost.
+    # The per-file variant costs an ``icacls`` spawn (~28 ms) and is O(N) across
+    # the blob and journal writers -- unusable at the record counts this store
+    # targets, which is why hardening lives here and not on the write path.
+    from .file_permissions import restrict_directory_permissions
+
+    restrict_directory_permissions(root)
 
     return root
 

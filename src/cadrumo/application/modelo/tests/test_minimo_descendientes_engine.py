@@ -22,7 +22,7 @@ for the profile roundtrip — no mocks, stubs, or fakes. Expected euro amounts
 are read from the loaded revision's own ``renta-{year}-minimo-descendientes-*``
 parameters (including the Madrid-specific ``-madrid-*`` tranches), never
 hand-duplicated as a Decimal literal independent of the registry
-(`no-tautological-calculation-tests`); the parity assertion
+(`aeat-quality-gates`); the parity assertion
 (``test_all_six_revisions_expose_the_full_parameter_set``) would fail if any
 revision's registry authoring drifted from the formula this engine consumes.
 """

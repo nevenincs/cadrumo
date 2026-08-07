@@ -4,7 +4,7 @@ total -> cuota resultante de la autoliquidacion -> cuota diferencial ->
 resultado de la declaracion.
 
 Grounding posture (see aeat-quality-gates and
-verification-grounding-needs-oracle-evidence): the bundled AEAT Manual practico
+no-silent-under-declaration): the bundled AEAT Manual practico
 de Renta 2024 corpus is Parte 1 only. Its Capitulo 18 states the DEFINITIONAL
 identities of the final-settlement chain verbatim - "la cuota resultante de la
 autoliquidacion es el resultado de aplicar sobre la cuota liquida total ..."

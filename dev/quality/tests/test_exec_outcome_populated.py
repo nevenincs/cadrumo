@@ -28,7 +28,7 @@ exactly one shape: a *checked* Step whose execution record *exists and resolves*
 through the owning tool and whose ``## Outcome`` section is empty. A checked Step
 with *no* resolvable record is a different violation, owned by the exec-record
 existence check (the ``exec_missing`` axis of ``vaultspec-core status`` and the
-``plan-closure-requires-exec-records`` discipline) and deliberately not counted
+``aeat-agent-orchestration`` discipline) and deliberately not counted
 here. The honest limitation is the same one ``status`` carries: a legacy record
 that declares no ``step_id:`` frontmatter, or a record under a plan that fails to
 parse, cannot be resolved to its Step by the owning tool and is therefore

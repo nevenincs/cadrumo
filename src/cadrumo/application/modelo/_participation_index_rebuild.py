@@ -5,7 +5,7 @@ revision persistence; the calculation-revision catalogue is the authoritative
 source of truth. This module regenerates the index from scratch by iterating the
 full finalized-revision catalogue, so a stale or corrupt index can be replaced
 without data loss, in line with the
-``ledger-participation-index-is-derived-rebuildable`` project rule.
+``aeat-ledger-contract`` project rule.
 
 The rebuild reads the :class:`CalculationRevisionCatalogue` (the finalized
 revisions and their ``source_transaction_ids``), the work-unit catalogue (for the

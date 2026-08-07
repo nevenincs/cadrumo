@@ -12,7 +12,7 @@ A :class:`ReviewOnlyWorkspace` is opened from a
 :func:`~application.modelo.decrypt_review_package_for_recipient`) plus
 the package's recovered :class:`~application.modelo.ReviewPackageManifest`
 descriptor. It is the accountant/gestor-side counterpart of
-``local-filed-observations-are-non-official-evidence``: exactly as a locally
+``no-silent-under-declaration``: exactly as a locally
 persisted filed observation must never be mistaken for official AEAT
 evidence, a review-only workspace must never be mistaken for a mandate to
 file, export, or otherwise act on the underlying revision with authority.

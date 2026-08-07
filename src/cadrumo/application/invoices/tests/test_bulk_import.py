@@ -3,7 +3,7 @@
 :func:`~application.invoices.import_invoices_from_rows` delegates every row's
 write to :func:`~application.invoices.create_catalogue_invoice` -- the sole
 sanctioned :class:`~domain.invoices.Invoice` writer
-(``composition-service-no-parallel-write-path``) -- and never persists a row
+(``aeat-architecture-boundaries``) -- and never persists a row
 itself. These tests exercise it against the real encrypted
 :class:`~adapters.persistence.profile.invoices.InvoiceCatalogueRepository` (real
 master-key provider, real engine) -- no mocks.

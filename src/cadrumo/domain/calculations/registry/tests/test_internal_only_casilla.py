@@ -12,7 +12,7 @@ fichero record AEAT does not publish), and an internal-only casilla whose
 computation surface unless formula-derived).
 
 These tests exercise the validator contract directly, not a hand-computed
-calculation expectation — the ``no-tautological-calculation-tests`` rule is
+calculation expectation — the ``aeat-quality-gates`` rule is
 satisfied because the assertions are about a validation refusal, not about
 a Decimal output produced from a formula-under-test.
 """

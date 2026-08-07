@@ -5,7 +5,7 @@ revision and records which :class:`BindingSourceKind` members the
 registry actually declares in its bindings, and where. This gate joins that
 registry-side inventory against the live-mesh disposition taxonomy
 (``build_binding_source_dispositions`` and the ``DEFERRED`` / ``RESERVED``
-partition sets) and refuses the ``no-dormant-source-resolvers`` violation at the
+partition sets) and refuses the ``aeat-calculation-aggregation`` violation at the
 registry-inventory boundary: no committed revision may declare a ``RESERVED``
 source kind, because a reserved kind has neither an enrolled resolver nor a
 standing deferred advisory, so it would resolve to a silent blank on every
@@ -97,7 +97,7 @@ def test_no_committed_revision_declares_a_reserved_source_kind() -> None:
     A ``RESERVED`` source kind carries no enrolled resolver and no standing
     deferred advisory, so a committed revision that declared one would blank that
     binding on every calculation with no operator-visible diagnostic — the exact
-    ``no-dormant-source-resolvers`` silent-zero this gate refuses. The disposition
+    ``aeat-calculation-aggregation`` silent-zero this gate refuses. The disposition
     of each declared kind is read from ``build_binding_source_dispositions`` (the
     single closed answer to "where does source X resolve"); a declared kind that
     classifies ``RESERVED`` fails here with its declaring sites enumerated.

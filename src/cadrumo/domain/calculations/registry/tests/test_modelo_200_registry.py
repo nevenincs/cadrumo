@@ -397,7 +397,7 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
     The two bold figures are AEAT-published oracle values lifted
     verbatim from the manual table — they are *not* recomputed by the
     test author from the registry formula, so this satisfies the
-    no-tautological-calculation-tests rule: the test fails if the
+    aeat-quality-gates rule: the test fails if the
     registry formula diverges from the AEAT manual.
 
     The retenciones and pagos-fraccionados amounts hold their positive

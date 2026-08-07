@@ -63,7 +63,7 @@ Expiry and replay defence: every envelope carries an
   persisted, bucket-scoped consumed-nonce ledger) before or after calling
   :func:`decrypt_review_package_for_recipient` -- this module mints and
   carries the nonce but performs no persistence itself (this is the
-  ``composition-service-no-parallel-write-path`` boundary: encryption and
+  ``aeat-architecture-boundaries`` boundary: encryption and
   decryption stay pure in-memory primitives, and the CLI decrypt-side
   composition owns the ledger check).
 * **Review-only mode** (``review_only=True``) asserts the sealed package
@@ -574,7 +574,7 @@ def decrypt_review_package_for_recipient(
 
     Replay defence is NOT performed here: this function is a pure
     encrypt/decrypt primitive with no persistence dependency
-    (``composition-service-no-parallel-write-path``). A caller that needs
+    (``aeat-architecture-boundaries``). A caller that needs
     replay defence composes
     :class:`~application.modelo.RecipientReplayGuardRepository` around
     this call, keyed on ``envelope.envelope_nonce_hex``.

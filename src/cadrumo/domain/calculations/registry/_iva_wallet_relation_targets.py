@@ -8,7 +8,7 @@ a validator, so it lives in its own module where the exact declarations are the
 whole file rather than seventy lines inside a three-hundred-line validator.
 
 Extracted from ``_validate_relation_sources`` per
-``registry-resolver-family-extraction``: a family's declarations live in their own
+``aeat-architecture-boundaries``: a family's declarations live in their own
 module and the aggregator re-exports rather than accreting them. The validator
 imports back only the two names it actually uses.
 """

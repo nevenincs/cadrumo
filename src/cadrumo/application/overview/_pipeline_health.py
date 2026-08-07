@@ -25,7 +25,7 @@ verification-report catalogue for the requested scope. It persists nothing
 and never contacts AEAT. Every counter it reports is already produced by an
 existing read model or a direct repository read; this module composes them
 into one cross-domain dashboard rather than introducing a new aggregation
-(the ``composition-service-no-parallel-write-path`` discipline).
+(the ``aeat-architecture-boundaries`` discipline).
 
 See Also:
     :mod:`~application.overview`

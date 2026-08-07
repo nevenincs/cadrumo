@@ -449,7 +449,7 @@ def test_amend_wizard_scripted_inputs_match_hand_built_work_amend() -> None:
     scripted-derived inputs, one through the raw ``work amend`` flag grammar.
     Both must resolve to the same persisted outcome -- proof the wizard is a
     guided front end over the one ``amend_modelo_revision`` path
-    (``composition-service-no-parallel-write-path``), not a second,
+    (``aeat-architecture-boundaries``), not a second,
     independently-derived amendment surface.
     """
     _create_profile()

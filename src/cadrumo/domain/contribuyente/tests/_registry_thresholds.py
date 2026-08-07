@@ -4,7 +4,7 @@ Two test modules in this package need a
 :class:`~cadrumo.domain.contribuyente.family.MinimoDescendientesThresholds` to
 exercise the ordinary-eligibility predicate. Both previously built one from
 inline ``Decimal`` literals carrying the real regulatory figures, which
-``aeat-schema-central-config`` forbids: a regulatory value inlined at a call
+``aeat-registry-authority-flow`` forbids: a regulatory value inlined at a call
 site is a second authority, and a revision that moved either ceiling would
 leave those modules passing against a stale figure while the engine used the
 new one.

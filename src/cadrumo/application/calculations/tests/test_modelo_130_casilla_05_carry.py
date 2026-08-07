@@ -10,7 +10,7 @@ accumulation identity over the same-ejercicio trimestres anteriores::
 These gates drive the carry through the real ``previous_filing`` resolver against
 real encrypted-SQLite repositories and the real registry authority - no mocks,
 stubs, skips, or xfail. They are non-tautological per
-``no-tautological-calculation-tests``: the value oracle is the verbatim AEAT
+``aeat-quality-gates``: the value oracle is the verbatim AEAT
 accumulation identity computed by an independent helper, a DIFFERENT code path
 than the span binding under test. A binding that summed raw casilla 07 (skipping
 the per-quarter max-0) or dropped the minus-16 term fails the identity gate

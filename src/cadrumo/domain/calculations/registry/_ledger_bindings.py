@@ -388,6 +388,26 @@ class IvaLedgerObservation(BaseModel):
     flow_direction: IvaFlowDirection
     base_amount: Decimal
     iva_amount: Decimal
+    applied_rate: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
+    """The numeric IVA rate this line was charged at, as a fraction, when known.
+
+    Carried ALONGSIDE :attr:`rate_kind` rather than instead of it, because the
+    two answer different questions and the annual return asks both. ``rate_kind``
+    is the semantic tier (general / reducido / super-reducido / zero); this is the
+    rate that tier resolved to on this line's date. One tier can produce several
+    rates within a single filing year: the anti-inflation food measures stepped
+    the super-reducido tier 4 % to 2 % to 0 % and the reducido tier 10 % to 5 %
+    to 7.5 % across successive extensions, which is why Modelo 390 carries one box
+    per rate per window where Modelo 303 carries one per tier. Resolving to the
+    tier and discarding the value made those boxes unpopulatable, because two
+    lines at 4 % and 2 % arrived downstream indistinguishable.
+
+    ``None`` where the rate is genuinely unknown rather than zero — a
+    pre-classified candidate supplied without one, or an exempt line that carries
+    no rate at all. A caller MUST NOT read ``None`` as 0 %: zero-rated and
+    rate-less are different declarations, and :class:`IvaRateKind` already
+    distinguishes ``ZERO`` from ``EXEMPT`` for exactly that reason.
+    """
     recargo_amount: Decimal = Decimal("0")
     """Recargo de equivalencia cuota the supplier charged on a repercutido sale to
     a recargo-regime retailer, in EUR. ``Decimal("0")`` on every line that carries
@@ -452,6 +472,22 @@ class _IvaLedgerSelector(BaseModel):
     rate_kinds: tuple[IvaRateKind, ...] = Field(min_length=1)
     flow_direction: IvaFlowDirection
     cash_accounting_treatments: tuple[IvaCashAccountingTreatment, ...] = (IvaCashAccountingTreatment.NONE,)
+    applied_rates: tuple[Decimal, ...] | None = Field(default=None, min_length=1)
+    """Numeric rates this binding accepts, when the box is rate-specific.
+
+    ``None`` -- the default and the shape every quarterly binding uses -- means
+    the binding does not discriminate on the value and matches whatever rates
+    its ``rate_kinds`` tiers admit. Set it only where the FORM asks per rate
+    rather than per tier: Modelo 390 carries one box per rate per window because
+    a tier's rate can change inside a filing year, so its 2 % box must reject a
+    4 % line that shares the super-reducido tier with it.
+
+    An observation whose ``applied_rate`` is ``None`` (rate genuinely unknown --
+    an invoice-sourced line carries a rate slot, not a number) matches NO
+    rate-specific binding. That is deliberate: admitting it would put an
+    unmeasured line in a box that asserts a specific rate, and the annual return
+    is where that assertion is read.
+    """
     fact: Literal["iva_amount_sum", "base_amount_sum", "recargo_amount_sum"] = "iva_amount_sum"
 
     @field_validator("categories", mode="after")
@@ -572,6 +608,9 @@ class IvaSelectorAxesProtocol(Protocol):
     @property
     def exemption_article(self) -> IvaExemptionArticle | None: ...
 
+    @property
+    def applied_rate(self) -> Decimal | None: ...
+
 
 class _IvaReachabilityProbeObservation(NamedTuple):
     """Minimal shape carrying only the five axes the IVA matcher reads.
@@ -587,6 +626,10 @@ class _IvaReachabilityProbeObservation(NamedTuple):
     flow_direction: IvaFlowDirection
     cash_accounting_treatment: IvaCashAccountingTreatment
     exemption_article: IvaExemptionArticle | None
+    # The probe asks whether a binding is REACHABLE by some observation, so it
+    # supplies the rate the binding under test names rather than a fixed value:
+    # a rate-specific binding is reachable, just not by a differently-rated line.
+    applied_rate: Decimal | None = None
 
 
 def _iva_reachability_probe(selector: _IvaLedgerSelector) -> None:
@@ -637,6 +680,11 @@ def _iva_reachability_probe(selector: _IvaLedgerSelector) -> None:
             else IvaCashAccountingTreatment.NONE
         ),
         exemption_article=(selector.exemption_articles[0] if selector.exemption_articles else None),
+        # Offer the first rate the selector names, so a rate-specific binding is
+        # asked whether ANY line can reach it rather than whether a rate-less one
+        # can. A None here would fail every rate-specific binding at build time
+        # and read as "unreachable" when the binding is simply particular.
+        applied_rate=(selector.applied_rates[0] if selector.applied_rates else None),
     )
     if not matcher(probe):
         raise RegistryValidationError(
@@ -660,6 +708,8 @@ def _iva_ledger_observation_matches_selector(
     if observation.flow_direction is not selector.flow_direction:
         return False
     if observation.cash_accounting_treatment not in set(selector.cash_accounting_treatments):
+        return False
+    if selector.applied_rates is not None and observation.applied_rate not in set(selector.applied_rates):
         return False
     if selector.exemption_articles is None:
         return True

@@ -10,7 +10,7 @@ two-tranche scale (not a flat scalar), so the
 
 These tests check graph wiring, validation errors and dispatch
 mechanics. Hand-computed Decimal expectations are deliberately avoided
-per ``.claude/rules/no-tautological-calculation-tests.md``; the
+per ``.claude/rules/aeat-quality-gates.md``; the
 oracle-grounded numeric assertions for the LIS Art. 29.1 scale live in
 the Modelo 200 cuota-integra tests.
 """

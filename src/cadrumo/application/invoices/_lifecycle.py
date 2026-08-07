@@ -9,7 +9,7 @@ operator cannot confirm the long content-addressed ``invoice_id`` that
 catalogue invoice already binds; without a delete a mistaken
 ``catalogue create`` is permanent. These two services close that CRUD gap over
 the same sanctioned :class:`InvoiceCatalogueRepository` write path
-(``composition-service-no-parallel-write-path``). These verbs are the
+(``aeat-architecture-boundaries``). These verbs are the
 operator's single-record surface over the canonical aggregate; an earlier form
 of this docstring justified them as "keeping the slim-vs-rich split intact",
 which is a rationale the canonical-structure work removes -- the split is being

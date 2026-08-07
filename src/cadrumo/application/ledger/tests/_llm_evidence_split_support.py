@@ -23,13 +23,13 @@ from ....domain.transactions import (
     RawProvenance,
     RawTransaction,
     SourceFormat,
-    SubprocessLLMClassifier,
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
     prompt_spec_with_saturation_fields,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from ._subprocess_classifier_support import SubprocessLLMClassifier
 
 _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 _BUCKET = "bucket-split"

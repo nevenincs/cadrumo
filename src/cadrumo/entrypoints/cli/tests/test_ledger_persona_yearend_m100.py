@@ -9,7 +9,7 @@ cross-year invoice raised 2025-12 / paid 2026-01.
 
 These tests are observational operator testimonials: they assert the **surfaces
 the CLI does and does not expose** for a full-year roll-up, not hand-computed
-tax outputs (per ``no-tautological-calculation-tests``). The monetary sums are
+tax outputs (per ``aeat-quality-gates``). The monetary sums are
 read back from the operator-facing ``list`` JSON the same way an operator with a
 spreadsheet would tally them, and are asserted only for internal consistency
 (income > 0, expense > 0, the year split sums to the whole), never against a

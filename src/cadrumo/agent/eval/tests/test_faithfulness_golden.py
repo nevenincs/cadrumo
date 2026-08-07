@@ -23,7 +23,7 @@ No mocks: every seeded row is a genuine ``TransactionCatalogueRepository``
 write, every calculate value is what the real registry engine plus the real
 CLI envelope serializer produced, and every faithfulness verdict is the real
 regex-grounded check - not a hand-rolled boolean
-(``no-tautological-calculation-tests``, ``aeat-quality-gates``).
+(``aeat-quality-gates``, ``aeat-quality-gates``).
 """
 
 from __future__ import annotations

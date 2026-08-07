@@ -31,7 +31,7 @@ error-kind breakdown, backing the ``aeat app diagnostics latency`` and
 introduces a new capture or storage path -- both read
 :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
 exactly as ``run-health`` and ``runs`` do, honouring
-``composition-service-no-parallel-write-path``.
+``aeat-architecture-boundaries``.
 
 :func:`build_llm_usage_report` projects the same recorded rows into a
 run-count/duration/success-rate summary grouped by provider AND by model,
@@ -640,7 +640,7 @@ def build_llm_usage_report(
     Reuses :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
     directly -- the same recorder every sibling diagnostics report reads --
     so there is no parallel capture or storage path for this report
-    (``composition-service-no-parallel-write-path``).
+    (``aeat-architecture-boundaries``).
     :class:`~adapters.outbound.llm.LLMRunRecord` carries no token
     counts, so this is a run-count/duration/success-rate summary rather than
     a token-usage summary.

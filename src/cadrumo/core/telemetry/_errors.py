@@ -30,6 +30,6 @@ class TelemetrySchemaError(CoreError):
     a telemetry producer must enroll in before it can emit a counter or timing.
     A key that is not registered for its command means a producer was added
     without registering its schema entry first — the exact gap
-    ``no-dormant-source-resolvers``'s closed-registry discipline exists to
+    ``aeat-calculation-aggregation``'s closed-registry discipline exists to
     catch elsewhere in the codebase.
     """

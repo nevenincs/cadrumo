@@ -71,7 +71,7 @@ class ModeloReconcileResult(OutputSchema):
     :class:`ModeloReconciliationDiffPayload` list, an aware ``reconciled_at``
     timestamp, and optional narrative. Non-blocking reconciliation advisories
     ride the shared envelope ``notices`` channel exclusively
-    (``cli-notices-are-the-only-diagnostic-channel``); this result carries no
+    (``aeat-cli-contract``); this result carries no
     bespoke advisory field.
     """
 
@@ -115,6 +115,6 @@ class WorkCompareTaxationResult(OutputSchema):
     # which households the figure above is valid for, so a machine consumer
     # cannot read the individual result as authoritative without it. The
     # operator-facing caveat PROSE stays on the envelope ``notices`` channel per
-    # ``cli-notices-are-the-only-diagnostic-channel``; this is the structured
+    # ``aeat-cli-contract``; this is the structured
     # flag that channel's text describes.
     individual_branch_single_earner_only: bool

@@ -1145,7 +1145,7 @@ def _latest_llm_rejection_notice(
     operator declined an LLM suggestion and has not since accepted one — `view`
     surfaces a one-line advisory carrying the recorded reason, so prior judgement
     is visible without opening `history`
-    (``cli-notices-are-the-only-diagnostic-channel``).
+    (``aeat-cli-contract``).
     """
     object_ids = _history_object_ids(transaction_repository, resolved_id=resolved_id, include_split_siblings=False)
     decisions = [

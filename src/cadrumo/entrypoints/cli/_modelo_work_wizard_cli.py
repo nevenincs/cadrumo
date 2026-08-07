@@ -12,10 +12,10 @@ confirms then flows through the exact same
 path that ``aeat app modelo work calculate`` uses (via
 :func:`~._modelo_cli_support.work_calculate_input_bundle_from_cli`); the
 wizard is a guided front end over that one calculation path, not a second one
-(``composition-service-no-parallel-write-path``).
+(``aeat-architecture-boundaries``).
 
 Ledger-bound and computed casillas are never prompted: the ledger
-auto-derivation (``one-aggregation-path-pull-equals-calculate``) and the
+auto-derivation (``aeat-calculation-aggregation``) and the
 registry formula engine already populate them, exactly as a bare
 ``work calculate`` would. The wizard's job is only the residual manual
 surface a bare calculate call would otherwise reject with a bindings-missing

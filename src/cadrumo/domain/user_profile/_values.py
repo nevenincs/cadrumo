@@ -7,7 +7,6 @@ imports do not enter ``sys.modules`` at user-profile package init.
 
 from __future__ import annotations
 
-import json
 import re
 from datetime import date, datetime
 from decimal import Decimal

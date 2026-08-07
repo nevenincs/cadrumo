@@ -66,7 +66,7 @@ class CommandClassification(BaseModel):
     ``risk_declared`` reports whether the three judgment axes were ASSESSED rather
     than defaulted, and it exists because the safety axes cannot report that
     themselves. ``live_write`` is False for every command in the tree and must stay
-    that way (`aeat-safety-legal-gates` forbids live submission), so ``not
+    that way (`sensitive-financial-data-secure-storage-only` forbids live submission), so ``not
     live_write`` holds universally and cannot distinguish a verb someone judged
     safe from a verb nobody has looked at. A safety invariant that holds for
     everything cannot, on its own, tell you it was checked. This flag is what makes

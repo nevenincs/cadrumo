@@ -16,7 +16,7 @@ one of them.
 Why that matters more than "it is only a read": a live ``pull`` fetches taxpayer
 data from AEAT under a certificate. Reading the WRONG taxpayer mutates nothing
 locally and is still a confidentiality breach, and the wrong figures then feed
-every downstream calculation. `aeat-safety-legal-gates` treats the AEAT boundary
+every downstream calculation. `sensitive-financial-data-secure-storage-only` treats the AEAT boundary
 as the load-bearing one, and this is the gate that asks "which taxpayer?" before
 a verb crosses it.
 

@@ -18,7 +18,7 @@ axis the CLI compels an impatriado to declare:
 
 The expected base is derived from the art. 93.2 source-scope rule (which amounts
 are in scope), not by re-running the aggregation arithmetic — a scope/structure
-assertion, per no-tautological-calculation-tests.
+assertion, per aeat-quality-gates.
 
 See Also:
     :mod:`~application.aggregation._impatriado_income_ledger`

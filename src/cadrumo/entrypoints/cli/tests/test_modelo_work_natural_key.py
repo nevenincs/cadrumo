@@ -148,7 +148,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
 def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
     """Re-verifying an already-verified revision is a guarded no-op in both addressing modes.
 
-    single-subject-mutation-is-idempotent-guarded: the verb must NOT refuse a
+    aeat-cli-contract: the verb must NOT refuse a
     re-verify. Whether addressed by natural key (work-addressed) or by explicit
     calculation-revision id (revision-addressed), the second call returns exit 0,
     the SAME verification report id (no duplicate report), and surfaces the

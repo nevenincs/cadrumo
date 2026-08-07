@@ -242,7 +242,7 @@ _CADRUMO_ROOT = Path(__file__).resolve().parents[4]
 #: the resolver internal that funnels every snapshot, and ``_work_addressing``
 #: is the creation-time assertion path that accepts an explicit ``--revision``
 #: only when it equals the law-determined pick (per the
-#: revision-resolution-is-law-determined discipline).
+#: aeat-registry-authority-flow discipline).
 _SANCTIONED_REVISION_ID_SITES = frozenset(
     {
         "domain/calculations/registry/_snapshot.py",
@@ -282,7 +282,7 @@ def _law_determined_violations(
     or ``period``) — a revision-id-only or otherwise non-period-driven selection.
     ``unsanctioned`` are modules that pass ``revision_id`` into resolution outside
     the two sanctioned assertion sites. Both classes are the injection defect the
-    revision-resolution-is-law-determined rule bars.
+    aeat-registry-authority-flow rule bars.
     """
     under_specified = [(rel, line, sorted(kw)) for rel, line, kw in calls if not {"filing_year", "period"} <= kw]
     unsanctioned = sorted({rel for rel, _line, kw in calls if "revision_id" in kw} - _SANCTIONED_REVISION_ID_SITES)
@@ -310,7 +310,7 @@ def test_every_production_select_revision_call_is_law_determined() -> None:
     alongside those axes, and only at the two sanctioned sites. A new call that
     omits the law-determined axes (a revision_id-only injection) or that feeds a
     ``revision_id`` into resolution from an unreviewed site fails here — the
-    exact defect class the revision-resolution-is-law-determined rule bars.
+    exact defect class the aeat-registry-authority-flow rule bars.
     """
     calls = _production_select_revision_calls()
     assert calls, (

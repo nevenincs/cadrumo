@@ -20,7 +20,7 @@ a future audit query distinguish "who was trusted / what was sealed" from
 
 Every function in this module is a thin, pure composition over
 :func:`~application.modelo._revision_persistence.emit_modelo_bucket_event`
-(``composition-service-no-parallel-write-path``): none of them open a
+(``aeat-architecture-boundaries``): none of them open a
 :class:`~adapters.persistence.storage.SecureObjectRepository` write path
 of their own for the recipient registry, the encryption primitives, or the
 review-package build/verify layer -- those already own their persistence.

@@ -10,7 +10,7 @@ backup/restore surface: attachment evidence bytes, the audit trail, and the
 cross-period calculation inputs all ride inside the sealed archive.
 
 The verbs delegate every write to the existing service methods
-(``composition-service-no-parallel-write-path``); this module owns only CLI
+(``aeat-architecture-boundaries``); this module owns only CLI
 argument parsing, pointer resolution, and envelope emission.
 """
 

@@ -222,7 +222,7 @@ def test_same_key_differing_only_in_classified_by_override_raises_conflict(
     ``Transaction.classified_by`` (falling back to ``manual``). An idempotency match
     that omitted it would return the stored row unchanged and silently drop the new
     classifier provenance — the failure mode
-    ``single-subject-mutation-is-idempotent-guarded`` forbids.
+    ``aeat-cli-contract`` forbids.
     """
     repo, events = _repositories(secure_objects)
     base: _ManualTransactionBaseArgs = {

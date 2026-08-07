@@ -16,11 +16,15 @@ like coverage.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
+from .....core import Modelo
 from ....iva import (
     IvaCashAccountingTreatment,
     IvaCategory,
+    IvaExemptionArticle,
     IvaFlowDirection,
     IvaRateKind,
 )
@@ -104,7 +108,11 @@ def test_the_unmatched_selector_really_matches_every_treatment_never() -> None:
 
 
 class _StubIvaObservation:
-    """Minimal stand-in carrying only the five axes the IVA matcher reads."""
+    """Minimal stand-in carrying only the five axes the IVA matcher reads.
+
+    Satisfies ``IvaSelectorAxesProtocol`` structurally, which is what makes it
+    a legitimate stand-in for the full observation record here.
+    """
 
     def __init__(
         self,
@@ -113,13 +121,18 @@ class _StubIvaObservation:
         rate_kind: IvaRateKind,
         flow_direction: IvaFlowDirection,
         cash_accounting_treatment: IvaCashAccountingTreatment,
-        exemption_article: object | None,
+        exemption_article: IvaExemptionArticle | None,
+        applied_rate: Decimal | None = None,
     ) -> None:
         self.category = category
         self.rate_kind = rate_kind
         self.flow_direction = flow_direction
         self.cash_accounting_treatment = cash_accounting_treatment
         self.exemption_article = exemption_article
+        # Defaults to the genuinely-unknown rate, which is the shape these
+        # tests exercise: they vary the cash-accounting axis and must not
+        # accidentally also constrain the rate filter.
+        self.applied_rate = applied_rate
 
 
 def test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail() -> None:
@@ -144,7 +157,7 @@ def test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail() -> None
     """
     for casilla_id in ("02", "9999", "definitely-not-a-real-casilla"):
         selector = _RentaLedgerGastosPagoFraccionadoSelector(
-            modelo="130",
+            modelo=Modelo.M130,
             target_casilla_id=casilla_id,
             fact="deductible_amount_sum",
         )
@@ -159,7 +172,14 @@ def test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail() -> None
 
 
 class _StubCasillaObservation:
-    """Minimal stand-in for the one attribute the casilla-keyed matcher reads."""
+    """Minimal stand-in for the attributes the casilla-keyed matcher reads.
 
-    def __init__(self, *, target_casilla_id: str) -> None:
+    Carries ``deductible_amount`` as well as the casilla id: the matcher only
+    reads the id, but the protocol declares both, and a stub that satisfies
+    the protocol only by accident is the kind of stand-in that stops being
+    valid the moment the matcher reads its second field.
+    """
+
+    def __init__(self, *, target_casilla_id: str, deductible_amount: Decimal = Decimal("0")) -> None:
         self.target_casilla_id = target_casilla_id
+        self.deductible_amount = deductible_amount

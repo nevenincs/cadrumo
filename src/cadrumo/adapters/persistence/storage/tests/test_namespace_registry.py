@@ -279,10 +279,21 @@ def _module_exists(dotted_path: str) -> bool:
         return False
 
 
-def test_all_67_namespace_rows_use_cadrumo_owners_and_preserve_six_authority_segments() -> None:
+def test_every_namespace_row_uses_cadrumo_owners_and_preserves_six_authority_segments() -> None:
+    """Ownership and authority-segment invariants hold for every registered row.
+
+    Deliberately gates on the PROPERTY, never on the row tally. This test
+    asserted ``len(definitions) == 67`` and its name carried the same number,
+    so adding a sixty-eighth namespace reddened it for no reason the assertion
+    was written to catch. A count encodes the moment it was written, trains
+    everyone to bump the constant, and then detects nothing — the registry is
+    expected to grow, and growth is not the defect. What must hold at every
+    size is that each row is cadrumo-owned and that the AEAT authority segments
+    stay exactly as enumerated below.
+    """
     definitions = STORAGE_NAMESPACE_REGISTRY.namespaces
 
-    assert len(definitions) == 67
+    assert definitions, "the namespace registry must not be empty"
     assert all(
         definition.namespace.startswith(("cadrumo.", "cadrumo-test.", "cadrumo-tests.")) for definition in definitions
     )

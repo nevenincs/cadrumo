@@ -51,7 +51,7 @@ any AST pass and are stated here rather than papered over:
 * A module string built at runtime and fed to ``importlib.import_module``
   is not an import statement; no static walk can see its target. This is a
   documented structural limit of AST scanning, and the reason the
-  ``dynamic-import-targets-the-public-facade`` discipline is author-side.
+  ``aeat-architecture-boundaries`` discipline is author-side.
 * A module-level ``__getattr__`` (PEP 562) that serves a prompter handle on
   attribute access binds no name an import statement declares, so a facade
   built that way is outside the closure. No production facade in this tree

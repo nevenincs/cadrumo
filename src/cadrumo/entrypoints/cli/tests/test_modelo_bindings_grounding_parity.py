@@ -1,7 +1,7 @@
 """Shared-grounding parity for the modelo bindings list and preview payloads.
 
 ``bindings list`` and ``bindings resolve`` (preview) project the *same*
-binding. Per `binding-values-carry-provenance` both must carry the binding's
+binding. Per `aeat-registry-bindings` both must carry the binding's
 ``legal_refs`` / ``source_refs`` and typed source identity. Before the shared
 :class:`BindingGroundingPayload` existed, each row declared that grounding
 independently, so a constraint relaxed on one surface left the other silently

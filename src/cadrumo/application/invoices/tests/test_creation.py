@@ -197,6 +197,9 @@ def test_build_catalogue_invoice_carries_intra_community_category() -> None:
         iva_rate=Decimal("0"),
         currency="EUR",
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        # An entrega intracomunitaria must now state its clave: the category
+        # alone cannot separate an ordinary E from a post-importation M or H.
+        operation_type=IntracomOperationType.E,
     )
     assert intra.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
 
@@ -237,6 +240,7 @@ def test_create_catalogue_invoice_intra_community_feeds_modelo_349(tmp_path: Pat
             iva_rate=Decimal("0"),
             currency="EUR",
             iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            operation_type=IntracomOperationType.E,
             repository=repository,
         )
         resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
@@ -858,3 +862,64 @@ def test_canonical_creation_emits_the_lifecycle_event_for_its_direction(
     assert len(emitted) == 1, "the returned event id must resolve in the bucket history"
     assert emitted[0].event_type is getattr(BucketEventType, expected_event)
     assert emitted[0].object_id == result.invoice.invoice_id
+
+
+def test_an_entrega_intracomunitaria_must_state_its_modelo_349_clave() -> None:
+    """The one category that cannot settle its own clave is refused without one.
+
+    Claves E, M and H all carry ``INTRA_COMMUNITY_SUPPLY``: M and H are supplies
+    following an exempt importation (LIVA art. 27.12), and no category predicate
+    separates them from an ordinary entrega. The operator is looking at the
+    document and knows which it is; the Modelo 349 resolver, running later, does
+    not and can only infer E and disclose that it guessed.
+
+    Capturing the fact where it exists is what makes the downstream disclosure a
+    genuine last resort rather than the normal path.
+    """
+    with pytest.raises(InvoiceValidationError, match="must state its Modelo 349 operation type"):
+        build_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Kunde GmbH",
+            counterparty_tax_id="DE345678901",
+            counterparty_country="DE",
+            invoice_number="EU-NO-CLAVE",
+            issued_at=date(2026, 2, 10),
+            taxable_base=Decimal("2000.00"),
+            iva_rate=Decimal("0"),
+            currency="EUR",
+            iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        )
+
+
+def test_the_clave_requirement_is_scoped_to_the_one_ambiguous_category() -> None:
+    """Categories that determine their own clave are not made to restate it.
+
+    The service categories give S and I and triangulation gives T, so demanding
+    an operation type for them would be a redundant required field -- which is
+    how a boundary check earns the reputation that gets it removed. A domestic
+    invoice is likewise untouched.
+
+    The positive control for the refusal above: without this, a check that
+    refused every category would satisfy that test while blocking ordinary
+    invoice creation entirely.
+    """
+    for category in (
+        IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+        IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
+        IvaCategory.DOMESTIC_EXEMPT,
+    ):
+        invoice = build_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Kunde GmbH",
+            counterparty_tax_id="DE345678901",
+            counterparty_country="DE",
+            invoice_number=f"EU-{category.value}",
+            issued_at=date(2026, 2, 10),
+            taxable_base=Decimal("2000.00"),
+            iva_rate=Decimal("0"),
+            currency="EUR",
+            iva_category=category,
+        )
+        assert invoice.iva_category is category

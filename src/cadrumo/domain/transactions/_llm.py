@@ -1,9 +1,18 @@
-"""LLM-backed transaction classifiers with a parametric prompt builder.
+"""LLM classifier contracts with a parametric prompt builder.
 
-Defines the :class:`LLMClassifier` protocol plus subprocess-based
-reference implementations for the three local LLM CLIs
-(:func:`build_claude_classifier`, :func:`build_antigravity_classifier`,
-:func:`build_codex_classifier`). The prompt is built
+Defines the :class:`LLMClassifier` and :class:`LLMSplitProposer` protocols and
+the allow-list-guarded response parsing every classifier answer passes through.
+Concrete transports live outside this module: the on-host readers in the gated
+inference package, and a subprocess harness on the test side. The subprocess
+CLI implementations that once lived here were the off-host route, and they were
+deleted with it.
+
+This module keeps the part that is a SAFETY contract rather than a transport --
+the prompt spec and the parse that confine a model to selecting
+``classification`` / ``category`` / ``iva_category`` and never emitting a
+regulated number. That belongs in the domain, not behind an optional install.
+
+The prompt is built
 PROGRAMMATICALLY from the available enum values so the LLM prompt
 stays in sync with :class:`cadrumo.domain.transactions.BusinessClassification`:
 adding a new value automatically requires a developer to decide
@@ -31,9 +40,7 @@ hallucinating model cannot corrupt the catalogue.
 from __future__ import annotations
 
 import re
-import shutil
-import subprocess
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Protocol, runtime_checkable
@@ -47,7 +54,7 @@ from ..categories import SpendingCategory, resolve_category_profiles
 from ..iva import IvaCategory
 from ._enums import BusinessClassification
 from ._errors import LLMClassifierError, TransactionValidationError
-from ._model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier, resolve_profile
+from ._model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier
 from ._models import Transaction
 
 _logger = get_logger(__name__)
@@ -855,355 +862,6 @@ def parse_split_response(stdout: str, *, spec: PromptSpec | None = None) -> LLMS
     return response
 
 
-# ── subprocess-based classifier ───────────────────────────────────
-
-
-@dataclass(frozen=True)
-class SubprocessLLMClassifier:
-    """LLM classifier that shells out to a local CLI binary.
-
-    Pipes the prompt via stdin by default (more reliable than a
-    positional argument for long multi-line prompts, especially on
-    Windows where CreateProcess quoting can corrupt arguments).
-
-    Reads output from stdout. Transaction prompts and classifier
-    responses are sensitive financial data, so this adapter deliberately
-    avoids file-backed subprocess handoff.
-
-    Set ``prompt_via_argument=True`` for CLIs that reject stdin and
-    require the prompt as the final positional argument.
-    """
-
-    name: str
-    command: tuple[str, ...]
-    model: str | None = None
-    timeout_seconds: float = _DEFAULT_TIMEOUT_SECONDS
-    spec: PromptSpec = field(default_factory=default_prompt_spec)
-    prompt_via_argument: bool = False
-
-    @property
-    def decided_by(self) -> str:
-        """Return the ``classified_by`` identifier including the model when set."""
-        if self.model:
-            return f"llm:{self.name}:{self.model}"
-        return f"llm:{self.name}"
-
-    def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
-        """Shell out to the LLM CLI, parse, validate, return.
-
-        Args:
-            transaction: The transaction to classify.
-            evidence_text: Optional on-host-extracted attached-evidence text injected
-                into the prompt (sent via stdin, never a file).
-
-        Returns:
-            A :class:`LLMClassificationResponse` with the parsed classification result.
-        """
-        stdout = self._run_cli(
-            self.spec.render(transaction, evidence_text=evidence_text),
-            transaction_id=transaction.transaction_id,
-        )
-        response = parse_response(stdout, spec=self.spec)
-        _logger.debug(
-            "llm classify: %s returned classification=%s confidence=%s for transaction %s",
-            self.name,
-            response.classification.value,
-            response.confidence,
-            transaction.transaction_id,
-        )
-        return response
-
-    def propose_split(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMSplitResponse:
-        """Shell out with a split-proposal prompt, parse and validate the split.
-
-        Args:
-            transaction: The transaction to split.
-            evidence_text: Optional on-host-extracted attached-evidence text injected
-                into the prompt (sent via stdin, never a file).
-
-        Returns:
-            A validated :class:`LLMSplitResponse`.
-        """
-        stdout = self._run_cli(
-            build_split_prompt(transaction, spec=self.spec, evidence_text=evidence_text),
-            transaction_id=transaction.transaction_id,
-        )
-        return parse_split_response(stdout, spec=self.spec)
-
-    def _run_cli(self, prompt: str, *, transaction_id: str) -> str:
-        """Shell out to the CLI with ``prompt`` via stdin (never a file) and return stdout."""
-        resolved_binary = shutil.which(self.command[0])
-        if resolved_binary is None:
-            _logger.warning("llm classifier %s not found on PATH: %s", self.name, self.command[0])
-            raise LLMClassifierError(f"{self.name} CLI not found on PATH: {self.command[0]}")
-
-        argv: list[str] = [resolved_binary, *self.command[1:]]
-        stdin_input: str | None = None
-        if self.prompt_via_argument:
-            argv.append(prompt)
-        else:
-            stdin_input = prompt
-
-        _logger.debug("llm classify: spawning %s argv=%s transaction_id=%s", self.name, argv[0], transaction_id)
-        try:
-            completed = subprocess.run(
-                argv,
-                input=stdin_input,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                timeout=self.timeout_seconds,
-                check=False,
-            )
-        except subprocess.TimeoutExpired as exc:
-            _logger.warning(
-                "llm classify: %s timed out after %ss for transaction %s",
-                self.name,
-                self.timeout_seconds,
-                transaction_id,
-                exc_info=True,
-            )
-            raise LLMClassifierError(f"{self.name} CLI timed out after {self.timeout_seconds}s") from exc
-        except OSError as exc:
-            # Spawn-time failures (PermissionError, ENOEXEC, ENOMEM, Windows
-            # CreateProcess errors). Translate so the --all CLI loop can
-            # skip this one transaction and continue on the next.
-            _logger.error("llm classify: %s spawn failed", self.name, exc_info=True)
-            raise LLMClassifierError(f"{self.name} CLI spawn failed: {exc}") from exc
-        if completed.returncode != 0:
-            _logger.warning(
-                "llm classify: %s exited with returncode=%d for transaction %s",
-                self.name,
-                completed.returncode,
-                transaction_id,
-            )
-            raise LLMClassifierError(
-                f"{self.name} CLI exited with {completed.returncode}: {(completed.stderr or completed.stdout)[:400]!r}",
-            )
-        return completed.stdout
-
-
-# ── builders + registry ───────────────────────────────────────────
-
-
-def build_claude_classifier(
-    *,
-    alias: str | None = None,
-    model: str | None = None,
-    spec: PromptSpec | None = None,
-    minimum_tier: ModelTier = MINIMUM_CLASSIFICATION_TIER,
-) -> SubprocessLLMClassifier:
-    """Build a classifier that shells out to ``claude --bare -p``.
-
-    Args:
-        alias: Capability-tier alias (``claude-sonnet`` / ``claude-opus``
-            / ``claude-haiku``). Resolves to the current model ID via
-            :func:`cadrumo.domain.transactions._model_tier.resolve_profile`
-            and enforces ``minimum_tier``.
-        model: Explicit provider-specific model override. When set,
-            takes precedence over ``alias`` AND skips the tier check;
-            reserved for advanced operators pinning a specific model.
-        spec: Prompt spec override.
-        minimum_tier: Refuses aliases below this tier (default:
-            :data:`MINIMUM_CLASSIFICATION_TIER`).
-
-    Returns:
-        A :class:`SubprocessLLMClassifier` configured for the
-        ``claude`` CLI.
-    """
-    resolved_model = _resolve_model_id(provider="claude", alias=alias, explicit_model=model, minimum_tier=minimum_tier)
-    command: tuple[str, ...] = ("claude", "--bare", "-p")
-    if resolved_model:
-        command = ("claude", "--bare", "-p", "--model", resolved_model)
-    return SubprocessLLMClassifier(
-        name="claude",
-        command=command,
-        model=resolved_model or None,
-        spec=spec or default_prompt_spec(),
-    )
-
-
-def build_antigravity_classifier(
-    *,
-    alias: str | None = None,
-    model: str | None = None,
-    spec: PromptSpec | None = None,
-    minimum_tier: ModelTier = MINIMUM_CLASSIFICATION_TIER,
-) -> SubprocessLLMClassifier:
-    """Build a classifier that shells out to ``agy --prompt <prompt>``.
-
-    Antigravity (Google's agentic CLI ``agy``) is the supported successor to
-    the retired standalone ``gemini`` CLI. Its ``--print`` / ``-p`` /
-    ``--prompt`` mode runs a single prompt non-interactively; the prompt is the
-    VALUE of that flag, so it is passed as the final positional argument
-    (``prompt_via_argument=True``). Unlike the old ``gemini`` CLI (a Node
-    wrapper whose command line overflowed a ~8 KB limit on the larger
-    saturation prompt), ``agy`` is a native binary invoked through the
-    subprocess argument list, so it carries the full platform command-line
-    budget. ``--model`` selects a model when one is pinned; otherwise ``agy``
-    uses its own current default. Its stdout may carry start-up noise; the JSON
-    iterator in :func:`parse_response` tolerates it.
-
-    Args:
-        alias: Capability-tier alias (``antigravity-default``). Enforces
-            ``minimum_tier``.
-        model: Explicit provider-specific model override.
-        spec: Prompt spec override.
-        minimum_tier: Refuses aliases below this tier.
-
-    Returns:
-        A :class:`SubprocessLLMClassifier` configured for the ``agy`` CLI with
-        ``prompt_via_argument=True``.
-    """
-    resolved_model = _resolve_model_id(
-        provider="antigravity",
-        alias=alias,
-        explicit_model=model,
-        minimum_tier=minimum_tier,
-    )
-    command = ("agy", "--prompt") if not resolved_model else ("agy", "--model", resolved_model, "--prompt")
-    return SubprocessLLMClassifier(
-        name="antigravity",
-        command=command,
-        model=resolved_model or None,
-        spec=spec or default_prompt_spec(),
-        prompt_via_argument=True,
-    )
-
-
-def build_codex_classifier(
-    *,
-    alias: str | None = None,
-    model: str | None = None,
-    spec: PromptSpec | None = None,
-    minimum_tier: ModelTier = MINIMUM_CLASSIFICATION_TIER,
-) -> SubprocessLLMClassifier:
-    """Build a classifier that shells out to ``codex exec``.
-
-    Uses ``--ephemeral`` + ``--skip-git-repo-check`` so the invocation
-    does not require a git repo and does not persist sessions. The
-    The subprocess adapter parses JSON candidates from stdout so no
-    transaction data is written to a temporary file.
-
-    Args:
-        alias: Capability-tier alias (``codex-default`` / ``codex-o3``).
-            Enforces ``minimum_tier``.
-        model: Explicit provider-specific model override.
-        spec: Prompt spec override.
-        minimum_tier: Refuses aliases below this tier.
-
-    Returns:
-        A :class:`SubprocessLLMClassifier` configured for the
-        ``codex`` CLI.
-    """
-    resolved_model = _resolve_model_id(provider="codex", alias=alias, explicit_model=model, minimum_tier=minimum_tier)
-    command: tuple[str, ...] = ("codex", "exec", "--ephemeral", "--skip-git-repo-check")
-    if resolved_model:
-        command = (*command, "-m", resolved_model)
-    return SubprocessLLMClassifier(
-        name="codex",
-        command=command,
-        model=resolved_model or None,
-        spec=spec or default_prompt_spec(),
-    )
-
-
-def _resolve_model_id(
-    *,
-    provider: str,
-    alias: str | None,
-    explicit_model: str | None,
-    minimum_tier: ModelTier,
-) -> str:
-    """Resolve an alias or explicit model override to a provider-specific model ID.
-
-    Precedence:
-    1. ``explicit_model`` wins (advanced operator pinning a raw ID);
-       no tier check.
-    2. Otherwise ``alias`` resolves via the tier catalogue with
-       minimum-tier enforcement.
-    3. When both are None the catalogue's default for ``provider``
-       (the lowest-tier profile at or above ``minimum_tier``) wins.
-    """
-    if explicit_model is not None:
-        return explicit_model
-    profile: ModelProfile = resolve_profile(provider, alias=alias, minimum_tier=minimum_tier)
-    return profile.model_id
-
-
-_PROVIDER_BUILDERS: dict[str, Callable[..., LLMClassifier]] = {
-    "claude": build_claude_classifier,
-    "antigravity": build_antigravity_classifier,
-    "codex": build_codex_classifier,
-}
-
-
-def resolve_classifier(
-    provider: str,
-    *,
-    alias: str | None = None,
-    model: str | None = None,
-    spec: PromptSpec | None = None,
-    minimum_tier: ModelTier = MINIMUM_CLASSIFICATION_TIER,
-) -> LLMClassifier:
-    """Return a classifier for the given provider name.
-
-    Args:
-        provider: One of ``"claude"``, ``"antigravity"``, or ``"codex"``.
-        alias: Optional capability-tier alias (see
-            :class:`cadrumo.domain.transactions._model_tier.ModelProfile`).
-            Resolves to a current model ID via the tier catalogue.
-        model: Optional raw model-ID override. Takes precedence over
-            alias and skips the tier check. Reserved for advanced
-            operators pinning a specific provider model.
-        spec: Optional prompt spec override.
-        minimum_tier: Refuses aliases below this tier (default
-            :data:`MINIMUM_CLASSIFICATION_TIER`).
-
-    Returns:
-        A concrete implementation of :class:`LLMClassifier`.
-
-    Raises:
-        LLMClassifierError: If ``provider`` is not supported,
-            or if tier resolution fails.
-    """
-    try:
-        builder = _PROVIDER_BUILDERS[provider.lower()]
-    except KeyError as exc:
-        valid = ", ".join(sorted(_PROVIDER_BUILDERS))
-        raise LLMClassifierError(f"unknown LLM provider: {provider!r}; valid: {valid}") from exc
-    try:
-        return builder(alias=alias, model=model, spec=spec, minimum_tier=minimum_tier)
-    except ValueError as exc:
-        raise LLMClassifierError(str(exc)) from exc
-
-
-def resolve_split_proposer(provider: str, *, spec: PromptSpec | None = None) -> LLMSplitProposer:
-    """Resolve the production split proposer for ``provider``.
-
-    Resolves the provider's classifier (via :func:`resolve_classifier`) and
-    narrows it to an :class:`LLMSplitProposer`. The subprocess classifiers are
-    the only production proposers.
-
-    Args:
-        provider: One of ``"claude"``, ``"antigravity"``, ``"codex"``.
-        spec: Optional prompt spec override (the category + IVA-category
-            saturation spec is the natural choice so split children carry the
-            same allow-list-guarded selections).
-
-    Returns:
-        An :class:`LLMSplitProposer` for ``provider``.
-
-    Raises:
-        LLMClassifierError: If ``provider`` resolves to a classifier that does
-            not support evidence-driven splitting.
-    """
-    classifier = resolve_classifier(provider, spec=spec)
-    if not isinstance(classifier, LLMSplitProposer):
-        raise LLMClassifierError(f"provider {provider!r} does not support evidence-driven splitting")
-    return classifier
-
-
 __all__ = [
     "MINIMUM_CLASSIFICATION_TIER",
     "PIPELINE_ONLY_CLASSIFICATIONS",
@@ -1216,16 +874,10 @@ __all__ = [
     "ModelProfile",
     "ModelTier",
     "PromptSpec",
-    "SubprocessLLMClassifier",
-    "build_antigravity_classifier",
-    "build_claude_classifier",
-    "build_codex_classifier",
     "default_classification_choices",
     "default_iva_category_choices",
     "default_prompt_spec",
     "parse_response",
     "prompt_spec_with_every_spending_category",
     "prompt_spec_with_saturation_fields",
-    "resolve_classifier",
-    "resolve_split_proposer",
 ]

@@ -65,7 +65,7 @@ def test_wizard_success_json_emits_shared_spine_and_next_step_notice(
 ) -> None:
     """JSON mode emits the shared envelope spine with the next-step as a Notice.
 
-    Locks the ``cli-notices-are-the-only-diagnostic-channel`` contract for
+    Locks the ``aeat-cli-contract`` contract for
     the wizard verbs: the JSON emit carries the shared spine
     (``schema_version`` / ``command`` / ``status`` / ``result`` /
     ``notices``), and the post-create / post-edit hint rides on the

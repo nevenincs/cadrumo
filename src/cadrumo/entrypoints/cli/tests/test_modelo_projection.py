@@ -411,7 +411,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     across quarters, reporting 120.000 of phantom income; it now reads the
     latest quarter's cumulative value (48.000), the true annual basis.
 
-    Per `no-tautological-calculation-tests.md` the oracle is the M100 registry
+    Per `aeat-quality-gates.md` the oracle is the M100 registry
     engine itself, not a re-implementation of the projection formula.  Both
     paths exercise different code entry points: the project verb traverses
     stored CalculationRevision records; the oracle calls the engine directly.
@@ -502,7 +502,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     # -- Oracle: direct M100 registry calculation --------------------------
     # This is the independent entry path that proves the projection verb
     # produces the same result as calling the M100 engine directly with the
-    # same accumulated inputs.  Per no-tautological-calculation-tests.md,
+    # same accumulated inputs.  Per aeat-quality-gates.md,
     # the expected value comes from the registry engine, not from
     # re-implementing the IRPF tariff formula.
     #

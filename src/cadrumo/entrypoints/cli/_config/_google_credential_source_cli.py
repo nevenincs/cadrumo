@@ -32,7 +32,7 @@ Neither command performs a live ADC discovery or IAM token exchange; the
 persisted selection is dispatched by
 :func:`~adapters.outbound.storage.build_google_credentials` the next time a
 Google-backed command builds credentials for this profile
-(``composition-service-no-parallel-write-path`` — this CLI module delegates to
+(``aeat-architecture-boundaries`` — this CLI module delegates to
 the landed persistence and resolver primitives; it does not re-implement
 credential resolution).
 

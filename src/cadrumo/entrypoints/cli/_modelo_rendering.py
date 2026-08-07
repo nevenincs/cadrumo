@@ -208,7 +208,7 @@ def next_action_notice(
     ``work status`` / ``work history``) and ``work verify`` call this instead of
     a bespoke ``next`` / ``suggestion`` payload field, so every next-step hint
     rides the one uniform notices surface per the
-    ``cli-notices-are-the-only-diagnostic-channel`` rule. Being ``info`` severity
+    ``aeat-cli-contract`` rule. Being ``info`` severity
     it never flips the envelope ``status`` away from ``success``.
     """
     return Notice(

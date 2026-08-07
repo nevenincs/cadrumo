@@ -12,7 +12,7 @@ Coverage:
   halts instructively at ``verify`` with ``export`` skipped and a non-zero exit.
 
 The chain is build + export only: no live AEAT submission path is exercised or
-reachable (``aeat-safety-legal-gates``).
+reachable (``sensitive-financial-data-secure-storage-only``).
 """
 
 from __future__ import annotations

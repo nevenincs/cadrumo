@@ -3,7 +3,7 @@
 :mod:`.test_marker_integrity` walks every test module's comments, docstrings,
 and durable symbol/pytest-id names for this repo's own process history (a
 numbered campaign-container id, a dated decision-record filename, a fixed
-process-review phrase) — the leak `aeat-source-hygiene` and the vaultspec
+process-review phrase) — the leak `aeat-architecture-boundaries` and the vaultspec
 "Code Stands Alone" mandate forbid. This module holds the declarative half of
 that gate: the pattern/target/near-miss triples plus the small helpers that
 apply and prove them. It is genuinely separable from the AST walk that uses

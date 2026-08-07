@@ -87,16 +87,19 @@ class ParsedEInvoice:
 
     __slots__ = (
         "currency",
+        "customer_name",
         "customer_tax_id",
         "grand_total",
         "invoice_date",
         "invoice_number",
+        "invoice_series",
         "iva_amount",
         "iva_breakdown",
         "iva_category",
         "lines",
         "recargo_amount",
         "shape",
+        "supplier_name",
         "supplier_tax_id",
         "taxable_base",
     )
@@ -105,7 +108,10 @@ class ParsedEInvoice:
         self.shape = shape
         self.supplier_tax_id: str | None = None
         self.customer_tax_id: str | None = None
+        self.supplier_name: str | None = None
+        self.customer_name: str | None = None
         self.invoice_number: str | None = None
+        self.invoice_series: str | None = None
         self.invoice_date: str | None = None
         self.currency: str | None = None
         self.taxable_base: Decimal | None = None
@@ -130,6 +136,64 @@ def _first_text(parent: Element, name: str) -> str | None:
     for node in parent.iter():
         if _local(node.tag) == name and node.text and node.text.strip():
             return node.text.strip()
+    return None
+
+
+def _direct_child_text(parent: Element, name: str) -> str | None:
+    """Return the text of *parent*'s own child, never a deeper descendant.
+
+    The descendant walk :func:`_first_text` performs is right for a leaf stated
+    once in a subtree, and wrong wherever the same local name is restated at a
+    deeper level with a different meaning. A Facturae ``InvoiceHeader`` on a
+    rectificativa carries the corrected invoice's identifier as
+    ``Corrective/InvoiceNumber`` alongside its own ``InvoiceNumber``, so a
+    descendant walk has two candidates and picks correctly only because the
+    schema happens to fix their order.
+    """
+    for node in parent:
+        if _local(node.tag) == name and node.text and node.text.strip():
+            return node.text.strip()
+    return None
+
+
+def _ubl_party_name(party: Element) -> str | None:
+    """Return a UBL party's name, preferring its registered legal name.
+
+    EN16931 maps the party's legal name to ``PartyLegalEntity/RegistrationName``
+    (BT-27 / BT-44) and its trading name to ``PartyName/Name`` (BT-28 / BT-45).
+    The legal name is the one a filing reconciles against, so it wins; the
+    trading name is the fallback for a document that states only that.
+    """
+    registration = _first_text(party, "RegistrationName")
+    if registration:
+        return registration
+    for named in _find_all(party, "PartyName"):
+        found = _direct_child_text(named, "Name")
+        if found:
+            return found
+    return None
+
+
+def _facturae_party_name(party: Element) -> str | None:
+    """Return a Facturae party's stated name, legal entity or natural person.
+
+    Facturae states the name in one of two mutually exclusive blocks selected by
+    ``PersonTypeCode``: ``LegalEntity/CorporateName`` for a company, or
+    ``Individual`` split across ``Name``, ``FirstSurname`` and ``SecondSurname``
+    for a natural person. The two surnames are joined back into the single
+    display name the document means, because Spanish naming carries both and a
+    counterparty recorded under the given name alone is not identifiable.
+    """
+    corporate = _first_text(party, "CorporateName")
+    if corporate:
+        return corporate
+    for individual in _find_all(party, "Individual"):
+        parts = [
+            _direct_child_text(individual, part) for part in ("Name", "FirstSurname", "SecondSurname")
+        ]
+        joined = " ".join(part for part in parts if part)
+        if joined:
+            return joined
     return None
 
 
@@ -196,6 +260,10 @@ def _parse_cii(root: Element) -> ParsedEInvoice:
         found = _find_all(root, party_name)
         if found:
             setattr(parsed, f"{target}_tax_id", _vat_id(found[0]))
+            # A direct child: the party subtree also carries a contact's
+            # PersonName and may carry a SpecifiedLegalOrganization trading
+            # name, neither of which is the party's own stated name.
+            setattr(parsed, f"{target}_name", _direct_child_text(found[0], "Name"))
     for settlement in _find_all(root, "ApplicableHeaderTradeSettlement"):
         parsed.currency = _first_text(settlement, "InvoiceCurrencyCode")
         for total in _find_all(settlement, "SpecifiedTradeSettlementHeaderMonetarySummation"):
@@ -246,6 +314,7 @@ def _parse_ubl(root: Element) -> ParsedEInvoice:
         found = _find_all(root, party_tag)
         if found:
             setattr(parsed, f"{target}_tax_id", _vat_id(found[0]))
+            setattr(parsed, f"{target}_name", _ubl_party_name(found[0]))
     for total in _find_all(root, "LegalMonetaryTotal"):
         parsed.taxable_base = _decimal(_first_text(total, "TaxExclusiveAmount"))
         parsed.grand_total = _decimal(_first_text(total, "TaxInclusiveAmount"))
@@ -293,12 +362,16 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
             # Facturae states the fiscal identifier in TaxIdentificationNumber,
             # which IS the VAT number; no SIRET/Steuernummer ambiguity here.
             setattr(parsed, f"{target}_tax_id", _first_text(found[0], "TaxIdentificationNumber"))
+            setattr(parsed, f"{target}_name", _facturae_party_name(found[0]))
     invoices = _find_all(root, "Invoice")
     if not invoices:
         return parsed
     invoice = invoices[0]
     for header in _find_all(invoice, "InvoiceHeader"):
-        parsed.invoice_number = _first_text(header, "InvoiceNumber")
+        # Scoped to the header's own children: a rectificativa restates the
+        # CORRECTED invoice's number under Corrective/ in this same subtree.
+        parsed.invoice_number = _direct_child_text(header, "InvoiceNumber")
+        parsed.invoice_series = _direct_child_text(header, "InvoiceSeriesCode")
     for issue in _find_all(invoice, "InvoiceIssueData"):
         parsed.invoice_date = _first_text(issue, "IssueDate")
         parsed.currency = _first_text(issue, "InvoiceCurrencyCode")

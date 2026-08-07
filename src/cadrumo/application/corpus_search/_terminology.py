@@ -6,7 +6,7 @@ NOT shipped in the wheel. This module is the shipped, product-side consumer: a
 lean strict loader that projects each concept for a requested locale and a
 simple in-memory search over the small concept set.
 
-Per the ``glossary-concepts-are-taxpayer-facing`` rule the shipped search
+Per the ``aeat-documentation`` rule the shipped search
 surfaces only ``approved``-lifecycle concepts — the ratified taxpayer/operator
 vocabulary — excluding ``draft`` (unreviewed) and ``deprecated`` (internal
 machinery) concepts, which the taxpayer glossary also excludes. The lifecycle

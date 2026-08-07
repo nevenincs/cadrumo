@@ -7,7 +7,7 @@ secure-object persistence, no mocks). Proves the default-off posture, that
 ``build_telemetry_flush_preview`` never performs a network call regardless of
 posture, and that :func:`~application.diagnostics_telemetry.flush_telemetry`
 composes the real core gate/sink primitives rather than re-implementing them
-(``composition-service-no-parallel-write-path``): a real loopback HTTP server
+(``aeat-architecture-boundaries``): a real loopback HTTP server
 proves a fully-permitted flush actually transmits the exact previewed payload,
 and a refused-consent flush never dials out.
 

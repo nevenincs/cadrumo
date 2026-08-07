@@ -15,7 +15,7 @@ directly, while :func:`build_corpus_search_tool` lazily adapts onto the MCP
 SDK's ``Tool`` type so the module still imports (and the server refuses
 gracefully) when the ``cadrumo[agent]`` extra is absent. The retrieval itself is
 owned by the application service (:func:`~application.corpus_search.search_corpus`),
-consumed through the package facade per ``service-imports-via-top-level-reexports``.
+consumed through the package facade per ``aeat-architecture-boundaries``.
 """
 
 from __future__ import annotations

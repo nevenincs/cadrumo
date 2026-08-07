@@ -543,7 +543,7 @@ def test_result_contract_rejects_provider_payload_mismatch() -> None:
 # :meth:`~application.aggregation.RetencionesAggregationSourceResolver.aggregate`, shared by the live calculate
 # mesh (``resolve``) and the per-modelo aggregation service (``aggregate_per_modelo``,
 # the CLI ``aggregate`` / pull surface). These gates prove the collapse routes each
-# modelo to the same core it did before (``one-aggregation-path-pull-equals-calculate``)
+# modelo to the same core it did before (``aeat-calculation-aggregation``)
 # with no value shift and the landed distinct-NIF perceptor count unchanged.
 
 # The pre-existing, independently-tested aggregation cores are the oracle: the collapsed

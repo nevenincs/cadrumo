@@ -182,7 +182,7 @@ boundary (raised 2025-12, paid 2026-01).
 
 ### Oracle discipline (anti-tautology)
 
-Per `no-tautological-calculation-tests` and `aeat-quality-gates`, the oracle
+Per `aeat-quality-gates` and `aeat-quality-gates`, the oracle
 asserts **structural projection** (this row → this casilla/modelo bucket) and
 **arithmetic base/cuota sums** (summation of authored bases) — it does **not**
 re-compute registry tax formulas. `taxable_base` + `iva_amount` are authored

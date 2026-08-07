@@ -15,6 +15,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.aggregation import LedgerIncomeGrounding
 from .. import (
     ModeloRevision,
     unrouted_ledger_renta_income_quantities,
@@ -39,6 +40,13 @@ class _Row:
         self.gross_amount = Decimal(gross)
         self.withheld_amount = Decimal(withheld)
         self.taxable_base_amount = None if base is None else Decimal(base)
+        # Derived from the base exactly as the real projection derives it: a
+        # declared taxable base is substrate, its absence leaves only the raw
+        # bank-credited figure. Hard-coding one member instead would let a row
+        # claim substrate it does not carry.
+        self.grounding = (
+            LedgerIncomeGrounding.CASH_FALLBACK if base is None else LedgerIncomeGrounding.SUBSTRATE_DECLARED
+        )
 
 
 def _revision_without_fact(revision: ModeloRevision, fact: str) -> ModeloRevision:

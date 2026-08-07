@@ -4,7 +4,7 @@ The window rule is certain date arithmetic over two declared years, grounded in
 the bundled consolidated LIRPF (``ley-35-2006.html#dtduodecima`` apartado 4,
 added by Ley 26/2014, ``BOE-A-2014-12327``). Expected verdicts are derived from
 the verbatim apartado-4 branches, not from the predicate's own output, per the
-no-tautological-calculation-tests rule:
+aeat-quality-gates rule:
 
 - Contingencia in 2015 or later: eligible in the ejercicio the contingencia
   occurs "o en los dos ejercicios siguientes" — window ``[c, c+2]``.

@@ -7,7 +7,7 @@ boundary: the build-time glossary generator and Pagefind card projector select
 (:func:`~application.corpus_search.search_terminology`) filters the runtime
 terminology search on the same token. Only the value set lives here — deciding
 which concepts *hold* which lifecycle stays an authoring judgement (the
-``glossary-concepts-are-taxpayer-facing`` discipline reserves ``approved`` for
+``aeat-documentation`` discipline reserves ``approved`` for
 taxpayer- and operator-facing vocabulary and keeps internal machinery concepts
 ``deprecated`` but dev-resolvable).
 

@@ -10,7 +10,7 @@ under-declaration is non-silent (no-silent-under-declaration), and re-pin that
 the finalized BLOCK path is unchanged.
 
 Correctness rides on the live revision-catalogue scan, never the derived
-participation index (ledger-participation-index-is-derived-rebuildable): the
+participation index (aeat-ledger-contract): the
 revisions are seeded into a real :class:`CalculationRevisionCatalogueRepository`
 backed by a real :class:`SecureObjectRepository`, with no mocks, stubs, or skips.
 """

@@ -42,7 +42,6 @@ EXPECTED_LEDGER_VERBS: frozenset[str] = frozenset(
         "llm-diagnostics",
         "merge",
         "preflight",
-        "providers",
         "pull-folder",
         "remove",
         "reset",
@@ -94,16 +93,18 @@ def test_ledger_link_check_preflight_sit_at_noun_group_root() -> None:
 # list / update / remove / archive / reset) plus the ratified orthogonal axes
 # (link / check / preflight) plus the ratified workflow axes (allocate / attach
 # / categories / classify / doclink / export / history / import / merge /
-# providers / pull-folder / review / split / stash / status / track). Counting
+# pull-folder / review / split / stash / status / track). Counting
 # them independently of the set membership catches accidental verb-count
 # drift (e.g. a verb silently re-parented but replaced by a similarly-named
 # alias) that an exact-set match might still happen to satisfy if both the
 # missing and the extra are accounted for in the expected set update.
 _CRUD_SPINE_COUNT: int = 7  # add, view, list, update, remove, archive, reset
 _RATIFIED_ORTHOGONAL_AXIS_COUNT: int = 3  # link, check, preflight
-_RATIFIED_WORKFLOW_AXIS_COUNT: int = 19  # allocate attach categories classify
-# doclink exclude export history import llm-diagnostics merge providers pull-folder
+_RATIFIED_WORKFLOW_AXIS_COUNT: int = 18  # allocate attach categories classify
+# doclink exclude export history import llm-diagnostics merge pull-folder
 # restore review split stash status track
+# `providers` listed the cloud LLM CLIs on PATH. The cloud inference path was
+# deleted, so the verb had nothing left to list and went with it.
 _EXPECTED_LEDGER_VERB_COUNT: int = _CRUD_SPINE_COUNT + _RATIFIED_ORTHOGONAL_AXIS_COUNT + _RATIFIED_WORKFLOW_AXIS_COUNT
 
 

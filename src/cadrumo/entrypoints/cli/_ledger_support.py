@@ -57,7 +57,7 @@ def _emit_update_result(
     """Emit the canonical single-transaction ledger mutation result.
 
     ``notices`` rides the shared envelope notices channel
-    (``cli-notices-are-the-only-diagnostic-channel``); mutation verbs pass any
+    (``aeat-cli-contract``); mutation verbs pass any
     non-blocking advisory here rather than re-modelling it as a bespoke result
     field.
 

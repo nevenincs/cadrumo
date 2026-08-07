@@ -8,7 +8,7 @@ For a justificante, the report records whether the work unit's modelo, period,
 revision declares ``reconciliation_total_casilla_ids`` and a persisted
 calculation revision exists — whether the receipt's printed total equals the
 canonical computed result casilla
-(``one-aggregation-path-pull-equals-calculate``). A filed-amount divergence
+(``aeat-calculation-aggregation``). A filed-amount divergence
 surfaces as a typed ``total`` diff carrying the reconciling expectation's legal
 grounding; where the total could not be reconciled (no map, no revision, no
 printed total) a ``totals_not_reconciled`` advisory discloses it so an
@@ -724,7 +724,7 @@ def _extraction_profile_provisional_advisory(
     A ``declaracion_pdf`` registry profile with ``provisional_pending_specimen =
     true`` has its ``bbox_anchored`` anchor positions guessed from the bundled
     AEAT-published Diseño de Registro rather than confirmed against a real
-    filed PDF (see ``fixture-provenance-declared-in-sidecar`` and the profile's
+    filed PDF (see ``aeat-quality-gates`` and the profile's
     ``verification_source``). Extraction still fails hard on a real PDF whose
     layout diverges enough that the anchor pattern matches nowhere on the page
     (``no-silent-under-declaration`` is upheld by the parser's coverage gate),
@@ -1044,7 +1044,7 @@ def _computed_result_value(work_unit: WorkUnit, casilla_id: str) -> Decimal | No
     Reads the persisted filed / verified calculation revision (never a fresh
     calculation — the reconcile path stays local-only), so the value compared is
     the same canonical ``revision.casilla_values`` the result-summary and export
-    surfaces render (``one-aggregation-path-pull-equals-calculate``). Returns
+    surfaces render (``aeat-calculation-aggregation``). Returns
     ``None`` when no persisted revision carries the casilla.
     """
     revision = _filed_revision_for_work_unit(work_unit)

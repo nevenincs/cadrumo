@@ -345,7 +345,7 @@ def __getattr__(name: str):
     those submodules import names from this package while it is
     still initialising. The lazy path keeps the symbols reachable
     through the package boundary per the
-    ``service-imports-via-top-level-reexports`` rule.
+    ``aeat-architecture-boundaries`` rule.
     """
     if name == "build_overview_agenda":
         from ._agenda import build_overview_agenda as _impl

@@ -9,7 +9,7 @@ requires.
 
 The expected anchor sets are enumerated by hand per target quarter (an
 INDEPENDENT enumeration), never derived from the span function under test,
-per no-tautological-calculation-tests.
+per aeat-quality-gates.
 """
 
 from __future__ import annotations

@@ -272,7 +272,7 @@ def evaluate_m131_resolve_modulos_minoracion_empleo(expression: FormulaExpressio
     * ``coeficiente por incremento`` — when the current year's módulo 1 unit
       count exceeds the prior year's, the positive difference times 0,40
       (a scalar ``ratio`` registry parameter, not hardcoded per
-      ``aeat-schema-central-config``);
+      ``aeat-registry-authority-flow``);
     * ``coeficiente por tramos`` — a progressive bracket lookup (the Orden's
       tramo table) applied to the módulo 1 units net of the increment already
       credited above (``resolve_bracket`` reused verbatim; the tramo table is

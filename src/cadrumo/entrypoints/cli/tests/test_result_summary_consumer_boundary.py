@@ -20,7 +20,7 @@ it fails on the commit that wires the consumer, not on the filing that leaks.
 Scanning is by SYMBOL NAME across every ``from ... import`` in the tree, not by
 importers of the defining module. That distinction is the whole design. The
 project mandates importing through a package facade
-(``service-imports-via-top-level-reexports``), and the one real consumer obeys
+(``aeat-architecture-boundaries``), and the one real consumer obeys
 it -- ``_modelo_rendering`` reaches the payload type through ``_modelo_payloads``
 and the application types through ``application.modelo``, never through a
 definer. A gate keyed on the definers' importers would therefore score exactly
@@ -158,7 +158,7 @@ def test_the_payload_reexport_surface_is_the_one_we_think_it_is() -> None:
     The reachable paths for the symbol are what a naive definer-keyed gate got
     wrong. Pinning the computed set means a promotion that widens reach shows up
     as a failure to review rather than silently enlarging the surface -- and
-    ``service-imports-via-top-level-reexports`` actively encourages exactly such
+    ``aeat-architecture-boundaries`` actively encourages exactly such
     promotions, so an assumed depth would be correct today and wrong later.
     """
     _, reexporters = _scan(_PAYLOAD_SYMBOL)

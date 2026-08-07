@@ -358,7 +358,7 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     assert "Confirm the recorded activity-start date" not in verification_output
 
     # Re-verifying an already-verified revision is a guarded idempotent no-op
-    # (single-subject-mutation-is-idempotent-guarded): the verb returns exit 0
+    # (aeat-cli-contract): the verb returns exit 0
     # with the existing report and a localized idempotent-no-op notice, never the
     # old refusal. The raw enum token and the retired refusal phrase must not leak.
     already_verified = _run_cli(

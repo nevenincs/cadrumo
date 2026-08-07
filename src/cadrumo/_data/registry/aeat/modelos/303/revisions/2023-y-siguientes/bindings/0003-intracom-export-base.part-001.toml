@@ -18,7 +18,7 @@
 # fact). These bindings supersede the dormant application-tier
 # casilla_59_base_imponible / casilla_60_base_imponible helpers (zero production
 # callers), moving the category->casilla routing from feature code into the
-# registry per aeat-schema-central-config. Casilla 60 covers both art. 21 exports
+# registry per aeat-registry-authority-flow. Casilla 60 covers both art. 21 exports
 # and art. 22 operations assimilated to exports, so the selector accepts both
 # zero-rated category members.
 [[revisions.2023-y-siguientes.bindings]]

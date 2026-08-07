@@ -19,7 +19,6 @@ Submodules
    cadrumo.adapters.persistence.storage.master_key._dek_wrap
    cadrumo.adapters.persistence.storage.master_key._errors
    cadrumo.adapters.persistence.storage.master_key._idle_timeout
-   cadrumo.adapters.persistence.storage.master_key._kdf
    cadrumo.adapters.persistence.storage.master_key._kdf_params
    cadrumo.adapters.persistence.storage.master_key._live_sessions
    cadrumo.adapters.persistence.storage.master_key._login_throttle
