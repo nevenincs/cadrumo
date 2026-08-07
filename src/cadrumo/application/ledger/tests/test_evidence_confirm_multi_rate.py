@@ -21,6 +21,7 @@ import pytest
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
+from ....domain.invoices import IvaRate
 from ....domain.iva import InvoiceKind
 from .._evidence_draft import confirm_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
@@ -40,8 +41,13 @@ _TWO_RATE_FIXTURE = Path(__file__).parent / "_evidence_corpus" / "en16931_ubl_tw
 _EXPECTED_BASE = Decimal("150.00")
 _EXPECTED_IVA = Decimal("26.00")
 _EXPECTED_TOTAL = Decimal("176.00")
-_EXPECTED_RATE_SPLIT = ((Decimal("21.00"), Decimal("100.00"), Decimal("21.00")),
-                        (Decimal("10.00"), Decimal("50.00"), Decimal("5.00")))
+# Keyed by the closed rate SLOT the invoice persists, not by a percentage: the
+# slot is what a Modelo 303 tier is summed from, so asserting on it is asserting
+# on the thing that reaches the declaration.
+_EXPECTED_RATE_SPLIT = (
+    (IvaRate.RATE_21, Decimal("100.00"), Decimal("21.00")),
+    (IvaRate.RATE_10, Decimal("50.00"), Decimal("5.00")),
+)
 
 
 def _confirm_the_two_rate_document(
@@ -84,8 +90,8 @@ def test_both_rates_survive_the_confirm_boundary(
     )
     lines = result.invoice.lines
 
-    assert len(lines) == 2, f"the second rate was lost in transit: {[str(line.iva_rate) for line in lines]}"
-    observed = {(Decimal(str(line.iva_rate.value)), line.subtotal, line.iva_amount) for line in lines}
+    assert len(lines) == 2, f"the second rate was lost in transit: {[line.iva_rate for line in lines]}"
+    observed = {(line.iva_rate, line.subtotal, line.iva_amount) for line in lines}
     assert observed == set(_EXPECTED_RATE_SPLIT)
 
 
