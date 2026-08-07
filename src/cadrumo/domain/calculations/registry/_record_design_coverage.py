@@ -63,14 +63,35 @@ def _extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
 #   off-load-path advisory coverage report that inventories form-level
 #   data coverage; it is NOT a load-blocking gate.
 
-_CASILLA_TAG_RE = re.compile(r"\[(\d{5})\]")
-"""Matches the five-digit casilla tag AEAT embeds in Diseño field text.
+_CASILLA_TAG_RE = re.compile(r"\[(\d{1,5})\]")
+"""Matches the bracketed casilla tag AEAT embeds in Diseño field text.
 
 The official AEAT Diseño de Registros workbooks annotate every casilla
-field with its five-digit casilla number in square brackets within the
-field description (e.g. ``Liquidación III - ... - Base imponible
-[00552]``). This regex extracts those tags so a derivation can enumerate
-the ``(segmento, number)`` casilla set.
+field with its casilla number in square brackets within the field
+description, validation or content text (e.g. ``Liquidación III - ... -
+Base imponible [00552]``). This regex extracts those tags so a derivation
+can enumerate the ``(segmento, number)`` casilla set.
+
+**The tag width is NOT five digits across AEAT.** It was written as
+``\\d{5}``, which is the Impuesto sobre Sociedades convention that Modelo
+200 and Modelo 220 use. Every other modelo family brackets its box number
+at its natural width -- Modelo 303 writes ``[01]`` and ``[150]``, Modelo
+390 ``[01]``, Modelo 036 two and three digits. A fixed five-digit pattern
+therefore matched nothing on them, and because a matchless sweep yields an
+empty Diseño set rather than an error, the coverage report said
+``0 casillas, 0 gap`` for 36 of the 38 revisions that bundle an official
+record design. Reading as fully covered is the worst available failure for
+an instrument whose whole job is to find what the registry has not
+authored.
+
+Widening it takes the population that extracts anything from 2 revisions
+to 24. The remaining 14 annotate their casillas outside bracketed field
+text entirely and are inventoried, not silently zeroed, by
+:func:`build_diseno_coverage_report`.
+
+Bounded at five digits rather than open-ended: an unbounded ``\\d+`` would
+admit amounts, NIF fragments and position offsets that appear bracketed in
+the same columns.
 """
 
 
@@ -501,6 +522,14 @@ class DisenoCoverageReport:
       the Diseño casillas the registry has backfilled.
     - ``coverage_gap_casillas`` is the subset the Diseño declares that
       the registry does not — the advisory follow-up inventory.
+
+    ``extraction_found_no_casillas`` separates the two states that
+    otherwise present identically. A revision whose registry covers the
+    whole form reports an empty gap; so does a revision whose Diseño could
+    not be read at all, because an unread source yields an empty set and
+    every count derived from it is zero. Only the first is good news, and
+    for 36 of 38 revisions it was the second one being reported. Consult
+    this flag before treating an empty gap as coverage.
     """
 
     modelo_id: str
@@ -508,6 +537,18 @@ class DisenoCoverageReport:
     diseno_casillas: tuple[DerivedDisenoCasilla, ...]
     covered_casillas: tuple[DerivedDisenoCasilla, ...]
     coverage_gap_casillas: tuple[DerivedDisenoCasilla, ...]
+
+    @property
+    def extraction_found_no_casillas(self) -> bool:
+        """Whether the Diseño source yielded no casillas at all.
+
+        ``True`` means this report carries no information about coverage:
+        the source was parsed but no casilla tag was recognised in it, so
+        the registry was compared against nothing. An official AEAT record
+        design always declares casillas, so this state is a limitation of
+        the extraction, never a property of the form.
+        """
+        return not self.diseno_casillas
 
     @property
     def diseno_casilla_count(self) -> int:
