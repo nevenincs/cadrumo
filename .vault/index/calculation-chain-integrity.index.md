@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:6401d9fc51679ad165139715626ad8293b5c61352a2bc08157807bf64cb635ad'
+body_hash: 'sha256:4e2a116f5e23e7abd384a5eb63816391009e4deb0c4c6b0d7bfafb249b29c749'
 related:
   - '[[2026-08-07-calculation-chain-integrity-W01-P01-S01]]'
   - '[[2026-08-07-calculation-chain-integrity-W01-P01-S02]]'
@@ -49,18 +49,22 @@ related:
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S41]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S42]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S43]]'
+  - '[[2026-08-07-calculation-chain-integrity-W06-P08-S46]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S48]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S49]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S50]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S51]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S52]]'
+  - '[[2026-08-07-calculation-chain-integrity-W06-P08-S53]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S54]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S55]]'
+  - '[[2026-08-07-calculation-chain-integrity-W06-P08-S57]]'
   - '[[2026-08-07-calculation-chain-integrity-activity-type-placement-adr]]'
   - '[[2026-08-07-calculation-chain-integrity-adr]]'
   - '[[2026-08-07-calculation-chain-integrity-binding-output-casilla-declaration-adr]]'
   - '[[2026-08-07-calculation-chain-integrity-iva-regimen-surface-boundaries-audit]]'
   - '[[2026-08-07-calculation-chain-integrity-iva-subjection-clave-authorities-audit]]'
+  - '[[2026-08-07-calculation-chain-integrity-m390-annual-under-modelling-research]]'
   - '[[2026-08-07-calculation-chain-integrity-plan]]'
   - '[[2026-08-07-calculation-chain-integrity-research]]'
 ---
@@ -79,7 +83,7 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 
 ### audit
 
-- `2026-08-07-calculation-chain-integrity-iva-regimen-surface-boundaries-audit` - `calculation-chain-integrity` audit: `What is a modelled IVA settlement regimen, and what only looks like one`
+- `2026-08-07-calculation-chain-integrity-iva-regimen-surface-boundaries-audit` - `calculation-chain-integrity` audit: what is a modelled IVA settlement regimen, and what only looks like one
 - `2026-08-07-calculation-chain-integrity-iva-subjection-clave-authorities-audit` - `calculation-chain-integrity` audit: `IVA subjection and M349 clave: two fragmented authorities`
 
 ### exec
@@ -125,13 +129,16 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 - `2026-08-07-calculation-chain-integrity-W06-P08-S41` - `calculation-chain-integrity` exec W06.P08.S41
 - `2026-08-07-calculation-chain-integrity-W06-P08-S42` - `calculation-chain-integrity` exec W06.P08.S42
 - `2026-08-07-calculation-chain-integrity-W06-P08-S43` - `calculation-chain-integrity` exec W06.P08.S43
+- `2026-08-07-calculation-chain-integrity-W06-P08-S46` - `calculation-chain-integrity` exec W06.P08.S46
 - `2026-08-07-calculation-chain-integrity-W06-P08-S48` - `calculation-chain-integrity` exec W06.P08.S48
 - `2026-08-07-calculation-chain-integrity-W06-P08-S49` - `calculation-chain-integrity` exec W06.P08.S49
 - `2026-08-07-calculation-chain-integrity-W06-P08-S50` - `calculation-chain-integrity` exec W06.P08.S50
 - `2026-08-07-calculation-chain-integrity-W06-P08-S51` - Confirm against live BOE which instrument set the October to December 2024 two and seven point five percent food windows, quoting the operative article text, since three near-identical names are in play and one already sits in the catalogue for an unrelated IRPF purpose
 - `2026-08-07-calculation-chain-integrity-W06-P08-S52` - Author corpus entries for the confirmed food-rate instruments before any rate record cites them, both the instrument that introduced the regime and the one that set the final step if they differ
+- `2026-08-07-calculation-chain-integrity-W06-P08-S53` - Add the effective-dated temporary food rates to the Spanish rate table goods-blind, on the measured ground that neither the M390 nor M303 diseno carries any goods axis so a goods distinction would encode information no AEAT box can receive
 - `2026-08-07-calculation-chain-integrity-W06-P08-S54` - `calculation-chain-integrity` exec W06.P08.S54
 - `2026-08-07-calculation-chain-integrity-W06-P08-S55` - `calculation-chain-integrity` exec W06.P08.S55
+- `2026-08-07-calculation-chain-integrity-W06-P08-S57` - `calculation-chain-integrity` exec W06.P08.S57
 
 ### plan
 
@@ -139,4 +146,5 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 
 ### research
 
+- `2026-08-07-calculation-chain-integrity-m390-annual-under-modelling-research` - `calculation-chain-integrity` research: `Scoping the Modelo 390 annual under-modelling as its own campaign`
 - `2026-08-07-calculation-chain-integrity-research` - `calculation-chain-integrity` research: `Silent-zero and silent-overclaim defects measured across the ledger-calculation-declaration chain`

@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:061b63bb8d97bf929fc8e867c53e46de6f120e865552cd090c4683974c09db15'
+body_hash: 'sha256:d4dbbc783822a8198df9fe96bf352612f31ace36b15c4c4c15adc28f0b23ac05'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -126,8 +126,8 @@ Run the sweep over the surfaces this campaign touches, where three parallel-auth
 - [x] `W06.P08.S42` - Document the call-off stock claves as unreachable by scope from an invoice-sourced path so the next reader does not refile the subset as a defect; `src/cadrumo/application/invoices/_source_resolver.py`.
 - [x] `W06.P08.S43` - Add the second not-subject member to the cash-accounting exclusion set now the OSS scope refusal is confirmed correct, with a mutation proof since a set-membership edit that reddens nothing has not been shown to bite; `src/cadrumo/application/aggregation/_iva_ledger.py`.
 - [x] `W06.P08.S44` - Require the intracom operation type at invoice creation where the operator holds the fact, rather than inferring a clave at calculate time where nobody does, closing the ambiguity upstream instead of screening it downstream; `src/cadrumo/application/invoices/_creation.py`.
-- [ ] `W06.P08.S46` - Establish whether M390 modelling only twenty-two casillas with no counterpart for four categories the quarterly return carries is a registry-completeness gap or correct by the annual form's own design; `src/cadrumo/_data/registry/aeat/modelos/390/`.
-- [ ] `W06.P08.S47` - Scope the M390 annual under-modelling as its own campaign, the registry carries twenty-two casillas against three hundred and seventy-five official boxes and splits neither goods from services nor by rate tier where the diseno does both; `.vault/research/`.
+- [x] `W06.P08.S46` - Establish whether M390 modelling only twenty-two casillas with no counterpart for four categories the quarterly return carries is a registry-completeness gap or correct by the annual form's own design; `src/cadrumo/_data/registry/aeat/modelos/390/`.
+- [x] `W06.P08.S47` - Scope the M390 annual under-modelling as its own campaign, the registry carries twenty-two casillas against three hundred and seventy-five official boxes and splits neither goods from services nor by rate tier where the diseno does both; `.vault/research/`.
 - [x] `W06.P08.S49` - Refuted by measurement, do not widen the rate-kind enum - the fourteen M390 rate values are effective-dated values of the five existing semantic tiers, not new tiers, proven cross-year from the bundled layouts where the 2025 diseno zero-mandates the same casilla numbers the 2024 diseno carries live; `src/cadrumo/domain/iva/_schema.py`.
 - [x] `W06.P08.S48` - Note that splitting the annual casilla per leg will require per-leg semantic roles in the reconciliation parity gate, since the quarterly side carries one combined role where the annual side will carry two; `src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W06.P08.S50` - Assert the intracom concept is still compared after the annual split, the shared-role intersection shrinks silently so the parity gate stops covering it without ever reddening; `src/cadrumo/domain/calculations/registry/tests/`.
