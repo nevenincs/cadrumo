@@ -5455,8 +5455,6 @@ core:
         lennie szöveges formában.
       registration_duplicate_callable: A projektválaszok implementációja kétszer lett
         regisztrálva eltérő hívható objektummal; pontosan egyszer kell regisztrálni.
-dotted:
-  key: Pontozott kulcs
 entries:
   portal_calendario_contribuyente:
     label: Adófizetői naptár

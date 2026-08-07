@@ -5153,8 +5153,6 @@ core:
         code in text form.
       registration_duplicate_callable: Project answers implementation registered twice
         with different callables; it must be registered exactly once.
-dotted:
-  key: Dotted key
 entries:
   portal_calendario_contribuyente:
     label: Taxpayer Calendar

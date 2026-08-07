@@ -210,3 +210,11 @@ number = "700"
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.repercutido.tipo-0.cuota"
 number = "701"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.entregas-intracomunitarias"
+number = "103"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.exportaciones-exentas"
+number = "104"

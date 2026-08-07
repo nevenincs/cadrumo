@@ -5531,8 +5531,6 @@ core:
       registration_duplicate_callable: La implementación de respuestas de proyecto
         se registró dos veces con distintos invocables; debe registrarse exactamente
         una vez.
-dotted:
-  key: Clave con puntos
 entries:
   portal_calendario_contribuyente:
     label: Calendario del contribuyente
