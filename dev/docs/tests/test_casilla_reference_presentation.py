@@ -27,11 +27,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import BindingSourceKind, Modelo
+from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry import CasillaConstraints, InputKind
 
 from ..casilla_reference import (
-    _BINDING_SOURCE_DISPLAY,
     EMPTY_SCHEMA,
     CasillaFacts,
     CompiledSchema,
@@ -39,6 +39,8 @@ from ..casilla_reference import (
     _display_language,
     _handbook_definitions,
     _legal_provision_display,
+    _text,
+    display_locale_keys,
     render_casilla_reference,
 )
 from ..legal_reference import legal_reference_target, load_legal_provisions
@@ -176,13 +178,84 @@ def test_handbook_definitions_are_read_per_language_and_never_shared() -> None:
 # ── The substance: how the box gets filled ───────────────────────────────────
 
 
-def test_binding_source_display_covers_the_whole_taxonomy() -> None:
-    """Every binding source kind has a phrase, so none renders blank.
+def test_every_display_string_is_authored_in_every_language() -> None:
+    """No user-visible string is missing in any of the four build languages.
 
-    Keyed on the enum rather than a count, so adding a kind reds this gate
-    instead of silently shipping a casilla whose fill explanation says nothing.
+    The key set is derived from the schema's own closed value sets, so adding a
+    ``BindingSourceKind`` member or a ``data_type`` reds this gate instead of
+    silently shipping a casilla whose explanation renders nothing.
     """
-    assert set(_BINDING_SOURCE_DISPLAY) == {member.value for member in BindingSourceKind}
+    missing = [
+        (language.value, key)
+        for key in display_locale_keys()
+        for language in OutputLanguage
+        if not _resolves(key, language)
+    ]
+    assert not missing, f"display strings absent from a catalogue: {missing[:20]}"
+    assert {f"modelo.display.binding_source.{member.value}" for member in BindingSourceKind} <= set(
+        display_locale_keys(),
+    )
+
+
+def _resolves(key: str, language: OutputLanguage) -> bool:
+    from ..casilla_reference import CasillaReferenceError
+
+    try:
+        _text(key.removeprefix("modelo.display."), language)
+    except CasillaReferenceError:
+        return False
+    return True
+
+
+def test_a_missing_display_string_refuses_rather_than_rendering_a_fallback() -> None:
+    """An unauthored key is a build failure, never a humanised key fragment."""
+    from ..casilla_reference import CasillaReferenceError
+
+    with pytest.raises(CasillaReferenceError):
+        _text("chrome.no_such_string", OutputLanguage.ES)
+
+
+def test_display_keys_are_registered_so_the_scaffold_keeps_them() -> None:
+    """The locale scaffold prunes keys its scan cannot see; these are registered.
+
+    The AST key scan walks ``src/cadrumo`` only, so every key this dev-side
+    surface consumes would be pruned as stale on the next scaffold run unless it
+    is registered. Registration is what makes the catalogue the durable home.
+    """
+    from dev.locales._fstring_registry import get_registered_keys
+
+    assert set(display_locale_keys()) <= get_registered_keys()
+
+
+def test_no_english_chrome_survives_on_a_spanish_page() -> None:
+    """Every display string that differs between languages renders localized.
+
+    Self-maintaining: the phrase list is the catalogue itself, so a chrome
+    string reintroduced as an English literal in the generator is caught without
+    anyone remembering to extend a hardcoded list. Strings a locale shares with
+    English by design (NIF, IBAN, Segmento) are equal in both catalogues and so
+    are skipped rather than allowlisted here a second time.
+    """
+    records = (_record(), _record(casilla_id="01", number="01", input_kind=InputKind.MANUAL, formula_id=None))
+    overview = _overview(definition=None)
+    spanish = _render(records, OutputLanguage.ES, _schema(overview=overview))
+    english = _render(records, OutputLanguage.EN, _schema(overview=overview))
+
+    # Read the expectations from the catalogue itself, never through the
+    # generator's own resolver: a gate that asks the code under test what the
+    # right string is agrees with that code by construction, and an English
+    # literal reintroduced in place of a lookup would pass unnoticed.
+    leaked: list[str] = []
+    for key in display_locale_keys():
+        _, es_value = lookup_translation_entry(key, locale=OutputLanguage.ES.value)
+        _, en_value = lookup_translation_entry(key, locale=OutputLanguage.EN.value)
+        if es_value is None or en_value is None or es_value == en_value:
+            continue
+        if len(en_value) < 6 or en_value not in english:
+            continue
+        if en_value in spanish:
+            leaked.append(en_value)
+    assert not leaked, f"English chrome rendered on a Spanish page: {leaked}"
 
 
 def test_computed_casilla_names_the_boxes_it_derives_from() -> None:
@@ -199,7 +272,7 @@ def test_computed_casilla_names_the_boxes_it_derives_from() -> None:
     for casilla_id in ("01", "02"):
         anchor = casilla_page_anchor(Modelo.M130, casilla_id)
         assert f'href="#{anchor}" title="{casilla_id}">{casilla_id}</a>' in rst
-    assert " and " in rst.partition("casilla-derives-from")[2]
+    assert f" {_text('chrome.list_and', OutputLanguage.EN)} " in rst.partition("casilla-derives-from")[2]
     assert "modelo-130-rendimiento-neto" not in rst.partition("casilla-card__internals")[0]
 
 
@@ -210,7 +283,7 @@ def test_bound_casilla_names_the_source_that_fills_it() -> None:
     rst = _render((record,), OutputLanguage.EN, _schema({(Modelo.M130.value, "03"): facts}))
 
     assert "casilla-fill--bound" in rst
-    assert _BINDING_SOURCE_DISPLAY[BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION.value] in rst
+    assert _text(f"binding_source.{BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION.value}", OutputLanguage.EN) in rst
 
 
 def test_alternate_binding_sources_are_offered_as_alternatives() -> None:
@@ -223,8 +296,8 @@ def test_alternate_binding_sources_are_offered_as_alternatives() -> None:
         ),
     )
     rst = _render((record,), OutputLanguage.EN, _schema({(Modelo.M130.value, "03"): facts}))
-    assert _BINDING_SOURCE_DISPLAY[BindingSourceKind.PREVIOUS_FILING.value] in rst
-    assert ", or " in rst
+    assert _text(f"binding_source.{BindingSourceKind.PREVIOUS_FILING.value}", OutputLanguage.EN) in rst
+    assert _text("chrome.alternative_join", OutputLanguage.EN) in rst
 
 
 @pytest.mark.parametrize(
@@ -251,7 +324,7 @@ def test_constraints_render_as_what_a_filer_may_enter() -> None:
     )
     facts = CasillaFacts(constraints=constraints)
     rst = _render((_record(),), OutputLanguage.EN, _schema({(Modelo.M130.value, "03"): facts}))
-    assert "Between 0 and 100" in rst
+    assert _text("value_range.between", OutputLanguage.EN, min=0, max=100) in rst
 
 
 def test_printed_box_number_wins_over_the_record_design_number() -> None:
@@ -262,7 +335,7 @@ def test_printed_box_number_wins_over_the_record_design_number() -> None:
 
     above, _, below = rst.partition('<details class="casilla-card__internals">')
     assert '<span class="casilla-card__number">64</span>' in above
-    assert "Record-design number" in below
+    assert _text("chrome.record_design_number", OutputLanguage.EN) in below
     assert "iva.anual.total" not in above
 
 
@@ -295,9 +368,9 @@ def test_modelo_page_without_a_definition_still_characterises_the_modelo() -> No
     rst = _render((_record(),), OutputLanguage.EN, _schema(overview=_overview()))
     assert "modelo-overview__definition" not in rst
     assert "IRPF" in rst
-    assert "Filed quarterly" in rst
-    assert "1 casillas in 1 sections" in rst
-    assert "1 calculated" in rst
+    assert _text("cadence.quarterly", OutputLanguage.EN) in rst
+    assert _text("chrome.casilla_count", OutputLanguage.EN, casillas=1, sections=1) in rst
+    assert f"1 {_text('input_kind_count.computed', OutputLanguage.EN)}" in rst
 
 
 def test_modelo_page_survives_an_unresolved_overview() -> None:
@@ -366,9 +439,15 @@ def test_unresolvable_ref_still_renders_and_is_not_counted_as_a_link() -> None:
     ],
 )
 def test_provision_display_reads_the_official_instrument_name(legal_id: str, expected: str) -> None:
-    """A catalogue id renders as the instrument's official Spanish name plus article."""
+    """A catalogue id renders as the instrument's official Spanish name plus article.
+
+    The instrument name is identical in every build language: BOE publishes
+    "Ley 37/1992" under that name, so translating it would cite a norm that does
+    not exist.
+    """
     provisions = {provision.legal_id: provision for provision in load_legal_provisions(_REPO_ROOT)}
-    assert _legal_provision_display(legal_id, provisions[legal_id]) == expected
+    for language in OutputLanguage:
+        assert _legal_provision_display(legal_id, provisions[legal_id], language) == expected
 
 
 # ── Structure ────────────────────────────────────────────────────────────────

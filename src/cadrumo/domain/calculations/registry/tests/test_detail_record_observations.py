@@ -27,7 +27,7 @@ from .._bindings import (
     RefundOperationObservation,
     RelatedPartyOperationObservation,
 )
-from .._detail_record_bindings import _build_related_party_rows
+from .._detail_record_bindings import RelatedPartyOperationObservation, _build_related_party_rows
 from .._donativo_bindings import _build_donativo_rows
 from .._withholding_bindings import (
     WithholdingObservation,
@@ -208,7 +208,7 @@ def test_build_related_party_rows_groups_by_party_country_kind_method() -> None:
             country_code="ES",
             transaction_date=date(2025, 3, 15),
             operation_kind_code="01",
-            transfer_pricing_method_code="CUP",
+            transfer_pricing_method_code="1A",
             amount=es_q1,
         ),
         RelatedPartyOperationObservation(
@@ -217,7 +217,7 @@ def test_build_related_party_rows_groups_by_party_country_kind_method() -> None:
             country_code="ES",
             transaction_date=date(2025, 6, 15),
             operation_kind_code="01",
-            transfer_pricing_method_code="CUP",
+            transfer_pricing_method_code="1A",
             amount=es_q2,
         ),
         RelatedPartyOperationObservation(
@@ -226,7 +226,7 @@ def test_build_related_party_rows_groups_by_party_country_kind_method() -> None:
             country_code="DE",
             transaction_date=date(2025, 4, 1),
             operation_kind_code="02",
-            transfer_pricing_method_code="TNMM",
+            transfer_pricing_method_code="1E",
             amount=de_amount,
         ),
     )
@@ -432,3 +432,60 @@ def test_build_donativo_rows_sums_per_donor_and_preserves_recurrencia() -> None:
     assert by_nif["12345678A"]["is_recurrent"] == "1"
     assert by_nif["87654321Z"]["amount_donated"] == other_donor_amount
     assert by_nif["87654321Z"]["is_recurrent"] == "0"
+
+
+def _related_party_observation(**overrides: object) -> RelatedPartyOperationObservation:
+    """Build a valid related-party observation, overriding one field per case.
+
+    Every untouched field is a value the model accepts, so a refusal can only
+    have come from the override.
+    """
+    return RelatedPartyOperationObservation.model_validate(
+        {
+            "source_id": "detalle:per_related_party_operation:row-0",
+            "counterparty_tax_id": "A12345678",
+            "counterparty_legal_name": "Entidad Vinculada SL",
+            "country_code": "ES",
+            "transaction_date": date(2026, 3, 1),
+            "operation_kind_code": "01",
+            "transfer_pricing_method_code": "1A",
+            "amount": Decimal("50000"),
+            **overrides,
+        },
+    )
+
+
+def test_related_party_observation_baseline_validates() -> None:
+    """Anti-tautology guard: the untouched fixture must VALIDATE.
+
+    Without it a typo in an untested field would refuse every case below and
+    the catalogue enforcement would be proven by nothing.
+    """
+    obs = _related_party_observation()
+    assert obs.operation_kind_code == "01"
+    assert obs.transfer_pricing_method_code == "1A"
+
+
+def test_related_party_observation_refuses_off_catalogue_codes() -> None:
+    """Binding-resolved codes are held to the same DR23200 tables as the CLI row.
+
+    This is the engine-side half of the M232 coded-field contract. The values
+    reach it as free-form registry text, so without the catalogue an operation
+    kind or valuation method AEAT never published would resolve into a casilla.
+    """
+    for case_id, overrides in (
+        # DR23200 Tabla C stops at clave 11.
+        ("operation-kind-above-catalogue", {"operation_kind_code": "99"}),
+        ("operation-kind-unpadded", {"operation_kind_code": "1"}),
+        # Tabla B codes are 1A-1E; the OECD abbreviations for the same
+        # art. 18.4 methods are not AEAT's codes and do not fit the field.
+        ("method-oecd-abbreviation", {"transfer_pricing_method_code": "CUP"}),
+        ("method-off-catalogue", {"transfer_pricing_method_code": "ZZ"}),
+    ):
+        with pytest.raises(ValidationError):
+            _related_party_observation(**overrides)
+
+
+def test_related_party_observation_hydrates_operator_casing() -> None:
+    """A lowercase token resolves to the code DR23200 spells in uppercase."""
+    assert _related_party_observation(transfer_pricing_method_code="1e").transfer_pricing_method_code == "1E"

@@ -43,7 +43,8 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import IntracomOperationType, Period
 from ....core.resources import resources
-from ....domain.invoices import InvoiceCatalogue
+from ....domain.calculations.registry import IvaLedgerObservation
+from ....domain.invoices import Invoice, InvoiceCatalogue
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.secure_sql import isolated_runtime_profile
 from ...invoices import build_catalogue_invoice
@@ -98,7 +99,10 @@ def _persist_contradicted_supply(secure_objects: SecureObjectRepository) -> str:
     return invoice.invoice_id
 
 
-def _screen(secure_objects: SecureObjectRepository) -> tuple[object, ...]:
+def _screen(
+    secure_objects: SecureObjectRepository,
+) -> tuple[tuple[IvaLedgerObservation, ...], tuple[str, ...], tuple[Invoice, ...], tuple[Invoice, ...]]:
+    """Run the real screen, returning its four channels as the types they are."""
     snapshot = resources().modelos.authority.snapshot("303", filing_year=_YEAR, period=_PERIOD)
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,
@@ -154,8 +158,10 @@ def test_the_advisory_names_the_invoice_and_both_candidate_fields(
     assert diagnostic.reason == "invoice_category_counterparty_mismatch"
     assert f"FAC-{_YEAR}-CONTRADICTED" in diagnostic.message, "the operator must know WHICH invoice"
     assert "CH" in diagnostic.message
-    assert "category" in diagnostic.remedy.lower()
-    assert "country" in diagnostic.remedy.lower()
+    remedy = diagnostic.remedy
+    assert remedy is not None, "an advisory the operator must act on carries no remedy"
+    assert "category" in remedy.lower()
+    assert "country" in remedy.lower()
 
 
 def test_a_supportable_supply_produces_no_advisory(secure_objects: SecureObjectRepository) -> None:

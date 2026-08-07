@@ -28,6 +28,13 @@ _EXPECTED_TOKENS = {
     "COUNTERPARTY_NAME": "counterparty_name",
     "INVOICE_NUMBER": "invoice_number",
     "INVOICE_DATE": "invoice_date",
+    # The bank-movement pair. Enumerated here rather than left to the set
+    # difference to notice, because these two are exactly the members whose
+    # ABSENCE from the vocabulary is the defect: a booked date read under
+    # INVOICE_DATE, or a movement amount read under GRAND_TOTAL, is a
+    # mislabelling that produces a well-formed row saying the wrong thing.
+    "BOOKED_DATE": "booked_date",
+    "MOVEMENT_AMOUNT": "movement_amount",
     "TAXABLE_BASE": "taxable_base",
     "IVA_RATE": "iva_rate",
     "IVA_AMOUNT": "iva_amount",

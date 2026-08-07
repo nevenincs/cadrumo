@@ -70,7 +70,7 @@ def _drive_provider(_tmp_path: Path) -> GoogleDriveProvider:
     )
 
 
-_PROVIDERS: tuple[tuple[str, Callable[[Path], object]], ...] = (
+_PROVIDERS: tuple[tuple[str, Callable[[Path], StorageProvider]], ...] = (
     ("local", _local_provider),
     ("google_drive", _drive_provider),
 )
@@ -123,7 +123,7 @@ def _conformance_failures(provider_type: type) -> list[str]:
 @pytest.mark.parametrize(("_name", "build"), _PROVIDERS, ids=_PROVIDER_IDS)
 def test_every_backend_instance_satisfies_the_runtime_protocol(
     _name: str,
-    build: Callable[[Path], object],
+    build: Callable[[Path], StorageProvider],
     tmp_path: Path,
 ) -> None:
     """Each shipped backend is a real ``StorageProvider`` instance.
@@ -138,7 +138,7 @@ def test_every_backend_instance_satisfies_the_runtime_protocol(
 @pytest.mark.parametrize(("_name", "build"), _PROVIDERS, ids=_PROVIDER_IDS)
 def test_every_backend_matches_the_contract_signatures(
     _name: str,
-    build: Callable[[Path], object],
+    build: Callable[[Path], StorageProvider],
     tmp_path: Path,
 ) -> None:
     """Each backend accepts what the contract declares, under the same names and kinds."""
@@ -282,7 +282,7 @@ _ADMISSIBLE_KEYS = ("0" * 64, "7f343fa82f8a281192c3e4b4a1d0f5e6", "00000000probe
 @pytest.mark.parametrize("hostile", _INADMISSIBLE_KEYS)
 def test_both_backends_refuse_the_same_inadmissible_object_key(
     _name: str,
-    build: Callable[[Path], object],
+    build: Callable[[Path], StorageProvider],
     hostile: str,
     tmp_path: Path,
 ) -> None:
@@ -295,14 +295,14 @@ def test_both_backends_refuse_the_same_inadmissible_object_key(
     provider = build(tmp_path)
 
     with pytest.raises(OutboundStorageValidationError):
-        provider.get("namespace", hostile)  # type: ignore[attr-defined]
+        provider.get("namespace", hostile)
 
 
 @pytest.mark.parametrize(("_name", "build"), _PROVIDERS, ids=_PROVIDER_IDS)
 @pytest.mark.parametrize("admissible", _ADMISSIBLE_KEYS)
 def test_neither_backend_refuses_a_key_production_actually_emits(
     _name: str,
-    build: Callable[[Path], object],
+    build: Callable[[Path], StorageProvider],
     admissible: str,
     tmp_path: Path,
 ) -> None:
@@ -318,7 +318,7 @@ def test_neither_backend_refuses_a_key_production_actually_emits(
     # A validation refusal is the failure under test; anything else (missing
     # object, absent root, no credentials) means the key itself was admitted.
     with pytest.raises(Exception) as caught:
-        provider.get("namespace", admissible)  # type: ignore[attr-defined]
+        provider.get("namespace", admissible)
 
     assert not isinstance(caught.value, OutboundStorageValidationError), caught.value
 

@@ -122,10 +122,10 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     stays import-error-safe. If a domain import fails, ``get_registered_keys``
     will propagate the error with full context rather than a silent empty set.
     """
-    from ..application.wizard import WIZARD_FLOWS
-    from ..core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-    from ..domain.contribuyente import CCAA
-    from ..domain.deadlines import (
+    from cadrumo.application.wizard import WIZARD_FLOWS
+    from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+    from cadrumo.domain.contribuyente import CCAA
+    from cadrumo.domain.deadlines import (
         EntityType,
         FiscalResidency,
         IrpfEstimationRegime,
@@ -133,7 +133,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         IrpfSpecialRegime,
         LegalEntityForm,
     )
-    from ..domain.user_profile import UserProfileStatus
+    from cadrumo.domain.user_profile import UserProfileStatus
 
     return (
         *_wizard_choice_label_registrations(
@@ -154,6 +154,28 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         ),
         *_wizard_question_registrations(wizard_flows=WIZARD_FLOWS),
         *_surface_registrations(user_profile_status=UserProfileStatus),
+        *_generated_docs_registrations(),
+    )
+
+
+def _generated_docs_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Registrations for display copy consumed outside ``src/cadrumo``.
+
+    The key scan walks ``src/cadrumo`` only, so a catalogue key whose only
+    consumer is a dev-side surface is invisible to it and scaffold would prune
+    it as stale. The generated casilla reference renders every one of its
+    display strings from the catalogues rather than from Python literals, and
+    derives the key set from the schema's own closed value sets, so the
+    registration reads that one derivation instead of restating it.
+    """
+    from dev.docs.casilla_reference import display_locale_keys
+
+    return (
+        FStringKeyRegistration(
+            description="modelo.display.* (generated casilla-reference display copy)",
+            key_factory=lambda v: v,
+            values=display_locale_keys(),
+        ),
     )
 
 

@@ -78,6 +78,7 @@ casilla_ids = [
     "iva.anual.reconciliacion.devengada-simplificado-303",
     "iva.anual.compensacion-ultimo-periodo-97",
     "iva.anual.compensacion-generada-ejercicio-no-97",
+    "iva.anual.total-bases-cuotas-iva",
     "iva.anual.cuota-devengada-total",
     "iva.anual.cuota-deducible-total",
     "iva.anual.resultado-regimen-general",
@@ -85,6 +86,7 @@ casilla_ids = [
     "decl.tipo-declaracion",
 ]
 formulas = [
+    "modelo-390-iva-anual-total-bases-cuotas-iva",
     "modelo-390-iva-anual-cuota-devengada-total",
     "modelo-390-iva-anual-cuota-deducible-total",
     "modelo-390-iva-anual-resultado-regimen-general",

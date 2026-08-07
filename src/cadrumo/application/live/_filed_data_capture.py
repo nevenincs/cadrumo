@@ -197,6 +197,13 @@ async def _walk_or_failure_row(
     :func:`capture_filed_data_bulk`: on any walk failure the exception is folded
     into ``failures`` as a :class:`FiledDataCaptureFailureRow` and ``None`` is
     returned so the caller can skip the pair.
+
+    A register page whose grid declares more records than it rendered is refused
+    by the walker rather than returned short, and that refusal arrives here like
+    any other walk failure — one pair reported as failed while the sweep
+    continues. Truncation deliberately gets no bulk-level mechanism of its own:
+    a second reporting channel would let a partial capture be counted as a
+    success on one path and a failure on the other.
     """
     try:
         return await _await_filed_register_walk(

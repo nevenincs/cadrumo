@@ -5,11 +5,12 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
+from types import MappingProxyType
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, MetodoValoracion, TipoOperacionVinculada
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.external_constants import DEFAULT_CURRENCY
 from ._binding_aggregation import binding_aggregation_op
@@ -76,6 +77,15 @@ _RelatedPartyRowField = Literal[
 ]
 
 
+_M232_CODE_SETS: Mapping[str, type[TipoOperacionVinculada] | type[MetodoValoracion]] = MappingProxyType(
+    {
+        "operation_kind_code": TipoOperacionVinculada,
+        "transfer_pricing_method_code": MetodoValoracion,
+    },
+)
+"""Field name to its DR23200 code set, read by the hydrating validator."""
+
+
 class RelatedPartyOperationObservation(BaseModel):
     """One related-party operation for modelo 232."""
 
@@ -86,11 +96,30 @@ class RelatedPartyOperationObservation(BaseModel):
     counterparty_legal_name: str = Field(default="", max_length=200)
     country_code: str = Field(default="ES", min_length=2, max_length=2)
     transaction_date: date
-    operation_kind_code: str = Field(min_length=1, max_length=4)
-    transfer_pricing_method_code: str = Field(default="", max_length=4)
+    operation_kind_code: TipoOperacionVinculada
+    transfer_pricing_method_code: MetodoValoracion = MetodoValoracion.NO_DECLARADO
     amount: Decimal
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
+
+    @field_validator("operation_kind_code", "transfer_pricing_method_code", mode="before")
+    @classmethod
+    def _hydrate_m232_codigo(cls, value: object, info: ValidationInfo) -> object:
+        """Hydrate a resolved binding value into its typed DR23200 code set.
+
+        Binding values arrive from the registry as free-form text, so this is
+        the boundary that turns a token into a member. It is the same pair of
+        sets the operator-supplied CLI row carries, which is why both read them
+        from ``core`` rather than either side re-spelling the tables.
+        """
+        if not isinstance(value, str):
+            return value
+        code_set = _M232_CODE_SETS[info.field_name]
+        try:
+            return code_set(value.upper())
+        except ValueError:
+            accepted = ", ".join(repr(str(member)) for member in code_set)
+            raise ValueError(f"{info.field_name} must be one of {accepted}; got {value!r}") from None
 
     @field_validator("amount")
     @classmethod

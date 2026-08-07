@@ -32,7 +32,7 @@ from .....core.i18n import tr
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
 
-from pydantic import BaseModel
+from pydantic import AnyUrl, BaseModel
 from pydantic import ValidationError as PydanticValidationError
 
 from .....core.logging import get_logger
@@ -142,6 +142,32 @@ def assert_query_browser_action_for(policy: RemoteStateGuardPolicy, action: str)
         action: Browser action label to validate (e.g. ``"open-groi-form"``).
     """
     assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action=action))
+
+
+def assert_read_http_for(policy: RemoteStateGuardPolicy, method: str, url: str) -> None:
+    """Assert that a wire-crossing read of ``url`` is permitted under ``policy``.
+
+    The ``http`` counterpart of :func:`assert_query_browser_action_for`, and the
+    one body behind every sede reader's fail-closed no-write guard. The censal,
+    notifications and expedientes-walker readers each carried an identical copy
+    differing only in the module-level policy it named; each still declares its
+    OWN policy — the surfaces genuinely differ in which hosts they admit — and
+    passes it here, so the refusal RULE has one home while the per-surface
+    posture stays local.
+
+    A guard that refuses writes is the wrong thing to hold three copies of: a
+    correction applied to one leaves the other two admitting what it now
+    refuses, and nothing fails until a write reaches AEAT.
+
+    Args:
+        policy: The read policy the calling surface declared.
+        method: HTTP method of the navigation about to be made.
+        url: Absolute target URL.
+
+    Raises:
+        RegistryValidationError: The navigation is not a permitted read.
+    """
+    assert_remote_operation_allowed(policy, RemoteOperation(kind="http", method=method, url=AnyUrl(url)))
 
 
 def require_playwright_page(raw_page: object) -> Page:
@@ -400,6 +426,68 @@ def normalize_response_text(text: str) -> str:
     return _WHITESPACE_RE.sub(" ", without_accents.casefold()).strip()
 
 
+def normalize_display_text(text: str) -> str:
+    """Collapse a page value's whitespace while keeping it readable as printed.
+
+    The sibling of :func:`normalize_response_text` for the other half of the
+    job: that one casefolds and folds diacritics so a marker can be MATCHED,
+    which makes its output unfit to show or store. This one only tidies the
+    spacing — AEAT pages lay values out with non-breaking spaces and wrapped
+    indentation — so ``"Cuota Disponible"`` survives as written rather than
+    arriving as ``"cuota disponible"``.
+
+    Reach for this whenever the normalised text is the VALUE; reach for
+    :func:`normalize_response_text` only when it is a lookup key.
+    """
+    return " ".join(text.replace("\xa0", " ").split())
+
+
+def bounded_text(value: object, *, max_length: int = 120) -> str:
+    """Return ``value`` as tidy text, truncated to at most ``max_length`` characters.
+
+    What a page-shape diagnostic records for an attribute it does not interpret,
+    so a pathological page cannot put an unbounded string into a dump file or an
+    error context.
+
+    The ellipsis is one character rather than three dots for an arithmetic
+    reason: the truncation keeps ``max_length - 1`` characters, so a one-character
+    marker lands exactly on the bound while ``"..."`` overshoots it by two. The
+    wallet and declarations shape readers each carried a copy of this and had
+    already drifted onto different markers, which is how the overshooting one
+    survived.
+    """
+    text = normalize_display_text(str(value))
+    if len(text) <= max_length:
+        return text
+    return f"{text[: max_length - 1]}…"
+
+
+def redacted_url(value: object) -> str | None:
+    """Return ``value`` with its query string and fragment removed.
+
+    Everything identifying rides in the query on a sede URL — the NIF, the
+    expediente reference, the session token — so a URL bound for a log line, an
+    error context or a diagnostic dump goes through here first. Scheme, host and
+    path survive, which is what makes the record diagnosable.
+
+    Distinct from ``application.auth`` ``_redacted_url_summary``, which keeps the
+    query KEY names and drops the scheme; that one answers "which parameters did
+    this request carry", not "where did it go".
+    """
+    if value is None:
+        return None
+    text = str(value)
+    if not text:
+        return ""
+    try:
+        parsed = urlsplit(text)
+    except ValueError:
+        return ""
+    if not parsed.scheme and not parsed.netloc:
+        return parsed.path
+    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
+
 SPANISH_NEGATIVE_VERDICT_MARKERS: tuple[str, ...] = (
     "no consta",
     "no valido",
@@ -577,13 +665,17 @@ __all__ = [
     "_SedeCheckerModel",
     "assert_pdf_response",
     "assert_query_browser_action_for",
+    "assert_read_http_for",
     "assert_read_landing",
+    "bounded_text",
     "extract_marker_verdict",
     "first_visible_locator",
     "landed_origin",
     "make_locate_helper",
     "nif_check_operation_tail",
+    "normalize_display_text",
     "normalize_response_text",
+    "redacted_url",
     "registry_failure_message",
     "require_playwright_page",
     "response_media_type",

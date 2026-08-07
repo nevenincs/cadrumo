@@ -163,7 +163,9 @@ def test_the_transcription_not_the_raw_bytes_is_what_the_reader_receives(
     _read_through_the_wired_path(chat_url)
 
     sent = requests.get(timeout=5)
-    prompt = "".join(str(message.get("content", "")) for message in sent["messages"])
+    messages = sent["messages"]
+    assert isinstance(messages, list), "the wired request carried no message list"
+    prompt = "".join(str(message.get("content", "")) for message in messages if isinstance(message, dict))
     assert "Reformas Delta SL" in prompt, "the document's own text did not reach the reader"
     assert "766,30" in prompt
 

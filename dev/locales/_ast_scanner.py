@@ -42,7 +42,7 @@ import re
 from collections.abc import Iterator
 from pathlib import Path
 
-from ..core.logging import get_logger
+from cadrumo.core.logging import get_logger
 
 _log = get_logger(__name__)
 

@@ -1927,6 +1927,9 @@ cli:
           érték megtartásához).
         confirm_link_hint_message: Kapcsold össze ezt a számlát egy könyvelési tétellel
           a `aeat app ledger link` paranccsal.
+        confirm_operation_type_help: 'A 349-es modell kulcsa kozossegen beluli termekertekesiteshez.
+          Kotelezo, ha a dokumentum kozossegen beluli ertekesitest jelol: a kategoria
+          nem mondja meg, hogy adomentes behozatalt kovetett-e.'
         confirm_printed_total_mismatch_message: A dokumentumon szereplő végösszeg
           nem egyezik a rögzített végösszeggel. A rögzített végösszeg az adóalapból
           és az áfakulcsból származik, ezért az eltérés azt jelenti, hogy a dokumentum
@@ -1936,6 +1939,25 @@ cli:
         confirm_resolve_help: 'Valaszoljon meg egy blokkolo eszrevetelt: <eszrevetel-azonosito>=<choose|supply|attest>:<ertek-vagy-indok>.
           Eszrevetelenkent ismetelje; tomeges kapcsolo nincs.'
         confirm_taxable_base_help: Felülírja a kinyert adóalapot.
+        consent:
+          bytes_unrecallable: 'A hozzájárulás visszavonása megállítja a további küldést.
+            A már elküldött bájtokat nem hívja vissza: ez a program nem tudja azokat
+            a szolgáltatótól visszaszerezni vagy törölni. A helyi újraszármaztatás
+            a jelenlegi nyilvántartásából eltávolítja a gépen kívüli olvasást, a szolgáltatóéból
+            nem.'
+          content_address_help: A dokumentum tárolt bájtjainak SHA-256 tartalomcíme.
+          evidence_reference_help: Az újraszármaztatandó bizonylat vagy melléklet
+            azonosítója.
+          group_help: Tekintse át, mi került gépen kívüli modellhez, és állítsa vissza
+            az eredményeket helyben.
+          list_help: Sorolja fel az összes gépen kívüli küldést és az azokból származó
+            eredményeket.
+          rederive_help: Olvassa be újra az egyik eredményt ezen a gépen a tárolt
+            átiratból.
+          rederive_refused: 'Az újraszármaztatás elutasítva: {detail}'
+          rederived: A(z) {reference} újraszármaztatva ezen a gépen. Korábban {previous}
+            volt; most {current}. A korábbi olvasás felülírásra került, de nem törlődött.
+          transcriber_help: Az újrafelhasználandó átirat gyorsítótárkulcsa.
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
         extract_attachment_id_help: A kapcsolt melléklet azonosítója, amelyből az
           adatokat ki kell nyerni (a --evidence-id alternatívája).
@@ -1999,7 +2021,6 @@ cli:
         view_help: Vásárlásiszámla-bizonyíték megjelenítése.
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót a bizonyíték törléséhez.
-        confirm_operation_type_help: 'A 349-es modell kulcsa kozossegen beluli termekertekesiteshez. Kotelezo, ha a dokumentum kozossegen beluli ertekesitest jelol: a kategoria nem mondja meg, hogy adomentes behozatalt kovetett-e.'
       inventory:
         actividad_id_help: Gazdasági tevékenység azonosítója.
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.
@@ -5455,8 +5476,51 @@ core:
         lennie szöveges formában.
       registration_duplicate_callable: A projektválaszok implementációja kétszer lett
         regisztrálva eltérő hívható objektummal; pontosan egyszer kell regisztrálni.
-dotted:
-  key: Pontozott kulcs
+docs:
+  glossary:
+    entry:
+      broader: Tágabb fogalom
+      domain: Terület
+      legal_basis: Jogalap
+      related: Kapcsolódó
+      undefined: Ezen a nyelven még nincs elérhető meghatározás.
+    intro: A dokumentációban használt spanyol adózási szakkifejezések. Minden kifejezés
+      a jogalapjára mutat, ha van ilyen. Keressen rá egy kifejezésre; a meghatározás
+      mindenütt ugyanaz, ahol a kifejezés előfordul.
+    title: Szójegyzék
+  legal:
+    index:
+      intro: Azok a spanyol törvények, királyi rendeletek és miniszteri rendeletek,
+        amelyeken a Cadrumo számításai alapulnak. Minden oldal egyetlen jogszabály
+        hivatkozott rendelkezéseit sorolja fel, és mindegyiket összekapcsolja a BOE-ban
+        közzétett hivatalos szöveggel.
+      title: Jogszabályi hivatkozások
+    page:
+      intro: A Boletín Oficial del Estado hivatalos lapban {document} számon jelent
+        meg. A Cadrumo számításai e jogszabály {count} rendelkezésére hivatkoznak;
+        mindegyik alább a BOE hivatalos szövegére mutat.
+    provision:
+      boe_is_official: A Boletín Oficial del Estado egységes szerkezetbe foglalt szövege
+        a hivatalos szöveg.
+      in_force_between: Hatályos {start} és {end} között
+      in_force_from: 'Hatályos ettől: {start}'
+      in_force_until: 'Hatályos eddig: {end}'
+      official_wording: Hivatalos szöveg, részlet (spanyolul)
+      published: 'közzétéve: {date}'
+      read_on_boe: '{citation} elolvasása a BOE-ban'
+    record:
+      authority: Kibocsátó hatóság
+      boe_document: BOE-dokumentum
+      bundled_corpus: Mellékelt korpusz
+      catalogue_id: Katalógusazonosító
+      consolidated_as_of: Egységes szerkezet dátuma
+      evidence_tier: Bizonyítéki szint
+      instrument_kind: Jogszabály típusa
+      note: Katalogizáló megjegyzése
+      review_status: Ellenőrzés állapota
+      reviewed_at: Ellenőrzés dátuma
+      reviewed_by: Ellenőrizte
+      title: Katalógusbejegyzés
 entries:
   portal_calendario_contribuyente:
     label: Adófizetői naptár
@@ -7009,6 +7073,118 @@ mcp:
       mert a meleg futtatókörnyezet {reason} volt; az eredmény azonos, csak lassabb.
       A meleg kiszolgálás folytatódik, amint a lassú hívás befejeződik.
 modelo:
+  display:
+    binding_source:
+      atribucion_member: az atribución de rentas tagjaiból
+      bienes_inversion_regularizacion: a beruházási javak korrekciójából
+      borrador: az AEAT borrador tervezetéből
+      collectible_invoice: a kiállított számláiból
+      donativo_donor: a nyilvántartott adományozóiból
+      foreign_asset: a külföldi vagyonelemeiből
+      iva_compensation_annual_partition: az adóév IVA-kompenzációjából
+      iva_wallet_decision: az IVA-kompenzációs döntéséből
+      ledger_impatriado_income_aggregation: az impatriado-rendszer szerinti bevételeiből
+      ledger_irnr_income_aggregation: az IRNR-bevételeiből
+      ledger_iva_aggregation: az IVA-tételeiből
+      ledger_oss_aggregation: az OSS-tételeiből
+      ledger_renta_gastos_estimacion_directa_aggregation: a közvetlen megállapítás
+        szerinti költségeiből
+      ledger_renta_gastos_pago_fraccionado_aggregation: a pago fraccionado költségeiből
+      ledger_renta_income_aggregation: a nyilvántartott bevételeiből
+      ledger_transaction: a nyilvántartott tételeiből
+      manual_input: az Ön által megadott értékből
+      payable_invoice: a befogadott számláiból
+      previous_filing: a korábbi bevallásából
+      profile: az adózói profiljából
+      prorrata_regularizacion: az arányosítás korrekciójából
+      purchase_invoice_evidence: a beszerzési számlák bizonylataiból
+      refund_operation: a visszatérítési ügyleteiből
+      related_party_operation: a kapcsolt ügyleteiből
+      relation_prefill: egy kapcsolódó modelo eredményéből
+      retenciones_aggregation: a nyilvántartott retenciones tételekből
+      withholding: a levont forrásadókból
+    cadence:
+      ad_hoc: Az esemény bekövetkezésekor benyújtandó
+      annual: Évente benyújtandó
+      monthly: Havonta benyújtandó
+      profile_based: A profilja szerint benyújtandó
+      quarterly: Negyedévente benyújtandó
+    chrome:
+      alternative_join: ', vagy'
+      binding: Adatkötés
+      casilla_count: '{casillas} casilla {sections} szakaszban'
+      casilla_id: Casilla-azonosító
+      derived_from: 'ebből:'
+      established_by: Jogszabályi alapja
+      formula: Képlet
+      general_section: Általános
+      index_intro: Modellónként egy oldal. Minden casilla megadja, hogyan töltődik
+        ki (Ön adja meg, más rovatokból számítjuk, vagy a nyilvántartásaiból töltjük
+        ki), hol szerepel a hivatalos nyomtatványon, és melyik jogszabály állapítja
+        meg.
+      index_title: Casilla-referencia
+      legal_basis: Jogalap
+      list_and: és
+      not_on_official_form: Nem szerepel a hivatalos nyomtatványon
+      record_design_number: Rekordterv szerinti szám
+      registry_identifiers: Nyilvántartási azonosítók
+      registry_section: Nyilvántartási szakasz
+      required: Kötelező
+      revisions: Változatok
+      sections_nav: A modelo szakaszai
+      segmento: '{segmento} szegmens'
+      semantic_role: Szemantikai szerep
+      sources: Források
+    data_type:
+      bic: BIC
+      boolean: Igen vagy nem
+      ccaa_code: Autonóm közösség kódja
+      country_code: Országkód
+      date: Dátum
+      decimal: Tizedes szám
+      iban: IBAN
+      integer: Egész szám
+      money: Összeg euróban
+      municipality_code: Településkód
+      name: Név
+      nif: NIF
+      nif_iva: Közösségi adószám (NIF-IVA)
+      period_code: Időszak
+      postal_code: Irányítószám
+      province_code: Provincia kódja
+      ratio: Százalék
+      text: Szöveg
+      year: Adóév
+    input_kind:
+      bound: Automatikusan kitöltve
+      computed: Automatikusan számítjuk
+      informational: Csak tájékoztató
+      manual: Ön adja meg
+    input_kind_count:
+      bound: a nyilvántartásaiból kitöltve
+      computed: számított
+      informational: csak tájékoztató
+      manual: amelyet Ön ad meg
+    legal_kind:
+      dictionary: AEAT-adatszótár
+      form_spec: Hivatalos AEAT-nyomtatvány
+      instruction: AEAT-útmutató
+      instructions: AEAT-útmutató
+      manual_pdf: AEAT-kézikönyv
+      record_design: AEAT-rekordterv
+      suppression_notice: AEAT-közlemény
+      xsd: AEAT XSD-séma
+    length:
+      at_least: Legalább {min} karakter
+      at_most: Legfeljebb {max} karakter
+      between: '{min} és {max} karakter között'
+    value_enum: 'Az alábbiak egyike: {values}'
+    value_range:
+      at_least: Legalább {min}
+      at_most: Legfeljebb {max}
+      between: '{min} és {max} között'
+      non_negative: Nulla vagy több
+      non_positive: Nulla vagy kevesebb
   schema:
     '036':
       field:
@@ -66702,22 +66878,30 @@ modelo:
               help: null
               label: 0,5%-os egyenértékűségi pótlék - éves keletkezett ÁFA
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31.label
+              help: A felár hatálya alá tartozó kiskereskedőknek történő, 2 %-os áfakulccsal
+                adózó értékesítésekre felszámított 0.26 %-os egyenértékűségi felár
+                összege (RDL 4/2024 art. 1). A(z) 692. rovatban kell bevallani.
+              label: Egyenértékűségi felár, 0.26 %-os kulcs - éves fizetendő összeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8.label
+              help: A felár hatálya alá tartozó kiskereskedőknek történő, 4 %-os áfakulccsal
+                adózó értékesítésekre felszámított 0.5 %-os egyenértékűségi felár
+                összege (LIVA art. 161.3). A(z) 36. rovatban kell bevallani.
+              label: Egyenértékűségi felár, 0.5 %-os kulcs - éves fizetendő összeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31.label
+              help: A felár hatálya alá tartozó kiskereskedőknek történő, 5 %-os áfakulccsal
+                adózó értékesítésekre felszámított 0.62 %-os egyenértékűségi felár
+                összege (RDL 4/2024 art. 1). A(z) 666. rovatban kell bevallani.
+              label: Egyenértékűségi felár, 0.62 %-os kulcs - éves fizetendő összeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
               help: A felár hatálya alá tartozó kiskereskedőknek történő, 10 %-os
                 áfakulccsal adózó értékesítésekre felszámított 1.4 %-os egyenértékűségi
                 felár összege (LIVA art. 161.2). A(z) 600. rovatban kell bevallani.
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8.label
+              label: Egyenértékűségi felár, 1.4 %-os kulcs - éves fizetendő összeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg.label
+              help: A felár hatálya alá tartozó kiskereskedőknek történő, 7.5 %-os
+                áfakulccsal adózó értékesítésekre felszámított 1 %-os egyenértékűségi
+                felár összege (RDL 4/2024 art. 1). A(z) 694. rovatban kell bevallani.
+              label: Egyenértékűségi felár, 1 %-os kulcs - éves fizetendő összeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
               help: A felár hatálya alá tartozó kiskereskedőknek történő, 21 %-os
                 áfakulccsal adózó értékesítésekre felszámított 5.2 %-os egyenértékűségi
@@ -66843,6 +67027,22 @@ modelo:
                 adóalapját, a három belföldi adókulcs összesítésével.
               label: Levonható áfa adóalapja - belföldi folyó termék- és szolgáltatásbeszerzések
                 összesen - éves
+            x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
+              help: Összegzi az általános, kedvezményes és szuperkedvezményes kulcsok
+                szerinti fizetendő áfát, valamint a Közösségen belüli beszerzésekre
+                önszámlázott áfát, a felár nélkül (47. rovat).
+              label: Áfa alapok és összegek összesen - Fizetendő adó (Reg. ordinario)
+                - éves
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
+              help: A masik tagallamba torteno termekertekesites osszege, amely a
+                spanyol afatorveny 25. cikke alapjan adomentes. Ne tuntesse fel az
+                unios vallalkozasoknak nyujtott szolgaltatasokat.
+              label: Közösségen belüli termékértékesítés
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
+              help: A spanyol áfatörvény 21. cikke alapján adómentes termékexport,
+                valamint a 22. cikk alapján adómentes, exporttal egy tekintet alá
+                eső ügyletek összege.
+              label: Export és egyéb, levonási joggal járó adómentes ügyletek
           construct:
             modelo-390-iva-resumen-anual:
               field:
@@ -67189,6 +67389,8 @@ profile:
         provider:
           label: Hitelesítési mód
       capabilities:
+        cloud_evidence_upload:
+          label: Dokumentumolvasás a gépen kívül
         google_export:
           label: Google-exportálás
         llm_vision:
@@ -67695,6 +67897,8 @@ topic:
     title: VERI*FACTU
 transactions:
   import:
+    batch_id_collision: 'Kihagyott sor: ugyanazzal az azonosítóval rendelkezik, mint
+      egy másik sor ebben a fájlban.'
     message_053465: Ismétlődő tranzakció észlelve az importált fájlban.
     message_082074: Ismétlődő tranzakció már szerepel a főkönyvben.
     message_185962: A forrásfájl nem tartalmaz érvényes tranzakciót.

@@ -66,6 +66,7 @@ def register(app: typer.Typer) -> None:
             probe_playwright_browser,
         )
         from ....application.user_profile import resolve_active_capability
+        from ....core.config import load_settings
         from ._check_hardware_rows import contention_row
 
         profile_id = resolve_active_bucket_id()
@@ -113,6 +114,20 @@ def register(app: typer.Typer) -> None:
             issues.append(f"llm_vision is on but {ollama.detail}: {ollama.remediation}")
         if cap_enabled[ServiceCapability.GOOGLE_EXPORT.value] and not extra_available.get("extra:google", False):
             issues.append("google_export is on but the 'google' extra is not installed (pip install cadrumo[google])")
+        # The eligibility bar's own row. Reported in the SAME shape as the two
+        # above -- the capability is on, but the layer beneath it refuses -- so
+        # an operator who turned the bar on and expected off-host reading to
+        # work is told which of the two switches is still closed, rather than
+        # meeting a per-invocation refusal with no explanation. The capability's
+        # posture itself is already rendered by the loop above; this is the
+        # inconsistency between it and the deployment flag.
+        if cap_enabled[ServiceCapability.CLOUD_EVIDENCE_UPLOAD.value] and not (
+            load_settings().cadrumo_evidence_cloud_upload_permitted
+        ):
+            issues.append(
+                "cloud_evidence_upload is on for this profile but the deployment has not opted in "
+                "(set CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED); no document can be read off-host",
+            )
 
         ok = not issues
         result = ConfigCheckResult.model_validate(

@@ -52,7 +52,19 @@ def _pdf_with_embedded_xml() -> bytes:
     page.save()
 
     with pikepdf.Pdf.open(BytesIO(buf.getvalue())) as pdf:
-        pdf.attachments[_ATTACHMENT_NAME] = pikepdf.AttachedFileSpec(pdf, _XML_PAYLOAD)
+        # The descriptive fields are named rather than defaulted. A real
+        # Factur-X attachment carries them, and pikepdf's own stub declares
+        # them required even though the binding defaults them -- so supplying
+        # them makes the fixture both more faithful and checkable.
+        pdf.attachments[_ATTACHMENT_NAME] = pikepdf.AttachedFileSpec(
+            pdf,
+            _XML_PAYLOAD,
+            description="Factur-X invoice data",
+            filename=_ATTACHMENT_NAME,
+            mime_type="text/xml",
+            creation_date="D:20240101000000Z",
+            mod_date="D:20240101000000Z",
+        )
         out = BytesIO()
         pdf.save(out)
         return out.getvalue()

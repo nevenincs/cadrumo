@@ -20,7 +20,7 @@ from typing import Final, Literal
 from pydantic import BaseModel, Field, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG
-from .....core.config import AEAT_CERTIFICATE_PROTECTED_URL
+from .....core.config import AEAT_CERTIFICATE_PROTECTED_URL, assert_canonical_protected_resource
 from .....core.time import validate_utc_aware
 from ._errors import AeatLoginAssertionError
 
@@ -64,9 +64,7 @@ class PersistedSessionMetadata(BaseModel):
     @field_validator("protected_resource_url")
     @classmethod
     def _protected_resource_is_canonical(cls, value: str) -> str:
-        if value != AEAT_CERTIFICATE_PROTECTED_URL:
-            raise ValueError("persisted certificate proof must use the canonical protected resource")
-        return value
+        return assert_canonical_protected_resource(value, subject="persisted certificate proof")
 
 
 # Ordered (substring, reason-code) rules for persisted-session refusals. The

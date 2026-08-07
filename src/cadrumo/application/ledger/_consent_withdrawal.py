@@ -48,21 +48,22 @@ from typing import TYPE_CHECKING, Protocol
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.time import UtcInstant
 from ._extracted_document_cache import read_cached_transcription
 from ._extraction_draft_store import load_extraction_drafts, write_extraction_draft
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.llm import EvidenceConsentLedgerEntry
     from ...core.config import Settings
-    from ...core.time import UtcInstant
     from ._evidence_draft import InvoiceDraft
 
 __all__ = [
     "LOCAL_TRANSPORT_SEGMENT",
     "CloudDerivedArtefact",
     "ConsentWithdrawalSurvey",
+    "ConsentedDispatch",
     "LocalRederivation",
     "OnHostReader",
+    "artefact_is_cloud_derived",
     "provenance_stamp_transport",
     "rederive_artefact_on_host",
     "survey_cloud_consent",
@@ -126,6 +127,33 @@ def provenance_stamp_transport(stamp: str) -> str | None:
     return transport
 
 
+class ConsentedDispatch(BaseModel):
+    """One recorded off-host dispatch, as this layer sees it.
+
+    A projection of the adapter-side consent-ledger entry rather than that
+    record itself. The ledger belongs to the transport that writes it; an
+    application service that imported its shape would couple the withdrawal
+    surface to a storage record it does not own, and this layer's dependency
+    direction forbids the import anyway. Mapping is the caller's one line.
+
+    Attributes:
+        evidence_content_address: SHA-256 address of the document transmitted.
+            The address, never the bytes -- the same line the ledger draws.
+        provider: The off-host provider the request dispatched at.
+        model: The model identifier the request dispatched at.
+        surface: The operator surface that took the acknowledgement.
+        recorded_at: When the consent was honoured.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    evidence_content_address: str = Field(min_length=1)
+    provider: str = Field(min_length=1)
+    model: str = Field(min_length=1)
+    surface: str = Field(min_length=1)
+    recorded_at: UtcInstant
+
+
 class CloudDerivedArtefact(BaseModel):
     """One persisted artefact whose provenance names an off-host read.
 
@@ -171,9 +199,9 @@ class ConsentWithdrawalSurvey(BaseModel):
         transmitted_bytes_are_unrecallable: Always ``True``.
     """
 
-    model_config = ConfigDict(strict=True, frozen=True, arbitrary_types_allowed=True)
+    model_config = ConfigDict(strict=True, frozen=True)
 
-    consented_dispatches: tuple[EvidenceConsentLedgerEntry, ...] = ()
+    consented_dispatches: tuple[ConsentedDispatch, ...] = ()
     cloud_derived_artefacts: tuple[CloudDerivedArtefact, ...] = ()
     transmitted_bytes_are_unrecallable: bool = True
 
@@ -216,7 +244,7 @@ def survey_cloud_consent(
     *,
     bucket_id: str,
     settings: Settings,
-    consent_entries: tuple[EvidenceConsentLedgerEntry, ...] = (),
+    consent_entries: tuple[ConsentedDispatch, ...] = (),
     resolve_content_address: ContentAddressResolver | None = None,
     transcriber_cache_key: str | None = None,
 ) -> ConsentWithdrawalSurvey:
@@ -225,8 +253,8 @@ def survey_cloud_consent(
     Args:
         bucket_id: The profile bucket to survey.
         settings: Deployment settings resolving the storage route.
-        consent_entries: The profile's consent-ledger entries, read by the
-            caller from the adapter-side ledger this layer does not import.
+        consent_entries: The profile's consent history, projected by the caller
+            from the adapter-side ledger this layer does not import.
         resolve_content_address: Optional resolver from an evidence reference to
             the document's content address. Without it, re-derivability is
             reported as unknown rather than guessed.

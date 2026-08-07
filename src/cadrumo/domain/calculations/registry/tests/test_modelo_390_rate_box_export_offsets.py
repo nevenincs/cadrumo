@@ -102,7 +102,7 @@ def _registry_rate_fields() -> dict[int, str]:
             if record.record_type != _BOX_RECORD_TYPE:
                 continue
             for field in record.fields:
-                if field.casilla_id and field.casilla_id.startswith(_CASILLA_PREFIX):
+                if field.offset is not None and field.casilla_id and field.casilla_id.startswith(_CASILLA_PREFIX):
                     fields[field.offset] = field.casilla_id
     return fields
 
@@ -171,6 +171,6 @@ def test_no_rate_position_is_written_twice() -> None:
     revision = _m390_revision()
     for layout in revision.export_layouts:
         for record in layout.records:
-            offsets = [field.offset for field in record.fields]
+            offsets = [field.offset for field in record.fields if field.offset is not None]
             duplicated = {offset for offset in offsets if offsets.count(offset) > 1}
             assert not duplicated, f"record {record.record_type} writes offsets {sorted(duplicated)} twice"

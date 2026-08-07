@@ -41,6 +41,7 @@ from ....domain.calculations.registry import (
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from ...aggregation import CalculationSourceDiagnostic
 from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
@@ -123,7 +124,7 @@ def _split_revision() -> ModeloRevision:
     )
 
 
-def _coordinator_diagnostics(values: dict[CasillaId, Decimal]) -> tuple[object, ...]:
+def _coordinator_diagnostics(values: dict[CasillaId, Decimal]) -> tuple[CalculationSourceDiagnostic, ...]:
     """Every advisory the COORDINATOR raises, not the collector called directly."""
     return collect_bucket_aggregation_advisory_diagnostics(
         _split_revision(),
@@ -177,4 +178,4 @@ def test_the_coordinator_raises_the_advisory_and_returns() -> None:
     """
     diagnostics = _coordinator_diagnostics({_TOTAL_CASILLA: Decimal("420.00"), _BOX_4PCT: Decimal("300.00")})
 
-    assert _REASON in {diagnostic.reason for diagnostic in diagnostics}  # type: ignore[attr-defined]
+    assert _REASON in {diagnostic.reason for diagnostic in diagnostics}

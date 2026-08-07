@@ -35,6 +35,35 @@ AEAT_CERTIFICATE_PROTECTED_URL = f"{AEAT_CERTIFICATE_PROTECTED_ORIGIN}{AEAT_CERT
 """Canonical protected navigation URL for certificate authentication."""
 
 
+def assert_canonical_protected_resource(value: str, *, subject: str) -> str:
+    """Return ``value`` if it is the canonical protected resource, else raise.
+
+    Certificate authentication is proved by reaching one specific AEAT
+    resource, so a record claiming proof against any other URL is not evidence
+    of anything. Both the persisted proof and the live session detail assert
+    this, and they asserted it with separate copies of the comparison until
+    this became its one home — beside the constant it is about, where a change
+    to the route and a change to the rule cannot separate.
+
+    Args:
+        value: The protected-resource URL the record carries.
+        subject: What is being validated, for the refusal message — the two
+            call sites name different records and the operator needs to know
+            which one refused.
+
+    Returns:
+        ``value`` unchanged.
+
+    Raises:
+        ValueError: ``value`` is not the canonical protected resource. A plain
+            ``ValueError`` because both call sites are pydantic validators,
+            which fold it into the model's own ``ValidationError``.
+    """
+    if value != AEAT_CERTIFICATE_PROTECTED_URL:
+        raise ValueError(f"{subject} must use the canonical protected resource")
+    return value
+
+
 class SecretStoreBackend(StrEnum):
     """Supported backends for the master-key secret store.
 
@@ -194,6 +223,7 @@ __all__ = [
     "SecretStoreBackend",
     "StorageRouteClassification",
     "StorageRouteKind",
+    "assert_canonical_protected_resource",
     "coerce_output_language_setting",
     "default_aeat_sede_origin",
     "default_aeat_sede_origin_with_slash",

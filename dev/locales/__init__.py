@@ -1,10 +1,15 @@
 """Locale-catalogue maintenance facade for shared YAML translations.
 
-The package keeps the four runtime catalogues (``en``, ``es``, ``ca``, ``hu``)
-in sync with codebase translation keys and enforces inter-locale parity. The
-developer CLI (``python -m cadrumo.locales``) owns edits through ``set``,
-``remove``, ``scaffold``, ``scaffold --check``, and ``audit`` commands; the
-catalogue YAML is CLI-maintained, not hand-edited.
+Contributor tooling: it maintains the four runtime catalogues that ship under
+``src/cadrumo/locales/`` but is not itself part of the distribution. The
+catalogue YAML (``en``, ``es``, ``ca``, ``hu``) and the allowlist JSON stay in
+the package because the renderer loads them at runtime; only the maintenance
+code lives here.
+
+The package keeps those catalogues in sync with codebase translation keys and
+enforces inter-locale parity. The developer CLI (``python -m dev.locales``)
+owns edits through ``set``, ``remove``, ``scaffold``, ``scaffold --check``, and
+``audit`` commands; the catalogue YAML is CLI-maintained, not hand-edited.
 
 Major declarations:
 
@@ -12,12 +17,14 @@ Major declarations:
   catalogues.
 * :class:`StrictUniqueKeyLoader` rejects duplicate YAML keys at parse time.
 * :class:`LocaleError` reports maintenance failures.
+* :data:`LocaleNode` documents the recursive locale-tree shape consumers walk.
 """
 
 from __future__ import annotations
 
 from ._ast_scanner import scan_namespace_markers, scan_source_tree
 from ._fstring_registry import get_registered_keys
+from ._paths import DOCS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
 from ._status import (
     RESERVED_INTERPOLATION_TOKENS,
@@ -26,14 +33,18 @@ from ._status import (
     catalogue_status,
     classify_catalogue_leaf,
 )
-from .manager import LocaleError, LocaleManager, StrictUniqueKeyLoader
+from .manager import LocaleError, LocaleManager, LocaleNode, StrictUniqueKeyLoader
 
 __all__ = [
+    "DOCS_SRC_DIR",
+    "LOCALES_DIR",
     "RESERVED_INTERPOLATION_TOKENS",
+    "SRC_DIR",
     "CatalogueLeafState",
     "CatalogueStatusRecord",
     "LocaleError",
     "LocaleManager",
+    "LocaleNode",
     "StrictUniqueKeyLoader",
     "catalogue_status",
     "classify_catalogue_leaf",

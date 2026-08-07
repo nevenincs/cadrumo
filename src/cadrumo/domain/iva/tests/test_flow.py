@@ -32,16 +32,27 @@ from .. import (
     IvaCategory,
     IvaFlowDirection,
     derive_flow_for_classification,
+    is_deducible_flow,
+    is_devengada_flow,
+    settlement_sides_for_flow,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_iva_flow_direction_enum_has_three_closed_members() -> None:
+def test_iva_flow_direction_enum_has_four_closed_members() -> None:
+    """The axis carries both sides of a reverse-charge operation, not just one.
+
+    The fourth member is the SUPPLIER's side. Before it existed the axis could
+    not express "turnover bearing no cuota on either side", so a supplier's own
+    reverse-charge invoice was routed to the recipient's member and self-assessed
+    as though the supplier owed the cuota it had deliberately not charged.
+    """
     assert {m for m in IvaFlowDirection} == {
         IvaFlowDirection.REPERCUTIDO,
         IvaFlowDirection.SOPORTADO,
         IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        IvaFlowDirection.OPERACION_CON_INVERSION,
     }
 
 
@@ -49,6 +60,7 @@ def test_iva_flow_direction_string_values_are_kebab_case() -> None:
     assert IvaFlowDirection.REPERCUTIDO.value == "repercutido"
     assert IvaFlowDirection.SOPORTADO.value == "soportado"
     assert IvaFlowDirection.INVERSION_SUJETO_PASIVO.value == "inversion_sujeto_pasivo"
+    assert IvaFlowDirection.OPERACION_CON_INVERSION.value == "operacion_con_inversion"
 
 
 @pytest.mark.parametrize(
@@ -148,23 +160,48 @@ def test_derive_flow_classifies_non_reverse_charge_categories(
     assert derive_flow_for_classification(category=category, invoice_direction=direction) is expected
 
 
-@pytest.mark.parametrize(
-    "direction",
-    (
-        pytest.param(InvoiceKind.ISSUED, id="issued"),
-        pytest.param(InvoiceKind.RECEIVED, id="received"),
-    ),
-)
-def test_derive_flow_classifies_domestic_reverse_charge_as_autorepercutido(direction: InvoiceKind) -> None:
-    """Domestic reverse-charge (LIVA art 84.Uno.2) routes to INVERSION_SUJETO_PASIVO
-    irrespective of invoice direction; the recipient self-assesses."""
+def test_received_domestic_reverse_charge_self_assesses() -> None:
+    """The RECIPIENT of a domestic art. 84.Uno.2 operation is the sujeto pasivo."""
     assert (
         derive_flow_for_classification(
             category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
-            invoice_direction=direction,
+            invoice_direction=InvoiceKind.RECEIVED,
         )
         is IvaFlowDirection.INVERSION_SUJETO_PASIVO
     )
+
+
+def test_issued_domestic_reverse_charge_is_the_suppliers_side_not_a_self_assessment() -> None:
+    """A domestic RC supply the taxpayer MADE settles on neither side.
+
+    This assertion previously held the OPPOSITE — that both directions route to
+    INVERSION_SUJETO_PASIVO — and encoded a live mis-declaration as the contract.
+    A Spanish construction subcontractor invoicing under LIVA art. 84.Uno.2.f
+    charges no IVA and bears none; the recipient self-assesses. Booking the
+    supplier's own invoice as a self-assessment inflated Modelo 303 box [13] and
+    both cuota totals, and claimed a deduction of input IVA the supplier never
+    bore. The two errors cancel in the resultado, which is why nothing caught it.
+    """
+    assert (
+        derive_flow_for_classification(
+            category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+            invoice_direction=InvoiceKind.ISSUED,
+        )
+        is IvaFlowDirection.OPERACION_CON_INVERSION
+    )
+
+
+def test_a_supplier_side_reverse_charge_operation_reaches_no_settlement_side() -> None:
+    """The tripwire for the whole ruling: neither cuota total may claim it.
+
+    Routing this flow to DEVENGADA invents an output cuota never charged; routing
+    it to DEDUCIBLE invents a deduction of input IVA never borne. Both are money
+    the taxpayer would file. This test reds if a later change puts the supplier's
+    side back on either side of the settlement.
+    """
+    assert settlement_sides_for_flow(IvaFlowDirection.OPERACION_CON_INVERSION) == frozenset()
+    assert not is_devengada_flow(IvaFlowDirection.OPERACION_CON_INVERSION)
+    assert not is_deducible_flow(IvaFlowDirection.OPERACION_CON_INVERSION)
 
 
 @pytest.mark.parametrize(
@@ -385,29 +422,48 @@ def test_devengada_and_deducible_flow_sets_intersect_at_autorepercutido() -> Non
     )
 
 
-def test_devengada_and_deducible_flow_sets_union_to_full_flow_taxonomy() -> None:
-    """Every flow direction contributes to at least one settlement side —
-    the union of the two cornerstone sets covers the full taxonomy."""
+def test_devengada_and_deducible_flow_sets_union_to_every_settling_flow() -> None:
+    """The two cornerstone sets cover every flow that settles at all.
+
+    This asserted coverage of the WHOLE taxonomy until the supplier's side of a
+    reverse-charge operation was given its own member. That operation is turnover
+    bearing no cuota, so belonging to neither set is the fact being recorded
+    rather than a gap — and the old form would have forced it onto a side,
+    which is the mis-declaration the member exists to end.
+
+    The guard the original really provided — no flow falls through unclassified —
+    is preserved and sharpened in the mapping-totality test below, which checks
+    membership of the mapping rather than non-emptiness of its values.
+    """
     from .. import (
         DEDUCIBLE_FLOW_DIRECTIONS,
         DEVENGADA_FLOW_DIRECTIONS,
     )
 
-    assert set(IvaFlowDirection) == DEVENGADA_FLOW_DIRECTIONS | DEDUCIBLE_FLOW_DIRECTIONS
+    settling = set(IvaFlowDirection) - {IvaFlowDirection.OPERACION_CON_INVERSION}
+    assert settling == DEVENGADA_FLOW_DIRECTIONS | DEDUCIBLE_FLOW_DIRECTIONS
 
 
 def test_settlement_sides_mapping_is_total_over_flow_directions() -> None:
-    """The settlement-side mapping must cover every IvaFlowDirection
-    member — no flow falls through to an unclassified state."""
+    """Every member is a KEY of the mapping — no flow falls through unclassified.
+
+    Totality is asserted over the mapping's KEYS, not over the non-emptiness of
+    its values. Those are different guarantees and only the first is the one
+    worth having: a member missing from the mapping raises ``KeyError`` at a
+    caller, while a member mapped to the empty set has been consciously declared
+    to settle on neither side. Asserting non-emptiness conflated the two and
+    would forbid ever recording an operation that bears no cuota.
+    """
     from .. import settlement_sides_for_flow
 
     assert len(list(IvaFlowDirection)) > 0
-    covered: set[IvaFlowDirection] = set()
     for flow in IvaFlowDirection:
-        sides = settlement_sides_for_flow(flow)
-        assert sides, f"{flow!r} maps to empty settlement-side set"
-        covered.add(flow)
-    assert covered == set(IvaFlowDirection), "every flow direction must be covered"
+        settlement_sides_for_flow(flow)  # raises KeyError if the member is unmapped
+    sideless = {flow for flow in IvaFlowDirection if not settlement_sides_for_flow(flow)}
+    assert sideless == {IvaFlowDirection.OPERACION_CON_INVERSION}, (
+        "exactly one flow settles on neither side — the supplier's own reverse-charge "
+        f"supply. A second one appearing here is unreviewed: {sorted(f.value for f in sideless)}"
+    )
 
 
 def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:

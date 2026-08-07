@@ -104,6 +104,12 @@ from ._invoice_classification import (
     classify_invoice_line_for_iva,
     invoice_line_to_iva_observation,
 )
+from ._legend_derivation import (
+    LegendDerivation,
+    LegendDerivationOutcome,
+    derive_category_from_regime_legend,
+    match_regime_legend,
+)
 from ._lookup import cite, lookup_rate, rate_kinds_for_declared_rate
 from ._m303_settlement import (
     is_m303_annual_settlement_period,
@@ -118,6 +124,12 @@ from ._oss import (
     OssIossRegime,
     RegimePeriodicity,
     regime_allows_deduction,
+)
+from ._place_of_supply import (
+    IvaPlaceOfSupplyRule,
+    load_place_of_supply_rules,
+    place_of_supply_rule,
+    required_supply_nature_for_rule,
 )
 from ._prorrata import (
     EspecialMandatoryRule,
@@ -185,6 +197,17 @@ from ._sepa_marca import (
     SepaMarca,
     derive_sepa_marca,
 )
+from ._supply_nature import (
+    LIVA_CITATION_QUALIFIERS,
+    STATUTORY_CITATIONS,
+    StatutoryCitation,
+    SupplyNature,
+    SupplyNatureDerivation,
+    SupplyNatureDerivationOutcome,
+    derive_supply_nature_from_citation,
+    match_statutory_citations,
+    supply_nature_is_required,
+)
 from ._verify import verify_catalogue
 
 __all__ = [
@@ -194,11 +217,13 @@ __all__ = [
     "EVIDENCE_EXEMPT_IVA_CATEGORIES",
     "IVA_CATEGORY_COMPONENTS",
     "LAST_FILING_PERIOD_TOKENS",
+    "LIVA_CITATION_QUALIFIERS",
     "NO_PRINTED_TAX_IVA_CATEGORIES",
     "REGIME_LEGENDS",
     "REGIME_PERIODICITY",
     "SEPA_ZONE_COUNTRY_CODES",
     "SPAIN_COUNTRY_CODE",
+    "STATUTORY_CITATIONS",
     "CustomerTaxStatus",
     "DeductionScope",
     "EUMemberState",
@@ -226,6 +251,7 @@ __all__ = [
     "IvaInvoiceClassification",
     "IvaInvoiceClassificationCriteria",
     "IvaKindApplicability",
+    "IvaPlaceOfSupplyRule",
     "IvaRateKind",
     "IvaRateNotFoundError",
     "IvaRateOverlapError",
@@ -239,6 +265,8 @@ __all__ = [
     "IvaValidationError",
     "IvaVerificationIssue",
     "IvaVerificationReport",
+    "LegendDerivation",
+    "LegendDerivationOutcome",
     "LivaArt161RecargoRates",
     "OssIossRegime",
     "ProrrataError",
@@ -258,6 +286,10 @@ __all__ = [
     "RegularizacionProrrataDireccion",
     "RegularizacionProrrataResult",
     "SepaMarca",
+    "StatutoryCitation",
+    "SupplyNature",
+    "SupplyNatureDerivation",
+    "SupplyNatureDerivationOutcome",
     "TransactionKind",
     "category_bears_taxable_base",
     "category_cuota_is_zero_by_law",
@@ -271,8 +303,10 @@ __all__ = [
     "compute_sectoral_prorrata",
     "cuota_less_m303_categories_from_table",
     "deductible_percentage_for",
+    "derive_category_from_regime_legend",
     "derive_flow_for_classification",
     "derive_sepa_marca",
+    "derive_supply_nature_from_citation",
     "domestic_categories_by_rate_kind",
     "especial_mandatory_rule",
     "invoice_line_to_iva_observation",
@@ -285,11 +319,15 @@ __all__ = [
     "load_iva_catalogues",
     "load_iva_rate_table",
     "load_iva_rules_from_manual",
+    "load_place_of_supply_rules",
     "load_recargo_rates",
     "lookup_rate",
     "m303_annual_settlement_order_key",
     "m303_annual_settlement_period_order",
     "m303_annual_settlement_period_tokens",
+    "match_regime_legend",
+    "match_statutory_citations",
+    "place_of_supply_rule",
     "rate_kind_for_domestic_category",
     "rate_kinds_for_declared_rate",
     "recargo_rate_for",
@@ -297,12 +335,14 @@ __all__ = [
     "refund_eligibility_reason",
     "regime_allows_deduction",
     "regime_legend_phrases",
+    "required_supply_nature_for_rule",
     "requires_sectoral_separation",
     "resolve_catalogue",
     "resolve_category_rate",
     "settlement_sides_for_flow",
     "split_gross_at_rate",
     "sum_deductible_amounts",
+    "supply_nature_is_required",
     "territorial_scope_for_country",
     "validate_prorrata_reference",
     "verify_catalogue",

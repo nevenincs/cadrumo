@@ -16,11 +16,12 @@ from typing import Any, cast, override
 
 import yaml
 
-from ..core import normalise_product_identity_references
-from ..core.atomic_write import atomic_write_text
-from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
-from ..core.i18n import extract_placeholders
-from ..core.logging import get_logger
+from cadrumo.core import normalise_product_identity_references
+from cadrumo.core.atomic_write import atomic_write_text
+from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
+from cadrumo.core.i18n import extract_placeholders
+from cadrumo.core.logging import get_logger
+
 from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
@@ -155,16 +156,32 @@ class StrictUniqueKeyLoader(yaml.SafeLoader):
 class LocaleManager:
     """API for managing locale files, scaffolding, and structural health."""
 
-    def __init__(self, src_dir: Path, locales_dir: Path):
+    def __init__(self, src_dir: Path, locales_dir: Path, extra_src_dirs: tuple[Path, ...] = ()):
         """Initialise the manager with the source tree and locale file directory.
 
         Args:
             src_dir: Root directory of the Python source tree to scan for translation keys.
             locales_dir: Directory containing ``*.yml`` locale files.
+            extra_src_dirs: Further roots outside the package that reference
+                catalogue keys. Empty by default so a caller scanning an
+                isolated fixture tree never picks up the live checkout; the CLI
+                and the parity gate pass the documentation generators' root,
+                whose keys would otherwise read as extra keys absent from the
+                codebase.
         """
         self.src_dir = src_dir
         self.locales_dir = locales_dir
-        self.pattern = re.compile(r'\b(?:tr|t)\(\s*["\'](\w+(?:\.\w+)+)["\']', re.UNICODE)
+        self.extra_src_dirs = tuple(d for d in extra_src_dirs if d.is_dir())
+        # ``docs_chrome`` is the documentation generators' accessor. It exists
+        # because ``tr()`` resolves the ambient locale while a docs build must
+        # render one explicit language per page, so the generators cannot use
+        # ``tr()`` -- but the keys it takes are ordinary catalogue keys and must
+        # be as visible to this scan as any other, or scaffold prunes them and
+        # the parity gate reports them as keys no code requests.
+        self.pattern = re.compile(
+            r'\b(?:tr|t|docs_chrome)\(\s*["\'](\w+(?:\.\w+)+)["\']',
+            re.UNICODE,
+        )
 
     def get_codebase_keys(self) -> set[str]:
         """Extract all concrete dotted translation keys from the codebase.
@@ -199,19 +216,18 @@ class LocaleManager:
         from ._fstring_registry import get_registered_keys
 
         keys: set[str] = set()
-        for py_file in self.src_dir.rglob("*.py"):
-            if py_file.name == "test_parity.py" or py_file.name == "manager.py":
-                continue
-            if _is_test_module(py_file):
-                continue
-            try:
-                content = py_file.read_text(encoding=UTF_8_ENCODING, errors="ignore")
-            except OSError as exc:
-                _log.debug("locale key scan: skipping %s (%s)", py_file, exc)
-                continue
-            for match in self.pattern.finditer(content):
-                keys.add(match.group(1))
-        keys.update(scan_source_tree(self.src_dir))
+        for root in (self.src_dir, *self.extra_src_dirs):
+            for py_file in root.rglob("*.py"):
+                if _is_test_module(py_file):
+                    continue
+                try:
+                    content = py_file.read_text(encoding=UTF_8_ENCODING, errors="ignore")
+                except OSError as exc:
+                    _log.debug("locale key scan: skipping %s (%s)", py_file, exc)
+                    continue
+                for match in self.pattern.finditer(content):
+                    keys.add(match.group(1))
+            keys.update(scan_source_tree(root))
         keys.update(get_registered_keys())
         keys.update(scan_registry_keys())
         keys.update(scan_profile_schema_keys())
@@ -228,7 +244,10 @@ class LocaleManager:
         """
         from ._ast_scanner import scan_namespace_markers
 
-        return scan_namespace_markers(self.src_dir)
+        markers: set[str] = set()
+        for root in (self.src_dir, *self.extra_src_dirs):
+            markers.update(scan_namespace_markers(root))
+        return markers
 
     def audit(self) -> LocaleAuditResult:
         """Audit scalar, key-set, placeholder, and codebase parity.

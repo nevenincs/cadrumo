@@ -295,7 +295,7 @@ class TestParseListbox:
     def test_modelo_100_2022_parses_one_row(self) -> None:
         """Assert the Modelo 100 / 2022 fixture parses to a single fully-populated row."""
         html = (_FIXTURE_ROOT / "declaraciones-modelo-100-2022.html").read_text(encoding="utf-8")
-        rows = _parse_listbox(html, modelo="100", ejercicio=2022)
+        rows = _parse_listbox(html, modelo="100", ejercicio=2022).rows
         assert len(rows) == 1
         row = rows[0]
         assert row.modelo == "100"
@@ -358,7 +358,7 @@ class TestParseListbox:
               </tr>
             </div>
         """
-        rows = _parse_listbox(html, modelo="130", ejercicio=2026)
+        rows = _parse_listbox(html, modelo="130", ejercicio=2026).rows
 
         assert len(rows) == 1
         row = rows[0]
@@ -394,7 +394,7 @@ class TestParseListbox:
               </tr>
             </div>
         """
-        row = _parse_listbox(html, modelo="130", ejercicio=2026)[0]
+        row = _parse_listbox(html, modelo="130", ejercicio=2026).rows[0]
 
         assert row.declaration_copy_link_text == "Ver"
         assert row.archive_link_text is None
@@ -416,7 +416,7 @@ class TestParseListbox:
               </table>
             </div>
         """
-        rows = _parse_listbox(html, modelo="130", ejercicio=2024)
+        rows = _parse_listbox(html, modelo="130", ejercicio=2024).rows
         assert rows == ()
 
     def test_missing_listbox_raises_parse_error(self) -> None:

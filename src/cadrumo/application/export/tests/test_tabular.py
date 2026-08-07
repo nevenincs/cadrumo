@@ -169,12 +169,18 @@ def test_export_errors_build_error_envelope(error: ExportFormatError | ExportFie
 def test_export_error_locale_keys_present_in_catalogue(locale_key: str, locale_code: str) -> None:
     """The locale catalogue must carry export error keys for every locale."""
     import importlib.resources
-    import pathlib
 
     import yaml
 
-    locale_dir = pathlib.Path(str(importlib.resources.files("cadrumo.locales")))
-    text = (locale_dir / f"{locale_code}.yml").read_text(encoding=UTF_8_ENCODING)
+    # Resolved through the `cadrumo` package the way the renderer does, not
+    # through `cadrumo.locales`: the catalogue directory carries data only, so
+    # it is a namespace package whose `files()` result does not survive a round
+    # trip through `str()`.
+    text = (
+        importlib.resources.files("cadrumo")
+        .joinpath("locales", f"{locale_code}.yml")
+        .read_text(encoding=UTF_8_ENCODING)
+    )
     data = yaml.safe_load(text)
     value = data.get("errors", {}).get("refused", {}).get(locale_key)
     assert value, f"locale {locale_code!r}: 'errors.refused.{locale_key}' key is missing or empty in {locale_code}.yml"

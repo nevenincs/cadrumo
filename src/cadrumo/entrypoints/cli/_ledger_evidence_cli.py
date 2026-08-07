@@ -33,6 +33,7 @@ from ._common import (
 from ._evidence_field_notices import field_degradation_notices
 from ._ledger_business_invoice_cli import _catalogue_invoice_shared_fields
 from ._ledger_evidence_batch_cli import register_evidence_batch_command
+from ._ledger_evidence_consent_cli import register_evidence_consent_commands
 from ._ledger_evidence_review_cli import parse_finding_resolution, register_evidence_review_commands
 from ._ledger_payloads import (
     EvidenceAddResult,
@@ -65,6 +66,7 @@ def register_evidence_commands(app: typer.Typer) -> None:
     _register_evidence_extract_command()
     _register_evidence_confirm_command()
     register_evidence_batch_command(evidence_app)
+    register_evidence_consent_commands(evidence_app)
     register_evidence_review_commands(evidence_app)
 
 

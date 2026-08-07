@@ -36,8 +36,12 @@ from decimal import Decimal
 import pytest
 
 from ....domain.invoices import IvaRate
-from ....domain.iva import InvoiceKind, IvaCategory, iva_category_components
-from ....domain.iva._invoice_classification import invoice_line_to_iva_observation
+from ....domain.iva import (
+    InvoiceKind,
+    IvaCategory,
+    invoice_line_to_iva_observation,
+    iva_category_components,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -39,7 +39,7 @@ from .._representation_gate import (
     wait_for_own_name_representation_selector,
 )
 from ..browser import DefaultBrowserSession, default_browser_session_factory
-from ._adapter_utils import assert_read_landing, is_aeat_auth_gate_redirect, landed_origin
+from ._adapter_utils import assert_read_landing, is_aeat_auth_gate_redirect, landed_origin, redacted_url
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
@@ -57,7 +57,6 @@ from ._iva_compensation_wallet_parsing import (
     _assert_own_name_representation_form_html,
     _has_wallet_table,
     _looks_like_executed_empty_wallet_page,
-    _redacted_url,
     _wallet_execute_form_method,
     _wallet_execute_gate_status,
     _wallet_page_shape_context,
@@ -175,8 +174,8 @@ async def fetch_iva_compensation_wallet(
                     "AEAT Pre303 presentation surface rejected the authenticated session with 4033",
                     failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
                     context={
-                        "landing_url": _redacted_url(page.url),
-                        "expected_url": _redacted_url(_PRE303_PRESENTATION_URL),
+                        "landing_url": redacted_url(page.url),
+                        "expected_url": redacted_url(_PRE303_PRESENTATION_URL),
                         "surface": "pre303_presentation_service",
                     },
                     suggestion=(
@@ -219,8 +218,8 @@ async def fetch_iva_compensation_wallet(
                 "AEAT IVA compensation wallet rejected the authenticated session with 4033",
                 failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
                 context={
-                    "landing_url": _redacted_url(page.url),
-                    "expected_url": _redacted_url(_WALLET_URL),
+                    "landing_url": redacted_url(page.url),
+                    "expected_url": redacted_url(_WALLET_URL),
                     "surface": "iva_compensation_wallet",
                 },
                 suggestion=(
@@ -420,8 +419,8 @@ async def _continue_own_name_representation(
             "authenticated profile user.",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context={
-                "landing_url": _redacted_url(getattr(page, "url", None)),
-                "expected_url": _redacted_url(expected_url),
+                "landing_url": redacted_url(getattr(page, "url", None)),
+                "expected_url": redacted_url(expected_url),
                 "surface": surface,
                 "blocked_operation": "representative_or_unknown_representation_gate",
             },
@@ -507,8 +506,8 @@ async def _select_own_name_actuacion_if_present(page: Page, *, settings: Setting
             "AEAT cartera own-name option did not resolve to the expected wallet surface",
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
             context={
-                "landing_url": _redacted_url(getattr(page, "url", None)),
-                "own_name_target": _redacted_url(target),
+                "landing_url": redacted_url(getattr(page, "url", None)),
+                "own_name_target": redacted_url(target),
             },
         )
     _assert_read_http("GET", target)
@@ -528,7 +527,7 @@ async def _select_own_name_actuacion_if_present(page: Page, *, settings: Setting
         raise SedeNavigationError(
             "AEAT cartera own-name continuation failed",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            context={"landing_url": _redacted_url(getattr(page, "url", None))},
+            context={"landing_url": redacted_url(getattr(page, "url", None))},
         ) from exc
     dump_dir = settings.cadrumo_wallet_diagnostic_dump_dir
     if dump_dir is not None:
@@ -700,7 +699,7 @@ async def _submit_wallet_execute_gate_if_present(
                 failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
                 context={
                     **_wallet_page_shape_context(html, landing_url=current_url),
-                    "expected_url": _redacted_url(expected_url),
+                    "expected_url": redacted_url(expected_url),
                     "blocked_operation": "wallet_execute_read_query",
                 },
                 suggestion=(

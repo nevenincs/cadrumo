@@ -23,6 +23,7 @@ from .....core import AuthProviderKind as _AuthProviderKind
 from .....core.config import (
     AEAT_CERTIFICATE_PROTECTED_ORIGIN,
     AEAT_CERTIFICATE_PROTECTED_URL,
+    assert_canonical_protected_resource,
 )
 from .certificate import (
     CertificateNifParseError,
@@ -52,9 +53,7 @@ class CertificateSessionDetail(BaseModel):
     @field_validator("protected_resource_url")
     @classmethod
     def _protected_resource_is_canonical(cls, value: str) -> str:
-        if value != AEAT_CERTIFICATE_PROTECTED_URL:
-            raise ValueError("certificate session proof must use the canonical protected resource")
-        return value
+        return assert_canonical_protected_resource(value, subject="certificate session proof")
 
 
 #: Discriminants of the Cl@ve-backed providers. Declared once so the shared

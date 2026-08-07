@@ -150,6 +150,13 @@ required = false
 sensitivity = "operational"
 description = "Whether this profile may export modelo workbooks to Google Sheets or Drive. Default on; opting out keeps exports offline-only."
 
+[[sections.fields]]
+key = "cloud_evidence_upload"
+type = "boolean"
+required = false
+sensitivity = "operational"
+description = "Whether this profile is eligible to be asked for permission to read an evidence document at a hosted model, which removes that document from this machine. Default off, and refused outright in gestor mode. While off, the permission is never requested and no document is ever sent."
+
 [[sections]]
 key = "auth"
 title = "AEAT authentication"

@@ -57,6 +57,19 @@ No count is hardcoded. The number of designs, boundaries and shared boxes all
 vary as the corpus grows; gating on any of them would encode today and detect
 nothing tomorrow.
 
+RUNTIME, stated here so the next reader meets it in the code rather than in CI.
+Reading the design SOURCES rather than their markdown derivatives took this
+module from roughly 28s to roughly 185s, a five-fold increase, because it now
+parses spreadsheets and PDFs instead of pre-extracted text. Two things keep that
+acceptable and both are worth knowing before anyone tries to "optimise" it. The
+parsers are ``lru_cache``d, so the cost is paid ONCE PER SESSION rather than per
+test -- the number that matters for CI is the one-off, not a multiple of it. And
+it cannot be scoped away: restricting the parse to modelos that actually declare
+an export layout removes only ~37% of the files and ~15% of the bytes, because
+the largest designs belong to modelos that do export. The cost buys the offsets
+and the field occupancy the derivatives do not carry, which is what the box and
+retirement signals are made of.
+
 TWO INDEPENDENT SIGNALS, ONE VERDICT. The box-offset diff sees which boxes moved
 but needs bracketed box markers. The page-length diff sees only that a page
 changed size, but reads designs the box table cannot -- several older PDF
@@ -107,6 +120,12 @@ import pytest
 from .....core.resources import bundled_path
 from .. import ModeloDefinition
 from .._authority import ValidatedRegistryAuthority
+from .._record_design import (
+    extract_record_design_pdf,
+    extract_record_design_workbook,
+    extract_record_design_xls_workbook,
+)
+from .._record_design_schema import RecordDesignSheet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -116,7 +135,28 @@ _DESIGN_ROOT_PARTS = ("corpus", "aeat_official", "disenos_registro")
 # The extracted design tables render one field per row as
 # "order | offset | length | kind | description [box] | ... ".
 _BOX_MARKER = re.compile(r"\[(\d{1,4})\]")
-_DESIGN_YEAR = re.compile(r"ejercicio-(\d{4})")
+_DESIGN_YEAR = re.compile(r"ejercicio-(\d{4})(?:-y-(\d{4}))?")
+#: A design filename may name TWO explicit ejercicios ("ejercicio-2015-y-2016"),
+#: and the corpus holds four such spans (2007-y-2008, 2008-y-2009, 2015-y-2016,
+#: 2019-y-2020). Taking only the first match attributed the design to its opening
+#: year and left the second attributed to NOTHING -- 2016 and 2020 each had a
+#: bundled design and no year claiming it. "y-siguientes" is deliberately NOT
+#: expanded: its span is open-ended, so enumerating it would invent years.
+#: The orden year in a filename ("orden-hap-2373-2014-...-ejercicio-2018") is not
+#: a coverage year and must never be read as one, which is why this anchors on
+#: "ejercicio-" rather than scanning for any four-digit run.
+#: Case-INSENSITIVE on purpose. AEAT writes both `Reservado para la AEAT` and
+#: `RESERVADO PARA LA A.E.A.T.`, and a case-sensitive substring test silently
+#: misses the uppercase form -- which reads a reserved block's own growth as a
+#: moved field and invents a boundary that is not there.
+_RESERVED_FIELD = re.compile(r"reservado", re.IGNORECASE)
+#: Design SOURCE suffixes, in preference order for a year bundled more than once.
+_DESIGN_SUFFIXES = (".xlsx", ".xls", ".pdf")
+#: The synthetic single-sheet name the PDF backend falls back to when a document
+#: declares no per-page sections. Its presence means the parse is FLATTENED, so
+#: per-page signals must abstain rather than compare one synthetic page against
+#: a spreadsheet's real ones.
+_PDF_FLATTENED_SHEET = "PDF record design"
 
 # Each page closes with a "TOTAL <n> POSICIONES" row, in the pipe-delimited
 # spreadsheet extractions and the space-delimited PDF ones alike. The sequence of
@@ -134,10 +174,101 @@ def _design_dir(modelo_id: str) -> Path:
     return bundled_path(*_DESIGN_ROOT_PARTS, f"modelo_{modelo_id}")
 
 
-def _parse_design(path: Path) -> dict[str, int]:
-    """box number -> record offset for one extracted design table."""
+def _sources_by_year(modelo_id: str) -> tuple[tuple[int, Path], ...]:
+    """``(design year, source path)`` pairs, first source per year winning."""
+    seen: dict[int, Path] = {}
+    for path in _design_sources(modelo_id):
+        if not _design_sheets(path):
+            continue
+        for year in _design_years(path.name):
+            seen.setdefault(year, path)
+    return tuple(sorted(seen.items()))
+
+
+def _design_years(name: str) -> tuple[int, ...]:
+    """Every ejercicio a design filename explicitly claims, in order."""
+    matched = _DESIGN_YEAR.search(name)
+    if matched is None:
+        return ()
+    return tuple(int(group) for group in matched.groups() if group is not None)
+
+
+def _designs_by_year(modelo_id: str) -> dict[int, tuple[Path, ...]]:
+    """``{year: every readable design source claiming it}`` -- one to MANY.
+
+    AEAT splits an ejercicio mid-course, so a year can have two designs that differ
+    in byte layout. Modelo 303 does it three times: 2018, 2021 and 2024 each ship a
+    "hasta periodo N" design and a "desde/a partir de periodo N" one. The year-keyed
+    maps below keep the FIRST by filename sort and silently discard the other, so a
+    caller asking what a year looked like gets an arbitrary half with no signal a
+    second exists. This map keeps both, so a consumer deriving epoch boundaries can
+    see the split rather than land a boundary on the wrong side of it.
+    """
+    grouped: dict[int, list[Path]] = {}
+    for path in _design_sources(modelo_id):
+        if not _design_sheets(path):
+            continue
+        for year in _design_years(path.name):
+            grouped.setdefault(year, []).append(path)
+    return {year: tuple(paths) for year, paths in sorted(grouped.items())}
+
+
+def _design_sources(modelo_id: str) -> list[Path]:
+    """Every bundled design SOURCE for one modelo, deterministically ordered."""
+    directory = _design_dir(modelo_id)
+    if not directory.is_dir():
+        return []
+    return sorted(
+        (path for path in directory.glob("files/*") if path.suffix.lower() in _DESIGN_SUFFIXES),
+        key=lambda path: (path.name, path.suffix.lower()),
+    )
+
+
+def _design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
+    """Parse one design SOURCE, dispatching on its suffix.
+
+    The sources are read directly rather than their ``.extracted.md``
+    derivatives. The markdown extraction of a PDF drops the offset column and
+    the page-total rows, so every PDF-sourced design read that way reports as
+    unreadable while the shipped parser reads the same file correctly -- 21 of
+    the 24 designs this module called unmeasured were readable all along, six
+    of them consecutive Modelo 100 years. Reading the source removes the whole
+    class rather than special-casing it.
+
+    Returns an empty tuple for a genuinely unparseable file, so the caller's
+    unreadable-reporting path still names it. A parse that fails must stay
+    visible as unmeasured; only a parse that never ran should disappear.
+    """
+    parsers = {
+        ".xlsx": extract_record_design_workbook,
+        ".xls": extract_record_design_xls_workbook,
+        ".pdf": extract_record_design_pdf,
+    }
+    parser = parsers.get(path.suffix.lower())
+    if parser is None:
+        return ()
+    try:
+        return parser(path)
+    except Exception:  # noqa: BLE001 - an unparseable design is reported, never raised
+        return ()
+
+
+def _parse_extracted(path: Path) -> dict[str, int]:
+    """box number -> offset from a design's ``.extracted.md`` derivative.
+
+    Retained as a FALLBACK, not as the primary read. Measured: switching to the
+    sources alone closed 21 PDF-sourced designs but OPENED new blind spots on
+    `.xls` files whose markdown parses while the binary does not, so the
+    unreadable count moved 24 -> 21 rather than 24 -> 3. Source-first with a
+    derivative fallback is strictly better than either alone -- the source
+    yields offsets and occupancy the markdown cannot, and the markdown covers
+    the binaries the parsers refuse.
+    """
+    derivative = path.with_name(path.name + ".extracted.md")
+    if not derivative.is_file():
+        return {}
     table: dict[str, int] = {}
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+    for line in derivative.read_text(encoding="utf-8", errors="replace").splitlines():
         if "|" not in line:
             continue
         columns = [column.strip() for column in line.split("|")]
@@ -148,39 +279,97 @@ def _parse_design(path: Path) -> dict[str, int]:
         except (IndexError, ValueError):
             continue
         boxes = _BOX_MARKER.findall(line)
-        if not boxes:
-            continue
-        # A field's OWN number is the LAST bracket on its row. Formula totals cite
-        # their operands first -- "Total cuota devengada ([152]+[167]+...) [27]"
-        # -- so first-match keying would file the total under an operand, and
-        # requiring a single bracket would drop it entirely. Modelo 303 has
-        # eleven such rows, including its three most load-bearing totals; Modelo
-        # 390 has none, which is why this only surfaced on the second modelo.
-        #
-        # A box can also appear once per régimen segment at the same offset; keep
-        # the first and never overwrite, so a later segment cannot mask a move.
-        table.setdefault(boxes[-1], offset)
+        if boxes:
+            table.setdefault(boxes[-1], offset)
     return table
 
 
+def _parse_design(path: Path) -> dict[str, int]:
+    """box number -> record offset for one design, source first, derivative second."""
+    table: dict[str, int] = {}
+    for sheet in _design_sheets(path):
+        for field in sheet.fields:
+            offset = field.offset
+            boxes = _BOX_MARKER.findall(field.description)
+            if not boxes:
+                continue
+            # A field's OWN number is the LAST bracket on its row. Formula totals cite
+            # their operands first -- "Total cuota devengada ([152]+[167]+...) [27]"
+            # -- so first-match keying would file the total under an operand, and
+            # requiring a single bracket would drop it entirely. Modelo 303 has
+            # eleven such rows, including its three most load-bearing totals; Modelo
+            # 390 has none, which is why this only surfaced on the second modelo.
+            #
+            # A box can also appear once per régimen segment at the same offset; keep
+            # the first and never overwrite, so a later segment cannot mask a move.
+            #
+            # Modelo 390 proves this is not hypothetical: box [114] carries one
+            # `Código CNAE` per prorrata row -- once in the 2016 design and FIVE
+            # times in 2017. A last-wins map compares 2016's first row against
+            # 2017's fifth and reports a +332 "move" that never happened.
+            table.setdefault(boxes[-1], offset)
+    return table or _parse_extracted(path)
+
+
 def _page_lengths(path: Path) -> tuple[str, ...]:
-    """The per-page ``TOTAL n POSICIONES`` sequence for one design."""
-    return tuple(_PAGE_TOTAL.findall(path.read_text(encoding="utf-8", errors="replace")))
+    """The per-sheet declared record length, source first, derivative second.
+
+    ABSTAINS on a flattened PDF parse. The PDF backend returns ONE synthetic
+    sheet covering the whole document, so its "page lengths" are a one-element
+    tuple describing no page at all. Compared against a spreadsheet's nine real
+    per-page totals it differs unconditionally, which reports a re-layout
+    between every PDF-sourced year and its neighbour -- a boundary manufactured
+    by the parser shape rather than by AEAT.
+
+    Measured: with the flattened tuple emitted, Modelo 390 gained a false
+    2015->2016 boundary, while a box-keyed comparison of the same two designs
+    finds 345 shared boxes and ZERO moved. Returning nothing lets the box signal
+    carry those years and keeps this one honest about what it cannot see.
+    """
+    sheets = _design_sheets(path)
+    if len(sheets) == 1 and sheets[0].name == _PDF_FLATTENED_SHEET:
+        return ()
+    lengths = tuple("variable" if sheet.total_positions is None else str(sheet.total_positions) for sheet in sheets)
+    if lengths:
+        return lengths
+    derivative = path.with_name(path.name + ".extracted.md")
+    if not derivative.is_file():
+        return ()
+    return tuple(_PAGE_TOTAL.findall(derivative.read_text(encoding="utf-8", errors="replace")))
+
+
+def _occupancy(path: Path) -> dict[tuple[str, int], bool]:
+    """``(sheet, offset) -> is_reserved`` for every field in one design.
+
+    The reserved flag is carried as a VALUE rather than applied as a filter, and
+    that is the whole point. Excluding reserved rows from a comparison makes a
+    field RETIRED INTO reserved space invisible: it is real on one side and
+    reserved on the other, so the exclusion drops one side and the pair is never
+    compared. Measured on Modelo 390, three `Reg. Simplificado - Reducción
+    aplicable` slots were retired between the 2024 and 2025 designs at offsets
+    223, 543 and 1205, and a reserved-excluding diff reported the two years
+    identical.
+
+    A filter that drops a category cannot see movement into or out of that
+    category. Keying on the position and classifying afterwards makes the
+    transition a first-class result.
+    """
+    return {
+        (sheet.name, field.offset): _RESERVED_FIELD.search(field.description) is not None
+        for sheet in _design_sheets(path)
+        for field in sheet.fields
+    }
 
 
 def _page_lengths_for(modelo_id: str) -> dict[int, tuple[str, ...]]:
     """``{design year: page-length sequence}`` for every readable design."""
-    directory = _design_dir(modelo_id)
-    if not directory.is_dir():
-        return {}
     lengths: dict[int, tuple[str, ...]] = {}
-    for path in sorted(directory.glob("files/*.extracted.md")):
-        matched = _DESIGN_YEAR.search(path.name)
-        if matched is None:
-            continue
+    for path in _design_sources(modelo_id):
         found = _page_lengths(path)
-        if found:
-            lengths.setdefault(int(matched.group(1)), found)
+        if not found:
+            continue
+        for year in _design_years(path.name):
+            lengths.setdefault(year, found)
     return lengths
 
 
@@ -191,21 +380,15 @@ def _designs_for(modelo_id: str) -> tuple[dict[int, dict[str, int]], dict[int, s
     maps: it can neither be compared nor attributed to a revision's span, so
     counting it either way would be a guess.
     """
-    directory = _design_dir(modelo_id)
-    if not directory.is_dir():
-        return {}, {}
     parsed: dict[int, dict[str, int]] = {}
     unreadable: dict[int, str] = {}
-    for path in sorted(directory.glob("files/*.extracted.md")):
-        matched = _DESIGN_YEAR.search(path.name)
-        if matched is None:
-            continue
-        year = int(matched.group(1))
+    for path in _design_sources(modelo_id):
         table = _parse_design(path)
-        if table:
-            parsed.setdefault(year, table)
-        elif year not in parsed:
-            unreadable.setdefault(year, path.name)
+        for year in _design_years(path.name):
+            if table:
+                parsed.setdefault(year, table)
+            elif year not in parsed:
+                unreadable.setdefault(year, path.name)
     return parsed, unreadable
 
 
@@ -331,13 +514,40 @@ def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]
         # and stated as bare tuples it was under-read for hours by everyone
         # looking at it, including its author.
         headline = (
-            f"RECORD SET CHANGED ({delta}) -- the design's record decomposition differs, "
-            "so this is not an offset shift"
+            f"RECORD SET CHANGED ({delta}) -- the design's record decomposition differs, so this is not an offset shift"
             if delta
             else "page byte-lengths differ, so something moved inside a record"
         )
+        boundaries.setdefault((earlier, later), []).append(f"{headline}: {lengths[earlier]} vs {lengths[later]}")
+
+    # THIRD SIGNAL: a slot RETIRED into reserved space. It moves no box and
+    # changes no page length -- the reserved block absorbs the freed bytes
+    # exactly -- so neither signal above can see it, and a digest cannot either.
+    # It is still a re-layout: a field present in one design and absent in the
+    # next means a filing written under the older layout puts declared values
+    # into space AEAT now marks reserved.
+    #
+    # Measured live on Modelo 390, where three `Reg. Simplificado - Reducción
+    # aplicable` slots were retired between the 2024 and 2025 designs while both
+    # signals above reported the years identical.
+    #
+    # The REVERSE transition (reserved -> real) is deliberately NOT asserted.
+    # It measures zero across the whole bundled corpus, so an assertion for it
+    # would ship vacuous and pass silently forever. It is reported when seen,
+    # which is the honest shape for a signal with no positive case to prove it.
+    occupancy_years = sorted(_claimed_years(revision, {year for year, _ in _sources_by_year(modelo_id)}))
+    sources = dict(_sources_by_year(modelo_id))
+    for earlier, later in zip(occupancy_years, occupancy_years[1:]):
+        before, after = _occupancy(sources[earlier]), _occupancy(sources[later])
+        shared = set(before) & set(after)
+        retired = sorted(slot for slot in shared if not before[slot] and after[slot])
+        if not retired:
+            continue
+        sample = ", ".join(f"{sheet} offset {offset}" for sheet, offset in retired[:3])
         boundaries.setdefault((earlier, later), []).append(
-            f"{headline}: {lengths[earlier]} vs {lengths[later]}"
+            f"{len(retired)} slot(s) RETIRED into reserved space (e.g. {sample}) -- "
+            "no box moved and no page length changed, so a filing written under the "
+            "older layout writes declared values into space now marked reserved"
         )
 
     return boundaries
@@ -364,8 +574,7 @@ def test_no_revision_spans_a_design_relayout() -> None:
         if not boundaries:
             continue
         detail = "; ".join(
-            f"{earlier}/{later} ({' + '.join(evidence)})"
-            for (earlier, later), evidence in sorted(boundaries.items())
+            f"{earlier}/{later} ({' + '.join(evidence)})" for (earlier, later), evidence in sorted(boundaries.items())
         )
         violations.append(
             f"modelo {modelo.id} revision {revision_id!r} spans {len(boundaries)} re-layout(s) "
@@ -376,3 +585,55 @@ def test_no_revision_spans_a_design_relayout() -> None:
         "filings at the wrong byte offsets. Split each revision at every boundary listed; "
         "splitting at only the ones one signal saw leaves the rest live:\n  " + "\n  ".join(violations)
     )
+
+
+def test_every_ejercicio_a_design_names_is_attributed_to_it() -> None:
+    """A design naming two ejercicios must be attributed to BOTH.
+
+    ``ejercicio-(\d{4})`` taken as a first match attributed a two-year design to
+    its opening year only, so Modelo 303's 2015-y-2016 and 2019-y-2020 designs
+    left 2016 and 2020 claimed by nothing -- years the corpus covers and the
+    enumeration reported as unmeasured.
+
+    The emptiness guard is deliberate: the subject of this assertion is a map
+    built by globbing a directory, and a glob that matches nothing would satisfy
+    every ``for`` below vacuously.
+    """
+    by_year = _designs_by_year("303")
+    assert by_year, "no Modelo 303 design was enumerated at all; the assertions below would be vacuous"
+    for year in (2015, 2016, 2019, 2020):
+        assert year in by_year, f"{year} is covered by a bundled design but attributed to nothing"
+
+
+def test_a_year_aeat_split_mid_course_keeps_both_of_its_designs() -> None:
+    """AEAT split three Modelo 303 ejercicios mid-course; both halves must survive.
+
+    The year-keyed maps keep the first design by filename sort and discard the
+    rest, so a consumer deriving an epoch boundary from "the 2024 design" reads
+    an arbitrary half of a year that has two incompatible layouts.
+
+    Counted by CONTENT, not by path: the corpus bundles three of these designs
+    twice under names differing only by a truncated extension, and a path count
+    would report the duplicate as a second design and pass while proving nothing.
+    """
+    by_year = _designs_by_year("303")
+    assert by_year, "no Modelo 303 design was enumerated at all"
+    for year in (2018, 2021, 2024):
+        distinct = {path.read_bytes() for path in by_year.get(year, ())}
+        assert len(distinct) >= 2, (
+            f"{year} should carry two distinct Modelo 303 designs (AEAT split it mid-course) "
+            f"but {len(distinct)} distinct payload(s) survived enumeration"
+        )
+
+
+def test_the_orden_year_in_a_filename_is_not_read_as_a_coverage_year() -> None:
+    """``orden-hap-2373-2014-...-ejercicio-2018`` covers 2018, not 2014.
+
+    The negative control for the widened attribution: anchoring on ``ejercicio-``
+    rather than scanning for four-digit runs is what keeps a legislative
+    instrument's own year out of the coverage map.
+    """
+    assert _design_years("13-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2018-salvo.xlsx") == (2018,)
+    assert _design_years("10-303-orden-hap-2373-2014-ejercicio-2015-y-2016-247-kb-xlsx.xlsx") == (2015, 2016)
+    assert _design_years("02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021.xlsx") == (2022,)
+    assert _design_years("07-303-orden-eha-3786-2008-v1-1-36-kb-pdf.pdf") == ()

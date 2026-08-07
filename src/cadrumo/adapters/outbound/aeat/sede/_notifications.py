@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING, Any, Final, Literal
 from urllib.parse import urlsplit, urlunsplit
 
 from bs4 import BeautifulSoup
-from pydantic import AnyHttpUrl, AnyUrl, BaseModel, Field
+from pydantic import AnyHttpUrl, BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.async_cleanup import close_async_resources
@@ -43,12 +43,11 @@ from .....core.logging import get_logger
 from .....core.parsing import parse_date
 from .....core.time import now
 from .....domain.calculations.registry import (
-    RemoteOperation,
     RemoteStateGuardPolicy,
-    assert_remote_operation_allowed,
 )
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
+from ._adapter_utils import assert_read_http_for
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
@@ -605,10 +604,7 @@ async def _navigate_and_parse(
 
 def _assert_read_http(method: str, url: str) -> None:
     """Fail-closed guard: refuse any non-read-only or off-AEAT notifications navigation."""
-    assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
-        RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
-    )
+    assert_read_http_for(_READ_GUARD_POLICY, method, url)
 
 
 def _recorded_landing_url(landing_url: str, *, fallback_url: str) -> str:

@@ -727,7 +727,14 @@ def _with_derived_303_compensation_available_observation(
             values[casilla.casilla_id] = casilla.decimal_value()
         except (InvalidOperation, SedeValidationError) as exc:
             raise SedeParseError(f"observed casilla {casilla.casilla_id!r} is not decimal-valued") from exc
-    derivation = derive_m303_compensation_available_from_casillas(values)
+    # A fetched AEAT filing carries casillas only, and the compensación /
+    # devolución election is not one: Modelo 303 has no devolución casilla, so
+    # the fichero header that records it is not in what we observe here. The
+    # standard compensación disposition is therefore ASSUMED, which is right for
+    # the common case and over-states the carry for a period the taxpayer had
+    # refunded. Stated rather than defaulted, and stamped into the locator below
+    # so an operator auditing the carry can see the assumption that produced it.
+    derivation = derive_m303_compensation_available_from_casillas(values, refunded=False)
     if derivation is None:
         return observation
     if derivation.basis == "generated":
@@ -748,7 +755,8 @@ def _with_derived_303_compensation_available_observation(
     else:
         source_artefact_kind = "derived_carry_policy"
         source_locator = (
-            f"carry-policy:{M303_COMPENSATION_POSTERIOR_CASILLA}+max(0,-{M303_COMPENSATION_RESULTADO_CASILLA})"
+            f"carry-policy:compensacion-assumed:"
+            f"{M303_COMPENSATION_POSTERIOR_CASILLA}+max(0,-{M303_COMPENSATION_RESULTADO_CASILLA})"
         )
     derived = ObservedCasillaValue(
         casilla_id=target_id,

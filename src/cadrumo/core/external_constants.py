@@ -748,6 +748,21 @@ MINIMO_MENOR_TRES_MAX_AGE: Final[int] = 3
 #: split between the two custodial parents.
 CUSTODIA_COMPARTIDA_PRORRATA_FACTOR: Final[Decimal] = Decimal("0.5")
 
+#: Art. 81.1 LIRPF (Ley 35/2006, BOE-A-2006-20764) adopción/acogimiento window for the
+#: deducción por maternidad: the limb runs "durante los tres años siguientes a la fecha
+#: de la inscripción en el Registro Civil". Counted in YEARS from a date, unlike the
+#: Art. 58.2 window below, which counts whole tax PERIODS from the entry period — two
+#: rules that read alike and are not, so they stay separate constants.
+ART_81_1_ENTRY_WINDOW_YEARS: Final[int] = 3
+
+#: Madrid DL 1/2010 art. 4 deducción por nacimiento o adopción applicability window,
+#: expressed as the count of periods FOLLOWING the entry period. The deducción applies
+#: in the period of nacimiento/adopción and in each of the two following, i.e. a
+#: three-period window keyed on the entry year. Grounded in the bundled AEAT Renta 2025
+#: manual, parte 2 (deducciones autonómicas), "Ámbito temporal de aplicación de la
+#: deducción". Autonómico rather than estatal, so it is the likelier of the two to move.
+NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS: Final[int] = 2
+
 #: LIRPF Disposición Transitoria 12ª (Ley 35/2006, BOE-A-2006-20764) reducción rate:
 #: 40 % reducción on the part of a plan-de-pensiones capital rescate attributable to
 #: contributions made on or before 31-12-2006.

@@ -38,7 +38,14 @@ import pytest
 
 from ....core import Modelo, Period
 from ....domain.calculations.registry import ModeloRevision, bundled_authority, selector_as_dict
-from ....domain.iva import EUMemberState, IvaRateKind, rate_kinds_for_declared_rate
+from ....domain.calculations.registry import IvaLedgerObservation
+from ....domain.iva import (
+    EUMemberState,
+    IvaCategory,
+    IvaFlowDirection,
+    IvaRateKind,
+    rate_kinds_for_declared_rate,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -314,3 +321,137 @@ def test_a_domestic_row_always_carries_the_rate_the_rungs_key_on() -> None:
         assert observation.applied_rate is not None, (
             f"observation {observation.ledger_id} reached a domestic tier with no recorded rate"
         )
+
+
+def test_a_rate_less_row_is_refused_at_ingest_rather_than_silently_dropped() -> None:
+    """The narrowing's whole safety case rests on this refusal, so it is gated here.
+
+    The accepted rate-box decision rejects narrowing a tier binding because
+    underdetermined rows then reach no box and leave the declared total. Modelo
+    303 narrows anyway, and is safe only because the underdetermined row cannot
+    exist on this path: the classifier refuses a transaction with no
+    ``iva_rate`` and says so, rather than emitting an observation whose rate is
+    unknown.
+
+    A refusal is a stronger guarantee than a catch-all layer -- the amount never
+    enters the return AND the operator is told -- but it is a different mechanism
+    from the one that decision prescribes, so it needs its own gate. If this ever
+    stops refusing, the narrowing becomes a silent under-declaration.
+    """
+    row = _transaction(
+        "row-no-rate",
+        on_date=date(2024, 11, 6),
+        taxable_base=Decimal("1600.00"),
+        iva_rate=None,
+        iva_amount=Decimal("120.00"),
+    )
+    catalogue = TransactionCatalogue.model_validate({"transactions": {row.transaction_id: row}})
+    aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD_4T_2024)
+
+    assert aggregation.observations == (), "a rate-less row produced an observation instead of being refused"
+    assert [i.reason.value for i in aggregation.issues] == ["missing_iva_rate"]
+
+
+def test_an_underdetermined_observation_would_reach_no_rung_at_all() -> None:
+    """Positive control: the probe above can only mean something if this fails.
+
+    Proving a rate-less row never appears says nothing unless we also show what
+    would happen if it did. Fed straight to the resolver, an observation with no
+    recorded rate reaches NO rung -- exactly the loss the rate-box decision warns
+    of -- while its determined twin reaches the ordinary reducido rung. So the
+    refusal above is load-bearing, not incidental.
+    """
+    common = {
+        "ledger_id": "control",
+        "transaction_date": date(2024, 11, 6),
+        "category": IvaCategory.DOMESTIC_REDUCED,
+        "rate_kind": IvaRateKind.REDUCED,
+        "flow_direction": IvaFlowDirection.REPERCUTIDO,
+        "base_amount": Decimal("1600.00"),
+        "iva_amount": Decimal("120.00"),
+        "recargo_amount": Decimal("0"),
+    }
+    revision = _revision()
+
+    def reached(applied_rate: Decimal | None) -> dict[str, Decimal]:
+        observation = IvaLedgerObservation(**common, applied_rate=applied_rate)
+        values = resolve_iva_ledger_binding_values(revision, (observation,))
+        return {str(k): v for k, v in values.items() if "iva-repercutido" in str(k) and v != Decimal("0")}
+
+    assert reached(None) == {}, "an underdetermined row reached a rate-specific rung"
+    assert reached(Decimal("0.10")) == {
+        "modelo-303-iva-repercutido-reducido-base": Decimal("1600.00"),
+        "modelo-303-iva-repercutido-reducido-cuota": Decimal("120.00"),
+    }
+
+
+def test_total_cuota_devengada_enumerates_every_recargo_rung_aeat_sums() -> None:
+    """The aggregate must carry every rung AEAT's own [27] formula enumerates.
+
+    The diseño prints casilla 27 as an explicit sum, and it names the recargo
+    rungs [158], [170] and [26] alongside [18], [21] and [24]. Three of those
+    were missing here, and [158] is the one that cost money: it is bound, so a
+    super-reducido recargo cuota reached that box, but the box reached no total
+    -- declared on the face of the return and absent from the figure the
+    resultado chain uses.
+
+    Keyed on the rungs rather than on a count, so adding a rung without totalling
+    it reds this rather than passing on a stale tally. [158] and [26] appear in
+    the printed formula of every design this revision spans; [170] appears from
+    the 2024-late design, and is included so the total stays correct on both
+    sides of the pending box move rather than needing a second edit then.
+    """
+    revision = _revision()
+    total = next(f for f in revision.formulas if f.target_casilla_id == "iva.cuota-devengada-total")
+    summed = {str(arg.casilla_id) for arg in total.expression.args if arg.casilla_id is not None}
+
+    recargo_rungs_aeat_sums = {"18", "21", "24", "158", "170", "26"}
+    assert recargo_rungs_aeat_sums <= summed, (
+        f"recargo rungs AEAT sums into [27] but this total omits: "
+        f"{sorted(recargo_rungs_aeat_sums - summed)}"
+    )
+
+
+#: Every term AEAT prints inside casilla [27] in the 2025 diseno. [11] is the one
+#: deliberate exclusion: it projects the AIC official-box PARITY casilla, while
+#: iva.autorepercutido.intracomunitaria already books that same cuota into the
+#: total, so summing it would count the AIC cuota twice. Declared here with its
+#: reason rather than silently absent, because an undeclared gap in this list is
+#: indistinguishable from the omission the test exists to catch.
+_AEAT_TOTAL_TERMS = ("152", "167", "03", "155", "06", "09", "11", "13", "15", "158", "170", "18", "21", "24", "26")
+_DELIBERATELY_EXCLUDED = {"11": "AIC parity box; iva.autorepercutido.intracomunitaria already books the cuota"}
+
+
+def test_total_cuota_devengada_covers_every_term_aeat_prints() -> None:
+    """Each printed term must be reachable, directly or through its projection.
+
+    A term can be covered indirectly: [03] is a projection of
+    iva.repercutido.super-reducido, so summing the carrier covers the box. This
+    resolves each term to whatever actually feeds it rather than matching ids,
+    which is what makes it safe to compare a semantic-layer total against a
+    box-layer formula.
+
+    Non-tautology: the projection map is derived from the loaded revision, not
+    restated here, so dropping either a summed carrier or the projection that
+    links a box to it fails this.
+    """
+    revision = _revision()
+    total = next(f for f in revision.formulas if f.target_casilla_id == "iva.cuota-devengada-total")
+    summed = {str(arg.casilla_id) for arg in total.expression.args if arg.casilla_id is not None}
+
+    projects: dict[str, str] = {}
+    for formula in revision.formulas:
+        target = str(formula.target_casilla_id) if formula.target_casilla_id else None
+        operands = [str(a.casilla_id) for a in formula.expression.args if a.casilla_id is not None]
+        source = getattr(formula.expression, "casilla_id", None)
+        if target and source is not None and not operands:
+            projects[target] = str(source)
+
+    uncovered = [
+        term
+        for term in _AEAT_TOTAL_TERMS
+        if term not in _DELIBERATELY_EXCLUDED
+        and term not in summed
+        and projects.get(term) not in summed
+    ]
+    assert not uncovered, f"terms AEAT prints in [27] that this total cannot reach: {uncovered}"

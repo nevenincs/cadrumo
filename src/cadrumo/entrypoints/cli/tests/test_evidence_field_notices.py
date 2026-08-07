@@ -13,8 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.ledger import FieldProvenance
-from ....application.ledger._evidence_draft import FieldAmbiguityCandidate
+from ....application.ledger import FieldAmbiguityCandidate, FieldProvenance
 from ....core import FieldGroundingOutcome, FieldOrigin
 from ....core.json_contract import Notice, NoticeSeverity, derive_status
 from .._evidence_field_notices import DEGRADED_GROUNDING_OUTCOMES, field_degradation_notices

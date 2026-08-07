@@ -220,6 +220,45 @@ async def shared_playwright(
         yield pw
 
 
+def _register_rows_from_snapshot(
+    html: str,
+    *,
+    modelo: str,
+    ejercicio: int,
+) -> tuple[Declaracion, ...]:
+    """Parse one register snapshot into rows, refusing a page the grid says is partial.
+
+    The register is read from a single ``Buscar`` result snapshot, and the walker
+    does not click through pages. When the grid's own pager label declares more
+    records than the snapshot rendered, the rows in hand are an undercount of the
+    operator's filing history — and every downstream ``row_count`` is a plain
+    ``len()`` over them, so returning the short tuple would report a partial
+    capture with exactly the confidence of a complete one. That is refused
+    loudly instead: a truncated register read is an error, never a quiet
+    shortfall.
+
+    Raises:
+        SedeParseError: When the rendered row count falls short of the record
+            total the grid's pager label declares.
+    """
+    page = _parse_listbox(html, modelo=modelo, ejercicio=ejercicio)
+    if page.truncated:
+        raise SedeParseError(
+            # Kept short and fact-first: the bulk sweep bounds a failure row's
+            # message, so a long preamble would truncate away the counts.
+            f"declaraciones register modelo {modelo} ejercicio {ejercicio} rendered "
+            f"{len(page.rows)} row(s) but its pager declares {page.declared_total} in total; "
+            "refusing an under-reported filing history",
+            context={
+                "modelo": modelo,
+                "ejercicio": ejercicio,
+                "rendered_count": len(page.rows),
+                "declared_total": page.declared_total,
+            },
+        )
+    return page.rows
+
+
 class DeclaracionesRegisterSession:
     """Reusable read-only session for AEAT's filed-declarations register."""
 
@@ -229,7 +268,12 @@ class DeclaracionesRegisterSession:
         self._context = context
 
     async def walk(self, *, modelo: str, ejercicio: int) -> tuple[Declaracion, ...]:
-        """Return :class:`Declaracion` rows for one ``(modelo, ejercicio)`` query."""
+        """Return :class:`Declaracion` rows for one ``(modelo, ejercicio)`` query.
+
+        Raises:
+            SedeParseError: When the grid declares more records than it rendered,
+                per :func:`_register_rows_from_snapshot`.
+        """
         if not await _drive_search(self._page, modelo=modelo, ejercicio=ejercicio):
             log.info(
                 "DeclaracionesRegisterSession.walk: ejercicio unavailable modelo=%s ejercicio=%d",
@@ -237,7 +281,7 @@ class DeclaracionesRegisterSession:
                 ejercicio,
             )
             return ()
-        results = _parse_listbox(await self._page.content(), modelo=modelo, ejercicio=ejercicio)
+        results = _register_rows_from_snapshot(await self._page.content(), modelo=modelo, ejercicio=ejercicio)
         log.info(
             "DeclaracionesRegisterSession.walk: found %d declaration(s) modelo=%s ejercicio=%d",
             len(results),
@@ -398,6 +442,10 @@ async def walk_declarations_register(
     Returns:
         Tuple of :class:`Declaracion` records, one per filing row.
         Empty when AEAT returns "No se han encontrado resultados".
+
+    Raises:
+        SedeParseError: When the grid declares more records than it rendered,
+            per :func:`_register_rows_from_snapshot`.
     """
     async with _open_register_page(session, settings=settings, playwright=playwright) as (
         page,
@@ -410,7 +458,7 @@ async def walk_declarations_register(
                 ejercicio,
             )
             return ()
-        results = _parse_listbox(await page.content(), modelo=modelo, ejercicio=ejercicio)
+        results = _register_rows_from_snapshot(await page.content(), modelo=modelo, ejercicio=ejercicio)
     log.info(
         "walk_declarations_register: found %d declaration(s) modelo=%s ejercicio=%d",
         len(results),

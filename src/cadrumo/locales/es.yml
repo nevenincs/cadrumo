@@ -800,13 +800,15 @@ application:
     bulk_import:
       errors:
         file_read_failed: No se pudo leer el archivo de importación masiva de facturas.
+        formula_cell: El archivo de importación masiva de facturas contiene una celda
+          con fórmula en la fila {row}, columna {column}; no se aceptan los valores
+          en caché de las fórmulas.
         missing_columns: 'Al archivo de importación masiva de facturas le faltan columnas
           obligatorias: {missing_columns}'
         unreadable_table: 'El archivo de importación masiva de facturas no contiene
           ninguna tabla legible: {detail}'
         unsupported_extension: El archivo de importación masiva de facturas debe ser
           .csv o .xlsx (se recibió {extension}).
-        formula_cell: 'El archivo de importación masiva de facturas contiene una celda con fórmula en la fila {row}, columna {column}; no se aceptan los valores en caché de las fórmulas.'
     creation:
       errors:
         duplicate_invoice: 'Ya existe una factura con la misma identidad en el catálogo:
@@ -1965,6 +1967,24 @@ cli:
           {accepted}'
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
+        batch_directory_help: Directorio cuyos ficheros se ingresan. Combínalo con
+          --file repetido o sustitúyelo por él.
+        batch_file_help: Un documento a ingresar. Repite la opción una vez por documento;
+          se combina con un directorio.
+        batch_help: Ingresa cada documento de un directorio (o cada --file) como evidencia
+          y borrador revisable, con una fila de resultado por documento.
+        batch_items_refused_message: Se rechazaron algunos documentos. El resto de
+          documentos de la ejecución se completaron igualmente; las filas rechazadas
+          indican qué se encontró.
+        batch_pending_review_message: Algunos borradores contienen un hallazgo que
+          una persona debe resolver antes de crear una factura. Están retenidos, no
+          fallidos.
+        batch_progress_message: 'procesado %{source}: %{status}'
+        batch_source_required: Indica un argumento de directorio, una o más opciones
+          --file, o ambos.
+        batch_work_deferred_message: Algunos documentos no se leyeron porque no se
+          pudo ejecutar ningún modelo de lectura. No se adivinó ningún valor a partir
+          de ellos y nada falló; vuelve a ejecutar cuando se resuelva la causa indicada.
         confirm_already_exists_message: Ya existe una factura con esta identidad;
           se devuelve sin cambios en lugar de crear un duplicado.
         confirm_counterparty_name_help: Nombre de la contraparte (sin heuristica de
@@ -1979,6 +1999,7 @@ cli:
           el valor extraido).
         confirm_link_hint_message: Vincula esta factura a un movimiento del libro
           con `aeat app ledger link`.
+        confirm_operation_type_help: cli.app.ledger.evidence.confirm_operation_type_help
         confirm_printed_total_mismatch_message: El total impreso en el documento no
           coincide con el total registrado. El total registrado se deriva de la base
           imponible y del tipo de IVA, por lo que una diferencia significa que el
@@ -1987,6 +2008,25 @@ cli:
         confirm_resolve_help: 'Responda un hallazgo bloqueante: <id-hallazgo>=<choose|supply|attest>:<valor-o-motivo>.
           Repita por cada hallazgo; no existe una opcion masiva.'
         confirm_taxable_base_help: Sobrescribe la base imponible extraida.
+        consent:
+          bytes_unrecallable: 'Retirar el consentimiento detiene los envíos futuros.
+            No permite recuperar los bytes ya enviados: esta aplicación no puede recuperarlos
+            ni borrarlos del proveedor. Volver a derivar en local elimina la lectura
+            externa de sus registros actuales, pero no de los del proveedor.'
+          content_address_help: Dirección de contenido SHA-256 de los bytes almacenados
+            del documento.
+          evidence_reference_help: Identificador de la evidencia o del adjunto que
+            se va a volver a derivar.
+          group_help: Revise qué se envió a un modelo externo y recupere los artefactos
+            en este equipo.
+          list_help: Muestre cada envío externo y los artefactos derivados de él.
+          rederive_help: Vuelva a leer un artefacto en este equipo desde su transcripción
+            almacenada.
+          rederive_refused: 'Nueva derivación rechazada: {detail}'
+          rederived: Se ha vuelto a derivar {reference} en este equipo. Antes tenía
+            {previous}; ahora tiene {current}. La lectura anterior queda sustituida,
+            no borrada.
+          transcriber_help: Clave de caché de la transcripción que se reutilizará.
         evidence_id_help: Identificador del justificante (coincidencia exacta)
         extract_attachment_id_help: Identificador del adjunto vinculado del que extraer
           los datos (alternativa a --evidence-id).
@@ -5523,8 +5563,50 @@ core:
       registration_duplicate_callable: La implementación de respuestas de proyecto
         se registró dos veces con distintos invocables; debe registrarse exactamente
         una vez.
-dotted:
-  key: Clave con puntos
+docs:
+  glossary:
+    entry:
+      broader: Término genérico
+      domain: Ámbito
+      legal_basis: Base legal
+      related: Relacionado
+      undefined: Todavía no hay definición disponible en este idioma.
+    intro: Términos fiscales españoles utilizados en la documentación. Cada término
+      enlaza con su base legal cuando existe. Busque un término; la definición es
+      la misma allí donde se le haga referencia.
+    title: Glosario
+  legal:
+    index:
+      intro: Las leyes, reales decretos y órdenes ministeriales españolas en las que
+        se fundamentan los cálculos de Cadrumo. Cada página recoge las disposiciones
+        citadas de un texto y enlaza cada una con su redacción oficial en el BOE.
+      title: Referencia legal
+    page:
+      intro: Publicado en el Boletín Oficial del Estado como {document}. Los cálculos
+        de Cadrumo citan {count} disposiciones de este texto; cada una enlaza más
+        abajo con su redacción oficial en el BOE.
+    provision:
+      boe_is_official: El texto consolidado del Boletín Oficial del Estado es la redacción
+        oficial.
+      in_force_between: En vigor desde {start} hasta {end}
+      in_force_from: En vigor desde {start}
+      in_force_until: En vigor hasta {end}
+      official_wording: Texto oficial, en extracto (en español)
+      published: publicado el {date}
+      read_on_boe: Leer {citation} en el BOE
+    record:
+      authority: Autoridad
+      boe_document: Documento del BOE
+      bundled_corpus: Corpus incluido
+      catalogue_id: Identificador del catálogo
+      consolidated_as_of: Consolidado a fecha de
+      evidence_tier: Nivel de evidencia
+      instrument_kind: Tipo de norma
+      note: Nota del catalogador
+      review_status: Estado de revisión
+      reviewed_at: Fecha de revisión
+      reviewed_by: Revisado por
+      title: Ficha del catálogo
 entries:
   portal_calendario_contribuyente:
     label: Calendario del contribuyente
@@ -7137,6 +7219,118 @@ mcp:
       el runtime en caliente estaba {reason}; el resultado es idéntico, solo más lento.
       El servicio en caliente se reanuda cuando se libera la llamada lenta.'
 modelo:
+  display:
+    binding_source:
+      atribucion_member: desde los miembros en atribución de rentas
+      bienes_inversion_regularizacion: desde la regularización de bienes de inversión
+      borrador: desde el borrador de la AEAT
+      collectible_invoice: desde las facturas emitidas
+      donativo_donor: desde los donantes registrados
+      foreign_asset: desde sus bienes en el extranjero
+      iva_compensation_annual_partition: desde la compensación de IVA del ejercicio
+      iva_wallet_decision: desde su decisión de compensación de IVA
+      ledger_impatriado_income_aggregation: desde sus ingresos del régimen de impatriados
+      ledger_irnr_income_aggregation: desde sus ingresos de IRNR
+      ledger_iva_aggregation: desde sus apuntes de IVA
+      ledger_oss_aggregation: desde sus apuntes de OSS
+      ledger_renta_gastos_estimacion_directa_aggregation: desde sus gastos en estimación
+        directa
+      ledger_renta_gastos_pago_fraccionado_aggregation: desde sus gastos del pago
+        fraccionado
+      ledger_renta_income_aggregation: desde sus ingresos registrados
+      ledger_transaction: desde sus movimientos registrados
+      manual_input: desde un valor que usted aporta
+      payable_invoice: desde las facturas recibidas
+      previous_filing: desde su declaración anterior
+      profile: desde su perfil de contribuyente
+      prorrata_regularizacion: desde la regularización de prorrata
+      purchase_invoice_evidence: desde los justificantes de sus facturas de compra
+      refund_operation: desde sus operaciones de devolución
+      related_party_operation: desde sus operaciones vinculadas
+      relation_prefill: desde el resultado de un modelo relacionado
+      retenciones_aggregation: desde las retenciones registradas
+      withholding: desde las retenciones soportadas
+    cadence:
+      ad_hoc: Se presenta cuando ocurre el hecho
+      annual: Se presenta anualmente
+      monthly: Se presenta mensualmente
+      profile_based: Se presenta según su perfil
+      quarterly: Se presenta trimestralmente
+    chrome:
+      alternative_join: ', o'
+      binding: Vínculo de datos
+      casilla_count: '{casillas} casillas en {sections} secciones'
+      casilla_id: Identificador de casilla
+      derived_from: a partir de
+      established_by: Establecido por
+      formula: Fórmula
+      general_section: General
+      index_intro: Una página por modelo. Cada casilla indica cómo se rellena (la
+        introduce usted, se calcula a partir de otras casillas o se rellena desde
+        sus registros), dónde figura en el modelo oficial y qué norma la establece.
+      index_title: Referencia de casillas
+      legal_basis: Base legal
+      list_and: y
+      not_on_official_form: No figura en el modelo oficial
+      record_design_number: Número del diseño de registro
+      registry_identifiers: Identificadores del registro
+      registry_section: Sección del registro
+      required: Obligatoria
+      revisions: Revisiones
+      sections_nav: Secciones de este modelo
+      segmento: Segmento {segmento}
+      semantic_role: Rol semántico
+      sources: Fuentes
+    data_type:
+      bic: BIC
+      boolean: Sí o no
+      ccaa_code: Código de comunidad autónoma
+      country_code: Código de país
+      date: Fecha
+      decimal: Número decimal
+      iban: IBAN
+      integer: Número entero
+      money: Importe en euros
+      municipality_code: Código de municipio
+      name: Nombre
+      nif: NIF
+      nif_iva: NIF-IVA
+      period_code: Periodo
+      postal_code: Código postal
+      province_code: Código de provincia
+      ratio: Porcentaje
+      text: Texto
+      year: Ejercicio
+    input_kind:
+      bound: Se rellena automáticamente
+      computed: Se calcula automáticamente
+      informational: Solo informativa
+      manual: Lo introduce usted
+    input_kind_count:
+      bound: rellenadas desde sus registros
+      computed: calculadas
+      informational: solo informativas
+      manual: que introduce usted
+    legal_kind:
+      dictionary: Diccionario de datos AEAT
+      form_spec: Modelo oficial AEAT
+      instruction: Instrucciones AEAT
+      instructions: Instrucciones AEAT
+      manual_pdf: Manual AEAT
+      record_design: Diseño de registro AEAT
+      suppression_notice: Nota AEAT
+      xsd: Esquema XSD AEAT
+    length:
+      at_least: Al menos {min} caracteres
+      at_most: Como máximo {max} caracteres
+      between: De {min} a {max} caracteres
+    value_enum: 'Uno de: {values}'
+    value_range:
+      at_least: Al menos {min}
+      at_most: Como máximo {max}
+      between: Entre {min} y {max}
+      non_negative: Cero o más
+      non_positive: Cero o menos
   schema:
     '036':
       field:
@@ -68848,6 +69042,42 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
               help: null
               label: Recargo de equivalencia tipo 0.5pct - Cuota devengada anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
+              help: Declara la cuota de recargo de equivalencia al 0,26 % repercutida
+                en las ventas a comerciantes minoristas acogidos al régimen de recargo,
+                sobre entregas gravadas al tipo de IVA del 2 % (RDL 4/2024 art. 1).
+                Se consigna en la casilla 692.
+              label: Recargo de equivalencia tipo 0,26 % - Cuota devengada anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
+              help: Declara la cuota de recargo de equivalencia al 0,5 % repercutida
+                en las ventas a comerciantes minoristas acogidos al régimen de recargo,
+                sobre entregas gravadas al tipo de IVA del 4 % (LIVA art. 161.3).
+                Se consigna en la casilla 36.
+              label: Recargo de equivalencia tipo 0,5 % - Cuota devengada anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
+              help: Declara la cuota de recargo de equivalencia al 0,62 % repercutida
+                en las ventas a comerciantes minoristas acogidos al régimen de recargo,
+                sobre entregas gravadas al tipo de IVA del 5 % (RDL 4/2024 art. 1).
+                Se consigna en la casilla 666.
+              label: Recargo de equivalencia tipo 0,62 % - Cuota devengada anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
+              help: Declara la cuota de recargo de equivalencia al 1,4 % repercutida
+                en las ventas a comerciantes minoristas acogidos al régimen de recargo,
+                sobre entregas gravadas al tipo de IVA del 10 % (LIVA art. 161.2).
+                Se consigna en la casilla 600.
+              label: Recargo de equivalencia tipo 1,4 % - Cuota devengada anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
+              help: Declara la cuota de recargo de equivalencia al 1 % repercutida
+                en las ventas a comerciantes minoristas acogidos al régimen de recargo,
+                sobre entregas gravadas al tipo de IVA del 7,5 % (RDL 4/2024 art.
+                1). Se consigna en la casilla 694.
+              label: Recargo de equivalencia tipo 1 % - Cuota devengada anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
+              help: Declara la cuota de recargo de equivalencia al 5,2 % repercutida
+                en las ventas a comerciantes minoristas acogidos al régimen de recargo,
+                sobre entregas gravadas al tipo de IVA del 21 % (LIVA art. 161.1).
+                Se consigna en la casilla 602.
+              label: Recargo de equivalencia tipo 5,2 % - Cuota devengada anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: null
               label: Cuota IVA repercutido al tipo reducido (10%) - anual
@@ -68962,6 +69192,22 @@ modelo:
                 interiores.
               label: Base imponible IVA deducible - Total operaciones interiores corrientes
                 de bienes y servicios - anual
+            x-d5r62bj1dpqm2r1eehnn8obc5lh62sr5ecmm6tbfehgn6bb9epgg:
+              help: Suma la cuota IVA devengada de los tipos general, reducido y super-reducido
+                y la autorepercutida en adquisiciones intracomunitarias, excluyendo
+                el recargo de equivalencia (casilla 47).
+              label: Total bases y cuotas IVA - Cuota (Reg. ordinario) - anual
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
+              help: 'Importe de las entregas de bienes a otro Estado miembro, exentas
+                por el artículo 25 de la Ley del IVA. No incluya los servicios prestados
+                a empresarios de la UE: no están sujetos en España y se declaran como
+                operaciones no sujetas.'
+              label: Entregas intracomunitarias de bienes
+            x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
+              help: Importe de las exportaciones de bienes exentas por el artículo
+                21 de la Ley del IVA y de las operaciones asimiladas a la exportación
+                exentas por el artículo 22.
+              label: Exportaciones y otras operaciones exentas con derecho a deducción
           construct:
             modelo-390-iva-resumen-anual:
               field:
@@ -69328,6 +69574,8 @@ profile:
         provider:
           label: Método de autenticación
       capabilities:
+        cloud_evidence_upload:
+          label: Lectura de documentos fuera del equipo
         google_export:
           label: Exportación a Google
         llm_vision:
@@ -69831,6 +70079,8 @@ topic:
     title: VERI*FACTU
 transactions:
   import:
+    batch_id_collision: 'Fila omitida: tiene el mismo identificador de transacción
+      que otra fila de este archivo.'
     message_053465: Transacción duplicada detectada dentro del archivo importado.
     message_082074: Transacción duplicada ya presente en el libro mayor.
     message_185962: El archivo de origen no contiene transacciones válidas.

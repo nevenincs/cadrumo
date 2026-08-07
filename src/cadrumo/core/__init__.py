@@ -96,6 +96,7 @@ from ._auth_provider import AuthProviderDescription, AuthProviderKind
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._casilla_value_kind import CasillaValueKind
+from ._classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ._concept_lifecycle import ConceptLifecycle
 from ._concepto_ingreso import (
     INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE,
@@ -182,6 +183,7 @@ from ._model_catalogue import (
 from ._modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
 from ._modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ._models import STRICT_FROZEN_CONFIG
+from ._objeto_tributario import ObjetoTributario
 from ._optional_extras import (
     ANTHROPIC_EXTRA,
     BROWSER_EXTRA,
@@ -403,6 +405,7 @@ __all__: list[str] = [
     "BucketPointer",
     "CasillaId",
     "CasillaValueKind",
+    "ClassifierInputSource",
     "CompatibilityRegime",
     "ConceptLifecycle",
     "ConceptoIngreso",
@@ -410,6 +413,7 @@ __all__: list[str] = [
     "ContentionCause",
     "ConvenioOverrideKind",
     "CorpusAnchorResolutionError",
+    "CounterpartyTaxablePersonStatus",
     "DeclaracionIdioma",
     "DeploymentLicencePosture",
     "DescendantRelacion",
@@ -451,6 +455,7 @@ __all__: list[str] = [
     "ModelRuntime",
     "ModelSelectionAdvisory",
     "Modelo",
+    "ObjetoTributario",
     "OfficialTipoRentaCode",
     "OptionalExtra",
     "PassphraseStrength",

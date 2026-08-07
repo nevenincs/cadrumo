@@ -50,6 +50,28 @@ from .._diagnostics import (
 )
 from .._import import import_ledger_with_diagnostics
 
+
+def _diagnose(**kwargs: object):
+    """Call the helper with fingerprints derived for the supplied rows.
+
+    ``import_fingerprints`` is a required argument on the real signature: a
+    fingerprint derived without the parse-boundary direction carries the literal
+    ``UNSPECIFIED`` discriminator and can never match a stored one, so a default
+    would let dedup fail open. These tests supply direction-free fingerprints
+    consistently on both sides of the comparison, which is what keeps them
+    meaningful.
+    """
+    rows = tuple(kwargs.pop("raw_transactions"))  # type: ignore[arg-type]
+    fingerprints = kwargs.pop(
+        "import_fingerprints",
+        tuple(derive_import_fingerprint(raw) for raw in rows),
+    )
+    return import_ledger_with_diagnostics(
+        raw_transactions=rows,
+        import_fingerprints=fingerprints,  # type: ignore[arg-type]
+        **kwargs,  # type: ignore[arg-type]
+    )
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
@@ -95,7 +117,7 @@ _SOURCE_PATH = Path("project/data/example.csv")
 
 
 def test_import_empty_batch_emits_parser_warning_and_zero_counts() -> None:
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=(),
         existing_catalogue=TransactionCatalogue(),
@@ -116,7 +138,7 @@ def test_import_empty_batch_short_circuits_before_original_file_check(tmp_path: 
     original = tmp_path / "original.csv"
     original.write_bytes(b"any,bytes")
 
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=(),
         existing_catalogue=TransactionCatalogue(),
@@ -135,7 +157,7 @@ def test_import_empty_batch_short_circuits_before_original_file_check(tmp_path: 
 def test_import_single_row_yields_one_imported_no_diagnostics() -> None:
     raw = _raw_transaction("tx-1")
 
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=(raw,),
         existing_catalogue=TransactionCatalogue(),
@@ -158,7 +180,7 @@ def test_import_duplicate_within_file_emits_duplicate_warning() -> None:
     raw_a = _raw_transaction("tx-1")
     raw_b = _raw_transaction("tx-1")  # same identity → same derived id
 
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=(raw_a, raw_b),
         existing_catalogue=TransactionCatalogue(),
@@ -188,7 +210,7 @@ def test_import_duplicate_against_catalogue_emits_duplicate_info() -> None:
     )
     catalogue = TransactionCatalogue.model_validate({transaction.transaction_id: transaction})
 
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=(raw,),
         existing_catalogue=catalogue,
@@ -218,7 +240,7 @@ def test_import_duplicate_against_catalogue_uses_supplied_direction_fingerprint(
     )
     catalogue = TransactionCatalogue.model_validate({transaction.transaction_id: transaction})
 
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=(raw,),
         existing_catalogue=catalogue,
@@ -245,7 +267,7 @@ def test_import_preview_keeps_opposite_direction_movement() -> None:
     )
     outgoing_fingerprint = derive_import_fingerprint(raw, direction=TransactionDirection.OUTGOING)
 
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=(raw,),
         existing_catalogue=TransactionCatalogue.model_validate({existing.transaction_id: existing}),
@@ -265,7 +287,7 @@ def test_import_duplicate_diagnostic_carries_affected_transaction_id() -> None:
     raw_b = _raw_transaction("tx-1")
     derived_id = derive_transaction_id(raw_a)
 
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=(raw_a, raw_b),
         existing_catalogue=TransactionCatalogue(),
@@ -288,7 +310,7 @@ def test_import_consecutive_dates_emit_no_gap_diagnostic() -> None:
         _raw_transaction("tx-3", value_date=date(2025, 4, 10)),
     ]
 
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=rows,
         existing_catalogue=TransactionCatalogue(),
@@ -305,7 +327,7 @@ def test_import_36_day_gap_emits_single_gap_warning() -> None:
         _raw_transaction("tx-2", value_date=date(2025, 2, 10)),
     ]
 
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=rows,
         existing_catalogue=TransactionCatalogue(),
@@ -325,7 +347,7 @@ def test_import_multiple_gaps_emit_only_one_diagnostic() -> None:
         _raw_transaction("tx-3", value_date=date(2025, 4, 1)),  # gap #2
     ]
 
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=rows,
         existing_catalogue=TransactionCatalogue(),
@@ -342,7 +364,7 @@ def test_import_gap_uses_value_date_with_booked_date_fallback() -> None:
         _raw_transaction("tx-2", value_date=None, booked_date=date(2025, 2, 10)),
     ]
 
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=rows,
         existing_catalogue=TransactionCatalogue(),
@@ -363,7 +385,7 @@ def test_import_original_source_present_emits_original_file_info(tmp_path: Path)
     original = tmp_path / "original.csv"
     original.write_bytes(b"any,bytes\n")
 
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=(_raw_transaction("tx-1"),),
         existing_catalogue=TransactionCatalogue(),
@@ -382,7 +404,7 @@ def test_import_original_source_missing_emits_no_original_file_diagnostic(tmp_pa
     originals as warnings (a missing original is a CLI-layer concern)."""
     missing_original = tmp_path / "does-not-exist.csv"
 
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=(_raw_transaction("tx-1"),),
         existing_catalogue=TransactionCatalogue(),
@@ -397,7 +419,7 @@ def test_import_no_original_source_emits_no_original_file_diagnostic() -> None:
     """When original_source_path is None the helper does not emit an
     ORIGINAL_FILE diagnostic — the verification block is fully gated
     on the kwarg being supplied."""
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=(_raw_transaction("tx-1"),),
         existing_catalogue=TransactionCatalogue(),
@@ -414,7 +436,7 @@ def test_import_no_original_source_emits_no_original_file_diagnostic() -> None:
 
 def test_import_returns_strict_frozen_result() -> None:
     """LedgerImportResult is strict/frozen; attempts to mutate raise."""
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=(_raw_transaction("tx-1"),),
         existing_catalogue=TransactionCatalogue(),
@@ -428,10 +450,87 @@ def test_import_returns_strict_frozen_result() -> None:
 def test_import_diagnostics_is_tuple_not_list() -> None:
     """The diagnostics field is a tuple — an immutable shape so
     downstream consumers can iterate without defensive copies."""
-    result = import_ledger_with_diagnostics(
+    result = _diagnose(
         source_path=_SOURCE_PATH,
         raw_transactions=(),
         existing_catalogue=TransactionCatalogue(),
     )
 
     assert isinstance(result.diagnostics, tuple)
+
+
+# ---------------------------------------------------------------------------
+# Agreement with the persisting import path
+# ---------------------------------------------------------------------------
+
+
+def test_two_identical_same_day_movements_both_import_and_are_only_advised() -> None:
+    """THE case the two classifiers disagreed on.
+
+    Two rows sharing a movement signature but carrying distinct provider ids --
+    a pair of matching same-day retainers -- are two genuine movements. The
+    persisting path imports both; this path counted the second as skipped, so
+    ``--verify`` reported a duplicate the import would never skip and previewed
+    one row fewer than would land. Under-declaration is the worse error, so the
+    repeat is an advisory, not a skip.
+    """
+    raw_a = _raw_transaction("tx-1", description="Retainer")
+    raw_b = _raw_transaction("tx-2", description="Retainer")
+    assert derive_import_fingerprint(raw_a) == derive_import_fingerprint(raw_b), (
+        "fixture no longer exercises a shared movement signature"
+    )
+    assert derive_transaction_id(raw_a) != derive_transaction_id(raw_b), (
+        "fixture rows collide on the catalogue key, which is a different case"
+    )
+
+    result = _diagnose(
+        source_path=_SOURCE_PATH,
+        raw_transactions=(raw_a, raw_b),
+        existing_catalogue=TransactionCatalogue(),
+    )
+
+    assert result.imported_count == 2, "a genuine movement was previewed as skipped"
+    assert result.skipped_count == 0
+    advisories = [d for d in result.diagnostics if d.kind is LedgerImportDiagnosticKind.DUPLICATE]
+    assert len(advisories) == 1, "the repeat must still be surfaced for review"
+    assert advisories[0].severity is BaseSeverity.WARNING
+
+
+def test_rows_colliding_on_the_catalogue_key_are_still_skipped() -> None:
+    """The other intra-batch case, which is a real skip.
+
+    Two rows resolving to the same transaction id cannot both persist -- the
+    catalogue keys on that id -- so the count must say one. Reporting both as
+    imported would overstate what landed.
+    """
+    raw = _raw_transaction("tx-1")
+
+    result = _diagnose(
+        source_path=_SOURCE_PATH,
+        raw_transactions=(raw, _raw_transaction("tx-1")),
+        existing_catalogue=TransactionCatalogue(),
+    )
+
+    assert result.imported_count == 1
+    assert result.skipped_count == 1
+
+
+def test_import_fingerprints_is_required_so_dedup_cannot_fail_open() -> None:
+    """A defaulted fingerprint would carry ``UNSPECIFIED`` and match nothing.
+
+    ``derive_import_fingerprint`` substitutes that literal for a missing
+    direction, and a stored fingerprint is always direction-qualified, so a
+    default would make every row read as new -- silently importing an entire
+    statement twice.
+    """
+    import inspect
+
+    parameter = inspect.signature(import_ledger_with_diagnostics).parameters["import_fingerprints"]
+    assert parameter.default is inspect.Parameter.empty
+
+    with pytest.raises(TypeError):
+        import_ledger_with_diagnostics(  # type: ignore[call-arg]
+            source_path=_SOURCE_PATH,
+            raw_transactions=(_raw_transaction("tx-1"),),
+            existing_catalogue=TransactionCatalogue(),
+        )

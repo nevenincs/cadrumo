@@ -33,7 +33,7 @@ from ...core import Period
 from ...core.time import now
 from ...domain.transactions import DecisionProvenance
 from .._evidence_draft_text import TextInvoiceFieldExtractor
-from .._evidence_draft_vision import LocalVisionInvoiceFieldExtractor
+from .._evidence_draft_vision import LocalVisionDocumentTranscriber
 from .._invoice_extraction_prompt import build_invoice_extraction_prompt
 from .._models import LLMProvider, LLMRequest
 
@@ -107,39 +107,40 @@ class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
 
 
 class TestTheProvenanceStampNamesTheRatesTheReadUsed:
-    """A stamp that cannot answer "under which rates?" will mislead an audit."""
+    """A stamp that cannot answer "under which rates?" will mislead an audit.
 
-    def test_the_vision_stamp_carries_the_period_and_the_prompt_fingerprint(self) -> None:
-        extractor = LocalVisionInvoiceFieldExtractor(model="qwen2.5vl:3b", period=_ANNUAL_2026)
-        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+    The stamp lives on the SEMANTIC stage, and only there, because that is the
+    stage the rates reach. Vision stage one transcribes: it compiles no rates,
+    so a rate-provenance stamp on it would name an authority its prompt never
+    consulted. What the transcriber records instead is which reader produced
+    the text, at which prompt version, over which transport -- asserted below.
+    """
 
-        assert extractor.decided_by == f"llm:local-vision:qwen2.5vl:3b:rates-{compiled.rate_provenance}"
-        assert "2026-0A" in extractor.decided_by
-
-    def test_the_text_stamp_carries_it_too(self) -> None:
+    def test_the_text_stamp_carries_the_period_and_the_prompt_fingerprint(self) -> None:
         extractor = TextInvoiceFieldExtractor(model="some-text-model", period=_ANNUAL_2026)
         compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
 
         assert extractor.decided_by == f"llm:local-text-extract:some-text-model:rates-{compiled.rate_provenance}"
+        assert "2026-0A" in extractor.decided_by
 
     def test_a_different_rate_period_produces_a_different_stamp(self) -> None:
         """The discriminating control: the stamp moves when the rates move."""
-        annual = LocalVisionInvoiceFieldExtractor(model="m", period=_ANNUAL_2026)
-        q4 = LocalVisionInvoiceFieldExtractor(model="m", period=_Q4_2024)
+        annual = TextInvoiceFieldExtractor(model="m", period=_ANNUAL_2026)
+        q4 = TextInvoiceFieldExtractor(model="m", period=_Q4_2024)
 
         assert annual.decided_by != q4.decided_by
 
     def test_the_transport_half_is_still_derived_from_the_provider(self) -> None:
         """The pre-existing property survives the extension."""
-        local = LocalVisionInvoiceFieldExtractor(model="m", period=_ANNUAL_2026)
-        cloud = LocalVisionInvoiceFieldExtractor(
+        local = TextInvoiceFieldExtractor(model="m", period=_ANNUAL_2026)
+        cloud = TextInvoiceFieldExtractor(
             model="m",
             provider=LLMProvider.ANTHROPIC,
             period=_ANNUAL_2026,
         )
 
-        assert local.decided_by.startswith("llm:local-vision:")
-        assert not cloud.decided_by.startswith("llm:local-vision:")
+        assert local.decided_by.startswith("llm:local-text-extract:")
+        assert not cloud.decided_by.startswith("llm:local-text-extract:")
 
     def test_the_extended_stamp_still_persists_as_a_decision_provenance(self) -> None:
         """It must survive the persisted record's own validator and its 128-char bound.
@@ -148,7 +149,7 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         the shape rule here: a longer stamp that the record refuses is a broken
         stamp, and the record is the authority on that.
         """
-        extractor = LocalVisionInvoiceFieldExtractor(
+        extractor = TextInvoiceFieldExtractor(
             model="claude-haiku-4-5-20251001",
             provider=LLMProvider.ANTHROPIC,
             period=_ANNUAL_2026,
@@ -157,3 +158,23 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         provenance = DecisionProvenance(decided_by=extractor.decided_by, decided_at=now())
 
         assert provenance.decided_by == extractor.decided_by
+
+    def test_the_vision_transcriber_records_its_transport_rather_than_a_rate_stamp(self) -> None:
+        """Stage one is auditable for what it IS: reader, prompt version, transport.
+
+        The transport matters because a transcription is a durable artefact
+        derived from the document, so an off-host one is something a consent
+        withdrawal must be able to enumerate. A model identifier alone names the
+        vendor only to a reader who already knows the catalogue.
+        """
+        local = LocalVisionDocumentTranscriber(model="qwen2.5vl:3b").transcriber_identity
+        cloud = LocalVisionDocumentTranscriber(
+            model="claude-haiku-4-5-20251001",
+            provider=LLMProvider.ANTHROPIC,
+        ).transcriber_identity
+
+        assert "local" in local.name
+        assert "anthropic" in cloud.name
+        assert local.name != cloud.name
+        assert local.revision.startswith("prompt-v")
+        assert "rates-" not in local.name, "stage one compiles no rates, so it must claim none"

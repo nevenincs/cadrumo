@@ -36,6 +36,7 @@ from ....core.external_constants import XLSM_EXTENSION as _XLSM_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.logging import get_logger
 from ....core.paths import path_stat_fingerprint
+from ....core.tabular import coerce_cell_text
 from ._errors import RegistryValidationError
 from ._record_design_coverage import (
     DerivedDisenoCasilla,
@@ -425,12 +426,8 @@ def _cell(values: tuple[object, ...], index: int) -> object | None:
     return values[index] if index < len(values) else None
 
 
-def _clean(value: object | None) -> str:
-    return "" if value is None else str(value).strip()
-
-
 def _optional_text(value: object | None) -> str | None:
-    cleaned = _clean(value)
+    cleaned = coerce_cell_text(value)
     return cleaned or None
 
 
@@ -441,7 +438,7 @@ def _optional_header_text(values: tuple[object, ...], index: int | None) -> str 
 
 
 def _required_text(value: object | None, sheet: str, row: int, field: str) -> str:
-    cleaned = _clean(value)
+    cleaned = coerce_cell_text(value)
     if not cleaned:
         raise RegistryValidationError(f"{sheet!r} row {row} missing {field}")
     return cleaned
@@ -475,7 +472,7 @@ def _int_or_none(value: object | None) -> int | None:
 
 def _normalise_header_cell(value: object | None) -> str:
     return (
-        _clean(value)
+        coerce_cell_text(value)
         .casefold()
         .replace("º", "o")
         .replace("ó", "o")

@@ -7,7 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from ...tests.cli_runner import invoke_typer_app
+from cadrumo.tests.cli_runner import invoke_typer_app
+
 from .._status import CatalogueLeafState, catalogue_status, classify_catalogue_leaf
 from ..cli import app
 from ..manager import LocaleManager

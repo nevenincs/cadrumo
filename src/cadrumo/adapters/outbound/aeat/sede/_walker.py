@@ -22,8 +22,6 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
 
-from pydantic import AnyUrl
-
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.hashing import sha256_hex
@@ -31,14 +29,12 @@ from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
 from .....domain.calculations.registry import (
-    RemoteOperation,
     RemoteStateGuardPolicy,
-    assert_remote_operation_allowed,
 )
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
-from ._adapter_utils import assert_read_landing, landed_origin
+from ._adapter_utils import assert_read_http_for, assert_read_landing, landed_origin
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_TIMEOUT_SHORT_MS as _TIMEOUT_SHORT_MS,
@@ -101,10 +97,7 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
 
 def _assert_read_http(method: str, url: str) -> None:
     """Refuse a wire-crossing read the walker policy does not admit."""
-    assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
-        RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
-    )
+    assert_read_http_for(_READ_GUARD_POLICY, method, url)
 
 
 # The one page whose CONTENT this walker interprets. Expediente detail URLs

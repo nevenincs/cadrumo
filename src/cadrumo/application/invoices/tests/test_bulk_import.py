@@ -283,7 +283,15 @@ def test_read_bulk_invoice_import_rows_reads_csv_and_xlsx_identically(tmp_path: 
     csv_values = csv_source.rows[0].values
     xlsx_values = xlsx_source.rows[0].values
     assert csv_values["invoice_number"] == xlsx_values["invoice_number"] == "BULK-E-001"
-    assert Decimal(csv_values["taxable_base"]) == Decimal(xlsx_values["taxable_base"])
+    # The two readers legitimately hand back different CELL types for the same
+    # figure -- csv yields the text "100.00", openpyxl yields the number 100 --
+    # and the claim here is that the VALUES agree regardless. Narrowed to what
+    # Decimal accepts rather than to one type, so the comparison stays the
+    # cross-format one and does not quietly become a type assertion.
+    csv_base, xlsx_base = csv_values["taxable_base"], xlsx_values["taxable_base"]
+    assert isinstance(csv_base, str | int | float | Decimal)
+    assert isinstance(xlsx_base, str | int | float | Decimal)
+    assert Decimal(csv_base) == Decimal(xlsx_base)
 
 
 def test_read_bulk_invoice_import_rows_rejects_unknown_extension(tmp_path: Path) -> None:

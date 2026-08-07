@@ -34,7 +34,12 @@ import pytest
 
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
-from .. import IvaLedgerObservation, ModeloRevision, resolve_ledger_iva_aggregation_binding_values
+from .. import (
+    IvaLedgerObservation,
+    ModeloRevision,
+    resolve_ledger_iva_aggregation_binding_values,
+    selector_as_dict,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -48,6 +53,11 @@ _SUPER_REDUCIDO_CUOTA = Decimal("48.00")
 _ZERO_BASE = Decimal("700.00")
 _SOPORTADO_BASE = Decimal("900.00")
 _SOPORTADO_CUOTA = Decimal("189.00")
+# The two volume boxes AEAT asks for beside the régimen-ordinario block. Distinct
+# from every other base above so a resolver that folded either into the zero tier
+# -- all three are zero-rated repercutido -- fails on value rather than on shape.
+_INTRACOM_BASE = Decimal("1750.00")
+_EXPORT_BASE = Decimal("2300.00")
 
 
 def _m390_revision() -> ModeloRevision:
@@ -115,6 +125,24 @@ def _annual_observations() -> tuple[IvaLedgerObservation, ...]:
             base=_SOPORTADO_BASE,
             iva=_SOPORTADO_CUOTA,
         ),
+        # Exempt supplies carrying base with no cuota. They reach the volume
+        # boxes rather than the régimen-ordinario tiers, and without a row of
+        # each those two bindings resolve zero for want of input -- which reads
+        # exactly like the dormant capacity the next test refuses to accept.
+        _observation(
+            category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            rate_kind=IvaRateKind.ZERO,
+            flow=IvaFlowDirection.REPERCUTIDO,
+            base=_INTRACOM_BASE,
+            iva=Decimal("0.00"),
+        ),
+        _observation(
+            category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+            rate_kind=IvaRateKind.ZERO,
+            flow=IvaFlowDirection.REPERCUTIDO,
+            base=_EXPORT_BASE,
+            iva=Decimal("0.00"),
+        ),
     )
 
 
@@ -131,6 +159,8 @@ def _resolved() -> dict[str, Decimal]:
         ("modelo-390-iva-repercutido-super-reducido-base", _SUPER_REDUCIDO_BASE),
         ("modelo-390-iva-repercutido-zero-base", _ZERO_BASE),
         ("modelo-390-iva-soportado-interiores-base", _SOPORTADO_BASE),
+        ("modelo-390-volumen-entregas-intracomunitarias-base", _INTRACOM_BASE),
+        ("modelo-390-volumen-exportaciones-exentas-base", _EXPORT_BASE),
     ),
 )
 def test_annual_base_binding_draws_its_tier_base_amount(binding_id: str, expected: Decimal) -> None:
@@ -194,8 +224,9 @@ def test_every_declared_base_casilla_is_bound_to_a_base_fact() -> None:
     base_casillas = [casilla for casilla in revision.casillas if casilla.id.endswith(".base")]
     assert base_casillas, "the annual revision declares no base imponible casilla"
     for casilla in base_casillas:
+        assert casilla.binding is not None, f"base casilla {casilla.id} declares no binding to carry its figure"
         binding = bindings[casilla.binding]
-        selector = dict(binding.selector or {})
+        selector = selector_as_dict(binding)
         assert selector.get("fact") == "base_amount_sum", (
             f"casilla {casilla.id} is bound to {binding.id} whose fact is {selector.get('fact')!r}"
         )

@@ -7,7 +7,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from bs4 import BeautifulSoup
+from pydantic import BaseModel, Field
 
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import Period
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -15,7 +17,12 @@ from ._adapter_utils import normalize_response_text
 from ._declarations_schema import Declaracion
 from ._errors import SedeFailureMode, SedeParseError, SedeValidationError
 
-__all__ = ["_has_class", "_parse_listbox", "_parse_presented_at"]
+__all__ = [
+    "DeclaracionesRegisterPage",
+    "_has_class",
+    "_parse_listbox",
+    "_parse_presented_at",
+]
 
 log = get_logger(__name__)
 
@@ -24,6 +31,33 @@ _PRESENTED_AT_RE = re.compile(
     r"^(?P<day>\d{2})/(?P<month>\d{2})/(?P<year>\d{4})\s+"
     r"(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})$",
 )
+# ZK renders the grid's own record count in its pager label, e.g.
+# "Pagina 1/3, registros 1-3 de 8 en total". Matched against the
+# accent-folded, casefolded pager text so a diacritic or capitalisation
+# difference in AEAT's wording does not silence the count.
+_DECLARED_TOTAL_RE = re.compile(r"de (\d+) en total")
+
+
+class DeclaracionesRegisterPage(BaseModel):
+    """One rendered page of the declaraciones register, with its own declared size.
+
+    The register grid is read from a single DOM snapshot, so the rows parsed out
+    of it are only ever the rows AEAT chose to render. When the grid carries a
+    pager label, that label states how many records exist in total, which is the
+    one signal available for deciding whether the snapshot is the whole answer.
+    ``declared_total`` is ``None`` when the markup carries no pager at all — a
+    one-page result by construction, not a shortfall.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    rows: tuple[Declaracion, ...]
+    declared_total: int | None = Field(default=None, ge=0)
+
+    @property
+    def truncated(self) -> bool:
+        """Whether fewer rows were rendered than the grid's own label declares."""
+        return self.declared_total is not None and len(self.rows) < self.declared_total
 
 
 def _has_class(target: str):
@@ -43,8 +77,14 @@ def _parse_listbox(
     *,
     modelo: str,
     ejercicio: int,
-) -> tuple[Declaracion, ...]:
-    """Parse the post-Buscar listbox into typed Declaracion records."""
+) -> DeclaracionesRegisterPage:
+    """Parse the post-Buscar listbox into a typed register page.
+
+    Returns:
+        The rendered :class:`Declaracion` rows together with the record total the
+        grid's own pager label declares, so a caller can tell a complete answer
+        from a rendered-page-only one.
+    """
     try:
         soup = BeautifulSoup(html, "html.parser")
     except Exception as exc:
@@ -79,6 +119,7 @@ def _parse_listbox(
             context={"modelo": modelo, "ejercicio": ejercicio},
         )
     items = listbox.find_all(class_=_has_class("z-listitem"))
+    declared_total = _parse_declared_total(soup)
 
     rows: list[Declaracion] = []
     for item in items:
@@ -86,7 +127,7 @@ def _parse_listbox(
         cell_texts = [cell.get_text(" ", strip=True) for cell in cells]
 
         if len(cell_texts) == 1 and cell_texts[0] == _NO_RESULTS_TEXT:
-            return ()
+            return DeclaracionesRegisterPage(rows=(), declared_total=declared_total)
 
         if len(cell_texts) < 7:
             log.debug("_parse_listbox: skipping malformed row with %d cell(s)", len(cell_texts))
@@ -115,7 +156,23 @@ def _parse_listbox(
                 declaration_copy_cell_index=declaration_copy_index,
             ),
         )
-    return tuple(rows)
+    return DeclaracionesRegisterPage(rows=tuple(rows), declared_total=declared_total)
+
+
+def _parse_declared_total(soup) -> int | None:
+    """Return the record total the grid's pager label states, or ``None`` when absent.
+
+    A grid with no pager markup renders every record it has, so an absent label
+    is not a missing total — there is nothing to reconcile against.
+    """
+    pager = soup.find(class_=_has_class("z-paging"))
+    if pager is None:
+        return None
+    match = _DECLARED_TOTAL_RE.search(normalize_response_text(pager.get_text(" ", strip=True)))
+    if match is None:
+        log.debug("_parse_declared_total: pager present but its label states no record total")
+        return None
+    return int(match.group(1))
 
 
 @dataclass(slots=True, frozen=True)

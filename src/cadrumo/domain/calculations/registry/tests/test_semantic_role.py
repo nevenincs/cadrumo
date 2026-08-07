@@ -304,7 +304,37 @@ class TestValidateSemanticRoleCardinality:
         m = _registry_modelo("202", "2025-y-siguientes", [c])
         assert _validate_semantic_role_cardinality([m]) == ()
 
-    def test_intentional_singleton_role_repeated_elsewhere_fails(self) -> None:
+    def test_intentional_singleton_role_repeated_within_one_revision_fails(self) -> None:
+        """POSITIVE CONTROL: the gate must still bite on a real duplicate.
+
+        Two bearers inside ONE revision co-apply in a single filing, which is
+        exactly the defect ``intentional_singleton`` exists to catch. If this
+        ever passes, the cardinality axis has been removed rather than
+        rescoped, which is worse than the artefact the rescoping fixed.
+        """
+        a = _casilla(
+            cid="a",
+            semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
+            semantic_role_cardinality="intentional_singleton",
+            semantic_role_cardinality_reason="2025-only legal slot",
+        )
+        b = _casilla(cid="b", semantic_role="is_pf_mod_40_3_b2_base_tipo_3")
+        m = _registry_modelo("202", "2025-y-siguientes", [a, b])
+        failures = _validate_semantic_role_cardinality([m])
+        assert failures == (
+            "semantic_role 'is_pf_mod_40_3_b2_base_tipo_3': casilla "
+            "202.2025-y-siguientes.a declares semantic_role_cardinality "
+            "'intentional_singleton' but role is shared by co-applying casillas "
+            "(2 in one revision, 1 modelo(s))",
+        )
+
+    def test_intentional_singleton_role_in_a_second_modelo_fails(self) -> None:
+        """POSITIVE CONTROL, second axis: two modelos genuinely co-exist.
+
+        Modelo 303 and Modelo 390 are both filed, so a role borne by each is
+        shared in the sense the marker denies. Only sibling revisions of ONE
+        modelo are mutually exclusive.
+        """
         a = _casilla(
             cid="a",
             semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
@@ -313,13 +343,40 @@ class TestValidateSemanticRoleCardinality:
         )
         b = _casilla(cid="b", semantic_role="is_pf_mod_40_3_b2_base_tipo_3")
         m1 = _registry_modelo("202", "2025-y-siguientes", [a])
-        m2 = _registry_modelo("202", "2026-y-siguientes", [b])
+        m2 = _registry_modelo("303", "2025-y-siguientes", [b])
         failures = _validate_semantic_role_cardinality([m1, m2])
         assert failures == (
             "semantic_role 'is_pf_mod_40_3_b2_base_tipo_3': casilla "
             "202.2025-y-siguientes.a declares semantic_role_cardinality "
-            "'intentional_singleton' but role appears 2 times",
+            "'intentional_singleton' but role is shared by co-applying casillas "
+            "(1 in one revision, 2 modelo(s))",
         )
+
+    def test_intentional_singleton_role_across_sibling_revisions_passes(self) -> None:
+        """NEGATIVE CONTROL: a revision split must not staleness-fail the marker.
+
+        AEAT binds every ``(modelo, filing_year, period)`` to exactly one
+        revision, so these two can never co-apply and the role has not gained a
+        sibling -- the revision was cloned. Splitting a revision at a design
+        re-layout clones every casilla, so counting raw observations would turn
+        correct authoring into a validation failure that gets worse with each
+        further split.
+        """
+        a = _casilla(
+            cid="a",
+            semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
+            semantic_role_cardinality="intentional_singleton",
+            semantic_role_cardinality_reason="2025-only legal slot",
+        )
+        b = _casilla(
+            cid="a",
+            semantic_role="is_pf_mod_40_3_b2_base_tipo_3",
+            semantic_role_cardinality="intentional_singleton",
+            semantic_role_cardinality_reason="2025-only legal slot",
+        )
+        m1 = _registry_modelo("202", "2025-y-siguientes", [a])
+        m2 = _registry_modelo("202", "2026-y-siguientes", [b])
+        assert _validate_semantic_role_cardinality([m1, m2]) == ()
 
 
 class TestTypoTwinWarning:
