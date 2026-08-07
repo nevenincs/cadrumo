@@ -222,3 +222,132 @@ def test_no_box_layer_casilla_enters_an_annual_total_formula() -> None:
         referenced = {arg.casilla_id for arg in formula.expression.args if arg.casilla_id is not None}
         leaked = referenced & box_layer_ids
         assert not leaked, f"formula {formula.id} sums box-layer casillas {sorted(leaked)}"
+
+
+# The official AEAT box each rate casilla occupies, read off the bundled 2024
+# Diseno de Registros, apartado 5, "Reg. ordin." rows. The Recargo de
+# equivalencia segment carries its own twins ([663]/[664], [691]/[692], [35]/[36])
+# at the same record positions, so these numbers are segment-resolved rather than
+# matched on offset alone.
+_OFFICIAL_BOX_NUMBER = {
+    "iva.anual.repercutido.tipo-21.base": "05",
+    "iva.anual.repercutido.tipo-21.cuota": "06",
+    "iva.anual.repercutido.tipo-10.base": "03",
+    "iva.anual.repercutido.tipo-10.cuota": "04",
+    "iva.anual.repercutido.tipo-7-5.base": "669",
+    "iva.anual.repercutido.tipo-7-5.cuota": "670",
+    "iva.anual.repercutido.tipo-5.base": "702",
+    "iva.anual.repercutido.tipo-5.cuota": "703",
+    "iva.anual.repercutido.tipo-4.base": "01",
+    "iva.anual.repercutido.tipo-4.cuota": "02",
+    "iva.anual.repercutido.tipo-2.base": "667",
+    "iva.anual.repercutido.tipo-2.cuota": "668",
+    "iva.anual.repercutido.tipo-0.base": "700",
+    "iva.anual.repercutido.tipo-0.cuota": "701",
+}
+
+
+def _with_applied_rates(
+    binding_id: str,
+    applied_rates: tuple[Decimal, ...] | None,
+) -> ModeloRevision:
+    """Return the real revision with one binding's ``applied_rates`` axis replaced.
+
+    The mutation is applied to the loaded revision and re-resolved through the
+    real resolver, so what it proves is a property of the shipped selector logic
+    rather than of a re-implementation of it.
+    """
+    revision = _m390_revision()
+    mutated = tuple(
+        binding.model_copy(
+            update={"selector": binding.selector.model_copy(update={"applied_rates": applied_rates})}
+        )
+        if binding.id == binding_id
+        else binding
+        for binding in revision.bindings
+    )
+    return revision.model_copy(update={"bindings": mutated})
+
+
+def test_every_box_layer_casilla_states_its_official_box_number() -> None:
+    """Each box casilla names its AEAT number rather than implying it by position.
+
+    Modelo 390 addresses its slots by semantic id while the record design
+    addresses them by box number, and the two vocabularies do not intersect at
+    all. Stating the number keeps the correspondence readable instead of
+    requiring a later consumer to re-derive it from an export offset and then
+    disambiguate which régimen segment the record belongs to.
+    """
+    casillas = {casilla.id: casilla for casilla in _m390_revision().casillas}
+    for casilla_id, number in _OFFICIAL_BOX_NUMBER.items():
+        assert casilla_id in casillas, f"{casilla_id} is not declared by the revision"
+        assert casillas[casilla_id].number == number, (
+            f"{casilla_id} claims box {casillas[casilla_id].number}, official design says {number}"
+        )
+
+
+def test_rate_blind_base_casillas_claim_no_rate_specific_box_number() -> None:
+    """A rate-blind casilla must not claim a rate-specific box as its identity.
+
+    The three repercutido base casillas once carried 05/03/01 while binding
+    rate-blindly. That asserted a false identity and collided head-on with the
+    box-layer casillas that legitimately own those numbers.
+
+    ``iva.anual.soportado.interiores.base`` deliberately KEEPS number 48. Box 48
+    is "Total oper. inter. corrientes bienes y servic. - Base imponible", a
+    genuine TOTAL box, so a rate-blind binding is exactly what it asks for. The
+    rule is that the number follows the box's own semantics, not that a
+    rate-blind casilla never carries a number.
+    """
+    casillas = {casilla.id: casilla for casilla in _m390_revision().casillas}
+    rate_specific = set(_OFFICIAL_BOX_NUMBER.values())
+    for casilla_id in (
+        "iva.anual.repercutido.general.base",
+        "iva.anual.repercutido.reducido.base",
+        "iva.anual.repercutido.super-reducido.base",
+    ):
+        assert casillas[casilla_id].number not in rate_specific, (
+            f"{casilla_id} is rate-blind but claims rate-specific box {casillas[casilla_id].number}"
+        )
+    assert casillas["iva.anual.soportado.interiores.base"].number == "48"
+
+
+def test_mutation_widening_a_box_binding_re_creates_the_tier_merge() -> None:
+    """Mutation one: clearing a box's rate axis restores the defect being fixed.
+
+    Dropping ``applied_rates`` from the 10 % cuota box makes it swallow every
+    reducido row - the 7,5 %, the 5 % and the rate-unrecorded one - so box [04]
+    overstates exactly as it did before the split. This reddens
+    ``test_each_rate_box_draws_only_its_own_rate``.
+    """
+    rows = (*_rated_rows(), _unrated_row())
+    mutated = _with_applied_rates("modelo-390-iva-repercutido-tipo-10-cuota", None)
+    widened = dict(resolve_ledger_iva_aggregation_binding_values(mutated, rows))[
+        "modelo-390-iva-repercutido-tipo-10-cuota"
+    ]
+    assert widened != Decimal("250.00"), (
+        "the mutation changed nothing; the rate axis is not load-bearing"
+    )
+    assert widened == Decimal("250.00") + Decimal("120.00") + Decimal("70.00") + _UNRATED_CUOTA
+
+
+def test_mutation_narrowing_the_total_binding_deletes_the_unrecorded_row() -> None:
+    """Mutation two: narrowing the total layer deletes money from the return.
+
+    This is why the repair is a split rather than a narrowing. Giving the
+    rate-blind reducido cuota binding an ``applied_rates`` axis makes it drop the
+    row whose rate was never recorded, and that money reaches no other casilla -
+    it leaves the annual devengada total. This reddens
+    ``test_the_rate_blind_total_layer_retains_the_unrated_row``.
+    """
+    rows = (*_rated_rows(), _unrated_row())
+    intact = _resolve(rows)["modelo-390-iva-repercutido-reducido-cuota"]
+    mutated = _with_applied_rates(
+        "modelo-390-iva-repercutido-reducido-cuota",
+        (Decimal("0.10"), Decimal("0.075"), Decimal("0.05")),
+    )
+    narrowed = dict(resolve_ledger_iva_aggregation_binding_values(mutated, rows))[
+        "modelo-390-iva-repercutido-reducido-cuota"
+    ]
+    assert narrowed == intact - _UNRATED_CUOTA
+    assert narrowed < intact, "the narrowing dropped nothing; the fixture would prove nothing"
