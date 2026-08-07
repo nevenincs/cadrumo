@@ -4,7 +4,7 @@ tags:
   - "#real-pdf-fixture-corpus"
 date: "2026-04-21"
 modified: '2026-08-07'
-body_hash: 'sha256:94575c1003e737ae1c8786655f221125e80c602c2a8c25ffc59da3e85b1cbab1'
+body_hash: 'sha256:632e4bd33b33a40e19f0d9715c2ab6db5679c7d312eb4c0de9b456bfd59439b4'
 related:
   - '[[2026-04-21-real-pdf-fixture-corpus-research]]'
   - '[[2026-04-21-real-pdf-import-umbrella-research]]'
@@ -198,7 +198,6 @@ With counts per `(modelo, año, template_revision)`. Ties to cluster B's schema-
 - **Synthetic generator doubles as a product surface** — once built, Kent could generate a mock justificante / declaración for training / demo purposes. Not scope now, but a latent win.
 - **Superseded (2026-08-07):** the `src/cadrumo/adapters/inbound/pdf/_scrub.py` library named in §2 was never wired to any caller, recipe, or committed fixture, and has been deleted along with its test module and the empty L2 scaffold. See §2's supersession note; `2026-04-25-pdf-sanitizer-adr` is the accepted successor design for redacting PII in fixture PDFs.
 
-
 ### Amendment (2026-08-07): the middle layer no longer exists
 
 This ADR decided a three-layer corpus -- public anchors, **scrubbed privates**,
@@ -230,4 +229,3 @@ hardening, not through the workflow this ADR described.
 One consequence worth naming for whoever picks this up: the generator workflow
 that replaced it is driven by `python -m` on the generator modules and is
 documented nowhere outside their own docstrings.
-

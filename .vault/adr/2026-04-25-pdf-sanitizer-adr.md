@@ -4,7 +4,7 @@ tags:
   - '#pdf-sanitizer'
 date: '2026-04-25'
 modified: '2026-08-07'
-body_hash: 'sha256:8c4645ff1907b5383045fb5d0ad0e1f08568f9eb86c7c0b7377cd22e4f38d41a'
+body_hash: 'sha256:d05e43761270376b75c0c288eba99214a1cce55f5341ab5b787248ec778960d4'
 related:
   - "[[2026-04-25-pdf-sanitizer-research]]"
   - "[[2026-04-25-aeat-verify-research]]"
@@ -474,7 +474,6 @@ benefit is that `pip install aeat` produces a working sanitiser.
   *whole* TokenMap, including arbitrary entries the operator can
   add for ad-hoc strings).
 
-
 ### Amendment (2026-08-07): the package moves to `dev/`, and the CLI bridge is withdrawn
 
 This ADR stays `accepted` as to WHAT the sanitiser is and how it works. Two
@@ -524,4 +523,3 @@ declares `real_corpus`, so nothing has passed through the sanitiser since the
 purge. The relocation is correct under either answer -- `dev/` is the right home
 whether the tool is later hardened with a detection stage or later dropped --
 so that question blocks only the hardening investment, not the move.
-

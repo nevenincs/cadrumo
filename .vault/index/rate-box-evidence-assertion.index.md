@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:0e2250ef353fc54ed30b48c627573fef2d83fdfd365c0bb94ee18354fb716c25'
+body_hash: 'sha256:c4140ac9753f168d293f04ec2ee79326e06332fef95929eae11e35b6683d0f76'
 related:
   - '[[2026-08-07-rate-box-evidence-assertion-adr]]'
   - '[[2026-08-07-rate-box-evidence-assertion-research]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#rate-box-evidence-assertion`
 
 ### adr
 
-- `2026-08-07-rate-box-evidence-assertion-adr` - `rate-box-evidence-assertion` adr: `an official box asserts only what the evidence determines; the return preserves the whole` | (**status:** `proposed`)
+- `2026-08-07-rate-box-evidence-assertion-adr` - `rate-box-evidence-assertion` adr: `an official box asserts only what the evidence determines; the return preserves the whole` | (**status:** `accepted`)
 
 ### research
 
