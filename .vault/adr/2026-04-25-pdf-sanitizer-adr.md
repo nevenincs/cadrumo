@@ -1,19 +1,19 @@
 ---
 tags:
-  - '#adr'
-  - '#pdf-sanitizer'
+  - "#adr"
+  - "#pdf-sanitizer"
 date: '2026-04-25'
-modified: '2026-08-07'
-body_hash: 'sha256:d05e43761270376b75c0c288eba99214a1cce55f5341ab5b787248ec778960d4'
 related:
   - "[[2026-04-25-pdf-sanitizer-research]]"
   - "[[2026-04-25-aeat-verify-research]]"
   - "[[2026-04-25-aeat-verify-adr]]"
   - "[[2026-04-25-aeat-verify-plan]]"
   - "[[2026-04-24-aeat-verify-reference]]"
+superseded_by: '2026-08-07-pdf-sanitizer-contributor-tooling-adr'
+modified: '2026-08-07'
+body_hash: 'sha256:8dfa271fb94c65185c10414ee4ebe175ef2d47eb62295116ee6c99a9552b72d1'
 ---
-
-# `pdf-sanitizer` adr: `pdf-sanitizer-architecture-and-api` | (**status:** `accepted`)
+# `pdf-sanitizer` adr: `pdf-sanitizer-architecture-and-api` | (**status:** `superseded`)
 
 ## Problem Statement
 
