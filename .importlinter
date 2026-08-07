@@ -483,7 +483,6 @@ ignore_imports =
     cadrumo.application.invoices._creation -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._creation -> cadrumo.adapters.persistence.profile.buckets
     cadrumo.application.invoices._creation -> cadrumo.adapters.persistence.storage
-    cadrumo.application.invoices._importing -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._lifecycle -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._linking -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._queries -> cadrumo.adapters.persistence.profile.invoices
