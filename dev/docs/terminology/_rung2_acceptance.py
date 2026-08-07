@@ -30,6 +30,14 @@ from ._rung2_provenance import Rung2InputProvenance
 from ._static_matrix import DEFAULT_MAX_SERIALIZED_BYTES, NORMALIZATION_CONTRACT_VERSION, ModelMetadata
 
 __all__ = [
+    "POTION_MODEL_SNAPSHOT_SHA256",
+    "POTION_PROVIDER_PACKAGE",
+    "POTION_PROVIDER_SOURCE_SHA256",
+    "POTION_PROVIDER_VERSION",
+    "POTION_TOKENIZER_CONFIG_SHA256",
+    "POTION_TOKENIZER_PACKAGE",
+    "POTION_TOKENIZER_VERSION",
+    "POTION_TOKENIZER_VOCABULARY_SHA256",
     "RUNG2_CONFIG_SCHEMA_VERSION",
     "Rung2AcceptanceError",
     "Rung2AcceptanceEvidence",
@@ -40,6 +48,14 @@ __all__ = [
 _SHA256 = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 _BUNDLE_URL = Annotated[str, StringConstraints(min_length=1)]
 RUNG2_CONFIG_SCHEMA_VERSION: Final[str] = "cadrumo.docs-search.rung2-config.v2"
+POTION_PROVIDER_PACKAGE: Final[str] = "model2vec"
+POTION_PROVIDER_VERSION: Final[str] = "0.8.2"
+POTION_PROVIDER_SOURCE_SHA256: Final[str] = "929a7ee94295436f3befb3f0836cf45c587fd91f34fe3f3f8f4039a5e126c4d7"
+POTION_MODEL_SNAPSHOT_SHA256: Final[str] = "869266e7140deabcaa3e5e0e69c7e017af5507d07006114690fb05d3ab06c9d6"
+POTION_TOKENIZER_PACKAGE: Final[str] = "tokenizers"
+POTION_TOKENIZER_VERSION: Final[str] = "0.23.1"
+POTION_TOKENIZER_CONFIG_SHA256: Final[str] = "83ae8f6fbf3124bd6d7e8d7c62677067f5cdd3885f377a7a787e8daa4f353299"
+POTION_TOKENIZER_VOCABULARY_SHA256: Final[str] = "16d9434a6dba49dffd2a831ceb73bcbab2662b32d7bd3d0c4a2544e3b4c22d3b"
 
 
 class Rung2AcceptanceError(ValueError):
@@ -163,8 +179,21 @@ def validate_rung2_browser_config(
         or model.revision != POTION_MODEL_REVISION
         or model.spdx_license != POTION_MODEL_LICENSE
         or model.dimension != POTION_MODEL_DIMENSION
+        or model.model_snapshot_sha256 != POTION_MODEL_SNAPSHOT_SHA256
     ):
         raise Rung2AcceptanceError("validated Rung-2 bundle does not use the ratified Potion model identity")
+    if (
+        model.provider.package != POTION_PROVIDER_PACKAGE
+        or model.provider.version != POTION_PROVIDER_VERSION
+        or model.provider.source_sha256 != POTION_PROVIDER_SOURCE_SHA256
+        or model.tokenizer.package != POTION_TOKENIZER_PACKAGE
+        or model.tokenizer.version != POTION_TOKENIZER_VERSION
+        or model.tokenizer.repository != POTION_MODEL_REPOSITORY
+        or model.tokenizer.revision != POTION_MODEL_REVISION
+        or model.tokenizer.vocabulary_sha256 != POTION_TOKENIZER_VOCABULARY_SHA256
+        or model.tokenizer.config_sha256 != POTION_TOKENIZER_CONFIG_SHA256
+    ):
+        raise Rung2AcceptanceError("validated Rung-2 bundle does not use the ratified provider/tokenizer identity")
     if bundle.matrix.vocabulary_sha256 != bundle.bridge.matrix_vocabulary_sha256:
         raise Rung2AcceptanceError("Rung-2 bundle vocabulary fingerprint is not bridge-linked")
     if model.tokenizer.normalization.algorithm != validated.normalization_version:
