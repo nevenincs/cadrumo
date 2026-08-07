@@ -3,15 +3,15 @@ tags:
   - "#adr"
   - "#real-pdf-fixture-corpus"
 date: "2026-04-21"
-modified: '2026-07-17'
-body_hash: 'sha256:18ca594e2ea74b9f296ad407dedc2e65e5760e13bf4294e92688a9aef1796304'
+modified: '2026-08-07'
+body_hash: 'sha256:252e62be2a1cf7724188a4efa13f3a048c9a8470a9e4b616dbe21a75a4bf32bd'
 related:
-  - "[[2026-04-21-real-pdf-fixture-corpus-research]]"
-  - "[[2026-04-21-real-pdf-import-umbrella-research]]"
-  - "[[2026-04-21-pdf-taxonomy-adr]]"
-  - "[[2026-04-21-casilla-schema-completeness-adr]]"
+  - '[[2026-04-21-real-pdf-fixture-corpus-research]]'
+  - '[[2026-04-21-real-pdf-import-umbrella-research]]'
+  - '[[2026-04-21-pdf-taxonomy-adr]]'
+  - '[[2026-04-21-casilla-schema-completeness-adr]]'
+  - '[[2026-04-25-pdf-sanitizer-adr]]'
 ---
-
 # `real-pdf-fixture-corpus` adr: `three-layer-corpus-public-anchors-scrubbed-privates-synthetic-parametrised` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -71,6 +71,24 @@ tests/fixtures/
 ```
 
 ### 2. New `src/cadrumo/adapters/inbound/pdf/_scrub.py` library
+
+> **Superseded (2026-08-07).** `2026-04-25-pdf-sanitizer-adr` overrides this
+> section's Sanitiser design in full and states so explicitly. The shipped
+> successor is `adapters/inbound/sanitizer/`, which operates on an
+> operator-supplied declarative `TokenMap` and deliberately does not run
+> probabilistic PII discovery (`sanitizer/_records.py`). This retires an
+> **unfinished** pipeline, not a functioning one it displaces: at removal time
+> `scrub_filing` had zero callers tree-wide, no `just`/`scripts` recipe existed
+> to invoke it, `scripts/check_l2_scrub_guard.py` (§3 below) was never
+> authored, and `tests/fixtures/pdf_corpus/l2_scrubbed_private/` held only an
+> empty `_consent_log.jsonl` — no scrubbed fixture was ever committed. The
+> regex-based PII-discovery capability this module implemented (NIF/IBAN/
+> phone/email/name pattern matching) was a **deliberate scope decision the
+> survivor declined**, not a capability it inherited; it is recoverable from
+> git history if a future need for automatic PII discovery (as opposed to
+> operator-declared token mapping) arises. `src/cadrumo/adapters/inbound/pdf/_scrub.py`,
+> its test module, and the empty `l2_scrubbed_private/` scaffold (including
+> the 0-byte `_consent_log.jsonl`) were deleted as dead, superseded design.
 
 Lives in the package cluster A opens. Public API:
 
@@ -178,4 +196,4 @@ With counts per `(modelo, año, template_revision)`. Ties to cluster B's schema-
 - **Parametrised calc-verification works.** Tests can sweep `@pytest.mark.parametrize` across the casilla input space; `Engine.audit_against` checks every case.
 - **User consent is first-class.** Nothing enters the repo without a sidecar record; revocation is supported; every scrubbed file carries its own audit trail.
 - **Synthetic generator doubles as a product surface** — once built, Kent could generate a mock justificante / declaración for training / demo purposes. Not scope now, but a latent win.
-- **A new `src/cadrumo/adapters/inbound/pdf/_scrub.py` library** lands; consumable by CLI surfaces, CI jobs, and future product features beyond fixtures.
+- **Superseded (2026-08-07):** the `src/cadrumo/adapters/inbound/pdf/_scrub.py` library named in §2 was never wired to any caller, recipe, or committed fixture, and has been deleted along with its test module and the empty L2 scaffold. See §2's supersession note; `2026-04-25-pdf-sanitizer-adr` is the accepted successor design for redacting PII in fixture PDFs.
