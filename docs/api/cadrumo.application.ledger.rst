@@ -21,6 +21,7 @@ Submodules
    cadrumo.application.ledger._actions_manual
    cadrumo.application.ledger._actions_split_merge
    cadrumo.application.ledger._aeat_record_projection
+   cadrumo.application.ledger._batch_ingest
    cadrumo.application.ledger._closure_findings
    cadrumo.application.ledger._document_transcription
    cadrumo.application.ledger._evidence
@@ -32,6 +33,7 @@ Submodules
    cadrumo.application.ledger._evidence_textlayer
    cadrumo.application.ledger._extracted_document_cache
    cadrumo.application.ledger._extraction_draft_store
+   cadrumo.application.ledger._grounded_reading
    cadrumo.application.ledger._grounding_anchor
    cadrumo.application.ledger._id_resolution
    cadrumo.application.ledger._identity_roles
