@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:ecfd4cc7068bd501198485c7393c2e1dd99962c368889473cdda3b4a4cb42d8e'
+body_hash: 'sha256:ce502049eb4071062311c994fb2d2aeea662524ee93aac2c3afa3c25153f3213'
 step_id: 'S56'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
@@ -54,3 +54,14 @@ So it enrolls under the scoped campaign with its dependency stated, rather than 
 ## Scope note
 
 `src/cadrumo/_data/registry/aeat/modelos/390/` is unchanged, as before — but now because the work is sequenced elsewhere, not because it is inexpressible.
+
+## The campaign this routes to does not exist yet
+
+The disposition above sends the four casillas and their bindings to the M390
+under-modelling campaign that `W06.P08.S47` scoped. No such plan has been opened.
+
+The routing is still correct -- the work genuinely belongs with the rest of the
+annual surface, and adding four boxes here without their Modelo 303 counterparts
+would red the reconciliation parity gate. But "enrolls under the scoped campaign"
+should not be read as "scheduled". The close honesty review carries this as
+`FINDING-3`.

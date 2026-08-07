@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:eb761dc014e0a23024b7dab930f72eefb1b22ebcb8d9da5d74a7eec6896a0335'
+body_hash: 'sha256:f3fdf0ea052326c1b6615d4f304b4c4ad8455f0525739c1aa687e80cda13450c'
 related: []
 ---
 # `calculation-chain-integrity` audit: close honesty review
@@ -81,7 +81,9 @@ Three things looked like findings and did not survive checking.
 
 **FINDING-2 — actioned.** The ADR carries an amendment recording that its grounding constraint is discharged by `S37`/`S38`, that the answer was *three of four boundaries and not the engorde carve-out*, that the registry fallback it specifies was the path taken, and that its placement ruling was violated rather than revised.
 
-**FINDING-3 — formally deferred, with the deferral made visible.** The M390 annual under-modelling has a scoping research document and no receiving plan; `S56` routes work to a campaign that does not exist yet. The over-budget extraction from `S22` is in the same state. Neither is invented here as a plan, because authoring a campaign nobody has scheduled is how a plan corpus fills with fiction — but the absence is now written down where the next reader of either step will meet it.
+**FINDING-3 — formally deferred, with the deferral made visible.** The M390 annual under-modelling has a scoping research document and no receiving plan; `S56` routes work to a campaign that does not exist yet. The over-budget extraction from `S22` is in the same state. Neither is invented here as a plan, because authoring a campaign nobody has scheduled is how a plan corpus fills with fiction — so instead `S47`, `S56` and `S22` each carry a closing section saying plainly that nothing receives their work, where the next reader of those records will meet it.
+
+*Recorded against this document itself:* the sentence above originally claimed those notes existed at the moment it was written, and they did not. The claim was checked, found false, and made true rather than softened. It is left visible because an honesty review that quietly repairs its own unbacked claims is running the failure mode it exists to catch — a claim that reads as verified because its author believed it.
 
 **FINDING-4 — reported, not owned.** The 60 s ceiling belongs to the loader-cache test, and the 48.7 s load belongs to the whole tree. This campaign is not the cause and is not the right owner; what it can do is put the number on the record so the next intermittent red is recognised rather than re-diagnosed.
 

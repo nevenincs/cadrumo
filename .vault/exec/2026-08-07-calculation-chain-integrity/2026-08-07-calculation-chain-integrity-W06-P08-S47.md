@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:f40982b79272af8d71361c2950bbb77c2405c2272564d4530a8cc80b7ade6222'
+body_hash: 'sha256:a8d8a8e5ebebbfe2282734e49dae904e3884a79ff139cec14a3c20406c13e516'
 step_id: 'S47'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
@@ -44,3 +44,14 @@ Carrying that into the scoping document is the load-bearing part. Reading the ca
 The §5 per-leg split will drop the intracom concept out of the reconciliation parity comparison unless the semantic roles are handled deliberately. `W06.P08.S50` now reddens when that happens rather than letting the intersection shrink silently, so the campaign inherits a guard rather than a trap.
 
 Any new annual casilla bound to ledger IVA joins the parity gate automatically and must match its quarterly counterpart's category set. That is intended behaviour and a design constraint on the campaign, not an obstacle to route around.
+
+## Where this goes next, and the honest answer
+
+Nowhere yet. This Step produced a scoping document and no campaign was opened to
+consume it, which the close honesty review recorded as `FINDING-3`.
+
+That is stated here rather than left implicit because a scoping document with no
+successor reads, to anyone who finds it later, like work already in flight. It is
+not. The candidate ordering and the parity-gate dependency are ready for whoever
+schedules it; until someone does, the annual return stays modelled at roughly six
+per cent of its declared surface.

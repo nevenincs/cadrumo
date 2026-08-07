@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:a84bc41b69fb3b6471b148a7454f1eb7d284b935f60db61a8cdc98a40f1fc889'
+body_hash: 'sha256:2a5219138e88dffa1f110a0ccaace5eca7d3829e3f6e095db1a2499f3e191b96'
 step_id: 'S22'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
@@ -53,3 +53,14 @@ I did not trim it. The docstring is what tells a reader that `None` means undecl
 Eleven modules and five callables remain over budget. Each needs an extraction, which is a cohesion judgement per subject, and most sit in lanes other agents are actively moving — `_ledger_bindings.py` has grown to 1913 since the earlier pass measured it at 1843, which is the clearest possible signal that it has not settled.
 
 The Step's qualifier is "completing an already-argued intent rather than making a new decision". Extraction is a new decision every time.
+
+## The extraction residue has no owner
+
+Eleven modules and five callables remain over budget, and this Step deliberately
+did not touch them: each needs a cohesion judgement, and most sit in lanes other
+agents are actively moving.
+
+No plan carries that work. The close honesty review records it as `FINDING-3`
+alongside the M390 residue, for the same reason -- a deferral that names no
+receiving campaign is indistinguishable, six weeks later, from a deferral that was
+picked up.
