@@ -1043,46 +1043,6 @@ def test_history_selection_is_invariant_to_the_order_duplicated_periods_arrive_i
 _SYNTHETIC_REQUEST_TYPE = "SYNTHETIC-REQUEST-TYPE"
 
 
-def _filed_130_observation_carrying_a_request_type() -> FiledDeclaracionObservation:
-    """Build one active filed Modelo 130 observation whose metadata states a request type.
-
-    The metadata mapping mirrors what the live capture path writes off the
-    register row. Modelo 130 keeps this out of the IVA compensation machinery,
-    so the persistence boundary is exercised on its own.
-    """
-    body = b"130-2026-1T-submitted-file"
-    artefact = FiledDeclaracionArtefact(
-        kind="submitted_file",
-        source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/BUCV-JDIT/AvisoLegal"),
-        content_type="application/octet-stream",
-        byte_count=len(body),
-        sha256=hashlib.sha256(body).hexdigest(),
-        captured_at=_CAPTURED_AT,
-    )
-    return FiledDeclaracionObservation(
-        modelo="130",
-        ejercicio=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-        expediente_id="202613000000101A",
-        status="ALTA",
-        presented_at=_CAPTURED_AT,
-        authenticated_identity=_SYNTHETIC_PROFILE_ID,
-        artefacts=(artefact,),
-        casillas=(
-            ObservedCasillaValue(
-                casilla_id=validated_casilla_id("01", surface="filed request-type observation"),
-                value="1000.00",
-                value_kind=CasillaValueKind.NUMERIC,
-                source_artefact_kind="submitted_file",
-                source_locator="submitted-file:01",
-                confidence=1.0,
-            ),
-        ),
-        extraction_coverage={"submitted_file": 1.0},
-        metadata={"tipo_solicitud": _SYNTHETIC_REQUEST_TYPE, "observaciones": ""},
-    )
-
-
 def test_persisted_source_metadata_drops_the_register_request_type_signal(tmp_path: Path) -> None:
     """AEAT's own request-type signal reaches the observation and is lost at persistence.
 
@@ -1098,8 +1058,15 @@ def test_persisted_source_metadata_drops_the_register_request_type_signal(tmp_pa
     half-fix would be worse than a visible gap. REVERSE THIS TEST when the
     request-type signal is carried through -- assert the persisted metadata
     carries it, and the two absence assertions below become the ones to delete.
+
+    Modelo 130 keeps this off the IVA compensation machinery a Modelo 303
+    observation additionally drives, so the persistence boundary is exercised on
+    its own. The metadata mapping mirrors what the live capture path writes off
+    the register row.
     """
-    observation = _filed_130_observation_carrying_a_request_type()
+    observation = _filed_130_observation().model_copy(
+        update={"metadata": {"tipo_solicitud": _SYNTHETIC_REQUEST_TYPE, "observaciones": ""}},
+    )
     assert observation.metadata["tipo_solicitud"] == _SYNTHETIC_REQUEST_TYPE, (
         "the raw observation does not carry the signal, so this test cannot show it being dropped"
     )
