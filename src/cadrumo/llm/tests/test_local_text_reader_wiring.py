@@ -1,0 +1,112 @@
+"""A text-layer document classifies on-host, with no cloud transport.
+
+This is the gate that must be green **before** the first cloud-deletion Step
+closes. The sequencing is a constraint rather than a preference: delete the
+cloud path first and there is a window in which text-layer PDFs cannot be
+classified at all, which is a capability regression shipped to operators for
+however long the window lasts.
+
+The proof is deliberately run against the real wiring rather than against a
+hand-built classifier. A test that constructed ``LocalTextLLMClassifier``
+itself would prove the class works and say nothing about whether the classify
+path reaches it -- which is precisely the failure mode this campaign's own
+research records: three deliverables that shipped correct, tested, and
+unreferenced, because a unit test passes whether or not anything calls the
+code.
+
+No model runs here. The transport is asserted structurally and through an
+injected client, because running local inference crashed a development host and
+terminated four concurrent agent sessions; nothing in this campaign requires a
+live model.
+"""
+
+from __future__ import annotations
+
+import inspect
+
+import pytest
+
+from .. import LocalTextLLMClassifier
+from .._models import LLMProvider
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+def test_the_classify_path_reaches_the_local_text_reader() -> None:
+    """The core classify path constructs the local reader when no cloud provider is given.
+
+    Enrolment gate, not a unit test. Reads the classify seam's own source, so
+    it fails if the wiring is removed even while ``LocalTextLLMClassifier``
+    itself stays perfectly functional.
+
+    Before this wiring the same branch raised ``_TEXT_PATH_NEEDS_PROVIDER``,
+    making a cloud provider mandatory for any text-layer document.
+    """
+    from ...application.ledger import _llm_classification
+
+    source = inspect.getsource(_llm_classification._classify_with_evidence)
+
+    assert "LocalTextLLMClassifier" in source, (
+        "the classify path must reach the local text reader; without it a text-layer "
+        "document has no on-host route and requires a cloud transport"
+    )
+    assert "_TEXT_PATH_NEEDS_PROVIDER" not in source, (
+        "the text path must no longer refuse for want of a cloud provider"
+    )
+
+
+def test_the_local_text_reader_requests_the_local_provider_and_carries_no_images() -> None:
+    """Its request pins the LOCAL provider and sends text only.
+
+    Two properties, and the second is the one that matters for privacy: a
+    request carrying images would mean a text document was being rasterised and
+    routed as a vision read, and a request without the provider override could
+    fall through to whatever the settings default happens to be -- which is how
+    a document ends up leaving the host by accident rather than by decision.
+    """
+    from ...domain.transactions import prompt_spec_with_every_spending_category
+
+    reader = LocalTextLLMClassifier(spec=prompt_spec_with_every_spending_category())
+    request = reader._request("classify this")
+
+    assert request.provider_override is LLMProvider.LOCAL
+    assert not request.images, "a text read must carry no images"
+    assert request.prompt == "classify this"
+
+
+def test_the_provenance_stamp_names_the_local_text_transport() -> None:
+    """A persisted record can say which on-host transport read it.
+
+    Distinct from both the vision stamp and the retired cloud stamps. Once the
+    cloud providers are gone the provider axis collapses to the local runtime,
+    and a reader who assumed it was still multi-valued would be wrong -- so the
+    two on-host transports must remain distinguishable from each other.
+    """
+    from ...domain.transactions import prompt_spec_with_every_spending_category
+
+    reader = LocalTextLLMClassifier(
+        spec=prompt_spec_with_every_spending_category(),
+        model="qwen2.5:3b",
+    )
+
+    assert reader.decided_by == "llm:local-text:qwen2.5:3b"
+    assert reader.decided_by.startswith("llm:local-")
+
+
+def test_the_text_model_default_sits_under_the_declared_hardware_floor() -> None:
+    """S45: the model is chosen under the constraint, not beside it.
+
+    The floor exists because a model that does not fit does not refuse -- it
+    loads and thrashes, or is killed mid-read, and the operator sees an
+    unexplained timeout. A default that exceeded its own declared floor would
+    make the probe report a capable machine for a model it cannot run.
+    """
+    from ...core.config import load_settings
+
+    settings = load_settings()
+
+    assert settings.cadrumo_llm_ollama_text_model == "qwen2.5:3b"
+    # The text sibling of the vision default: a machine provisioned for one is
+    # provisioned for the other.
+    assert settings.cadrumo_llm_ollama_vision_model.startswith("qwen2.5")
+    assert settings.cadrumo_llm_model_runtime_memory_floor_bytes >= 8 * 1024**3

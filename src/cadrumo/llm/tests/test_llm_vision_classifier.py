@@ -100,9 +100,23 @@ def test_image_evidence_classifies_with_no_provider(profile: TestRuntimeProfile)
     assert provenance.startswith("llm:local-vision:")
 
 
-def test_text_or_no_evidence_without_provider_refuses_instructively() -> None:
-    """Without a provider and without readable image evidence, the text path refuses."""
-    with pytest.raises(TransactionValidationError, match="needs a cloud provider"):
+def test_text_path_without_a_cloud_provider_now_routes_on_host() -> None:
+    """The text path no longer demands a cloud provider; it reads on-host.
+
+    This test previously asserted the OPPOSITE -- that the branch refused with
+    "needs a cloud provider" -- and that refusal was the mechanism behind the
+    inverted privacy posture: a text-layer document, the more machine-readable
+    one, was the only class whose contents had to leave the host, decided by
+    nothing but how the file happened to be produced.
+
+    Inverted deliberately rather than deleted, so the change of posture is
+    visible in the test history rather than silently disappearing from it. The
+    refusal that survives is about the RUNTIME being unreachable, which is a
+    provisioning problem with a stated fix, not a transport policy.
+    """
+    from ...domain.transactions import LLMClassifierError
+
+    with pytest.raises(LLMClassifierError, match="on-host"):
         _classify_with_evidence(
             _transaction("ev-1"),
             None,
@@ -134,7 +148,7 @@ def test_vision_connection_error_becomes_a_typed_refusal_with_fix(profile: TestR
         spec=prompt_spec_with_saturation_fields(),
         settings=unreachable_settings,
     )
-    with pytest.raises(LLMClassifierError, match=r"vision reading failed.*Fix:"):
+    with pytest.raises(LLMClassifierError, match=r"model reading failed.*Fix:"):
         _classify_with_evidence(
             _transaction("ev-1"),
             evidence,

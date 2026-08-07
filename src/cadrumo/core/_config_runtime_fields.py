@@ -48,6 +48,19 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
             "CPU-only/low-memory hardware"
         ),
     )
+    cadrumo_llm_ollama_text_model: str = Field(
+        default="qwen2.5:3b",
+        description=(
+            "Local Ollama TEXT model used to classify a text-layer document on-host. "
+            "Chosen under the same consumer-hardware constraint that binds the vision "
+            "default rather than beside it: qwen2.5:3b is ~2 GB, comfortably under the "
+            "declared memory floor, and is the text sibling of the qwen2.5vl:3b vision "
+            "default, so a machine provisioned for one is provisioned for the other. "
+            "This model reads only the extracted text and selects from the registry "
+            "allow-list; it never emits a regulated number. Override upward "
+            "(qwen2.5:7b) on a larger GPU"
+        ),
+    )
     cadrumo_llm_model_runtime_memory_floor_bytes: int = Field(
         default=8 * 1024**3,
         gt=0,

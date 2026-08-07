@@ -74,6 +74,7 @@ from ._models import (
 )
 from ._providers import rasterise_pdf_pages_to_base64_png
 from ._retention import select_retention_removal_keys
+from ._text_classifier import LocalTextLLMClassifier
 
 __all__ = [
     "CacheKey",
@@ -89,6 +90,7 @@ __all__ = [
     "LLMRateLimitError",
     "LLMRequest",
     "LLMResponse",
+    "LocalTextLLMClassifier",
     "LocalVisionLLMClassifier",
     "MultimodalImageInput",
     "PromptDefinition",

@@ -49,7 +49,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import uuid4
 
-from ...llm import rasterise_pdf_pages_to_base64_png
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...core.config import Settings, load_settings
@@ -76,7 +75,7 @@ from ...domain.transactions import (
     resolve_split_proposer,
     set_classification,
 )
-from ...llm import LocalVisionLLMClassifier
+from ...llm import LocalTextLLMClassifier, LocalVisionLLMClassifier, rasterise_pdf_pages_to_base64_png
 from ._actions_common import (
     build_bucket_event as _build_bucket_event,
 )
@@ -307,8 +306,13 @@ _TEXT_PATH_NEEDS_PROVIDER = (
 )
 
 
-def _run_vision_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
-    """Run an on-host vision call, converting a missing/unreachable Ollama to a typed refusal.
+def _run_on_host_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
+    """Run an on-host model call, converting a missing/unreachable Ollama to a typed refusal.
+
+    Transport-neutral: it guards the VISION read and, since the local text
+    reader was wired, the TEXT read too. Named for the runtime it protects
+    rather than for one of its callers, because the previous name would have
+    become a quiet lie the moment the second caller arrived.
 
     The local adapter only guards HTTP *status* errors; a connection-refused or a
     model-missing failure escaped every CLI ``except`` clause as a raw
@@ -319,8 +323,8 @@ def _run_vision_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
     """
     import httpx
 
-    from .llm import LLMProviderError
     from ...domain.transactions import LLMClassifierError
+    from ...llm import LLMProviderError
 
     try:
         return run()
@@ -328,9 +332,9 @@ def _run_vision_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
         from ..provisioning import probe_ollama_vision
 
         status = probe_ollama_vision(settings)
-        fix = status.remediation or "ensure the local Ollama vision model is reachable"
+        fix = status.remediation or "ensure the local Ollama runtime is reachable"
         detail = status.detail if not status.available else str(exc)
-        raise LLMClassifierError(f"on-host vision reading failed: {detail}. Fix: {fix}") from exc
+        raise LLMClassifierError(f"on-host model reading failed: {detail}. Fix: {fix}") from exc
 
 
 def _record_subprocess_run[T](run: Callable[[], T], *, provider: str) -> T:
@@ -407,17 +411,25 @@ def _classify_with_evidence(
         # its own run-timing telemetry -- do not double-record here.
         vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings, model=vision_model)
         images = evidence.images
-        response = _run_vision_or_refuse(
+        response = _run_on_host_or_refuse(
             lambda: vision.classify(transaction, evidence_images=images),
             settings=settings,
         )
         return response, vision.decided_by
-    if text_classifier is None:
-        raise TransactionValidationError(
-            _TEXT_PATH_NEEDS_PROVIDER,
-            context={"transaction_id": transaction.transaction_id},
-        )
     text = evidence.text if evidence is not None else None
+    if text_classifier is None:
+        # S44: the LOCAL text reader, wired here for the first time. Before it
+        # existed this branch refused unless the operator supplied a cloud
+        # provider, which is what made a text-layer PDF the one document class
+        # whose contents left the host -- the more machine-readable document
+        # taking the less private route, decided by nothing but how it happened
+        # to be produced. Text-layer evidence now takes the same on-host path
+        # scanned evidence already took.
+        local_text = LocalTextLLMClassifier(spec=spec, settings=settings)
+        return _run_on_host_or_refuse(
+            lambda: local_text.classify(transaction, evidence_text=text),
+            settings=settings,
+        ), local_text.decided_by
     return _record_subprocess_run(
         lambda: text_classifier.classify(transaction, evidence_text=text),
         provider=text_classifier.decided_by,
@@ -447,7 +459,7 @@ def _split_with_evidence(
         # its own run-timing telemetry -- do not double-record here.
         vision = vision_classifier or LocalVisionLLMClassifier(spec=spec, settings=settings, model=vision_model)
         images = evidence.images
-        response = _run_vision_or_refuse(
+        response = _run_on_host_or_refuse(
             lambda: vision.propose_split(transaction, evidence_images=images),
             settings=settings,
         )
