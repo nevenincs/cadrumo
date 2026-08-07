@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:25ff974586bb8ea43156f213e1a553535c5e175af6b605038324bd329d71934e'
+body_hash: 'sha256:09f95b19675662be7acbea837c8cbdd168cc147ab3b6ab9d660725381b9ebddc'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -71,7 +71,7 @@ Implement the canonical placement, then unblock the retencion regimen filter and
 
 - [x] `W03.P05.S11` - Place the Modelo 036 activity axis - TipoActividad in core, tipo_actividad on Transaction with a non-default roundtrip and a delete-the-key anti-tautology proof, and a resolver that reads the art. 95 correspondence from the S38 registry parameters instead of restating it. The code sits per-row rather than on the profile because a taxpayer with both an agrarian and a non-agrarian activity is exactly the case S13 must split. The IrpfActivityKind bridge is deliberately not built - it needs a profile input that does not exist and the field shape is a decision this row should not pre-empt by building half of it; `src/cadrumo/domain/transactions/`.
 - [x] `W03.P05.S12` - Narrow the statutory-rate advisory to the rates a taxpayer can lawfully be subject to, restoring the flat-fee catch measured lost; `src/cadrumo/application/aggregation/_retencion_rate_advisory.py`.
-- [ ] `W03.P05.S13` - BLOCKED on S11, do not attempt first - casilla 08 is the agrarian quarterly volume and the ledger carries no activity-type axis to separate agrarian income from estimacion directa, so aggregating it today would feed the same rows into both casilla 01 and casilla 08 and double-count rather than close the silent zero; `src/cadrumo/application/aggregation/`.
+- [ ] `W03.P05.S13` - OPEN on two measured blockers, and the row's own premise was wrong - the agrarian quarterly volume is casilla 05 feeding the 2 percent formula at 06, while casilla 08 is retenciones e ingresos a cuenta, and casilla 01 is modulos-computed rendimientos that no ledger sum could feed. S11 did clear the activity split. What blocks it now is that art 110.1.c fixes the base as volumen de ingresos excluidas las subvenciones de capital y las indemnizaciones and the ledger has no marker for either, so a binding today would silently OVER-declare, and that art 110 covers pesqueras while art 95 does not, so reusing the S38 selectors would silently drop a pesquero filer's whole volume; `src/cadrumo/application/aggregation/`.
 - [x] `W03.P05.S37` - Bundle the M036 tipo-de-actividad code table, which the diseno names only as Tabla and never enumerates - AEAT publishes it in the instrucciones, so it landed under instructions/modelo_036 with two independent sede captures, sha256 and a PROVENANCE.md rather than under disenos_registro; `src/cadrumo/_data/corpus/aeat_official/instructions/modelo_036/`.
 - [x] `W03.P05.S38` - Ground the M036 code-to-art-95-partition correspondence as registry parameters with their own legal_refs, three partitions selectable and the engorde de porcino y avicultura carve-out declared as an empty code set so the gap is legible rather than silent; `src/cadrumo/_data/registry/aeat/legal/`.
 
