@@ -30,8 +30,8 @@ from ....llm._invoice_field_grounding import (
     parse_invoice_extraction_response,
 )
 from .. import _evidence_draft as _router_module
-from .._evidence import PurchaseInvoiceEvidenceInputError
 from .._document_transcription import DocumentTranscription, TranscriberIdentity
+from .._evidence import PurchaseInvoiceEvidenceInputError
 from .._evidence_draft import FieldProvenance, InvoiceDraft
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import transcribe_text_layer

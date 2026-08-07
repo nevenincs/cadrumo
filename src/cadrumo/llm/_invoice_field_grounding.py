@@ -37,6 +37,7 @@ import json
 import re
 from collections.abc import Callable, Mapping
 from decimal import Decimal
+from typing import cast
 
 from pydantic import BaseModel, Field
 
@@ -251,7 +252,13 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
     values: dict[str, object] = {}
     anchors: dict[str, object] = {}
     role_evidence: dict[str, object] = {}
-    for key, value in raw.items():
+    # A stdlib boundary: `json.loads` returns `Any`, so the `isinstance` narrow
+    # above yields a mapping of unknowns and the suffix tests below would be
+    # unchecked. The cast asserts only what the JSON grammar already guarantees
+    # -- an object's keys are strings -- and leaves the values opaque for the
+    # strict models to validate.
+    keyed = cast("dict[str, object]", raw)
+    for key, value in keyed.items():
         # Role evidence is tested FIRST because the two suffixes are independent
         # strings a later edit could make overlap; ordering the more specific
         # test ahead means such an overlap misroutes nothing silently, and the

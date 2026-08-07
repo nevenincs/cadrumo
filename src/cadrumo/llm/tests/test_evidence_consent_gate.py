@@ -53,6 +53,7 @@ from .._consent import provider_reads_off_host
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+
 def _transcription() -> DocumentTranscription:
     """Return a minimal stage-one transcription for the reader to consume.
 
