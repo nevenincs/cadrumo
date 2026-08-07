@@ -4,7 +4,7 @@ tags:
   - '#llm-package-split'
 date: '2026-08-06'
 modified: '2026-08-07'
-body_hash: 'sha256:a94ac43997c6a15f10376aa1aa4a94a4517623dd7a71dcda4b0978b1fa030d22'
+body_hash: 'sha256:6ee3c330a99fd2efb9a831e1775f4a2ec62bb97dac09e2a5ec12cfd8b0d24e1b'
 tier: L3
 related:
   - '[[2026-08-06-llm-package-split-adr]]'
@@ -148,15 +148,15 @@ Replaces a two-member media kind derived from a declared MIME with a typed shape
 
 Adds hardened deterministic parsers for both EN16931 syntaxes and for Facturae, mapping to one line-carrying extraction draft. They land under adapters/inbound alongside the seven sibling packages that already parse externally-authored formats, because a record whose subject is a boundary decision cannot put format parsing in the application layer without contradicting itself.
 
-- [ ] `W02.P04.S67` - Extend the extraction draft to carry a line set and a per-rate IVA breakdown, red if a two-rate document still collapses to a single base and cuota pair; `src/cadrumo/application/ledger/_evidence_draft.py`.
+- [x] `W02.P04.S67` - Extend the extraction draft to carry a line set and a per-rate IVA breakdown, red if a two-rate document still collapses to a single base and cuota pair; `src/cadrumo/application/ledger/_evidence_draft.py`.
 - [ ] `W02.P04.S79` - Add a representable recargo slot to the extraction draft, since the printed-total discrepancy advisory now fires with no field for the operator to resolve it into, red if a recargo-bearing document still leaves the operator no place to record it; `src/cadrumo/application/ledger/_evidence_draft.py`.
 - [x] `W02.P04.S13` - Add a deterministic EN16931 CII parser mapping to the line-carrying extraction draft, red if a CII document with two tax rates yields fewer than two per-rate entries; `src/cadrumo/adapters/inbound/einvoice/`.
 - [x] `W02.P04.S14` - Add a deterministic EN16931 UBL parser, since a CII-only reader silently returns nothing for half the standard, red if a UBL document yields no record where the CII path yields one; `src/cadrumo/adapters/inbound/einvoice/`.
 - [x] `W02.P04.S15` - Add a deterministic Facturae 3.2.x parser mapping to the same line-carrying draft, red if a Facturae document maps to a shape the CII and UBL parsers do not also produce; `src/cadrumo/adapters/inbound/einvoice/`.
 - [ ] `W02.P04.S80` - Map the parsed percentage onto the closed IvaRate slot enum and refuse loudly when no slot matches, never rounding to the nearest member, red if a 5 percent pre-2025 line resolves to any slot rather than refusing; `src/cadrumo/adapters/inbound/einvoice/`.
 - [ ] `W02.P04.S82` - Map the document's own tax-category code onto the IvaCategory enum including the intra-community service members, leaving it unset with a visible advisory only where the document states no category, never guessing, red if a services invoice is left unset when the document does state its category; `src/cadrumo/adapters/inbound/einvoice/`.
-- [ ] `W02.P04.S16` - Harden every XML read with entity resolution and external DTD loading disabled and with size and depth bounds, red if an XXE probe document resolves an external entity or a billion-laughs payload is not refused; `src/cadrumo/adapters/inbound/einvoice/`.
-- [ ] `W02.P04.S17` - Select the VAT number as the party tax identifier rather than a French SIRET or German Steuernummer, red if a ZUGFeRD fixture carrying both still yields the SIRET; `src/cadrumo/adapters/inbound/einvoice/`.
+- [x] `W02.P04.S16` - Harden every XML read with entity resolution and external DTD loading disabled and with size and depth bounds, red if an XXE probe document resolves an external entity or a billion-laughs payload is not refused; `src/cadrumo/adapters/inbound/einvoice/`.
+- [x] `W02.P04.S17` - Select the VAT number as the party tax identifier rather than a French SIRET or German Steuernummer, red if a ZUGFeRD fixture carrying both still yields the SIRET; `src/cadrumo/adapters/inbound/einvoice/`.
 - [ ] `W02.P04.S56` - Map emisor and destinatario the right way round on received-invoice SII records, red if a received-invoice fixture still reports the taxpayer as the issuer; `src/cadrumo/adapters/inbound/einvoice/`.
 - [ ] `W02.P04.S57` - Read the invoice number from the document identifier element rather than the first identifier in the tree, red if a document whose first identifier is a guideline identifier still yields that guideline string as the invoice number; `src/cadrumo/adapters/inbound/einvoice/`.
 
