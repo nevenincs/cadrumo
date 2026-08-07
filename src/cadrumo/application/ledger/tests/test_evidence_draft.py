@@ -24,6 +24,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from io import BytesIO
@@ -57,6 +58,7 @@ from ._evidence_test_support import isolated_settings as isolated_settings
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import secure_objects as secure_objects
 from ._llm_vision_evidence_support import _json_array, _json_object, _run_against_loopback_ollama
+from ._loopback_reader import serving_a_loopback_reader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
@@ -81,6 +83,59 @@ _PARTIAL_INVOICE_LINES = (
     "Base imponible: 250,00",
     "Total factura: 250,00",
 )
+
+
+# ---------------------------------------------------------------------------
+# A real loopback reader for the paths that now go through the semantic reader
+# ---------------------------------------------------------------------------
+#
+# These cases are about MINTING, IDEMPOTENCY, OVERRIDES and LINKING -- not about
+# what happens when no reader is installed. Wiring the semantic reader made them
+# stop at a connection error, which says nothing about any of those contracts,
+# so they are served a real endpoint rather than inverted into refusal
+# assertions. The refusal itself is gated separately, in
+# `test_grounded_reading_wiring.py`, where it is the subject rather than an
+# accident of the environment.
+#
+# Replies are keyed on each document's own printed figures, so the full and
+# partial invoices cannot be confused for one another.
+
+_FULL_INVOICE_FIELDS = {
+    "supplier_tax_id": _SUPPLIER_CIF,
+    "supplier_tax_id_anchor": _SUPPLIER_CIF,
+    "invoice_number": "2026-0142",
+    "invoice_number_anchor": "2026-0142",
+    "invoice_date": "2026-03-10",
+    "invoice_date_anchor": "10/03/2026",
+    "taxable_base": "100,00",
+    "taxable_base_anchor": "100,00",
+    "iva_rate": "21",
+    "iva_rate_anchor": "21%",
+    "iva_amount": "21,00",
+    "iva_amount_anchor": "21,00",
+    "grand_total": "121,00",
+    "grand_total_anchor": "121,00",
+    "currency": "EUR",
+}
+
+_PARTIAL_INVOICE_FIELDS = {
+    "taxable_base": "250,00",
+    "taxable_base_anchor": "250,00",
+    "grand_total": "250,00",
+    "grand_total_anchor": "250,00",
+}
+
+
+@pytest.fixture(autouse=True)
+def _loopback_reader() -> Iterator[None]:
+    """Serve a real reading endpoint for every case in this module."""
+    with serving_a_loopback_reader(
+        (
+            ("2026-0142", _FULL_INVOICE_FIELDS),
+            ("250,00", _PARTIAL_INVOICE_FIELDS),
+        ),
+    ):
+        yield
 
 
 def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:

@@ -20,6 +20,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
@@ -37,6 +38,7 @@ from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import isolated_settings as isolated_settings
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import secure_objects as secure_objects
+from ._loopback_reader import serving_a_loopback_reader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
@@ -72,6 +74,51 @@ _RECARGO_INVOICE_LINES = (
     "Recargo de equivalencia 5,2%: 5,20",
     "Total factura: 126,20",
 )
+
+# A real loopback reader. These cases compare a COHERENT document against a
+# RECARGO one, so a single canned reply would answer both identically and the
+# discrepancy assertion would be comparing the stub to itself. Each document is
+# answered with its own printed figures.
+#
+# Deliberately NOT supplying `recargo_amount`: the confirm path is what has
+# nowhere to put the recargo, and that gap is the very thing these cases exist
+# to detect. Supplying it here would repair the document before the code saw it.
+
+_COHERENT_FIELDS = {
+    "supplier_tax_id": _SUPPLIER_CIF,
+    "supplier_tax_id_anchor": _SUPPLIER_CIF,
+    "invoice_number": "2026-0142",
+    "invoice_number_anchor": "2026-0142",
+    "invoice_date": "2026-03-10",
+    "invoice_date_anchor": "10/03/2026",
+    "taxable_base": "100,00",
+    "taxable_base_anchor": "100,00",
+    "iva_rate": "21",
+    "iva_rate_anchor": "21%",
+    "iva_amount": "21,00",
+    "iva_amount_anchor": "21,00",
+    "grand_total": "121,00",
+    "grand_total_anchor": "121,00",
+}
+
+_RECARGO_FIELDS = {
+    **_COHERENT_FIELDS,
+    "invoice_number": "2026-0199",
+    "invoice_number_anchor": "2026-0199",
+    "invoice_date": "2026-03-11",
+    "invoice_date_anchor": "11/03/2026",
+    "grand_total": "126,20",
+    "grand_total_anchor": "126,20",
+}
+
+
+@pytest.fixture(autouse=True)
+def _loopback_reader() -> Iterator[None]:
+    """Serve a real reading endpoint keyed on each document's own figures."""
+    with serving_a_loopback_reader(
+        (("2026-0199", _RECARGO_FIELDS), ("2026-0142", _COHERENT_FIELDS)),
+    ):
+        yield
 
 
 def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
