@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:89a3c6bb3a3997cec3ff2fb01f56e3c10c9b6771d7e7b9b6dda6708b4bffe3e2'
+body_hash: 'sha256:5929bbf2effc41f8ea5a35d1baf463b96910142d233b4edc85fba288a62d0b47'
 related:
   - "[[2026-06-10-live-justificante-reconcile-adr]]"
   - "[[2026-05-04-live-filing-data-capture-adr]]"
@@ -154,14 +154,35 @@ follow-up. It raises `SedeParseError` on a malformed or missing `CSV` query,
 which the consuming site must catch alongside the artefact's other swallowed
 failure modes (see Observability gap, below).
 
-Structural provenance still applies independently of this: the
-`justificante_pdf` artefact is fetched via a download link scoped to the
-specific register row's `expediente_id`
-(`src/cadrumo/adapters/outbound/aeat/sede/_declarations.py:922-1036`,
-`_row_locator_for_expediente`, `:1400-1403`), and the manifest byte-count and
-sha256 are verified before parse (`_filed_observation_persistence.py:417-422`).
-That binding is a reason the artefact-observation pairing is trustworthy; it
-is not a reason to skip the CSV check that is now known to be recoverable.
+**This structural binding is the PRIMARY protection, not a secondary one.**
+`_capture_row_pdf_artefact` locates its target row via
+`_row_locator_for_expediente` (`_declarations.py:1400-1404`), a Playwright
+locator scoped to the ONE row matching `declaration.expediente_id` and
+re-resolved fresh from the live grid per declaration. AEAT's own server
+decides which cotejo popup and CSV that click opens; the `(observation,
+artefact)` pairing is fixed at construction, before any `Justificante` model
+or predicate runs, and every downstream consumer iterates strictly
+`observation.artefacts`. The `presentation_id`/`expediente_id` comparison
+never performed this binding — it only ever re-checked PDF content in a
+namespace that could never agree. The added CSV check is SECONDARY
+defense-in-depth against a different bug class: a downstream storage,
+caching, or selection-layer defect re-associating a correctly-fetched
+artefact with the wrong observation after capture. The manifest byte-count
+and sha256 verified before parse (`_filed_observation_persistence.py:417-422`,
+via `load_artefact`) is self-referential — it proves the decrypted bytes were
+not corrupted after being written under that digest-derived key, and says
+nothing about which filing the bytes belong to — so the CSV check is the
+first content-level identity check performed after storage, distinct from
+both the row-scoped fetch and the digest check.
+
+`_row_locator_for_expediente` currently filters via Playwright
+`has_text=expediente_id`, a **substring** match (`.z-listcell`, filtered on
+text containment, not exact equality). AEAT expediente ids are 12-32
+character tracking numbers with no known reachable substring collision, so
+this is not evidence of a live defect — but once the wrong-namespace
+predicate re-check is removed, this locator becomes the SOLE mechanism
+preventing a cross-filing mis-pairing, which raises its own correctness bar
+enough to justify hardening it to an exact match.
 
 ## No caller has a valid reason to populate `presentation_id`
 

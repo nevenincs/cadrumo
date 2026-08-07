@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:1e748a06ebbe739447d6b13c725c84b4275deb66e2583e65059b041d6fba5f29'
+body_hash: 'sha256:baf7c872e5137f46337589d48ee09b260c633ef44bac7389711e5f361f515faf'
 related:
   - "[[2026-08-07-canonical-identifiers-reference]]"
   - "[[2026-08-07-justificante-identity-matching-adr]]"
@@ -337,6 +337,23 @@ artefacts, an IVA-wallet observation — already sitting in that profile.
 Re-acquiring them requires the operator to re-authenticate with Cl@ve Móvil
 on their own phone; this is a human step the plan must call out as an
 OPERATOR action, never something an agent automates or works around.
+
+**A general limit on the whole enrollment, not a detail of one Wave:**
+typing an identifier constrains its SHAPE, never its AGREEMENT with a
+sibling field on the same model. `ModeloDraft.profile_tax_id` and
+`.subject_tax_id` (`domain/filing/_schema.py:261,265`) are the proof this
+is real, not hypothetical: both are already `SubjectTaxId`-typed, and the
+model's own `_enforce_draft_invariants` validator exists precisely because
+typing alone lets two *individually valid but different* NIFs pass — the
+checksum is checked in isolation per field, never cross-field. This plan's
+60 Steps can all close and every field can carry the correct namespace
+alias while a model holding two or more tax-identity fields for what is
+supposed to be one party still silently accepts disagreement between them,
+unless that model already carries (or gains) its own cross-field
+consistency validator alongside the retype. The taxonomy's completion
+claim is therefore bounded: "the identifier surface is enrolled" means
+shape-correctness, not agreement-correctness, and a reader must not infer
+the stronger claim from the weaker one.
 
 **Difficulties:** staged enrollment means the taxonomy is genuinely
 incomplete at every point before the last Step lands — a reader consulting

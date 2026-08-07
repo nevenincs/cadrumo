@@ -4,13 +4,14 @@ tags:
   - '#canonical-identifiers'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:132f978d6106b1500303d72ee6c5d4929e970bdd9737de9ffc1e8b4c0fdcf531'
+body_hash: 'sha256:6ef3d31e5b70cb92547db9a2e7aa77795c69ed4a1e52a26d9eb907a7e5fe0ac1'
 tier: L3
 related:
   - '[[2026-08-07-canonical-identifiers-adr]]'
   - '[[2026-08-07-canonical-identifiers-reference]]'
   - '[[2026-08-07-justificante-identity-matching-adr]]'
 ---
+
 # `canonical-identifiers` plan
 
 Enroll the AEAT document-identifier taxonomy `2026-08-07-canonical-identifiers-adr`
@@ -44,14 +45,26 @@ delete) plus the MCP/CLI golden-schema pinning the wire census showed is
 otherwise uncovered. Wave `W09` is the ratchet gate and closeout, now
 correctly sequenced last, after every enrollment tranche.
 
-**Declared gap:** the mechanical tranche in `W04` is scoped per-namespace at
-package granularity, not per individual field occurrence. This is a stated,
-reasoned exception to the no-compression convention: every occurrence in
-scope receives the SAME already-existing alias (a single mechanical
-transform, not heterogeneous per-site work), and each Step's execution
-record MUST enumerate every file it touched, reconciled against the
-classified589.csv census, before the Step is checked closed. A Step closed
-without that enumeration is not verifiably complete.
+**Declared gap:** the mechanical tranche in `W04` (and the two tax-identity
+Steps in `W06`) is scoped per-namespace at package granularity, not per
+individual field occurrence. This is a stated, reasoned exception to the
+no-compression convention: every occurrence in scope receives the SAME
+already-existing alias (a single mechanical transform, not heterogeneous
+per-site work), and each Step's execution record MUST enumerate every file
+it touched before the Step is checked closed. **Reconciliation target: the
+"Classification census" section of `2026-08-07-canonical-identifiers-reference`,
+never a scratchpad path.** An earlier draft of this plan pointed the
+reconciliation requirement at a coordinating session's `classified589.csv`;
+that artefact lives in a different agent's scratchpad namespace, which no
+executor in this session or a future one can read, making the gate
+unmeetable. The census membership is now promoted into the Reference
+document specifically so this gate is checkable. A Step closed without a
+file enumeration cross-checked against that section is not verifiably
+complete, and every compressed Step (`W04.P06.S29`-`S33`, `W06.P09.S45`,
+`W06.P10.S46`) is ONE atomic commit carrying every file it touches - the
+one-symbol-one-commit relocation-atomicity rule binds inside a compressed
+row exactly as it does inside a single-file row; landing a namespace's
+adoption across several commits is not a valid reading of the compression.
 
 ## Steps
 
@@ -67,11 +80,17 @@ Wave must land and its roundtrip suite stay green before Wave `W02` begins.
 
 Moves the four modelo ids and the invoice id onto the shared `Hex64Str`
 primitive with no shape change, proving the relocation is safe before any
-AEAT-issued namespace work begins.
+AEAT-issued namespace work begins. **Execution is deliberately held until
+the current tree settles** (four concurrent executors, HEAD moving under
+live commits, contended modules); every Step in this Phase, and every
+mechanical Step this plan later stages, MUST re-verify its target sites
+against current HEAD immediately before editing rather than trusting a
+file list gathered when this plan was written - a stale list is the most
+likely way a mechanical tranche collides with unrelated concurrent work.
 
-- [ ] `W01.P01.S01` - alias `WorkUnitId`, `CalculationRevisionId`, `FilingRecordId`, and `VerificationReportId` from `core.identity.Hex64Str`, deleting the duplicate pattern declaration; `src/cadrumo/domain/modelos/_ids.py`.
+- [ ] `W01.P01.S01` - re-read `domain/modelos/_ids.py` against current HEAD to confirm the four ids and the duplicate pattern are still declared as described here, then alias `WorkUnitId`, `CalculationRevisionId`, `FilingRecordId`, and `VerificationReportId` from `core.identity.Hex64Str`, deleting the duplicate pattern declaration; `src/cadrumo/domain/modelos/_ids.py`.
 - [ ] `W01.P01.S02` - relocate the four aliased ids into `core/identity/` and update every consumer import in the same commit per the relocation-atomicity rule; `src/cadrumo/core/identity/__init__.py`.
-- [ ] `W01.P01.S03` - alias `InvoiceId` from `core.identity.Hex64Str`, deleting its duplicate pattern declaration, and relocate it into `core/identity/` with its consumer imports updated in the same commit; `src/cadrumo/domain/invoices/_ids.py`.
+- [ ] `W01.P01.S03` - re-read `domain/invoices/_ids.py` against current HEAD to confirm `InvoiceId`'s duplicate declaration is still present as described here, then alias it from `core.identity.Hex64Str`, deleting the duplicate pattern declaration, and relocate it into `core/identity/` with its consumer imports updated in the same commit; `src/cadrumo/domain/invoices/_ids.py`.
 - [ ] `W01.P01.S04` - run the full persistence and pydantic-model roundtrip suite to confirm the relocation changed no shape; `src/cadrumo/tests/`.
 
 ## Wave `W02` - AEAT-issued namespace enrollment
@@ -151,9 +170,10 @@ independent of Waves `W02`/`W03`.
 ### Phase `W04.P06` - adopt existing aliases at classified bare-str sites
 
 Each Step retypes every classified bare-`str` occurrence of one namespace
-name onto its existing alias. Per the Description's declared gap, this is
-package-batch-scoped; the Step's execution record must enumerate every file
-touched, reconciled against the classified589.csv census.
+name onto its existing alias, landed as ONE atomic commit per Step. Per the
+Description's declared gap, this is package-batch-scoped; the Step's
+execution record must enumerate every file touched, reconciled against the
+"Classification census" section of `2026-08-07-canonical-identifiers-reference`.
 
 - [ ] `W04.P06.S29` - retype every classified `transaction_id`/`parent_transaction_id`/`old_transaction_id`/`previous_transaction_id`/`merged_transaction_id` pydantic model field onto `TransactionId` across the ledger application package, function parameters and non-model locals excluded; `src/cadrumo/application/ledger/`.
 - [ ] `W04.P06.S30` - retype every classified `transaction_id` pydantic model field onto `TransactionId` across the aggregation package's ledger models, then the renta-ledger-expenses model; `src/cadrumo/application/aggregation/`.
@@ -189,7 +209,7 @@ existing type at all.
 - [ ] `W05.P08.S40` - retype the three `registry_snapshot_id` sites and the `registry_revision_id` sites onto the two new aliases; `src/cadrumo/domain/calculations/registry/`.
 - [ ] `W05.P08.S41` - declare `AeatCertificadoId` as a new `IdentifierNamespace.AEAT_CERTIFICADO_ID` member and alias at the 13-digit-or-longer bound its docstring already states, and retype `RemoteNotification.certificado_id` onto it; `src/cadrumo/adapters/outbound/aeat/sede/_notifications.py`.
 - [ ] `W05.P08.S42` - declare `AeatBoxNumber` as a new `IdentifierNamespace.AEAT_BOX_NUMBER` member and alias, distinct from the registry's own `CasillaId`, and retype `display_number`, `form_number`, `from_number`, and `to_number` onto it; `src/cadrumo/adapters/outbound/aeat/sede/_notifications.py`.
-- [ ] `W05.P08.S43` - check whether M210's `official_tipo_renta_code` catalogue is already enumerated in registry TOML; if so, declare a `StrEnum` sourced from that catalogue rather than re-declaring the values, and retype the five sites onto it, explicitly NOT as an `IdentifierNamespace` member; `src/cadrumo/domain/modelos/_calculation_revision.py`.
+- [ ] `W05.P08.S43` - check whether M210's `official_tipo_renta_code` catalogue is already enumerated in registry TOML; `if so, declare a `StrEnum` sourced from that catalogue rather than re-declaring the values, and retype the five sites onto it, explicitly NOT as an `IdentifierNamespace` member; `src/cadrumo/domain/modelos/_calculation_revision.py`.
 - [ ] `W05.P08.S44` - declare `M720OperationKindCode` and `M720AssetClassCode` as `StrEnum`s in `core/` sourced from registry TOML if enumerated there, and retype `operation_kind_code` / `asset_class_code` onto them, explicitly NOT as `IdentifierNamespace` members; `src/cadrumo/domain/modelos/`.
 
 ## Wave `W06` - Tax-identity split
@@ -202,9 +222,12 @@ already existing (it does).
 ### Phase `W06.P09` - self and profile-owned tax identity
 
 Retypes the filer's-own and declared-family-member tax-identity fields onto
-the checksum-enforced `SubjectTaxId`.
+the checksum-enforced `SubjectTaxId`. Typing constrains SHAPE only, never
+cross-field agreement (ADR Consequences); this Phase's Step therefore also
+audits for the missing invariant, not only the missing type.
 
-- [ ] `W06.P09.S45` - retype every classified `tax_id`, `profile_tax_id`, and `spouse_tax_id` pydantic model field onto `SubjectTaxId`, per-file enumeration recorded in the Step record reconciled against the classified589.csv census; `src/cadrumo/`.
+- [ ] `W06.P09.S45` - retype every classified `tax_id` and `spouse_tax_id` pydantic model field onto `SubjectTaxId` as ONE atomic commit, EXCLUDING `ModeloDraft.profile_tax_id`/`.subject_tax_id` at `domain/filing/_schema.py:261,265` which already carry this alias, per-file enumeration recorded in the Step record reconciled against the Reference's "Classification census" section; `src/cadrumo/`.
+- [ ] `W06.P09.S62` - for every model retyped in `W06.P09.S45` that holds more than one tax-identity field meant to name the same party, check whether it already carries a cross-field consistency validator (the pattern is `ModeloDraft._enforce_draft_invariants` at `domain/filing/_schema.py:290`); `add one where missing, and record in the Step record every model checked and its disposition; `src/cadrumo/`.
 
 ### Phase `W06.P10` - counterparty-facing tax identity
 
@@ -212,8 +235,9 @@ Retypes counterparty-facing tax-identity fields onto the checksum-free
 `TaxIdIdentityToken`, preserving the ability to hold a non-resident
 counterparty's identifier.
 
-- [ ] `W06.P10.S46` - retype every classified `supplier_tax_id`, `customer_tax_id`, `party_tax_id`, `counterparty_tax_id`, `donor_tax_id`, and `member_tax_id` pydantic model field onto `TaxIdIdentityToken`, per-file enumeration recorded in the Step record reconciled against the classified589.csv census; `src/cadrumo/`.
+- [ ] `W06.P10.S46` - retype every classified `supplier_tax_id`, `customer_tax_id`, `party_tax_id`, `counterparty_tax_id`, `donor_tax_id`, and `member_tax_id` pydantic model field onto `TaxIdIdentityToken` as ONE atomic commit, per-file enumeration recorded in the Step record reconciled against the Reference's "Classification census" section; `src/cadrumo/`.
 - [ ] `W06.P10.S47` - add a roundtrip regression proving a non-Spanish-shaped counterparty tax id (a real EU VAT-shaped value) still validates under `TaxIdIdentityToken` after the retype, guarding against the split being applied backwards; `src/cadrumo/core/identity/tests/`.
+- [ ] `W06.P10.S63` - for every model retyped in `W06.P10.S46` that holds more than one tax-identity field meant to name the same counterparty, check whether it already carries a cross-field consistency validator; `add one where missing, and record in the Step record every model checked and its disposition, per the same shape-versus-agreement limit named in the ADR Consequences; `src/cadrumo/`.
 
 ## Wave `W07` - Free-text documentation and denominator second pass
 
@@ -224,8 +248,10 @@ baseline.
 
 ### Phase `W07.P11` - free-text categorisation and second-pass sweep
 
+TODO: Phase intent paragraph required by the convention ADR.
+
 - [ ] `W07.P11.S48` - document the three free-text sub-populations (AEAT-bounded prose, counterparty-issued document numbers, externally-controlled non-AEAT identifiers) as a code comment on `IdentifierNamespace` naming representative fields for each, explicitly stating none are namespace members; `src/cadrumo/core/identity/_namespace.py`.
-- [ ] `W07.P11.S49` - run a second-pass AST sweep using a noun-vocabulary heuristic (`identificador`, `clave`, `número`, `referencia` in field docstrings) independent of the original suffix heuristic, and record every newly found identifier-shaped field the first pass missed; `dev/`.
+- [ ] `W07.P11.S49` - author and run `dev/identifier_noun_census.py`, an AST sweep matching field docstrings against a noun-vocabulary heuristic (`identificador`, `clave`, `número`, `referencia`) independent of the original suffix heuristic that missed `clave_liquidacion`; `commit the script AND its output table (every match, file, line) into this Step's execution record as the named gate proving the sweep ran, not merely that it should; `dev/identifier_noun_census.py`.
 - [ ] `W07.P11.S50` - triage the second-pass sweep's findings from `W07.P11.S49` into the existing namespace set, a new namespace, or an explicit non-identifier exclusion, recording the disposition of each; `src/cadrumo/core/identity/_namespace.py`.
 
 ## Wave `W08` - Storage key-composition redesign and external-contract pinning
@@ -239,12 +265,16 @@ carry their final types).
 
 ### Phase `W08.P12` - object-key-grammar decision
 
+TODO: Phase intent paragraph required by the convention ADR.
+
 - [ ] `W08.P12.S51` - decide, and record the reason, whether every PII-shaped fold-in in `object_key_grammar` (`{member_nif}`, `{perceptor_nif}`, `{perceptor_tax_id}`) is pre-hashed uniformly or intentionally left raw beneath the outer `HashedLookup` HMAC, given the column is deterministically hashed either way; `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`.
 - [ ] `W08.P12.S52` - apply the `W08.P12.S51` decision to every `SecureObjectNamespaceDefinition.object_key_grammar` declaration that currently diverges from it; `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`.
 - [ ] `W08.P12.S53` - discard and re-derive the affected Cadrumo profile databases via `resume_config_reset` / `BucketMaintenanceService.delete` for any namespace whose rendered key changed, never a filesystem-level delete; `src/cadrumo/application/config_reset.py`.
 - [ ] `W08.P12.S54` - record the operator re-authentication step (Cl@ve Móvil) required to re-acquire the discarded live captures as an explicit OPERATOR action in the Step record, not an automated action; `.vault/exec/`.
 
 ### Phase `W08.P13` - golden-schema pinning for the external MCP/CLI contract
+
+TODO: Phase intent paragraph required by the convention ADR.
 
 - [ ] `W08.P13.S55` - enumerate every registered `OutputSchema` class carrying an identifier field this plan retyped, cross-referenced against the wire census's roughly-fifty-class sweep; `src/cadrumo/entrypoints/cli/`.
 - [ ] `W08.P13.S56` - add a golden-schema pinning test capturing each enumerated class's `model_json_schema()` output (the CLI envelope shape) and, for classes backing an MCP tool, the MCP `output_schema` from `_output_schema_for`, asserting the pinned constraints match the enrolled type; `src/cadrumo/entrypoints/mcp/tests/`.
@@ -281,6 +311,13 @@ Steps retyping disjoint files may be parallelized per the no-compression
 rule's file-level granularity; Steps sharing one file stay sequential to
 avoid contended edits.
 
+**Release condition:** every Wave is held pending the current executors
+closing out the in-flight tree churn, not because the plan is unready.
+Every Step re-verifies its target file(s) against current HEAD immediately
+before editing, per `W01.P01`'s note, since this plan's file lists were
+gathered at authoring time and the tree is expected to have moved by
+execution time.
+
 ## Verification
 
 The plan is complete when every Step above is closed (`- [x]`) and:
@@ -299,7 +336,8 @@ The plan is complete when every Step above is closed (`- [x]`) and:
   `test_json_schema_conformance.py` structural gate still passes.
 - Every Step whose action names a per-namespace batch (`W04.P06`,
   `W06.P09`, `W06.P10`) carries a file enumeration in its execution record
-  reconciled against the classified589.csv census.
+  reconciled against the Reference's "Classification census" section, and
+  landed as one atomic commit per Step.
 - Every discarded Cadrumo profile database from `W08.P12.S53` was
   re-derived through `resume_config_reset` / `BucketMaintenanceService.delete`
   only, confirmed by inspection of the Step's execution record, never a

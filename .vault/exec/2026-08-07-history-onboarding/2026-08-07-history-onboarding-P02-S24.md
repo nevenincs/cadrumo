@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:36865c666cff091e3a76bc3ba831b8920f212de70dba635d79a4eba5dba0adff'
+body_hash: 'sha256:3ca7be154c98c9654c0aac07ffdbb77adfe48e9cce3dbacdb4e2167ed717d7a5'
 step_id: 'S24'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
@@ -73,3 +73,16 @@ The fixture's two request-type strings are plausible placeholders standing in
 for a NON-EMPTY cell, which is the only property anything reads them for. AEAT's
 verbatim vocabulary for that column is not established here and the test never
 asserts either string literally.
+
+Both mutations were re-run explicitly serialised with `-n0` after the project
+default was found to inject `-n auto --dist=loadfile`: verdicts unchanged, both
+still red. The unmutated module runs green serialised, so the reds are the
+mutations rather than the harness.
+
+The six expediente ids this fixture introduces are, measurably, the first values
+in the committed corpus matching the register-identifier format at all: a census
+of every fixture and registry file found zero. Each is 16 characters shaped
+`<year><sequence><checksum-letter>`, satisfying the sede pattern and sitting
+inside both the declared 12-32 bounds and the narrower observed 14-20 range, so a
+test exercising the pattern genuinely exercises it rather than passing on an
+arbitrary string.

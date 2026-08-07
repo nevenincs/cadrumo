@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:a16cff466697297c439fb445786fadb70eec62616c2dd863b73eaabd7df1e162'
+body_hash: 'sha256:323c2cfac4fe1f9155a831075f42b40a3484749fa171dc32ccc0f67dde58c85b'
 related:
   - "[[2026-08-07-justificante-identity-matching-reference]]"
   - "[[2026-06-10-live-justificante-reconcile-adr]]"
@@ -58,12 +58,45 @@ per `no-silent-under-declaration` and `sensitive-financial-data-secure-storage-o
   with `extract_csv_from_url(artefact.source_url)`, no new persisted field, no
   persistence-boundary change — reference, "The third site's CSV is
   independently resolved during capture and then discarded".
-- `extract_csv_from_url` is the existing canonical helper for this
-  extraction (its own docstring: "shared more widely, by `_declarations.py`
-  and `_parse.py` as well"); it is not yet exported through the sede
-  package's public facade, so promoting it into that `__all__` is a
-  precondition of consuming it from `application/live/`, per
-  `aeat-architecture-boundaries`.
+- `extract_csv_from_url` is the sole canonical helper for this extraction
+  (its own docstring: "shared more widely, by `_declarations.py` and
+  `_parse.py` as well"). As of the most recent verification it is ALREADY
+  exported through the sede package's public facade (`__init__.py:97,204`) —
+  a peer landed this in the shared tree since this decision's earlier draft;
+  the implementing row must re-verify this before executing rather than
+  re-promoting a symbol that already resolves, per `aeat-agent-orchestration`.
+- **The recovered CSV's provenance chain must stay independent of the
+  receipt's own self-reported CSV, and this is not self-evident from the code
+  today — it depends on how `source_url` is constructed.** The chain is:
+  AEAT's cotejo redirect URL (server-chosen, not client-guessed) →
+  `extract_csv_from_url(cotejo_url)` → our constructed `pdf_url` (`f"{origin}
+  {_COTEJO_DOCUMENT_PATH}?CSV={csv}"`) → persisted verbatim as
+  `FiledDeclaracionArtefact.source_url` → recovered via
+  `extract_csv_from_url(artefact.source_url)` at comparison time. This is a
+  genuinely independent channel from the receipt's own embedded CSV — the
+  receipt's CSV is parsed from the PDF body text
+  (`_extract.py`), while the compared value comes from AEAT's cotejo redirect,
+  a structurally different source, so agreement is a real cross-channel
+  check, not tautological. **That independence rests entirely on
+  `source_url` continuing to be constructed from the cotejo URL.** If a
+  future change builds `source_url` from a stored digest, a period-level
+  template, or the receipt's own parsed CSV, the "check" becomes
+  self-referential — comparing the receipt's CSV against a value ultimately
+  derived from itself — and would pass unconditionally and silently while
+  still reading as a real check. This is the same failure shape as this
+  project's `required_text` tautology incident (`aeat-calculation-grounding`):
+  a validator and the value it validates sharing one author or one
+  derivation defeats the validator invisibly. Any future change to how
+  `source_url` is constructed MUST re-establish or re-verify this
+  independence and update this bullet to record how.
+- `extract_csv_from_url` reads the `CSV` query parameter via
+  `urlsplit`/`parse_qs` with **no path check** — fine here because every URL
+  it is called against in this decision (`cotejo_url`, our own constructed
+  `pdf_url`/`source_url`) is one this codebase built or received directly
+  from an authenticated AEAT redirect, never an arbitrary or
+  operator-supplied URL. This is stated explicitly so a future caller does
+  not point the helper at an untrusted URL on the mistaken assumption that
+  the helper itself validates provenance — it validates shape, not origin.
 - Because every site can now perform its own genuine CSV equality check
   (two already do; the third can, without new persisted state), no caller has
   any remaining valid use for `matches_filing_target`'s `presentation_id`
@@ -90,6 +123,29 @@ per `no-silent-under-declaration` and `sensitive-financial-data-secure-storage-o
   `Deuda.situacion` are AEAT-printed adjudicated-case labels whose vocabulary
   the app does not control and cannot enumerate; typing them as a closed set
   would be wrong, and this ADR does not recommend touching them.
+- **The structural binding, not the predicate, is what has always prevented a
+  cross-filing artefact mis-pairing at the register-reconciliation site, and
+  this decision makes that binding load-bearing rather than incidental.**
+  `_capture_row_pdf_artefact` fetches the `justificante_pdf` artefact through
+  a Playwright `row_locator` built by `_row_locator_for_expediente`
+  (`_declarations.py:1400-1404`), scoped to the ONE register row matching
+  `declaration.expediente_id` and re-resolved fresh from the live grid for
+  every declaration; AEAT's own server decides which cotejo popup and CSV
+  that click opens, not this codebase. The `(observation, artefact)` pairing
+  is therefore fixed at construction — before any `Justificante` model or
+  predicate exists — and every downstream consumer iterates strictly
+  `observation.artefacts`, never a pooled or re-associated set. The
+  `presentation_id`/`expediente_id` comparison being removed never actually
+  performed this binding; it only ever re-checked PDF content against a
+  namespace mismatch that could never agree. Once it is gone,
+  `_row_locator_for_expediente` is the SOLE remaining mechanism preventing a
+  cross-filing mis-pairing, which raises its own correctness bar: it
+  currently filters via
+  Playwright `has_text=expediente_id`, a **substring** match. AEAT expediente
+  ids are 12-32 character tracking numbers with no known reachable
+  substring collision, so this is not evidence of a live defect, but a sole
+  mechanism should not rest on substring matching when an exact match is a
+  small, available hardening.
 
 ## Considered options
 
@@ -160,9 +216,18 @@ per `no-silent-under-declaration` and `sensitive-financial-data-secure-storage-o
   already real-corpus per fixture-provenance discipline) and unit coverage,
   never a fresh live pull.
 - A pinning test asserting today's (defective) rejection is being authored in
-  parallel by another agent; the implementing row that lands the fix MUST
-  update that test's assertion to the corrected behavior in the same change —
-  it must not be deleted, skipped, or left asserting the old defect.
+  parallel by another agent and had not landed as of this decision's most
+  recent verification; the implementing row that lands the fix MUST re-check
+  for it immediately before executing and, if found, update its assertion to
+  the corrected behavior in the same change — it must not be deleted,
+  skipped, left asserting the old defect, or duplicated by a second
+  independently-authored test.
+- Any mutation-proof test in this plan's implementing rows MUST run with
+  `pytest-xdist` disabled (`-n0`), including checking for a project
+  `addopts` default that injects `-n auto` — xdist workers are separate
+  processes and never observe an in-memory mutation performed by the test
+  process, which makes an un-forced proof vacuous regardless of its
+  assertions.
 - No legal-catalogue entries are touched by this decision; it is a pure
   identifier-matching correction with no BOE/AEAT legal-provenance
   implication.
@@ -197,11 +262,12 @@ equality check before calling the narrowed predicate on `modelo`,
   pre-existing `justificante.csv == snapshot.csv` check (`:549-552`)
   unchanged and drops the same now-signature-invalid argument from its call
   into `_justificante_matches_capture_axis`.
-- `extract_csv_from_url` (`_declarations_remote.py`) is promoted into the
-  sede package's public facade (`__all__` in
-  `adapters/outbound/aeat/sede/__init__.py`) as a precondition, per
-  `aeat-architecture-boundaries` — WHERE the symbol lives changes, not WHEN
-  it executes; the function itself is unchanged.
+- `extract_csv_from_url` (`_declarations_remote.py`) is already promoted into
+  the sede package's public facade (`__all__` in
+  `adapters/outbound/aeat/sede/__init__.py:97,204`, landed by a peer in the
+  shared tree since this decision's earlier draft) — a precondition of
+  consuming it from `application/live/`, per `aeat-architecture-boundaries`,
+  now satisfied. The implementing row re-verifies rather than re-lands it.
 - `_parse_matching_filed_justificante`
   (`_filed_observation_persistence.py`) GAINS a `csv == csv` check it did not
   have: recover the CSV from the `justificante_pdf` artefact's
@@ -218,6 +284,16 @@ equality check before calling the narrowed predicate on `modelo`,
   `_justificante_matches_capture_axis`, and `_justificante_matches_filing_record`
   all lose their now-dead `presentation_id` parameter and argument, following
   the predicate's narrowed signature.
+- `_row_locator_for_expediente` (`_declarations.py:1400-1404`) changes its
+  `has_text=expediente_id` substring filter to an exact match, anchoring on
+  the existing `re` import already used in the same module
+  (`_declarations.py:27`) rather than introducing a second selection idiom —
+  `has_text=re.compile(rf"^{re.escape(expediente_id)}$")` or equivalent. No
+  reusable exact-match `filter(has_text=...)` idiom exists elsewhere in this
+  adapter family to import instead (the one other exact-match idiom in the
+  file, `page.get_by_text(label_text, exact=True)` at `:794,829`, is a
+  different Playwright API shape for a different selection need, not a
+  `filter(has_text=...)` call).
 - Observability: `_parse_matching_filed_justificante` distinguishes its five
   swallowed outcomes (unreadable artefact, manifest mismatch, unparsable PDF,
   CSV-resolution failure from a malformed `source_url`, CSV mismatch) and the
@@ -271,18 +347,27 @@ parameter that need not exist at all.
 
 **Gains:** live-captured M303 justificante evidence (and every other modelo
 reachable through these three call sites) can auto-stamp local filing records
-again, with a genuine receipt-namespace CSV check at all three sites — the
-register-reconciliation site ends this decision STRICTER than it started,
-not merely unblocked. The two-filings-per-period hazard (a period carrying
-both an original and a complementaria, sharing `modelo`/`ejercicio`/`period`/
-`tax_id`) is exactly what the added CSV check discriminates that the four-field
-match alone cannot. The `live-justificante-reconcile` and
-`live-filing-data-capture` ADRs' stated purpose stops being silently inert; an
-operator gets a visible `Notice` distinguishing "nothing to capture" from
-"capture rejected" from "CSV mismatch" instead of an unexplained zero.
-`matches_filing_target` loses a parameter no caller could ever populate
-correctly, closing the recurrence risk structurally rather than by
-convention.
+again. The PRIMARY protection against a cross-filing artefact mis-pairing was
+always, and remains, `_row_locator_for_expediente`'s row-scoped Playwright
+fetch (Considerations) — this decision does not create that protection, it
+was already there and this decision now says so in the record rather than
+leaving it implicit. What this decision ADDS is a SECONDARY, defense-in-depth
+`csv == csv` check at all three sites, catching a different bug class: a
+downstream storage, caching, or selection-layer defect that re-associates a
+correctly-fetched artefact with the wrong observation AFTER capture — a bug
+in this codebase, not in the AEAT round-trip. The digest check
+`load_artefact` already performs is self-referential (it re-hashes decrypted
+bytes against the digest that IS the storage key, proving byte integrity, not
+correct filing association), so the CSV check is the first content-level
+identity check this codebase has ever performed after storage. The
+`live-justificante-reconcile` and `live-filing-data-capture` ADRs' stated
+purpose stops being silently inert; an operator gets a visible `Notice`
+distinguishing "nothing to capture" from "capture rejected" from "CSV
+mismatch" instead of an unexplained zero. `matches_filing_target` loses a
+parameter no caller could ever populate correctly, closing the recurrence
+risk structurally rather than by convention. `_row_locator_for_expediente`
+moves from substring to exact matching, closing the one caveat the trace
+raised against the mechanism this decision now depends on more visibly.
 
 **Difficulties:** `extract_csv_from_url` raises `SedeParseError` on a
 malformed or CSV-less URL, which `_parse_matching_filed_justificante` must
@@ -292,7 +377,9 @@ a reported non-match, which the mutation-proof coverage in the plan must
 specifically probe. Promoting `extract_csv_from_url` to the sede facade
 widens its public surface; any future change to its shape or error contract
 now has an application-layer consumer to consider, not only outbound-adapter
-ones.
+ones. The added CSV check is defense-in-depth, not the primary guarantee — a
+reviewer reading only this decision without the structural-binding
+Consideration above could overstate what it protects against.
 
 **Pathway opened:** the parallel canonical typed-identifier-system effort has
 a concrete worked example in this decision — `core._aeat_csv`'s shape
@@ -303,4 +390,12 @@ reconciled here (Considerations, Constraints).
 `presentation_id`-shaped argument at any of these sites, or at a new call
 site, cannot compile against the narrowed predicate signature — the removed
 parameter is itself the durable guard against that recurrence, backed by the
-corrected unit test.
+corrected unit test. Separately, and only guarded by THIS record rather than
+by any test: a future contributor refactoring
+`_capture_row_pdf_artefact`/`capture_declaration` away from a per-row,
+per-click cotejo fetch toward a period-level or batch-level listing URL would
+look like an unrelated, reasonable efficiency change while silently
+destroying the row-scoped binding this decision's entire safety argument now
+depends on more visibly than before. Any change to that fetch shape MUST
+re-establish an equivalent row-exact binding before landing, and MUST update
+this ADR's Considerations to record how.

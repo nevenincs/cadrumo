@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:fd08ff771fc14e06c19bf4dd630e4b64a2ed7be7c34f2e4709c2bb5ba23a3565'
+body_hash: 'sha256:f014365c48b3cb83f9f0a5bfb3f11eff7122f58cc63fbd2077541034bddc649a'
 step_id: 'S25'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
@@ -61,3 +61,14 @@ only the successful one.
 
 Selection is a pure function over already-validated observations, so this test
 touches no storage and needs no profile bucket.
+
+All three rank mutations were re-run explicitly serialised with `-n0` after the
+project default was found to inject `-n auto --dist=loadfile`: every verdict
+unchanged. The unmutated test runs green serialised.
+
+Worth recording precisely: no mutation here ever passed green. The two that missed
+their intended target still RED, on the winner assertion instead of the invariance
+one, so the failure mode was mis-aiming rather than a mutation that never reached
+the process running the assertions. The discriminating control for that second
+failure mode -- re-run a GREEN mutation serialised to tell "missed" from "never
+ran" -- therefore had no case to apply to here, and is not claimed.

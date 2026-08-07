@@ -4,7 +4,7 @@ tags:
   - '#justificante-identity-matching'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:66a6483269a8c8e81afc98ffa4dcdf91c3a65fd71a73f920590f0a7c3fefd500'
+body_hash: 'sha256:e9be9d1a11a9f5c3e6e6e88c03bd3a782d1805d36eecc82741f689910d1d3dc7'
 tier: L2
 related:
   - '[[2026-08-07-justificante-identity-matching-adr]]'
@@ -27,25 +27,31 @@ a `csv == csv` check in the same change that drops its wrong-namespace
 argument, never landing in a weaker intermediate state. Once every site
 performs its own CSV check, `matches_filing_target`'s `presentation_id`
 parameter has no remaining valid caller anywhere, so it is removed from the
-predicate's signature entirely rather than merely re-documented. `P01` lands
-the domain and application fixes plus their tests, including a mutation-proof
-regression for the two-filings-per-period hazard the added check exists to
-catch; `P02` closes the swallowed-outcome observability gap.
+predicate's signature entirely rather than merely re-documented. The PRIMARY
+protection against a cross-filing artefact mis-pairing was always the
+row-scoped Playwright fetch (`_row_locator_for_expediente`), not the
+predicate; this plan also hardens that locator from a substring to an exact
+`expediente_id` match, since it becomes the sole mechanism once the
+predicate's wrong-namespace re-check is gone. `P01` lands the domain and
+application fixes plus their tests, including a mutation-proof regression for
+the CSV check's defense-in-depth role against a wrong-artefact-selection bug;
+`P02` closes the swallowed-outcome observability gap.
 
 ## Steps
 
 ### Phase `P01` - Correct the presentation_id namespace at each call site
 
-Promote the shared CSV-extraction helper, drop the wrong-namespace argument at the two already-guarded call sites, add the missing csv check at the third rather than dropping it check-less, remove the now-unusable presentation_id parameter, and prove the fix with the corrected pinning test, a real-fixture regression, and a mutation-proof two-filings-per-period discrimination test.
+Promote the shared CSV-extraction helper, harden the row-scoped locator to an exact match, drop the wrong-namespace argument at the two already-guarded call sites, add the missing csv defense-in-depth check at the third rather than dropping it check-less, remove the now-unusable presentation_id parameter, and prove the fix with the corrected pinning test, a real-fixture regression, an exact-match locator test, and a mutation-proof two-filings-per-period discrimination test.
 
-- [ ] `P01.S11` - Promote extract_csv_from_url into the sede package public facade; `src/cadrumo/adapters/outbound/aeat/sede/__init__.py`.
+- [ ] `P01.S11` - Confirm extract_csv_from_url already resolves through the sede package public facade before landing S01, promoting it only if a fresh HEAD read shows it missing; `src/cadrumo/adapters/outbound/aeat/sede/__init__.py`.
+- [ ] `P01.S13` - Harden the row-scoped locator to an exact expediente_id match instead of a substring filter, reusing the existing re import rather than a second selection idiom, with a test proving it cannot match a second row whose id merely contains the target as a substring; `src/cadrumo/adapters/outbound/aeat/sede/_declarations.py (_row_locator_for_expediente)`.
 - [ ] `P01.S01` - Add a csv-equality check recovering the CSV from the justificante_pdf artefact source_url via extract_csv_from_url, fold a resolution failure into the existing swallowed-outcome shape, and drop the now-signature-invalid expediente_id argument in the same change; `src/cadrumo/application/live/_filed_observation_persistence.py`.
 - [ ] `P01.S02` - Drop the now-signature-invalid expediente_id argument now that register_capture_justificante_metadata's existing csv equality check already covers identity; `src/cadrumo/application/live/_justificante.py (_justificante_matches_capture_axis)`.
 - [ ] `P01.S03` - Drop the now-signature-invalid expediente_id argument now that register_capture_as_filing_evidence's existing csv equality check already covers identity; `src/cadrumo/application/live/_justificante.py (register_capture_as_filing_evidence)`.
 - [ ] `P01.S04` - Remove the presentation_id parameter entirely from matches_filing_target and its three now-dead pass-through wrapper parameters; `src/cadrumo/domain/justificante/_schema.py, src/cadrumo/application/live/_justificante.py, and src/cadrumo/application/live/_filed_observation_persistence.py`.
 - [ ] `P01.S05` - Update the pinning test to the corrected signature and matching behavior, and remove the fixture's false expediente-as-presentation_id equivalence; `src/cadrumo/domain/justificante/tests/test_filing_target.py`.
 - [ ] `P01.S06` - Add a real-fixture regression proving the register-reconciliation path enrolls a committed M303 justificante via the new csv-equality check; `src/cadrumo/application/live/tests/_filed_capture_history_support.py and a new or existing test in src/cadrumo/application/live/tests`.
-- [ ] `P01.S12` - Add a mutation-proof test proving the new csv check discriminates two same-period filings sharing modelo, ejercicio, period and tax_id, confirming the four-field match alone cannot; `src/cadrumo/application/live/tests`.
+- [ ] `P01.S12` - Add a mutation-proof test proving the new csv defense-in-depth check discriminates two same-period filings sharing modelo, ejercicio, period and tax_id, confirming a wrong-artefact-selection bug would be caught even though the row-scoped fetch is the primary binding; `src/cadrumo/application/live/tests`.
 - [ ] `P01.S07` - Run the domain and application justificante test suites and confirm green; `src/cadrumo/domain/justificante/tests and src/cadrumo/application/live/tests`.
 
 ### Phase `P02` - Distinguish swallowed justificante-matching outcomes
@@ -60,9 +66,12 @@ Surface a Notice distinguishing all five swallowed outcomes at the register-reco
 
 `P01.S11` (facade promotion) must land first; `P01.S01` depends on it, because
 `_filed_observation_persistence.py` cannot import `extract_csv_from_url`
-before it is exported. `P01.S02` and `P01.S03` touch a disjoint file and have
-no dependency on `S11`/`S01`; they may run in parallel with each other and
-with `S01`. `P01.S04` (removing the `presentation_id` parameter) depends on
+before it is exported. `P01.S13` (locator hardening) touches
+`_declarations.py` only and has no dependency on `S11`; it may run in
+parallel with `S11`/`S01`. `P01.S02` and `P01.S03` touch a disjoint file and
+have no dependency on `S11`/`S01`/`S13`; they may run in parallel with each
+other and with `S01`/`S13`. `P01.S04` (removing the `presentation_id`
+parameter) depends on
 `S01`, `S02`, and `S03` all landing first — removing the parameter while any
 caller still passes it would break that caller's own build, so `S04` is a
 hard convergence point, not a parallel row. `P01.S05` and `P01.S06` depend on
@@ -97,10 +106,18 @@ absorb and update that test in place rather than authoring a second one, per
   passes against the corrected code — this is the concrete proof that no site
   ends this plan checked more weakly than it started, per the ADR's
   Constraints.
+- `P01.S13`'s locator test proves `_row_locator_for_expediente` does NOT
+  match a synthetic second row whose `expediente_id` contains the target id
+  as a substring, and fails against the pre-hardening substring filter.
 - `uv run --no-sync pytest src/cadrumo/domain/justificante/tests
   src/cadrumo/application/live/tests -m unit` (sequential, per
   `aeat-local-execution`) is green with the full log captured to a file, not
   piped through a truncating filter.
+- Every mutation-proof test in this plan (`P01.S12`, `P02.S10`) is confirmed
+  to run with `pytest-xdist` disabled (`-n0`), checking for a project
+  `addopts` default injecting `-n auto` first — an un-forced proof under
+  xdist is vacuous since worker processes never see an in-memory mutation
+  performed by the test process.
 - The `P02.S10` mutation-proof test fails when the reason-distinguishing
   branch is reverted to the uniform `logger.warning` plus `return None` shape,
   and passes against the corrected code.
