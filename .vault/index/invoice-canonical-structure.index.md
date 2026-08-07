@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#invoice-canonical-structure'
-date: '2026-08-06'
-modified: '2026-08-06'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:c67f7e6348311ba5c4ee5cbfd0189fc12b4309360ff0c6874a674a4547540b85'
+body_hash: 'sha256:45917ea10a4f4b12ba9bbdafb38f22091ee321eef16facd77d74efdd1dead227'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S28]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S29]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S30]]'
+  - '[[2026-08-06-invoice-canonical-structure-P01-S31]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S35]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S36]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S37]]'
@@ -58,6 +59,7 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 - `2026-08-06-invoice-canonical-structure-P01-S36` - Remove the ES counterparty-country default from both canonical entry verbs so an omitted country refuses or derives rather than silently stamping a domestic country on a foreign invoice, preserving the slim verb's derive-or-raise behaviour across the fold because country is the routing key for both informativas
 - `2026-08-06-invoice-canonical-structure-P01-S37` - Give the canonical invoice write paths the bucket lifecycle events the slim store emits, because the canonical creation, mutation and deletion paths emit no bucket event of any kind while the slim services emit six dedicated event types and return their ids in the operator mutation result, so repointing the bare verbs would drop the invoice audit trail and the bucket-event-ids field together, and deleting the slim store would orphan six enum members that then need consumer reconciliation
 - `2026-08-06-invoice-canonical-structure-P02-S07` - Stop synthesising exactly one line at BOTH synthesis sites, the canonical builder and the live bulk importer, accepting a supplied line set and proving a two-line invoice at different rates persists and aggregates per line with no persisted-schema change
+- `2026-08-06-invoice-canonical-structure-P01-S31` - Write the capability-parity proof, a bucket exercising every capability of both stores run through the canonical path asserting identical M347, M349, M303 and M390 outputs and an identical export-import roundtrip, and if that proof cannot be written record that the fold is not ready and what is missing
 
 ### plan
 
