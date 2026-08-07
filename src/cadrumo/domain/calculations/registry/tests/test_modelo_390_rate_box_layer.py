@@ -29,16 +29,35 @@ No registry formula is re-computed here.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
 import pytest
+from pydantic import BaseModel
 
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
-from .. import IvaLedgerObservation, ModeloRevision, resolve_ledger_iva_aggregation_binding_values
+from .. import (
+    DataBindingDefinition,
+    IvaLedgerObservation,
+    ModeloRevision,
+    resolve_ledger_iva_aggregation_binding_values,
+    selector_as_dict,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _axis_sequence(axes: Mapping[str, object], key: str) -> tuple[object, ...]:
+    """Return a selector's sequence axis as a hashable tuple, absent or not.
+
+    A selector axis is ``object`` once the mapping is read generically, and an
+    absent axis and an empty one are the same grouping identity here -- both
+    mean "this binding does not narrow on that axis".
+    """
+    value = axes.get(key)
+    return tuple(value) if isinstance(value, (list, tuple)) else ()
 
 
 # rate suffix, category, tier, a date inside the rate's 2024 window, base, cuota.
@@ -219,17 +238,16 @@ def test_every_rate_split_base_tier_carries_exactly_one_rate_blind_binding() -> 
     change would only red the suite; it is tracked separately instead.
     """
     revision = _m390_revision()
-    grouped: dict[tuple[object, ...], list[object]] = {}
+    grouped: dict[tuple[object, ...], list[dict[str, object]]] = {}
     for binding in revision.bindings:
         if str(binding.source) != "ledger_iva_aggregation":
             continue
-        selector = binding.selector
-        axes = selector if isinstance(selector, dict) else selector.model_dump(exclude_none=True)
+        axes = selector_as_dict(binding)
         if axes.get("fact") != "base_amount_sum":
             continue
         key = (
-            tuple(axes.get("categories") or ()),
-            tuple(axes.get("rate_kinds") or ()),
+            _axis_sequence(axes, "categories"),
+            _axis_sequence(axes, "rate_kinds"),
             axes.get("flow_direction"),
         )
         grouped.setdefault(key, []).append(axes)
@@ -351,12 +369,17 @@ def _with_applied_rates(
     rather than of a re-implementation of it.
     """
     revision = _m390_revision()
-    mutated = tuple(
-        binding.model_copy(update={"selector": binding.selector.model_copy(update={"applied_rates": applied_rates})})
-        if binding.id == binding_id
-        else binding
-        for binding in revision.bindings
-    )
+
+    def _rated(binding: DataBindingDefinition) -> DataBindingDefinition:
+        selector = binding.selector
+        # A selector compiles to either a typed model or a raw mapping. This
+        # mutation only means anything against the typed form, so the raw one
+        # is refused by name rather than reaching `model_copy` and failing with
+        # an attribute error that says nothing about why.
+        assert isinstance(selector, BaseModel), f"{binding.id} carries an untyped selector; nothing to mutate"
+        return binding.model_copy(update={"selector": selector.model_copy(update={"applied_rates": applied_rates})})
+
+    mutated = tuple(_rated(binding) if binding.id == binding_id else binding for binding in revision.bindings)
     return revision.model_copy(update={"bindings": mutated})
 
 
