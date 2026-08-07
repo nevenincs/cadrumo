@@ -5,14 +5,14 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:da8ebd16102ec0b78f6ad44bd61e5e5a87676faa9dbd98d83cc9478f5020dfbd'
+body_hash: 'sha256:b31bf89afbdb9c0a20c33f51ffcf95e56b94cfbcbb09baccd1a75df899fd5f4b'
 related:
   - '[[2026-08-07-dev-harness-bleed-research]]'
   - '[[2026-06-14-docs-tooling-separation-adr]]'
   - '[[2026-08-07-pdf-sanitizer-contributor-tooling-adr]]'
   - '[[2026-07-08-importlinter-test-carveout-adr]]'
 ---
-# `dev-harness-bleed` adr: `locales tooling boundary` | (**status:** `proposed`)
+# `dev-harness-bleed` adr: `locales tooling boundary` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -389,7 +389,32 @@ for a sweep of the class, and is not governed by this decision.
 
 ## Ratification
 
-Awaits operator acceptance. Sub-decision B reversed after the first approval, so
-the record needs re-approval against the corrected facts. Sub-decision A has been
-executed under separate authorisation; C and the relocation remain unauthorised,
-and no plan Steps are opened by this record.
+Accepted by the operator on 2026-08-07, on the amended record: decisions A1, B2
+and C1. Implementation is authorised.
+
+The acceptance is of this form of the record, not a carry-over. An earlier
+approval was given to the A1 / **B3** / C1 form. Sub-decision B then reversed on
+evidence — the src-test-imports-dev crossing turned out to be already ruled and
+permitted rather than a violation — and the operator was re-asked rather than the
+prior approval being extended to a decision they had not seen. B2 did not ship
+under an approval given for B3.
+
+The operator reasoning recorded for B2: the crossing is permitted by an existing
+ruling, since `dev/import_hygiene_scan.py:474-494` scopes its violation family to
+shipped modules, thirteen src test modules already import `dev.`, and every
+`tests/` tree is wheel-excluded at `pyproject.toml:280-283`; while B3 would
+invent a production module with no production consumer and still leave roughly
+half the tooling lines in the wheel.
+
+Sub-decision A was executed ahead of this ratification under separate
+authorisation. C1 and the relocation are authorised by it and not yet done.
+
+C1's safety rests on no production path being able to raise `LocaleError`, and
+that was closed at the source rather than by walking the seventeen
+`except CadrumoError` sites individually. No production module imports the
+locales tooling at all, and the runtime renderer reaches the catalogues through
+its own private `_load_locale_yaml` at `src/cadrumo/core/i18n/_render.py:544`
+rather than through `LocaleManager`. With no production caller able to construct
+a manager, no production catcher can receive the exception — which also disposes
+of the concern that `LocaleError` is raised by the reading path as well as the
+mutating one. Reparenting it onto `Exception` is therefore behaviour-preserving.
