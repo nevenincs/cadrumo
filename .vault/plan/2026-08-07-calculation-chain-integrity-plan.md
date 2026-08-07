@@ -11,8 +11,8 @@ related:
   - '[[2026-06-19-silent-zero-base-aggregation-adr]]'
   - '[[2026-08-06-llm-invoice-read-reconciliation-adr]]'
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
+  - '[[2026-08-07-calculation-chain-integrity-research]]'
 ---
-
 # `calculation-chain-integrity` plan
 
 ## Steps

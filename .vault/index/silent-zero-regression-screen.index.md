@@ -6,8 +6,9 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:a151c50b8c008ea387228e886d32d608e7c249f180c9b3d56ef07f89cf2461ea'
+body_hash: 'sha256:827a28cff2086f61cf165b6bfb5a9c2f44bb77f3b35da1965d62eeb42ca60d89'
 related:
+  - '[[2026-08-07-silent-zero-regression-screen-adr]]'
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
 ---
 
@@ -16,6 +17,10 @@ related:
 Auto-generated index of all documents tagged with `#silent-zero-regression-screen`.
 
 ## Documents
+
+### adr
+
+- `2026-08-07-silent-zero-regression-screen-adr` - `calculation-chain-integrity` adr: `Remediation shape for the silent-zero and silent-overclaim class` | (**status:** `accepted`)
 
 ### research
 

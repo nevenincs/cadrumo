@@ -6,12 +6,11 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:f692e4cb7115e6faf3e9e337ca8c51a9f88c72a95278302be4ba20d6ed31a6b5'
+body_hash: 'sha256:abec5cbc378d02937c1587c59e401833775cd889862f88fd8073e0cbbd3024a2'
 related:
   - '[[2026-08-07-calculation-chain-integrity-W02-P02-S05]]'
   - '[[2026-08-07-calculation-chain-integrity-W02-P02-S06]]'
   - '[[2026-08-07-calculation-chain-integrity-W05-P07-S16]]'
-  - '[[2026-08-07-calculation-chain-integrity-adr]]'
   - '[[2026-08-07-calculation-chain-integrity-plan]]'
   - '[[2026-08-07-calculation-chain-integrity-research]]'
 ---
@@ -21,10 +20,6 @@ related:
 Auto-generated index of all documents tagged with `#calculation-chain-integrity`.
 
 ## Documents
-
-### adr
-
-- `2026-08-07-calculation-chain-integrity-adr` - `calculation-chain-integrity` adr: `Remediation shape for the silent-zero and silent-overclaim class` | (**status:** `accepted`)
 
 ### exec
 

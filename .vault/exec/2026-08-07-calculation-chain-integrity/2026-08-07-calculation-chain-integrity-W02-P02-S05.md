@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:749e2475527b7300eabf6668e54c9e971513f80ac48534d49270e555da25dab1'
+body_hash: 'sha256:a2467a39f4c16045713f30f4a178dd63e7355921d6f60b2a49c32236d55ac144'
 step_id: 'S05'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
@@ -26,7 +26,7 @@ related:
 
 ## Outcome
 
-The modelo-130-relation-regression ADR is direct prior art, not merely adjacent context: it already solved the identical silent-zero failure class for two binding source kinds and explicitly scoped ledger-backed sources OUT of that fix. This plan's `W02.P02.S06` decision record is therefore framed as extending an already-accepted, already-shipped three-state contract to the sources its own amendment left open, rather than inventing an unrelated mechanism. Findings folded directly into `2026-08-07-calculation-chain-integrity-adr`.
+The modelo-130-relation-regression ADR is direct prior art, not merely adjacent context: it already solved the identical silent-zero failure class for two binding source kinds and explicitly scoped ledger-backed sources OUT of that fix. This plan's `W02.P02.S06` decision record is therefore framed as extending an already-accepted, already-shipped three-state contract to the sources its own amendment left open, rather than inventing an unrelated mechanism. Findings folded directly into `2026-08-07-silent-zero-regression-screen-adr` (authored under that feature tag, alongside the grounding research, per plan-owner direction).
 
 ## Verification
 
