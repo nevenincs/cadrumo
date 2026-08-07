@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:9c0a9691b9cd0e7b0bb81a17b0cdcace053c2f0103f4848de6d7deb363bcbc3d'
+body_hash: 'sha256:bb34ee2ac6190fc3a30efeb5cda688570d546a43831c3102514b4caabe07994e'
 step_id: 'S32'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -44,9 +44,11 @@ The first choice of injected figure was wrong and the premise-anchoring test cau
 
 The anchor check verifies that a value's printed form is present in the document, not that it plays the role claimed for it. Two consequences are recorded as measured, passing assertions rather than left to be discovered later.
 
-An injected sentence that prints its own plausible figure passes the anchor check. And more sharply, a short figure anchors inside a longer printed one, so a total of zero anchors against any document printing a value that ends the same way, which is a large share of real invoices. Closing that needs a boundary-aware anchor search and belongs to the module that owns the check, not to this gate.
+An injected sentence that prints its own plausible figure passes the anchor check. That one is durable: the check establishes presence, never role, and no boundary rule can change it. It is caught downstream by the arithmetic closure, which is asserted here alongside it, so the boundary's real strength is recorded as the conjunction of the two legs rather than overstated as the anchor check alone.
 
-Both cases are caught downstream by the arithmetic closure, which is asserted here alongside them. The boundary's real strength is therefore recorded as the conjunction of the two legs rather than overstated as the anchor check alone.
+The second residual has since been closed and this record was updated rather than left standing. A short figure anchored inside a longer printed one, so a total of zero anchored against any document printing a value ending the same way. The module that owns the check landed a boundary-aware search: an occurrence counts only where the anchor is not a fragment of a longer number, applied per edge and only where that edge is numeric. It also closed a case this gate had missed, a bare run of digits.
+
+The assertion that documented the gap was inverted rather than relaxed, which is the direction that matters: relaxing it would have re-documented a bypass that no longer exists and gone green if the bypass ever returned. The gate now guards the closed gap from both sides of the boundary, and carries two additions -- the bare-digit case, and a discriminating case where a figure printed both as a fragment and as a whole token still anchors, so the boundary rule cannot be satisfied by rejecting every numeric anchor.
 
 ### The vision lane is not claimed
 
@@ -57,9 +59,11 @@ No assertion is made about the vision lane, because none would be honest: a test
 ## Verification
 
     uv run --no-sync pytest src/cadrumo/llm/tests/test_injection_regression.py -n 0
-    21 passed in 21.95s
+    23 passed in 8.30s
 
-Collected 21, zero deselected.
+Collected 23, zero deselected. Twenty-one at first landing; twenty-three after the inversion added the bare-digit case and the both-fragment-and-token case.
+
+Restoring the plain substring search from outside the repository reds exactly two, both inverted assertions, while every positive control stays green -- which is what distinguishes a boundary rule from one that simply refuses numeric anchors.
 
     uv run --no-sync pytest src/cadrumo/llm/tests/ -n 0
     260 passed, 3 deselected in 184.55s (0:03:04)
