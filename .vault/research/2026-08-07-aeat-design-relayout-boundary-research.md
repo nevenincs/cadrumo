@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:74b9cb9d4d098c864172db1297c83b258fd79bfbf029b7ba01d05078f74fb150'
+body_hash: 'sha256:79fa0f9bc5c53d9c1cd6f6b33c93eea2ed981103c4a30c692948ff8654b0be22'
 related: []
 ---
 
@@ -39,30 +39,40 @@ hundreds of false absences there). The module carries its own anti-vacuity guard
 the living specification of the boundary set — running it re-derives the exact
 numbers below at HEAD; this document is a snapshot, not the authority.
 
-### Modelo 303: two revisions, six named boundaries
+### Modelo 303: two revisions, the UNION of two signals names six boundaries
 
 The registry currently declares two M303 revisions: `2009-y-siguientes`
-(`valid_to=2022`) and `2023-y-siguientes` (open-ended). Both span internal
-re-layouts:
+(`valid_to=2022`) and `2023-y-siguientes` (open-ended). Two independent
+instruments each name a different, non-identical subset of the boundaries
+inside them, and the boundary set that matters is their UNION, never either
+list alone:
 
-- `2009-y-siguientes` claims 2015 and 2017: 74 of 74 shared boxes moved.
-- `2009-y-siguientes` claims 2019 and 2021: 74 of 146 shared boxes moved.
-- `2009-y-siguientes` claims 2021 and 2022: 39 of 156 shared boxes moved.
-- `2023-y-siguientes` claims 2025 and 2026: 125 of 174 shared boxes moved (gate's
-  box-diff); independently, a per-app-reachable-field diff restricted to the 86
-  casilla ids the registry's own `export/*.toml` actually declares found 56 of
-  those 86 diverge, including a -787 byte relocation of casillas `[165]-[167]`
-  and a -490 byte relocation of `[168]-[170]` — not a ladder shift, a block moved
-  from the tail of the record to the middle.
+```
+'2009-y-siguientes'
+   box-diff  : (2015,2017) (2019,2021) (2021,2022)
+   page-diff : (2014,2015) (2015,2017) (2019,2021) (2021,2022)
+   UNION     : 4 boundaries -> 5 revisions needed
 
-A second, independent instrument (per-page `TOTAL n POSICIONES` length,
-box-number-free) found two FURTHER boundaries the box diff did not surface:
-`2009-y-siguientes` 2014→2015, and `2023-y-siguientes` 2024→2025 — both on a
-different page than the 2025→2026 finding. Neither instrument subsumes the
-other: the box diff needs bracketed markers the page-length signal does not, and
-the page-length signal is coarser (page changed size, not which box moved) but
-reaches designs — several older PDF extractions — that yield no box markers at
-all.
+'2023-y-siguientes'
+   box-diff  : (2025,2026)
+   page-diff : (2024,2025) (2025,2026)
+   UNION     : 2 boundaries -> 3 revisions needed
+```
+
+The page-length signal finds `2014→2015` and `2024→2025` — real boundaries
+inside M303's span the box-offset diff does not surface at all, on a different
+page than the 2025→2026 finding. An implementer who split M303 using the
+box-diff list alone would produce four and three revisions respectively, leave
+two live boundaries unmodelled, and see the gate still red — reading as an
+incomplete fix rather than a wrong one. **Take the union, never either signal
+alone.**
+
+The 2025→2026 boundary is measured most precisely: 125 of 174 shared boxes
+moved per the gate's box-diff; independently, a per-app-reachable-field diff
+restricted to the 86 casilla ids the registry's own `export/*.toml` actually
+declares found 56 of those 86 diverge, including a -787 byte relocation of
+casillas `[165]-[167]` and a -490 byte relocation of `[168]-[170]` — not a
+ladder shift, a block moved from the tail of the record to the middle.
 
 Confirmed once, cross-checked against the registry's own literal encoded
 `offset =` values (not just the corpus): the registry's `2023-y-siguientes`
@@ -71,11 +81,39 @@ casilla `166`, matching the 2023/2024/2025 designs exactly and NOT the 2026
 design — so the revision currently writes bytes for a 2026-period filing using
 2025-era offsets, live, today (2026-08-07; Q1 and Q2 2026 have already closed).
 
-### Modelo 390: one revision, five named boundaries, live export proof
+### A convention bug in one box-offset extractor, found by describing it to a second author rather than sharing code
+
+AEAT's design tables stamp a field's own box number as the LAST bracketed
+token in its description row; a "Total X ( [a] + [b] + ... )" row lists other
+boxes as formula operands before its own number. Two independently-authored
+extractors (mine, and `m390-box-layer`'s) each violated this convention, and
+in DIFFERENT directions: mine used the FIRST bracket in a row (`.search()`),
+silently mis-keying a total row under one of its operand's numbers and
+clobbering that operand's real offset; theirs skipped any row with more than
+one bracket entirely (`if len(boxes) != 1: continue`), silently DROPPING the
+row. Fixed independently in each extractor once described (never by sharing
+code, deliberately) — my fix in the M303 offset diff above, theirs in
+`aefe464464`. Effect was purely additive to the boundary set already found: no
+boundary appeared or vanished, only three high-value M303 rows (`Total cuota
+devengada` casilla `[27]`, `Total a deducir` `[45]`, `Resultado régimen
+general` `[46]`) went from silently absent to correctly measured in the second
+extractor, and M390 had zero such rows to recover (confirming it was never
+exposed to this bug). The finding never rested on the recovered rows, but two
+independent extractors that had consolidated onto one implementation would
+have shared this exact blind spot with nothing to expose it — the useful
+comparison between two independent instruments is not whether they agree, but
+whether they fail the same way.
+
+### Modelo 390: one revision, five named boundaries, both signals agree, live export proof
 
 The registry declares a single M390 revision, `2010-y-siguientes`, spanning:
-2017→2018, 2019→2021, 2021→2022, 2022→2023, 2023→2024 (per the gate). A
-different agent on this campaign (`m390-box-layer`) proved this end to end: an
+2017→2018, 2019→2021, 2021→2022, 2022→2023, 2023→2024 (per the gate's
+box-diff). Unlike M303, the page-length signal finds the SAME five boundaries
+here, byte-for-byte identical — reassuring (both instruments converge) but
+uninformative on its own: it confirms the box-diff's list is complete for M390
+specifically, and that confirmation is only available because M303's
+divergence between the two signals was already known to check for. A different
+agent on this campaign (`m390-box-layer`) proved the live impact end to end: an
 `export_draft` call at `filing_year=2023` succeeds and produces 7698 bytes with
 the total cuota written at byte 1628 — past the 2023 record's declared end at
 1526. The export does not fail; it silently writes a byte-valid-looking file laid

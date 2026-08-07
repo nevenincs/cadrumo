@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:8266492c913d97659a49b8b1a34f6c270711d7399284a2d09b29acb4ca659fae'
+body_hash: 'sha256:3b944b62a22edb23de7a90747b02f0b82762a0c08344e858ac11cfc23afd6f7c'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
 ---
@@ -21,6 +21,11 @@ claim filing years on both sides of an AEAT record-design re-layout: Modelo 303'
 years at the wrong byte offsets. This is live: `2023-y-siguientes` already
 covers Q1/Q2 2026, both of which have closed as of this record's date, with
 Modelo 303's 2026 AEAT design measured and bundled
+(`2026-08-07-aeat-design-relayout-boundary-research`). Two independent
+box-offset and page-length instruments measured the full boundary set; their
+UNION is 4 boundaries inside `2009-y-siguientes`, 2 inside
+`2023-y-siguientes`, and 5 inside Modelo 390's single revision — 11 boundaries
+total, meaning full correctness requires 14 revisions where 3 exist today
 (`2026-08-07-aeat-design-relayout-boundary-research`). A structural gate
 enforcing "no revision spans a re-layout" is already landed and deliberately
 red, naming the violations as its own specification
@@ -58,20 +63,30 @@ edit itself.
   (`2026-08-07-aeat-design-relayout-boundary-research`, "shipped pattern"
   finding). The fix this record authorizes is not a new mechanism; it is
   applying an existing, working pattern to two more modelos.
-- Cost is asymmetric by era. Modelo 303's near-term boundary (2025→2026) is
-  live and affects filings being made today; its older boundaries (2015-2022)
-  and all five of Modelo 390's (2017-2024) are historical, affecting only
-  filing years long past their statutory amendment window.
+- Cost is asymmetric by era. Modelo 303's near-term boundaries (2024→2025,
+  2025→2026) are live and affect filings being made today; its older
+  boundaries (2014-2022) and all five of Modelo 390's (2017-2024) are
+  historical, affecting only filing years long past their statutory amendment
+  window.
+- The two measurement instruments are NOT interchangeable and neither
+  subsumes the other: on Modelo 303 they disagree — the page-length signal
+  finds two boundaries (2014→2015, 2024→2025) the box-offset diff misses
+  entirely — while on Modelo 390 they agree exactly. A boundary list built
+  from only one signal understates Modelo 303's true scope; the union is the
+  only correct set (`2026-08-07-aeat-design-relayout-boundary-research`, "the
+  union of two signals" finding). An implementer working from the box-diff
+  list alone would split Modelo 303 short by two boundaries and see the gate
+  still red — reading as an incomplete fix rather than a wrong one.
 
 ## Considered options
 
-- **Split every revision at every named boundary, oldest to newest, uniformly.**
-  Pro: total correctness, no filing year left mismodelled. Con: authors five
-  full historical Modelo 390 revisions (back to 2017) and three additional
-  historical Modelo 303 revisions (back to 2014) for filing years with no
-  active filers — pure sunk authoring cost with no user ever exercising the
-  correct path, and legal-grounding work (`legal_refs`, `source_refs`,
-  `corpus_ref`) for each.
+- **Split every revision at every named boundary (the union of both
+  instruments), oldest to newest, uniformly.** Pro: total correctness, no
+  filing year left mismodelled. Con: authors 14 revisions where 3 exist today
+  — 6 full Modelo 390 revisions (back to 2017) and 8 Modelo 303 revisions
+  (back to 2014) — for filing years with no active filers, pure sunk
+  authoring cost with no user ever exercising the correct path, and
+  legal-grounding work (`legal_refs`, `source_refs`, `corpus_ref`) for each.
 - **Split only at boundaries inside each modelo's currently-reachable filing
   window, and refuse export for filing years before the earliest split.**
   Rejected as the general rule but adopted as the DEFAULT posture (see
@@ -106,12 +121,14 @@ edit itself.
 ## Implementation
 
 For Modelo 303 and Modelo 390, split each existing revision into one revision
-per AEAT design the gate's failure text names, following the Modelo 123
-pattern: each new revision gets its own `revision.toml` (`valid_from`, and
-`valid_to` for every non-newest one), its own `export/*.toml` fragment tree
-encoding that design's own offsets (parsed from the bundled corpus, never
-hand-transcribed), and its own declared `source_refs` naming the specific AEAT
-`aeat-dr-<modelo>-<year>` design it encodes.
+per AEAT design named by the UNION of the gate's box-offset failure text and
+its page-length failure text — never one signal alone, per the Considerations
+finding — following the Modelo 123 pattern: each new revision gets its own
+`revision.toml` (`valid_from`, and `valid_to` for every non-newest one), its
+own `export/*.toml` fragment tree encoding that design's own offsets (parsed
+from the bundled corpus, never hand-transcribed), and its own declared
+`source_refs` naming the specific AEAT `aeat-dr-<modelo>-<year>` design it
+encodes.
 
 Per the "Considered options" ruling: split fully within each modelo's
 currently-reachable filing window (the years an operator can actually create a
@@ -143,15 +160,15 @@ rejects or misreads the filed record — the harm surfaces downstream of the
 point where this app could have caught it, which is exactly the shape
 `no-silent-under-declaration`'s posture exists to prevent, generalized from
 under-declared amounts to mis-placed bytes. Second, on how far back to model
-historically: bound at the reachable window rather than author five Modelo 390
-revisions and three more Modelo 303 revisions for years nobody can file today
-— `2026-08-07-aeat-design-relayout-boundary-research` records that the harm
-measured live (Modelo 303 2025→2026, Modelo 390's proved `export_draft`
-mis-write) is entirely in the CURRENT and recent-past window, so the sunk cost
-of full historical fidelity buys no correctness a real filer will ever reach.
-Third, Modelo 123 already demonstrates the target shape is buildable in this
-registry today, at the cost the split requires, with no new resolver or schema
-work — the correct pattern is copy, not invention.
+historically: bound at the reachable window rather than author 11 additional
+historical revisions across both modelos for years nobody can file today —
+`2026-08-07-aeat-design-relayout-boundary-research` records that the harm
+measured live (Modelo 303 2024→2025 and 2025→2026, Modelo 390's proved
+`export_draft` mis-write) is entirely in the CURRENT and recent-past window,
+so the sunk cost of full historical fidelity buys no correctness a real filer
+will ever reach. Third, Modelo 123 already demonstrates the target shape is
+buildable in this registry today, at the cost the split requires, with no new
+resolver or schema work — the correct pattern is copy, not invention.
 
 ## Consequences
 
@@ -172,3 +189,21 @@ work — the correct pattern is copy, not invention.
   something.
 - Modelo 200 is deliberately left unchanged in this pass; its coverage is a
   standing claim of the existing gate, not a new commitment this record makes.
+- This record's forward-coverage claim rests entirely on the gate, and the
+  gate's trustworthiness rests on having been built by two independently
+  authored measurement instruments that were cross-checked against each
+  other, not merely run in parallel. The useful comparison between two
+  independent instruments is not whether they agree — two instruments that
+  agreed on Modelo 303 would have told nobody about the 2014→2015 and
+  2024→2025 boundaries — it is whether they FAIL the same way. Both
+  instruments here independently violated the same AEAT box-numbering
+  convention (a field's own number is the last bracket in its description
+  row, not the first) and did so in different directions — one mis-keyed a
+  formula-total row under an operand's number, the other silently dropped
+  the row — and each was only caught because the two authors described the
+  convention to each other rather than sharing one implementation
+  (`2026-08-07-aeat-design-relayout-boundary-research`). A future extension of
+  this gate's method to another modelo should preserve that discipline:
+  build a second instrument, describe the shape rather than the code, and
+  treat agreement as inconclusive until the two have been shown to fail
+  differently at least once.
