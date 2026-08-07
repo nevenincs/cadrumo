@@ -460,6 +460,12 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
 def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
     if invoice.counterparty_country != "ES":
         return None
+    if invoice.counterparty_tax_id is None:
+        # Same reason as the general builder above: M347 declares a third party
+        # by their tax id, and a factura simplificada legitimately carries none
+        # (RD 1619/2012 art. 6.1.d). Without this the row reached the observation
+        # constructor with None and raised there instead of being skipped.
+        return None
     return InvoiceObservation(
         invoice_id=invoice.invoice_id,
         source_kind=BindingSourceKind(_invoice_source_kind(invoice)),

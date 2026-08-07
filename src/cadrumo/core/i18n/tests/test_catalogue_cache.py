@@ -55,7 +55,7 @@ def test_source_digest_mismatch_is_a_miss_not_a_wrong_answer(tmp_path: Path) -> 
     with override_settings(cadrumo_local_storage_root=tmp_path):
         old_digest = cc.compute_source_digest(b"source bytes v1")
         new_digest = cc.compute_source_digest(b"source bytes v2 -- different")
-        flat = {"cli.root.app_help": "Old value"}
+        flat: dict[str, str | None] = {"cli.root.app_help": "Old value"}
 
         cc.write_catalogue_cache("es", source_digest=old_digest, flat=flat)
 
@@ -87,7 +87,7 @@ def test_truncated_payload_under_a_matching_source_digest_is_rejected(tmp_path: 
     """
     with override_settings(cadrumo_local_storage_root=tmp_path):
         digest = cc.compute_source_digest(b"source bytes")
-        full_flat = {f"cli.key.{i}": f"value {i}" for i in range(200)}
+        full_flat: dict[str, str | None] = {f"cli.key.{i}": f"value {i}" for i in range(200)}
 
         cc.write_catalogue_cache("es", source_digest=digest, flat=full_flat)
 
@@ -117,7 +117,7 @@ def test_tampered_value_under_a_matching_source_digest_is_rejected(tmp_path: Pat
     """
     with override_settings(cadrumo_local_storage_root=tmp_path):
         digest = cc.compute_source_digest(b"source bytes")
-        flat = {"cli.root.app_help": "Valor correcto"}
+        flat: dict[str, str | None] = {"cli.root.app_help": "Valor correcto"}
         cc.write_catalogue_cache("es", source_digest=digest, flat=flat)
 
         path = cc.catalogue_cache_path("es")
