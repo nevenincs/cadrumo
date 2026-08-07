@@ -52,11 +52,19 @@ def _hand_built_stamps(tree: ast.AST) -> list[str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.JoinedStr):
             for part in node.values:
-                if isinstance(part, ast.Constant) and isinstance(part.value, str) and part.value.startswith(_STAMP_PREFIX):
+                if (
+                    isinstance(part, ast.Constant)
+                    and isinstance(part.value, str)
+                    and part.value.startswith(_STAMP_PREFIX)
+                ):
                     built.append(f"f-string starting {part.value!r}")
-        elif isinstance(node, ast.Constant) and isinstance(node.value, str):
-            if node.value.startswith(_STAMP_PREFIX) and node.value != _STAMP_PREFIX:
-                built.append(node.value)
+        elif (
+            isinstance(node, ast.Constant)
+            and isinstance(node.value, str)
+            and node.value.startswith(_STAMP_PREFIX)
+            and node.value != _STAMP_PREFIX
+        ):
+            built.append(node.value)
     return built
 
 
@@ -105,7 +113,10 @@ def test_every_reader_builds_its_stamp_through_the_constructor() -> None:
                 for call in ast.walk(node)
                 if isinstance(call, ast.Call) and isinstance(call.func, ast.Name)
             }
-            routed[f"{path.name}::{node.name}"] = "build_provenance_stamp" in calls
+            # Keyed by LINE, not by name: two producers in one module share a
+            # name, and keying by name let a compliant one silently overwrite a
+            # bypassing one. A mutation caught that before this gate shipped.
+            routed[f"{path.name}:{node.lineno}"] = "build_provenance_stamp" in calls
 
     assert routed, "no decided_by producer was found at all; this gate would pass over nothing"
     unrouted = sorted(site for site, ok in routed.items() if not ok)

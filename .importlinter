@@ -222,6 +222,10 @@ ignore_imports =
     # and the core-side stores for real-adapter roundtrips. Pinned per chain
     # origin rather than by a wildcard so a NEW production edge still fails.
     cadrumo.llm.conftest -> cadrumo.tests.secure_sql
+    # The stamp-singularity gate scans the whole non-test package, so it needs
+    # the shared file-walk helpers; that package reaches storage for its own
+    # roundtrip fixtures. A test-file chain origin, pinned like its siblings.
+    cadrumo.llm.tests.test_provenance_stamp_singularity -> cadrumo.tests
     cadrumo.llm.tests.test_evidence_draft_vision -> cadrumo.tests.secure_sql
     cadrumo.llm.tests.test_llm_vision_classifier -> cadrumo.tests.secure_sql
     cadrumo.llm.tests.test_redaction -> cadrumo.tests.secure_sql
@@ -433,12 +437,6 @@ ignore_imports =
     # other test chain origins above rather than widened, so a NEW production
     # application -> llm edge still fails loudly.
     cadrumo.application.ledger.tests.test_evidence_corpus_parsing -> cadrumo.llm
-    # The on-host transport token is declared on BOTH sides of this boundary --
-    # the reader writes it into a provenance stamp, the withdrawal survey reads
-    # it back out -- and the layers cannot share one declaration. The test
-    # pinning the two equal therefore has to see both. Production
-    # application -> llm coupling stays zero and still fails loudly.
-    cadrumo.application.ledger.tests.test_consent_withdrawal -> cadrumo.llm
     # The cloud-evidence eligibility bar is a consent gate that lives in the
     # gated subpackage, so the test asserting when an upload is permitted has
     # to reach it. Pinned like the test chain origins above; production

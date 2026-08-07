@@ -61,10 +61,10 @@ from ..application.ledger import (
     PurchaseInvoiceEvidenceInputError,
     TranscriberIdentity,
 )
-from ..core import FieldOrigin
+from ..core import FieldOrigin, provenance_transport_label
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
-from ._consent import EvidenceConsentToken, provenance_transport_label
+from ._consent import EvidenceConsentToken
 from ._errors import LLMConfigError
 from ._models import LLMProvider, LLMRequest, MultimodalImageInput, PromptDefinition, PromptRegistry
 

@@ -19,10 +19,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import FieldOrigin
+from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._consent_withdrawal import (
-    LOCAL_TRANSPORT_SEGMENT,
     artefact_is_cloud_derived,
     provenance_stamp_transport,
     rederive_artefact_on_host,
@@ -83,25 +82,6 @@ def _local_reader(transcribed_text: str, /) -> tuple[InvoiceDraft, str]:
     return InvoiceDraft(), _LOCAL_STAMP
 
 
-def test_the_two_layers_agree_on_the_on_host_transport_token() -> None:
-    """The reader that WRITES the token and the survey that READS it must match.
-
-    The token is declared twice because the layers cannot share one: the
-    inference package writes it into a stamp, this layer reads it back out of a
-    persisted stamp, and this layer may not import that package. Two
-    declarations of one value drift silently, and the drift is not cosmetic --
-    if the writer stamped a token this survey did not recognise, every on-host
-    artefact would be classified cloud-derived and every withdrawal would ask
-    the operator to re-derive work that never left the machine.
-
-    Pinned here rather than in the writer's suite because this is the side that
-    would be wrong about the other.
-    """
-    from ....llm import LOCAL_TRANSPORT_LABEL
-
-    assert LOCAL_TRANSPORT_SEGMENT == LOCAL_TRANSPORT_LABEL
-
-
 # ── Reading a provenance stamp ───────────────────────────────────────────────
 
 
@@ -109,8 +89,8 @@ def test_the_two_layers_agree_on_the_on_host_transport_token() -> None:
     ("stamp", "expected"),
     [
         (_CLOUD_STAMP, "openai"),
-        (_LOCAL_STAMP, LOCAL_TRANSPORT_SEGMENT),
-        ("llm:local-vision:qwen2.5vl:3b:rates-x", LOCAL_TRANSPORT_SEGMENT),
+        (_LOCAL_STAMP, LOCAL_TRANSPORT_LABEL),
+        ("llm:local-vision:qwen2.5vl:3b:rates-x", LOCAL_TRANSPORT_LABEL),
         ("llm:gemini-vision:gemini-2.5-pro:rates-x", "gemini"),
         ("classified_by_manual", None),
         ("llm:noseparator:model", None),

@@ -47,7 +47,7 @@ from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import LOCAL_TRANSPORT_LABEL, STRICT_FROZEN_CONFIG, provenance_stamp_transport
 from ...core.time import UtcInstant
 from ._extracted_document_cache import read_cached_transcription
 from ._extraction_draft_store import load_extraction_drafts, write_extraction_draft
@@ -57,21 +57,15 @@ if TYPE_CHECKING:
     from ._evidence_draft import InvoiceDraft
 
 __all__ = [
-    "LOCAL_TRANSPORT_SEGMENT",
     "CloudDerivedArtefact",
     "ConsentWithdrawalSurvey",
     "ConsentedDispatch",
     "LocalRederivation",
     "OnHostReader",
     "artefact_is_cloud_derived",
-    "provenance_stamp_transport",
     "rederive_artefact_on_host",
     "survey_cloud_consent",
 ]
-
-LOCAL_TRANSPORT_SEGMENT = "local"
-"""The transport segment an on-host reader stamps."""
-
 
 class OnHostReader(Protocol):
     """Re-reads already-transcribed text on this host, returning draft and stamp.
@@ -97,34 +91,6 @@ class ContentAddressResolver(Protocol):
     def __call__(self, evidence_reference: str, /) -> str | None:
         """Return the document's SHA-256 content address, or ``None``."""
         ...
-
-
-def provenance_stamp_transport(stamp: str) -> str | None:
-    """Return the transport a provenance stamp names, or ``None``.
-
-    Readers stamp ``llm:<transport>-<reader>:<model>:rates-<...>``, so the
-    transport is the leading token of the second segment. ``None`` means the
-    stamp does not carry a transport at all.
-
-    **A stamp with no transport is NOT read as on-host.** Returning ``None``
-    rather than ``"local"`` is the whole point: an unreadable stamp is a
-    question this function cannot answer, and answering it optimistically would
-    silently drop exactly the artefact a withdrawal most needs to surface. The
-    caller decides what to do with the uncertainty; it is not resolved here.
-
-    Args:
-        stamp: A reader's ``decided_by`` provenance stamp.
-
-    Returns:
-        The transport token, or ``None`` when the stamp does not name one.
-    """
-    segments = stamp.split(":")
-    if len(segments) < 2 or segments[0] != "llm":
-        return None
-    transport, separator, reader = segments[1].partition("-")
-    if not separator or not transport or not reader:
-        return None
-    return transport
 
 
 class ConsentedDispatch(BaseModel):
@@ -237,7 +203,7 @@ def artefact_is_cloud_derived(stamp: str) -> bool:
     that omits an artefact tells the operator they are clean when they are not,
     and the cost of an extra row is that they look at one more document.
     """
-    return provenance_stamp_transport(stamp) != LOCAL_TRANSPORT_SEGMENT
+    return provenance_stamp_transport(stamp) != LOCAL_TRANSPORT_LABEL
 
 
 def survey_cloud_consent(
@@ -375,7 +341,7 @@ def rederive_artefact_on_host(
         )
         raise ValueError(msg)
     draft, stamp = read_on_host(transcription.text)
-    if provenance_stamp_transport(stamp) != LOCAL_TRANSPORT_SEGMENT:
+    if provenance_stamp_transport(stamp) != LOCAL_TRANSPORT_LABEL:
         msg = (
             f"the re-derivation reader stamped {stamp!r}, which does not name an on-host transport; "
             "refusing to record it as a local re-derivation"
