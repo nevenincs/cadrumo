@@ -652,15 +652,6 @@
         "reason": "Same private OAuth-client-wrapper reach as lines 167/186 in the same file, exercising a third validation scenario."
       },
       {
-        "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.invoices._importing",
-        "imported_names": [
-          "_decode_invoice_payload"
-        ],
-        "reason": "White-box test confirming the private invoice-payload decoder returns InvoiceRowPayload TypedDict instances from JSON. Internal decoding helper backing parse_invoice_payload, not a standalone public entry point."
-      },
-      {
         "importer_path": "src/cadrumo/core/tests/test_storage_fingerprint_participation_gate.py",
         "occurrence": 1,
         "target_mod": "cadrumo.core.observability._fingerprint",
