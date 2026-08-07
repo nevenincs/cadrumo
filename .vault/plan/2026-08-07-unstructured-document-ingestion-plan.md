@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:e144fe0010ffaf20de63b80469a9313cf2aee7ed322c7f4a39091ddf44ad33b6'
+body_hash: 'sha256:b03dcadb5f869db62c8fd575a42572dbbcab15f8a901f87cc22e50501fbb0c3d'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -130,7 +130,7 @@ Bundles the licence-clean fixtures and lands the injection regression gate and t
 
 - [x] `W04.P09.S31` - Bundle the licence-clean fixture subset with provenance sidecars, including both COM-2026-0005 entries, gated by the fixture-provenance gate cross-checking sidecar against physical evidence; `src/cadrumo/application/ledger/tests`.
 - [x] `W04.P09.S32` - Add the injection regression gate: an instruction-shaped transcription must cross the S2-S3 boundary with no unanchored value and no out-of-schema key, proven by mutation; `src/cadrumo/llm/tests`.
-- [ ] `W04.P09.S33` - Run the mutation-proof pass over every W01 through W03 gate, breaking from outside the repo, observing red, restoring, and recording each red signature; `src/cadrumo`.
+- [x] `W04.P09.S33` - Run the mutation-proof pass over every W01 through W03 gate, breaking from outside the repo, observing red, restoring, and recording each red signature; `src/cadrumo`.
 
 ### Phase `W04.P10` - The measured harness lane
 
