@@ -19,6 +19,7 @@ See Also:
 
 from __future__ import annotations
 
+import zipfile
 from decimal import Decimal
 from pathlib import Path
 
@@ -333,3 +334,81 @@ def test_a_file_with_no_column_for_a_required_field_still_refuses(tmp_path: Path
     )
     with pytest.raises(InvoiceValidationError, match="taxable_base"):
         read_bulk_invoice_import_source(csv_path)
+
+
+def _workbook_with_stale_cached_formula(tmp_path: Path) -> Path:
+    """Write a book whose taxable_base cell states ``=500*2`` but caches ``7.77``.
+
+    This is the shape a spreadsheet application saves when a sheet is edited
+    somewhere else and stored without recalculating: the formula and the number
+    beside it disagree. openpyxl cannot author the pair, so the cached value is
+    injected into the sheet XML directly -- the file is a real xlsx either way,
+    and what it exercises is exactly what a real stale book would.
+    """
+    authored = tmp_path / "authored.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    assert sheet is not None
+    sheet.append(
+        ["counterparty_nif", "counterparty_name", "invoice_number", "invoice_date", "taxable_base", "iva_rate"],
+    )
+    sheet.append([_CIF, "Papeleria Sol SL", "BULK-ES-005", "2026-05-01", "=500*2", 21])
+    workbook.save(authored)
+
+    stale = tmp_path / "stale.xlsx"
+    with zipfile.ZipFile(authored) as source, zipfile.ZipFile(stale, "w", zipfile.ZIP_DEFLATED) as target:
+        for item in source.infolist():
+            payload = source.read(item.filename)
+            if item.filename == "xl/worksheets/sheet1.xml":
+                payload = payload.replace(b"<f>500*2</f>", b"<f>500*2</f><v>7.77</v>")
+            target.writestr(item, payload)
+    return stale
+
+
+def test_import_refuses_a_workbook_whose_cached_value_disagrees_with_its_formula(tmp_path: Path) -> None:
+    """A stale cached value must be refused, never read as the taxable base.
+
+    The discriminating case. A book whose formulas were never computed reads as
+    a blank and would be refused by the amount grammar even with no formula
+    guard at all, so it cannot tell a working guard from a missing one. Here the
+    cached number is present, well-formed, and wrong: ``7.77`` sits beside a
+    formula stating ``1000``. Read, it becomes the invoice's taxable base and
+    reaches Modelo 303/390 as a wrong figure with nothing anywhere reporting a
+    failure -- which is the whole reason a cached value is not an accepted
+    financial figure.
+    """
+    stale = _workbook_with_stale_cached_formula(tmp_path)
+
+    with pytest.raises(InvoiceValidationError) as exc_info:
+        read_bulk_invoice_import_source(stale)
+
+    assert "formula cached values are not accepted" in str(exc_info.value)
+    assert "7.77" not in str(exc_info.value)
+
+
+def test_import_refuses_an_uncomputed_formula_naming_the_formula_not_the_amount(tmp_path: Path) -> None:
+    """An uncomputed formula is refused for being a formula, not for being blank.
+
+    openpyxl authors formulas with no cached value, so this book is the one a
+    non-spreadsheet tool produces. Before the formula guard the cell read as
+    ``None`` and the row was refused by the decimal grammar, telling the
+    operator to write the amount with a dot as the decimal separator while they
+    looked at a perfectly good ``=500*2``. The guard has to fire first for the
+    refusal to name the real cause.
+    """
+    xlsx_path = tmp_path / "uncomputed.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    assert sheet is not None
+    sheet.append(
+        ["counterparty_nif", "counterparty_name", "invoice_number", "invoice_date", "taxable_base", "iva_rate"],
+    )
+    sheet.append([_CIF, "Papeleria Sol SL", "BULK-ES-006", "2026-05-01", "=500*2", 21])
+    workbook.save(xlsx_path)
+
+    with pytest.raises(InvoiceValidationError) as exc_info:
+        read_bulk_invoice_import_source(xlsx_path)
+
+    message = str(exc_info.value)
+    assert "formula cached values are not accepted" in message
+    assert "decimal separator" not in message

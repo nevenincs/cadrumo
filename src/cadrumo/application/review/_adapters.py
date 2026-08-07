@@ -51,9 +51,6 @@ _LOGGER = get_logger(__name__)
 
 _SUMMARY_MAX = 80
 
-# Multilingual contract: every tr carries es / en / ca / hu.
-_LANGS: tuple[str, ...] = ("es", "en", "ca", "hu")
-
 
 # ── transactions ──────────────────────────────────────────────────
 

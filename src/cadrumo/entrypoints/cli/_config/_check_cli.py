@@ -41,14 +41,11 @@ def _assess_selected_model_load(profile: HardwareProfile) -> ContentionSnapshot 
     from ....application.provisioning import assess_model_load_contention, select_model_for_role
     from ....core import ModelRole
 
-    selection = select_model_for_role(ModelRole.VISION_TRANSCRIPTION, profile=profile)
-    if not selection.selected or selection.runtime_id is None or selection.candidate is None:
+    assessable = select_model_for_role(ModelRole.VISION_TRANSCRIPTION, profile=profile).assessable_load
+    if assessable is None:
         return None
-    return assess_model_load_contention(
-        selection.runtime_id,
-        selection.candidate.memory_requirement_bytes,
-        profile=profile,
-    )
+    runtime_id, required_bytes = assessable
+    return assess_model_load_contention(runtime_id, required_bytes, profile=profile)
 
 
 def register(app: typer.Typer) -> None:

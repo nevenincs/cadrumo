@@ -94,6 +94,7 @@ _SPANISH_INVOICE: dict[str, str | None] = {
     "retencion_rate": "15",
     "retencion_amount": "180,00",
     "grand_total": "1.452,00",
+    "regime_legend": "régimen especial del criterio de caja",
     "currency": "EUR",
 }
 _SPANISH_ANCHORS: dict[str, str | None] = {
@@ -107,6 +108,7 @@ _SPANISH_ANCHORS: dict[str, str | None] = {
     "retencion_rate": "-15%",
     "retencion_amount": "-180,00 €",
     "grand_total": "1.452,00 €",
+    "regime_legend": "Factura acogida al régimen especial del criterio de caja",
     "currency": "€",
 }
 

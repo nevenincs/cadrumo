@@ -609,6 +609,14 @@ class Invoice(BaseModel):
     payment_id: str | None = None
     fx_rate: Decimal | None = None
     fx_rate_date: date | None = None
+    # WHO quoted the rate, at parity with the ledger transaction's own
+    # `rate_source`. The rate and its date said what was applied and when, but
+    # not on whose published series, so a stored euro total on a foreign invoice
+    # could not be re-derived or challenged years later -- while the very same
+    # conversion recorded on a bank row could. Set together with the rate, for
+    # the same reason the rate and its date are: half a provenance is a claim
+    # nothing can check.
+    fx_rate_source: str | None = Field(default=None, min_length=1)
     # When this RECORD was entered and last amended, which is a different fact
     # from `issued_at` (when the document was issued) and from `operation_date`
     # (when the operation occurred). Both are outside the identity derived by
@@ -732,15 +740,21 @@ class Invoice(BaseModel):
     def _validate_fx_conversion_coherence(self) -> Self:
         """Reject an incoherent conversion stamp.
 
-        The pair is all-or-nothing so a stored rate is always auditable: a rate
-        without its date has no provenance (which ECB publication produced it),
-        and a date without a rate converts nothing. A euro invoice carries
-        neither -- a stamp there would imply a conversion that never happened.
+        The triple is all-or-nothing so a stored rate is always auditable: a
+        rate without its date cannot be located in a published series, a rate
+        without its source does not say whose series to look in, and a date or
+        source without a rate converts nothing. A euro invoice carries none of
+        them -- a stamp there would imply a conversion that never happened.
         """
-        if self.currency == DEFAULT_CURRENCY and (self.fx_rate is not None or self.fx_rate_date is not None):
-            raise InvoiceValidationError("a EUR invoice must not carry an fx_rate or fx_rate_date")
-        if (self.fx_rate is None) != (self.fx_rate_date is None):
-            raise InvoiceValidationError("fx_rate and fx_rate_date must be set together")
+        stamp_present = (
+            self.fx_rate is not None or self.fx_rate_date is not None or self.fx_rate_source is not None
+        )
+        if self.currency == DEFAULT_CURRENCY and stamp_present:
+            raise InvoiceValidationError("a EUR invoice must not carry an fx conversion stamp")
+        if (self.fx_rate is None) != (self.fx_rate_date is None) or (self.fx_rate is None) != (
+            self.fx_rate_source is None
+        ):
+            raise InvoiceValidationError("fx_rate, fx_rate_date and fx_rate_source must be set together")
         if self.fx_rate is not None and self.fx_rate <= Decimal("0"):
             raise InvoiceValidationError("fx_rate must be strictly positive")
         return self

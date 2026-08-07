@@ -49,6 +49,7 @@ from ._errors import (
 )
 from ._models import (
     CurrencyNormalizationStatus,
+    FxConversionStamp,
     MonetaryAmount,
     NormalizedAmount,
 )
@@ -60,6 +61,7 @@ __all__ = [
     "CurrencyNormalizationStatus",
     "ExchangeRateProvider",
     "ExchangeRateProviderError",
+    "FxConversionStamp",
     "MissingExchangeRateError",
     "MonetaryAmount",
     "NormalizedAmount",

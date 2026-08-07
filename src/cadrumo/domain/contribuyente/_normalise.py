@@ -26,7 +26,4 @@ def normalise_key(value: str) -> str:
     return value.strip().lower().replace("-", ".")
 
 
-_normalise_key = normalise_key
-
-
 __all__ = ["normalise_key"]

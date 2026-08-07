@@ -26,7 +26,7 @@ from typing import ClassVar, override
 
 import pytest
 
-from ...core import AcceleratorKind, ContentionCause
+from ...core import AcceleratorKind, ContentionCause, ModelRole
 from ...core.config import override_settings
 from ..provisioning import (
     AcceleratorDevice,
@@ -41,6 +41,7 @@ from ..provisioning import (
     pull_runtime_model,
     read_runtime_residents,
     read_system_memory,
+    select_model_for_role,
     unload_runtime_model,
     verify_model_ready,
 )
@@ -480,7 +481,35 @@ def test_unload_releases_a_selected_resident_with_a_zero_keep_alive_and_no_promp
     posted = events.get(timeout=5)
     assert posted["method"] == "POST"
     assert posted["body"] == {"model": "qwen2.5vl:3b", "keep_alive": 0}
-    assert "prompt" not in posted["body"]
+    body = posted["body"]
+    assert isinstance(body, dict)
+    assert "prompt" not in body
+
+
+def test_a_selection_with_no_declared_requirement_declines_to_be_assessed() -> None:
+    """An unknown memory requirement must not be assessed as zero.
+
+    Zero is not a neutral placeholder on this path: it reaches
+    ``assess_model_load_contention`` as the amount the model needs, so the
+    check reports the load ADMITTED against a figure nobody supplied. Three
+    call sites derived this guard independently and each missed this fourth
+    case, which is why the accessor owns it.
+
+    Mutation that must trip this: return ``(runtime_id, requirement or 0)``.
+    """
+    selection = select_model_for_role(ModelRole.VISION_TRANSCRIPTION)
+    assert selection.candidate is not None, "this host catalogues no vision candidate; the case below is vacuous"
+    # Positive control: fully declared, the load is assessable.
+    assert selection.assessable_load is not None
+
+    stripped = selection.model_copy(
+        update={"candidate": selection.candidate.model_copy(update={"memory_requirement_bytes": None})},
+    )
+
+    assert stripped.assessable_load is None, (
+        "a candidate declaring no memory requirement must not yield an assessable load; "
+        "assessing it would report admitted on evidence nobody has"
+    )
 
 
 def test_unload_refuses_a_model_cadrumo_did_not_select_and_sends_nothing(

@@ -19,6 +19,7 @@ from __future__ import annotations
 from ._ecb_provider import (
     ECB_DATA_API_HOST,
     ECB_EXR_ENDPOINT,
+    ECB_RATE_SOURCE_ID,
     LOOKBACK_DAYS,
     EcbReferenceRateProvider,
     RateFetch,
@@ -28,6 +29,7 @@ from ._ecb_provider import (
 __all__ = [
     "ECB_DATA_API_HOST",
     "ECB_EXR_ENDPOINT",
+    "ECB_RATE_SOURCE_ID",
     "LOOKBACK_DAYS",
     "EcbReferenceRateProvider",
     "RateFetch",

@@ -47,7 +47,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from pathlib import Path
 
@@ -911,6 +911,8 @@ def _format_field(field: ExportFieldDefinition, value: object) -> str:
         rendered = _format_money(value, length=field.length, signed=field.signed)
     elif field.data_type == "integer":
         rendered = _format_integer(value, length=field.length)
+    elif field.data_type == "decimal":
+        rendered = _format_decimal(value, field=field)
     elif field.data_type == "boolean":
         rendered = "X" if value is True else ""
     else:
@@ -932,6 +934,29 @@ def _format_money(value: object, *, length: int, signed: bool) -> str:
     if signed:
         return " " + str(cents).zfill(length - 1)
     return str(cents).zfill(length)
+
+
+def _format_decimal(value: object, *, field: ExportFieldDefinition) -> str:
+    """Render a decimal slot as implicit-decimal digits, never with a separator.
+
+    The diseño de registro sizes these slots as "N enteros y M decimales"
+    summing to the full length, so a written decimal point would consume a byte
+    the layout does not have.  The scale varies per field, which is why it is
+    read from the field rather than fixed at two the way money is.
+    """
+    if field.decimals is None:
+        raise FilingExportValidationError(f"decimal export field {field.id!r} must declare decimals")
+    if isinstance(value, bool):
+        raise FilingExportValidationError("decimal export fields cannot render boolean values")
+    if value is None or value == "":
+        return ""
+    coerced = coerce_decimal(value)
+    if coerced is None:
+        raise FilingExportValidationError(f"decimal export field {field.id!r} cannot coerce {value!r} to Decimal")
+    if coerced < 0:
+        raise FilingExportValidationError(f"decimal export field {field.id!r} cannot render a negative value")
+    scaled = (coerced * (10**field.decimals)).to_integral_value(rounding=ROUND_HALF_UP)
+    return str(int(scaled))
 
 
 def _format_integer(value: object, *, length: int) -> str:

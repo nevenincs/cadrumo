@@ -89,7 +89,6 @@ _ADMINISTRATIVE_PERIOD_SET = frozenset(("ALTA", "MODIFICACION", "BAJA", "COMUNIC
 #: carry — see the shared-matcher rationale in the registry's ``select_revision``.
 #: It stands for a SET of periods, so it is not itself one.
 _SYMBOLIC_EVENT_SELECTOR = "EVENT-N"
-_EXT_PERIOD_RE = re.compile(r"^EXT-[1-4]T$")
 _EVENT_NUMBER_PERIOD_RE = re.compile(r"^EVENT-\d+$")
 _DISPLAY_PERIOD_RE = re.compile(r"^(?P<year>\d{4})\s+(?P<code>[A-Z0-9]+(?:-[A-Z0-9]+)*)$", re.I)
 

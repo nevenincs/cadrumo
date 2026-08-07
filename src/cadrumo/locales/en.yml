@@ -720,11 +720,14 @@ application:
     bulk_import:
       errors:
         file_read_failed: The bulk invoice import file could not be read.
+        formula_cell: The bulk invoice import file contains a formula cell at row
+          {row}, column {column}; formula cached values are not accepted.
         missing_columns: 'The bulk invoice import file is missing required columns:
           {missing_columns}'
+        unreadable_table: 'The bulk invoice import file carries no readable table:
+          {detail}'
         unsupported_extension: The bulk invoice import file must be .csv or .xlsx
           (got {extension}).
-        unreadable_table: 'The bulk invoice import file carries no readable table: {detail}'
     creation:
       errors:
         duplicate_invoice: 'An invoice with the same identity already exists in the
@@ -6238,6 +6241,8 @@ errors:
       Re-activate it with aeat config login NAME.
     refused_storage_unsecured_mode: The unsecured storage backend was requested without
       the required opt-in. It is not safe for real data.
+    refused_tabular_source_unreadable: The tabular file could not be decoded, or carries
+      no table with a header row.
     refused_taxation_comparison: The conjunta-vs-individual taxation comparison cannot
       be performed for this modelo or snapshot.
     refused_topic_not_found: The requested topic was not found.
@@ -6270,7 +6275,6 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
-    refused_tabular_source_unreadable: 'The tabular file could not be decoded, or carries no table with a header row.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -64572,9 +64576,16 @@ modelo:
           iva-cuota-repercutida-reducido:
             help: null
             label: Output VAT amount at the reduced rate (10%)
+          iva-cuota-repercutida-reducido-transitorio:
+            help: modelo.schema.303.casilla.continuidad.iva-cuota-repercutida-reducido-transitorio.help
+            label: Output VAT amount at the transitional reduced rate (5%/7.5%)
           iva-cuota-repercutida-super-reducido:
             help: null
             label: Output VAT amount at the super-reduced rate (4%)
+          iva-cuota-repercutida-super-reducido-transitorio:
+            help: Transitional box under RD-ley 4/2024 for the super-reduced rate,
+              coexisting with the ordinary 4% super-reduced rate.
+            label: Output VAT amount at the transitional super-reduced rate (2%)
           iva-cuota-soportada-importaciones:
             help: null
             label: Deductible input VAT on imports of current goods
@@ -65459,9 +65470,17 @@ modelo:
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: Total output VAT calculated at the reduced 10% rate.
               label: Output VAT amount at the reduced rate (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: Transitional box under RD-ley 4/2024 for the reduced rate, coexisting
+                with the ordinary 10% reduced rate.
+              label: Output VAT amount at the transitional reduced rate (5%/7.5%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: Total output VAT calculated at the super-reduced 4% rate.
               label: Output VAT amount at the super-reduced rate (4%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: Transitional box under RD-ley 4/2024 for the super-reduced rate,
+                coexisting with the ordinary 4% super-reduced rate.
+              label: Output VAT amount at the transitional super-reduced rate (2%)
             x-d5r62bjiclpnar3kc5i6u:
               help: Result of the self-assessment after the Modelo 303 adjustment
                 formula.

@@ -20,6 +20,7 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.money import round_to_cents
 from ._models import (
     CurrencyNormalizationStatus,
+    FxConversionStamp,
     MonetaryAmount,
     NormalizedAmount,
 )
@@ -27,6 +28,17 @@ from ._models import (
 
 class ExchangeRateProvider(Protocol):
     """Protocol for fetching exchange rates."""
+
+    @property
+    def rate_source_id(self) -> str:
+        """Stable identifier for the rate authority this provider speaks for.
+
+        Stamped onto every converted record so a stored euro figure names the
+        series it came from. Required rather than optional: a provider that
+        cannot say who it is produces conversions nothing can later audit, and
+        a default here would put that anonymity one attribute away.
+        """
+        ...
 
     def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
         """Get the exchange rate to EUR for a given currency and date.
@@ -81,7 +93,11 @@ class CurrencyNormalizationService:
             eur_amount=round_to_cents(eur_amount),
             status=CurrencyNormalizationStatus.NORMALIZED,
             rate=rate,
-            rate_source="provider",
+            # The authority that quoted this rate, not the bare fact that some
+            # provider did. "provider" said only "not native", which is already
+            # carried by the status, so the ledger row's rate provenance named
+            # nothing an auditor could go back to.
+            rate_source=self._rate_provider.rate_source_id,
             rate_date=rate_date,
         )
 
@@ -91,7 +107,7 @@ def resolve_fx_conversion_stamp(
     currency: str,
     on_date: date,
     rate_provider: ExchangeRateProvider,
-) -> tuple[Decimal, date] | None:
+) -> FxConversionStamp | None:
     """Return the euro-conversion stamp for a foreign-currency record, or ``None``.
 
     The single authority for the *stamping policy*: which date the rate is taken
@@ -123,12 +139,14 @@ def resolve_fx_conversion_stamp(
             reach for it.
 
     Returns:
-        The ``(rate, rate_date)`` pair to stamp, or ``None`` when the record
-        must be left unstamped — euro, or no resolvable rate.
+        The :class:`FxConversionStamp` to apply, or ``None`` when the record
+        must be left unstamped — euro, or no resolvable rate. The stamp names
+        the provider's rate authority, so the record says not only what rate was
+        applied and when, but on whose published series.
     """
     if currency.strip().upper() == DEFAULT_CURRENCY:
         return None
     rate = rate_provider.get_eur_rate(currency, on_date)
     if rate is None:
         return None
-    return (rate, on_date)
+    return FxConversionStamp(rate=rate, rate_date=on_date, source=rate_provider.rate_source_id)

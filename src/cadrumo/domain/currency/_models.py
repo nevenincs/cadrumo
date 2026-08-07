@@ -63,3 +63,20 @@ class NormalizedAmount(BaseModel):
     rate: Decimal | None = None
     rate_source: str | None = None
     rate_date: date | None = None
+
+
+class FxConversionStamp(BaseModel):
+    """The euro-conversion stamp a foreign-currency record carries.
+
+    Three fields rather than the ``(rate, date)`` pair this replaced, because a
+    stored euro figure that cannot say WHO quoted the rate is a number with no
+    authority behind it. The rate and the date say what was applied; *source*
+    says which rate authority stated it, which is what makes the conversion
+    auditable years later against the same published series.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    rate: Decimal = Field(gt=Decimal("0"))
+    rate_date: date
+    source: str = Field(min_length=1)

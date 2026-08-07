@@ -34,7 +34,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -428,37 +428,68 @@ def _read_delimited_source(path: Path, *, mapper: ColumnRoleMapper | None) -> Bu
     )
 
 
+def _refuse_formula_cells(cells: Iterable[object], *, path: Path, row_number: int) -> None:
+    """Refuse the book when any cell of *cells* states a formula instead of a value."""
+    for column_number, cell in enumerate(cells, start=1):
+        if getattr(cell, "data_type", None) != "f":
+            continue
+        raise InvoiceValidationError(
+            f"bulk invoice import file contains formula cell at row {row_number}, "
+            f"column {column_number}; formula cached values are not accepted",
+            translated_message="application.invoices.bulk_import.errors.formula_cell",
+            context={"path_name": path.name, "row": str(row_number), "column": str(column_number)},
+        )
+
+
 def _read_workbook_source(path: Path, *, mapper: ColumnRoleMapper | None) -> BulkInvoiceImportSource:
     """Read a workbook invoice book into a resolved source.
 
     A workbook states its own cell types, so there is no dialect to detect: a
     numeric cell arrives numeric and keeps the representation the workbook
     chose. Only the header resolution is shared with the delimited path.
+
+    **A formula cell is refused rather than read.** A cached value is not the
+    formula's value: a sheet saved without recalculation carries whatever number
+    was last computed into it, and reading that would enter a figure nobody
+    typed and the formula does not produce as an invoice's taxable base --
+    reaching Modelo 303/390 as a wrong number rather than as any kind of
+    failure, exactly as :func:`_parse_row_decimal` refuses rather than
+    reinterprets a Spanish ``1.234``. A book whose formulas were never computed
+    at all is the same defect wearing a blank: refusing on the formula names the
+    real cause, where reading its empty cached value would report a missing
+    amount and send the operator looking at their decimal separator.
+
+    The casilla-value spreadsheet reader and the bank-statement workbook
+    provider refuse on this ground already, in these words; this is the third
+    member of that family, not a new posture.
     """
     from openpyxl import load_workbook
 
-    workbook = load_workbook(filename=path, read_only=True, data_only=True)
+    workbook = load_workbook(filename=path, read_only=True, data_only=False)
     try:
         worksheet = workbook.worksheets[0]
-        rows_iter = worksheet.iter_rows(values_only=True)
+        rows_iter = worksheet.iter_rows()
         try:
-            header_row = next(rows_iter)
+            header_cells = next(rows_iter)
         except StopIteration:
             return BulkInvoiceImportSource(rows=(), resolution=resolve_bulk_import_columns((), mapper=None))
-        headers = [_cell_text(cell) for cell in header_row]
+        _refuse_formula_cells(header_cells, path=path, row_number=1)
+        headers = [_cell_text(cell.value) for cell in header_cells]
         resolution = resolve_bulk_import_columns(
             headers, mapper=mapper, required_fields=BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
         )
         _assert_required_fields_present(resolution)
         field_by_index = resolution.field_by_index
         rows: list[BulkImportSourceRow] = []
-        for row_number, row in enumerate(rows_iter, start=2):  # header is row 1
+        for row_number, row_cells in enumerate(rows_iter, start=2):  # header is row 1
+            _refuse_formula_cells(row_cells, path=path, row_number=row_number)
+            row = [cell.value for cell in row_cells]
             if not any(cell is not None and str(cell).strip() for cell in row):
                 continue
             values: dict[str, object] = {}
             for index, field in field_by_index.items():
-                cell = row[index] if index < len(row) else None
-                values[field] = cell.isoformat() if isinstance(cell, date) else cell
+                cell_value = row[index] if index < len(row) else None
+                values[field] = cell_value.isoformat() if isinstance(cell_value, date) else cell_value
             rows.append(BulkImportSourceRow(row_number=row_number, values=values))
         return BulkInvoiceImportSource(rows=tuple(rows), resolution=resolution)
     finally:

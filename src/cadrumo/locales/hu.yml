@@ -748,9 +748,11 @@ application:
         file_read_failed: A számlák tömeges importálási fájlja nem olvasható.
         missing_columns: 'A számlák tömeges importálási fájljából hiányoznak kötelező
           oszlopok: {missing_columns}'
+        unreadable_table: 'A számlák tömeges importálási fájlja nem tartalmaz olvasható
+          táblázatot: {detail}'
         unsupported_extension: 'A számlák tömeges importálási fájljának .csv vagy
           .xlsx kiterjesztésűnek kell lennie (kapott: {extension}).'
-        unreadable_table: 'A számlák tömeges importálási fájlja nem tartalmaz olvasható táblázatot: {detail}'
+        formula_cell: 'A számlák tömeges importálási fájlja képletet tartalmazó cellát tartalmaz a(z) {row}. sor {column}. oszlopában; a képletek gyorsítótárazott értékei nem elfogadhatók.'
     creation:
       errors:
         duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
@@ -6562,6 +6564,8 @@ errors:
       Aktiválja újra az aeat config login NÉV paranccsal.
     refused_storage_unsecured_mode: A nem biztonságos tároló háttérrendszert az szükséges
       engedélyezés nélkül kérték. Valós adatokhoz nem biztonságos.
+    refused_tabular_source_unreadable: A táblázatos fájlt nem sikerült dekódolni,
+      vagy nem tartalmaz fejlécsorral rendelkező táblázatot.
     refused_taxation_comparison: A közös-vs-egyéni adózás összehasonlítása nem végezhető
       el ennél a modelónál vagy pillanatképnél.
     refused_topic_not_found: A kért téma nem található.
@@ -6594,7 +6598,6 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
-    refused_tabular_source_unreadable: 'A táblázatos fájlt nem sikerült dekódolni, vagy nem tartalmaz fejlécsorral rendelkező táblázatot.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
@@ -65074,9 +65077,15 @@ modelo:
           iva-cuota-repercutida-reducido:
             help: null
             label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
+          iva-cuota-repercutida-reducido-transitorio:
+            help: modelo.schema.303.casilla.continuidad.iva-cuota-repercutida-reducido-transitorio.help
+            label: modelo.schema.303.casilla.continuidad.iva-cuota-repercutida-reducido-transitorio.label
           iva-cuota-repercutida-super-reducido:
             help: null
             label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
+          iva-cuota-repercutida-super-reducido-transitorio:
+            help: modelo.schema.303.casilla.continuidad.iva-cuota-repercutida-super-reducido-transitorio.help
+            label: modelo.schema.303.casilla.continuidad.iva-cuota-repercutida-super-reducido-transitorio.label
           iva-cuota-soportada-importaciones:
             help: null
             label: Levonható előzetesen felszámított ÁFA folyó áruk importján
@@ -65992,10 +66001,16 @@ modelo:
               help: A 10%-os csökkentett kulccsal kiszámított teljes felszámított
                 ÁFA.
               label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
+            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
+              help: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds.help
+              label: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds.label
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: A 4%-os szupercsökkentett kulccsal kiszámított teljes felszámított
                 ÁFA.
               label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
+            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
+              help: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng.help
+              label: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng.label
             x-d5r62bjiclpnar3kc5i6u:
               help: Az önbevallás eredménye a Modelo 303 korrekciós képlete után.
               label: Önbevallás eredménye
