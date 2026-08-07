@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:85fd1b6e67a876e04583406aeb12d0cd1f98161fbca3a6a6e99b4efc1d948175'
+body_hash: 'sha256:ecfd4cc7068bd501198485c7393c2e1dd99962c368889473cdda3b4a4cb42d8e'
 step_id: 'S56'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
@@ -14,49 +14,43 @@ related:
 
 ## Outcome
 
-**Not crossed, because the crossing is currently inexpressible** — established by measurement rather than by judgement. The prerequisite is a revision-shape decision that this Step does not own.
+**Unblocked, and by correcting this record rather than by anything changing.** The blocker the earlier pass recorded was wrong, and the evidence refuting it was already in `W06.P08.S49`'s own measurement — I had it in hand and read it backwards. The crossing needs no revision split and no schema change. What remains is bounded work that belongs to the M390 under-modelling campaign `S47` scoped.
 
-## The four regimenes are real and identifiable
+## The blocker, and why it was wrong
 
-Read from the loaded M390 snapshot, the regimen axis the Step refers to is visible in the casilla set:
+The earlier pass concluded that adding per-rate casillas for the temporary 2 %, 5 % and 7,5 % rates would "model, for the current filing year, boxes AEAT has switched off", because `CasillaDefinition` carries no validity dates and M390 has one revision open from 2010.
 
-- **régimen general** — `iva.anual.repercutido.{general,reducido,super-reducido}`
-- **recargo de equivalencia** — `iva.anual.repercutido.recargo.{general,reducido,super-reducido}`
-- **régimen simplificado** — `iva.anual.reconciliacion.devengada-simplificado-303`
-- **inversión del sujeto pasivo** — `iva.anual.autorepercutido.intracomunitaria`
+AEAT did not switch off the boxes. `S49` measured exactly what it did:
 
-So the Step's framing is sound: these are axes to cross the rate against, not category members to fan out. The cash-accounting precedent it cites is the right shape.
+| casilla | 2024 diseño | 2025 diseño |
+|---|---|---|
+| `[667]` Tipo 2 % — Base | `15 enteros 2 decimales` | `Nota 2` |
+| `[668]` Tipo 2 % — Cuota | `15 enteros 2 decimales` | `Nota 2` |
+| `[669]` Tipo 7,5 % — Base | `15 enteros 2 decimales` | `Nota 2` |
+| `[670]` Tipo 7,5 % — Cuota | `15 enteros 2 decimales` | `Nota 2` |
 
-## Why the crossing cannot land yet
+with `Nota 2` reading *estas casillas deben estar rellenas a 0*.
 
-Two measured facts, and together they block it:
+The boxes are on the 2025 form. AEAT kept the numbers and mandated a zero into them. So a casilla present in every filing year **is** the correct model of the form, and the zero mandate is satisfied rather than violated: no 2025 transaction can carry a 2 % applied rate, because the rate table's effective dates make that impossible, so the binding resolves zero on its own.
 
-- `CasillaDefinition` carries **no** validity dates. Its fields are id, number, section, data_type, semantic_role, binding, formula, legal_refs, source_refs and so on — `valid_from` / `valid_to` exist only on `ModeloRevision` (`_schema.py:1085-1086`).
-- Modelo 390 has **one** revision. `2010-y-siguientes`, `valid_from=2010-01-01`, `valid_to=None`.
+The date-shape that seemed missing is already there, one layer down. `S53`, `S54` and `S55` landed it — `applied_rate` on the observation and `applied_rates` on the selector, effective-dated at the VALUE axis. `S49`'s closing line says it outright: *values are dated, tiers are not*. A casilla that exists always and resolves zero when no dated value reaches it is that design working, not a gap in it.
 
-So any per-rate casilla added for the temporary 2%, 5% and 7.5% rates would be present for **every filing year from 2010 onward**. That is wrong in both directions: those rates did not exist for 2010 through 2022, and `W06.P08.S49` measured that the 2025 diseño **zero-mandates** exactly those boxes — casillas `[667]`-`[670]` carry `Nota 2: estas casillas deben estar rellenas a 0`.
+## The revision-shape question was also mis-framed
 
-Adding them now would model, for the current filing year, boxes AEAT has switched off.
+The earlier pass offered two shapes and called them both defensible: split M390 by year "as AEAT versions its diseño", or effective-date casillas. Measuring the registry instead of reasoning about it gives a different picture.
 
-## Why this is a decision rather than an implementation detail
+Sixty-four of seventy-three modelos carry ONE open-ended `-y-siguientes` revision. Nine carry more, and only two of those nine split every year — M100 and M131, whose scales and módulos change annually. The rest split where the LAW changed: M303 at `2009` → `2023`, M180 at `2019-2022` → `2023`, M202 across three windows, M123 at `2019-2023` → `2024`. M369 does not split temporally at all; it splits by esquema.
 
-Two shapes resolve it and they are not equivalent:
+So a revision boundary marks a legal change, not a calendar year, and M390's single revision is the convention rather than the anomaly. Splitting it by year would have been the deviation. Effective-dating `CasillaDefinition` would have been worse — a second time axis for a fact the revision window and the rate values already carry between them, which is a duplicate authority by construction.
 
-- **Split the M390 revision by year**, which is how AEAT itself versions the diseño — the corpus bundles separate 2016, 2017, 2018, 2019-2020, 2021, 2024 and 2025 workbooks. This matches the authority but multiplies the revision surface for a modelo currently carrying 22 casillas against 375 official boxes.
-- **Effective-date casillas** within a revision, which is a schema change to `CasillaDefinition` affecting every modelo, not just this one.
+Neither shape was needed. That is the part worth keeping: two options both argued as defensible, and the right answer was that the question did not arise.
 
-Either is defensible; picking one in passing while authoring rate bindings is exactly the "implementation choice made in passing" that `W01.P01` had to revert once already in this campaign.
+## What actually remains
 
-## Where this connects
+Adding casillas `[667]`–`[670]` with their rate-selecting bindings, grounded in the 2024 diseño. That is real work and it is not this Step's, for the reason `S47` recorded when it scoped the annual under-modelling: M390 is modelled at 22 casillas against 375 official boxes, and any new annual casilla bound to ledger IVA joins the reconciliation parity gate and must match its quarterly counterpart's category set. Adding four boxes without their M303 counterparts reds that gate.
 
-This is the third finding in one chain, and they only make sense together:
-
-- `S49` refuted widening `IvaRateKind`, because the temporary rates are effective-dated **values**, not tiers.
-- `S53` landed those values on the rate table, and hit the same time-shape from the other side: the tier lookup is single-valued per tier per date, so the loader refuses a same-tier window collision.
-- `S56` now finds the annual **form** has no way to say when a box is live.
-
-The rate axis is time-aware at the value layer and time-blind at the casilla layer. That mismatch is the real work, and it is bigger than crossing an axis.
+So it enrolls under the scoped campaign with its dependency stated, rather than being smuggled in here as four casillas that happen to fit.
 
 ## Scope note
 
-`src/cadrumo/_data/registry/aeat/modelos/390/` is deliberately unchanged. The row is re-scoped to name the blocker so the next reader meets the measurement rather than the instruction.
+`src/cadrumo/_data/registry/aeat/modelos/390/` is unchanged, as before — but now because the work is sequenced elsewhere, not because it is inexpressible.

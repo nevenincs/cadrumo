@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:5be029a11ddc43e24cd5927a95ee117c3dc6020185e89c72a70af28e08c0286a'
+body_hash: 'sha256:e87e4fff540b6c1684958766fb23a9da9a1d90a734c6b5433f727ece66d88da7'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -136,5 +136,5 @@ Run the sweep over the surfaces this campaign touches, where three parallel-auth
 - [x] `W06.P08.S53` - Add the effective-dated temporary food rates to the Spanish rate table goods-blind, on the measured ground that neither the M390 nor M303 diseno carries any goods axis so a goods distinction would encode information no AEAT box can receive; `src/cadrumo/_data/registry/aeat/legal/`.
 - [x] `W06.P08.S54` - Carry the applied numeric rate on the IVA ledger observation alongside its resolved tier, since the value is discarded once the tier resolves and nothing downstream can then populate a per-tier-per-window annual box; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
 - [x] `W06.P08.S55` - Give the IVA binding selector a rate-value axis so the annual form can bind one box per rate per window where the quarterly form binds by tier alone; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
-- [ ] `W06.P08.S56` - BLOCKED on a revision-shape decision, measured not assumed - the crossing is currently inexpressible because CasillaDefinition carries no validity dates and M390 has one revision valid_from 2010-01-01 with no valid_to, so a per-rate casilla for the temporary 2, 5 and 7,5 percent rates would be present for every filing year from 2010 onward including 2025 where the diseno zero-mandates exactly those boxes, and the prerequisite is to either split the M390 revision by year as AEAT versions its diseno or effective-date casillas; `src/cadrumo/_data/registry/aeat/modelos/390/`.
+- [x] `W06.P08.S56` - Settle the rate crossing by correcting this row's own blocker, which was wrong - AEAT did not switch the temporary-rate boxes off, it kept casillas 667 to 670 on the 2025 form and mandated a zero into them, so a casilla present every year IS the correct model and the binding resolves zero on its own because no 2025 transaction can carry a 2 percent applied rate. Measuring the registry also refutes the revision-split option, since 64 of 73 modelos carry one open-ended revision and the 9 that split do so where the law changed rather than per year. Neither shape was needed. Adding casillas 667 to 670 with their bindings enrolls under the S47 under-modelling campaign because they join the reconciliation parity gate and need their M303 counterparts; `src/cadrumo/_data/registry/aeat/modelos/390/`.
 - [x] `W06.P08.S57` - Record that used-goods and travel-agency appear only as printed-invoice notice phrases and that group-member rollup is filing topology, so a reader does not mistake either for a modelled settlement regimen; `.vault/audit/`.
