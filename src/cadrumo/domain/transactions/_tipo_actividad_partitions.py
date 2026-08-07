@@ -26,13 +26,34 @@ retains under art. 100, and resto empresariales, mejillón and pesquera reach ar
 only through apartado 6.1.º by estimación objetiva, which is a method axis rather than
 an activity one. The engorde de porcino y avicultura carve-out is the other case: it
 is a real partition that this table cannot select, because its finest livestock grain
-is ``B02 Ganadera``. The registry carries it with an empty code set so the gap is
-visible, and :func:`art_95_partition_for` returns ``None`` for a livestock code rather
-than pretending the general 2 % is settled.
+is ``B02 Ganadera``. The registry carries it with an empty code set so the gap stays
+visible where the mapping is read. A livestock code therefore resolves to
+:attr:`Art95ActivityPartition.AGRICOLA_GANADERA` and its 2 %, which is right for every
+livestock filer except an engordador — a limit of the axis, not of this resolver, and
+one no caller can discover from the return value alone.
+
+This is NOT a second answer to the question ``IrpfActivityKind`` already answers,
+and the difference is worth being explicit about because the two are one step
+apart. ``IrpfActivityKind`` classifies a taxpayer by which RATE arm applies —
+professional against sectorial — and is deliberately two-membered, because art.
+95's seven provisions fix only four distinct figures and six of them sit in
+rate-identical pairs. :class:`Art95ActivityPartition` classifies by which APARTADO
+fixes the rate, which is necessarily finer: agrícola/ganadera and forestal both
+yield 2 % yet are set by art. 95.4.2.º and art. 95.5, and they are separate here
+because the registry parameters are separate, and the registry parameters are
+separate because the provisions are.
+
+The bridge between them — deriving a taxpayer's ``IrpfActivityKind`` from a
+declared M036 code rather than asking the operator for it — is deliberately not
+built here. It needs an input no profile field currently holds, and where that
+field lives and what shape it takes is an open decision on the profile side.
+This module supplies the grounded half of that derivation and stops.
 
 See Also:
     :class:`~core.TipoActividad`
         The closed code set this resolves from.
+    :class:`~domain.deadlines.IrpfActivityKind`
+        The two-member rate-class axis a derivation would have to land on.
     :mod:`~domain.transactions._retencion_parameters`
         Reads the rates these partitions select.
 """
@@ -153,8 +174,7 @@ def load_tipo_actividad_partitions() -> Mapping[Art95ActivityPartition, frozense
         ) from exc
 
     partitions = {
-        partition: _code_set(parameters, parameter_id)
-        for partition, parameter_id in _SELECTOR_PARAM_IDS.items()
+        partition: _code_set(parameters, parameter_id) for partition, parameter_id in _SELECTOR_PARAM_IDS.items()
     }
 
     seen: dict[TipoActividad, Art95ActivityPartition] = {}

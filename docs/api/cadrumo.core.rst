@@ -85,6 +85,7 @@ Submodules
    cadrumo.core._storage_taxonomy
    cadrumo.core._storage_taxonomy_locations
    cadrumo.core._tax_domain
+   cadrumo.core._tipos_actividad
    cadrumo.core._toml
    cadrumo.core.aggregation
    cadrumo.core.async_cleanup
@@ -113,4 +114,5 @@ Submodules
    cadrumo.core.setup_answers
    cadrumo.core.storage_route_guidance
    cadrumo.core.text_fold
+   cadrumo.core.tty
    cadrumo.core.wizard_catalogue

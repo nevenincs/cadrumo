@@ -22,7 +22,7 @@ from pydantic import (
 )
 from pydantic_core import core_schema
 
-from ...core import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, TipoActividad, Art104TresExclusion, fold_diacritics
+from ...core import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion, TipoActividad, fold_diacritics
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY

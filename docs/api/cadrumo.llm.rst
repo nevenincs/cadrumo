@@ -23,7 +23,9 @@ Submodules
 
    cadrumo.llm._client
    cadrumo.llm._errors
+   cadrumo.llm._evidence_draft_text
    cadrumo.llm._evidence_draft_vision
+   cadrumo.llm._invoice_field_grounding
    cadrumo.llm._models
    cadrumo.llm._pricing
    cadrumo.llm._retention

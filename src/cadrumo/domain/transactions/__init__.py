@@ -173,6 +173,11 @@ from ._service import (
     set_classification,
     snapshot_classification_state,
 )
+from ._tipo_actividad_partitions import (
+    Art95ActivityPartition,
+    art_95_partition_for,
+    load_tipo_actividad_partitions,
+)
 
 if TYPE_CHECKING:
     from ._repository import (
@@ -216,6 +221,7 @@ __all__ = [
     "PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING",
     "RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING",
     "RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING",
+    "Art95ActivityPartition",
     "BucketTransactionRef",
     "BusinessClassification",
     "CategoryChoice",
@@ -265,6 +271,7 @@ __all__ = [
     "TransactionNotFoundError",
     "TransactionPersistenceError",
     "TransactionValidationError",
+    "art_95_partition_for",
     "build_split_prompt",
     "catalogue",
     "default_classification_choices",
@@ -282,6 +289,7 @@ __all__ = [
     "ledger_irpf_category_catalogue",
     "link_invoice",
     "load_retencion_actividades_rates",
+    "load_tipo_actividad_partitions",
     "maximum_supported_activity_retencion_rate",
     "normalise_movement_reference",
     "normalize_irpf_category",

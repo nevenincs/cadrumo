@@ -56,8 +56,11 @@ _M347_PUBLIC_FACADE_CONSUMERS = (
     ("src/cadrumo/application/aggregation/_counterpart.py", 3),
     ("src/cadrumo/application/modelo/_calculate_input.py", 3),
     ("src/cadrumo/domain/modelos/_row_models.py", 3),
-    ("src/cadrumo/domain/calculations/registry/_counterpart_bindings.py", 4),
-    ("src/cadrumo/domain/calculations/registry/_invoice_bindings.py", 4),
+    # The two binding families used to read the constant directly and compare it
+    # themselves, byte-identically. 5c6873b64c collapsed that onto the leaf
+    # _m347_threshold module, so the constant now has ONE registry consumer and
+    # naming the old two here would demand the duplication back.
+    ("src/cadrumo/domain/calculations/registry/_m347_threshold.py", 4),
 )
 
 
@@ -398,16 +401,10 @@ def test_threshold_consumers_alias_core_constants() -> None:
             "_row_models must import M347_THRESHOLD_EUR from cadrumo.core",
         ),
         (
-            "cadrumo.domain.calculations.registry._counterpart_bindings",
+            "cadrumo.domain.calculations.registry._m347_threshold",
             "M347_THRESHOLD_EUR",
             "M347_THRESHOLD_EUR",
-            "_counterpart_bindings must import M347_THRESHOLD_EUR from cadrumo.core",
-        ),
-        (
-            "cadrumo.domain.calculations.registry._invoice_bindings",
-            "M347_THRESHOLD_EUR",
-            "M347_THRESHOLD_EUR",
-            "_invoice_bindings must import M347_THRESHOLD_EUR from cadrumo.core",
+            "_m347_threshold must import M347_THRESHOLD_EUR from cadrumo.core",
         ),
         (
             "cadrumo.domain.renta._maritime_exemption",
