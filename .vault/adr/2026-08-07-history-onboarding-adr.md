@@ -5,13 +5,14 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:08ed6af01f6a3df48eb3f717fb85ae15d7929f3678bb7a5b9bf76c1a3be4d815'
+body_hash: 'sha256:ab571335cb2f857fc4cf6fd7d611cc429b97fb04ec11e70d416823b74bebcc31'
 related:
   - "[[2026-08-07-history-onboarding-reference]]"
   - "[[2026-08-07-declarations-register-pagination-adr]]"
   - "[[2026-08-07-dehu-notification-legal-effect-reference]]"
   - "[[2026-05-04-live-filing-data-capture-adr]]"
   - "[[2026-07-12-justificante-reframing-audit]]"
+  - '[[2026-08-07-history-onboarding-plan]]'
 ---
 
 # `history-onboarding` adr: `New-profile AEAT history discovery and onboarding` | (**status:** `accepted`)
@@ -136,38 +137,53 @@ primitive every other capture caller also uses unchanged.
 
 ## Implementation
 
-The following rows are opened as the concrete follow-on work this ADR authorises. They are not
-yet a vault Plan — plan authoring is the next pipeline phase and requires this ADR's acceptance
-first — but each is a discrete, scoped unit ready to plan directly from this list:
+The following rows are opened as the concrete, executable follow-on work this ADR authorises,
+carried into the roll-up plan `[[2026-08-07-history-onboarding-plan]]`. Every row below is
+buildable without live AEAT access: verification uses the repository's existing synthetic-HTML
+fixture pattern (the same shape as `declaraciones-modelo-100-paginated-synthetic.html`, provenance
+`synthetic_generated`), never a live authenticated session. No row in this list requires operator
+sign-off; a live-account confidence check of the discovery combobox behaviour is a SEPARATE,
+not-yet-authorised follow-up, tracked as an open item in Consequences, not as an Implementation row.
 
-1. **`discover_filed_declaration_availability`** (new, `adapters/outbound/aeat/sede/_declarations.py`
-   or a sibling module): opens the authenticated register page once, reads the modelo combobox's
-   full `.z-comboitem-text` option set, and for each modelo option reads the ejercicio combobox's
-   full option set, returning a typed `{modelo: tuple[ejercicio, ...]}` availability map. Read-only,
-   no persistence, not a `PROFILE_BOUND_WRITE_VERB_PATHS` entry.
+1. **`discover_filed_declaration_availability`** (new, `adapters/outbound/aeat/sede/_declarations.py`):
+   opens the authenticated register page once, reads the modelo combobox's full `.z-comboitem-text`
+   option set, and for each modelo option reads the ejercicio combobox's full option set for that
+   modelo. Returns a new typed `FiledDeclarationAvailability` model
+   (`modelo: str`, `ejercicios: tuple[int, ...]`) collected into a
+   `FiledDeclarationAvailabilityReport` (`items: tuple[FiledDeclarationAvailability, ...]`,
+   `discovered_at: UtcInstant`). Read-only, no persistence, not a `PROFILE_BOUND_WRITE_VERB_PATHS`
+   entry.
 2. **`aeat app live filed discover`** (new CLI verb, `filed` group): thin wrapper over (1),
-   emits the availability map as the envelope result plus the live-scope caveat above as a
-   `Notice`.
-3. **`aeat app live filed pull-all`** (new CLI verb, `filed` group): sequences (1) →
-   `capture_filed_data_bulk` over the discovered grid → `capture_iva_compensation_wallet` /
-   `reconcile_iva_compensation_wallet` → the existing notificaciones pull → one
+   emits the availability report as the envelope result plus the live-scope caveat (Constraints,
+   below) as a `Notice`.
+3. **`aeat app live filed pull-all`** (new CLI verb, `filed` group): sequences (1) ->
+   `capture_filed_data_bulk` over the discovered grid -> `capture_iva_compensation_wallet` /
+   `reconcile_iva_compensation_wallet` -> the existing notificaciones pull -> one
    `FiledHistoryOnboardingResult` envelope carrying per-pair outcomes, the re-capture divergence
    diff as `WARNING` `Notice`s, and the sibling pagination ADR's per-pair completeness signal once
    that decision lands (interim: raw `row_count`, no completeness assertion). Enrolled in
    `PROFILE_BOUND_WRITE_VERB_PATHS` as `app live filed pull-all`.
 4. **Re-capture divergence diff** (new, orchestration layer only, invoked from (3)): compares each
    freshly captured `FiledDeclaracionObservation`'s casilla values against the prior stamped
-   observation for the same key; on any changed value, emits a `WARNING` `Notice` naming the
+   observation for the same key, and on any changed value emits a `WARNING` `Notice` naming the
    modelo, period and changed casilla ids, never a silent overwrite.
 5. **Overview no-history `Notice`**: when a workable (non-`SETUP_INCOMPLETE`) profile has zero
    observations carrying an official `ObservationSourceKind`, the overview surfaces an `INFO`
    `Notice` naming `aeat app live filed pull-all` as the next action.
-6. **Sweep**: `PROFILE_BOUND_WRITE_VERB_PATHS`, error-registry suggestions, `next_action`
-   builders, `operator_surface/_help.py`, envelope `command=` identifiers, agent-harness docs,
-   and all four locale catalogues, for every string and identifier the new verbs introduce.
+6. **Hand-swept surface pass**: `PROFILE_BOUND_WRITE_VERB_PATHS`, error-registry
+   `default_suggestion` fields, the cross-period `next_action` builder
+   (`application/modelo/_verification_cross_period.py`), `operator_surface/_help.py`, envelope
+   `command=` identifiers, and the agent-harness docs under `src/cadrumo/_data/agent/`, for every
+   identifier the new verbs introduce.
+7. **Locale rows**: real `es`/`en`/`ca`/`hu` values for every new help string, `Notice` message key
+   and result-field label the new verbs introduce, landed through `dev.locales set` then
+   `scaffold`/`scaffold --check`.
 
 No new `ObservationSourceKind`, no new capture schema, no new IVA reconciliation mechanism, no
-generic importer.
+generic importer. Row 7 (and, transitively, rows 2 and 3 which cannot ship without their locale
+keys) carries a dependency on the shared locale catalogues being free of unrelated in-flight
+writes before landing; that dependency is a sequencing constraint on WHEN a row merges, not a
+reason to defer authoring it.
 
 ## Rationale
 
