@@ -1,6 +1,6 @@
 """Deterministic projection of normalized tabular rows under a column-role mapping.
 
-Consumes a :class:`~._tabular_dialect.NormalizedTable` plus a
+Consumes a :class:`~core.tabular.NormalizedTable` plus a
 :class:`ColumnRoleMapping` — one :class:`~core.FieldRole` per column, decided
 once for the whole file — and copies every cell into its role. The copy is the
 whole of the operation: :func:`project_table` performs no stripping, no
@@ -22,7 +22,7 @@ yields every column it does.
 See Also:
     :class:`~core.FieldRole`
         The closed vocabulary a column's meaning is mapped onto.
-    :mod:`._tabular_dialect`
+    :mod:`core.tabular`
         Produces the normalized table this module projects.
 """
 
@@ -32,7 +32,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import FieldRole
-from ._tabular_dialect import NormalizedTable
+from .....core.tabular import NormalizedTable
 
 #: Roles that address at most one column of a table. A source carrying two
 #: columns for the same one of these is ambiguous about which holds the value,
@@ -158,7 +158,7 @@ def project_table(table: NormalizedTable, mapping: ColumnRoleMapping) -> Project
     """Copy every mapped cell of ``table`` into its role under ``mapping``.
 
     Values are copied, never interpreted: each :attr:`ProjectedCell.value` is
-    byte-equal to the :class:`~._tabular_dialect.NormalizedRow` cell it came
+    byte-equal to the :class:`~core.tabular.NormalizedRow` cell it came
     from. A row shorter than the header (a ragged export) yields only the cells
     it actually carries rather than being padded or refused.
 

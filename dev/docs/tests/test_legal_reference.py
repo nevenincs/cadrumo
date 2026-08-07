@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from io import StringIO
 from pathlib import Path
 
@@ -27,7 +28,7 @@ def _system_messages(rst: str) -> tuple[str, ...]:
 
 
 def test_required_text_trailing_whitespace_is_removed_only_from_rst_projection() -> None:
-    """Inline literals stay valid without mutating authored required text."""
+    """The rendered wording extract is trimmed without mutating the authored tuple."""
     record = LegalProvisionRecord(
         legal_id="ley-37-1992:art-99",
         kind="ley",
@@ -40,7 +41,66 @@ def test_required_text_trailing_whitespace_is_removed_only_from_rst_projection()
     page = render_legal_reference(_REPO_ROOT, records=(record,)).pages[0]
 
     assert record.required_text == ("first authoritative phrase ", "second authoritative phrase")
-    assert ":Required text: ``first authoritative phrase``; ``second authoritative phrase``" in page.rst
+    rendered = [line.strip() for line in page.rst.splitlines()]
+    assert "first authoritative phrase" in rendered
+    assert "second authoritative phrase" in rendered
+    assert "first authoritative phrase " not in page.rst
+    assert _system_messages(page.rst) == ()
+
+
+def test_provision_heading_leads_with_the_citation_not_the_catalogue_id() -> None:
+    """A provision heading reads as a citation; the id is demoted, not dropped.
+
+    The reader arrives on a fragment anchor with no page context above it, so
+    the heading has to say which instrument and which article this is. The raw
+    catalogue id is still rendered on the page, in the provenance block, so the
+    grounding stays traceable.
+    """
+    record = LegalProvisionRecord(
+        legal_id="ley-37-1992:art-92",
+        kind="ley",
+        document_id="BOE-A-1992-28740",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a92",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a92",
+        article="92",
+    )
+
+    page = render_legal_reference(_REPO_ROOT, records=(record,)).pages[0]
+    lines = page.rst.splitlines()
+    headings = [line for index, line in enumerate(lines) if index + 1 < len(lines) and set(lines[index + 1]) == {"-"}]
+
+    assert headings == ["Ley 37/1992, Article 92"]
+    assert page.instrument == "Ley 37/1992"
+    assert "``ley-37-1992:art-92``" in page.rst
+
+
+def test_same_article_versions_get_distinct_headings_by_in_force_date() -> None:
+    """Consolidated versions of one article are told apart by their in-force date.
+
+    Several rows legitimately share an article number, one per filing-year
+    version. A shared heading would leave a reader unable to tell which version
+    governs their year, so the authored ``effective_from`` disambiguates.
+    """
+    common = {
+        "kind": "ley",
+        "document_id": "BOE-A-2006-20764",
+        "corpus_ref": "corpus/normatives/html/ley-35-2006.html#a52",
+        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a52",
+        "article": "52",
+    }
+    records = (
+        LegalProvisionRecord(legal_id="ley-35-2006:art-52", effective_from=date(2015, 1, 1), **common),
+        LegalProvisionRecord(legal_id="ley-35-2006:art-52-2021", effective_from=date(2021, 1, 1), **common),
+    )
+
+    page = render_legal_reference(_REPO_ROOT, records=records).pages[0]
+    lines = page.rst.splitlines()
+    headings = [line for index, line in enumerate(lines) if index + 1 < len(lines) and set(lines[index + 1]) == {"-"}]
+
+    assert len(headings) == len(set(headings)) == 2
+    assert all(heading.startswith("Ley 35/2006, Article 52") for heading in headings)
+    assert {"2015-01-01" in heading for heading in headings} == {True, False}
+    assert {"2021-01-01" in heading for heading in headings} == {True, False}
     assert _system_messages(page.rst) == ()
 
 

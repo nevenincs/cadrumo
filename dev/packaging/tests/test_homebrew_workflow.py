@@ -52,7 +52,7 @@ def test_homebrew_workflow_consumes_one_successful_commit_bound_cohort() -> None
     source_gate = next(step for step in steps if step["name"] == "Verify source workflow identity")
     checkout = next(step for step in steps if step["name"] == "Checkout tested source commit")
     download = next(
-        step for step in steps if step["name"] == "Download and verify the tested cohorts from the smoke evidence draft"
+        step for step in steps if step["name"] == "Download the tested cohorts from the verified source run"
     )
     commands = "\n".join(str(step.get("run", "")) for step in steps)
 
@@ -68,19 +68,17 @@ def test_homebrew_workflow_consumes_one_successful_commit_bound_cohort() -> None
     assert 'test "$event" = "push"' in source_gate["run"]
     assert checkout["with"]["ref"] == "${{ inputs.source_commit }}"
     assert checkout["with"]["persist-credentials"] is False
-    # The cohorts come hash-verified from the smoke run's evidence draft, with
-    # the tag DERIVED from the run-id input; every leg consumes the LINUX-built
-    # python cohort (wheels are py3-none-any; parity with the pre-transport
-    # unsuffixed artifact) plus the sealed full release cohort.
-    assert "dev.packaging.evidence_release verify" in download["run"]
-    assert '--tag "evidence-smoke-${SOURCE_RUN_ID}"' in download["run"]
-    assert '--expect-workflow ".github/workflows/packaging-smoke.yml"' in download["run"]
-    assert '--pattern "cadrumo-python-cohort-linux.tar.gz"' in download["run"]
-    assert '--pattern "cadrumo-release-cohort.tar.gz"' in download["run"]
+    # The cohorts come from the source run's own artifacts, which bind them to
+    # that run by construction; the source-identity gate above is the whole
+    # provenance check. Every leg consumes the LINUX-built python cohort
+    # (wheels are py3-none-any) plus the sealed full release cohort.
+    assert "gh run download" in download["run"]
+    assert "--name cadrumo-python-cohort-linux" in download["run"]
+    assert "--name cadrumo-release-cohort" in download["run"]
     # Least privilege: workflow-level stays read; only the uploader jobs hold
     # contents:write for the draft-release transport.
     assert document["permissions"] == {"actions": "read", "contents": "read"}
-    assert job["permissions"] == {"actions": "read", "contents": "write"}
+    assert job["permissions"] == {"actions": "read", "contents": "read"}
     assert "uv build" not in commands
 
 
@@ -108,48 +106,34 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     assert "--release-cohort-dir " in emit["run"]
 
     # All three legs publish their rows (distinct {row_id}-{evidence_id}.json
-    # basenames) and per-leg bundles to the ONE run draft created by the
-    # dedicated create-evidence-draft job (single-creator topology: concurrent
-    # matrix creates would mint duplicate drafts); the terminal seal job mints
-    # the manifest only on full matrix success.
-    publish = next(
-        step for step in steps if step.get("name") == "Publish Homebrew evidence to the run's evidence draft"
-    )
-    assert publish["env"]["EVIDENCE_TAG"] == "evidence-homebrew-${{ github.run_id }}"
-    assert "gh release create" not in publish["run"]  # upload-only leg
+    # basenames) and per-leg bundles as their OWN artifacts. Draft tags raced
+    # on creation and needed a dedicated single-creator job; artifacts do not
+    # race but DO clobber on name, so the per-leg matrix suffix is what keeps
+    # the three concurrent legs independent — and the matrix needs no gating
+    # job at all.
+    publish = next(step for step in steps if step.get("name") == "Stage the Homebrew evidence bundle")
+    assert "gh release" not in publish["run"]
     assert "cadrumo-homebrew-acquisition-${MATRIX_ID}.tar.gz" in publish["run"]
 
-    creator = document["jobs"]["create-evidence-draft"]
-    creator_surface = "\n".join(str(step.get("run", "")) for step in creator["steps"])
-    assert "gh release create" in creator_surface
-    assert "--draft" in creator_surface
-    assert "gh release view" in creator_surface  # create-if-absent probe
-    assert job["needs"] == "create-evidence-draft"
+    artifact_names = [
+        str((step.get("with") or {}).get("name")) for step in steps if "upload-artifact" in str(step.get("uses", ""))
+    ]
+    assert artifact_names, "the matrix leg uploads no artifact"
+    assert all("${{ matrix.id }}" in name for name in artifact_names), artifact_names
+    assert "needs" not in job
 
-    # Failure diagnostics survive the ephemeral hosted runner via debug-*
-    # assets on the same draft: upload-only (the draft is guaranteed by
-    # needs: create-evidence-draft — a create here would race the legs into
-    # duplicate drafts), and never a .json row-namespace name.
-    diagnostics = next(
-        step for step in steps if step.get("name") == "Upload build-failure diagnostics to the run's evidence draft"
-    )
+    # Failure diagnostics survive the ephemeral runner as debug-* artifacts,
+    # never under a .json row-namespace name.
+    diagnostics = next(step for step in steps if step.get("name") == "Stage build-failure diagnostics")
     assert diagnostics["if"] == "failure() && steps.initialize.outputs.ready == 'true'"
-    assert diagnostics["env"]["EVIDENCE_TAG"] == "evidence-homebrew-${{ github.run_id }}"
     assert "brew-install.log" in diagnostics["run"]
     assert "debug-brew-install-${MATRIX_ID}-${GITHUB_RUN_ID}.log" in diagnostics["run"]
     assert "debug-homebrew-diagnostics-${MATRIX_ID}-${GITHUB_RUN_ID}.tar.gz" in diagnostics["run"]
-    assert "gh release upload" in diagnostics["run"]
-    assert "gh release create" not in diagnostics["run"]
+    assert "gh release" not in diagnostics["run"]
     assert steps.index(diagnostics) < steps.index(
         next(step for step in steps if step.get("name") == "Clean up the retained Homebrew install"),
     )
 
-    seal = document["jobs"]["seal-evidence-manifest"]
-    assert seal["needs"] == "cadrumo-homebrew-acquisition"
-    assert "if" not in seal  # manifest only on full success
-    seal_surface = "\n".join(str(step.get("run", "")) for step in seal["steps"] if "run" in step)
-    assert "dev.packaging.evidence_release emit-manifest" in seal_surface
-    assert 'gh release upload "$EVIDENCE_TAG" evidence-manifest.json --clobber' in seal_surface
 
 
 def test_homebrew_workflow_runs_the_real_source_install_and_oracles() -> None:
@@ -159,7 +143,7 @@ def test_homebrew_workflow_runs_the_real_source_install_and_oracles() -> None:
     initialize = next(step for step in steps if step["name"] == "Initialize current-run evidence root")
     generate = next(step for step in steps if step["name"] == "Verify and generate the cohort-bound tap snapshot")
     smoke = next(step for step in steps if step["name"] == "Audit install and exercise Cadrumo through Homebrew")
-    publish = next(step for step in steps if step["name"] == "Publish Homebrew evidence to the run's evidence draft")
+    publish = next(step for step in steps if step["name"] == "Stage the Homebrew evidence bundle")
 
     assert initialize["id"] == "initialize"
     assert "GITHUB_RUN_ATTEMPT" in initialize["run"]
@@ -169,4 +153,3 @@ def test_homebrew_workflow_runs_the_real_source_install_and_oracles() -> None:
     assert "dev/packaging/smoke_homebrew.py" in smoke["run"]
     assert '--tap-name "cadrumo-smoke/${MATRIX_ID}"' in smoke["run"]
     assert publish["if"] == "always() && steps.initialize.outputs.ready == 'true'"
-    assert "gh release upload" in publish["run"]

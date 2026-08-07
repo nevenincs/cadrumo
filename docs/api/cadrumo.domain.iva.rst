@@ -27,6 +27,7 @@ Submodules
    cadrumo.domain.iva._rates
    cadrumo.domain.iva._recargo_equivalencia
    cadrumo.domain.iva._refund_eligibility
+   cadrumo.domain.iva._regime_legend
    cadrumo.domain.iva._saturation
    cadrumo.domain.iva._schema
    cadrumo.domain.iva._sepa_marca

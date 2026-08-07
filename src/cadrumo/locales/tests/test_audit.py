@@ -41,6 +41,7 @@ _PROSE_KEYS = {
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
         "mcp.elicitation.refusal.no_channel",
+        "provisioning.model.licence.non_commercial_advisory",
     },
     "en": {
         "errors.auth.auth_former_product_session_state",
@@ -56,6 +57,7 @@ _PROSE_KEYS = {
         "cli.config.passphrase.new_passphrase_prompt",
         "cli.config.google.profile_help",
         "mcp.elicitation.refusal.no_channel",
+        "provisioning.model.licence.non_commercial_advisory",
     },
     "es": {
         "errors.auth.auth_former_product_session_state",
@@ -69,6 +71,7 @@ _PROSE_KEYS = {
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
         "mcp.elicitation.refusal.no_channel",
+        "provisioning.model.licence.non_commercial_advisory",
     },
     "hu": {
         "errors.auth.auth_former_product_session_state",
@@ -82,6 +85,7 @@ _PROSE_KEYS = {
         "cli.ledger.add.system_state_not_assignable",
         "cli.ledger.classify.system_state_not_assignable",
         "mcp.elicitation.refusal.no_channel",
+        "provisioning.model.licence.non_commercial_advisory",
     },
 }
 _CLI_KEYS = {

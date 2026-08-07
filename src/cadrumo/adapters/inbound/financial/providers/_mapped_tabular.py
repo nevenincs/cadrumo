@@ -9,7 +9,7 @@ read of a known structure, while this lane's read depends on a column-role
 mapping decided per file. Letting the fallback shadow an exact provider would
 silently turn the deterministic parse into an inferred one.
 
-The lane itself is deterministic end to end. :mod:`._tabular_dialect` resolves
+The lane itself is deterministic end to end. :mod:`core.tabular` resolves
 the file's shape, a mapping supplies one :class:`~core.FieldRole` per column,
 and :mod:`._tabular_projection` copies each cell into its role byte-for-byte.
 Only the mapping is a judgement, and it is made once per file over a closed
@@ -37,6 +37,7 @@ from .....core import FieldRole
 from .....core.errors import CadrumoError, CoreValidationError, resolve_error_message
 from .....core.logging import get_logger
 from .....core.parsing import normalise_iso_4217_currency
+from .....core.tabular import NormalizedTable, TabularSourceError, normalize_tabular_bytes
 from .....domain.transactions import SourceFormat
 from ._base import (
     FinancialProvider,
@@ -52,7 +53,6 @@ from ._base import (
     synthesize_transaction_id,
 )
 from ._constants import CSV_EXTENSIONS
-from ._tabular_dialect import NormalizedTable, normalize_tabular_bytes
 from ._tabular_projection import ColumnRoleMapping, ProjectedRow, project_table
 
 _logger = get_logger(__name__)
@@ -176,7 +176,7 @@ class MappedTabularProvider(FinancialProvider):
         """
         try:
             table = normalize_tabular_bytes(self._read_source_bytes(path))
-        except FinancialProviderError as exc:
+        except (FinancialProviderError, TabularSourceError) as exc:
             return ProviderValidation(is_valid=False, warnings=(str(exc),))
         dialect_note = f"delimiter={table.dialect.delimiter!r},decimal={table.dialect.decimal_separator!r}"
         if self.mapping_resolver is None:
@@ -247,7 +247,10 @@ class MappedTabularProvider(FinancialProvider):
         """
         source_bytes = self._read_source_bytes(path)
         source_sha256 = self._compute_sha256(source_bytes)
-        table = normalize_tabular_bytes(source_bytes)
+        try:
+            table = normalize_tabular_bytes(source_bytes)
+        except TabularSourceError as exc:
+            raise InvalidFinancialSourceError(f"{path.name} does not normalize: {exc}") from exc
         if self.mapping_resolver is None:
             raise InvalidFinancialSourceError(
                 "no column-role mapping resolver is installed for the tabular mapping lane",

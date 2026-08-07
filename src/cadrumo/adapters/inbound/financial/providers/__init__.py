@@ -65,16 +65,6 @@ from ._mapped_tabular import (
 )
 from ._ofx import OfxProvider
 from ._pdf_n26 import PdfN26Provider
-from ._tabular_dialect import (
-    CANDIDATE_DELIMITERS,
-    NormalizedRow,
-    NormalizedTable,
-    TabularDialect,
-    TabularNotice,
-    TabularNoticeCode,
-    normalize_tabular_bytes,
-    normalize_tabular_text,
-)
 from ._tabular_projection import (
     AmbiguousRole,
     ColumnRoleMapping,
@@ -87,7 +77,6 @@ from ._tabular_projection import (
 from ._xlsx import XlsxProvider
 
 __all__ = [
-    "CANDIDATE_DELIMITERS",
     "MAPPED_TABULAR_EXTENSIONS",
     "REQUIRED_STATEMENT_ROLES",
     "AmbiguousRole",
@@ -101,8 +90,6 @@ __all__ = [
     "FinancialValidationError",
     "InvalidFinancialSourceError",
     "MappedTabularProvider",
-    "NormalizedRow",
-    "NormalizedTable",
     "OfxProvider",
     "ParsedLedgerRow",
     "PdfN26Provider",
@@ -110,18 +97,13 @@ __all__ = [
     "ProjectedRow",
     "ProjectedTable",
     "ProviderValidation",
-    "TabularDialect",
     "TabularMappingResolver",
-    "TabularNotice",
-    "TabularNoticeCode",
     "UnmappedColumn",
     "UnsupportedFinancialSourceError",
     "XlsxProvider",
     "default_tabular_mapping_resolver",
     "detect_provider",
     "direction_from_signed_amount",
-    "normalize_tabular_bytes",
-    "normalize_tabular_text",
     "project_table",
     "provider_for_extension",
 ]

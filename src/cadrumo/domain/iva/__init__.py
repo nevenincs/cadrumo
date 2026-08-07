@@ -155,6 +155,7 @@ from ._refund_eligibility import (
     refund_disposition_available,
     refund_eligibility_reason,
 )
+from ._regime_legend import REGIME_LEGENDS, RegimeLegend, regime_legend_phrases
 from ._saturation import (
     IvaRateResolution,
     resolve_category_rate,
@@ -193,6 +194,7 @@ __all__ = [
     "IVA_CATEGORY_COMPONENTS",
     "LAST_FILING_PERIOD_TOKENS",
     "NO_PRINTED_TAX_IVA_CATEGORIES",
+    "REGIME_LEGENDS",
     "REGIME_PERIODICITY",
     "SEPA_ZONE_COUNTRY_CODES",
     "CustomerTaxStatus",
@@ -249,6 +251,7 @@ __all__ = [
     "ProrrataSectorError",
     "RefundElection",
     "RefundEligibilityReason",
+    "RegimeLegend",
     "RegimePeriodicity",
     "RegularizacionProrrataDireccion",
     "RegularizacionProrrataResult",
@@ -291,6 +294,7 @@ __all__ = [
     "refund_disposition_available",
     "refund_eligibility_reason",
     "regime_allows_deduction",
+    "regime_legend_phrases",
     "requires_sectoral_separation",
     "resolve_catalogue",
     "resolve_category_rate",

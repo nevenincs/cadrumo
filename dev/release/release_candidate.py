@@ -5,14 +5,12 @@ workflow run spans that window, so the state cannot live in a job, in a job
 output, or in the working tree: it has to be durable, external, and readable by
 a later, unrelated process.
 
-The transport is the draft release this repository already uses to carry
-evidence rows. What is deliberately NOT reused is the evidence TAG namespace.
-``dev.packaging.evidence_release.plan_evidence_gc`` collects drafts inside
-``evidence-<lane>-<run_id>``, keeping only the newest K per lane, and a
-candidate sits sealed for two to three days -- long enough for K later
-campaigns to push it out of the retention window and delete the one artifact
-the soak depends on. A candidate that is garbage-collected mid-window does not
-publish late; it never publishes at all, and nothing reports why.
+The transport is a draft release. What is deliberately NOT reused is the
+per-run packaging transport: inter-workflow payloads ride Actions artifacts,
+which expire on their retention window, and a candidate sits sealed for two to
+three days. A candidate whose backing bytes expire mid-window does not publish
+late; it never publishes at all, and nothing reports why. A draft release has
+no such clock, so the candidate keeps one.
 
 Candidates therefore live under ``release-candidate-<run_id>``, which
 ``EVIDENCE_TAG_RE`` does not match, so the GC ignores them by construction

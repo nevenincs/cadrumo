@@ -171,10 +171,60 @@ def test_legal_grounding_links_resolve_to_permalinks() -> None:
     assert result.legal_links > 0
     assert "Legal basis:" in rst
 
-    catalogue_permalinks = set(_legal_permalinks(_REPO_ROOT).values())
+    catalogue_permalinks = {grounding.permalink for grounding in _legal_permalinks(_REPO_ROOT).values()}
     rendered_links = re.findall(r"Legal basis: `[^`]+ <([^>]+)>`__", rst)
     assert len(rendered_links) == result.legal_links
     assert all(url in catalogue_permalinks for url in rendered_links)
+
+
+def test_entry_bodies_render_the_build_language_and_no_other() -> None:
+    """A root built for one language renders that language's definitions only.
+
+    The page's prose comes from a four-language authority, so the failure to
+    guard against is a body rendered in a language the root was not built for.
+    For each target language, every rendered body must be the text that
+    language's section authors -- read by an independent traversal of the
+    handbook, never through the generator -- and no body may be the text of a
+    different language whose section says something else.
+    """
+    from cadrumo.core import ConceptLifecycle
+    from cadrumo.core.external_constants import OutputLanguage
+
+    handbook = _load_handbook()
+
+    def _authored(language: OutputLanguage) -> dict[str, set[str]]:
+        """concept_id -> the body strings that language legitimately renders."""
+        authored: dict[str, set[str]] = {}
+        for concept in handbook.concepts:
+            if concept.lifecycle is not ConceptLifecycle.APPROVED:
+                continue
+            for section in concept.languages:
+                if section.language is language:
+                    authored[concept.concept_id] = {
+                        text for text in (section.definition, section.short_description) if text
+                    }
+        return authored
+
+    for language in OutputLanguage:
+        rst, _ = render_glossary(_REPO_ROOT, handbook, language)
+        bodies = {
+            line.strip()
+            for line in _glossary_body(rst)
+            if line.startswith("      ") and line.strip() and not line.strip().startswith("*")
+        }
+        assert bodies, f"{language.value}: the glossary rendered no entry bodies"
+
+        expected = {text for texts in _authored(language).values() for text in texts}
+        # Every body is authored for the build language. Sections are the only
+        # source of prose, so a body outside this set came from another one.
+        foreign = bodies - expected
+        assert not foreign, f"{language.value}: bodies not authored in the build language: {sorted(foreign)[:3]}"
+
+    # The languages must actually differ, or the assertion above holds
+    # vacuously for a generator that ignored the argument entirely.
+    spanish, _ = render_glossary(_REPO_ROOT, handbook, OutputLanguage.ES)
+    english, _ = render_glossary(_REPO_ROOT, handbook, OutputLanguage.EN)
+    assert spanish != english, "the es and en renders are identical; the build language is being ignored"
 
 
 def test_broader_related_relations_render_as_term_cross_references() -> None:

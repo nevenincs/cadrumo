@@ -1,1 +1,200 @@
-/* Legal provision and glossary term presentation. */
+/* Legal provision and glossary term presentation.
+ *
+ * These pages are landed on sideways: a reader searches a term, jumps to a
+ * fragment anchor, and sees one provision with no page context above it. The
+ * type scale below is built for that arrival - the citation and the summary
+ * carry, the identifiers recede - and every colour is a Furo theme variable so
+ * light and dark both work without a second palette. */
+
+/* --- Legal provision entries ------------------------------------------- */
+
+.cadrumo-legal-force {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: var(--color-foreground-muted);
+  margin: -0.35rem 0 0.75rem;
+}
+
+.cadrumo-legal-force p {
+  margin: 0;
+}
+
+/* The authored catalogue note: the only human summary of the provision, and
+   the first thing a reader needs. */
+.cadrumo-legal-summary p {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--color-foreground-primary);
+  margin: 0 0 1rem;
+}
+
+/* Verbatim wording extracted from the official text: set apart so it can never
+   be misread as the documentation's own prose. */
+.cadrumo-legal-wording {
+  border-left: 3px solid var(--color-brand-content);
+  padding: 0.1rem 0 0.1rem 1rem;
+  margin: 0 0 1.15rem;
+}
+
+.cadrumo-legal-wording > p:first-child {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  color: var(--color-foreground-muted);
+  margin: 0 0 0.35rem;
+}
+
+.cadrumo-legal-wording blockquote {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-style: italic;
+  color: var(--color-foreground-secondary);
+}
+
+.cadrumo-legal-wording blockquote p {
+  margin: 0 0 0.3rem;
+}
+
+/* The way out to the authority. A reader who wants the real text should not
+   have to hunt for this. */
+.cadrumo-legal-official {
+  margin: 0 0 1.25rem;
+}
+
+.cadrumo-legal-official > p:first-child {
+  margin: 0 0 0.3rem;
+}
+
+.cadrumo-legal-official > p:first-child > a {
+  display: inline-block;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-m, 6px);
+  background: var(--color-background-secondary);
+  color: var(--color-link);
+}
+
+.cadrumo-legal-official > p:first-child > a::after {
+  content: " \2197";
+  font-weight: 400;
+}
+
+.cadrumo-legal-official > p:first-child > a:hover {
+  background: var(--color-background-hover);
+  border-color: var(--color-foreground-border);
+}
+
+.cadrumo-legal-official > p:last-child {
+  font-size: 0.8125rem;
+  color: var(--color-foreground-muted);
+  margin: 0;
+}
+
+/* Provenance, demoted. Present for anyone auditing where a figure came from;
+   out of the way of everyone else. */
+.cadrumo-legal-record {
+  border-top: 1px solid var(--color-background-border);
+  padding-top: 0.6rem;
+  margin: 0 0 2.25rem;
+  font-size: 0.8125rem;
+  color: var(--color-foreground-muted);
+}
+
+.cadrumo-legal-record > p:first-child {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  margin: 0 0 0.4rem;
+}
+
+.cadrumo-legal-record dl.field-list {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, max-content) 1fr;
+  gap: 0.15rem 0.85rem;
+  margin: 0;
+}
+
+.cadrumo-legal-record dl.field-list > dt {
+  font-weight: 500;
+  color: var(--color-foreground-muted);
+  background: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cadrumo-legal-record dl.field-list > dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cadrumo-legal-record dl.field-list > dd > p {
+  margin: 0;
+}
+
+.cadrumo-legal-record code.docutils {
+  font-size: 0.95em;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--color-foreground-secondary);
+}
+
+@media (max-width: 46rem) {
+  .cadrumo-legal-record dl.field-list {
+    grid-template-columns: 1fr;
+    gap: 0 0;
+  }
+
+  .cadrumo-legal-record dl.field-list > dt {
+    margin-top: 0.4rem;
+  }
+}
+
+/* --- Glossary entries --------------------------------------------------- */
+
+/* The headword is the term a reader searched for; give it weight over the
+   definition that follows it. */
+dl.glossary > dt {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-foreground-primary);
+}
+
+dl.glossary > dt + dt {
+  margin-top: 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-foreground-secondary);
+}
+
+dl.glossary > dd {
+  margin-bottom: 1.5rem;
+}
+
+dl.glossary > dd > ul {
+  margin: 0.45rem 0 0;
+  padding-left: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: var(--color-foreground-muted);
+}
+
+dl.glossary > dd > ul > li {
+  margin: 0.1rem 0;
+}
+
+/* The catalogue id trailing a Legal basis link stays traceable but recedes. */
+dl.glossary > dd > ul > li code.docutils {
+  font-size: 0.9em;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--color-foreground-muted);
+}

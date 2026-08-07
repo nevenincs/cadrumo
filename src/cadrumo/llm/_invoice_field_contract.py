@@ -207,6 +207,12 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
         form_instruction="digits only, keeping the printed decimal separator; no currency sign",
     ),
     InvoiceFieldContract(
+        field_name="regime_legend",
+        form=InvoiceFieldForm.FREE_TEXT,
+        concept="a printed statement that a special VAT/IVA regime applies to this operation",
+        form_instruction="copy the phrase exactly as printed if one appears; otherwise null",
+    ),
+    InvoiceFieldContract(
         field_name="currency",
         form=InvoiceFieldForm.CURRENCY_CODE,
         concept="the currency the amounts are printed in",

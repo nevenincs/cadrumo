@@ -137,7 +137,7 @@ def test_gate3_attaches_only_sweep_passed_evidence() -> None:
     """
     document = _document("publish-release.yml")
     surface = "\n".join(str(step.get("run", "")) for step in (document["jobs"]["publish"].get("steps") or []))
-    assert "dev.packaging.evidence_release leak-sweep" in surface
+    assert "dev.packaging.evidence_leak_sweep leak-sweep" in surface
     # The sweep covers the UNION of everything Gate 3 attaches: the evidence
     # attach dir AND the cohort files themselves.
     assert '--directory "$EVIDENCE_FINAL_DIR/attach"' in surface

@@ -305,13 +305,11 @@ def test_the_core_draft_path_routes_a_structured_document_to_the_exact_reader() 
     """
     from hashlib import sha256
 
-    from .._evidence import MediaKind
     from .._evidence_draft import _extract_invoice_fields_from_structured_record
     from .._evidence_input import EvidenceInput
 
     data = _read("zugferd_en16931_invoice.pdf")
     evidence = EvidenceInput(
-        media_kind=MediaKind.PDF,
         mime_type="application/pdf",
         data=data,
         content_sha256=sha256(data).hexdigest(),
@@ -320,7 +318,6 @@ def test_the_core_draft_path_routes_a_structured_document_to_the_exact_reader() 
     )
 
     # The label cannot see inside; the bytes can.
-    assert evidence.media_kind is MediaKind.PDF
     assert evidence.document_shape in STRUCTURED_DOCUMENT_SHAPES
 
     draft = _extract_invoice_fields_from_structured_record(evidence)
@@ -490,7 +487,7 @@ def test_an_unrecognised_xml_refuses_rather_than_reaching_the_vision_model() -> 
     """
     from hashlib import sha256
 
-    from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError
+    from .._evidence import PurchaseInvoiceEvidenceInputError
     from .._evidence_draft import _refuse_an_unrecognised_xml_document
     from .._evidence_input import EvidenceInput
 
@@ -501,7 +498,6 @@ def test_an_unrecognised_xml_refuses_rather_than_reaching_the_vision_model() -> 
         b"<sii:Cabecera/></sii:SuministroLRFacturasEmitidas>"
     )
     evidence = EvidenceInput(
-        media_kind=MediaKind.PDF,
         mime_type="application/xml",
         data=sii_record,
         content_sha256=sha256(sii_record).hexdigest(),
@@ -523,13 +519,11 @@ def test_a_recognised_structured_xml_is_not_caught_by_the_unrecognised_xml_refus
     """
     from hashlib import sha256
 
-    from .._evidence import MediaKind
     from .._evidence_draft import _refuse_an_unrecognised_xml_document
     from .._evidence_input import EvidenceInput
 
     data = _read("facturae_32_series_and_parties_invoice.xml")
     evidence = EvidenceInput(
-        media_kind=MediaKind.PDF,
         mime_type="application/xml",
         data=data,
         content_sha256=sha256(data).hexdigest(),
@@ -555,13 +549,11 @@ def test_the_structured_draft_carries_both_parties_rather_than_discarding_the_cu
     """
     from hashlib import sha256
 
-    from .._evidence import MediaKind
     from .._evidence_draft import _extract_invoice_fields_from_structured_record
     from .._evidence_input import EvidenceInput
 
     data = _read("facturae_32_series_and_parties_invoice.xml")
     evidence = EvidenceInput(
-        media_kind=MediaKind.PDF,
         mime_type="application/xml",
         data=data,
         content_sha256=sha256(data).hexdigest(),

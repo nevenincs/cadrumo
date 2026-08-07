@@ -98,6 +98,7 @@ class ExtractedInvoiceFields(BaseModel):
     retencion_rate: str | None = Field(default=None)
     retencion_amount: str | None = Field(default=None)
     grand_total: str | None = Field(default=None)
+    regime_legend: str | None = Field(default=None)
     currency: str | None = Field(default=None)
 
 
@@ -130,6 +131,7 @@ class ExtractedFieldAnchors(BaseModel):
     retencion_rate: str | None = Field(default=None)
     retencion_amount: str | None = Field(default=None)
     grand_total: str | None = Field(default=None)
+    regime_legend: str | None = Field(default=None)
     currency: str | None = Field(default=None)
 
 
@@ -524,6 +526,7 @@ def ground_extracted_fields(
     retencion_rate = _ground_numeric(fields.retencion_rate, "retencion_rate")
     retencion_amount = _ground_numeric(fields.retencion_amount, "retencion_amount")
     grand_total = _ground_numeric(fields.grand_total, "grand_total")
+    regime_legend = _ground_text(fields.regime_legend, "regime_legend")
     currency = _ground_text(fields.currency, "currency")
 
     # Keyed by the ONE contract declaration, so a field added there without a
@@ -539,6 +542,7 @@ def ground_extracted_fields(
         "retencion_rate": retencion_rate,
         "retencion_amount": retencion_amount,
         "grand_total": grand_total,
+        "regime_legend": regime_legend,
         "currency": currency,
     }
     envelopes = tuple(
@@ -566,6 +570,7 @@ def ground_extracted_fields(
         retencion_rate=retencion_rate,
         retencion_amount=retencion_amount,
         grand_total=grand_total,
+        regime_legend=regime_legend,
         currency=currency,
         provenance=envelopes,
         raw_text_length=raw_text_length,

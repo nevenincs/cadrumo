@@ -349,3 +349,31 @@ number = "74"
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "75"
 number = "75"
+
+# The two RD-ley 4/2024 transitional rungs of the régimen-general devengado
+# block. Their base boxes are ledger-bound and their cuota boxes project the
+# matching semantic carriers, exactly as the three ordinary-tier rungs do, so
+# both the boxes and the carriers join the calculation closure.
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "153"
+number = "153"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "155"
+number = "155"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "165"
+number = "165"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "167"
+number = "167"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.reducido.transitorio"
+number = "iva.repercutido.reducido.transitorio"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "iva.repercutido.super-reducido.transitorio"
+number = "iva.repercutido.super-reducido.transitorio"

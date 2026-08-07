@@ -1,1 +1,283 @@
-/* Casilla reference presentation. Owned by the casilla reference surface. */
+/* Casilla reference presentation. Owned by the casilla reference surface.
+ *
+ * The generated per-modelo pages (dev/docs/casilla_reference.py) are the
+ * landing place for a search result, so a reader arrives cold. The design
+ * ranks the page by what a taxpayer needs first: the official box number and
+ * its label, the prose saying what goes in it, the filing facts as scannable
+ * chips, the law as named links, and the registry's own identifiers folded
+ * away in a disclosure.
+ *
+ * Tokens come from the Furo skeleton (--color-*) and the Cadrumo theme layer
+ * (--cadrumo-radius-*), so light and dark both track the site.
+ */
+
+/* ── Page lead and section jump list ──────────────────────────────────── */
+
+.casilla-page-intro {
+  margin: 0 0 1.5rem;
+}
+
+.casilla-page-lead {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--color-foreground-primary);
+}
+
+.casilla-page-count {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-stack--monospace);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-foreground-muted);
+}
+
+.casilla-section-nav {
+  margin: 0 0 2.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-m, 10px);
+  background: var(--color-background-secondary);
+}
+
+.casilla-section-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.casilla-section-nav li {
+  margin: 0;
+}
+
+.casilla-section-nav a {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  padding: 0.22rem 0.6rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  text-decoration: none;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: 999px;
+}
+
+.casilla-section-nav a:hover {
+  border-color: var(--color-brand-content);
+  color: var(--color-brand-content);
+}
+
+.casilla-section-nav__count {
+  font-family: var(--font-stack--monospace);
+  font-size: 0.72rem;
+  color: var(--color-foreground-muted);
+}
+
+.casilla-section-anchor {
+  display: block;
+  height: 0;
+}
+
+/* ── The casilla card ─────────────────────────────────────────────────── */
+
+.casilla-card {
+  margin: 0 0 1rem;
+  padding: 0.95rem 1.1rem 0.85rem;
+  border: 1px solid var(--color-background-border);
+  border-left: 3px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-m, 10px);
+
+  /* Dark mode's page and card backgrounds are the same token, so the card
+   * edge disappears; lift it a little instead of hardening the border. */
+  background: light-dark(var(--color-background-primary), rgb(255 255 255 / 3%));
+  scroll-margin-top: 5rem;
+}
+
+.casilla-card:target {
+  border-left-color: var(--color-brand-content);
+  background: var(--color-background-secondary);
+}
+
+.casilla-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 0.7rem;
+  align-items: baseline;
+}
+
+.casilla-card__number {
+  flex: none;
+  padding: 0.1rem 0.5rem;
+  font-family: var(--font-stack--monospace);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--color-foreground-secondary);
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-s, 6px);
+  overflow-wrap: anywhere;
+}
+
+.casilla-card__title {
+  flex: 1 1 18rem;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-foreground-primary);
+}
+
+.casilla-card__help {
+  margin: 0.5rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--color-foreground-secondary);
+}
+
+/* ── Filing facts ─────────────────────────────────────────────────────── */
+
+.casilla-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.4rem;
+  margin: 0.65rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.casilla-fact {
+  margin: 0;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--color-foreground-secondary);
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-background-border);
+  border-radius: 999px;
+}
+
+.casilla-fact--computed {
+  color: light-dark(#2c5f45, #9cd3b3);
+  border-color: light-dark(#a9cdb8, #3c5f4c);
+}
+
+.casilla-fact--bound {
+  color: light-dark(#2a5470, #9ec7e2);
+  border-color: light-dark(#a7c4d8, #395a70);
+}
+
+.casilla-fact--required {
+  color: var(--cadrumo-accent-danger, #b3362a);
+  border-color: currentcolor;
+}
+
+/* ── Legal basis ──────────────────────────────────────────────────────── */
+
+.casilla-card__legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.6rem;
+  align-items: baseline;
+  margin: 0.7rem 0 0;
+}
+
+.casilla-card__legal-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-foreground-muted);
+}
+
+.casilla-card__legal-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.casilla-card__legal-list li {
+  margin: 0;
+}
+
+.casilla-card__legal-list li + li::before {
+  margin-right: 0.5rem;
+  color: var(--color-foreground-muted);
+  content: "·";
+}
+
+.casilla-legal-ref {
+  font-size: 0.85rem;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.casilla-legal-ref--raw {
+  font-family: var(--font-stack--monospace);
+  font-size: 0.78rem;
+  color: var(--color-foreground-muted);
+}
+
+/* ── Registry identifiers (demoted) ───────────────────────────────────── */
+
+.casilla-card__internals {
+  margin: 0.7rem 0 0;
+}
+
+.casilla-card__internals > summary {
+  font-size: 0.75rem;
+  color: var(--color-foreground-muted);
+  cursor: pointer;
+  list-style-position: outside;
+}
+
+.casilla-card__internals > summary:hover {
+  color: var(--color-brand-content);
+}
+
+.casilla-internals {
+  display: grid;
+  grid-template-columns: minmax(7rem, max-content) 1fr;
+  gap: 0.2rem 0.9rem;
+  margin: 0.55rem 0 0;
+  padding: 0.6rem 0.75rem;
+  background: light-dark(var(--color-background-secondary), rgb(0 0 0 / 22%));
+  border-radius: var(--cadrumo-radius-s, 6px);
+}
+
+.casilla-internals dt {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-foreground-muted);
+}
+
+.casilla-internals dd {
+  margin: 0;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.casilla-internals code {
+  padding: 0 0.2rem;
+  font-size: 0.72rem;
+  background: var(--color-background-primary);
+}
+
+@media (max-width: 40rem) {
+  .casilla-internals {
+    grid-template-columns: 1fr;
+    gap: 0.05rem;
+  }
+
+  .casilla-internals dt {
+    margin-top: 0.4rem;
+  }
+}

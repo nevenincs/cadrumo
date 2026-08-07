@@ -17,6 +17,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import PDF_CONTAINER_SHAPES, DocumentShape
 from ....core.config import Settings
 from ....domain.attachments import AttachmentKind, AttachmentSource, add_attachment_bytes
 from .._evidence import (
@@ -97,7 +98,7 @@ def test_resolve_purchase_invoice_evidence_reads_secure_storage_into_memory(
     assert isinstance(resolved, EvidenceInput)
     assert resolved.data == _PDF_BYTES
     assert resolved.content_sha256 == hashlib.sha256(_PDF_BYTES).hexdigest()
-    assert resolved.media_kind is MediaKind.PDF
+    assert resolved.document_shape in PDF_CONTAINER_SHAPES
     assert resolved.mime_type == "application/pdf"
     assert resolved.evidence_id == record.evidence_id
     assert resolved.attachment_id == record.attachment_id
@@ -118,25 +119,17 @@ def test_resolve_attachment_evidence_input_round_trips_bytes(
     assert resolved.attachment_id == record.attachment_id
 
 
-@pytest.mark.parametrize(
-    ("mime_type", "kind", "expected_kind"),
-    (
-        ("Application/PDF; charset=binary", AttachmentKind.INVOICE_PDF, MediaKind.PDF),
-        ("IMAGE/PNG; profile=receipt", AttachmentKind.RECEIPT_IMAGE, MediaKind.IMAGE),
-    ),
-)
-def test_attachment_evidence_normalizes_media_type_for_classification_but_preserves_provenance(
-    isolated_settings: Settings,
+def _stored_attachment_id(
     secure_objects: SecureObjectRepository,
+    *,
+    data: bytes,
     mime_type: str,
-    kind: AttachmentKind,
-    expected_kind: MediaKind,
-) -> None:
-    """Parameterized MIME values classify by token while the stored display value remains intact."""
-
+    kind: AttachmentKind = AttachmentKind.INVOICE_PDF,
+) -> str:
+    """Store real bytes under a caller-chosen declared MIME type, and return the id."""
     attachment = add_attachment_bytes(
         AttachmentStore(objects=secure_objects),
-        data=_PDF_BYTES,
+        data=data,
         kind=kind,
         source=AttachmentSource.LOCAL_FILE,
         source_reference="operator-evidence",
@@ -144,13 +137,92 @@ def test_attachment_evidence_normalizes_media_type_for_classification_but_preser
         captured_at=datetime(2026, 8, 1, tzinfo=UTC),
         bucket_id=_BUCKET_ID,
     )
+    return attachment.attachment_id
 
-    resolved = resolve_attachment_evidence_input(
-        attachment.attachment_id, store=AttachmentStore(objects=secure_objects)
+
+@pytest.mark.parametrize(
+    ("mime_type", "kind"),
+    (
+        ("Application/PDF; charset=binary", AttachmentKind.INVOICE_PDF),
+        ("IMAGE/PNG; profile=receipt", AttachmentKind.RECEIPT_IMAGE),
+    ),
+)
+def test_resolution_reads_the_bytes_while_the_declared_media_type_is_preserved_verbatim(
+    isolated_settings: Settings,
+    secure_objects: SecureObjectRepository,
+    mime_type: str,
+    kind: AttachmentKind,
+) -> None:
+    """The stored label decides nothing; the bytes decide, and the label survives intact.
+
+    Both parametrizations carry the SAME PDF bytes. The second announces them as
+    ``IMAGE/PNG``, a label that disagrees with its own payload -- the only case
+    where the two mechanisms can give different answers, and therefore the only
+    case worth parametrizing. The retired derivation read the label and called
+    those bytes an image; the probe opens them and answers PDF for both.
+
+    ``mime_type`` is still carried through unnormalised, because it is
+    provenance: what the producer declared, preserved exactly, casing and
+    parameters included.
+    """
+    attachment_id = _stored_attachment_id(secure_objects, data=_PDF_BYTES, mime_type=mime_type, kind=kind)
+
+    resolved = resolve_attachment_evidence_input(attachment_id, store=AttachmentStore(objects=secure_objects))
+
+    assert resolved.document_shape in PDF_CONTAINER_SHAPES
+    assert resolved.mime_type == mime_type
+
+
+def test_a_readable_document_is_admitted_even_when_its_declared_type_is_opaque(
+    isolated_settings: Settings,
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A truthful document must not be refused for wearing an unhelpful label.
+
+    The retired derivation refused anything whose MIME type was not PDF, XML or
+    ``image/*``, so a genuine invoice PDF stored as ``application/octet-stream``
+    -- the type a producer supplies when it simply does not know -- was rejected
+    at the read boundary while its bytes were perfectly readable. Admission is
+    now decided by the probe, so the opaque label costs nothing.
+
+    This assertion reds against the retired derivation, which is the point: it
+    is one of the two directions in which label and bytes disagree.
+    """
+    attachment_id = _stored_attachment_id(
+        secure_objects,
+        data=_PDF_BYTES,
+        mime_type="application/octet-stream",
     )
 
-    assert resolved.media_kind is expected_kind
-    assert resolved.mime_type == mime_type
+    resolved = resolve_attachment_evidence_input(attachment_id, store=AttachmentStore(objects=secure_objects))
+
+    assert resolved.document_shape in PDF_CONTAINER_SHAPES
+    assert resolved.mime_type == "application/octet-stream"
+
+
+def test_unreadable_bytes_are_refused_however_respectable_the_declared_type(
+    isolated_settings: Settings,
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The other direction: a trustworthy-looking label over bytes nothing can read.
+
+    These bytes match no recognised shape, yet they are announced as
+    ``application/pdf``. The retired derivation asked only the label, admitted
+    them, and left the failure to surface further down the read path. The probe
+    answers :attr:`DocumentShape.UNKNOWN`, which is never guessed into a
+    neighbouring shape, so the refusal happens at the boundary and names what is
+    actually wrong.
+    """
+    junk = b"\x00\x01\x02 not a document in any recognised shape"
+    attachment_id = _stored_attachment_id(secure_objects, data=junk, mime_type="application/pdf")
+    store = AttachmentStore(objects=secure_objects)
+
+    assert DocumentShape.UNKNOWN not in PDF_CONTAINER_SHAPES, "the control below would be vacuous"
+
+    with pytest.raises(PurchaseInvoiceEvidenceInputError) as excinfo:
+        resolve_attachment_evidence_input(attachment_id, store=store)
+
+    assert "no readable document shape" in str(excinfo.value)
 
 
 def test_record_without_in_store_attachment_is_unconstructable() -> None:

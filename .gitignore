@@ -406,6 +406,10 @@ cache/
 # Root-level Playwright/browser accessibility-tree snapshot dumps
 # (e.g. rail-snap.md). Never a durable repo artifact.
 /*-snap.md
+# Root-level screenshot dumps from a docs or CSS review (casilla-dark.png and
+# friends). Durable docs images live under docs/_static/; a loose one at the
+# root is the review artefact, not the asset.
+/*.png
 # Underscore-prefixed one-shot agent run workspaces (persona reruns, m303/m390
 # capture dirs) — carry secrets/*.key/*.kdf/*.db; ephemeral, never in git.
 /_scratch*/

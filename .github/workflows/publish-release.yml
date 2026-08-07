@@ -402,7 +402,7 @@ jobs:
           for tok in "$RUNNER_NAME" "$(hostname 2>/dev/null)" "$(whoami 2>/dev/null)"; do
             [[ -n "$tok" ]] && sweep_tokens+=(--token "$tok")
           done
-          uv run --frozen python -m dev.packaging.evidence_release leak-sweep \
+          uv run --frozen python -m dev.packaging.evidence_leak_sweep leak-sweep \
             --directory "$EVIDENCE_FINAL_DIR/attach" \
             --directory "$RELEASE_COHORT_DIR" \
             "${sweep_tokens[@]}"
@@ -479,7 +479,7 @@ jobs:
           for tok in "$RUNNER_NAME" "$(hostname 2>/dev/null)" "$(whoami 2>/dev/null)"; do
             [[ -n "$tok" ]] && sweep_tokens+=(--token "$tok")
           done
-          uv run --frozen python -m dev.packaging.evidence_release leak-sweep \
+          uv run --frozen python -m dev.packaging.evidence_leak_sweep leak-sweep \
             --directory "$DOWNLOAD_LATEST_DIR" \
             "${sweep_tokens[@]}"
           gh release upload "v$VERSION" "$DOWNLOAD_LATEST_DIR/download-latest.json" \

@@ -13,11 +13,10 @@ from pathlib import Path
 
 import pytest
 
-from ......tests import FIXTURES_DIR
-from .._base import InvalidFinancialSourceError
-from .._tabular_dialect import normalize_tabular_bytes, normalize_tabular_text
+from ...tests import FIXTURES_DIR
+from ..tabular import TabularSourceError, normalize_tabular_bytes, normalize_tabular_text
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _FIXTURES = FIXTURES_DIR / "financial" / "tabular-dialects"
 
@@ -152,7 +151,7 @@ def test_ragged_row_is_carried_and_reported_not_dropped() -> None:
 
 def test_source_with_no_delimited_rectangle_refuses() -> None:
     """A file carrying no table at all is refused rather than invented into one."""
-    with pytest.raises(InvalidFinancialSourceError, match="no delimited rectangle"):
+    with pytest.raises(TabularSourceError, match="no delimited rectangle"):
         normalize_tabular_text("just one line of prose\nand another\n", encoding="utf-8")
 
 

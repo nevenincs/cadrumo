@@ -14,6 +14,7 @@ legal metadata.
 
 from __future__ import annotations
 
+import re
 import tomllib
 import unicodedata
 from dataclasses import dataclass
@@ -22,19 +23,21 @@ from pathlib import Path
 from typing import Final, cast
 from urllib.parse import urlsplit
 
-from .glossary_reference import LEGAL_CATALOGUE_RELPATH
-
 __all__ = [
+    "LEGAL_CATALOGUE_RELPATH",
     "LEGAL_REFERENCE_DIR",
     "LegalPage",
     "LegalProvisionRecord",
     "LegalReferenceError",
     "LegalReferenceResult",
     "generate_legal_reference",
+    "legal_citation",
     "legal_document_slug",
+    "legal_instrument_designation",
     "legal_page_anchor",
     "legal_page_relpath",
     "legal_provision_anchor",
+    "legal_provision_designation",
     "legal_reference_page",
     "legal_reference_target",
     "load_legal_provisions",
@@ -44,6 +47,12 @@ __all__ = [
 _UTF_8 = "utf-8"
 LEGAL_REFERENCE_DIR: Final[str] = "_generated/legal"
 _ANCHOR_PREFIX: Final[str] = "legal-"
+
+#: The legal catalogue tree, relative to the repository root.  The leading
+#: segment is the CADRUMO package root; the trailing ``aeat`` is the authority
+#: taxonomy directory (aeat-naming).  This surface owns the constant because
+#: the legal catalogue is its source; the glossary reads it for grounding.
+LEGAL_CATALOGUE_RELPATH: Final[Path] = Path("src") / "cadrumo" / "_data" / "registry" / "aeat" / "legal"
 
 _DATE_FIELDS: Final[tuple[str, ...]] = (
     "published_at",
@@ -91,6 +100,91 @@ _RENDERED_TEXT_FIELDS: Final[tuple[str, ...]] = (
 _GENERATED_INDEX_SLUG: Final[str] = "index"
 _UNSAFE_LINK_CHARS: Final[frozenset[str]] = frozenset({"<", ">", '"', "'", "`", "\\"})
 
+#: The authored id stem shape a citation can be derived from: an instrument
+#: prefix, the instrument number, and the four-digit year.
+_STEM_PATTERN: Final[re.Pattern[str]] = re.compile(r"^(?P<prefix>[a-z][a-z-]*[a-z])-(?P<number>\d+)-(?P<year>\d{4})$")
+
+#: ``id-stem prefix -> (Spanish instrument designation, the ``kind`` that must
+#: agree)``.  A citation is derived ONLY when the authored prefix and the
+#: authored ``kind`` corroborate each other; disagreement falls back to the
+#: verbatim stem rather than asserting an instrument the catalogue does not
+#: claim.  The designation is the instrument's conventional Spanish reference
+#: form, not a title or a summary of what it says.
+_INSTRUMENT_BY_PREFIX: Final[dict[str, tuple[str, str]]] = {
+    "ley": ("Ley", "ley"),
+    "rd": ("Real Decreto", "real_decreto"),
+    "rdleg": ("Real Decreto Legislativo", "real_decreto_legislativo"),
+    "real-decreto-ley": ("Real Decreto-ley", "real_decreto_ley"),
+}
+
+#: Ministry codes that appear as ``orden-<code>-<number>-<year>`` stems and
+#: render as the official ``Orden CODE/number/year`` citation form.
+_ORDEN_MINISTRY_CODES: Final[frozenset[str]] = frozenset({"eha", "hac", "hap", "hfp"})
+
+
+def _legal_id_stem(legal_id: str) -> str:
+    """Return the instrument-naming part of a ``<stem>:<provision>`` id."""
+    return legal_id.partition(":")[0] or legal_id
+
+
+def legal_instrument_designation(legal_id: str, kind: str) -> str:
+    """Return the reader-facing designation of the instrument a provision sits in.
+
+    ``ley-37-1992`` with ``kind = "ley"`` reads as ``Ley 37/1992``: the
+    conventional Spanish citation form, recomposed from two authored catalogue
+    fields that corroborate each other.  Nothing is asserted that the catalogue
+    does not already state, and no title, subject matter, or meaning is
+    invented.  A stem whose shape or ``kind`` is not corroborated falls back to
+    the authored stem verbatim, so an unrecognised instrument is shown as
+    authored rather than guessed at.
+    """
+    stem = _legal_id_stem(legal_id)
+    match = _STEM_PATTERN.match(stem)
+    if match is None:
+        return stem
+    prefix = match.group("prefix")
+    number = match.group("number")
+    year = match.group("year")
+    ministry = prefix.removeprefix("orden-")
+    if ministry != prefix and ministry in _ORDEN_MINISTRY_CODES and kind == "orden":
+        return f"Orden {ministry.upper()}/{number}/{year}"
+    designation = _INSTRUMENT_BY_PREFIX.get(prefix)
+    if designation is not None and designation[1] == kind:
+        return f"{designation[0]} {number}/{year}"
+    return stem
+
+
+def legal_citation(
+    legal_id: str,
+    kind: str,
+    *,
+    article: str | None = None,
+    section: str | None = None,
+) -> str:
+    """Return the reader-facing citation of one provision.
+
+    The single citation authority for every surface that names a provision:
+    the legal pages' own headings and the glossary's grounding links both call
+    it, so a reader meets one designation for one provision wherever it
+    appears.  A reader arriving on a fragment anchor sees this line first and
+    nothing above it, so it names the instrument as well as the provision
+    within it.
+    """
+    instrument = legal_instrument_designation(legal_id, kind)
+    parts: list[str] = []
+    if article is not None:
+        parts.append(f"Article {article}")
+    if section is not None:
+        parts.append(f"section {section}" if parts else f"Section {section}")
+    if not parts:
+        return instrument
+    return f"{instrument}, {', '.join(parts)}"
+
+
+def legal_provision_designation(record: LegalProvisionRecord) -> str:
+    """Return the reader-facing citation for one loaded catalogue record."""
+    return legal_citation(record.legal_id, record.kind, article=record.article, section=record.section)
+
 
 class LegalReferenceError(RuntimeError):
     """Raised when the legal reference surface cannot be rendered safely."""
@@ -129,6 +223,8 @@ class LegalPage:
     """One generated document page and its target/grounding inventory."""
 
     document_id: str
+    #: The reader-facing designation of the instrument this page renders.
+    instrument: str
     output_relpath: str
     rst: str
     #: Anchors actually emitted; law-level rows without a fragment have none.
@@ -481,15 +577,114 @@ def _validate_records(records: tuple[object, ...]) -> None:
 
 
 def _rst_escape(text: str) -> str:
-    """Escape free catalogue text before it enters RST."""
+    """Escape free catalogue text before it enters RST body prose."""
     return "".join(f"\\{char}" if char in "\\`*_|[]" else char for char in text)
+
+
+def _rst_literal(text: str) -> str:
+    """Wrap catalogue text as an RST inline literal without escaping it.
+
+    Inline literals are verbatim: RST interprets no markup inside them, so a
+    backslash added by :func:`_rst_escape` is rendered as a visible backslash
+    rather than consumed.  An identifier such as ``legal_authority`` must
+    therefore enter the literal unescaped.
+    """
+    if "`" in text:
+        raise LegalReferenceError(f"catalogue value {text!r} cannot be rendered as an inline literal")
+    return f"``{text}``"
 
 
 def _rst_heading(text: str, underline: str) -> str:
     return f"{text}\n{underline * max(len(text), 3)}\n"
 
 
-def _render_entry(record: LegalProvisionRecord) -> tuple[str, str | None, str]:
+def _in_force_sentence(record: LegalProvisionRecord) -> str | None:
+    """Render the authored effectivity dates as one reader-facing sentence."""
+    if record.effective_from is not None and record.effective_to is not None:
+        span = f"In force from {record.effective_from.isoformat()} to {record.effective_to.isoformat()}"
+    elif record.effective_from is not None:
+        span = f"In force from {record.effective_from.isoformat()}"
+    elif record.effective_to is not None:
+        span = f"In force until {record.effective_to.isoformat()}"
+    else:
+        span = ""
+    published = f"published {record.published_at.isoformat()}" if record.published_at is not None else ""
+    if span and published:
+        return f"{span} ({published})."
+    if span:
+        return f"{span}."
+    if published:
+        return f"Published {record.published_at.isoformat() if record.published_at else ''}."
+    return None
+
+
+def _catalogue_record_block(record: LegalProvisionRecord) -> list[str]:
+    """The demoted provenance panel: the identifiers and the review trail.
+
+    Everything a reader does not need in order to understand the provision, but
+    which must stay visible for anyone auditing where the figure came from: the
+    catalogue id, the instrument kind, the bundled-corpus locator, and the
+    review stamp.  It renders after the content and is styled as subordinate.
+    """
+    fields = [
+        f":Catalogue id: {_rst_literal(record.legal_id)}",
+        f":Instrument kind: {_rst_literal(record.kind)}",
+        f":BOE document: {_rst_literal(record.document_id)}",
+        f":Bundled corpus: {_rst_literal(record.corpus_ref)}",
+    ]
+    if record.authority is not None:
+        fields.append(f":Authority: {_rst_literal(record.authority)}")
+    if record.evidence_tier is not None:
+        fields.append(f":Evidence tier: {_rst_literal(record.evidence_tier)}")
+    if record.consolidated_as_of is not None:
+        fields.append(f":Consolidated as of: {record.consolidated_as_of.isoformat()}")
+    if record.review_status is not None:
+        fields.append(f":Review status: {_rst_literal(record.review_status)}")
+    if record.reviewed_at is not None:
+        fields.append(f":Reviewed at: {record.reviewed_at.isoformat()}")
+    if record.reviewed_by is not None:
+        fields.append(f":Reviewed by: {_rst_escape(record.reviewed_by)}")
+    return [".. container:: cadrumo-legal-record", "", "   Catalogue record", "", *(f"   {line}" for line in fields)]
+
+
+def _headings_by_id(records: tuple[LegalProvisionRecord, ...], instrument: str) -> dict[str, str]:
+    """Resolve one unique reader-facing heading per provision on a page.
+
+    A catalogue commonly carries several consolidated versions of the same
+    article, each governing a different filing year (``art-52``,
+    ``art-52-2015``, ``art-52-2021``).  They share a citation, so the citation
+    alone is neither unique nor enough for a reader who needs the version that
+    applies to their year: the in-force date is the distinguishing fact, and it
+    is authored, not inferred.  Where even that repeats, the catalogue id
+    disambiguates, because a heading that silently names two provisions is
+    worse than one carrying an identifier.
+
+    ``instrument`` is the page's own heading, which a provision carrying no
+    article or section would otherwise duplicate exactly.
+    """
+    citations: dict[str, list[LegalProvisionRecord]] = {}
+    for record in records:
+        citations.setdefault(legal_provision_designation(record), []).append(record)
+
+    headings: dict[str, str] = {}
+    for citation, group in citations.items():
+        if len(group) == 1 and citation != instrument:
+            headings[group[0].legal_id] = citation
+            continue
+        dated = [
+            f"{citation} (in force from {record.effective_from.isoformat()})"
+            if record.effective_from is not None
+            else citation
+            for record in group
+        ]
+        distinct = len(set(dated)) == len(dated) and instrument not in dated
+        for record, heading in zip(group, dated, strict=True):
+            headings[record.legal_id] = heading if distinct else f"{citation} ({record.legal_id})"
+    return headings
+
+
+def _render_entry(record: LegalProvisionRecord, heading: str) -> tuple[str, str | None, str]:
+    """Render one provision: what it says first, where it came from last."""
     anchor = legal_provision_anchor(
         record.legal_id,
         article=record.article,
@@ -500,36 +695,42 @@ def _render_entry(record: LegalProvisionRecord) -> tuple[str, str | None, str]:
     lines: list[str] = []
     if anchor is not None:
         lines.extend([".. raw:: html", "", f'   <span id="{anchor}"></span>', ""])
-    lines.extend([_rst_heading(f"Provision {_rst_escape(record.legal_id)}", "-").rstrip("\n"), ""])
-    fields = [
-        f":Id: ``{_rst_escape(record.legal_id)}``",
-        f":Kind: ``{_rst_escape(record.kind)}``",
-        f":Document: ``{_rst_escape(record.document_id)}``",
-        f":Corpus ref: ``{_rst_escape(record.corpus_ref)}``",
-        f":BOE permalink: `BOE <{record.permalink}>`__",
-    ]
-    if record.authority is not None:
-        fields.append(f":Authority: ``{_rst_escape(record.authority)}``")
-    if record.evidence_tier is not None:
-        fields.append(f":Evidence tier: ``{_rst_escape(record.evidence_tier)}``")
-    if record.article is not None:
-        fields.append(f":Article: ``{_rst_escape(record.article)}``")
-    if record.section is not None:
-        fields.append(f":Section: ``{_rst_escape(record.section)}``")
-    for field in _DATE_FIELDS:
-        value = getattr(record, field)
-        if value is not None:
-            fields.append(f":{field.replace('_', ' ').title()}: ``{value.isoformat()}``")
-    if record.review_status is not None:
-        fields.append(f":Review status: ``{_rst_escape(record.review_status)}``")
-    if record.reviewed_by is not None:
-        fields.append(f":Reviewed by: {_rst_escape(record.reviewed_by)}")
+    designation = legal_provision_designation(record)
+    lines.extend([_rst_heading(_rst_escape(heading), "-").rstrip("\n"), ""])
+
+    in_force = _in_force_sentence(record)
+    if in_force is not None:
+        lines.extend([".. container:: cadrumo-legal-force", "", f"   {in_force}", ""])
+
+    # The authored note is the only human summary the catalogue holds. It is
+    # rendered verbatim: restating a provision's meaning is a legal claim this
+    # presentation layer must never author.
     if record.notes is not None:
-        fields.append(f":Notes: {_rst_escape(record.notes)}")
+        lines.extend([".. container:: cadrumo-legal-summary", "", f"   {_rst_escape(record.notes)}", ""])
+
     if record.required_text:
-        required = "; ".join(f"``{_rst_escape(item.rstrip())}``" for item in record.required_text)
-        fields.append(f":Required text: {required}")
-    lines.extend(fields)
+        lines.extend(
+            [
+                ".. container:: cadrumo-legal-wording",
+                "",
+                "   Wording checked against the official text, in extract:",
+                "",
+                *(f"      {_rst_escape(item.rstrip())}" for item in record.required_text),
+                "",
+            ],
+        )
+
+    lines.extend(
+        [
+            ".. container:: cadrumo-legal-official",
+            "",
+            f"   `Read {_rst_escape(designation)} on the BOE <{record.permalink}>`__",
+            "",
+            "   The Boletin Oficial del Estado consolidated text is the official wording.",
+            "",
+        ],
+    )
+    lines.extend(_catalogue_record_block(record))
     lines.append("")
     return "\n".join(lines), anchor, record.permalink
 
@@ -540,14 +741,23 @@ def _render_document_page(document_id: str, records: tuple[LegalProvisionRecord,
         "   Generated by dev/docs/legal_reference.py from the registry legal\n"
         "   catalogue. Do not edit by hand; regenerate.\n\n"
     )
-    blocks: list[str] = [header + _rst_heading(f"Legal document {_rst_escape(document_id)}", "=")]
+    instrument = legal_instrument_designation(records[0].legal_id, records[0].kind) if records else document_id
+    count = len(records)
+    provisions = "provision" if count == 1 else "provisions"
+    intro = (
+        f"Published in the Boletin Oficial del Estado as {_rst_escape(document_id)}. "
+        f"Cadrumo's calculations cite {count} {provisions} of this text; each one below links "
+        "to its official wording on the BOE."
+    )
+    blocks: list[str] = [header + _rst_heading(_rst_escape(instrument), "="), intro + "\n"]
     anchors: list[str] = []
     targets: dict[str, str] = {}
     anchor_by_id: dict[str, str | None] = {}
     grounding_by_id: dict[str, str] = {}
     seen_anchors: dict[str, str] = {}
+    headings = _headings_by_id(records, instrument)
     for record in records:
-        entry, anchor, permalink = _render_entry(record)
+        entry, anchor, permalink = _render_entry(record, headings[record.legal_id])
         if anchor is not None:
             previous = seen_anchors.get(anchor)
             if previous is not None:
@@ -572,6 +782,7 @@ def _render_document_page(document_id: str, records: tuple[LegalProvisionRecord,
 
     return LegalPage(
         document_id=document_id,
+        instrument=instrument,
         output_relpath=legal_page_relpath(document_id).as_posix(),
         rst="\n".join(blocks).rstrip("\n") + "\n",
         anchors=tuple(anchors),
@@ -586,13 +797,17 @@ def _render_index(pages: tuple[LegalPage, ...]) -> str:
     lines = [
         header + _rst_heading("Legal reference", "=").rstrip("\n"),
         "",
+        "The Spanish laws, reales decretos and ordenes ministeriales that Cadrumo's",
+        "calculations are grounded in. Each page lists the provisions cited from one",
+        "text and links every one of them to its official wording on the BOE.",
+        "",
         ".. toctree::",
         "   :maxdepth: 1",
         "",
     ]
-    for page in pages:
+    for page in sorted(pages, key=lambda page: (page.instrument.casefold(), page.document_id)):
         slug = legal_document_slug(page.document_id)
-        lines.append(f"   {slug} <{slug}>")
+        lines.append(f"   {_rst_escape(page.instrument)} <{slug}>")
     return "\n".join(lines).rstrip("\n") + "\n"
 
 

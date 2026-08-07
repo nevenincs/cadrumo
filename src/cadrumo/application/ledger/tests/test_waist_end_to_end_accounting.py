@@ -53,7 +53,6 @@ from ....domain.calculations.registry import INVOICE_BINDING_SOURCE_KINDS, bundl
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._closure_findings import closure_findings
-from .._evidence import MediaKind
 from .._evidence_draft import _extract_invoice_fields_from_structured_record
 from .._evidence_input import EvidenceInput, resolve_attachment_evidence_input
 
@@ -97,7 +96,6 @@ def _evidence() -> EvidenceInput:
     """Hop 1 -- ingest. Document bytes become the typed in-memory carrier."""
     data = _FIXTURE.read_bytes()
     return EvidenceInput(
-        media_kind=MediaKind.PDF,
         mime_type="application/xml",
         data=data,
         content_sha256=sha256(data).hexdigest(),
@@ -169,11 +167,24 @@ class TestHop2RoutingBypassesTranscriptionAndTheModel:
         )
 
     def test_the_shape_is_decided_on_the_bytes_not_the_declared_media_type(self) -> None:
-        """The label says PDF; the bytes say XML. Routing on the label is the defect."""
-        evidence = _evidence()
+        """The label says PDF; the bytes say XML. Routing on the label is the defect.
 
-        assert evidence.media_kind is MediaKind.PDF
-        assert evidence.document_shape in STRUCTURED_DOCUMENT_SHAPES
+        The mislabel is deliberate and carries the whole assertion: this carrier
+        announces ``application/pdf`` over a standalone structured XML invoice.
+        A read path trusting the declared media type would call it a PDF and send
+        it to prose extraction; the probe opens the bytes and routes it to the
+        exact reader.
+        """
+        data = _FIXTURE.read_bytes()
+        mislabelled = EvidenceInput(
+            mime_type="application/pdf",
+            data=data,
+            content_sha256=sha256(data).hexdigest(),
+            evidence_id="ev-waist-mislabelled",
+            attachment_id=None,
+        )
+
+        assert mislabelled.document_shape in STRUCTURED_DOCUMENT_SHAPES
 
 
 class TestHop3Extraction:

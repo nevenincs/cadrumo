@@ -142,7 +142,10 @@ def test_every_legal_destination_renders_authored_boe_grounding(
             continue
 
         inventory_permalink = page.grounding_by_id.get(source.legal_id)
-        rendered_link = f"BOE <{source.permalink}>"
+        # Asserted on the link TARGET, never the link label: the label is
+        # reader-facing presentation and may be reworded, while the permalink
+        # is the grounding claim. A dropped or altered URL still fails.
+        rendered_link = f"<{source.permalink}>`__"
         if inventory_permalink != source.permalink or rendered_link not in page.rst:
             ungrounded.append(
                 f"{source.legal_id}: destination inventory {inventory_permalink!r} or RST link "

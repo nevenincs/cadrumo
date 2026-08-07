@@ -26,16 +26,21 @@ to one definition. One concept = one glossary entry (the sphinx-hoverxref
 shared-entry rendering bug forbids many terms sharing one definition block via
 separate entries; the multi-term-line form is the supported way to alias).
 
-Output language: the docs build pins ``CADRUMO_OUTPUT_LANGUAGE=en`` (conf.py), so
-the entry body is the English definition (or the English short description
-when no full definition is authored), with the Spanish term as the headword -
-the term a Spanish-tax reader looks up, defined in the docs' English prose.
-Legal grounding links render where the concept carries ``legal_refs`` that
-resolve to a BOE permalink in the legal catalogue.
+Output language: the entry body follows the language the docs root is being
+built in (``CADRUMO_DOCS_LANGUAGE``, resolved through the single build-language
+authority :func:`~dev.docs.build.docs_build_language`), so a Spanish root
+renders Spanish definitions and a Hungarian root Hungarian ones. A page built
+for one language renders that language's prose and no other's. The headword
+stays the Spanish preferred term in every root: it is the term a Spanish-tax
+reader looks up, it is the surface the AEAT publishes, and it is the anchor
+authority the injected search records deep-link to. Legal grounding links
+render where the concept carries ``legal_refs`` that resolve to a BOE
+permalink in the legal catalogue.
 """
 
 from __future__ import annotations
 
+import os
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -44,6 +49,8 @@ from typing import cast
 from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 
+from .build import docs_build_language
+from .legal_reference import LEGAL_CATALOGUE_RELPATH, legal_citation
 from .terminology_handbook import load_terminology_handbook
 from .terminology_handbook._enums import TermStatus
 from .terminology_handbook._loader import TerminologyHandbook
@@ -56,10 +63,21 @@ _UTF_8 = "utf-8"
 #: ``docs/glossary.md`` stays in place until the cutover step swaps to this.
 _GENERATED_RELPATH = Path("_generated") / "glossary.rst"
 
-#: The legal catalogue tree (id -> permalink) for grounding-link resolution.
-#: The leading segment is the CADRUMO package root; the trailing "aeat" is the
-#: authority taxonomy directory (aeat-naming).
-LEGAL_CATALOGUE_RELPATH = Path("src") / "cadrumo" / "_data" / "registry" / "aeat" / "legal"
+
+@dataclass(frozen=True)
+class LegalGrounding:
+    """The catalogue facts one ``legal_refs`` entry resolves to.
+
+    ``kind`` rides alongside the permalink because the reader-facing citation
+    is derived from the id stem and the instrument kind together; resolving
+    both in one catalogue read keeps the glossary from reading the same TOMLs
+    twice for one grounding line.
+    """
+
+    permalink: str
+    kind: str
+    article: str | None = None
+    section: str | None = None
 
 
 @dataclass(frozen=True)
@@ -73,18 +91,19 @@ class GlossaryResult:
     deduplicated_terms: tuple[str, ...] = ()
 
 
-def _legal_permalinks(repo_root: Path) -> dict[str, str]:
-    """Build the ``legal-ref-id -> BOE permalink`` map from the catalogue TOMLs.
+def _legal_permalinks(repo_root: Path) -> dict[str, LegalGrounding]:
+    """Build the ``legal-ref-id -> grounding`` map from the catalogue TOMLs.
 
     Reads the ``[legal."<id>"]`` tables directly (a lightweight read, not the
     full registry-catalogue machinery): the concept ``legal_refs`` ids match
     the catalogue keys verbatim, so the map resolves a concept's grounding to
-    its published BOE permalink.
+    its published BOE permalink and the instrument kind its citation is
+    derived from.
     """
     catalogue = repo_root / LEGAL_CATALOGUE_RELPATH
-    permalinks: dict[str, str] = {}
+    grounding: dict[str, LegalGrounding] = {}
     if not catalogue.is_dir():
-        return permalinks
+        return grounding
     for fragment in sorted(catalogue.glob("*.toml")):
         try:
             data = cast(dict[str, object], tomllib.loads(fragment.read_text(encoding=_UTF_8)))
@@ -99,9 +118,17 @@ def _legal_permalinks(repo_root: Path) -> dict[str, str]:
                 continue
             table = cast(dict[str, object], body)
             permalink = table.get("permalink")
+            kind = table.get("kind")
+            article = table.get("article")
+            section = table.get("section")
             if isinstance(permalink, str) and permalink:
-                permalinks[ref_id] = permalink
-    return permalinks
+                grounding[ref_id] = LegalGrounding(
+                    permalink=permalink,
+                    kind=kind if isinstance(kind, str) else "",
+                    article=article if isinstance(article, str) else None,
+                    section=section if isinstance(section, str) else None,
+                )
+    return grounding
 
 
 def _approved_concepts(handbook: TerminologyHandbook) -> tuple[ConceptRecord, ...]:
@@ -118,10 +145,10 @@ def _primary_section(concept: ConceptRecord) -> LanguageSection | None:
     return None
 
 
-def _english_section(concept: ConceptRecord) -> LanguageSection | None:
-    """Return the English section (the entry body text), or None."""
+def _section_for(concept: ConceptRecord, language: OutputLanguage) -> LanguageSection | None:
+    """Return the concept's section in one language, or None when unauthored."""
     for section in concept.languages:
-        if section.language is OutputLanguage.EN:
+        if section.language is language:
             return section
     return None
 
@@ -155,14 +182,17 @@ def _term_lines(concept: ConceptRecord) -> list[str]:
     return lines
 
 
-def _body_text(concept: ConceptRecord) -> str:
-    """The entry body: the English definition, else the English short description.
+def _body_text(concept: ConceptRecord, language: OutputLanguage) -> str:
+    """The entry body in the language this docs root is built for.
 
-    Both are curated, taxpayer-general prose. The full ``definition`` is
+    Both fields are curated, taxpayer-general prose. The full ``definition`` is
     preferred when authored; the required ``short_description`` is the
-    guaranteed fallback (every approved concept has one).
+    guaranteed fallback (every approved concept has one). When the build
+    language carries no authored section the body falls back to Spanish, the
+    authoritative source language for an AEAT concept, and then to English:
+    one language is always rendered, never several side by side.
     """
-    section = _english_section(concept) or _primary_section(concept)
+    section = _section_for(concept, language) or _primary_section(concept) or _section_for(concept, OutputLanguage.EN)
     if section is None:  # pragma: no cover - approved concepts always have a section
         return ""
     return section.definition or section.short_description
@@ -197,9 +227,10 @@ def _related_lines(
 
 def _render_entry(
     concept: ConceptRecord,
-    permalinks: dict[str, str],
+    permalinks: dict[str, LegalGrounding],
     claimed: set[str],
     headwords: dict[str, str],
+    language: OutputLanguage,
 ) -> tuple[str, int, list[str]]:
     """Render one ``glossary`` entry and return ``(rst, legal_count, dropped)``.
 
@@ -225,13 +256,17 @@ def _render_entry(
         term_lines.append(term)
     body_indent = "      "
     lines = [f"   {term}" for term in term_lines]
-    block = [*lines, f"{body_indent}{_body_text(concept)}"]
+    block = [*lines, f"{body_indent}{_body_text(concept, language)}"]
     legal_count = 0
     grounding: list[str] = []
     for ref in concept.legal_refs:
-        permalink = permalinks.get(ref)
-        if permalink:
-            grounding.append(f"{body_indent}* Legal basis: `{ref} <{permalink}>`__")
+        resolved = permalinks.get(ref)
+        if resolved:
+            # The link reads as the citation a taxpayer would recognise; the
+            # catalogue id stays visible behind it so the grounding remains
+            # traceable to the exact row it came from.
+            citation = legal_citation(ref, resolved.kind, article=resolved.article, section=resolved.section)
+            grounding.append(f"{body_indent}* Legal basis: `{citation} <{resolved.permalink}>`__ (``{ref}``)")
             legal_count += 1
     grounding.extend(_related_lines(concept, headwords, body_indent))
     if grounding:
@@ -240,18 +275,26 @@ def _render_entry(
     return "\n".join(block), legal_count, dropped
 
 
-def render_glossary(repo_root: Path, handbook: TerminologyHandbook) -> tuple[str, GlossaryResult]:
+def render_glossary(
+    repo_root: Path,
+    handbook: TerminologyHandbook,
+    language: OutputLanguage | None = None,
+) -> tuple[str, GlossaryResult]:
     """Render the generated glossary RST and its result summary.
 
     Args:
         repo_root: Repository root (for the legal-catalogue read).
         handbook: The compiled Terminology Handbook.
+        language: The language to render definitions in. Defaults to the
+            language this docs root is being built for, read from the
+            environment through the single build-language authority.
 
     Returns:
         ``(rst_text, result)`` - the page content and a summary of how many
         approved concepts rendered, how many drafts were excluded, and how
         many legal grounding links resolved.
     """
+    resolved_language = language if language is not None else docs_build_language(os.environ)
     permalinks = _legal_permalinks(repo_root)
     approved = _approved_concepts(handbook)
     # concept_id -> headword for every approved concept, so broader/related
@@ -279,7 +322,7 @@ def render_glossary(repo_root: Path, handbook: TerminologyHandbook) -> tuple[str
     deduplicated: list[str] = []
     rendered = 0
     for concept in approved:
-        entry, count, dropped = _render_entry(concept, permalinks, claimed, headwords)
+        entry, count, dropped = _render_entry(concept, permalinks, claimed, headwords, resolved_language)
         deduplicated.extend(dropped)
         # A concept whose every term collided with an earlier entry has no
         # surviving headword; skip it rather than emit a term-less block.

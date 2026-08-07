@@ -21,10 +21,9 @@ from typing import Never, Self, SupportsIndex, override
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, DocumentShape
-from ...core.external_constants import PDF_MIME_TYPE, XML_MIME_TYPE
 from ...core.hashing import sha256_hex
-from ...domain.attachments import AttachmentStoreProtocol, normalize_media_type
-from ._evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceInputError
+from ...domain.attachments import AttachmentStoreProtocol
+from ._evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceInputError
 
 __all__ = [
     "EvidenceInput",
@@ -47,8 +46,11 @@ class EvidenceInput(BaseModel):
     persisted (see the module docstring and the overridden dump methods).
 
     Attributes:
-        media_kind: Whether the bytes are a PDF or an image.
-        mime_type: Concrete MIME type of the bytes (e.g. ``application/pdf``).
+        mime_type: Concrete MIME type as recorded on the storage manifest (e.g.
+            ``application/pdf``). Carried as provenance and for the vision
+            reader, which needs a concrete image MIME. It is the producer's
+            LABEL and decides nothing about how the bytes are read; that is
+            :attr:`document_shape`, which is probed from the bytes themselves.
         data: The decrypted evidence bytes, in memory only. Excluded from ``repr``.
         content_sha256: 64-character lowercase hex SHA-256 of :attr:`data`; the
             content address the bytes were read under. Enforced to match ``data``.
@@ -60,7 +62,6 @@ class EvidenceInput(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    media_kind: MediaKind
     mime_type: str = Field(min_length=1)
     data: bytes = Field(repr=False)
     content_sha256: str = Field(min_length=64, max_length=64)
@@ -98,13 +99,13 @@ class EvidenceInput(BaseModel):
     def document_shape(self) -> DocumentShape:
         """What this evidence actually IS, derived from its own bytes.
 
-        Supersedes :attr:`media_kind` as the reading decision. That field is
-        derived from the STORED MIME TYPE, which is a label the producer
-        attached and which cannot see inside the document -- so a ZUGFeRD
-        invoice, a PDF carrying a complete machine-readable EN16931 record,
-        answered ``PDF`` and was routed to prose extraction exactly like a
-        photograph of a receipt. The most exactly readable document in the
-        corpus took the least exact path, decided by a label.
+        The sole reading decision. It replaced a ``media_kind`` field derived
+        from the STORED MIME TYPE, which is a label the producer attached and
+        which cannot see inside the document -- so a ZUGFeRD invoice, a PDF
+        carrying a complete machine-readable EN16931 record, answered ``PDF``
+        and was routed to prose extraction exactly like a photograph of a
+        receipt. The most exactly readable document in the corpus took the
+        least exact path, decided by a label.
 
         Derived rather than stored, so it costs no constructor change and
         cannot drift from the bytes it describes: there is no second field to
@@ -131,26 +132,30 @@ class EvidenceInput(BaseModel):
         raise NotImplementedError(_REFUSAL_MESSAGE)
 
 
-def _media_kind_from_mime(mime_type: str) -> MediaKind:
-    """Map a stored attachment MIME type to the reader's ``MediaKind``.
+def _reject_unreadable_bytes(data: bytes, *, mime_type: str) -> None:
+    """Refuse evidence whose BYTES match no readable document shape.
 
-    A structured XML e-invoice resolves to :attr:`MediaKind.PDF` for the same
-    reason the write-side admission gate does: the coarse media kind only says
-    "not an image", and both a PDF and a structured record are then read through
-    the document-shape probe, which is the only thing that can say what the
-    document actually is. Omitting XML here refuses on the READ path a document
-    the write path accepted, which is the halfway state that leaves a document
-    ingestible and unreadable.
+    The read path's admission question used to be asked of the stored MIME type
+    through a two-member media kind, and a label cannot see inside a document.
+    It got both directions wrong: a PNG announced as ``application/pdf`` was
+    admitted and called a PDF, while a genuine PDF announced as
+    ``application/octet-stream`` was refused outright. Neither answer was about
+    the document.
+
+    :attr:`DocumentShape.UNKNOWN` is the probe's own "never guessed at, always
+    refused" verdict, so refusing on it moves the authority to the bytes while
+    leaving every case where the label told the truth decided exactly as before.
+    ``mime_type`` appears in the message only as the operator-visible breadcrumb
+    identifying the record they are looking at; it decides nothing.
     """
-    normalized_mime_type = normalize_media_type(mime_type)
-    if normalized_mime_type in {PDF_MIME_TYPE, XML_MIME_TYPE}:
-        return MediaKind.PDF
-    if normalized_mime_type.startswith("image/"):
-        return MediaKind.IMAGE
-    raise PurchaseInvoiceEvidenceInputError(
-        f"evidence media type {mime_type!r} cannot be read; only PDF, structured XML and image evidence is supported",
-        suggestion="aeat app ledger evidence list",
-    )
+    from ...adapters.inbound.einvoice import probe_document_shape
+
+    if probe_document_shape(data) is DocumentShape.UNKNOWN:
+        raise PurchaseInvoiceEvidenceInputError(
+            f"evidence bytes (stored as {mime_type!r}) match no readable document shape; "
+            "only PDF, structured XML and image evidence can be read",
+            suggestion="aeat app ledger evidence list",
+        )
 
 
 def resolve_attachment_evidence_input(
@@ -178,11 +183,16 @@ def resolve_attachment_evidence_input(
 
     Returns:
         :class:`EvidenceInput`: In-memory bytes plus provenance, for an on-host read.
+
+    Raises:
+        PurchaseInvoiceEvidenceInputError: If the bytes match no readable
+            document shape. Judged on the bytes, so the stored MIME type can be
+            wrong in either direction without changing the verdict.
     """
     manifest = store.load_manifest(attachment_id)
     data = store.read_bytes(manifest.sha256)
+    _reject_unreadable_bytes(data, mime_type=manifest.mime_type)
     return EvidenceInput(
-        media_kind=_media_kind_from_mime(manifest.mime_type),
         mime_type=manifest.mime_type,
         data=data,
         content_sha256=manifest.sha256,
