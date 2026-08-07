@@ -183,6 +183,7 @@ from ._model_catalogue import (
 from ._modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
 from ._modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ._models import STRICT_FROZEN_CONFIG
+from ._objeto_tributario import ObjetoTributario
 from ._optional_extras import (
     ANTHROPIC_EXTRA,
     BROWSER_EXTRA,
@@ -454,6 +455,7 @@ __all__: list[str] = [
     "ModelRuntime",
     "ModelSelectionAdvisory",
     "Modelo",
+    "ObjetoTributario",
     "OfficialTipoRentaCode",
     "OptionalExtra",
     "PassphraseStrength",
