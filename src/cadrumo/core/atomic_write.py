@@ -68,7 +68,6 @@ from collections.abc import Iterable
 from pathlib import Path
 
 from ._fsync import fsync_parent_dir
-from .file_permissions import restrict_file_permissions
 from .logging import get_logger
 
 __all__ = [
@@ -305,16 +304,14 @@ def atomic_write_hardened_bytes(path: Path, data: bytes, *, mode: int = _HARDENE
             os.close(fd)
         _replace_and_fsync(tmp_path, path)
         created = False
-        # ``mode`` is a POSIX file mode, and on NTFS it sets little beyond the
-        # read-only bit — the target otherwise inherits its parent directory's
-        # ACL. This tier is documented for secret-bearing targets, so it owns
-        # the platform-appropriate restriction rather than leaving half of it
-        # to callers: POSIX is covered by the ``os.open`` mode above, Windows
-        # by the ACL strip here. The two halves were split once before, when
-        # routing the durable writers through this tier replaced a
-        # ``restrict_file_permissions`` call that carried BOTH — which silently
-        # dropped ACL hardening on Windows while every POSIX test stayed green.
-        restrict_file_permissions(path)
+        # Deliberately NO per-file ACL call here. ``mode`` covers POSIX; on
+        # Windows the target's ACL comes from its parent directory, hardened
+        # ONCE at creation with inheritance flags (see
+        # ``core.file_permissions.restrict_directory_permissions``). A per-file
+        # ``icacls`` strip was measured at ~28 ms/write, which is O(N)
+        # subprocess spawns across the blob and journal writers — minutes of
+        # pure overhead at the record counts this store is built for. Directory
+        # inheritance gives the same confidentiality at O(1).
     except BaseException as exc:
         _log.error(
             "atomic_write: hardened-tier write failed target=%s error_type=%s",

@@ -815,19 +815,23 @@ application:
       errors:
         duplicate_invoice: 'Ya existe una factura con la misma identidad en el catálogo:
           %{invoice_id}.'
+        intracom_operation_type_required: 'Una entrega intracomunitaria debe declarar
+          su clave de operación del Modelo 349: la categoría por sí sola no distingue
+          una entrega intracomunitaria ordinaria (clave E) de una entrega posterior
+          a una importación exenta (clave M, o H mediante representante fiscal).'
         unsupported_iva_rate: 'El tipo de IVA %{iva_rate} no se reconoce; usa uno
           de: %{accepted}.'
-        intracom_operation_type_required: 'Una entrega intracomunitaria debe declarar su clave de operación del Modelo 349: la categoría por sí sola no distingue una entrega intracomunitaria ordinaria (clave E) de una entrega posterior a una importación exenta (clave M, o H mediante representante fiscal).'
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'El prefijo de identificador de factura %{invoice_id}
           es ambiguo; coincide con: %{candidates}.'
+        empty_invoice_patch: Una corrección de factura debe indicar al menos un campo
+          a modificar.
         invoice_id_required: Se requiere un identificador de factura.
         invoice_not_found: 'Factura del catálogo no encontrada: %{invoice_id}.'
         remove_linked_invoice: 'No se puede eliminar la factura %{invoice_id} mientras
           siga vinculada a transacciones: %{linked_transaction_ids}. Desvincúlelas
           primero.'
-        empty_invoice_patch: 'Una corrección de factura debe indicar al menos un campo a modificar.'
     linking:
       errors:
         linked_invoice_not_found: No se encontró la factura %{invoice_id} después
@@ -2043,25 +2047,29 @@ cli:
             iva_rate/currency/country_code/notes).
           import_file_not_found: 'Archivo no encontrado: {path}'
           import_help: Crea facturas del catálogo en lote desde un archivo CSV o XLSX.
+          invoice_class_help: Clase de factura. Una rectificativa exige además --rectifies-invoice-number
+            indicando la factura que corrige.
           invoice_id_help: Identificador de factura del catálogo (o prefijo no ambiguo).
+          iva_category_help: Tratamiento de IVA de la operación. Necesario para que
+            un cálculo de renta pueda fundamentarla.
           list_help: Lista las facturas del catálogo de conciliación.
+          recargo_help: Recargo de equivalencia repercutido sobre la cuota (LIVA art.
+            161). Va incluido en el total de la factura, a diferencia de una retención.
+          rectifies_help: Número de la factura que corrige esta rectificativa.
           remove_help: Elimina una factura del catálogo de conciliación.
           retention_amount_help: Importe de la retención de IRPF retenida por el pagador,
             en euros. Puede indicarse solo, o junto con --retention-rate.
           retention_rate_help: Fracción de retención del art. 95.1 RIRPF que retiene
             el pagador (0,15 para el 15% general, o 0,07 durante el periodo de inicio
             de actividad). Requiere --retention-amount; una fracción sola se rechaza.
+          series_help: Serie de numeración de la factura, cuando el emisor utiliza
+            una.
           view_help: Muestra una factura del catálogo de conciliación por identificador
             o prefijo no ambiguo.
           wizard_help: Entrada manual guiada y no interactiva cuando la extracción
             no está disponible.
           wizard_idempotent_noop: 'Sin operación idempotente: ya existe una factura
             con esta identidad (%{invoice_id}); no se creó nada.'
-          invoice_class_help: 'Clase de factura. Una rectificativa exige además --rectifies-invoice-number indicando la factura que corrige.'
-          series_help: 'Serie de numeración de la factura, cuando el emisor utiliza una.'
-          rectifies_help: 'Número de la factura que corrige esta rectificativa.'
-          recargo_help: 'Recargo de equivalencia repercutido sobre la cuota (LIVA art. 161). Va incluido en el total de la factura, a diferencia de una retención.'
-          iva_category_help: 'Tratamiento de IVA de la operación. Necesario para que un cálculo de renta pueda fundamentarla.'
         group_help: Registros de facturas de negocio (emitidas o recibidas)
         invoice_date_help: Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD),
           p. ej. 2026-01-15.
@@ -4520,8 +4528,7 @@ cli:
         la transacción; vista previa por defecto, persiste con --apply.
       llm_provider_unavailable: 'El proveedor LLM ''{provider}'' no está disponible:
         su CLI no está en el PATH. Instala el CLI de ''{provider}'' y asegúrate de
-        que esté en el PATH, o ejecuta ''aeat app ledger providers'' para listar los
-        proveedores disponibles.'
+        que esté en el PATH.'
       llm_reason_label: motivo
       llm_rejected_label: rechazada
       llm_rejected_message: Sugerencia del modelo rechazada y registrada. La transacción
@@ -4734,23 +4741,17 @@ cli:
       errors:
         cross_bucket_invoice: La factura pertenece a un bucket distinto del perfil
           activo.
-        invoice_not_found: Este id no existe en el catálogo de facturas de reconciliación,
-          que se rellena con los flujos de importación y reconciliación de facturas.
-          Los id generados por 'aeat app ledger invoice add' son registros de factura
-          del operador y no se pueden vincular aquí. Para crear una factura de catálogo
-          vinculable manualmente, ejecuta 'aeat app ledger invoice catalogue create'
-          y pasa ese invoice_id a --invoice-id. Para adjuntar evidencia de factura
-          de compra, ejecuta 'aeat app ledger attach' con un id de 'aeat app ledger
-          evidence add'.
+        invoice_not_found: Este id no existe en el catálogo de facturas. Crea antes
+          la factura con 'aeat app ledger invoice add' y después vincúlala; el id
+          que muestra ese verbo es el que debes indicar aquí.
       help: Vincula un movimiento contable con una factura del catálogo de reconciliación
         en una única llamada canónica. Para adjuntar evidencia de factura de compra,
         usa 'aeat app ledger attach'. Rechaza vínculos entre buckets. Local; nunca
         contacta con AEAT.
       id_help: Id de transacción del libro (SHA-256 o prefijo inequívoco).
-      invoice_id_help: Id del catálogo de facturas enriquecido, procedente de una
-        factura importada, reconciliada o creada con 'aeat app ledger invoice catalogue
-        create', vinculado bidireccionalmente con el movimiento. NO es un id de 'aeat
-        app ledger invoice add'.
+      invoice_id_help: Id de factura procedente de una factura importada, reconciliada
+        o añadida manualmente, vinculado bidireccionalmente con el movimiento. Todo
+        id de 'aeat app ledger invoice add' se puede vincular aquí.
     list:
       by_group_help: Agrupar el listado por etiqueta de grupo.
       column_header: "id\tid_completo\tfecha\timporte\tdescripción\testado_revisión"

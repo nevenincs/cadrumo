@@ -759,18 +759,23 @@ application:
     creation:
       errors:
         duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
+        intracom_operation_type_required: 'A Közösségen belüli termékértékesítésnek
+          meg kell adnia a 349-es modell műveleti kulcsát: a kategória önmagában nem
+          különbözteti meg a szokásos Közösségen belüli értékesítést (E kulcs) az
+          adómentes importot követő értékesítéstől (M kulcs, illetve H pénzügyi képviselő
+          esetén).'
         unsupported_iva_rate: 'A(z) %{iva_rate} áfakulcs nem ismert; használja az
           alábbiak egyikét: %{accepted}.'
-        intracom_operation_type_required: 'A Közösségen belüli termékértékesítésnek meg kell adnia a 349-es modell műveleti kulcsát: a kategória önmagában nem különbözteti meg a szokásos Közösségen belüli értékesítést (E kulcs) az adómentes importot követő értékesítéstől (M kulcs, illetve H pénzügyi képviselő esetén).'
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'A(z) %{invoice_id} számlaazonosító-előtag nem egyértelmű;
           több találat: %{candidates}.'
+        empty_invoice_patch: A számla javításához legalább egy módosítandó mezőt meg
+          kell adni.
         invoice_id_required: Számlaazonosító megadása kötelező.
         invoice_not_found: 'A katalógusban nem található számla: %{invoice_id}.'
         remove_linked_invoice: 'A(z) %{invoice_id} számla nem törölhető, amíg tranzakciókhoz
           kapcsolódik: %{linked_transaction_ids}. Előbb oldja fel a kapcsolatokat.'
-        empty_invoice_patch: 'A számla javításához legalább egy módosítandó mezőt meg kell adni.'
     linking:
       errors:
         linked_invoice_not_found: A(z) %{invoice_id} számla nem található a kapcsolás
@@ -1971,8 +1976,15 @@ cli:
             taxable_base, valamint opcionálisan iva_rate/currency/country_code/notes).
           import_file_not_found: 'A fájl nem található: {path}'
           import_help: Katalógusszámlák tömeges létrehozása CSV vagy XLSX fájlból.
+          invoice_class_help: A számla osztálya. A rectificativa emellett a --rectifies-invoice-number
+            megadását is megköveteli, amely a javított számlát nevezi meg.
           invoice_id_help: Katalógusbeli számla azonosítója (vagy egyértelmű előtag).
+          iva_category_help: Az ügylet áfakezelése. Szükséges ahhoz, hogy egy renta-számítás
+            megalapozhassa.
           list_help: Az egyeztetési katalógus számláinak listázása.
+          recargo_help: Az adótételre felszámított recargo de equivalencia (LIVA 161.
+            cikk). A retencióval ellentétben a számla végösszegén belül szerepel.
+          rectifies_help: Annak a számlának a száma, amelyet ez a rectificativa javít.
           remove_help: Egy egyeztetési katalógusbeli számla törlése.
           retention_amount_help: A kifizető által levont IRPF visszatartás összege
             euróban. Megadható önállóan, vagy a --retention-rate paraméterrel együtt.
@@ -1980,17 +1992,13 @@ cli:
             amelyet a kifizető von le (0,15 az általános 15%-hoz, vagy 0,07 a tevékenység
             megkezdésének időszakában). A --retention-amount megadása kötelező; önmagában
             a hányad megadása elutasításra kerül.
+          series_help: A számla sorozatjele, ha a kibocsátó használ ilyet.
           view_help: Egy egyeztetési katalógusbeli számla megjelenítése azonosító
             vagy egyértelmű előtag alapján.
           wizard_help: Irányított, nem interaktív kézi bevitel, ha a kinyerés nem
             elérhető.
           wizard_idempotent_noop: 'Idempotens no-op: már létezik ilyen azonosságú
             számla (%{invoice_id}); semmi sem jött létre.'
-          invoice_class_help: 'A számla osztálya. A rectificativa emellett a --rectifies-invoice-number megadását is megköveteli, amely a javított számlát nevezi meg.'
-          series_help: 'A számla sorozatjele, ha a kibocsátó használ ilyet.'
-          rectifies_help: 'Annak a számlának a száma, amelyet ez a rectificativa javít.'
-          recargo_help: 'Az adótételre felszámított recargo de equivalencia (LIVA 161. cikk). A retencióval ellentétben a számla végösszegén belül szerepel.'
-          iva_category_help: 'Az ügylet áfakezelése. Szükséges ahhoz, hogy egy renta-számítás megalapozhassa.'
         group_help: Üzleti számlák nyilvántartása (kiállított vagy beérkezett).
         invoice_date_help: A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN),
           pl. 2026-01-15.
@@ -4435,10 +4443,9 @@ cli:
       llm_help: Kérd meg egy helyi LLM szolgáltatót (claude/antigravity/codex), hogy
         osztályozza a tranzakciót; alapértelmezetten előnézet, --apply kapcsolóval
         menti.
-      llm_provider_unavailable: 'A(z) ''{provider}'' LLM szolgáltató nem érhető el:
-        a CLI nincs a PATH-on. Telepítsd a(z) ''{provider}'' CLI-t és gondoskodj róla,
-        hogy a PATH-on legyen, vagy futtasd a ''aeat app ledger providers'' parancsot
-        a használható szolgáltatók listázásához.'
+      llm_provider_unavailable: 'A(z) ''{provider}'' LLM-szolgáltató nem érhető el:
+        a CLI-je nincs a PATH-on. Telepítse a(z) ''{provider}'' CLI-t, és győződjön
+        meg róla, hogy a PATH-on van.'
       llm_reason_label: indok
       llm_rejected_label: elutasítva
       llm_rejected_message: A modell javaslata elutasítva és rögzítve. A tranzakció
@@ -4648,23 +4655,17 @@ cli:
       errors:
         cross_bucket_invoice: A számla egy másik buckethez tartozik, mint az aktív
           profil.
-        invoice_not_found: Ez az azonosító nem szerepel a reconciliációs számlakatalógusban,
-          amelyet a számlaimportálási és -reconciliációs folyamatok töltenek fel.
-          A 'aeat app ledger invoice add' által létrehozott azonosítók operátori számlarekordok,
-          és itt nem kapcsolhatók össze. Kézzel linkelhető katalógusszámla létrehozásához
-          futtassa a 'aeat app ledger invoice catalogue create' parancsot, majd adja
-          át az invoice_id értéket a --invoice-id kapcsolónak. Vásárlásiszámla-bizonyíték
-          csatolásához futtassa a 'aeat app ledger attach' parancsot egy 'aeat app
-          ledger evidence add' azonosítóval.
+        invoice_not_found: Ez az azonosító nem szerepel a számlakatalógusban. Előbb
+          hozza létre a számlát az 'aeat app ledger invoice add' paranccsal, majd
+          kapcsolja össze; az itt megadandó azonosítót ez a parancs írja ki.
       help: Főkönyvi tranzakció összekapcsolása egy reconciliációs katalógusszámlával
         egyetlen kanonikus hívásban. Vásárlásiszámla-bizonyíték csatolásához használja
         a 'aeat app ledger attach' parancsot. Keresztbucket-hivatkozásokat elutasít.
         Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
       id_help: Könyvelési tranzakció azonosító (SHA-256 vagy egyértelmű előtag).
-      invoice_id_help: A bővített számlakatalógus azonosítója egy importált vagy reconciliált
-        számlából, vagy a 'aeat app ledger invoice catalogue create' paranccsal létrehozva,
-        amely kétirányúan kapcsolódik a tranzakcióhoz. Ez NEM 'aeat app ledger invoice
-        add' azonosító.
+      invoice_id_help: Importált, egyeztetett vagy kézzel felvett számla azonosítója,
+        kétirányúan összekapcsolva a tranzakcióval. Minden 'aeat app ledger invoice
+        add' azonosító összekapcsolható itt.
     list:
       by_group_help: A lista csoportosítása csoportcímke szerint.
       column_header: "id\tteljes_id\tdátum\tösszeg\tleírás\tellenőrzési_állapot"

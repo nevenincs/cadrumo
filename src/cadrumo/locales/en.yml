@@ -733,18 +733,22 @@ application:
       errors:
         duplicate_invoice: 'An invoice with the same identity already exists in the
           catalogue: %{invoice_id}.'
+        intracom_operation_type_required: 'An intra-community supply must state its
+          Modelo 349 operation type: the category alone cannot tell an ordinary entrega
+          intracomunitaria (clave E) from a supply following an exempt importation
+          (clave M, or H via a fiscal representative).'
         unsupported_iva_rate: 'IVA rate %{iva_rate} is not recognised; use one of:
           %{accepted}.'
-        intracom_operation_type_required: 'An intra-community supply must state its Modelo 349 operation type: the category alone cannot tell an ordinary entrega intracomunitaria (clave E) from a supply following an exempt importation (clave M, or H via a fiscal representative).'
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'The invoice id prefix %{invoice_id} is ambiguous;
           it matches: %{candidates}.'
+        empty_invoice_patch: An invoice correction must state at least one field to
+          change.
         invoice_id_required: An invoice id is required.
         invoice_not_found: 'Catalogue invoice not found: %{invoice_id}.'
         remove_linked_invoice: 'Cannot remove invoice %{invoice_id} while it is still
           linked to transactions: %{linked_transaction_ids}. Unlink them first.'
-        empty_invoice_patch: 'An invoice correction must state at least one field to change.'
     linking:
       errors:
         linked_invoice_not_found: Invoice %{invoice_id} was not found after applying
@@ -1895,24 +1899,27 @@ cli:
             iva_rate/currency/country_code/notes).
           import_file_not_found: 'File not found: {path}'
           import_help: Bulk-create catalogue invoices from a CSV or XLSX file.
+          invoice_class_help: Invoice class. A rectificativa also requires --rectifies-invoice-number
+            naming the invoice it corrects.
           invoice_id_help: Catalogue invoice id (or unambiguous prefix).
+          iva_category_help: IVA treatment of the operation. Required for a renta
+            income calculation to ground it.
           list_help: List reconciliation catalogue invoices.
+          recargo_help: Recargo de equivalencia charged on top of the cuota (LIVA
+            art. 161). It rides inside the invoice total, unlike a retencion.
+          rectifies_help: Number of the invoice this rectificativa corrects.
           remove_help: Delete one reconciliation catalogue invoice.
           retention_amount_help: Amount of IRPF retención withheld by the payer, in
             euros. May be supplied alone, or alongside --retention-rate.
           retention_rate_help: RIRPF art. 95.1 retención fraction withheld by the
             payer (0.15 for the general 15%, or 0.07 during the inicio-de-actividad
             window). Requires --retention-amount; a rate alone is refused.
+          series_help: Invoice numbering series, when the issuer uses one.
           view_help: Show one reconciliation catalogue invoice by id or unambiguous
             prefix.
           wizard_help: Guided, non-interactive manual entry when extraction is unavailable.
           wizard_idempotent_noop: 'Idempotent no-op: an invoice with this identity
             already exists (%{invoice_id}); nothing was created.'
-          invoice_class_help: 'Invoice class. A rectificativa also requires --rectifies-invoice-number naming the invoice it corrects.'
-          series_help: 'Invoice numbering series, when the issuer uses one.'
-          recargo_help: 'Recargo de equivalencia charged on top of the cuota (LIVA art. 161). It rides inside the invoice total, unlike a retencion.'
-          iva_category_help: 'IVA treatment of the operation. Required for a renta income calculation to ground it.'
-          rectifies_help: 'Number of the invoice this rectificativa corrects.'
         group_help: Business invoice records (issued or received)
         invoice_date_help: Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.
         invoice_id_help: Invoice id (or unambiguous prefix)
@@ -4181,8 +4188,7 @@ cli:
       llm_help: Ask a local LLM provider (claude/antigravity/codex) to classify the
         transaction; preview by default, persist with --apply.
       llm_provider_unavailable: 'LLM provider ''{provider}'' is unavailable: its CLI
-        is not on PATH. Install the ''{provider}'' CLI and ensure it is on PATH, or
-        run ''aeat app ledger providers'' to list usable providers.'
+        is not on PATH. Install the ''{provider}'' CLI and ensure it is on PATH.'
       llm_reason_label: reason
       llm_rejected_label: rejected
       llm_rejected_message: LLM suggestion rejected and recorded. The transaction
@@ -4383,20 +4389,16 @@ cli:
       errors:
         cross_bucket_invoice: Invoice belongs to a different bucket than the active
           profile.
-        invoice_not_found: This id was not found in the reconciliation invoice catalogue,
-          which is populated by the invoice import and reconciliation flows. Ids minted
-          by 'aeat app ledger invoice add' are operator invoice records and cannot
-          be linked here. To create a linkable catalogue invoice manually, run 'aeat
-          app ledger invoice catalogue create' and pass that invoice_id to --invoice-id.
-          To attach purchase-invoice evidence, run 'aeat app ledger attach' with an
-          id from 'aeat app ledger evidence add'.
+        invoice_not_found: This id was not found in the invoice catalogue. Create
+          the invoice first with 'aeat app ledger invoice add', then link it; the
+          id that verb reports is the one to pass here.
       help: Bind a ledger transaction to a reconciliation-catalogue invoice in one
         atomic call. To attach purchase-invoice evidence, use 'aeat app ledger attach'.
         Refuses cross-bucket links. Local-only; never contacts AEAT.
       id_help: Ledger transaction id (SHA-256 or unambiguous prefix).
-      invoice_id_help: Rich invoice-catalogue id from an imported or reconciled invoice,
-        or from 'aeat app ledger invoice catalogue create', bound bidirectionally
-        to the transaction. This is NOT an 'aeat app ledger invoice add' id.
+      invoice_id_help: Invoice id from an imported, reconciled, or manually added
+        invoice, bound bidirectionally to the transaction. Every 'aeat app ledger
+        invoice add' id is linkable here.
     list:
       by_group_help: Section the listing by group label.
       column_header: "id\tfull_id\tdate\tamount\tdescription\treview_status"
