@@ -6,9 +6,10 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:5546cdb1312bbef8f26efe3ac1e836128f5a7d8d929e9b61402b169fd1c17053'
+body_hash: 'sha256:fd2862adfa28546b0f2093c89510800f767c2244d78b781cf9abd73f31df181c'
 related:
   - '[[2026-08-07-dev-harness-bleed-adr]]'
+  - '[[2026-08-07-dev-harness-bleed-research]]'
 ---
 
 # `dev-harness-bleed` feature index
@@ -20,3 +21,7 @@ Auto-generated index of all documents tagged with `#dev-harness-bleed`.
 ### adr
 
 - `2026-08-07-dev-harness-bleed-adr` - `dev-harness-bleed` adr: `locales tooling boundary` | (**status:** `proposed`)
+
+### research
+
+- `2026-08-07-dev-harness-bleed-research` - `dev-harness-bleed` research: `dev/CI tooling shipped inside src/cadrumo: verified inventory`
