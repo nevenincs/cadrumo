@@ -168,13 +168,24 @@ class TransactionKind(StrEnum):
             an EU-resident consumer routed through Esquema Exterior. LIVA
             art. 163 octiesdecies.
         OSS_UNION_GOODS_DISTANCE_SALE: Intra-community distance sale of
-            goods routed through Esquema Unión. LIVA art. 163 unvicies.
+            goods routed through Esquema Unión. Admitted to the scheme by
+            LIVA art. 163 unvicies; located as a supply of goods by art. 68.
         OSS_UNION_GOODS_INTERFACE_FACILITATED: Interior supply of goods
             facilitated by an electronic interface, routed through Esquema
-            Unión. LIVA art. 163 unvicies.
+            Unión. Admitted by LIVA art. 163 unvicies; located by art. 68.
         OSS_UNION_SERVICES: Services from an EU-established taxable person
             to a consumer in another Member State routed through Esquema
-            Unión. LIVA art. 163 unvicies.
+            Unión. Admitted by LIVA art. 163 unvicies; located as a supply of
+            services by art. 69.
+
+    **Art. 163 unvicies admits an operation to the Union scheme; it does not say
+    which limb the operation is.** Its own scope paragraph reaches "presten
+    servicios" and "ventas a distancia intracomunitarias de bienes" alike, so
+    citing it alone establishes neither. The three members above were previously
+    documented as resting on it for their goods-or-services character, and two
+    separate readers took that at face value and derived the wrong nature before
+    going to the statute. What fixes the nature is the placement article: art. 68
+    for *entregas de bienes*, art. 69 for *prestaciones de servicios*.
         IOSS_DISTANCE_SALE_LOW_VALUE: Distance sale of imported goods with
             intrinsic value at or below 150 EUR routed through Esquema de
             Importación (IOSS). LIVA art. 163 quinvicies.

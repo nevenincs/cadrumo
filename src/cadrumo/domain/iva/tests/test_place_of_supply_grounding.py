@@ -19,6 +19,7 @@ See Also:
 
 from __future__ import annotations
 
+import re
 from datetime import date
 
 import pytest
@@ -183,6 +184,58 @@ def test_the_union_scheme_article_never_fixes_the_nature_on_its_own() -> None:
             assert rule.establishing_reference != union_scheme, (
                 f"{rule.rule_id} fixes a nature on an article that reaches both limbs"
             )
+
+
+def test_the_statute_itself_shows_the_union_scheme_article_reaching_both_limbs() -> None:
+    """The claim above, checked against the law rather than restated.
+
+    The case above pins the DATA. This pins the reason: art. 163 unvicies really
+    does reach both limbs in the bundled consolidated text. Without it the guard
+    rests on an assertion nobody re-derives, which is exactly how the enum's own
+    prose came to describe the article as a goods provision.
+    """
+    heading = "# Artículo 163 unvicies."
+    start = _LIVA.find(heading)
+    assert start != -1, "the Union scheme article is not in the bundled consolidated text"
+
+    # The scope paragraph, not the whole article: a long article mentions the
+    # other limb incidentally further down, and reading to the end would make the
+    # claim true of almost any provision.
+    scope = _LIVA[start : start + 1200]
+    assert "presten servicios" in scope
+    assert "ventas a distancia intracomunitarias de bienes" in scope
+
+
+def test_the_enum_prose_does_not_attribute_a_nature_to_the_union_scheme_article() -> None:
+    """The docstring is a source readers trust, so it is gated like the data.
+
+    Two readers derived the wrong nature from this prose before going to the
+    statute, and one nearly shipped a row establishing GOODS from it. The check is
+    narrow on purpose: it does not police wording, only the specific attribution
+    that misled -- a member described as a goods-or-services kind whose stated
+    authority is the article that establishes neither.
+    """
+    from .._classification import TransactionKind
+
+    doc = TransactionKind.__doc__ or ""
+    assert doc, "the enum lost its docstring; this guard would pass vacuously"
+
+    # The defect is an attribution, so the check is an attribution: no sentence
+    # may say the operation is LOCATED by art. 163 unvicies. Naming the article
+    # beside a placement article is correct and must stay allowed -- that is
+    # precisely what the corrected prose does.
+    flattened = " ".join(doc.split())
+    misattribution = re.compile(r"locat\w*[^.]*163\s+unvicies", re.IGNORECASE)
+    offender = misattribution.search(flattened)
+
+    assert offender is None, (
+        f"the enum prose attributes placement to art. 163 unvicies: {offender.group(0)!r}" if offender else ""
+    )
+
+    assert "Admitted to the scheme by" in doc or "Admitted by" in doc, (
+        "the enum no longer distinguishes admission to the Union scheme from placement, "
+        "which is the distinction two readers previously missed"
+    )
 
 
 def test_an_ungrounded_rule_refuses_rather_than_returning_a_default() -> None:
