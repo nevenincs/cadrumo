@@ -56,7 +56,12 @@ from .....domain.calculations.registry import (
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, BrowserSession, DefaultBrowserSession, default_browser_session_factory
-from ._adapter_utils import assert_read_landing, registry_failure_message, require_playwright_page
+from ._adapter_utils import (
+    assert_read_landing,
+    normalize_display_text,
+    registry_failure_message,
+    require_playwright_page,
+)
 from ._browser_constants import PLAYWRIGHT_WAIT_NETWORKIDLE, default_viewport
 from ._browser_stage import build_playwright_stage_runner
 from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
@@ -456,8 +461,8 @@ def _require_payload_covers_expected_casillas(
 
 def extract_renta_web_open_summary_value(body_text: str, label: str) -> str | None:
     """Extract one Spanish-formatted numeric value from Renta WEB Open summary text."""
-    normalized_label = _normalize_summary_text(label)
-    lines = [_normalize_summary_text(line) for line in body_text.splitlines()]
+    normalized_label = normalize_display_text(label)
+    lines = [normalize_display_text(line) for line in body_text.splitlines()]
     for index, line in enumerate(lines):
         if not line:
             continue
@@ -707,10 +712,6 @@ async def _expect_visible(locator: Locator, *, stage: str, description: str, tim
         timeout_ms=timeout_ms,
         timeout_is_shape_change=True,
     )
-
-
-def _normalize_summary_text(value: str) -> str:
-    return " ".join(value.replace("\xa0", " ").split())
 
 
 __all__ = [

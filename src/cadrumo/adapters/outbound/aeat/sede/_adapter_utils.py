@@ -400,6 +400,22 @@ def normalize_response_text(text: str) -> str:
     return _WHITESPACE_RE.sub(" ", without_accents.casefold()).strip()
 
 
+def normalize_display_text(text: str) -> str:
+    """Collapse a page value's whitespace while keeping it readable as printed.
+
+    The sibling of :func:`normalize_response_text` for the other half of the
+    job: that one casefolds and folds diacritics so a marker can be MATCHED,
+    which makes its output unfit to show or store. This one only tidies the
+    spacing — AEAT pages lay values out with non-breaking spaces and wrapped
+    indentation — so ``"Cuota Disponible"`` survives as written rather than
+    arriving as ``"cuota disponible"``.
+
+    Reach for this whenever the normalised text is the VALUE; reach for
+    :func:`normalize_response_text` only when it is a lookup key.
+    """
+    return " ".join(text.replace("\xa0", " ").split())
+
+
 SPANISH_NEGATIVE_VERDICT_MARKERS: tuple[str, ...] = (
     "no consta",
     "no valido",
@@ -583,6 +599,7 @@ __all__ = [
     "landed_origin",
     "make_locate_helper",
     "nif_check_operation_tail",
+    "normalize_display_text",
     "normalize_response_text",
     "registry_failure_message",
     "require_playwright_page",

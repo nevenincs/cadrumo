@@ -34,7 +34,7 @@ from .....domain.calculations.registry import (
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
-from ._adapter_utils import normalize_response_text
+from ._adapter_utils import normalize_display_text, normalize_response_text
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 
@@ -224,10 +224,10 @@ def _is_wallet_result_label(label: str, token: str) -> bool:
 def _wallet_label_value_text(node: Tag, label_node: Tag) -> str:
     span = node.find("span")
     if span is not None:
-        return _normalised_display_text(span.get_text(" "))
+        return normalize_display_text(span.get_text(" "))
     node_text = node.get_text(" ")
     label_text = label_node.get_text(" ")
-    return _normalised_display_text(node_text.replace(label_text, "", 1).replace(":", " "))
+    return normalize_display_text(node_text.replace(label_text, "", 1).replace(":", " "))
 
 
 def discover_iva_compensation_wallet_entrypoint(html: str, *, base_url: str) -> str | None:
@@ -638,10 +638,6 @@ def _extract_spanish_amount(text: str) -> Decimal | None:
 
 def _normalised_text(value: str) -> str:
     return normalize_response_text(value).casefold()
-
-
-def _normalised_display_text(value: str) -> str:
-    return " ".join(str(value).replace("\xa0", " ").split())
 
 
 def _looks_like_executed_empty_wallet_page(soup: BeautifulSoup) -> bool:
