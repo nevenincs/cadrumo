@@ -6,9 +6,10 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:865b5bedaa4c334bf21649bc4f5206a916596f089d65c3c71dd194e64cea18a1'
+body_hash: 'sha256:a00dbe3d52184a66e6f68484b3384287985578803ced75326c4bdcfdf53d725b'
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-plan]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-research]]'
 ---
 
@@ -21,6 +22,10 @@ Auto-generated index of all documents tagged with `#aeat-liabilities-sanciones`.
 ### adr
 
 - `2026-08-07-aeat-liabilities-sanciones-adr` - `aeat-liabilities-sanciones` adr: `Deudas y sanciones: read-only liability register, never a calculation input` | (**status:** `accepted`)
+
+### plan
+
+- `2026-08-07-aeat-liabilities-sanciones-plan` - `aeat-liabilities-sanciones` plan
 
 ### research
 
