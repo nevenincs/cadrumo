@@ -216,8 +216,7 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "business_pct fields, from the app's own persisted envelope."
     ),
     ("domain/transactions/_models.py", "_coerce_decimal_field"): (
-        "Same JSON re-hydration as its _coerce_inbound sibling above, on the "
-        "model's own Decimal fields."
+        "Same JSON re-hydration as its _coerce_inbound sibling above, on the model's own Decimal fields."
     ),
     ("domain/deadlines/_profiles.py", "_parse_decimal"): (
         "Reads canonical profile facts already persisted, so the text grammar "
@@ -394,11 +393,29 @@ def test_string_parse_exemptions_are_all_live(source_tree_ast: Mapping[Path, ast
 def _destination_scan_items(
     source_tree_ast: Mapping[Path, ast.AST],
 ) -> tuple[tuple[Path, ast.AST, list[str]], ...]:
-    """Return ``(path, AST, source lines)`` for every production file outside the canonical home."""
-    return tuple(
-        (path, tree, path.read_text(encoding="utf-8").splitlines())
-        for path, tree in _string_parse_scan_items(source_tree_ast)
-    )
+    """Return ``(path, AST, source lines)`` for every production file outside the canonical home.
+
+    A file that has vanished since the session-scoped AST cache was built is
+    skipped rather than raising. Rule 4 needs the raw source lines (the
+    declaration is a comment, which the AST discards), so unlike its rule-3
+    sibling it re-reads from disk — and this tree has many agents working in it
+    at once, so a scratch module can appear and be deleted between the cache
+    build and the read. That really happened on this gate's first full run,
+    against ``domain/_scope_widening_probe.py``.
+
+    Skipping is correct rather than merely convenient: the question asked is
+    whether a live production file carries an undeclared coercion, and a path
+    with no file behind it has no live site and no declaration to go stale. The
+    cache entry, not the tree, is what is out of date.
+    """
+    items: list[tuple[Path, ast.AST, list[str]]] = []
+    for path, tree in _string_parse_scan_items(source_tree_ast):
+        try:
+            source = path.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            continue
+        items.append((path, tree, source.splitlines()))
+    return tuple(items)
 
 
 def _planted(tmp_path: Path, name: str, *lines: str) -> tuple[Path, ast.AST, list[str]]:
@@ -651,6 +668,39 @@ def test_string_parse_gate_reds_on_a_planted_bare_call(tmp_path: Path) -> None:
     violations = string_parse_decimal_violations(((module, tree),), display_root=tmp_path)
 
     assert violations == ["planted.py:5 (in parses_operator_text)", "planted.py:10 (in parses_via_a_local)"], violations
+
+
+def test_string_parse_gate_sees_an_isinstance_narrowed_branch(tmp_path: Path) -> None:
+    """Rule 3 must read an ``isinstance``-narrowed ``str`` branch as text.
+
+    Rule 4 consumed this narrowing one change before rule 3 did, so without a
+    proof pinning it here the two could silently diverge again on what counts as
+    text — and reverting the one-token flip in ``_visit_scope`` would take rule 3
+    back to reporting neither arm of an isinstance dispatch.
+    """
+    module = tmp_path / "narrowed.py"
+    module.write_text(
+        "\n".join(
+            (
+                "from decimal import Decimal",
+                "",
+                "",
+                "def dispatch(raw: object) -> Decimal | None:",
+                "    if isinstance(raw, (int, float)):",
+                "        return Decimal(raw)",
+                "    if isinstance(raw, str):",
+                "        return Decimal(raw)",
+                "    return None",
+                "",
+            ),
+        ),
+        encoding="utf-8",
+    )
+    tree = ast.parse(module.read_text(encoding="utf-8"))
+
+    violations = string_parse_decimal_violations(((module, tree),), display_root=tmp_path)
+
+    assert violations == ["narrowed.py:8 (in dispatch)"], violations
 
 
 def test_string_parse_gate_permits_literals_and_integer_widening(tmp_path: Path) -> None:
