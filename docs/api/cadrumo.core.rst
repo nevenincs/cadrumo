@@ -59,6 +59,7 @@ Submodules
    cadrumo.core._credentials
    cadrumo.core._declaracion_idioma
    cadrumo.core._descendant_relacion
+   cadrumo.core._deuda_direccion
    cadrumo.core._document_shape
    cadrumo.core._draft_discrepancy
    cadrumo.core._export_exemption_reason
@@ -83,6 +84,7 @@ Submodules
    cadrumo.core._modelo
    cadrumo.core._modelo_232_codigos
    cadrumo.core._models
+   cadrumo.core._objeto_tributario
    cadrumo.core._optional_extras
    cadrumo.core._period
    cadrumo.core._pid_liveness

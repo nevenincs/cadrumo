@@ -25,6 +25,7 @@ Submodules
    cadrumo.adapters.outbound.aeat.sede._declarations_observations
    cadrumo.adapters.outbound.aeat.sede._declarations_remote
    cadrumo.adapters.outbound.aeat.sede._declarations_schema
+   cadrumo.adapters.outbound.aeat.sede._deudas
    cadrumo.adapters.outbound.aeat.sede._errors
    cadrumo.adapters.outbound.aeat.sede._groi_check
    cadrumo.adapters.outbound.aeat.sede._iva_compensation_wallet
