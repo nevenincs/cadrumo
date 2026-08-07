@@ -68,12 +68,13 @@ class TestParseRowSpecValid:
         """Full vinculada spec with all optional fields."""
         result = _parse_row_spec(
             "vinculada nif=B87654321 nombre=EntidadSL pais=DE "
-            "tipo_vinculacion=2 tipo_operacion=05 metodo=TNMM importe=75000",
+            "tipo_vinculacion=B tipo_operacion=05 metodo=1E importe=75000",
         )
         assert isinstance(result, Modelo232VinculadaRow)
         assert result.nif == "B87654321"
         assert result.pais == "DE"
-        assert result.metodo == "TNMM"
+        assert result.tipo_vinculacion == "B"
+        assert result.metodo == "1E"
         assert result.importe == Decimal("75000")
 
     def test_row_type_is_case_insensitive(self) -> None:

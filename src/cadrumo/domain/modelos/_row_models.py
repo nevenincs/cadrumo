@@ -117,27 +117,17 @@ class Modelo184MemberRow(BaseModel):
 # One row per related-party transaction group.
 # ---------------------------------------------------------------------------
 
-# Closed catalogue of válid tipo_vinculacion codes per M232 form.
-_M232_TIPO_VINCULACION = Literal[
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-]
+# Tabla A of the AEAT diseño de registro DR23200 — tipo de vinculación, the
+# art. 18.2 LIS relationship cases. One alphanumeric position (240 on page_01),
+# so a code is exactly one character. The empty string is the conditional
+# field's unstated state: the whole vinculada block is non-obligatorio, and
+# defaulting to a real relationship would declare one the taxpayer never
+# stated.
+_M232_TIPO_VINCULACION = Literal["A", "B", "C", "D", "E", "F", "G", "H", ""]
 
-# Closed catalogue of valid tipo_operacion codes per M232 form.
+# Tabla C of DR23200 — tipo de operación, the eleven claves enumerated in
+# Orden HFP/816/2017 art. 3.1.f, zero-padded to the field's two positions
+# (243-244 on page_01).
 _M232_TIPO_OPERACION = Literal[
     "01",
     "02",
@@ -150,19 +140,13 @@ _M232_TIPO_OPERACION = Literal[
     "09",
     "10",
     "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
+    "",
 ]
 
-# Closed catalogue of transfer-pricing method codes per M232 / LIS art. 18.
-_M232_METODO = Literal["CUP", "RPM", "CPM", "PS", "TNMM", ""]
+# Tabla B of DR23200 — método de valoración, the five methods of art. 18.4.1º
+# LIS in the two positions the field carries (246-247 on page_01). These are
+# AEAT's own codes, not the OECD abbreviations for the same methods.
+_M232_METODO = Literal["1A", "1B", "1C", "1D", "1E", ""]
 
 
 class Modelo232VinculadaRow(BaseModel):
@@ -170,6 +154,11 @@ class Modelo232VinculadaRow(BaseModel):
 
     Fields mirror the related_party_operation binding source declared in
     ``232/revisions/2018-y-siguientes/bindings/0218…0223-*.toml``.
+
+    The three coded fields carry the closed catalogues AEAT's diseño de
+    registro DR23200 publishes as Tablas A, C and B — off-catalogue codes are
+    refused here rather than travelling into a fichero field that cannot hold
+    them.
 
     Parity assertions:
     * ``nif`` → ``counterparty_tax_id`` (binding: modelo-232-related-party-row-nif)
@@ -186,9 +175,9 @@ class Modelo232VinculadaRow(BaseModel):
     nif: _NifStr
     nombre: _NameStr = Field(default="")
     pais: _IsoCountryCode = Field(default="ES")
-    tipo_vinculacion: str = Field(default="1", min_length=1, max_length=2)
-    tipo_operacion: str = Field(default="01", min_length=1, max_length=2)
-    metodo: str = Field(default="", max_length=6)
+    tipo_vinculacion: _M232_TIPO_VINCULACION = ""
+    tipo_operacion: _M232_TIPO_OPERACION = ""
+    metodo: _M232_METODO = ""
     importe: Decimal
 
     @field_validator("pais")
@@ -205,10 +194,16 @@ class Modelo232VinculadaRow(BaseModel):
             raise ValueError("nif cannot be blank")
         return value.upper()
 
-    @field_validator("metodo")
+    @field_validator("tipo_vinculacion", "metodo", mode="before")
     @classmethod
-    def _metodo_uppercase(cls, value: str) -> str:
-        return value.upper()
+    def _code_uppercase(cls, value: object) -> object:
+        """Fold operator-typed lowercase into the catalogue's own casing.
+
+        Runs before the catalogue check so ``metodo=1a`` and
+        ``tipo_vinculacion=d`` are accepted as the codes DR23200 spells in
+        uppercase, while a genuinely off-catalogue code still refuses.
+        """
+        return value.upper() if isinstance(value, str) else value
 
 
 # ---------------------------------------------------------------------------

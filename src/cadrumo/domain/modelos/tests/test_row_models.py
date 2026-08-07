@@ -57,6 +57,35 @@ _M232_INVALID_CASES = (
         "blank-nif",
         lambda: Modelo232VinculadaRow(nif="   ", importe=Decimal("1")),
     ),
+    # DR23200 Tabla A runs A-H in a single alphanumeric position; a numeric
+    # code and a two-character one are both off-catalogue and unrepresentable.
+    _ValidationErrorCase(
+        "tipo-vinculacion-numeric",
+        lambda: Modelo232VinculadaRow(nif="A12345678", tipo_vinculacion="1", importe=Decimal("1")),
+    ),
+    _ValidationErrorCase(
+        "tipo-vinculacion-off-catalogue-letter",
+        lambda: Modelo232VinculadaRow(nif="A12345678", tipo_vinculacion="Z", importe=Decimal("1")),
+    ),
+    # Orden HFP/816/2017 art. 3.1.f enumerates eleven claves; nothing above 11.
+    _ValidationErrorCase(
+        "tipo-operacion-above-catalogue",
+        lambda: Modelo232VinculadaRow(nif="A12345678", tipo_operacion="99", importe=Decimal("1")),
+    ),
+    _ValidationErrorCase(
+        "tipo-operacion-unpadded",
+        lambda: Modelo232VinculadaRow(nif="A12345678", tipo_operacion="1", importe=Decimal("1")),
+    ),
+    # DR23200 Tabla B codes are 1A-1E in two positions; the OECD abbreviations
+    # for the same art. 18.4 methods are not AEAT's codes and do not fit.
+    _ValidationErrorCase(
+        "metodo-oecd-abbreviation",
+        lambda: Modelo232VinculadaRow(nif="A12345678", metodo="TNMM", importe=Decimal("1")),
+    ),
+    _ValidationErrorCase(
+        "metodo-off-catalogue",
+        lambda: Modelo232VinculadaRow(nif="A12345678", metodo="ZZ", importe=Decimal("1")),
+    ),
 )
 
 # ---------------------------------------------------------------------------
@@ -155,16 +184,17 @@ class TestModelo232VinculadaRow:
             nif="A12345678",
             nombre="Entitat Vinculada SL",
             pais="ES",
-            tipo_vinculacion="1",
+            tipo_vinculacion="A",
             tipo_operacion="01",
-            metodo="CUP",
+            metodo="1A",
             importe=Decimal("50000"),
         )
         assert row.nif == "A12345678"
         assert row.nombre == "Entitat Vinculada SL"
         assert row.pais == "ES"
         assert row.tipo_operacion == "01"
-        assert row.metodo == "CUP"
+        assert row.tipo_vinculacion == "A"
+        assert row.metodo == "1A"
         assert row.importe == Decimal("50000")
         assert row.row_type == "vinculada"
 
@@ -174,7 +204,13 @@ class TestModelo232VinculadaRow:
             (Modelo232VinculadaRow(nif="a12345678", importe=Decimal("1")), "nif", "A12345678"),
             (Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1")), "pais", "ES"),
             (Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1")), "metodo", ""),
-            (Modelo232VinculadaRow(nif="A12345678", metodo="cup", importe=Decimal("1")), "metodo", "CUP"),
+            (Modelo232VinculadaRow(nif="A12345678", metodo="1a", importe=Decimal("1")), "metodo", "1A"),
+            (
+                Modelo232VinculadaRow(nif="A12345678", tipo_vinculacion="d", importe=Decimal("1")),
+                "tipo_vinculacion",
+                "D",
+            ),
+            (Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1")), "tipo_operacion", ""),
         )
         for row, field_name, expected in cases:
             assert getattr(row, field_name) == expected, field_name
