@@ -75,6 +75,32 @@ _UBL_CUSTOMER_ADDRESS = "<cac:PostalAddress><cbc:PostalZone>28001</cbc:PostalZon
 # has to survive from.
 _CANARIAS_CODE = "35001"
 
+# No Cross Industry Invoice is bundled anywhere in the corpus, so this specimen
+# is built from the EN16931 mapping (BT-38 / BT-53 to
+# ram:PostalTradeAddress/ram:PostcodeCode) rather than taken from a real
+# document. Stated plainly in the case that uses it: it establishes that the CII
+# branch is reached and scoped correctly, not that a real-world CII invoice
+# states its address this way.
+_CII_SPECIMEN = """<?xml version="1.0" encoding="UTF-8"?>
+<rsm:CrossIndustryInvoice
+    xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
+    xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100">
+  <rsm:ExchangedDocument><ram:ID>CII-2026-0001</ram:ID></rsm:ExchangedDocument>
+  <rsm:SupplyChainTradeTransaction>
+    <ram:ApplicableHeaderTradeAgreement>
+      <ram:SellerTradeParty>
+        <ram:Name>Vendedor Insular SL</ram:Name>
+        <ram:PostalTradeAddress><ram:PostcodeCode>38001</ram:PostcodeCode></ram:PostalTradeAddress>
+      </ram:SellerTradeParty>
+      <ram:BuyerTradeParty>
+        <ram:Name>Comprador Ceuti SL</ram:Name>
+        <ram:PostalTradeAddress><ram:PostcodeCode>51001</ram:PostcodeCode></ram:PostalTradeAddress>
+      </ram:BuyerTradeParty>
+    </ram:ApplicableHeaderTradeAgreement>
+  </rsm:SupplyChainTradeTransaction>
+</rsm:CrossIndustryInvoice>
+"""
+
 
 def _stored(
     xml: str,
@@ -264,7 +290,4 @@ def test_a_cii_document_carries_the_postcode_code(
     assert draft.supplier_postal_code == "38001"
     assert draft.customer_postal_code == "51001"
     assert territorial_scope_for_spanish_postal_code(draft.supplier_postal_code) is IvaTerritorialScope.ES_CANARIAS
-    assert (
-        territorial_scope_for_spanish_postal_code(draft.customer_postal_code)
-        is IvaTerritorialScope.ES_CEUTA_MELILLA
-    )
+    assert territorial_scope_for_spanish_postal_code(draft.customer_postal_code) is IvaTerritorialScope.ES_CEUTA_MELILLA
