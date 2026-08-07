@@ -49,6 +49,7 @@ legal_refs = [
     "ley-37-1992:art-9",
     "ley-37-1992:art-90",
     "ley-37-1992:art-91",
+    "real-decreto-ley-20-2022:art-72",
     "real-decreto-ley-4-2024:art-1",
     "ley-37-1992:art-92",
     "ley-37-1992:art-94",
@@ -386,3 +387,13 @@ number = "iva.repercutido.reducido.transitorio"
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "iva.repercutido.super-reducido.transitorio"
 number = "iva.repercutido.super-reducido.transitorio"
+
+# Recargo rungs that joined the calculation closure when total cuota devengada
+# was corrected to enumerate them, as AEAT's own printed formula for [27] does.
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "170"
+number = "170"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "26"
+number = "26"

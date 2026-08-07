@@ -18,22 +18,25 @@
 # semantics here would have misclassified an October-filed Q3 return into
 # the Q4 window and printed 7,5 % where the law states 5 %.
 #
-# GROUNDING GAP, DECLARED NOT ASSUMED: the DESIGN authority for every window
-# boundary and constant below is solid (aeat-dr-303-2025, the same bundled
-# Diseño de Registros the four stable rungs already cite). The LEGAL
-# authority for the 5 % rate's own 2023 -> 09/3T-2024 span is NOT fully
-# grounded here: real-decreto-ley-4-2024:art-1 covers only the 7,5 %/2 %/0 %
-# follow-on step from 10/4T 2024, and the instrument that actually opened the
-# original 5 % window in January 2023 (a 2022/2023 measure -- candidates
-# investigated but not confirmed: RDL 20/2022, RDL 18/2022, RDL 5/2023) is
-# NOT yet bundled in the legal corpus. The 5 % windows below rest on the
-# design constant alone until that citation is added.
+# GROUNDING: the DESIGN authority for every window boundary and constant
+# below is solid (aeat-dr-303-2025, the same bundled Diseño de Registros the
+# four stable rungs already cite). The LEGAL authority for the 5 %/0 %
+# window's OPENING span (2023-01-01 through 2024-06-30, the original
+# sunset) is real-decreto-ley-20-2022:art-72 -- the article establishes 5 %
+# on aceites/pastas (recargo 0,62 %) and 0 % on the enumerated basic foods
+# (recargo 0 %), effective 1 January 2023. That original sunset was
+# extended in three further steps (RDL 1/2023 disposición adicional 16, RDL
+# 5/2023 art. 171, RDL 8/2023 art. 20 -- none yet separately bundled, all
+# restating the identical 5 %/0 % figures) through 30 September 2024, and
+# real-decreto-ley-4-2024:art-1 (already bundled) grounds the 7,5 %/2 %
+# follow-on step from 1 October 2024. The window boundaries below already
+# match this chain; only the citation set needed completing.
 
 [[revisions.2023-y-siguientes.parameters]]
 id = "m303-dr303-154-transitional-rate-percent"
 data_type = "ratio"
 unit = "percent"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "real-decreto-ley-20-2022:art-72", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 
 [[revisions.2023-y-siguientes.parameters.values]]
@@ -61,7 +64,7 @@ required_text = ["modelo 303"]
 id = "m303-dr303-166-transitional-rate-percent"
 data_type = "ratio"
 unit = "percent"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "real-decreto-ley-20-2022:art-72", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 
 [[revisions.2023-y-siguientes.parameters.values]]

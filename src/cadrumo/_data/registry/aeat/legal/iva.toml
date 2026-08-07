@@ -2063,3 +2063,24 @@ required_text = [
     "será del 1 por ciento",
     "será del 0,26 por ciento",
 ]
+
+[legal."real-decreto-ley-20-2022:art-72"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/real-decreto-ley-20-2022-art-72.html#a72"
+document_id = "BOE-A-2022-22685"
+article = "72"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-22685"
+published_at = 2022-12-28
+effective_from = 2023-01-01
+effective_to = 2024-06-30
+review_status = "reviewed"
+reviewed_at = 2026-08-07
+reviewed_by = "agent-prepared-pending-operator"
+notes = "RDL 20/2022 art. 72: opens the temporary IVA rate window on foodstuffs this modelo's M303 boxes [154] (reducido transitorio, aceites/pastas) and [166] (super-reducido transitorio, pan/harina/leche/quesos/huevos/frutas-verduras-legumbres-cereales) model. 5 % on oils and pasta (recargo 0,62 %), 0 % on the enumerated basic foods (recargo 0 %), con efectos desde el 1 de enero de 2023 y vigencia hasta el 30 de junio de 2024 -- the sunset was later extended by disposición adicional 16 of RDL 1/2023, art. 171 of RDL 5/2023 and art. 20 of RDL 8/2023 (all cited on the consolidated text, none yet separately bundled), which is why effective_to here stops at the ORIGINAL sunset rather than the chain's final one; the successor windows through 30/09/2024 restate the identical 5 %/0 % figures this entry already grounds, and RDL 4/2024:art-1 (already bundled) grounds the 7,5 %/2 % follow-on step from 1/10/2024. Consolidated text fetched via buscar/act.php (act.php, not the diario original), confirmed as the last version at fetch time (Última actualización, publicada el 28/12/2023, en vigor a partir del 29/12/2023). PROVENANCE. Entry agent-prepared from the packaged authoritative excerpt (article text only, not the full ~750 KB omnibus law, which spans energy/transport/social-benefit measures unrelated to this grounding); not reviewed by a human operator, which reviewed_by declares honestly per the pattern on the sibling real-decreto-ley-4-2024:art-1 entry."
+required_text = [
+    "Se aplicará el tipo del 5 por ciento del Impuesto sobre el Valor Añadido",
+    "será del 0,62 por ciento",
+    "Se aplicará el tipo del 0 por ciento del Impuesto sobre el Valor Añadido",
+]
