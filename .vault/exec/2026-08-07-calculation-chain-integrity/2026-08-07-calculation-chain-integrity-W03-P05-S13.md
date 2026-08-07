@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:ec858db6fcf18cf96eb77ebaeec0ba105c5f79e59b476a23ca9541c9a8e9af46'
+body_hash: 'sha256:d819128a77ac1373b9212a54d3b3a8413194a8ae2abf2a1c1820a8e6f57d369f'
 step_id: 'S13'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
@@ -14,47 +14,53 @@ related:
 
 ## Outcome
 
-**Not aggregated, and the reason changed completely.** The blocker this row was waiting on is gone; the row's own premise turned out to be wrong; and two different blockers surfaced on contact, both measured rather than argued.
+**Aggregated.** Modelo 131 casilla 05 is bound to the ledger, and both blockers this row recorded are closed rather than routed around.
 
-## The premise is wrong: casilla 08 is not the agrarian volume
+The premise correction stands from the earlier pass and is worth restating, because it changes what was built: the agrarian quarterly volume is **casilla 05**, feeding the 2 % formula at casilla 06. Casilla 08 is retenciones e ingresos a cuenta. Casilla 01 is módulos-computed rendimientos, derived from signos and índices correctores, so no ledger sum could ever feed it — the pair that could genuinely double-count is `03` against `05`.
 
-Read from the loaded M131 snapshot rather than from the row's assumption, for 2024 and 2025 alike:
+## Blocker one: the ledger can now mark what art. 110.1.c) excludes
 
-| casilla | semantic role | section |
-|---|---|---|
-| `01` | `irpf_pf_modulos_suma_rendimientos` | actividades económicas estimación objetiva |
-| `03` | `irpf_pf_modulos_volumen_sin_datos_base` | actividades sin datos base |
-| `05` | `irpf_pf_modulos_volumen_agrario` | actividades agrícolas, ganaderas y forestales |
-| `08` | `retenciones_ingresos_a_cuenta` | total liquidación |
+`ConceptoIngreso` in `core` carries four members, and the reason it is four rather than two is the sentence the AEAT Modelo 131 instrucciones use for casilla 05:
 
-The agrarian quarterly volume is **casilla 05**, and it feeds casilla 06 through the 2 % formula. Casilla 08 is retenciones e ingresos a cuenta and has nothing to do with activity volume.
+> el volumen de ingresos del trimestre ... **incluidas las subvenciones corrientes y excluidas las subvenciones de capital y las indemnizaciones**
 
-The double-count the row feared is real in shape but between the wrong pair. Casilla 01 is not a volume at all — it is the sum of módulos-computed *rendimientos*, derived from signos and índices correctores rather than from invoices, so no ledger sum could feed it. The pair that could genuinely double-count is `03` against `05`: both are volúmenes de ingresos, differing only by which activities they cover.
+The distinction runs *inside* subsidies. A rule keyed on the word "subvención" gets exactly one of them wrong, and it is the inclusion that breaks — an operating subsidy silently dropped from a declared volume. `counts_toward_volumen_de_ingresos` is the single predicate, and the excluded set is declared twice on purpose (typed in `core`, grounded in the registry with its `legal_refs`) with a parity test binding them so they cannot drift.
 
-## S11's blocker is genuinely cleared
+An undeclared concept is **included**. That direction is chosen, not defaulted into: an unmarked receipt is far more likely to be ordinary income than exceptional, and reading silence as exclusion would drop real income out of a declared volume.
 
-That `03`/`05` split is exactly what the activity axis makes expressible. `W03.P05.S11` landed `tipo_actividad` on the transaction, so agrarian rows can now be separated from the rest instead of feeding both casillas. Had the two new blockers not existed, this row would have been unblocked.
+## Blocker two: the activity set, and why the mejillón question never arose
 
-## Blocker one: the base excludes what the ledger cannot see
+The earlier pass expected to need a legal determination on whether `B04 Producción de mejillón` falls inside art. 110's *pesqueras*. It does not arise, and the reason is the form rather than the article.
 
-RD 439/2007 art. 110.1.c), verbatim from the bundled corpus:
+Art. 110.1.c) names *agrícolas, ganaderas, forestales o pesqueras*, but the bundled Modelo 131 instrucciones place the casilla-05 block under agrícolas, ganaderas y forestales and do not contain the word *pesquera* anywhere in the document. Modelo 131 is estimación objetiva and pesca is not in the módulos regime, so the article's wider wording covers a case this form cannot present. The selector is `A02, B01, B02, B03`, and neither pesquera code enters.
 
-> Tratándose de actividades agrícolas, ganaderas, forestales o pesqueras, cualquiera que fuese el método de determinación del rendimiento neto, el 2 por ciento del **volumen de ingresos del trimestre, excluidas las subvenciones de capital y las indemnizaciones**.
+That is recorded in the parameter's own notes and asserted in a test, so a later reader who notices the article says *pesqueras* and "fixes" the selector meets the reason before the change.
 
-The ledger carries no marker for either. Sweeping all 42 spending categories returns nothing matching `subvenc` or `indemn`, and no IRPF category expresses them.
+The selector is also deliberately NOT the art. 95 agrícola/ganadera one. That set has no forestal code, so reusing it would have dropped a forestal filer's whole quarterly volume — a silent zero reintroduced by borrowing the nearest-looking authority.
 
-So a binding written today would sum gross incoming agrarian rows including any capital subsidy or indemnity, and produce a casilla 05 larger than the law's base — a silent **over**-declaration. This campaign has been chasing the silent-zero class; this is the same defect with the sign flipped, and it is worse in kind, because an over-declaration costs the taxpayer money that no gate would flag.
+## The aggregation, and its two opposite defaults
 
-## Blocker two: the activity set is art. 110's, not art. 95's
+`aggregate_renta_m131_agrario_income_ledger` narrows rows before classification on two axes whose defaults point in **opposite** directions, each away from the worse error for its own axis:
 
-The obvious move is to reuse the `rirpf-art-95:selector-m036-*` parameters `S38` landed. They do not fit, and the mismatch is easy to miss because the two sets overlap heavily.
+- **Activity**: an undeclared `tipo_actividad` contributes nothing. Silence cannot mean agrarian, because routing an unmarked row into casilla 05 would move a non-agrarian filer's income into an agrarian box while the objetiva side of the same return already claims it. Under-filling a box the operator can complete by hand is recoverable; mis-routing income between two boxes of one return is not.
+- **Concept**: an undeclared `concepto_ingreso` contributes everything, for the reason above.
 
-Art. 110.1.c) covers actividades agrícolas, ganaderas, forestales **o pesqueras**. Art. 95 has no pesquera rate at all, so `B05 Pesquera` is deliberately absent from every art. 95 selector. Reusing the agrícola/ganadera selector for casilla 05 would silently drop a pesquero filer's entire quarterly volume — a silent zero, reintroduced by borrowing the nearest-looking authority.
+The window is the quarter alone, not the Modelo 130 cumulative — art. 110.1.c) fixes the payment on *el volumen de ingresos del trimestre*.
 
-Casilla 05 needs its own art. 110.1.c) selector, and authoring it raises a question this Step will not guess at: `B04 Producción de mejillón` is listed separately from `B05 Pesquera` in the Modelo 036 table, so AEAT distinguishes them, and whether mejillón production falls inside art. 110's *pesqueras* is a legal determination. Putting a guess in a registry parameter with `legal_refs` attached would give a guess the appearance of grounding.
+Eight tests cover it, and every one is about a row that must NOT arrive, because the failure mode of an aggregation is silence: a dropped row leaves a smaller number and a smaller number looks correct. The mixed-catalogue test asserts the total rather than the count, so a partially-applied filter is visible.
 
-## What the row needs now
+## Canonicalisation, on the operator's directive
 
-Three things, in order: a way for the ledger to mark subvenciones de capital and indemnizaciones so they can be excluded; an art. 110.1.c) selector parameter with the mejillón question settled against authority; and only then the binding and its resolver.
+Three duplications were introduced during this work and all three are removed:
 
-Nothing was aggregated, and the row stays open. Closing it now would mean shipping a casilla that is wrong in one direction for every agrarian filer receiving a subsidy and wrong in the other for every pesquero filer.
+- **Two code-set parsers.** `_m131_agrarian_activity_codes` had its own comma-split; it now calls `tipo_actividad_code_set`, the one reader for `m036-tipo-actividad-code-set` parameters. A second parser is a second place the unit check and the unknown-token refusal drift.
+- **Two projection loops.** The M100 and M131 aggregators wrote out the same lifecycle skip, classifier call and issue/observation split. Both now call `_project_income_onto_casilla`, which differs only in window, target casilla and an optional row filter.
+- **Two activity classifiers.** `Art95ActivityPartition` was a four-member enum over the same article `IrpfActivityKind` already covers. It is **deleted**. The resolver now returns `IrpfActivityKind`, and the apartado-level detail stays on the registry parameters' `legal_refs` where it belongs rather than becoming a second public classifier that would have to be kept true.
+
+That deletion turned out to be a gain, not just a subtraction. `IrpfActivityKind`'s docstring recorded the code-to-arm derivation as blocked for want of an input; a declared `tipo_actividad` is that input, so `irpf_activity_kind_for` closes it. The stale paragraph is retired in the same change — a docstring asserting a property the code no longer has is the same divergence the directive is aimed at.
+
+## Verification
+
+1946 tests across `domain/transactions`, `domain/deadlines`, `application/aggregation` and `core/tests` pass. The registry loads clean with casilla 05 `input_kind = "bound"` on all four revisions.
+
+Two failures were seen and both were re-run in isolation and pass there: an AEAT-route-literal gate and the loader disk-cache isolation test. The second is worth recording rather than dismissing — a cold registry load measures **48.7 s** against that test's 60 s subprocess ceiling, so it is running within about 20 % of its limit and tips over whenever the box is loaded. That is a real fragility, it is not caused by the four small TOML files added here, and it will keep producing intermittent reds until either the load gets faster or the ceiling reflects the machine.
