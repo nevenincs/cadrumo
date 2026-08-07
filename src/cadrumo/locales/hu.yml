@@ -746,13 +746,15 @@ application:
     bulk_import:
       errors:
         file_read_failed: A számlák tömeges importálási fájlja nem olvasható.
+        formula_cell: A számlák tömeges importálási fájlja képletet tartalmazó cellát
+          tartalmaz a(z) {row}. sor {column}. oszlopában; a képletek gyorsítótárazott
+          értékei nem elfogadhatók.
         missing_columns: 'A számlák tömeges importálási fájljából hiányoznak kötelező
           oszlopok: {missing_columns}'
         unreadable_table: 'A számlák tömeges importálási fájlja nem tartalmaz olvasható
           táblázatot: {detail}'
         unsupported_extension: 'A számlák tömeges importálási fájljának .csv vagy
           .xlsx kiterjesztésűnek kell lennie (kapott: {extension}).'
-        formula_cell: 'A számlák tömeges importálási fájlja képletet tartalmazó cellát tartalmaz a(z) {row}. sor {column}. oszlopában; a képletek gyorsítótárazott értékei nem elfogadhatók.'
     creation:
       errors:
         duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
@@ -1893,6 +1895,25 @@ cli:
           {accepted}'
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
+        batch_directory_help: A könyvtár, amelynek fájljait feldolgozza. Kombinálható
+          az ismételt --file kapcsolóval, vagy helyettesíthető azzal.
+        batch_file_help: Egy feldolgozandó dokumentum. Dokumentumonként ismételje
+          meg; könyvtárral együtt is használható.
+        batch_help: Egy könyvtár minden dokumentumát (vagy minden --file értéket)
+          bizonylatként és átnézhető piszkozatként dolgozza fel, dokumentumonként
+          egy eredménysorral.
+        batch_items_refused_message: A rendszer néhány dokumentumot elutasított. A
+          futtatás többi dokumentuma ettől függetlenül elkészült; az elutasított sorok
+          megnevezik a tapasztaltakat.
+        batch_pending_review_message: Néhány piszkozat olyan megállapítást hordoz,
+          amelyet embernek kell rendeznie a számla létrehozása előtt. Ezek visszatartva
+          vannak, nem hiúsultak meg.
+        batch_progress_message: 'feldolgozva %{source}: %{status}'
+        batch_source_required: Adjon meg egy könyvtár argumentumot, egy vagy több
+          --file kapcsolót, vagy mindkettőt.
+        batch_work_deferred_message: A rendszer néhány dokumentumot nem olvasott be,
+          mert nem futtatható olvasómodell. Semmilyen értéket nem tippelt meg belőlük,
+          és semmi nem hiúsult meg; futtassa újra, ha az alábbi ok megszűnt.
         confirm_already_exists_message: Már létezik számla ezzel az azonossággal;
           változatlanul visszaadva, nem pedig duplikációt létrehozva.
         confirm_counterparty_name_help: A partner megjelenített neve (még nincs kinyerést
@@ -1978,6 +1999,7 @@ cli:
         view_help: Vásárlásiszámla-bizonyíték megjelenítése.
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót a bizonyíték törléséhez.
+        confirm_operation_type_help: 'A 349-es modell kulcsa kozossegen beluli termekertekesiteshez. Kotelezo, ha a dokumentum kozossegen beluli ertekesitest jelol: a kategoria nem mondja meg, hogy adomentes behozatalt kovetett-e.'
       inventory:
         actividad_id_help: Gazdasági tevékenység azonosítója.
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.
@@ -65078,14 +65100,18 @@ modelo:
             help: null
             label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
           iva-cuota-repercutida-reducido-transitorio:
-            help: modelo.schema.303.casilla.continuidad.iva-cuota-repercutida-reducido-transitorio.help
-            label: modelo.schema.303.casilla.continuidad.iva-cuota-repercutida-reducido-transitorio.label
+            help: A 4/2024. sz. spanyol királyi törvényerejű rendelet átmeneti tétele
+              a csökkentett kulcshoz, amely a rendes 10%-os csökkentett kulccsal együtt
+              létezik.
+            label: Felszámított ÁFA összeg átmeneti csökkentett kulccsal (5%/7,5%)
           iva-cuota-repercutida-super-reducido:
             help: null
             label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
           iva-cuota-repercutida-super-reducido-transitorio:
-            help: modelo.schema.303.casilla.continuidad.iva-cuota-repercutida-super-reducido-transitorio.help
-            label: modelo.schema.303.casilla.continuidad.iva-cuota-repercutida-super-reducido-transitorio.label
+            help: A 4/2024. sz. spanyol királyi törvényerejű rendelet átmeneti tétele
+              a szupercsökkentett kulcshoz, amely a rendes 4%-os szupercsökkentett
+              kulccsal együtt létezik.
+            label: Felszámított ÁFA összeg átmeneti szupercsökkentett kulccsal (2%)
           iva-cuota-soportada-importaciones:
             help: null
             label: Levonható előzetesen felszámított ÁFA folyó áruk importján
@@ -66002,15 +66028,19 @@ modelo:
                 ÁFA.
               label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds:
-              help: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds.help
-              label: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8rpeehp62rjjd5q6usj9ds.label
+              help: A 4/2024. sz. spanyol királyi törvényerejű rendelet átmeneti tétele
+                a csökkentett kulcshoz, amely a rendes 10%-os csökkentett kulccsal
+                együtt létezik.
+              label: Felszámított ÁFA összeg átmeneti csökkentett kulccsal (5%/7,5%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: A 4%-os szupercsökkentett kulccsal kiszámított teljes felszámított
                 ÁFA.
               label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng.help
-              label: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng.label
+              help: A 4/2024. sz. spanyol királyi törvényerejű rendelet átmeneti tétele
+                a szupercsökkentett kulcshoz, amely a rendes 4%-os szupercsökkentett
+                kulccsal együtt létezik.
+              label: Felszámított ÁFA összeg átmeneti szupercsökkentett kulccsal (2%)
             x-d5r62bjiclpnar3kc5i6u:
               help: Az önbevallás eredménye a Modelo 303 korrekciós képlete után.
               label: Önbevallás eredménye
@@ -66671,6 +66701,28 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
               help: null
               label: 0,5%-os egyenértékűségi pótlék - éves keletkezett ÁFA
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31.label
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8.label
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31.label
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
+              help: A felár hatálya alá tartozó kiskereskedőknek történő, 10 %-os
+                áfakulccsal adózó értékesítésekre felszámított 1.4 %-os egyenértékűségi
+                felár összege (LIVA art. 161.2). A(z) 600. rovatban kell bevallani.
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8.label
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
+              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg.help
+              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg.label
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
+              help: A felár hatálya alá tartozó kiskereskedőknek történő, 21 %-os
+                áfakulccsal adózó értékesítésekre felszámított 5.2 %-os egyenértékűségi
+                felár összege (LIVA art. 161.1). A(z) 602. rovatban kell bevallani.
+              label: Egyenértékűségi felár, 5.2 %-os kulcs - éves fizetendő összeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: null
               label: Csökkentett kulcs (10%) szerint felszámított ÁFA - éves
