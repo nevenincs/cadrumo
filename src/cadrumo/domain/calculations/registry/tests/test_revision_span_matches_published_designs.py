@@ -122,11 +122,18 @@ def _parse_design(path: Path) -> dict[str, int]:
         except (IndexError, ValueError):
             continue
         boxes = _BOX_MARKER.findall(line)
-        if len(boxes) != 1:
+        if not boxes:
             continue
-        # A box can appear once per régimen segment at the same offset; keep the
-        # first and never overwrite, so a later segment cannot mask a movement.
-        table.setdefault(boxes[0], offset)
+        # A field's OWN number is the LAST bracket on its row. Formula totals cite
+        # their operands first -- "Total cuota devengada ([152]+[167]+...) [27]"
+        # -- so first-match keying would file the total under an operand, and
+        # requiring a single bracket would drop it entirely. Modelo 303 has
+        # eleven such rows, including its three most load-bearing totals; Modelo
+        # 390 has none, which is why this only surfaced on the second modelo.
+        #
+        # A box can also appear once per régimen segment at the same offset; keep
+        # the first and never overwrite, so a later segment cannot mask a move.
+        table.setdefault(boxes[-1], offset)
     return table
 
 
