@@ -102,7 +102,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, NoReturn, Self
+from typing import TYPE_CHECKING, Final, NoReturn, Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -128,9 +128,15 @@ from ...core.config import load_settings as _load_settings
 from ...core.external_constants import DEFAULT_CURRENCY, XML_MIME_TYPE
 from ...core.identity import tax_id_identity_token
 from ...core.parsing import parse_iso8601_date
-from ...domain.attachments import link_attachment_invoice, normalize_media_type
+from ...domain.attachments import AttachmentNotFoundError, link_attachment_invoice, normalize_media_type
 from ...domain.currency import ExchangeRateProvider
-from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceClass, InvoiceLine
+from ...domain.invoices import (
+    Invoice,
+    InvoiceCatalogueRepositoryProtocol,
+    InvoiceClass,
+    InvoiceLine,
+    InvoiceValidationError,
+)
 from ...domain.iva import (
     EUMemberState,
     InvoiceKind,
@@ -462,6 +468,20 @@ class InvoiceDraft(BaseModel):
             can tell the two parties apart; a text or vision reader recovers a
             single identifier and cannot say whose it is.
         customer_name: The receiving party's stated name, or ``None``.
+        supplier_postal_code: The postal code printed in the issuing party's
+            address, copied verbatim, or ``None``. Transcriptive like every
+            other copied field: it carries the printed code and never the
+            territory read off it. That reading belongs to
+            :func:`~domain.iva.territorial_scope_for_spanish_postal_code`,
+            which is the deterministic evidence separating the three Spanish
+            IVA territories -- the first two digits of a Spanish code are the
+            province -- and which refuses an unreadable code rather than
+            defaulting it to the peninsula.
+        customer_postal_code: The same for the party billed by the invoice.
+            Carried separately because establishment is asked of each party
+            independently: an issuer in Las Palmas invoicing a customer in
+            Madrid crosses a territorial boundary that one shared code could
+            not express.
         invoice_number: Invoice number recovered from a labelled line, or
             ``None``.
         invoice_series: The series half of the invoice's identity, stated
@@ -530,6 +550,8 @@ class InvoiceDraft(BaseModel):
     supplier_name: str | None = None
     customer_tax_id: str | None = None
     customer_name: str | None = None
+    supplier_postal_code: str | None = None
+    customer_postal_code: str | None = None
     invoice_number: str | None = None
     invoice_series: str | None = None
     invoice_date: str | None = None
@@ -1367,6 +1389,107 @@ def _refuse_an_issued_document_the_filer_did_not_issue(
     )
 
 
+# The fields a confirm does not author. Everything else on `Invoice` is written
+# from the confirm's own resolved inputs, so a re-confirm that differs on any of
+# them is a different statement about the document and must not be absorbed as a
+# no-op (`aeat-cli-contract`: the match compares EVERY persisted field).
+#
+# Each exclusion is a field some LATER verb owns: the payment lifecycle stamps
+# the first three, the ledger cross-reference the fourth, and the repository the
+# record stamps. Comparing them would make an ordinary paid invoice refuse its
+# own re-confirm. The set is named rather than inlined, and the comparison is
+# derived from `Invoice.model_fields`, so a field added to the model joins the
+# match automatically instead of silently falling outside it.
+_INVOICE_FIELDS_A_CONFIRM_DOES_NOT_AUTHOR: Final = frozenset(
+    {
+        "created_at",
+        "linked_transaction_ids",
+        "payment_id",
+        "payment_status",
+        "updated_at",
+    },
+)
+
+
+def _fields_a_reconfirm_would_change(candidate: Invoice, stored: Invoice) -> tuple[str, ...]:
+    """Return every persisted field on which *candidate* disagrees with *stored*.
+
+    Derived from the model rather than a hand-listed field set: the failure this
+    exists to prevent is a match that omits a field, and a hand-listed set is
+    exactly how that omission arrives. A new :class:`~domain.invoices.Invoice`
+    field is compared the moment it is declared.
+    """
+    compared = candidate.model_dump(mode="json")
+    against = stored.model_dump(mode="json")
+    return tuple(
+        sorted(
+            name
+            for name in Invoice.model_fields
+            if name not in _INVOICE_FIELDS_A_CONFIRM_DOES_NOT_AUTHOR and compared.get(name) != against.get(name)
+        ),
+    )
+
+
+def _invoice_ids_this_document_already_minted(
+    store: AttachmentStore,
+    *,
+    attachment_id: str,
+) -> tuple[str, ...]:
+    """Return the invoices already minted from the document at *attachment_id*.
+
+    Read off the attachment manifest's ``linked_invoice_ids``, which the confirm
+    path itself writes through :func:`~domain.attachments.link_attachment_invoice`.
+    No second index is introduced: the manifest already records the link, and the
+    attachment id IS the SHA-256 of the document's bytes, so the identity is
+    clock-free and the same file re-attached under a fresh evidence id resolves
+    to the same address.
+
+    A manifest that is not there yet answers "none": the document has certainly
+    not been confirmed from a record that does not exist.
+    """
+    try:
+        return store.load_manifest(attachment_id).linked_invoice_ids
+    except AttachmentNotFoundError:
+        return ()
+
+
+def _refuse_a_divergent_reconfirm(
+    *,
+    candidate: Invoice,
+    prior: Invoice,
+    attachment_id: str,
+) -> NoReturn:
+    """Refuse a re-confirm of one document that does not match the record it made.
+
+    Two shapes reach here and both are the same mistake. When the divergence is
+    in one of the six fields the invoice id folds, the confirm would hash to a
+    NEW id and mint a SECOND catalogue record from one document -- an operator
+    correcting a mis-read number, a second reading lane rounding a total
+    differently -- and both records then aggregate into Modelo 303, 347 and 390,
+    which AEAT reconciles against the counterparty's own declaration. When the
+    divergence is in any other field, the same-id guard would return the stored
+    record and the correction would vanish with nothing surfaced, which is the
+    worse of the two because nobody finds out.
+
+    The refusal names the divergent fields rather than reporting a bare conflict,
+    because the operator's next move depends entirely on which field moved: a
+    corrected number means the stored record is wrong and should be removed, a
+    different total means the two documents are not the same invoice.
+    """
+    divergent = _fields_a_reconfirm_would_change(candidate, prior)
+    raise InvoiceValidationError(
+        f"this document already confirmed invoice {prior.invoice_id} and this confirm differs on "
+        f"{', '.join(divergent) or 'no compared field'}. Correct or remove the stored invoice rather "
+        "than confirming the same document twice",
+        translated_message="application.ledger.evidence.errors.document_already_confirmed",
+        context={
+            "attachment_id": attachment_id,
+            "divergent_fields": ", ".join(divergent),
+            "stored_invoice_id": prior.invoice_id,
+        },
+    )
+
+
 def confirm_invoice_draft_from_evidence(
     *,
     bucket_id: str,
@@ -1655,6 +1778,12 @@ def confirm_invoice_draft_from_evidence(
         )
 
     repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
+    # Built with the SAME argument set `create_catalogue_invoice` is handed below,
+    # so the candidate is the record that would be written rather than a partial
+    # stand-in for it. That is what lets the guarded-retry match be a whole-record
+    # comparison: a candidate missing the category, the retencion or the class
+    # would compare equal on fields it never carried and absorb a correction to
+    # any of them as a no-op.
     candidate = build_catalogue_invoice(
         bucket_id=bucket_id,
         kind=kind,
@@ -1667,12 +1796,41 @@ def confirm_invoice_draft_from_evidence(
         iva_rate=resolved_iva_rate,
         currency=resolved_currency,
         notes=notes,
+        iva_category=resolved_iva_category,
+        operation_type=operation_type,
+        operation_date=operation_date,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
+        invoice_class=invoice_class,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
         recargo_amount=resolved_recargo_amount,
         lines=confirmed_lines,
         rate_provider=rate_provider,
     )
     attachment_store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, resolved_settings))
     catalogue = repository.load()
+    # Document identity, checked BEFORE invoice identity. The invoice id folds
+    # only six resolved fields, so it cannot answer "has this document already
+    # been turned into a record" -- a re-confirm resolving any of the six
+    # differently hashes to a new id and mints a duplicate that inflates every
+    # downstream modelo aggregation. The attachment address answers it exactly:
+    # it is the SHA-256 of the bytes, and the manifest already records what this
+    # document minted.
+    already_minted = tuple(
+        stored
+        for invoice_id in _invoice_ids_this_document_already_minted(
+            attachment_store,
+            attachment_id=resolved_attachment_id,
+        )
+        if invoice_id != candidate.invoice_id and (stored := catalogue.get(invoice_id)) is not None
+    )
+    if already_minted:
+        _refuse_a_divergent_reconfirm(
+            candidate=candidate,
+            prior=already_minted[0],
+            attachment_id=resolved_attachment_id,
+        )
     existing = catalogue.get(candidate.invoice_id)
     if existing is not None:
         # Guarded idempotent retry (aeat-cli-contract):
@@ -1681,6 +1839,19 @@ def confirm_invoice_draft_from_evidence(
         # source evidence link is re-asserted (a no-op when already present,
         # `link_attachment_invoice` dedups) so a re-confirm never regresses the
         # provenance link even if it was never wired for this evidence before.
+        #
+        # Only when the WHOLE record matches. A retry differing on a field the id
+        # does not fold -- the counterparty's name, the IVA category, a retencion
+        # -- is a correction, and returning the stored record for it would discard
+        # that correction silently, which is worse than the duplicate this guard
+        # prevents because nothing surfaces.
+        divergent = _fields_a_reconfirm_would_change(candidate, existing)
+        if divergent:
+            _refuse_a_divergent_reconfirm(
+                candidate=candidate,
+                prior=existing,
+                attachment_id=resolved_attachment_id,
+            )
         link_attachment_invoice(attachment_store, attachment_id=resolved_attachment_id, invoice_id=existing.invoice_id)
         existing_record = write_confirmation_record(
             record=build_confirmation_record(

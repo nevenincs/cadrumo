@@ -22,7 +22,7 @@ from __future__ import annotations
 from importlib.metadata import version
 
 from ...adapters.inbound.pdf import extract_pages_text_from_bytes
-from ...core import PDF_CONTAINER_SHAPES, FieldOrigin
+from ...core import LOCAL_TRANSPORT_LABEL, PDF_CONTAINER_SHAPES, FieldOrigin
 from ._document_transcription import DocumentTranscription, TranscriberIdentity
 from ._evidence import PurchaseInvoiceEvidenceInputError
 from ._evidence_input import EvidenceInput
@@ -62,6 +62,10 @@ def text_layer_transcriber_identity() -> TranscriberIdentity:
     return TranscriberIdentity(
         origin=FieldOrigin.TEXT_LAYER,
         name=TEXT_LAYER_TRANSCRIBER_NAME,
+        # Stated rather than defaulted, like every other axis here. This reader
+        # is a deterministic in-process extractor with no transport at all, so
+        # on-host is a fact about it rather than a fallback.
+        transport=LOCAL_TRANSPORT_LABEL,
         revision=_text_layer_transcriber_revision(),
     )
 

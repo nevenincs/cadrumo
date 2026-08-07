@@ -133,9 +133,9 @@ _SINGLE_BINDING_SELECTOR_CASES = (
     pytest.param(
         "modelo-303-iva-repercutido-general-cuota",
         (
-            _observation(flow=IvaFlowDirection.REPERCUTIDO, iva=Decimal("210")),
-            _observation(flow=IvaFlowDirection.SOPORTADO, iva=Decimal("105")),
-            _observation(flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO, iva=Decimal("90")),
+            _observation(applied_rate=Decimal("0.21"), flow=IvaFlowDirection.REPERCUTIDO, iva=Decimal("210")),
+            _observation(applied_rate=Decimal("0.21"), flow=IvaFlowDirection.SOPORTADO, iva=Decimal("105")),
+            _observation(applied_rate=Decimal("0.21"), flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO, iva=Decimal("90")),
         ),
         Decimal("210"),
         id="repercutido",
@@ -143,8 +143,8 @@ _SINGLE_BINDING_SELECTOR_CASES = (
     pytest.param(
         "modelo-303-iva-soportado-interiores-cuota",
         (
-            _observation(flow=IvaFlowDirection.REPERCUTIDO, iva=Decimal("210")),
-            _observation(flow=IvaFlowDirection.SOPORTADO, iva=Decimal("105")),
+            _observation(applied_rate=Decimal("0.21"), flow=IvaFlowDirection.REPERCUTIDO, iva=Decimal("210")),
+            _observation(applied_rate=Decimal("0.21"), flow=IvaFlowDirection.SOPORTADO, iva=Decimal("105")),
         ),
         Decimal("105"),
         id="soportado",
@@ -152,12 +152,12 @@ _SINGLE_BINDING_SELECTOR_CASES = (
     pytest.param(
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
         (
-            _observation(
+            _observation(applied_rate=Decimal("0.21"), 
                 category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
                 flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
                 iva=Decimal("42"),
             ),
-            _observation(
+            _observation(applied_rate=Decimal("0.21"), 
                 category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
                 flow=IvaFlowDirection.SOPORTADO,
                 iva=Decimal("99"),
@@ -197,7 +197,7 @@ def test_resolve_routes_domestic_reverse_charge_to_devengado_and_deducible_net_z
         _binding("modelo-303-iva-autorepercutido-interior-deducible-cuota"),
     )
     observations = [
-        _observation(
+        _observation(applied_rate=Decimal("0.21"), 
             ledger_id="domestic-rc",
             category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
             flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
@@ -205,7 +205,7 @@ def test_resolve_routes_domestic_reverse_charge_to_devengado_and_deducible_net_z
         ),
         # A stray SOPORTADO reverse-charge row must not be selected by the
         # inversion_sujeto_pasivo-flow bindings.
-        _observation(
+        _observation(applied_rate=Decimal("0.21"), 
             ledger_id="stray-soportado",
             category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
             flow=IvaFlowDirection.SOPORTADO,
@@ -234,13 +234,13 @@ def test_resolve_intracomunitaria_binding_consumes_inversion_sujeto_pasivo_flow(
     """
     revision = _revision_with_bindings(_binding("modelo-303-iva-autorepercutido-intracomunitaria-cuota"))
     observations = [
-        _observation(
+        _observation(applied_rate=Decimal("0.21"), 
             ledger_id="ica-isp",
             category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
             flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             iva=Decimal("63.00"),
         ),
-        _observation(
+        _observation(applied_rate=Decimal("0.21"), 
             ledger_id="ica-soportado",
             category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
             flow=IvaFlowDirection.SOPORTADO,
@@ -268,14 +268,14 @@ def test_calculate_303_domestic_reverse_charge_books_boxes_13_and_37_with_zero_n
     domestic_only = _calculate_303_from_observations(
         filing_year=2025,
         period="1T",
-        observations=(_observation(ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),),
+        observations=(_observation(applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),),
     )
     with_reverse_charge = _calculate_303_from_observations(
         filing_year=2025,
         period="1T",
         observations=(
-            _observation(ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),
-            _observation(
+            _observation(applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),
+            _observation(applied_rate=Decimal("0.21"), 
                 ledger_id="domestic-rc",
                 txn_date=date(2025, 3, 1),
                 category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
@@ -312,19 +312,19 @@ def test_resolve_filters_by_category_set() -> None:
     """The selector's categories tuple is interpreted as a SET match —
     observations whose category is in the tuple count, others don't."""
     observations = [
-        _observation(
+        _observation(applied_rate=Decimal("0.21"), 
             category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow=IvaFlowDirection.SOPORTADO,
             iva=Decimal("210"),
         ),
-        _observation(
+        _observation(applied_rate=Decimal("0.10"), 
             category=IvaCategory.DOMESTIC_REDUCED,
             rate_kind=IvaRateKind.REDUCED,
             flow=IvaFlowDirection.SOPORTADO,
             iva=Decimal("100"),
         ),
-        _observation(
+        _observation(applied_rate=Decimal("0.21"), 
             category=IvaCategory.RECARGO_EQUIVALENCIA,
             rate_kind=IvaRateKind.GENERAL,
             flow=IvaFlowDirection.SOPORTADO,
@@ -356,8 +356,8 @@ def test_resolve_filters_by_category_set() -> None:
 def test_resolve_supports_base_amount_sum_fact() -> None:
     revision = _revision_with_bindings(_with_selector(_binding(), fact="base_amount_sum"))
     observations = [
-        _observation(base=Decimal("1000"), iva=Decimal("210")),
-        _observation(base=Decimal("500"), iva=Decimal("105")),
+        _observation(applied_rate=Decimal("0.21"), base=Decimal("1000"), iva=Decimal("210")),
+        _observation(applied_rate=Decimal("0.21"), base=Decimal("500"), iva=Decimal("105")),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
     assert result == {"modelo-303-iva-repercutido-general-cuota": Decimal("1500")}
@@ -431,15 +431,15 @@ def test_resolve_without_exemption_article_filter_keeps_broad_domestic_exempt_ma
 
 def test_resolve_returns_zero_when_no_observation_matches() -> None:
     revision = _revision_with_bindings(_binding())
-    observations = [_observation(category=IvaCategory.RECARGO_EQUIVALENCIA, iva=Decimal("999"))]
+    observations = [_observation(applied_rate=Decimal("0.21"), category=IvaCategory.RECARGO_EQUIVALENCIA, iva=Decimal("999"))]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
     assert result == {"modelo-303-iva-repercutido-general-cuota": Decimal("0")}
 
 
 def test_unsupported_ledger_iva_observations_identifies_unbound_regimes() -> None:
     revision = _revision_with_bindings(_binding())
-    supported = _observation(ledger_id="ordinary-output")
-    unsupported = _observation(
+    supported = _observation(applied_rate=Decimal("0.21"), ledger_id="ordinary-output")
+    unsupported = _observation(applied_rate=Decimal("0.21"), 
         ledger_id="recargo-row",
         category=IvaCategory.RECARGO_EQUIVALENCIA,
         flow=IvaFlowDirection.SOPORTADO,
@@ -459,13 +459,13 @@ def test_unsupported_excludes_cuota_less_by_law_categories() -> None:
     cuota but is routed by no binding yet must still be flagged.
     """
     revision = _revision_with_bindings(_binding())
-    exempt_supply = _observation(
+    exempt_supply = _observation(applied_rate=Decimal("0.21"), 
         ledger_id="intra-community-supply",
         category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
         flow=IvaFlowDirection.REPERCUTIDO,
         iva=Decimal("0"),
     )
-    reverse_charge = _observation(
+    reverse_charge = _observation(applied_rate=Decimal("0.21"), 
         ledger_id="domestic-reverse-charge",
         category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
         flow=IvaFlowDirection.SOPORTADO,
@@ -490,7 +490,7 @@ def test_unsupported_flags_zero_amount_observation_unlike_every_other_ledger_fam
     category).
     """
     revision = _revision_with_bindings(_binding())
-    zero_amount_reverse_charge = _observation(
+    zero_amount_reverse_charge = _observation(applied_rate=Decimal("0.21"), 
         ledger_id="domestic-reverse-charge-zero",
         category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
         flow=IvaFlowDirection.SOPORTADO,
@@ -508,8 +508,8 @@ def test_resolve_handles_multiple_bindings_independently() -> None:
         _binding("modelo-303-iva-soportado-interiores-cuota"),
     )
     observations = [
-        _observation(flow=IvaFlowDirection.REPERCUTIDO, iva=Decimal("210")),
-        _observation(flow=IvaFlowDirection.SOPORTADO, iva=Decimal("63")),
+        _observation(applied_rate=Decimal("0.21"), flow=IvaFlowDirection.REPERCUTIDO, iva=Decimal("210")),
+        _observation(applied_rate=Decimal("0.21"), flow=IvaFlowDirection.SOPORTADO, iva=Decimal("63")),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
     assert result == {

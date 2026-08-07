@@ -38,9 +38,10 @@ dependencies = [
   # Linux/macOS/Windows.
   "argon2-cffi>=23.1.0,<26",
   # HTML parsing for status readers. The `lxml` extra is load-bearing, not a
-  # preference: three sede readers pass "lxml" as the parser backend, and
-  # BeautifulSoup raises FeatureNotFound rather than falling back when the
-  # named backend is absent. lxml does reach a default install today, but only
+  # preference: every AEAT page read goes through one constructor
+  # (`adapters/outbound/aeat/_html.py`) that names "lxml" as the parser
+  # backend, and BeautifulSoup raises FeatureNotFound rather than falling back
+  # when the named backend is absent. lxml does reach a default install today, but only
   # as a transitive of pikepdf -- incidental supply for a direct reliance, so a
   # pikepdf change would surface as a runtime failure on the first AEAT page
   # parsed. Declaring it turns that into a resolution failure instead.

@@ -1,4 +1,4 @@
-"""No user-visible prose is hardcoded in the generated legal and glossary surfaces.
+"""No user-visible prose is hardcoded in the generated reference surfaces.
 
 The defect this gate exists for renders correctly-localized CONTENT wrapped in
 page CHROME that is an English literal in the generator, so a Hungarian root
@@ -22,17 +22,27 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core import BindingSourceKind, Modelo
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry import InputKind
 
 from .._locale_chrome import docs_chrome
+from ..casilla_reference import (
+    CasillaFacts,
+    CompiledSchema,
+    ModeloOverview,
+    display_locale_keys,
+    render_casilla_reference,
+)
 from ..glossary_reference import render_glossary
 from ..legal_reference import load_legal_provisions, render_legal_reference
+from ..terminology._search_record import CasillaSearchRecord
 from ..terminology_handbook import load_terminology_handbook
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
-_GENERATORS = ("legal_reference.py", "glossary_reference.py")
+_GENERATORS = ("legal_reference.py", "glossary_reference.py", "casilla_reference.py")
 
 #: Strings that reach output but are not prose: RST and HTML syntax, catalogue
 #: field values, and the Spanish instrument designations that ARE the content.
@@ -158,3 +168,103 @@ def test_glossary_chrome_changes_language() -> None:
             other_title = docs_chrome("docs.glossary.title", other)
             if other_title != docs_chrome("docs.glossary.title", language):
                 assert other_title not in rst, f"{other.value} chrome leaked into the {language.value} glossary"
+
+
+def _casilla_page(language: OutputLanguage) -> str:
+    """Render one casilla page in ``language`` from constructed records.
+
+    Deliberately not driven from the live registry projection: that projection
+    refuses whenever any modelo carries an unfilled scaffold placeholder, which
+    is routine while another surface is mid-authoring, and a localization gate
+    that goes red on someone else's half-written catalogue reports nothing about
+    localization. The records here exercise every branch that renders chrome -
+    a computed casilla with a derivation, a bound one with a source, a required
+    one with constraints, and a modelo overview.
+    """
+    common: dict[str, object] = {
+        "modelo": Modelo.M130,
+        "data_type": "money",
+        "required": True,
+        "section": ("actividades_economicas",),
+        "legal_refs": ("ley-37-1992:art-92",),
+        "source_refs": ("aeat-dr-130-2025",),
+        "source_revisions": ("2025",),
+        "descriptions": {member: f"etiqueta-{member.value}" for member in OutputLanguage},
+    }
+    records = (
+        CasillaSearchRecord(casilla_id="01", number="01", input_kind=InputKind.BOUND, binding="b", **common),  # type: ignore[arg-type]
+        CasillaSearchRecord(casilla_id="03", number="03", input_kind=InputKind.COMPUTED, formula_id="f", **common),  # type: ignore[arg-type]
+    )
+    schema = CompiledSchema(
+        casillas={
+            (Modelo.M130.value, "01"): CasillaFacts(binding_sources=("profile",)),
+            (Modelo.M130.value, "03"): CasillaFacts(formula_inputs=("01",)),
+        },
+        modelos={
+            Modelo.M130.value: ModeloOverview(
+                title="IRPF pago fraccionado",
+                official_name="Modelo 130. Pago fraccionado.",
+                definition=None,
+                tax_domain="irpf",
+                cadence="quarterly",
+                legal_refs=("ley-37-1992:art-92",),
+            ),
+        },
+    )
+    result = render_casilla_reference(_REPO_ROOT, records=records, language=language, schema=schema)
+    return result.pages[0].rst
+
+
+def test_casilla_chrome_changes_language_while_the_official_names_do_not() -> None:
+    """Every display string follows the build language; the AEAT names do not.
+
+    Checked over the whole derived key set rather than one sample key, because
+    the families that render a casilla's fill provenance are exactly the ones a
+    hardcoded literal would hide in.
+    """
+    pages = {language: _casilla_page(language) for language in OutputLanguage}
+
+    for language, page in pages.items():
+        leaked: list[str] = []
+        for key in display_locale_keys():
+            mine = docs_chrome(key, language)
+            if len(mine) >= 6 and mine in page:
+                continue
+            for other in OutputLanguage:
+                theirs = docs_chrome(key, other)
+                if other is language or theirs == mine or len(theirs) < 6:
+                    continue
+                if theirs in page:
+                    leaked.append(f"{key} -> {other.value}: {theirs!r}")
+        assert leaked == [], f"{language.value} page carries another language's chrome:\n" + "\n".join(leaked[:10])
+
+    # The modelo's official name and the legal citation are AEAT's own Spanish
+    # and must read identically whatever language the root was built for.
+    for fixed in ("Modelo 130. Pago fraccionado.", "Ley 37/1992, art. 92"):
+        assert all(fixed in page for page in pages.values()), f"{fixed!r} moved with the build language"
+
+
+def test_every_casilla_display_string_is_authored_in_every_language() -> None:
+    """A page cannot be built in a language that has not authored its chrome."""
+    missing = [
+        f"{language.value}:{key}"
+        for key in display_locale_keys()
+        for language in OutputLanguage
+        if not _is_authored(key, language)
+    ]
+
+    assert missing == [], "display strings absent from a catalogue:\n" + "\n".join(missing[:20])
+
+    # Derived from the schema's closed value sets, so a new member arrives here
+    # as a missing string rather than as silently absent copy.
+    assert {f"docs.casilla.binding_source.{m.value}" for m in BindingSourceKind} <= set(display_locale_keys())
+
+
+def _is_authored(key: str, language: OutputLanguage) -> bool:
+    from .._locale_chrome import DocsChromeError
+
+    try:
+        docs_chrome(key, language)
+    except DocsChromeError:
+        return False
+    return True

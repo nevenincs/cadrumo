@@ -10,8 +10,13 @@ drift from the schema, because it has no independent existence.
 An XSD is itself XML, so the derivation runs through the SAME hardened parser
 (:func:`~._xml.parse_hardened_xml`) every other document on this path uses.
 Production therefore gains no second XML stack and no second hardening posture
-on the most hostile input surface in the product; ``lxml`` stays out of the
-runtime, exactly as ``pyproject.toml`` documents. The real XSD engine still has
+on the most hostile input surface in the product: no XML this package reads
+touches ``lxml``. That is narrower than "lxml stays out of the runtime", which
+an earlier version of this paragraph claimed and ``pyproject.toml`` explicitly
+corrects -- production DOES rely on lxml, as BeautifulSoup's parser backend for
+AEAT HTML, named in the AEAT adapter's one HTML constructor. The two are
+separate reliances on separate input surfaces, and only the XML one is this
+module's concern. The real XSD engine still has
 a job -- it validates this module's derivation in CI, by an INDEPENDENT method,
 so a bug in the walk below is caught by libxml2 rather than by agreement with
 itself.

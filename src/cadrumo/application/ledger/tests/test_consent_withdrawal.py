@@ -40,6 +40,7 @@ _CLOUD_STAMP = "llm:openai-text-extract:gpt-4.1:rates-2026A-abcdef"
 _LOCAL_STAMP = "llm:local-text-extract:qwen2.5:3b:rates-2026A-abcdef"
 
 _TEXT_LAYER = TranscriberIdentity(
+    transport=LOCAL_TRANSPORT_LABEL,
     origin=FieldOrigin.TEXT_LAYER,
     name="pdfplumber-text-layer",
     revision="0.11.4",

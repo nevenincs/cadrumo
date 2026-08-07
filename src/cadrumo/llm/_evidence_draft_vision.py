@@ -120,8 +120,6 @@ incidental: a model told what to look for finds it, and this stage must not
 decide what the document is before the stage that decides has run.
 """
 
-_TRANSCRIBER_NAME_PREFIX: Final[str] = "vision"
-
 
 def vision_transcription_prompt_registry() -> PromptRegistry:
     """Return the registry holding the transcription prompt.

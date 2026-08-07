@@ -47,6 +47,7 @@ from ...core.config import Settings
 from ...core.hashing import content_hash_hex
 from ...core.time import UtcInstant, now
 from ._confirmation_gate import ConfirmationBlocker, FindingResolution
+from ._deterministic_findings import deterministic_check_names
 from ._evidence_draft import FieldProvenance, InvoiceDraft
 
 __all__ = [
@@ -174,6 +175,26 @@ class InvoiceConfirmationRecord(BaseModel):
     confirmed_at: UtcInstant
     assertions: tuple[FieldAssertion, ...] = ()
     resolutions: tuple[ResolvedFinding, ...] = ()
+    checks_run: tuple[str, ...] | None = None
+    """Which deterministic checks ran when this record was minted.
+
+    Derived from the one declaration the readers execute
+    (:data:`~application.ledger.DETERMINISTIC_CHECKS`), never restated, so a
+    check added there reaches every later record without a second place to
+    remember.
+
+    ``None`` means the record makes NO CLAIM about which checks ran, and that is
+    a third state rather than a shorthand for either extreme. Records minted
+    before this field existed carry it, and they are not evidence that no check
+    ran (a lie toward alarm) nor that every current check ran (a lie toward
+    assurance) -- a record attests what ran at its own minting, and one that
+    never recorded the set simply does not say. An empty tuple is a different
+    claim entirely: that the set was recorded and was empty.
+
+    Not backfilled, deliberately. The compatibility regime is pre-release, so
+    reconstructing the set for existing records would be inventing a claim they
+    never made -- which is the exact misreading this field exists to prevent.
+    """
 
 
 def derive_confirmation_id(
@@ -437,6 +458,14 @@ def build_confirmation_record(
         extractor=extractor,
         confirmed_by=confirmed_by,
         confirmed_at=now(),
+        # Stamped from the one list the readers run, and deliberately NOT folded
+        # into the derived id above. The id folds the OUTCOME -- who confirmed
+        # what against which evidence -- so that a retry matches. Adding a check
+        # would change every id if the set were folded in, and two records of the
+        # same confirmation would stop matching because the product grew a check
+        # between them, which is the idempotency guard failing for a reason that
+        # has nothing to do with the confirmation.
+        checks_run=deterministic_check_names(),
         assertions=assertions,
         resolutions=resolved,
     )

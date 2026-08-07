@@ -544,9 +544,26 @@ class DisenoCoverageReport:
 
         ``True`` means this report carries no information about coverage:
         the source was parsed but no casilla tag was recognised in it, so
-        the registry was compared against nothing. An official AEAT record
-        design always declares casillas, so this state is a limitation of
-        the extraction, never a property of the form.
+        the registry was compared against nothing. Either way the counts
+        below are not evidence of coverage.
+
+        It does NOT mean extraction failed. **Correcting an earlier claim
+        made here:** this docstring asserted that an official AEAT record
+        design always declares casillas, so an empty set had to be an
+        extraction limitation. That is false. The 16 revisions in this
+        state are informative declarations -- 111, 115, 180, 184, 190,
+        193, 232, 347, 349, 360, 369 and 720 -- whose Diseño describes
+        positional records with NAMED fields (``TIPO DE REGISTRO``,
+        ``NIF DEL DECLARANTE``) and no numbered boxes at all. Measured:
+        zero bracketed numbers across all 16, at any digit width. For
+        them an empty casilla set is the correct answer, not a failure,
+        and casilla-number coverage is simply not the applicable measure
+        -- field coverage against the record layout would be.
+
+        So read this flag as "casilla coverage does not apply or could
+        not be computed", and distinguish the two by whether the source
+        yielded fields at all. Do not read it as a defect to be fixed by
+        widening extraction.
         """
         return not self.diseno_casillas
 

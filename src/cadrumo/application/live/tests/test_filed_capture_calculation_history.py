@@ -8,20 +8,26 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import AnyHttpUrl
 
 from ....adapters.inbound.justificante import parse_justificante_bytes
 from ....adapters.outbound.aeat.sede import (
     Declaracion,
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
     FiledDeclaracionObservationStore,
+    ObservedCasillaValue,
 )
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....core import Period
+from ....core import CasillaValueKind, Period
+from ....core.config import Settings
 from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import (
     RegistryModeloObservation,
     RegistryValidationError,
+    validated_casilla_id,
 )
 from ....domain.iva_compensation import IvaCompensationPeriodState
 from ....domain.modelos import (
@@ -1034,6 +1040,9 @@ def test_history_selection_is_invariant_to_the_order_duplicated_periods_arrive_i
     )
 
 
+_SYNTHETIC_REQUEST_TYPE = "SYNTHETIC-REQUEST-TYPE"
+
+
 def test_persisted_source_metadata_drops_the_register_request_type_signal(tmp_path: Path) -> None:
     """AEAT's own request-type signal reaches the observation and is lost at persistence.
 
@@ -1048,27 +1057,31 @@ def test_persisted_source_metadata_drops_the_register_request_type_signal(tmp_pa
     an amendment-aware election should key on is an open decision, and a silent
     half-fix would be worse than a visible gap. REVERSE THIS TEST when the
     request-type signal is carried through -- assert the persisted metadata
-    carries it, and this assertion becomes the one to delete.
+    carries it, and the two absence assertions below become the ones to delete.
+
+    Modelo 130 keeps this off the IVA compensation machinery a Modelo 303
+    observation additionally drives, so the persistence boundary is exercised on
+    its own. The metadata mapping mirrors what the live capture path writes off
+    the register row.
     """
-    request_type = "SYNTHETIC-REQUEST-TYPE"
-    observation = _prior_303_observation(pending_compensation=Decimal("1200.00")).model_copy(
-        update={"metadata": {"tipo_solicitud": request_type, "observaciones": ""}},
+    observation = _filed_130_observation().model_copy(
+        update={"metadata": {"tipo_solicitud": _SYNTHETIC_REQUEST_TYPE, "observaciones": ""}},
     )
-    assert observation.metadata["tipo_solicitud"] == request_type, (
+    assert observation.metadata["tipo_solicitud"] == _SYNTHETIC_REQUEST_TYPE, (
         "the raw observation does not carry the signal, so this test cannot show it being dropped"
     )
 
     with _secure_backend(tmp_path):
         persist_filed_calculation_observation(observation, repository=CalculationObservationRepository())
-        loaded = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
+        loaded = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
 
     assert loaded is not None
-    assert "tipo_solicitud" not in loaded.source_metadata
-    assert request_type not in loaded.source_metadata.values(), (
-        "the request type reached persistence under some other key; this test must name that key instead"
-    )
     assert "aeat_expediente_id" in loaded.source_metadata, (
-        "the expediente id is gone too, so the metadata was not built -- the absence above proves nothing"
+        "the metadata was not built at all, so the absences below would prove nothing"
+    )
+    assert "tipo_solicitud" not in loaded.source_metadata
+    assert _SYNTHETIC_REQUEST_TYPE not in loaded.source_metadata.values(), (
+        "the request type reached persistence under some other key; this test must name that key instead"
     )
 
 
@@ -1167,59 +1180,102 @@ def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: P
             resolve_bindings_from_local_store(target_snapshot, repository=repository, captured_at=_CAPTURED_AT)
 
 
+def _filed_130_observation(
+    *,
+    expediente_id: str = "13020260410ABCD1234EFGH5678",
+    presented_at: datetime = _CAPTURED_AT,
+) -> FiledDeclaracionObservation:
+    """One Modelo 130 filed observation that enrols as registry-grounded evidence.
+
+    Deliberately NOT Modelo 303. The provenance stamp is modelo-agnostic, while a
+    303 observation additionally drives the IVA compensation wallet on the way to
+    persistence -- a side effect with nothing to do with provenance, whose failure
+    would be indistinguishable here from a provenance divergence. Modelo 130
+    exercises the same single stamping site with nothing else attached.
+    """
+    period = Period.from_year_and_code(2026, "1T")
+    body = b"130-2026-1T-submitted-file"
+    external = Settings.external_constants().aeat
+    declarations_url = f"{external.domains.www6}{external.sede_paths.declarations_listing}"
+    artefact = FiledDeclaracionArtefact(
+        kind="submitted_file",
+        source_url=AnyHttpUrl(declarations_url),
+        content_type="application/octet-stream",
+        byte_count=len(body),
+        sha256=hashlib.sha256(body).hexdigest(),
+        captured_at=presented_at,
+    )
+    return FiledDeclaracionObservation(
+        modelo="130",
+        ejercicio=2026,
+        period=period,
+        expediente_id=expediente_id,
+        status="ALTA",
+        presented_at=presented_at,
+        authenticated_identity=_SYNTHETIC_PROFILE_ID,
+        artefacts=(artefact,),
+        casillas=(
+            ObservedCasillaValue(
+                casilla_id=validated_casilla_id("03"),
+                value="1500.00",
+                value_kind=CasillaValueKind.NUMERIC,
+                source_artefact_kind="submitted_file",
+                source_locator="submitted-file:03",
+                confidence=1.0,
+            ),
+        ),
+        extraction_coverage={"submitted_file": 1.0},
+    )
+
+
 def test_discovery_driven_capture_stamps_the_same_official_source_kind(tmp_path: Path) -> None:
     """A discovery-nominated pair is provenance-identical to a single-pair capture.
 
-    This is the Step's whole point, not a formality. The design deliberately adds
+    This is the point of the Step, not a formality. The design deliberately adds
     NO sixth ``ObservationSourceKind`` for a backfilled historical filing, on the
     ground that an imported filing IS an AEAT-sourced filed declaración rather
-    than a lesser-trust echo of one. That claim is only safe if the discovery
-    signal genuinely cannot reach the stamp — so the same synthetic declaración is
-    pushed through the single-pair finalizer policy and through the bulk policy
-    the discovery-driven sweep uses, into two real repositories, and the two
-    persisted rows are compared field by field.
+    than a lesser-trust echo of one. That is only safe if the discovery signal
+    genuinely cannot reach the stamp -- so the same synthetic declaración is
+    pushed through the single-pair finalizer policy and through the bulk policy a
+    discovery-driven sweep uses, into two real repositories on real encrypted
+    backends, and the two persisted rows are compared whole.
 
-    The comparison excludes nothing but the fields that MUST differ. It does not
-    compare ``captured_at`` loosely and then declare parity: ``captured_at`` is
-    derived from the filing's own ``presented_at``, so for one fixture it is
-    genuinely equal on both paths and is asserted equal. Everything else -- the
-    registry observation, the stamped revision, the source metadata -- is
-    asserted equal too, so a divergence anywhere in the provenance envelope
-    fails here rather than surfacing later as two filings a taxpayer cannot
-    reconcile.
+    The comparison excludes nothing. ``captured_at`` is derived from the filing's
+    own ``presented_at``, so it is genuinely equal on both paths and is asserted
+    equal rather than waved through; the registry observation, the revision stamp,
+    the source metadata and the member NIF are each asserted equal, and then the
+    two rows are compared with ``==`` so a field added later is covered without
+    this test being edited.
     """
-    observation = _prior_303_observation(pending_compensation=Decimal("1200.00"))
+    observation = _filed_130_observation()
     period = Period.from_year_and_code(2026, "1T")
 
     with _secure_backend(tmp_path / "single"):
-        single_repository = CalculationObservationRepository()
-        single_keys = finalize_filed_capture(
+        single_finalization = finalize_filed_capture(
             (observation,),
             policy=FiledCaptureFailurePolicy.FAIL_FAST,
-        ).calculation_observation_keys
-        single_row = single_repository.load_observation("303", period)
+        )
+        single_row = CalculationObservationRepository().load_observation("130", period)
 
-    # The discovery-driven route reaches capture through the bulk grid, whose
-    # finalizer policy is BEST_EFFORT because a partial sweep is the expected
-    # outcome. That policy difference is the ONLY thing the discovery path
-    # changes about finalization, which is exactly why it is the arm under test.
+    # A discovery-driven sweep reaches capture through the bulk grid, whose
+    # finalizer policy is BEST_EFFORT because partial success is the expected
+    # outcome of a history walk. That policy is the ONLY thing the discovery route
+    # changes about finalization, which is why it is the arm under test.
     with _secure_backend(tmp_path / "discovered"):
-        discovered_repository = CalculationObservationRepository()
-        finalization = finalize_filed_capture(
+        discovered_finalization = finalize_filed_capture(
             (observation,),
             policy=FiledCaptureFailurePolicy.BEST_EFFORT,
         )
-        discovered_row = discovered_repository.load_observation("303", period)
+        discovered_row = CalculationObservationRepository().load_observation("130", period)
 
     assert single_row is not None
     assert discovered_row is not None
-    assert finalization.failures == ()
-    assert single_keys == finalization.calculation_observation_keys
+    assert discovered_finalization.failures == ()
+    assert single_finalization.calculation_observation_keys == discovered_finalization.calculation_observation_keys
 
     assert single_row.source_kind is ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE
     assert discovered_row.source_kind is ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE
-    assert single_row.source_kind.is_official_aeat
-    assert discovered_row.source_kind is single_row.source_kind
+    assert discovered_row.source_kind.is_official_aeat
 
     assert discovered_row.observation == single_row.observation
     assert discovered_row.stamped_revision_id == single_row.stamped_revision_id
@@ -1232,20 +1288,19 @@ def test_discovery_driven_capture_stamps_the_same_official_source_kind(tmp_path:
 def test_no_discovery_signal_token_reaches_the_observation_provenance(tmp_path: Path) -> None:
     """The persisted provenance names no discovery signal, so it cannot depend on one.
 
-    The parity assertion above compares two runs. This one closes the other side:
-    even if both paths agreed, a signal token leaking into ``source_metadata``
-    would make the stored provenance vary with WHICH signal nominated the pair,
-    which is precisely the distinction the domain does not have.
+    The parity assertion above compares two runs and would pass if both were
+    wrong in the same way. This closes that side: a signal token reaching
+    ``source_metadata`` would make the stored provenance vary with WHICH signal
+    nominated the pair, which is exactly the distinction the domain does not have.
     """
     from ....core import FiledHistoryDiscoverySignal
 
-    observation = _prior_303_observation(pending_compensation=Decimal("1200.00"))
     with _secure_backend(tmp_path):
-        repository = CalculationObservationRepository()
-        finalize_filed_capture((observation,), policy=FiledCaptureFailurePolicy.BEST_EFFORT)
-        row = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
+        finalize_filed_capture((_filed_130_observation(),), policy=FiledCaptureFailurePolicy.BEST_EFFORT)
+        row = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
 
     assert row is not None
+    assert row.source_metadata
     stored = " ".join((*row.source_metadata.keys(), *row.source_metadata.values())).casefold()
     for signal in FiledHistoryDiscoverySignal:
         assert signal.value not in stored
@@ -1254,10 +1309,10 @@ def test_no_discovery_signal_token_reaches_the_observation_provenance(tmp_path: 
 def test_the_official_source_kind_set_gains_no_discovery_specific_member() -> None:
     """No sixth kind was introduced, and the official set is still exactly three.
 
-    Gated as membership of the official set rather than as a total count of the
-    enum, so adding a genuinely unrelated non-official kind does not force this
-    test to be edited -- while adding a discovery-specific OFFICIAL kind, which
-    is the decision this Step settled, fails here.
+    Gated on membership of the official set rather than on a total count of the
+    enum, so adding a genuinely unrelated NON-official kind does not force an edit
+    here -- while adding a discovery-specific official kind, which is the decision
+    this Step settled, fails.
     """
     official = {kind for kind in ObservationSourceKind if kind.is_official_aeat}
     assert official == {

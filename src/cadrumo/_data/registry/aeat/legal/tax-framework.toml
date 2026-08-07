@@ -21,6 +21,44 @@ reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIVA art. 1: naturaleza del IVA (impuesto indirecto sobre el consumo)."
 required_text = ["tributo de naturaleza indirecta que recae sobre el consumo"]
 
+[legal."ley-37-1992:art-3.dos"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a3"
+document_id = "BOE-A-1992-28740"
+article = "3"
+section = "Dos"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a3"
+published_at = 1992-12-29
+effective_from = 2020-02-06
+consolidated_as_of = 2026-08-07
+review_status = "reviewed"
+reviewed_at = 2026-08-07
+reviewed_by = "agent-review"
+notes = """LIVA art. 3: territorialidad. Apartado Dos, numero 1.o, letras a) y b) are the \
+provision that puts Ceuta y Melilla and Canarias OUTSIDE the territorio de aplicacion del \
+impuesto, and they are what the Spanish sub-national territory table rests on. \
+The anchored unit is the WHOLE article, because #a3 is the finest anchor the consolidated \
+document offers; apartado Dos cannot be sliced further. Read the two limbs separately: the \
+EXCLUSIONS are in apartado Dos, while the inside-limb -- the ambito espacial as el territorio \
+espanol "incluyendo en el las islas adyacentes" -- is apartado Uno. Neither apartado names the \
+Balears; the islands are inside the TAI by adjacency plus non-exclusion, never by being listed, \
+which is why the territory table pins them inside by province rather than by quoting this article. \
+Current redaction: letters a) and b) of apartado Dos.1.o were last modified by art. 214.Uno of \
+Real Decreto-ley 3/2020 (BOE-A-2020-1651). That apartado takes the general entry-into-force rule \
+of disposicion final decimosexta.1 -- the day after publication, 2020-02-06 -- and NOT the \
+2020-03-01 date of paragraph 3, which names only apartados dos a nueve of art. 214; art. 214 sits \
+in libro tercero, so the twenty-day rule of paragraph 2 does not reach it either. \
+The bundled #a3 unit was compared character-for-character against the live BOE consolidated text \
+on 2026-08-07 and is identical."""
+required_text = [
+    "El ámbito espacial de aplicación del impuesto es el territorio español",
+    "incluyendo en él las islas adyacentes",
+    "en el Reino de España, Ceuta y Melilla y en la República Italiana, Livigno, en cuanto territorios no comprendidos en la Unión Aduanera",
+    "En el Reino de España, Canarias",
+]
+
 [legal."ley-35-2006:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"

@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import FieldOrigin
+from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._document_transcription import DocumentTranscription, TranscriberIdentity
 from .._extracted_document_cache import (
@@ -38,11 +38,13 @@ _DIGEST = "b" * 64
 _OTHER_DIGEST = "c" * 64
 
 _TEXT_LAYER = TranscriberIdentity(
+    transport=LOCAL_TRANSPORT_LABEL,
     origin=FieldOrigin.TEXT_LAYER,
     name="pdfplumber-text-layer",
     revision="0.11.4",
 )
 _VISION = TranscriberIdentity(
+    transport=LOCAL_TRANSPORT_LABEL,
     origin=FieldOrigin.VISION,
     name="qwen2.5-vl-7b-instruct",
     revision="q4_k_m/prompt-r3",
@@ -213,7 +215,7 @@ def test_a_revision_change_is_a_miss_rather_than_a_stale_hit(profile: TestRuntim
         transcription=_transcription(transcriber=_VISION),
         settings=profile.settings,
     )
-    newer = TranscriberIdentity(origin=FieldOrigin.VISION, name=_VISION.name, revision="q4_k_m/prompt-r4")
+    newer = TranscriberIdentity(transport=LOCAL_TRANSPORT_LABEL, origin=FieldOrigin.VISION, name=_VISION.name, revision="q4_k_m/prompt-r4")
 
     assert (
         read_cached_transcription(

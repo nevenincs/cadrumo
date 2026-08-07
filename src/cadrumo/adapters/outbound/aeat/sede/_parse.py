@@ -17,11 +17,12 @@ from html import unescape
 from typing import Final
 from urllib.parse import urljoin, urlparse
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import Tag
 from pydantic import AnyHttpUrl
 
 from .....core.config import Settings
 from .....core.logging import get_logger
+from .._html import parse_html
 from ._declarations_remote import extract_csv_from_url
 from ._errors import SedeParseError
 from ._schema import Expediente, JustificanteRef
@@ -78,7 +79,7 @@ def parse_resumen_tree(html: str, *, base_url: str) -> tuple[Expediente, ...]:
             authenticated session likely expired).
     """
     try:
-        soup = BeautifulSoup(html, "lxml")
+        soup = parse_html(html)
     except Exception as exc:
         raise SedeParseError(f"failed to parse ResumenVlt HTML: {exc}") from exc
 

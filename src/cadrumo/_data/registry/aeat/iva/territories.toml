@@ -1,0 +1,66 @@
+# Spanish sub-national IVA territories, keyed by the postal-code prefix that
+# identifies them on a printed document.
+#
+# WHY THIS TABLE EXISTS. Ley 37/1992 art. 3.Dos, numero 1.o, letras a) and b)
+# put Ceuta y Melilla and Canarias OUTSIDE the territorio de aplicacion del
+# impuesto -- the first as territory outside the customs union, the second as
+# territory excluded from turnover-tax harmonisation. The Canary Islands charge
+# IGIC and Ceuta and Melilla charge IPSI, so an operation involving a party
+# established there is not subject to LIVA at all. A country
+# code cannot separate them: "ES" names the Member State while the territory
+# inside it stays undetermined, which is why the country resolver deliberately
+# returns nothing for a Spanish code and why this axis had to exist separately.
+#
+# WHY THE POSTAL CODE IS THE EVIDENCE. It is the only sub-national identifier a
+# document reliably prints, it is anchorable to the address block it was read
+# from, and its first two digits are the province code, so the mapping is a
+# lookup rather than an inference. The alternative considered and REJECTED was
+# reading the territory from the charged tax rate: a rate evidences where the
+# SUPPLY was located rather than where the PARTY is established, and a Canarian
+# issuer can charge IVA on a peninsula-located supply, so it answers a different
+# question and answers it wrongly on a real population.
+#
+# ONLY THE EXCLUDED TERRITORIES ARE ENUMERATED. Every other province is inside
+# the TAI, so listing them would be a second copy of the Spanish province table
+# maintained here for no purpose and drifting the moment a code is reassigned.
+# A prefix absent from this table therefore means "inside the TAI", and a code
+# that is not a well-formed Spanish postal code means UNKNOWN -- never the TAI,
+# because the peninsula is the majority population and defaulting to it would
+# silently pull Canarian and Ceutan parties into a territory their operations
+# are not subject to.
+#
+# GROUNDING NOTE, HONEST. The territorial exclusion is a tax provision and is
+# cited below. The prefix-to-province correspondence is administrative
+# geography rather than tax law, published by Correos and used unchanged by the
+# AEAT's own censal address forms; it is not a value this repository can point
+# at a bundled BOE text for, and it is recorded here rather than inlined in code
+# so that it is reviewable in one place.
+#
+# WHERE THE BALEARS SIT, AND WHY THEY ARE NOT QUOTED. Art. 3 does not name them.
+# Apartado Uno sets the ambito espacial as el territorio espanol "incluyendo en
+# el las islas adyacentes", and apartado Dos excludes Canarias, Ceuta y Melilla
+# and nothing else Spanish; the Balears are therefore inside the TAI by adjacency
+# plus non-exclusion. "Islands are outside" is the plausible wrong generalisation
+# this table is shaped to refuse -- prefixes 07 (Illes Balears) are deliberately
+# absent from the excluded set, which is what places them inside.
+
+[[territory]]
+postal_prefixes = ["35", "38"]
+scope = "es_canarias"
+name = "Canarias"
+legal_refs = ["ley-37-1992:art-3.dos"]
+notes = "Las Palmas (35) and Santa Cruz de Tenerife (38). Outside the TAI; IGIC applies instead of IVA."
+
+[[territory]]
+postal_prefixes = ["51"]
+scope = "es_ceuta_melilla"
+name = "Ceuta"
+legal_refs = ["ley-37-1992:art-3.dos"]
+notes = "Outside the TAI; IPSI applies instead of IVA."
+
+[[territory]]
+postal_prefixes = ["52"]
+scope = "es_ceuta_melilla"
+name = "Melilla"
+legal_refs = ["ley-37-1992:art-3.dos"]
+notes = "Outside the TAI; IPSI applies instead of IVA. Shares a scope with Ceuta because LIVA treats the two identically, while they stay separate records because they are separate provinces and a reader pointing an operator at one must not name the other."

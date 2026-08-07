@@ -209,8 +209,20 @@ def test_confirm_honours_an_override_of_an_extracted_field(tmp_path: Path) -> No
     assert result["issued_at"] == "2026-03-10"
 
 
-def test_confirm_of_a_different_override_mints_a_distinct_invoice(tmp_path: Path) -> None:
-    """A same-evidence confirm with genuinely different resolved fields does not collapse."""
+def test_confirm_of_a_different_override_refuses_rather_than_duplicating(tmp_path: Path) -> None:
+    """One document must not leave two invoices behind, whatever the operator retypes.
+
+    The second call resolves a different invoice number, which is one of the six
+    fields the invoice id folds -- so it hashes to a fresh id, and before the
+    document-identity guard it sailed past the same-id check and left the
+    catalogue holding two records made from one piece of paper. Both would then
+    aggregate into Modelo 303, 347 and 390, which AEAT reconciles against the
+    counterparty's own declaration.
+
+    The refusal names the field that moved, because the operator's next move
+    depends on it: a corrected number means the stored record is wrong, a
+    different total means these are not the same invoice.
+    """
     evidence_id = _add_evidence(tmp_path, _FULL_INVOICE_LINES)
 
     first = _invoke(
@@ -236,15 +248,12 @@ def test_confirm_of_a_different_override_mints_a_distinct_invoice(tmp_path: Path
             "--invoice-number", "2026-0143",
         ],
     )  # fmt: skip
-    assert second.exit_code == 0, second.output
-    second_result = json.loads(second.output)["result"]
-
-    assert second_result["created"] is True
-    assert second_result["invoice_id"] != first_result["invoice_id"]
+    assert second.exit_code != 0, second.output
+    assert "invoice_number" in second.output
 
     listed = _invoke(["--format", "json", "app", "ledger", "invoice", "list"])
     assert listed.exit_code == 0, listed.output
-    assert json.loads(listed.output)["result"]["count"] == 2
+    assert json.loads(listed.output)["result"]["count"] == 1
 
 
 def test_confirm_by_attachment_id_uses_the_same_in_store_bytes(tmp_path: Path) -> None:

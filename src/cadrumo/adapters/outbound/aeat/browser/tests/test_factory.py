@@ -40,8 +40,6 @@ async def _wait_for_descendants(
     return observed
 
 
-
-
 async def _wait_for_owner_entry(
     entered: asyncio.Event,
     owner_task: asyncio.Task[None],

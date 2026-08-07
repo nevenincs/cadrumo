@@ -30,7 +30,6 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Final
 from urllib.parse import urlsplit
 
-from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl
 
 from .....core import Period
@@ -54,6 +53,7 @@ from .....domain.calculations.registry import (
     registry_snapshot_id,
     relation_source_requirements,
 )
+from .._html import parse_html
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
@@ -295,7 +295,7 @@ def _combobox_option_texts(html: str) -> tuple[str, ...]:
         SedeParseError: When the snapshot cannot be parsed at all.
     """
     try:
-        soup = BeautifulSoup(html, "html.parser")
+        soup = parse_html(html)
     except Exception as exc:
         raise SedeParseError(
             f"failed to parse declaraciones combobox HTML: {exc}",

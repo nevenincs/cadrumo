@@ -155,3 +155,42 @@ def test_a_stamp_built_here_is_readable_by_the_parser_that_classifies_it() -> No
     assert provenance_stamp_transport(local) == "local"
     assert provenance_stamp_transport(cloud) == "openai"
     assert provenance_stamp_transport(local) != provenance_stamp_transport(cloud)
+
+def test_no_transcriber_identity_folds_its_transport_into_a_name() -> None:
+    """The identity records transport as data, never inside another field.
+
+    A third provenance grammar is what this module exists to prevent, and the
+    identity was carrying one: the vision reader folded its transport into
+    ``name`` as ``vision-<transport>:<model>``, which no parser knew and which
+    broke ``name``'s own contract against coarse labels. The fix was a first
+    class ``transport`` field, so the way that regresses is someone folding it
+    back into a name.
+
+    Asserted over the CONSTRUCTED identities rather than over source text: what
+    matters is the value that reaches storage, and a reader assembling the name
+    from parts would satisfy any source-level pattern while storing the same
+    smuggled shape.
+    """
+    from ...application.ledger import text_layer_transcriber_identity
+    from ...core import LOCAL_TRANSPORT_LABEL
+    from .._evidence_draft_vision import LocalVisionDocumentTranscriber
+
+    identities = [
+        text_layer_transcriber_identity(),
+        LocalVisionDocumentTranscriber(model="qwen2.5vl:3b").transcriber_identity,
+        LocalVisionDocumentTranscriber(
+            model="claude-haiku-4-5-20251001",
+            provider=LLMProvider.ANTHROPIC,
+        ).transcriber_identity,
+    ]
+
+    assert any(identity.transport != LOCAL_TRANSPORT_LABEL for identity in identities), (
+        "every identity here is on-host, so this gate cannot tell a recorded transport from a "
+        "hardcoded one; include an off-host reader or it proves nothing"
+    )
+    for identity in identities:
+        assert identity.transport, f"{identity.name} records no transport"
+        assert identity.transport not in identity.name, (
+            f"{identity.name!r} folds its transport {identity.transport!r} back into the name; "
+            "transport is its own axis so that nothing has to parse a name to find it"
+        )

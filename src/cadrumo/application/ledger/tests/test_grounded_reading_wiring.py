@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ....core import LOCAL_TRANSPORT_LABEL, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from ....core.config import load_settings
 from ....llm import LLMProviderError
 from ....llm._invoice_field_grounding import (
@@ -447,6 +447,7 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
             page_count=1,
             source_content_sha256="c" * 64,
             transcriber=TranscriberIdentity(
+                transport=LOCAL_TRANSPORT_LABEL,
                 origin=FieldOrigin.TEXT_LAYER,
                 name="pdfplumber",
                 revision="gate",

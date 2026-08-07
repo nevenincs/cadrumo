@@ -18,9 +18,11 @@ safe to import from either conftest at the earliest point in collection.
 from __future__ import annotations
 
 import atexit
+import contextlib
 import logging
 import os
 import shutil
+import sys
 import time
 from pathlib import Path
 from tempfile import gettempdir
@@ -52,15 +54,158 @@ _STALE_AFTER_SECONDS = 24 * 60 * 60
 """Generous staleness threshold for a sibling root: long enough to never
 race a slow CI run or a long-idle interactive session sharing the same
 temp directory, short enough that crashed/killed prior invocations do not
-accumulate indefinitely."""
+accumulate indefinitely.
+
+This is the ceiling that applies to every swept family, and it is
+deliberately unchanged: mtime is only a PROXY for liveness -- a live
+session that has simply not written for a while is indistinguishable from
+an abandoned one -- so where mtime is the only available signal the
+threshold has to out-wait the slowest plausible quiet period. The
+``cadrumo-pytest-<pid>`` family carries a second, direct signal on top of
+it (see :data:`_ABANDONED_AFTER_SECONDS`); the ``cadrumo-settings-``
+family, whose names carry no owner, has only this one.
+"""
+
+_ABANDONED_AFTER_SECONDS = 10 * 60
+"""Grace period applied only AFTER the owning process is confirmed gone.
+
+A ``cadrumo-pytest-<pid>`` directory names its owner in its own filename,
+so for that family liveness is directly observable rather than inferred
+from mtime. Once the owning PID no longer resolves to a running process,
+no live session can be using the directory -- that path is derived from
+``os.getpid()`` and nothing else ever opens it -- so the slow-CI-run case
+:data:`_STALE_AFTER_SECONDS` guards against cannot apply: a slow run's
+process is alive by definition and is spared however long it idles.
+
+The grace is therefore not a staleness estimate but a margin for the
+things a liveness answer cannot cover: clock skew on the mtime read, and
+a process that has just exited whose own ``atexit`` cleanup is still
+mid-``rmtree``. Ten minutes is far beyond either and still bounds the
+accrual at a fraction of a day's worth.
+"""
+
+_STILL_ACTIVE = 259
+"""Windows ``GetExitCodeProcess`` sentinel meaning the process is running."""
+
+_ERROR_INVALID_PARAMETER = 87
+"""Windows ``OpenProcess`` error meaning no process carries that identifier."""
 
 
-def sweep_stale_roots(parent: Path, *, now: float | None = None) -> int:
-    """Remove swept-prefix directories under ``parent`` older than the threshold.
+def _process_is_live(pid: int) -> bool:
+    """Report whether ``pid`` currently resolves to a running process.
 
-    Split out of the ``atexit`` hook so the staleness rule can be exercised
+    Fail-safe in one direction on purpose: every uncertain answer -- an
+    unparseable identifier, a permission refusal, an unavailable platform
+    facility -- reports ``True``, so the caller spares the directory. The
+    sweep can therefore only ever retain something it might have reclaimed,
+    never reclaim something it should have retained.
+
+    PID reuse is the known unsoundness, and it lands on the safe side too: a
+    recycled identifier makes an abandoned directory look owned, which costs
+    one more day of retention before :data:`_STALE_AFTER_SECONDS` reclaims it
+    anyway. It cannot make a live directory look abandoned.
+
+    Ordering matters and is satisfied structurally by querying per directory
+    rather than against a pre-taken snapshot: the directory listing happens
+    first, so any directory under consideration was created by a process that
+    already existed when the listing was taken. A process that starts later
+    has no entry in that listing, and so can never be judged dead.
+    """
+    if pid <= 0:
+        return True
+    if sys.platform == "win32":
+        return _windows_process_is_live(pid)
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except OSError:
+        return True
+    return True
+
+
+def _windows_process_is_live(pid: int) -> bool:
+    """Windows liveness probe, via ``ctypes`` so the module stays pure-stdlib.
+
+    ``os.kill(pid, 0)`` is NOT usable here: on Windows CPython routes any
+    signal other than the console-control events to ``TerminateProcess``, so
+    the POSIX liveness idiom would kill the very process it asks about.
+    """
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.OpenProcess.restype = wintypes.HANDLE
+        kernel32.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+        kernel32.GetExitCodeProcess.argtypes = (wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD))
+        kernel32.CloseHandle.argtypes = (wintypes.HANDLE,)
+
+        query_limited_information = 0x1000
+        handle = kernel32.OpenProcess(query_limited_information, False, pid)
+        if not handle:
+            return ctypes.get_last_error() != _ERROR_INVALID_PARAMETER
+        try:
+            exit_code = wintypes.DWORD()
+            if not kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
+                return True
+            return exit_code.value == _STILL_ACTIVE
+        finally:
+            kernel32.CloseHandle(handle)
+    except (ImportError, OSError, AttributeError, ValueError):
+        return True
+
+
+def _owning_pid(sibling: Path, stem: str) -> int | None:
+    """Return the PID encoded in ``sibling``'s name, or ``None`` if it carries none."""
+    if stem != _STEM:
+        return None
+    suffix = sibling.name[len(stem) :]
+    if not suffix.isdigit():
+        return None
+    try:
+        return int(suffix)
+    except ValueError:
+        return None
+
+
+def _is_reclaimable(sibling: Path, stem: str, reference: float) -> bool:
+    """Decide whether ``sibling`` may be removed, erring towards retention.
+
+    Two independent grounds, either sufficient:
+
+    * the mtime ceiling (:data:`_STALE_AFTER_SECONDS`), the only rule that
+      applies to a family whose names carry no owner; and
+    * the owning process is confirmed gone and the short abandonment grace
+      (:data:`_ABANDONED_AFTER_SECONDS`) has elapsed.
+
+    The second is strictly additive: it reclaims sooner where a direct
+    liveness answer exists, and never widens what the first alone would take.
+    """
+    age = reference - sibling.stat().st_mtime
+    if age > _STALE_AFTER_SECONDS:
+        return True
+    if age <= _ABANDONED_AFTER_SECONDS:
+        return False
+    pid = _owning_pid(sibling, stem)
+    return pid is not None and not _process_is_live(pid)
+
+
+def sweep_stale_roots(parent: Path, *, now: float | None = None, exclude: Path | None = None) -> int:
+    """Remove swept-prefix directories under ``parent`` that no live session owns.
+
+    Split out of the ``atexit`` hook so the reclaim rule can be exercised
     directly: a sweep reachable only through interpreter shutdown is a sweep
-    nothing can prove reclaims the right things, or spares the wrong ones.
+    nothing can prove reclaims the right things, or spares the wrong ones --
+    and, more sharply, a sweep that runs ONLY at a clean exit runs only in the
+    case where it was not needed. A process that is killed leaves its
+    directory behind and skips the sweep in the same stroke, so the reclaim
+    has to happen at session START to reach anything.
+
+    Safe to run concurrently from many processes: nothing it removes belongs
+    to a live session, so a directory two sweepers reach at once can be
+    partially removed without any run observing the difference, and
+    ``ignore_errors=True`` absorbs the resulting races.
 
     Best-effort throughout -- a locked file or a permission error is swallowed.
     This is tidiness, not correctness: a stale root is self-invalidating on
@@ -70,11 +215,16 @@ def sweep_stale_roots(parent: Path, *, now: float | None = None) -> int:
         parent: Directory to sweep, normally the OS temp directory.
         now: Reference time, defaulting to the wall clock. Injectable so a test
             can age a directory without waiting a day for it.
+        exclude: A directory to leave alone regardless of every other rule,
+            normally the calling process's own root. Its PID is live, so the
+            liveness rule already spares it; naming it explicitly means a
+            caller never depends on that reasoning holding.
 
     Returns:
         How many directories were removed.
     """
     reference = time.time() if now is None else now
+    spared = None if exclude is None else exclude.name
     removed = 0
     for stem in _SWEPT_STEMS:
         try:
@@ -82,12 +232,15 @@ def sweep_stale_roots(parent: Path, *, now: float | None = None) -> int:
         except OSError:
             continue
         for sibling in siblings:
+            if sibling.name == spared:
+                continue
             try:
-                if reference - sibling.stat().st_mtime > _STALE_AFTER_SECONDS:
-                    shutil.rmtree(sibling, ignore_errors=True)
-                    removed += 1
+                reclaimable = _is_reclaimable(sibling, stem, reference)
             except OSError:
                 continue
+            if reclaimable:
+                shutil.rmtree(sibling, ignore_errors=True)
+                removed += 1
     return removed
 
 
@@ -142,22 +295,41 @@ def _release_log_handlers_under(root: Path) -> None:
 
 
 def register_collection_storage_root_cleanup(root: Path) -> None:
-    """Register best-effort cleanup for ``root`` and any stale sibling directories.
+    """Sweep abandoned sibling roots NOW, and register cleanup of ``root`` at exit.
 
-    Removes ``root`` at process exit (``atexit``) and sweeps every stale
-    sibling carrying a swept prefix (see :data:`_SWEPT_STEMS`), so
-    per-invocation directories from past runs — crashed sessions, killed
-    workers — do not accumulate indefinitely in the OS temp directory. Both the
-    removal and the sweep are best-effort: a locked file or a permission error
-    is swallowed rather than raised, since this is tidiness, not correctness —
-    a stale root, like a stale registry cache pickle, is self-invalidating on
-    next use because a fresh PID never reuses an old directory.
+    Called once per pytest process by both conftests, at the earliest safe
+    point in collection, which makes it the one moment guaranteed to execute
+    regardless of how any previous process died. The sweep runs here, before
+    the ``atexit`` registration, for exactly that reason: an exit-only sweep
+    is unreachable in the case it exists for. A process that is killed rather
+    than torn down runs neither its ``atexit`` hooks nor pytest's teardown, so
+    it leaves its directory behind AND skips the sweep that would have
+    reclaimed its predecessors'. Only clean exits ever swept, and a clean exit
+    has already removed its own root -- the reclaim could only run when it was
+    not needed.
+
+    Measured on the shared development box before this ran at startup: 137
+    ``cadrumo-pytest-*`` directories spanning a single day, each holding a
+    SQLite database plus its write-ahead-log sidecar, accruing faster than the
+    24h mtime ceiling released them, on the way to filling the system volume.
+
+    The exit hook is retained unchanged: it correctly handles the clean path,
+    where removing this process's own root the moment it finishes is better
+    than leaving it for a successor to find.
+
+    Both the removal and the sweep are best-effort: a locked file or a
+    permission error is swallowed rather than raised, since this is tidiness,
+    not correctness — a stale root, like a stale registry cache pickle, is
+    self-invalidating on next use because a fresh PID never reuses an old
+    directory.
     """
+    with contextlib.suppress(OSError):
+        sweep_stale_roots(root.parent, exclude=root)
 
     def _cleanup() -> None:
         _release_log_handlers_under(root)
         shutil.rmtree(root, ignore_errors=True)
-        sweep_stale_roots(root.parent)
+        sweep_stale_roots(root.parent, exclude=root)
 
     atexit.register(_cleanup)
 

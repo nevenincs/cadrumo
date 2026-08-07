@@ -23,6 +23,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....core import BindingSourceKind, Modelo, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision, resolve_retenciones_aggregation_binding_values
@@ -91,6 +92,9 @@ def _invoice(
             "retention_amount": None if retention_amount is None else Decimal(retention_amount),
             "fx_rate": None if fx_rate is None else Decimal(fx_rate),
             "fx_rate_date": None if fx_rate is None else date(2026, 3, 15),
+            # The three fx fields are set together or not at all: a rate with no
+            # named authority is an unattributable conversion.
+            "fx_rate_source": None if fx_rate is None else ECB_RATE_SOURCE_ID,
         },
     )
 

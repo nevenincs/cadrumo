@@ -46,6 +46,7 @@ from ...iva import (
     IvaExemptionArticle,
     IvaFlowDirection,
     IvaRateKind,
+    M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES,
     OssIossRegime,
     TransactionKind,
 )
@@ -928,6 +929,113 @@ def unrouted_ledger_iva_quantities(
         independent_facts=_IVA_INDEPENDENT_QUANTITY_FACTS,
         readers=_IVA_INDEPENDENT_QUANTITY_READERS,
     )
+
+
+def structurally_unroutable_iva_base_categories(
+    revision: ModeloRevision,
+    *,
+    out_of_scope: frozenset[IvaCategory] = M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES,
+) -> tuple[IvaCategory, ...]:
+    """Return :class:`IvaCategory` members no ``base_amount_sum`` binding on ``revision`` could ever reach.
+
+    A fourth axis beside :func:`unsupported_ledger_iva_observations` (is this
+    ROW selected) and :func:`unrouted_ledger_iva_quantities` (is this row's
+    FACT drawn). Both siblings are OBSERVATION-DEPENDENT: they cannot fire
+    until a taxpayer's ledger actually holds a row of the affected category,
+    and :func:`unrouted_ledger_iva_quantities` in particular reports only
+    *"uncovered non-zero rows"* -- its own docstring states it "must not
+    manufacture a finding from" a zero total, which is exactly why it needs no
+    category exclusion set: a cuota-less category's cuota is 0.00 BY LAW, so
+    it is filtered by the non-zero guard before any exclusion set could matter.
+
+    This screen has no rows to filter on, so it needs the opposite of that
+    guard -- an explicit declaration of what is out of scope, because
+    "unmentioned" would otherwise mean "unrouted." It answers a question
+    neither sibling can: *"could this revision's bindings EVER route this
+    category's base, independent of whether any taxpayer has fallen into the
+    hole yet?"* True or false from the registry alone, before a single ledger
+    row exists. For a filing-grade tool that distinction matters: the first
+    taxpayer with an unrouted reverse-charge base should not be the detector.
+
+    Three states result from combining this screen with its siblings, and a
+    caller must not collapse two of them into one "no finding":
+
+    - **unroutable**: this screen fires -- no binding on the revision could
+      ever draw this category's base, for any observation.
+    - **unrouted**: this screen is silent (some binding COULD draw it) but
+      :func:`unrouted_ledger_iva_quantities` fires for a real row -- the
+      binding exists but a particular row still reached nothing (e.g. a
+      binding scoped to one flow direction leaves a row of the same category
+      under a different flow direction uncovered).
+    - **routed**: both are silent.
+
+    ``out_of_scope`` is deliberately NOT :data:`CUOTA_LESS_M303_IVA_CATEGORIES`.
+    That set answers "does this category produce a cuota?"; this screen asks
+    "does this category's BASE reach some casilla?", and several by-law
+    cuota-less categories DO carry a real base by law --
+    :data:`~cadrumo.domain.iva.IvaCategory.DOMESTIC_ZERO` is the proof: zero
+    cuota by definition, base-bearing by law. Reusing CUOTA_LESS here would
+    suppress exactly the population this screen exists to catch. The default
+    is M303's own out-of-scope declaration
+    (:data:`~cadrumo.domain.iva.M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES`); no
+    generic per-modelo scope mechanism exists in the registry today (a
+    registry-expressiveness gap in its own right), so a caller working a
+    different modelo must supply its own set rather than default into M303's.
+
+    Uses the real production selector parser (:func:`_iva_ledger_selector`)
+    and matcher (:func:`_iva_build_matcher`) -- never a re-implementation of
+    the match rule. For each ``base_amount_sum`` binding whose declared
+    categories include the candidate, a probe observation is assembled from
+    values the selector's OWN declared axes already admit (one representative
+    rate kind, the declared flow direction, one representative cash-accounting
+    treatment, and one representative applied rate / exemption article where
+    the selector restricts them) and run through the real matcher. This never
+    guesses a value the selector did not itself declare, so it cannot invent a
+    false match.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose ``ledger_iva_aggregation``
+            bindings decide which categories' base is drawn.
+        out_of_scope: Categories this screen must not evaluate at all, because
+            "unroutable base" is not a meaningful question for them on this
+            modelo (see :data:`~cadrumo.domain.iva.M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES`
+            for the M303 declaration and the reasoning per member).
+
+    Returns:
+        Every :class:`IvaCategory` member not in ``out_of_scope`` for which no
+        ``base_amount_sum`` binding on ``revision`` could ever match an
+        observation of that category, in enum declaration order.
+    """
+    base_selectors = [
+        _iva_ledger_selector(binding)
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
+    ]
+    base_selectors = [selector for selector in base_selectors if selector.fact == "base_amount_sum"]
+    matchers = [(selector, _iva_build_matcher(selector)) for selector in base_selectors]
+
+    unroutable: list[IvaCategory] = []
+    for category in IvaCategory:
+        if category in out_of_scope:
+            continue
+        reachable = False
+        for selector, matcher in matchers:
+            if category not in selector.categories:
+                continue
+            probe = _IvaReachabilityProbeObservation(
+                category=category,
+                rate_kind=selector.rate_kinds[0],
+                flow_direction=selector.flow_direction,
+                cash_accounting_treatment=selector.cash_accounting_treatments[0],
+                exemption_article=selector.exemption_articles[0] if selector.exemption_articles else None,
+                applied_rate=selector.applied_rates[0] if selector.applied_rates else None,
+            )
+            if matcher(probe):
+                reachable = True
+                break
+        if not reachable:
+            unroutable.append(category)
+    return tuple(unroutable)
 
 
 # Ledger Renta estimación directa gastos aggregation source bindings.

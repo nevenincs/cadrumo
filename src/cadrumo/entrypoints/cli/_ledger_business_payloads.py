@@ -390,6 +390,14 @@ class EvidenceExtractResult(OutputSchema):
     supplier_name: str | None = None
     customer_tax_id: str | None = None
     customer_name: str | None = None
+    # The postal code each party's address prints, carried verbatim. The
+    # operator sees the printed code, never the territory read off it: the
+    # first two digits are province-coded, so Canarias, Ceuta and Melilla are
+    # separable from the peninsula deterministically -- but that reading is the
+    # domain's, and surfacing it here would put a second copy of a regulatory
+    # boundary on the review surface.
+    supplier_postal_code: str | None = None
+    customer_postal_code: str | None = None
     invoice_number: str | None = None
     invoice_series: str | None = None
     invoice_date: str | None = None

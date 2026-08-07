@@ -106,6 +106,15 @@ def test_an_unread_diseno_is_reported_as_unread_not_as_full_coverage() -> None:
     The flag is what separates them, so it is asserted in BOTH directions --
     a one-directional assertion is satisfied by a property that is always
     true.
+
+    CORRECTION, kept here because the first version of this test asserted it:
+    an empty extraction is not always a failure. The 16 revisions in that state
+    are informative declarations (111, 115, 180, 184, 190, 193, 232, 347, 349,
+    360, 369, 720) whose Diseño describes positional records with NAMED fields
+    and no numbered boxes -- zero bracketed numbers across all 16, at any digit
+    width. For them an empty casilla set is correct. The flag still earns its
+    place: it marks "casilla coverage does not apply or could not be computed",
+    and either way the empty gap is not evidence of coverage.
     """
     unread = DisenoCoverageReport(
         modelo_id="303",
