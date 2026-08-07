@@ -18,19 +18,32 @@
 # semantics here would have misclassified an October-filed Q3 return into
 # the Q4 window and printed 7,5 % where the law states 5 %.
 #
-# GROUNDING: the DESIGN authority for every window boundary and constant
-# below is solid (aeat-dr-303-2025, the same bundled Diseño de Registros the
-# four stable rungs already cite). The LEGAL authority for the 5 %/0 %
-# window's OPENING span (2023-01-01 through 2024-06-30, the original
-# sunset) is real-decreto-ley-20-2022:art-72 -- the article establishes 5 %
-# on aceites/pastas (recargo 0,62 %) and 0 % on the enumerated basic foods
-# (recargo 0 %), effective 1 January 2023. That original sunset was
-# extended in three further steps (RDL 1/2023 disposición adicional 16, RDL
-# 5/2023 art. 171, RDL 8/2023 art. 20 -- none yet separately bundled, all
-# restating the identical 5 %/0 % figures) through 30 September 2024, and
-# real-decreto-ley-4-2024:art-1 (already bundled) grounds the 7,5 %/2 %
-# follow-on step from 1 October 2024. The window boundaries below already
-# match this chain; only the citation set needed completing.
+# GROUNDING, fully closed with two already-bundled citations spanning
+# 2023-01-01 through 2024-12-31 end to end, no residual gap:
+#
+# real-decreto-ley-20-2022:art-72 opens the window effective 1 January 2023
+# (5 % on aceites/pastas, recargo 0,62 %; 0 % on the enumerated basic foods,
+# recargo 0 %). Its own consolidated operative text already reads "vigencia
+# hasta el 30 de junio de 2024" -- the effect of three intermediate
+# extensions (RDL 1/2023 disposición adicional 16, RDL 5/2023 art. 171, RDL
+# 8/2023 art. 20; none separately bundled) is already baked into that
+# consolidated wording, so this citation alone covers 2023-01-01 through
+# 2024-06-30.
+#
+# real-decreto-ley-4-2024:art-1 (already bundled) picks up from there: its
+# own preámbulo, read directly from the bundled corpus, states verbatim
+# "se mantiene la rebaja del IVA de estos alimentos en los tipos del 5 por
+# ciento ... y del 0 por ciento ... hasta el 30 de septiembre de 2024. A
+# partir de dicha fecha ... se incrementarán los tipos impositivos al 7,5 y
+# 2 por ciento, respectivamente, hasta el 31 de diciembre" -- i.e. RD-ley
+# 4/2024 ITSELF (not merely restating an unbundled predecessor) extends the
+# 5 %/0 % pair through 30 September 2024 before its own 7,5 %/2 % step from
+# 1 October. So the 2024-07-01..2024-09-30 segment rests on this bundled
+# citation directly, not on any unbundled instrument.
+#
+# The DESIGN authority for every window boundary and constant below is
+# separately solid (aeat-dr-303-2025, the same bundled Diseño de Registros
+# the four stable rungs already cite).
 
 [[revisions.2023-y-siguientes.parameters]]
 id = "m303-dr303-154-transitional-rate-percent"
