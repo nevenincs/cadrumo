@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:4f092251c1822a3779216d8e83f46086e98bf54d506e0075053e626b5b154aa8'
+body_hash: 'sha256:5cab829361827234b131d51bc794345c998fea818f9cc05f653011bb4473157e'
 related:
   - "[[2026-08-07-invoice-canonical-structure-iva-treatment-axis-adr]]"
 ---
@@ -161,20 +161,56 @@ figure - it makes the comparison diverge for a taxpayer whose books are correct.
 not an under-declaration. It is nevertheless the same fix as casilla 59/60: construct the
 observation from the invoice's own category.
 
-### The bundled art. 94 excerpt does not ground the con-derecho set
+### CORPUS REFRESH TRIGGER: the bundled art. 94 excerpt is truncated, and its evidence gate cannot detect that
 
-Attempting to ground the previous finding legally, the bundled `ley-37-1992-art-94.html`
-excerpt was found to carry apartado Uno points 1 through 5 and to stop there. It does not
-carry the exempt-with-credit clause that would ground treating intra-community supplies
-and exportaciones as operations originating the right to deduct. The codebase's
-con-derecho set already classifies them that way and may well be right, but that
-classification is NOT verifiable against the bundled corpus as it stands.
+A standalone finding, not a footnote to the prorrata work. A live deduction-rights
+classification rests on a bundled excerpt that cannot ground it, and the gate that is
+supposed to catch exactly this passes.
 
-Recorded as a grounding gap, not as a claim that the classification is wrong. Art.
-104.Dos IS bundled and states the ratio: the numerador takes operations "que originen el
-derecho a la deducción", the denominador all operations "incluidas aquellas que no
-originen el derecho a deducir". Which side an exempt intra-community supply falls on is
-exactly what the missing art. 94 clause decides.
+**The excerpt stops mid-article.** `corpus/normatives/html/ley-37-1992-art-94.html`
+carries the article heading, the apartado Uno chapeau, and points 1 through 5. Its final
+bytes are, verbatim:
+
+```
+<p class="parrafo_2">5.º Los servicios prestados por agencias de viajes que estén exentos
+del Impuesto en virtud de lo establecido en el artículo 143 de esta Ley.</p>
+```
+
+The file ends there - no further point, no subsequent apartado, and no closing markup.
+That is a truncated fetch, not a curated excerpt that deliberately stopped.
+
+**What is missing is the operative clause.** Point 1.º as bundled reads flatly "Las
+entregas de bienes y prestaciones de servicios sujetas y no exentas", with no letras. The
+exempt-with-credit provision - the one that decides whether an exportación or an entrega
+intracomunitaria exenta originates the right to deduct - is absent. This research does NOT
+state what the consolidated text says in its place: authoring the missing clause from
+memory is the failure the grounding rule exists to prevent, and a wrong art. 94 would
+mis-classify deduction rights rather than merely fail to ground them. The text must come
+from a corpus refresh against BOE.
+
+**The evidence gate cannot catch it.** The registry legal entry
+`[legal."ley-37-1992:art-94"]` declares exactly one `required_text`:
+
+```
+required_text = ["operaciones cuya realización origina el derecho a la deducción"]
+```
+
+That string is the article TITLE, and the title survives truncation - it is the first line
+of the bundled file. So the cross-check confirms that something is present, never that the
+binding provision is present, and deleting the entire article body would not red the gate.
+The entry is nevertheless stamped `review_status = "reviewed"`, `reviewed_by = "operator"`,
+`reviewed_at = 2026-05-21`, which makes it read as verified.
+
+**Reach.** The entry is not dormant: `ley-37-1992:art-94` is cited across the Modelo 390
+formulas, constructs, bindings, casillas, completeness manifest and export layouts, and the
+codebase's own con-derecho set - the classification this article governs - is what routes
+volume between the prorrata numerator and denominator.
+
+**Actions, neither of them authoring legal text.** Refresh the bundled excerpt from the BOE
+consolidated text for this article. Separately, strengthen the entry's `required_text` to
+quote a phrase from the operative point rather than the heading, so a future truncation
+fails loudly. Whether other bundled excerpts share the title-only `required_text` shape was
+NOT swept here and is worth a pass.
 
 ## Sources
 
@@ -195,4 +231,7 @@ exactly what the missing art. 94 clause decides.
 - Modelo 303 registry, revisions `2009-y-siguientes` and `2023-y-siguientes`: casilla
   definitions for the prorrata volumes and percentage; bindings for casillas 59 and 60.
 - Bundled corpus `rd-1619-2012-art-6.html` (arts. 6.1.g and 6.2.a/b/c),
-  `ley-37-1992-art-104.html` (art. 104.Dos), `ley-37-1992-art-94.html` (truncated).
+  `ley-37-1992-art-104.html` (art. 104.Dos), `ley-37-1992-art-94.html` (truncated after
+  apartado Uno point 5).
+- `src/cadrumo/_data/registry/aeat/legal/iva.toml` - the `ley-37-1992:art-94` legal entry,
+  its title-only `required_text`, and its operator review stamp.
