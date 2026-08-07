@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:85f8f0fa04fa37be540dbc9c3492b943c54fa6cc18272d86b68a5ef404466256'
+body_hash: 'sha256:c3ba8fc65a013c47c9c35eb0af2e8e37bdde87a6bf38a5c3284ec07a15fc276c'
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-research]]'
 ---
@@ -30,8 +30,25 @@ kept safe given its direct adjacency to AEAT's payment flow.
   taxpayer's own liability, never inputs to any modelo casilla — no
   calculation-grounding, aggregation, binding, or resolver machinery is
   triggered by a read-and-display record of these objects, per
-  `2026-08-07-aeat-liabilities-sanciones-research` ("None of this is purely
-  informational... but nothing here should feed a modelo casilla").
+  `2026-08-07-aeat-liabilities-sanciones-research` ("Decisive answer: an
+  AEAT-imposed sanción, recargo de apremio or AEAT-determined interés de
+  demora never reaches a modelo casilla — this is purely read-and-display").
+- The registry already carries a casilla-level "Intereses de demora" concept
+  that must never be confused with this gap. M100 casilla `0576`
+  (`src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/casillas/c0576.toml`,
+  `legal_refs` citing `ley-58-2003:art-26`) is the taxpayer
+  **self-computing** an interés de demora while voluntarily regularising a
+  previously-claimed tax benefit within the SAME declaration under LGT art.
+  26.5 — a value the formula engine derives from the taxpayer's own prior
+  figures, never a value AEAT hands back to the app. An AEAT-assessed interés
+  de demora (art. 26.2.a/d), surfaced through "Consultar deudas", is a
+  categorically different data flow: an administrative act happening to a
+  filing that already exists, not an input to a future one. No `casilla`
+  anywhere in the registry accepts "amount AEAT says I owe" as an input, and
+  `BindingSourceKind` has no member referencing any post-filing enforcement
+  concept (research, "Decisive answer..."). This is the worked counter-example
+  a future contributor must not miss: casilla `0576` looks, at a glance, like
+  exactly the box an AEAT-reported interés de demora should feed. It is not.
 - AEAT's "Consultar deudas" surface is a genuine read-only consulta, structurally
   and procedurally distinct from payment: viewing the debts list and choosing
   to pay are different trámites with different apoderamiento codes, mirroring
@@ -71,10 +88,10 @@ kept safe given its direct adjacency to AEAT's payment flow.
   state*. These are different entities with different identity, source
   surface and lifecycle — an `ACUERDO_SANCION`-classified notification
   announces a sanción, a debts-consulta row is the sanción's resulting deuda,
-  if and once liquidated (research, "A typed record would live beside the
-  notifications/expedientes family"). Conflating them is exactly the
-  cross-concept collision `aeat-architecture-boundaries` forbids for the
-  reserved term "binding", generalised: two concepts, one type.
+  if and once liquidated (research, "Concrete typed-record shape, owning
+  packages, and CLI surface — actionable for the ADR"). Conflating them is
+  exactly the cross-concept collision `aeat-architecture-boundaries` forbids
+  for the reserved term "binding", generalised: two concepts, one type.
 - Every profile-bound write path — including a read verb that persists a
   captured snapshot to bucket storage, such as the existing `app live
   expedientes pull` and `app live iva-wallet pull` entries — is hand-enrolled
@@ -200,14 +217,21 @@ without a real page. This row is explicitly deferred until an operator
 authorises a live authenticated capture; it is not scheduled by this record.
 
 **CLI surface (unblocked for the service layer, blocked for `pull`).** `aeat
-app live deudas list` and `aeat app live deudas show` read persisted
-snapshots and need no specimen. `aeat app live deudas pull` — the AEAT fetch,
+app live deudas list`, `view` and `latest` read persisted snapshots and need
+no specimen — the exact verb shape `expedientes` already uses (`app live
+expedientes latest|list|view`, `test_root_fallback_write_guard.py:611-613`).
+`aeat app live deudas pull` — the AEAT fetch,
 named `pull` never `capture`/`refresh`/`fetch`/`sync` per `aeat-cli-contract`
 — is wired last, once the adapter exists, and its own row adds `"app live
 deudas pull"` to `PROFILE_BOUND_WRITE_VERB_PATHS`
 (`src/cadrumo/application/storage_write_policy.py:122`) in the same commit,
 with a comment stating it persists a captured snapshot to bucket storage
-(mirroring the existing `"app live expedientes pull"` entry's rationale).
+(mirroring the existing `"app live expedientes pull"` entry's rationale). The
+same commit adds `deudas pull` to the operator-orientation agent-harness
+document alongside `expedientes pull` and `notifications pull`
+(`src/cadrumo/_data/agent/rules/cadrumo-operator-orientation-routing.md:59-64`),
+per `aeat-cli-contract`'s mandate that the harness cites only the live verb
+surface.
 
 **Grounding rows (human-owner-blocked).** Each `ObjetoTributario` category
 that carries a legally-established percentage or rate the app interprets
