@@ -223,14 +223,24 @@ two hundred characters against a limit of a hundred and twenty; eight of the twe
 sites have under forty characters of room for any reason at all. So the form the
 message asks for does not fit the code it governs, and the attempt was reverted.
 
-Three resolutions exist and the choice is not obvious. The pattern could grow the
-exception its message already documents, which makes the implementation match the
-stated policy but relaxes a gate on the strength of what the code already does. The
-twenty casts could be restructured, though an annotated binding does not narrow what
-the checkers report as unknown, so each would become a justified suppression instead -
-trading a documented cast for a documented suppression without changing what is
-actually escaped. Or the rule could accept the block convention the codebase already
-uses, keeping one home for each rationale.
+Both resolutions that leave the rule untouched were tested, and neither works.
+
+Inlining each rationale, the form the message asks for, produced sixteen line-length
+violations with lines reaching two hundred characters against a limit of a hundred and
+twenty; eight of the twenty sites have under forty characters of room for any reason.
+
+Removing a cast and relying on the declared annotation was tried on a site whose
+target variable is already annotated with the exact type the cast asserts. The cast is
+redundant to a reader and is not redundant to the checker: with it removed, the value
+is still reported as partially unknown, because a declared annotation does not narrow
+what the checker cannot see through. So the cast is load-bearing for the gate above it
+even where it looks like ceremony.
+
+That leaves changing the rule. The pattern could grow the exception its message
+already documents, or accept the tagged block convention the codebase uses. Either
+makes the implementation match the stated policy, and either relaxes a gate on the
+strength of what the code already does, which is why it is recorded rather than
+taken.
 
 This is recorded rather than decided because every path changes a gate or twenty
 production sites, and the rule's own text is the evidence that its author intended an
