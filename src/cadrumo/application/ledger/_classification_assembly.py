@@ -39,6 +39,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
@@ -47,10 +48,12 @@ from ...core import STRICT_FROZEN_CONFIG, CounterpartyTaxablePersonStatus
 from ...domain.iva import (
     CustomerTaxStatus,
     EUMemberState,
+    IvaCategory,
     IvaInvoiceClassificationCriteria,
     IvaTerritorialScope,
     SupplyNature,
     TransactionKind,
+    classify_iva,
     territorial_scope_for_country,
 )
 
@@ -214,37 +217,35 @@ def _member_state(
 _NATURE_INDIFFERENT_KIND: TransactionKind = TransactionKind.GOODS
 
 
-def _nature_forks_the_law(
-    issuer_scope: IvaTerritorialScope | None,
-    customer_scope: IvaTerritorialScope | None,
-) -> bool:
-    """Whether the supply's nature can change this operation's treatment.
+def _nature_forks_the_law(probe: Callable[[TransactionKind], IvaCategory]) -> bool:
+    """Whether the supply's nature can change THIS operation's treatment.
 
-    The laziness rule the governing record requires: ask only on the branches
-    where the law forks on the answer. Demanding it everywhere put a blocking
-    gap on the common path — a domestic operation between established parties at
-    a registry rate resolves identically for goods and services, so the question
-    had no answer that could change anything and the operator was asked anyway.
+    Asks the rule table about itself: classify the same operation under each
+    kind a printed nature can produce and compare the verdicts. Identical
+    verdicts mean the answer could not have mattered, so demanding it would ask
+    the operator a question with no consequence — which is what put a blocking
+    gap on every domestic invoice.
 
-    Decided from the territorial scopes, which are the only branch selector
-    available before the category exists. The domain's own
-    ``supply_nature_is_required`` answers the same question from a CATEGORY and
-    is the authority once one is established; it deliberately returns ``True``
-    for ``None``, so it cannot serve here — at assembly time no category exists
-    yet, and consulting it would restore the unconditional demand it is meant to
-    prevent.
+    **This is not a second copy of the laziness rule.** A hand-written branch on
+    the territorial scopes would have been exactly that, and would have drifted
+    the moment the categories moved. The domain's ``supply_nature_is_required``
+    remains the authority; it keys on an established CATEGORY and returns
+    ``True`` for ``None``, so it cannot be consulted at assembly time, where the
+    criteria that produce the category are still being built. Rather than invent
+    a second key, this derives the answer from the one authority that can be
+    consulted before a category exists: the table itself. A gate asserts the two
+    agree on every category this probe can reach, so a change to either is
+    caught rather than silently forked.
 
-    Fails toward asking: an unresolved scope forks, because an operation not yet
-    placed may still land on a branch that needs the answer.
+    Fails toward asking: a probe that cannot classify at all forks, because an
+    operation that could not be placed may still land on a branch needing the
+    answer.
     """
-    if issuer_scope is None or customer_scope is None:
+    try:
+        verdicts = {probe(kind) for kind in _NATURE_TO_KIND.values()}
+    except Exception:  # reason: an unclassifiable probe is not evidence of indifference.
         return True
-    spanish = {
-        IvaTerritorialScope.ES_MAINLAND,
-        IvaTerritorialScope.ES_CANARIAS,
-        IvaTerritorialScope.ES_CEUTA_MELILLA,
-    }
-    return not (issuer_scope in spanish and customer_scope in spanish)
+    return len(verdicts) > 1
 
 
 def assemble_classification_criteria(
@@ -323,15 +324,6 @@ def assemble_classification_criteria(
     if customer_state_gap is not None:
         missing.append(customer_state_gap)
 
-    if supply_nature is None and _nature_forks_the_law(issuer_scope, customer_scope):
-        missing.append(
-            MissingClassifierInput(
-                field="kind",
-                reason="no statutory citation on the document established whether it supplies goods or services",
-                settled_by="a printed statutory citation, or an explicit operator assertion of the supply nature",
-            ),
-        )
-
     if transaction_date is None:
         missing.append(
             MissingClassifierInput(
@@ -342,12 +334,61 @@ def assemble_classification_criteria(
         )
 
     if missing:
+        # The probe needs otherwise-complete criteria, and this operation does
+        # not have them -- so the nature question cannot be decided here. It is
+        # still REPORTED, because failing toward asking is the rule and because
+        # dropping it would cost the accumulate-at-once property: an operator
+        # resolving the other gaps would re-run only to meet a new one.
+        if supply_nature is None:
+            missing.append(
+                MissingClassifierInput(
+                    field="kind",
+                    reason=(
+                        "no statutory citation on the document established whether it supplies goods "
+                        "or services, and this operation is too incompletely placed to tell whether "
+                        "its treatment turns on the answer"
+                    ),
+                    settled_by=(
+                        "a printed statutory citation, or an explicit operator assertion of the supply "
+                        "nature; resolving the other gaps may also settle it"
+                    ),
+                ),
+            )
         return ClassificationAssembly(missing=tuple(missing))
 
     assert status is not None  # narrowed: a gap would have been recorded
     assert issuer_scope is not None
     assert customer_scope is not None
     assert transaction_date is not None
+
+    def _probe(kind: TransactionKind) -> IvaCategory:
+        return classify_iva(
+            IvaInvoiceClassificationCriteria(
+                transaction_date=transaction_date,
+                issuer_residency=issuer_scope,
+                customer_residency=customer_scope,
+                customer_tax_status=status,
+                kind=kind,
+                direction=direction,
+                issuer_member_state=issuer_state,
+                customer_member_state=customer_state,
+                rate_tier=rate_tier,
+            ),
+        ).category
+
+    if supply_nature is None and _nature_forks_the_law(_probe):
+        return ClassificationAssembly(
+            missing=(
+                MissingClassifierInput(
+                    field="kind",
+                    reason=(
+                        "no statutory citation on the document established whether it supplies goods "
+                        "or services, and this operation's treatment differs between them"
+                    ),
+                    settled_by="a printed statutory citation, or an explicit operator assertion of the supply nature",
+                ),
+            ),
+        )
 
     return ClassificationAssembly(
         criteria=IvaInvoiceClassificationCriteria(
