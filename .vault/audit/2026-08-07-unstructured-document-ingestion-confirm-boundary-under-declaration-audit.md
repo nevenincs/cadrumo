@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:540104787eee2b7e2c5d881572d3112f4846c7a3416048a614ce93e17b193448'
+body_hash: 'sha256:50aa699f7479a777841ab01a47f876c6a03df97501d18f9c6db170e3f4d100d4'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -359,11 +359,45 @@ decision record for this axis, the change touches a gate with its own legal
 preconditions, and the correction above is what that campaign needed before
 acting.
 
-One consequence in the handover is explicitly NOT confirmed. Whether the dropped
-observations also feed the prorrata volumen-total denominator, and so inflate the
-deductible percentage, was not traced end to end by either party. It remains a
-hypothesis. Recording it as such here so that appearing in two documents does not
-later read as corroboration.
+The prorrata consequence in the handover has since been traced and REFUTED, by
+its own author and independently confirmed. Both prorrata casillas take manual
+input, and the only bindings touching them read casilla ids rather than writing
+them, so the declared percentage never came from observations at all. The dropped
+lines could not have moved it. Recorded as refuted rather than quietly dropped:
+it was carried as an unproven hypothesis in two documents at once, which is
+exactly the shape that starts to read as corroboration, and the correction is
+worth more than the removal.
+
+What the skip actually broke is better evidenced and worse in one respect. It
+blinded the divergence DETECTOR precisely where an under-declaring operator would
+have been caught -- a false negative in the expensive direction.
+
+### feed-axis-had-no-parity-gate | high | Closed: casilla 59 was guarded from one side only, and that is why the divergence survived
+
+The reason the invoice-versus-bank divergence lasted is not that casilla 59 was
+untested. It was tested, it passed, and it was guarded -- from ONE side. A
+transaction-shaped intra-community supply reached it and the assertion held. An
+invoice-shaped one never arrived, and no test existed that could have noticed,
+because no test drove the invoice feed to a casilla at all.
+
+That is a structural blind spot rather than a missing case. A feed silently
+declaring less than its sibling is invisible to a per-feed test by construction,
+since each feed's tests only ever assert what that feed itself produces. Both
+feeds stay internally consistent and green while one of them under-declares.
+
+The transport axis already had its gate: the pull path and the calculate path are
+held to the same casilla values. That axis asks whether two ways of REACHING one
+resolver agree. The feed axis -- two SOURCES populating one binding -- had no
+equivalent, and the two are genuinely different questions: every transport of
+each feed can agree perfectly while the feeds disagree with each other.
+
+Closed with a gate that takes one operation, expresses it as both an invoice line
+and a bank transaction, and holds the two to the same casilla and the same
+classification. Written as a comparison rather than an expectation, so it cannot
+be satisfied by updating a constant to match a regression, and the agreed figure
+is then checked against the operation itself so two feeds agreeing on a wrong
+number fails too. Proven against the original defect: reverting the invoice feed
+to rate-slot classification reds all three assertions.
 
 ## Recommendations
 
@@ -410,6 +444,13 @@ different sites: a field is added to a record and a comparison, a projection or 
 forwarding list is not extended with it, and nothing notices because every test on
 both sides still passes. Greppability and a careful docstring are not controls.
 Where a list must mirror a model, assert the mirror against the model.
+
+Ask which SIDE a gate is green from. The most expensive finding in this sweep
+survived behind a passing test: the casilla it guarded was reached correctly from
+one feed and never from the other, and the gate could not have failed. Where two
+sources populate one destination, a per-source test proves each source consistent
+with itself and nothing about the pair. The gate has to be a comparison between
+them.
 
 A test that passes the day it is written proves nothing until it has been made to
 fail. Every gate this sweep added was mutation-checked against the exact
