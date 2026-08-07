@@ -566,7 +566,15 @@ def _with_derived_303_compensation_available(
     target_id = M303_COMPENSATION_AVAILABLE_CASILLA
     if target_id in observation.casilla_values:
         return observation
-    derivation = derive_m303_compensation_available_from_casillas(observation.casilla_values)
+    # See the sibling sede derivation: a fetched AEAT filing carries no
+    # compensación/devolución election (Modelo 303 has no devolución casilla),
+    # so the standard compensación disposition is ASSUMED here. The local filed
+    # path knows the disposition and re-stamps this same casilla for a refunded
+    # period; this path cannot, and says so rather than inheriting a default.
+    derivation = derive_m303_compensation_available_from_casillas(
+        observation.casilla_values,
+        refunded=False,
+    )
     if derivation is None:
         return observation
     snapshot = resources().modelos.authority.snapshot(
