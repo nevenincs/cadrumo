@@ -86,6 +86,22 @@ _FORMAT_BY_REGISTRY_TYPE = {
 def test_export_plan_mirrors_registry_manifest_formulas_and_formats(
     modelo: str, year: int, period: str, on: date
 ) -> None:
+    """Assert the exported plan mirrors the official manifest, formulas and formats.
+
+    Three properties are enforced: every manifest-required casilla is emitted
+    (matched on number and segmento, not on id), every computed casilla carries a
+    live formula cell rather than a baked value, and every numeric casilla carries
+    a number-format facet agreeing with its registry declaration.
+
+    Casilla SECTION ORDER is deliberately not asserted here, and that omission is
+    the point of this paragraph. Section is presentation -- the plan emits section
+    headers so a human can read the workbook -- while what must mirror the official
+    modelo is the casilla set and its numbering, both covered above. A project rule
+    previously claimed this gate enforced registry-declaration section order; it
+    never has, and the claim was corrected rather than satisfied. Anyone reading
+    that history should not re-add the assertion on its authority: if section order
+    earns enforcement, it earns it on its own grounds.
+    """
     snapshot = _snapshot(modelo, year, period, on)
     revision = snapshot.revision
     manifest = revision.completeness_manifest

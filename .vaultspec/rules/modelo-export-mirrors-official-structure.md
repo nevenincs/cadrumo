@@ -49,8 +49,16 @@ parity" is checked against the same registry authority the engine uses
   evidence); `build_offline_workbook` (openpyxl) and `apply_export_plan` (Sheets API)
   are two transports of that one plan, asserted to render the same content; the
   parity gate asserts casilla set = completeness-manifest required set (numbering +
-  segmento), registry-declaration section order, and a live formula on every computed
-  casilla — a divergence is a hard CI failure.
+  segmento), a number-format facet on every numeric casilla, and a live formula on
+  every computed casilla — a divergence is a hard CI failure.
+
+  **Casilla section order is deliberately NOT gated.** The gate carries no
+  section assertion at all, so a rule claiming otherwise sends a reader looking
+  for enforcement that does not exist and invites them to trust an unchecked
+  property. Section is presentation: the plan emits section headers for a human
+  reading the workbook, while what must mirror the official modelo is the casilla
+  SET and its numbering, both of which are gated above. If section order later
+  earns enforcement, the assertion lands first and this paragraph goes with it.
 - **Good:** `assert_export_mirrors_manifest` runs inside `export_draft` after the
   rendered set is known (filtering `v.value is not None`) and before
   `output_path.write_bytes`; a fixed-width `.boe` omitting a required, representable
