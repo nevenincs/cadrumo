@@ -9,7 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core import M347_THRESHOLD_EUR, STRICT_FROZEN_CONFIG, BindingSourceKind
+from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
@@ -23,6 +23,7 @@ from ._binding_selector_utils import (
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._ids import BindingId
+from ._m347_threshold import m347_declarable_party_ids
 from ._schema import DataBindingDefinition, ModeloRevision
 
 _RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]
@@ -560,7 +561,7 @@ def _m347_declarable_party_ids(observations: tuple[InvoiceObservation, ...]) -> 
         totals[observation.party_tax_id] = totals.get(observation.party_tax_id, Decimal("0")) + _invoice_total_amount(
             observation,
         )
-    return frozenset(party_tax_id for party_tax_id, total in totals.items() if total > M347_THRESHOLD_EUR)
+    return m347_declarable_party_ids(totals)
 
 
 def _invoice_total_amount(observation: InvoiceObservation) -> Decimal:

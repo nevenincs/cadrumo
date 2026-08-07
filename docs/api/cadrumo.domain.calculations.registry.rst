@@ -65,6 +65,7 @@ Submodules
    cadrumo.domain.calculations.registry._live_parity
    cadrumo.domain.calculations.registry._loader
    cadrumo.domain.calculations.registry._loader_cache
+   cadrumo.domain.calculations.registry._m347_threshold
    cadrumo.domain.calculations.registry._modelo_localization
    cadrumo.domain.calculations.registry._observation_fold
    cadrumo.domain.calculations.registry._parity_tapes

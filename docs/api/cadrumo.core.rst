@@ -65,6 +65,7 @@ Submodules
    cadrumo.core._google_credential_source
    cadrumo.core._hex
    cadrumo.core._iban
+   cadrumo.core._image_media_type
    cadrumo.core._invoice_link
    cadrumo.core._irnr
    cadrumo.core._ledger_sort
