@@ -288,7 +288,7 @@ def test_durable_maintenance_gates_moved_into_the_full_lane() -> None:
     """The retired weekly workflow's two gates live on in ci-full.yml.
 
     The vault structural-drift audit and the ledger + storage roundtrip suite
-    (aeat-roundtrip-discipline: never removed without a replacement).
+    (aeat-quality-gates: never removed without a replacement).
     """
     assert not (_WORKFLOWS_DIR / "durable-maintenance-gates.yml").exists()
     commands = "\n".join(

@@ -455,7 +455,7 @@
         "imported_names": [
           "_ENROLLED_SOURCE_KINDS"
         ],
-        "reason": "White-box breadth test reading the private enrolled-source-kind set to confirm every registry binding source is routed or explicitly deferred (no-dormant-source-resolvers rule). The set is deliberately private so only the calculate-time gate consumes it as an enforcement mechanism, not a browsable public registry. Target module relocated from _calculation_actions to _calculation_source_policy; this entry tracks the relocation."
+        "reason": "White-box breadth test reading the private enrolled-source-kind set to confirm every registry binding source is routed or explicitly deferred (aeat-calculation-aggregation rule). The set is deliberately private so only the calculate-time gate consumes it as an enforcement mechanism, not a browsable public registry. Target module relocated from _calculation_actions to _calculation_source_policy; this entry tracks the relocation."
       },
       {
         "importer_path": "src/cadrumo/domain/renta/tests/test_first_slice_routing.py",

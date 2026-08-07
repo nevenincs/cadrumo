@@ -58,7 +58,7 @@ _GENERATED_RELPATH = Path("_generated") / "glossary.rst"
 
 #: The legal catalogue tree (id -> permalink) for grounding-link resolution.
 #: The leading segment is the CADRUMO package root; the trailing "aeat" is the
-#: authority taxonomy directory (cadrumo-product-authority-names).
+#: authority taxonomy directory (aeat-naming).
 LEGAL_CATALOGUE_RELPATH = Path("src") / "cadrumo" / "_data" / "registry" / "aeat" / "legal"
 
 

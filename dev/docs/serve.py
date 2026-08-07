@@ -35,7 +35,7 @@ command tree at ``builder-inited`` (see ``docs/conf.py``) and ``docs/_build``
 is the output tree. Editing a docstring under ``src/cadrumo/`` rebuilds the
 affected autodoc page; adding or removing a *module* still requires
 ``python -m dev.docs.apidocs scaffold`` to refresh the committed ``docs/api``
-stub set (per the aeat-docs-scaffolding-cli rule), which this server does not
+stub set (per the aeat-documentation rule), which this server does not
 run. This is the interactive companion to :mod:`dev.docs.build`, which performs
 the one-shot incremental and gate builds.
 """

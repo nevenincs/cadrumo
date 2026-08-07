@@ -5,9 +5,9 @@ naming a symbol or module that no longer exists misdirects every reader of that
 rule until someone happens to notice. Two live instances were found the same
 day, and neither was found by reading the rules:
 
-- ``relation-slot-bindings-declare-relation-source`` named a carve-out constant
+- ``aeat-registry-bindings`` named a carve-out constant
   under its pre-rename spelling, in a module it had since been extracted out of.
-- ``aeat-swarm-audit-cadence`` told an audit axis to ground its read against a
+- ``aeat-agent-orchestration`` told an audit axis to ground its read against a
   policy gate that had been deleted, so the axis instruction was unexecutable
   and an agent following it would report a cleared inventory it never consulted.
 
@@ -32,7 +32,7 @@ was written, the section boundary separated them 3-for-3 and 2-for-2.
 Polarity is deliberately NOT the discriminator, though it looks like the
 obvious one. A first attempt at this gate proposed excluding ``Bad:`` bullets;
 that would have kept a false positive, because
-``cadrumo-product-authority-names`` names the pre-rename
+``aeat-naming`` names the pre-rename
 ``AEAT_WALLET_...DUMP_DIR`` setting inside a **Good:** bullet -- the good act
 being to rename it away. Presence-versus-absence is a semantic property of the
 sentence and cannot be read off the bullet's label, whereas the section heading
