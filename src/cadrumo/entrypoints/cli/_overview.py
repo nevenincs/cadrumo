@@ -434,7 +434,7 @@ def _profile_calendar_inputs(
     try:
         with profile_storage_session(bucket_id):
             record = repository.load(bucket_id)
-            taxpayer = projection_for_taxpayer(record.record, tax_id_default="00000000T")
+            taxpayer = projection_for_taxpayer(record.record)
             live_events, _ = _local_live_calendar_events(bucket_id, rng, expected_tax_id=taxpayer.tax_id)
             modelo_record_events, _ = _local_modelo_record_calendar_events(
                 bucket_id,
