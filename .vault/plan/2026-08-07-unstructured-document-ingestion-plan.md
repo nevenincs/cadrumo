@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:ee29a49d70573ec6ee986303d4871bcd662d38bfffab44f517846ddfaa39a4b6'
+body_hash: 'sha256:c9fba09ae62fed14d1376750ebf50961bc1eaa7ae7ff2d8a22f3992dc051f591'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -101,7 +101,7 @@ Lands the deterministic grounding stage and deletes the Spanish-label regex extr
 - [x] `W02.P06.S19` - Resolve identity roles deterministically, excluding the taxpayer own NIF from counterparty candidacy and surfacing AMBIGUOUS with all candidates when role evidence does not pick exactly one, gated by the OP-PUR-COM-2026-0005_layout-minimal fixture never yielding a first-match id; `src/cadrumo/application/ledger`.
 - [x] `W02.P06.S20` - Emit arithmetic-closure findings over the identities total equals base plus cuota plus recargo plus suplido, cash equals total minus retencion, and per-rate sums, gated by both COM-2026-0005 fixture entries producing a blocking 890.00 versus 927.22 finding; `src/cadrumo/application/ledger`.
 - [x] `W02.P06.S21` - Route per-field degradation advisories through the typed Notice channel naming what was seen and why it was rejected, gated by envelope conformance tests; `src/cadrumo/entrypoints/cli`.
-- [ ] `W02.P06.S22` - Delete the Spanish-label regex extractor family and its tests after the semantic reader is wired, gated by clean collection, zero remaining label-regex references WITHIN _evidence_draft.py only (the justificante and declaracion inbound parsers carry their own LABEL_RE symbols and are NOT in scope), and the bundled fixtures passing through the new path against the loopback stub; `src/cadrumo/application/ledger/_evidence_draft.py`.
+- [x] `W02.P06.S22` - Delete the Spanish-label regex extractor family and its tests after the semantic reader is wired, gated by clean collection, zero remaining label-regex references WITHIN _evidence_draft.py only (the justificante and declaracion inbound parsers carry their own LABEL_RE symbols and are NOT in scope), and the bundled fixtures passing through the new path against the loopback stub; `src/cadrumo/application/ledger/_evidence_draft.py`.
 
 ### Phase `W02.P07` - S4 classification
 
@@ -253,7 +253,7 @@ Lands the consent ledger and eligibility bar, the withdrawal and re-derivation v
 - [ ] `W10.P18.S71` - Append a consent-ledger entry at the dispatch choke point in the same path that honours a token, refusing transmission when the append fails, gated by mutation: break the append and the dispatch must refuse; `src/cadrumo/llm/_client.py`.
 - [ ] `W10.P18.S72` - Add the per-profile cloud-consent eligibility bar, default off and gestor-locked off, with no consent gate offered on any surface while off, gated by a surface sweep test and a config check row; `src/cadrumo/application/user_profile`.
 - [ ] `W10.P18.S73` - Add the withdrawal verb: list consent-ledger entries, state plainly that transmitted bytes cannot be recalled, mark cloud-derived artefacts, and offer local re-derivation from the cached transcription that re-stamps provenance without rewriting history, gated by a re-derivation test; `src/cadrumo/entrypoints/cli`.
-- [ ] `W10.P18.S74` - Add the model remove action reporting freed bytes and the doctor row detecting partially-installed states in both directions (extra without models, models without extra), gated by doctor row tests; `src/cadrumo/application/provisioning.py`.
+- [x] `W10.P18.S74` - Add the model remove action reporting freed bytes and the doctor row detecting partially-installed states in both directions (extra without models, models without extra), gated by doctor row tests; `src/cadrumo/application/provisioning.py`.
 - [ ] `W10.P18.S75` - Extend the packaging smoke lane with the uninstall step proving every guarded surface returns to the instructive install refusal after the extra is removed; `dev/packaging`.
 - [ ] `W10.P18.S76` - Sweep every W08 through W10 verb for the pull and --file naming standard, envelope and notice conformance, and documented-command coverage, gated by the conformance suites red-green proven on one deliberate violation; `src/cadrumo/entrypoints/cli`.
 
