@@ -432,10 +432,26 @@ ignore_imports =
     # behind the optional inference boundary.
     cadrumo.application.ledger._extracted_document_cache -> cadrumo.adapters.**
     cadrumo.application.ledger._extraction_draft_store -> cadrumo.adapters.**
+    # The confirmation record is the third of that same family and is pinned for
+    # the same reason, not as a convenience: it declares its own secure-object
+    # namespace and persists through SecureBoundRepository, so it IS a ledger
+    # store. Encrypted persistence is reached from the application layer
+    # throughout this codebase by design -- roughly 1300 such edges across 495
+    # modules -- and this one is a member of that ambient class rather than a
+    # new kind of coupling.
+    cadrumo.application.ledger._confirmation_record -> cadrumo.adapters.**
     # The read-time shape probe. DocumentShape is derived from a document's
     # own bytes by an INBOUND adapter, because reading an externally-authored
     # format is inbound-adapter work; the ledger consumes the answer.
     cadrumo.application.ledger._evidence_input -> cadrumo.adapters.inbound.einvoice
+    # The batch runner asks that same probe ONE question -- is this document
+    # structured, and therefore readable without loading a model -- and consumes
+    # the answer. Same shape and same justification as the pin above; it is the
+    # probe's own caller, not a second reader. Pinned rather than deferred
+    # behind a function-local import: the deferral would hide the edge from this
+    # contract without changing it, and an edge the linter cannot see is the one
+    # that arrives unreviewed.
+    cadrumo.application.ledger._batch_ingest -> cadrumo.adapters.inbound.einvoice
     # Same shape, same reason: the AEAT submission BATCH is read by the inbound
     # adapter (reading an externally-authored format is inbound-adapter work),
     # and this module is the projection that decides how many recipients a
