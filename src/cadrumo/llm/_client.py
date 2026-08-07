@@ -162,6 +162,7 @@ class LLMClient:
             images=request.images,
         )
         self._require_image_support(adapter, provider_request)
+        provider_request = self._omit_unsupported_parameters(adapter, provider_request)
         run_started_at = now()
         run_clock_start = time.monotonic()
         try:
@@ -217,6 +218,30 @@ class LLMClient:
             completion.output_tokens,
         )
         return response
+
+    @staticmethod
+    def _omit_unsupported_parameters(adapter: _ProviderAdapter, request: ProviderRequest) -> ProviderRequest:
+        """Clear request parameters the resolved model does not accept.
+
+        Enforced at the same single dispatch point as the image boundary, and
+        for the same reason: which parameters a model accepts is a property of
+        the DISPATCH, never of each adapter remembering to check. Cleared to
+        ``None`` here rather than skipped in each adapter's payload builder, so
+        one omission decision serves every provider.
+
+        Omitting rather than refusing is deliberate. An unsupported sampling
+        parameter has a harmless fallback -- the vendor's own default -- whereas
+        the image boundary refuses because its fallback is a model answering
+        from a document it never received. The two capability axes therefore
+        end in different verbs, and the difference is the size of the harm.
+        """
+        unsupported = adapter.unsupported_parameters(request.model)
+        if not unsupported:
+            return request
+        cleared = {name: None for name in unsupported if getattr(request, name, None) is not None}
+        if not cleared:
+            return request
+        return request.model_copy(update=cleared)
 
     @staticmethod
     def _require_image_support(adapter: _ProviderAdapter, request: ProviderRequest) -> None:

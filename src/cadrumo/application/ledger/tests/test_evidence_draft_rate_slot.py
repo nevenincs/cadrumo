@@ -29,6 +29,7 @@ taxonomy does not know.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
@@ -45,6 +46,7 @@ from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import isolated_settings as isolated_settings
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import secure_objects as secure_objects
+from ._loopback_reader import serving_a_loopback_reader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
@@ -80,6 +82,50 @@ _KNOWN_RATE_INVOICE_LINES = (
     "Cuota IVA: 21,00",
     "Total factura: 121,00",
 )
+
+# A real loopback reader. The two documents differ ONLY in the percentage, which
+# is what makes the positive control work, so the replies must differ only there
+# too -- a shared payload would make the control vacuous.
+
+_UNREPRESENTABLE_RATE_FIELDS = {
+    "supplier_tax_id": _SUPPLIER_CIF,
+    "supplier_tax_id_anchor": _SUPPLIER_CIF,
+    "invoice_number": "2011-0451",
+    "invoice_number_anchor": "2011-0451",
+    "invoice_date": "2011-06-14",
+    "invoice_date_anchor": "14/06/2011",
+    "taxable_base": "100,00",
+    "taxable_base_anchor": "100,00",
+    "iva_rate": "8",
+    "iva_rate_anchor": "8%",
+    "iva_amount": "8,00",
+    "iva_amount_anchor": "8,00",
+    "grand_total": "108,00",
+    "grand_total_anchor": "108,00",
+}
+
+_KNOWN_RATE_FIELDS = {
+    **_UNREPRESENTABLE_RATE_FIELDS,
+    "invoice_number": "2024-0452",
+    "invoice_number_anchor": "2024-0452",
+    "invoice_date": "2024-06-14",
+    "invoice_date_anchor": "14/06/2024",
+    "iva_rate": "21",
+    "iva_rate_anchor": "21%",
+    "iva_amount": "21,00",
+    "iva_amount_anchor": "21,00",
+    "grand_total": "121,00",
+    "grand_total_anchor": "121,00",
+}
+
+
+@pytest.fixture(autouse=True)
+def _loopback_reader() -> Iterator[None]:
+    """Serve a real reading endpoint keyed on each document's own figures."""
+    with serving_a_loopback_reader(
+        (("2024-0452", _KNOWN_RATE_FIELDS), ("2011-0451", _UNREPRESENTABLE_RATE_FIELDS)),
+    ):
+        yield
 
 
 def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:

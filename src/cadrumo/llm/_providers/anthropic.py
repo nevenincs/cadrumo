@@ -36,8 +36,6 @@ if TYPE_CHECKING:
     )
     from anthropic.types import (
         ImageBlockParam,
-        MessageParam,
-        MetadataParam,
         TextBlock,
         TextBlockParam,
     )
@@ -127,6 +125,38 @@ def build_user_content(request: ProviderRequest) -> str | list[ImageBlockParam |
     return blocks
 
 
+def build_message_kwargs(request: ProviderRequest) -> dict[str, Any]:
+    """Build the exact keyword arguments sent to ``messages.create``.
+
+    Extracted for the same reason :func:`build_user_content` was: the wire shape
+    becomes assertable without an API key, a network call, or a stubbed SDK. A
+    parameter's ABSENCE cannot be tested while the payload exists only as
+    inlined keyword arguments at the call site, and absence is exactly the claim
+    that matters -- a defaulted parameter and an omitted one are different
+    requests, and the newer models reject the first.
+
+    Absence is expressed by not adding the key at all, never by passing ``None``:
+    the SDK forwards an explicit ``None`` as a JSON ``null``, which is a stated
+    value and draws the same rejection the number would.
+
+    Also collapses the system/no-system branch this call site used to duplicate.
+    That duplication is why ``temperature`` appeared twice, and why changing it
+    once would have left the other path sending it.
+    """
+    kwargs: dict[str, Any] = {
+        "model": request.model,
+        "max_tokens": request.max_tokens,
+        "messages": ({"role": "user", "content": build_user_content(request)},),
+        "metadata": {"user_id": request.request_id},
+        "timeout": request.timeout_s,
+    }
+    if request.system is not None:
+        kwargs["system"] = request.system
+    if request.temperature is not None:
+        kwargs["temperature"] = request.temperature
+    return kwargs
+
+
 class AnthropicAdapter(_ProviderAdapter):
     """Provider adapter that talks to Anthropic's Messages API.
 
@@ -183,30 +213,9 @@ class AnthropicAdapter(_ProviderAdapter):
                 or timeout failures, and non-2xx API status codes.
         """
         sdk = self._sdk
-        user_message: MessageParam = {"role": "user", "content": build_user_content(request)}
-        messages = (user_message,)
-        metadata: MetadataParam = {"user_id": request.request_id}
         response: Any = None
         try:
-            if request.system is None:
-                response = await self._client.messages.create(
-                    model=request.model,
-                    max_tokens=request.max_tokens,
-                    temperature=request.temperature,
-                    messages=messages,
-                    metadata=metadata,
-                    timeout=request.timeout_s,
-                )
-            else:
-                response = await self._client.messages.create(
-                    model=request.model,
-                    max_tokens=request.max_tokens,
-                    temperature=request.temperature,
-                    system=request.system,
-                    messages=messages,
-                    metadata=metadata,
-                    timeout=request.timeout_s,
-                )
+            response = await self._client.messages.create(**build_message_kwargs(request))
         except sdk.RateLimitError as exc:
             headers = exc.response.headers if exc.response is not None else None
             raise_rate_limit("Anthropic rate limit exceeded.", headers.get("retry-after") if headers else None)

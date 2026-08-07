@@ -292,6 +292,38 @@ def test_no_catalogue_leaf_is_a_self_referencing_placeholder() -> None:
     )
 
 
+def test_no_catalogue_value_carries_a_doubled_apostrophe() -> None:
+    """A doubled apostrophe surviving YAML parsing renders literally to the operator.
+
+    ``''`` inside a single-quoted YAML scalar is the correct escape for one
+    apostrophe, and the catalogues carry over a thousand of them legitimately.
+    The defect is the escape surviving *into the parsed value*, which happens
+    when a string is authored by copying single-quoted YAML source into a
+    ``locales set`` call so the escape rides along. A raw grep cannot separate
+    the two, so the scan runs after parsing. Twelve shipped this way in Catalan,
+    one of them also hiding a lost opening quote around a command name.
+    """
+    import yaml
+
+    total_values = 0
+    doubled: list[str] = []
+    for locale in ("en", "es", "ca", "hu"):
+        catalogue = _SRC_ROOT / "locales" / f"{locale}.yml"
+        payload = yaml.safe_load(catalogue.read_text(encoding="utf-8"))
+        for key, value in _flatten_leaves(payload.get(locale, payload)):
+            if not isinstance(value, str):
+                continue
+            total_values += 1
+            if "''" in value:
+                doubled.append(f"{locale}:{key} -> {value}")
+    assert total_values > 1000, "catalogue flattening returned implausibly few string values - the walk regressed"
+    assert not doubled, (
+        "catalogue values carrying a doubled apostrophe after YAML parsing; the "
+        "escape belongs in the file, never in the value - re-author via "
+        "`python -m cadrumo.locales set`:\n" + "\n".join(doubled)
+    )
+
+
 def _flatten_leaves(node: object, prefix: str = "") -> list[tuple[str, object]]:
     if not isinstance(node, dict):
         return [(prefix, node)]

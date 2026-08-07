@@ -91,7 +91,14 @@ def test_mapping_lane_is_last_for_every_source_shape() -> None:
 
 
 def test_known_bank_fixture_still_takes_the_exact_provider() -> None:
-    """A recognised bank export must keep its deterministic exact parse."""
+    """A recognised bank export parses deterministically, end to end.
+
+    An OUTCOME check: it pins which provider answers and the values it yields.
+    It does **not** on its own establish that the ordering is what produced that
+    outcome — under test the production resolver cannot act, so this stays green
+    even with the lane ordered first. The shadowing guarantee lives in
+    :func:`test_the_known_bank_export_matches_before_the_mapping_lane_is_reached`.
+    """
     provider = detect_provider(_KNOWN_BANK_FIXTURE)
     assert isinstance(provider, CsvProvider)
     rows = list(provider.ingest(_KNOWN_BANK_FIXTURE))
@@ -100,12 +107,43 @@ def test_known_bank_fixture_still_takes_the_exact_provider() -> None:
     assert rows[0].raw.amount == Decimal("1500.25")
 
 
-def test_the_mapping_lane_would_take_the_known_bank_fixture_if_offered_it_first() -> None:
-    """The ordering is what protects the exact provider, not the lane's incapacity.
+def test_the_known_bank_export_matches_before_the_mapping_lane_is_reached() -> None:
+    """The exact provider matches at a position AHEAD of the mapping lane.
 
-    This is the load-bearing assertion of the enrolment. If the lane were
-    incapable of reading the known export, ordering it last would be
-    protecting nothing and the ordering test above would pass vacuously.
+    This is the gate against shadowing, and it is deliberately structural
+    rather than an assertion about which provider won. The outcome test above
+    cannot do this job on its own: under test the production resolver reaches a
+    model and a profile-bound cache that are not available, so the lane declines
+    every file **wherever it sits in the order**. A known export would keep
+    taking its exact parser even with the lane ordered first — green because the
+    fallback cannot act, not because the ordering protects anything.
+
+    Comparing positions removes that dependency entirely. If the lane were
+    ordered ahead of the exact providers, the matching index would fall after
+    the lane's and this reddens, whether or not the lane's resolver could have
+    answered.
+    """
+    candidates = _ordered_candidates(_KNOWN_BANK_FIXTURE)
+    lane_index = next(index for index, provider in enumerate(candidates) if isinstance(provider, MappedTabularProvider))
+    matched_index = next(
+        (index for index, provider in enumerate(candidates) if provider.validate_source(_KNOWN_BANK_FIXTURE).is_valid),
+        None,
+    )
+
+    assert matched_index is not None, "no provider claimed the known bank export"
+    assert isinstance(candidates[matched_index], CsvProvider)
+    assert matched_index < lane_index, (
+        f"the mapping lane sits at {lane_index}, ahead of the exact provider that matched at {matched_index}"
+    )
+
+
+def test_the_mapping_lane_can_read_the_known_bank_fixture_when_it_can_map() -> None:
+    """The lane is held back by the ordering, not by an inability to read the file.
+
+    Stated as capability only. It uses a supplied mapping rather than the
+    production resolver, so it proves the lane *can* act on this export — which
+    is what makes ordering it last meaningful — while the shadowing guarantee
+    itself rests on the position comparison above.
     """
     lane = MappedTabularProvider(mapping_resolver=_resolver(_KNOWN_BANK_ROLES))
     validation = lane.validate_source(_KNOWN_BANK_FIXTURE)

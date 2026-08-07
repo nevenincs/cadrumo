@@ -16,8 +16,10 @@ from ...application.ledger import (
     import_ledger_source,
 )
 from ...core import resolve_active_bucket_id
+from ...core.errors import CadrumoError, resolve_error_message
 from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ._common import _bad, _emit_envelope, _optional_canonical_period, _state, _tx_repo
 
 
@@ -104,24 +106,48 @@ def register_import_commands(app: typer.Typer) -> None:
         currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
         canonical_period = _optional_canonical_period(period, year=year)
         import_paths = _resolve_import_paths(file)
-        file_results = [
-            import_ledger_source(
-                LedgerSourceImportCommand(
-                    bucket_id=bucket_id,
-                    path=file_path,
-                    provider=normalised_provider,
-                    dry_run=dry_run,
-                    verify=verify,
-                    source=verify_source,
-                    period=canonical_period,
-                    actor=actor,
-                    source_command="aeat app ledger import",
+        file_results: list[LedgerSourceImportResult] = []
+        refusals: list[tuple[Path, str]] = []
+        for file_path in import_paths:
+            # Per FILE, so one unreadable statement cannot discard the results
+            # already produced for the rest of the folder. Only the project's
+            # own failure taxonomy is caught: a TypeError here is a defect and
+            # must still crash rather than be reported as a bad statement.
+            try:
+                file_results.append(
+                    import_ledger_source(
+                        LedgerSourceImportCommand(
+                            bucket_id=bucket_id,
+                            path=file_path,
+                            provider=normalised_provider,
+                            dry_run=dry_run,
+                            verify=verify,
+                            source=verify_source,
+                            period=canonical_period,
+                            actor=actor,
+                            source_command="aeat app ledger import",
+                        ),
+                        transaction_repository=transaction_repository,
+                        currency_normalizer=currency_normalizer,
+                    ),
+                )
+            except CadrumoError as exc:
+                refusals.append((file_path, resolve_error_message(exc)))
+        if not file_results:
+            # Nothing imported at all, which is the single-file failure case as
+            # well as a folder in which every file failed. That stays a hard
+            # refusal: downgrading it to a warning would turn today's error exit
+            # into a success for an operator who imported nothing.
+            raise _bad(
+                tr(
+                    "cli.ledger.import.all_files_refused",
+                    detail="; ".join(f"{path.name}: {reason}" for path, reason in refusals),
+                    default=(
+                        "No statement file could be imported: "
+                        + "; ".join(f"{path.name}: {reason}" for path, reason in refusals)
+                    ),
                 ),
-                transaction_repository=transaction_repository,
-                currency_normalizer=currency_normalizer,
             )
-            for file_path in import_paths
-        ]
         result = file_results[0] if len(file_results) == 1 else _aggregate_import_results(file_results)
         lines = [
             f"{tr('cli.ledger.labels.rows')}\t{result.rows}",
@@ -147,6 +173,32 @@ def register_import_commands(app: typer.Typer) -> None:
             lines.extend(_validation_lines(result.validation, result.source))
         from ._ledger_payloads import LedgerImportPayload
 
+        # A partially-failed folder must not read as a clean import. The
+        # aggregate sums only the files that SUCCEEDED, so without these the
+        # totals would describe a subset while presenting themselves as the
+        # whole -- the silent-degradation shape, one layer up.
+        notices: list[Notice] = []
+        for refused_path, reason in refusals:
+            refusal_line = tr(
+                "cli.ledger.import.file_refused",
+                path=refused_path.name,
+                reason=reason,
+                default=f"{refused_path.name} was not imported: {reason}",
+            )
+            lines.append(f"{tr('cli.ledger.labels.warning')}	{refusal_line}")
+            notices.append(
+                Notice(
+                    severity=NoticeSeverity.WARNING,
+                    code="ledger.import.file_refused",
+                    message=refusal_line,
+                    context={
+                        "path": refused_path.name,
+                        "reason": reason,
+                        "imported_files": str(len(file_results)),
+                        "refused_files": str(len(refusals)),
+                    },
+                ),
+            )
         _emit_envelope(
             ctx,
             command="ledger.import",
@@ -157,6 +209,7 @@ def register_import_commands(app: typer.Typer) -> None:
                 likely_duplicate_notice=likely_duplicate_notice,
             ),
             lines=lines,
+            notices=notices,
         )
 
 

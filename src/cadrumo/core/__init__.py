@@ -162,8 +162,9 @@ from ._irnr import (
 )
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._model_catalogue import (
+    ANTHROPIC_COMMERCIAL_TERMS,
     APACHE_2_0,
-    DEFAULT_MODEL_BY_ROLE,
+    DEFAULT_MODEL_BY_RUNTIME_AND_ROLE,
     MODEL_CATALOGUE,
     QWEN_RESEARCH,
     DeploymentLicencePosture,
@@ -171,6 +172,7 @@ from ._model_catalogue import (
     ModelCandidate,
     ModelLicence,
     ModelRole,
+    ModelRuntime,
     ModelSelectionAdvisory,
     candidates_for_role,
     default_model_runtime_id,
@@ -334,6 +336,7 @@ __all__: list[str] = [
     "AEAT_CSV_MIN_LENGTH",
     "AEAT_CSV_PATTERN",
     "AEAT_RECORD_BATCH_SHAPES",
+    "ANTHROPIC_COMMERCIAL_TERMS",
     "ANTHROPIC_EXTRA",
     "APACHE_2_0",
     "ART_58_2_ENTITLING_RELACIONES",
@@ -342,7 +345,7 @@ __all__: list[str] = [
     "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS",
     "BROWSER_EXTRA",
     "COMPATIBILITY_REGIME",
-    "DEFAULT_MODEL_BY_ROLE",
+    "DEFAULT_MODEL_BY_RUNTIME_AND_ROLE",
     "DEFAULT_WRITE_PROVENANCE",
     "EXTERNAL_PATH_SETTINGS_FIELDS",
     "FETCH_GATED_M210_TIPO_RENTA_CODES",
@@ -440,6 +443,7 @@ __all__: list[str] = [
     "ModelCandidate",
     "ModelLicence",
     "ModelRole",
+    "ModelRuntime",
     "ModelSelectionAdvisory",
     "Modelo",
     "OfficialTipoRentaCode",

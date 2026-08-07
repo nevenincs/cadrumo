@@ -38,9 +38,11 @@ from ..provisioning import (
     cadrumo_selected_models,
     probe_hardware_profile,
     probe_local_inference_hardware,
+    pull_runtime_model,
     read_runtime_residents,
     read_system_memory,
     unload_runtime_model,
+    verify_model_ready,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -542,3 +544,121 @@ def test_selected_models_are_exactly_the_configured_roles() -> None:
         cadrumo_llm_ollama_mapping_model="mapping-model",
     ):
         assert cadrumo_selected_models() == frozenset({"vision-model", "text-model", "mapping-model"})
+
+
+# ---------------------------------------------------------------------------
+# the pull and readiness actions, over real HTTP
+# ---------------------------------------------------------------------------
+
+
+def _roomy_profile() -> HardwareProfile:
+    """A machine with headroom to spare, so admission is not the thing under test."""
+    return _profile(
+        kind=AcceleratorKind.NVIDIA_CUDA,
+        devices=(_device(0, total=24 * GIB, free=20 * GIB),),
+        total_ram=64 * GIB,
+        free_ram=48 * GIB,
+    )
+
+
+def _starved_profile() -> HardwareProfile:
+    """A machine measurably short of the requirement, with the shortfall attributable."""
+    return _profile(
+        kind=AcceleratorKind.NVIDIA_CUDA,
+        devices=(_device(0, total=16 * GIB, free=1 * GIB),),
+        total_ram=64 * GIB,
+        free_ram=48 * GIB,
+    )
+
+
+def _paths(events: Queue[dict[str, object]]) -> list[str]:
+    """Drain every request the runtime stub actually received, in order."""
+    seen: list[str] = []
+    while not events.empty():
+        seen.append(str(events.get_nowait()["path"]))
+    return seen
+
+
+def test_a_refused_pull_never_issues_the_fetch(runtime: tuple[str, Queue[dict[str, object]]]) -> None:
+    """The admission check runs BEFORE the fetch, and this is the whole point of the action.
+
+    Asserted on the REQUESTS the runtime received rather than on the outcome,
+    because an outcome saying ``pulled=False`` is satisfied equally by a pull
+    that ran, downloaded gigabytes, and then failed. The claim here is the one
+    that matters to an operator's bandwidth: ``/api/pull`` was never called.
+
+    The queue is not empty and must not be asserted so: attributing a shortfall
+    requires reading the runtime's resident set, so ``/api/ps`` is expected and
+    is part of the check rather than part of the fetch. An earlier version of
+    this case asserted an empty queue and failed against correct code.
+    """
+    chat_url, events = runtime
+    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
+        outcome = pull_runtime_model("huge-model:70b", 40 * GIB, profile=_starved_profile())
+
+    assert outcome.pulled is False
+    assert outcome.contention is not None
+    assert outcome.contention.admitted is False
+    assert "/api/pull" not in _paths(events), "a refused pull must not have issued the fetch"
+
+
+def test_an_admitted_pull_does_issue_the_fetch(runtime: tuple[str, Queue[dict[str, object]]]) -> None:
+    """Positive control for the case above.
+
+    Without this, a ``pull_runtime_model`` that refused unconditionally -- or
+    that never issued a request under any circumstances -- would satisfy the
+    never-fetches assertion and look correct.
+    """
+    chat_url, events = runtime
+    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
+        outcome = pull_runtime_model("small-model:1b", 1 * GIB, profile=_roomy_profile())
+
+    assert outcome.pulled is True
+    assert "/api/pull" in _paths(events)
+
+
+def test_a_pull_against_an_unreachable_runtime_refuses_naming_the_daemon_command() -> None:
+    """An unreachable runtime is an instructive refusal, never a spawn.
+
+    Driven against a REAL closed loopback port rather than a patched client, so
+    the refusal is produced by an actual failed connection. Port 1 is reserved
+    and never listening.
+    """
+    with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
+        outcome = pull_runtime_model("small-model:1b", 1 * GIB, profile=_roomy_profile())
+
+    assert outcome.pulled is False
+    assert outcome.contention is None, "this is a transport failure, not an admission refusal"
+    assert "ollama serve" in outcome.remediation
+
+
+def test_a_readiness_check_against_an_unreachable_runtime_refuses_naming_the_daemon_command() -> None:
+    """Same boundary on the verify path, and the same real closed port."""
+    with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
+        outcome = verify_model_ready("small-model:1b")
+
+    assert outcome.ready is False
+    assert outcome.answered is False
+    assert "ollama serve" in outcome.remediation
+
+
+def test_a_readiness_check_reports_ready_when_the_runtime_answers(
+    runtime: tuple[str, Queue[dict[str, object]]],
+) -> None:
+    """Positive control for both refusal cases above.
+
+    A verify that reported unready unconditionally would satisfy every refusal
+    assertion in this file. This is what distinguishes "refuses correctly" from
+    "refuses always".
+    """
+    chat_url, events = runtime
+    _RuntimeStub.residents = [{"name": "small-model:1b", "size": 1 * GIB, "size_vram": 1 * GIB}]
+    with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
+        outcome = verify_model_ready("small-model:1b")
+
+    assert outcome.ready is True
+    assert outcome.answered is True
+    assert outcome.resident is True
+    assert outcome.elapsed_ms is not None
+    assert events.get(timeout=5)["path"] == "/api/ps"
+    assert events.get(timeout=5)["path"] == "/api/generate"

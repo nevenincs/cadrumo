@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
@@ -95,6 +96,14 @@ def _binding_values(*transactions: Transaction, period: Period) -> dict[str, Dec
     )
     assert aggregation.issues == ()
     return resolve_ledger_iva_aggregation_binding_values(_revision_303(), aggregation.observations)
+
+
+class _CommonTransactionFields(TypedDict):
+    """The fields the rate-box pair holds constant, so only the axis varies."""
+
+    direction: TransactionDirection
+    taxable_base: Decimal
+    iva_amount: Decimal
 
 
 def test_cash_accounting_supply_reports_art75_information_before_collection_and_settles_when_collected() -> None:
@@ -353,7 +362,10 @@ def test_cash_accounting_row_reaches_the_same_rate_boxes_as_an_ordinary_row() ->
     sales, so it cannot be satisfied by both going blank, and pinned to the
     declared rate's own boxes.
     """
-    common = {
+    # Declared, not inferred: an untyped mapping widens each value to the union
+    # of all three, so the splat below reads as offering a Decimal where a
+    # direction is expected and checks none of them.
+    common: _CommonTransactionFields = {
         "direction": TransactionDirection.INCOMING,
         "taxable_base": Decimal("1000.00"),
         "iva_amount": Decimal("210.00"),

@@ -8,10 +8,11 @@
 [concept]
 concept_id = "iva-domestic-super-reduced-4"
 domain = "regimen"
-lifecycle = "draft"
+lifecycle = "retired"
 domain_refs = ["iva-category:domestic_super_reduced"]
+replaced_by = "iva-domestic-super-reduced"
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-08-07
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"

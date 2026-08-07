@@ -26,6 +26,7 @@ from ...core import (
     DeploymentLicencePosture,
     HardwareTier,
     ModelRole,
+    ModelRuntime,
     ModelSelectionAdvisory,
     candidates_for_role,
     model_candidate,
@@ -357,6 +358,78 @@ def test_the_shipped_settings_defaults_are_what_selection_resolves_to() -> None:
     assert text.runtime_id == settings.cadrumo_llm_ollama_text_model
     assert mapping.runtime_id == settings.cadrumo_llm_ollama_mapping_model
     assert model_candidate(settings.cadrumo_llm_ollama_vision_model) is not None
+
+
+def test_the_cloud_runtime_resolves_every_role_to_the_shipped_cloud_default() -> None:
+    """A hosted route must land on a role-named model, not the global fallback."""
+    settings = load_settings()
+    profile = _cuda_profile(14 * _GIB)
+    for role, configured in (
+        (ModelRole.VISION_TRANSCRIPTION, settings.cadrumo_llm_cloud_vision_model),
+        (ModelRole.TEXT_EXTRACTION, settings.cadrumo_llm_cloud_text_model),
+        (ModelRole.COLUMN_ROLE_MAPPING, settings.cadrumo_llm_cloud_mapping_model),
+    ):
+        selection = select_model_for_role(role, profile=profile, runtime=ModelRuntime.CLOUD_ANTHROPIC)
+        assert selection.selected
+        assert selection.runtime_id == configured
+        assert selection.candidate is not None
+        assert selection.candidate.runtime is ModelRuntime.CLOUD_ANTHROPIC
+        assert selection.candidate.licence.commercial_use_permitted
+
+
+def test_a_hosted_selection_is_never_refused_for_local_headroom() -> None:
+    """Nothing runs on this machine, so this machine's free memory cannot bar it.
+
+    The discriminating case: on a profile so constrained that every local
+    candidate is refused, the hosted route still resolves and carries neither
+    headroom advisory. Judging a cloud model against local memory would refuse a
+    route that cannot fail that way.
+    """
+    starved = _cuda_profile(1 * _GIB)
+
+    local = select_model_for_role(ModelRole.VISION_TRANSCRIPTION, profile=starved)
+    assert not local.selected
+    assert ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM in local.advisories
+
+    hosted = select_model_for_role(
+        ModelRole.VISION_TRANSCRIPTION,
+        profile=starved,
+        runtime=ModelRuntime.CLOUD_ANTHROPIC,
+    )
+    assert hosted.selected
+    assert ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM not in hosted.advisories
+    assert ModelSelectionAdvisory.FIT_UNVERIFIED not in hosted.advisories
+
+
+def test_an_unmeasurable_machine_does_not_flag_fit_on_a_hosted_selection() -> None:
+    """FIT_UNVERIFIED means 'could not check a local fit' — there is none to check."""
+    unmeasured = _unmeasurable_profile()
+    assert (
+        ModelSelectionAdvisory.FIT_UNVERIFIED
+        in select_model_for_role(
+            ModelRole.VISION_TRANSCRIPTION,
+            profile=unmeasured,
+        ).advisories
+    )
+    hosted = select_model_for_role(
+        ModelRole.VISION_TRANSCRIPTION,
+        profile=unmeasured,
+        runtime=ModelRuntime.CLOUD_ANTHROPIC,
+    )
+    assert hosted.selected
+    assert hosted.advisories == ()
+
+
+def test_the_two_runtimes_never_resolve_to_each_others_models() -> None:
+    """A runtime's selection is scoped to its own candidates, both ways."""
+    profile = _cuda_profile(14 * _GIB)
+    for role in ModelRole:
+        local = select_model_for_role(role, profile=profile)
+        hosted = select_model_for_role(role, profile=profile, runtime=ModelRuntime.CLOUD_ANTHROPIC)
+        assert local.candidate is not None and hosted.candidate is not None
+        assert local.candidate.runtime is ModelRuntime.LOCAL_OLLAMA
+        assert hosted.candidate.runtime is ModelRuntime.CLOUD_ANTHROPIC
+        assert local.runtime_id != hosted.runtime_id
 
 
 def test_the_mapping_role_never_resolves_to_a_vision_tier_model() -> None:

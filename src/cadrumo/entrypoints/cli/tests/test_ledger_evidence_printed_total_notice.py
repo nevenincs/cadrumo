@@ -24,13 +24,17 @@ See Also:
 from __future__ import annotations
 
 import json
+import threading
 from collections.abc import Iterator
+from http import HTTPStatus
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import pytest
 
+from ....core.config import override_settings
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -64,6 +68,93 @@ _RECARGO_INVOICE_LINES = (
     "Recargo de equivalencia 5,2%: 5,20",
     "Total factura: 126,20",
 )
+
+
+# ---------------------------------------------------------------------------
+# A real loopback reader, so the confirm path can run with no model present
+# ---------------------------------------------------------------------------
+#
+# Wiring the semantic reader made every text-PDF confirm depend on a reading
+# model, so these two cases stopped at `httpx.ConnectError` before any notice
+# was built. The endpoint below is real HTTP on a loopback port speaking the
+# runtime's own wire shape; only the REPLY is authored here, and everything
+# downstream of the socket is production code. No model is loaded and no
+# inference runs.
+#
+# The reply is keyed off the transcription the reader receives, so each document
+# is answered with its OWN printed figures rather than one canned payload --
+# otherwise the coherent and recargo cases would be indistinguishable to the
+# stub and the mismatch assertion would be testing the fixture.
+
+
+class _ReaderStub(BaseHTTPRequestHandler):
+    """A real local endpoint speaking the reading runtime's ``/api/chat`` shape."""
+
+    def do_POST(self) -> None:
+        body = self.rfile.read(int(self.headers.get("content-length", "0")))
+        prompt = json.dumps(json.loads(body.decode("utf-8"))["messages"])
+        fields = _RECARGO_FIELDS if "2026-0199" in prompt else _COHERENT_FIELDS
+        payload = json.dumps(
+            {
+                "model": "qwen2.5:7b",
+                "message": {"role": "assistant", "content": json.dumps(fields)},
+                "prompt_eval_count": 100,
+                "eval_count": 50,
+            },
+        ).encode("utf-8")
+        self.send_response(HTTPStatus.OK)
+        self.send_header("content-type", "application/json")
+        self.send_header("content-length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+    @override
+    def log_message(self, format: str, *args: object) -> None:
+        """Silence the handler's stderr access log."""
+
+
+_COHERENT_FIELDS = {
+    "supplier_tax_id": _SUPPLIER_CIF,
+    "supplier_tax_id_anchor": _SUPPLIER_CIF,
+    "invoice_number": "2026-0142",
+    "invoice_number_anchor": "2026-0142",
+    "invoice_date": "2026-03-10",
+    "invoice_date_anchor": "10/03/2026",
+    "taxable_base": "100,00",
+    "taxable_base_anchor": "100,00",
+    "iva_rate": "21",
+    "iva_rate_anchor": "21%",
+    "iva_amount": "21,00",
+    "iva_amount_anchor": "21,00",
+    "grand_total": "121,00",
+    "grand_total_anchor": "121,00",
+}
+
+_RECARGO_FIELDS = {
+    **_COHERENT_FIELDS,
+    "invoice_number": "2026-0199",
+    "invoice_number_anchor": "2026-0199",
+    "invoice_date": "2026-03-11",
+    "invoice_date_anchor": "11/03/2026",
+    "grand_total": "126,20",
+    "grand_total_anchor": "126,20",
+}
+
+
+@pytest.fixture(autouse=True)
+def _loopback_reader() -> Iterator[None]:
+    """Serve a real reading endpoint on a loopback port for the duration of a test."""
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _ReaderStub)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    chat_url = f"http://127.0.0.1:{server.server_port}/api/chat"
+    try:
+        with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
+            yield
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
 
 
 def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:

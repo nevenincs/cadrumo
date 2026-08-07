@@ -2008,6 +2008,11 @@ cli:
         view_help: Muestra un justificante de factura de compra
         yes_help: Confirma la eliminación del justificante
         yes_required: Debes pasar --yes para eliminar un justificante
+        field_contradicted: '{field}: el documento indica ''{anchor}'', que no coincide con el valor registrado para este campo. {detail}'
+        field_ambiguous: '{field}: varias lecturas compitieron y no se pudo decidir entre ({candidates}). Elija una en lugar de aceptar el borrador tal cual.'
+        field_anchor_self_reported: '{field}: el lector afirma haberlo leído de ''{anchor}'', pero esa afirmación proviene del mismo lector que produjo el valor, así que nada independiente lo ha confirmado.'
+        field_anchor_not_found: '{field}: el lector señala ''{anchor}'', que no aparece en la transcripción del documento. Un valor normalizado puede fallar esta búsqueda legítimamente, así que revise el campo en lugar de suponer que fue corroborado.'
+        field_no_anchor: '{field}: el lector no ofreció nada en el documento a lo que señalar, así que no hay forma impresa con la que contrastar este valor.'
       inventory:
         actividad_id_help: Identificador de la actividad económica
         create_help: Crea un libro de existencias para una actividad y ejercicio
@@ -2080,6 +2085,7 @@ cli:
           con esta identidad (%{invoice_id}); no se creó nada.'
         yes_help: Confirma la eliminación de la factura
         yes_required: Debes pasar --yes para eliminar una factura
+        import_column_role_not_applied: 'no se aplicó un rol de columna propuesto: {detail}'
       prorrata:
         activity_code_help: Código de actividad CNAE / IAE agrupado en este sector
           (repetible, al menos uno).
@@ -3986,7 +3992,8 @@ cli:
       role_help: Función del modelo sobre la que actuar (transcripción de imágenes,
         extracción de texto, mapeo tabular).
       verify:
-        help: cli.config.provision.verify.help
+        help: Verifica que un modelo está cargado y responde a una consulta trivial
+          dentro de un límite de tiempo.
         model_help: Identificador del modelo que se verificará. Por defecto, el modelo
           seleccionado para la función.
     recover:
@@ -6066,7 +6073,6 @@ errors:
     fail_llm_provider: El proveedor del modelo de lenguaje devolvió un error irrecuperable.
     fail_llm_rate_limit: El proveedor del modelo de lenguaje rechazó la solicitud
       por límite de uso. Espera unos minutos y vuelve a intentarlo.
-    fail_locale_manager: Se produjo un error al gestionar o leer los archivos de idioma.
     fail_manuals_manual_parse: Un registro de manual no superó la validación del esquema.
     fail_mcp_launch: No se pudo iniciar el servidor MCP.
     fail_modelo_calculation_revision_persistence: No se pudo guardar o leer el catálogo
@@ -68864,6 +68870,10 @@ modelo:
                 de la casilla 669. El Real Decreto-ley 4/2024, artículo 1, fijó este
                 tipo desde el 1 de octubre hasta el 31 de diciembre de 2024.
               label: Cuota IVA devengado - Regimen ordinario - Tipo 7,5% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: Suma la base imponible de las operaciones interiores repercutidas
+                al tipo cero, sea cual sea el porcentaje aplicado a cada operación.
+              label: IVA devengado RG tipo cero - Base imponible
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
               label: Resultado anual del regimen general (cuota devengada - cuota

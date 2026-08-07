@@ -166,6 +166,86 @@ def test_the_rate_blind_total_layer_retains_the_unrated_row() -> None:
     assert with_unrated - without == _UNRATED_CUOTA
 
 
+def _unrated_zero_row() -> IvaLedgerObservation:
+    """A zero-tier row whose rate the ledger never captured."""
+    return _observation(
+        category=IvaCategory.DOMESTIC_ZERO,
+        rate_kind=IvaRateKind.ZERO,
+        on=date(2024, 6, 2),
+        base=_UNRATED_BASE,
+        cuota=Decimal("0.00"),
+        applied_rate=None,
+    )
+
+
+def test_the_zero_tier_retains_a_rate_unrecorded_row() -> None:
+    """The zero tier had no blind layer at all, so such a row reached NOTHING.
+
+    Its two bindings both pinned ``applied_rates = 0.00``, so a zero-rated row
+    with no recorded rate matched neither and its base imponible left the return
+    silently. No cuota was lost -- a zero-rated supply's cuota is zero -- but the
+    base is a declared figure AEAT reconciles.
+
+    The reducido tier is the control: an identical rate-unrecorded row has always
+    been retained there, so a failure here is the zero tier specifically rather
+    than the resolver dropping unrated rows generally.
+    """
+    without = _resolve(_rated_rows())
+    with_unrated = _resolve((*_rated_rows(), _unrated_zero_row()))
+    zero_total = "modelo-390-iva-repercutido-zero-base"
+    assert with_unrated[zero_total] - without[zero_total] == _UNRATED_BASE
+
+    control_without = _resolve(_rated_rows())["modelo-390-iva-repercutido-reducido-base"]
+    control_with = _resolve((*_rated_rows(), _unrated_row()))["modelo-390-iva-repercutido-reducido-base"]
+    assert control_with - control_without == _UNRATED_BASE
+
+
+def test_every_rate_split_base_tier_carries_exactly_one_rate_blind_binding() -> None:
+    """Gate the property, not the tier list: a rate-split base tier needs a total layer.
+
+    The zero tier shipped with rate boxes and no blind sibling, which is the one
+    shape that loses money silently -- and it is invisible to a per-tier test
+    that only enumerates the tiers someone remembered. Derived from the revision
+    so a tier added later without a blind layer fails here rather than passing
+    vacuously.
+
+    Scoped to ``base_amount_sum``. The cuota axis is NOT asserted here, and the
+    exclusion is a real limit rather than a convenience: the zero tier has no
+    blind cuota sibling either, so a rate-unrecorded zero row carrying a non-zero
+    cuota still drops that cuota. Closing it means adding a term to the annual
+    devengada total formula for a figure that is zero whenever the row is
+    self-consistent, which is a change to a money-bearing total and a decision in
+    its own right. Widening this assertion to every fact without making that
+    change would only red the suite; it is tracked separately instead.
+    """
+    revision = _m390_revision()
+    grouped: dict[tuple[object, ...], list[object]] = {}
+    for binding in revision.bindings:
+        if str(binding.source) != "ledger_iva_aggregation":
+            continue
+        selector = binding.selector
+        axes = selector if isinstance(selector, dict) else selector.model_dump(exclude_none=True)
+        if axes.get("fact") != "base_amount_sum":
+            continue
+        key = (
+            tuple(axes.get("categories") or ()),
+            tuple(axes.get("rate_kinds") or ()),
+            axes.get("flow_direction"),
+        )
+        grouped.setdefault(key, []).append(axes)
+
+    for key, members in grouped.items():
+        rated = [axes for axes in members if axes.get("applied_rates")]
+        blind = [axes for axes in members if not axes.get("applied_rates")]
+        if not rated:
+            continue
+        assert len(blind) == 1, (
+            f"selector identity {key} declares {len(rated)} rate-specific binding(s) and "
+            f"{len(blind)} rate-blind sibling(s); a rate-split tier needs exactly one "
+            f"total layer or a rate-unrecorded row reaches nothing"
+        )
+
+
 def test_base_and_cuota_of_a_tier_drop_the_same_rows() -> None:
     """Base and cuota must narrow symmetrically, or an impossible record appears.
 
@@ -316,6 +396,7 @@ def test_rate_blind_base_casillas_claim_no_rate_specific_box_number() -> None:
         "iva.anual.repercutido.general.base",
         "iva.anual.repercutido.reducido.base",
         "iva.anual.repercutido.super-reducido.base",
+        "iva.anual.repercutido.zero.base",
     ):
         assert casillas[casilla_id].number not in rate_specific, (
             f"{casilla_id} is rate-blind but claims rate-specific box {casillas[casilla_id].number}"

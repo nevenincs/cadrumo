@@ -29,12 +29,19 @@ from decimal import Decimal
 import pytest
 
 from ...core import FieldOrigin, Period
-from ...domain.iva import EUMemberState, load_iva_rate_table
+from ...domain.iva import (
+    NO_PRINTED_TAX_IVA_CATEGORIES,
+    EUMemberState,
+    IvaCategory,
+    load_iva_rate_table,
+)
 from ...domain.transactions import statutory_activity_retencion_rates
 from .._invoice_extraction_prompt import (
+    INVOICE_EXTRACTION_PROMPT_ID,
     PROMPT_TEMPLATE,
     build_invoice_extraction_prompt,
     default_extraction_period,
+    invoice_extraction_prompt_registry,
     template_numeric_literals,
 )
 from .._invoice_field_contract import (
@@ -147,6 +154,168 @@ class TestCompiledEnumerationsComeFromTheRegistry:
         assert "never move it onto a listed one" in text
 
 
+class TestTheAntiDriftGateBitesInBothDirections:
+    """The gate is unproven until each half is shown to red on its own mutation.
+
+    A one-directional proof is the failure mode this class exists to close. A
+    gate that only proves "no literal is present" passes a template that ignores
+    the registry entirely and enumerates nothing; a gate that only proves "the
+    values came from the registry" passes a template that also carries a stale
+    literal beside them. Both mutations are applied at RUNTIME from outside the
+    production modules, so no tracked file changes and a concurrent sweep cannot
+    commit the mutation.
+    """
+
+    def test_moving_a_registry_rate_moves_the_compiled_prompt(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Direction one: the compiled text FOLLOWS the rate authority.
+
+        The mutation adds one record to the table the compiler reads and asserts
+        the new percentage reaches the text. This is the assertion a template
+        holding a hardcoded rate list cannot satisfy: it would keep emitting the
+        original enumeration under the mutated authority.
+        """
+        baseline = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+        planted = Decimal("13.5")
+        assert planted not in baseline.iva_rate_pcts, "pick a percentage the registry does not already carry"
+
+        real_table = load_iva_rate_table()
+        spain = real_table[EUMemberState.ES]
+        extra = spain[0].model_copy(
+            update={
+                "pct": planted,
+                "effective_from": _ANNUAL_2026.start_date,
+                "effective_until": None,
+            },
+        )
+        mutated = dict(real_table) | {EUMemberState.ES: (*spain, extra)}
+        monkeypatch.setattr("cadrumo.domain.iva.load_iva_rate_table", lambda: mutated)
+
+        after = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+
+        assert planted in after.iva_rate_pcts
+        assert "13.5" in after.text
+        assert after.fingerprint != baseline.fingerprint
+
+    def test_the_literal_gate_reds_on_a_template_carrying_a_rate(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Direction two: planting a literal in the REGISTERED template reds the gate.
+
+        The distinction from the scanner's positive control is the whole point.
+        That control passes a string to the scanner and proves the regex works;
+        this replaces the template the shipped gate actually reads, so it proves
+        the gate is pointed at the artefact that ships. A gate reading a stale
+        snapshot passes this file and misses a literal added to the real
+        template -- which is exactly the defect the compiler's own docstring
+        records a probe having caught.
+        """
+        assert template_numeric_literals() == (), "positive control: the gate is green before the mutation"
+
+        registry = invoice_extraction_prompt_registry()
+        definition = registry.get(INVOICE_EXTRACTION_PROMPT_ID)
+        poisoned = definition.model_copy(update={"template": definition.template + "\n- the IVA rate is 21."})
+        mutated_registry = type(registry)()
+        mutated_registry.register(poisoned)
+        monkeypatch.setattr(
+            "cadrumo.llm._invoice_extraction_prompt.invoice_extraction_prompt_registry",
+            lambda: mutated_registry,
+        )
+
+        assert template_numeric_literals() == ("21",)
+
+    def test_neither_mutation_is_visible_to_the_other_direction(self) -> None:
+        """Both mutations are undone by teardown, so the gate is green again here.
+
+        Ordering-independent: monkeypatch restores at teardown, so a green here
+        proves neither mutation leaked into module state (the compiler caches its
+        registry with ``lru_cache``, which is exactly the kind of state a patch
+        can strand).
+        """
+        assert template_numeric_literals() == ()
+        assert Decimal("13.5") not in build_invoice_extraction_prompt(period=_ANNUAL_2026).iva_rate_pcts
+
+
+class TestTheNoPrintedTaxLineAsksThePaperQuestion:
+    """The list of tax-free reasons must describe INVOICES, not 303 cuota outcomes.
+
+    The two authorities differ exactly on the reverse-charge family, and in the
+    direction that matters: under inversion del sujeto pasivo the recipient
+    self-assesses a real 303 cuota, so those members are deliberately excluded
+    from the cuota-less set -- while the supplier's invoice repercutes nothing
+    and is required to say so. Compiling the prompt off the cuota-less set
+    therefore told a reading model that the commonest no-IVA invoice a Spanish
+    autonomo receives cannot exist.
+    """
+
+    @pytest.mark.parametrize(
+        "category",
+        [
+            IvaCategory.DOMESTIC_REVERSE_CHARGE,
+            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        ],
+    )
+    def test_the_reverse_charge_family_is_named_as_a_tax_free_invoice(self, category: IvaCategory) -> None:
+        """Fixture anchor: pinned by member, so a rename cannot pass this vacuously."""
+        assert category in NO_PRINTED_TAX_IVA_CATEGORIES
+        assert category.value.replace("_", " ") in _compiled()
+
+    def test_the_line_enumerates_the_derived_set_exactly(self) -> None:
+        """No member is dropped and none is invented, in both directions."""
+        text = _compiled()
+        opening = "carry no tax at all ("
+        rendered = text[text.index(opening) + len(opening) : text.index(").")]
+
+        assert set(rendered.split(", ")) == {c.value.replace("_", " ") for c in NO_PRINTED_TAX_IVA_CATEGORIES}
+
+
+class TestRetencionIsAskedForAndNotMerelyEnumerated:
+    """Enumerating a rate the response has no slot for is dead context, and worse.
+
+    The prompt listed the RIRPF art. 95 rates while asking for no withholding
+    field, so every reading of an invoice carrying IRPF retencion dropped it --
+    on a prompt whose binding constraint is the context budget of a 2B-class
+    model. The loss runs in the over-payment direction: a retencion already
+    withheld and never recovered is tax paid twice, and nothing downstream
+    watches that direction.
+    """
+
+    @pytest.mark.parametrize("field_name", ["retencion_rate", "retencion_amount"])
+    def test_the_withholding_fields_are_declared_asked_for_and_grounded(self, field_name: str) -> None:
+        text = _compiled()
+
+        assert field_name in {contract.field_name for contract in INVOICE_FIELD_CONTRACTS}
+        assert f'"{field_name}"' in text
+        assert f'"{anchor_key_for_field(field_name)}"' in text
+        assert field_name in ExtractedInvoiceFields.model_fields
+        assert field_name in ExtractedFieldAnchors.model_fields
+
+    def test_a_withheld_invoice_survives_grounding_with_its_anchor(self) -> None:
+        """End to end through the real parser and grounder: no model, no transport."""
+        response = parse_invoice_extraction_response(
+            json.dumps(
+                {
+                    "retencion_rate": "15",
+                    "retencion_rate_anchor": "-15%",
+                    "retencion_amount": "150,00",
+                    "retencion_amount_anchor": "-150,00 EUR",
+                },
+            ),
+        )
+
+        draft = ground_extracted_fields(response, raw_text_length=400, origin=FieldOrigin.VISION)
+
+        assert draft.retencion_rate == Decimal("15")
+        assert draft.retencion_amount == Decimal("150.00")
+        anchors = {envelope.field: envelope.anchor for envelope in draft.provenance}
+        assert anchors["retencion_rate"] == "-15%"
+        assert anchors["retencion_amount"] == "-150,00 EUR"
+
+
 class TestContractParityAcrossBothDerivations:
     """Prompt fields and grounder fields derive from ONE declaration.
 
@@ -200,7 +369,9 @@ class TestContractParityAcrossBothDerivations:
                 taxable_base="100,00",
                 iva_rate="21",
                 iva_amount="21,00",
-                grand_total="121,00",
+                retencion_rate="15",
+                retencion_amount="15,00",
+                grand_total="106,00",
                 currency="EUR",
             ),
             anchors=ExtractedFieldAnchors(),

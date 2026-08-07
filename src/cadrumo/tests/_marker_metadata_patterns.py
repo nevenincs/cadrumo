@@ -13,7 +13,33 @@ it, since none of it touches a module tree — it is scan data.
 from __future__ import annotations
 
 import re
+from enum import StrEnum
 from typing import NamedTuple
+
+
+class MarkerScanScope(StrEnum):
+    """How far across the tree one scan pattern is allowed to reach.
+
+    The scan runs one mechanism over two module populations, and the two do
+    not tolerate the same patterns. Test modules are scanned by every pattern.
+    Production modules are scanned only by the patterns whose false-positive
+    rate over real source is zero, because a pattern that fires on ordinary
+    domain prose trains every reader to ignore the gate, and an ignored gate
+    reports exactly what a clean tree reports.
+
+    A measured example of the asymmetry, over the 1485 non-test modules under
+    ``src/cadrumo``: the dated-document-stem pattern found only genuine
+    document-identifier citations, while the ``phase`` pattern's hits were
+    almost entirely legitimate — a Spanish tax-law ``RD-ley 4/2024 phase-out``,
+    a two-phase custody protocol, a state machine's own target-phase
+    vocabulary. Scope is therefore declared per pattern, beside the pattern,
+    rather than chosen once for the whole table.
+    """
+
+    #: Scanned in test modules only.
+    TEST_MODULES = "test_modules"
+    #: Scanned in test modules and in ordinary production source.
+    TEST_AND_PRODUCTION_MODULES = "test_and_production_modules"
 
 
 class PatternCase(NamedTuple):
@@ -24,11 +50,17 @@ class PatternCase(NamedTuple):
     declaration is what stops a new pattern arriving without the controls
     proving it discriminates, and it is how a token scrambled while being
     split across a concatenation stops reading as a clean result.
+
+    ``scope`` declares which module population the pattern is applied to; see
+    :class:`MarkerScanScope`. It defaults to the narrower reach, so a new
+    pattern arrives test-scoped and widening it is a deliberate edit backed by
+    a measurement.
     """
 
     pattern: re.Pattern[str]
     must_match: tuple[str, ...]
     must_not_match: tuple[str, ...]
+    scope: MarkerScanScope = MarkerScanScope.TEST_MODULES
 
 
 CAMPAIGN_METADATA_CASES: tuple[PatternCase, ...] = (
@@ -83,6 +115,18 @@ CAMPAIGN_METADATA_CASES: tuple[PatternCase, ...] = (
         ),
         ("the vault adr folder", "the reference implementation lives in the vault", "review the audit trail"),
     ),
+    # The one entry scanned in ordinary production source as well as in tests.
+    # A dated document stem NAMES a specific record in this repo's own vault,
+    # which is the citation direction "Code Stands Alone" reverses, and the
+    # shape carries no domain meaning a tax module could want: the exhaustive
+    # read of every hit across 1485 production modules found no legitimate use.
+    #
+    # Deliberately narrower than the bare-word entry above it, which bans the
+    # token even where no document is named ("needs a superseding ADR"). That
+    # entry is broader than the rule's text -- the rule permits stating the
+    # constraint and forbids naming the document -- and the tension is
+    # unresolved, so the bare word stays test-scoped rather than being widened
+    # on an unruled reading.
     PatternCase(
         re.compile(
             r"[0-9]{4}-[0-9]{2}-[0-9]{2}[-_a-z0-9]*(?:ad" + r"r|audit|plan|reference|research)\b",
@@ -96,9 +140,49 @@ CAMPAIGN_METADATA_CASES: tuple[PatternCase, ...] = (
             "2026-07-25-thing-research",
         ),
         ("2026-07-25 release notes",),
+        scope=MarkerScanScope.TEST_AND_PRODUCTION_MODULES,
+    ),
+    # Every pattern above is blind to a bare NARRATIVE reference to this
+    # repo's own campaign -- no digit, no dotted id, no document stem. Bare
+    # "campaign" is not itself bannable: the release/packaging domain names a
+    # real CI job "campaign" (``dev/packaging/campaign.py``, the workflow's
+    # own ``campaign`` job id), so "the campaign's own CI already checks" and
+    # "a foreign, failed ... campaign's cohort" are genuine engineering
+    # vocabulary, not process narration. Only the first-person possessive
+    # forms are unambiguous: nothing in this codebase's CI or packaging domain
+    # calls its own job "this campaign" or "our campaign".
+    PatternCase(
+        re.compile(r"\b(?:this|our) campaign\b", re.IGNORECASE),
+        ("this campaign's own research records show it", "our campaign has been finding these leaks"),
+        ("the campaign's own CI already checks", "a marketing campaign was launched this spring"),
+    ),
+    # A bare, undigited "Step" survives every numbered pattern above.
+    # Capitalisation is the only signal this repo's own prose gives: a
+    # mid-sentence "Step" capitalised and anchored by a determiner ("this
+    # Step", "the prior Step", "the first cloud-deletion Step") is this
+    # repo's own plan-Step vocabulary -- ordinary English never capitalises
+    # the noun mid-sentence. Lowercase "step" is untouched, and so is a
+    # sentence-initial "Step" used as a modifier rather than referred back to
+    # (a wizard's own "Step discovery reads the registry", with no determiner
+    # in front of it). The hyphen guard keeps a genuine "Step-by-step"
+    # adjective phrase out.
+    PatternCase(
+        re.compile(r"\b(?:[Tt]his|[Tt]he)(?:\s+\w+(?:-\w+)*){0,2}\s+Step(?!-)\b"),
+        ("this Step exists to remove the gap", "before the first cloud-deletion Step closes"),
+        ("Step discovery reads the registry", "the difficult Step-by-step tutorial walkthrough"),
     ),
 )
 CAMPAIGN_METADATA_PATTERNS = tuple(case.pattern for case in CAMPAIGN_METADATA_CASES)
+#: The production-scoped subset, DERIVED from the one table rather than listed.
+#:
+#: A hand-maintained second list would drift from the scope each case declares,
+#: and the drift direction that matters is silent: a case widened at its
+#: declaration but absent here is simply never applied to production, which
+#: reads as a clean production tree.
+PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES: tuple[PatternCase, ...] = tuple(
+    case for case in CAMPAIGN_METADATA_CASES if case.scope is MarkerScanScope.TEST_AND_PRODUCTION_MODULES
+)
+PRODUCTION_SCOPED_CAMPAIGN_METADATA_PATTERNS = tuple(case.pattern for case in PRODUCTION_SCOPED_CAMPAIGN_METADATA_CASES)
 _NOQA_LINT_CODE_PATTERN = re.compile(r"(#\s*noqa(?::\s*)?)([A-Z]+[0-9]+(?:\s*,\s*[A-Z]+[0-9]+)*)")
 #: Process nouns that must not name a durable test symbol or pytest id.
 #:

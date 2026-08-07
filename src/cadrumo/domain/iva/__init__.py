@@ -163,6 +163,7 @@ from ._saturation import (
 from ._schema import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EVIDENCE_EXEMPT_IVA_CATEGORIES,
+    NO_PRINTED_TAX_IVA_CATEGORIES,
     EUMemberState,
     IvaCashAccountingPaymentEvidence,
     IvaCashAccountingTreatment,
@@ -191,6 +192,7 @@ __all__ = [
     "EVIDENCE_EXEMPT_IVA_CATEGORIES",
     "IVA_CATEGORY_COMPONENTS",
     "LAST_FILING_PERIOD_TOKENS",
+    "NO_PRINTED_TAX_IVA_CATEGORIES",
     "REGIME_PERIODICITY",
     "SEPA_ZONE_COUNTRY_CODES",
     "CustomerTaxStatus",

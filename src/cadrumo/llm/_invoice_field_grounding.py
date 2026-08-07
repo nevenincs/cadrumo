@@ -94,6 +94,8 @@ class ExtractedInvoiceFields(BaseModel):
     taxable_base: str | None = Field(default=None)
     iva_rate: str | None = Field(default=None)
     iva_amount: str | None = Field(default=None)
+    retencion_rate: str | None = Field(default=None)
+    retencion_amount: str | None = Field(default=None)
     grand_total: str | None = Field(default=None)
     currency: str | None = Field(default=None)
 
@@ -123,6 +125,8 @@ class ExtractedFieldAnchors(BaseModel):
     taxable_base: str | None = Field(default=None)
     iva_rate: str | None = Field(default=None)
     iva_amount: str | None = Field(default=None)
+    retencion_rate: str | None = Field(default=None)
+    retencion_amount: str | None = Field(default=None)
     grand_total: str | None = Field(default=None)
     currency: str | None = Field(default=None)
 
@@ -514,6 +518,8 @@ def ground_extracted_fields(
     taxable_base = _ground_numeric(fields.taxable_base, "taxable_base")
     iva_rate = _ground_numeric(fields.iva_rate, "iva_rate")
     iva_amount = _ground_numeric(fields.iva_amount, "iva_amount")
+    retencion_rate = _ground_numeric(fields.retencion_rate, "retencion_rate")
+    retencion_amount = _ground_numeric(fields.retencion_amount, "retencion_amount")
     grand_total = _ground_numeric(fields.grand_total, "grand_total")
     currency = _ground_text(fields.currency, "currency")
 
@@ -526,6 +532,8 @@ def ground_extracted_fields(
         "taxable_base": taxable_base,
         "iva_rate": iva_rate,
         "iva_amount": iva_amount,
+        "retencion_rate": retencion_rate,
+        "retencion_amount": retencion_amount,
         "grand_total": grand_total,
         "currency": currency,
     }
@@ -550,6 +558,8 @@ def ground_extracted_fields(
         taxable_base=taxable_base,
         iva_rate=iva_rate,
         iva_amount=iva_amount,
+        retencion_rate=retencion_rate,
+        retencion_amount=retencion_amount,
         grand_total=grand_total,
         currency=currency,
         provenance=envelopes,

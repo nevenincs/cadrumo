@@ -1,7 +1,7 @@
 """Automated real-client capture for the Claude Desktop distribution rows.
 
-Supersedes the manual in-app capture the 2026-07-19 post-release ADR assumed for
-the ``claude-desktop-mcpb`` / ``claude-desktop-plugin`` rows: this is a
+Supersedes the manual in-app capture previously accepted for the
+``claude-desktop-mcpb`` / ``claude-desktop-plugin`` rows: this is a
 reproducible harness that provisions a clean isolated Claude Desktop profile
 (seeded only with the operator's session auth), launches the real app as the
 debug-enabled primary instance, drives it over CDP to make a real cadrumo MCP

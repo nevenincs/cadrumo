@@ -1,14 +1,15 @@
-"""Real-behaviour tests for on-host invoice-PDF field extraction into a draft.
+"""Real-behaviour tests for on-host invoice-document reading into a draft.
 
-Builds real text-bearing PDFs in memory (reportlab), wraps them as
-``EvidenceInput``, and asserts :func:`extract_invoice_fields` recovers the
-grounded fields with no file written and no field fabricated. No mocks.
+Builds real text-bearing PDFs in memory (reportlab), stores them through the
+real encrypted-bucket write path, and asserts
+:func:`extract_invoice_draft_from_evidence` recovers the grounded fields with no
+file written and no field fabricated. No mocks.
 
 See Also:
     :class:`~application.ledger.InvoiceDraft`
         Public reviewed-draft record returned before any invoice is persisted.
-    :func:`~application.ledger.extract_invoice_fields`
-        On-host text-layer primitive exercised by the pure extraction tests.
+    :func:`~application.ledger.transcribe_text_layer`
+        Acquisition-stage primitive that refuses a document with no text layer.
     :func:`~application.ledger.extract_invoice_draft_from_evidence`
         CLI-facing resolver that reads stored evidence bytes from secure storage
         and chooses text-layer or on-host vision extraction.
@@ -23,7 +24,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from io import BytesIO
@@ -37,7 +38,6 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
-from ....core.decimal import coerce_finite_european_decimal
 from ....domain.attachments import load_attachment
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
@@ -46,17 +46,17 @@ from ...user_profile import UserProfileLifecycleRepository
 from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
 from .._evidence_draft import (
     InvoiceDraft,
-    _parse_labelled_amount,
     confirm_invoice_draft_from_evidence,
     extract_invoice_draft_from_evidence,
-    extract_invoice_fields,
 )
 from .._evidence_input import EvidenceInput
+from .._evidence_textlayer import transcribe_text_layer
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import isolated_settings as isolated_settings
 from ._evidence_test_support import runtime_profile as runtime_profile
 from ._evidence_test_support import secure_objects as secure_objects
 from ._llm_vision_evidence_support import _json_array, _json_object, _run_against_loopback_ollama
+from ._loopback_reader import serving_a_loopback_reader
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
@@ -83,6 +83,59 @@ _PARTIAL_INVOICE_LINES = (
 )
 
 
+# ---------------------------------------------------------------------------
+# A real loopback reader for the paths that now go through the semantic reader
+# ---------------------------------------------------------------------------
+#
+# These cases are about MINTING, IDEMPOTENCY, OVERRIDES and LINKING -- not about
+# what happens when no reader is installed. Wiring the semantic reader made them
+# stop at a connection error, which says nothing about any of those contracts,
+# so they are served a real endpoint rather than inverted into refusal
+# assertions. The refusal itself is gated separately, in
+# `test_grounded_reading_wiring.py`, where it is the subject rather than an
+# accident of the environment.
+#
+# Replies are keyed on each document's own printed figures, so the full and
+# partial invoices cannot be confused for one another.
+
+_FULL_INVOICE_FIELDS = {
+    "supplier_tax_id": _SUPPLIER_CIF,
+    "supplier_tax_id_anchor": _SUPPLIER_CIF,
+    "invoice_number": "2026-0142",
+    "invoice_number_anchor": "2026-0142",
+    "invoice_date": "2026-03-10",
+    "invoice_date_anchor": "10/03/2026",
+    "taxable_base": "100,00",
+    "taxable_base_anchor": "100,00",
+    "iva_rate": "21",
+    "iva_rate_anchor": "21%",
+    "iva_amount": "21,00",
+    "iva_amount_anchor": "21,00",
+    "grand_total": "121,00",
+    "grand_total_anchor": "121,00",
+    "currency": "EUR",
+}
+
+_PARTIAL_INVOICE_FIELDS = {
+    "taxable_base": "250,00",
+    "taxable_base_anchor": "250,00",
+    "grand_total": "250,00",
+    "grand_total_anchor": "250,00",
+}
+
+
+@pytest.fixture(autouse=True)
+def _loopback_reader() -> Iterator[None]:
+    """Serve a real reading endpoint for every case in this module."""
+    with serving_a_loopback_reader(
+        (
+            ("2026-0142", _FULL_INVOICE_FIELDS),
+            ("250,00", _PARTIAL_INVOICE_FIELDS),
+        ),
+    ):
+        yield
+
+
 def _text_pdf_bytes(lines: tuple[str, ...]) -> bytes:
     from reportlab.lib.pagesizes import A4
     from reportlab.pdfgen import canvas
@@ -107,94 +160,17 @@ def _evidence_input(data: bytes, media_kind: MediaKind, mime_type: str) -> Evide
     )
 
 
-def test_extracts_every_field_from_a_full_invoice_layout_on_host() -> None:
-    pdf = _text_pdf_bytes(_FULL_INVOICE_LINES)
-    ev = _evidence_input(pdf, MediaKind.PDF, "application/pdf")
-
-    draft = extract_invoice_fields(ev)
-
-    assert draft.supplier_tax_id == _SUPPLIER_CIF
-    assert draft.invoice_number == "2026-0142"
-    assert draft.invoice_date == "2026-03-10"
-    assert draft.taxable_base == 100
-    assert draft.iva_rate == 21
-    assert draft.iva_amount == 21
-    assert draft.grand_total == 121
-    assert draft.raw_text_length > 0
-    # No currency code is printed on this layout, so none is asserted -- the
-    # amounts are not silently claimed to be euro by the extractor.
-    assert draft.currency is None
-
-
-def test_printed_currency_code_is_recovered() -> None:
-    lines = (*_PARTIAL_INVOICE_LINES, "Importe en USD")
-    ev = _evidence_input(_text_pdf_bytes(lines), MediaKind.PDF, "application/pdf")
-
-    draft = extract_invoice_fields(ev)
-
-    assert draft.currency == "USD"
-
-
-def test_two_currency_codes_are_ambiguous_and_ground_to_none() -> None:
-    """An invoice quoting a foreign total beside its euro equivalent is unresolvable.
-
-    Picking the first match would silently denominate the filing amount in
-    whichever code the layout happened to print first.
-    """
-    lines = (*_PARTIAL_INVOICE_LINES, "Total USD 250,00", "Contravalor EUR 230,00")
-    ev = _evidence_input(_text_pdf_bytes(lines), MediaKind.PDF, "application/pdf")
-
-    draft = extract_invoice_fields(ev)
-
-    assert draft.currency is None
-
-
-def test_missing_fields_are_none_not_fabricated() -> None:
-    """A PDF missing several fields leaves them ``None``, never a guessed value."""
-    pdf = _text_pdf_bytes(_PARTIAL_INVOICE_LINES)
-    ev = _evidence_input(pdf, MediaKind.PDF, "application/pdf")
-
-    draft = extract_invoice_fields(ev)
-
-    assert draft.supplier_tax_id is None
-    assert draft.invoice_number is None
-    assert draft.invoice_date is None
-    assert draft.iva_rate is None
-    assert draft.iva_amount is None
-    # The fields that ARE present in the source text are still recovered.
-    assert draft.taxable_base == 250
-    assert draft.grand_total == 250
-
-
-def test_invalid_tax_id_lookalike_is_skipped_not_returned() -> None:
-    """A digit run that merely looks like a tax id but fails the checksum is skipped."""
-    # "A0000000A" has the coarse shape of a CIF but fails the AEAT check letter.
-    lines = ("Factura", "Ref: A0000000A", "Total factura: 50,00")
-    pdf = _text_pdf_bytes(lines)
-    ev = _evidence_input(pdf, MediaKind.PDF, "application/pdf")
-
-    draft = extract_invoice_fields(ev)
-
-    assert draft.supplier_tax_id is None
-    assert draft.grand_total == 50
-
-
 def test_image_evidence_has_no_text_layer_and_refuses() -> None:
+    """An image carries nothing to transcribe, so the acquisition stage refuses.
+
+    The refusal is what the router keys the vision escalation on: a document
+    that cannot be transcribed is a statement about the DOCUMENT, so it is the
+    one case where escalating to a reader that works on pixels is right.
+    """
     ev = _evidence_input(b"\x89PNG\r\n\x1a\nfake-png-bytes", MediaKind.IMAGE, "image/png")
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        extract_invoice_fields(ev)
-
-
-def test_extraction_never_writes_a_file(tmp_path_factory: pytest.TempPathFactory) -> None:
-    """The evidence bytes and extracted text stay in memory; nothing lands on disk."""
-    empty_dir = tmp_path_factory.mktemp("no-write-expected")
-    pdf = _text_pdf_bytes(_FULL_INVOICE_LINES)
-    ev = _evidence_input(pdf, MediaKind.PDF, "application/pdf")
-
-    extract_invoice_fields(ev)
-
-    assert list(empty_dir.iterdir()) == []
+        transcribe_text_layer(ev)
 
 
 class TestExtractInvoiceDraftFromEvidence:
@@ -317,7 +293,7 @@ def _png_bytes() -> bytes:
 class TestExtractInvoiceDraftFromEvidenceVisionFallback:
     """Real-behaviour tests: a scan-only PDF / image falls back to on-host vision.
 
-    ``extract_invoice_fields`` (the text-layer primitive) still refuses on a
+    ``transcribe_text_layer`` (the acquisition-stage primitive) still refuses on a
     scan-only PDF or an image (see ``test_image_evidence_has_no_text_layer_and_refuses``
     above); this class covers the wiring layer
     (``extract_invoice_draft_from_evidence``) that catches that refusal and falls
@@ -850,30 +826,3 @@ class TestConfirmInvoiceDraftFromEvidence:
         reloaded_attachment = load_attachment(store, record.attachment_id)
         # Exactly one entry -- not duplicated by the second confirm call.
         assert reloaded_attachment.linked_invoice_ids == (first.invoice.invoice_id,)
-
-
-@pytest.mark.parametrize(
-    ("printed", "expected"),
-    [
-        ("1234.56", Decimal("1234.56")),
-        ("1.234,56", Decimal("1234.56")),
-        ("1234,56", Decimal("1234.56")),
-        ("NaN", None),
-        ("Infinity", None),
-    ],
-    ids=["dot-decimal", "es-thousands", "comma", "nan", "infinity"],
-)
-def test_text_layer_amount_matches_the_canonical_decimal_authority(
-    printed: str,
-    expected: Decimal | None,
-) -> None:
-    """The text layer reads an amount exactly as the canonical helper does.
-
-    Both extraction paths -- text layer and vision fallback -- must resolve the
-    same printed amount identically, or the same invoice yields a different
-    taxable base depending on whether the PDF carried a text layer.
-    """
-    parsed = _parse_labelled_amount(re.compile(r"BASE\s+([\d.,]+|NaN|Infinity)"), f"BASE {printed}")
-
-    assert parsed == expected
-    assert parsed == coerce_finite_european_decimal(printed)

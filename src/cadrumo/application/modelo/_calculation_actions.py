@@ -140,6 +140,7 @@ from ._m210_agrupacion_renta import validate_m210_agrupacion_renta_rows_for_calc
 from ._m349_ledger_guard import (
     raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
 )
+from ._operator_override_advisory import collect_operator_override_divergence_diagnostics
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._revision_persistence import persist_calculation_revision
 from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
@@ -1054,6 +1055,11 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         casilla_inputs=casilla_inputs or {},
         bound_inputs=backend_source_inputs,
     )
+    override_diagnostics = collect_operator_override_divergence_diagnostics(
+        snapshot.revision,
+        casilla_inputs=casilla_inputs or {},
+        bound_inputs=backend_source_inputs,
+    )
     reconciliation = _reconcile_caller_overrides(
         revision=snapshot.revision,
         target_period=work_unit.period.registry_token,
@@ -1100,7 +1106,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         filing_year=work_unit.filing_year,
         bucket_id=work_unit.bucket_id,
     )
-    source_diagnostics = reconciliation.source_diagnostics + advisory_diagnostics
+    source_diagnostics = reconciliation.source_diagnostics + override_diagnostics + advisory_diagnostics
     return BucketAggregationCalculationResult(
         revision=revision,
         source_diagnostics=source_diagnostics,

@@ -319,6 +319,7 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
         "modelo-390-iva-repercutido-general-base",
         "modelo-390-iva-repercutido-reducido-base",
         "modelo-390-iva-repercutido-super-reducido-base",
+        "modelo-390-iva-repercutido-zero-base",
         "modelo-390-iva-repercutido-tipo-21-base",
         "modelo-390-iva-repercutido-tipo-21-cuota",
         "modelo-390-iva-repercutido-tipo-10-base",

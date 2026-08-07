@@ -237,6 +237,7 @@ ignore_imports =
     cadrumo.llm.tests.test_retention_selector_parity -> cadrumo.adapters.outbound.llm._run_telemetry
     cadrumo.llm.tests.test_client -> cadrumo.adapters.outbound.llm
     cadrumo.llm.tests.test_invoice_prompt_cache_binding -> cadrumo.adapters.outbound.llm
+    cadrumo.llm.tests.test_injection_regression -> cadrumo.adapters.outbound.llm
     # ── One PRODUCTION edge, sanctioned and worth stating precisely ────────
     # LLMClient default-constructs the three core-side stores, which do resolve
     # secure storage. So the subpackage reaches persistence TRANSITIVELY even
@@ -406,6 +407,11 @@ ignore_imports =
     # never cross it -- only headers out, roles back.
     cadrumo.adapters.inbound.financial.providers._mapped_tabular -> cadrumo.llm
     cadrumo.application.ledger.tests.test_extraction_interchange -> cadrumo.llm
+    # The wiring gate constructs a real LLMProviderError to prove the text path
+    # REFUSES on a missing reader instead of silently escalating to vision. The
+    # exception type is the contract being tested, so substituting another would
+    # test a different thing; production code here holds no new llm edge.
+    cadrumo.application.ledger.tests.test_grounded_reading_wiring -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_evidence_split -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_evidence_split_apply -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_reject -> cadrumo.llm
@@ -437,6 +443,20 @@ ignore_imports =
     # obligation, so the constraint has to live where the projection does --
     # which means consuming the adapter's record type here.
     cadrumo.application.ledger._aeat_record_projection -> cadrumo.adapters.inbound.einvoice
+    # Same shape, same reason. An invoice book arrives in a dialect nobody
+    # controls -- delimiter, decimal convention, encoding, a metadata preamble,
+    # an appended TOTAL row -- and resolving that is reading an externally-
+    # authored format, which is inbound-adapter work. This module consumes the
+    # answer (a typed table) and never parses a byte itself. Pinned per origin
+    # rather than by widening the contract, so a NEW application module reaching
+    # the financial adapter still fails loudly.
+    #
+    # Worth revisiting rather than growing: this module ALSO reads .xlsx through
+    # openpyxl directly, so its file-reading half is arguably misplaced and the
+    # whole of it is a relocation candidate into adapters.inbound. That is a
+    # larger move than the Step that added this edge, and is recorded rather
+    # than attempted here.
+    cadrumo.application.invoices._bulk_import -> cadrumo.adapters.inbound.financial
     cadrumo.application.filing._history_repository -> cadrumo.adapters.**
     cadrumo.application.filing._import -> cadrumo.adapters.**
     cadrumo.application.filing._runtime_repository -> cadrumo.adapters.**

@@ -57,6 +57,20 @@ binding = "modelo-390-iva-repercutido-super-reducido-base"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
+[[revisions."2010-y-siguientes".casillas]]
+id = "iva.anual.repercutido.zero.base"
+number = "iva.anual.repercutido.zero.base"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_base_imponible_repercutida_zero"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Distinct base imponible rate tier (0pct) from the reducido and super-reducido tiers; a statutory zero tipo, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-zero-base"
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
 # Box [48] "Total oper. inter. corrientes bienes y servic. - Base imponible",
 # the deducible-side counterpart of cuota box [49]. The sibling cuota binding
 # aggregates all three domestic rate tiers, which is exactly what the official

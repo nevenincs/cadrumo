@@ -54,6 +54,7 @@ from ....domain.calculations.registry import InputKind
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,
+    ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     VerificationReport,
@@ -207,7 +208,14 @@ def _calculate_and_verify(
         return revision, report
 
 
-def _redeclaration_findings(report: VerificationReport) -> tuple[object, ...]:
+def _redeclaration_findings(report: VerificationReport) -> tuple[ModeloVerificationFinding, ...]:
+    """Return the re-declaration advisories, keeping their type for the callers.
+
+    Typed as the real finding rather than ``object``: every caller reads
+    ``kind``, ``severity`` and ``message`` off the result, so erasing the
+    element type turned each of those assertions into an unchecked attribute
+    access on the one helper whose whole job is to hand findings to them.
+    """
     return tuple(finding for finding in report.findings if _ADVISORY_MARKER in finding.message)
 
 

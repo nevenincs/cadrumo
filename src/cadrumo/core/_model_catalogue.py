@@ -47,6 +47,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from decimal import Decimal
 from enum import StrEnum
 from typing import Final
 
@@ -269,6 +270,7 @@ class ModelCandidate(BaseModel):
     runtime: ModelRuntime
     roles: frozenset[ModelRole] = Field(min_length=1)
     memory_requirement_bytes: int | None = Field(default=None, gt=0)
+    input_price_per_mtok_usd: Decimal | None = Field(default=None, gt=0)
     max_context_tokens: int = Field(gt=0)
     licence: ModelLicence
     measured_baseline_ref: str = ""
@@ -292,6 +294,41 @@ class ModelCandidate(BaseModel):
             )
             raise ValueError(msg)
         return self
+
+    @model_validator(mode="after")
+    def _hosted_candidates_declare_their_price(self) -> ModelCandidate:
+        """Require the ranking axis each runtime actually has.
+
+        Selection is bounded from below, which needs SOME ordering to be bounded
+        against. On-host that axis is the memory requirement; a hosted model has
+        no on-host footprint, so without a declared price its ordering silently
+        degrades to alphabetical -- and a frontier-tier default then sorts as
+        "weakest" purely by its name. The published input price is the honest
+        substitute: it is publisher-verifiable, it tracks tier, and it is the
+        cost the operator actually carries.
+        """
+        if self.runtime is ModelRuntime.LOCAL_OLLAMA and self.input_price_per_mtok_usd is not None:
+            msg = f"local candidate {self.runtime_id!r} declares a per-token price; its weights run on-host for free"
+            raise ValueError(msg)
+        if self.runtime is not ModelRuntime.LOCAL_OLLAMA and self.input_price_per_mtok_usd is None:
+            msg = (
+                f"hosted candidate {self.runtime_id!r} declares no input price, so it has no "
+                f"ordering axis and selection cannot be bounded from below"
+            )
+            raise ValueError(msg)
+        return self
+
+    @property
+    def selection_rank(self) -> Decimal:
+        """Return the ascending 'weakest first' key for this candidate's runtime.
+
+        Memory bytes on-host, published input price off-host. Comparable only
+        within one runtime, which is why :func:`candidates_for_role` is scoped to
+        one.
+        """
+        if self.memory_requirement_bytes is not None:
+            return Decimal(self.memory_requirement_bytes)
+        return self.input_price_per_mtok_usd or Decimal(0)
 
     def serves(self, role: ModelRole) -> bool:
         """Return whether this candidate is eligible for ``role``."""
@@ -471,6 +508,7 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
         runtime_id="claude-haiku-4-5",
         runtime=ModelRuntime.CLOUD_ANTHROPIC,
         roles=frozenset({ModelRole.VISION_TRANSCRIPTION, ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING}),
+        input_price_per_mtok_usd=Decimal("1"),
         max_context_tokens=200_000,
         licence=ANTHROPIC_COMMERCIAL_TERMS,
         notes=(
@@ -479,67 +517,97 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
             "for the on-host 2B-4B class. It is the lowest-bound capable cloud candidate, "
             "which is the whole point -- a hosted route must not silently reach a frontier "
             "tier. Vision-capable: the publisher's model overview states that all current "
-            "Claude models support text and image input and vision. Specification read at "
+            "Claude models support text and image input and vision. Priced at $1 per million "
+            "input tokens, the cheapest current tier -- against $3 for the mid tier and $5 for "
+            "the frontier tier, which is what makes the ordering real rather than alphabetical. "
+            "Specification and pricing read at "
             "https://platform.claude.com/docs/en/about-claude/models/overview"
         ),
     ),
 )
 
-DEFAULT_MODEL_BY_ROLE: Final[Mapping[ModelRole, str]] = {
-    ModelRole.VISION_TRANSCRIPTION: "qwen3-vl:2b",
-    ModelRole.TEXT_EXTRACTION: "qwen3:1.7b",
-    ModelRole.COLUMN_ROLE_MAPPING: "qwen3:1.7b",
+DEFAULT_MODEL_BY_RUNTIME_AND_ROLE: Final[Mapping[ModelRuntime, Mapping[ModelRole, str]]] = {
+    ModelRuntime.LOCAL_OLLAMA: {
+        ModelRole.VISION_TRANSCRIPTION: "qwen3-vl:2b",
+        ModelRole.TEXT_EXTRACTION: "qwen3:1.7b",
+        ModelRole.COLUMN_ROLE_MAPPING: "qwen3:1.7b",
+    },
+    ModelRuntime.CLOUD_ANTHROPIC: {
+        ModelRole.VISION_TRANSCRIPTION: "claude-haiku-4-5",
+        ModelRole.TEXT_EXTRACTION: "claude-haiku-4-5",
+        ModelRole.COLUMN_ROLE_MAPPING: "claude-haiku-4-5",
+    },
 }
-"""The runtime id each role falls back to, and the source of the settings defaults.
+"""Every shipped default, keyed by runtime then role -- the source of the settings defaults.
 
-Declared here rather than as literals on :class:`~core.config.Settings` so the
-licence gate has one place to read every shipped default from, and so a default
+Keyed by runtime as well as role because the two runtimes are configured
+separately and a role's answer differs between them. Declared here rather than
+as literals on :class:`~core.config.Settings` so the licence gate has ONE place
+to read every shipped default from, across both runtimes, and so a default
 cannot name a model the catalogue does not describe.
+
+That completeness is the point. A per-role gate that only knew about local
+defaults would have passed while every cloud route fell through to a
+frontier-tier model, which is exactly the state this mapping was added to
+correct.
 """
 
 
 def _validate_catalogue() -> None:
     """Refuse an internally inconsistent catalogue at import.
 
-    Structural invariants only -- unique ids, every role covered, every default
-    resolvable and eligible for the role it defaults. The licence and ordering
-    properties are asserted by the catalogue gate rather than here, because a
-    gate that lives in the module it checks cannot fail the build independently
-    of it.
+    Structural invariants only -- unique ids, every runtime/role pair covered,
+    every default resolvable and eligible for the role and runtime it defaults.
+    The licence and ordering properties are asserted by the catalogue gate
+    rather than here, because a gate that lives in the module it checks cannot
+    fail the build independently of it.
     """
     ids = [candidate.runtime_id for candidate in MODEL_CATALOGUE]
     if len(ids) != len(set(ids)):
         msg = "the model catalogue declares a duplicate runtime id"
         raise ValueError(msg)
-    for role in ModelRole:
-        if not any(candidate.serves(role) for candidate in MODEL_CATALOGUE):
-            msg = f"the model catalogue declares no candidate for role {role.value!r}"
+    for runtime in ModelRuntime:
+        defaults = DEFAULT_MODEL_BY_RUNTIME_AND_ROLE.get(runtime)
+        if defaults is None:
+            msg = f"the model catalogue declares no defaults for runtime {runtime.value!r}"
             raise ValueError(msg)
-        default_id = DEFAULT_MODEL_BY_ROLE.get(role)
-        if default_id is None:
-            msg = f"the model catalogue declares no default for role {role.value!r}"
-            raise ValueError(msg)
-        default = next((candidate for candidate in MODEL_CATALOGUE if candidate.runtime_id == default_id), None)
-        if default is None or not default.serves(role):
-            msg = f"the default {default_id!r} for role {role.value!r} is not a catalogued candidate for it"
-            raise ValueError(msg)
+        for role in ModelRole:
+            if not any(c.serves(role) and c.runtime is runtime for c in MODEL_CATALOGUE):
+                msg = f"the catalogue declares no {runtime.value!r} candidate for role {role.value!r}"
+                raise ValueError(msg)
+            default_id = defaults.get(role)
+            if default_id is None:
+                msg = f"no {runtime.value!r} default for role {role.value!r}"
+                raise ValueError(msg)
+            default = next((c for c in MODEL_CATALOGUE if c.runtime_id == default_id), None)
+            if default is None or not default.serves(role) or default.runtime is not runtime:
+                msg = f"the default {default_id!r} is not a catalogued {runtime.value!r} candidate for {role.value!r}"
+                raise ValueError(msg)
 
 
 _validate_catalogue()
 
 
-def candidates_for_role(role: ModelRole) -> tuple[ModelCandidate, ...]:
-    """Return every candidate serving ``role``, weakest first.
+def candidates_for_role(
+    role: ModelRole,
+    runtime: ModelRuntime = ModelRuntime.LOCAL_OLLAMA,
+) -> tuple[ModelCandidate, ...]:
+    """Return every candidate serving ``role`` on ``runtime``, weakest first.
 
-    Ascending by declared memory requirement, which is the selection order:
-    the design point is the weakest model that clears the capability bars, not
-    the strongest the hardware could hold. A caller that wants a larger model
-    names it as an override.
+    Scoped to one runtime because the ordering is only meaningful within one:
+    ascending declared memory requirement ranks local candidates, and a hosted
+    candidate has no such figure to be ranked by. Mixing them would sort a cloud
+    model against a number it does not have.
+
+    Within a runtime the order IS the selection order: the design point is the
+    weakest model that clears the capability bars, never the strongest the
+    hardware or the budget could reach. A caller that wants a larger model names
+    it as an override.
     """
     return tuple(
         sorted(
-            (candidate for candidate in MODEL_CATALOGUE if candidate.serves(role)),
-            key=lambda candidate: (candidate.memory_requirement_bytes, candidate.runtime_id),
+            (c for c in MODEL_CATALOGUE if c.serves(role) and c.runtime is runtime),
+            key=lambda c: (c.selection_rank, c.runtime_id),
         ),
     )
 
@@ -554,10 +622,13 @@ def model_candidate(runtime_id: str) -> ModelCandidate | None:
     return next((candidate for candidate in MODEL_CATALOGUE if candidate.runtime_id == runtime_id), None)
 
 
-def default_model_runtime_id(role: ModelRole) -> str:
-    """Return the shipped default runtime id for ``role``.
+def default_model_runtime_id(
+    role: ModelRole,
+    runtime: ModelRuntime = ModelRuntime.LOCAL_OLLAMA,
+) -> str:
+    """Return the shipped default runtime id for ``role`` on ``runtime``.
 
-    Supplies the :class:`~core.config.Settings` field defaults, so the settings
-    surface and the licence gate read one value.
+    Supplies the :class:`~core.config.Settings` field defaults for both
+    runtimes, so the settings surface and the licence gate read one value.
     """
-    return DEFAULT_MODEL_BY_ROLE[role]
+    return DEFAULT_MODEL_BY_RUNTIME_AND_ROLE[runtime][role]

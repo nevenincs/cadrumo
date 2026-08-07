@@ -62,6 +62,7 @@ def register(app: typer.Typer) -> None:
         from ....application.provisioning import (
             probe_hardware_profile,
             probe_local_inference_hardware,
+            probe_local_model_provisioning,
             probe_model_runtime_hardware_floor,
             probe_ollama_vision,
             probe_optional_extras,
@@ -90,8 +91,11 @@ def register(app: typer.Typer) -> None:
         hardware = probe_local_inference_hardware(profile)
         contention = contention_row(_assess_selected_model_load(profile))
         playwright = probe_playwright_browser()
+        provisioning = probe_local_model_provisioning()
         extras = probe_optional_extras()
-        dependencies = [d.model_dump() for d in (ollama, hardware_floor, hardware, contention, playwright, *extras)]
+        dependencies = [
+            d.model_dump() for d in (ollama, hardware_floor, hardware, contention, provisioning, playwright, *extras)
+        ]
         # Per-provider cert/clave health, storage/corpus/env preflight, and
         # registry referential integrity. Report-only: a red preflight row is
         # surfaced for operator visibility but does not, on its own, flip the

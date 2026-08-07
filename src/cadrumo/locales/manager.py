@@ -18,7 +18,6 @@ import yaml
 
 from ..core import normalise_product_identity_references
 from ..core.atomic_write import atomic_write_text
-from ..core.errors import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ..core.i18n import extract_placeholders
 from ..core.logging import get_logger
@@ -63,8 +62,13 @@ def _load_intentional_identical(path: Path) -> dict[str, dict[str, object]]:
     return {locale: dict(entries) for locale, entries in decoded.items() if isinstance(entries, dict)}
 
 
-class LocaleError(CadrumoError):
-    """Raised on locale management and parsing errors."""
+class LocaleError(Exception):
+    """Raised on locale management and parsing errors.
+
+    A contributor-tool exception, never operator-facing: it carries no
+    registered :class:`~cadrumo.core.errors.ErrorCode` and is not part of the
+    translated-error-message machinery.
+    """
 
 
 @dataclass(frozen=True)

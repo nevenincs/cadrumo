@@ -31,7 +31,11 @@ class ProviderRequest(BaseModel):
         prompt: Rendered prompt text sent to the provider.
         system: Optional system prompt prepended to the conversation.
         max_tokens: Maximum number of output tokens to request.
-        temperature: Sampling temperature in the inclusive range ``[0.0, 1.0]``.
+        temperature: Sampling temperature in the inclusive range ``[0.0, 1.0]``,
+            or ``None`` meaning the parameter is OMITTED from the wire rather
+            than sent at some default. The distinction is load-bearing: a
+            vendor's newer models reject an explicitly-sent ``temperature``
+            with a 400, so "no preference" cannot be expressed as a number.
         timeout_s: Per-request timeout in seconds.
         images: On-host-prepared image inputs for a multimodal read (empty for a
             text-only request), each carrying its base64 payload AND its declared
@@ -48,7 +52,12 @@ class ProviderRequest(BaseModel):
     prompt: str = Field(description="Rendered prompt text.")
     system: str | None = Field(default=None, description="Optional system prompt.")
     max_tokens: int = Field(ge=1, description="Maximum output tokens.")
-    temperature: float = Field(ge=0.0, le=1.0, description="Sampling temperature.")
+    temperature: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Sampling temperature, or None to omit the parameter entirely.",
+    )
     timeout_s: int = Field(ge=1, description="Per-request timeout in seconds.")
     images: tuple[MultimodalImageInput, ...] = Field(
         default=(),
@@ -100,6 +109,32 @@ class _ProviderAdapter(ABC):
 
     provider: LLMProvider
     supports_images: bool = False
+
+    def unsupported_parameters(self, model: str) -> frozenset[str]:
+        """Return the request parameters this adapter must NOT put on the wire for *model*.
+
+        The second half of the capability axis :attr:`supports_images` opened.
+        Both defects are one shape -- a request field the transport assumed was
+        universal -- and they failed in opposite directions: ``images`` was
+        silently DROPPED by adapters that could not carry it, and
+        ``temperature`` is unconditionally SENT to models that reject it. One
+        was dropped without telling anyone; one is sent without asking.
+
+        Declared per MODEL rather than per adapter because that is where vendors
+        actually differ: the same Anthropic adapter serves models that accept
+        ``temperature`` and models that refuse it, so an adapter-wide flag
+        cannot express the constraint.
+
+        Defaults to the empty set -- an adapter carries every parameter until it
+        declares otherwise. That is the opposite default from
+        :attr:`supports_images`, deliberately: silently dropping an image makes
+        a model answer from nothing, which is unbounded harm, while omitting a
+        sampling parameter falls back to the vendor's own default. The
+        restrictive default belongs where the failure is silent, not where it is
+        merely a different temperature.
+        """
+        del model
+        return frozenset()
 
     @abstractmethod
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:

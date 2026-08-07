@@ -1,7 +1,7 @@
 """Real-CLI regression for ``aeat app ledger evidence extract`` (#254 slice).
 
-Wires the on-host ``extract_invoice_fields`` primitive (landed in
-``25ed55fd29``) to the ledger CLI: an operator can now run ``evidence add``
+Wires the on-host document readers to the ledger CLI: an operator can run
+``evidence add``
 against a real PDF, then ``evidence extract --evidence-id <id>`` to read the
 supplier NIF / invoice number / date / base / IVA rate / IVA amount / total
 into a reviewable :class:`~application.ledger.InvoiceDraft` -- without
@@ -16,8 +16,8 @@ See Also:
         CLI command registration exercised by these Typer regressions.
     :func:`~application.ledger.extract_invoice_draft_from_evidence`
         CLI-facing resolver that loads stored bytes and returns the draft.
-    :func:`~application.ledger.extract_invoice_fields`
-        Text-layer extraction primitive reached by the happy path.
+    :func:`~application.ledger.transcribe_text_layer`
+        Acquisition-stage primitive reached by the text-native happy path.
     :class:`~application.ledger.InvoiceDraft`
         Reviewable, non-persisted payload asserted by the command output.
     :func:`~application.ledger.confirm_invoice_draft_from_evidence`

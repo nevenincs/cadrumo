@@ -45,7 +45,14 @@ from ...application.ledger import FieldProvenance, InvoiceDraft, PurchaseInvoice
 from ...core import FieldGroundingOutcome, FieldOrigin, Period
 from ...domain.calculations.registry import bundled_authority
 from ...domain.iva import EUMemberState, load_iva_rate_table
-from .._invoice_extraction_prompt import build_invoice_extraction_prompt
+from .._invoice_extraction_prompt import (
+    INVOICE_EXTRACTION_PROMPT_ID,
+    INVOICE_EXTRACTION_PROMPT_VERSION,
+    PROMPT_TEMPLATE,
+    build_invoice_extraction_prompt,
+    invoice_extraction_prompt_registry,
+    template_numeric_literals,
+)
 from .._invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,
     INVOICE_FIELD_CONTRACTS,
@@ -78,7 +85,9 @@ _SPANISH_INVOICE: dict[str, str | None] = {
     "taxable_base": "1.200,00",
     "iva_rate": "21",
     "iva_amount": "252,00",
-    "grand_total": "1.452,00",
+    "retencion_rate": "15",
+    "retencion_amount": "180,00",
+    "grand_total": "1.272,00",
     "currency": "EUR",
 }
 _SPANISH_ANCHORS: dict[str, str | None] = {
@@ -88,7 +97,9 @@ _SPANISH_ANCHORS: dict[str, str | None] = {
     "taxable_base": "1.200,00 €",
     "iva_rate": "21%",
     "iva_amount": "252,00 €",
-    "grand_total": "1.452,00 €",
+    "retencion_rate": "-15%",
+    "retencion_amount": "-180,00 €",
+    "grand_total": "1.272,00 €",
     "currency": "€",
 }
 
@@ -211,7 +222,7 @@ class TestEveryExtractedFieldCarriesItsAnchor:
 
         envelope = _envelope(draft, "grand_total")
 
-        assert draft.grand_total == Decimal("1452.00")
+        assert draft.grand_total == Decimal("1272.00")
         assert envelope.anchor is None
         assert "no printed form" in envelope.note
 
@@ -223,7 +234,7 @@ class TestEveryExtractedFieldCarriesItsAnchor:
             origin=FieldOrigin.VISION,
         )
 
-        assert draft.grand_total == Decimal("1452.00")
+        assert draft.grand_total == Decimal("1272.00")
         assert all(item.anchor is None for item in draft.provenance)
 
     def test_a_key_that_is_neither_a_field_nor_an_anchor_is_refused(self) -> None:
@@ -488,3 +499,50 @@ class TestTheAnchorModelStaysBoundToTheOneDeclaration:
         assert isinstance(parsed, ExtractedInvoiceResponse)
         assert parsed.fields.iva_rate == "21"
         assert parsed.anchors.iva_rate == "21%"
+
+
+class TestTheTemplateIsRegisteredRatherThanOnlyAConstant:
+    """The pre-substitution template is versioned prompt metadata, so it lives in the registry.
+
+    The compiler reads its template from
+    :func:`~llm._invoice_extraction_prompt.invoice_extraction_prompt_registry`
+    rather than closing over a module constant, which is what lets the template's
+    id and version travel onto the compiled artefact. The compiled OUTPUT keeps
+    its own type: an integer version cannot express a content fingerprint that
+    moves whenever a substituted registry value moves, so the two are carried
+    separately rather than one replacing the other.
+    """
+
+    def test_the_registry_carries_the_extraction_template(self) -> None:
+        definition = invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID)
+
+        assert definition.id == INVOICE_EXTRACTION_PROMPT_ID
+        assert definition.version == INVOICE_EXTRACTION_PROMPT_VERSION
+        assert definition.template == PROMPT_TEMPLATE
+
+    def test_the_compiler_consumes_the_registered_template(self) -> None:
+        """Asserted by substituting the registered template by hand and comparing."""
+        definition = invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID)
+        compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+
+        assert compiled.text.startswith(definition.template[: definition.template.index("{")])
+        assert compiled.template_version == definition.version
+
+    def test_the_numeric_literal_scan_follows_the_registry(self) -> None:
+        """The digit-free gate must read the text the compiler will actually use."""
+        definition = invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID)
+
+        assert template_numeric_literals() == template_numeric_literals(definition.template)
+
+    def test_the_version_and_the_fingerprint_are_different_facts(self) -> None:
+        """Two periods share one template version but must not share a fingerprint.
+
+        This is why registering the template does not retire the fingerprint: the
+        instructions were identical, the compiled text was not, and only one of
+        the two axes can say so.
+        """
+        annual = build_invoice_extraction_prompt(period=_ANNUAL_2024)
+        later = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+
+        assert annual.template_version == later.template_version
+        assert annual.fingerprint != later.fingerprint

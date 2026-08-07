@@ -37,11 +37,11 @@ Major declarations:
   proportionality rules to persisted usage-ratio overrides.
 * :class:`PurchaseInvoiceEvidenceService` - the
   evidence lifecycle for receipts or supplier invoice artefacts attached to
-  ledger transactions, and :func:`extract_invoice_fields` with
-  :class:`InvoiceDraft` - the on-host field-extraction primitive an operator
+  ledger transactions, and :func:`extract_invoice_draft_from_evidence` with
+  :class:`InvoiceDraft` - the on-host document-reading entry point an operator
   reviews before minting a :class:`domain.invoices.Invoice` from a PDF.
 * :class:`EvidenceInput` - the transient in-memory carrier of decrypted
-  evidence bytes that :func:`extract_invoice_fields` reads. Exported because
+  evidence bytes that :func:`transcribe_text_layer` reads. Exported because
   it is that function's argument type: a consumer cannot construct a call
   through this facade without it. It is never persisted or serialized.
 * :class:`DocumentTranscription` with :class:`TranscriberIdentity` - the
@@ -165,10 +165,15 @@ if TYPE_CHECKING:
         PrintedTotalDiscrepancy,
         confirm_invoice_draft_from_evidence,
         extract_invoice_draft_from_evidence,
-        extract_invoice_fields,
         printed_total_discrepancy,
     )
     from ._evidence_input import EvidenceInput
+    from ._evidence_textlayer import transcribe_text_layer
+    from ._grounded_reading import (
+        GROUNDABLE_ORIGINS,
+        ground_draft_against_transcription,
+        verified_provenance,
+    )
     from ._grounding_anchor import (
         AnchorEvaluation,
         evaluate_anchor,
@@ -176,6 +181,7 @@ if TYPE_CHECKING:
         ground_anchored_value,
         ground_self_reported_anchor,
         normalise_for_anchor_search,
+        strip_printed_unit,
     )
     from ._id_resolution import (
         MINIMUM_DISPLAY_ID_WIDTH,
@@ -290,10 +296,14 @@ _LAZY_EXPORTS: dict[str, str] = {
     "within_rounding_allowance": "._closure_findings",
     "AnchorEvaluation": "._grounding_anchor",
     "evaluate_anchor": "._grounding_anchor",
+    "GROUNDABLE_ORIGINS": "._grounded_reading",
     "ground_ambiguous_candidates": "._grounding_anchor",
+    "ground_draft_against_transcription": "._grounded_reading",
+    "verified_provenance": "._grounded_reading",
     "ground_anchored_value": "._grounding_anchor",
     "ground_self_reported_anchor": "._grounding_anchor",
     "normalise_for_anchor_search": "._grounding_anchor",
+    "strip_printed_unit": "._grounding_anchor",
     "IdentityCandidate": "._identity_roles",
     "IdentityRoleResolution": "._identity_roles",
     "canonical_identity_token": "._identity_roles",
@@ -306,6 +316,16 @@ _LAZY_EXPORTS: dict[str, str] = {
     "EvidenceInput": "._evidence_input",
     "ExportSerializationFormat": "..export",
     "FieldAmbiguityCandidate": "._evidence_draft",
+    "BATCH_ITEM_STATUSES": "._batch_ingest",
+    "BatchItemResult": "._batch_ingest",
+    "BatchRunResult": "._batch_ingest",
+    "InferencePause": "._batch_ingest",
+    "UnresolvedBatchSource": "._batch_ingest",
+    "batch_item_identity": "._batch_ingest",
+    "run_evidence_batch": "._batch_ingest",
+    "order_batch_items": "._batch_ingest",
+    "order_batch_sources": "._batch_ingest",
+    "summarise_batch": "._batch_ingest",
     "FieldProvenance": "._evidence_draft",
     "InvoiceConfirmationResult": "._evidence_draft",
     "InvoiceDraft": "._evidence_draft",
@@ -384,7 +404,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "execute_reviewed_decision": "._llm_review_workflow",
     "export_ledger_transactions": "._actions_export",
     "extract_invoice_draft_from_evidence": "._evidence_draft",
-    "extract_invoice_fields": "._evidence_draft",
     "get_manual_transaction": "._actions_manual",
     "get_transaction_participation": "._participation_read",
     "import_ledger_source": "._actions_import",
@@ -417,6 +436,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "suggest_evidence_split": "._llm_classification",
     "suggest_llm_classification": "._llm_classification",
     "summarize_manual_transactions": "._actions_manual",
+    "transcribe_text_layer": "._evidence_textlayer",
     "unset_usage_ratio": "._ratios",
     "update_manual_transaction": "._actions_manual",
     "update_manual_transaction_fields": "._actions_manual",
@@ -458,15 +478,19 @@ def __dir__() -> list[str]:
 
 
 __all__ = [
+    "BATCH_ITEM_STATUSES",
     "BULK_CLASSIFY_ALLOWED_COLUMNS",
     "CLASSIFIED_BY_MANUAL",
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD",
+    "GROUNDABLE_ORIGINS",
     "MINIMUM_DISPLAY_ID_WIDTH",
     "ROUNDING_ALLOWANCE_PER_TERM",
     "AeatRecordProjectionError",
     "AnchorEvaluation",
     "ApplyRulesAppliedRow",
     "ApplyRulesResult",
+    "BatchItemResult",
+    "BatchRunResult",
     "BulkClassifyFailure",
     "BulkClassifyResult",
     "BulkClassifyRow",
@@ -479,6 +503,7 @@ __all__ = [
     "FieldProvenance",
     "IdentityCandidate",
     "IdentityRoleResolution",
+    "InferencePause",
     "InvoiceConfirmationResult",
     "InvoiceDraft",
     "InvoiceDraftLine",
@@ -535,6 +560,7 @@ __all__ = [
     "SplitChildCommand",
     "SplitTransactionResult",
     "TranscriberIdentity",
+    "UnresolvedBatchSource",
     "add_classification_rule",
     "apply_classification_rules",
     "apply_evidence_classification",
@@ -543,6 +569,7 @@ __all__ = [
     "apply_saturated_llm_classification",
     "archive_manual_transaction",
     "attach_manual_transaction_evidence",
+    "batch_item_identity",
     "build_llm_diagnostics_report",
     "bulk_classify_from_csv",
     "canonical_identity_token",
@@ -559,11 +586,11 @@ __all__ = [
     "execute_reviewed_decision",
     "export_ledger_transactions",
     "extract_invoice_draft_from_evidence",
-    "extract_invoice_fields",
     "get_manual_transaction",
     "get_transaction_participation",
     "ground_ambiguous_candidates",
     "ground_anchored_value",
+    "ground_draft_against_transcription",
     "ground_self_reported_anchor",
     "import_ledger_source",
     "import_ledger_transactions",
@@ -578,6 +605,8 @@ __all__ = [
     "mark_transaction_reviewed_excluded",
     "merge_transactions",
     "normalise_for_anchor_search",
+    "order_batch_items",
+    "order_batch_sources",
     "preflight_ledger_tax_readiness",
     "preflight_transaction_catalogue",
     "printed_total_discrepancy",
@@ -590,18 +619,23 @@ __all__ = [
     "resolve_lineage_transaction_id",
     "resolve_transaction_id",
     "restore_manual_transaction",
+    "run_evidence_batch",
     "saturate_llm_classification",
     "set_usage_ratio",
     "split_transaction",
     "split_transaction_with_classified_children",
     "stash_manual_transaction",
+    "strip_printed_unit",
     "suggest_evidence_split",
     "suggest_llm_classification",
+    "summarise_batch",
     "summarize_manual_transactions",
+    "transcribe_text_layer",
     "unset_usage_ratio",
     "update_manual_transaction",
     "update_manual_transaction_fields",
     "validate_ratios_for_bucket",
     "validate_ratios_profile",
+    "verified_provenance",
     "within_rounding_allowance",
 ]

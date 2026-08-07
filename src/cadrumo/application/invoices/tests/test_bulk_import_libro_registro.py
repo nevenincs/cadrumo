@@ -97,7 +97,7 @@ def test_the_libro_registro_resolves_every_field_under_a_mapping() -> None:
         "invoice_date",
         "taxable_base",
         "iva_rate",
-        "retention_amount",
+        "retencion_amount",
     } <= source.resolution.fields_present
 
 
@@ -207,3 +207,47 @@ def test_the_mapping_lane_is_not_consulted_when_exact_names_suffice() -> None:
 
     assert not resolution.consulted_mapping_lane
     assert [column.header for column in resolution.unmapped_columns] == ["bogus"]
+
+
+def test_a_rejected_role_token_leaves_the_column_unmapped_not_the_file_refused() -> None:
+    """A role token outside the vocabulary costs its column, never the file.
+
+    The mapping step's allow-list refusal reaches the resolver as nothing more
+    than ``UNMAPPED`` for that column, because the positional mapping carries
+    roles and no reasons. The operator-facing account of *why* is assembled at
+    the command boundary and emitted as a notice; what must hold here is that
+    the file still reads and every other column still binds.
+    """
+    from .._bulk_import_columns import resolve_bulk_import_columns
+
+    resolution = resolve_bulk_import_columns(
+        ("fecha_expedicion", "base_imponible", "algo_raro"),
+        mapper=lambda _headers: (FieldRole.INVOICE_DATE, FieldRole.TAXABLE_BASE, FieldRole.UNMAPPED),
+        required_fields=frozenset({"taxable_base"}),
+    )
+
+    assert resolution.columns[0].field == "invoice_date"
+    assert resolution.columns[1].field == "taxable_base"
+    assert [column.header for column in resolution.unmapped_columns] == ["algo_raro"]
+
+
+def test_a_role_the_importer_has_no_slot_for_is_reported_with_its_role_intact() -> None:
+    """A column understood but unusable is distinguishable from one not understood.
+
+    ``cuota_iva`` maps to a real role the importer derives rather than accepts.
+    Keeping the role on the resolved column is what lets the operator be told
+    the difference between "we do not know this column" and "we know it and do
+    not take it".
+    """
+    from .._bulk_import_columns import resolve_bulk_import_columns
+
+    resolution = resolve_bulk_import_columns(
+        ("base_imponible", "cuota_iva"),
+        mapper=lambda _headers: (FieldRole.TAXABLE_BASE, FieldRole.IVA_AMOUNT),
+        required_fields=frozenset({"taxable_base"}),
+    )
+
+    cuota = resolution.columns[1]
+    assert cuota.field is None
+    assert cuota.role is FieldRole.IVA_AMOUNT
+    assert cuota in resolution.unmapped_columns

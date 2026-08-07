@@ -1862,6 +1862,11 @@ cli:
         view_help: Show purchase invoice evidence
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence
+        field_contradicted: '{field}: the document reads ''{anchor}'', which does not agree with the value recorded for this field. {detail}'
+        field_ambiguous: '{field}: several readings competed and none could be decided between ({candidates}). Choose one rather than accepting the draft as read.'
+        field_anchor_self_reported: '{field}: the reader reports having read this from ''{anchor}'', but that claim came from the same reader that produced the value, so nothing independent has confirmed it.'
+        field_anchor_not_found: '{field}: the reader points at ''{anchor}'', which does not occur in the document''s transcription. A normalised value can fail this search legitimately, so check the field rather than assuming it was corroborated.'
+        field_no_anchor: '{field}: the reader offered nothing in the document to point at, so there is no printed form to check this value against.'
       inventory:
         actividad_id_help: Economic activity identifier
         create_help: Create an inventory ledger for one activity and tax year
@@ -1931,6 +1936,7 @@ cli:
           exists (%{invoice_id}); nothing was created.'
         yes_help: Confirm deleting the invoice
         yes_required: Pass --yes to delete an invoice
+        import_column_role_not_applied: 'a proposed column role was not applied: {detail}'
       prorrata:
         activity_code_help: CNAE / IAE activity code grouped into this sector (repeatable,
           at least one).
@@ -3696,11 +3702,13 @@ cli:
       report:
         help: Report measured hardware, the model selected per role, and whether it
           can be loaded now.
-      role_help: cli.config.provision.role_help
+      role_help: Model role to act on (vision transcription, text extraction, tabular
+        mapping).
       verify:
         help: Verify a model is loaded and answers a trivial prompt within a time
           bound.
-        model_help: cli.config.provision.verify.model_help
+        model_help: Runtime identifier of the model to verify. Defaults to the model
+          selected for the role.
     recover:
       errors:
         recovery_code_rejected: The recovery code did not open the recovery wrapper;
@@ -5633,7 +5641,6 @@ errors:
     fail_llm_provider: The language-model provider returned an unrecoverable error.
     fail_llm_rate_limit: The language-model provider rejected the request due to rate
       limits. Wait a few minutes and try again.
-    fail_locale_manager: An error occurred while managing or parsing the locale files.
     fail_manuals_manual_parse: A manual record failed schema validation.
     fail_mcp_launch: The MCP server could not be launched.
     fail_modelo_calculation_revision_persistence: The calculation-revision catalogue
@@ -66136,6 +66143,10 @@ modelo:
                 box 669. Real Decreto-ley 4/2024, article 1, set this rate from 1
                 October to 31 December 2024.
               label: Output VAT amount - standard regime - 7,5% rate - annual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: Add up the taxable base of domestic output transactions in the
+                zero rate tier, whatever percentage each transaction carried.
+              label: Output VAT, general regime, zero tier - Taxable base
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
               label: Annual result under the standard regime (VAT due minus deductible

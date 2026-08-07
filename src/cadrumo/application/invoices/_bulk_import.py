@@ -82,7 +82,7 @@ BULK_INVOICE_IMPORT_REQUIRED_COLUMNS: frozenset[str] = frozenset(
 BULK_INVOICE_IMPORT_OPTIONAL_COLUMNS: frozenset[str] = frozenset(
     {
         "iva_rate",
-        "retention_amount",
+        "retencion_amount",
         "currency",
         "country_code",
         "notes",
@@ -149,7 +149,7 @@ class BulkInvoiceImportRow(BaseModel):
     invoice_date: date
     taxable_base: Decimal
     iva_rate: Decimal | None = None
-    retention_amount: Decimal | None = None
+    retencion_amount: Decimal | None = None
     currency: str = DEFAULT_CURRENCY
     country_code: str = "ES"
     notes: str = ""
@@ -330,14 +330,14 @@ def _parse_bulk_invoice_row(
         else None
     )
 
-    retention_raw = _cell_text(raw_row.get("retention_amount"))
-    retention_amount = (
+    retencion_raw = _cell_text(raw_row.get("retencion_amount"))
+    retencion_amount = (
         _parse_row_decimal(
-            _canonicalise_amount_text(raw_row.get("retention_amount"), decimal_separator=decimal_separator),
+            _canonicalise_amount_text(raw_row.get("retencion_amount"), decimal_separator=decimal_separator),
             row_number=row_number,
-            field="retention_amount",
+            field="retencion_amount",
         )
-        if retention_raw
+        if retencion_raw
         else None
     )
 
@@ -352,7 +352,7 @@ def _parse_bulk_invoice_row(
             invoice_date=invoice_date,
             taxable_base=taxable_base,
             iva_rate=iva_rate,
-            retention_amount=retention_amount,
+            retencion_amount=retencion_amount,
             currency=currency_raw,
             country_code=country_code_raw,
             notes=_cell_text(raw_row.get("notes")),
@@ -556,7 +556,7 @@ def import_invoices_from_rows(
                 issued_at=parsed.invoice_date,
                 taxable_base=parsed.taxable_base,
                 iva_rate=parsed.iva_rate,
-                retention_amount=parsed.retention_amount,
+                retention_amount=parsed.retencion_amount,
                 currency=parsed.currency,
                 notes=parsed.notes,
             )
@@ -582,7 +582,7 @@ def import_invoices_from_rows(
             issued_at=parsed.invoice_date,
             taxable_base=parsed.taxable_base,
             iva_rate=parsed.iva_rate,
-            retention_amount=parsed.retention_amount,
+            retention_amount=parsed.retencion_amount,
             currency=parsed.currency,
             notes=parsed.notes,
             repository=repo,
