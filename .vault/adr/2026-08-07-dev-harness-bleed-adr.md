@@ -5,13 +5,12 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:053073019d99c4c800932b3061e7a7a27348718dea6979b1091b3585879dd4e0'
+body_hash: 'sha256:b3c8f06ddb83cca31238958960ea5e79931ef1b0eb028c1209ae418514a22fa3'
 related:
+  - '[[2026-08-07-dev-harness-bleed-research]]'
   - '[[2026-06-14-docs-tooling-separation-adr]]'
-  - '[[2026-06-14-docs-tooling-separation-research]]'
   - '[[2026-08-07-pdf-sanitizer-contributor-tooling-adr]]'
   - '[[2026-07-08-importlinter-test-carveout-adr]]'
-  - '[[2026-08-07-dev-harness-bleed-research]]'
 ---
 # `dev-harness-bleed` adr: `locales tooling boundary` | (**status:** `proposed`)
 
@@ -41,10 +40,9 @@ over the concept of non-production code living in the shipped package. The
 sanitiser carries no CLI entrypoint and is invisible to that sweep. The claim is
 withdrawn; this record decides the locales case only.
 
-A decision is needed rather than a direct relocation because the naive move reds
-its own verification gate, and because the move touches a boundary question the
-terminology precedent did not face: several unrelated src subpackages import this
-tooling as a general-purpose test utility.
+A decision is needed rather than a direct relocation because the move touches a
+boundary question the terminology precedent did not face: several unrelated src
+subpackages import this tooling as a general-purpose test utility.
 
 ## Considerations
 
@@ -54,48 +52,76 @@ tooling as a general-purpose test utility.
 - Packaging needs zero edits: `pyproject.toml` ships `src/cadrumo` wholesale via
   a single package entry, and its only other `locales` mention (`:442`) refers to
   the unrelated `docs/locales/` catalogues.
-- `locales/cli.py` makes 26 `tr()` calls localising its own operator output, and
-  its `cli.*` keys are present in all four shipped catalogues.
+- **Sub-decision A has since been executed** (commit `1a160fa04f`). At HEAD
+  `locales/cli.py` makes zero `tr()` calls and no `cli.locales` block survives in
+  any of the four catalogues, so the parity-orphan blocker described below is
+  discharged rather than pending. The blocker was real when this record was
+  opened; the decision is retained because it is the ruling the execution
+  implemented, not because work remains.
+- The count of self-localising calls was measured at twenty. An earlier figure of
+  twenty-six came from a naive grep whose pattern also matched `str(` and one
+  docstring mention; that figure reached this record unchallenged and is
+  corrected here.
 - `LocaleManager.get_codebase_keys()` scans the source tree with `rglob("*.py")`
   over src only, at `src/cadrumo/locales/manager.py:198`.
-- The canonical tree-wide parity gate is itself a consumer:
+- **Six src test modules consume the tooling, across three unrelated domains.**
+  The canonical tree-wide parity gate is itself a consumer:
   `src/cadrumo/tests/test_parity.py:8-13` imports the `locales` facade, the CLI
   app and `locales.manager`, and pins the logger name
-  `"cadrumo.locales._ast_scanner"` at `:585`.
-- Two unrelated domains use the tooling as a utility:
+  `"cadrumo.locales._ast_scanner"` at `:585`. Three sit in unrelated domains and
+  use `LocaleManager` as a general utility:
   `src/cadrumo/adapters/persistence/storage/tests/test_hardening_convention_guards.py:13`,
   which reaches it by a five-dot relative import of the private `manager`
-  submodule, and
-  `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py:47`.
-  Two further gates consume it:
-  `src/cadrumo/tests/test_registry_locale_key_parity.py:26-27` and
+  submodule; `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py:73`
+  (the `:47` occurrence cited by an earlier draft is prose naming the
+  `python -m cadrumo.locales set` command, not an import); and
+  `src/cadrumo/application/operator_surface/tests/test_contract.py:41`, which
+  constructs a manager and reads catalogues at `:438-441`. Two further gates
+  consume it: `src/cadrumo/tests/test_registry_locale_key_parity.py:26-27` and
   `src/cadrumo/tests/test_locale_translation_honesty.py:26`.
+- **The cross-domain consumers use only the catalogue-reading half.** No consumer
+  outside `locales/` calls `get_codebase_keys` or `get_codebase_namespaces`
+  except `test_parity.py` (`:53`, `:702`, `:725`). The three unrelated-domain
+  gates use `LocaleManager` purely as a strict YAML catalogue reader,
+  functionally a strict-mode near-duplicate of the renderer's private
+  `_load_locale_yaml` and `_flatten_translations` at
+  `src/cadrumo/core/i18n/_render.py:544` and `:560`. That overlap is a candidate
+  deduplication finding in its own right and is not resolved here.
+- **`test_parity.py` is substantially the mutation tooling's own unit suite**, not
+  only a consuming gate: it exercises `set_locale_value`, `remove_locale_value`,
+  scaffold, canonicalise and the CLI app directly. Where it should live is
+  therefore a genuine question rather than a mechanical repoint.
 - **A src test importing the dev tree is established, ruled practice, not a
   violation.** `dev/import_hygiene_scan.py:474-494` scopes its
   `DevToolingImportViolation` family deliberately to *shipped* modules, and its
-  docstring states that an excluded test tree's `dev.` import "encodes 'this
-  suite requires the repo checkout and the dev dependency group', which is
-  already true and intended", adding that widening the family to unshipped tests
-  "would be an ownership preference, not a correctness gate" and must be revisited
-  "by ruling, never by drift". Thirteen src test modules already import `dev.`
-  across unrelated domains, including `adapters/inbound/einvoice/tests/`,
-  `_data/corpus/tests/`, `entrypoints/mcp/tests/` and `entrypoints/cli/tests/`.
+  docstring states that an excluded test tree's `dev.` import encodes the fact
+  that the suite requires the repo checkout and the dev dependency group, which
+  is already true and intended; it adds that widening the family to unshipped
+  tests would be an ownership preference rather than a correctness gate, and must
+  be revisited by ruling, never by drift. Thirteen src test modules already
+  import `dev.` across unrelated domains.
 - **A move out of the walked package reds the error-registry gate loudly, not
   silently.** `src/cadrumo/core/errors/tests/test_registry_enforcement.py:173-183`
   imports every `cadrumo` module, collects the codes reachable from
-  `CadrumoError` subclasses, and asserts `set(reverse) == set(ERROR_REGISTRY)`.
-  Relocating `LocaleError` leaves `FAIL_LOCALE_MANAGER` registered at
-  `src/cadrumo/core/errors/registry/_core.py:451` with no subclass supplying it,
-  so the set equality fails. The sanitiser record records the identical
-  constraint for its six codes. `LocaleError` is nonetheless dead in product
-  terms: it is raised only in `locales/manager.py` and `locales/cli.py`, and no
-  production module imports it.
+  `CadrumoError` subclasses, and asserts the registered code set equals the
+  reachable set. Relocating `LocaleError` leaves `FAIL_LOCALE_MANAGER` registered
+  at `src/cadrumo/core/errors/registry/_core.py:451` with no subclass supplying
+  it, so the equality fails.
+- **Deleting that registry row alone is impossible.**
+  `CadrumoError.__init_subclass__` at `src/cadrumo/core/errors/__init__.py:92-97`
+  calls `bind_error_code(cls)` at class-definition time, which refuses a subclass
+  carrying no registry row, so removing the row breaks import of
+  `locales/manager.py`. `LocaleError` is nonetheless dead in product terms: it is
+  raised only inside `locales/manager.py` and `locales/cli.py`, and no production
+  module imports it.
+- `LocaleError` is raised by the catalogue-reading path as well as the mutation
+  path — `manager.py:145`, the strict loader's duplicate-key refusal — so it does
+  not partition cleanly along a read/mutate split.
 - The accepted `2026-07-08-importlinter-test-carveout-adr` already names
   `cadrumo.locales` as one of the shared cross-cutting helper packages that test
   edges legitimately route through. Its chosen carve-out is a wildcard over
-  `.tests.` importers rather than per-package entries, so no literal `locales`
-  string survives in `.importlinter` at HEAD and there is no config edit to
-  carry.
+  test importers rather than per-package entries, so no literal `locales` string
+  survives in `.importlinter` at HEAD and there is no config edit to carry.
 - The `aeat-locales-cli` rule mandates the `python -m cadrumo.locales` verbs
   verbatim as the only sanctioned authoring path, so the move changes a mandated
   operator command.
@@ -123,57 +149,56 @@ tooling as a general-purpose test utility.
   implementation, preserving the mandated CLI surface.** Rejected. This is a
   compatibility shim in the exact sense the no-shims rule forbids: its only
   purpose is keeping an old invocation path alive after the canonical home moved,
-  and it re-ships an entrypoint module in the wheel, defeating the decision's own
-  goal to avoid editing one rule and five literal strings. The honest alternative
-  is to change the mandated command and sweep it, which the carry list below
-  already requires. It would also itself be a shipped module importing `dev.`,
-  which is precisely the one direction `dev/import_hygiene_scan.py` fails, so the
-  option is not merely discouraged but gate-blocked.
+  and it re-ships an entrypoint module in the wheel, defeating the goal of the
+  decision to avoid editing one rule and five literal strings. It would also
+  itself be a shipped module importing `dev.`, which is precisely the one
+  direction `dev/import_hygiene_scan.py` fails, so the option is not merely
+  discouraged but gate-blocked.
 
-### Sub-decision A: the tooling CLI's own localisation
+### Sub-decision A: the tooling CLI and its own localisation
 
-`locales/cli.py` localises itself from the four shipped catalogues. Move it to
-dev and its 26 `cli.*` keys lose their in-src caller; the scanner at
-`manager.py:198` no longer sees them, and the parity gate flags them as
-orphaned. The relocation fails its own check. Keeping them is also wrong on the
-merits: it leaves dev-tool UI strings inside shipped runtime data, the mirror
-image of the bleed being fixed.
+`locales/cli.py` localised itself from the four shipped catalogues, twenty `tr()`
+calls in all. Moving it to dev would strand those `cli.*` keys: the scanner at
+`manager.py:198` would no longer see an in-src caller, and the parity gate would
+flag them as orphaned, so the relocation would fail its own check. Keeping them
+was also wrong on the merits, leaving dev-tool UI strings inside shipped runtime
+data, the mirror image of the bleed being fixed.
 
-- **A1, de-localise the tooling CLI:** replace the 26 `tr()` calls with plain
+- **A1, de-localise the tooling CLI:** replace the `tr()` calls with plain
   English strings and remove the `cli.*` keys from all four catalogues through
-  the locale CLI's removal verb.
+  the locale CLI removal verb.
 - **A2, give the tooling its own catalogue under dev:** preserves translated
   dev-tool output at the cost of a second catalogue mechanism, a second parity
   surface, and a scanner that must cover two source roots.
 - **A3, widen the scanner to cover dev too:** keeps the keys in the shipped
   catalogues, which is the outcome this decision exists to prevent.
 
-**Recommendation: A1.** The tooling's audience is contributors, who already read
+**Recommendation: A1.** The audience is contributors, who already read
 English-only output from every other dev tool. A2 buys translated dev output by
 permanently doubling the catalogue and parity machinery this repo has repeatedly
 consolidated; A3 keeps shipping dev strings to taxpayers. A1 is the only option
 leaving exactly one catalogue mechanism and one shipped catalogue set, and it is
 the same disposition the sanitiser record takes for its six localised messages.
-Note that removal must route through the locale CLI: hand-editing the catalogues
-or the intentional-identical allowlist is refused by the shipped parity and
-honesty gates.
+Removal must route through the locale CLI: hand-editing the catalogues or the
+intentional-identical allowlist is refused by the shipped parity and honesty
+gates. This sub-decision has been executed; see Considerations.
 
 ### Sub-decision B: src gates that import the tooling
 
 This was framed as the contentious sub-decision on the premise that a src test
 importing a dev utility is a boundary violation. **That premise is false, and the
-question is already ruled.** `dev/import_hygiene_scan.py:474-494` scopes its
-violation family to shipped modules by deliberate design and states in terms that
-an unshipped test tree's `dev.` import is intended, not tolerated. Thirteen src
-test modules already do it. Every `tests/` tree is wheel-excluded, so such an
-import cannot reach an installed operator.
+question is already ruled.** The import-hygiene scanner scopes its violation
+family to shipped modules by deliberate design and states in terms that an
+unshipped test tree `dev.` import is intended, not tolerated. Thirteen src test
+modules already do it. Every `tests/` tree is wheel-excluded, so such an import
+cannot reach an installed operator.
 
 - **B1, move every consumer gate to dev as well.** Clean, but it relocates the
-  canonical locale parity gate out of the production test tree, and the two
-  unrelated-domain consumers are storage and CLI conformance gates that merely
-  need a key inventory — filing them under `dev/locales/` puts them under the
-  wrong owner. Rejected as ownership churn buying nothing the existing rule does
-  not already grant.
+  canonical locale parity gate out of the production test tree, and the
+  unrelated-domain consumers are storage, CLI-conformance and operator-surface
+  gates that merely need a catalogue reader; filing them under `dev/locales/`
+  puts them under the wrong owner. Rejected as ownership churn buying nothing the
+  existing rule does not already grant.
 - **B2, leave the consumer gates in src importing the relocated dev utility.**
   Chosen. It is the established, gate-sanctioned pattern, it keeps each gate
   under its own domain owner, and it is the smallest change consistent with the
@@ -181,18 +206,24 @@ import cannot reach an installed operator.
 - **B3, split the tooling** into a production-resident key-inventory module plus
   a dev-resident mutation half. Rejected: it invents a new production module to
   avoid a boundary crossing that is explicitly permitted, leaving more shipped
-  code than B2 — the opposite of this record's goal — and its scope cannot be
-  pinned without first proving `manager.py` separates cleanly.
+  code than B2, the opposite of the goal of this record.
 
-**Recommendation: B2.** An earlier draft of this record recommended B3 with B1 as
-fallback, on the reasoning that B2 traded a visible violation for an invisible
-one. That reasoning does not survive the scanner's own rationale block: there is
-no violation to trade, the crossing is ruled intended, and the stated cost of B2
-(a test suite unrunnable from a wheel-only install) is void because the tests are
-not in the wheel. B3's remaining appeal was that three domains independently
-reaching for `LocaleManager` suggests a genuine shared capability; that
-observation stands, but it argues for a tidier dev-side facade, not for shipping
-the capability to operators.
+**Recommendation: B2.** An earlier draft recommended B3 with B1 as fallback, on
+the reasoning that B2 traded a visible violation for an invisible one. That
+reasoning does not survive the rationale block of the scanner: there is no
+violation to trade, the crossing is ruled intended, and the stated cost of B2, a
+test suite unrunnable from a wheel-only install, is void because the tests are
+not in the wheel.
+
+Two measurements sharpen the rejection of B3. An independent split assessment put
+roughly 1,185 of 2,317 tooling lines, about half, on the production side of the
+split, all with zero production importers, and found the extracted module would
+have no production consumer at all; that figure is recorded as reference and was
+not re-derived here, though the current seven-module total of 2,271 lines is
+consistent with it. Independently, no cross-domain consumer calls the
+key-inventory methods at all, since they use the catalogue reader, so the
+capability B3 would promote to production is not the capability those consumers
+need.
 
 The one real defect here is independent of the choice:
 `test_hardening_convention_guards.py:13` reaches the tooling by a five-dot
@@ -205,21 +236,30 @@ happens.
 `src/cadrumo/core/errors/registry/_core.py:451` maps the string
 `"cadrumo.locales.manager.LocaleError"` to `FAIL_LOCALE_MANAGER`.
 
-- **C1, delete the entry**, its `errors.fail.fail_locale_manager` message key and
-  the four catalogue strings behind it.
+- **C1, retire the entry**: reparent `LocaleError` off `CadrumoError` onto plain
+  `Exception`, drop the now-unused import, then delete the registry row, its
+  `errors.fail.fail_locale_manager` message key, and the four catalogue strings
+  behind it.
 - **C2, keep the entry** and make `LocaleError` genuinely reachable from an
   operator command.
 
-**Recommendation: C1**, unchanged, but on corrected grounds. An earlier draft
-argued the string coupling means a move breaks *silently*, leaving a dangling key
-nobody notices. That is wrong: `test_registry_enforcement.py:173-183` asserts the
-registered code set equals the set reachable from walked `CadrumoError`
-subclasses, so relocating `LocaleError` reds that gate loudly. The correction
-strengthens rather than weakens C1 — the deletion is not optional hygiene that
-could be deferred, it is a mandatory part of the same atomic change, exactly as
-the sanitiser record constrains its own six codes. C2 remains rejected: it would
-mean inventing operator reachability for a contributor tool. Under A1 the four
-catalogue strings go the same way as the `cli.*` keys, so C1 and A1 are one sweep.
+**Recommendation: C1**, on corrected grounds and with a corrected action. An
+earlier draft argued the string coupling means a move breaks silently, leaving a
+dangling key nobody notices. That is wrong: the enforcement gate asserts the
+registered code set equals the walked-subclass set, so relocating `LocaleError`
+reds it loudly. The correction strengthens C1, because the retirement is not
+optional hygiene that could be deferred but a mandatory part of the same atomic
+change, exactly as the sanitiser record constrains its own six codes.
+
+The same draft described the action as deleting the entry, which is not
+executable on its own: the subclass hook refuses a `CadrumoError` subclass with
+no registry row, so deleting the row first breaks import. The reparenting step is
+therefore part of the decision, not an implementation detail. It is
+behaviour-preserving: every real catcher names `LocaleError` explicitly
+(`manager.py:329`, `cli.py:139`, `:172`, `:197`, `:214`, `:233`), and the
+`except CadrumoError` sites sit on production paths that cannot raise it. C2
+remains rejected: it would mean inventing operator reachability for a contributor
+tool.
 
 ## Constraints
 
@@ -227,13 +267,13 @@ catalogue strings go the same way as the `cli.*` keys, so C1 and A1 are one swee
 - The relocation must be atomic: one commit per symbol with an explicit
   pathspec, a clean collect-only run immediately before, and no bridging
   re-export at any point.
-- The error-registry deletion and the module move are one atomic change, not a
-  move followed by a cleanup, because the enforcement gate's package walk no
-  longer reaches the class.
+- The error-registry retirement and the module move are one atomic change, not a
+  move followed by a cleanup, because the enforcement gate package walk no longer
+  reaches the class.
 - Locale removal must route through the locale CLI; hand-editing the catalogues
   or the intentional-identical allowlist is refused by the shipped gates.
 - The generated API stubs are CLI-owned and the scaffold run sweeps peer modules,
-  so only this package's deltas may be staged.
+  so only the deltas of this package may be staged.
 - The shared worktree carries concurrent peer work in `test_parity.py`, package
   facades and the catalogues, so the commit shape must assume contention.
 
@@ -241,17 +281,25 @@ catalogue strings go the same way as the `cli.*` keys, so C1 and A1 are one swee
 
 Land the boundary in the order A, then C, then the relocation. De-localise the
 tooling CLI and remove its `cli.*` keys from the four catalogues through the
-locale CLI, which frees the scanner-scope constraint. Delete the dead
-error-registry entry and its message key in the same change as the move, because
-the enforcement gate reds the moment the class leaves the walked package. Then
-relocate the seven modules and the six tooling tests to `dev/locales/`,
-preserving the existing facade discipline so the package's exported surface stays
-its public names and the private modules stay private.
+locale CLI, which frees the scanner-scope constraint; this step is done.
+Reparent `LocaleError` and retire the error-registry row and message key in the
+same change as the move, because the enforcement gate reds the moment the class
+leaves the walked package. Then relocate the seven modules and the six tooling
+tests to `dev/locales/`, preserving the existing facade discipline so the
+exported surface stays the public names and the private modules stay private.
 
-Sub-decision B requires no work beyond repointing imports: the five consumer
-gates stay where they are, under their own domain owners, and import the
-relocated package. The one substantive import fix is replacing the five-dot
+Sub-decision B requires no work beyond repointing imports: the six consumer gates
+stay where they are, under their own domain owners, and import the relocated
+package. The one substantive import fix is replacing the five-dot
 private-submodule import in the storage hardening guard with a facade import.
+
+Two details bite during execution. `_status.py:28-34` imports four private names
+from `manager` alongside `LocaleManager`, which is a non-issue under this
+decision because the whole package moves together, but would have been a blocker
+under a split. And `manager.py:199` self-excludes two files from its scan by
+literal filename, `test_parity.py` and `manager.py`; once both leave `src`, that
+clause matches nothing and is silently over-broad, so it should be deleted with
+the move rather than carried.
 
 The catalogues, `_intentional_identical.json` and their `importlib.resources`
 load path do not move and are not touched.
@@ -268,36 +316,39 @@ What this record adds is the three couplings the terminology precedent did not
 face. Terminology tooling had no self-localisation, no cross-domain test
 consumers and no entry in the central error registry; locales tooling has all
 three. Two of them turn out to be already-ruled rather than open: the test-tree
-crossing is settled by the import-hygiene scanner's own scoping rationale and by
+crossing is settled by the scoping rationale of the import-hygiene scanner and by
 the accepted import-linter carve-out, and the error-registry coupling is caught
 by an existing equality gate rather than failing silently. Recording that
-explicitly is most of this record's value, because both were independently
+explicitly is most of the value of this record, because both were independently
 mis-read as open questions before the prior rulings were searched for.
-
-Only sub-decision A is genuinely open, and it is open in a narrow way: all three
-options work, and A1 wins on having one mechanism rather than two.
 
 ## Consequences
 
 - The production wheel stops carrying catalogue-maintenance tooling. It does not
   stop carrying the tooling tests, which were never in it.
-- Under A1 the tooling CLI's operator output becomes English-only. Contributors
-  lose translated dev-tool messages; taxpayers stop receiving dev-tool strings in
-  their shipped catalogues.
-- Under C1 `FAIL_LOCALE_MANAGER` leaves the central error catalogue. Nothing
-  operator-facing changes, because nothing operator-facing could raise it.
+- Under A1 the tooling CLI output is English-only. Contributors lose translated
+  dev-tool messages; taxpayers stop receiving dev-tool strings in their shipped
+  catalogues.
+- Under C1 `FAIL_LOCALE_MANAGER` leaves the central error catalogue and
+  `LocaleError` stops being a registry-bound error. Nothing operator-facing
+  changes, because nothing operator-facing could raise it.
 - Under B2 the production test tree keeps its locale gates under their own
   owners, and the count of src test modules importing `dev.` rises from thirteen
-  to about fifteen. That is an increase in an already-sanctioned pattern, not a
-  new class of coupling — but it is a real increase, and if the project ever
-  wants that number bounded, this record is one of the contributions to it.
+  to about eighteen. That is an increase in an already-sanctioned pattern, not a
+  new class of coupling, but it is a real increase, and if the project ever wants
+  that number bounded, this record is one of the contributions to it.
 - The mandated authoring command changes, so the `aeat-locales-cli` rule changes
   with it.
 - The dev-harness-bleed question is not closed by this record. The sanitiser is
-  decided separately, and no gate detects non-production code merely *living*
-  under `src` — only the reverse direction, a shipped module importing `dev.`, is
+  decided separately, and no gate detects non-production code merely living
+  under `src`; only the reverse direction, a shipped module importing `dev.`, is
   enforced. Closing the class would need either such a gate or a standing sweep;
   this record neither builds one nor pretends the need away.
+- A candidate duplication is surfaced and left open: the strict catalogue reader
+  in `LocaleManager` overlaps the private loader helpers in the renderer, and
+  three unrelated domains reach for the tooling only for that capability. If it
+  is deduplicated later, the cross-domain consumers stop needing the dev package
+  at all.
 
 ### Same-commit carry list
 
@@ -316,6 +367,8 @@ solved by this record.
 - Repoint the five-dot private-submodule import at
   `src/cadrumo/adapters/persistence/storage/tests/test_hardening_convention_guards.py:13`
   at the relocated package facade.
+- Delete the dead literal-filename self-exclusion at
+  `src/cadrumo/locales/manager.py:199`.
 - Edit the mandate at `.vaultspec/rules/aeat-locales-cli.md` and propagate with
   the spec sync verb; never the generated `.claude/` copy.
 - Sweep the literal invocation strings at
@@ -336,5 +389,7 @@ for a sweep of the class, and is not governed by this decision.
 
 ## Ratification
 
-Awaits operator acceptance. No implementation is authorised and no plan Steps are
-opened by this record.
+Awaits operator acceptance. Sub-decision B reversed after the first approval, so
+the record needs re-approval against the corrected facts. Sub-decision A has been
+executed under separate authorisation; C and the relocation remain unauthorised,
+and no plan Steps are opened by this record.
