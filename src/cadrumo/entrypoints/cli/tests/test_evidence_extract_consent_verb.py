@@ -43,7 +43,6 @@ from ....application.ledger import DocumentTranscription, TranscriberIdentity
 from ....core import FieldOrigin
 from ....core.config import override_settings
 from ....llm import (
-    EvidenceConsentToken,
     LLMConsentError,
     LLMProvider,
     TextInvoiceFieldExtractor,
@@ -74,6 +73,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
         label="Test evidence consent profile",
     ) as profile:
         yield profile
+
 
 _CONTENT_ADDRESS = "a" * 64
 _SURFACE = "cli:ledger.evidence.extract"
@@ -110,7 +110,7 @@ def _serve_openai() -> Iterator[tuple[str, Queue[str]]]:
 
     class _Endpoint(BaseHTTPRequestHandler):
         @override
-        def do_POST(self) -> None:  # noqa: N802 - BaseHTTPRequestHandler's own name
+        def do_POST(self) -> None:
             raw = self.rfile.read(int(self.headers.get("content-length", "0")))
             bodies.put(raw.decode("utf-8"))
             payload = json.dumps(
@@ -128,7 +128,7 @@ def _serve_openai() -> Iterator[tuple[str, Queue[str]]]:
             self.wfile.write(payload)
 
         @override
-        def log_message(self, format: str, *args: object) -> None:  # noqa: A002 - signature is fixed
+        def log_message(self, format: str, *args: object) -> None:
             return
 
     server = ThreadingHTTPServer(("127.0.0.1", 0), _Endpoint)
