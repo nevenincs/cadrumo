@@ -5,32 +5,15 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:e35a4230885062640034e818ddc44f10dff90a6dbedbb712b7cb88e2b04ab282'
+body_hash: 'sha256:89a3c6bb3a3997cec3ff2fb01f56e3c10c9b6771d7e7b9b6dda6708b4bffe3e2'
 related:
   - "[[2026-06-10-live-justificante-reconcile-adr]]"
   - "[[2026-05-04-live-filing-data-capture-adr]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #reference) and one feature tag.
-     Replace justificante-identity-matching with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `justificante-identity-matching` reference: `Justificante identity matching: presentation_id namespace`
+
+## Summary
 
 Grounded against real AEAT-issued Modelo 303 justificante PDFs pulled by a live
 authenticated session, loaded from encrypted storage, and run through the
@@ -104,42 +87,92 @@ the same false equivalence into its fixture (`"presentation_id": "EXP-2025-1T"`
 reads as an expediente-shaped literal) — synthetic, and consistent with the
 conflation rather than independent evidence for it.
 
-## Site 3 already has a correct, independent identity check alongside the broken one
+## Two of the three sites already have a correct, independent CSV check alongside the broken one
 
-`register_capture_as_filing_evidence` (`_justificante.py:672-687`) parses the
-receipt and, **before** calling into `matches_filing_target`, already asserts
-`justificante.csv.strip().upper() != snapshot.csv.strip().upper()` and raises
-if they disagree (`:673-676`). That is a genuine receipt-namespace identity
-check: the snapshot's own `csv` (captured at submission time, independent of
-the parsed PDF) against the PDF's own parsed `csv`. The subsequent
-`presentation_id=snapshot.expediente_id` argument passed into
-`matches_filing_target` two lines later is redundant *and* wrong — it
-re-compares in a namespace where no independently-known correct value exists
-at that call site, using a value from a different namespace.
+Both remaining call sites that populate `presentation_id` sit downstream of an
+already-present, genuinely independent receipt-namespace comparison — this
+corrects an earlier draft of this reference, which treated only one of the two
+as guarded without checking the other's actual caller:
 
-## No independently-known receipt-namespace identifier exists at the register-reconciliation call sites
+- `register_capture_as_filing_evidence` (`_justificante.py:672-687`) parses
+  the receipt and, **before** calling into `matches_filing_target`, already
+  asserts `justificante.csv.strip().upper() != snapshot.csv.strip().upper()`
+  and raises if they disagree (`:673-676`).
+- `register_capture_justificante_metadata` (`_justificante.py:545-557`), the
+  actual caller of `_justificante_matches_capture_axis` (`:596-605`), runs the
+  identical check one function up: `justificante.csv.strip().upper() !=
+  snapshot.csv.strip().upper()` (`:549-552`), before calling
+  `_justificante_matches_capture_axis` at `:553`.
 
-At `_parse_matching_filed_justificante` (`_filed_observation_persistence.py:400-441`)
-and `_justificante_matches_capture_axis`, the only inputs in scope are the
-`FiledDeclaracionObservation` / `JustificanteCaptureSnapshot` (both carrying
-only the register-sourced `expediente_id`, never a receipt-sourced `csv` or
-`presentation_id`) and the artefact bytes being parsed. `Declaracion`
-(`_declarations_schema.py:16-35`) — the register row model — has no `csv`
-field; the CSV only becomes known by parsing the justificante PDF itself,
-which is circular for a pre-parse expected-value check.
+Both compare the snapshot's own `csv` (captured at submission time via the
+cotejo flow, independent of the parsed PDF) against the PDF's own parsed
+`csv`. Both then also pass `presentation_id=snapshot.expediente_id` into
+`matches_filing_target`, which is redundant *and* wrong-namespace given the
+CSV check that already ran. Dropping that argument at both sites is strictly
+subtractive: it removes a comparison that never validly ran, next to one that
+already does the real job.
 
-The artefact-to-observation pairing at these two call sites is nonetheless
-structurally trustworthy independent of any content-level identifier
-comparison: `FiledDeclaracionArtefact.storage_ref`
-(`_schema.py:218-235`) is fetched via a download link scoped to that specific
-register row's `expediente_id`
+## The third site's CSV is independently resolved during capture and then discarded — it is recoverable without a schema change
+
+`_parse_matching_filed_justificante` (`_filed_observation_persistence.py:400-441`,
+called from `persist_filed_justificante_metadata` and
+`enroll_filed_justificante_evidence`) is the one site with no adjacent CSV
+check. `FiledDeclaracionObservation` and `Declaracion` (register row) both
+carry no `csv` field, and `FiledDeclaracionArtefact`
+(`_schema.py:218-235`) also has no `csv` field.
+
+But the `justificante_pdf` artefact this function parses is fetched by
+`_capture_row_pdf_artefact`
+(`src/cadrumo/adapters/outbound/aeat/sede/_declarations_fetch.py:226-284`),
+which **already resolves the receipt's CSV independently of the PDF body**:
+it navigates to the row's cotejo popup, extracts
+`csv = _extract_csv_from_url(cotejo_url)` (`:262`) using the canonical
+`extract_csv_from_url` helper (`_declarations_remote.py:31-46`, exported
+`__all__` at `:69-73` — "shared more widely, by `_declarations.py` and
+`_parse.py`", per its module docstring), then builds
+`pdf_url = _cotejo_document_url(_origin_of(cotejo_url), csv)` — literally
+`f"{origin}{_COTEJO_DOCUMENT_PATH}?CSV={csv}"` (`_declarations_fetch.py:154-156`)
+— and stores that exact URL as `FiledDeclaracionArtefact.source_url`
+(`:275-283`). `extract_csv_from_url` (`_declarations_remote.py:31-46`) reads
+the `CSV` query parameter via `urlsplit`/`parse_qs` with no path check, so it
+recovers the identical CSV from `artefact.source_url` just as reliably as it
+did from the cotejo popup URL that produced it.
+
+This means the register-reconciliation site does NOT lack an
+independently-sourced identifier — it computes one, uses it to fetch the exact
+bytes being parsed, and then discards it without persisting it anywhere.
+`extract_csv_from_url(artefact.source_url)` recovers it at comparison time
+with **no new persisted field and no persistence-boundary change**: `source_url`
+is an existing `AnyHttpUrl` field already round-tripped through
+`FiledDeclaracionArtefact` today.
+
+`extract_csv_from_url` is not currently re-exported through the sede
+package's public facade (`src/cadrumo/adapters/outbound/aeat/sede/__init__.py`
+does not list it); per `aeat-architecture-boundaries`, promoting it into that
+`__all__` is a precondition of consuming it from `application/live/`, not a
+follow-up. It raises `SedeParseError` on a malformed or missing `CSV` query,
+which the consuming site must catch alongside the artefact's other swallowed
+failure modes (see Observability gap, below).
+
+Structural provenance still applies independently of this: the
+`justificante_pdf` artefact is fetched via a download link scoped to the
+specific register row's `expediente_id`
 (`src/cadrumo/adapters/outbound/aeat/sede/_declarations.py:922-1036`,
 `_row_locator_for_expediente`, `:1400-1403`), and the manifest byte-count and
-sha256 are verified before parse
-(`_filed_observation_persistence.py:417-422`). The PDF-content
-`presentation_id` re-check that follows adds nothing beyond that structural
-binding — it can only ever reject (since it compares mismatched namespaces),
-never confirm.
+sha256 are verified before parse (`_filed_observation_persistence.py:417-422`).
+That binding is a reason the artefact-observation pairing is trustworthy; it
+is not a reason to skip the CSV check that is now known to be recoverable.
+
+## No caller has a valid reason to populate `presentation_id`
+
+Once all three sites are corrected to perform their own CSV equality check
+(two already do; the third gains one via `extract_csv_from_url`), none of them
+has any remaining reason to pass a value into `matches_filing_target`'s
+`presentation_id` parameter — the receipt-namespace verification is fully
+covered by the CSV check each caller now performs itself, uniformly. A
+parameter no caller can ever correctly populate, and that every actual
+populating caller populated wrong, is a defect in the predicate's signature,
+not only in its callers.
 
 ## `elsewhere-modelo` scope of the receipt label
 
@@ -152,6 +185,22 @@ justificante number, distinct from the register's case-file id. The defect is
 general to every modelo reachable through these three call sites, not an
 M303-only quirk; the two captured fixtures happen to be M303 because that is
 what the live pull retrieved.
+
+## A canonical CSV shape type already exists in `core`, narrower than the domain alias
+
+`cadrumo.core._aeat_csv` (`src/cadrumo/core/_aeat_csv.py:1-45`, exported
+`is_aeat_csv` / `AEAT_CSV_PATTERN` / min/max length constants) states in its
+own module docstring that the CSV contract "lives in `cadrumo.core` because
+every layer meets a CSV and none of them owns it," and constrains it to 8-32
+uppercase alphanumeric characters. `JustificanteCsv`
+(`src/cadrumo/domain/justificante/_schema.py:22-29`) is a separate, narrower
+`Annotated[str, StringConstraints(min_length=4, max_length=64)]` alias that
+does not reuse `core`'s pattern and is looser at the low end (4 vs 8) and
+looser at the high end (64 vs 32). This is exactly the kind of fragmented
+free-form identifier population the operator's parallel canonical
+typed-identifier-system effort is inventorying; this record does not resolve
+it — reconciling `JustificanteCsv` onto `core`'s canonical CSV contract is
+adjacent scope for that effort, not this one, and is out of scope here.
 
 ## Observability gap
 
