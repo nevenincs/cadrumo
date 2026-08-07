@@ -79,6 +79,7 @@ from ._enums import (
     iva_rate_kind,
     iva_rate_percentage,
     numeric_iva_rate_percentages,
+    numeric_iva_rate_slots,
 )
 from ._errors import (
     InvoiceCatalogueError,
@@ -161,6 +162,7 @@ __all__ = [
     "iva_rate_percentage",
     "link_transaction",
     "numeric_iva_rate_percentages",
+    "numeric_iva_rate_slots",
     "partition_invoices",
     "suggest_reconciliations",
     "validate_country_code",

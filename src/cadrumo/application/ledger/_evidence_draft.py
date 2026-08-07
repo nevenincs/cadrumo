@@ -98,7 +98,6 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel
 
-from ...llm import LLMPdfRasterisationError, LLMProviderError, rasterise_pdf_pages_to_base64_png
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice
@@ -112,6 +111,7 @@ from ...core.parsing import parse_date, parse_iso8601_date
 from ...domain.attachments import link_attachment_invoice
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceClass, InvoiceLine, IvaRate
 from ...domain.iva import InvoiceKind, IvaCategory
+from ...llm import LLMPdfRasterisationError, LLMProviderError, rasterise_pdf_pages_to_base64_png
 from ..provisioning import probe_ollama_vision
 from ..user_profile import resolve_active_capability
 from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
@@ -784,7 +784,7 @@ def _iva_rate_slot_for(rate: Decimal | None) -> IvaRate:
     exempt slot would mint a zero-cuota invoice against a document that printed
     a cuota.
     """
-    from ...application.invoices import numeric_iva_rate_slots
+    from ...domain.invoices import numeric_iva_rate_slots
 
     if rate is None:
         return IvaRate.EXEMPT

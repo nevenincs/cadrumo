@@ -1,12 +1,9 @@
 """Application service for creating one rich catalogue :class:`Invoice`.
 
-The operator-facing ``aeat app ledger invoice catalogue create`` verb needs
-a path to mint a **linkable** invoice. The slim
-:class:`~application.ledger.BusinessOperationInvoice` written by
-``invoice add`` is an operator-edit record with no ``linked_transaction_ids``
-field, so ``link --invoice-id`` cannot resolve it. Only the rich
-:class:`~domain.invoices.Invoice` in the
-:class:`~domain.invoices.InvoiceCatalogue` carries
+The operator-facing ``aeat app ledger invoice add`` verb mints a **linkable**
+invoice directly: the :class:`~domain.invoices.Invoice` in the
+:class:`~domain.invoices.InvoiceCatalogue` is the only invoice record, and it
+carries
 ``linked_transaction_ids`` and is the reconciliation authority ``link`` targets.
 
 :func:`create_catalogue_invoice` builds a strict :class:`Invoice` from
@@ -36,7 +33,6 @@ from pydantic import BaseModel, ConfigDict
 from ...adapters.outbound.fx import default_ecb_rate_provider
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import IntracomOperationType
-from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.money import round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.time import now
@@ -46,7 +42,7 @@ from ...domain.buckets import (
     BucketEventType,
     emit_bucket_event,
 )
-from ...domain.currency import ExchangeRateProvider
+from ...domain.currency import ExchangeRateProvider, resolve_fx_conversion_stamp
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -57,27 +53,9 @@ from ...domain.invoices import (
     InvoiceValidationError,
     IvaRate,
     PaymentStatus,
+    numeric_iva_rate_slots,
 )
 from ...domain.iva import InvoiceKind, IvaCategory
-
-_NUMERIC_IVA_RATE_SLOTS: dict[Decimal, IvaRate] = {
-    Decimal("0"): IvaRate.RATE_0,
-    Decimal("4"): IvaRate.RATE_4,
-    Decimal("10"): IvaRate.RATE_10,
-    Decimal("21"): IvaRate.RATE_21,
-}
-
-
-def numeric_iva_rate_slots() -> dict[Decimal, IvaRate]:
-    """Return the closed set of operator-supplied IVA percentage slots.
-
-    A copy of the module-private mapping :func:`_resolve_iva_rate_slot` and
-    :func:`build_catalogue_invoice` consume internally, exposed for other
-    invoice-creation transports (e.g. the manual-entry wizard) that must
-    validate a percentage against the same accepted set before it reaches
-    :func:`build_catalogue_invoice`.
-    """
-    return dict(_NUMERIC_IVA_RATE_SLOTS)
 
 
 class CatalogueInvoiceCreateResult(BaseModel):
@@ -174,9 +152,10 @@ def _resolve_iva_rate_slot(iva_rate: Decimal | None) -> IvaRate:
     """
     if iva_rate is None:
         return IvaRate.EXEMPT
-    slot = _NUMERIC_IVA_RATE_SLOTS.get(iva_rate)
+    slots = numeric_iva_rate_slots()
+    slot = slots.get(iva_rate)
     if slot is None:
-        accepted = ", ".join(format(rate, "f") for rate in sorted(_NUMERIC_IVA_RATE_SLOTS))
+        accepted = ", ".join(format(rate, "f") for rate in sorted(slots))
         raise InvoiceValidationError(
             "iva_rate is not a recognised IVA percentage",
             translated_message="application.invoices.creation.errors.unsupported_iva_rate",
@@ -342,41 +321,21 @@ def build_catalogue_invoice(
         invoice_payload["retention_rate"] = format(retention_rate, "f")
     if retention_amount is not None:
         invoice_payload["retention_amount"] = format(retention_amount, "f")
-    _stamp_fx_conversion(invoice_payload, currency=currency, issued_at=issued_at, rate_provider=rate_provider)
+    # The euro-conversion stamp. ``currency`` is already the canonical uppercase
+    # ISO 4217 token (normalised once above), so the provider is queried with the
+    # same token the record stores. WHICH date the rate is taken at, and when a
+    # record is deliberately left unstamped, are resolve_fx_conversion_stamp's to
+    # answer -- this only writes the result into the payload shape.
+    fx_stamp = resolve_fx_conversion_stamp(
+        currency=currency,
+        on_date=issued_at,
+        rate_provider=rate_provider or default_ecb_rate_provider(),
+    )
+    if fx_stamp is not None:
+        rate, rate_date = fx_stamp
+        invoice_payload["fx_rate"] = format(rate, "f")
+        invoice_payload["fx_rate_date"] = rate_date.isoformat()
     return Invoice.model_validate(invoice_payload)
-
-
-def _stamp_fx_conversion(
-    payload: dict[str, object],
-    *,
-    currency: str,
-    issued_at: date,
-    rate_provider: ExchangeRateProvider | None,
-) -> None:
-    """Stamp the euro conversion rate for a foreign-currency invoice.
-
-    ``currency`` must already be the canonical uppercase ISO 4217 token (the
-    caller normalises it once via :func:`core.parsing.normalise_iso_4217_currency`
-    before both the persisted payload and this lookup read it), so the
-    provider is queried with the same token the record stores.
-
-    Converts at the invoice's issue date, which is the operation date Spanish
-    law binds the official rate to (Ley 46/1998 art. 36), matching the ledger's
-    convert-once-at-ingest shape rather than converting at read time.
-
-    A euro invoice is left unstamped. A foreign invoice whose rate cannot be
-    resolved is also left unstamped rather than defaulted: the record then
-    reports no euro value and is gated out of projection, which is recoverable,
-    where a fabricated rate would not be.
-    """
-    if currency.strip().upper() == DEFAULT_CURRENCY:
-        return
-    provider = rate_provider or default_ecb_rate_provider()
-    rate = provider.get_eur_rate(currency, issued_at)
-    if rate is None:
-        return
-    payload["fx_rate"] = format(rate, "f")
-    payload["fx_rate_date"] = issued_at.isoformat()
 
 
 def create_catalogue_invoice(
@@ -477,5 +436,4 @@ __all__ = [
     "CatalogueInvoiceCreateResult",
     "build_catalogue_invoice",
     "create_catalogue_invoice",
-    "numeric_iva_rate_slots",
 ]
