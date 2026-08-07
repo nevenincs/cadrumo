@@ -27,9 +27,9 @@ from __future__ import annotations
 import typer
 from pydantic import BaseModel, ConfigDict, SecretStr
 
-from ....core.tty import stdin_is_tty
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
+from ....core.tty import stdin_is_tty
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError

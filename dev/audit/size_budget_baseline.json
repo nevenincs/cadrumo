@@ -1,10 +1,10 @@
 {
   "_comment": "GENERATED limit table for the size ratchet in src/cadrumo/tests/test_codebase_size_budgets.py. Do NOT hand-edit the 'modules' or 'callables' numbers: regenerate with `python -m dev.audit.size_budget --write-baseline`, then review and commit the diff. Every limit is a measured size plus a declared headroom, and the gate fails BOTH when an entry grows past its limit and when a limit drifts further above its subject than the declared slack tolerance, so a pin cannot silently outlive the size it was taken from. 'notes' is the one hand-maintained section: prose only, never numbers, carried forward verbatim across regeneration and dropped when its key disappears. Keys are repo-relative POSIX paths, and 'path::function' for callables.",
   "generated": {
-    "scanned_modules": 4109,
-    "scanned_callables": 10813,
-    "module_entries": 26,
-    "callable_entries": 19
+    "scanned_modules": 4229,
+    "scanned_callables": 11021,
+    "module_entries": 25,
+    "callable_entries": 18
   },
   "notes": {
     "src/cadrumo/adapters/persistence/storage/sql/secure_objects.py": "The raw-row decode/fault-isolation codec is already extracted to _secure_object_row_codec.py. The core-complexity decomposition split the remaining hotspot callables into named helpers, so the residual size is helper signatures and docstrings; radon reports no callable above C.",
@@ -20,7 +20,6 @@
     "src/cadrumo/domain/calculations/registry/_record_design.py": "Not acquired complexity: the ruff 0.15.22 -> 0.16.0 formatter reflow joined comprehensions and call chains the old formatter split. A split would be the wrong remedy here.",
     "src/cadrumo/domain/calculations/registry/_workbook_parity.py": "Carries a sys.platform guard so ty resolves winreg only on win32.",
     "src/cadrumo/entrypoints/cli/_ledger.py::ledger_classify": "A wide Typer signature (manual + LLM + saturate + evidence + auto-split routes). The LLM-routing bodies live in _ledger_llm_cli.py; what remains is the option surface and the route dispatch.",
-    "src/cadrumo/entrypoints/cli/_ledger_read_cli.py": "Split direction: the invoice link/verify read surface is the extractable family.",
     "src/cadrumo/entrypoints/cli/_modelo_payloads.py": "The bindings list/resolve payload family was extracted to _modelo_bindings_payloads.py, following the split pattern of _modelo_aux_payloads.py and _modelo_revision_payload_parts.py.",
     "src/cadrumo/entrypoints/mcp/_server.py::build_server": "MCP SDK handler-registration factory: every @server.list_tools() / @server.call_tool() handler closes over server, window, and the persona/telemetry gates built earlier in the function, so the handlers cannot be hoisted to module level without threading that state through every handler signature. Split direction: extract the per-capability handler-builder closures (tools/prompts/resources) into factory helpers taking the shared state as arguments."
   },
@@ -32,13 +31,13 @@
     "src/cadrumo/application/auth/_operator.py": 1685,
     "src/cadrumo/application/bucket_maintenance/_service.py": 1517,
     "src/cadrumo/application/ledger/_actions_manual.py": 1490,
-    "src/cadrumo/application/ledger/_llm_classification.py": 1687,
-    "src/cadrumo/application/modelo/_calculation_actions.py": 1602,
+    "src/cadrumo/application/ledger/_llm_classification.py": 1619,
+    "src/cadrumo/application/modelo/_calculation_actions.py": 1617,
     "src/cadrumo/application/modelo/_verification_actions.py": 1431,
-    "src/cadrumo/application/wizard/_commands.py": 1955,
-    "src/cadrumo/application/workflow/_engine.py": 1356,
-    "src/cadrumo/core/config.py": 1574,
-    "src/cadrumo/domain/calculations/registry/_applicability.py": 1751,
+    "src/cadrumo/application/wizard/_commands.py": 1956,
+    "src/cadrumo/application/workflow/_engine.py": 1353,
+    "src/cadrumo/core/config.py": 1562,
+    "src/cadrumo/domain/calculations/registry/_applicability.py": 1752,
     "src/cadrumo/domain/calculations/registry/_formula_runtime.py": 1633,
     "src/cadrumo/domain/calculations/registry/_ledger_bindings.py": 1335,
     "src/cadrumo/domain/calculations/registry/_loader.py": 1398,
@@ -46,11 +45,10 @@
     "src/cadrumo/domain/calculations/registry/_workbook_parity.py": 1487,
     "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles.py": 1390,
     "src/cadrumo/domain/transactions/_models.py": 1541,
-    "src/cadrumo/entrypoints/cli/_app_live.py": 1443,
+    "src/cadrumo/entrypoints/cli/_app_live.py": 1445,
     "src/cadrumo/entrypoints/cli/_config_payloads.py": 1545,
-    "src/cadrumo/entrypoints/cli/_ledger_read_cli.py": 1316,
-    "src/cadrumo/entrypoints/cli/_modelo.py": 1353,
-    "src/cadrumo/entrypoints/cli/_modelo_payloads.py": 1478
+    "src/cadrumo/entrypoints/cli/_modelo.py": 1356,
+    "src/cadrumo/entrypoints/cli/_modelo_payloads.py": 1463
   },
   "callables": {
     "src/cadrumo/application/aggregation/_iva_ledger.py::_classify_iva_transaction": 219,
@@ -62,13 +60,12 @@
     "src/cadrumo/application/modelo/_quickfile.py::run_modelo_quickfile": 227,
     "src/cadrumo/application/modelo/_revision_persistence.py::persist_filed_revision": 200,
     "src/cadrumo/application/modelo/_verification_actions.py::verify_modelo_revision": 240,
-    "src/cadrumo/application/user_profile/_custody_carry.py::_natural_key_resolvers": 245,
+    "src/cadrumo/application/user_profile/_custody_carry.py::_natural_key_resolvers": 238,
     "src/cadrumo/application/user_profile/_profile_repository.py::create": 198,
-    "src/cadrumo/application/workflow/_engine.py::_stage_running_preflight": 193,
     "src/cadrumo/core/observability/_context.py::run_context": 205,
     "src/cadrumo/domain/calculations/registry/_formula_runtime.py::calculate_registry_snapshot": 228,
-    "src/cadrumo/entrypoints/cli/_ledger.py::ledger_add": 258,
-    "src/cadrumo/entrypoints/cli/_ledger.py::ledger_classify": 234,
+    "src/cadrumo/entrypoints/cli/_ledger.py::ledger_add": 242,
+    "src/cadrumo/entrypoints/cli/_ledger.py::ledger_classify": 206,
     "src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py::ledger_pull_folder": 191,
     "src/cadrumo/entrypoints/mcp/_server.py::_on_call_tool": 230,
     "src/cadrumo/entrypoints/mcp/_server.py::build_server": 617

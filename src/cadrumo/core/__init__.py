@@ -184,11 +184,6 @@ from ._prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from ._refund_election import RefundElection
-from ._tipos_actividad import (
-    IAE_SUBJECT_TIPOS_ACTIVIDAD,
-    NON_IAE_SUBJECT_TIPOS_ACTIVIDAD,
-    TipoActividad,
-)
 from ._rescate_type import RescateType
 from ._result_disposition import (
     ResultDisposition,
@@ -221,6 +216,11 @@ from ._storage_taxonomy import (
     storage_tree_targets,
 )
 from ._tax_domain import TaxDomain
+from ._tipos_actividad import (
+    IAE_SUBJECT_TIPOS_ACTIVIDAD,
+    NON_IAE_SUBJECT_TIPOS_ACTIVIDAD,
+    TipoActividad,
+)
 from ._toml import freeze_toml, freeze_toml_value, parse_toml_text, read_toml, to_str_keyed_dict
 from .compatibility_lifecycle import (
     COMPATIBILITY_REGIME,
@@ -339,7 +339,6 @@ __all__: list[str] = [
     "STORAGE_TAXONOMY",
     "STRICT_FROZEN_CONFIG",
     "STRUCTURED_DOCUMENT_SHAPES",
-    "TipoActividad",
     "UNMODELED_OBLIGATIONS",
     "AmendmentKindRegime",
     "AmendmentLiabilityDirection",
@@ -411,6 +410,7 @@ __all__: list[str] = [
     "StorageOverridePolicy",
     "StorageScope",
     "TaxDomain",
+    "TipoActividad",
     "TipoRentaGroundingTier",
     "TipoRentaIrnr",
     "accepted_filing_period_codes",

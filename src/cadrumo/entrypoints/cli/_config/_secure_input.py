@@ -28,8 +28,8 @@ import warnings
 
 from pydantic import BaseModel, ValidationError
 
-from ....core.tty import stdin_is_tty
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.tty import stdin_is_tty
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 _MAX_SECRETS_STDIN_BYTES = 8192
