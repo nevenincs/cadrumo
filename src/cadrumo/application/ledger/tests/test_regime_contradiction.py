@@ -5,15 +5,23 @@ charges no Spanish IVA, printed beside a repercutido line, means the mention or
 the line does not belong -- and which one is not decidable from the page, because
 either reading leads to a different declaration.
 
-**Only one contradiction shape is reachable today, and that is stated rather than
-worked around.** The statutory table carries seven mandated mentions and exactly
-one declares a category, so a contradiction requires that one mention. The other
-six declare nothing to contradict, and the exempt case fixes no phrase at all
-(art. 6.1.j requires a reference to the granting provision, not a set string), so
-there is nothing to match. Writing a refusal case per hypothetical shape would
-report broad coverage over branches no document can reach; the reachable shape is
-covered here and a premise test pins the table so this claim cannot go stale
-silently.
+**The two contradiction shapes collapse into one reachable check, and that is
+stated rather than worked around.** A contradiction needs a mention that declares
+a category, and the statutory table has exactly one -- which is also the only row
+declaring ``expects_repercutido_line=False``. So "a reverse-charge mention beside
+a charged line" and "a mention the rate pattern belies" are not two shapes today:
+they are the same row, checked in the only direction it can fail. The other six
+mentions declare nothing to contradict, and the exempt case fixes no phrase at
+all (art. 6.1.j requires a reference to the granting provision, not a set
+string), so there is nothing to match.
+
+**The second direction becomes reachable only when a row declares a category with
+``expects_repercutido_line=True``** -- a mention whose regime DOES expect Spanish
+IVA, contradicted by a document printing none. No such row exists, so a refusal
+case for it would exercise a branch no legend can reach, which is the
+fixtures-too-easy failure at design level. Naming the condition is worth more
+than a test that cannot fail, and the premise test below pins the count so the
+claim cannot go stale in silence.
 
 **The positive control is load-bearing.** Every refusal case below passes equally
 against a gate that refuses everything, so a coherent document is confirmed to
@@ -48,12 +56,19 @@ _REVERSE_CHARGE_MENTION = _DECLARING[0].phrase
 def test_only_one_contradiction_shape_is_reachable() -> None:
     """The premise this module's scope rests on, asserted rather than claimed in prose.
 
-    A contradiction needs a mention that declares a category. If a second such
-    row is ever added, the reachable set grows and this suite stops covering it
-    -- and says so here instead of continuing to read as complete.
+    Two facts collapse the two nominal shapes into one. A contradiction needs a
+    mention that DECLARES a category, and exactly one does; that same row is the
+    only one expecting no repercutido line, so the only way it can be
+    contradicted is by a document printing one.
+
+    Both halves are asserted, because either changing reopens the second
+    direction. A row that declares a category while expecting a repercutido line
+    would be contradicted by a document printing NONE -- the shape this suite
+    deliberately does not cover, since no such row exists.
     """
     assert len(_DECLARING) == 1
     assert _DECLARING[0].expects_repercutido_line is False
+    assert not [legend for legend in REGIME_LEGENDS if legend.declares is not None and legend.expects_repercutido_line]
 
 
 def test_a_reverse_charge_mention_beside_a_charged_cuota_is_a_finding() -> None:
