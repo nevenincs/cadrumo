@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:008aa270ff1ab0e26b21b2bf3bec0993f4a77b2a121fa42a6d1367fae009a226'
+body_hash: 'sha256:715179690eb743fe12329c44825d1114ed2c650c830e485bce47c796239d1307'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -43,16 +43,16 @@ Delivers the typed foundations every later wave consumes: the core provenance an
 
 Lands the closed core enums and the facade promotion that every consuming change depends on.
 
-- [ ] `W01.P01.S01` - Add the FieldOrigin provenance StrEnum (EXACT_STRUCTURED, TEXT_LAYER, VISION, TABULAR_MAPPED, OPERATOR) with facade export, gated by enum round-trip tests and the import-hygiene gate; `src/cadrumo/core`.
-- [ ] `W01.P01.S02` - Add the closed FieldRole StrEnum for tabular column mapping including UNMAPPED, with facade export, gated by a test asserting every importer-consumed role is a member; `src/cadrumo/core`.
-- [ ] `W01.P01.S03` - Promote EvidenceInput to the application.ledger public facade as a precondition of any consuming change, gated by the import-hygiene gate and a consumer-import test; `src/cadrumo/application/ledger/__init__.py`.
+- [x] `W01.P01.S01` - Add the FieldOrigin provenance StrEnum (EXACT_STRUCTURED, TEXT_LAYER, VISION, TABULAR_MAPPED, OPERATOR) with facade export, gated by enum round-trip tests and the import-hygiene gate; `src/cadrumo/core`.
+- [x] `W01.P01.S02` - Add the closed FieldRole StrEnum for tabular column mapping including UNMAPPED, with facade export, gated by a test asserting every importer-consumed role is a member; `src/cadrumo/core`.
+- [x] `W01.P01.S03` - Promote EvidenceInput to the application.ledger public facade as a precondition of any consuming change, gated by the import-hygiene gate and a consumer-import test; `src/cadrumo/application/ledger/__init__.py`.
 
 ### Phase `W01.P02` - The transcription record and its encrypted cache
 
 Lands the DocumentTranscription record with its custody tripwires and the secure-storage cache.
 
-- [ ] `W01.P02.S04` - Add the single typed DocumentTranscription record (reading-order text with printed forms preserved, page count, source content address, origin with model identity and revision) carrying the EvidenceInput serialization tripwires, gated by a strict roundtrip and tripwire refusal tests; `src/cadrumo/application/ledger`.
-- [ ] `W01.P02.S05` - Wire the encrypted transcription cache through core secure storage keyed by source content address plus transcriber identity, gated by a real-adapter roundtrip, an on-disk mutation anti-tautology proof, and the sensitive-persistence gate scan reaching the new module; `src/cadrumo/application/ledger`.
+- [x] `W01.P02.S04` - Add the single typed DocumentTranscription record (reading-order text with printed forms preserved, page count, source content address, origin with model identity and revision) carrying the EvidenceInput serialization tripwires, gated by a strict roundtrip and tripwire refusal tests; `src/cadrumo/application/ledger`.
+- [x] `W01.P02.S05` - Wire the encrypted transcription cache through core secure storage keyed by source content address plus transcriber identity, gated by a real-adapter roundtrip, an on-disk mutation anti-tautology proof, and the sensitive-persistence gate scan reaching the new module; `src/cadrumo/application/ledger`.
 
 ### Phase `W01.P03` - The widened draft, provenance envelopes, and the loss-forbidden waist
 
