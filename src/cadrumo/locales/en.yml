@@ -4154,8 +4154,6 @@ cli:
         of the counterparty (ISO 3166-1 alpha-2 lowercase, e.g. de or xi); required
         with --iva-category intra_community_supply, prohibited with export_third_country_zero_rated
         or export_assimilated_zero_rated
-      evidence_acknowledged_help: Acknowledge that reading evidence with a cloud provider
-        uploads it off your machine (required by the consent gate).
       file_exclusive: --file cannot be combined with a transaction id or --classification.
       file_help: Path to a CSV file with columns transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
@@ -4516,8 +4514,6 @@ cli:
           and --child-description arguments
         min_two_children: ledger split requires at least two --child-amount / --child-description
           pairs
-      evidence_acknowledged_help: Acknowledge --read-evidence sends the evidence to
-        a cloud model (off by default, gestor-barred).
       help: Redistribute one parent transaction into N child transactions whose amounts
         sum to the parent amount exactly
       id_help: Parent transaction id (or unambiguous hex prefix) to split
@@ -66440,8 +66436,6 @@ profile:
         provider:
           label: Authentication method
       capabilities:
-        cloud_evidence_upload:
-          label: Cloud evidence upload
         google_export:
           label: Google export
         llm_vision:

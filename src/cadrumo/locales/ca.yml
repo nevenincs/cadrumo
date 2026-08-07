@@ -4456,8 +4456,6 @@ cli:
         del Nord de la contrapart (ISO 3166-1 alfa-2 minúscules, p. ex. de o xi);
         obligatori amb --iva-category intra_community_supply, prohibit amb export_third_country_zero_rated
         o export_assimilated_zero_rated
-      evidence_acknowledged_help: Confirma que llegir l'evidència amb un proveïdor
-        al núvol la puja fora del teu equip (ho exigeix la verificació de consentiment).
       file_exclusive: --file no pot combinar-se amb un id de transacció ni --classification.
       file_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
@@ -4768,8 +4766,6 @@ cli:
       period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
         0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
       year_help: Any de declaració (p. ex. 2024).
-    providers:
-      help: Llista els proveïdors LLM en subprocés amb CLI disponible al PATH.
     pull_folder:
       errors:
         folder_id_unrecognised: La referència de carpeta de Drive %{reference} no
@@ -4836,8 +4832,6 @@ cli:
       errors:
         child_args_mismatch: Cada import fill ha de tenir una descripció filla corresponent
         min_two_children: Has d'indicar almenys dues transaccions filles
-      evidence_acknowledged_help: Reconeix que --read-evidence envia l'evidència a
-        un model al núvol (desactivat per defecte, vetat per a gestors).
       help: Divideix una transacció del llibre en diverses transaccions filles
       id_help: Id de la transacció que vols dividir
       llm_exclusive: --llm no es pot combinar amb --child-amount/--child-description;
@@ -66869,8 +66863,6 @@ profile:
         provider:
           label: Mètode d'autenticació
       capabilities:
-        cloud_evidence_upload:
-          label: Enviament d'evidència al núvol
         google_export:
           label: Exportació a Google
         llm_vision:

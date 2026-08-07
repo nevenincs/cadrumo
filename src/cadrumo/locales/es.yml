@@ -4491,8 +4491,6 @@ cli:
         Irlanda del Norte de la contraparte (ISO 3166-1 alfa-2 minúsculas, p. ej.
         de o xi); obligatorio con --iva-category intra_community_supply, prohibido
         con export_third_country_zero_rated o export_assimilated_zero_rated
-      evidence_acknowledged_help: Confirma que leer la evidencia con un proveedor
-        en la nube la sube fuera de tu equipo (lo exige la verificación de consentimiento).
       file_exclusive: --file no puede combinarse con un id de transacción ni --classification.
       file_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
@@ -4804,8 +4802,6 @@ cli:
       period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A
         (anual), 01-12 (meses). Combínelo con --year para elegir el año.'
       year_help: Año de declaración (p. ej. 2024).
-    providers:
-      help: Lista los proveedores LLM en subproceso con CLI disponible en PATH.
     pull_folder:
       errors:
         folder_id_unrecognised: La referencia de carpeta de Drive %{reference} no
@@ -4872,8 +4868,6 @@ cli:
       errors:
         child_args_mismatch: Cada importe hijo debe tener una descripción hija correspondiente
         min_two_children: Debes indicar al menos dos transacciones hijas
-      evidence_acknowledged_help: Reconoce que --read-evidence envía la evidencia
-        a un modelo en la nube (desactivado por defecto, vetado para gestores).
       help: Divide una transacción del libro en varias transacciones hijas
       id_help: Id de la transacción que quieres dividir
       llm_exclusive: --llm no puede combinarse con --child-amount/--child-description;
@@ -69180,8 +69174,6 @@ profile:
         provider:
           label: Método de autenticación
       capabilities:
-        cloud_evidence_upload:
-          label: Envío de evidencia a la nube
         google_export:
           label: Exportación a Google
         llm_vision:

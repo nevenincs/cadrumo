@@ -4407,8 +4407,6 @@ cli:
         IVA-előtagja (ISO 3166-1 alpha-2 kisbetűs, pl. de vagy xi); kötelező --iva-category
         intra_community_supply esetén, tiltott export_third_country_zero_rated vagy
         export_assimilated_zero_rated esetén.
-      evidence_acknowledged_help: Erősítse meg, hogy a bizonyíték felhőszolgáltatóval
-        való beolvasása feltölti azt a gépéről (a hozzájárulási kapu megköveteli).
       file_exclusive: --file nem kombinálható tranzakció-azonosítóval vagy --classification
         értékkel.
       file_help: 'Egy CSV-fájl útvonala, amelynek oszlopai: transaction_id, classification[,
@@ -4723,9 +4721,6 @@ cli:
       period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
         01-12 (hónapok). A --year kapcsolóval adja meg az évet.'
       year_help: Bevallási év (pl. 2024).
-    providers:
-      help: Felsorolja az alfolyamatos LLM-szolgáltatókat, amelyek CLI-je elérhető
-        a PATH-en.
     pull_folder:
       errors:
         folder_id_unrecognised: A(z) %{reference} Google Drive mappahivatkozás nem
@@ -4798,8 +4793,6 @@ cli:
           --child-description argumentum szükséges.
         min_two_children: A ledger split parancshoz legalább két --child-amount /
           --child-description pár szükséges.
-      evidence_acknowledged_help: Ismerd el, hogy a --read-evidence felhőmodellnek
-        küldi a bizonyítékot (alapból kikapcsolva, könyvelőknél tiltva).
       help: Egy szülőtranzakció felosztása N gyermek tranzakcióra, amelyek összege
         pontosan egyenlő a szülő összegével.
       id_help: A felosztandó szülőtranzakció azonosítója (vagy egyértelmű hexadecimális
@@ -66984,8 +66977,6 @@ profile:
         provider:
           label: Hitelesítési mód
       capabilities:
-        cloud_evidence_upload:
-          label: Bizonylat feltöltése felhőbe
         google_export:
           label: Google-exportálás
         llm_vision:
