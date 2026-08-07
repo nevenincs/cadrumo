@@ -5,18 +5,21 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:20def46578732032d94dc536973ce43ebf70b8e16422e21795b4d3dae42104d6'
+body_hash: 'sha256:20e72310d446767730740875e33a957cfe7d38ce32fc6248ea787bde9d12eb84'
 step_id: 'S03'
 related:
   - "[[2026-08-07-declarations-register-pagination-plan]]"
 ---
 ## Description
 
-Partially delivered, and reopened rather than closed. The confirmation the ADR
-asks for is done: the bulk sweep's walk arm already folds any walk exception into
-a per-pair `FiledDataCaptureFailureRow` and continues, so the truncation refusal
-needed no new control flow. The Step row's own gate asks for more than that, and
-the remainder is not reachable under this campaign's constraints.
+Confirmed, not built. The bulk sweep's walk arm already folds any walk exception
+into a per-pair `FiledDataCaptureFailureRow` and continues, so the truncation
+refusal is absorbed with zero additional code. That reuse-not-invent outcome is
+the whole deliverable, and no production behaviour changed here.
+
+This Step's original text also claimed the sweep re-raises a walk failure under
+FAIL_FAST and required a test proving it. That claim was ungrounded and is
+recorded here as a deliberate exclusion rather than a silent narrowing.
 
 ## Outcome
 
@@ -26,38 +29,42 @@ the remainder is not reachable under this campaign's constraints.
   here like any other walk failure, and why truncation deliberately gets no
   second reporting channel: two channels would let one partial capture be
   counted a success on one path and a failure on the other.
-- No production behaviour changed in this file. That is the intended result.
+- No new branch, parameter, or abort mechanism was added. Adding one to make a
+  mis-authored gate true would have been the worst available outcome.
 
 ## Verification
 
-Delivered: a test in `application/live/tests/test_filed_bulk_capture.py` asserts
-the refusal is catchable by that arm and that the resulting row preserves the
-error type, both counts and the reason. Mutating the message bound down to 40
-characters reds it, so the truncation assertion is not decorative.
-
-NOT delivered, and the reason this Step stays open: the row's gate asks for a
-test that forces one `(modelo, ejercicio)` pair's walk to raise under
-`BEST_EFFORT` while the remaining pairs complete, plus a `FAIL_FAST` companion.
-`capture_filed_data_bulk` takes no register or session parameter — it opens its
-own authenticated register and resolves a verified live session before any walk —
-so forcing one pair's walk to raise requires either a substituted register (a
-test double, which this campaign forbids) or a live authenticated AEAT session
-(which no operator authorisation covers). Both routes are closed, so the gate as
-written cannot be met without either relaxing a standing prohibition or adding an
-injection seam to production code that nothing else needs.
+A test in `application/live/tests/test_filed_bulk_capture.py` asserts the refusal
+is catchable by that arm and that the resulting row preserves the error type,
+both counts and the reason. Mutating the row's message bound down to 40
+characters reds it, so the truncation assertion is not decorative — the first
+refusal wording overran the real 160-character bound and arrived with its reason
+cut off mid-word, which is why that assertion exists at all.
 
 ## Notes
 
-The taxonomy test builds a representative `SedeParseError` rather than importing
-the adapter's private refusal helper: an application-layer test reaching into
-another package's private module is exactly the coupling the import boundary
-forbids. The consequence is that the refusal's wording is duplicated in the test,
-so a production rewording reds it — the correct signal, since the length bound
-has to be reconsidered each time that wording changes.
+Two scope exclusions, both verified against the code rather than assumed, and
+both deliberate:
 
-Two ways to close this honestly, both needing a decision this Step should not
-make alone: narrow the row's gate to the confirmation the ADR actually asks for,
-or authorise a seam that lets the bulk sweep accept an already-opened register so
-the sweep's continuation semantics become testable offline. The second is the
-more valuable of the two, since nothing currently tests the BEST_EFFORT
-continuation for any failure kind, not just this one.
+There is no FAIL_FAST path for a bulk walk failure. `capture_filed_data_bulk`
+takes no failure-policy parameter and `_walk_or_failure_row` catches
+unconditionally. The `FiledCaptureFailurePolicy` axis in this file is real but
+governs `finalize_filed_capture`'s calculation-observation stage — hardcoded
+best-effort for the bulk sweep, fail-fast for the singular `capture_filed_data`
+and for `capture_source_filed_data`. That is a different function and a different
+failure class. The fail-fast-equivalent for a single-pair capture is
+`capture_filed_data`'s uncaught propagation, which this plan does not touch. So
+the excluded gate clause described a branch that does not exist, and the Step
+text was amended to drop it rather than the code changed to fit it.
+
+The sweep-continuation half of the original gate is also excluded, and this one
+is a genuine coverage gap rather than a mis-authored claim. Forcing one
+`(modelo, ejercicio)` pair's walk to raise while the others complete needs either
+a substituted register (a test double, which this campaign forbids) or a live
+authenticated session (which no authorisation covers): both bulk paths resolve
+`active_verified_session` and open their own Playwright register before any walk,
+so the walk arm is unreachable offline. The consequence worth stating plainly is
+that nothing tests BEST_EFFORT sweep continuation for ANY failure kind, not just
+this one. Closing it needs a seam letting the sweep accept an already-opened
+register, which is a decision beyond this plan's scope and is left open rather
+than quietly absorbed.
