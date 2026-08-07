@@ -24,6 +24,7 @@ import pytest
 
 from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from ....llm import LLMProviderError
+from .. import _evidence_draft as _router_module
 from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError
 from .._evidence_draft import FieldProvenance, InvoiceDraft
 from .._evidence_input import EvidenceInput
@@ -55,6 +56,17 @@ def _control_transcription():
             content_sha256=hashlib.sha256(payload).hexdigest(),
             attachment_id="b" * 64,
         ),
+    )
+
+
+def _control_evidence() -> EvidenceInput:
+    payload = _CONTROL.read_bytes()
+    return EvidenceInput(
+        media_kind=MediaKind.PDF,
+        mime_type="application/pdf",
+        data=payload,
+        content_sha256=hashlib.sha256(payload).hexdigest(),
+        attachment_id="b" * 64,
     )
 
 
@@ -218,7 +230,7 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
     router = Path(__file__).parents[1] / "_evidence_draft.py"
     source = router.read_text(encoding="utf-8")
 
-    assert "transcribe_text_layer(evidence)" in source
+    assert "transcribe_text_layer(evidence_input)" in source
     assert "extract_invoice_fields_from_text" in source
     assert "ground_draft_against_transcription" in source
 
@@ -234,7 +246,7 @@ def test_the_router_no_longer_reads_the_text_layer_with_label_regexes() -> None:
     router = Path(__file__).parents[1] / "_evidence_draft.py"
     source = router.read_text(encoding="utf-8")
 
-    chain_start = source.index("def _read_text_layer_semantically")
+    chain_start = source.index("def _read_transcription_semantically")
     chain_body = source[chain_start : chain_start + 3000]
 
     assert "extract_invoice_fields(evidence" not in chain_body, (
@@ -248,7 +260,7 @@ def test_the_router_no_longer_reads_the_text_layer_with_label_regexes() -> None:
 
 
 def test_an_absent_reader_refuses_and_names_the_provisioning_verb() -> None:
-    """"No reader" is a gap the operator can close, so the refusal says how.
+    """ "No reader" is a gap the operator can close, so the refusal says how.
 
     The message names ``aeat config provision pull`` rather than reporting a
     bare failure. A refusal that does not say how to fix itself is a dead end,
@@ -266,22 +278,78 @@ def test_an_absent_reader_refuses_and_names_the_provisioning_verb() -> None:
     assert "no value was guessed" in message
 
 
-def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:
-    """The decision, asserted rather than left to which exception is caught.
+def test_a_missing_reader_does_not_fall_through_to_the_vision_engine(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The decision, EXERCISED rather than inspected.
 
     A missing reader is a statement about the ENVIRONMENT, not the document.
     Escalating to vision would run a heavier engine the operator did not ask
     for, on a document whose text layer was perfectly readable, and would do it
-    invisibly. The opposite case -- a document with no text layer at all -- DOES
-    escalate, and that asymmetry is the point.
+    invisibly.
+
+    This case originally asserted only the SOURCE TEXT of the semantic read, and
+    it passed while the refusal was being swallowed whole: the refusal raises
+    `PurchaseInvoiceEvidenceInputError`, the caller's fallback caught exactly
+    that type, and every text PDF with no reader ran vision and reported a
+    vision failure. A structural assertion on the callee cannot see what the
+    CALLER does with what it raises, which is where the defect lived.
+
+    Substituting the reader is not a test double for the code under test -- the
+    reader is the ENVIRONMENT this case is about, and making it unavailable is
+    the condition being reproduced. Nothing about the router is stubbed.
     """
-    from .._evidence_draft import _read_text_layer_semantically
+    import cadrumo.llm as llm_module
 
-    source = inspect.getsource(_read_text_layer_semantically)
+    from .._evidence_draft import _read_transcription_semantically
 
-    assert "_refuse_a_text_read_with_no_reader" in source
-    assert "_extract_invoice_fields_via_vision" not in source, (
-        "the text path escalated to vision on a reader failure"
+    def unavailable(*args: object, **kwargs: object) -> object:
+        raise LLMProviderError("Ollama is not reachable")
+
+    monkeypatch.setattr(llm_module, "extract_invoice_fields_from_text", unavailable)
+
+    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+        _read_transcription_semantically(_control_evidence(), _control_transcription())
+
+    assert raised.value.suggestion == "aeat config provision pull"
+
+
+def test_the_routers_fallback_try_wraps_only_the_transcription() -> None:
+    """The scoping that makes the asymmetry structural rather than incidental.
+
+    If the fallback ``try`` ever widens to wrap the semantic read again, the
+    refusal raises the very type the fallback catches, gets swallowed, and every
+    text PDF with no reader silently runs vision -- reporting a vision failure
+    on a document whose text layer was fine.
+
+    Checked by walking the AST rather than slicing the source text. Two
+    string-slicing attempts at this assertion both passed against a mutant that
+    reintroduced the defect: the first found an earlier ``try:`` belonging to
+    the structured-record branch, and the second was truncated to nothing
+    because this function's own explanatory comment contains the word
+    ``except``. Prose in the file is not a reliable delimiter for a claim about
+    code, and a mutation is what exposed both.
+    """
+    import ast
+
+    module = ast.parse(Path(inspect.getfile(_router_module)).read_text(encoding="utf-8"))
+    router = next(
+        node
+        for node in ast.walk(module)
+        if isinstance(node, ast.FunctionDef) and node.name == "extract_invoice_draft_from_evidence"
+    )
+
+    guarded_calls = {
+        call.func.id
+        for handler in ast.walk(router)
+        if isinstance(handler, ast.Try)
+        for call in ast.walk(ast.Module(body=handler.body, type_ignores=[]))
+        if isinstance(call, ast.Call) and isinstance(call.func, ast.Name)
+    }
+
+    assert "transcribe_text_layer" in guarded_calls, "the transcription is no longer inside a fallback try"
+    assert "_read_transcription_semantically" not in guarded_calls, (
+        "the fallback try wraps the semantic read; the missing-reader refusal will be swallowed"
     )
 
 

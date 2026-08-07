@@ -138,6 +138,7 @@ from ...llm import (
 )
 from ..provisioning import probe_ollama_vision
 from ..user_profile import resolve_active_capability
+from ._document_transcription import DocumentTranscription
 from ._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
 from ._evidence_input import (
     EvidenceInput,
@@ -768,13 +769,25 @@ def extract_invoice_draft_from_evidence(
             pass
     _refuse_an_unrecognised_xml_document(evidence_input)
     if evidence_input.document_shape in PDF_CONTAINER_SHAPES:
+        # The `try` wraps ONLY the transcription, and that scoping is the whole
+        # asymmetry rather than a formatting choice. A failure to transcribe is a
+        # statement about the DOCUMENT -- no text layer, scan-only, XFA -- so
+        # escalating to a reader that works on pixels is right. Everything after
+        # it is a statement about the ENVIRONMENT and must refuse in the
+        # operator's face.
+        #
+        # Wrapping the whole chain instead is a live defect this code already
+        # had: the reader refusal raises `PurchaseInvoiceEvidenceInputError`, so
+        # a broader `except` swallowed it and silently ran vision on a document
+        # whose text layer was perfectly readable -- the exact escalation the
+        # refusal exists to prevent, reported to the operator as a vision
+        # failure on a text PDF.
         try:
-            return _read_text_layer_semantically(evidence_input)
+            transcription = transcribe_text_layer(evidence_input)
         except PurchaseInvoiceEvidenceInputError:
-            # No usable text layer (scan-only / XFA) -> on-host vision fallback below.
-            # This is a statement about the DOCUMENT, so escalating to a reader
-            # that works on pixels is the right answer.
-            pass
+            transcription = None
+        if transcription is not None:
+            return _read_transcription_semantically(evidence_input, transcription)
     return _extract_invoice_fields_via_vision(evidence_input, settings=resolved_settings)
 
 
@@ -812,7 +825,10 @@ def _refuse_a_text_read_with_no_reader(exc: Exception) -> NoReturn:
     ) from exc
 
 
-def _read_text_layer_semantically(evidence: EvidenceInput) -> InvoiceDraft:
+def _read_transcription_semantically(
+    evidence: EvidenceInput,
+    transcription: DocumentTranscription,
+) -> InvoiceDraft:
     """Read a text-native PDF through the transcribe-extract-ground chain.
 
     The three stages the campaign built, connected. Before this, each was correct
@@ -840,13 +856,22 @@ def _read_text_layer_semantically(evidence: EvidenceInput) -> InvoiceDraft:
 
     Args:
         evidence: Resolved in-memory evidence bytes.
+        transcription: The already-produced acquisition-stage text. Taken as an
+            ARGUMENT rather than produced here so the caller's fallback ``try``
+            can wrap the transcription alone. That scoping is what separates a
+            DOCUMENT failure (no text layer -- escalate to vision) from an
+            ENVIRONMENT failure (no reader -- refuse), and it has to be
+            structural: when one ``try`` wrapped both, the refusal below raised
+            the same exception type the fallback catches and was silently
+            swallowed into a vision run.
 
     Returns:
         The grounded draft.
 
     Raises:
-        PurchaseInvoiceEvidenceInputError: When the PDF carries no usable text
-            layer, so the caller can fall back to the on-host vision reader.
+        PurchaseInvoiceEvidenceInputError: When the semantic reader cannot be
+            run. Deliberately OUTSIDE the caller's fallback ``try`` -- see
+            :func:`_refuse_a_text_read_with_no_reader`.
     """
     # Both imports are function-local by necessity, not preference, and both are
     # cycle-breaks rather than lazy-loading:
@@ -864,7 +889,6 @@ def _read_text_layer_semantically(evidence: EvidenceInput) -> InvoiceDraft:
     from ...llm import extract_invoice_fields_from_text
     from ._grounded_reading import ground_draft_against_transcription
 
-    transcription = transcribe_text_layer(evidence)
     try:
         read = extract_invoice_fields_from_text(transcription.text)
     except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
