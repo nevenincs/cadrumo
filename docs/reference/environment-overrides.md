@@ -14,7 +14,7 @@ An annotated template with the same variables lives at `env/.env.example` in
 the repository. The application itself reads only the process environment;
 `env/.env` is not a production source. For local development and the test
 suite, the repository's `conftest.py` bridges `env/.env` into the process
-environment before tests run, filling only variables not already set; a
+environment before tests run, filling only variables not already set — a
 value already present in your shell always wins.
 
 | Variable | Type | Default | What it controls |
@@ -25,7 +25,7 @@ value already present in your shell always wins.
 | `AEAT_CLAVE_SEDE_ACCESS_URL_TEMPLATE` | str | (derived) | URL template for AEAT's auth-method selector page. `{target}` is replaced with the URL-encoded target path. The default template is sourced from the external constants registry. |
 | `AEAT_MANUALS_ROOT` | Path | (derived) | Root directory for the structured AEAT Manual práctico corpus |
 | `AEAT_NORMATIVES_ROOT` | Path | (derived) | Root directory for the bundled legal normatives corpus |
-| `AEAT_SEDE_EXPEDIENTES_PATH` | str | (derived) | AEAT Sede path for 'Mis expedientes': the default post-auth target used by Cl@ve Móvil login and the expedientes reader. |
+| `AEAT_SEDE_EXPEDIENTES_PATH` | str | (derived) | AEAT Sede path for 'Mis expedientes' — the default post-auth target used by Cl@ve Móvil login and the expedientes reader. |
 | `AEAT_STATUS_DETAIL_URL_TEMPLATE` | str | (derived) | URL path template for an expediente detail page. Must contain '{expediente_id}'. Override only when AEAT changes the corresponding route. |
 | `AEAT_STATUS_NOTIFICACIONES_PATH` | str | (derived) | URL path for the 'Mis notificaciones' listing page. Joined against aeat_base_url. Override only when AEAT changes the corresponding route. |
 | `CADRUMO_ALLOW_UNENCRYPTED` | str | empty | Hostile-named opt-out gate for the unsecured backend. Must be set to the literal '1' (env var: CADRUMO_ALLOW_UNENCRYPTED=1) to use cadrumo_secret_store_backend=unsecured. The unsecured backend is intended for testing / educational / throwaway scenarios only and provides ZERO confidentiality. The substrate refuses to load an operator profile that carries a real NIF/NIE/CIF while running in unsecured mode. |
@@ -74,8 +74,6 @@ value already present in your shell always wins.
 | `CADRUMO_DEV_TEST_DATABASE_PASSWORD` | SecretStr | (secret) | Development/test-only password used by secure-storage subprocess tests. |
 | `CADRUMO_DRAFT_FAIL_ON_WARNING` | bool | `false` | If true, build_draft raises FilingValidationError when any WARNING- or ERROR-severity finding is produced |
 | `CADRUMO_DRAFTS_DIR` | Path | (derived) | Directory where filing drafts are written as JSON files |
-| `CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED` | bool | `false` | Whether this deployment permits transmitting evidence to a cloud model at all. Default off: evidence reading is on-host only. When True, a per-invocation operator consent acknowledgement is still required for each cloud read. |
-| `CADRUMO_EVIDENCE_GESTOR_MODE` | bool | `false` | Gestor/professional deployment flag. When True, cloud evidence upload is categorically refused regardless of cadrumo_evidence_cloud_upload_permitted or per-invocation consent. |
 | `CADRUMO_FALLBACK_LANGUAGES` | str | `es,en` | Comma-separated fallback chain consulted when the target language is missing. |
 | `CADRUMO_FILE_LOCK_RETRY_BACKOFF_S` | float | `0.05` | Sleep interval (seconds) between non-blocking file-lock acquire attempts |
 | `CADRUMO_FILE_LOCK_TIMEOUT_S` | float | `30.0` | Default exclusive file-lock acquisition timeout (seconds) |
@@ -116,12 +114,14 @@ value already present in your shell always wins.
 | `CADRUMO_LLM_GEMINI_GENERATE_CONTENT_TEMPLATE` | str | `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent` | Google Gemini generateContent endpoint template (``{model}`` is substituted) |
 | `CADRUMO_LLM_MAX_RETRIES` | int | `3` | Maximum retry attempts for retryable LLM failures |
 | `CADRUMO_LLM_MODEL` | str | `claude-sonnet-4-6` | Default LLM model identifier |
+| `CADRUMO_LLM_MODEL_RUNTIME_MEMORY_FLOOR_BYTES` | int | `8589934592` | Minimum total system memory the local model runtime needs before a vision read is worth attempting. Sized for the default vision model (qwen2.5vl:3b, ~3 GB of weights) plus the 8192-token context window and normal OS residency, which is why the floor sits well above the weight size alone. Below it the runtime does not refuse -- it loads and thrashes, or is killed mid-read, which reaches the operator as an unexplained timeout rather than as a hardware shortfall. Tunable because the floor tracks the configured model: lower it for moondream on low-memory hardware, raise it for qwen2.5vl:7b |
 | `CADRUMO_LLM_OLLAMA_CHAT_URL` | str | `http://127.0.0.1:11434/api/chat` | Local Ollama /api/chat endpoint; override for non-localhost Ollama deployments |
 | `CADRUMO_LLM_OLLAMA_NUM_CTX` | int | `8192` | Ollama context window (num_ctx) for local requests. The vision read sends the full registry allow-list prompt plus the encoded invoice image, which exceeds Ollama's 4096 default; 8192 fits the prompt + image + output with headroom and still runs on consumer hardware |
+| `CADRUMO_LLM_OLLAMA_TEXT_MODEL` | str | `qwen2.5:3b` | Local Ollama TEXT model used to classify a text-layer document on-host. Chosen under the same consumer-hardware constraint that binds the vision default rather than beside it: qwen2.5:3b is ~2 GB, comfortably under the declared memory floor, and is the text sibling of the qwen2.5vl:3b vision default, so a machine provisioned for one is provisioned for the other. This model reads only the extracted text and selects from the registry allow-list; it never emits a regulated number. Override upward (qwen2.5:7b) on a larger GPU |
 | `CADRUMO_LLM_OLLAMA_VISION_MODEL` | str | `qwen2.5vl:3b` | Local Ollama vision model used to read scanned/image evidence on-host (the default, gestor-allowed posture); must be a multimodal model pulled into the local Ollama runtime. Default qwen2.5vl:3b (~3 GB) is document/OCR-grade and runs on normal consumer hardware (modest GPU or CPU); override to qwen2.5vl:7b for an 8 GB+ GPU or moondream for CPU-only/low-memory hardware |
 | `CADRUMO_LLM_OPENAI_API_KEY` | SecretStr | (secret) | OpenAI API key (optional) |
 | `CADRUMO_LLM_OPENAI_CHAT_COMPLETIONS_URL` | str | `https://api.openai.com/v1/chat/completions` | OpenAI Chat Completions endpoint; override for OpenAI-compatible proxies |
-| `CADRUMO_LLM_PROVIDER` | LLMProviderSetting | `ANTHROPIC` | Default LLM provider name |
+| `CADRUMO_LLM_PROVIDER` | LLMProvider | `ANTHROPIC` | Default LLM provider name |
 | `CADRUMO_LLM_RUN_TELEMETRY_DIR` | Path | (derived) | Directory for append-only local LLM run-timing telemetry logs |
 | `CADRUMO_LLM_RUN_TELEMETRY_MAX_RECORDS` | int | `5000` | Maximum number of local LLM run-telemetry records retained; oldest excess records are pruned |
 | `CADRUMO_LLM_RUN_TELEMETRY_RETENTION_DAYS` | int | `30` | Retention window in days for local LLM run-telemetry records; older records are pruned |
@@ -158,7 +158,7 @@ value already present in your shell always wins.
 | `CADRUMO_RUNS_DIR` | Path | (derived) | Directory where run traces and JSONL event logs are persisted (one subdirectory per run_id, containing trace.json + events.jsonl) |
 | `CADRUMO_RUNS_MAX_TOTAL_BYTES` | int | `268435456` | Trace-store byte cap; after age pruning, remove oldest runs but always retain the newest |
 | `CADRUMO_RUNS_RETENTION_DAYS` | int | `30` | Retention window in days for per-run trace directories; older run directories are pruned |
-| `CADRUMO_SECRET_PASSPHRASE` | SecretStr | (secret) | Passphrase that derives the encrypted-secret-store master key. Default None; the master-key loader refuses operation on None or empty value to preserve fail-closed behaviour. Operator-facing env var is CADRUMO_SECRET_PASSPHRASE. |
+| `CADRUMO_SECRET_PASSPHRASE` | SecretStr | (secret) | Passphrase that derives the encrypted-secret-store master key. Default None — the master-key loader refuses operation on None or empty value to preserve fail-closed behaviour. Operator-facing env var is CADRUMO_SECRET_PASSPHRASE. |
 | `CADRUMO_SECRET_STORE_BACKEND` | SecretStoreBackend | `auto` | Master-key backend for the secret store. auto = OS keychain when available, encrypted file fallback otherwise. keyring = OS keychain only (refuses to fall back). file = encrypted file only (required for CI / headless). unsecured = testing-only mode with a published deterministic key; requires cadrumo_allow_unencrypted=true and refuses real NIFs. |
 | `CADRUMO_SECRET_STORE_DIR` | Path | (derived) | Directory for the encrypted secret-store master-key file and ciphertext records |
 | `CADRUMO_STORAGE_PROVIDER_KIND` | str | `local_filesystem` | Backend for `cadrumo.adapters.outbound.storage`. Accepted values: local_filesystem (default), google_drive, in_memory. google_drive additionally requires cadrumo_google_drive_root_folder_id and a per-profile registered OAuth client + token via `aeat config google`. |
@@ -172,7 +172,7 @@ value already present in your shell always wins.
 | `CADRUMO_TUI_APPEARANCE` | TuiAppearance | `auto` | Appearance for the full-screen terminal surfaces. auto = follow the host terminal. light = the warm-paper appearance. dark = the low-light appearance. |
 | `CADRUMO_USAGE_RATIOS_PATH` | Path | (derived) | User-configured per-category usage ratio overrides |
 | `CADRUMO_VALIDATION_VERDICT_CACHE_DIR` | Path | (derived) | Directory for the persistent registry-validation verdict cache (a fingerprint-keyed proof that validate_registry ran green, so a matching immutable tree skips runtime re-validation) |
-| `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` | Path | unset | Opt-in diagnostic capture directory for the IVA compensation wallet (cartera) read. The ``None`` default disables capture and is the only production posture: with it unset the wallet read path is byte-for-byte unchanged. When set via ``CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`` the read writes one redacted structural-shape summary per captured page and frame (URL without query, heading/table/form/input counts, form action paths, input identifiers, and a content hash) to this directory so AEAT DOM drift on the cartera surface can be diagnosed offline. It never writes raw HTML, frame HTML, screenshots, input values, or wallet amounts, so the capture carries no live taxpayer figures; it is written only to this operator-chosen directory and must never be committed or reused as a fixture without sanitisation. |
+| `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` | Path | unset | Opt-in diagnostic capture directory for the IVA compensation wallet (cartera) read. The ``None`` default disables capture and is the only production posture: with it unset the wallet read path is byte-for-byte unchanged. When set via ``CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`` the read writes one redacted structural-shape summary per captured page and frame — URL without query, heading/table/form/input counts, form action paths, input identifiers, and a content hash — to this directory so AEAT DOM drift on the cartera surface can be diagnosed offline. It never writes raw HTML, frame HTML, screenshots, input values, or wallet amounts, so the capture carries no live taxpayer figures; it is written only to this operator-chosen directory and must never be committed or reused as a fixture without sanitisation. |
 | `CADRUMO_WALLET_DIAGNOSTIC_RETENTION_DAYS` | int | `30` | Retention window in days for wallet diagnostic dump files; when the opt-in dump directory is configured, dump files older than this are pruned |
 | `CADRUMO_WORKBOOK_PARITY_LIBREOFFICE_TIMEOUT_S` | int | `120` | Subprocess timeout (seconds) for the LibreOffice binary XLS conversion fall-back |
 | `CADRUMO_WORKBOOK_PARITY_PER_FILE_TIMEOUT_S` | float | `15.0` | Default per-file timeout (seconds) for workbook-parity scans |
