@@ -300,10 +300,27 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
             window, or a standing slot the registry no longer serves. Refusing
             is the point: substituting whatever the tier happens to mean that
             day would record a number the invoice never carried.
+            :attr:`IvaRate.RATE_0` is never refused; see the note below.
     """
     fraction = iva_rate_slot_percentage(rate)
     if fraction is None:
         return None
+    if rate is IvaRate.RATE_0:
+        # The one tier exempted from the in-force check, because the registry's
+        # zero authority is knowingly INCOMPLETE and an in-force test against an
+        # incomplete authority manufactures false refusals. rates.toml records
+        # only the RD-ley 4/2024 window and says in its own comment that the
+        # indefinite art. 91.Cuatro 0% (entregas de donativos, Ley 49/2002) is
+        # deliberately NOT registered, because the flat ``kind = "zero"`` axis
+        # cannot express a tipo bounded to donativos and an open record would
+        # apply 0% to every domestic supply.
+        #
+        # So a missing zero record means "this registry cannot say", not "no
+        # zero-rated supply was lawful that day" -- and refusing on it made
+        # every zero-rated invoice unrecordable at every date. Every other tier
+        # has complete window coverage, so the check stays sound there and MUST
+        # NOT be widened to skip them.
+        return fraction
 
     kind = _IVA_RATE_TO_IVA_KIND[rate]
     effective_date = on_date or today_madrid()
