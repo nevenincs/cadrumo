@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:09f95b19675662be7acbea837c8cbdd168cc147ab3b6ab9d660725381b9ebddc'
+body_hash: 'sha256:b031ce786b2226b5dd7eac3e71233b4231cb23038437ba002cc2a9f43a3f03d9'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -99,7 +99,7 @@ Separate real defects from measurement artefacts with evidence, fixing anything 
 - [x] `W05.P07.S17` - Run the serial lane with workers disabled so the sixty held tests produce a result instead of an absence; `src/cadrumo/`.
 - [x] `W05.P07.S20` - Fix the installed-console help path constructing Settings and reaching the former-product database refusal, help must never need database access and the refusal must route through the translated error boundary instead of leaking a traceback; `src/cadrumo/entrypoints/cli/`.
 - [x] `W05.P07.S21` - Diagnose the ledger evidence-extract extra-forbidden regression on recargo_amount, lines, iva_breakdown and iva_category before fixing either side, getting the direction wrong would paper over a data-loss regression as test staleness; `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_extract_cli.py`.
-- [ ] `W05.P07.S22` - Land the mechanical ratchet and rationale-marker fixes confirmed new since the pre-tonight baseline, each completing an already-argued intent rather than making a new decision; `src/cadrumo/`.
+- [x] `W05.P07.S22` - Land the mechanical ratchet and lint fixes now that both recorded preconditions came true - src is clean on ruff and the size baseline re-measure cleared all four stale pins, tightening almost every limit rather than absorbing growth, with _models.py deliberately left pinned below its measurement because the writer refuses to lift a ceiling that was broken through. The dev agent_eval residue is left alone since 44 of its 57 are D103 docstrings in a package mid-relocation, and the remaining over-budget subjects each need an extraction, which is a new decision; `src/cadrumo/, dev/audit/`.
 - [x] `W05.P07.S23` - Rule whether the new einvoice XML parse error derives from the project error base or declares a bare-base rationale, a domain call not a mechanical fix; `src/cadrumo/adapters/inbound/einvoice/_xml.py`.
 - [x] `W05.P07.S31` - Classify the serial-lane perf-budget miss against a quiet baseline, measured P95 3.906 CPU-s against a 3.0 budget on a box that ran a large agent fleet all night; `src/cadrumo/application/aggregation/tests/test_ledger_scale_benchmark.py`.
 - [x] `W05.P07.S32` - Classify the packaging cohort inventory drift, six errors share one root cause where a stray gitignore sits in the build output directory outside the declared manifest; `dev/packaging/`.

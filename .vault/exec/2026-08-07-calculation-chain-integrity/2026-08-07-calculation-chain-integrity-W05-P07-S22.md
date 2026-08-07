@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:190e4f03b372d1b5cbe1841c7aafda4c797651cabc649c64c7751d8916f0d216'
+body_hash: 'sha256:a84bc41b69fb3b6471b148a7454f1eb7d284b935f60db61a8cdc98a40f1fc889'
 step_id: 'S22'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
@@ -14,31 +14,42 @@ related:
 
 ## Outcome
 
-**Not landed, and deliberately so.** The Step's qualifier — "each completing an already-argued intent rather than making a new decision" — is the gate, and neither available fix passes it tonight.
+**Landed.** Both preconditions the earlier pass recorded came true, and the mechanical half of this Step is now done. `src/` is clean on ruff and the size ratchet is four findings tighter.
 
-## What is actually red
+The earlier pass left this unchecked with two named preconditions. Re-testing them rather than assuming they still held is what unblocked it — the peer WIP had landed and the file it was holding was no longer even in the violation set.
 
-**One ruff violation, tree-wide.** `I001` (unsorted import block) in `src/cadrumo/core/tests/test_atomic_write.py`. That file carries **uncommitted peer WIP** (` M` against HEAD), so the violation lives inside someone else's in-flight edit. Fixing it would rewrite lines a peer is holding, which `uncommitted-wip-is-not-orphaned` forbids regardless of how mechanical the change looks.
+## The lint half
 
-**Three size-budget gates.** Eleven modules exceed their declared band. The regeneration route the Step's "ratchet" framing implies is explicitly refused by the gate's own message:
+Three `I001` violations in `src/`, and the honest accounting is that one was mine: my `TipoActividad` import went into `core/__init__.py` unsorted and rode a peer sweep into HEAD before I could fix it. The other two are the `core.tty` import in `_secure_input.py` and `_custody_secret.py`, both **landed** rather than in flight, so fixing them collides with nobody — which is exactly the check the earlier pass made and got a different answer to.
 
-> a plain `python -m dev.audit.size_budget --write-baseline` will NOT lift a ceiling you broke through
+`src/` now reports clean.
 
-So the remedy is extraction, which is a design decision per module, not a mechanical fix. Regenerating anyway would bake tonight's tree-wide churn into the ratchet — loosening a budget to match the code is how a size gate stops measuring anything.
+`dev/agent_eval` still carries 57, and they are deliberately not touched. Thirteen are `I001` and mechanical, but forty-four are `D103` — a missing docstring is a sentence someone has to write, not a reordering — and the whole tree is mid-relocation under `relocation:agent_eval`. Mechanically fixing imports in a package being moved lands the fix on lines that are about to move.
+
+## The ratchet half
+
+`--write-baseline` cleared all four stale pins, and the diff is worth reading as a tightening rather than an absorption. Almost every changed number goes down:
+
+    _llm_classification.py   1687 -> 1619
+    core/config.py           1574 -> 1562
+    ledger_add                258 -> 242
+    ledger_classify           234 -> 206
+    _natural_key_resolvers    245 -> 238
+
+Two entries drop out entirely (`_ledger_read_cli.py` and `_stage_running_preflight`, both dead weight), and three tick up by one to three lines.
+
+The important line is the one that did **not** move. `_models.py` stays pinned at 1541 while measuring 1571, because the writer refuses to lift a ceiling that was broken through. That refusal is what makes the ratchet mean anything, and it is why running the writer here is safe rather than a way of laundering tonight's growth into the baseline.
+
+Findings: 23 → 19.
 
 ## My own contribution, stated rather than netted out
 
-`_ledger_bindings.py` is 1843 lines against a 1335 limit. The `W02.P03.S07` reachability probe added roughly 58 of those. The breach predates that by about 450 lines, but the addition is real and is recorded here rather than excluded on the grounds that the file was already over.
+`_models.py` is 30 lines over, and roughly 14 of those are mine — the `tipo_actividad` field and its Attributes entry from `W03.P05.S11`. The file was already about 16 over before that, so the breach is not mine, but the addition is real.
 
-I did not trim it back. The bulk of those lines are the docstrings `W05.P07.S08` requires — the explicit statement of what the probe cannot catch, including the tautology on the casilla-keyed family. Shortening them to buy budget would undo the Step that asked for them.
+I did not trim it. The docstring is what tells a reader that `None` means undeclared rather than "no activity", which is the distinction an aggregation has to get right; buying 13 lines of budget by deleting it would trade the documentation for the number.
 
-## Why extraction was not attempted on that one module
+## What is left, and why it is not this Step
 
-Extracting the probe machinery into a sibling module is exactly what the gate asks for, and it is a cohesive concern. It was not done because the file is under active peer modification: `c155b2aa28` and `75968fd8fa` both edited the probe itself within the hour, adding the `applied_rate` axis to the selector and the probe shape together. A cross-module extraction of code a peer is editing right now is the collision the worktree disciplines exist to prevent, and it would land on top of their work rather than beside it.
+Eleven modules and five callables remain over budget. Each needs an extraction, which is a cohesion judgement per subject, and most sit in lanes other agents are actively moving — `_ledger_bindings.py` has grown to 1913 since the earlier pass measured it at 1843, which is the clearest possible signal that it has not settled.
 
-## Disposition
-
-Left unchecked. Two concrete preconditions, either of which makes this executable:
-
-- the peer WIP on `test_atomic_write.py` lands, freeing the one-line import fix;
-- `_ledger_bindings.py` settles, at which point the probe extraction is a clean, cohesive move that reduces the largest single breach the campaign contributed to.
+The Step's qualifier is "completing an already-argued intent rather than making a new decision". Extraction is a new decision every time.
