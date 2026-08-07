@@ -72,12 +72,20 @@ def _resolve_role_model(role_value: str | None, model: str | None) -> tuple[str,
 
     role = ModelRole(role_value) if role_value else ModelRole.VISION_TRANSCRIPTION
     selection = select_model_for_role(role)
+    # An unknown requirement yields no pair rather than a zero one. Zero is not
+    # a neutral placeholder here: it flows into the contention assessment as the
+    # amount the model needs, so every check would report "admitted" on evidence
+    # nobody has. Returning None skips the assessment, which says the same thing
+    # honestly -- the caller already treats a missing pair as "not assessed".
     if model:
-        requirement = selection.candidate.memory_requirement_bytes if selection.candidate else 0
-        return model, requirement
+        requirement = selection.candidate.memory_requirement_bytes if selection.candidate else None
+        return (model, requirement) if requirement is not None else None
     if not selection.selected or selection.runtime_id is None or selection.candidate is None:
         return None
-    return selection.runtime_id, selection.candidate.memory_requirement_bytes
+    requirement = selection.candidate.memory_requirement_bytes
+    if requirement is None:
+        return None
+    return selection.runtime_id, requirement
 
 
 def register_provision_commands(app: typer.Typer) -> None:
@@ -121,8 +129,13 @@ def register_provision_commands(app: typer.Typer) -> None:
                     detail=selection.detail,
                 ),
             )
+            # Same reason as the resolver above: a candidate whose requirement is
+            # unknown cannot anchor a contention assessment, so it does not become
+            # the primary rather than becoming a zero-requirement one.
             if primary is None and selection.selected and selection.candidate is not None:
-                primary = (selection.runtime_id or "", selection.candidate.memory_requirement_bytes)
+                requirement = selection.candidate.memory_requirement_bytes
+                if requirement is not None:
+                    primary = (selection.runtime_id or "", requirement)
 
         contention = None
         if primary is not None:
@@ -142,7 +155,7 @@ def register_provision_commands(app: typer.Typer) -> None:
             free_system_memory_bytes=profile.memory.free_bytes,
             runtime_reachable=residents is not None,
             residents=resident_names,
-            models=[ProvisionModelPayload(**row) for row in models],
+            models=models,
             contention=_contention_payload(contention),
         )
         lines = [
@@ -150,7 +163,7 @@ def register_provision_commands(app: typer.Typer) -> None:
             f"runtime\t{'reachable' if residents is not None else 'unreachable'}",
         ]
         lines.extend(
-            f"model\t{row['role']}\t{row['model'] or '-'}\t{'resident' if row['resident'] else '-'}"
+            f"model\t{row.role}\t{row.model or '-'}\t{'resident' if row.resident else '-'}"
             for row in models
         )
         if contention is not None:
