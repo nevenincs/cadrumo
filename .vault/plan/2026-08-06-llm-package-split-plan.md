@@ -4,7 +4,7 @@ tags:
   - '#llm-package-split'
 date: '2026-08-06'
 modified: '2026-08-07'
-body_hash: 'sha256:92d793014d5a24ecdffcac8cd4e62fcdedf892ed1c462421d3230b1e074393e4'
+body_hash: 'sha256:cd36754d5fa778e2bfaa13f3056571442578a5ff43537c805febcb01e31f8c76'
 tier: L3
 related:
   - '[[2026-08-06-llm-package-split-adr]]'
@@ -175,7 +175,7 @@ Turns the ZUGFeRD fixture into a real field-level gate, proves the core path rea
 - [x] `W02.P05.S71` - Assert the keyed guard compares every persisted field so a same-key re-add whose content differs refuses with an instructive conflict, red if a re-add changing one field is reported as an unchanged no-op and the new value is silently dropped; `src/cadrumo/application/ledger/tests/`.
 - [x] `W02.P05.S70` - Prove the parsers give the sibling campaign's multi-line writer a real per-rate producer by round-tripping a two-rate structured document from parse to a confirmed multi-line invoice, sequenced after that campaign's writer Step lands, red if the confirm boundary is bypassed or the second rate is lost in transit; `src/cadrumo/application/ledger/tests/`.
 - [x] `W02.P05.S81` - Assert the invoice-level identity holds exactly on a parsed multi-rate document with grand total equal to base plus IVA plus recargo and retencion outside it, red if per-line rounding is allowed to accumulate into the invoice-level total; `src/cadrumo/application/ledger/tests/`.
-- [ ] `W02.P05.S83` - Prove an invoice confirmed from a structured document grounds through the decomposition contract rather than refusing as undeclared, red if the renta sales-evidence path still refuses it with an ungrounded-decomposition verdict; `src/cadrumo/application/ledger/tests/`.
+- [x] `W02.P05.S83` - Prove an invoice confirmed from a structured document grounds through the decomposition contract rather than refusing as undeclared, red if the renta sales-evidence path still refuses it with an ungrounded-decomposition verdict; `src/cadrumo/application/ledger/tests/`.
 
 ## Wave `W03` - Define and enforce the core-to-extension interchange contract
 

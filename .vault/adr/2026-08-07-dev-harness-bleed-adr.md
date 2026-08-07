@@ -11,6 +11,7 @@ related:
   - '[[2026-06-14-docs-tooling-separation-research]]'
   - '[[2026-08-07-pdf-sanitizer-contributor-tooling-adr]]'
   - '[[2026-07-08-importlinter-test-carveout-adr]]'
+  - '[[2026-08-07-dev-harness-bleed-research]]'
 ---
 # `dev-harness-bleed` adr: `locales tooling boundary` | (**status:** `proposed`)
 
