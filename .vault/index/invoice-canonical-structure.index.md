@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:b41d5a3519aa6ec87eb6119797bf02fba75bc842b046962c983163681b1f855c'
+body_hash: 'sha256:3dd59c87a8dafb384faa1c293ded691cadab9cf98a5aaf533d754f4dbbbc7c9d'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -18,6 +18,8 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S29]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S30]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S31]]'
+  - '[[2026-08-06-invoice-canonical-structure-P01-S32]]'
+  - '[[2026-08-06-invoice-canonical-structure-P01-S33]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S34]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S35]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S36]]'
@@ -61,6 +63,8 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 - `2026-08-06-invoice-canonical-structure-P01-S37` - Give the canonical invoice write paths the bucket lifecycle events the slim store emits, because the canonical creation, mutation and deletion paths emit no bucket event of any kind while the slim services emit six dedicated event types and return their ids in the operator mutation result, so repointing the bare verbs would drop the invoice audit trail and the bucket-event-ids field together, and deleting the slim store would orphan six enum members that then need consumer reconciliation
 - `2026-08-06-invoice-canonical-structure-P02-S07` - Stop synthesising exactly one line at BOTH synthesis sites, the canonical builder and the live bulk importer, accepting a supplied line set and proving a two-line invoice at different rates persists and aggregates per line with no persisted-schema change
 - `2026-08-06-invoice-canonical-structure-P01-S31` - Write the capability-parity proof, a bucket exercising every capability of both stores run through the canonical path asserting identical M347, M349, M303 and M390 outputs and an identical export-import roundtrip, and if that proof cannot be written record that the fold is not ready and what is missing
+- `2026-08-06-invoice-canonical-structure-P01-S32` - Enrol the invoice decomposition contract as a capability-inventory row with both production consumers and the modelos each serves, the renta sales-evidence gate running the full grounded check and the M349 gate narrowed to the two self-contradiction defects, and record which record classes each would exclude after the fold
+- `2026-08-06-invoice-canonical-structure-P01-S33` - Prove decomposition parity, that an ex-slim record and a natively rich record carrying identical economic facts decompose to identical components and land on the same partition side, and decide per unmigratable class whether it decomposes correctly, refuses loudly or is flagged defective
 - `2026-08-06-invoice-canonical-structure-P01-S34` - Re-decide the M349 treatment of an absent iva_category now that its stated justification is stale, the enum having gained intra-community service members in 7502ee65ed while the resolver docstring still says services map to no member, and either correct the reasoning while keeping the behaviour or change the behaviour, never leaving a filing-path guard resting on a false premise
 
 ### plan
