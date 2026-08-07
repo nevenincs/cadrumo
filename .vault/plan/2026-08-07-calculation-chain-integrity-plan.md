@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:943a516827d146d3f95812fed7e81525bcd5e5fe0900c1195db192cf4839c9b3'
+body_hash: 'sha256:213f8c15fe6513a264563b6bd60caa6d53c3c54b23337e989bcc60936e366625'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -51,7 +51,7 @@ Implement the decided mechanism with a mutation proof and an explicit statement 
 
 - [x] `W02.P03.S07` - Implement the reachability probe per binding source family, hung on the existing per-family module seam; `src/cadrumo/domain/calculations/registry/`.
 - [x] `W02.P03.S08` - Mutation-prove the gate reddens on a binding retargeted to match nothing, and state in code what it cannot catch; `src/cadrumo/domain/calculations/registry/tests/`.
-- [ ] `W02.P03.S40` - Gate that both sides of every reconciliation pair select the same category set, enumerated from both declaration sites, so a periodic-line change that skips its annual or aggregate counterpart reddens instead of shipping; `src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W02.P03.S40` - Gate that both sides of every reconciliation pair select the same category set, enumerated from both declaration sites, so a periodic-line change that skips its annual or aggregate counterpart reddens instead of shipping; `src/cadrumo/domain/calculations/registry/tests/`.
 
 ## Wave `W03` - The activity-type classification axis
 
@@ -121,7 +121,7 @@ Run the sweep over the surfaces this campaign touches, where three parallel-auth
 - [ ] `W06.P08.S33` - Rule whether the cash-accounting exclusion set is scoped by the LIVA art 163 duodecies Uno territorial clause or enumerates only its Dos carve-outs, six members are Dos letters and one is a Uno scope case with nothing distinguishing them; `src/cadrumo/application/aggregation/_iva_ledger.py`.
 - [ ] `W06.P08.S34` - Check the OSS declaration path before adding the second not-subject member to the cash-accounting exclusion, doing so newly refuses OSS rows for a taxpayer who also uses cash accounting and that combination is live; `src/cadrumo/application/aggregation/`.
 - [ ] `W06.P08.S35` - Answer whether an invoice with no declared operation type can legitimately need the five claves the category fallback cannot emit, if not the fallback is correct by scope and must say so; `src/cadrumo/application/invoices/_source_resolver.py`.
-- [ ] `W06.P08.S39` - Query both declaration sites when enumerating reconciliation pairs, annual-summary relations and reconciliation casillas with their blocking-rule formulas, the first alone misses the grupo pair; `src/cadrumo/domain/calculations/registry/`.
+- [x] `W06.P08.S39` - Query both declaration sites when enumerating reconciliation pairs, annual-summary relations and reconciliation casillas with their blocking-rule formulas, the first alone misses the grupo pair; `src/cadrumo/domain/calculations/registry/`.
 - [ ] `W06.P08.S41` - Refuse rather than guess when an intra-community supply carries no operation type, the fallback emits the one clave the official table expressly carves post-importation supplies out of and cannot distinguish them from the category it reads; `src/cadrumo/application/invoices/_source_resolver.py`.
 - [ ] `W06.P08.S42` - Document the call-off stock claves as unreachable by scope from an invoice-sourced path so the next reader does not refile the subset as a defect; `src/cadrumo/application/invoices/_source_resolver.py`.
 - [ ] `W06.P08.S43` - Add the second not-subject member to the cash-accounting exclusion set now the OSS scope refusal is confirmed correct, with a mutation proof since a set-membership edit that reddens nothing has not been shown to bite; `src/cadrumo/application/aggregation/_iva_ledger.py`.
