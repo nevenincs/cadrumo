@@ -817,6 +817,7 @@ application:
           %{invoice_id}.'
         unsupported_iva_rate: 'El tipo de IVA %{iva_rate} no se reconoce; usa uno
           de: %{accepted}.'
+        intracom_operation_type_required: 'Una entrega intracomunitaria debe declarar su clave de operación del Modelo 349: la categoría por sí sola no distingue una entrega intracomunitaria ordinaria (clave E) de una entrega posterior a una importación exenta (clave M, o H mediante representante fiscal).'
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'El prefijo de identificador de factura %{invoice_id}

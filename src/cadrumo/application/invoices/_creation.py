@@ -27,6 +27,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Final
 
 from pydantic import BaseModel, ConfigDict
 
@@ -141,6 +142,56 @@ def emit_catalogue_invoice_event(
         payload_version=_INVOICE_EVENT_PAYLOAD_VERSION,
     )
     return (event.event_id,)
+
+
+#: The one IVA category that does NOT settle its Modelo 349 clave.
+#:
+#: Every other intra-community category determines its clave outright: the two
+#: service categories give S and I, and triangulation gives T. An entrega
+#: intracomunitaria de bienes does not, because claves M and H -- supplies
+#: following an exempt importation, LIVA art. 27.12 -- share this exact
+#: category with the ordinary clave E. No category predicate can separate the
+#: three, so the fact lives with the operator or nowhere.
+_CATEGORY_NEEDING_AN_EXPLICIT_CLAVE: Final = IvaCategory.INTRA_COMMUNITY_SUPPLY
+
+
+def _require_operation_type_where_the_category_cannot_settle_it(
+    *,
+    iva_category: IvaCategory | None,
+    operation_type: IntracomOperationType | None,
+) -> None:
+    """Refuse an entrega intracomunitaria that does not state its clave.
+
+    Closing the ambiguity HERE rather than screening it at calculate time is
+    the whole point. At creation the operator is looking at the document and
+    knows whether this supply followed an exempt importation; by the time the
+    Modelo 349 resolver runs, nobody does, and the best it can offer is to
+    infer E and disclose that it guessed. A fact that only one party holds
+    should be captured from that party, not reconstructed downstream from
+    evidence that cannot carry it.
+
+    Scoped to the single category where the ambiguity is real. Demanding an
+    operation type for the service or triangulation categories would make the
+    operator restate a clave their category already determines, and a
+    redundant required field is how a boundary check earns the reputation that
+    gets it removed.
+
+    Raises:
+        InvoiceValidationError: When an ``INTRA_COMMUNITY_SUPPLY`` invoice
+            carries no ``operation_type``, naming the three candidate claves so
+            the refusal tells the operator what to state rather than only that
+            something is missing.
+    """
+    if iva_category is not _CATEGORY_NEEDING_AN_EXPLICIT_CLAVE or operation_type is not None:
+        return
+    raise InvoiceValidationError(
+        "an intra-community supply must state its Modelo 349 operation type: the category alone "
+        "cannot distinguish an ordinary entrega intracomunitaria (clave E) from a supply following "
+        "an exempt importation (clave M, or H when made by a fiscal representative), because all "
+        "three carry this same IVA category",
+        translated_message="application.invoices.creation.errors.intracom_operation_type_required",
+        context={"iva_category": _CATEGORY_NEEDING_AN_EXPLICIT_CLAVE.value},
+    )
 
 
 def _resolve_iva_rate_slot(iva_rate: Decimal | None) -> IvaRate:
@@ -308,6 +359,10 @@ def build_catalogue_invoice(
         invoice_payload["recargo_amount"] = format(recargo_amount, "f")
     if iva_category is not None:
         invoice_payload["iva_category"] = iva_category.value
+    _require_operation_type_where_the_category_cannot_settle_it(
+        iva_category=iva_category,
+        operation_type=operation_type,
+    )
     if operation_type is not None:
         invoice_payload["operation_type"] = operation_type.value
     if operation_date is not None:

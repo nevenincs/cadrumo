@@ -735,6 +735,7 @@ application:
           catalogue: %{invoice_id}.'
         unsupported_iva_rate: 'IVA rate %{iva_rate} is not recognised; use one of:
           %{accepted}.'
+        intracom_operation_type_required: 'An intra-community supply must state its Modelo 349 operation type: the category alone cannot tell an ordinary entrega intracomunitaria (clave E) from a supply following an exempt importation (clave M, or H via a fiscal representative).'
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'The invoice id prefix %{invoice_id} is ambiguous;

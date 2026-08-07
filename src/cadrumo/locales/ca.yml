@@ -813,6 +813,7 @@ application:
           %{invoice_id}.'
         unsupported_iva_rate: 'El tipus d''IVA %{iva_rate} no es reconeix; useu un
           de: %{accepted}.'
+        intracom_operation_type_required: 'Un lliurament intracomunitari ha de declarar la seva clau d''operació del Model 349: la categoria per si sola no distingeix un lliurament intracomunitari ordinari (clau E) d''un lliurament posterior a una importació exempta (clau M, o H mitjançant representant fiscal).'
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'El prefix d''identificador de factura %{invoice_id}
