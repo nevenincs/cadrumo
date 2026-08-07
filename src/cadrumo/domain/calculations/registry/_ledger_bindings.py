@@ -1794,6 +1794,9 @@ def unsupported_ledger_renta_gastos_pago_fraccionado_observations(
 ) -> tuple[RentaGastosPagoFraccionadoObservationProtocol, ...]:
     """Return the gasto observations no ``ledger_renta_gastos_pago_fraccionado_aggregation`` binding can consume.
 
+    ``revision`` is the :class:`ModeloRevision` whose declared bindings define
+    what is consumable.
+
     Delegates the screen to :func:`unsupported_ledger_family_observations` —
     see that function for the shared fail-closed contract (why an unmatched
     observation is a modelling gap, not a legitimate zero). This family's
