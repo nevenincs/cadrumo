@@ -802,6 +802,69 @@ def _iva_rate_slot_for(rate: Decimal | None) -> IvaRate:
     return slot
 
 
+def _refuse_an_issued_document_the_filer_did_not_issue(
+    *,
+    kind: InvoiceKind,
+    extracted_supplier_tax_id: str | None,
+) -> None:
+    """Refuse a document confirmed as ISSUED that someone else issued.
+
+    The sibling guard refuses a counterparty that names the filer. This one
+    catches the opposite mis-direction: a supplier's invoice TO the taxpayer,
+    confirmed as issued BY them. There the counterparty is a real third party,
+    so the sibling guard sees nothing wrong -- the record is internally
+    coherent and simply describes the wrong direction.
+
+    The evidence itself settles it. On a genuinely issued document the printed
+    supplier IS the filer, so an extracted supplier identity that is somebody
+    else is positive evidence the document was issued by that somebody else.
+
+    Direction is not cosmetic. It decides which informativa the record feeds
+    and on which side: a received invoice booked as issued moves a purchase
+    into the sales column, inverts the cuota's meaning between soportado and
+    repercutido, and reaches Modelo 347 as an operation the counterparty will
+    have declared with the opposite sign. AEAT reconciles those two
+    declarations against each other.
+
+    Refusing rather than warning, for the same reason the sibling guard does:
+    the direction is wrong under every reading, not merely doubtful.
+
+    The guard declines to judge where it cannot. An absent extracted supplier
+    means the scan found no issuer identity, which is silence rather than
+    evidence, and a bucket whose profile carries no tax id gives nothing to
+    compare against. Both return without refusing -- a guard that cannot run
+    must not block a path it cannot judge.
+
+    Args:
+        kind: The direction the operator is confirming the document as.
+        extracted_supplier_tax_id: Issuer identity recovered from the document,
+            or ``None`` when the scan found none.
+
+    Raises:
+        PurchaseInvoiceEvidenceInputError: The document names an issuer who is
+            not the filer, yet is being confirmed as issued by the filer.
+    """
+    if kind is not InvoiceKind.ISSUED or extracted_supplier_tax_id is None:
+        return
+
+    from ..invoices import counterparty_is_the_filer
+    from ..wizard import WizardStatusError, load_active_taxpayer_profile
+    from ..workflow import workflow_state_repository
+
+    try:
+        profile = load_active_taxpayer_profile(workflow_state_repository().load())
+    except WizardStatusError:
+        return
+    if profile is None:
+        return
+    if counterparty_is_the_filer(counterparty_tax_id=extracted_supplier_tax_id, profile=profile):
+        return
+    raise PurchaseInvoiceEvidenceInputError(
+        "this document names another issuer, so it cannot be confirmed as issued by you; "
+        "confirm it as received, or correct the document reference",
+    )
+
+
 def confirm_invoice_draft_from_evidence(
     *,
     bucket_id: str,
@@ -927,6 +990,10 @@ def confirm_invoice_draft_from_evidence(
         field="counterparty_tax_id",
     )
     assert isinstance(resolved_counterparty_tax_id, str)
+    _refuse_an_issued_document_the_filer_did_not_issue(
+        kind=kind,
+        extracted_supplier_tax_id=draft.supplier_tax_id,
+    )
     _refuse_a_counterparty_that_is_the_filer(resolved_counterparty_tax_id)
     resolved_invoice_number = _require_confirmed_field(
         invoice_number if invoice_number is not None else draft.invoice_number,
