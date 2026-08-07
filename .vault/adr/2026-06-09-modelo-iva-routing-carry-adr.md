@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-iva-routing-carry'
 date: '2026-06-09'
-modified: '2026-07-17'
-body_hash: 'sha256:10544ae58fa165f236dc2a3d450b44f9b36662215de0eb454c13cbb3a571cb94'
+modified: '2026-08-07'
+body_hash: 'sha256:b5a4cb26930cea8d9754c0240931660985fab40aef95efa5a12d986f1d4b61ec'
 related:
   - "[[2026-06-09-modelo-iva-routing-carry-research]]"
 ---
@@ -124,3 +124,78 @@ non-official-evidence decisions in this ADR stand and align to the canonical dir
 in the PHASE ADRs (not a central apex doc): source-kind under the phase-2.1
 `binding-source-kind-taxonomy-unification` ADR; the carry mechanism under the
 foundational `live-iva-compensation-wallet-adr` anchor + the future phase-2.3 ADR.
+
+## 2026-08-07 amendment — Tier 2 AIC official-box parity is a re-route, not an addition
+
+Tier 2 above defers "AIC official-box parity" without saying which official box
+parity means. A tax review has settled it, and the answer changes what the shipped
+Modelo 390 binding does rather than only adding a breakdown beneath it.
+
+**Ruling: intra-community acquisitions do not belong on the inversión-del-sujeto-pasivo
+line.** Modelo 390's `modelo-390-iva-autorepercutido-intracomunitaria-cuota` selects
+`intra_community_acquisition_reverse_charge` and
+`intra_community_service_acquisition_reverse_charge`; its export field sits in record
+`modelo-390-page-02` at offset 1492, which the bundled 2024 and 2025 designs both
+identify as box 28, "IVA deveng. invers. sujeto pasivo - Cuota". The two dedicated
+seven-rate AIC ladders published immediately before it, fourteen bienes boxes and
+fourteen servicios boxes, stay blank. The money total is right and the line is wrong.
+
+Three confirmations, ascending in strength.
+
+- **Legal structure.** LIVA art. 13.1 makes adquisiciones intracomunitarias de bienes a
+  hecho imponible in its own right, while art. 84 governs entregas de bienes and
+  prestaciones de servicios, its Uno.2 being the inversión rule. The bundled
+  `ley-37-1992-art-84.html` carries the BOE block structure past its own end and shows
+  the following block opening Capítulo II, adquisiciones intracomunitarias de bienes, at
+  art. 85. LIVA places the AIC taxable-person rule in a different chapter from the
+  inversión rule.
+- **AEAT's own taxonomy, inside this modelo.** The Régimen Simplificado page of Modelo
+  390 carries box 76, IVA devengado en adquisiciones intracomunitarias, and box 77, IVA
+  devengado por inversión del sujeto pasivo, as two separate boxes. AEAT states the
+  distinction rather than leaving it to be inferred from how many boxes exist.
+- **The app already does it correctly on Modelo 303, which is decisive because it is an
+  internal contradiction rather than a competing reading of the law.**
+  `modelo-303-dr303-11-projection` targets official box 11 from
+  `iva.autorepercutido.intracomunitaria.devengado`, while a separate
+  `modelo-303-dr303-13-projection` targets box 13 from
+  `iva.autorepercutido.interior.devengado`. For the identical two ledger categories,
+  Modelo 303 files on the AIC line and reserves the inversión line for domestic
+  inversión, while Modelo 390 files both on the inversión line. Modelo 390 reconciles its
+  annual devengada against the summed quarters, so the two surfaces disagree about where
+  the same money belongs. Both readings cannot be right in one codebase.
+
+**This amendment corrects the Considerations inventory above.** That list names eight
+LIVA articles absent from the catalogue and corpus, and art. 85 is not among them. Art.
+85 establishes the taxable person for adquisiciones intracomunitarias and is therefore
+the binding provision any re-routed AIC binding must cite. It is absent from both the
+bundled corpus and the legal catalogue, so the gate that Tier 2 already imposes now
+covers nine articles, not eight. The re-route must not ship before art. 85 lands with
+real BOE text and a `required_text` cross-check, per the grounding constraint above.
+
+**Two residues recorded here are cross-modelo, not Modelo 390 problems.** Both were
+first measured on Modelo 390 and both are equally true of Modelo 303, so an
+implementation scoped to the half that was measured would leave the other half live.
+First, the AIC base imponible reaches no official box on either return: Modelo 390's box
+27 is neither declared nor exported, and Modelo 303's box 10 has no projection formula.
+Second, the AIC binding's `rate_kinds` omits `zero` on both, so a 0%-rate
+intra-community acquisition reaches nothing even on the line it currently occupies. The
+`zero` widening is independently fixable but must carry its own mutation proof, because
+widening a selector alone can silently change what an existing box declares.
+
+**The implementing shape already exists in this registry.** Modelo 303 reaches its
+official boxes through projection formulas targeting the official box id, not through
+casilla `number` declarations; the three projections named above are the pattern to
+copy rather than re-derive. Keep the existing rate-blind total casilla as a sibling
+layer so rate-unrecorded AIC rows still reach a casilla, since narrowing to per-rate
+boxes without a blind sibling has been measured to collapse a total.
+
+**One measurement constraint for the implementer.** A byte offset does not identify a
+box. Offset 1492 matches box 28 on page 2 and box 215 on page 3 of the same design, so
+the identification holds only when keyed by record as well as offset. This extends the
+existing caution that offset-to-box is undefined across a revision's span: it is equally
+undefined across pages within one design, and an offset-only claim produces no
+impossible output to catch it by inspection.
+
+This amendment rules on code and is not self-executing. The corpus work and the
+re-route are tracked as separate open rows, the re-route blocked by the corpus work, so
+that the record being correct is not mistaken for the tree being correct.
