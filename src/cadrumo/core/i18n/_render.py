@@ -96,8 +96,8 @@ class MissingTranslationError(CoreError):
         """
         super().__init__(
             f"locale key {key!r} is not translated in {locale!r}; "
-            f"run `python -m cadrumo.locales scaffold` to declare it, then "
-            f"`python -m cadrumo.locales set {locale} {key} <value>` to translate it"
+            f"run `python -m dev.locales scaffold` to declare it, then "
+            f"`python -m dev.locales set {locale} {key} <value>` to translate it"
         )
         self.key = key
         self.locale = locale
