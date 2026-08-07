@@ -130,3 +130,70 @@ review_status = "reviewed"
 reviewed_at = 2026-08-07
 reviewed_by = "agent-review"
 notes = "RIRPF art 95.6.1: tipo de retencion del 1 por ciento cuando el rendimiento neto de la actividad se determine con arreglo al metodo de estimacion objetiva y la actividad figure en la relacion de grupos y epigrafes de la Seccion Primera de las Tarifas del IAE del apartado 6.2. Esa tabla de epigrafes no se consume como parametro. Verificado contra el texto consolidado vivo del BOE el 2026-08-07."
+
+# Correspondence between the Modelo 036 tipo-de-actividad codes and the art. 95
+# partitions above. Added 2026-08-07.
+#
+# The M036 diseno de registro names field 403 only as `Tabla` and enumerates
+# nothing; the code table is published in the instrucciones, bundled at
+# corpus/aeat_official/instructions/modelo_036/ (see its PROVENANCE.md) with
+# the two AEAT sede captures that carry it and their sha256. Ten codes: A01
+# Arrendadores de Bienes inmuebles, A02 Ganaderia independiente, A03 Resto
+# empresariales, A04 Artisticas y Deportivas, A05 Profesionales; B01 Agricola,
+# B02 Ganadera, B03 Forestal, B04 Produccion de mejillon, B05 Pesquera.
+#
+# These entries exist so the code-to-partition correspondence is registry data
+# with its own legal_refs rather than an if-chain in a resolver. `value` is the
+# comma-separated code set that selects the partition and `unit` marks it as a
+# code set rather than a rate; the codes themselves are AEAT censo vocabulary
+# fixed by the Orden EHA/1274/2007 instrucciones, so both provisions are cited.
+#
+# A01, A03, B04 and B05 select NO art. 95 partition and are deliberately absent
+# from every entry below: arrendamiento de inmuebles retains under art. 100, and
+# resto empresariales, produccion de mejillon and pesquera carry no art.-95 rate
+# at all (an actividad empresarial only reaches art. 95 through apartado 6.1 by
+# estimacion objetiva, which is a method axis rather than an activity code).
+
+[parameters."rirpf-art-95:selector-m036-actividades-profesionales"]
+evidence_tier = "legal_authority"
+value = "A04,A05"
+unit = "m036-tipo-actividad-code-set"
+applies_to = "irpf-retencion-actividades-economicas"
+legal_refs = ["rd-439-2007:art-95", "orden-eha-1274-2007:art-1"]
+review_status = "reviewed"
+reviewed_at = 2026-08-07
+reviewed_by = "agent-review"
+notes = "Selecciona el tipo profesional del art 95.1 (15 por ciento general, 7 por ciento inicio). El puente es el apartado 2.a): 'se consideraran comprendidos entre los rendimientos de actividades profesionales: a) En general, los derivados del ejercicio de las actividades incluidas en las Secciones Segunda y Tercera de las Tarifas del Impuesto sobre Actividades Economicas'. La Seccion Segunda es la de actividades profesionales, que el M036 codifica como A05 Profesionales, y la Seccion Tercera es la de actividades artisticas, que el M036 codifica como A04 Artisticas y Deportivas. Sin el apartado 2 la correspondencia A04 seria una inferencia; con el es texto. El excerpt empaquetado se extendio con los apartados 2 y 3 en el mismo commit que esta entrada, porque paraba en el apartado 1 y saltaba al 4."
+
+[parameters."rirpf-art-95:selector-m036-actividades-agricolas-ganaderas"]
+evidence_tier = "legal_authority"
+value = "A02,B01,B02"
+unit = "m036-tipo-actividad-code-set"
+applies_to = "irpf-retencion-actividades-economicas"
+legal_refs = ["rd-439-2007:art-95", "orden-eha-1274-2007:art-1"]
+review_status = "reviewed"
+reviewed_at = 2026-08-07
+reviewed_by = "agent-review"
+notes = "Selecciona el 2 por ciento general del art 95.4.2. B01 Agricola y B02 Ganadera son directos. A02 Ganaderia independiente no se infiere por analogia sino que lo dice el propio apartado 4: 'Se entenderan incluidas entre las actividades agricolas y ganaderas: a) La ganaderia independiente'. Que A02 este en la tabla de actividades SUJETAS a IAE y B02 en la de NO sujetas no separa la partida del art 95: el apartado 4 define la actividad por su naturaleza, no por su sujecion al IAE."
+
+[parameters."rirpf-art-95:selector-m036-actividades-forestales"]
+evidence_tier = "legal_authority"
+value = "B03"
+unit = "m036-tipo-actividad-code-set"
+applies_to = "irpf-retencion-actividades-economicas"
+legal_refs = ["rd-439-2007:art-95", "orden-eha-1274-2007:art-1"]
+review_status = "reviewed"
+reviewed_at = 2026-08-07
+reviewed_by = "agent-review"
+notes = "Selecciona el 2 por ciento forestal del art 95.5. Coincide en valor con el tipo agricola/ganadero general pero lo fija un apartado distinto, por lo que el selector se declara aparte igual que el parametro de tipo: una futura divergencia entre ambos apartados no debe requerir desdoblar el selector."
+
+[parameters."rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura"]
+evidence_tier = "legal_authority"
+value = ""
+unit = "m036-tipo-actividad-code-set"
+applies_to = "irpf-retencion-actividades-economicas"
+legal_refs = ["rd-439-2007:art-95", "orden-eha-1274-2007:art-1"]
+review_status = "reviewed"
+reviewed_at = 2026-08-07
+reviewed_by = "agent-review"
+notes = "HUECO DECLARADO, no un olvido: el conjunto esta vacio a proposito. El art 95.4.1 fija el 1 por ciento para las actividades ganaderas de engorde de porcino y avicultura especificamente, y la tabla del M036 no llega a ese grano: su codigo ganadero mas fino es B02 Ganadera, con A02 Ganaderia independiente al lado, y ninguno aisla porcino ni avicultura. Un contribuyente acogido al carve-out es indistinguible de cualquier otro ganadero sobre este eje. Se declara vacio en vez de omitirse para que la ausencia sea legible: omitirlo dejaria creer que el eje del M036 particiona el art 95 por completo, que es exactamente la lectura que llevaria a aplicar el 2 por ciento general a un engordador. El discriminante tendria que venir de otra autoridad; el epigrafe IAE es el candidato obvio y no sirve, porque la propia instruccion del M036 dice que el epigrafe solo se cumplimenta 'para las actividades comprendidas dentro de los codigos de actividad A01, A02, A03, A04 y A05', es decir nunca para un filer de la serie B."

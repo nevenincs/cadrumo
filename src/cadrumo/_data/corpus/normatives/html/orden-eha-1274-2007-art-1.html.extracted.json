@@ -3,16 +3,16 @@
   "source_kind": "normatives_html",
   "status": "ok",
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-1274-2007-art-1.html",
-  "source_sha256": "38fc47f4659e50897f6d333ab21138c9f763724a1cd65cc6a468d9677f03bd85",
+  "source_sha256": "31f109587f9ed1e923fddc90a725300ab1f334fdb76f2a05af0564169a15d785",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.1",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {
-      "text": "Orden EHA/1274/2007 - Articulo 1\nArticulo 1. Aprobacion del modelo 036 de declaracion censal.\nSe aprueba el modelo 036, de declaracion censal de alta, modificacion y baja en el Censo de empresarios, profesionales y retenedores.\nEl modelo 036 figura en el anexo I de esta orden.",
-      "title": null,
-      "section": null,
-      "anchor": null
+      "text": "De conformidad con lo establecido en el artículo 13 del Reglamento General de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos, aprobado por Real Decreto 1065/2007, de 27 de julio, se aprueba el modelo 036, de declaración censal de alta, modificación y baja en el Censo de empresarios, profesionales y retenedores que figura en el anexo I de esta orden.",
+      "title": "Artículo 1. Aprobación del modelo 036 de declaración censal.",
+      "section": "Artículo 1. Aprobación del modelo 036 de declaración censal.",
+      "anchor": "#ar"
     }
   ]
 }

@@ -1,4 +1,3 @@
-Orden EHA/1274/2007 - Articulo 1
-Articulo 1. Aprobacion del modelo 036 de declaracion censal.
-Se aprueba el modelo 036, de declaracion censal de alta, modificacion y baja en el Censo de empresarios, profesionales y retenedores.
-El modelo 036 figura en el anexo I de esta orden.
+# Artículo 1. Aprobación del modelo 036 de declaración censal.
+
+De conformidad con lo establecido en el artículo 13 del Reglamento General de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos, aprobado por Real Decreto 1065/2007, de 27 de julio, se aprueba el modelo 036, de declaración censal de alta, modificación y baja en el Censo de empresarios, profesionales y retenedores que figura en el anexo I de esta orden.
