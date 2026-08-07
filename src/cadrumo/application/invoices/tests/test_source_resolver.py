@@ -1400,3 +1400,54 @@ def test_a_stated_operation_type_is_never_disclosed_as_inferred(
     repository.save(InvoiceCatalogue.from_invoices((stated, _third_country_import())))
 
     assert _inferred_clave_reasons(_m349_resolution(repository)) == []
+
+
+def test_an_unconverted_foreign_invoice_is_excluded_but_reported(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """Excluding the amount is right; excluding it in silence is not.
+
+    A foreign-currency invoice with no resolved euro rate must never be declared
+    at its face value -- that part is settled, and the sibling test above pins
+    it. But the OPERATION is still real and still declarable: a GBP
+    intracommunity supply to a German customer belongs on the recapitulativa
+    whatever the euro figure turns out to be.
+
+    Dropping it silently leaves the operator filing a Modelo 349 that omits an
+    operation, with nothing on any surface saying so. The resolver's own
+    incoherence advisory states the principle it must follow here: a missing
+    intracomunitaria is an under-declaration whether it was dropped by a
+    contradiction or by silence.
+    """
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    unconverted = _invoice(
+        bucket_id=_BUCKET_ID,
+        invoice_number="F-2026-012",
+        issued_at=date(2026, 1, 15),
+        counterparty_tax_id="DE123456789",
+        base_total=Decimal("1000.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        currency="GBP",
+    )
+    repository.save(InvoiceCatalogue.from_invoices((unconverted,)))
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+
+    resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="349",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    assert resolution.diagnostics, (
+        "the invoice was withheld from Modelo 349 with no advisory: the operator "
+        "files a recapitulativa missing a real operation and is never told"
+    )
+    reported = [d for d in resolution.diagnostics if unconverted.invoice_id in d.source_ref]
+    assert reported, f"no advisory names the withheld invoice: {[d.source_ref for d in resolution.diagnostics]}"
+    # The advisory has to say what to DO about it. An operator who cannot act on
+    # the message is no better off than one who never saw it.
+    assert reported[0].remedy, "the advisory names the problem but not the remedy"
