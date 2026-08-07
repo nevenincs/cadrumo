@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:9d954ce1812f371029b7da0448ceb0cb414e739dd6e9b2aef04910df7f2fbd76'
+body_hash: 'sha256:33e4345124199f1892c04dbec5629915aedcd2f3379586e9dc6c666e483fc126'
 related:
   - "[[2026-08-07-history-onboarding-reference]]"
   - "[[2026-08-07-declarations-register-pagination-adr]]"
@@ -168,6 +168,53 @@ standing advisory, never a silent auto-resolve. This diff is new orchestration-l
 MUST NOT be pushed into `capture_filed_data_bulk` itself, which stays the generic reusable
 primitive every other capture caller also uses unchanged.
 
+**A live smoke test found a real multiplicity gap, verified against HEAD, and it is squarely this
+ADR's to own.** For modelo 303, filing year 2024, the AEAT register returned six rows for a
+naive four-quarter year: 1T, 2T, 3T, 4T, plus a second 3T and a second 4T presented months later
+under different `expediente_id`s — almost certainly originals plus complementarias.
+`select_declarations_for_capture` (`application/live/_filed_data.py:71-97`) already captures EVERY
+matching raw row for a period, not just one, so `filed pull --modelo 303 --year 2024 --period 3T`
+persisted `captured_count=2` with two distinct raw observations and six artefacts. Nothing is lost:
+`select_latest_filed_observations_in_history_order` (`application/live/_filed_observation_persistence.py:130-159`,
+confirmed at HEAD) is a genuine latest-by-presentation SELECTION for the ONE calculation
+observation, ranked `(is ALTA, presented_at, expediente_id)` — the same rank tuple
+`_select_authoritative_declaration` (`adapters/outbound/aeat/sede/_declarations.py:1384-1397`,
+confirmed at HEAD) and `latest_declarations_by_period` (`_filed_observation_persistence.py:311-`)
+both use, blind to which candidate amends which. This is a DIFFERENT scenario from the re-capture
+divergence diff above: that diff detects divergence ACROSS separate runs of the same pair; this
+gap is plurality WITHIN one run, already on AEAT's register before this feature ever executes.
+Two real holes follow, both inside this feature's own promise of a faithful history: (1) the
+per-period raw count is computed and then thrown away — `BulkFiledDataCaptureReport` /
+`FiledDataCaptureReport` report only a flat total `captured_count` across the whole
+`(modelo, year)` sweep (`_filed_data_capture.py:238,301`, confirmed at HEAD), with no per-period
+breakdown, so a coverage report built on top of it cannot tell "one filing" from "two filings,
+newer kept" for any given period; and (2) `Declaracion.tipo_solicitud`
+(`adapters/outbound/aeat/sede/_declarations_schema.py:26`, confirmed at HEAD) — AEAT's own
+original-versus-complementaria signal — is parsed and reaches CLI display
+(`_declarations.py:1166`) but is dropped at `_filed_observation_source_metadata`
+(`_filed_observation_persistence.py:491-506`, confirmed at HEAD: builds only
+`aeat_register_status`, `aeat_expediente_id`, `authenticated_identity` and CSVs), so even the
+label distinguishing "original" from "amendment" is discarded at the exact boundary a coverage
+report would want to read it from.
+
+This is in scope, not deferred, because a feature whose Problem Statement is "import this
+taxpayer's history faithfully" cannot silently collapse a period's real multiplicity into a single
+number without contradicting its own premise — the `(modelo, ejercicio)` pair grid this ADR
+already treats as the completeness axis must NOT be read as 1:1 with declarations found; that
+assumption is exactly what `latest_declarations_by_period`'s existing collapse already breaks, and
+this ADR's own row-count denominator work must be checked against it rather than silently
+inheriting it. The fix is symmetric to the expected-but-not-found advisory this ADR already
+specifies: a period whose raw register count exceeds the persisted-observation count of 1 is not
+an anomaly (AEAT amendments are legitimate) but IS a fact the coverage report must surface, at
+`INFO` severity (never `WARNING`, which stays reserved for genuine gaps). `tipo_solicitud`
+carry-through is a smaller, separable, higher-value enrichment of the same signal — it lets the
+notice say "original" versus "complementaria" instead of only "N filings, newest kept" — and is
+opened as its own row rather than folded into the multiplicity row, because it touches a file this
+ADR's author is not permitted to edit directly (`_filed_observation_persistence.py` is under
+active peer contention); the multiplicity count itself needs no such edit, since the raw
+declaration list is already in scope inside `_filed_data_capture.py` (this ADR's own target file)
+before any call into the persistence module.
+
 ## Considered options
 
 1. **No discovery; widen the default year range and modelo set.** Rejected: any fixed default is
@@ -203,6 +250,17 @@ primitive every other capture caller also uses unchanged.
    the graded-confidence shape `_retencion_rate_advisory.py` already uses for a structurally
    similar problem (inferring a fact from indirect arithmetic evidence, ranked by strength, never
    asserted as certain).
+7. **Leave period multiplicity uninstrumented; treat it as pre-existing, out-of-scope behaviour.**
+   Rejected: it directly undermines this ADR's own "faithful history" premise once a bulk sweep
+   can silently walk past an amended period with no trace. **Push the multiplicity check into
+   `select_latest_filed_observations_in_history_order` itself, so the selector raises or warns.**
+   Rejected: that function is the shared selection authority for every capture route, not an
+   onboarding-specific reporting surface, and the ADR's own no-shared-primitive-mutation
+   constraint applies here exactly as it does to the re-capture diff. **Compute and surface the
+   raw-vs-selected count in the onboarding orchestration layer, from data `_filed_data_capture.py`
+   already holds before the collapse.** Accepted: no shared-primitive edit, an `INFO` (not
+   `WARNING`) severity matching that amendments are legitimate, and it composes with, rather than
+   duplicates, the existing re-capture divergence diff.
 
 ## Constraints
 
@@ -227,6 +285,11 @@ primitive every other capture caller also uses unchanged.
   ADR or any later revision, without a new ADR amendment recording that live NIF-scoping has been
   confirmed. The scoping heuristic's output is a label (`CoverageScopingSignal`), never a resolved
   boolean, and the report's uncertainty-facing text is prose (`denominator_note`), never a number.
+- `_filed_observation_persistence.py` and `adapters/outbound/aeat/sede/_declarations.py` are under
+  active peer contention; the `tipo_solicitud` carry-through row targeting the former is authored
+  here and landed by an executor, never edited directly by this ADR's authoring agent. Every other
+  row targets `_filed_data_capture.py` (this ADR's own file) precisely because that avoids editing
+  either contended file to compute the multiplicity signal.
 - Every new verb needs its own line in `PROFILE_BOUND_WRITE_VERB_PATHS`
   (`storage_write_policy.py:122`) if it writes, plus a hand-swept pass through the
   error-registry `default_suggestion` fields, cross-period `next_action` builders,
@@ -292,6 +355,16 @@ not-yet-authorised follow-up, tracked as an open item in Consequences, not as an
    freshly captured `FiledDeclaracionObservation`'s casilla values against the prior stamped
    observation for the same key, and on any changed value emits a `WARNING` `Notice` naming the
    modelo, period and changed casilla ids, never a silent overwrite.
+4a. **Period multiplicity signal** (new, `application/live/_filed_data_capture.py`): extends
+   `FiledDataCaptureReport`/`BulkFiledDataCaptureReport` with a per-`(modelo, ejercicio, period)`
+   breakdown of raw register row count versus the one persisted calculation observation, computed
+   from the `declarations`/`selected` tuples the bulk capture path already holds before calling
+   `finalize_filed_capture` — no edit to `_filed_observation_persistence.py` or `_declarations.py`.
+4b. **Found-more-than-expected advisory** (new, orchestration layer only, invoked from (3)): for
+   every period whose raw count from (4a) exceeds 1, emits an `INFO` `Notice` (never `WARNING`)
+   naming the modelo, period, the winning `expediente_id`, and the count of superseded filings
+   preserved as evidence; composes with, never duplicates, the re-capture divergence diff (4),
+   which detects divergence ACROSS runs, not plurality WITHIN one run.
 5. **Overview no-history `Notice`**: when a workable (non-`SETUP_INCOMPLETE`) profile has zero
    observations carrying an official `ObservationSourceKind`, the overview surfaces an `INFO`
    `Notice` naming `aeat app live filed pull-all` as the next action.
@@ -303,12 +376,21 @@ not-yet-authorised follow-up, tracked as an open item in Consequences, not as an
 7. **Locale rows**: real `es`/`en`/`ca`/`hu` values for every new help string, `Notice` message key
    and result-field label the new verbs introduce, landed through `dev.locales set` then
    `scaffold`/`scaffold --check`.
+8. **`tipo_solicitud` carry-through** (new field on `_filed_observation_source_metadata`,
+   `application/live/_filed_observation_persistence.py:491-506`): adds `aeat_tipo_solicitud` to
+   the returned metadata dict from `observation.tipo_solicitud`, sourced through to (4b)'s notice
+   text so it can say "original" versus "complementaria" instead of only "N filings, newest kept."
+   Targets a file under active peer contention; opened here, landed by an executor, never edited
+   by this ADR's authoring agent. (4a)/(4b) do not depend on this row landing first — they degrade
+   gracefully to the count-only wording when `tipo_solicitud` is absent from source metadata.
 
 No new `ObservationSourceKind`, no new capture schema, no new IVA reconciliation mechanism, no
 generic importer. Row 7 (and, transitively, rows 2 and 3 which cannot ship without their locale
 keys) carries a dependency on the shared locale catalogues being free of unrelated in-flight
 writes before landing; that dependency is a sequencing constraint on WHEN a row merges, not a
-reason to defer authoring it.
+reason to defer authoring it. Row 8 carries a dependency on `_filed_observation_persistence.py`'s
+current contention clearing before an executor can land it; rows 4a/4b do not share that
+dependency and can land independently.
 
 ## Rationale
 
@@ -344,3 +426,12 @@ with `aeat-calculation-aggregation`'s one-canonical-mechanism-per-type mandate.
 - Full completeness (both axes: pair-set AND per-page) is not achieved until the sibling
   pagination ADR's decision also ships; this ADR's coverage report must not claim more than it
   currently can prove.
+- A period carrying multiple AEAT filings (an amendment) is now visible in the coverage report at
+  `INFO` severity instead of silently collapsing to the single latest-by-presentation calculation
+  observation `select_latest_filed_observations_in_history_order` already selects; the raw evidence
+  for every superseded filing was already preserved before this ADR (six artefacts persisted for
+  the smoke-tested 3T pair), so this closes a VISIBILITY gap, not a data-loss one.
+- The `tipo_solicitud` carry-through row depends on a currently-contended file clearing before an
+  executor can land it, so the notice's wording may ship in its degraded "N filings, newest kept"
+  form for a period before the richer "original versus complementaria" wording becomes available;
+  this is an acceptable, explicitly-tracked staged rollout, not a silent gap.

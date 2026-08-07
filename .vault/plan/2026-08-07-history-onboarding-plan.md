@@ -4,7 +4,7 @@ tags:
   - '#history-onboarding'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:2cd424874aa69f86b66696e82a1817a83ebcc045e6e91e6e350dbc8633957374'
+body_hash: 'sha256:6fcf576d200b59f425852fa2ab0091693ba9a58f5d972dd100be6824e2833497'
 tier: L2
 related:
   - '[[2026-08-07-history-onboarding-adr]]'
@@ -77,6 +77,25 @@ scope for this plan and requires separate operator sign-off not yet given; the d
 depend on that check ever resolving, because `PROFILE_APPLICABILITY` ships as the load-bearing
 signal regardless of its outcome.
 
+A live smoke test against real AEAT (modelo 303, filing year 2024) found a period carrying two
+filings under different `expediente_id`s months apart - almost certainly an original plus a
+complementaria. Nothing is lost: `select_declarations_for_capture` already captures every raw
+row for a period, and `select_latest_filed_observations_in_history_order` is a genuine
+latest-by-presentation SELECTION for the one calculation observation, not an overwrite. But the
+EXISTING `BulkFiledDataCaptureReport`/`FiledDataCaptureReport` only ever report a flat total
+`captured_count` across a whole `(modelo, year)` sweep, so a period's real multiplicity was
+invisible to any coverage report built on top of it - directly undermining this plan's own
+"faithful history" premise, and a live reminder that this plan's `(modelo, ejercicio)` pair grid
+must never be read as 1:1 with declarations found; `latest_declarations_by_period` already
+collapses that assumption elsewhere in the codebase. `P03.S21`/`P03.S22` close this by computing
+and surfacing a per-period raw-versus-selected count at `INFO` severity (an amendment is legitimate,
+never an anomaly), entirely inside `_filed_data_capture.py` with no edit to the two files
+currently under active peer contention (`_filed_observation_persistence.py`,
+`adapters/outbound/aeat/sede/_declarations.py`). `P02.S23` separately carries AEAT's own
+`tipo_solicitud` request-type field through the persistence boundary so the advisory can
+eventually say "original" versus "complementaria" rather than only a count; that row DOES target
+a contended file, is authored here, and is landed only by an executor once the contention clears.
+
 ## Steps
 
 ### Phase `P01` - AEAT-declared discovery capability
@@ -93,16 +112,14 @@ Land dual-tier availability discovery: a taxpayer-specific PROFILE_APPLICABILITY
 
 ### Phase `P02` - Provenance parity proof
 
-Prove that a bulk-discovered historical capture stamps the same official ObservationSourceKind
-as an existing single-pair live capture, settling the provenance question without introducing a
-new kind.
+Prove that a bulk-discovered historical capture stamps the same official ObservationSourceKind as an existing single-pair live capture, settling the provenance question without introducing a new kind, and carry the tipo_solicitud request-type signal through the shared persistence boundary once its file's current contention clears.
 
 - [ ] `P02.S05` - add a parity test capturing the same synthetic declaracion fixture once through capture_filed_data and once through the discovery-driven grid, asserting both persisted observations carry ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE and are otherwise field-equal apart from capture timestamps, verified by the test going red if either path is made to stamp a different kind; `src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py`.
+- [ ] `P02.S23` - carry tipo_solicitud through into _filed_observation_source_metadata as aeat_tipo_solicitud, landed only after the file's current peer contention clears and by an executor rather than this plan's authoring agent, verified by a roundtrip test asserting the persisted metadata carries the field when the source Declaracion has one; `src/cadrumo/application/live/_filed_observation_persistence.py`.
 
 ### Phase `P03` - Onboarding orchestration verb
 
-Sequence discovery, bulk filed capture, IVA wallet reconciliation and notificaciones pull behind
-one standalone pull-all verb, with a re-capture divergence diff surfaced as a standing advisory.
+Sequence discovery, bulk filed capture, IVA wallet reconciliation and notificaciones pull behind one standalone pull-all verb, with a re-capture divergence diff and a period-multiplicity advisory both surfaced as standing, non-blocking Notices.
 
 - [ ] `P03.S06` - add the FiledHistoryOnboardingResult typed result model carrying per-pair outcomes, IVA wallet reconciliation status, notificaciones pull status, the divergence Notice list, the CoverageScopingSignal classification and a prose denominator_note field, and no numeric completeness percentage or fraction over AEAT_REGISTER_OPTIONS-tagged pairs, verified by a strict roundtrip test plus a test asserting the model schema carries no percentage or fraction field; `src/cadrumo/entrypoints/cli/_app_live_payloads.py`.
 - [ ] `P03.S07` - add the re-capture divergence diff comparing a fresh FiledDeclaracionObservation against the prior stamped observation for the same modelo, ejercicio and period key, verified by a test that re-captures a fixture with one changed casilla value and asserts exactly one WARNING Notice naming that casilla; `src/cadrumo/application/live/_filed_data_capture.py`.
@@ -110,6 +127,8 @@ one standalone pull-all verb, with a re-capture divergence diff surfaced as a st
 - [ ] `P03.S09` - add the aeat app live filed pull-all verb, verified by test_documented_command_conformance.py and a new JSON-schema conformance case; `src/cadrumo/entrypoints/cli/_app_live.py`.
 - [ ] `P03.S10` - enroll app live filed pull-all in PROFILE_BOUND_WRITE_VERB_PATHS, verified by the existing write-policy guard test asserting the new path is recognised as profile-bound; `src/cadrumo/application/storage_write_policy.py`.
 - [ ] `P03.S19` - add the expected-but-not-found advisory comparing captured rows against every PROFILE_APPLICABILITY-tagged pair, emitting a WARNING Notice naming each modelo and ejercicio the profile expects but no declaracion was captured for, verified by a test asserting the Notice fires only for PROFILE_APPLICABILITY pairs and never for pairs carrying only the AEAT_REGISTER_OPTIONS tag; `src/cadrumo/application/live/_filed_data_capture.py`.
+- [ ] `P03.S21` - extend FiledDataCaptureReport and BulkFiledDataCaptureReport with a per modelo ejercicio period breakdown of raw register row count versus the one persisted calculation observation, computed from the declarations and selected tuples already held before finalize_filed_capture runs, touching no persistence-boundary file, verified by a synthetic-fixture test asserting a two-row period reports raw count two and selected count one; `src/cadrumo/application/live/_filed_data_capture.py`.
+- [ ] `P03.S22` - add the found-more-than-expected advisory emitting an INFO Notice for every period whose raw register count exceeds one, naming the modelo, period, winning expediente_id and superseded filing count, degrading gracefully to count-only wording when tipo_solicitud is absent from source metadata, verified by a test asserting INFO severity, never WARNING, and asserting the notice composes with rather than duplicates the re-capture divergence diff; `src/cadrumo/application/live/_filed_data_capture.py`.
 
 ### Phase `P04` - Operator-surface integration and hand-swept sweep
 
@@ -135,16 +154,22 @@ in parallel with each other once `S01` closes; `S18` (the union report) depends 
 `S17`; `S20` (scoping heuristic) depends only on `S02` and `S17` (it reads their output, not
 `S18`'s union) and may run in parallel with `S18`; `S03` (service wrapper) depends on `S02`; `S04`
 (CLI verb) depends on `S03`, `S18` and `S20`. P02 depends only on the existing
-`capture_filed_data` path (already shipped) and can run in parallel with P01. P03 depends on P01
-closing in full (needs `S18`'s union report shape and `S20`'s signal) and on the provenance
-settlement recorded by P02, so P03 does not start until both close; within P03, `S06` (result
-model) and `S07` (divergence diff) can run in parallel with each other, `S08` (orchestration)
-depends on both plus `S18`, `S19` (expected-but-not-found advisory) depends on `S08`, and
-`S09`-`S10` (CLI verb, write-guard enrollment) depend on `S08`. P04 depends on P03 closing (the
-CLI verb and its identifiers must exist before the sweep can reference them); within P04, `S11`
-(overview Notice) is independent of `S13`-`S16` and may run in parallel with them. `S12` (locale
-rows) additionally carries a standing dependency on the shared locale catalogues settling any
-unrelated in-flight peer write before it lands, independent of this plan's own internal ordering.
+`capture_filed_data` path (already shipped) and can run in parallel with P01; within P02, `S05`
+(parity test) and `S23` (tipo_solicitud carry-through) are independent of each other, but `S23`
+additionally carries a standing dependency on `_filed_observation_persistence.py`'s current peer
+contention clearing, orthogonal to this plan's own ordering. P03 depends on P01 closing in full
+(needs `S18`'s union report shape and `S20`'s signal) and on the provenance settlement recorded by
+`S05` (P03 does not need `S23` to start; `S22` degrades gracefully without it); within P03, `S06`
+(result model) and `S07` (divergence diff) can run in parallel with each other, `S21` (period
+multiplicity field) is independent of both and may run in parallel with them, `S08`
+(orchestration) depends on `S06`, `S07`, `S18` and `S21`, `S19` (expected-but-not-found advisory)
+and `S22` (found-more-than-expected advisory) both depend on `S08` and may run in parallel with
+each other, and `S09`-`S10` (CLI verb, write-guard enrollment) depend on `S08`. P04 depends on P03
+closing (the CLI verb and its identifiers must exist before the sweep can reference them); within
+P04, `S11` (overview Notice) is independent of `S13`-`S16` and may run in parallel with them.
+`S12` (locale rows) additionally carries a standing dependency on the shared locale catalogues
+settling any unrelated in-flight peer write before it lands, independent of this plan's own
+internal ordering.
 
 This plan's Phases are independent of the sibling `declarations-register-pagination` plan's
 Phases; no Step here blocks on that plan's Steps, and no Step there blocks on this plan.
@@ -157,11 +182,15 @@ is verified against synthetic-HTML fixtures, never a live AEAT session; the unio
 each pair with the correct provenance set; the scoping heuristic classifies each of its three
 synthetic fixtures correctly and the result model carries no percentage or fraction field over
 `AEAT_REGISTER_OPTIONS`-tagged pairs; the expected-but-not-found advisory fires only for
-`PROFILE_APPLICABILITY` pairs and never for `AEAT_REGISTER_OPTIONS`-only pairs; every new CLI verb
-passes `test_documented_command_conformance.py` and its JSON-schema conformance case; the
-write-guard enrollment test recognises `app live filed pull-all` as profile-bound; the locale gate
-(`dev.locales scaffold --check`) is green across all four catalogues; and the hand-swept surfaces
-(error-registry suggestions, next-action builder, operator help, envelope command identifiers,
-agent-harness docs) pass their existing conformance tests. No Step is verified by, or requires, a
-live authenticated AEAT probe; that remains a separate, not-yet-authorised follow-up, and the plan
-is fully shippable and fully honest about coverage without it.
+`PROFILE_APPLICABILITY` pairs and never for `AEAT_REGISTER_OPTIONS`-only pairs; the period
+multiplicity field correctly reports raw-versus-selected counts against a synthetic two-filing
+fixture, and the found-more-than-expected advisory fires at `INFO`, never `WARNING`, severity;
+every new CLI verb passes `test_documented_command_conformance.py` and its JSON-schema conformance
+case; the write-guard enrollment test recognises `app live filed pull-all` as profile-bound; the
+locale gate (`dev.locales scaffold --check`) is green across all four catalogues; and the
+hand-swept surfaces (error-registry suggestions, next-action builder, operator help, envelope
+command identifiers, agent-harness docs) pass their existing conformance tests. No Step is
+verified by, or requires, a live authenticated AEAT probe; that remains a separate,
+not-yet-authorised follow-up, and the plan is fully shippable and fully honest about coverage
+without it. `P02.S23` is complete only once landed by an executor after its file's contention
+clears; every other Step is independently completable.
