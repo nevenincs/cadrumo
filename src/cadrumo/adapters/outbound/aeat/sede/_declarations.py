@@ -24,11 +24,13 @@ legal and source references.
 
 from __future__ import annotations
 
+import re
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 from urllib.parse import urlsplit
 
+from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl
 
 from .....core import Period
@@ -86,7 +88,7 @@ from ._declarations_fetch import (
     _listing_url_for,
     _origin_of,
 )
-from ._declarations_listbox import _parse_listbox, _parse_presented_at
+from ._declarations_listbox import _has_class, _parse_listbox, _parse_presented_at
 from ._declarations_observations import (
     FiledDeclaracionArtefactSink,
     _declaration_pdf_extraction_profile_provisional,
@@ -115,6 +117,8 @@ from ._errors import (
 from ._schema import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
+    FiledDeclarationAvailability,
+    FiledDeclarationAvailabilityReport,
     JustificanteRef,
     ObservedCasillaValue,
     SedeCapture,
@@ -141,6 +145,24 @@ _DECLARATIONS_LISTING_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.declarations_listi
 # navigation check already requires is therefore the post-search read surface
 # too, rather than a new claim about where AEAT may serve results.
 _DECLARATIONS_READ_PATH_PREFIXES: tuple[str, ...] = (_DECLARATIONS_LISTING_PATH_PREFIX,)
+
+# The two combobox option shapes, taken from the option_match values the shipped
+# selection path already uses against the live form: a modelo option carries
+# "<code> -" followed by a description, and an ejercicio option is a bare year.
+# Requiring the dash on one and anchoring the other end-to-end keeps them
+# disjoint, which matters because AEAT renders BOTH popups into one DOM snapshot
+# -- the bundled real capture carries the modelo list and the ejercicio list
+# together, along with a "-- Seleccione --" placeholder in each.
+#
+# The description is deliberately NOT required to be non-empty. The same real
+# capture offers "174 -" with a blank description, and a pattern demanding a
+# following character drops that modelo out of the offered set entirely -- a
+# silent narrowing of the very signal this read exists to widen.
+#
+# Codes are not digits-only: the capture offers ATF, BSS, DT2, FCV, RIB, VEG and
+# 14A alongside the numeric ones.
+_MODELO_OPTION_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<modelo>[0-9A-Z]{2,8})\s*-")
+_EJERCICIO_OPTION_RE: Final[re.Pattern[str]] = re.compile(r"^(?P<ejercicio>[0-9]{4})$")
 
 DEFAULT_NAVIGATION_TIMEOUT_MS: int = 30_000
 DEFAULT_FORM_INTERACTION_TIMEOUT_MS: int = 10_000
@@ -257,6 +279,159 @@ def _register_rows_from_snapshot(
             },
         )
     return page.rows
+
+
+def _combobox_option_texts(html: str) -> tuple[str, ...]:
+    """Return every rendered combobox option text in one register-page snapshot.
+
+    ZK keeps combobox popups in the DOM whether or not they are open, so a
+    snapshot can carry the modelo popup's options and the ejercicio popup's
+    options at once. The two callers below therefore do NOT rely on "only the
+    open popup is present"; they discriminate by option SHAPE instead, and the
+    two shapes are disjoint (see :func:`filed_register_modelo_options` and
+    :func:`filed_register_ejercicio_options`).
+
+    Raises:
+        SedeParseError: When the snapshot cannot be parsed at all.
+    """
+    try:
+        soup = BeautifulSoup(html, "html.parser")
+    except Exception as exc:
+        raise SedeParseError(
+            f"failed to parse declaraciones combobox HTML: {exc}",
+            translated_message=tr("adapters.sede.errors.parse_failed"),
+        ) from exc
+    return tuple(
+        text
+        for option in soup.find_all(class_=_has_class("z-comboitem-text"))
+        for text in (option.get_text(" ", strip=True),)
+        if text
+    )
+
+
+def filed_register_modelo_options(html: str) -> tuple[str, ...]:
+    """Return the modelo codes the register's modelo combobox offers.
+
+    The shape is the one the shipped selection path already matches against the
+    live form: a modelo option reads ``"<code> - <description>"``, which is why
+    :func:`_drive_search` selects on ``f"{modelo} -"``. Requiring the dash is
+    what keeps this disjoint from an ejercicio option, which is a bare year.
+
+    Duplicates are collapsed in first-seen order, so the result is what AEAT
+    offered rather than how many times it rendered it.
+
+    Raises:
+        SedeParseError: When the snapshot carries no modelo-shaped option. An
+            empty modelo list is not a taxpayer with no history — the register
+            always offers modelos — so it means the form did not render or AEAT
+            changed the option shape, and reporting it as "nothing offered"
+            would turn a shape change into a silently empty history.
+    """
+    codes = tuple(
+        dict.fromkeys(
+            match.group("modelo")
+            for text in _combobox_option_texts(html)
+            for match in (_MODELO_OPTION_RE.match(text),)
+            if match is not None
+        ),
+    )
+    if not codes:
+        raise SedeParseError(
+            "declaraciones register rendered no modelo-shaped combobox option; "
+            "refusing to report an empty offered-modelo set",
+            translated_message=tr("adapters.sede.errors.parse_failed"),
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+        )
+    return codes
+
+
+def filed_register_ejercicio_options(html: str) -> tuple[int, ...]:
+    """Return the ejercicios the register's ejercicio combobox offers, newest first.
+
+    An ejercicio option is a bare four-digit year, which is what
+    :func:`_drive_search` selects on. Unlike the modelo list, an EMPTY result is
+    a legitimate answer: the register genuinely offers no ejercicio for a modelo
+    the authenticated taxpayer has nothing under, and that is one of the two
+    readings this signal cannot distinguish between. So this returns ``()``
+    rather than refusing, and the caller must not read the emptiness as proof
+    that nothing was filed.
+    """
+    years = {
+        int(match.group("ejercicio"))
+        for text in _combobox_option_texts(html)
+        for match in (_EJERCICIO_OPTION_RE.match(text),)
+        if match is not None
+    }
+    return tuple(sorted((year for year in years if 2000 <= year <= 2099), reverse=True))
+
+
+async def discover_filed_declaration_availability(
+    session: AeatSession,
+    *,
+    settings: Settings | None = None,
+    playwright: Playwright | None = None,
+) -> FiledDeclarationAvailabilityReport:
+    """Read what the declaraciones register OFFERS, without querying any pair.
+
+    Opens the register form once, enumerates the modelo combobox's full option
+    set, then selects each modelo in turn and enumerates the ejercicio
+    combobox's option set for it. Nothing is searched, downloaded or persisted:
+    this is a read of the form's own controls.
+
+    The result is tagged
+    :attr:`~core.FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS` and MUST be
+    consumed as AEAT's *offered* option set. Whether those option lists are
+    scoped to the authenticated NIF or are a static universal catalogue is
+    unconfirmed, and settling it needs a live authenticated probe against an
+    account with real filing history under explicit operator authorisation. So
+    a caller may UNION this into a walk grid — widening coverage costs nothing —
+    but may never measure completeness against it alone, and may never report a
+    pair absent from it as a filing the taxpayer does not have.
+
+    A modelo whose ejercicio enumeration fails is skipped with a logged
+    diagnostic rather than failing the whole read, because this signal is
+    additive by construction: losing one modelo's options narrows a bonus, while
+    refusing the read would deny the caller the widening entirely.
+
+    Args:
+        session: Authenticated AEAT session whose ``storage_state_path`` carries
+            valid cookies.
+        settings: Optional :class:`Settings` override.
+        playwright: Optional pre-started Playwright instance, typically from
+            :func:`shared_playwright`. Caller owns its lifetime.
+
+    Returns:
+        A :class:`FiledDeclarationAvailabilityReport` of the offered pairs.
+
+    Raises:
+        SedeNavigationError: When the register form does not load.
+        SedeParseError: When the modelo combobox renders no modelo-shaped option.
+    """
+    items: list[FiledDeclarationAvailability] = []
+    async with _open_register_page(session, settings=settings, playwright=playwright) as (page, _context):
+        await _open_register_form(page)
+        await _open_combobox(page, label_text="Modelo (*)")
+        modelos = filed_register_modelo_options(await page.content())
+        log.info("discover_filed_declaration_availability: register offers %d modelo option(s)", len(modelos))
+        for modelo in modelos:
+            try:
+                if not await _select_combobox_value(page, label_text="Modelo (*)", option_match=f"{modelo} -"):
+                    log.info(
+                        "discover_filed_declaration_availability: modelo option vanished between reads modelo=%s",
+                        modelo,
+                    )
+                    continue
+                await _open_combobox(page, label_text="Ejercicio (*)")
+                ejercicios = filed_register_ejercicio_options(await page.content())
+            except (SedeNavigationError, SedeParseError) as exc:
+                log.info(
+                    "discover_filed_declaration_availability: ejercicio enumeration failed modelo=%s error=%s",
+                    modelo,
+                    exc.__class__.__name__,
+                )
+                continue
+            items.append(FiledDeclarationAvailability(modelo=modelo, ejercicios=ejercicios))
+    return FiledDeclarationAvailabilityReport(items=tuple(items), discovered_at=now())
 
 
 class DeclaracionesRegisterSession:
@@ -482,67 +657,7 @@ async def _drive_search(
     get an actionable error rather than an opaque combobox click
     timeout.
     """
-    try:
-        _assert_read_http("GET", _LISTING_URL, policy=read_policy)
-        await page.goto(
-            _LISTING_URL,
-            wait_until=_WAIT_NETWORKIDLE,
-            timeout=_get_navigation_timeout_ms(),
-        )
-    except PlaywrightError as exc:
-        raise SedeNavigationError(
-            f"goto {_LISTING_URL!r} failed: {exc}",
-            translated_message=tr("adapters.sede.errors.listing_nav_failed"),
-            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            context=await _declarations_page_shape_context_from_page(
-                page,
-                stage="listing_goto",
-                modelo=modelo,
-                ejercicio=ejercicio,
-            ),
-        ) from exc
-    await page.wait_for_timeout(1500)
-    await _continue_alert_modal(page, read_policy=read_policy)
-
-    final_url = page.url
-    if _DECLARATIONS_LISTING_PATH_PREFIX not in final_url:
-        log.warning(
-            "declaraciones register did not load; session may have expired (final_url=%r)",
-            final_url,
-        )
-        raise SedeNavigationError(
-            f"declaraciones register did not load (final URL: {final_url!r}); "
-            "session likely expired — run `aeat config auth test` and retry",
-            translated_message=tr("adapters.sede.errors.session_expired_nav_failed"),
-            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            context=await _declarations_page_shape_context_from_page(
-                page,
-                stage="listing_final_url",
-                modelo=modelo,
-                ejercicio=ejercicio,
-            ),
-        )
-    # Defensive: even when the URL matches, AEAT sometimes serves a
-    # blank shell with no Modelo label until the JS finishes booting.
-    try:
-        await page.get_by_text("Modelo (*)", exact=True).first.wait_for(
-            state="visible",
-            timeout=_get_form_interaction_timeout_ms(),
-        )
-    except PlaywrightError as exc:
-        raise SedeNavigationError(
-            "declaraciones register form did not render the 'Modelo (*)' "
-            f"label within {_get_form_interaction_timeout_ms()}ms; "
-            "session likely expired or AEAT served a maintenance page",
-            translated_message=tr("adapters.sede.errors.form_render_timeout"),
-            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            context=await _declarations_page_shape_context_from_page(
-                page,
-                stage="form_render",
-                modelo=modelo,
-                ejercicio=ejercicio,
-            ),
-        ) from exc
+    await _open_register_form(page, modelo=modelo, ejercicio=ejercicio, read_policy=read_policy)
 
     if not await _select_combobox_value(
         page,
@@ -611,14 +726,106 @@ async def _drive_search(
     return True
 
 
-async def _select_combobox_value(
+async def _open_register_form(
+    page: Page,
+    *,
+    modelo: str | None = None,
+    ejercicio: int | None = None,
+    read_policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+) -> None:
+    """Navigate to the register form and refuse anything that is not it.
+
+    Extracted so the search driver and the availability reader share ONE way in.
+    A second navigation path would carry its own copy of the login-wall check,
+    the alert-modal dismissal and the landing prefix rule, and the landing-refusal
+    enrollment gate only proves that a rule is CALLED — not that a copy of it
+    stayed in step with this one.
+
+    ``modelo`` and ``ejercicio`` are diagnostic context only; the availability
+    reader has no pair yet and passes neither.
+
+    Raises:
+        SedeNavigationError: When navigation fails, AEAT serves something other
+            than the register, or the form does not render its Modelo label.
+    """
+    try:
+        _assert_read_http("GET", _LISTING_URL, policy=read_policy)
+        await page.goto(
+            _LISTING_URL,
+            wait_until=_WAIT_NETWORKIDLE,
+            timeout=_get_navigation_timeout_ms(),
+        )
+    except PlaywrightError as exc:
+        raise SedeNavigationError(
+            f"goto {_LISTING_URL!r} failed: {exc}",
+            translated_message=tr("adapters.sede.errors.listing_nav_failed"),
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context=await _declarations_page_shape_context_from_page(
+                page,
+                stage="listing_goto",
+                modelo=modelo,
+                ejercicio=ejercicio,
+            ),
+        ) from exc
+    await page.wait_for_timeout(1500)
+    await _continue_alert_modal(page, read_policy=read_policy)
+
+    final_url = page.url
+    if _DECLARATIONS_LISTING_PATH_PREFIX not in final_url:
+        log.warning(
+            "declaraciones register did not load; session may have expired (final_url=%r)",
+            final_url,
+        )
+        raise SedeNavigationError(
+            f"declaraciones register did not load (final URL: {final_url!r}); "
+            "session likely expired — run `aeat config auth test` and retry",
+            translated_message=tr("adapters.sede.errors.session_expired_nav_failed"),
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context=await _declarations_page_shape_context_from_page(
+                page,
+                stage="listing_final_url",
+                modelo=modelo,
+                ejercicio=ejercicio,
+            ),
+        )
+    # Defensive: even when the URL matches, AEAT sometimes serves a
+    # blank shell with no Modelo label until the JS finishes booting.
+    try:
+        await page.get_by_text("Modelo (*)", exact=True).first.wait_for(
+            state="visible",
+            timeout=_get_form_interaction_timeout_ms(),
+        )
+    except PlaywrightError as exc:
+        raise SedeNavigationError(
+            "declaraciones register form did not render the 'Modelo (*)' "
+            f"label within {_get_form_interaction_timeout_ms()}ms; "
+            "session likely expired or AEAT served a maintenance page",
+            translated_message=tr("adapters.sede.errors.form_render_timeout"),
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context=await _declarations_page_shape_context_from_page(
+                page,
+                stage="form_render",
+                modelo=modelo,
+                ejercicio=ejercicio,
+            ),
+        ) from exc
+
+
+async def _open_combobox(
     page: Page,
     *,
     label_text: str,
-    option_match: str,
     read_policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
-) -> bool:
-    """Open the combobox after ``label_text`` and pick an option matching ``option_match``."""
+) -> None:
+    """Click open the combobox rendered after ``label_text``.
+
+    Extracted from :func:`_select_combobox_value` so the availability reader
+    opens a combobox through the same locator and the same read-action assertion
+    that every selection already uses, rather than growing a parallel one.
+
+    Raises:
+        SedeNavigationError: When the combobox button cannot be clicked.
+    """
     label = page.get_by_text(label_text, exact=True).first
     button = label.locator('xpath=following::a[contains(@class,"z-combobox-button")][1]')
     try:
@@ -630,6 +837,17 @@ async def _select_combobox_value(
             translated_message="adapters.sede.errors.playwright_combobox_open_failed",
         ) from exc
     await page.wait_for_timeout(400)
+
+
+async def _select_combobox_value(
+    page: Page,
+    *,
+    label_text: str,
+    option_match: str,
+    read_policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+) -> bool:
+    """Open the combobox after ``label_text`` and pick an option matching ``option_match``."""
+    await _open_combobox(page, label_text=label_text, read_policy=read_policy)
 
     options = page.locator(".z-comboitem-text")
     matching_options = options.filter(has_text=option_match)

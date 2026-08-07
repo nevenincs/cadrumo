@@ -52,7 +52,7 @@ from functools import cache
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..core import FieldRole, ModelRole
+from ..core import FieldRole, ModelRole, build_provenance_stamp
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._errors import LLMConfigError, LLMValidationError
@@ -467,6 +467,12 @@ class SemanticColumnRoleMapper:
         resolved_settings = settings if settings is not None else load_settings()
         self._model = model if model is not None else self._role_model(resolved_settings)
         self._provider = provider if provider is not None else (None if model is not None else LLMProvider.LOCAL)
+        # The transport the stamp names, resolved separately from the one the
+        # request carries. `self._provider` stays None when the caller deferred
+        # to configuration, because passing None to the request means "let the
+        # client resolve it" -- but a stamp cannot defer, and one that omits the
+        # transport is a stamp a consent withdrawal cannot classify.
+        self._stamp_provider = self._provider or LLMProvider(resolved_settings.cadrumo_llm_provider)
         self._client = (
             client
             if client is not None
@@ -503,8 +509,20 @@ class SemanticColumnRoleMapper:
 
     @property
     def decided_by(self) -> str:
-        """Provenance stamp naming the model a mapping was reached with."""
-        return f"llm:column-role-map:{self._model}"
+        """Provenance stamp naming the transport and model a mapping was reached with.
+
+        This stamp previously named no transport at all, which had two costs.
+        It could not say whether a mapping had left the host -- and this is the
+        one reader besides the extractors that accepts a provider, so it is the
+        one that can. And its reader name parsed AS a transport, so a survey
+        classifying artefacts by that segment read ``column`` where it expected
+        a transport.
+        """
+        return build_provenance_stamp(
+            provider=self._stamp_provider,
+            reader="column-role-map",
+            model=self._model,
+        )
 
     def map(self, headers: Sequence[str]) -> ColumnRoleProposal:
         """Establish the roles of ``headers``, one call for the whole file.

@@ -92,6 +92,7 @@ Submodules
    cadrumo.core._profile_session
    cadrumo.core._prorrata_exclusions
    cadrumo.core._prorrata_register
+   cadrumo.core._provenance_stamp
    cadrumo.core._refund_election
    cadrumo.core._rescate_type
    cadrumo.core._result_disposition

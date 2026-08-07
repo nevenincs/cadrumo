@@ -231,6 +231,12 @@ from ._prorrata_register import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
+from ._provenance_stamp import (
+    LOCAL_TRANSPORT_LABEL,
+    build_provenance_stamp,
+    provenance_stamp_transport,
+    provenance_transport_label,
+)
 from ._refund_election import RefundElection
 from ._rescate_type import RescateType
 from ._result_disposition import (
@@ -369,6 +375,7 @@ __all__: list[str] = [
     "LENGTH_ALONE_IS_STRONG",
     "LENGTH_FAIR_FLOOR",
     "LLM_EXTRA",
+    "LOCAL_TRANSPORT_LABEL",
     "M210_TIPO_RENTA_CODE_PROJECTION",
     "M347_THRESHOLD_EUR",
     "MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX",
@@ -502,6 +509,7 @@ __all__: list[str] = [
     "accepted_period_patterns",
     "assess_passphrase_strength",
     "bucket_scoped_storage_path",
+    "build_provenance_stamp",
     "candidates_for_role",
     "capture_pointer",
     "character_class_count",
@@ -542,6 +550,8 @@ __all__: list[str] = [
     "pointer_path",
     "post_filing_event_is_actionable",
     "project_m210_tipo_renta_code",
+    "provenance_stamp_transport",
+    "provenance_transport_label",
     "read_pointer",
     "read_toml",
     "registry_period_kind",

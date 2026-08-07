@@ -7312,14 +7312,7 @@ modelo:
       informational: solo informativas
       manual: que introduce usted
     legal_kind:
-      dictionary: Diccionario de datos AEAT
-      form_spec: Modelo oficial AEAT
       instruction: Instrucciones AEAT
-      instructions: Instrucciones AEAT
-      manual_pdf: Manual AEAT
-      record_design: Diseño de registro AEAT
-      suppression_notice: Nota AEAT
-      xsd: Esquema XSD AEAT
     length:
       at_least: Al menos {min} caracteres
       at_most: Como máximo {max} caracteres

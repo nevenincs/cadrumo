@@ -14,8 +14,8 @@ async def declarations_page_shape_context_from_page(
     page,
     *,
     stage: str,
-    modelo: str,
-    ejercicio: int,
+    modelo: str | None = None,
+    ejercicio: int | None = None,
 ) -> dict[str, object]:
     try:
         html = await page.content()
@@ -35,9 +35,16 @@ def declarations_page_shape_context(
     *,
     landing_url: str,
     stage: str,
-    modelo: str,
-    ejercicio: int,
+    modelo: str | None = None,
+    ejercicio: int | None = None,
 ) -> dict[str, object]:
+    """Project one register page's observable shape into a diagnostic context.
+
+    ``modelo`` and ``ejercicio`` are optional because the availability reader
+    navigates the same form with no pair in hand. They are reported as ``None``
+    rather than as a placeholder, so a diagnostic never states a pair the caller
+    was not querying.
+    """
     from bs4 import Tag
 
     soup = BeautifulSoup(html, "html.parser")

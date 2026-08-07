@@ -6823,14 +6823,7 @@ modelo:
       informational: reference only
       manual: you enter
     legal_kind:
-      dictionary: AEAT data dictionary
-      form_spec: Official AEAT form
       instruction: AEAT instructions
-      instructions: AEAT instructions
-      manual_pdf: AEAT manual
-      record_design: AEAT record design
-      suppression_notice: AEAT notice
-      xsd: AEAT XSD schema
     length:
       at_least: At least {min} characters
       at_most: Up to {max} characters

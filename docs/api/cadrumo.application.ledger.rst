@@ -22,6 +22,8 @@ Submodules
    cadrumo.application.ledger._actions_split_merge
    cadrumo.application.ledger._aeat_record_projection
    cadrumo.application.ledger._batch_ingest
+   cadrumo.application.ledger._classification_assembly
+   cadrumo.application.ledger._classifier_inputs
    cadrumo.application.ledger._closure_findings
    cadrumo.application.ledger._confirmation_gate
    cadrumo.application.ledger._confirmation_record
@@ -48,5 +50,6 @@ Submodules
    cadrumo.application.ledger._preflight
    cadrumo.application.ledger._protocols
    cadrumo.application.ledger._ratios
+   cadrumo.application.ledger._regime_contradiction
    cadrumo.application.ledger._review_projection
    cadrumo.application.ledger._rule_repository

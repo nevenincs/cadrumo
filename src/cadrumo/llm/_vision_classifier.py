@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 
+from ..core import build_provenance_stamp
 from ..core.config import Settings, load_settings
 from ..domain.transactions import (
     LLMClassificationResponse,
@@ -77,7 +78,7 @@ class LocalVisionLLMClassifier:
     @property
     def decided_by(self) -> str:
         """Provenance stamp recorded as ``classified_by`` (distinct from cloud subprocess)."""
-        return f"llm:local-vision:{self._model}"
+        return build_provenance_stamp(provider=LLMProvider.LOCAL, reader="vision", model=self._model)
 
     def classify(
         self,

@@ -7166,14 +7166,7 @@ modelo:
       informational: csak tájékoztató
       manual: amelyet Ön ad meg
     legal_kind:
-      dictionary: AEAT-adatszótár
-      form_spec: Hivatalos AEAT-nyomtatvány
       instruction: AEAT-útmutató
-      instructions: AEAT-útmutató
-      manual_pdf: AEAT-kézikönyv
-      record_design: AEAT-rekordterv
-      suppression_notice: AEAT-közlemény
-      xsd: AEAT XSD-séma
     length:
       at_least: Legalább {min} karakter
       at_most: Legfeljebb {max} karakter

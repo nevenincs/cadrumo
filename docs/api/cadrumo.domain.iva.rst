@@ -25,6 +25,7 @@ Submodules
    cadrumo.domain.iva._lookup
    cadrumo.domain.iva._m303_settlement
    cadrumo.domain.iva._oss
+   cadrumo.domain.iva._place_of_supply
    cadrumo.domain.iva._prorrata
    cadrumo.domain.iva._rates
    cadrumo.domain.iva._recargo_equivalencia
@@ -33,4 +34,5 @@ Submodules
    cadrumo.domain.iva._saturation
    cadrumo.domain.iva._schema
    cadrumo.domain.iva._sepa_marca
+   cadrumo.domain.iva._supply_nature
    cadrumo.domain.iva._verify

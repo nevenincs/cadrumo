@@ -7269,14 +7269,7 @@ modelo:
       informational: només informatives
       manual: que introdueix vostè
     legal_kind:
-      dictionary: Diccionari de dades de l'AEAT
-      form_spec: Model oficial de l'AEAT
       instruction: Instruccions de l'AEAT
-      instructions: Instruccions de l'AEAT
-      manual_pdf: Manual de l'AEAT
-      record_design: Disseny de registre de l'AEAT
-      suppression_notice: Nota de l'AEAT
-      xsd: Esquema XSD de l'AEAT
     length:
       at_least: Com a mínim {min} caràcters
       at_most: Com a màxim {max} caràcters
