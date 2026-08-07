@@ -79,6 +79,7 @@ Submodules
    cadrumo.core._ledger_sort
    cadrumo.core._model_catalogue
    cadrumo.core._modelo
+   cadrumo.core._modelo_232_codigos
    cadrumo.core._models
    cadrumo.core._optional_extras
    cadrumo.core._period

@@ -18,6 +18,7 @@ Submodules
    cadrumo.domain.iva._components
    cadrumo.domain.iva._corpus
    cadrumo.domain.iva._errors
+   cadrumo.domain.iva._establishment
    cadrumo.domain.iva._flow
    cadrumo.domain.iva._invoice_classification
    cadrumo.domain.iva._lookup
