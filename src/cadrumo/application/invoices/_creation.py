@@ -292,7 +292,7 @@ def build_catalogue_invoice(
     identity. The model re-checks that identity exactly, so a stated recargo
     the lines do not support refuses rather than being balanced silently.
     """
-    from ...domain.invoices import iva_rate_percentage
+    from ...domain.invoices import iva_rate_slot_percentage
 
     # Normalise once, before either the persisted payload or the FX lookup
     # reads it: a padded or lowercase token ("gbp", " gbp ") must resolve the
@@ -300,13 +300,16 @@ def build_catalogue_invoice(
     # rate and leave the invoice unstamped.
     currency = normalise_iso_4217_currency(currency)
     rate_slot = resolve_iva_rate_slot(iva_rate)
-    # Resolve the cuota with the same default-date the Invoice line validator
-    # uses (``iva_rate_percentage(self.iva_rate)``), so the synthesised
-    # ``iva_amount`` matches the model's own re-derivation within tolerance and
-    # the line-arithmetic invariant holds. The cuota is grounded against the
-    # registry-resolved rate, never a hand-typed percentage. EXEMPT /
-    # NOT_SUBJECT resolve to None and carry a zero cuota.
-    pct = iva_rate_percentage(rate_slot)
+    # Resolve the cuota through the same undated helper the Invoice line
+    # validator uses (``iva_rate_slot_percentage(self.iva_rate)``), so the
+    # synthesised ``iva_amount`` matches the model's own re-derivation within
+    # tolerance and the line-arithmetic invariant holds. The rate comes from the
+    # slot the operator chose, never a hand-typed percentage. Whether that rate
+    # was in force is settled by the invoice-level validator against the
+    # operation date, not here -- resolving it against today would refuse to
+    # record a legitimate 2024 transitional-rate invoice. EXEMPT / NOT_SUBJECT
+    # resolve to None and carry a zero cuota.
+    pct = iva_rate_slot_percentage(rate_slot)
     if lines:
         # Deliberate runtime guard on a boundary sequence: the annotation does not
         # constrain what a caller actually passes, and a foreign element would reach

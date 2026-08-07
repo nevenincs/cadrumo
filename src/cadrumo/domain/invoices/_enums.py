@@ -1,14 +1,21 @@
 """Closed enumerations for invoice records.
 
-Defines :class:`IvaRate` and :class:`PaymentStatus` together with the
-:func:`iva_rate_percentage` helper that resolves the numeric Decimal
-percentage backing each :class:`IvaRate` member.
+Defines :class:`IvaRate` and :class:`PaymentStatus` together with the two
+percentage helpers backing each :class:`IvaRate` member:
+:func:`iva_rate_slot_percentage` returns the number a slot names, and
+:func:`iva_rate_percentage` returns that same number only once the
+centralized IVA substrate at :mod:`cadrumo.domain.iva` confirms it was in
+force on a given date.
 
-The percentage helper queries the centralized IVA substrate at
-:mod:`cadrumo.domain.iva` rather than carrying its own rate literals.
-:class:`IvaRate` keeps its closed-taxonomy role for invoice records;
-the legal-grade percentage value lives in
-``registry/aeat/iva/rates.toml`` and is dated.
+The split exists because the two questions have different answers and
+different homes. An invoice LINE has no date of its own and only needs the
+number to check its own arithmetic; the INVOICE knows when the operation
+happened and is where legality is decided. Both read one derivation, so the
+number never differs between them -- only whether it is accepted.
+
+:class:`IvaRate` keeps its closed-taxonomy role for invoice records, and
+``registry/aeat/iva/rates.toml`` stays the dated legal-grade authority for
+which rates existed when.
 """
 
 from __future__ import annotations
@@ -343,11 +350,7 @@ def numeric_iva_rate_slots() -> dict[Decimal, IvaRate]:
     Returns:
         A fresh mutable mapping, so a caller cannot mutate the shared taxonomy.
     """
-    return {
-        percentage: member
-        for member in IvaRate
-        if (percentage := _slot_declared_percentage(member)) is not None
-    }
+    return {percentage: member for member in IvaRate if (percentage := _slot_declared_percentage(member)) is not None}
 
 
 def numeric_iva_rate_percentages() -> frozenset[Decimal]:
@@ -375,6 +378,7 @@ __all__ = [
     "invoice_legal_mention_text",
     "iva_rate_kind",
     "iva_rate_percentage",
+    "iva_rate_slot_percentage",
     "numeric_iva_rate_percentages",
     "numeric_iva_rate_slots",
 ]

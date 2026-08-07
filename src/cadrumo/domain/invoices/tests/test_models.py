@@ -10,7 +10,13 @@ from pydantic import ValidationError
 
 from ....core.identity import IdentityError
 from ...iva import EUMemberState, InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
-from .._enums import IvaRate, PaymentStatus, iva_rate_percentage, numeric_iva_rate_percentages
+from .._enums import (
+    IvaRate,
+    PaymentStatus,
+    iva_rate_percentage,
+    iva_rate_slot_percentage,
+    numeric_iva_rate_percentages,
+)
 from .._errors import InvoiceValidationError
 from .._models import (
     Invoice,
@@ -33,7 +39,10 @@ def _valid_line(
     quantity_dec = Decimal(quantity)
     unit_price_dec = Decimal(unit_price)
     subtotal = quantity_dec * unit_price_dec
-    rate = iva_rate_percentage(iva_rate)
+    # The undated helper, matching what InvoiceLine's own arithmetic validator
+    # uses: a transitional-rate line must be buildable here without the fixture
+    # having to know which statutory window the rate belonged to.
+    rate = iva_rate_slot_percentage(iva_rate)
     iva_amount = Decimal("0") if rate is None else (subtotal * rate)
     return InvoiceLine(
         description=description,
@@ -79,6 +88,39 @@ def _valid_invoice(
             "linked_transaction_ids": linked_transaction_ids,
         },
     )
+
+
+def test_invoice_accepts_a_transitional_food_rate_inside_its_window() -> None:
+    """A November 2024 sale at 2 % is recordable as an invoice, not just as a ledger row.
+
+    RD-ley 4/2024 art. 1 put certain foodstuffs at 2 % while the rest of the
+    super-reducido tier stayed at 4 %. The ledger accepted such a row while the
+    invoice path refused it, so the evidence-bearing surface was the one that
+    could not record a legal sale. This is that asymmetry closed.
+    """
+    invoice = _valid_invoice(
+        issued_at=date(2024, 11, 15),
+        lines=(_valid_line(iva_rate=IvaRate.RATE_2),),
+    )
+
+    assert invoice.lines[0].iva_rate is IvaRate.RATE_2
+    assert invoice.iva_total == Decimal("2.00")
+
+
+def test_invoice_refuses_a_transitional_food_rate_outside_its_window() -> None:
+    """The same 2 % line on a 2025 invoice is refused rather than silently re-rated.
+
+    The window is what makes the transitional slots safe to carry. Without this
+    check the slot would resolve on any date, letting a 2025 invoice claim a
+    rate the statute had already withdrawn -- and the pre-fix implementation
+    was worse still, silently returning the tier's ordinary 4 % for a line the
+    operator marked 2 %.
+    """
+    with pytest.raises(ValidationError, match=r"was not in force"):
+        _valid_invoice(
+            issued_at=date(2025, 6, 1),
+            lines=(_valid_line(iva_rate=IvaRate.RATE_2),),
+        )
 
 
 def test_invoice_id_is_64_char_lowercase_hex_and_stable() -> None:
@@ -288,7 +330,6 @@ def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> 
     for Spain at a given date.
     """
     from ...iva import EUMemberState, IvaRateKind, lookup_rate
-    from .._enums import iva_rate_percentage
 
     sample_date = date(2025, 6, 15)
 
