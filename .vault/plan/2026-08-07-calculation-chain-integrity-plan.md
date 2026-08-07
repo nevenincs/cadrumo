@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:af818dc25dd96e25ad4ccdc05c472c8cd379d2693f61139cfd36af2fcc784a0a'
+body_hash: 'sha256:28d78878761012615b965b3d4e1ae8378ba2059e44eca6786375b46a4f1c5e48'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -69,10 +69,10 @@ Establish which of the profile field, the per-transaction marker, and the regist
 
 Implement the canonical placement, then unblock the retencion regimen filter and M130 casilla 08.
 
-- [ ] `W03.P05.S11` - BLOCKED on S38 which is blocked on S37 - W03.P04 established the M036 tipo-de-actividad code table is absent from the bundled corpus and the only bundled enumeration, the Modelo 840 IAE set of Empresarial, Profesional and Artistica, resolves one boundary of the four the art. 95 rate partition needs, so a placement landed now would carry a vocabulary that cannot select a rate; `src/cadrumo/domain/transactions/`.
+- [ ] `W03.P05.S11` - BLOCKED on S38 grounding, which is gated on S37 bundling - the vocabulary question is now ANSWERED and the earlier pessimism was wrong, since the M036 table is not IAE-rooted and carries a B-series for non-IAE activities where B01 agricola, B02 ganadera and B03 forestal live, so it selects three of the four art. 95 boundaries and misses only the engorde de porcino y avicultura 1 percent carve-out, meaning the axis is worth placing once the table is bundled rather than being structurally unable to serve; `src/cadrumo/domain/transactions/`.
 - [x] `W03.P05.S12` - Narrow the statutory-rate advisory to the rates a taxpayer can lawfully be subject to, restoring the flat-fee catch measured lost; `src/cadrumo/application/aggregation/_retencion_rate_advisory.py`.
 - [ ] `W03.P05.S13` - BLOCKED on S11, do not attempt first - casilla 08 is the agrarian quarterly volume and the ledger carries no activity-type axis to separate agrarian income from estimacion directa, so aggregating it today would feed the same rows into both casilla 01 and casilla 08 and double-count rather than close the silent zero; `src/cadrumo/application/aggregation/`.
-- [ ] `W03.P05.S37` - FETCH-GATED (fetch: the AEAT Modelo 036 tipo-de-actividad code table the diseno de registro field 403 names only as Tabla, published with the M036 instrucciones rather than inside the diseno workbook) - bundle it under the modelo_036 corpus directory with its per-modelo manifest sha256 and source URL, following the Modelo 210 layout_authority precedent, verified at HEAD as absent from all five bundled M036 workbooks whose sheets are page sheets only; `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_036/`.
+- [ ] `W03.P05.S37` - FETCH-GATED, artefact now LOCATED - the tipo-de-actividad table the diseno field 403 names only as Tabla is published in the M036 instrucciones on the AEAT sede guia practica, not with the diseno workbook, at anexo-03-instrucciones-modelo-036 pagina-4 and at capitulo-04 actividades-economicas-locales actividad, both carrying the same ten codes A01 to A05 for IAE activities and B01 to B05 for non-IAE, cross-checked across the two pages, so what remains is bundling one of them under the modelo_036 corpus directory with manifest sha256 and source URL rather than discovering what to fetch; `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_036/`.
 - [ ] `W03.P05.S38` - FETCH-GATED behind S37 - ground the code-to-art-95-partition mapping in the registry with its own legal_refs once the table lands, never inferred in code, and plan for the refreshed table proving unable to serve at all, in which case the partition needs a different authority rather than a fabricated mapping; `src/cadrumo/_data/registry/aeat/legal/`.
 
 ## Wave `W04` - Decision-blocked dispositions

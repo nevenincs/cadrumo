@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:f8690b98e2552e4c829c9ce06594755b9f42b00991d83594ac24cb23e60d037e'
+body_hash: 'sha256:e8a20ef3ccc5604c16cb5068e8478c4da2e2121d52ee34ccb305a0ae7ed79e38'
 step_id: 'S37'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
@@ -33,6 +33,23 @@ So the value set genuinely lives in a document AEAT publishes alongside the dise
 ## Why the existing sync tool does not close this
 
 `dev/corpus/sync_aeat_record_design_corpus.py` synchronises the **diseño de registro** indexes from the Sede static-files endpoint. The M036 diseño is already bundled and is the very artefact that declines to enumerate the table. The tool would re-fetch what is already here.
+
+## The artefact is now LOCATED
+
+The discovery half of this gate is retired. The table is published in the M036
+**instrucciones** on the AEAT sede guía práctica, not with the diseño workbook,
+which is why every sweep of the bundled diseño corpus came back empty. Two sede
+pages carry it identically (cross-checked):
+
+- `.../guia-practica-cumplimentacion-modelo-censal-036/anexos/anexo-03-instrucciones-modelo-036/cumplimentacion-modelo/pagina-4.html`
+- `.../guia-practica-cumplimentacion-modelo-censal-036/capitulo-04-actividades-economicas-locales/cumplimentacion-declaracion-actividades-economicas-locales/actividad.html`
+
+introduced by `Código/Tipo de actividad: se cumplimentará de acuerdo con las
+siguientes tablas.` and carrying ten codes: `A01`-`A05` for IAE activities and
+`B01`-`B05` for non-IAE ones.
+
+The AEAT diseño index page was also checked directly and confirms the negative:
+it links exactly one file for Modelo 036, `DR036v43.xlsx`, with no table annex.
 
 ## Why it was not fetched ad hoc
 
