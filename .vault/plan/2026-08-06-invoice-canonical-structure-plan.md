@@ -4,7 +4,7 @@ tags:
   - '#invoice-canonical-structure'
 date: '2026-08-06'
 modified: '2026-08-07'
-body_hash: 'sha256:9aa418317cc9e99bb10af7ef0ce6d0856074a3a7bbc0c237bda0835324e4b825'
+body_hash: 'sha256:8c6e6298d17015aba5e625b5b0e25a23cec765b7e162656aa10fc068d884bdb8'
 tier: L2
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
@@ -70,10 +70,10 @@ Additive only. Make the canonical aggregate's existing fields reachable from sin
 
 - [x] `P02.S04` - Prove the already-landed retention-rate and retention-amount writer options persist through the real encrypted namespace with a strict save-load-equality roundtrip plus an anti-tautology proof, the CLI and builder code having landed in ef0438561d and only the roundtrip gate remaining; `src/cadrumo/application/invoices/tests/test_creation.py`.
 - [x] `P02.S05` - Add explicit recargo, iva-category, invoice-class and series options to the canonical writer and both entry verbs so every regime is expressible without inferring one from operation-type, holding the peer totals identity grand_total equals base_total plus iva_total plus recargo_amount with retencion outside it; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
-- [ ] `P02.S06` - Accept operation-date on every entry verb including the guided one, so a guided entry can reach a declared devengo rank rather than only the proxy rank; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
+- [x] `P02.S06` - Accept operation-date on every entry verb including the guided one, so a guided entry can reach a declared devengo rank rather than only the proxy rank; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
 - [x] `P02.S07` - Stop synthesising exactly one line at BOTH synthesis sites, the canonical builder and the live bulk importer, accepting a supplied line set and proving a two-line invoice at different rates persists and aggregates per line with no persisted-schema change; `src/cadrumo/application/invoices/_creation.py`.
-- [ ] `P02.S26` - Widen the confirm-boundary override set from the extraction draft's field set to the writer's, adding retencion, recargo, invoice-class, series, rectifies-invoice-number, iva-category, operation-date and the missing iva-amount, so an operator confirming a rectificativa or a retencion-bearing invoice from evidence need not abandon the evidence path; `src/cadrumo/application/ledger/_evidence_draft.py`.
-- [ ] `P02.S27` - Make the recargo figure reachable at the confirm boundary and on the persisted invoice once the llm-package-split lane lands its draft-side recargo slot at W02.P04.S79, so the printed-total discrepancy that lane's reader already detects has somewhere to resolve to, this Step owning only the confirm side and never the draft model; `src/cadrumo/application/ledger/_evidence_draft.py`.
+- [x] `P02.S26` - Widen the confirm-boundary override set from the extraction draft's field set to the writer's, adding retencion, recargo, invoice-class, series, rectifies-invoice-number, iva-category, operation-date and the missing iva-amount, so an operator confirming a rectificativa or a retencion-bearing invoice from evidence need not abandon the evidence path; `src/cadrumo/application/ledger/_evidence_draft.py`.
+- [x] `P02.S27` - Make the recargo figure reachable at the confirm boundary and on the persisted invoice once the llm-package-split lane lands its draft-side recargo slot at W02.P04.S79, so the printed-total discrepancy that lane's reader already detects has somewhere to resolve to, this Step owning only the confirm side and never the draft model; `src/cadrumo/application/ledger/_evidence_draft.py`.
 
 ### Phase `P03` - Fold and delete the slim store
 

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:41977fa7cf17dd9342eb078e194fd673a762afacb2f39c0dad1eeffd5c06c8a0'
+body_hash: 'sha256:61924f653d805087476fec4a7cbe1a0787ef515c3892ef4c0a52f5b028e6e97c'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -26,7 +26,10 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S37]]'
   - '[[2026-08-06-invoice-canonical-structure-P02-S04]]'
   - '[[2026-08-06-invoice-canonical-structure-P02-S05]]'
+  - '[[2026-08-06-invoice-canonical-structure-P02-S06]]'
   - '[[2026-08-06-invoice-canonical-structure-P02-S07]]'
+  - '[[2026-08-06-invoice-canonical-structure-P02-S26]]'
+  - '[[2026-08-06-invoice-canonical-structure-P02-S27]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-audit]]'
   - '[[2026-08-06-invoice-canonical-structure-lane-discovery-sweep-research]]'
@@ -70,6 +73,9 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 - `2026-08-06-invoice-canonical-structure-P01-S34` - Re-decide the M349 treatment of an absent iva_category now that its stated justification is stale, the enum having gained intra-community service members in 7502ee65ed while the resolver docstring still says services map to no member, and either correct the reasoning while keeping the behaviour or change the behaviour, never leaving a filing-path guard resting on a false premise
 - `2026-08-06-invoice-canonical-structure-P02-S04` - Prove the already-landed retention-rate and retention-amount writer options persist through the real encrypted namespace with a strict save-load-equality roundtrip plus an anti-tautology proof, the CLI and builder code having landed in ef0438561d and only the roundtrip gate remaining
 - `2026-08-06-invoice-canonical-structure-P02-S05` - Add explicit recargo, iva-category, invoice-class and series options to the canonical writer and both entry verbs so every regime is expressible without inferring one from operation-type, holding the peer totals identity grand_total equals base_total plus iva_total plus recargo_amount with retencion outside it
+- `2026-08-06-invoice-canonical-structure-P02-S06` - Accept operation-date on every entry verb including the guided one, so a guided entry can reach a declared devengo rank rather than only the proxy rank
+- `2026-08-06-invoice-canonical-structure-P02-S26` - Widen the confirm-boundary override set from the extraction draft's field set to the writer's, adding retencion, recargo, invoice-class, series, rectifies-invoice-number, iva-category, operation-date and the missing iva-amount, so an operator confirming a rectificativa or a retencion-bearing invoice from evidence need not abandon the evidence path
+- `2026-08-06-invoice-canonical-structure-P02-S27` - Make the recargo figure reachable at the confirm boundary and on the persisted invoice once the llm-package-split lane lands its draft-side recargo slot at W02.P04.S79, so the printed-total discrepancy that lane's reader already detects has somewhere to resolve to, this Step owning only the confirm side and never the draft model
 
 ### plan
 
