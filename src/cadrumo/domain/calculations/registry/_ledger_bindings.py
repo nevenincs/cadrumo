@@ -1242,6 +1242,126 @@ def ungrounded_ledger_renta_income_observations(
     return UngroundedRentaIncome(facts=frozenset(facts), observations=ungrounded)
 
 
+# The renta-income facts that measure the SAME quantity by different rules, so a
+# revision declaring one deliberately omits the others: ``ingresos_integros_sum``
+# (declared base, else cash), ``taxable_base_sum`` (declared base only), and
+# ``cash_received_sum`` (raw bank credit) are three measures of one income. A
+# screen that demanded all three would fire on every revision.
+#
+# ``withheld_amount_sum`` is NOT in this group, and that is the whole point: the
+# retención a taxpayer suffered is an INDEPENDENT quantity carried on the same
+# observation, not an alternative measure of its income. Nothing else can stand
+# in for it.
+_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS: frozenset[str] = frozenset(
+    {"ingresos_integros_sum", "taxable_base_sum", "cash_received_sum"},
+)
+
+#: The independent quantities, DERIVED as the complement so the two sets cannot
+#: drift apart. A new fact added to the closed set is screened by default and
+#: must be classified deliberately as an alternative measure to be excluded --
+#: the safe direction, since forgetting to classify one surfaces an advisory
+#: rather than silently dropping a quantity.
+_RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = (
+    _RENTA_INCOME_SUPPORTED_FACTS - _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS
+)
+
+
+#: Per-fact readers for the independent quantities. Keyed on the same
+#: selector-fact vocabulary the resolver dispatches on
+#: (:func:`_renta_income_aggregate`), so a fact cannot be screened under one
+#: reading and resolved under another.
+_RENTA_INDEPENDENT_QUANTITY_READERS: dict[str, Callable[[RentaIncomeObservationProtocol], Decimal]] = {
+    "withheld_amount_sum": lambda observation: observation.withheld_amount,
+}
+
+
+class UnroutedRentaQuantity(NamedTuple):
+    """An independent renta quantity the observations carry that no binding draws.
+
+    ``fact`` is the selector fact that would have drawn it, ``total`` the sum
+    the rows carry, and ``observations`` the contributing rows in input order.
+    """
+
+    fact: str
+    total: Decimal
+    observations: tuple[RentaIncomeObservationProtocol, ...]
+
+
+def unrouted_ledger_renta_income_quantities(
+    revision: ModeloRevision,
+    observations: Iterable[RentaIncomeObservationProtocol],
+) -> tuple[UnroutedRentaQuantity, ...]:
+    """Return independent quantities the rows carry that no binding on ``revision`` draws.
+
+    The third renta-income screen, and it watches an axis the other two cannot
+    see. :func:`unsupported_ledger_renta_income_observations` asks whether a ROW
+    is selected by some binding; :func:`ungrounded_ledger_renta_income_observations`
+    asks whether a consumed row carried the substrate its binding's fact assumes.
+    Both key on the row. This one keys on the QUANTITY.
+
+    The distinction is load-bearing because every ``RentaIncomeObservation`` is
+    built with ``target_casilla_id = "01"`` regardless of which fact a binding
+    reads off it (see the note in the M130 ``0003-m130-income-cumulative.toml``
+    bindings fragment). A row therefore matches the income bindings on that key
+    and counts as consumed — while a SECOND, independent quantity it carries,
+    the retención suffered, reaches nothing at all. Drop the
+    ``withheld_amount_sum`` binding from a revision and the row-level screen
+    stays silent: every row is still consumed, for its income. The taxpayer's
+    whole retención credit disappears with a clean screen on both sides, which
+    is precisely the silent under-declaration the screens exist to prevent.
+
+    Alternative MEASURES of one quantity are excluded
+    (:data:`_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS`): a revision picks one
+    income measure and omitting the other two is correct, so demanding all three
+    would fire on every revision and train the operator to ignore the advisory.
+    Only a genuinely independent quantity is screened.
+
+    Reports nothing when the rows carry nothing: a taxpayer who suffered no
+    retención has a zero total, which is a legitimate zero rather than a
+    modelling gap, and this screen must not manufacture a finding from it.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose renta-income bindings
+            decide which facts are drawn.
+        observations: Actividad-económica income observations to screen.
+
+    Returns:
+        One :class:`UnroutedRentaQuantity` per uncovered non-zero quantity,
+        ordered by fact name. Empty when every quantity the rows carry is drawn.
+    """
+    drawn = {
+        _renta_ledger_income_selector(binding).fact
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
+    }
+    rows = tuple(observations)
+    unrouted: list[UnroutedRentaQuantity] = []
+    for fact in sorted(_RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS):
+        if fact in drawn:
+            continue
+        read = _RENTA_INDEPENDENT_QUANTITY_READERS.get(fact)
+        if read is None:
+            # A fact classified as independent with no reader is a partition
+            # break, not a silent skip: the build-time gate below pins the two
+            # together, so reaching here means that gate was bypassed.
+            raise RegistryValidationError(
+                f"renta-income fact {fact!r} is screened as an independent quantity but declares no reader; "
+                "add it to _RENTA_INDEPENDENT_QUANTITY_READERS or classify it in "
+                "_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS",
+            )
+        carrying = tuple(row for row in rows if read(row) != Decimal("0"))
+        if not carrying:
+            continue
+        unrouted.append(
+            UnroutedRentaQuantity(
+                fact=fact,
+                total=sum((read(row) for row in carrying), Decimal("0")),
+                observations=carrying,
+            ),
+        )
+    return tuple(sorted(unrouted, key=lambda entry: entry.fact))
+
+
 # Casilla IDs that the M130 gastos cumulative aggregation may feed. Validated at
 # registry load time so a binding targeting any other casilla surfaces before
 # any calculation runs.
