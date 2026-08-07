@@ -18,6 +18,7 @@ from pathlib import Path
 
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.hashing import sha256_hex
+
 from ._live_scoring import LiveScenarioScore
 from ._models import GoldenScenario, LiveTrajectory
 

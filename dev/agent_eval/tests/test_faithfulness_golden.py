@@ -53,6 +53,7 @@ from cadrumo.entrypoints.mcp import faithfulness_check
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+
 from .. import NarrationFaithfulness, load_scenario, run_golden_scenario
 from ._real_cli_support import create_m130_work_unit, valid_cli_commands
 

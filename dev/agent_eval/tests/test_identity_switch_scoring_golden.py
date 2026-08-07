@@ -29,6 +29,7 @@ from cadrumo.entrypoints.mcp import (
     identity_gate_refusal,
     tool_name_for_command,
 )
+
 from .. import (
     LiveToolCallRecord,
     LiveTrajectory,

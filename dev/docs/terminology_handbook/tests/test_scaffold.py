@@ -157,7 +157,7 @@ def test_scaffold_empty_tree_creates_expected_drafts(tmp_path: Path) -> None:
         "iva-domestic-general-21": _candidate(
             "iva-domestic-general-21",
             ConceptDomain.REGIMEN,
-            "iva-category:domestic_general_21",
+            "iva-category:domestic_general",
         ),
     }
     plan = scaffold_handbook(concepts, candidates, today=_TODAY, apply=True)
@@ -407,7 +407,7 @@ def test_build_plan_is_deterministically_ordered(tmp_path: Path) -> None:
         "iva-domestic-general-21": _candidate(
             "iva-domestic-general-21",
             ConceptDomain.REGIMEN,
-            "iva-category:domestic_general_21",
+            "iva-category:domestic_general",
         ),
     }
     plan = build_scaffold_plan(candidates, {}, today=_TODAY)

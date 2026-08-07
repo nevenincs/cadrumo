@@ -31,6 +31,7 @@ from cadrumo.entrypoints.mcp import ConfirmationPolicy, build_tool_descriptors, 
 from cadrumo.tests.cli_envelope import require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+
 from .. import ProfileConfirmationScenario, check_profile_confirmation_scenario
 from ._real_cli_support import valid_cli_commands
 
