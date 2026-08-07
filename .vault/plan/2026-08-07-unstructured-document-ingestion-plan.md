@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:076202760e216ea304801db305ddb9747f879dab240062bbebd6bb1addc5e924'
+body_hash: 'sha256:1cc2e0774482b9a8866128e90b28a27b1a5109bdcb20ccb89bf97e65507a8c70'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -95,7 +95,7 @@ Lands the deterministic grounding stage and deletes the Spanish-label regex extr
 - [x] `W02.P06.S18` - Enforce the anchor check: a candidate grounds only when its anchor occurs in the transcription and the typed value equals the deterministic parse of that anchor, proven by mutation with an off-document value observing red; `src/cadrumo/application/ledger`.
 - [x] `W02.P06.S19` - Resolve identity roles deterministically, excluding the taxpayer own NIF from counterparty candidacy and surfacing AMBIGUOUS with all candidates when role evidence does not pick exactly one, gated by the OP-PUR-COM-2026-0005_layout-minimal fixture never yielding a first-match id; `src/cadrumo/application/ledger`.
 - [x] `W02.P06.S20` - Emit arithmetic-closure findings over the identities total equals base plus cuota plus recargo plus suplido, cash equals total minus retencion, and per-rate sums, gated by both COM-2026-0005 fixture entries producing a blocking 890.00 versus 927.22 finding; `src/cadrumo/application/ledger`.
-- [ ] `W02.P06.S21` - Route per-field degradation advisories through the typed Notice channel naming what was seen and why it was rejected, gated by envelope conformance tests; `src/cadrumo/entrypoints/cli`.
+- [x] `W02.P06.S21` - Route per-field degradation advisories through the typed Notice channel naming what was seen and why it was rejected, gated by envelope conformance tests; `src/cadrumo/entrypoints/cli`.
 - [ ] `W02.P06.S22` - Delete the Spanish-label regex extractor family and its tests after the semantic reader is wired, gated by clean collection, zero remaining label-regex references, and the bundled fixtures passing through the new path; `src/cadrumo/application/ledger/_evidence_draft.py`.
 
 ### Phase `W02.P07` - S4 classification
