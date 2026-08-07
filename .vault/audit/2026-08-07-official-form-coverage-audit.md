@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:998c8341aa028be0dccfced791b3b100c800c6dbe1dbce88da2a2c8291ac0b09'
+body_hash: 'sha256:e3bda5c5ec9593c0079398ccc789db79041c800acdf5f0afd51c579ff45598b1'
 related: []
 ---
 ## Scope
@@ -138,6 +138,25 @@ against live BOE that both were complete. A shrink-only ratchet now pins the
 population, currently 54, with its anti-tautology proof bound to the largest
 remaining entry so it retires only when the worst case is genuinely fixed.
 
+### blind-does-not-mean-unreadable | medium | The 16 revisions reporting no casillas have no casillas to report, and an earlier reading of this audit said otherwise
+
+Recorded as a correction to this document rather than by rewriting the entry
+above it. The extraction-found-nothing flag was introduced with a docstring
+asserting that an official AEAT record design always declares casillas, so an
+empty set had to be a limitation of the extraction. That is false.
+
+All 16 revisions in that state -- 111, 115, 180, 184, 190, 193, 232, 347, 349,
+360, 369 and 720 -- are informative declarations. Their Diseño describes
+positional records with named fields, and carries zero bracketed numbers at any
+digit width. They are addressed by field, not by box. An empty casilla set is
+the correct answer, and casilla-number coverage is not the applicable measure
+for them.
+
+The flag itself still earns its place: it marks that casilla coverage does not
+apply or could not be computed, and in both cases an empty gap is not evidence
+of coverage. Only the interpretation was wrong, and it was wrong in the
+direction that manufactures work.
+
 ### grounding-gate-read-the-wrong-artefact | high | A gate built to measure legal grounding measured a file no grounding check consults
 
 The corpus refresh above did not take effect when first landed, and the reason
@@ -175,7 +194,16 @@ article against live BOE before requoting so a phrase is never pinned to an
 already-truncated excerpt. The ratchet enforces the cadence; the remaining work
 is one legal reading per entry.
 
-Extend the Diseño extraction to the 16 revisions whose annotation sits outside
-bracketed field text, so their coverage becomes measurable rather than
-explicitly unknown. Until then their reports carry the extraction-found-nothing
-flag, which is honest but is not coverage.
+Do NOT extend the Diseño extraction to the 16 revisions that yield no
+casillas. An earlier draft of this recommendation said to, and it was wrong.
+Those revisions are informative declarations whose record design describes
+positional records with NAMED fields and no numbered boxes at all -- measured,
+zero bracketed numbers across all 16 at any digit width. An empty casilla set
+is the correct answer for them, so widening extraction would chase an
+annotation that does not exist.
+
+What is genuinely open there is a different measure: field coverage against the
+record layout. Those declarations are addressed by field, so the question worth
+asking is whether the registry declares every record field the layout carries,
+not every casilla number. That is a separate instrument, and nothing currently
+provides it.
