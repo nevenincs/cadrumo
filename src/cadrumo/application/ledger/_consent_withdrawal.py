@@ -196,14 +196,38 @@ class LocalRederivation(BaseModel):
     transcription_reused: bool
 
 
-def artefact_is_cloud_derived(stamp: str) -> bool:
-    """Whether a stamp should be surfaced to a withdrawing operator.
+def artefact_is_cloud_derived(read_transports: tuple[str, ...]) -> bool:
+    """Whether an artefact should be surfaced to a withdrawing operator.
 
-    Fails open toward SURFACING: an unreadable stamp is included. A withdrawal
-    that omits an artefact tells the operator they are clean when they are not,
-    and the cost of an extra row is that they look at one more document.
+    Reads the recorded TRANSPORTS rather than parsing a reader label. The label
+    was never a transport claim -- the batch path stores a function name, by a
+    deliberate rule against claiming one reader for a draft assembled from
+    several -- so parsing it for transport marked every batch-ingested draft
+    cloud-derived. Fail-open noise on a confidentiality surface is not caution;
+    it trains an operator to ignore the surface.
+
+    Fails open toward SURFACING on genuine uncertainty: an EMPTY tuple means
+    the writer could not establish where the read ran, and that is surfaced
+    rather than resolved as on-host. A withdrawal that omits an artefact tells
+    the operator they are clean when they may not be.
+
+    The fact is monotone: any non-local transport makes the document off-host,
+    because if any field left the host then the document did.
     """
-    return provenance_stamp_transport(stamp) != LOCAL_TRANSPORT_LABEL
+    if not read_transports:
+        return True
+    return any(transport != LOCAL_TRANSPORT_LABEL for transport in read_transports)
+
+
+def _off_host_transport(read_transports: tuple[str, ...]) -> str | None:
+    """Return the off-host transport to show, or ``None`` when there is none to name.
+
+    ``None`` covers both "recorded as on-host" and "never established"; the row
+    exists at all only because :func:`artefact_is_cloud_derived` selected it, so
+    the operator already knows it needs attention.
+    """
+    off_host = [transport for transport in read_transports if transport != LOCAL_TRANSPORT_LABEL]
+    return off_host[0] if off_host else None
 
 
 def survey_cloud_consent(
@@ -236,7 +260,7 @@ def survey_cloud_consent(
         CloudDerivedArtefact(
             evidence_reference=stored.evidence_reference,
             provenance_stamp=stored.extractor,
-            transport=provenance_stamp_transport(stored.extractor),
+            transport=_off_host_transport(stored.read_transports),
             drafted_at=stored.drafted_at,
             rederivable_on_host=_rederivable(
                 stored.evidence_reference,
@@ -247,7 +271,7 @@ def survey_cloud_consent(
             ),
         )
         for stored in drafts
-        if artefact_is_cloud_derived(stored.extractor)
+        if artefact_is_cloud_derived(stored.read_transports)
     )
     return ConsentWithdrawalSurvey(
         consented_dispatches=consent_entries,
@@ -341,7 +365,8 @@ def rederive_artefact_on_host(
         )
         raise ValueError(msg)
     draft, stamp = read_on_host(transcription.text)
-    if provenance_stamp_transport(stamp) != LOCAL_TRANSPORT_LABEL:
+    transport = provenance_stamp_transport(stamp)
+    if transport != LOCAL_TRANSPORT_LABEL:
         msg = (
             f"the re-derivation reader stamped {stamp!r}, which does not name an on-host transport; "
             "refusing to record it as a local re-derivation"
@@ -352,6 +377,11 @@ def rederive_artefact_on_host(
         evidence_reference=evidence_reference,
         draft=draft,
         extractor=stamp,
+        # The transport is READ BACK from the stamp the reader just produced,
+        # not asserted alongside it: the refusal above already established that
+        # the stamp names an on-host transport, so recording anything else here
+        # would contradict the check that let this line run.
+        read_transports=(transport,),
         settings=settings,
     )
     return LocalRederivation(

@@ -58,6 +58,20 @@ class StoredExtractionDraft(BaseModel):
         draft: The proposed fields, exactly as the reader produced them.
         extractor: Which reader produced it, so a draft from a superseded
             extractor is identifiable rather than silently trusted at confirm.
+        read_transports: Every transport that carried this document's reading.
+            Separate from ``extractor`` because they answer different questions
+            at different granularities. WHICH reader produced a value is a
+            per-field fact, already carried by the draft's own provenance
+            envelopes, and a document-level claim about it would be exactly the
+            laundering those envelopes exist to prevent. WHETHER any bytes left
+            the host is legitimately document-level: if any field went off-host
+            then the document did, so the fact is monotone over fields and
+            loses nothing by being aggregated here.
+
+            Empty means UNKNOWN, not on-host. A writer that cannot establish
+            where the read ran says nothing rather than claiming the safe
+            answer, and the consent withdrawal survey surfaces the uncertainty
+            instead of resolving it optimistically.
         drafted_at: When the draft was written.
     """
 
@@ -66,6 +80,7 @@ class StoredExtractionDraft(BaseModel):
     evidence_reference: str = Field(min_length=1)
     draft: InvoiceDraft
     extractor: str = Field(min_length=1)
+    read_transports: tuple[str, ...] = ()
     drafted_at: UtcInstant
 
 
@@ -124,6 +139,7 @@ def write_extraction_draft(
     draft: InvoiceDraft,
     extractor: str,
     settings: Settings,
+    read_transports: tuple[str, ...] = (),
 ) -> ExtractionDraftDocument:
     """Persist a draft through the core's encrypted repository.
 
@@ -142,6 +158,7 @@ def write_extraction_draft(
                 evidence_reference=evidence_reference,
                 draft=draft,
                 extractor=extractor,
+                read_transports=read_transports,
                 drafted_at=now(),
             ),
         ),

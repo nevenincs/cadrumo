@@ -2271,6 +2271,8 @@ cli:
         pull_modelo_help: Limita esta descarga a este modelo.
         pull_sources_help: Descarga las observaciones presentadas que requieren las
           dependencias de una declaración objetivo.
+        discover_help: 'Mostrar qué pares de modelo y ejercicio recorrería una descarga del historial.'
+        discover_register_scope_caveat: 'La lista de opciones del registro es lo que AEAT ofrece, no un historial de presentaciones confirmado para este NIF. No está confirmado si esa lista se limita al NIF autenticado, por lo que solo amplía el recorrido: un par ausente de ella no prueba que no se presentara nada.'
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
       iva_wallet:
@@ -5564,6 +5566,111 @@ core:
         se registró dos veces con distintos invocables; debe registrarse exactamente
         una vez.
 docs:
+  casilla:
+    binding_source:
+      atribucion_member: desde los miembros en atribución de rentas
+      bienes_inversion_regularizacion: desde la regularización de bienes de inversión
+      borrador: desde el borrador de la AEAT
+      collectible_invoice: desde las facturas emitidas
+      donativo_donor: desde los donantes registrados
+      foreign_asset: desde sus bienes en el extranjero
+      iva_compensation_annual_partition: desde la compensación de IVA del ejercicio
+      iva_wallet_decision: desde su decisión de compensación de IVA
+      ledger_impatriado_income_aggregation: desde sus ingresos del régimen de impatriados
+      ledger_irnr_income_aggregation: desde sus ingresos de IRNR
+      ledger_iva_aggregation: desde sus apuntes de IVA
+      ledger_oss_aggregation: desde sus apuntes de OSS
+      ledger_renta_gastos_estimacion_directa_aggregation: desde sus gastos en estimación
+        directa
+      ledger_renta_gastos_pago_fraccionado_aggregation: desde sus gastos del pago
+        fraccionado
+      ledger_renta_income_aggregation: desde sus ingresos registrados
+      ledger_transaction: desde sus movimientos registrados
+      manual_input: desde un valor que usted aporta
+      payable_invoice: desde las facturas recibidas
+      previous_filing: desde su declaración anterior
+      profile: desde su perfil de contribuyente
+      prorrata_regularizacion: desde la regularización de prorrata
+      purchase_invoice_evidence: desde los justificantes de sus facturas de compra
+      refund_operation: desde sus operaciones de devolución
+      related_party_operation: desde sus operaciones vinculadas
+      relation_prefill: desde el resultado de un modelo relacionado
+      retenciones_aggregation: desde las retenciones registradas
+      withholding: desde las retenciones soportadas
+    cadence:
+      ad_hoc: Se presenta cuando ocurre el hecho
+      annual: Se presenta anualmente
+      monthly: Se presenta mensualmente
+      profile_based: Se presenta según su perfil
+      quarterly: Se presenta trimestralmente
+    chrome:
+      alternative_join: ', o'
+      binding: Vínculo de datos
+      casilla_count: '{casillas} casillas en {sections} secciones'
+      casilla_id: Identificador de casilla
+      derived_from: a partir de
+      established_by: Establecido por
+      formula: Fórmula
+      general_section: General
+      index_intro: Una página por modelo. Cada casilla indica cómo se rellena (la
+        introduce usted, se calcula a partir de otras casillas o se rellena desde
+        sus registros), dónde figura en el modelo oficial y qué norma la establece.
+      index_title: Referencia de casillas
+      legal_basis: Base legal
+      list_and: y
+      not_on_official_form: No figura en el modelo oficial
+      record_design_number: Número del diseño de registro
+      registry_identifiers: Identificadores del registro
+      registry_section: Sección del registro
+      required: Obligatoria
+      revisions: Revisiones
+      sections_nav: Secciones de este modelo
+      segmento: Segmento {segmento}
+      semantic_role: Rol semántico
+      sources: Fuentes
+    data_type:
+      bic: BIC
+      boolean: Sí o no
+      ccaa_code: Código de comunidad autónoma
+      country_code: Código de país
+      date: Fecha
+      decimal: Número decimal
+      iban: IBAN
+      integer: Número entero
+      money: Importe en euros
+      municipality_code: Código de municipio
+      name: Nombre
+      nif: NIF
+      nif_iva: NIF-IVA
+      period_code: Periodo
+      postal_code: Código postal
+      province_code: Código de provincia
+      ratio: Porcentaje
+      text: Texto
+      year: Ejercicio
+    input_kind:
+      bound: Se rellena automáticamente
+      computed: Se calcula automáticamente
+      informational: Solo informativa
+      manual: Lo introduce usted
+    input_kind_count:
+      bound: rellenadas desde sus registros
+      computed: calculadas
+      informational: solo informativas
+      manual: que introduce usted
+    legal_kind:
+      instruction: Instrucciones AEAT
+    length:
+      at_least: Al menos {min} caracteres
+      at_most: Como máximo {max} caracteres
+      between: De {min} a {max} caracteres
+    value_enum: 'Uno de: {values}'
+    value_range:
+      at_least: Al menos {min}
+      at_most: Como máximo {max}
+      between: Entre {min} y {max}
+      non_negative: Cero o más
+      non_positive: Cero o menos
   glossary:
     entry:
       broader: Término genérico
@@ -7220,89 +7327,7 @@ mcp:
       El servicio en caliente se reanuda cuando se libera la llamada lenta.'
 modelo:
   display:
-    binding_source:
-      atribucion_member: desde los miembros en atribución de rentas
-      bienes_inversion_regularizacion: desde la regularización de bienes de inversión
-      borrador: desde el borrador de la AEAT
-      collectible_invoice: desde las facturas emitidas
-      donativo_donor: desde los donantes registrados
-      foreign_asset: desde sus bienes en el extranjero
-      iva_compensation_annual_partition: desde la compensación de IVA del ejercicio
-      iva_wallet_decision: desde su decisión de compensación de IVA
-      ledger_impatriado_income_aggregation: desde sus ingresos del régimen de impatriados
-      ledger_irnr_income_aggregation: desde sus ingresos de IRNR
-      ledger_iva_aggregation: desde sus apuntes de IVA
-      ledger_oss_aggregation: desde sus apuntes de OSS
-      ledger_renta_gastos_estimacion_directa_aggregation: desde sus gastos en estimación
-        directa
-      ledger_renta_gastos_pago_fraccionado_aggregation: desde sus gastos del pago
-        fraccionado
-      ledger_renta_income_aggregation: desde sus ingresos registrados
-      ledger_transaction: desde sus movimientos registrados
-      manual_input: desde un valor que usted aporta
-      payable_invoice: desde las facturas recibidas
-      previous_filing: desde su declaración anterior
-      profile: desde su perfil de contribuyente
-      prorrata_regularizacion: desde la regularización de prorrata
-      purchase_invoice_evidence: desde los justificantes de sus facturas de compra
-      refund_operation: desde sus operaciones de devolución
-      related_party_operation: desde sus operaciones vinculadas
-      relation_prefill: desde el resultado de un modelo relacionado
-      retenciones_aggregation: desde las retenciones registradas
-      withholding: desde las retenciones soportadas
-    cadence:
-      ad_hoc: Se presenta cuando ocurre el hecho
-      annual: Se presenta anualmente
-      monthly: Se presenta mensualmente
-      profile_based: Se presenta según su perfil
-      quarterly: Se presenta trimestralmente
-    chrome:
-      alternative_join: ', o'
-      binding: Vínculo de datos
-      casilla_count: '{casillas} casillas en {sections} secciones'
-      casilla_id: Identificador de casilla
-      derived_from: a partir de
-      established_by: Establecido por
-      formula: Fórmula
-      general_section: General
-      index_intro: Una página por modelo. Cada casilla indica cómo se rellena (la
-        introduce usted, se calcula a partir de otras casillas o se rellena desde
-        sus registros), dónde figura en el modelo oficial y qué norma la establece.
-      index_title: Referencia de casillas
-      legal_basis: Base legal
-      list_and: y
-      not_on_official_form: No figura en el modelo oficial
-      record_design_number: Número del diseño de registro
-      registry_identifiers: Identificadores del registro
-      registry_section: Sección del registro
-      required: Obligatoria
-      revisions: Revisiones
-      sections_nav: Secciones de este modelo
-      segmento: Segmento {segmento}
-      semantic_role: Rol semántico
-      sources: Fuentes
-    data_type:
-      bic: BIC
-      boolean: Sí o no
-      ccaa_code: Código de comunidad autónoma
-      country_code: Código de país
-      date: Fecha
-      decimal: Número decimal
-      iban: IBAN
-      integer: Número entero
-      money: Importe en euros
-      municipality_code: Código de municipio
-      name: Nombre
-      nif: NIF
-      nif_iva: NIF-IVA
-      period_code: Periodo
-      postal_code: Código postal
-      province_code: Código de provincia
-      ratio: Porcentaje
-      text: Texto
-      year: Ejercicio
     input_kind:
-      bound: Se rellena automáticamente
       computed: Se calcula automáticamente
       informational: Solo informativa
       manual: Lo introduce usted

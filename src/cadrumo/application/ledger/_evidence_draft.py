@@ -163,6 +163,7 @@ from ._evidence_reference import (
 from ._evidence_textlayer import transcribe_text_layer
 
 if TYPE_CHECKING:
+    from ...llm import EvidenceConsentToken, LLMProvider
     from ._confirmation_gate import FindingResolution
 
 __all__ = [
@@ -584,6 +585,8 @@ def extract_invoice_draft_from_evidence(
     evidence_id: str | None = None,
     attachment_id: str | None = None,
     settings: Settings | None = None,
+    off_host_provider: LLMProvider | None = None,
+    consent_token: EvidenceConsentToken | None = None,
 ) -> InvoiceDraft:
     """Resolve one stored evidence reference to bytes and extract its :class:`InvoiceDraft`.
 
@@ -608,6 +611,14 @@ def extract_invoice_draft_from_evidence(
         attachment_id: A linked attachment id, or ``None``.
         settings: Resolved ``Settings``. When ``None``, ``load_settings()`` is
             used so test overrides via ``override_settings()`` are honoured.
+        off_host_provider: Provider to route the MODEL-BEARING stages at, or
+            ``None`` for the on-host default. Widening this signature does not
+            widen the boundary: the refusal lives below this function, at the
+            client's single dispatch point, so a caller naming a cloud provider
+            without a token is refused there rather than trusted here.
+        consent_token: Per-invocation off-host consent proof, minted through
+            :func:`~llm.mint_evidence_consent_token`. ``None`` is correct for
+            every on-host read.
 
     Returns:
         :class:`InvoiceDraft`: The best-effort extracted fields, for operator
@@ -687,8 +698,19 @@ def extract_invoice_draft_from_evidence(
         except PurchaseInvoiceEvidenceInputError:
             transcription = None
         if transcription is not None:
-            return _read_transcription_semantically(evidence_input, transcription)
-    return _extract_invoice_fields_via_vision(evidence_input, settings=resolved_settings)
+            return _read_transcription_semantically(
+                evidence_input,
+                transcription,
+                settings=resolved_settings,
+                off_host_provider=off_host_provider,
+                consent_token=consent_token,
+            )
+    return _extract_invoice_fields_via_vision(
+        evidence_input,
+        settings=resolved_settings,
+        off_host_provider=off_host_provider,
+        consent_token=consent_token,
+    )
 
 
 def _refuse_a_text_read_with_no_reader(exc: Exception) -> NoReturn:
@@ -728,6 +750,10 @@ def _refuse_a_text_read_with_no_reader(exc: Exception) -> NoReturn:
 def _read_transcription_semantically(
     evidence: EvidenceInput,
     transcription: DocumentTranscription,
+    *,
+    settings: Settings,
+    off_host_provider: LLMProvider | None = None,
+    consent_token: EvidenceConsentToken | None = None,
 ) -> InvoiceDraft:
     """Read a text-native PDF through the transcribe-extract-ground chain.
 
@@ -759,6 +785,11 @@ def _read_transcription_semantically(
             structural: when one ``try`` wrapped both, the refusal below raised
             the same exception type the fallback catches and was silently
             swallowed into a vision run.
+        settings: Resolved settings, passed down rather than reloaded so the
+            caller's overrides govern the model this stage resolves.
+        off_host_provider: Provider to route the SEMANTIC stage at, or ``None``
+            for the on-host default.
+        consent_token: Per-invocation off-host consent proof, or ``None``.
 
     Returns:
         The grounded draft.
@@ -781,11 +812,25 @@ def _read_transcription_semantically(
     # written at module scope.
     import httpx
 
-    from ...llm import extract_invoice_fields_from_text
+    from ...llm import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
     from ._grounded_reading import ground_draft_against_transcription
 
     try:
-        read = extract_invoice_fields_from_text(transcription)
+        # The pinned wrapper stays the on-host route and is left untouched: its
+        # pin is a stated confidentiality property, and widening it with a
+        # pass-through provider would open the off-host route for every caller
+        # with no diff line that looks like a confidentiality change. An
+        # explicitly-consented read constructs the extractor DIRECTLY instead,
+        # so the reach-around gate keeps the wrapper as its target.
+        if off_host_provider is None:
+            read = extract_invoice_fields_from_text(transcription)
+        else:
+            read = TextInvoiceFieldExtractor(
+                provider=off_host_provider,
+                model=settings.cadrumo_llm_cloud_text_model,
+                settings=settings,
+                consent_token=consent_token,
+            ).extract(transcription=transcription)
     except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
         # The reader is absent or unreachable. See the refusal's own docstring
         # for why this does not fall through to vision.
@@ -881,7 +926,13 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
     )
 
 
-def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Settings) -> InvoiceDraft:
+def _extract_invoice_fields_via_vision(
+    evidence: EvidenceInput,
+    *,
+    settings: Settings,
+    off_host_provider: LLMProvider | None = None,
+    consent_token: EvidenceConsentToken | None = None,
+) -> InvoiceDraft:
     """Rasterise/encode *evidence*, TRANSCRIBE it with the on-host vision model, then read it.
 
     Two stages, not one, and the split is what earns this path its grounding.
@@ -913,7 +964,7 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
         )
 
     try:
-        from ...llm import transcribe_document_images
+        from ...llm import LocalVisionDocumentTranscriber, transcribe_document_images
 
         if evidence.document_shape in PDF_CONTAINER_SHAPES:
             images = tuple(
@@ -935,11 +986,29 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
         # Content-addressed to the SOURCE bytes, never to the renders: the same
         # document rasterised at another resolution is one document, and hashing
         # the images would split it into two cache entries that can never hit.
-        transcription = transcribe_document_images(
-            images,
-            source_content_sha256=evidence.content_sha256,
-            settings=settings,
-        )
+        #
+        # The consented route reaches stage ONE as well as stage two, and that
+        # is deliberate rather than thorough: on a scan-only document the pixels
+        # ARE the evidence, so a consent that covered only the semantic stage
+        # would take an operator's acknowledgement and then leave the read
+        # entirely on-host -- an acknowledgement that changes nothing, which is
+        # worse than not asking.
+        if off_host_provider is None:
+            transcription = transcribe_document_images(
+                images,
+                source_content_sha256=evidence.content_sha256,
+                settings=settings,
+            )
+        else:
+            transcription = LocalVisionDocumentTranscriber(
+                provider=off_host_provider,
+                model=settings.cadrumo_llm_cloud_vision_model,
+                settings=settings,
+                consent_token=consent_token,
+            ).transcribe(
+                evidence_images=images,
+                source_content_sha256=evidence.content_sha256,
+            )
     except MissingOptionalExtraError as exc:
         # Ordered ahead of the runtime-failure branch deliberately. A missing
         # `llm` extra is a dependency problem, not a reachability problem: the
@@ -964,7 +1033,13 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
     # statement about the semantic READER, and converting it into "vision
     # reading failed" would send the operator to restart a daemon that read the
     # page perfectly well.
-    return _read_transcription_semantically(evidence, transcription)
+    return _read_transcription_semantically(
+        evidence,
+        transcription,
+        settings=settings,
+        off_host_provider=off_host_provider,
+        consent_token=consent_token,
+    )
 
 
 class PrintedTotalDiscrepancy(BaseModel):

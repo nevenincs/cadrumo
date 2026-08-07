@@ -36,18 +36,23 @@ import asyncio
 from collections.abc import Awaitable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
+
+from pydantic import BaseModel, Field, field_validator
 
 from ...adapters.outbound.aeat.sede import (
     Declaracion,
     FiledDeclaracionObservation,
     FiledDeclaracionObservationStore,
+    FiledDeclarationAvailabilityReport,
     capture_previous_filing_observations,
     capture_relation_source_observations,
+    discover_filed_declaration_availability,
     open_declarations_register,
     shared_playwright,
 )
-from ...core import Period, require_active_bucket_id
+from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import FiledHistoryDiscoverySignal, Period, require_active_bucket_id
 from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import ValidatedRegistryAuthority
 from ._errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
@@ -71,6 +76,11 @@ from ._remote_state_models import (
 )
 from ._remote_state_outcomes import bounded_context_text
 from ._session import active_verified_session
+
+if TYPE_CHECKING:
+    from datetime import date
+
+    from ...domain.deadlines import TaxpayerProfile
 
 
 def filed_data_capture_failure_row(
@@ -668,6 +678,313 @@ async def capture_source_filed_data(
     )
 
 
+async def discover_filed_history(
+    *,
+    profile: TaxpayerProfile | None = None,
+    today: date | None = None,
+) -> FiledHistoryDiscoveryReport:
+    """Discover what history to walk, unioning both signals into one grid.
+
+    Reads the register's offered option lists through the SAME verified-session
+    bring-up every filed-capture path uses, so a missing or unverified auth
+    session refuses here exactly as it does on the capture path rather than with
+    a discovery-specific error nobody has seen before.
+
+    Nothing is persisted and no pair is queried: this is a read of the register's
+    own controls plus a pure derivation over already-persisted profile data.
+
+    ``profile`` is optional so the register-options read can be exercised on its
+    own, but omitting it means the report carries NO taxpayer-specific
+    denominator — see
+    :attr:`FiledHistoryDiscoveryReport.carries_a_taxpayer_specific_denominator`,
+    which is the flag a caller must check before making any coverage claim.
+
+    Args:
+        profile: The taxpayer's declared profile, supplying the load-bearing
+            :attr:`~core.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY`
+            signal. ``None`` yields a register-options-only report.
+        today: Reference date for applicability and the year span's upper bound.
+            Defaults to the Madrid civil date the rest of the CLI resolves
+            filing dates against.
+
+    Returns:
+        The union :class:`FiledHistoryDiscoveryReport`.
+
+    Raises:
+        SedeNavigationError: When the session carries no persisted browser state,
+            propagated unchanged from the shared register bring-up.
+    """
+    from ...core.time import today_madrid
+
+    session, settings = await active_verified_session(operation="live-expedientes-read")
+    async with shared_playwright(session) as playwright:
+        availability = await discover_filed_declaration_availability(
+            session,
+            settings=settings,
+            playwright=playwright,
+        )
+    expected = (
+        expected_filed_declaration_grid(profile, today=today or today_madrid())
+        if profile is not None
+        else ExpectedFiledDeclarationGrid()
+    )
+    return filed_history_discovery_report(expected=expected, availability=availability)
+
+
+class ExpectedFiledDeclarationGrid(BaseModel):
+    """The ``(modelo, ejercicio)`` pairs the taxpayer's OWN declared facts expect.
+
+    Tagged :attr:`~core.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY`. This
+    is the load-bearing denominator: every value in it comes from data the
+    taxpayer declared during setup, walked through the same applicability
+    machinery the overview calendar already reconciles obligations with, so it is
+    taxpayer-specific by construction and needs no authenticated session.
+
+    Attributes:
+        modelos: Registry modelos this profile's declared facts do not rule out,
+            in sorted order. A modelo the applicability engine positively
+            answers "no" for is absent, and so is one the registry does not model
+            at all — the latter because no declared fact feeds a verdict for it,
+            so nominating it would manufacture an expectation the profile never
+            made.
+        ejercicios: The filing years spanned by the declared activity dates,
+            newest first.
+        activity_start_declared: Whether the profile declared an
+            ``activity_start_date``. When ``False``, ``ejercicios`` is EMPTY and
+            this grid makes no claim: it is "cannot say", never "nothing
+            expected". A consumer must surface that distinction rather than
+            reporting a clean zero, because a silently empty profile signal
+            leaves only the signal whose informativeness is unconfirmed.
+        activity_end_declared: Whether the profile declared an
+            ``activity_end_date``, which caps the span. A taxpayer who ceased
+            activity is not expected to have filed afterwards, and flagging
+            those years as expected-but-not-found would be a false anomaly.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    modelos: tuple[str, ...] = ()
+    ejercicios: tuple[int, ...] = ()
+    activity_start_declared: bool = False
+    activity_end_declared: bool = False
+
+    @property
+    def pairs(self) -> tuple[tuple[str, int], ...]:
+        """Return every expected ``(modelo, ejercicio)`` pair, newest year first."""
+        return tuple((modelo, ejercicio) for modelo in self.modelos for ejercicio in self.ejercicios)
+
+
+class FiledHistoryDiscoveryPair(BaseModel):
+    """One ``(modelo, ejercicio)`` pair to walk, carrying which signal nominated it.
+
+    The signal set is what makes a zero-row outcome readable, so it travels with
+    the pair rather than being discarded once the union is built. The two
+    predicates below exist so no consumer re-derives the asymmetry: a caller asks
+    the pair whether a zero-row result is an anomaly instead of re-checking tags
+    and possibly getting the rule wrong in one of several places.
+
+    Attributes:
+        modelo: Modelo code.
+        ejercicio: Filing year.
+        signals: Every signal that nominated this pair, in the canonical enum
+            declaration order, deduplicated. Never empty — a pair nominated by
+            nothing is not walked.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    modelo: str = Field(min_length=1, max_length=8)
+    ejercicio: int = Field(ge=2000, le=2099)
+    signals: tuple[FiledHistoryDiscoverySignal, ...] = Field(min_length=1)
+
+    @field_validator("signals")
+    @classmethod
+    def _canonical_signal_order(
+        cls,
+        value: tuple[FiledHistoryDiscoverySignal, ...],
+    ) -> tuple[FiledHistoryDiscoverySignal, ...]:
+        """Dedup and canonicalise the signal set so equal nominations compare equal."""
+        seen = set(value)
+        return tuple(signal for signal in FiledHistoryDiscoverySignal if signal in seen)
+
+    @property
+    def expected_by_profile(self) -> bool:
+        """Whether the taxpayer's own declared facts expected a filing for this pair."""
+        return FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY in self.signals
+
+    @property
+    def zero_rows_is_an_anomaly(self) -> bool:
+        """Whether finding no declaración for this pair is worth an advisory.
+
+        True only when the profile signal nominated the pair: the taxpayer's own
+        declared facts expected a filing that was not found. A pair nominated
+        ONLY by the register's option list is a plain negative however empty it
+        comes back, because whether that list is scoped to this NIF at all is
+        unconfirmed — treating its emptiness as a finding would raise an alert
+        from a signal that may carry no information about this taxpayer.
+        """
+        return self.expected_by_profile
+
+
+class FiledHistoryDiscoveryReport(BaseModel):
+    """The union walk grid, with every pair tagged by the signal(s) behind it.
+
+    The union is deliberately additive: the register's offered option set can
+    only ever WIDEN the grid the profile expects, never narrow it and never
+    substitute for it. That is why a pair present in only one signal is still
+    walked, while only the profile-nominated ones can produce an anomaly.
+
+    Attributes:
+        pairs: Every pair to walk, sorted by modelo then descending ejercicio so
+            recent filings are reached first.
+        profile_year_span_determined: Whether the profile declared the activity
+            start date the year axis needs. When ``False`` the profile signal
+            contributed nothing and the report says so, rather than presenting a
+            register-options-only grid as though both signals had agreed.
+        register_options_read: Whether the register's option lists were read at
+            all. ``False`` on the profile-only path (no live session), which is
+            not a failure — the design ships fully functional without it.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    pairs: tuple[FiledHistoryDiscoveryPair, ...] = ()
+    profile_year_span_determined: bool = False
+    register_options_read: bool = False
+
+    @property
+    def walk_pairs(self) -> tuple[tuple[str, int], ...]:
+        """Return the plain ``(modelo, ejercicio)`` pairs to query, in walk order."""
+        return tuple((pair.modelo, pair.ejercicio) for pair in self.pairs)
+
+    @property
+    def profile_expected_pairs(self) -> tuple[FiledHistoryDiscoveryPair, ...]:
+        """Return only the pairs the taxpayer's declared facts expected a filing for."""
+        return tuple(pair for pair in self.pairs if pair.expected_by_profile)
+
+    @property
+    def register_options_only_pairs(self) -> tuple[FiledHistoryDiscoveryPair, ...]:
+        """Return the pairs nominated ONLY by the unconfirmed register option list."""
+        return tuple(pair for pair in self.pairs if not pair.expected_by_profile)
+
+    @property
+    def carries_a_taxpayer_specific_denominator(self) -> bool:
+        """Whether any coverage claim this report supports rests on taxpayer facts.
+
+        ``False`` means every walked pair came from the register's offered option
+        list, whose scoping is unconfirmed, so the report supports NO completeness
+        claim at all — only a record of what was queried.
+        """
+        return bool(self.profile_expected_pairs)
+
+
+def expected_filed_declaration_grid(
+    profile: TaxpayerProfile,
+    *,
+    today: date,
+) -> ExpectedFiledDeclarationGrid:
+    """Derive the taxpayer-specific candidate grid from the profile's declared facts.
+
+    The modelo axis reuses
+    :func:`~application.overview.build_obligation_coverage`, which already
+    partitions the whole AEAT obligation universe against a
+    :class:`~domain.deadlines.TaxpayerProfile` into surfaced / confidently
+    excluded / advised / out-of-scope. Nothing is re-derived here: a modelo is a
+    candidate when that partition does NOT place it in a confident negative or
+    out of scope.
+
+    Two exclusions are deliberate. A modelo the registry does not model at all
+    is dropped, because no declared fact produced its verdict — nominating it
+    would invent an expectation the taxpayer never made and then report the
+    inevitable zero rows as an anomaly. And the year axis is capped by a declared
+    ``activity_end_date``, because a taxpayer who ceased activity is not expected
+    to have filed afterwards.
+
+    ``surfaced_modelos`` is passed empty on purpose. The partition is total, so
+    with nothing surfaced every non-negative verdict lands in ``advised``; the
+    union taken below covers both tuples anyway, so the result does not depend on
+    which side a candidate falls out of.
+
+    Args:
+        profile: The taxpayer's declared three-axis profile.
+        today: Reference date for applicability evaluation and the year span's
+            upper bound.
+
+    Returns:
+        The :class:`ExpectedFiledDeclarationGrid`. When the profile declared no
+        activity start date the grid carries no ejercicios and says so through
+        ``activity_start_declared``.
+    """
+    # Deferred to keep application.live's import-time graph free of the overview
+    # package, which reaches back into this package for its evidence snapshots.
+    # The same reason _coverage.py defers its own application.modelo lookup.
+    from ..overview import CoverageAdviceReason, build_obligation_coverage
+
+    coverage = build_obligation_coverage(profile, (), today=today)
+    candidates = {
+        *coverage.surfaced,
+        *(item.modelo for item in coverage.advised if item.reason is not CoverageAdviceReason.REGISTRY_UNMODELED),
+    }
+
+    start = profile.activity_start_date
+    end = profile.activity_end_date
+    if start is None:
+        ejercicios: tuple[int, ...] = ()
+    else:
+        last_year = min(today.year, end.year) if end is not None else today.year
+        ejercicios = tuple(range(last_year, start.year - 1, -1))
+
+    return ExpectedFiledDeclarationGrid(
+        modelos=tuple(sorted(candidates)),
+        ejercicios=ejercicios,
+        activity_start_declared=start is not None,
+        activity_end_declared=end is not None,
+    )
+
+
+def filed_history_discovery_report(
+    *,
+    expected: ExpectedFiledDeclarationGrid,
+    availability: FiledDeclarationAvailabilityReport | None = None,
+) -> FiledHistoryDiscoveryReport:
+    """Union the two discovery signals into one provenance-tagged walk grid.
+
+    A pair nominated by both signals carries both tags; a pair nominated by one
+    carries only that one. The union never drops a pair either signal offered,
+    which is what makes the register's contribution purely coverage-widening: it
+    cannot remove anything the profile expected, and it cannot lend its own pairs
+    the profile signal's standing.
+
+    Args:
+        expected: The taxpayer-specific grid from
+            :func:`expected_filed_declaration_grid`.
+        availability: The register's offered option set, or ``None`` when the
+            option lists were not read (no live session). ``None`` is a supported
+            mode, not a degraded one.
+
+    Returns:
+        The :class:`FiledHistoryDiscoveryReport` walk grid.
+    """
+    signals_by_pair: dict[tuple[str, int], set[FiledHistoryDiscoverySignal]] = {}
+    for pair in expected.pairs:
+        signals_by_pair.setdefault(pair, set()).add(FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY)
+    if availability is not None:
+        for pair in availability.offered_pairs:
+            signals_by_pair.setdefault(pair, set()).add(FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS)
+
+    return FiledHistoryDiscoveryReport(
+        pairs=tuple(
+            FiledHistoryDiscoveryPair(modelo=modelo, ejercicio=ejercicio, signals=tuple(signals))
+            for (modelo, ejercicio), signals in sorted(
+                signals_by_pair.items(),
+                key=lambda item: (item[0][0], -item[0][1]),
+            )
+        ),
+        profile_year_span_determined=expected.activity_start_declared,
+        register_options_read=availability is not None,
+    )
+
+
 def capture_report_path(path: Path, *, output_root: Path) -> str:
     """Return a stable report path relative to the configured output root when possible."""
     try:
@@ -677,11 +994,17 @@ def capture_report_path(path: Path, *, output_root: Path) -> str:
 
 
 __all__ = [
+    "ExpectedFiledDeclarationGrid",
+    "FiledHistoryDiscoveryPair",
+    "FiledHistoryDiscoveryReport",
     "capture_filed_data",
     "capture_filed_data_bulk",
     "capture_report_path",
     "capture_source_filed_data",
+    "discover_filed_history",
+    "expected_filed_declaration_grid",
     "filed_data_capture_failure_row",
+    "filed_history_discovery_report",
     "list_filed_data",
     "list_filed_data_bulk",
 ]

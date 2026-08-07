@@ -44,7 +44,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG, CounterpartyTaxablePersonStatus
+from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ...domain.iva import (
     CustomerTaxStatus,
     EUMemberState,
@@ -65,6 +65,8 @@ if TYPE_CHECKING:
 
 __all__ = [
     "ClassificationAssembly",
+    "DeclaredFact",
+    "DeclaredFacts",
     "MissingClassifierInput",
     "assemble_classification_criteria",
     "classify_from_assembled_criteria",
@@ -248,17 +250,75 @@ def _nature_forks_the_law(probe: Callable[[TransactionKind], IvaCategory]) -> bo
     return len(verdicts) > 1
 
 
+class DeclaredFact[T](BaseModel):
+    """One fact supplied to the criteria, beside who established it.
+
+    The value and its attribution travel together because they are one claim.
+    Passing the value alone -- which the flat ``asserted_*`` parameters this
+    replaces did -- loses WHO said it at the boundary, and the provenance stamp
+    then has to guess or stay silent about a fact the classification stood on.
+
+    Attributes:
+        value: The fact itself, in its own closed type.
+        source: Who established it. Reuses the shipped
+            :class:`~core.ClassifierInputSource` rather than declaring a second
+            source vocabulary: the audit envelope already speaks it, so one
+            spelling flows from this channel through
+            :class:`~application.ledger.ClassifierInputFact` to the stamp. A
+            private enum here would have been a second authority on the one
+            question "who says so".
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    value: T
+    source: ClassifierInputSource
+
+
+class DeclaredFacts(BaseModel):
+    """Every fact supplied into one classification, whoever established it.
+
+    **Extended by adding a FIELD, never a second route.** This is the whole
+    reason it is a model rather than more keyword parameters: a later stage with
+    a new fact to contribute adds an attribute here and the assembly, the
+    envelope and the stamp carry it without a new channel. A second supply route
+    would fork the attribution the same way the four flat parameters forked it,
+    and the fork is invisible until an auditor asks who said what.
+
+    Every field is optional. An absent fact is not a supplied ``None``: it means
+    nobody established it, which is exactly what the assembly reports as a
+    missing input rather than papering over.
+
+    Attributes:
+        supply_nature: What the operation supplies, where established.
+        customer_tax_status: The customer's IVA status -- the sanctioned way to
+            supply what a VIES consultation would otherwise settle.
+        issuer_scope: The issuer's territory, where a country code cannot
+            settle it.
+        customer_scope: The customer's territory, on the same terms.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    supply_nature: DeclaredFact[SupplyNature] | None = None
+    customer_tax_status: DeclaredFact[CustomerTaxStatus] | None = None
+    issuer_scope: DeclaredFact[IvaTerritorialScope] | None = None
+    customer_scope: DeclaredFact[IvaTerritorialScope] | None = None
+
+
+def _value_of[T](fact: DeclaredFact[T] | None) -> T | None:
+    """Return a declared fact's value, or ``None`` when nobody declared it."""
+    return None if fact is None else fact.value
+
+
 def assemble_classification_criteria(
     *,
     transaction_date: date | None,
     direction: InvoiceKind,
     inputs: ClassifierInputs,
-    supply_nature: SupplyNature | None,
+    declared: DeclaredFacts,
     issuer_country_code: str | None = None,
     customer_country_code: str | None = None,
-    asserted_customer_tax_status: CustomerTaxStatus | None = None,
-    asserted_issuer_scope: IvaTerritorialScope | None = None,
-    asserted_customer_scope: IvaTerritorialScope | None = None,
     rate_tier: IvaRateKind | None = None,
 ) -> ClassificationAssembly:
     """Assemble the rule table's criteria, or return every input that stopped it.
@@ -270,16 +330,11 @@ def assemble_classification_criteria(
         transaction_date: When the supply took place.
         direction: Issued or received, as the operator settled it at confirm.
         inputs: The evidence-and-profile facts collected for this document.
-        supply_nature: What the document established it supplies, or ``None``.
+        declared: The facts supplied into this classification, each carrying who
+            established it. Replaces the flat ``asserted_*`` parameters, which
+            could carry a value but not its attribution.
         issuer_country_code: The issuer's printed country code, if any.
         customer_country_code: The customer's printed country code, if any.
-        asserted_customer_tax_status: An operator's explicit claim about the
-            customer's IVA status, which is the sanctioned way to supply what
-            VIES would otherwise settle.
-        asserted_issuer_scope: An operator's explicit claim about the issuer's
-            territory.
-        asserted_customer_scope: An operator's explicit claim about the
-            customer's territory.
         rate_tier: The rate tier, required by the criteria model for ES-to-ES
             domestic operations.
 
@@ -288,14 +343,16 @@ def assemble_classification_criteria(
     """
     missing: list[MissingClassifierInput] = []
 
-    status, status_gap = _customer_tax_status(inputs, asserted_customer_tax_status)
+    supply_nature = _value_of(declared.supply_nature)
+
+    status, status_gap = _customer_tax_status(inputs, _value_of(declared.customer_tax_status))
     if status_gap is not None:
         missing.append(status_gap)
 
     issuer_scope, issuer_gap = _scope(
         issuer_country_code,
         field="issuer_residency",
-        asserted=asserted_issuer_scope,
+        asserted=_value_of(declared.issuer_scope),
     )
     if issuer_gap is not None:
         missing.append(issuer_gap)
@@ -303,7 +360,7 @@ def assemble_classification_criteria(
     customer_scope, customer_gap = _scope(
         customer_country_code,
         field="customer_residency",
-        asserted=asserted_customer_scope,
+        asserted=_value_of(declared.customer_scope),
     )
     if customer_gap is not None:
         missing.append(customer_gap)

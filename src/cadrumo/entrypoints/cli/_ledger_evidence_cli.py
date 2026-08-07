@@ -15,11 +15,14 @@ from ...application.ledger import (
     confirm_invoice_draft_from_evidence,
     extract_invoice_draft_from_evidence,
 )
+from ...application.user_profile import cloud_evidence_upload_eligible_for_active_profile
 from ...core import IntracomOperationType
+from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.invoices import InvoiceValidationError
 from ...domain.iva import InvoiceKind
+from ...llm import EvidenceConsentToken, LLMConsentError, LLMProvider, mint_evidence_consent_token
 from ._common import (
     _bad,
     _emit_envelope,
@@ -332,6 +335,126 @@ def extract_review_suggestion(*, evidence_id: str | None, reference: str) -> str
     return f"aeat app ledger evidence confirm --kind received {reference_flag} {reference} --counterparty-name <name>"
 
 
+#: Operator surface recorded on a token this command mints. Names the exact verb
+#: rather than "cli", because a withdrawal survey answers "where was this
+#: acknowledged" and a whole-entrypoint label cannot.
+_EXTRACT_CONSENT_SURFACE = "cli:ledger.evidence.extract"
+
+
+def _mint_extract_consent(
+    *,
+    bucket_id: str,
+    evidence_id: str | None,
+    off_host_provider: LLMProvider | None,
+    acknowledged: bool,
+) -> EvidenceConsentToken | None:
+    """Return the token authorising ONE off-host read, or ``None`` for the on-host default.
+
+    Both flags absent is the overwhelmingly common call and returns ``None``
+    immediately: no token, no provider override, behaviour identical to before
+    this option existed. Everything below runs only when an operator has
+    explicitly asked for an off-host read.
+
+    The two flags are required TOGETHER, and each missing half refuses rather
+    than being absorbed. A provider without the acknowledgement would send a
+    taxpayer's document off-host on a flag that does not say so; an
+    acknowledgement without a provider takes a consent and then changes nothing,
+    which is worse than not asking, because it trains an operator to believe the
+    prompt is meaningless.
+
+    Nothing here is stored. There is no config key and no profile field behind
+    either flag -- a stored acknowledgement would be exactly the standing
+    enablement the default-off posture exists to prevent, and it would decay
+    into consent nobody remembers granting.
+
+    Returns:
+        The minted token, or ``None`` when no off-host read was requested.
+
+    Raises:
+        typer.BadParameter: When the flags are supplied incompletely, when the
+            provider names the on-host default, when the read has no
+            content-addressable evidence record behind it, or when the consent
+            gate refuses this invocation.
+    """
+    if off_host_provider is None and not acknowledged:
+        return None
+    if off_host_provider is None:
+        raise _bad(
+            tr(
+                "cli.app.ledger.evidence.extract_acknowledge_without_provider",
+                default=(
+                    "--acknowledge-off-host acknowledges a transmission that would not happen. "
+                    "Name --off-host-provider as well, or drop the acknowledgement."
+                ),
+            ),
+        )
+    if off_host_provider is LLMProvider.LOCAL:
+        raise _bad(
+            tr(
+                "cli.app.ledger.evidence.extract_off_host_provider_is_local",
+                default=(
+                    "--off-host-provider local is the default and reads nothing off-host. "
+                    "Omit the flag, or name a hosted provider."
+                ),
+            ),
+        )
+    if not acknowledged:
+        raise _bad(
+            tr(
+                "cli.app.ledger.evidence.extract_provider_without_acknowledge",
+                default=(
+                    "Reading this document off-host sends its contents to a third party. "
+                    "Add --acknowledge-off-host to confirm that, for this one read."
+                ),
+            ),
+        )
+
+    # The token binds to the BYTES, so a read with no content-addressable record
+    # behind it cannot mint one. An attachment-only extract is exactly that case:
+    # an id names the bytes but does not fingerprint them, and recording one as
+    # the other would let a later withdrawal believe it had proved a match it
+    # never checked.
+    if evidence_id is None:
+        raise _bad(
+            tr(
+                "cli.app.ledger.evidence.extract_off_host_needs_evidence_id",
+                default=(
+                    "An off-host read must name --evidence-id: consent is recorded against the "
+                    "document's content address, which an attachment id does not carry."
+                ),
+            ),
+        )
+    try:
+        record = PurchaseInvoiceEvidenceService().view(bucket_id=bucket_id, evidence_id=evidence_id)
+    except PurchaseInvoiceEvidenceNotFoundError as exc:
+        raise _bad(str(exc)) from exc
+    content_address = record.source_sha256
+    if not content_address:
+        raise _bad(
+            tr(
+                "cli.app.ledger.evidence.extract_off_host_needs_content_address",
+                default=(
+                    "This evidence record carries no content address, so an off-host read cannot be "
+                    "recorded against the bytes it would transmit."
+                ),
+            ),
+        )
+
+    try:
+        return mint_evidence_consent_token(
+            settings=load_settings(),
+            # The SINGLE production reading of the standing per-profile bar. Passed
+            # through rather than re-decided here: the minting path refuses when it
+            # is false, so a surface cannot widen the posture by forgetting it.
+            profile_eligible=cloud_evidence_upload_eligible_for_active_profile(),
+            acknowledged=acknowledged,
+            surface=_EXTRACT_CONSENT_SURFACE,
+            evidence_content_address=content_address,
+        )
+    except LLMConsentError as exc:
+        raise _bad(str(exc)) from exc
+
+
 def _register_evidence_extract_command() -> None:
     @evidence_app.command(
         "extract",
@@ -358,6 +481,22 @@ def _register_evidence_extract_command() -> None:
                 default="Linked attachment id to extract from (alternative to --evidence-id).",
             ),
         ),
+        off_host_provider: LLMProvider | None = typer.Option(
+            None,
+            "--off-host-provider",
+            help=tr(
+                "cli.app.ledger.evidence.extract_off_host_provider_help",
+                default="Send this document to a hosted model instead of reading it on-host.",
+            ),
+        ),
+        acknowledge_off_host: bool = typer.Option(
+            False,
+            "--acknowledge-off-host",
+            help=tr(
+                "cli.app.ledger.evidence.extract_acknowledge_off_host_help",
+                default="Acknowledge, for this one read, that the document leaves this machine.",
+            ),
+        ),
     ) -> None:
         """Run the on-host PDF text-layer extractor over stored evidence bytes.
 
@@ -379,11 +518,19 @@ def _register_evidence_extract_command() -> None:
                 ),
             )
         transaction_repository = _tx_repo(_state())
+        consent_token = _mint_extract_consent(
+            bucket_id=transaction_repository.bucket_id,
+            evidence_id=evidence_id,
+            off_host_provider=off_host_provider,
+            acknowledged=acknowledge_off_host,
+        )
         try:
             draft = extract_invoice_draft_from_evidence(
                 bucket_id=transaction_repository.bucket_id,
                 evidence_id=evidence_id,
                 attachment_id=attachment_id,
+                off_host_provider=off_host_provider,
+                consent_token=consent_token,
             )
         except (PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError) as exc:
             raise _bad(str(exc)) from exc
@@ -393,6 +540,12 @@ def _register_evidence_extract_command() -> None:
             "evidence_id": evidence_id,
             "attachment_id": attachment_id,
             **draft.model_dump(mode="json"),
+            # Read off the TOKEN rather than off the flags. A flag says what the
+            # operator asked for; the token exists only because the deployment
+            # posture, the profile bar and the acknowledgement all permitted it,
+            # so it is the nearest thing to an observation this surface holds.
+            "off_host_provider": None if consent_token is None else off_host_provider,
+            "off_host_acknowledged_surface": None if consent_token is None else consent_token.surface,
         }
         lines = [
             f"bucket_id\t{transaction_repository.bucket_id}",

@@ -39,11 +39,11 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import suppress
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, override
+from typing import TYPE_CHECKING, Final, Literal, override
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import LOCAL_TRANSPORT_LABEL, STRICT_FROZEN_CONFIG
 from ...domain.iva import InvoiceKind
 
 if TYPE_CHECKING:
@@ -455,6 +455,19 @@ def _assess_model_load_contention_once(
 #: laundering those envelopes exist to prevent.
 BATCH_DRAFT_EXTRACTOR = "extract_invoice_draft_from_evidence"
 
+#: Transports that carried a batch reading, recorded beside the draft.
+#: On-host is not assumed here, it is DERIVED from an enforced refusal: an
+#: evidence-derived request may only reach an off-host provider carrying a
+#: per-invocation consent token, the dispatch refuses without one, and this
+#: path mints none and accepts none. So no batch read can have left the host,
+#: and recording that is an observation about the gate rather than a guess
+#: about configuration.
+#:
+#: The moment this path gains a consent token, this constant stops being the
+#: right answer and must become a function of that token -- which is why it is
+#: named for what it asserts rather than inlined at the write site.
+BATCH_READ_TRANSPORTS: Final[tuple[str, ...]] = (LOCAL_TRANSPORT_LABEL,)
+
 
 def _batch_sources(sources: Iterable[Path | str]) -> tuple[Path, ...]:
     """Expand each submitted source to the files it names.
@@ -660,6 +673,7 @@ def _ingest_one_batch_item(
             evidence_reference=evidence_id,
             draft=draft,
             extractor=BATCH_DRAFT_EXTRACTOR,
+            read_transports=BATCH_READ_TRANSPORTS,
             settings=settings,
         )
     except Exception as exc:  # reason: a draft that could not be stored is this item's refusal.

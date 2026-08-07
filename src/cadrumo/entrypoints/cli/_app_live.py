@@ -32,17 +32,20 @@ from ...application.live import (
     FiledCasillaSkipRow,
     FiledDataCaptureFailureRow,
     FiledDataListingRow,
+    FiledHistoryDiscoveryReport,
     IvaCompensationHistoryReport,
     IvaRemoteStateAcquisitionReport,
     IvaWalletCaptureReport,
     capture_filed_data,
     capture_filed_data_bulk,
     capture_source_filed_data,
+    discover_filed_history,
     list_filed_data,
     list_filed_data_bulk,
 )
 from ...application.operator_surface import FilingStatus
 from ...core import Period, PeriodError
+from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._app_live_auth_preflight import _emit_live_auth_preflight
@@ -57,6 +60,7 @@ from ._common import _emit_envelope, active_bucket_id_or_refuse, resolve_optiona
 
 if TYPE_CHECKING:
     from ...application.live import VerifyVerdict
+    from ...domain.deadlines import TaxpayerProfile
 
 
 def _verify_expected(value: str | None) -> VerifyVerdict | None:
@@ -1046,6 +1050,127 @@ def _filed_list_result_and_lines(
         ],
     )
     return result, tuple(lines)
+
+
+@filed_app.command("discover", help=tr("cli.app.live.filed.discover_help"))
+def filed_discover_cmd(ctx: typer.Context) -> None:
+    """Report which ``(modelo, ejercicio)`` pairs a history pull would walk.
+
+    Reads the declaraciones register's own modelo and ejercicio option lists and
+    unions them with the grid the active taxpayer's declared profile facts expect,
+    tagging every pair with the signal(s) that nominated it. Nothing is captured
+    and nothing is persisted, which is why the verb is ``discover`` rather than
+    ``pull``.
+
+    The two signals are reported separately on purpose. A pair the profile
+    expected is a real expectation; a pair only the register offered is not, and
+    the accompanying caveat notice says so rather than leaving the operator to
+    read one number as though both signals meant the same thing.
+    """
+    profile = _active_taxpayer_profile_or_none()
+    report = asyncio.run(discover_filed_history(profile=profile))
+    result, lines = _filed_discover_result_and_lines(report)
+    _emit_envelope(
+        ctx,
+        command="app.live.filed.discover",
+        result=result,
+        lines=lines,
+        notices=_filed_discover_notices(report),
+    )
+
+
+def _active_taxpayer_profile_or_none() -> TaxpayerProfile | None:
+    """Return the active taxpayer profile, or ``None`` when setup has not produced one.
+
+    Discovery is useful before a profile is complete -- the register-options read
+    needs no profile at all -- so a missing profile downgrades the report rather
+    than refusing the verb. What it must NOT do is silently look like a complete
+    answer, which is what the caveat notices exist to prevent.
+    """
+    from ...application.wizard import load_active_taxpayer_profile
+    from ...application.workflow import workflow_state_repository
+
+    try:
+        return load_active_taxpayer_profile(workflow_state_repository().load())
+    except CadrumoError:
+        return None
+
+
+def _filed_discover_result_and_lines(report: FiledHistoryDiscoveryReport) -> tuple[Any, tuple[str, ...]]:
+    from ._app_live_payloads import FiledDiscoverResult, FiledHistoryDiscoveryPairPayload
+
+    lines = [
+        _metric_line("pair_count", len(report.pairs)),
+        _metric_line("profile_expected_count", len(report.profile_expected_pairs)),
+        _metric_line("register_options_only_count", len(report.register_options_only_pairs)),
+    ]
+    lines.extend(
+        _metric_line(
+            "pair",
+            "\t".join(
+                (
+                    pair.modelo,
+                    str(pair.ejercicio),
+                    ",".join(signal.value for signal in pair.signals),
+                    f"anomaly_if_empty={pair.zero_rows_is_an_anomaly}",
+                ),
+            ),
+        )
+        for pair in report.pairs
+    )
+    result = FiledDiscoverResult(
+        pairs=[
+            FiledHistoryDiscoveryPairPayload(
+                modelo=pair.modelo,
+                ejercicio=pair.ejercicio,
+                signals=[signal.value for signal in pair.signals],
+                zero_rows_is_an_anomaly=pair.zero_rows_is_an_anomaly,
+            )
+            for pair in report.pairs
+        ],
+        pair_count=len(report.pairs),
+        profile_expected_count=len(report.profile_expected_pairs),
+        register_options_only_count=len(report.register_options_only_pairs),
+        profile_year_span_determined=report.profile_year_span_determined,
+        register_options_read=report.register_options_read,
+        carries_a_taxpayer_specific_denominator=report.carries_a_taxpayer_specific_denominator,
+    )
+    return result, tuple(lines)
+
+
+def _filed_discover_notices(report: FiledHistoryDiscoveryReport) -> list[Notice]:
+    """Say what each signal does and does not establish, before anything is walked.
+
+    Two notices, because there are two different things an operator can get
+    wrong. The first bounds the register's option list, which is the signal whose
+    NIF-scoping nobody has confirmed. The second fires only when the report
+    carries no taxpayer-specific denominator at all, which is the case where the
+    pair count looks like coverage and is not.
+    """
+    notices = [
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="live.filed.discover.register_options_scope_unconfirmed",
+            message=tr("cli.app.live.filed.discover_register_scope_caveat"),
+            context={
+                "register_options_only_count": str(len(report.register_options_only_pairs)),
+                "register_options_read": str(report.register_options_read),
+            },
+        ),
+    ]
+    if not report.carries_a_taxpayer_specific_denominator:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="live.filed.discover.no_taxpayer_specific_denominator",
+                message=tr("cli.app.live.filed.discover_no_profile_denominator"),
+                context={
+                    "profile_year_span_determined": str(report.profile_year_span_determined),
+                    "pair_count": str(len(report.pairs)),
+                },
+            ),
+        )
+    return notices
 
 
 @filed_app.command("pull", help=tr("cli.app.live.filed.pull_help"))

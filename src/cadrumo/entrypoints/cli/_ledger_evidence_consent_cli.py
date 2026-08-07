@@ -28,6 +28,7 @@ from ...application.ledger import (
     rederive_artefact_on_host,
     survey_cloud_consent,
 )
+from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._common import _bad, _emit_envelope, _state, _tx_repo
@@ -76,7 +77,7 @@ def _register_consent_list_command() -> None:
     def consent_list(ctx: typer.Context) -> None:
         """List off-host dispatches and the artefacts derived from them."""
         bucket_id = _tx_repo(_state()).bucket_id
-        survey = survey_cloud_consent(bucket_id=bucket_id, settings=_state().settings)
+        survey = survey_cloud_consent(bucket_id=bucket_id, settings=load_settings())
         payload = {
             "bucket_id": bucket_id,
             "transmitted_bytes_are_unrecallable": survey.transmitted_bytes_are_unrecallable,
@@ -145,7 +146,7 @@ def _register_consent_rederive_command() -> None:
                 evidence_reference=evidence_reference,
                 source_content_sha256=content_address,
                 transcriber_cache_key=transcriber,
-                settings=_state().settings,
+                settings=load_settings(),
                 read_on_host=_on_host_reader(),
             )
         except ValueError as exc:

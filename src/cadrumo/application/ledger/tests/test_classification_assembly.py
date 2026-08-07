@@ -13,6 +13,7 @@ from datetime import date
 
 import pytest
 
+from ....core import ClassifierInputSource
 from ....domain.iva import (
     CustomerTaxStatus,
     InvoiceKind,
@@ -23,6 +24,8 @@ from ....domain.iva import (
     TransactionKind,
 )
 from .._classification_assembly import (
+    DeclaredFact,
+    DeclaredFacts,
     assemble_classification_criteria,
     classify_from_assembled_criteria,
 )
@@ -37,6 +40,44 @@ _DATE = date(2026, 4, 2)
 
 def _inputs(*, printed_identifier: str | None = _CUSTOMER_NIF):
     return collect_classifier_inputs(InvoiceDraft(customer_tax_id=printed_identifier))
+
+
+_ASSERTED = ClassifierInputSource.OPERATOR_ASSERTION
+
+
+def _assemble_with_declared(
+    *,
+    supply_nature=None,
+    asserted_customer_tax_status=None,
+    asserted_issuer_scope=None,
+    asserted_customer_scope=None,
+    **kwargs,
+):
+    """Call the real assembly, building the declared-facts channel from flat facts.
+
+    An adapter rather than a rewrite of every call site: these tests are about
+    the assembly's REFUSAL logic, and restating four attributions at sixteen
+    sites would bury that behind ceremony. Every fact it supplies is attributed
+    as an operator assertion, which is what these cases mean -- they exercise
+    the path where the document could not settle the value.
+
+    The channel's own contract is gated separately in
+    ``test_declared_facts_channel.py`` against the real signature, so nothing
+    here is the only thing standing between the channel and a regression.
+    """
+
+    def wrap(value):
+        return None if value is None else DeclaredFact(value=value, source=_ASSERTED)
+
+    return assemble_classification_criteria(
+        declared=DeclaredFacts(
+            supply_nature=wrap(supply_nature),
+            customer_tax_status=wrap(asserted_customer_tax_status),
+            issuer_scope=wrap(asserted_issuer_scope),
+            customer_scope=wrap(asserted_customer_scope),
+        ),
+        **kwargs,
+    )
 
 
 def _complete(**overrides: object):
@@ -54,12 +95,12 @@ def _complete(**overrides: object):
         "asserted_issuer_scope": IvaTerritorialScope.ES_MAINLAND,
     }
     kwargs.update(overrides)
-    return assemble_classification_criteria(**kwargs)  # type: ignore[arg-type]
+    return _assemble_with_declared(**kwargs)  # type: ignore[arg-type]
 
 
 def test_a_printed_identifier_alone_does_not_assemble_the_criteria() -> None:
     """The expensive refusal. A taxable person is not a verified registration."""
-    assembly = assemble_classification_criteria(
+    assembly = _assemble_with_declared(
         transaction_date=_DATE,
         direction=InvoiceKind.ISSUED,
         inputs=_inputs(),
@@ -97,7 +138,7 @@ def test_a_spanish_country_code_does_not_settle_the_territory() -> None:
     the restrictive-provision-as-default shape: it would silently capture the
     Canaries, Ceuta and Melilla population the rule does not govern.
     """
-    assembly = assemble_classification_criteria(
+    assembly = _assemble_with_declared(
         transaction_date=_DATE,
         direction=InvoiceKind.ISSUED,
         inputs=_inputs(),
@@ -115,7 +156,7 @@ def test_a_spanish_country_code_does_not_settle_the_territory() -> None:
 
 def test_a_foreign_country_code_does_settle_the_territory() -> None:
     """Positive control for the refusal above: the resolver is genuinely consulted."""
-    assembly = assemble_classification_criteria(
+    assembly = _assemble_with_declared(
         transaction_date=_DATE,
         direction=InvoiceKind.ISSUED,
         inputs=_inputs(),
@@ -270,7 +311,7 @@ def test_an_absent_date_refuses() -> None:
 
 def test_every_missing_input_is_reported_at_once() -> None:
     """An operator resolving four gaps should learn four, not one per attempt."""
-    assembly = assemble_classification_criteria(
+    assembly = _assemble_with_declared(
         transaction_date=None,
         direction=InvoiceKind.ISSUED,
         inputs=_inputs(printed_identifier=None),
@@ -288,7 +329,7 @@ def test_every_missing_input_is_reported_at_once() -> None:
 
 def test_every_refusal_names_something_the_operator_can_do() -> None:
     """A refusal an operator cannot act on is barely better than a silent drop."""
-    assembly = assemble_classification_criteria(
+    assembly = _assemble_with_declared(
         transaction_date=None,
         direction=InvoiceKind.ISSUED,
         inputs=_inputs(printed_identifier=None),
@@ -336,12 +377,18 @@ def test_a_printed_nature_maps_only_to_the_general_service_kind() -> None:
 
 
 def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
-    """The sanctioned path until VIES exists: the operator's claim, made knowingly."""
+    """The sanctioned path until VIES exists: the operator's claim, made knowingly.
+
+    Written against the real signature rather than the adapter, because the
+    subject here IS the attribution: the same value settles the assembly only
+    when someone is recorded as having claimed it.
+    """
+    goods = DeclaredFact(value=SupplyNature.GOODS, source=ClassifierInputSource.OPERATOR_ASSERTION)
     without = assemble_classification_criteria(
         transaction_date=_DATE,
         direction=InvoiceKind.ISSUED,
         inputs=_inputs(),
-        supply_nature=SupplyNature.GOODS,
+        declared=DeclaredFacts(supply_nature=goods),
         issuer_country_code="DE",
         customer_country_code="FR",
     )
@@ -349,14 +396,20 @@ def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
         transaction_date=_DATE,
         direction=InvoiceKind.ISSUED,
         inputs=_inputs(),
-        supply_nature=SupplyNature.GOODS,
+        declared=DeclaredFacts(
+            supply_nature=goods,
+            customer_tax_status=DeclaredFact(
+                value=CustomerTaxStatus.B2C_CONSUMER,
+                source=ClassifierInputSource.OPERATOR_ASSERTION,
+            ),
+        ),
         issuer_country_code="DE",
         customer_country_code="FR",
-        asserted_customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
     )
 
     assert not without.assembled
     assert with_assertion.assembled
+    assert with_assertion.criteria is not None
     assert with_assertion.criteria is not None
     assert with_assertion.criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
 

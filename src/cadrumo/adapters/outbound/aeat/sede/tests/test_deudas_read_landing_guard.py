@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import pytest
 
+from ......tests.aeat_literal_fixtures import aeat_url
 from .. import assert_deudas_landing, deudas_read_path_prefixes
 from .._adapter_utils import assert_read_landing
 from .._deudas import _READ_GUARD_POLICY
@@ -27,25 +28,27 @@ from .._errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_SEDE = "https://www6.agenciatributaria.gob.es"
-
 # Paths shaped like the controls that sit beside the debts listing. None is a
 # captured AEAT path -- no specimen exists -- they are the shapes the guard must
-# refuse regardless of what the real consulta path turns out to be.
+# refuse regardless of what the real consulta path turns out to be. The origin
+# comes from the configured AEAT domain rather than a literal, so the fixtures
+# follow the host pool instead of pinning a number of their own.
+_CONSULTA_PATH = "/wlpl/DEUD-DEUD/ConsultarDeudas"
+
 _PAYMENT_SHAPED = (
-    f"{_SEDE}/wlpl/DEUD-DEUD/PagarTodasDeudas",
-    f"{_SEDE}/wlpl/DEUD-DEUD/PagarAlgunasDeudas",
-    f"{_SEDE}/wlpl/DEUD-DEUD/PagoParcial",
-    f"{_SEDE}/wlpl/RECA-JDIT/SolicitarAplazamiento",
-    f"{_SEDE}/wlpl/RECA-JDIT/AplazamientoFraccionamiento",
+    aeat_url("www6", "/wlpl/DEUD-DEUD/PagarTodasDeudas"),
+    aeat_url("www6", "/wlpl/DEUD-DEUD/PagarAlgunasDeudas"),
+    aeat_url("www6", "/wlpl/DEUD-DEUD/PagoParcial"),
+    aeat_url("www6", "/wlpl/RECA-JDIT/SolicitarAplazamiento"),
+    aeat_url("www6", "/wlpl/RECA-JDIT/AplazamientoFraccionamiento"),
 )
 
 _READ_SHAPED = (
-    f"{_SEDE}/wlpl/DEUD-DEUD/ConsultarDeudas",
-    f"{_SEDE}/wlpl/DEUD-DEUD/DetalleDeuda",
+    aeat_url("www6", _CONSULTA_PATH),
+    aeat_url("www6", "/wlpl/DEUD-DEUD/DetalleDeuda"),
 )
 
-_UNREADABLE = ("", "about:blank", "/wlpl/DEUD-DEUD/ConsultarDeudas", None)
+_UNREADABLE = ("", "about:blank", _CONSULTA_PATH, None)
 
 
 def test_the_allow_list_ships_empty() -> None:
@@ -100,16 +103,16 @@ def test_the_guard_discriminates_on_the_allow_list_and_not_on_something_else() -
     property under test, rather than by a host rejection or a broken policy
     that would refuse no matter what.
     """
-    permitted_prefix = "/wlpl/DEUD-DEUD/ConsultarDeudas"
+    permitted_prefix = _CONSULTA_PATH
 
     assert_read_landing(
-        f"{_SEDE}{permitted_prefix}",
+        aeat_url("www6", permitted_prefix),
         surface="deudas consulta positive control",
         policy=_READ_GUARD_POLICY,
         allowed_path_prefixes=(permitted_prefix,),
     )
 
-    for refused in (f"{_SEDE}/wlpl/DEUD-DEUD/PagarTodasDeudas", f"{_SEDE}/wlpl/RECA-JDIT/SolicitarAplazamiento"):
+    for refused in (_PAYMENT_SHAPED[0], _PAYMENT_SHAPED[3]):
         with pytest.raises(SedeNavigationError):
             assert_read_landing(
                 refused,

@@ -29,10 +29,24 @@ from .test_evidence_draft_provenance import _fully_populated_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: Fields the extract payload carries that the draft does not: the operator's own
-#: reference into the call, not extracted content. Named explicitly so a NEW
-#: unexplained payload-only field is visible rather than absorbed.
-_REFERENCE_FIELDS = frozenset({"bucket_id", "evidence_id", "attachment_id"})
+#: Fields the extract payload carries that the draft does not: facts about the
+#: CALL rather than about the document. Named explicitly so a NEW unexplained
+#: payload-only field is visible rather than absorbed.
+#:
+#: The first three are the operator's own reference into the call. The last two
+#: record how the read was authorised to travel, and they belong here for the
+#: same structural reason: consent is granted per invocation, so it is a
+#: property of the call and has no per-field draft origin to mirror. Putting
+#: them on the draft would have forced a per-field copy of a single fact.
+_REFERENCE_FIELDS = frozenset(
+    {
+        "bucket_id",
+        "evidence_id",
+        "attachment_id",
+        "off_host_provider",
+        "off_host_acknowledged_surface",
+    },
+)
 
 
 def test_every_draft_field_exists_on_the_extract_payload() -> None:
