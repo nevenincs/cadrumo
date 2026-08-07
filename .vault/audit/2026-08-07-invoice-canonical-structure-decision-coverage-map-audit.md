@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:d8dbca5b529fbdca6206ffa82de700946d113244dc31c02d1977bf088fe91674'
+body_hash: 'sha256:9f771071ff74cca2f2b1f5c3afeab79dbb575d129bc6406c4d3a3a8277dd457a'
 related:
   - "[[2026-08-06-invoice-canonical-structure-adr]]"
   - "[[2026-08-06-invoice-canonical-structure-plan]]"
@@ -78,3 +78,23 @@ No Step covered it. The collapse required the country on `invoice add`, and the 
 It failed loudly rather than mis-declaring, because the same country-to-tax-id coupling that makes `eu_iva_id` unnecessary refuses a German VAT id stamped `ES`. So the exposure was a confusing NIF error on a correct document, not a silent Modelo 347 or 349 mis-declaration. Fixed: both defaults removed, and the eighteen tests that were riding the default now state the country explicitly.
 
 That is the argument for building this map. The defect sat between a Step that fixed one verb and a decision that governed another, which is exactly where step-by-step verification does not look.
+
+## Mutation results, and the duplication they exposed
+
+The close review recorded that zero-capability-loss was verified but not proven: the repointed tests were green, which shows the canonical path gives the right answer, not that a test would redden if it stopped. Two capabilities were mutation-tested to close that.
+
+**The country-to-tax-id coupling — guarded.** Disabling the non-Spanish branch of the invoice model's validation reddens `test_canonical_invoice_refuses_the_tax_id_country_mismatch_slim_permits`. That matters because D-O's amendment rests entirely on this coupling: it is the reason `eu_iva_id` is unnecessary rather than missing. The mechanism the amendment cites is genuinely held by a test.
+
+The declarable-coverage proofs stayed green under that mutation, correctly — they use matching country and tax-id pairs, so the coupling is not on their path. They guard a different property.
+
+**The Modelo 347 declaration floor — NOT guarded, and the reason was a duplication.** Flipping the counterpart aggregation's comparison from `>` to `>=` left the invoice resolver's Modelo 347 test green. The earlier claim that this test was sharp because its control invoice sits exactly ON the floor was wrong: the control is placed correctly, but the test exercises a DIFFERENT copy of the comparison.
+
+The threshold was written out four times in production: byte-identical lines in the counterpart and invoice binding families, again in the aggregation preview, and inverted in the row-model validator. Two of those are sibling modules in the same package.
+
+The two binding families now share one predicate in a leaf module — a leaf because `_counterpart_bindings` already imports from `_invoice_bindings`, so either family owning it would make the dependency circular, and because neither family owns a regulation. Each keeps its own summation; only the comparison is shared.
+
+Re-running the same mutation against the single home now reddens the invoice test: the counterparty sitting exactly on the floor is counted and the declarante count goes from 1 to 2. The capability moved from unguarded to guarded, and the proof is the mutation, not the green run.
+
+**Left for adjudication, not swept.** The aggregation preview and the row-model validator still carry their own copies. They cite art. 33.1 where the bindings cite art. 31, and one is an inverse check, so whether they are the same rule or two related rules is a legal-grounding question rather than a refactor. Merging them on shape alone would be exactly the constraint-shape mistake the substitutability pre-filter exists to prevent.
+
+The general lesson is the one this map was built to test: a duplicated rule reports as covered because each copy has its own green test. Only a mutation asks whether the test is watching the code that runs.
