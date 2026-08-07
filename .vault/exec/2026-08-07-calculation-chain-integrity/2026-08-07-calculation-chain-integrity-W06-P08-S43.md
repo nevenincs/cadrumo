@@ -5,70 +5,29 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:9c82a79db1a1b83c518c655f8eef742d65c9fb5ce327164de669947388e6e599'
+body_hash: 'sha256:77c01b389b16051e6818731a0b4d6fa1ecf6d32d5954c5c453b3a82c15cfd28c'
 step_id: 'S43'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace calculation-chain-integrity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S43 and 2026-08-07-calculation-chain-integrity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Add the second not-subject member to the cash-accounting exclusion set now the OSS scope refusal is confirmed correct, with a mutation proof since a set-membership edit that reddens nothing has not been shown to bite and ## Scope
-
-- `src/cadrumo/application/aggregation/_iva_ledger.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Add the second not-subject member to the cash-accounting exclusion set now the OSS scope refusal is confirmed correct, with a mutation proof since a set-membership edit that reddens nothing has not been shown to bite
-
-## Scope
-
-- `src/cadrumo/application/aggregation/_iva_ledger.py`
-
-## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+# `calculation-chain-integrity` exec W06.P08.S43
 
 ## Outcome
 
-## Verification
+Landed with the mutation proof the Step demands, now that `S34` confirmed the OSS scope refusal is correct.
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+## The addition
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+`DOMESTIC_NOT_SUBJECT` joins `OPERACION_NO_SUJETA` under the apartado Uno heading in `_CASH_ACCOUNTING_EXCLUDED_CATEGORIES` (`application/aggregation/_iva_ledger.py:1108-1109`). Both are not-subject in the TAI and therefore outside the regime by art. 163 duodecies Uno scope rather than by a Dos carve-out.
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+## Why the Step insisted on a proof
 
-## Notes
+A set-membership edit is the shape most likely to red nothing: adding a member to a frozenset changes no signature, breaks no caller, and passes every existing test unless one specifically exercises that member. The test docstring records that `DOMESTIC_NOT_SUBJECT` was previously absent, so the edit had to be shown to bite rather than assumed to.
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+## The proof set
+
+Three tests in `application/aggregation/tests/test_iva_cash_accounting.py`, and the second two are what make the first meaningful:
+
+- `test_both_not_subject_categories_are_outside_the_cash_accounting_regime` is parametrised over both members, so the new one is exercised by name rather than by the set's mere existence.
+- `test_an_exempt_domestic_supply_still_enters_the_cash_accounting_regime` is the positive control. Without it, an exclusion that had swallowed every category would satisfy the test above.
+- `test_a_not_subject_row_outside_the_regime_is_not_refused_by_this_gate` carries `S34`'s finding forward as an executable guarantee, so a later broadening of the refusal past the regime boundary reddens here.

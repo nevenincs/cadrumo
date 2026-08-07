@@ -5,70 +5,34 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:a9527e1b5e6e1f69e0d42759fc76998ae450a732490abbb3faa6c2551f76bcc2'
+body_hash: 'sha256:c390dde67a430f33054d74cba7dbdf01d0957dcba362c993f25737e04ffb2f63'
 step_id: 'S28'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace calculation-chain-integrity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S28 and 2026-08-07-calculation-chain-integrity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Collapse the three hand-maintained rate-to-IVA-category tables onto one canonical rate-kind table plus the existing accessor, after the adjacent retencion work clears the shared module and ## Scope
-
-- `src/cadrumo/domain/iva/_classification.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Collapse the three hand-maintained rate-to-IVA-category tables onto one canonical rate-kind table plus the existing accessor, after the adjacent retencion work clears the shared module
-
-## Scope
-
-- `src/cadrumo/domain/iva/_classification.py`
-
-## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+# `calculation-chain-integrity` exec W06.P08.S28
 
 ## Outcome
 
-## Verification
+Done and verified at HEAD. One canonical rate-tier to domestic-category table survives, and both former copies now consume it.
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+## The collapse
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+`_RATE_TIER_TO_CATEGORY` (`domain/iva/_classification.py:559`) is the single declaration, with `_CATEGORY_TO_RATE_TIER` derived from it by inversion rather than hand-listed a second time.
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+The two sites that previously held their own copies now read the accessor:
 
-## Notes
+- `domain/iva/_invoice_classification.py:198` reads `domestic_categories_by_rate_kind()[rate_kind]`
+- `application/aggregation/_iva_ledger.py:1250` reads the same accessor
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+A sweep for a surviving hand-listed rate-kind to `DOMESTIC_*` table finds exactly one site: the canonical declaration itself.
+
+## Why this one was hard to find, recorded in the accessor's own docstring
+
+> three independent copies of this mapping existed before it was promoted, none sharing an identifier with another, so no symbol search would have found them.
+
+That is the general shape this campaign's sweep phase exists for, and the reason the accessor says it in its own docstring rather than leaving it to a commit message: the next reader is the one who would otherwise add a fourth.
+
+## A trap the docstring closes
+
+It also warns against using the mapping's KEY set as "which rate kinds exist" and directs the reader to iterate the enum for that. Conflating the two is what let one of the three copies drift a member short, so the fix names the conflation rather than only removing its symptom.

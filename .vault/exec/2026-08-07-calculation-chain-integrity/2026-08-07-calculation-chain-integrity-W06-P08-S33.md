@@ -5,70 +5,25 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:f3d01cb6d9ae8e1836d8003fb90461a08f8771332a07c8700452c38e73ddab05'
+body_hash: 'sha256:02ad793dc1330a924e313a6c998165c7bb92ef4eae2643e99ee4d86f4b53a66c'
 step_id: 'S33'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace calculation-chain-integrity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S33 and 2026-08-07-calculation-chain-integrity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Rule whether the cash-accounting exclusion set is scoped by the LIVA art 163 duodecies Uno territorial clause or enumerates only its Dos carve-outs, six members are Dos letters and one is a Uno scope case with nothing distinguishing them and ## Scope
-
-- `src/cadrumo/application/aggregation/_iva_ledger.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Rule whether the cash-accounting exclusion set is scoped by the LIVA art 163 duodecies Uno territorial clause or enumerates only its Dos carve-outs, six members are Dos letters and one is a Uno scope case with nothing distinguishing them
-
-## Scope
-
-- `src/cadrumo/application/aggregation/_iva_ledger.py`
-
-## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+# `calculation-chain-integrity` exec W06.P08.S33
 
 ## Outcome
 
-## Verification
+Ruled, and the ruling is now visible in the set itself: the exclusion set enumerates BOTH the apartado Dos carve-outs AND the apartado Uno territorial-scope cases, and records which is which.
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+## The ambiguity this Step named
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+Six members were art. 163 duodecies **Dos** letters and one was a **Uno** scope case, with nothing in the code distinguishing them. A reader could not tell whether the set was "the Dos list" (making the Uno member a mistake) or "everything outside the regime" (making the Dos list incomplete).
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+## The ruling
 
-## Notes
+`_CASH_ACCOUNTING_EXCLUDED_CATEGORIES` (`application/aggregation/_iva_ledger.py:1098`) is now explicitly two-part, under two comments: the six apartado Dos carve-outs, then `OPERACION_NO_SUJETA` and `DOMESTIC_NOT_SUBJECT` under "apartado Uno scope: not subject in the TAI".
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+So the set means "everything outside the regime", reached by two distinct legal routes, and the comment records which clause puts each member there. A future member can now be added under the right heading instead of appended to an undifferentiated list.
+
+The second not-subject member the ruling admits is the subject of `S43`; the OSS-path check that had to precede it is `S34`.

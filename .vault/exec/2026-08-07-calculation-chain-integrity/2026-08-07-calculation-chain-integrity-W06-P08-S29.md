@@ -5,70 +5,25 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:6367447ecc77b557e8eeaf83cc75ff4c3c05d7cc87d309396b8421572edc5e2f'
+body_hash: 'sha256:bb0fe89410baa51435ca62b0adcc2328f3e2688025a7906f177ea1d27a1078ae'
 step_id: 'S29'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace calculation-chain-integrity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S29 and 2026-08-07-calculation-chain-integrity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Promote the canonical rate-kind mapping or an accessor onto the domain iva facade before any application-layer consumer reads it, it is private today and cross-package code must not dot into it and ## Scope
-
-- `src/cadrumo/domain/iva/__init__.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Promote the canonical rate-kind mapping or an accessor onto the domain iva facade before any application-layer consumer reads it, it is private today and cross-package code must not dot into it
-
-## Scope
-
-- `src/cadrumo/domain/iva/__init__.py`
-
-## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+# `calculation-chain-integrity` exec W06.P08.S29
 
 ## Outcome
 
+Done and verified at HEAD. Both accessors sit on the `domain.iva` public facade, so no cross-package consumer dots into the private module.
+
 ## Verification
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+`domain/iva/__init__.py` imports `domestic_categories_by_rate_kind` and `rate_kind_for_domestic_category` (lines 61-62) and lists both in `__all__` (lines 269, 286).
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+The application-layer consumer reaches them correctly: `application/aggregation/_iva_ledger.py:76` imports from the package, never from `_classification`. The only importer of the private module is its sibling inside the same package (`domain/iva/_invoice_classification.py:52`), which is intra-package and therefore fine.
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+## Why the promotion had to precede the consumption
 
-## Notes
+The Step's ordering, promote before any application-layer consumer reads it, is `service-imports-via-top-level-reexports` applied in advance rather than repaired afterwards. A consumer landing first would have had to dot into `_classification`, and that reads to every later consumer as permission to do the same. Both halves landed together, so the precedent never existed.
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The mapping is exposed as a read-only view rather than the mutable dict, so a consumer cannot mutate the shared taxonomy through the accessor.

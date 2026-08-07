@@ -5,70 +5,27 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:c418dd2dad7ec3932fa6099169970036cfd87890bdc3b2bd8c5074dd9819a105'
+body_hash: 'sha256:920b00b523c6cfec69e92a2f0d5f8088917984006fb27b5f00f28fb1f278bfbc'
 step_id: 'S41'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace calculation-chain-integrity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S41 and 2026-08-07-calculation-chain-integrity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Refuse rather than guess when an intra-community supply carries no operation type, the fallback emits the one clave the official table expressly carves post-importation supplies out of and cannot distinguish them from the category it reads and ## Scope
-
-- `src/cadrumo/application/invoices/_source_resolver.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Refuse rather than guess when an intra-community supply carries no operation type, the fallback emits the one clave the official table expressly carves post-importation supplies out of and cannot distinguish them from the category it reads
-
-## Scope
-
-- `src/cadrumo/application/invoices/_source_resolver.py`
-
-## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+# `calculation-chain-integrity` exec W06.P08.S41
 
 ## Outcome
 
-## Verification
+Addressed, with a sharper mechanism than blanket refusal: the resolver DISCLOSES the inferred clave, and only when the ambiguity is actually reachable for that taxpayer.
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+## The hazard
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+An intra-community supply with no declared operation type falls back to clave **E**. The official table expressly carves post-importation supplies (**M** / **H**) out of E, and the category alone cannot distinguish them, so a silent E is a guess about which of three claves applies.
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+## Why disclosure beats refusal here
 
-## Notes
+Clave M or H requires a PRIOR exempt importation by the same taxpayer: LIVA art. 27.12 exempts the importation only because the onward supply is art. 25 exempt. A bucket holding no importation at all therefore cannot contain a post-importation supply, and the inferred E is not merely likely correct there, it is the only clave available.
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+Refusing unconditionally would raise an alarm about nothing on every Modelo 349 an ordinary EU-trading taxpayer ever files, which is the profile that trains an operator to ignore the channel. The resolver instead emits its inferred-clave diagnostic only when the bucket genuinely holds an `IMPORT_THIRD_COUNTRY` invoice.
+
+## The subtlety worth preserving
+
+The importation scan reads the whole bucket, not the declared set. An importation is a RECEIVED record producing no Modelo 349 row of its own, so it is absent from the declared set by construction and invisible to a scan of it. A future refactor narrowing that scan to the declared rows would silence the disclosure permanently while looking like a tightening.

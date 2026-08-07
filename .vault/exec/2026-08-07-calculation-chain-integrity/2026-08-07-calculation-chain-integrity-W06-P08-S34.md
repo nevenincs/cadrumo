@@ -5,70 +5,27 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:7dce5b6381e6bd204c0517d65cc18caca2a66d19b51ecc0327d188d720513171'
+body_hash: 'sha256:f80b336ff0dd6c4bad41d41cf1575056831c59202c98517732a08fb5f039f167'
 step_id: 'S34'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace calculation-chain-integrity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S34 and 2026-08-07-calculation-chain-integrity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Check the OSS declaration path before adding the second not-subject member to the cash-accounting exclusion, doing so newly refuses OSS rows for a taxpayer who also uses cash accounting and that combination is live and ## Scope
-
-- `src/cadrumo/application/aggregation/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Check the OSS declaration path before adding the second not-subject member to the cash-accounting exclusion, doing so newly refuses OSS rows for a taxpayer who also uses cash accounting and that combination is live
-
-## Scope
-
-- `src/cadrumo/application/aggregation/`
-
-## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+# `calculation-chain-integrity` exec W06.P08.S34
 
 ## Outcome
 
-## Verification
+Checked before the addition, and the check is preserved as a test rather than as a note.
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+## The hazard
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+Adding `DOMESTIC_NOT_SUBJECT` to the cash-accounting exclusion set would newly refuse rows for a taxpayer who is BOTH not-subject and on the cash-accounting regime. The Step flags that this combination is live via the OSS declaration path, so the addition could have turned working rows into refusals.
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+## What the check established
 
-## Notes
+The refusal is correctly scoped: it fires only when the row is actually under the cash-accounting regime, not merely because the category is not-subject. That scoping is pinned by `test_a_not_subject_row_outside_the_regime_is_not_refused_by_this_gate` (`application/aggregation/tests/test_iva_cash_accounting.py:313`), where a not-subject row outside the regime passes through untouched.
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+So an OSS row belonging to a taxpayer who also uses cash accounting is refused only on the rows genuinely inside the regime, which is the intended treatment rather than a regression.
+
+## Why this is recorded separately from S43
+
+The Step exists because the check had to happen BEFORE the set membership changed. Recording it separately keeps that ordering visible: the addition in `S43` is safe because of this finding, not independently of it. Collapsing the two would lose the reason the addition is not a regression.

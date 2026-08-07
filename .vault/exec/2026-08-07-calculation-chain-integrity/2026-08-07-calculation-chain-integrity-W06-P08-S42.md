@@ -5,70 +5,25 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:bfdda82395ee8a0ebf10142a3e8ff4a58acd3e39b963b91e8fde31e178154e1b'
+body_hash: 'sha256:8a58783048f2b4e0137bd39663db642a9384acb40a59ae15b9cbe0e1841bef37'
 step_id: 'S42'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace calculation-chain-integrity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S42 and 2026-08-07-calculation-chain-integrity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Document the call-off stock claves as unreachable by scope from an invoice-sourced path so the next reader does not refile the subset as a defect and ## Scope
-
-- `src/cadrumo/application/invoices/_source_resolver.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Document the call-off stock claves as unreachable by scope from an invoice-sourced path so the next reader does not refile the subset as a defect
-
-## Scope
-
-- `src/cadrumo/application/invoices/_source_resolver.py`
-
-## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+# `calculation-chain-integrity` exec W06.P08.S42
 
 ## Outcome
 
-## Verification
+Documented at the declaration, so the subset is not refiled as a defect.
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+## What is recorded
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+The comment on `_CLAVE_BY_KIND_AND_CATEGORY` (`application/invoices/_source_resolver.py:119-120`) states that **R / D / C**, the call-off stock claves, report movements that carry no invoice at all, so no invoice-sourced path can reach them.
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+That is unreachability by SCOPE rather than an omission: a call-off stock movement is a transfer of goods under a consignment sales arrangement, reported without an invoice, so there is no invoice for an invoice-sourced resolver to classify. No amount of widening the category table would reach them.
 
-## Notes
+## Why this needed its own Step
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+A reader comparing the four-entry table against the ten-member operation-type enum sees a large shortfall and reasonably files it as incomplete. The register this campaign inherited did exactly that once already. Recording the scope boundary at the table converts a recurring false finding into a settled one.
+
+It sits alongside the M/H note from `S35`, and the two are deliberately distinguished: M/H are reachable-but-ambiguous, R/D/C are unreachable-by-construction. A single "these five are not emitted" note would have lost that.

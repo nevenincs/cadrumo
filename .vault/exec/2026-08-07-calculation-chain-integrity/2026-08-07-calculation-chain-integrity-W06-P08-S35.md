@@ -5,70 +5,26 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:685b9d4bc7a628ef4adfc5a92875e6d771bc1dd3b91d521c296cc770ee541a90'
+body_hash: 'sha256:69fa7e438ab22f89580c9892c530ba77bc81f3789804f7d89b2946fa3b22e7af'
 step_id: 'S35'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace calculation-chain-integrity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S35 and 2026-08-07-calculation-chain-integrity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Answer whether an invoice with no declared operation type can legitimately need the five claves the category fallback cannot emit, if not the fallback is correct by scope and must say so and ## Scope
-
-- `src/cadrumo/application/invoices/_source_resolver.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Answer whether an invoice with no declared operation type can legitimately need the five claves the category fallback cannot emit, if not the fallback is correct by scope and must say so
-
-## Scope
-
-- `src/cadrumo/application/invoices/_source_resolver.py`
-
-## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+# `calculation-chain-integrity` exec W06.P08.S35
 
 ## Outcome
 
-## Verification
+Answered: no. An invoice with no declared operation type cannot legitimately need any of the five claves the category fallback does not emit, so the fallback IS correct by scope, and now says so at the declaration.
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+## The answer, by clave
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+`_CLAVE_BY_KIND_AND_CATEGORY` (`application/invoices/_source_resolver.py:121`) carries four entries plus triangulation handled separately, and the comment above it records why the other five are unreachable rather than missing:
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+- **M / H** (supplies following an exempt importation, LIVA art. 27.12) share the intra-community supply category with **E**, so no category predicate can separate them. The operator states these via the operation type, and the resolver discloses the ambiguity rather than guessing.
+- **R / D / C** (the call-off stock claves) report movements carrying no invoice at all, so no invoice-sourced path can reach them by construction.
 
-## Notes
+Two different reasons, and the distinction matters: the first is a genuine ambiguity the fallback cannot resolve, the second is out of scope for any invoice-sourced path whatsoever. Conflating them would suggest the second is also a gap worth closing.
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+## Why the comment placement matters
+
+It sits on the table itself, so a reader who finds four entries where the enum has ten meets the reason immediately. Without it the natural reading is "this table is incomplete", and the natural fix, widening it, would change what gets declared rather than how it is expressed.
