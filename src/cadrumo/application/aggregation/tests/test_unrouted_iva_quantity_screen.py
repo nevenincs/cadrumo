@@ -28,6 +28,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import (
+    IvaLedgerObservation,
     ModeloRevision,
     unrouted_ledger_iva_quantities,
     unsupported_ledger_iva_observations,
@@ -112,14 +113,14 @@ def _sale(
     )
 
 
-def _observations(*transactions: Transaction) -> tuple[object, ...]:
+def _observations(*transactions: Transaction) -> tuple[IvaLedgerObservation, ...]:
     """Project real transactions through the production IVA aggregation."""
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions(transactions),
         period=_Q1_2025,
     )
     assert result.observations, "the projection emitted no declarable observation to screen"
-    return result.observations
+    return tuple(result.observations)
 
 
 def _revision_without_fact(revision: ModeloRevision, fact: str) -> ModeloRevision:
