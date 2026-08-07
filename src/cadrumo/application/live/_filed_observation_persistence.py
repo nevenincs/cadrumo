@@ -493,11 +493,34 @@ def _filed_observation_source_metadata(
     *,
     justificante_csvs: tuple[str, ...] = (),
 ) -> dict[str, str]:
+    """Project one filed observation's register provenance into persisted metadata.
+
+    ``aeat_tipo_solicitud`` carries AEAT's own request-type signal off the
+    register row -- the one field that distinguishes an original filing from an
+    amendment. It was previously read into the raw observation and then dropped
+    here, because the source metadata was built from a fixed key set, so the
+    signal existed at capture and was gone by the time anything downstream could
+    read it.
+
+    Carrying it is deliberately NOT the same as electing on it: no selection
+    logic reads this key, and which identifier an amendment-aware election should
+    key on stays an open decision. What changes is that the evidence survives, so
+    that decision can be made later against persisted data rather than requiring
+    a re-capture.
+
+    The key is omitted rather than written empty when the register row carried no
+    request type. An empty string would be indistinguishable from AEAT declaring
+    one, and absence here means "the row did not say", which is the honest
+    reading.
+    """
     metadata = {
         "aeat_register_status": observation.status.strip().upper(),
         "aeat_expediente_id": observation.expediente_id,
         "authenticated_identity": observation.authenticated_identity.strip().upper(),
     }
+    tipo_solicitud = observation.metadata.get("tipo_solicitud", "").strip()
+    if tipo_solicitud:
+        metadata["aeat_tipo_solicitud"] = tipo_solicitud
     unique_csvs = tuple(dict.fromkeys(csv.strip() for csv in justificante_csvs if csv.strip()))
     if len(unique_csvs) == 1:
         metadata["aeat_justificante_csv"] = unique_csvs[0]
