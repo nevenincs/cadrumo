@@ -801,12 +801,28 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules() -> None:
     Stronger than the indifference probe, which certifies one operation at a
     time. This reds if anyone ever admits ``UNKNOWN`` into a substantive rule's
     accepted set, whether or not the assembly happens to reach that rule today.
+
+    **The closing assertion is on what the sweep VERIFIED, never on what it
+    visited.** It previously counted shapes and compared the count to the loop
+    bounds, incrementing before the fallthrough ``continue`` — so it equalled the
+    product of the iterables unconditionally and could not fail. Emptying the rule
+    table, which sends every shape to the fallthrough and skips the inner check
+    entirely, still left it passing: a sweep that verified nothing reported
+    success.
+
+    A tally of shapes visited is structurally incapable of detecting that,
+    because the shapes it counts are exactly the ones the check skips. So the
+    property replaces it: at least one rule must have been ridden by ``UNKNOWN``
+    without reading the status, which is false precisely when the inner assertion
+    never ran. The set is deliberately not compared against a fixed size — a rule
+    entering or leaving the table is a legitimate change, while verifying nothing
+    never is.
     """
     from ....domain.iva import EUMemberState, IvaInvoiceClassificationCriteria, classify_iva
 
     fallthrough = "R99_fallthrough"
     reachable_kinds = (TransactionKind.GOODS, TransactionKind.SERVICES_GENERAL)
-    checked = 0
+    ridden_without_reading_the_status: set[str] = set()
 
     def _rule(status: CustomerTaxStatus, issuer, customer, kind, direction) -> str:
         return classify_iva(
@@ -829,13 +845,16 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules() -> None:
                 for direction in InvoiceKind:
                     shape = (issuer, customer, kind, direction)
                     matched = _rule(CustomerTaxStatus.UNKNOWN, *shape)
-                    checked += 1
                     if matched == fallthrough:
                         continue
+                    ridden_without_reading_the_status.add(matched)
                     for status in CustomerTaxStatus:
                         assert _rule(status, *shape) == matched, (
                             f"UNKNOWN matched {matched} on {shape} but {status} does not: "
                             "the rule reads the customer status, so UNKNOWN triggered it"
                         )
 
-    assert checked == len(IvaTerritorialScope) ** 2 * len(reachable_kinds) * len(InvoiceKind)
+    assert ridden_without_reading_the_status, (
+        "the sweep verified nothing: UNKNOWN reached the no-rule-matched fallthrough on every "
+        "shape, so the status-blindness assertion never executed once"
+    )
