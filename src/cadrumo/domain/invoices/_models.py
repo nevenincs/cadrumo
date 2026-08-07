@@ -447,7 +447,17 @@ class InvoiceLine(BaseModel):
     subtotal: Decimal
     iva_rate: IvaRate
     iva_amount: Decimal
-    category_id: str | None = None
+    # Named for the taxonomy it belongs to, not "category" bare. This aggregate
+    # already carries `Invoice.iva_category`, a completely unrelated axis: one
+    # is the IVA TREATMENT of the operation, the other a SPENDING classification
+    # of the line. Two fields called "category" on one aggregate is how a reader
+    # reaches for the wrong one, and how a grep for either finds both.
+    #
+    # Currently written and persisted but read by no production consumer. Kept
+    # rather than removed because per-line spending classification is a real
+    # capability the aggregate is shaped for; the honest state is recorded here
+    # so a reader does not infer from its presence that aggregation consumes it.
+    spending_category_id: str | None = None
     oss_rate_kind: IvaRateKind | None = None
 
     @model_validator(mode="before")
@@ -477,14 +487,14 @@ class InvoiceLine(BaseModel):
             raise InvoiceValidationError("description must not be blank")
         return trimmed
 
-    @field_validator("category_id")
+    @field_validator("spending_category_id")
     @classmethod
-    def _validate_category_id(cls, value: str | None) -> str | None:
+    def _validate_spending_category_id(cls, value: str | None) -> str | None:
         if value is None:
             return None
         trimmed = value.strip()
         if not trimmed:
-            raise InvoiceValidationError("category_id must not be blank")
+            raise InvoiceValidationError("spending_category_id must not be blank")
         return trimmed
 
     @field_validator("quantity")

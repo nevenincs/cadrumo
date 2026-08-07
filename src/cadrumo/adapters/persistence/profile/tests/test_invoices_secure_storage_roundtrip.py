@@ -48,7 +48,7 @@ def _populated_invoice(invoice_number: str = "F-2025-001") -> Invoice:
                     subtotal=Decimal("1000.00"),
                     iva_rate=IvaRate.RATE_21,
                     iva_amount=Decimal("210.00"),
-                    category_id="consultoria",
+                    spending_category_id="consultoria",
                 ),
             ),
             "payment_status": PaymentStatus.PENDING,
@@ -91,7 +91,7 @@ def test_invoice_catalogue_survives_encrypted_storage_roundtrip(
         assert loaded_line.iva_rate is IvaRate.RATE_21
         assert loaded_line.quantity == Decimal("10")
         assert loaded_line.iva_amount == Decimal("210.00")
-        assert loaded_line.category_id == "consultoria"
+        assert loaded_line.spending_category_id == "consultoria"
 
 
 def test_invoice_catalogue_persists_only_to_the_secure_database_object(
