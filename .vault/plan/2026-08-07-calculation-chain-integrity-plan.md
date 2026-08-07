@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:d4dbbc783822a8198df9fe96bf352612f31ace36b15c4c4c15adc28f0b23ac05'
+body_hash: 'sha256:4c2f9b439dd1dd723658a470c7e356e8e97e6b7294f4169614c6de8477af85f0'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -136,5 +136,5 @@ Run the sweep over the surfaces this campaign touches, where three parallel-auth
 - [x] `W06.P08.S53` - Add the effective-dated temporary food rates to the Spanish rate table goods-blind, on the measured ground that neither the M390 nor M303 diseno carries any goods axis so a goods distinction would encode information no AEAT box can receive; `src/cadrumo/_data/registry/aeat/legal/`.
 - [x] `W06.P08.S54` - Carry the applied numeric rate on the IVA ledger observation alongside its resolved tier, since the value is discarded once the tier resolves and nothing downstream can then populate a per-tier-per-window annual box; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
 - [x] `W06.P08.S55` - Give the IVA binding selector a rate-value axis so the annual form can bind one box per rate per window where the quarterly form binds by tier alone; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
-- [ ] `W06.P08.S56` - Cross the rate axis with the four already-modelled regimenes only, following the cash-accounting precedent where a regimen is a typed axis crossed with the category rather than a fan-out of category members; `src/cadrumo/_data/registry/aeat/modelos/390/`.
+- [ ] `W06.P08.S56` - BLOCKED on a revision-shape decision, measured not assumed - the crossing is currently inexpressible because CasillaDefinition carries no validity dates and M390 has one revision valid_from 2010-01-01 with no valid_to, so a per-rate casilla for the temporary 2, 5 and 7,5 percent rates would be present for every filing year from 2010 onward including 2025 where the diseno zero-mandates exactly those boxes, and the prerequisite is to either split the M390 revision by year as AEAT versions its diseno or effective-date casillas; `src/cadrumo/_data/registry/aeat/modelos/390/`.
 - [x] `W06.P08.S57` - Record that used-goods and travel-agency appear only as printed-invoice notice phrases and that group-member rollup is filing topology, so a reader does not mistake either for a modelled settlement regimen; `.vault/audit/`.
