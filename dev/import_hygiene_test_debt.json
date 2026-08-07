@@ -731,6 +731,35 @@
           "profile"
         ],
         "reason": "Pytest fixture re-export, imported into the module namespace so pytest can resolve it and re-exported through `__all__` for that reason alone. Same shared-harness rationale as the helper import above."
+      },
+      {
+        "importer_path": "src/cadrumo/adapters/outbound/llm/tests/test_evidence_consent_ledger.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.llm._providers.base",
+        "imported_names": [
+          "ProviderCompletion",
+          "ProviderRequest",
+          "_ProviderAdapter"
+        ],
+        "reason": "Adapter-conformance reach: the evidence-consent refusal is proven by driving a REAL `_ProviderAdapter` implementation through the client's dispatch, so the refusal is observed at the boundary a live provider crosses rather than at a double that cannot refuse. `_ProviderAdapter` is the provider-side Protocol and is deliberately private: it is the seam adapters implement, never a symbol a consumer calls, so promoting it would publish an extension point the package does not offer. `ProviderCompletion` and `ProviderRequest` are its argument and return shapes and are meaningless apart from it, so per-symbol judgement puts all three on the same side rather than promoting the two public-named ones alone."
+      },
+      {
+        "importer_path": "src/cadrumo/application/filing/tests/test_export_implicit_decimal_slots.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.domain.calculations.registry._export_parse",
+        "imported_names": [
+          "_parse_decimal"
+        ],
+        "reason": "Primitive-under-test reach: `_parse_decimal` is the implicit-decimal scalar reader for fixed-width export slots, and the behaviour under test (a decimal point the byte layout never prints) is only observable at the primitive. Driving the public export path instead would exercise it through a whole record projection, so a misparsed slot would surface as a wrong total with its cause a layer away. Deliberately NOT promoted: it is a parsing helper with one production caller inside its own module, and a public parse door would invite call sites that should be going through the record projection."
+      },
+      {
+        "importer_path": "src/cadrumo/application/tests/test_import_dedup_path_parity.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.application.ledger._actions_import",
+        "imported_names": [
+          "_evaluate_import_rows"
+        ],
+        "reason": "Parity-of-two-paths reach: the test proves the dedup decision is identical whether a row arrives by import or by the manual path, which requires calling the import path's own row evaluator directly. The public import action also WRITES, so driving it would compare a decision against a persisted side effect rather than against the other decision. Deliberately NOT promoted: `_evaluate_import_rows` is an internal step of one action, and exposing it would offer callers a way to evaluate rows without the write the action exists to perform."
       }
     ]
   }
