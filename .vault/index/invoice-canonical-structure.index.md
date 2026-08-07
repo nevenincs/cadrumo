@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:4033c1f3af3011a44fe31c90cfc130feec2653e6eb6256d940df93f7bbe746f9'
+body_hash: 'sha256:0c580bf014a74544e55fb3fdee7d573ab5fb1a4e4c6622cb00484fea86099c45'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -47,6 +47,7 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-naming-and-capability-reference]]'
   - '[[2026-08-06-invoice-canonical-structure-plan]]'
   - '[[2026-08-06-invoice-canonical-structure-research]]'
+  - '[[2026-08-07-invoice-canonical-structure-fragmentation-sweep-audit]]'
 ---
 
 # `invoice-canonical-structure` feature index
@@ -62,6 +63,7 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 ### audit
 
 - `2026-08-06-invoice-canonical-structure-audit` - `invoice-canonical-structure` audit: `Fresh-context honesty review of the campaign`
+- `2026-08-07-invoice-canonical-structure-fragmentation-sweep-audit` - `invoice-canonical-structure` audit: `Fragmentation sweep of the invoice and identifier surfaces`
 
 ### exec
 
