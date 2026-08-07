@@ -31,8 +31,27 @@ by the same means and under the same fail-toward-asking rule.
 
 **Spanish territorial scope needs sub-national evidence.** A country code names
 the State while the IVA territory inside it stays undetermined, and Spain holds
-three that the law treats differently. So a domestic pair contributes nothing
-here, and nothing may paper over that with a mainland default.
+three that the law treats differently. The printed postal code is that
+sub-national evidence — its first two digits are the province — so a Spanish
+party is now resolved from the country and postal codes together.
+
+Two limits on that join, both deliberate. It is gated on Spain having been
+NAMED, never on the country resolver merely returning nothing, because
+five-digit postal codes are not unique to Spain. And an absent or unreadable
+postal code refuses rather than resolving to the mainland: the peninsula is the
+majority population, so that default would be invisible in testing while placing
+Canarian and Ceutan parties inside a territory their operations are not subject
+to.
+
+**What still does not resolve is an ordinary domestic invoice**, and the reason
+is upstream of this module. Establishment evidence reaches it as a printed
+country code, and a domestic Spanish invoice frequently prints no country at all
+while its bare tax identifier carries no country prefix. A valid Spanish tax
+identifier cannot stand in for one: the non-resident CIF leader, the K/L/M
+identifiers issued to Spaniards abroad and to non-residents, and the NIE series
+all belong to parties who are not established in Spain — and establishment for
+IVA is the sede de actividad, not tax registration. So that population refuses
+here, correctly, until the evidence question is settled.
 
 Both are settleable by an explicit operator assertion, which is the sanctioned
 path until those authorities exist. An assertion is the operator's claim, made
