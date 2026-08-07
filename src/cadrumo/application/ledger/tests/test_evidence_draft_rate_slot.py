@@ -19,8 +19,8 @@ The taxonomy is expected to keep growing as older filing years come into scope,
 so the assertion below is what keeps this module honest across that growth.
 
 **Refusing is the correct outcome and rounding is the dangerous one.** Silently
-resolving five percent to the four percent slot understates the cuota; resolving
-it to ten percent overstates it. Both produce a structurally valid invoice
+resolving eight percent down to the four percent slot understates the cuota;
+resolving it up to ten percent overstates it. Both produce a structurally valid invoice
 record carrying a figure that appears on no document, and neither leaves a
 signal -- which is precisely the silent-misfiling class the confirm boundary
 exists to prevent. The nearest slot is never the right answer for a rate the
@@ -55,7 +55,7 @@ _SUPPLIER_CIF = "B12345674"
 # Every figure is internally coherent -- the document is not malformed, it is
 # simply expressed in a rate slot this taxonomy does not carry.
 _UNREPRESENTABLE_RATE = Decimal("8")
-_TRANSIENT_RATE_INVOICE_LINES = (
+_UNREPRESENTABLE_RATE_INVOICE_LINES = (
     "Factura de Energia Peninsular SL",
     f"NIF: {_SUPPLIER_CIF}",
     "Numero de factura: 2011-0451",
@@ -146,7 +146,7 @@ def test_the_chosen_rate_is_genuinely_outside_the_taxonomy() -> None:
     assert any(rate > _UNREPRESENTABLE_RATE for rate in slots), "no higher slot for the rate to round up into"
 
 
-def test_a_five_percent_document_refuses_and_names_the_accepted_rates(
+def test_an_unrepresentable_rate_refuses_and_names_the_accepted_rates(
     isolated_settings: Settings,
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
@@ -164,15 +164,19 @@ def test_a_five_percent_document_refuses_and_names_the_accepted_rates(
     """
     with pytest.raises(InvoiceValidationError) as excinfo:
         _confirm(
-            _TRANSIENT_RATE_INVOICE_LINES,
+            _UNREPRESENTABLE_RATE_INVOICE_LINES,
             isolated_settings=isolated_settings,
             secure_objects=secure_objects,
             tmp_path=tmp_path,
-            filename="factura_luz_2024.pdf",
+            filename="factura_luz_2011.pdf",
         )
 
     error = excinfo.value
     assert error.translated_message == "application.invoices.creation.errors.unsupported_iva_rate"
+    # A refusal that names neither the rejected rate nor the accepted set is the
+    # bare "value invalid" the CLI boundary rule forbids, so its absence is a
+    # failure of this test's subject rather than a typing detail.
+    assert error.context is not None, "the refusal must carry the context naming the rate and the accepted slots"
     assert error.context["iva_rate"] == format(_UNREPRESENTABLE_RATE, "f"), (
         f"the refusal must name the rate rejected: {error.context}"
     )
@@ -199,8 +203,8 @@ def test_the_refusal_is_the_same_one_whether_or_not_a_cuota_was_printed(
     types -- so the operator's experience of the identical mistake depended on
     a property of their document that has nothing to do with the rate.
     """
-    printed_cuota = _TRANSIENT_RATE_INVOICE_LINES
-    no_printed_cuota = tuple(line for line in _TRANSIENT_RATE_INVOICE_LINES if not line.startswith("Cuota IVA"))
+    printed_cuota = _UNREPRESENTABLE_RATE_INVOICE_LINES
+    no_printed_cuota = tuple(line for line in _UNREPRESENTABLE_RATE_INVOICE_LINES if not line.startswith("Cuota IVA"))
     assert len(no_printed_cuota) == len(printed_cuota) - 1, "the second fixture must differ by the cuota line alone"
 
     raised = []
