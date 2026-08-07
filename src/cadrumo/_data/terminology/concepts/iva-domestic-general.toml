@@ -6,13 +6,12 @@
 # from `broader` and must never be authored here.
 
 [concept]
-concept_id = "iva-domestic-general-21"
+concept_id = "iva-domestic-general"
 domain = "regimen"
-lifecycle = "retired"
+lifecycle = "draft"
 domain_refs = ["iva-category:domestic_general"]
-replaced_by = "iva-domestic-general"
-created_at = 2026-06-10
+created_at = 2026-08-07
 updated_at = 2026-08-07
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "Tipo impositivo general del IVA, aplicable a toda entrega de bienes o prestacion de servicios interior que no tenga reconocido un tipo reducido o superreducido (LIVA art. 90)."

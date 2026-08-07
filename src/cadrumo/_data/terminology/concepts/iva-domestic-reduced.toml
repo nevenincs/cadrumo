@@ -6,13 +6,12 @@
 # from `broader` and must never be authored here.
 
 [concept]
-concept_id = "iva-domestic-general-21"
+concept_id = "iva-domestic-reduced"
 domain = "regimen"
-lifecycle = "retired"
-domain_refs = ["iva-category:domestic_general"]
-replaced_by = "iva-domestic-general"
-created_at = 2026-06-10
+lifecycle = "draft"
+domain_refs = ["iva-category:domestic_reduced"]
+created_at = 2026-08-07
 updated_at = 2026-08-07
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "Tipo impositivo reducido del IVA, aplicable a las entregas, servicios y operaciones que la ley enumera de forma tasada (LIVA art. 91.Uno)."
