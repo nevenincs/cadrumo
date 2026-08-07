@@ -6,11 +6,12 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:35193d88aeab27bac24ef700c69cb95ae5344298bcd3e0d64190b0dd365d031d'
+body_hash: 'sha256:7c29633e97db0e781c65ce5a8461eda0c91de8590a933a192ab56a3afd194025'
 related:
   - '[[2026-07-20-release-asset-transport-adr]]'
   - '[[2026-07-20-release-asset-transport-audit]]'
   - '[[2026-07-20-release-asset-transport-reference]]'
+  - '[[2026-08-07-release-asset-transport-public-repo-artifact-return-adr]]'
 ---
 
 # `release-asset-transport` feature index
@@ -21,7 +22,8 @@ Auto-generated index of all documents tagged with `#release-asset-transport`.
 
 ### adr
 
-- `2026-07-20-release-asset-transport-adr` - `release-asset-transport` adr: `evidence and cohort transport moves from Actions artifacts to GitHub Release assets` | (**status:** `accepted`)
+- `2026-07-20-release-asset-transport-adr` - `release-asset-transport` adr: `evidence and cohort transport moves from Actions artifacts to GitHub Release assets` | (**status:** `superseded`)
+- `2026-08-07-release-asset-transport-public-repo-artifact-return-adr` - `release-asset-transport` adr: `evidence and cohort transport returns to Actions artifacts` | (**status:** `accepted`)
 
 ### audit
 

@@ -1,19 +1,19 @@
 ---
 tags:
-  - '#adr'
-  - '#release-asset-transport'
+  - "#adr"
+  - "#release-asset-transport"
 date: '2026-07-20'
-modified: '2026-07-20'
-body_hash: 'sha256:b6b032f51d034a7936e1463b6880a351e0662ce3fbee55da278a70ecc146a9df'
 related:
   - "[[2026-07-15-distribution-installation-readiness-adr]]"
   - "[[2026-07-16-distribution-harness-identity-adr]]"
   - "[[2026-07-19-post-release-distribution-adr]]"
   - "[[2026-07-04-release-readiness-gate-adr]]"
   - "[[2026-07-20-release-asset-transport-reference]]"
+superseded_by: '2026-08-07-release-asset-transport-public-repo-artifact-return-adr'
+modified: '2026-08-07'
+body_hash: 'sha256:07cadcae0d9e41ccfb7c60fad63dc739308a61a3d4d00afc41bb5e6bd5d2a414'
 ---
-
-# `release-asset-transport` adr: `evidence and cohort transport moves from Actions artifacts to GitHub Release assets` | (**status:** `accepted`)
+# `release-asset-transport` adr: `evidence and cohort transport moves from Actions artifacts to GitHub Release assets` | (**status:** `superseded`)
 
 ## Problem Statement
 
