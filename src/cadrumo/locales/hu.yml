@@ -66703,6 +66703,10 @@ modelo:
                 meg.
               label: Fizetendő áfa összege - általános szabályozás - 7,5%-os kulcs
                 - éves
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: Adja össze a nulla adókulcsú belföldi értékesítések adóalapját,
+                függetlenül az egyes ügyletekre alkalmazott százaléktól.
+              label: Fizetendő áfa, általános szabályozás, nulla adókulcs - Adóalap
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
               label: Az általános rendszer éves eredménye (keletkezett ÁFA mínusz

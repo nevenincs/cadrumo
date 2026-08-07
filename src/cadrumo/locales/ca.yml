@@ -66570,6 +66570,10 @@ modelo:
                 de la casella 669. El Reial decret llei 4/2024, article 1, va fixar
                 aquest tipus des de l'1 d'octubre fins al 31 de desembre de 2024.
               label: Quota d’IVA meritat - Règim ordinari - Tipus 7,5% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: Suma la base imposable de les operacions interiors repercutides
+                al tipus zero, sigui quin sigui el percentatge aplicat a cada operació.
+              label: IVA meritat RG tipus zero - Base imposable
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
               label: Resultat anual del règim general (quota meritada - quota deduïble)

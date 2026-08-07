@@ -113,16 +113,22 @@ def _with_values(draft: ModeloDraft, values: dict[CasillaId, Decimal | None]) ->
 def test_the_real_registry_projects_the_partitions_this_file_relies_on() -> None:
     """Anchor: every assertion below is vacuous if the split is not declared.
 
-    Six partitions -- general, reducido and super-reducido, each over base and
-    cuota -- come off the live subview, and the reducido cuota tier carries the
-    three boxes the shortfall cases below draw on. Without this, a registry
-    change that dropped the split would make the refusal tests pass by never
-    reaching the gate at all.
+    The partitions this file draws on come off the live subview, and the reducido
+    cuota tier carries the boxes the shortfall cases below use. Without this, a
+    registry change that dropped the split would make the refusal tests pass by
+    never reaching the gate at all.
+
+    Asserted by NAME rather than by count. A total of six was pinned here once,
+    which made adding the zero tier's missing total layer look like a regression
+    while the property the anchor exists for -- the reducido tier is projected
+    with its boxes -- was never in question. A count also cannot say WHICH
+    partition vanished, which is the only thing a reader of this failure needs.
     """
     partitions = _real_provider().get_subview("390").rate_box_partitions
 
-    assert len(partitions) == 6
-    reducido = next(part for part in partitions if part.total_casilla_id == _REDUCIDO_TOTAL)
+    by_total = {part.total_casilla_id: part for part in partitions}
+    assert _REDUCIDO_TOTAL in by_total, f"the reducido cuota partition is gone; projected: {sorted(by_total)}"
+    reducido = by_total[_REDUCIDO_TOTAL]
     assert set(reducido.box_casilla_ids) >= {_BOX_10, _BOX_5}
     assert reducido.rate_kinds == ("reduced",)
 

@@ -62,6 +62,30 @@ source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-
 source_ref = "aeat-modelo-390-procedure"
 required_text = ["modelo 390"]
 
+# The rate-blind total for the zero tier. Its three sibling tiers each carry
+# one, so a row whose applied_rate was never recorded still reaches that tier's
+# total and only the RATE box goes unclaimed. The zero tier had no blind layer
+# at all: its only two bindings both pin applied_rates = 0.00, so a zero-rated
+# row with no recorded rate reached NOTHING and its base imponible left the
+# return silently. No cuota is lost -- a zero-rated supply's cuota is zero --
+# but the base is a declared figure AEAT reconciles.
+#
+# Declares no export_refs, exactly like its three siblings: this is the internal
+# total layer, and box [700] is the rate layer that writes to the record. That
+# split is what lets the rate-box coverage gate read a shortfall here, which is
+# the whole point of adding it.
+[[revisions."2010-y-siguientes".bindings]]
+id = "modelo-390-iva-repercutido-zero-base"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_zero"], rate_kinds = ["zero"], flow_direction = "repercutido", fact = "base_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["modelo 390"]
+
 [[revisions."2010-y-siguientes".bindings]]
 id = "modelo-390-iva-soportado-interiores-base"
 source = "ledger_iva_aggregation"

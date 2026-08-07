@@ -68870,6 +68870,10 @@ modelo:
                 de la casilla 669. El Real Decreto-ley 4/2024, artículo 1, fijó este
                 tipo desde el 1 de octubre hasta el 31 de diciembre de 2024.
               label: Cuota IVA devengado - Regimen ordinario - Tipo 7,5% - anual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: Suma la base imponible de las operaciones interiores repercutidas
+                al tipo cero, sea cual sea el porcentaje aplicado a cada operación.
+              label: IVA devengado RG tipo cero - Base imponible
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
               label: Resultado anual del regimen general (cuota devengada - cuota

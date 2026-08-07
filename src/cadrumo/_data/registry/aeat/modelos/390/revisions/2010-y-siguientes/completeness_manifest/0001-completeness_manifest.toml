@@ -100,6 +100,10 @@ casilla_id = "iva.anual.repercutido.super-reducido.base"
 number = "iva.anual.repercutido.super-reducido.base"
 
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.zero.base"
+number = "iva.anual.repercutido.zero.base"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.repercutido.recargo.general"
 number = "iva.anual.repercutido.recargo.general"
 

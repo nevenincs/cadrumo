@@ -66143,6 +66143,10 @@ modelo:
                 box 669. Real Decreto-ley 4/2024, article 1, set this rate from 1
                 October to 31 December 2024.
               label: Output VAT amount - standard regime - 7,5% rate - annual
+            x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn7kpbidsn64objck:
+              help: Add up the taxable base of domestic output transactions in the
+                zero rate tier, whatever percentage each transaction carried.
+              label: Output VAT, general regime, zero tier - Taxable base
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
               label: Annual result under the standard regime (VAT due minus deductible

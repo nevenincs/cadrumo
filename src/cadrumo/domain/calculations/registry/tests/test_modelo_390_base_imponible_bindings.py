@@ -45,6 +45,7 @@ _REDUCIDO_BASE = Decimal("2500.00")
 _REDUCIDO_CUOTA = Decimal("250.00")
 _SUPER_REDUCIDO_BASE = Decimal("1200.00")
 _SUPER_REDUCIDO_CUOTA = Decimal("48.00")
+_ZERO_BASE = Decimal("700.00")
 _SOPORTADO_BASE = Decimal("900.00")
 _SOPORTADO_CUOTA = Decimal("189.00")
 
@@ -97,6 +98,16 @@ def _annual_observations() -> tuple[IvaLedgerObservation, ...]:
             base=_SUPER_REDUCIDO_BASE,
             iva=_SUPER_REDUCIDO_CUOTA,
         ),
+        # The zero tier: base imponible with no cuota, which is what a zero-rated
+        # supply is. Its rate-blind total exists so a row whose rate the ledger
+        # never captured still reaches the tier.
+        _observation(
+            category=IvaCategory.DOMESTIC_ZERO,
+            rate_kind=IvaRateKind.ZERO,
+            flow=IvaFlowDirection.REPERCUTIDO,
+            base=_ZERO_BASE,
+            iva=Decimal("0.00"),
+        ),
         _observation(
             category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
@@ -118,6 +129,7 @@ def _resolved() -> dict[str, Decimal]:
         ("modelo-390-iva-repercutido-general-base", _GENERAL_BASE),
         ("modelo-390-iva-repercutido-reducido-base", _REDUCIDO_BASE),
         ("modelo-390-iva-repercutido-super-reducido-base", _SUPER_REDUCIDO_BASE),
+        ("modelo-390-iva-repercutido-zero-base", _ZERO_BASE),
         ("modelo-390-iva-soportado-interiores-base", _SOPORTADO_BASE),
     ),
 )
