@@ -1967,6 +1967,14 @@ cli:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
         confirm_already_exists_message: Ya existe una factura con esta identidad;
           se devuelve sin cambios en lugar de crear un duplicado.
+        batch_directory_help: 'Directorio cuyos ficheros se ingresan. Combínalo con --file repetido o sustitúyelo por él.'
+        batch_file_help: 'Un documento a ingresar. Repite la opción una vez por documento; se combina con un directorio.'
+        batch_help: 'Ingresa cada documento de un directorio (o cada --file) como evidencia y borrador revisable, con una fila de resultado por documento.'
+        batch_items_refused_message: 'Se rechazaron algunos documentos. El resto de documentos de la ejecución se completaron igualmente; las filas rechazadas indican qué se encontró.'
+        batch_pending_review_message: 'Algunos borradores contienen un hallazgo que una persona debe resolver antes de crear una factura. Están retenidos, no fallidos.'
+        batch_progress_message: 'procesado %{source}: %{status}'
+        batch_source_required: 'Indica un argumento de directorio, una o más opciones --file, o ambos.'
+        batch_work_deferred_message: 'Algunos documentos no se leyeron porque no se pudo ejecutar ningún modelo de lectura. No se adivinó ningún valor a partir de ellos y nada falló; vuelve a ejecutar cuando se resuelva la causa indicada.'
         confirm_counterparty_name_help: Nombre de la contraparte (sin heuristica de
           extracción todavía; normalmente obligatorio).
         confirm_counterparty_nif_help: Sobrescribe el NIF del proveedor extraido.
