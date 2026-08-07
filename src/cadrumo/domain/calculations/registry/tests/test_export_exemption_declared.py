@@ -30,10 +30,12 @@ from .._validate_export_exemption import validate_export_exemption_declarations
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _gate(revision: ModeloRevision) -> list[str]:
+def _gate(revision: ModeloRevision, modelo_id: str = "303") -> list[str]:
     """Run the export-exemption gate over one revision and return its failures."""
     failures: list[str] = []
-    validate_export_exemption_declarations(failures, prefix="modelo T revision R", revision=revision)
+    validate_export_exemption_declarations(
+        failures, prefix="modelo T revision R", modelo_id=modelo_id, revision=revision
+    )
     return failures
 
 
@@ -71,8 +73,8 @@ def test_bundled_registry_declares_every_load_bearing_export_exemption(
     the pre-annotation tree did for eighteen casillas across eight revisions.
     """
     offenders: list[str] = []
-    for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
-        offenders.extend(_gate(revision))
+    for modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
+        offenders.extend(_gate(revision, modelo_id))
     assert offenders == []
 
 
@@ -86,12 +88,12 @@ def test_removing_a_declared_reason_reds_the_gate(
     reason, so the proof covers the whole annotated set, not one specimen.
     """
     checked = 0
-    for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
+    for modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
         for casilla in revision.casillas:
             if casilla.export_exemption_reason is None:
                 continue
             stripped = _replace_casilla(revision, casilla.id, export_exemption_reason=None)
-            failures = _gate(stripped)
+            failures = _gate(stripped, modelo_id)
             assert any(repr(casilla.id) in failure for failure in failures), (
                 f"stripping the reason from {casilla.id!r} did not red the gate"
             )
@@ -115,7 +117,7 @@ def test_a_forgotten_annotation_is_detected(
     independently in every bundled fixed-width revision that has a candidate.
     """
     planted = 0
-    for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
+    for modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
         manifest = revision.completeness_manifest
         if manifest is None:
             continue
@@ -136,7 +138,7 @@ def test_a_forgotten_annotation_is_detected(
         # Drop every export field addressing the candidate: the layout stops
         # carrying it while nothing declares why. Baseline first, so a revision
         # that was already red cannot masquerade as a detection.
-        assert _gate(revision) == []
+        assert _gate(revision, modelo_id) == []
         layouts = tuple(
             layout.model_copy(
                 update={
@@ -158,7 +160,7 @@ def test_a_forgotten_annotation_is_detected(
             for layout in revision.export_layouts
         )
         wounded = revision.model_copy(update={"export_layouts": layouts})
-        failures = _gate(wounded)
+        failures = _gate(wounded, modelo_id)
         assert any(repr(candidate.id) in failure for failure in failures), (
             f"planted forgotten annotation on {candidate.id!r} went undetected"
         )
@@ -177,7 +179,7 @@ def test_feeds_addressed_casilla_claim_is_verified_not_trusted(
     that genuinely reaches no addressed casilla must therefore refuse.
     """
     relabelled = 0
-    for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
+    for modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
         for casilla in revision.casillas:
             if casilla.export_exemption_reason is not ExportExemptionReason.NOT_IN_RECORD_DESIGN:
                 continue
@@ -186,7 +188,7 @@ def test_feeds_addressed_casilla_claim_is_verified_not_trusted(
                 casilla.id,
                 export_exemption_reason=ExportExemptionReason.FEEDS_ADDRESSED_CASILLA,
             )
-            failures = _gate(mutated)
+            failures = _gate(mutated, modelo_id)
             assert any(repr(casilla.id) in failure and "no formula chain" in failure for failure in failures), (
                 f"{casilla.id!r} claims to feed an addressed casilla and the gate believed it"
             )

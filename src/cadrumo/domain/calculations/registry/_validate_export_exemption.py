@@ -49,6 +49,8 @@ See Also:
 from __future__ import annotations
 
 from ....core import ExportExemptionReason, ExportLayoutFormat
+from ....core.aggregation import BindingSourceKind
+from ._bindings import binding_source_casilla_ids, binding_source_modelo
 from ._export import derive_export_layouts_from_bindings, fixed_width_record_casilla_ids
 from ._ids import CasillaId
 from ._runtime_graph import expression_casilla_refs
@@ -63,9 +65,15 @@ def _reaches_addressed_casilla(
 ) -> bool:
     """Return whether ``casilla_id`` feeds, transitively, a casilla the record addresses.
 
-    Walks forward along formula-consumption edges: ``consumers[x]`` holds every
-    casilla whose formula expression reads ``x``. Cycles terminate through the
-    visited set, so a malformed graph cannot hang the build.
+    Walks forward along consumption edges: ``consumers[x]`` holds every casilla
+    that reads ``x``, whether through a formula expression or through a binding
+    selector. Cycles terminate through the visited set, so a malformed graph
+    cannot hang the build.
+
+    Binding edges are not optional here. Modelo 303's ``iva.prorrata-porcentaje``
+    reaches official box ``44`` only through the ``prorrata_regularizacion``
+    binding — box 44 declares no formula at all — so a formula-only walk would
+    refuse a true claim and push the author toward a weaker, wrong reason.
     """
     pending = [casilla_id]
     seen: set[CasillaId] = set()
@@ -80,10 +88,47 @@ def _reaches_addressed_casilla(
     return False
 
 
+def _consumption_edges(revision: ModeloRevision, modelo_id: str) -> dict[CasillaId, set[CasillaId]]:
+    """Return, per casilla, the casillas that read it WITHIN this filing.
+
+    Two edge kinds, because a casilla can be consumed either way: a formula
+    expression reading it, and a binding selector naming it as a source.
+
+    Two edge kinds are deliberately EXCLUDED, and the exclusions carry the
+    correctness of the whole check:
+
+    - a ``previous_filing`` binding reads a PRIOR period's value, so it proves
+      the figure is consumed by the NEXT filing, never that this one files it.
+      Counting it would let every cross-period carry seed — which is exactly the
+      population needing the ``NOT_IN_RECORD_DESIGN`` reason — masquerade as
+      reaching a box on the current return.
+    - a cross-modelo binding names casillas on a FOREIGN modelo, so its ids do
+      not denote casillas in this revision at all.
+    """
+    formula_by_id = {formula.id: formula for formula in revision.formulas}
+    binding_by_id = {binding.id: binding for binding in revision.bindings}
+    edges: dict[CasillaId, set[CasillaId]] = {}
+    for casilla in revision.casillas:
+        if casilla.formula is not None and (formula := formula_by_id.get(casilla.formula)) is not None:
+            for ref in expression_casilla_refs(formula.expression):
+                edges.setdefault(ref, set()).add(casilla.id)
+        for binding_id in (casilla.binding, *casilla.alternate_bindings):
+            binding = binding_by_id.get(binding_id) if binding_id is not None else None
+            if binding is None or binding.source is BindingSourceKind.PREVIOUS_FILING:
+                continue
+            source_modelo = binding_source_modelo(binding)
+            if source_modelo is not None and source_modelo != modelo_id:
+                continue
+            for ref in binding_source_casilla_ids(binding):
+                edges.setdefault(ref, set()).add(casilla.id)
+    return edges
+
+
 def validate_export_exemption_declarations(
     failures: list[str],
     *,
     prefix: str,
+    modelo_id: str,
     revision: ModeloRevision,
 ) -> None:
     """Append a failure for every load-bearing export exemption lacking a reason.
@@ -97,6 +142,8 @@ def validate_export_exemption_declarations(
     Args:
         failures: Accumulator the registry validator drains; never raises.
         prefix: Caller-supplied ``modelo N revision R`` diagnostic prefix.
+        modelo_id: Modelo identifier, used to scope out cross-modelo binding
+            edges whose source casilla ids name a foreign modelo.
         revision: The :class:`ModeloRevision` under validation.
     """
     manifest = revision.completeness_manifest
@@ -113,16 +160,7 @@ def validate_export_exemption_declarations(
     for layout in layouts:
         addressed |= fixed_width_record_casilla_ids(layout.records)
 
-    formula_by_id = {formula.id: formula for formula in revision.formulas}
-    consumers: dict[CasillaId, set[CasillaId]] = {}
-    for casilla in revision.casillas:
-        if casilla.formula is None:
-            continue
-        formula = formula_by_id.get(casilla.formula)
-        if formula is None:
-            continue
-        for ref in expression_casilla_refs(formula.expression):
-            consumers.setdefault(ref, set()).add(casilla.id)
+    consumers = _consumption_edges(revision, modelo_id)
 
     casilla_by_id = {casilla.id: casilla for casilla in revision.casillas}
     for manifest_casilla in manifest.casillas:
