@@ -268,6 +268,13 @@ def invoice_line_to_iva_observation(
         base_amount=base_amount,
         iva_amount=iva_amount,
         recargo_amount=recargo_amount,
+        # applied_rate is deliberately left unset here. An invoice line carries a
+        # rate SLOT, not a number, and the slot's percentage is resolved against
+        # the registry for a given date -- so filling it would mean re-deriving
+        # the rate from the tier, which answers "what does this tier mean" rather
+        # than "what was this line charged". The ledger path, where the operator
+        # declared a numeric rate, carries the value; this path records that it
+        # does not have one rather than inventing agreement with the tier.
     )
 
 

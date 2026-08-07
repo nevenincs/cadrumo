@@ -1327,6 +1327,12 @@ def _classify_iva_transaction(
         prorrata_reference_id=linked_prorrata_id,
         input_classification=transaction.input_classification,
         prorrata_sector_id=transaction.prorrata_sector_id,
+        # The rate the operator declared on the row, kept beside the tier it
+        # resolved to. Read from the transaction rather than re-derived from
+        # the tier: the tier-to-rate mapping is date-dependent, so re-deriving
+        # would answer "what does this tier mean today" when the question is
+        # "what was this line actually charged".
+        applied_rate=transaction.iva_rate,
     )
     return _IvaTransactionOutcome(
         observations=(observation,),
@@ -1350,6 +1356,7 @@ def _iva_observation(
     cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE,
     input_classification: InputClassification | None = None,
     prorrata_sector_id: str | None = None,
+    applied_rate: Decimal | None = None,
 ) -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id=ledger_id,
@@ -1357,6 +1364,7 @@ def _iva_observation(
         category=category,
         exemption_article=exemption_article,
         rate_kind=rate_kind,
+        applied_rate=applied_rate,
         flow_direction=flow_direction,
         base_amount=base_amount,
         iva_amount=iva_amount,
