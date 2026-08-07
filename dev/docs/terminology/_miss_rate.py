@@ -146,9 +146,14 @@ def relevance_mapping_path() -> Path:
 
 
 def held_out_query_set_path() -> Path:
-    """Return the bundled path for the held-out query corpus."""
+    """Return the dev-local path for the held-out query corpus.
 
-    return bundled_path("terminology", "evaluation", "held-out-queries.json")
+    A committed measurement INPUT, versioned so miss-rate figures stay
+    comparable across runs, but read by no runtime consumer - so it lives with
+    this harness under ``dev/`` rather than in the production ``_data`` tree.
+    """
+
+    return Path(__file__).resolve().parent / "evaluation" / "held-out-queries.json"
 
 
 def load_committed_relevance(path: Path | None = None) -> SweepResult:

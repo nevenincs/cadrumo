@@ -9,7 +9,7 @@
 concept_id = "iva-domestic-super-reduced-4"
 domain = "regimen"
 lifecycle = "draft"
-domain_refs = ["iva-category:domestic_super_reduced_4"]
+domain_refs = ["iva-category:domestic_super_reduced"]
 created_at = 2026-06-10
 updated_at = 2026-06-10
 
