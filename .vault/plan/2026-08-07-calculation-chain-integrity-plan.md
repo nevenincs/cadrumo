@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:f6c029a7e538d4a198fa5b36d37010755beb3d932a4a12b8d83377640fbe4fe1'
+body_hash: 'sha256:23390ced4c95b8dea9ec5433a03e5709741bfe9b5deea29d5737797b990e4cc9'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -134,7 +134,7 @@ Run the sweep over the surfaces this campaign touches, where three parallel-auth
 - [ ] `W06.P08.S51` - Confirm against live BOE which instrument set the October to December 2024 two and seven point five percent food windows, quoting the operative article text, since three near-identical names are in play and one already sits in the catalogue for an unrelated IRPF purpose; `src/cadrumo/_data/registry/aeat/legal/`.
 - [ ] `W06.P08.S52` - Author corpus entries for the confirmed food-rate instruments before any rate record cites them, both the instrument that introduced the regime and the one that set the final step if they differ; `src/cadrumo/_data/corpus/normatives/html/`.
 - [ ] `W06.P08.S53` - Add the effective-dated temporary food rates to the Spanish rate table goods-blind, on the measured ground that neither the M390 nor M303 diseno carries any goods axis so a goods distinction would encode information no AEAT box can receive; `src/cadrumo/_data/registry/aeat/legal/`.
-- [ ] `W06.P08.S54` - Carry the applied numeric rate on the IVA ledger observation alongside its resolved tier, since the value is discarded once the tier resolves and nothing downstream can then populate a per-tier-per-window annual box; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
-- [ ] `W06.P08.S55` - Give the IVA binding selector a rate-value axis so the annual form can bind one box per rate per window where the quarterly form binds by tier alone; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
+- [x] `W06.P08.S54` - Carry the applied numeric rate on the IVA ledger observation alongside its resolved tier, since the value is discarded once the tier resolves and nothing downstream can then populate a per-tier-per-window annual box; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
+- [x] `W06.P08.S55` - Give the IVA binding selector a rate-value axis so the annual form can bind one box per rate per window where the quarterly form binds by tier alone; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
 - [ ] `W06.P08.S56` - Cross the rate axis with the four already-modelled regimenes only, following the cash-accounting precedent where a regimen is a typed axis crossed with the category rather than a fan-out of category members; `src/cadrumo/_data/registry/aeat/modelos/390/`.
 - [ ] `W06.P08.S57` - Record that used-goods and travel-agency appear only as printed-invoice notice phrases and that group-member rollup is filing topology, so a reader does not mistake either for a modelled settlement regimen; `.vault/audit/`.
