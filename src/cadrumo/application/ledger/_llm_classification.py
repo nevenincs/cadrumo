@@ -71,8 +71,6 @@ from ...domain.transactions import (
     TransactionValidationError,
     prompt_spec_with_every_spending_category,
     prompt_spec_with_saturation_fields,
-    resolve_classifier,
-    resolve_split_proposer,
     set_classification,
 )
 from ...llm import (
@@ -164,17 +162,6 @@ def is_llm_provider_available(provider: SubprocessProvider) -> bool:
     """Return whether ``provider``'s CLI binary is resolvable on ``PATH``."""
     return shutil.which(_PROVIDER_CLI_BINARY[provider]) is not None
 
-
-def _resolve_default_classifier(provider: SubprocessProvider) -> LLMClassifier:
-    """Resolve the production classifier for ``provider`` with the category prompt.
-
-    Builds the classifier with
-    :func:`~domain.transactions.prompt_spec_with_every_spending_category`
-    so the model also suggests an expense
-    :class:`~domain.categories.SpendingCategory`, and keeps
-    the allow-list-guarded ``parse_response`` path intact.
-    """
-    return resolve_classifier(provider.value, spec=prompt_spec_with_every_spending_category())
 
 
 @dataclass(frozen=True)
@@ -333,7 +320,7 @@ def _run_on_host_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
 def _record_subprocess_run[T](run: Callable[[], T], *, provider: str) -> T:
     """Run a subprocess CLI classify/split call, recording local run-timing telemetry.
 
-    Wraps :class:`~domain.transactions.SubprocessLLMClassifier` calls (which
+    Wraps the subprocess classifier harness calls (which
     stay pure and time-unaware, per hexagonal layering -- the domain layer must
     not import the storage-touching recorder). Records duration and outcome via
     :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`, mirroring the
@@ -493,7 +480,8 @@ def suggest_llm_classification(
         transaction_id: Stable id of the transaction to classify.
         provider: Subprocess provider to resolve when ``classifier`` is None.
         classifier: Injected classifier (dependency injection for tests). When
-            None, resolved via :func:`resolve_classifier` for ``provider``.
+            None. With the cloud transports deleted the on-host reader is the
+            default, so an injected classifier is the only non-default case.
         vision_classifier: Injected on-host vision classifier used when the
             evidence is a scan-only PDF or image; default-resolved otherwise.
         vision_model: Overrides the settings default local vision model (e.g.
@@ -521,11 +509,7 @@ def suggest_llm_classification(
             context={"transaction_id": transaction_id},
         )
     resolved_settings = settings if settings is not None else load_settings()
-    resolved_classifier = (
-        classifier
-        if classifier is not None
-        else (_resolve_default_classifier(provider) if provider is not None else None)
-    )
+    resolved_classifier = classifier
     evidence = (
         _resolve_evidence(
             transaction,
@@ -697,17 +681,6 @@ def apply_llm_classification(
 # ── stage-2 saturation: grounded rich tax metadata ────────────────
 
 
-def _resolve_saturation_classifier(provider: SubprocessProvider) -> LLMClassifier:
-    """Resolve the production classifier for ``provider`` with the saturation prompt.
-
-    Builds the classifier with
-    :func:`~domain.transactions.prompt_spec_with_saturation_fields` so the
-    model also selects an expense :class:`~domain.categories.SpendingCategory`
-    and an :class:`~domain.iva.IvaCategory` from the registry-grounded allow-list,
-    keeping the allow-list-guarded ``parse_response`` path intact.
-    """
-    return resolve_classifier(provider.value, spec=prompt_spec_with_saturation_fields())
-
 
 def _derive_iva_substrate(
     iva_category: IvaCategory,
@@ -762,7 +735,8 @@ def saturate_llm_classification(
         transaction_id: Stable id of the transaction to classify.
         provider: Subprocess provider to resolve when ``classifier`` is None.
         classifier: Injected classifier (dependency injection for tests). When
-            None, resolved via :func:`resolve_classifier` for ``provider`` with
+            None. With the cloud transports deleted the on-host reader is the
+            default; an injected classifier overrides it, with
             the saturation prompt spec.
         vision_classifier: Injected on-host vision classifier used when the
             evidence is a scan-only PDF or image; default-resolved otherwise.
@@ -795,7 +769,7 @@ def saturate_llm_classification(
     resolved_classifier = (
         classifier
         if classifier is not None
-        else (_resolve_saturation_classifier(provider) if provider is not None else None)
+        else None
     )
     evidence = (
         _resolve_evidence(
@@ -1067,15 +1041,6 @@ def derive_operator_iva_substrate(
 # ── stage-3b: evidence-driven N-way split ─────────────────────────
 
 
-def _resolve_default_split_proposer(provider: SubprocessProvider) -> LLMSplitProposer:
-    """Resolve the production split proposer for ``provider`` with the saturation prompt.
-
-    Uses :func:`~domain.transactions.prompt_spec_with_saturation_fields` so each
-    proposed child carries the same allow-list-guarded expense-category and
-    IVA-category selections the saturate path uses.
-    """
-    return resolve_split_proposer(provider.value, spec=prompt_spec_with_saturation_fields())
-
 
 def _split_child_description(child_index: int, *, citation: str, category: SpendingCategory | None) -> str:
     """Build a distinct, operator-facing description for one split child.
@@ -1116,7 +1081,8 @@ def suggest_evidence_split(
         transaction_id: Stable id of the transaction to split.
         provider: Subprocess provider to resolve when ``proposer`` is None.
         proposer: Injected split proposer (dependency injection for tests). When
-            None, resolved via :func:`resolve_split_proposer` for ``provider``.
+            None. With the cloud transports deleted the on-host reader is the
+            default, so an injected proposer is the only non-default case.
         vision_classifier: Injected on-host vision classifier used when the
             evidence is a scan-only PDF or image; default-resolved otherwise.
         vision_model: Overrides the settings default local vision model (e.g.
@@ -1149,7 +1115,7 @@ def suggest_evidence_split(
     resolved_proposer = (
         proposer
         if proposer is not None
-        else (_resolve_default_split_proposer(provider) if provider is not None else None)
+        else None
     )
     evidence = (
         _resolve_evidence(

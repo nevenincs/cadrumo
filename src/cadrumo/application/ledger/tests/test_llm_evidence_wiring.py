@@ -24,7 +24,6 @@ from ....domain.transactions import (
     RawProvenance,
     RawTransaction,
     SourceFormat,
-    SubprocessLLMClassifier,
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
@@ -36,6 +35,7 @@ from .._evidence import (
     PurchaseInvoiceEvidenceService,
 )
 from .._llm_classification import _resolve_evidence, suggest_llm_classification
+from ._subprocess_classifier_support import SubprocessLLMClassifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

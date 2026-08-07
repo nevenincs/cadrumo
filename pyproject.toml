@@ -753,7 +753,7 @@ convention = "google"
 "src/cadrumo/domain/auth/apoderamientos/_catalogue.py" = ["S105"]
 "src/cadrumo/domain/calculations/registry/_workbook_parity.py" = ["S603"]
 "src/cadrumo/domain/deadlines/_festivos.py" = ["S105"]
-"src/cadrumo/domain/transactions/_llm.py" = ["S603"]
+"src/cadrumo/application/ledger/tests/_subprocess_classifier_support.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_language_flag_help_honesty.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py" = ["S603"]
 # Test modules under master_key/ exercise the passphrase-rejection paths
