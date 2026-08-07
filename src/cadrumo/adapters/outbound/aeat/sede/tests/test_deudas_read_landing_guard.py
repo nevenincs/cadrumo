@@ -20,7 +20,13 @@ from __future__ import annotations
 
 import pytest
 
-from ......tests.aeat_literal_fixtures import aeat_url
+from ......tests.aeat_literal_fixtures import (
+    DEUDAS_CONSULTA_PATH_SHAPE_CANARY,
+    DEUDAS_OFF_HOST_LANDING_CANARY,
+    DEUDAS_PAYMENT_SURFACE_PATH_SHAPE_CANARIES,
+    DEUDAS_READ_SURFACE_PATH_SHAPE_CANARIES,
+    aeat_url,
+)
 from .. import assert_deudas_landing, deudas_read_path_prefixes
 from .._adapter_utils import assert_read_landing
 from .._deudas import _READ_GUARD_POLICY
@@ -28,27 +34,14 @@ from .._errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-# Paths shaped like the controls that sit beside the debts listing. None is a
-# captured AEAT path -- no specimen exists -- they are the shapes the guard must
-# refuse regardless of what the real consulta path turns out to be. The origin
-# comes from the configured AEAT domain rather than a literal, so the fixtures
-# follow the host pool instead of pinning a number of their own.
-_CONSULTA_PATH = "/wlpl/DEUD-DEUD/ConsultarDeudas"
+# The landing shapes are declared centrally, so no test module owns an AEAT
+# route literal, and the origin comes from the configured AEAT domain rather
+# than a pinned host number.
+_PAYMENT_SHAPED = tuple(aeat_url("www6", path) for path in DEUDAS_PAYMENT_SURFACE_PATH_SHAPE_CANARIES)
+_READ_SHAPED = tuple(aeat_url("www6", path) for path in DEUDAS_READ_SURFACE_PATH_SHAPE_CANARIES)
 
-_PAYMENT_SHAPED = (
-    aeat_url("www6", "/wlpl/DEUD-DEUD/PagarTodasDeudas"),
-    aeat_url("www6", "/wlpl/DEUD-DEUD/PagarAlgunasDeudas"),
-    aeat_url("www6", "/wlpl/DEUD-DEUD/PagoParcial"),
-    aeat_url("www6", "/wlpl/RECA-JDIT/SolicitarAplazamiento"),
-    aeat_url("www6", "/wlpl/RECA-JDIT/AplazamientoFraccionamiento"),
-)
-
-_READ_SHAPED = (
-    aeat_url("www6", _CONSULTA_PATH),
-    aeat_url("www6", "/wlpl/DEUD-DEUD/DetalleDeuda"),
-)
-
-_UNREADABLE = ("", "about:blank", _CONSULTA_PATH, None)
+# A relative path has no establishable origin, which is its own refusal reason.
+_UNREADABLE = ("", "about:blank", DEUDAS_CONSULTA_PATH_SHAPE_CANARY, None)
 
 
 def test_the_allow_list_ships_empty() -> None:
@@ -89,7 +82,7 @@ def test_a_landing_with_no_establishable_origin_is_refused(landing: str | None) 
 def test_an_off_host_landing_is_refused() -> None:
     """An authenticated session is never followed off the AEAT apex."""
     with pytest.raises(SedeNavigationError):
-        assert_deudas_landing("https://deudas-agenciatributaria.example.com/ConsultarDeudas")
+        assert_deudas_landing(DEUDAS_OFF_HOST_LANDING_CANARY)
 
 
 def test_the_guard_discriminates_on_the_allow_list_and_not_on_something_else() -> None:
@@ -103,7 +96,7 @@ def test_the_guard_discriminates_on_the_allow_list_and_not_on_something_else() -
     property under test, rather than by a host rejection or a broken policy
     that would refuse no matter what.
     """
-    permitted_prefix = _CONSULTA_PATH
+    permitted_prefix = DEUDAS_CONSULTA_PATH_SHAPE_CANARY
 
     assert_read_landing(
         aeat_url("www6", permitted_prefix),

@@ -78,6 +78,38 @@ CENSAL_WRITE_SURFACE_PATH_CANARIES = (
     CENSAL_MODIF_DOMICILIO_NOTIF_PATH_CANARY,
     CENSAL_M036_FILING_TOOL_PATH_CANARY,
 )
+# The debts-consulta landing shapes the deudas read guard must refuse.
+#
+# UNLIKE the censal canaries above, these are SHAPED, not observed: no specimen
+# of AEAT's "Consultar deudas" surface exists in this tree, so each stands for a
+# KIND of landing rather than a path anyone has captured. They are declared here
+# so the guard's proof can name the landings that would cost a taxpayer money
+# without any test module owning an AEAT route literal of its own.
+#
+# The payment shapes are the reason the guard's allow-list ships empty. The
+# canonical write-verb token scan catches literal "pagar", so the first two
+# would be refused by policy alone -- but "PagoParcial",
+# "SolicitarAplazamiento" and "AplazamientoFraccionamiento" carry no token the
+# scan knows, and the empty allow-list is the only thing that refuses them.
+DEUDAS_CONSULTA_PATH_SHAPE_CANARY = "/wlpl/DEUD-DEUD/ConsultarDeudas"
+DEUDAS_DETALLE_PATH_SHAPE_CANARY = "/wlpl/DEUD-DEUD/DetalleDeuda"
+DEUDAS_PAGAR_TODAS_PATH_SHAPE_CANARY = "/wlpl/DEUD-DEUD/PagarTodasDeudas"
+DEUDAS_PAGAR_ALGUNAS_PATH_SHAPE_CANARY = "/wlpl/DEUD-DEUD/PagarAlgunasDeudas"
+DEUDAS_PAGO_PARCIAL_PATH_SHAPE_CANARY = "/wlpl/DEUD-DEUD/PagoParcial"
+DEUDAS_APLAZAMIENTO_PATH_SHAPE_CANARY = "/wlpl/RECA-JDIT/SolicitarAplazamiento"
+DEUDAS_FRACCIONAMIENTO_PATH_SHAPE_CANARY = "/wlpl/RECA-JDIT/AplazamientoFraccionamiento"
+DEUDAS_PAYMENT_SURFACE_PATH_SHAPE_CANARIES = (
+    DEUDAS_PAGAR_TODAS_PATH_SHAPE_CANARY,
+    DEUDAS_PAGAR_ALGUNAS_PATH_SHAPE_CANARY,
+    DEUDAS_PAGO_PARCIAL_PATH_SHAPE_CANARY,
+    DEUDAS_APLAZAMIENTO_PATH_SHAPE_CANARY,
+    DEUDAS_FRACCIONAMIENTO_PATH_SHAPE_CANARY,
+)
+DEUDAS_READ_SURFACE_PATH_SHAPE_CANARIES = (
+    DEUDAS_CONSULTA_PATH_SHAPE_CANARY,
+    DEUDAS_DETALLE_PATH_SHAPE_CANARY,
+)
+DEUDAS_OFF_HOST_LANDING_CANARY = "https://deudas-lookalike.example.com/ConsultarDeudas"
 ACCESO_DR_DETAIL_PATH_FIXTURE = "/wlpl/DASR-CORE/AccesoDR2023RVlt"
 KATA_COTEJO_ID_PATH_FIXTURE = "/wlpl/KATA-APLI/cotejo/CotejoIdSv"
 KATA_COTEJO_DOC_ID_PATH_FIXTURE = "/wlpl/KATA-APLI/cotejo/CotejoDocIdSv"
@@ -230,6 +262,16 @@ __all__ = [
     "CITATION_SEDE_HTTP_DOWNGRADE_URL_CANARY",
     "CITATION_SEDE_LOOKALIKE_HOST_URL_CANARY",
     "CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED",
+    "DEUDAS_APLAZAMIENTO_PATH_SHAPE_CANARY",
+    "DEUDAS_CONSULTA_PATH_SHAPE_CANARY",
+    "DEUDAS_DETALLE_PATH_SHAPE_CANARY",
+    "DEUDAS_FRACCIONAMIENTO_PATH_SHAPE_CANARY",
+    "DEUDAS_OFF_HOST_LANDING_CANARY",
+    "DEUDAS_PAGAR_ALGUNAS_PATH_SHAPE_CANARY",
+    "DEUDAS_PAGAR_TODAS_PATH_SHAPE_CANARY",
+    "DEUDAS_PAGO_PARCIAL_PATH_SHAPE_CANARY",
+    "DEUDAS_PAYMENT_SURFACE_PATH_SHAPE_CANARIES",
+    "DEUDAS_READ_SURFACE_PATH_SHAPE_CANARIES",
     "FILED_ARTEFACT_PATH_FIXTURE",
     "JUSTIFICANTE_AYUDA_PATH_FIXTURE",
     "JUSTIFICANTE_COTEJO_PATH_PREFIX_FIXTURE",
