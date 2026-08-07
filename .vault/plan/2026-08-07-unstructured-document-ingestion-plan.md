@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:9ea6e10926664a3a553a3d16cf171690409e12d625c21be9e84248dc62bd5a1f'
+body_hash: 'sha256:1312bb0cb472ad7385ac5288763bf69b5c1c40ac4c8be6c580c9d797d0da8176'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -92,6 +92,9 @@ Lands the anchored candidate schema and the local extraction surface, and record
 - [ ] `W02.P05.S87` - Compile the statutory legend vocabulary from RD 1619/2012 art. 6.1 mandated mentions as prompt data with the instruction to copy verbatim if printed and never to choose one, gated by extending the anti-drift literal scan so the legend set carries no hardcoded prose literal outside its single home, proven by mutation in both directions; `src/cadrumo/llm`.
 - [ ] `W02.P05.S88` - Build the deterministic model-free classifier downstream of grounding that derives IvaCategory from the transcribed legend plus the per-rate breakdown plus counterparty establishment plus direction, recording its input set in the provenance envelope under a new DERIVED origin member, deriving only where signals are decisive and treating an unstated counterparty country as unknown rather than domestic, gated by model-free classification tests; `src/cadrumo/application/ledger`.
 - [ ] `W02.P05.S90` - Add the classification fixture pair proving the reverse-charge path where a legend is present with no repercutido line and the category derives, and the contradiction path where a legend sits beside a repercutido line and a blocking finding fires, driven through the loopback reader with no model, plus a retencion regression fixture proving the response slot survives to the draft; `src/cadrumo/application/ledger/tests`.
+- [ ] `W02.P05.S94` - Carry the printed currency code from the invoice draft through confirm into the ledger transaction so a foreign-currency invoice is recognisable as foreign rather than defaulting to euro, gated by a fixture invoice printing a non-euro code and an assertion that the stored transaction reports that currency, mutation-proven by dropping the carry and confirming the row is no longer distinguishable from a euro one; `src/cadrumo/application/ledger`.
+- [ ] `W02.P05.S95` - Populate the euro equivalent at confirm for a foreign-currency invoice from a dated grounded rate carrying its source and rate date in the provenance envelope, refusing rather than inventing a rate when none is available for the invoice date, since a non-euro row with no euro equivalent is gated out of aggregation as unsupported currency and silently leaves the modelo totals, gated by a refusal test with a positive control proving a rated conversion reaches the casilla projection; `src/cadrumo/application/ledger`.
+- [ ] `W02.P05.S96` - Prove the reading path on non-Spanish invoices by extending the bundled corpus fixtures to at least one intra-community invoice whose labels and regime legend are printed in another official EU language, asserting the reader recovers base, cuota, both parties and the legend without any Spanish label appearing on the document, so the field contract is shown to be language-independent rather than assumed to be; `src/cadrumo/application/ledger/tests`.
 
 ### Phase `W02.P06` - S3 grounding and the regex deletion
 
