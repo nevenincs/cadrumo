@@ -225,8 +225,12 @@ def _related_lines(
     the exact surface the glossary entry claims.
     """
     relation_lines: list[str] = []
-    for name, ids in (("broader", concept.broader), ("related", concept.related)):
-        label = docs_chrome(f"docs.glossary.entry.{name}", language)
+    # Spelled out at the call, not passed through a variable: the locale
+    # scanner reads call sites, and a key it cannot see is a key scaffold prunes.
+    for label, ids in (
+        (docs_chrome("docs.glossary.entry.broader", language), concept.broader),
+        (docs_chrome("docs.glossary.entry.related", language), concept.related),
+    ):
         refs = [f":term:`{headwords[ref]}`" for ref in ids if ref != concept.concept_id and ref in headwords]
         if refs:
             relation_lines.append(f"{body_indent}* {label}: {', '.join(refs)}")
