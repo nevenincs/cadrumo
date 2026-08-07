@@ -440,3 +440,25 @@ class TestTheReadingPathSuppliesNoManufacturedRoleEvidence:
 
         assert resolution.resolved == "B12345674"
         assert resolution.provenance.grounding is FieldGroundingOutcome.ANCHORED
+
+    def test_the_no_role_evidence_fallback_note_finally_renders(self) -> None:
+        """That message was unreachable while every candidate carried manufactured evidence.
+
+        Two identifiers both verify and neither is evidenced, so both are
+        surfaced as competing rather than one being promoted. The note on each
+        is the fallback branch, which could not render before: the ``or``
+        supplying it was always short-circuited by the synthesised string.
+        """
+        resolution = resolve_counterparty_identity(
+            field="supplier_tax_id",
+            candidates=self._candidates(supplier_tax_id="B12345674", customer_tax_id="A82645177"),
+            taxpayer_tax_id=None,
+            origin=FieldOrigin.TEXT_LAYER,
+        )
+
+        assert resolution.resolved is None
+        assert resolution.provenance.candidates, "both identifiers must be surfaced, not silently dropped"
+        assert all(
+            candidate.note == "no role evidence distinguishes this identifier"
+            for candidate in resolution.provenance.candidates
+        )
