@@ -75,6 +75,7 @@ class BucketSession:
         "_bucket_id",
         "_dek_buffer",
         "_engine",
+        "_hmac_subkeys",
         "_idle_deadline",
         "_idle_window",
         "_kek_available",
@@ -116,6 +117,14 @@ class BucketSession:
         # for why the scope is the session and not the process, and why one
         # entry was not enough.
         self._routed_settings: dict[str, Settings] = {}
+        # Per-context HKDF sub-key memo behind :meth:`hmac_subkey`. Session-
+        # scoped for the same reason as the routed-settings memo: the values
+        # are derived from this bucket's DEK, so a process-lifetime cache
+        # would be bucket-scoped state outliving a bucket switch. Cleared on
+        # :meth:`close`, with the same best-effort caveat as the ``dek``
+        # property: the cached values are immutable ``bytes`` the language
+        # cannot wipe in place.
+        self._hmac_subkeys: dict[bytes, bytes] = {}
         # Registered at construction, not at binding: a session owns key buffers
         # from this point on, and the emergency-zeroisation path must cover it
         # whether or not it is ever bound to a context (and whichever thread
@@ -335,6 +344,40 @@ class BucketSession:
             raise BucketLockedError(bucket_id=self._bucket_id)
         return bytes(self._dek_buffer)
 
+    def hmac_subkey(self, context: bytes) -> bytes:
+        """Return the HKDF-SHA256 sub-key of this session's DEK for ``context``, memoised.
+
+        The keyed-lookup digest recipe (HKDF sub-key, then HMAC-SHA256 of the
+        material) re-derived the sub-key on every call, yet the derivation
+        depends only on ``(DEK, context)`` — both constant for the session's
+        life. On the secure-object write path that derivation ran several
+        times per row and dominated the crypto budget. Memoising it here
+        follows the :meth:`routed_settings` precedent: the value is
+        bucket-scoped, so its cache must live and die with the session that
+        owns the bucket, never at module scope. Distinct ``context`` values
+        yield cryptographically independent sub-keys, so entries cannot
+        collide across consumers.
+
+        Args:
+            context: Stable per-consumer HKDF info bytes distinguishing this
+                digest space from every other caller's.
+
+        Returns:
+            The 32-byte derived sub-key.
+
+        Raises:
+            BucketLockedError: When the session has already been sealed.
+        """
+        if self._sealed:
+            raise BucketLockedError(bucket_id=self._bucket_id)
+        cached = self._hmac_subkeys.get(context)
+        if cached is None:
+            from ..crypto import derive_key
+
+            cached = derive_key(key_material=bytes(self._dek_buffer), salt=b"", context=context)
+            self._hmac_subkeys[context] = cached
+        return cached
+
     def touch(self, now: datetime) -> None:
         """Roll the idle deadline forward to `now + idle_window`, clamped to the cap.
 
@@ -507,6 +550,7 @@ class BucketSession:
         _zeroise(self._dek_buffer)
         self._sealed = True
         self._routed_settings.clear()
+        self._hmac_subkeys.clear()
         self._dispose_engine()
 
     def _dispose_engine(self) -> None:
