@@ -2008,6 +2008,25 @@ cli:
         confirm_resolve_help: 'Responda un hallazgo bloqueante: <id-hallazgo>=<choose|supply|attest>:<valor-o-motivo>.
           Repita por cada hallazgo; no existe una opcion masiva.'
         confirm_taxable_base_help: Sobrescribe la base imponible extraida.
+        consent:
+          bytes_unrecallable: 'Retirar el consentimiento detiene los envíos futuros.
+            No permite recuperar los bytes ya enviados: esta aplicación no puede recuperarlos
+            ni borrarlos del proveedor. Volver a derivar en local elimina la lectura
+            externa de sus registros actuales, pero no de los del proveedor.'
+          content_address_help: Dirección de contenido SHA-256 de los bytes almacenados
+            del documento.
+          evidence_reference_help: Identificador de la evidencia o del adjunto que
+            se va a volver a derivar.
+          group_help: Revise qué se envió a un modelo externo y recupere los artefactos
+            en este equipo.
+          list_help: Muestre cada envío externo y los artefactos derivados de él.
+          rederive_help: Vuelva a leer un artefacto en este equipo desde su transcripción
+            almacenada.
+          rederive_refused: 'Nueva derivación rechazada: {detail}'
+          rederived: Se ha vuelto a derivar {reference} en este equipo. Antes tenía
+            {previous}; ahora tiene {current}. La lectura anterior queda sustituida,
+            no borrada.
+          transcriber_help: Clave de caché de la transcripción que se reutilizará.
         evidence_id_help: Identificador del justificante (coincidencia exacta)
         extract_attachment_id_help: Identificador del adjunto vinculado del que extraer
           los datos (alternativa a --evidence-id).

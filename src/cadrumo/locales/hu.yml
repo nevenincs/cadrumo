@@ -1939,6 +1939,25 @@ cli:
         confirm_resolve_help: 'Valaszoljon meg egy blokkolo eszrevetelt: <eszrevetel-azonosito>=<choose|supply|attest>:<ertek-vagy-indok>.
           Eszrevetelenkent ismetelje; tomeges kapcsolo nincs.'
         confirm_taxable_base_help: Felülírja a kinyert adóalapot.
+        consent:
+          bytes_unrecallable: 'A hozzájárulás visszavonása megállítja a további küldést.
+            A már elküldött bájtokat nem hívja vissza: ez a program nem tudja azokat
+            a szolgáltatótól visszaszerezni vagy törölni. A helyi újraszármaztatás
+            a jelenlegi nyilvántartásából eltávolítja a gépen kívüli olvasást, a szolgáltatóéból
+            nem.'
+          content_address_help: A dokumentum tárolt bájtjainak SHA-256 tartalomcíme.
+          evidence_reference_help: Az újraszármaztatandó bizonylat vagy melléklet
+            azonosítója.
+          group_help: Tekintse át, mi került gépen kívüli modellhez, és állítsa vissza
+            az eredményeket helyben.
+          list_help: Sorolja fel az összes gépen kívüli küldést és az azokból származó
+            eredményeket.
+          rederive_help: Olvassa be újra az egyik eredményt ezen a gépen a tárolt
+            átiratból.
+          rederive_refused: 'Az újraszármaztatás elutasítva: {detail}'
+          rederived: A(z) {reference} újraszármaztatva ezen a gépen. Korábban {previous}
+            volt; most {current}. A korábbi olvasás felülírásra került, de nem törlődött.
+          transcriber_help: Az újrafelhasználandó átirat gyorsítótárkulcsa.
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
         extract_attachment_id_help: A kapcsolt melléklet azonosítója, amelyből az
           adatokat ki kell nyerni (a --evidence-id alternatívája).

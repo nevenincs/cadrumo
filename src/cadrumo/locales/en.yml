@@ -1864,6 +1864,21 @@ cli:
         confirm_resolve_help: 'Answer one blocking finding: <finding-id>=<choose|supply|attest>:<value-or-reason>.
           Repeat once per finding; there is no bulk flag.'
         confirm_taxable_base_help: Override the extracted taxable base.
+        consent:
+          bytes_unrecallable: 'Withdrawing consent stops future transmission. It cannot
+            recall bytes already sent: this product has no way to retrieve or delete
+            them from the provider. Re-deriving locally removes the cloud read from
+            your current records, but not from the provider''s.'
+          content_address_help: SHA-256 content address of the document's stored bytes.
+          evidence_reference_help: Evidence or attachment id of the artefact to re-derive.
+          group_help: Review what was sent to an off-host model, and bring artefacts
+            back on-host.
+          list_help: List every off-host dispatch and the artefacts derived from one.
+          rederive_help: Re-read one artefact on this host from its cached transcription.
+          rederive_refused: 'Re-derivation refused: {detail}'
+          rederived: Re-derived {reference} on this host. It previously carried {previous};
+            it now carries {current}. The earlier reading is superseded, not erased.
+          transcriber_help: Cache key of the transcription to reuse.
         evidence_id_help: Evidence id (exact match)
         extract_attachment_id_help: Linked attachment id to extract from (alternative
           to --evidence-id).

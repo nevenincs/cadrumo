@@ -1998,6 +1998,25 @@ cli:
         confirm_resolve_help: 'Respongueu una troballa blocant: <id-troballa>=<choose|supply|attest>:<valor-o-motiu>.
           Repetiu-ho per cada troballa; no hi ha cap opcio massiva.'
         confirm_taxable_base_help: Sobreescriu la base imposable extreta.
+        consent:
+          bytes_unrecallable: 'Retirar el consentiment atura els enviaments futurs.
+            No permet recuperar els bytes ja enviats: aquesta aplicació no els pot
+            recuperar ni esborrar del proveïdor. Tornar a derivar en local elimina
+            la lectura externa dels vostres registres actuals, però no dels del proveïdor.'
+          content_address_help: Adreça de contingut SHA-256 dels bytes desats del
+            document.
+          evidence_reference_help: Identificador de l'evidència o de l'adjunt que
+            es tornarà a derivar.
+          group_help: Reviseu què s'ha enviat a un model extern i recupereu els artefactes
+            en aquest equip.
+          list_help: Mostreu cada enviament extern i els artefactes que se'n deriven.
+          rederive_help: Torneu a llegir un artefacte en aquest equip des de la seva
+            transcripció desada.
+          rederive_refused: 'Nova derivació rebutjada: {detail}'
+          rederived: S'ha tornat a derivar {reference} en aquest equip. Abans tenia
+            {previous}; ara té {current}. La lectura anterior queda substituïda, no
+            esborrada.
+          transcriber_help: Clau de memòria cau de la transcripció que es reutilitzarà.
         evidence_id_help: Identificador del justificant (coincidència exacta)
         extract_attachment_id_help: Identificador de l'adjunt vinculat del qual extreure
           les dades (alternativa a --evidence-id).
