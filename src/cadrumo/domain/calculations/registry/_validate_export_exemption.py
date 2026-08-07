@@ -31,6 +31,24 @@ there would be authoring noise over a set the gate never consults. The gate
 tightens exactly where the stakes rise: mark such a casilla ``required`` and it
 must justify its exemption from that moment.
 
+The scan is casilla-keyed, and that is a blind spot in the instrument
+-------------------------------------------------------------------
+
+"No record addresses it" means no record addresses it BY CASILLA ID. A
+``BINDING``-kind export field names the binding, not the casilla, so a value the
+export genuinely writes at a declared offset is invisible to this scan and looks
+exactly like one AEAT never prints. Modelo 720's ejercicio (design positions
+5-8) and declaración complementaria/sustitutiva (121-122) are both written that
+way, and reading their names alone suggests the opposite conclusion.
+
+So a refusal from this gate is a question, not a verdict: it says the exemption
+is undeclared, never that the casilla is unrepresentable. Answering it means
+reading the record design AND the bindings —
+:attr:`~core.ExportExemptionReason.FILED_VIA_BINDING_FIELD` exists precisely
+because the honest answer is sometimes "it is filed, just not through a casilla
+address". The refusal message repeats this warning, because that is where an
+author actually lands.
+
 This is deliberately NOT a cross-check of casilla numbers against the bundled
 Diseño de Registros. That check is not yet viable — Modelo 390 alone would emit
 hundreds of false positives against the current parser — and a gate keyed on a
@@ -193,10 +211,14 @@ def validate_export_exemption_declarations(
             f"{prefix}: casilla {casilla.id!r} is in the completeness manifest and would be "
             f"required by the fichero-BOE completeness gate ("
             f"{'declares a formula' if casilla.formula is not None else 'is required'}), but no "
-            f"fixed-width export record addresses it and it declares neither internal_only nor "
-            f"export_exemption_reason. Exemption from that gate must be declared, not left to "
-            f"absence: annotate the casilla with the reason it files no slot, or give it the "
-            f"export field it is missing",
+            f"fixed-width export record addresses it BY CASILLA ID and it declares neither "
+            f"internal_only nor export_exemption_reason. Exemption from that gate must be declared, "
+            f"not left to absence: annotate the casilla with the reason it files no slot, or give it "
+            f"the export field it is missing. Before concluding it is not representable, check the "
+            f"record design and the bindings: this scan is casilla-keyed and CANNOT see a "
+            f"BINDING-kind field, so a value the export really does write at a declared offset "
+            f"looks identical here to one AEAT never prints "
+            f"({ExportExemptionReason.FILED_VIA_BINDING_FIELD.value!r} is the reason for that case)",
         )
 
 
