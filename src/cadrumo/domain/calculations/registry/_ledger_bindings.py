@@ -1292,6 +1292,59 @@ def _renta_ledger_gastos_pago_fraccionado_selector(
         ) from exc
 
 
+class _ReachabilityProbeObservation(NamedTuple):
+    """Minimal structural instance of :class:`RentaGastosPagoFraccionadoObservationProtocol`.
+
+    Not a test double: this is production code, called at registry-build
+    time, constructing the smallest object that satisfies the registry's
+    own declared Protocol. It exists so the reachability probe below never
+    needs to import the concrete
+    :class:`~cadrumo.application.aggregation._renta_gasto_ledger.RentaGastoObservation`
+    -- doing so would have domain code depend on the application layer,
+    the wrong hexagonal direction (`aeat-architecture-boundaries`). The
+    Protocol is exactly the seam that makes this substitution legitimate:
+    the resolver's matcher only ever reads the two declared attributes.
+    """
+
+    target_casilla_id: CasillaId
+    deductible_amount: Decimal
+
+
+def _renta_gastos_pago_fraccionado_reachability_probe(
+    selector: _RentaLedgerGastosPagoFraccionadoSelector,
+) -> None:
+    """Assert the selector matches at least one constructible observation shape.
+
+    Constructs a synthetic minimal observation from the selector's own
+    declared ``target_casilla_id`` and runs it through the real matcher this
+    family's resolver builds
+    (:func:`_renta_gastos_pago_fraccionado_build_matcher`) -- not a
+    reimplementation of the match rule, the same one production calculate
+    and this probe both call. A selector whose matcher accepts no
+    constructible shape is a defect no runtime ledger data can ever
+    surface: the binding would aggregate to zero forever, indistinguishable
+    from a taxpayer with no gasto deducible that period.
+
+    This is a REACHABILITY probe only, and deliberately narrow. It proves
+    the selector CAN match a shape built from its own declared fields; it
+    never touches real ledger data and so cannot prove real data DOES
+    match, and it cannot catch a matcher that accepts the wrong rows or a
+    resolver that aggregates matched rows incorrectly -- both are outside
+    what a build-time, data-free check can observe.
+    """
+    matcher = _renta_gastos_pago_fraccionado_build_matcher(selector)
+    probe = _ReachabilityProbeObservation(
+        target_casilla_id=selector.target_casilla_id,
+        deductible_amount=Decimal("1.00"),
+    )
+    if not matcher(probe):
+        raise RegistryValidationError(
+            f"ledger_renta_gastos_pago_fraccionado_aggregation binding target_casilla_id "
+            f"{selector.target_casilla_id!r} matches no constructible observation shape -- "
+            "the binding can never resolve a value from any ledger data",
+        )
+
+
 def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition(
     binding: DataBindingDefinition,
 ) -> None:
@@ -1317,6 +1370,10 @@ def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition
             f"binding {binding.id!r} ledger_renta_gastos_pago_fraccionado_aggregation supports only "
             f"fact 'deductible_amount_sum', got {selector.fact!r}",
         )
+    try:
+        _renta_gastos_pago_fraccionado_reachability_probe(selector)
+    except RegistryValidationError as exc:
+        raise RegistryValidationError(f"binding {binding.id!r} {exc}") from exc
 
 
 def _renta_gastos_pago_fraccionado_build_matcher(
