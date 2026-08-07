@@ -4,7 +4,7 @@ tags:
   - '#modelo-iva-routing-carry'
 date: '2026-06-09'
 modified: '2026-08-07'
-body_hash: 'sha256:b5a4cb26930cea8d9754c0240931660985fab40aef95efa5a12d986f1d4b61ec'
+body_hash: 'sha256:8b2d30e41657c0e68943ca126bce87561a51c4948c51a93f6ba1e5d286d222ea'
 related:
   - "[[2026-06-09-modelo-iva-routing-carry-research]]"
 ---
@@ -164,13 +164,21 @@ Three confirmations, ascending in strength.
   annual devengada against the summed quarters, so the two surfaces disagree about where
   the same money belongs. Both readings cannot be right in one codebase.
 
-**This amendment corrects the Considerations inventory above.** That list names eight
-LIVA articles absent from the catalogue and corpus, and art. 85 is not among them. Art.
-85 establishes the taxable person for adquisiciones intracomunitarias and is therefore
-the binding provision any re-routed AIC binding must cite. It is absent from both the
-bundled corpus and the legal catalogue, so the gate that Tier 2 already imposes now
-covers nine articles, not eight. The re-route must not ship before art. 85 lands with
-real BOE text and a `required_text` cross-check, per the grounding constraint above.
+**The Tier 2 grounding gate above is now satisfied, and this amendment's first draft
+said the opposite.** That draft asserted art. 85 was absent from the catalogue and the
+corpus and that the gate had grown to nine articles; both claims were false and are
+withdrawn. They came from searching the catalogue for `id = "..."` when it declares
+entries as `[legal."..."]` table headers, which returns a false absence rather than an
+error. Measured through the live resolver instead: art. 85 is present, its `corpus_ref`
+resolves against the bundled consolidated LIVA, and both its `required_text` phrases
+pass, with an art. 84 phrase correctly failing to resolve inside art. 85's unit as a
+negative control. The same check over the eight articles the Considerations names as
+missing finds all eight present and resolving. **Tier 2 is no longer grounding-gated for
+this routing.** Art. 85 remains the correct provision to cite, being the one that
+establishes the taxable person for adquisiciones intracomunitarias, and its catalogue
+entry is stamped `reviewed_by = "agent-review"` rather than as operator-reviewed, so a
+filing-grade human review of that entry is still outstanding even though the mechanical
+gate passes.
 
 **Two residues recorded here are cross-modelo, not Modelo 390 problems.** Both were
 first measured on Modelo 390 and both are equally true of Modelo 303, so an
