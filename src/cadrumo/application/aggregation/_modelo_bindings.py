@@ -1225,6 +1225,27 @@ def _raise_if_invoice_iva_would_be_silent(
     )
 
 
+def _line_contributes_to_the_iva_screen(base_amount: Decimal, iva_amount: Decimal) -> bool:
+    """Return whether one invoice line has anything the IVA screen can declare.
+
+    A line contributes when it carries a base OR a cuota. Screening on the cuota
+    alone reads as a sensible "nothing to declare" filter and is not one: an
+    exempt operation (LIVA art. 20), an intra-community supply (art. 25) and an
+    issued-side reverse charge all carry a real base with a cuota that is zero
+    BY LAW. The component table says so outright -- both categories are
+    ``base=required, cuota=zero_by_law`` -- and Modelo 303 declares those bases
+    in its own base-only casillas.
+
+    So a cuota-only filter dropped exactly the lines whose base was the only
+    thing they were ever going to contribute, and the declaration understated
+    the exempt base by the whole amount with nothing reporting it.
+
+    A line carrying neither is the only shape that genuinely contributes
+    nothing, and is the only one this predicate declines.
+    """
+    return base_amount > Decimal("0") or iva_amount > Decimal("0")
+
+
 def _screened_invoice_iva_observations(
     *,
     context: CalculationSourceContext,
@@ -1248,7 +1269,7 @@ def _screened_invoice_iva_observations(
         recargo_line_index = _sole_recargo_bearing_line_index(invoice)
         contributed = False
         for line_index, line in enumerate(invoice.lines):
-            if line.iva_amount <= Decimal("0"):
+            if not _line_contributes_to_the_iva_screen(line.subtotal, line.iva_amount):
                 continue
             observations.append(
                 invoice_line_to_iva_observation(
