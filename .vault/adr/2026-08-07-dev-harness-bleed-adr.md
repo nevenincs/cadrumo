@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:b3c8f06ddb83cca31238958960ea5e79931ef1b0eb028c1209ae418514a22fa3'
+body_hash: 'sha256:da8ebd16102ec0b78f6ad44bd61e5e5a87676faa9dbd98d83cc9478f5020dfbd'
 related:
   - '[[2026-08-07-dev-harness-bleed-research]]'
   - '[[2026-06-14-docs-tooling-separation-adr]]'
@@ -256,7 +256,7 @@ executable on its own: the subclass hook refuses a `CadrumoError` subclass with
 no registry row, so deleting the row first breaks import. The reparenting step is
 therefore part of the decision, not an implementation detail. It is
 behaviour-preserving: every real catcher names `LocaleError` explicitly
-(`manager.py:329`, `cli.py:139`, `:172`, `:197`, `:214`, `:233`), and the
+(`manager.py:333`, a tuple catch naming it, and `cli.py:139`, `:172`, `:197`, `:214`, `:233`), and the
 `except CadrumoError` sites sit on production paths that cannot raise it. C2
 remains rejected: it would mean inventing operator reachability for a contributor
 tool.
