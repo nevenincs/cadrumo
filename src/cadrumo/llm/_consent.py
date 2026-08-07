@@ -73,7 +73,7 @@ def provider_reads_off_host(provider: LLMProvider) -> bool:
     return provider is not LLMProvider.LOCAL
 
 
-def cloud_evidence_read_permitted(settings: Settings, *, acknowledged: bool) -> bool:
+def cloud_evidence_read_permitted(settings: Settings, *, profile_eligible: bool, acknowledged: bool) -> bool:
     """Whether an off-host read of taxpayer evidence is permitted for THIS invocation.
 
     On-host reading is always permitted and is the default; this gate governs
@@ -82,24 +82,39 @@ def cloud_evidence_read_permitted(settings: Settings, *, acknowledged: bool) -> 
 
     1. Gestor/professional mode is OFF (``settings.cadrumo_evidence_gestor_mode``
        is ``False``). An absolute, categorical bar: a gestor deployment never
-       transmits a client's document regardless of the other two conditions.
+       transmits a client's document regardless of the other three conditions.
     2. The deployment has opted in
        (``settings.cadrumo_evidence_cloud_upload_permitted`` is ``True``).
-    3. The operator acknowledged this specific invocation (``acknowledged`` is
+    3. The ACTIVE PROFILE carries the standing eligibility bar
+       (``profile_eligible``), resolved by
+       :func:`~application.user_profile.cloud_evidence_upload_eligible_for_active_profile`.
+       Deployment opt-in and profile eligibility are separate questions: one
+       machine can serve several taxpayers, and one of them permitting an
+       off-host read must not decide it for the others.
+    4. The operator acknowledged this specific invocation (``acknowledged`` is
        ``True``). The acknowledgement is never sticky; it must be re-affirmed at
        every call.
 
+    ``profile_eligible`` is a REQUIRED keyword with no default, deliberately: a
+    defaulted bar is one a caller can forget, and forgetting this one would
+    reinstate exactly the machine-wide posture condition 3 exists to split.
+    Omitting it is a :exc:`TypeError` at the call site rather than an open door.
+
     Args:
         settings: Resolved deployment settings carrying the consent posture.
+        profile_eligible: Whether the active profile's standing eligibility bar
+            is on.
         acknowledged: Whether the operator acknowledged the off-host read for
             this specific invocation.
 
     Returns:
-        ``True`` only when all three conditions above hold.
+        ``True`` only when all four conditions above hold.
     """
     if settings.cadrumo_evidence_gestor_mode:
         return False
     if not settings.cadrumo_evidence_cloud_upload_permitted:
+        return False
+    if not profile_eligible:
         return False
     return acknowledged
 
@@ -176,6 +191,7 @@ class EvidenceConsentToken(BaseModel):
 def mint_evidence_consent_token(
     *,
     settings: Settings,
+    profile_eligible: bool,
     acknowledged: bool,
     surface: str,
     evidence_content_address: str,
@@ -186,8 +202,16 @@ def mint_evidence_consent_token(
     :func:`cloud_evidence_read_permitted` first, so a token cannot exist for an
     invocation the gate refused.
 
+    Because this is the sole minting path, routing the per-profile eligibility
+    bar through it is what makes "while the bar is off, no surface offers the
+    consent gate" true by construction rather than by convention. A surface that
+    forgot to hide its prompt would still obtain no token, so the operator can
+    be misled at most into an acknowledgement that changes nothing.
+
     Args:
         settings: Resolved deployment settings carrying the consent posture.
+        profile_eligible: The active profile's standing eligibility bar, from
+            :func:`~application.user_profile.cloud_evidence_upload_eligible_for_active_profile`.
         acknowledged: Whether the operator acknowledged this specific read.
         surface: Operator surface that took the acknowledgement.
         evidence_content_address: SHA-256 content address of the evidence.
@@ -196,11 +220,11 @@ def mint_evidence_consent_token(
         A token satisfying the dispatch-point gate for this invocation.
 
     Raises:
-        LLMConsentError: When the deployment posture or the missing
-            acknowledgement refuses the read. The refusal is localized and
-            names what the operator would do to proceed.
+        LLMConsentError: When the deployment posture, the profile's eligibility
+            bar, or the missing acknowledgement refuses the read. The refusal is
+            localized and names what the operator would do to proceed.
     """
-    if not cloud_evidence_read_permitted(settings, acknowledged=acknowledged):
+    if not cloud_evidence_read_permitted(settings, profile_eligible=profile_eligible, acknowledged=acknowledged):
         raise LLMConsentError(
             tr(_MINT_REFUSAL_LOCALE_KEY),
             suggestion=tr(EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY),

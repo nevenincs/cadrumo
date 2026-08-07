@@ -15,6 +15,7 @@ from ...application.ledger import (
     confirm_invoice_draft_from_evidence,
     extract_invoice_draft_from_evidence,
 )
+from ...core import IntracomOperationType
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.invoices import InvoiceValidationError
@@ -31,6 +32,7 @@ from ._common import (
 )
 from ._evidence_field_notices import field_degradation_notices
 from ._ledger_business_invoice_cli import _catalogue_invoice_shared_fields
+from ._ledger_evidence_batch_cli import register_evidence_batch_command
 from ._ledger_evidence_review_cli import parse_finding_resolution, register_evidence_review_commands
 from ._ledger_payloads import (
     EvidenceAddResult,
@@ -62,6 +64,7 @@ def register_evidence_commands(app: typer.Typer) -> None:
     _register_evidence_remove_command()
     _register_evidence_extract_command()
     _register_evidence_confirm_command()
+    register_evidence_batch_command(evidence_app)
     register_evidence_review_commands(evidence_app)
 
 
@@ -549,6 +552,18 @@ def _register_evidence_confirm_command() -> None:
                 default="ISO-4217 currency code overriding the one printed on the document.",
             ),
         ),
+        operation_type: IntracomOperationType | None = typer.Option(
+            None,
+            "--operation-type",
+            help=tr(
+                "cli.app.ledger.evidence.confirm_operation_type_help",
+                default=(
+                    "Modelo 349 clave for an entrega intracomunitaria. Required when the document "
+                    "states an intra-community supply: the category cannot say whether it followed "
+                    "an exempt importation."
+                ),
+            ),
+        ),
         notes: str = typer.Option(
             "",
             "--notes",
@@ -588,6 +603,7 @@ def _register_evidence_confirm_command() -> None:
             iva_rate=iva_rate,
             country_code=country_code,
             currency=currency,
+            operation_type=operation_type,
             notes=notes,
             resolve=resolve,
         )
@@ -607,6 +623,7 @@ def _run_evidence_confirm(
     iva_rate: str | None,
     country_code: str,
     currency: str | None,
+    operation_type: IntracomOperationType | None,
     notes: str,
     resolve: list[str],
 ) -> None:
@@ -634,6 +651,7 @@ def _run_evidence_confirm(
             taxable_base=parse_decimal_amount(taxable_base, label="taxable-base") if taxable_base else None,
             iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
             currency=currency,
+            operation_type=operation_type,
             notes=notes,
             resolutions=resolutions,
         )

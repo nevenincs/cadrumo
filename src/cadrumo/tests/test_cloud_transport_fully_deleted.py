@@ -13,13 +13,14 @@ is indistinguishable from cleaning the tree if only the final result is
 reported, so the symbol set is fixed in source, reviewable in a diff, and any
 future edit to it is a visible decision rather than an invisible one.
 
-**Three names left the deleted set, and that is such a decision.** Off-host
+**Four names left the deleted set, and that is such a decision.** Off-host
 reading of taxpayer evidence was re-sanctioned behind a reinstated consent
 gate over the in-memory HTTP providers -- never the subprocess family, which
 stays deleted permanently. ``cloud_evidence_read_permitted`` and the two
 deployment settings behind it therefore moved to
 ``_REINSTATED_CONSENT_SYMBOLS``, where they are asserted PRESENT and WIRED
-rather than absent. The move is only honest because the destination has teeth:
+rather than absent -- joined later by ``CLOUD_EVIDENCE_UPLOAD``, the per-profile
+eligibility bar, once the decision it was waiting on was taken. The move is only honest because the destination has teeth:
 a symbol removed from the sweep and merely forgotten would leave this file
 reading like a decision while the tree lost a guarantee.
 
@@ -54,10 +55,6 @@ _DELETED_CLOUD_SYMBOLS = (
     "is_llm_provider_available",
     "LLMProviderAvailability",
     "probe_subprocess_providers",
-    # The per-profile capability the gate once resolved through. Still deleted:
-    # the reinstated gate reads the deployment posture directly, and the
-    # per-profile eligibility bar is a separate, not-yet-built decision.
-    "CLOUD_EVIDENCE_UPLOAD",
     # The operator-facing surfaces. Still deleted: nothing mints a token yet, so
     # no CLI surface asks the operator for one.
     "evidence_acknowledged",
@@ -68,6 +65,12 @@ _REINSTATED_CONSENT_SYMBOLS = (
     "cloud_evidence_read_permitted",
     "cadrumo_evidence_cloud_upload_permitted",
     "cadrumo_evidence_gestor_mode",
+    # The per-profile eligibility bar. It moved out of the deleted set when the
+    # decision it was waiting on was taken: the standing bar now exists, is
+    # default-off and gestor-locked-off, and every consent-minting surface must
+    # read it. Its teeth are the dedicated eligibility gate under
+    # application/user_profile/tests, plus the wiring assertion below.
+    "CLOUD_EVIDENCE_UPLOAD",
 )
 
 _NEIGHBOURING_TRANSPORTS_THAT_MUST_SURVIVE = (SRC_CADRUMO / "entrypoints" / "mcp" / "_call_runtime.py",)
@@ -125,9 +128,9 @@ def test_the_declared_symbol_set_is_not_silently_emptied() -> None:
     empties or guts the symbol tuple would make the sweep pass over nothing
     while looking exactly like a green run.
     """
-    assert len(_DELETED_CLOUD_SYMBOLS) >= 13
+    assert len(_DELETED_CLOUD_SYMBOLS) >= 12
     assert "SubprocessLLMClassifier" in _DELETED_CLOUD_SYMBOLS
-    assert "CLOUD_EVIDENCE_UPLOAD" in _DELETED_CLOUD_SYMBOLS
+    assert "CLOUD_EVIDENCE_UPLOAD" in _REINSTATED_CONSENT_SYMBOLS
 
 
 def test_the_reinstated_consent_apparatus_exists_and_is_wired_at_the_choke_point() -> None:
@@ -147,6 +150,7 @@ def test_the_reinstated_consent_apparatus_exists_and_is_wired_at_the_choke_point
     import inspect
     import textwrap
 
+    from ..core import ServiceCapability
     from ..llm import cloud_evidence_read_permitted
     from ..llm._client import LLMClient
 
@@ -155,6 +159,11 @@ def test_the_reinstated_consent_apparatus_exists_and_is_wired_at_the_choke_point
         if symbol.startswith("cadrumo_"):
             assert symbol in settings_fields, f"{symbol} is claimed reinstated but Settings does not declare it"
     assert callable(cloud_evidence_read_permitted)
+    # The reinstated capability is a live enum member again, and it is the one
+    # that defaults OFF -- the property it was reinstated FOR. A member present
+    # but defaulting on would satisfy a mere membership check while removing the
+    # bar it names.
+    assert ServiceCapability.CLOUD_EVIDENCE_UPLOAD.default_enabled is False
 
     tree = ast.parse(textwrap.dedent(inspect.getsource(LLMClient.complete)))
     called = {

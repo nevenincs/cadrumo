@@ -979,7 +979,12 @@ def _pad(value: str, field: ExportFieldDefinition) -> str:
         return value.rjust(field.length, " ")
     if field.padding == "right_space":
         return value.ljust(field.length, " ")
-    return value
+    # ``padding = "none"`` still owes the slot its full width. A short return
+    # here is invisible on the positioned path, where the caller's
+    # space-prefilled buffer happens to backfill the remainder, but it shortens
+    # the record on the unpositioned path that concatenates rendered fields.
+    # Correctness must not rest on which assembly path a record takes.
+    return value.ljust(field.length, " ")
 
 
 def _mismatched_casilla_ids(

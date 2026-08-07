@@ -23,7 +23,12 @@ redacted :class:`UsageRecord` values to encrypted secure-object storage and
 produces :class:`UsageSummary` reports. :class:`LLMRunTelemetryRecorder`
 persists local-only :class:`LLMRunRecord` run-timing/outcome metadata (never
 prompt or response text) and produces :class:`LLMRunTelemetrySummary` reports,
-backing the ``aeat app diagnostics run-health`` operator surface. Strict model
+backing the ``aeat app diagnostics run-health`` operator surface.
+:class:`EvidenceConsentLedger` persists one :class:`EvidenceConsentLedgerEntry`
+per off-host evidence dispatch a consent token permitted -- the content
+address, provider, model and surface, never the bytes -- and is the only one of
+these four stores that refuses rather than degrading when its write fails.
+Strict model
 types include :class:`Translation` and transient :class:`MultimodalImageInput`,
 whose base64 bytes are not persisted; only content SHA participates in cache
 keys.
@@ -49,10 +54,13 @@ Examples:
 """
 
 from ._cache import LLMCache
+from ._consent_ledger import EvidenceConsentLedger, EvidenceConsentLedgerEntry
 from ._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder, LLMRunTelemetrySummary
 from ._usage import UsageRecorder
 
 __all__ = [
+    "EvidenceConsentLedger",
+    "EvidenceConsentLedgerEntry",
     "LLMCache",
     "LLMRunRecord",
     "LLMRunTelemetryRecorder",

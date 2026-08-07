@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:c1497ea6c6a27b2b481668c747cf8bc73c534a7b59b68f17c26d75c71266cd10'
+body_hash: 'sha256:60ccb25a54efde3d9d89930c6325c44645b907ea6435794339534dde71aa333b'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -653,6 +653,65 @@ D1's S4 sentence for `IvaCategory` specifically:
   under suggest-review-apply) is untouched; that surface classifies a
   transaction with operator review as the gate, not a transcription stage
   claiming exactness.
+
+**Ruling (second amendment): supply nature, and the completed input set.**
+The operator's correction is structural — IVA is determined by the goods
+or services supplied, the origin, the receptor and the entities trading —
+and measured against it the classifier's input set above was incomplete:
+it omitted the nature of the supply, which selects WHICH place-of-supply
+rules apply at all and therefore precedes origin and destination. The
+collision is real: a Spanish invoice frequently does not state whether it
+supplies goods or services, and deriving that from free-prose line
+descriptions is a classification act — a rule table over arbitrary prose
+is either trivially incomplete or a model wearing a lookup table. The
+ruling, four parts:
+
+- **Supply nature enters stage 2 only as anchorable printed evidence,
+  else UNKNOWN.** An explicit printed statement decides; so does a printed
+  statutory citation, deterministically: a legend citing art. 25 LIVA is a
+  goods exemption, art. 21 an export of goods, art. 69/70 a services
+  place-of-supply — the article number on the paper is a closed legal
+  vocabulary, anchorable, and maps by law, not by prose interpretation.
+  No other derivation is sanctioned: correlated signals (an IRPF
+  retención line suggests professional services but also attaches to 2 %
+  agricultural withholding) may feed contradiction detection, never
+  decide.
+- **The requirement is lazy, which bounds the assisted population.**
+  Supply nature is demanded only on the branches where the law forks on
+  it — the cross-border and reverse-charge families. A domestic operation
+  (both parties established in Spain, a registry rate charged) derives
+  its category identically for goods and services, so the commonest
+  population never asks the question. The honest product statement,
+  recorded rather than smoothed: on a cross-border document with no
+  decisive printed statement, the pipeline is assisted, not automated —
+  and that is correct, because the alternative is guessing the
+  place-of-supply of a foreign-currency invoice, which is
+  mis-declaration with confidence.
+- **When UNKNOWN on a branch that needs it:** the category stays ABSENT
+  with the review gate surfacing one resolvable item — the operator
+  states goods or services, an `OPERATOR`-provenance assertion the
+  classifier then consumes with its inputs recorded. A model MAY
+  pre-suggest the answer from the line descriptions through the accepted
+  suggest-review-apply channel — a cheap selection task within the
+  low-context budget — but the suggestion reaches the deterministic
+  classifier only after operator confirmation, so the classifier's
+  inputs remain facts, never model output.
+- **"Entities trading" completes the set with two further inputs.** The
+  counterparty's taxable-person status, evidence-derived: a printed
+  counterparty VAT identifier implies a taxable person (anchorable);
+  its absence reads UNKNOWN, never consumer — the simplified-ticket
+  population legitimately prints no recipient. And the taxpayer's own
+  censo-registered regime facts (recargo de equivalencia, régimen
+  status), consumed from the profile authority — system-authoritative
+  facts, not paper evidence, and recorded in the input envelope like
+  every other input. External registry verification of a counterparty id
+  (VIES) is named and deferred: it is a network authority this pipeline
+  does not consult.
+
+The place-of-supply mapping row this shapes cites LIVA separately for
+goods and services as registry data; under this ruling its branch
+selector is the supply-nature input, and its domestic branches must not
+demand what they do not need.
 
 ### D9 — Stage-by-stage measurement: the map from stage to oracle
 

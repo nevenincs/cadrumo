@@ -48,6 +48,7 @@ from ...core.decimal import coerce_decimal, normalize_decimal_separators, try_pa
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing import parse_iso8601_date
 from ...core.tabular import TabularSourceError, normalize_tabular_bytes
+from ...core.workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceValidationError
 from ...domain.iva import InvoiceKind
 from ._bulk_import_columns import (
@@ -428,17 +429,17 @@ def _read_delimited_source(path: Path, *, mapper: ColumnRoleMapper | None) -> Bu
     )
 
 
-def _refuse_formula_cells(cells: Iterable[object], *, path: Path, row_number: int) -> None:
+def _refuse_formula_cells(cells: Iterable[WorkbookCell], *, path: Path, row_number: int) -> None:
     """Refuse the book when any cell of *cells* states a formula instead of a value."""
-    for column_number, cell in enumerate(cells, start=1):
-        if getattr(cell, "data_type", None) != "f":
-            continue
-        raise InvoiceValidationError(
-            f"bulk invoice import file contains formula cell at row {row_number}, "
-            f"column {column_number}; formula cached values are not accepted",
-            translated_message="application.invoices.bulk_import.errors.formula_cell",
-            context={"path_name": path.name, "row": str(row_number), "column": str(column_number)},
-        )
+    column_number = first_formula_cell_column(cells)
+    if column_number is None:
+        return
+    raise InvoiceValidationError(
+        f"bulk invoice import file contains formula cell at row {row_number}, "
+        f"column {column_number}; {FORMULA_CELL_REFUSAL}",
+        translated_message="application.invoices.bulk_import.errors.formula_cell",
+        context={"path_name": path.name, "row": str(row_number), "column": str(column_number)},
+    )
 
 
 def _read_workbook_source(path: Path, *, mapper: ColumnRoleMapper | None) -> BulkInvoiceImportSource:

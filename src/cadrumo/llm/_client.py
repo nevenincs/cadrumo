@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     # split creates: the stores import this package for the shared error and
     # model types, and the client refers back to them.
     from ..adapters.outbound.llm import (
+        EvidenceConsentLedger,
         LLMCache,
         LLMRunTelemetryRecorder,
         UsageRecorder,
@@ -85,6 +86,7 @@ class LLMClient:
         cache: LLMCache | None = None,
         usage_recorder: UsageRecorder | None = None,
         run_telemetry_recorder: LLMRunTelemetryRecorder | None = None,
+        consent_ledger: EvidenceConsentLedger | None = None,
         prompt_registry: PromptRegistry | None = None,
         caller: str = "cadrumo.llm.client",
         prompt_id: str = "adhoc",
@@ -94,7 +96,12 @@ class LLMClient:
         # types, so binding them at module load would close the cycle. Resolved
         # here, at construction, through that package's public facade -- the
         # sanctioned cycle-break target, never a private submodule.
-        from ..adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
+        from ..adapters.outbound.llm import (
+            EvidenceConsentLedger,
+            LLMCache,
+            LLMRunTelemetryRecorder,
+            UsageRecorder,
+        )
 
         self.settings = settings or Settings()
         self.cache = cache or LLMCache(root_dir=self.settings.cadrumo_llm_cache_dir)
@@ -102,6 +109,10 @@ class LLMClient:
         self.run_telemetry_recorder = run_telemetry_recorder or LLMRunTelemetryRecorder(
             root_dir=self.settings.cadrumo_llm_run_telemetry_dir,
         )
+        # Not swept by _sweep_retention_stores below, and deliberately so: the
+        # consent ledger is an audit trail a withdrawal reads, not a diagnostic
+        # store, so it has no prune to call.
+        self.consent_ledger = consent_ledger or EvidenceConsentLedger()
         self.prompt_registry = prompt_registry or PromptRegistry.seeded()
         self.caller = caller
         self.prompt_id = prompt_id
@@ -143,7 +154,7 @@ class LLMClient:
         """
         provider = request.provider_override or self._default_provider()
         model = request.model_override or self._default_model(provider)
-        self._require_evidence_consent(provider, request)
+        self._require_evidence_consent(provider, model, request)
         request_id = self._request_id(request)
         cached = self.cache.read(request, provider, model)
         if cached is not None:
@@ -224,8 +235,8 @@ class LLMClient:
         )
         return response
 
-    def _require_evidence_consent(self, provider: LLMProvider, request: LLMRequest) -> None:
-        """Refuse an off-host dispatch of taxpayer evidence without per-invocation consent.
+    def _require_evidence_consent(self, provider: LLMProvider, model: str, request: LLMRequest) -> None:
+        """Refuse an off-host dispatch of taxpayer evidence without per-invocation consent, and record the ones it permits.
 
         The confidentiality boundary, enforced at the client's single dispatch
         point for the reason the image boundary is: which requests may leave the
@@ -250,22 +261,47 @@ class LLMClient:
         if a token reaches this point, because a defence that depends on the
         caller having remembered is not a defence.
 
+        **The audit append lives here, in the branch that HONOURS the token,
+        not beside it.** Recording and permitting are one code path, so the
+        ledger is complete by construction rather than by every caller
+        remembering: there is no ordering in which a consented request reaches
+        the cache read, an adapter, or the wire without its entry already
+        written. The append is allowed to raise for the same reason -- a
+        best-effort log that can silently miss an entry is worse than none,
+        because a later audit reads it as complete. A failed append therefore
+        refuses the dispatch.
+
+        The append is also ahead of the cache read, so a consented invocation
+        served from a primed entry is recorded too. That is the honest side to
+        err on: the response is still cloud-derived, so a withdrawal must list
+        it as a re-derivation candidate.
+
         Args:
             provider: The resolved provider this request would dispatch at.
+            model: The resolved model this request would dispatch at, recorded
+                in the ledger entry.
             request: The request, carrying its evidence marker and any token.
 
         Raises:
             LLMConsentError: When an evidence-derived request would be
                 dispatched off-host without a valid per-invocation consent
-                token, or in a gestor deployment at all.
+                token, in a gestor deployment at all, or when the consent
+                ledger cannot record the permitted dispatch.
         """
         if not request.evidence_derived or not provider_reads_off_host(provider):
             return
-        if self.settings.cadrumo_evidence_gestor_mode or request.consent_token is None:
+        token = request.consent_token
+        if self.settings.cadrumo_evidence_gestor_mode or token is None:
             raise LLMConsentError(
                 tr(_EVIDENCE_CONSENT_DISPATCH_REFUSAL_LOCALE_KEY, provider=provider.value),
                 suggestion=tr(EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY),
             )
+        self.consent_ledger.append(
+            evidence_content_address=token.evidence_content_address,
+            provider=provider.value,
+            model=model,
+            surface=token.surface,
+        )
 
     @staticmethod
     def _omit_unsupported_parameters(adapter: _ProviderAdapter, request: ProviderRequest) -> ProviderRequest:

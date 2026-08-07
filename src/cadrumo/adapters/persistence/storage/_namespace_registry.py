@@ -529,10 +529,10 @@ LEDGER_EXTRACTED_DOCUMENT_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
     # caches" explicitly among the things the in-memory processing exemption
     # does not reach.
     #
-    # Deliberately NOT called a *normalization* cache: that name presupposes the
-    # normalize-then-extract pipeline shape the governing ADR leaves open for
-    # want of a measurement, and no identifier may assert a decision the record
-    # says is undecided. What is cached is the extraction, which exists under
+    # Deliberately NOT called a *normalization* cache: whether the pipeline
+    # ends up normalize-then-extract or extract-then-normalize is still open
+    # pending a measurement, and no identifier here may assert a shape that is
+    # still undecided. What is cached is the extraction, which exists under
     # either shape.
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
@@ -826,6 +826,23 @@ LLM_RUN_TELEMETRY_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
+# The off-host evidence-consent audit trail. Unlike its three PROCESS_LOCAL
+# siblings above, this one is STRUCTURED_CUSTODY and carries no retention
+# sweep: it is the record a consent-withdrawal re-derivation reads to find
+# which artefacts depend on a cloud read, so an entry pruned away would make
+# the withdrawal silently incomplete. It holds the content ADDRESS, the
+# provider/model, and the surface that took the acknowledgement -- never the
+# document bytes, the prompt, or the response.
+LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="llm_evidence_consent_ledger",
+    namespace="cadrumo.outbound.llm.evidence_consent_ledger",
+    owner="cadrumo.adapters.outbound.llm",
+    sensitivity=SensitivityClass.IDENTITY,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{recorded_at_iso}|{evidence_content_address}|{uuid4_hex}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="aeat_filed_declaration_artefacts",
     namespace="cadrumo.outbound.aeat.sede.filed_declaration.artefacts",
@@ -1107,6 +1124,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         LLM_CACHE_NAMESPACE,
         LLM_USAGE_NAMESPACE,
         LLM_RUN_TELEMETRY_NAMESPACE,
+        LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE,
         AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
         AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
         AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
@@ -1150,6 +1168,7 @@ __all__ = [
     "LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE",
     "LIVE_VERIFY_OBSERVATION_NAMESPACE",
     "LLM_CACHE_NAMESPACE",
+    "LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE",
     "LLM_RUN_TELEMETRY_NAMESPACE",
     "LLM_USAGE_NAMESPACE",
     "M145_COMMUNICATION_RECORD_NAMESPACE",

@@ -126,3 +126,4 @@ Submodules
    cadrumo.core.text_fold
    cadrumo.core.tty
    cadrumo.core.wizard_catalogue
+   cadrumo.core.workbook

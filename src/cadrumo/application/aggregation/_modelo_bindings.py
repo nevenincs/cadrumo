@@ -253,7 +253,7 @@ class LedgerIvaAggregationSourceResolver:
             aggregation.observations,
             prorrata_apportionment=aggregation.prorrata_apportionment,
         )
-        devengo_compared_invoices = _raise_if_invoice_iva_would_be_silent(
+        devengo_compared_invoices, category_counterparty_mismatches = _raise_if_invoice_iva_would_be_silent(
             context=context,
             period=aggregation_period,
             transaction_binding_values=binding_values,
@@ -289,6 +289,10 @@ class LedgerIvaAggregationSourceResolver:
             + devengo_proxy_attribution_diagnostics(
                 devengo_compared_invoices,
                 source_kind="ledger_iva_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + _category_counterparty_mismatch_diagnostics(
+                category_counterparty_mismatches,
                 resolver_id=self.resolver_id,
             )
             + tuple(
@@ -798,8 +802,8 @@ def _m130_retenciones_backend_inputs(
 
     A schema field expressing that divergence honestly was tried and
     reverted: it would reopen the cross-domain routing-table design this
-    redirect depends on, which needs a superseding ADR, not an
-    implementation choice made in passing. Following the established remedy
+    redirect depends on, which needs a deliberate redesign of that table, not
+    an implementation choice made in passing. Following the established remedy
     instead: the hardcoded casilla constant lives in `domain.renta` and is
     validated against every
     M130 revision by a `CrossDomainSnapshotCheck` registered at snapshot-build
@@ -1153,7 +1157,7 @@ def _raise_if_invoice_iva_would_be_silent(
     transaction_binding_values: Mapping[BindingId, Decimal],
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
     prorrata_apportionment: IvaLedgerProrrataApportionment | None,
-) -> tuple[Invoice, ...]:
+) -> tuple[tuple[Invoice, ...], tuple[Invoice, ...]]:
     """Refuse a filing whose invoice IVA would be absent from its ledger totals.
 
     The IVA cuota boxes are sourced from ``ledger_iva_aggregation``: the
@@ -1180,20 +1184,33 @@ def _raise_if_invoice_iva_would_be_silent(
     are equally short and the rule passes.
 
     Returns:
-        The invoices whose IVA was compared against the ledger, so the caller
-        can disclose how their period placement was arrived at. Empty when the
-        modelo is not screened or there was nothing to compare.
+        A pair. First, the invoices whose IVA was compared against the ledger,
+        so the caller can disclose how their period placement was arrived at.
+        Second, the invoices withheld because their declared category and their
+        counterparty country contradict each other -- carried out separately
+        because they reached NO casilla, so the caller must report them rather
+        than describe their placement. Both empty when the modelo is not
+        screened or there was nothing to compare.
+
+        The second element survives the early return below: a period whose
+        every invoice was withheld produces no observations at all, and that is
+        precisely the case where staying silent would be worst.
     """
     screened_bindings = _INVOICE_LEDGER_SCREEN_BINDINGS.get(str(context.modelo))
     if screened_bindings is None:
-        return ()
-    invoice_observations, invoice_ids, compared_invoices = _screened_invoice_iva_observations(
+        return (), ()
+    (
+        invoice_observations,
+        invoice_ids,
+        compared_invoices,
+        category_counterparty_mismatches,
+    ) = _screened_invoice_iva_observations(
         context=context,
         period=period,
         invoice_repository=invoice_repository,
     )
     if not invoice_observations:
-        return ()
+        return (), category_counterparty_mismatches
     invoice_binding_values = resolve_iva_ledger_binding_values(
         context.revision,
         invoice_observations,
@@ -1206,7 +1223,7 @@ def _raise_if_invoice_iva_would_be_silent(
         > (transaction_value := transaction_binding_values.get(binding_id, Decimal("0")))
     }
     if not missing_binding_values:
-        return compared_invoices
+        return compared_invoices, category_counterparty_mismatches
     raise AggregationValidationError(
         t("errors.error.error_modelo_aggregation_binding"),
         context={
@@ -1296,11 +1313,12 @@ def _counterparty_supports_the_declared_category(invoice: Invoice) -> bool:
     the category and the counterparty disagree, and routing on the category
     alone would declare volume the taxpayer never supplied that way.
 
-    Returns ``False`` rather than raising, which leaves the line unrouted. That
-    is the status quo for a mismatched invoice rather than a new silence, but it
-    IS a silence: this projector returns observations and has no issue channel
-    to report a refusal through, unlike the bank path which returns a typed
-    gate issue. Surfacing it needs that channel and is not in reach here.
+    Returns ``False`` rather than raising, which leaves the line unrouted. The
+    withholding is REPORTED: the screen collects each mismatched invoice and the
+    resolver raises an ``invoice_category_counterparty_mismatch`` advisory
+    naming it, so the operator learns the volume was withheld and why. The bank
+    path returns a typed gate issue for the same shape; this projector returns
+    observations, so it reports through the resolution's diagnostics instead.
     """
     country = (invoice.counterparty_country or "").strip().upper()
     if invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
@@ -1397,20 +1415,70 @@ def _invoice_line_iva_observation(
     )
 
 
+def _claims_a_base_only_category(invoice: Invoice) -> bool:
+    """Whether this invoice claims a category that a base-only casilla declares.
+
+    Narrows the mismatch advisory to invoices that were ACTUALLY withheld from a
+    casilla. A domestic exemption routes nowhere either, but it has no base-only
+    casilla to reach, so reporting it would be noise about an operation that was
+    never going to be declared there.
+    """
+    return invoice.kind is InvoiceKind.ISSUED and invoice.iva_category in _BASE_ONLY_ROUTED_CATEGORIES
+
+
+def _category_counterparty_mismatch_diagnostics(
+    invoices: Sequence[Invoice],
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return one advisory per invoice withheld for a category the counterparty contradicts.
+
+    Withholding the volume is correct: an intra-community supply to a third
+    country is not an intra-community supply whatever it claims, and routing it
+    on the category alone would declare volume the taxpayer never supplied that
+    way. What was missing is the operator being told, so a real operation left a
+    declaration with nothing on any surface saying so.
+
+    The remedy names both fields, because either could be the wrong one -- the
+    category may be mis-tagged, or the counterparty country may be. The record
+    does not know which, and guessing would point the operator at the wrong fix.
+    """
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="invoice_category_counterparty_mismatch",
+            source_kind="ledger_iva_aggregation",
+            resolver_id=resolver_id,
+            source_ref=f"invoice:{invoice.invoice_id}",
+            message=(
+                f"invoice {invoice.invoice_number!r} declares "
+                f"{invoice.iva_category.value if invoice.iva_category else 'no category'} but its "
+                f"counterparty country {invoice.counterparty_country!r} cannot bear it, so its base "
+                "is NOT declared on this modelo"
+            ),
+            remedy=(
+                "Correct either the invoice's IVA category or its counterparty country so the two "
+                "agree, then recalculate so the operation reaches its casilla"
+            ),
+        )
+        for invoice in invoices
+    )
+
+
 def _screened_invoice_iva_observations(
     *,
     context: CalculationSourceContext,
     period: Period,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
-) -> tuple[tuple[IvaLedgerObservation, ...], tuple[str, ...], tuple[Invoice, ...]]:
+) -> tuple[tuple[IvaLedgerObservation, ...], tuple[str, ...], tuple[Invoice, ...], tuple[Invoice, ...]]:
     try:
         repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=context.bucket_id)
         catalogue = repository.load()
     except _STORAGE_DEGRADATION_ERRORS:
-        return (), (), ()
+        return (), (), (), ()
     observations: list[IvaLedgerObservation] = []
     invoice_ids: set[str] = set()
     compared_invoices: list[Invoice] = []
+    category_counterparty_mismatches: list[Invoice] = []
     for invoice in catalogue.values():
         if not _screened_invoice_in_period(invoice, context=context, period=period):
             continue
@@ -1438,7 +1506,18 @@ def _screened_invoice_iva_observations(
             contributed = True
         if contributed:
             compared_invoices.append(invoice)
-    return tuple(observations), tuple(invoice_ids), tuple(compared_invoices)
+        elif _claims_a_base_only_category(invoice) and not _counterparty_supports_the_declared_category(invoice):
+            # Withheld because the category and the counterparty disagree.
+            # Collected so the resolver can say so: an operation removed from a
+            # declaration without the operator being told is the shape this
+            # whole screen exists to prevent.
+            category_counterparty_mismatches.append(invoice)
+    return (
+        tuple(observations),
+        tuple(invoice_ids),
+        tuple(compared_invoices),
+        tuple(category_counterparty_mismatches),
+    )
 
 
 def _sole_recargo_bearing_line_index(invoice: Invoice) -> int | None:

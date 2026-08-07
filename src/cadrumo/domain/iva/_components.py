@@ -578,7 +578,7 @@ def _zero_cuota_domestic(
         # an operation bearing none of those tipos bears no recargo. Inferred
         # from the tipo ladder rather than stated by a bundled provision.
         recargo_grounding=IvaGroundingConfidence.REASONED,
-        # The ADR's anchor case: an IVA-exempt professional service carries no
+        # The anchor case: an IVA-exempt professional service carries no
         # cuota and still bears a retención. Cuota-less is not substrate-less.
         retencion=IvaRetencionExpectation.POSSIBLE,
         retencion_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,

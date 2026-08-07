@@ -469,8 +469,8 @@ def _stored_rentas_anuales(raw: str | None, *, index: int) -> Decimal | None:
     # ``max_fraction_digits=2`` is what makes the thousands shape refuse, since
     # a Spanish grouping is always exactly three digits. That protection is
     # therefore incidental rather than separator recognition, and it declines a
-    # literal ``8.000`` meaning eight euros exactly. The governing decision
-    # accepted that cost knowingly: a parser that GUESSES which convention the
+    # literal ``8.000`` meaning eight euros exactly. That cost is accepted
+    # knowingly: a parser that GUESSES which convention the
     # operator meant is the silent-corruption surface, and a loud refusal
     # naming the accepted form is the safe direction.
     value = try_parse_canonical_decimal(raw, max_fraction_digits=2)

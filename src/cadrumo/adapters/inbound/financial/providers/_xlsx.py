@@ -25,6 +25,7 @@ from openpyxl.workbook import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
 from .....core.logging import get_logger
+from .....core.workbook import FORMULA_CELL_REFUSAL, first_formula_cell_column
 from .....domain.transactions import SourceFormat
 from ._base import (
     FinancialProvider,
@@ -314,12 +315,12 @@ def _materialize_selected_rows_or_refuse_formula_cells(
     rows: list[list[Any]] = []
     for row_index, cells in enumerate(worksheet.iter_rows(), start=1):
         if row_index > header_index + 1:
-            for column_index, cell in enumerate(cells, start=1):
-                if cell.data_type == "f":
-                    raise InvalidFinancialSourceError(
-                        f"worksheet {sheet_name!r} contains formula cell at row {row_index}, column {column_index}; "
-                        "formula cached values are not accepted",
-                    )
+            column_index = first_formula_cell_column(cells)
+            if column_index is not None:
+                raise InvalidFinancialSourceError(
+                    f"worksheet {sheet_name!r} contains formula cell at row {row_index}, column {column_index}; "
+                    f"{FORMULA_CELL_REFUSAL}",
+                )
         rows.append([cell.value for cell in cells])
     return rows
 

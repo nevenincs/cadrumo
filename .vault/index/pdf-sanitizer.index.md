@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:5b7a0f75f864d1b71d44c2c8dd3a16d248f999f3553b146a01a545174a80c7b7'
+body_hash: 'sha256:94c03cb2544b9e6cb45c0ccfceb98b41639fa70fe6987f2b3e10e2f2124762d5'
 related:
   - '[[2026-04-25-pdf-sanitizer-adr]]'
   - '[[2026-04-25-pdf-sanitizer-plan]]'
@@ -22,8 +22,8 @@ Auto-generated index of all documents tagged with `#pdf-sanitizer`.
 
 ### adr
 
-- `2026-04-25-pdf-sanitizer-adr` - `pdf-sanitizer` adr: `pdf-sanitizer-architecture-and-api` | (**status:** `accepted`)
-- `2026-08-07-pdf-sanitizer-contributor-tooling-adr` - `pdf-sanitizer` adr: `sanitiser is contributor tooling, not a shipped surface` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
+- `2026-04-25-pdf-sanitizer-adr` - `pdf-sanitizer` adr: `pdf-sanitizer-architecture-and-api` | (**status:** `superseded`)
+- `2026-08-07-pdf-sanitizer-contributor-tooling-adr` - `pdf-sanitizer` adr: `sanitiser-is-contributor-tooling-not-shipped-surface` | (**status:** `proposed`)
 
 ### plan
 

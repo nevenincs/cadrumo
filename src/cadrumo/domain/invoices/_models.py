@@ -746,9 +746,7 @@ class Invoice(BaseModel):
         source without a rate converts nothing. A euro invoice carries none of
         them -- a stamp there would imply a conversion that never happened.
         """
-        stamp_present = (
-            self.fx_rate is not None or self.fx_rate_date is not None or self.fx_rate_source is not None
-        )
+        stamp_present = self.fx_rate is not None or self.fx_rate_date is not None or self.fx_rate_source is not None
         if self.currency == DEFAULT_CURRENCY and stamp_present:
             raise InvoiceValidationError("a EUR invoice must not carry an fx conversion stamp")
         if (self.fx_rate is None) != (self.fx_rate_date is None) or (self.fx_rate is None) != (

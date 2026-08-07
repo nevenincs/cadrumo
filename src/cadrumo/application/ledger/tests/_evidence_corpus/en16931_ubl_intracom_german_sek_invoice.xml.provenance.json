@@ -1,0 +1,9 @@
+{
+  "provenance": "synthetic_generated",
+  "kind": "xml_invoice_ubl",
+  "source": "authored in-tree for the foreign-language and foreign-currency sweep of the reading path",
+  "licence": "Apache-2.0",
+  "notes": "Hand-authored EN16931 UBL invoice, fictional parties and figures. Declared synthetic rather than sourced: no bundled fixture printed an invoice in a language other than Spanish, and none was denominated in a currency other than the euro, so neither 'the reader recovers fields from structure rather than from Spanish wording' nor 'a foreign-currency document is recorded as foreign' could be observed rather than assumed. Shaped as a Swedish intra-community supply to a Spanish recipient (UNTDID 5305 category K with VATEX-EU-IC, LIVA art. 25) in SEK, with the item description and the statutory mention in German. The exemption case is chosen because it is the one where a dropped legend costs a declaration: base with no cuota is indistinguishable from an ordinary zero-cuota supply once the mention and the code are gone, and the recipient's self-assessed IVA is then never assessed. Every asserted value is a figure the document itself prints, never one recomputed from the code under test.",
+  "sha256": "ae8fa475e4d8d6f153872ab4f5bba8c978efdf63b95e97d8d827f917d2c0f51d",
+  "bytes": 3773
+}

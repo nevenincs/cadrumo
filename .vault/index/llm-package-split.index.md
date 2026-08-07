@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:ce3cec2b77b3553e9741821caef24c27e3055ea0ff5ceb16194126ce38156751'
+body_hash: 'sha256:7ea7c89220943cf58e4093520fe9df1d797fa19f7e6dc9658676f89914976710'
 related:
   - '[[2026-08-06-llm-package-split-W01-P01-S01]]'
   - '[[2026-08-06-llm-package-split-W01-P01-S02]]'
@@ -38,6 +38,7 @@ related:
   - '[[2026-08-06-llm-package-split-W02-P05-S70]]'
   - '[[2026-08-06-llm-package-split-W02-P05-S71]]'
   - '[[2026-08-06-llm-package-split-W02-P05-S81]]'
+  - '[[2026-08-06-llm-package-split-W02-P05-S83]]'
   - '[[2026-08-06-llm-package-split-W03-P06-S23]]'
   - '[[2026-08-06-llm-package-split-W03-P06-S24]]'
   - '[[2026-08-06-llm-package-split-W03-P06-S25]]'
@@ -127,6 +128,7 @@ Auto-generated index of all documents tagged with `#llm-package-split`.
 - `2026-08-06-llm-package-split-W02-P05-S70` - Prove the parsers give the sibling campaign's multi-line writer a real per-rate producer by round-tripping a two-rate structured document from parse to a confirmed multi-line invoice, sequenced after that campaign's writer Step lands, red if the confirm boundary is bypassed or the second rate is lost in transit
 - `2026-08-06-llm-package-split-W02-P05-S71` - Assert the keyed guard compares every persisted field so a same-key re-add whose content differs refuses with an instructive conflict, red if a re-add changing one field is reported as an unchanged no-op and the new value is silently dropped
 - `2026-08-06-llm-package-split-W02-P05-S81` - Assert the invoice-level identity holds exactly on a parsed multi-rate document with grand total equal to base plus IVA plus recargo and retencion outside it, red if per-line rounding is allowed to accumulate into the invoice-level total
+- `2026-08-06-llm-package-split-W02-P05-S83` - Prove an invoice confirmed from a structured document grounds through the decomposition contract rather than refusing as undeclared, red if the renta sales-evidence path still refuses it with an ungrounded-decomposition verdict
 - `2026-08-06-llm-package-split-W03-P06-S23` - Declare the strict closed interchange payload the core accepts, with forbidden extras and a fixed key set, red if an unexpected key survives validation
 - `2026-08-06-llm-package-split-W03-P06-S24` - Apply the existing shape grounding to every payload field reusing the checksum, date and decimal validators rather than rewriting them, red if a checksum-invalid tax id or unparseable date reaches the core
 - `2026-08-06-llm-package-split-W03-P06-S25` - Carry legal_refs, source_refs and the typed source kind on the payload, red if a payload constructed without them validates

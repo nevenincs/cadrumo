@@ -21,6 +21,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ...iva import (
     EUMemberState,
     InvoiceKind,
@@ -242,6 +243,7 @@ def test_converted_foreign_invoice_decomposes_in_euro() -> None:
         lines=(_line(unit_price="200.00", iva_rate=IvaRate.RATE_0),),
         fx_rate=Decimal("0.90"),
         fx_rate_date=date(2026, 4, 1),
+        fx_rate_source=ECB_RATE_SOURCE_ID,
     )
 
     verdict = decompose_invoice(invoice)

@@ -320,7 +320,7 @@ def _meta_for(
         "kind": record.kind.value,
         "tier": record.tier.value,
         # The closed display class the JS renderer reads verbatim for the
-        # result icon and class-scoped style (ADR D7). Derived once here at the
+        # result icon and class-scoped style. Derived once here at the
         # injection seam -- the single derivation authority -- and shipped as a
         # display/crumb axis, never re-derived heuristically in the renderer.
         "display_class": derive_display_class(record).value,

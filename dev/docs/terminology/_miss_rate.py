@@ -68,7 +68,7 @@ class HeldOutCaseKind(StrEnum):
     """How a held-out case is evaluated against the compiled mapping."""
 
     #: The query is a shipped vocabulary row; hit iff an expected id is in the
-    #: TOP FIVE targets of exactly that compiled query (ADR D3 bound).
+    #: :data:`TOP_RESULTS_BOUND` targets of exactly that compiled query.
     VOCABULARY = "vocabulary"
     #: The query is a real free-text phrasing that is NOT in the vocabulary;
     #: candidate compiled queries are those whose normalised text appears

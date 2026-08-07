@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:3f1a1683f6a8025f16ac680975074cd346e325bc307f046bc0d8525fd043df0f'
+body_hash: 'sha256:8474954870c0c99979bed804334b38f09143e09b5a8a55949b45b38372cc8f95'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
@@ -32,6 +32,7 @@ related:
   - '[[2026-08-01-user-docs-search-consolidation-P05-S15]]'
   - '[[2026-08-01-user-docs-search-consolidation-P05-S16]]'
   - '[[2026-08-01-user-docs-search-consolidation-P05-S17]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P05-S34]]'
   - '[[2026-08-01-user-docs-search-consolidation-P06-S20]]'
   - '[[2026-08-01-user-docs-search-consolidation-P06-S21]]'
   - '[[2026-08-01-user-docs-search-consolidation-P06-S22]]'
@@ -76,6 +77,7 @@ related:
   - '[[2026-08-06-user-docs-search-consolidation-rung2-alias-sweep-plumbing-audit]]'
   - '[[2026-08-07-user-docs-search-consolidation-p02-s04-matrix-artifact-review-audit]]'
   - '[[2026-08-07-user-docs-search-consolidation-p02-s06-acceptance-provenance-gate-audit]]'
+  - '[[2026-08-07-user-docs-search-consolidation-ranking-measurement-audit]]'
 ---
 
 # `user-docs-search-consolidation` feature index
@@ -120,6 +122,7 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-06-user-docs-search-consolidation-rung2-alias-sweep-plumbing-audit` - `user-docs-search-consolidation` audit: `Rung-2 alias-authority sweep plumbing review`
 - `2026-08-07-user-docs-search-consolidation-p02-s04-matrix-artifact-review-audit` - `user-docs-search-consolidation` audit: `P02.S04 matrix artifact review`
 - `2026-08-07-user-docs-search-consolidation-p02-s06-acceptance-provenance-gate-audit` - `user-docs-search-consolidation` audit: `P02.S06 acceptance provenance gate review`
+- `2026-08-07-user-docs-search-consolidation-ranking-measurement-audit` - `user-docs-search-consolidation` audit: `Ranked-result measurement across modelo, casilla, natural-language and tax-term queries`
 
 ### exec
 
@@ -156,6 +159,7 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-01-user-docs-search-consolidation-P04-S13` - Redeploy and live-verify the full-mode index, the casilla destination pages, and the language roots, recording the live checks in the exec record
 - `2026-08-01-user-docs-search-consolidation-P06-S29` - Correct the structured modelo plus casilla route to carry and match canonical casilla_id while retaining display-number and segmento fallback, and add the real-authority gate for an id that differs from its display number
 - `2026-08-01-user-docs-search-consolidation-P06-S30` - Prove the RAG sweep composition emits only authoritative injected record targets while preserving deterministic structured casilla enrollment, then refresh the manifest-admissible relevance input
+- `2026-08-01-user-docs-search-consolidation-P05-S34` - Correct the three sites that ranked a legal provision in the DOC band above the modelo and casilla cards it grounds, and gate the agreement between a record's stamped weight and the class it displays under
 
 ### plan
 

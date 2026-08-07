@@ -36,6 +36,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.outbound.fx import ECB_RATE_SOURCE_ID
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import SensitivityClass
 from ....core import IntracomOperationType
@@ -350,6 +351,7 @@ def _foreign_currency_invoice() -> Invoice:
             # the stored rate is the inverted GBP->EUR multiplier.
             "fx_rate": Decimal("1") / Decimal("0.84183"),
             "fx_rate_date": date(2025, 3, 14),
+            "fx_rate_source": ECB_RATE_SOURCE_ID,
         },
     )
 
@@ -369,6 +371,7 @@ def test_foreign_currency_conversion_stamp_survives_encrypted_storage_roundtrip(
     assert restored == original
     assert restored.fx_rate == Decimal("1") / Decimal("0.84183")
     assert restored.fx_rate_date == date(2025, 3, 14)
+    assert restored.fx_rate_source == ECB_RATE_SOURCE_ID
     # 1000.00 GBP * (1 / 0.84183) = 1187.888... -> 1187.89 EUR
     assert restored.grand_total_eur == Decimal("1187.89")
     assert restored.base_total_eur == Decimal("1187.89")
@@ -376,11 +379,16 @@ def test_foreign_currency_conversion_stamp_survives_encrypted_storage_roundtrip(
     assert restored.grand_total == Decimal("1000.00")
 
 
-def test_dropped_fx_rate_date_surfaces_at_load(tmp_path: Path) -> None:
-    """Anti-tautology proof: deleting ``fx_rate_date`` on disk must refuse the load.
+@pytest.mark.parametrize("dropped_field", ["fx_rate_date", "fx_rate_source"])
+def test_dropping_either_fx_provenance_field_surfaces_at_load(tmp_path: Path, dropped_field: str) -> None:
+    """Anti-tautology proof: deleting a stamp field on disk must refuse the load.
 
-    ``fx_rate`` and ``fx_rate_date`` are an all-or-nothing pair so a stored rate
-    is always auditable. Persists a converted GBP invoice, then surgically
+    ``fx_rate``, ``fx_rate_date`` and ``fx_rate_source`` are an all-or-nothing
+    triple so a stored rate is always auditable: the date locates the
+    observation and the source says whose published series to locate it in.
+    Both companions are dropped in turn, because a proof that only ever removes
+    the date leaves the source's half of the invariant untested and passing
+    vacuously. Persists a converted GBP invoice, then surgically
     deletes the date from the encrypted envelope while leaving the rate. A naive
     load would re-default the date to ``None`` and return an invoice whose rate
     has no provenance -- and which still converts, so nothing downstream would
@@ -403,10 +411,10 @@ def test_dropped_fx_rate_date_surfaces_at_load(tmp_path: Path) -> None:
         assert record is not None
         envelope = _json.loads(record.payload.decode("utf-8"))
         invoice_dict = envelope["payload"]["invoices"][invoice.invoice_id]
-        assert invoice_dict.get("fx_rate_date") is not None, (
-            "fixture must persist fx_rate_date for this proof to be meaningful"
+        assert invoice_dict.get(dropped_field) is not None, (
+            f"fixture must persist {dropped_field} for this proof to be meaningful"
         )
-        del invoice_dict["fx_rate_date"]
+        del invoice_dict[dropped_field]
         profile.repository.save(
             namespace=_INVOICE_NAMESPACE,
             object_key=_INVOICE_OBJECT_KEY,
