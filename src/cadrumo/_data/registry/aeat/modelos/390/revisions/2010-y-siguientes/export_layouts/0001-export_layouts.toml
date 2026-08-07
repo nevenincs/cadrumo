@@ -400,46 +400,216 @@ signed = false
 legal_refs = ["orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
+# Apartado 5, "Operaciones Reg. Gral. - Base Imponible y cuota - Reg. ordin.":
+# fourteen consecutive money fields, one per official box, ordered 0 %, 2 %, 4 %,
+# 5 %, 7,5 %, 10 %, 21 % with base preceding cuota within each rate. Offsets and
+# box numbers read off the bundled 2024 Diseno de Registro, page 2, campos 6-19.
+#
+# Each field names a rate-SPECIFIC casilla. The rate-blind tier casillas that
+# previously wrote 98/200/234 no longer export: a tier is not a rate, so on 2024
+# dates the reducido tier legitimately carried 10 %, 7,5 % and 5 % at once and one
+# tier figure in box [04] declared all three as 10 %. Those casillas remain the
+# rate-blind TOTAL layer, still feeding the annual devengada total and still
+# catching rows whose rate the ledger never recorded.
+#
+# The whole run is declared, not only the three boxes previously written. Writing
+# 4 % without 2 %, or 10 % without 7,5 % and 5 %, would drop the temporary-rate
+# money from the record entirely rather than merely mis-allocate it.
+
 [[revisions."2010-y-siguientes".export_layouts.records.fields]]
-id = "modelo-390-page-02-casilla-super-reducido"
+id = "modelo-390-page-02-casilla-tipo-0-base"
+offset = 13
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.tipo-0.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-tipo-0-cuota"
+offset = 30
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.tipo-0.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-tipo-2-base"
+offset = 47
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.tipo-2.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-tipo-2-cuota"
 offset = 98
 length = 17
 kind = "casilla"
-casilla_id = "iva.anual.repercutido.super-reducido"
+casilla_id = "iva.anual.repercutido.tipo-2.cuota"
 data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".export_layouts.records.fields]]
-id = "modelo-390-page-02-casilla-reducido"
+id = "modelo-390-page-02-casilla-tipo-4-base"
+offset = 81
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.tipo-4.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-tipo-4-cuota"
+offset = 64
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.tipo-4.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-tipo-5-base"
+offset = 115
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.tipo-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-tipo-5-cuota"
+offset = 132
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.tipo-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-tipo-7-5-base"
+offset = 149
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.tipo-7-5.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-tipo-7-5-cuota"
+offset = 166
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.tipo-7-5.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-tipo-10-base"
+offset = 183
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.tipo-10.base"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-tipo-10-cuota"
 offset = 200
 length = 17
 kind = "casilla"
-casilla_id = "iva.anual.repercutido.reducido"
+casilla_id = "iva.anual.repercutido.tipo-10.cuota"
 data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".export_layouts.records.fields]]
-id = "modelo-390-page-02-casilla-general"
-offset = 234
+id = "modelo-390-page-02-casilla-tipo-21-base"
+offset = 217
 length = 17
 kind = "casilla"
-casilla_id = "iva.anual.repercutido.general"
+casilla_id = "iva.anual.repercutido.tipo-21.base"
 data_type = "money"
 required = false
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-tipo-21-cuota"
+offset = 234
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.tipo-21.cuota"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".export_layouts.records.fields]]

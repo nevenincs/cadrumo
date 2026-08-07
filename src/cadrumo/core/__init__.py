@@ -127,6 +127,7 @@ from ._field_origin import FieldOrigin
 from ._field_role import FieldRole
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
+from ._hardware import AcceleratorKind, ContentionCause
 from ._hex import HEX_PATTERN_16, HEX_PATTERN_64, HEX_PATTERN_128, Hex16Str, Hex64Str
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
 from ._image_media_type import ImageMediaType, detect_image_media_type
@@ -349,6 +350,7 @@ __all__: list[str] = [
     "STRICT_FROZEN_CONFIG",
     "STRUCTURED_DOCUMENT_SHAPES",
     "UNMODELED_OBLIGATIONS",
+    "AcceleratorKind",
     "AmendmentKindRegime",
     "AmendmentLiabilityDirection",
     "Art104TresExclusion",
@@ -361,6 +363,7 @@ __all__: list[str] = [
     "CompatibilityRegime",
     "ConceptLifecycle",
     "ConceptoIngreso",
+    "ContentionCause",
     "ConvenioOverrideKind",
     "CorpusAnchorResolutionError",
     "DeclaracionIdioma",

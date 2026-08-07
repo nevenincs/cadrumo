@@ -885,27 +885,38 @@ def unrouted_ledger_iva_quantities(
     quantities, so a row selected for its cuota reads as consumed while its
     base imponible reaches nothing at all.
 
-    The gap this closes is live, not hypothetical. Modelo 303 declares eight
-    ``base_amount_sum`` bindings; Modelo 390, the annual return, declares none
-    while declaring ``iva_amount_sum`` and ``recargo_amount_sum``. Every IVA
-    observation folded into the annual return therefore carries a base imponible
-    that no binding draws, and — because those same rows ARE consumed for their
-    cuota — the row screen is silent on it by construction. The official annual
-    form does carry base boxes paired with each cuota box, so the silence hides
-    real under-modelling rather than a form that does not ask.
+    The gap is live, not hypothetical, and it survives a revision declaring the
+    fact. Both Modelo 303 and Modelo 390 declare ``base_amount_sum`` bindings
+    covering the domestic tiers, so "is base imponible drawn" answers yes on
+    each. Their base bindings nonetheless reach no import or reverse-charge row:
+    ``import_third_country``,
+    ``intra_community_acquisition_reverse_charge`` and
+    ``intra_community_service_acquisition_reverse_charge`` have their CUOTA
+    drawn and their base drawn by nothing, on both modelos. The rows are
+    consumed for that cuota, so the row screen is silent by construction, and a
+    coverage test keyed on the fact alone would be silent too.
 
-    This function does not close that gap; it makes it visible. Adding the
-    missing Modelo 390 bindings needs casillas the revision does not declare,
-    which is the annual-form campaign's work.
+    That is why coverage is asked per row and per fact. The earlier worked
+    example here — Modelo 390 declaring no base binding at all — was closed by
+    the annual-form campaign, and closing it is precisely what would have
+    blinded a fact-keyed screen to the three categories above. A screen's value
+    is the mechanism, never the instance: this one keeps reporting whatever the
+    declared bindings fail to reach, and correctly falls silent on the four
+    domestic categories both modelos now cover.
+
+    This function reports; it does not close. Routing an import or
+    reverse-charge base imponible is registry work with its own casillas and
+    grounding.
 
     Args:
         revision: The :class:`ModeloRevision` whose IVA bindings decide which
-            facts are drawn.
+            facts are drawn, and which rows each drawing binding reaches.
         observations: Ledger IVA observations to screen.
 
     Returns:
-        One :class:`UnroutedLedgerQuantity` per uncovered non-zero quantity,
-        ordered by fact name. Empty when every quantity the rows carry is drawn.
+        One :class:`UnroutedLedgerQuantity` per fact with uncovered non-zero
+        rows, ordered by fact name, each carrying only the rows that fact's
+        bindings fail to reach.
     """
     return unrouted_ledger_family_quantities(
         revision,

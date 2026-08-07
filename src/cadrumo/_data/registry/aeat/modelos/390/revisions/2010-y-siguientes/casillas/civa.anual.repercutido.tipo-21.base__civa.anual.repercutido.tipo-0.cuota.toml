@@ -5,14 +5,15 @@
 # casilla-to-box correspondence is readable without re-deriving it from offsets
 # and disambiguating the regimen segment.
 #
-# They declare NO export_refs. The export layout still writes boxes 98/200/234
-# from the rate-blind tier casillas, and flipping those fields to this layer is
-# only safe alongside the gate that refuses a return whose rate boxes sum below
-# its declared total. Until that lands, declaring an export field here would
-# convert a correct-but-mis-allocated record into an internally inconsistent one.
+# Each casilla owns its official box in the record: the fourteen consecutive
+# money fields at offsets 13-250 of page 2, base preceding cuota within each
+# rate. The rate-blind tier casillas that previously wrote 98/200/234 no longer
+# export, so no casilla both totals and asserts a rate.
 #
 # The tier casillas remain the TOTAL layer: rate-blind, feeding the annual
 # devengada total, keeping every row including those whose rate is unrecorded.
+# That layer sums to MORE than this one by exactly the rate-unrecorded amount,
+# which is why the export refuses on the difference rather than hiding it.
 
 # Box [05] - "Tipo 21 % - Base imponible". Vigencia: todo el ejercicio.
 [[revisions."2010-y-siguientes".casillas]]
@@ -28,6 +29,7 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-21-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-tipo-21-base"]
 
 # Box [06] - "Tipo 21 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2010-y-siguientes".casillas]]
@@ -43,6 +45,7 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-21-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-tipo-21-cuota"]
 
 # Box [03] - "Tipo 10 % - Base imponible". Vigencia: todo el ejercicio.
 [[revisions."2010-y-siguientes".casillas]]
@@ -58,6 +61,7 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-10-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-tipo-10-base"]
 
 # Box [04] - "Tipo 10 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2010-y-siguientes".casillas]]
@@ -73,6 +77,7 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-10-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-tipo-10-cuota"]
 
 # Box [669] - "Tipo 7,5 % - Base imponible". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2010-y-siguientes".casillas]]
@@ -86,8 +91,9 @@ semantic_role_cardinality_reason = "One official AEAT box per rate; the 7,5 % ti
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-7-5-base"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-tipo-7-5-base"]
 
 # Box [670] - "Tipo 7,5 % - Cuota". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2010-y-siguientes".casillas]]
@@ -101,8 +107,9 @@ semantic_role_cardinality_reason = "One official AEAT box per rate; the 7,5 % ti
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-7-5-cuota"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-tipo-7-5-cuota"]
 
 # Box [702] - "Tipo 5 % - Base imponible". Vigencia: del 1 de julio al 30 de septiembre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2010-y-siguientes".casillas]]
@@ -116,8 +123,9 @@ semantic_role_cardinality_reason = "One official AEAT box per rate; the 5 % tier
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-5-base"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-tipo-5-base"]
 
 # Box [703] - "Tipo 5 % - Cuota". Vigencia: del 1 de julio al 30 de septiembre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2010-y-siguientes".casillas]]
@@ -131,8 +139,9 @@ semantic_role_cardinality_reason = "One official AEAT box per rate; the 5 % tier
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-5-cuota"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-tipo-5-cuota"]
 
 # Box [01] - "Tipo 4 % - Base imponible". Vigencia: todo el ejercicio.
 [[revisions."2010-y-siguientes".casillas]]
@@ -148,6 +157,7 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-4-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-tipo-4-base"]
 
 # Box [02] - "Tipo 4 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2010-y-siguientes".casillas]]
@@ -163,6 +173,7 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-4-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-tipo-4-cuota"]
 
 # Box [667] - "Tipo 2 % - Base imponible". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2010-y-siguientes".casillas]]
@@ -176,8 +187,9 @@ semantic_role_cardinality_reason = "One official AEAT box per rate; the 2 % tier
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-2-base"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-tipo-2-base"]
 
 # Box [668] - "Tipo 2 % - Cuota". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
 [[revisions."2010-y-siguientes".casillas]]
@@ -191,8 +203,9 @@ semantic_role_cardinality_reason = "One official AEAT box per rate; the 2 % tier
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-2-cuota"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-tipo-2-cuota"]
 
 # Box [700] - "Tipo 0 % - Base imponible". Vigencia: todo el ejercicio.
 [[revisions."2010-y-siguientes".casillas]]
@@ -206,8 +219,9 @@ semantic_role_cardinality_reason = "One official AEAT box per rate; the 0 % tier
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-0-base"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-tipo-0-base"]
 
 # Box [701] - "Tipo 0 % - Cuota". Vigencia: todo el ejercicio.
 [[revisions."2010-y-siguientes".casillas]]
@@ -221,5 +235,6 @@ semantic_role_cardinality_reason = "One official AEAT box per rate; the 0 % tier
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-0-cuota"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
+export_refs = ["modelo-390-page-02-casilla-tipo-0-cuota"]

@@ -95,7 +95,6 @@ from __future__ import annotations
 import re
 from datetime import date
 from decimal import Decimal
-
 from typing import Self
 
 from pydantic import BaseModel, Field, model_validator
@@ -1373,6 +1372,7 @@ def confirm_invoice_draft_from_evidence(
         # disagreeing authorities on the same figures, which is the reason the
         # per-rate split is skipped on that path too.
         resolved_recargo_amount = recargo_amount
+    resolved_iva_category = iva_category if iva_category is not None else _category_stated_by_the_document(draft)
 
     repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     candidate = build_catalogue_invoice(
@@ -1423,7 +1423,7 @@ def confirm_invoice_draft_from_evidence(
         iva_rate=resolved_iva_rate,
         currency=resolved_currency,
         notes=notes,
-        iva_category=iva_category,
+        iva_category=resolved_iva_category,
         operation_date=operation_date,
         retention_rate=retention_rate,
         retention_amount=retention_amount,
@@ -1452,6 +1452,44 @@ def confirm_invoice_draft_from_evidence(
         created=True,
         total_discrepancy=printed_total_discrepancy(draft=draft, invoice=result.invoice),
     )
+
+
+def _category_stated_by_the_document(draft: InvoiceDraft) -> IvaCategory | None:
+    """Return the IVA treatment the document's own record declares, or ``None``.
+
+    The UNTDID 5305 tax-category code is a fact only a structured reader can
+    recover: it is IN the document and no regex or vision reader can supply it.
+    Dropping it here is not a missing label but a missing declaration. A
+    domestic reverse charge, an exempt supply and a zero-rated supply all print
+    a base and no cuota, so once the code is gone the record cannot be told
+    apart from an ordinary zero-cuota supply -- and the self-assessed output IVA
+    a reverse charge obliges, which Modelo 303 collects in its own inversión del
+    sujeto pasivo tier, is never assessed at all.
+
+    A standard-rated supply maps to the empty string rather than a member: the
+    rate itself carries the meaning there and there is no special category to
+    state, so it resolves to ``None`` exactly as an absent code does.
+
+    An unrecognised token also resolves to ``None`` rather than raising. The
+    parser only ever writes values from its own closed UNTDID mapping, so a
+    token outside it means that mapping changed shape; refusing the whole
+    confirm over a label the operator can supply themselves would block a
+    filing the rest of the record fully supports.
+
+    Args:
+        draft: The re-run extraction being confirmed.
+
+    Returns:
+        The stated :class:`~domain.iva.IvaCategory`, or ``None`` when the
+        document states no special category.
+    """
+    stated = (draft.iva_category or "").strip()
+    if not stated:
+        return None
+    try:
+        return IvaCategory(stated)
+    except ValueError:
+        return None
 
 
 def _confirmed_lines_from_the_document(

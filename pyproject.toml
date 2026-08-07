@@ -190,6 +190,15 @@ ofx = [
 # this one declares what the inference path needs on its own terms.
 llm = [
   "pillow>=12,<13",
+  # NVML bindings, read-only. The local-inference contention check needs FREE
+  # VRAM, not total: a 16 GB card shared with a resident service and a desktop
+  # is not 16 GB of headroom, and a load admitted against the total is the
+  # overflow this check exists to prevent. NVML gives per-device total AND free
+  # figures; a whole-device `nvidia-smi` shell-out gives neither reliably nor
+  # without a subprocess. Absent, the accelerator reads `unknown` and acting
+  # fails closed -- so this extra widens what can be admitted, never what can
+  # be refused.
+  "nvidia-ml-py>=13,<14",
 ]
 # Operator agent-harness runtime. The harness operating layer (rules, personas,
 # skills) ships as reviewed product data in the CORE wheel under

@@ -202,7 +202,7 @@ def derive_rate_box_partitions(revision: ModeloRevision) -> tuple[RateBoxPartiti
         if len(total_casillas) != 1 or not box_casillas:
             continue
         total_casilla_id = total_casillas[0]
-        if total_casilla_id in box_casillas:
+        if exports.get(total_casilla_id, False) or total_casilla_id in box_casillas:
             continue
         if not any(exports.get(casilla_id, False) for casilla_id in box_casillas):
             continue

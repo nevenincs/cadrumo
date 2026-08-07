@@ -20,6 +20,7 @@ guards share one registry.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import sys
 from collections.abc import Mapping
@@ -29,18 +30,43 @@ from typing import cast
 import httpx
 from pydantic import BaseModel, Field
 
-from ..core import OPTIONAL_EXTRAS, STRICT_FROZEN_CONFIG, ExternalPathRole, OptionalExtra, optional_extra_available
+from ..core import (
+    OPTIONAL_EXTRAS,
+    STRICT_FROZEN_CONFIG,
+    AcceleratorKind,
+    ContentionCause,
+    ExternalPathRole,
+    OptionalExtra,
+    optional_extra_available,
+)
 from ..core.config import Settings, load_settings
 
 __all__ = [
     "OPTIONAL_EXTRAS",
+    "AcceleratorDevice",
+    "AcceleratorKind",
+    "AcceleratorReading",
+    "ContentionCause",
+    "ContentionSnapshot",
     "DependencyStatus",
+    "HardwareProfile",
     "OptionalExtra",
+    "RuntimeResident",
+    "SystemMemoryReading",
+    "UnloadOutcome",
+    "assess_model_load_contention",
+    "cadrumo_selected_models",
+    "probe_hardware_profile",
+    "probe_local_inference_hardware",
     "probe_model_runtime_hardware_floor",
     "probe_ollama_vision",
     "probe_optional_extra",
     "probe_optional_extras",
     "probe_playwright_browser",
+    "read_accelerator",
+    "read_runtime_residents",
+    "read_system_memory",
+    "unload_runtime_model",
 ]
 
 _OLLAMA_PROBE_TIMEOUT_S = 2.0
@@ -66,12 +92,6 @@ class DependencyStatus(BaseModel):
     remediation: str = ""
 
 
-def _ollama_tags_url(chat_url: str) -> str:
-    """Derive the lightweight ``/api/tags`` model-list URL from the configured chat URL."""
-    base = chat_url.rsplit("/api/", 1)[0] if "/api/" in chat_url else chat_url.rstrip("/")
-    return f"{base}/api/tags"
-
-
 def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
     """Probe Ollama and the configured vision model, returning a :class:`DependencyStatus`.
 
@@ -86,7 +106,7 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
     """
     resolved = settings if settings is not None else load_settings()
     model = resolved.cadrumo_llm_ollama_vision_model
-    url = _ollama_tags_url(resolved.cadrumo_llm_ollama_chat_url)
+    url = _ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "tags")
     try:
         with httpx.Client(timeout=_OLLAMA_PROBE_TIMEOUT_S) as client:
             response = client.get(url)
@@ -220,50 +240,104 @@ def probe_playwright_browser(cache_root: Path | None = None) -> DependencyStatus
     )
 
 
-def read_total_system_memory_bytes() -> int | None:
-    """Return total physical system memory in bytes, or ``None`` when unreadable.
+class SystemMemoryReading(BaseModel):
+    """Measured total and free physical system memory, either of which may be unreadable.
 
-    Dependency-free on every supported platform: POSIX reads the pair of
-    ``sysconf`` values, Windows calls ``GlobalMemoryStatusEx`` through
-    :mod:`ctypes`. Returns ``None`` rather than raising or guessing when the
-    platform answers nothing, because an unknown quantity must not be reported
-    as a shortfall -- see :func:`probe_model_runtime_hardware_floor`.
+    Both figures are carried because they answer different questions and the
+    provisioning decision separates them deliberately: ``total_bytes`` is what a
+    diagnostic row *reports* about the machine, ``free_bytes`` is the only figure
+    a load decision may *act* on. A machine with 64 GiB installed and 2 GiB free
+    cannot host a 4 GiB model, and reading the total as headroom is exactly the
+    admission error the contention check exists to prevent.
+
+    ``None`` means "not measured", never "zero". See
+    :class:`~core.AcceleratorKind` for the same distinction on the device side.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    total_bytes: int | None = Field(default=None, ge=0)
+    free_bytes: int | None = Field(default=None, ge=0)
+
+
+def _windows_memory_status() -> tuple[int, int] | None:
+    """Return ``(total, available)`` physical bytes from ``GlobalMemoryStatusEx``, or ``None``."""
+    import ctypes
+
+    class _MemoryStatusEx(ctypes.Structure):
+        _fields_ = (
+            ("dwLength", ctypes.c_ulong),
+            ("dwMemoryLoad", ctypes.c_ulong),
+            ("ullTotalPhys", ctypes.c_ulonglong),
+            ("ullAvailPhys", ctypes.c_ulonglong),
+            ("ullTotalPageFile", ctypes.c_ulonglong),
+            ("ullAvailPageFile", ctypes.c_ulonglong),
+            ("ullTotalVirtual", ctypes.c_ulonglong),
+            ("ullAvailVirtual", ctypes.c_ulonglong),
+            ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+        )
+
+    status = _MemoryStatusEx()
+    status.dwLength = ctypes.sizeof(_MemoryStatusEx)
+    try:
+        if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+            return int(status.ullTotalPhys), int(status.ullAvailPhys)
+    except (OSError, AttributeError):
+        return None
+    return None
+
+
+def read_system_memory() -> SystemMemoryReading:
+    """Measure total and free physical system memory, reporting either as ``None`` when unreadable.
+
+    Dependency-free on every supported platform: POSIX reads the ``sysconf``
+    page-size pair, Windows calls ``GlobalMemoryStatusEx`` through :mod:`ctypes`.
+    The free counterpart costs nothing to obtain -- the Windows struct already
+    carries ``ullAvailPhys`` in the same call, and POSIX exposes
+    ``SC_AVPHYS_PAGES`` beside the total -- so both figures come from one
+    measurement and cannot disagree about the moment they describe.
+
+    A platform that answers nothing yields ``None``, never a guess: an unknown
+    quantity must not be reported as a shortfall by
+    :func:`probe_model_runtime_hardware_floor`, nor mistaken for headroom by
+    :func:`assess_model_load_contention`.
     """
     if sys.platform != "win32":
         # Guarded on the platform rather than on getattr so a type checker can
         # follow it: os.sysconf is absent from the Windows stubs entirely. The
-        # inner membership check stays for POSIX variants that omit the two
-        # constants themselves.
+        # inner membership checks stay for POSIX variants that omit the
+        # constants themselves; SC_AVPHYS_PAGES is the more commonly absent of
+        # the three, so a total may be readable where a free figure is not.
         names = getattr(os, "sysconf_names", {})
         if "SC_PAGE_SIZE" in names and "SC_PHYS_PAGES" in names:
             try:
-                return int(os.sysconf("SC_PAGE_SIZE")) * int(os.sysconf("SC_PHYS_PAGES"))
+                page_size = int(os.sysconf("SC_PAGE_SIZE"))
+                total = page_size * int(os.sysconf("SC_PHYS_PAGES"))
             except (OSError, ValueError):
-                return None
-    if sys.platform == "win32":
-        import ctypes
+                return SystemMemoryReading()
+            free: int | None = None
+            if "SC_AVPHYS_PAGES" in names:
+                try:
+                    free = page_size * int(os.sysconf("SC_AVPHYS_PAGES"))
+                except (OSError, ValueError):
+                    free = None
+            return SystemMemoryReading(total_bytes=total, free_bytes=free)
+        return SystemMemoryReading()
+    measured = _windows_memory_status()
+    if measured is None:
+        return SystemMemoryReading()
+    return SystemMemoryReading(total_bytes=measured[0], free_bytes=measured[1])
 
-        class _MemoryStatusEx(ctypes.Structure):
-            _fields_ = (
-                ("dwLength", ctypes.c_ulong),
-                ("dwMemoryLoad", ctypes.c_ulong),
-                ("ullTotalPhys", ctypes.c_ulonglong),
-                ("ullAvailPhys", ctypes.c_ulonglong),
-                ("ullTotalPageFile", ctypes.c_ulonglong),
-                ("ullAvailPageFile", ctypes.c_ulonglong),
-                ("ullTotalVirtual", ctypes.c_ulonglong),
-                ("ullAvailVirtual", ctypes.c_ulonglong),
-                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
-            )
 
-        status = _MemoryStatusEx()
-        status.dwLength = ctypes.sizeof(_MemoryStatusEx)
-        try:
-            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
-                return int(status.ullTotalPhys)
-        except (OSError, AttributeError):
-            return None
-    return None
+def read_total_system_memory_bytes() -> int | None:
+    """Return total physical system memory in bytes, or ``None`` when unreadable.
+
+    A narrowing of :func:`read_system_memory` for the hardware-floor diagnostic,
+    which judges the machine's installed capacity rather than its present
+    headroom. Kept as the one total-only reader so there is no second platform
+    branch to drift.
+    """
+    return read_system_memory().total_bytes
 
 
 def probe_model_runtime_hardware_floor(
@@ -356,6 +430,687 @@ def probe_optional_extra(extra: OptionalExtra) -> DependencyStatus:
         service=f"extra:{extra.extra}",
         available=True,
         detail=f"{extra.feature} is available ({extra.import_name} importable)",
+    )
+
+
+class AcceleratorDevice(BaseModel):
+    """One enumerated accelerator device and its measured VRAM figures.
+
+    Per-device rather than aggregated because a model loads onto ONE device: two
+    cards with 3 GiB free each are not 6 GiB of headroom for a 4 GiB model. The
+    aggregation rules that follow from that live on
+    :class:`HardwareProfile`.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    index: int = Field(ge=0)
+    name: str = Field(min_length=1)
+    total_vram_bytes: int | None = Field(default=None, ge=0)
+    free_vram_bytes: int | None = Field(default=None, ge=0)
+
+
+class AcceleratorReading(BaseModel):
+    """What the accelerator measurement found: a kind, and the devices behind it.
+
+    ``kind`` is :class:`~core.AcceleratorKind`; an empty ``devices`` tuple is
+    consistent with both ``NONE`` (measured: there are none) and ``UNKNOWN``
+    (not measured), which is precisely why the kind is carried separately rather
+    than inferred from the tuple being empty.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    kind: AcceleratorKind
+    devices: tuple[AcceleratorDevice, ...] = ()
+    detail: str = ""
+
+
+class HardwareProfile(BaseModel):
+    """The measured local-inference capacity of this machine.
+
+    Carries totals AND free amounts on both the system-memory and the device
+    axis, and the two are not interchangeable: **totals are for reporting, free
+    amounts are for acting.** A diagnostic row may say "16 GiB card"; a load
+    decision may only consult :attr:`free_vram_bytes`. Deciding on a total is the
+    concrete defect this model exists to prevent -- the machine this was built
+    for has a 16 GiB card with under 4 GiB free, shared with a resident search
+    service, and a load admitted against the total takes the host down with every
+    running process on it.
+
+    Every figure is independently optional. ``None`` means the measurement was
+    not obtainable, and per the provisioning decision the two directions differ:
+    diagnostic rows report an unreadable figure as **unverified** and stay
+    available, while :func:`assess_model_load_contention` treats it as a refusal
+    input. See :func:`probe_hardware_profile`.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    memory: SystemMemoryReading
+    accelerator: AcceleratorReading
+
+    @property
+    def total_vram_bytes(self) -> int | None:
+        """Return summed device VRAM for REPORTING, or ``None`` when any device is unreadable.
+
+        Summed because the reporting question is "what is installed in this
+        machine", which is additive. Deliberately NOT the figure any load
+        decision consults -- see :attr:`free_vram_bytes`.
+        """
+        devices = self.accelerator.devices
+        if not devices or any(device.total_vram_bytes is None for device in devices):
+            return None
+        return sum(device.total_vram_bytes or 0 for device in devices)
+
+    @property
+    def free_vram_bytes(self) -> int | None:
+        """Return the largest single-device free VRAM for ACTING, or ``None`` when unreadable.
+
+        The maximum, never the sum: a model is resident on one device, so the
+        headroom that decides admission is the best single device's, and summing
+        would manufacture capacity that no allocation can reach. Devices whose
+        free figure is unreadable are skipped rather than counted as zero --
+        they cannot host the load either way, and treating them as zero would
+        not change the maximum.
+
+        ``None`` when no device reported a free figure at all, which fails
+        closed at the act.
+        """
+        readable = [device.free_vram_bytes for device in self.accelerator.devices if device.free_vram_bytes is not None]
+        if not readable:
+            return None
+        return max(readable)
+
+
+def read_accelerator() -> AcceleratorReading:
+    """Measure the local accelerator through NVML, never raising and never loading a model.
+
+    NVML (the ``nvidia-ml-py`` binding declared in the ``llm`` extra) is
+    preferred over a ``nvidia-smi`` shell-out because it yields **per-device**
+    total and free figures from an in-process query with no subprocess. The
+    distinction is load-bearing for attribution: a whole-device free figure is
+    contaminated by every process on the card, which is exactly the quantity
+    :func:`assess_model_load_contention` must split between this runtime's
+    residents and peer processes -- so NVML is authoritative for the free-VRAM
+    figure, and the runtime's own ``/api/ps`` report (see
+    :func:`read_runtime_residents`) is authoritative for how much of it is ours.
+
+    Returns :attr:`~core.AcceleratorKind.UNKNOWN` when NVML is absent or
+    uninitialisable, and :attr:`~core.AcceleratorKind.NONE` only on the positive
+    reading that NVML initialised and enumerated zero devices.
+    """
+    try:
+        import pynvml
+    except ImportError:
+        return AcceleratorReading(
+            kind=AcceleratorKind.UNKNOWN,
+            detail="NVML is not installed, so device memory could not be measured",
+        )
+    try:
+        pynvml.nvmlInit()
+    except (pynvml.NVMLError, OSError) as exc:
+        return AcceleratorReading(
+            kind=AcceleratorKind.UNKNOWN,
+            detail=f"NVML is installed but did not initialise ({exc.__class__.__name__})",
+        )
+    try:
+        try:
+            count = int(pynvml.nvmlDeviceGetCount())
+        except (pynvml.NVMLError, OSError, ValueError):
+            return AcceleratorReading(
+                kind=AcceleratorKind.UNKNOWN,
+                detail="NVML initialised but the device count could not be read",
+            )
+        if count == 0:
+            return AcceleratorReading(
+                kind=AcceleratorKind.NONE,
+                detail="NVML initialised and enumerated no devices",
+            )
+        devices: list[AcceleratorDevice] = []
+        for index in range(count):
+            name = f"device {index}"
+            total: int | None = None
+            free: int | None = None
+            try:
+                handle = pynvml.nvmlDeviceGetHandleByIndex(index)
+                raw_name = pynvml.nvmlDeviceGetName(handle)
+                name = raw_name.decode("utf-8", "replace") if isinstance(raw_name, bytes) else str(raw_name)
+                info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+                total = int(info.total)
+                free = int(info.free)
+            except (pynvml.NVMLError, OSError, ValueError, AttributeError):
+                # A device that answers nothing stays enumerated with unreadable
+                # figures rather than being dropped: its presence is a real
+                # measurement even when its memory is not.
+                pass
+            devices.append(
+                AcceleratorDevice(
+                    index=index,
+                    name=name or f"device {index}",
+                    total_vram_bytes=total,
+                    free_vram_bytes=free,
+                ),
+            )
+        return AcceleratorReading(
+            kind=AcceleratorKind.NVIDIA_CUDA,
+            devices=tuple(devices),
+            detail=f"NVML enumerated {count} device(s)",
+        )
+    finally:
+        with contextlib.suppress(pynvml.NVMLError, OSError):
+            pynvml.nvmlShutdown()
+
+
+def probe_hardware_profile(
+    *,
+    memory: SystemMemoryReading | None = None,
+    accelerator: AcceleratorReading | None = None,
+) -> HardwareProfile:
+    """Measure this machine into a :class:`HardwareProfile`, never raising.
+
+    Both measurements are injectable arguments rather than patched module
+    internals, so every branch of the profile and of
+    :func:`assess_model_load_contention` is exercised against real model
+    construction with real readings -- a test must never depend on this host's
+    actual device state, which changes minute to minute while an agent fleet
+    runs on it.
+
+    Args:
+        memory: A system-memory reading; measured via :func:`read_system_memory`
+            when omitted.
+        accelerator: An accelerator reading; measured via
+            :func:`read_accelerator` when omitted.
+
+    Returns:
+        The composed :class:`HardwareProfile`.
+    """
+    return HardwareProfile(
+        memory=memory if memory is not None else read_system_memory(),
+        accelerator=accelerator if accelerator is not None else read_accelerator(),
+    )
+
+
+def _gib(value: int | None) -> str:
+    """Render a byte count as GiB for an operator-facing row, or ``unverified`` when unknown."""
+    return "unverified" if value is None else f"{value / 1024**3:.1f} GiB"
+
+
+def probe_local_inference_hardware(profile: HardwareProfile | None = None) -> DependencyStatus:
+    """Report the measured hardware profile as a diagnostic row, unknown shown as unverified.
+
+    Follows the shipped direction of :func:`probe_model_runtime_hardware_floor`:
+    an unreadable figure keeps ``available`` **true** and is rendered as
+    ``unverified``, because a *diagnostic* must not manufacture a shortfall on a
+    platform it merely cannot measure. The opposite direction governs
+    :func:`assess_model_load_contention`, which acts rather than reports and so
+    refuses on the same unknown.
+
+    Args:
+        profile: A measured profile; probed via :func:`probe_hardware_profile`
+            when omitted.
+
+    Returns:
+        A :class:`DependencyStatus` on the ``local-inference-hardware`` row.
+    """
+    resolved = profile if profile is not None else probe_hardware_profile()
+    kind = resolved.accelerator.kind
+    detail = (
+        f"system memory {_gib(resolved.memory.free_bytes)} free of {_gib(resolved.memory.total_bytes)}; "
+        f"accelerator {kind.value}; "
+        f"VRAM {_gib(resolved.free_vram_bytes)} free of {_gib(resolved.total_vram_bytes)}"
+    )
+    if kind is AcceleratorKind.UNKNOWN:
+        return DependencyStatus(
+            service="local-inference-hardware",
+            available=True,
+            detail=f"{detail} ({resolved.accelerator.detail})",
+            remediation=(
+                "install the NVML reader (pip install cadrumo[llm]) to measure device headroom; "
+                "until then a local model load is refused rather than guessed"
+            ),
+        )
+    return DependencyStatus(service="local-inference-hardware", available=True, detail=detail)
+
+
+class RuntimeResident(BaseModel):
+    """One model the local runtime reports as currently loaded.
+
+    Sourced from the runtime's own ``/api/ps`` report, which is what makes the
+    figure attributable: it is memory held by models *this* runtime loaded, as
+    distinct from the device-wide free shortfall NVML measures. The gap between
+    the two is peer-process usage.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    name: str = Field(min_length=1)
+    size_bytes: int | None = Field(default=None, ge=0)
+    size_vram_bytes: int | None = Field(default=None, ge=0)
+
+
+def _ollama_endpoint(chat_url: str, path: str) -> str:
+    """Derive a sibling runtime endpoint (``/api/<path>``) from the configured chat URL."""
+    base = chat_url.rsplit("/api/", 1)[0] if "/api/" in chat_url else chat_url.rstrip("/")
+    return f"{base}/api/{path}"
+
+
+def read_runtime_residents(settings: Settings | None = None) -> tuple[RuntimeResident, ...] | None:
+    """Read the local runtime's resident model set, or ``None`` when it could not be read.
+
+    A short-timeout ``GET /api/ps``. Loads nothing and runs no inference. The
+    ``None`` return is a distinct state from an empty tuple and the two must not
+    be collapsed: empty means "measured, nothing is resident", which permits
+    attributing a device shortfall to peer processes, while ``None`` means the
+    attribution input is missing and
+    :func:`assess_model_load_contention` refuses rather than guessing.
+    """
+    resolved = settings if settings is not None else load_settings()
+    url = _ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "ps")
+    try:
+        with httpx.Client(timeout=_OLLAMA_PROBE_TIMEOUT_S) as client:
+            response = client.get(url)
+            response.raise_for_status()
+            payload = response.json()
+        if not isinstance(payload, dict):
+            return None
+        # CAST-RATIONALE-OLLAMA-PS-PAYLOAD: httpx.Response.json() returns Any;
+        # isinstance narrows to dict but not its type parameters.
+        # nosemgrep: no-cast-in-domain-application
+        entries = cast(dict[str, object], payload).get("models")
+        if not isinstance(entries, list):
+            return None
+        # CAST-RATIONALE-OLLAMA-PS-MODELS: isinstance narrows to list but not its
+        # element type; entries are validated individually below.
+        # nosemgrep: no-cast-in-domain-application
+        residents: list[RuntimeResident] = []
+        for entry in cast(list[object], entries):
+            if not isinstance(entry, dict):
+                return None
+            # CAST-RATIONALE-OLLAMA-PS-ENTRY: isinstance narrows to dict but not
+            # its type parameters.
+            # nosemgrep: no-cast-in-domain-application
+            row = cast(dict[str, object], entry)
+            name = row.get("name") or row.get("model")
+            if not isinstance(name, str) or not name:
+                return None
+            size = row.get("size")
+            size_vram = row.get("size_vram")
+            residents.append(
+                RuntimeResident(
+                    name=name,
+                    size_bytes=int(size) if isinstance(size, int) and size >= 0 else None,
+                    size_vram_bytes=int(size_vram) if isinstance(size_vram, int) and size_vram >= 0 else None,
+                ),
+            )
+    except (httpx.HTTPError, ValueError):
+        return None
+    return tuple(residents)
+
+
+def cadrumo_selected_models(settings: Settings | None = None) -> frozenset[str]:
+    """Return the model identifiers Cadrumo itself selected, the only ones it may unload.
+
+    The boundary of the unload action. A model resident in the local runtime that
+    Cadrumo did not select belongs to whoever loaded it, and evicting it would be
+    the same overreach as signalling a peer process -- it is reported in the
+    contention snapshot and never acted on.
+    """
+    resolved = settings if settings is not None else load_settings()
+    return frozenset({resolved.cadrumo_llm_ollama_vision_model, resolved.cadrumo_llm_ollama_text_model})
+
+
+def _matches_selected(name: str, selected: frozenset[str]) -> bool:
+    """Return whether a resident model name is one Cadrumo selected, ignoring the tag suffix."""
+    stem = name.split(":", 1)[0]
+    return name in selected or any(candidate.split(":", 1)[0] == stem for candidate in selected)
+
+
+class ContentionSnapshot(BaseModel):
+    """The measured verdict on whether one model load is safe to perform right now.
+
+    Read the fields as three separate claims. ``admitted`` is the decision.
+    ``causes`` is :class:`~core.ContentionCause` and says *why* a refusal
+    happened, keyed to which remediation applies -- unloading a model Cadrumo
+    selected, closing a peer application, or measuring what could not be
+    measured. ``residents`` is the attribution evidence: the runtime's own
+    loaded set, which is what separates memory Cadrumo can reclaim from memory
+    it may only observe.
+
+    Nothing on this model evicts, signals, or otherwise touches a process
+    Cadrumo does not own. Pressure caused by a peer is reported and refused,
+    never managed.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    model: str = Field(min_length=1)
+    requirement_bytes: int = Field(ge=0)
+    safety_margin_bytes: int = Field(ge=0)
+    accelerator: AcceleratorKind
+    free_vram_bytes: int | None = Field(default=None, ge=0)
+    free_system_memory_bytes: int | None = Field(default=None, ge=0)
+    binding_free_bytes: int | None = Field(default=None, ge=0)
+    residents: tuple[RuntimeResident, ...] | None = None
+    resident_attributed_bytes: int = Field(default=0, ge=0)
+    unloadable_models: tuple[str, ...] = ()
+    shortfall_bytes: int | None = Field(default=None, ge=0)
+    admitted: bool
+    causes: tuple[ContentionCause, ...] = ()
+    detail: str = ""
+    remediation: str = ""
+
+    @property
+    def required_bytes(self) -> int:
+        """Return the requirement plus the configured safety margin -- the figure actually compared."""
+        return self.requirement_bytes + self.safety_margin_bytes
+
+
+def _attributed_resident_bytes(
+    residents: tuple[RuntimeResident, ...],
+    *,
+    on_device: bool,
+    names: frozenset[str] | None = None,
+) -> int:
+    """Sum resident memory in the binding arena, optionally restricted to named models."""
+    total = 0
+    for resident in residents:
+        if names is not None and resident.name not in names:
+            continue
+        held = resident.size_vram_bytes if on_device else resident.size_bytes
+        total += held or 0
+    return total
+
+
+def assess_model_load_contention(
+    model: str,
+    requirement_bytes: int,
+    *,
+    profile: HardwareProfile | None = None,
+    residents: tuple[RuntimeResident, ...] | None = None,
+    residents_measured: bool = True,
+    settings: Settings | None = None,
+) -> ContentionSnapshot:
+    """Judge whether loading ``model`` is safe right now, failing closed on any unknown.
+
+    **Acting fails closed where reporting fails open.** The free figures, never
+    the totals, are compared against the model's declared requirement plus the
+    configured safety margin. An unreadable free figure refuses the load: "could
+    not tell" is not evidence of headroom, and is precisely the state that
+    destroyed running work on the machine this was built for. The only escape is
+    the explicit ``cadrumo_llm_contention_check_override`` setting, which admits
+    an *unmeasurable* machine and never a *measured* shortfall.
+
+    On a measured shortfall the cause is attributed rather than assumed, because
+    the remediations are not interchangeable. Memory held by the runtime's own
+    residents is reclaimable through :func:`unload_runtime_model` -- and only for
+    the models Cadrumo selected. Memory unexplained by those residents is a peer
+    process's, and the refusal says so instead of telling the operator to unload
+    something they do not own.
+
+    This function never loads, pulls, evicts, or signals anything. It reads.
+
+    Args:
+        model: The model identifier whose load is being judged.
+        requirement_bytes: The model's declared memory requirement.
+        profile: Measured hardware; probed when omitted.
+        residents: The runtime's resident set; read when omitted. ``None``
+            together with ``residents_measured`` false means unreadable.
+        residents_measured: False when the resident set could not be read.
+            Distinguishes an unreadable resident set from a measured-empty one.
+        settings: Settings carrying the margin and override; loaded when omitted.
+
+    Returns:
+        A :class:`ContentionSnapshot`. This module never raises on absence; the
+        dispatch boundary converts a non-admitted snapshot into its typed
+        refusal.
+    """
+    resolved = settings if settings is not None else load_settings()
+    margin = resolved.cadrumo_llm_contention_safety_margin_bytes
+    hardware = profile if profile is not None else probe_hardware_profile()
+    if residents is None and residents_measured:
+        read = read_runtime_residents(resolved)
+        resident_set = read
+        residents_known = read is not None
+    else:
+        resident_set = residents
+        residents_known = residents_measured and residents is not None
+
+    kind = hardware.accelerator.kind
+    free_vram = hardware.free_vram_bytes
+    free_ram = hardware.memory.free_bytes
+    on_device = kind is AcceleratorKind.NVIDIA_CUDA
+    # The binding arena follows the measured accelerator kind: a device load is
+    # bound by device memory, a CPU-only machine by system memory, and an
+    # unmeasurable accelerator by nothing that can be trusted.
+    binding_free = free_vram if on_device else (free_ram if kind is AcceleratorKind.NONE else None)
+    required = requirement_bytes + margin
+
+    base = {
+        "model": model,
+        "requirement_bytes": requirement_bytes,
+        "safety_margin_bytes": margin,
+        "accelerator": kind,
+        "free_vram_bytes": free_vram,
+        "free_system_memory_bytes": free_ram,
+        "binding_free_bytes": binding_free,
+        "residents": resident_set,
+    }
+
+    if binding_free is None:
+        if resolved.cadrumo_llm_contention_check_override:
+            return ContentionSnapshot(
+                **base,
+                admitted=True,
+                detail=(
+                    f"free memory for {model!r} could not be measured "
+                    f"(accelerator {kind.value}); admitted only because "
+                    f"cadrumo_llm_contention_check_override is set"
+                ),
+            )
+        return ContentionSnapshot(
+            **base,
+            admitted=False,
+            causes=(ContentionCause.UNREADABLE,),
+            detail=(
+                f"free memory could not be measured (accelerator {kind.value}), so the "
+                f"{_gib(required)} needed for {model!r} cannot be shown to be available"
+            ),
+            remediation=(
+                "install the NVML reader (pip install cadrumo[llm]) so device headroom can be "
+                "measured, or set cadrumo_llm_contention_check_override on a machine known to "
+                "have capacity this build cannot read"
+            ),
+        )
+
+    if binding_free >= required:
+        return ContentionSnapshot(
+            **base,
+            shortfall_bytes=0,
+            admitted=True,
+            detail=(
+                f"{_gib(binding_free)} free meets the {_gib(required)} needed for {model!r} "
+                f"({_gib(requirement_bytes)} requirement plus a {_gib(margin)} margin)"
+            ),
+        )
+
+    shortfall = required - binding_free
+    if not residents_known or resident_set is None:
+        return ContentionSnapshot(
+            **base,
+            shortfall_bytes=shortfall,
+            admitted=False,
+            causes=(ContentionCause.UNREADABLE,),
+            detail=(
+                f"{_gib(binding_free)} free is {_gib(shortfall)} short of the {_gib(required)} "
+                f"needed for {model!r}, and the local runtime's resident set could not be read, "
+                f"so the shortfall cannot be attributed"
+            ),
+            remediation=(
+                "start the local model runtime so its resident set can be read, then retry; "
+                "the shortfall is measured and real either way"
+            ),
+        )
+
+    selected = cadrumo_selected_models(resolved)
+    resident_bytes = _attributed_resident_bytes(resident_set, on_device=on_device)
+    unloadable = tuple(
+        resident.name for resident in resident_set if _matches_selected(resident.name, selected)
+    )
+    unloadable_bytes = _attributed_resident_bytes(
+        resident_set,
+        on_device=on_device,
+        names=frozenset(unloadable),
+    )
+    peer_bytes = max(shortfall - resident_bytes, 0)
+
+    causes: list[ContentionCause] = []
+    if resident_bytes > 0:
+        causes.append(ContentionCause.RUNTIME_RESIDENT)
+    if peer_bytes > 0:
+        causes.append(ContentionCause.PEER_PROCESS)
+    if not causes:
+        # Nothing is resident and nothing is unexplained only when the shortfall
+        # is zero, which the admitted branch above already returned; reaching
+        # here means the shortfall is entirely outside this runtime.
+        causes.append(ContentionCause.PEER_PROCESS)
+
+    resident_names = ", ".join(resident.name for resident in resident_set) or "none"
+    detail = (
+        f"{_gib(binding_free)} free is {_gib(shortfall)} short of the {_gib(required)} needed for "
+        f"{model!r}; the local runtime holds {_gib(resident_bytes)} across residents [{resident_names}] "
+        f"and {_gib(peer_bytes)} of the shortfall is held outside it"
+    )
+    if peer_bytes > 0 and unloadable_bytes > 0:
+        remediation = (
+            f"unload the Cadrumo-selected resident model(s) {', '.join(unloadable)} to reclaim "
+            f"{_gib(unloadable_bytes)}, and close the other application holding {_gib(peer_bytes)}; "
+            f"Cadrumo does not touch a process it did not start"
+        )
+    elif peer_bytes > 0:
+        remediation = (
+            f"close the other application holding {_gib(peer_bytes)} of device memory, then retry; "
+            f"no Cadrumo-selected model is resident, so there is nothing here for Cadrumo to unload"
+        )
+    elif unloadable_bytes > 0:
+        remediation = (
+            f"unload the Cadrumo-selected resident model(s) {', '.join(unloadable)} to reclaim "
+            f"{_gib(unloadable_bytes)}, then retry"
+        )
+    else:
+        remediation = (
+            f"the local runtime holds {_gib(resident_bytes)} in models Cadrumo did not select "
+            f"([{resident_names}]); ask whoever loaded them to release them -- Cadrumo unloads "
+            f"only the models it selected"
+        )
+
+    return ContentionSnapshot(
+        **base,
+        resident_attributed_bytes=resident_bytes,
+        unloadable_models=unloadable,
+        shortfall_bytes=shortfall,
+        admitted=False,
+        causes=tuple(causes),
+        detail=detail,
+        remediation=remediation,
+    )
+
+
+class UnloadOutcome(BaseModel):
+    """The result of an explicit unload of one Cadrumo-selected resident model.
+
+    Never raises and never escalates: a model Cadrumo did not select, or one that
+    is not resident, returns ``unloaded`` false with the reason. The action is
+    self-scoped by construction -- it asks the local runtime to release a model
+    *it* loaded on Cadrumo's behalf, and has no mechanism to affect any other
+    process on the device.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    model: str = Field(min_length=1)
+    unloaded: bool
+    was_resident: bool = False
+    detail: str = ""
+    remediation: str = ""
+
+
+def unload_runtime_model(
+    model: str,
+    *,
+    residents: tuple[RuntimeResident, ...] | None = None,
+    residents_measured: bool = True,
+    settings: Settings | None = None,
+) -> UnloadOutcome:
+    """Release one Cadrumo-selected model from the local runtime, touching nothing else.
+
+    Two guards, in order, and both matter. The model must be one
+    :func:`cadrumo_selected_models` names, so Cadrumo cannot evict a model
+    another operator or application loaded into the shared runtime. It must then
+    be **resident**, which is what keeps this action from becoming a load: the
+    runtime's release call would otherwise bring a non-resident model in before
+    releasing it, and this module must never cause a model load.
+
+    The release is a zero-keep-alive request carrying no prompt, so the runtime
+    drops the model without running inference.
+
+    Args:
+        model: The model identifier to release.
+        residents: The resident set; read via :func:`read_runtime_residents`
+            when omitted.
+        residents_measured: False when the resident set could not be read.
+        settings: Settings carrying the runtime endpoint; loaded when omitted.
+
+    Returns:
+        An :class:`UnloadOutcome` describing what happened and, on refusal, why.
+    """
+    resolved = settings if settings is not None else load_settings()
+    if not _matches_selected(model, cadrumo_selected_models(resolved)):
+        return UnloadOutcome(
+            model=model,
+            unloaded=False,
+            detail=f"{model!r} is not a model Cadrumo selected, so Cadrumo will not unload it",
+            remediation=(
+                "Cadrumo releases only the models it loaded; ask the owner of the other model to "
+                "release it, or point cadrumo_llm_ollama_vision_model / _text_model at it"
+            ),
+        )
+    if residents is None and residents_measured:
+        resident_set = read_runtime_residents(resolved)
+    else:
+        resident_set = residents if residents_measured else None
+    if resident_set is None:
+        return UnloadOutcome(
+            model=model,
+            unloaded=False,
+            detail="the local runtime's resident set could not be read, so nothing was released",
+            remediation="start the local model runtime, then retry",
+        )
+    if not any(_matches_selected(resident.name, frozenset({model})) for resident in resident_set):
+        return UnloadOutcome(
+            model=model,
+            unloaded=False,
+            was_resident=False,
+            detail=f"{model!r} is not resident in the local runtime; nothing to release",
+        )
+    url = _ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "generate")
+    try:
+        with httpx.Client(timeout=_OLLAMA_PROBE_TIMEOUT_S) as client:
+            response = client.post(url, json={"model": model, "keep_alive": 0})
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        return UnloadOutcome(
+            model=model,
+            unloaded=False,
+            was_resident=True,
+            detail=f"the local runtime refused the release request for {model!r} ({exc.__class__.__name__})",
+            remediation="check that the local model runtime is reachable at cadrumo_llm_ollama_chat_url",
+        )
+    return UnloadOutcome(
+        model=model,
+        unloaded=True,
+        was_resident=True,
+        detail=f"released {model!r} from the local runtime",
     )
 
 

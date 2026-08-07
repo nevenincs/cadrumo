@@ -44,6 +44,11 @@ Major declarations:
   evidence bytes that :func:`extract_invoice_fields` reads. Exported because
   it is that function's argument type: a consumer cannot construct a call
   through this facade without it. It is never persisted or serialized.
+* :class:`DocumentTranscription` with :class:`TranscriberIdentity` - the
+  acquisition-stage record of a document's reading-order text, printed forms
+  preserved, stamped with the reader that produced it. Exported because the
+  vision reader outside this package produces one and every later ingestion
+  stage consumes one. Like :class:`EvidenceInput` it refuses serialization.
 * :func:`confirm_invoice_draft_from_evidence` with
   :class:`InvoiceConfirmationResult` - the non-interactive confirm step that
   re-extracts a draft, layers operator overrides on top, and delegates the
@@ -133,6 +138,7 @@ if TYPE_CHECKING:
         describe_aeat_party_identifier,
         project_aeat_record_counterparty,
     )
+    from ._document_transcription import DocumentTranscription, TranscriberIdentity
     from ._evidence import (
         MediaKind,
         PurchaseInvoiceEvidence,
@@ -262,6 +268,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "AeatRecordProjectionError": "._aeat_record_projection",
     "describe_aeat_party_identifier": "._aeat_record_projection",
     "project_aeat_record_counterparty": "._aeat_record_projection",
+    "DocumentTranscription": "._document_transcription",
     "DraftDiscrepancyFinding": "._evidence_draft",
     "EligibleCategoryRow": "._ratios",
     "EvidenceInput": "._evidence_input",
@@ -324,6 +331,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ReviewedSuggestion": "._llm_review_workflow",
     "SplitChildCommand": "._models",
     "SplitTransactionResult": "._models",
+    "TranscriberIdentity": "._document_transcription",
     "add_classification_rule": "._actions_classification",
     "apply_classification_rules": "._actions_classification",
     "apply_evidence_classification": "._llm_classification",
@@ -422,12 +430,13 @@ __all__ = [
     "CLASSIFIED_BY_MANUAL",
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD",
     "MINIMUM_DISPLAY_ID_WIDTH",
+    "AeatRecordProjectionError",
     "ApplyRulesAppliedRow",
     "ApplyRulesResult",
     "BulkClassifyFailure",
     "BulkClassifyResult",
     "BulkClassifyRow",
-    "AeatRecordProjectionError",
+    "DocumentTranscription",
     "DraftDiscrepancyFinding",
     "EligibleCategoryRow",
     "EvidenceInput",
@@ -489,6 +498,7 @@ __all__ = [
     "ReviewedSuggestion",
     "SplitChildCommand",
     "SplitTransactionResult",
+    "TranscriberIdentity",
     "add_classification_rule",
     "apply_classification_rules",
     "apply_evidence_classification",

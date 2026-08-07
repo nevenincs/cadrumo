@@ -126,11 +126,15 @@ def _observations(*transactions: Transaction) -> tuple[IvaLedgerObservation, ...
 def _revision_without_fact(revision: ModeloRevision, fact: str) -> ModeloRevision:
     """Return ``revision`` with every ``ledger_iva_aggregation`` binding drawing ``fact`` removed.
 
-    Models the regression under test: a revision that draws a row's other
-    quantities while never declaring a binding for this one. Modelo 390 is the
-    standing real instance for ``base_amount_sum``, but the assertion is pinned
-    on the stripped revision rather than on M390's current declarations so that
-    closing that gap in the registry cannot turn this test into a false claim.
+    Models one of the two shapes the screen catches: a revision declaring no
+    binding for this fact at all. Pinning on a stripped revision rather than on
+    a modelo that happens to lack the fact today was the right call and has
+    already paid — Modelo 390 was the standing instance for ``base_amount_sum``
+    and the annual-form campaign closed it. A test keyed on that state would now
+    be asserting something false about a correctly-modelled form.
+
+    The other shape, a fact declared by bindings that reach only SOME rows, is
+    covered by the partitioned tests below against the committed revision.
     """
     kept = [
         binding
@@ -148,7 +152,12 @@ def test_the_committed_revision_draws_every_quantity_its_rows_carry() -> None:
 
 
 def test_a_revision_drawing_no_base_surfaces_the_whole_base() -> None:
-    """The Modelo 390 shape: cuota and recargo drawn, base imponible drawn by nothing."""
+    """A revision declaring no base binding at all reports the whole base.
+
+    The simpler of the two shapes: the fact reaches no binding on the revision,
+    so every row carrying it is uncovered. Modelo 390 was the standing real
+    instance until the annual-form campaign declared its base boxes.
+    """
     revision = _revision_without_fact(_m303_revision(), "base_amount_sum")
     rows = _observations(
         _sale("s-1", base="1000.00", iva="210.00"),

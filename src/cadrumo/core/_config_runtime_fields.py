@@ -76,6 +76,33 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
             "moondream on low-memory hardware, raise it for qwen2.5vl:7b"
         ),
     )
+    cadrumo_llm_contention_safety_margin_bytes: int = Field(
+        default=1024**3,
+        ge=0,
+        description=(
+            "Headroom kept free ABOVE a model's declared memory requirement before "
+            "a load is admitted. A model does not occupy exactly its weight size: "
+            "the KV cache grows with the context window, the runtime allocates "
+            "scratch buffers, and the display server keeps taking frames while the "
+            "read runs. Admitting a load that fits with zero margin is how a "
+            "measured-safe load still ends as an OOM kill mid-read. 1 GiB covers "
+            "the default 8192-token context plus normal desktop churn; raise it on "
+            "a machine that also drives a display, lower it on a headless box"
+        ),
+    )
+    cadrumo_llm_contention_check_override: bool = Field(
+        default=False,
+        description=(
+            "Admit a local model load even when free headroom could not be "
+            "measured. Default false: an unreadable free figure fails CLOSED at "
+            "the act, because 'could not tell' is not evidence of headroom. Set "
+            "true only on a machine known to have capacity that this build cannot "
+            "read (a non-NVIDIA accelerator, or NVML absent because cadrumo[llm] "
+            "is not installed). It does not override a MEASURED shortfall -- a "
+            "load whose requirement exceeds measured free memory is refused "
+            "regardless of this setting"
+        ),
+    )
     cadrumo_llm_default_max_tokens: int = Field(
         default=1024,
         gt=0,

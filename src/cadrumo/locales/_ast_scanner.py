@@ -306,9 +306,27 @@ def _dotted_literal_value(node: ast.expr | None) -> str | None:
 
 
 def _add_first_dotted_arg(node: ast.Call, findings: set[str]) -> None:
+    """Collect the dotted-literal key(s) carried by a call's first argument.
+
+    A ternary first argument (``tr("key.a" if cond else "key.b")``) is walked
+    into both branches -- possibly nested -- so every literal key an operator
+    can actually observe at runtime is discovered, not only whichever branch
+    happens to sit as a plain ``Constant``. Without this, only the branch the
+    regex/AST scanner happens to see first is ever enrolled, and the other
+    branch's key is invisible to every downstream parity/coverage audit.
+    """
     if not node.args:
         return
-    value = _dotted_literal_value(node.args[0])
+    _collect_conditional_dotted_literal(node.args[0], findings)
+
+
+def _collect_conditional_dotted_literal(node: ast.expr, findings: set[str]) -> None:
+    """Recursively collect dotted-literal keys from a (possibly ternary) expression."""
+    if isinstance(node, ast.IfExp):
+        _collect_conditional_dotted_literal(node.body, findings)
+        _collect_conditional_dotted_literal(node.orelse, findings)
+        return
+    value = _dotted_literal_value(node)
     if value is not None:
         findings.add(value)
 
