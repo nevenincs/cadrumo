@@ -321,7 +321,14 @@ html_meta = {
 html_favicon = "_static/cadrumo-favicon.svg"
 html_static_path = ["_static"]
 templates_path = ["_templates"]
-html_css_files = ["cadrumo-docs.css"]
+html_css_files = [
+    "cadrumo-docs.css",
+    # The generated reference surfaces carry their own stylesheets so the
+    # taxpayer-facing presentation of a casilla, a provision and a glossary
+    # term can evolve without editing the site-wide sheet.
+    "cadrumo-casilla-reference.css",
+    "cadrumo-legal-reference.css",
+]
 html_js_files = ["cadrumo-docs.js"]
 # The left sidebar carries the command-palette trigger and the navigation tree;
 # brand and the stock search box move into the sticky site header / palette.
