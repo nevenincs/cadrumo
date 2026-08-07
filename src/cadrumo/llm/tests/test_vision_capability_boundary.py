@@ -32,7 +32,6 @@ import pytest
 from PIL import Image
 from pydantic import SecretStr, ValidationError
 
-from ...adapters.outbound.llm import LLMCache, UsageRecorder
 from ...core import ImageMediaType
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
@@ -72,11 +71,21 @@ def _settings(tmp_path: Path, *, openai_chat_url: str | None = None) -> EnvFileF
 
 
 def _client(settings: EnvFileFreeSettings) -> LLMClient:
-    return LLMClient(
-        settings=settings,
-        cache=LLMCache(root_dir=settings.cadrumo_llm_cache_dir),
-        usage_recorder=UsageRecorder(root_dir=settings.cadrumo_llm_usage_dir),
-    )
+    """Build a real client, letting it construct its own core-side stores.
+
+    The cache and usage recorder are deliberately NOT injected. Passing them
+    built exactly what ``LLMClient.__init__`` already defaults to, from the same
+    two settings fields, so the injection changed nothing about the test and
+    only added an import of the persistence-backed stores into this package.
+
+    That import was the sole reason the inference subpackage appeared to reach
+    persistence: the boundary contract walks import chains, and a test importing
+    the core-side cache puts one there whether or not anything persists. The
+    property the contract protects is real -- the encryption exemption rests on
+    this package persisting nothing -- so the honest fix is to stop importing
+    what the test never needed, not to carve the chain out.
+    """
+    return LLMClient(settings=settings)
 
 
 @contextmanager

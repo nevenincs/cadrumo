@@ -1203,7 +1203,7 @@ def test_transaction_catalogue_preserves_populated_cash_accounting_evidence_thro
                 "taxable_base": Decimal("1000.00"),
                 "iva_rate": Decimal("0.21"),
                 "iva_amount": Decimal("210.00"),
-                "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+                "iva_category": IvaCategory.DOMESTIC_GENERAL,
                 "cash_accounting_treatment": IvaCashAccountingTreatment.TAXPAYER_REGIME,
                 "operation_date": date(2026, 3, 20),
                 "cash_accounting_payment_evidence": (

@@ -40,6 +40,10 @@ Major declarations:
   ledger transactions, and :func:`extract_invoice_fields` with
   :class:`InvoiceDraft` - the on-host field-extraction primitive an operator
   reviews before minting a :class:`domain.invoices.Invoice` from a PDF.
+* :class:`EvidenceInput` - the transient in-memory carrier of decrypted
+  evidence bytes that :func:`extract_invoice_fields` reads. Exported because
+  it is that function's argument type: a consumer cannot construct a call
+  through this facade without it. It is never persisted or serialized.
 * :func:`confirm_invoice_draft_from_evidence` with
   :class:`InvoiceConfirmationResult` - the non-interactive confirm step that
   re-extracts a draft, layers operator overrides on top, and delegates the
@@ -143,6 +147,7 @@ if TYPE_CHECKING:
         extract_invoice_fields,
         printed_total_discrepancy,
     )
+    from ._evidence_input import EvidenceInput
     from ._id_resolution import (
         MINIMUM_DISPLAY_ID_WIDTH,
         compute_display_id_width,
@@ -245,6 +250,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "BulkClassifyRow": "._models",
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD": "._llm_diagnostics",
     "EligibleCategoryRow": "._ratios",
+    "EvidenceInput": "._evidence_input",
     "ExportSerializationFormat": "..export",
     "InvoiceConfirmationResult": "._evidence_draft",
     "InvoiceDraft": "._evidence_draft",
@@ -404,6 +410,7 @@ __all__ = [
     "BulkClassifyResult",
     "BulkClassifyRow",
     "EligibleCategoryRow",
+    "EvidenceInput",
     "ExportSerializationFormat",
     "InvoiceConfirmationResult",
     "InvoiceDraft",

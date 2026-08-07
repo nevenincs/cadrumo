@@ -335,7 +335,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         IvaLedgerObservation(
             ledger_id="rep-general-1",
             transaction_date=date(2025, 6, 1),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("1000"),
@@ -344,7 +344,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         IvaLedgerObservation(
             ledger_id="rep-reducido-1",
             transaction_date=date(2025, 6, 3),
-            category=IvaCategory.DOMESTIC_REDUCED_10,
+            category=IvaCategory.DOMESTIC_REDUCED,
             rate_kind=IvaRateKind.REDUCED,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("200"),
@@ -353,7 +353,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         IvaLedgerObservation(
             ledger_id="rep-super-1",
             transaction_date=date(2025, 6, 4),
-            category=IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+            category=IvaCategory.DOMESTIC_SUPER_REDUCED,
             rate_kind=IvaRateKind.SUPER_REDUCED,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("100"),
@@ -362,7 +362,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         IvaLedgerObservation(
             ledger_id="sop-interior-1",
             transaction_date=date(2025, 6, 5),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.SOPORTADO,
             base_amount=Decimal("300"),

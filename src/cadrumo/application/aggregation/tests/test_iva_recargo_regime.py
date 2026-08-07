@@ -92,7 +92,7 @@ def test_non_declarable_category_is_gated_not_emitted(category: IvaCategory) -> 
 
 
 def test_normal_domestic_category_still_emits() -> None:
-    tx = _tx("ok-1", iva_category=IvaCategory.DOMESTIC_GENERAL_21)
+    tx = _tx("ok-1", iva_category=IvaCategory.DOMESTIC_GENERAL)
     result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((tx,)), period=_Q2_2026)
     assert len(result.observations) == 1
-    assert result.observations[0].category is IvaCategory.DOMESTIC_GENERAL_21
+    assert result.observations[0].category is IvaCategory.DOMESTIC_GENERAL

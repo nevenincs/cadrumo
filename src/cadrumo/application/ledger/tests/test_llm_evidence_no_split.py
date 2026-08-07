@@ -105,7 +105,7 @@ def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
     assert parent.lifecycle_state is TransactionLifecycleState.ACTIVE
     assert parent.business_classification is BusinessClassification.BUSINESS
     assert parent.category_id == SpendingCategory.MATERIAL_OFICINA.value
-    assert parent.iva_category is IvaCategory.DOMESTIC_GENERAL_21
+    assert parent.iva_category is IvaCategory.DOMESTIC_GENERAL
     assert parent.iva_rate == Decimal("0.21")
     assert parent.taxable_base is not None and parent.iva_amount is not None
     assert parent.taxable_base + parent.iva_amount == Decimal("121.00")

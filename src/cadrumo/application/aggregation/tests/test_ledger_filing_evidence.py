@@ -100,7 +100,7 @@ def _txn() -> Transaction:
             "taxable_base": Decimal("100.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("21.00"),
-            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+            "iva_category": IvaCategory.DOMESTIC_GENERAL,
             "category_id": "material_oficina",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
@@ -141,7 +141,7 @@ def test_capture_projects_tax_facts_and_binds_fingerprint() -> None:
     assert row.fingerprint == row_fingerprint(txn)
     assert row.amount == Decimal("121.00")
     assert row.taxable_base == Decimal("100.00")
-    assert row.iva_category == "domestic_general_21"
+    assert row.iva_category == "domestic_general"
     assert row.direction == "OUTGOING"
     assert row.lifecycle_state == "ACTIVE"
     assert evidence.manual_entries[0].casilla_id == _MANUAL_FACT_CASILLA
@@ -227,7 +227,7 @@ def test_evidence_roundtrips_through_encrypted_revision(_objects: SecureObjectRe
     assert loaded_revision.ledger_filing_evidence == evidence
     loaded_evidence = loaded_revision.ledger_filing_evidence
     assert loaded_evidence is not None
-    assert loaded_evidence.rows[0].iva_category == "domestic_general_21"
+    assert loaded_evidence.rows[0].iva_category == "domestic_general"
 
     # Anti-tautology: a revision with evidence must NOT equal the same revision
     # with its evidence stripped — the field carries real state.
@@ -281,7 +281,7 @@ def test_evidence_row_strict_json_roundtrip_all_fields() -> None:
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("0.21"),
         iva_amount=Decimal("21.00"),
-        iva_category="domestic_general_21",
+        iva_category="domestic_general",
         category_id="material_oficina",
         irpf_category="actividad_economica",
         counterparty_eu_member_state="de",

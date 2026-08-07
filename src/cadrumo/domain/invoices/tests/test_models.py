@@ -201,13 +201,13 @@ def test_invoice_iva_category_is_typed_as_iva_category_substrate_enum() -> None:
     invoice = Invoice.model_validate(
         {
             **invoice.model_dump(mode="python"),
-            "iva_category": "domestic_general_21",
+            "iva_category": "domestic_general",
         },
     )
-    assert invoice.iva_category is IvaCategory.DOMESTIC_GENERAL_21
+    assert invoice.iva_category is IvaCategory.DOMESTIC_GENERAL
 
     json_dump = invoice.model_dump(mode="json")
-    assert json_dump["iva_category"] == "domestic_general_21"
+    assert json_dump["iva_category"] == "domestic_general"
 
 
 def test_invoice_iva_category_rejects_unknown_string() -> None:

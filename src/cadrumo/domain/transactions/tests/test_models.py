@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import Art104TresExclusion, TipoActividad
+from ....core import Art104TresExclusion, ConceptoIngreso, TipoActividad
 from ...iva import (
     InputClassification,
     IvaCategory,
@@ -33,6 +33,7 @@ from .. import (
     derive_transaction_id,
     normalise_movement_reference,
 )
+from .._volumen_ingresos import counts_toward_volumen_de_ingresos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -292,6 +293,77 @@ def test_art_104_tres_exclusion_roundtrips_for_judgment_exclusion() -> None:
     assert restored.art_104_tres_exclusion is Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL
 
 
+def test_concepto_ingreso_roundtrips_for_an_excluded_concept() -> None:
+    """A declared income concept survives a strict JSON save/load cycle.
+
+    Populated with the member that CHANGES the calculation -- a subvención de capital,
+    which art. 110.1.c) removes from the volume base -- rather than with ``ORDINARIO``,
+    which behaves like the ``None`` default and would prove nothing about persistence.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("9000.00"), description="Subvencion PAC de capital"),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "tipo_actividad": TipoActividad.B01_AGRICOLA,
+            "concepto_ingreso": ConceptoIngreso.SUBVENCION_CAPITAL,
+        },
+    )
+
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.concepto_ingreso is ConceptoIngreso.SUBVENCION_CAPITAL
+
+
+def test_concepto_ingreso_dropped_from_the_payload_surfaces_as_inequality() -> None:
+    """Anti-tautology proof, and the one where the default is dangerous.
+
+    Losing this field does not merely lose a label: ``None`` means INCLUDED, so a
+    dropped ``SUBVENCION_CAPITAL`` silently pulls an excluded receipt back into the
+    volume base and over-declares. The field is optional, so nothing raises -- which is
+    exactly why the deletion has to be caught as inequality rather than trusted to fail
+    loudly on its own.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("9000.00"), description="Subvencion PAC de capital"),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "concepto_ingreso": ConceptoIngreso.SUBVENCION_CAPITAL,
+        },
+    )
+    storage_payload = json.loads(original.model_dump_json())
+    del storage_payload["concepto_ingreso"]
+
+    restored = Transaction.model_validate_json(json.dumps(storage_payload))
+
+    assert restored != original
+    assert restored.concepto_ingreso is None
+    assert counts_toward_volumen_de_ingresos(restored.concepto_ingreso)
+    assert not counts_toward_volumen_de_ingresos(original.concepto_ingreso)
+
+
+def test_concepto_ingreso_rejects_a_token_outside_the_closed_set() -> None:
+    """A persisted payload carrying an unknown income concept is refused at load."""
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(amount=Decimal("9000.00"), description="Subvencion PAC de capital"),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "concepto_ingreso": ConceptoIngreso.SUBVENCION_CAPITAL,
+        },
+    )
+    storage_payload = json.loads(original.model_dump_json())
+    storage_payload["concepto_ingreso"] = "subvencion_qualquiera"
+
+    with pytest.raises(ValidationError):
+        Transaction.model_validate_json(json.dumps(storage_payload))
+
+
 def test_tipo_actividad_roundtrips_for_a_declared_activity() -> None:
     """A declared Modelo 036 activity code survives a strict JSON save/load cycle.
 
@@ -501,7 +573,7 @@ def test_transaction_exemption_article_round_trips_for_domestic_exempt_category(
 
 
 def test_transaction_rejects_exemption_article_without_domestic_exempt_category() -> None:
-    for iva_category in (None, IvaCategory.DOMESTIC_GENERAL_21):
+    for iva_category in (None, IvaCategory.DOMESTIC_GENERAL):
         payload: dict[str, object] = {
             "raw": _sample_raw(),
             "direction": TransactionDirection.INCOMING,

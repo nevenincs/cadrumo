@@ -80,10 +80,10 @@ def test_response_carries_iva_category_and_business_pct() -> None:
         classification=BusinessClassification.MIXED,
         confidence=Decimal("0.8"),
         reason="part business, part personal use",
-        iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
         business_pct=Decimal("0.6"),
     )
-    assert response.iva_category is IvaCategory.DOMESTIC_GENERAL_21
+    assert response.iva_category is IvaCategory.DOMESTIC_GENERAL
     assert response.business_pct == Decimal("0.6")
 
 
@@ -107,7 +107,7 @@ def test_response_structurally_refuses_numeric_tax_fields() -> None:
                         "classification": "BUSINESS",
                         "confidence": Decimal("0.9"),
                         "reason": "a business expense",
-                        "iva_category": "domestic_general_21",
+                        "iva_category": "domestic_general",
                         numeric_field: "21.00",
                     },
                 )
@@ -152,7 +152,7 @@ def test_saturation_spec_allow_list_matches_every_category() -> None:
 def test_rendered_prompt_requests_iva_category_without_numbers() -> None:
     prompt = prompt_spec_with_saturation_fields().render(_transaction())
     assert "iva_category" in prompt
-    assert IvaCategory.DOMESTIC_GENERAL_21.value in prompt
+    assert IvaCategory.DOMESTIC_GENERAL.value in prompt
     # Explicitly instructs the model not to compute a figure.
     assert "do NOT compute" in prompt
     # The schema line offers iva_category as a selection, never a rate field.
@@ -169,10 +169,10 @@ def test_parse_accepts_grounded_iva_category() -> None:
     spec = prompt_spec_with_saturation_fields()
     stdout = (
         '{"classification": "BUSINESS", "confidence": 0.9, "reason": "business meal", '
-        '"category": "manutencion_dietas_nacional", "iva_category": "domestic_reduced_10"}'
+        '"category": "manutencion_dietas_nacional", "iva_category": "domestic_reduced"}'
     )
     response = parse_response(stdout, spec=spec)
-    assert response.iva_category is IvaCategory.DOMESTIC_REDUCED_10
+    assert response.iva_category is IvaCategory.DOMESTIC_REDUCED
 
 
 def test_parse_rejects_hallucinated_iva_category() -> None:
@@ -185,7 +185,7 @@ def test_parse_rejects_hallucinated_iva_category() -> None:
 def test_parse_rejects_iva_category_when_spec_did_not_ask() -> None:
     # The default classification-only spec carries no IVA allow-list, so an
     # emitted iva_category is unexpected and must be refused.
-    stdout = '{"classification": "BUSINESS", "confidence": 0.9, "reason": "x", "iva_category": "domestic_general_21"}'
+    stdout = '{"classification": "BUSINESS", "confidence": 0.9, "reason": "x", "iva_category": "domestic_general"}'
     with pytest.raises(LLMClassifierError, match=r"no JSON candidate matched"):
         parse_response(stdout, spec=default_prompt_spec())
 

@@ -75,7 +75,7 @@ def _tx(
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
-    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL_21,
+    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL,
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
     attachment_ids: tuple[str, ...] = (),
     purchase_invoice_evidence_id: str | None = None,
@@ -121,7 +121,7 @@ def test_advisory_fires_on_incoming_cuota_bearing_income_without_evidence() -> N
     tx = _tx(
         "income-no-evidence",
         direction=TransactionDirection.INCOMING,
-        iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
     )
     diagnostics = missing_evidence_advisory_observations([tx])
     assert len(diagnostics) == 1

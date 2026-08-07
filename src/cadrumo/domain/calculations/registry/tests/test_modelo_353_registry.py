@@ -124,7 +124,7 @@ def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> Non
         IvaLedgerObservation(
             ledger_id="agg-rep-1",
             transaction_date=date(2025, 6, 1),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("8000"),
@@ -133,7 +133,7 @@ def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> Non
         IvaLedgerObservation(
             ledger_id="agg-sop-1",
             transaction_date=date(2025, 6, 5),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.SOPORTADO,
             base_amount=Decimal("3000"),

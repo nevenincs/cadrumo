@@ -102,14 +102,14 @@ from .. import (
     ungrounded_ledger_renta_income_observations,
     validated_casilla_id,
 )
-from .._scenarios import (
+from .._schema_input_kind import InputKind
+from ._registry_schema_support import _committed_modelo
+from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
-from .._schema_input_kind import InputKind
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -403,7 +403,7 @@ def test_the_manual_states_the_activity_is_iva_exempt() -> None:
     case rests on that distinction.
     """
     assert category_cuota_is_zero_by_law(IvaCategory.DOMESTIC_EXEMPT, InvoiceKind.ISSUED)
-    assert not category_cuota_is_zero_by_law(IvaCategory.DOMESTIC_GENERAL_21, InvoiceKind.ISSUED)
+    assert not category_cuota_is_zero_by_law(IvaCategory.DOMESTIC_GENERAL, InvoiceKind.ISSUED)
 
 
 def test_the_two_printed_income_lines_fold_into_the_bound_casilla() -> None:

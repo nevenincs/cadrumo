@@ -16,14 +16,15 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from ....llm import ExtractionPayload, ExtractionProducer, ExtractionSourceKind
+from ....core import FieldOrigin
+from ....llm import ExtractionPayload, ExtractionProducer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _producer() -> ExtractionProducer:
     return ExtractionProducer(
-        source_kind=ExtractionSourceKind.STRUCTURED_RECORD,
+        source_kind=FieldOrigin.EXACT_STRUCTURED,
         identity="en16931-cii",
         revision="D16B",
     )
@@ -58,7 +59,7 @@ def test_well_formed_payload_validates() -> None:
     payload = ExtractionPayload(**_well_formed())
 
     assert payload.taxable_base == Decimal("473.00")
-    assert payload.producer.source_kind is ExtractionSourceKind.STRUCTURED_RECORD
+    assert payload.producer.source_kind is FieldOrigin.EXACT_STRUCTURED
     assert payload.legal_refs == ("liva:art-164",)
 
 

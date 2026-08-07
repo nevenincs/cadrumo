@@ -389,15 +389,19 @@ class Rung2EvaluationRow(BaseModel):
         if self.reason is Rung2EvaluationReason.TARGET_MISMATCH:
             if not candidate_ids:
                 raise ValueError("a target-mismatch row must contain candidates")
-        elif self.reason in {
-            Rung2EvaluationReason.NO_COMPOSED_CANDIDATE,
-            Rung2EvaluationReason.EMPTY_QUERY,
-            Rung2EvaluationReason.INSUFFICIENT_COVERAGE,
-            Rung2EvaluationReason.NON_FINITE_QUERY_VECTOR,
-            Rung2EvaluationReason.ZERO_QUERY_VECTOR,
-            Rung2EvaluationReason.RUNNER_UP_AMBIGUITY,
-            Rung2EvaluationReason.NO_COSINE_MATCH,
-        } and candidate_ids:
+        elif (
+            self.reason
+            in {
+                Rung2EvaluationReason.NO_COMPOSED_CANDIDATE,
+                Rung2EvaluationReason.EMPTY_QUERY,
+                Rung2EvaluationReason.INSUFFICIENT_COVERAGE,
+                Rung2EvaluationReason.NON_FINITE_QUERY_VECTOR,
+                Rung2EvaluationReason.ZERO_QUERY_VECTOR,
+                Rung2EvaluationReason.RUNNER_UP_AMBIGUITY,
+                Rung2EvaluationReason.NO_COSINE_MATCH,
+            }
+            and candidate_ids
+        ):
             raise ValueError("an abstention row cannot contain candidates")
         return self
 

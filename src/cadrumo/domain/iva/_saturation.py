@@ -56,9 +56,9 @@ _ZERO = Decimal("0")
 # both resolve to a zero fraction (no positive IVA), so they are handled
 # explicitly below rather than via a positive lookup.
 _CATEGORY_TO_RATE_KIND: dict[IvaCategory, IvaRateKind] = {
-    IvaCategory.DOMESTIC_GENERAL_21: IvaRateKind.GENERAL,
-    IvaCategory.DOMESTIC_REDUCED_10: IvaRateKind.REDUCED,
-    IvaCategory.DOMESTIC_SUPER_REDUCED_4: IvaRateKind.SUPER_REDUCED,
+    IvaCategory.DOMESTIC_GENERAL: IvaRateKind.GENERAL,
+    IvaCategory.DOMESTIC_REDUCED: IvaRateKind.REDUCED,
+    IvaCategory.DOMESTIC_SUPER_REDUCED: IvaRateKind.SUPER_REDUCED,
     IvaCategory.DOMESTIC_ZERO: IvaRateKind.ZERO,
     IvaCategory.DOMESTIC_EXEMPT: IvaRateKind.EXEMPT,
 }

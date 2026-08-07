@@ -23,9 +23,9 @@ def test_iva_category_has_every_named_member() -> None:
     ``INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE``.
     """
     expected = {
-        "DOMESTIC_GENERAL_21",
-        "DOMESTIC_REDUCED_10",
-        "DOMESTIC_SUPER_REDUCED_4",
+        "DOMESTIC_GENERAL",
+        "DOMESTIC_REDUCED",
+        "DOMESTIC_SUPER_REDUCED",
         "DOMESTIC_ZERO",
         "DOMESTIC_EXEMPT",
         "DOMESTIC_NOT_SUBJECT",

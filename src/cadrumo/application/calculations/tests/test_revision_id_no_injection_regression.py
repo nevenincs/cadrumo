@@ -48,7 +48,7 @@ _BENIGN_EXEMPTIONS: frozenset[str] = frozenset(
         # 3. Fixture / scenario replay: pins the revision a fixture declares;
         #    by the structural non-overlap property the pin either equals the
         #    law-determined revision or the run refuses.
-        "domain/calculations/registry/_scenarios.py",
+        "domain/calculations/registry/tests/_scenarios.py",
         # 4. Registry-derived enumeration: the referential-integrity preflight
         #    probe builds a snapshot for EVERY revision of EVERY bundled modelo,
         #    pinning each revision.id to itself while iterating

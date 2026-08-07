@@ -76,7 +76,7 @@ def test_apply_splits_parent_and_classifies_children(
         assert child is not None
         assert child.lifecycle_state is TransactionLifecycleState.ACTIVE
         assert child.business_classification is BusinessClassification.BUSINESS
-        assert child.iva_category is IvaCategory.DOMESTIC_GENERAL_21
+        assert child.iva_category is IvaCategory.DOMESTIC_GENERAL
         assert child.iva_rate == Decimal("0.21")
         assert child.classified_by == "llm:claude:test-model"
         assert child.taxable_base is not None and child.iva_amount is not None

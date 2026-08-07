@@ -88,19 +88,19 @@ def test_ledger_add_accepts_and_persists_iva_category() -> None:
             "--iva-amount",
             "21",
             "--iva-category",
-            "domestic_general_21",
+            "domestic_general",
         ],
     )
 
     assert added.exit_code == 0, added.output
     added_payload = _json(added)
     transaction = added_payload["transaction"]
-    assert transaction["iva_category"] == "domestic_general_21"
+    assert transaction["iva_category"] == "domestic_general"
 
     viewed = _invoke(["--format", "json", "app", "ledger", "view", added_payload["transaction_id"]])
     assert viewed.exit_code == 0, viewed.output
     viewed_transaction = _json(viewed)["transaction"]
-    assert viewed_transaction["iva_category"] == "domestic_general_21"
+    assert viewed_transaction["iva_category"] == "domestic_general"
 
 
 def test_ledger_add_accepts_and_persists_counterparty_eu_member_state() -> None:

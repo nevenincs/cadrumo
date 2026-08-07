@@ -377,7 +377,7 @@ def test_ledger_classify_persists_professional_service_paid_net_of_irpf_withhold
             "--iva-amount",
             "210.00",
             "--iva-category",
-            "domestic_general_21",
+            "domestic_general",
             "--irpf-category",
             "actividad_economica",
             "--actor",
@@ -397,7 +397,7 @@ def test_ledger_classify_persists_professional_service_paid_net_of_irpf_withhold
     assert transaction["taxable_base"] == "1000"
     assert transaction["iva_amount"] == "210"
     assert transaction["iva_rate"] == "0.21"
-    assert transaction["iva_category"] == "domestic_general_21"
+    assert transaction["iva_category"] == "domestic_general"
     assert transaction["irpf_category"] == "actividad_economica"
 
 
@@ -447,7 +447,7 @@ def test_ledger_classify_persists_rent_paid_net_of_withholding(
             "--iva-amount",
             "567.00",
             "--iva-category",
-            "domestic_general_21",
+            "domestic_general",
             "--irpf-category",
             "arrendamiento_local",
             "--actor",
@@ -467,7 +467,7 @@ def test_ledger_classify_persists_rent_paid_net_of_withholding(
     assert transaction["taxable_base"] == "2700"
     assert transaction["iva_amount"] == "567"
     assert transaction["iva_rate"] == "0.21"
-    assert transaction["iva_category"] == "domestic_general_21"
+    assert transaction["iva_category"] == "domestic_general"
     assert transaction["irpf_category"] == "arrendamiento_local"
 
 
@@ -512,7 +512,7 @@ def test_ledger_classify_rent_net_withholding_refusal_names_accepted_irpf_ids(
             "--iva-amount",
             "567.00",
             "--iva-category",
-            "domestic_general_21",
+            "domestic_general",
             "--irpf-category",
             "rental_withholding",
         ],

@@ -101,11 +101,7 @@ def test_the_builder_consults_the_predicate_rather_than_reimplementing_it() -> N
 
     source = inspect.getsource(module._simplificada_tax_id_notices)
     tree = ast.parse(source.lstrip())
-    called = {
-        node.func.id
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-    }
+    called = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
     assert "simplificada_requires_tax_id_for_domestic_issuer" in called, (
         "the notice builder must delegate to the predicate; re-deriving case 3.o here "
         "creates a second authority that drifts silently from the domain tests"

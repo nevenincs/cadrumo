@@ -144,7 +144,7 @@ def test_a_cuota_bearing_row_with_no_base_is_not_this_gate_s_business() -> None:
     its base is imprecise, not certainly understated -- the cuota reaches the
     return either way -- so it stays with the advisory rather than blocking here.
     """
-    row = _transaction("tx-1", iva_category=IvaCategory.DOMESTIC_GENERAL_21, taxable_base=None, iva_amount=Decimal("210"))
+    row = _transaction("tx-1", iva_category=IvaCategory.DOMESTIC_GENERAL, taxable_base=None, iva_amount=Decimal("210"))
 
     assert _findings({"tx-1": row}) == []
 

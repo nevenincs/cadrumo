@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _SPEC = prompt_spec_with_saturation_fields()
 _VALID = (
     '{"classification": "BUSINESS", "confidence": 0.9, "reason": "office laptop", '
-    '"category": "hardware_amortizable", "iva_category": "domestic_general_21", "business_pct": null}'
+    '"category": "hardware_amortizable", "iva_category": "domestic_general", "business_pct": null}'
 )
 
 
@@ -37,7 +37,7 @@ def test_adversarial_responses_are_rejected() -> None:
             "out-of-allowlist-category",
             (
                 '{"classification": "BUSINESS", "confidence": 1.0, "reason": "x", '
-                '"category": "__root__", "iva_category": "domestic_general_21"}'
+                '"category": "__root__", "iva_category": "domestic_general"}'
             ),
         ),
         (

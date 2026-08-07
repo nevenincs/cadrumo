@@ -118,14 +118,14 @@ def test_modelo_303_2024_domestic_base_aggregates_from_ledger() -> None:
     no-binding state (base -> 0) fails this test loudly.
     """
     repercutido = _observation(
-        category=IvaCategory.DOMESTIC_GENERAL_21,
+        category=IvaCategory.DOMESTIC_GENERAL,
         rate_kind=IvaRateKind.GENERAL,
         flow=IvaFlowDirection.REPERCUTIDO,
         base=Decimal("6500"),
         iva=Decimal("1365"),
     )
     soportado = _observation(
-        category=IvaCategory.DOMESTIC_GENERAL_21,
+        category=IvaCategory.DOMESTIC_GENERAL,
         rate_kind=IvaRateKind.GENERAL,
         flow=IvaFlowDirection.SOPORTADO,
         base=Decimal("300"),
@@ -167,14 +167,14 @@ def test_modelo_303_2009_revision_domestic_base_aggregates_from_ledger() -> None
     assert snapshot.revision.id == "2009-y-siguientes"  # filing_year 2022 resolves to the older revision
     observations = (
         _observation(
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow=IvaFlowDirection.REPERCUTIDO,
             base=Decimal("6500"),
             iva=Decimal("1365"),
         ),
         _observation(
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow=IvaFlowDirection.SOPORTADO,
             base=Decimal("300"),
@@ -220,7 +220,7 @@ def test_recargo_equivalencia_cuota_aggregates_by_tier_from_recargo_amount() -> 
     revision = _m303_revision("2023-y-siguientes")
     general = _observation(
         ledger_id="rec-general",
-        category=IvaCategory.DOMESTIC_GENERAL_21,
+        category=IvaCategory.DOMESTIC_GENERAL,
         rate_kind=IvaRateKind.GENERAL,
         flow=IvaFlowDirection.REPERCUTIDO,
         base=Decimal("1000"),
@@ -229,7 +229,7 @@ def test_recargo_equivalencia_cuota_aggregates_by_tier_from_recargo_amount() -> 
     )
     reduced = _observation(
         ledger_id="rec-reduced",
-        category=IvaCategory.DOMESTIC_REDUCED_10,
+        category=IvaCategory.DOMESTIC_REDUCED,
         rate_kind=IvaRateKind.REDUCED,
         flow=IvaFlowDirection.REPERCUTIDO,
         base=Decimal("1000"),
@@ -239,7 +239,7 @@ def test_recargo_equivalencia_cuota_aggregates_by_tier_from_recargo_amount() -> 
     # A normal sale with no recargo contributes zero to the recargo cuota.
     plain = _observation(
         ledger_id="plain-general",
-        category=IvaCategory.DOMESTIC_GENERAL_21,
+        category=IvaCategory.DOMESTIC_GENERAL,
         rate_kind=IvaRateKind.GENERAL,
         flow=IvaFlowDirection.REPERCUTIDO,
         base=Decimal("2000"),
@@ -269,7 +269,7 @@ def test_modelo_303_2009_revision_recargo_and_intracom_export_aggregate_from_led
     revision = _m303_2022_2t_snapshot().revision
     assert revision.id == "2009-y-siguientes"
     rec_general = _observation(
-        category=IvaCategory.DOMESTIC_GENERAL_21,
+        category=IvaCategory.DOMESTIC_GENERAL,
         rate_kind=IvaRateKind.GENERAL,
         flow=IvaFlowDirection.REPERCUTIDO,
         base=Decimal("1000"),
@@ -277,7 +277,7 @@ def test_modelo_303_2009_revision_recargo_and_intracom_export_aggregate_from_led
         recargo=Decimal("52.00"),
     )
     rec_reduced = _observation(
-        category=IvaCategory.DOMESTIC_REDUCED_10,
+        category=IvaCategory.DOMESTIC_REDUCED,
         rate_kind=IvaRateKind.REDUCED,
         flow=IvaFlowDirection.REPERCUTIDO,
         base=Decimal("1000"),
@@ -285,7 +285,7 @@ def test_modelo_303_2009_revision_recargo_and_intracom_export_aggregate_from_led
         recargo=Decimal("14.00"),
     )
     rec_super = _observation(
-        category=IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+        category=IvaCategory.DOMESTIC_SUPER_REDUCED,
         rate_kind=IvaRateKind.SUPER_REDUCED,
         flow=IvaFlowDirection.REPERCUTIDO,
         base=Decimal("1000"),
@@ -390,7 +390,7 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
             _observation(
                 ledger_id="op-ventas-recargo-equivalencia",
                 txn_date=date(2022, 5, 15),
-                category=IvaCategory.DOMESTIC_GENERAL_21,
+                category=IvaCategory.DOMESTIC_GENERAL,
                 rate_kind=IvaRateKind.GENERAL,
                 flow=IvaFlowDirection.REPERCUTIDO,
                 base=Decimal("24000.00"),

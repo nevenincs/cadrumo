@@ -20,7 +20,7 @@ from pydantic import ValidationError
 from ....adapters.persistence.storage import LLM_CACHE_NAMESPACE, secure_object_repository_for_active_bucket
 from ....core.classification import SensitivityClass
 from ....core.config import load_settings
-from ....core.hashing import content_hash_hex, sha256_hex
+from ....core.hashing import canonical_json_bytes, content_hash_hex, sha256_hex
 from ....core.logging import get_logger
 from ....core.redaction import default_rules_for_class, redact_structured
 from ....core.time import now
@@ -389,12 +389,20 @@ class LLMCache:
         return self.root_dir.resolve().as_posix()
 
     def _payload_for_entry(self, entry: Mapping[str, object]) -> bytes:
-        """Wrap a redacted entry with its logical partition before encryption."""
+        """Wrap a redacted entry with its logical partition before encryption.
+
+        Serialised through :func:`~core.hashing.canonical_json_bytes`, the same
+        helper the sibling usage and run-telemetry stores write their payloads
+        with, so all three diagnostic stores in this package produce one byte
+        shape. ``entry`` reaches here as ``model_dump(mode="json")`` output that
+        has been through redaction, so it is JSON-native and the helper's
+        refusal of anything else is a guard rather than a constraint.
+        """
         payload = {
             "logical_root": self._logical_root(),
             "entry": entry,
         }
-        return json.dumps(payload, indent=2, sort_keys=True, default=str).encode("utf-8")
+        return canonical_json_bytes(payload)
 
     def _entry_from_payload(self, payload: bytes) -> CachedEntry:
         """Decode a secure-object payload into a cached entry."""

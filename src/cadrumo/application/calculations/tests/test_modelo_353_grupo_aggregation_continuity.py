@@ -116,7 +116,7 @@ def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva:
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
-        category=IvaCategory.DOMESTIC_GENERAL_21,
+        category=IvaCategory.DOMESTIC_GENERAL,
         rate_kind=IvaRateKind.GENERAL,
         flow_direction=flow,
         base_amount=Decimal("1000.00"),

@@ -458,9 +458,7 @@ def test_put_many_bytes_writes_a_repeated_payload_only_once(
         monkeypatch.setattr(objects, "save_many", counting_save_many)
         store.put_many_bytes([repeated, distinct, repeated])
 
-        assert seen == [2], (
-            f"three payloads carrying two distinct digests must produce two writes, saw {seen}"
-        )
+        assert seen == [2], f"three payloads carrying two distinct digests must produce two writes, saw {seen}"
 
 
 def test_put_many_bytes_reuses_payloads_already_stored(tmp_path: Path) -> None:

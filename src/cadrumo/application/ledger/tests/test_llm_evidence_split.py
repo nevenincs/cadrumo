@@ -91,7 +91,7 @@ def test_suggest_derives_each_child_substrate_from_registry(
     )
 
     for child in suggestion.children:
-        assert child.iva_category is IvaCategory.DOMESTIC_GENERAL_21
+        assert child.iva_category is IvaCategory.DOMESTIC_GENERAL
         assert child.rate_derivable is True
         # The registry rate, not a model-emitted number.
         assert child.iva_rate == Decimal("0.21")

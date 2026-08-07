@@ -90,7 +90,7 @@ def _classify_with_tax_facts(transaction_id: str) -> None:
             "--iva-amount",
             "17.36",
             "--iva-category",
-            "domestic_general_21",
+            "domestic_general",
             "--irpf-category",
             "actividades_economicas_directa_simplificada",
         ],
@@ -208,7 +208,7 @@ def test_classify_from_csv_accepts_iva_category_column(tmp_path: Path) -> None:
     tx1, _tx2 = _import_two_transactions(tmp_path)
     csv_file = tmp_path / "iva_category.csv"
     csv_file.write_text(
-        f"transaction_id,classification,iva_category\n{tx1},BUSINESS,domestic_general_21\n",
+        f"transaction_id,classification,iva_category\n{tx1},BUSINESS,domestic_general\n",
         encoding="utf-8",
     )
 
@@ -220,7 +220,7 @@ def test_classify_from_csv_accepts_iva_category_column(tmp_path: Path) -> None:
     payload = json.loads(result.output)["result"]
     assert payload["applied"] == 1, payload
     assert payload["failures"] == [], payload
-    assert _stored_transaction(tx1).iva_category is IvaCategory.DOMESTIC_GENERAL_21
+    assert _stored_transaction(tx1).iva_category is IvaCategory.DOMESTIC_GENERAL
 
 
 def test_classify_from_csv_accepts_irpf_category_column(tmp_path: Path) -> None:
@@ -601,7 +601,7 @@ def test_classify_from_csv_preserves_existing_tax_facts_when_columns_omitted(tmp
     assert row["taxable_base"] == "82.64"
     assert row["iva_rate"] == "0.21"
     assert row["iva_amount"] == "17.36"
-    assert row["iva_category"] == "domestic_general_21"
+    assert row["iva_category"] == "domestic_general"
     assert row["irpf_category"] == "actividades_economicas_directa_simplificada"
 
 
@@ -628,7 +628,7 @@ def test_classify_from_csv_blank_optional_tax_cells_preserve_existing_values(tmp
     assert row["taxable_base"] == "82.64"
     assert row["iva_rate"] == "0.21"
     assert row["iva_amount"] == "17.36"
-    assert row["iva_category"] == "domestic_general_21"
+    assert row["iva_category"] == "domestic_general"
     assert row["irpf_category"] == "actividades_economicas_directa_simplificada"
 
 

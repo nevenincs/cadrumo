@@ -197,3 +197,49 @@ review_status = "reviewed"
 reviewed_at = 2026-08-07
 reviewed_by = "agent-review"
 notes = "HUECO DECLARADO, no un olvido: el conjunto esta vacio a proposito. El art 95.4.1 fija el 1 por ciento para las actividades ganaderas de engorde de porcino y avicultura especificamente, y la tabla del M036 no llega a ese grano: su codigo ganadero mas fino es B02 Ganadera, con A02 Ganaderia independiente al lado, y ninguno aisla porcino ni avicultura. Un contribuyente acogido al carve-out es indistinguible de cualquier otro ganadero sobre este eje. Se declara vacio en vez de omitirse para que la ausencia sea legible: omitirlo dejaria creer que el eje del M036 particiona el art 95 por completo, que es exactamente la lectura que llevaria a aplicar el 2 por ciento general a un engordador. El discriminante tendria que venir de otra autoridad; el epigrafe IAE es el candidato obvio y no sirve, porque la propia instruccion del M036 dice que el epigrafe solo se cumplimenta 'para las actividades comprendidas dentro de los codigos de actividad A01, A02, A03, A04 y A05', es decir nunca para un filer de la serie B."
+
+# Activity set for the art. 110.1.c agrarian pago fraccionado. Added 2026-08-07.
+#
+# This is a SEPARATE selector from the art. 95 ones above and must stay separate.
+# Art. 110.1.c names "actividades agricolas, ganaderas, forestales o pesqueras",
+# which is not the art. 95 partition: art. 95 fixes no rate for pesca at all, so
+# B05 is deliberately absent from every art. 95 selector. Borrowing the art. 95
+# agricola/ganadera selector for a Modelo 131 casilla would have silently
+# dropped a whole class of filer.
+#
+# The set below is nevertheless the four agrarian codes WITHOUT pesquera, and
+# the reason is the form rather than the article. The AEAT Modelo 131
+# instrucciones bundled at corpus/aeat_official/instructions/modelo_131/ carry
+# the casilla-05 block under actividades agricolas, ganaderas y forestales and
+# do not mention pesqueras anywhere in the document. Modelo 131 is estimacion
+# objetiva and pesca does not appear in the modulos regime, so the article's
+# wider wording covers a case this form cannot present. That also disposes of
+# the B04 produccion de mejillon question: no pesquera-adjacent code enters,
+# so no determination about mejillon is needed for this casilla.
+#
+# A future art. 110.1.c consumer OUTSIDE estimacion objetiva (a Modelo 130
+# agrarian path) would need its own selector including pesquera, and would have
+# to settle mejillon then. It is not settled here, because guessing it into a
+# parameter carrying legal_refs would give the guess the appearance of grounding.
+
+[parameters."rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrario-objetiva"]
+evidence_tier = "legal_authority"
+value = "A02,B01,B02,B03"
+unit = "m036-tipo-actividad-code-set"
+applies_to = "irpf-pago-fraccionado-agrario"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-1274-2007:art-1"]
+review_status = "reviewed"
+reviewed_at = 2026-08-07
+reviewed_by = "agent-review"
+notes = "Codigos del Modelo 036 cuyo volumen de ingresos alimenta la casilla 05 del Modelo 131 (pago fraccionado agrario del art 110.1.c, 2 por ciento, calculado en la casilla 06). B01 Agricola, B02 Ganadera y B03 Forestal son directos; A02 Ganaderia independiente entra porque el art 95.4 la incluye expresamente entre las actividades agricolas y ganaderas y el art 110 no la excluye. Pesquera queda FUERA de este selector pese a que el art 110.1.c la nombra: las instrucciones AEAT del Modelo 131 situan el bloque de la casilla 05 bajo actividades agricolas, ganaderas y forestales y no mencionan pesqueras en ningun punto, porque el Modelo 131 es estimacion objetiva y la pesca no figura en el regimen de modulos. Un consumidor del art 110.1.c fuera de estimacion objetiva necesitaria su propio selector con pesquera y tendria que resolver entonces si B04 Produccion de mejillon queda dentro; aqui no se resuelve."
+
+[parameters."rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario"]
+evidence_tier = "legal_authority"
+value = "subvencion_capital,indemnizacion"
+unit = "concepto-ingreso-set"
+applies_to = "irpf-pago-fraccionado-agrario"
+legal_refs = ["rd-439-2007:art-110"]
+review_status = "reviewed"
+reviewed_at = 2026-08-07
+reviewed_by = "agent-review"
+notes = "Conceptos de ingreso que el art 110.1.c excluye del volumen de ingresos del trimestre: 'excluidas las subvenciones de capital y las indemnizaciones'. Las instrucciones AEAT del Modelo 131 lo enuncian ademas por el lado positivo para la casilla 05: 'incluidas las subvenciones corrientes y excluidas las subvenciones de capital y las indemnizaciones'. La distincion corre DENTRO de las subvenciones -- corriente entra, de capital no -- por lo que ninguna regla basada en la palabra subvencion acierta con las dos. Se declara como parametro para que el conjunto excluido sea dato del registro y no una lista repetida en el codigo."

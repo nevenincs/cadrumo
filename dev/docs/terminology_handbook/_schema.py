@@ -70,7 +70,7 @@ _ConceptId = Annotated[
     ),
 ]
 # Typed reference into a source entity, e.g. ``modelo:303`` or
-# ``iva-category:domestic_general_21``. Casilla references are deliberately not
+# ``iva-category:domestic_general``. Casilla references are deliberately not
 # accepted as scalar domain refs; a future casilla link must carry structured
 # ``modelo_id`` and ``casilla_id`` fields instead of another combined notation.
 _DomainRef = Annotated[

@@ -43,7 +43,7 @@
         "--iva-amount",
         "420",
         "--iva-category",
-        "domestic_general_21",
+        "domestic_general",
         "--idempotency-key",
         "venta-1t-2025"
       ],
@@ -78,7 +78,7 @@
         "--iva-amount",
         "315",
         "--iva-category",
-        "domestic_general_21",
+        "domestic_general",
         "--idempotency-key",
         "venta-2t-2025"
       ],
@@ -113,7 +113,7 @@
         "--iva-amount",
         "210",
         "--iva-category",
-        "domestic_general_21",
+        "domestic_general",
         "--idempotency-key",
         "venta-3t-2025"
       ],
@@ -148,7 +148,7 @@
         "--iva-amount",
         "525",
         "--iva-category",
-        "domestic_general_21",
+        "domestic_general",
         "--idempotency-key",
         "venta-4t-2025"
       ],
@@ -187,7 +187,7 @@
         "--iva-amount",
         "105",
         "--iva-category",
-        "domestic_general_21",
+        "domestic_general",
         "--idempotency-key",
         "compra-1t-2025"
       ],
@@ -229,7 +229,7 @@
             "fx_rate": null,
             "irpf_category": null,
             "iva_amount": "105",
-            "iva_category": "domestic_general_21",
+            "iva_category": "domestic_general",
             "iva_rate": "0.21",
             "lifecycle_state": "ACTIVE",
             "m210_income_classification": null,

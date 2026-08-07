@@ -9,11 +9,11 @@ from functools import lru_cache
 
 from .....core.resources import bundled_path
 from .. import CasillaId, LegalRefId, SourceRefId, validated_casilla_id, validated_casilla_id_map
-from .._scenarios import (
+from ._registry_schema_support import _committed_modelo
+from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
 )
-from ._registry_schema_support import _committed_modelo
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 

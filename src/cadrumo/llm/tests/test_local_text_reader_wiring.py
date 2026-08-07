@@ -50,9 +50,7 @@ def test_the_classify_path_reaches_the_local_text_reader() -> None:
         "the classify path must reach the local text reader; without it a text-layer "
         "document has no on-host route and requires a cloud transport"
     )
-    assert "_TEXT_PATH_NEEDS_PROVIDER" not in source, (
-        "the text path must no longer refuse for want of a cloud provider"
-    )
+    assert "_TEXT_PATH_NEEDS_PROVIDER" not in source, "the text path must no longer refuse for want of a cloud provider"
 
 
 def test_the_local_text_reader_requests_the_local_provider_and_carries_no_images() -> None:

@@ -299,6 +299,7 @@ from ._formula_runtime import (
 from ._formula_initial_values import initial_value_casilla_ids
 from ._formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
 from ._formula_text_inputs import validate_text_input_targets, validated_text_input_casilla_ids
+from ._ledger_binding_resolution import screened_quantity_families
 from ._legal import (
     legal_reference_quotes_corpus,
     verify_legal_catalogue,
@@ -367,6 +368,12 @@ from ._support_matrix import (
     RevisionCapabilityProbe,
     build_support_matrix,
     revision_capability_probe,
+)
+from ._rate_box_partition import (
+    RateBoxPartition,
+    RateBoxShortfall,
+    derive_rate_box_partitions,
+    rate_box_coverage_shortfalls,
 )
 from ._record_design import (
     DerivedDisenoCasilla,
@@ -864,6 +871,8 @@ __all__ = [
     "PeriodSelector",
     "ProfileKeyGrounding",
     "ProfilePredicateDefinition",
+    "RateBoxPartition",
+    "RateBoxShortfall",
     "RecordDesignField",
     "RecordDesignSheet",
     "RecordId",
@@ -1008,6 +1017,7 @@ __all__ = [
     "counterpart_binding_requirements",
     "declared_casilla_ids",
     "derive_calculation_completeness_casillas",
+    "derive_rate_box_partitions",
     "derive_diseno_coverage_casillas",
     "derive_export_layouts_from_bindings",
     "derive_modelo_202_modality",
@@ -1072,6 +1082,7 @@ __all__ = [
     "previous_filing_observation_requirements",
     "previous_filing_source_reference",
     "profile_condition_matches",
+    "rate_box_coverage_shortfalls",
     "read_parameter",
     "register_cross_domain_snapshot_check",
     "registry_scalar_value_type",
@@ -1128,6 +1139,7 @@ __all__ = [
     "save_parity_scenario",
     "save_parity_tape",
     "scan_workbook",
+    "screened_quantity_families",
     "select_revision",
     "select_revision_for_year",
     "selector_as_dict",

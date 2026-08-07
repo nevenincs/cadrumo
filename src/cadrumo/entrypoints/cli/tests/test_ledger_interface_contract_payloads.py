@@ -411,26 +411,28 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
 def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> None:
     """List payloads for companion ledger sub-apps are typed."""
     invoice_list = CatalogueInvoiceListResult.model_validate_json(
-        json.dumps({
-            "bucket_id": "default",
-            "rows": [
-                {
-                    "invoice_id": "b" * 64,
-                    "kind": "received",
-                    "invoice_number": "F-001",
-                    "issued_at": "2026-04-05",
-                    "counterparty_name": "Proveedor SL",
-                    "counterparty_tax_id": "B12345674",
-                    "counterparty_country": "ES",
-                    "base_total": "100.00",
-                    "iva_total": "21.00",
-                    "grand_total": "121.00",
-                    "currency": "EUR",
-                    "payment_status": "PENDING",
-                },
-            ],
-            "count": 1,
-        }),
+        json.dumps(
+            {
+                "bucket_id": "default",
+                "rows": [
+                    {
+                        "invoice_id": "b" * 64,
+                        "kind": "received",
+                        "invoice_number": "F-001",
+                        "issued_at": "2026-04-05",
+                        "counterparty_name": "Proveedor SL",
+                        "counterparty_tax_id": "B12345674",
+                        "counterparty_country": "ES",
+                        "base_total": "100.00",
+                        "iva_total": "21.00",
+                        "grand_total": "121.00",
+                        "currency": "EUR",
+                        "payment_status": "PENDING",
+                    },
+                ],
+                "count": 1,
+            }
+        ),
     )
     assert isinstance(invoice_list.rows[0], CatalogueInvoiceRecordPayload)
 

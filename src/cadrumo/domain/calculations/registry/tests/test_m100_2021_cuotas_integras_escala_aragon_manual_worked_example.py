@@ -17,13 +17,13 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import CasillaId, ValidatedRegistryAuthority, validated_casilla_id
-from .._scenarios import (
+from .._schema_input_kind import InputKind
+from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
-from .._schema_input_kind import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

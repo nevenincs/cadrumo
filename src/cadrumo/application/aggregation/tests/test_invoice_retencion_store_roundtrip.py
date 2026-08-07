@@ -87,7 +87,7 @@ def _received_invoice() -> Invoice:
             "counterparty_name": _PERCEPTOR_NAME,
             "counterparty_tax_id": _PERCEPTOR_NIF,
             "counterparty_country": "ES",
-            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+            "iva_category": IvaCategory.DOMESTIC_GENERAL,
             "lines": (line,),
             "base_total": _BASE,
             "iva_total": _BASE * rate,

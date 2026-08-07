@@ -243,8 +243,8 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
             "generation time (e.g. ``GENERAL`` for 21 % goods, "
             "``REDUCED`` for restaurants, ``SUPER_REDUCED`` for basic "
             "food). The classifier consults it for ES-to-ES domestic "
-            "rules to pick between ``DOMESTIC_GENERAL_21`` / "
-            "``DOMESTIC_REDUCED_10`` / ``DOMESTIC_SUPER_REDUCED_4`` / "
+            "rules to pick between ``DOMESTIC_GENERAL`` / "
+            "``DOMESTIC_REDUCED`` / ``DOMESTIC_SUPER_REDUCED`` / "
             "``DOMESTIC_ZERO``. Ignored for non-domestic rules."
         ),
     )
@@ -557,9 +557,9 @@ def _r30_canarias_ceuta_melilla(criteria: IvaInvoiceClassificationCriteria) -> b
 
 
 _RATE_TIER_TO_CATEGORY: dict[IvaRateKind, IvaCategory] = {
-    IvaRateKind.GENERAL: IvaCategory.DOMESTIC_GENERAL_21,
-    IvaRateKind.REDUCED: IvaCategory.DOMESTIC_REDUCED_10,
-    IvaRateKind.SUPER_REDUCED: IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+    IvaRateKind.GENERAL: IvaCategory.DOMESTIC_GENERAL,
+    IvaRateKind.REDUCED: IvaCategory.DOMESTIC_REDUCED,
+    IvaRateKind.SUPER_REDUCED: IvaCategory.DOMESTIC_SUPER_REDUCED,
     IvaRateKind.ZERO: IvaCategory.DOMESTIC_ZERO,
     IvaRateKind.EXEMPT: IvaCategory.DOMESTIC_EXEMPT,
 }
@@ -789,10 +789,10 @@ def classify_iva(criteria: IvaInvoiceClassificationCriteria) -> IvaClassificatio
                     criteria.customer_residency.value,
                     criteria.kind.value,
                 )
-            category = _RATE_TIER_TO_CATEGORY.get(tier, IvaCategory.DOMESTIC_GENERAL_21)
-            if category is IvaCategory.DOMESTIC_GENERAL_21 and tier not in _RATE_TIER_TO_CATEGORY:
+            category = _RATE_TIER_TO_CATEGORY.get(tier, IvaCategory.DOMESTIC_GENERAL)
+            if category is IvaCategory.DOMESTIC_GENERAL and tier not in _RATE_TIER_TO_CATEGORY:
                 _logger.debug(
-                    "classify_iva: R05 tier=%s not in mapping; fell back to DOMESTIC_GENERAL_21",
+                    "classify_iva: R05 tier=%s not in mapping; fell back to DOMESTIC_GENERAL",
                     tier.value if hasattr(tier, "value") else tier,
                 )
         rate = _resolve_rate_for_category(criteria, category)

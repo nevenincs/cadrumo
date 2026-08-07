@@ -53,9 +53,9 @@ from .....core.resources import bundled_path
 from .. import CasillaId, ModeloRevision, build_snapshot, validated_casilla_id
 from .._errors import RegistryValidationError
 from .._loader import load_registry_tree
-from .._scenarios import bound_casilla_ids, run_registry_calculation_scenario
 from .._schema_input_kind import InputKind
 from ._registry_schema_support import _committed_modelo
+from ._scenarios import bound_casilla_ids, run_registry_calculation_scenario
 from .test_m100_2024_estimacion_directa_manual_worked_example import (
     _REGISTRY_ROOT,
     _SOURCE_ROOT,

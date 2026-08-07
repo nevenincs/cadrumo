@@ -9,7 +9,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.bindings.selector]
-categories = ["domestic_general_21"]
+categories = ["domestic_general"]
 rate_kinds = ["general"]
 flow_direction = "repercutido"
 fact = "iva_amount_sum"
@@ -28,7 +28,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.bindings.selector]
-categories = ["domestic_reduced_10"]
+categories = ["domestic_reduced"]
 rate_kinds = ["reduced"]
 flow_direction = "repercutido"
 fact = "iva_amount_sum"
@@ -47,7 +47,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.bindings.selector]
-categories = ["domestic_super_reduced_4"]
+categories = ["domestic_super_reduced"]
 rate_kinds = ["super_reduced"]
 flow_direction = "repercutido"
 fact = "iva_amount_sum"
@@ -66,7 +66,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.bindings.selector]
-categories = ["domestic_general_21", "domestic_reduced_10", "domestic_super_reduced_4"]
+categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"]
 rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "soportado"
 fact = "iva_amount_sum"
@@ -135,7 +135,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.bindings.selector]
-categories = ["domestic_general_21", "domestic_reduced_10", "domestic_super_reduced_4"]
+categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"]
 rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "repercutido"
 cash_accounting_treatments = ["taxpayer_regime"]
@@ -155,7 +155,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.bindings.selector]
-categories = ["domestic_general_21", "domestic_reduced_10", "domestic_super_reduced_4"]
+categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"]
 rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "repercutido"
 cash_accounting_treatments = ["taxpayer_regime"]
@@ -175,7 +175,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.bindings.selector]
-categories = ["domestic_general_21", "domestic_reduced_10", "domestic_super_reduced_4"]
+categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"]
 rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "soportado"
 cash_accounting_treatments = ["taxpayer_regime", "supplier_regime"]
@@ -195,7 +195,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2023-y-siguientes.bindings.selector]
-categories = ["domestic_general_21", "domestic_reduced_10", "domestic_super_reduced_4"]
+categories = ["domestic_general", "domestic_reduced", "domestic_super_reduced"]
 rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "soportado"
 cash_accounting_treatments = ["taxpayer_regime", "supplier_regime"]

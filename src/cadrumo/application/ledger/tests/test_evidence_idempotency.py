@@ -53,6 +53,7 @@ class _EvidenceIdFields(TypedDict):
     iva_amount: Decimal | None
     notes: str
 
+
 _BUCKET = "bucket-idem"
 
 

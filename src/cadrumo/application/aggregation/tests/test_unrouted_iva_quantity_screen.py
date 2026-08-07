@@ -105,7 +105,7 @@ def _sale(
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal(iva),
             "recargo_amount": recargo_amount,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+            "iva_category": IvaCategory.DOMESTIC_GENERAL,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",

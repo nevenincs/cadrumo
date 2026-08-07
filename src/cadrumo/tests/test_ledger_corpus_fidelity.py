@@ -264,7 +264,7 @@ def test_iva_pipeline_emits_intracommunity_and_export_and_import() -> None:
         result = aggregate_iva_ledger_observations(catalogue, period=period)
         categories.update(o.category for o in result.observations)
     for required in (
-        IvaCategory.DOMESTIC_GENERAL_21,
+        IvaCategory.DOMESTIC_GENERAL,
         IvaCategory.INTRA_COMMUNITY_SUPPLY,
         IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,

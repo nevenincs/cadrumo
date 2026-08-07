@@ -83,9 +83,9 @@ into income/expense rows.
 **IvaCategory** — all 16 placed on concrete rows:
 | category | worked example row |
 | --- | --- |
-| `domestic_general_21` | ES client invoice; office supplies, software |
-| `domestic_reduced_10` | hotel/restaurant business travel |
-| `domestic_super_reduced_4` | books / professional press |
+| `domestic_general` | ES client invoice; office supplies, software |
+| `domestic_reduced` | hotel/restaurant business travel |
+| `domestic_super_reduced` | books / professional press |
 | `domestic_zero` | (rare) qualifying zero-rated domestic |
 | `domestic_exempt` | RC seguro responsabilidad civil, formación (art. 20) |
 | `domestic_not_subject` | indemnización / non-taxable receipt |
@@ -157,7 +157,7 @@ boundary (raised 2025-12, paid 2026-01).
         "business_classification": "BUSINESS",
         "business_pct": null,
         "category_id": null,
-        "iva_category": "domestic_general_21",
+        "iva_category": "domestic_general",
         "iva_rate": "0.21",
         "taxable_base": "1020.30",
         "iva_amount": "214.26",

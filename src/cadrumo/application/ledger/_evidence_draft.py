@@ -1191,7 +1191,31 @@ def confirm_invoice_draft_from_evidence(
     # so a cuota the base and rate cannot support refuses rather than being
     # accepted as an override.
     confirmed_lines = None
-    if iva_amount is not None:
+    operator_overrode_the_amounts = taxable_base is not None or iva_rate is not None or iva_amount is not None
+    if len(draft.iva_breakdown) > 1 and not operator_overrode_the_amounts:
+        # A document that charges more than one rate cannot be represented by a
+        # single base and cuota pair. The parsers read the per-rate split
+        # exactly; collapsing it here would lose WHICH part of the base carried
+        # which rate, and the totals would still agree -- which is what makes
+        # the loss quiet. Modelo 303 sums cuota devengada per tier, so a
+        # collapsed invoice declares into one tier what belongs in two.
+        #
+        # Skipped entirely when the operator overrode any amount: an explicit
+        # override is a statement about the whole invoice, and silently keeping
+        # a per-rate split beside it would leave two disagreeing authorities on
+        # the same figures.
+        confirmed_lines = tuple(
+            InvoiceLine(
+                description=f"{resolved_invoice_number or 'Invoice'} - IVA {entry.iva_rate}%",
+                quantity=Decimal("1"),
+                unit_price=entry.taxable_base,
+                subtotal=entry.taxable_base,
+                iva_rate=resolve_iva_rate_slot(entry.iva_rate),
+                iva_amount=entry.iva_amount,
+            )
+            for entry in draft.iva_breakdown
+        )
+    elif iva_amount is not None:
         confirmed_lines = (
             InvoiceLine(
                 description=resolved_invoice_number or "Invoice",

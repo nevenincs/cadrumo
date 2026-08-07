@@ -138,7 +138,7 @@ def _invoice_row(*, declares_substrate: bool, cash: Decimal | None = None) -> Tr
             "taxable_base": _BASE if declares_substrate else None,
             "iva_amount": _CUOTA if declares_substrate else None,
             "iva_rate": _IVA_RATE if declares_substrate else None,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL_21 if declares_substrate else None,
+            "iva_category": IvaCategory.DOMESTIC_GENERAL if declares_substrate else None,
             "irpf_category": "actividad_economica",
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": datetime(_FILING_YEAR, 4, 6, 10, 0, tzinfo=UTC),

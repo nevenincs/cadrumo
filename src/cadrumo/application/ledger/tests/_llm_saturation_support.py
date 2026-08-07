@@ -35,7 +35,7 @@ _BUCKET = "17171717-1717-4717-8717-171717171717"
 def _saturating_subprocess_classifier(
     *,
     classification: BusinessClassification = BusinessClassification.BUSINESS,
-    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL_21,
+    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL,
     business_pct: Decimal | None = None,
     model: str = "test-model",
 ) -> SubprocessLLMClassifier:

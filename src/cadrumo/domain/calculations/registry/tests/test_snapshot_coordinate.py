@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: how the four divergent formats arose in the first place.
 _EMITTING_SURFACES: Final[tuple[str, ...]] = (
     "src/cadrumo/application/verification/_verify.py",
-    "src/cadrumo/domain/calculations/registry/_scenarios.py",
+    "src/cadrumo/domain/calculations/registry/tests/_scenarios.py",
     "src/cadrumo/domain/calculations/registry/_workbook_parity.py",
     "src/cadrumo/adapters/outbound/aeat/sede/_declarations.py",
 )

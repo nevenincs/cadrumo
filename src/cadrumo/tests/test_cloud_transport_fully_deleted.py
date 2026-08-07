@@ -54,9 +54,7 @@ _DELETED_CLOUD_SYMBOLS = (
     "evidence-acknowledged",
 )
 
-_NEIGHBOURING_TRANSPORTS_THAT_MUST_SURVIVE = (
-    SRC_CADRUMO / "entrypoints" / "mcp" / "_call_runtime.py",
-)
+_NEIGHBOURING_TRANSPORTS_THAT_MUST_SURVIVE = (SRC_CADRUMO / "entrypoints" / "mcp" / "_call_runtime.py",)
 
 
 def test_no_deleted_cloud_symbol_survives_in_production() -> None:

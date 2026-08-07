@@ -131,12 +131,15 @@ def test_every_model_talking_class_lives_in_the_inference_package() -> None:
         if tree is None:
             return False
         return any(
-            isinstance(node, ast.Call) and getattr(node.func, "id", None) == "LLMRequest"
-            for node in ast.walk(tree)
+            isinstance(node, ast.Call) and getattr(node.func, "id", None) == "LLMRequest" for node in ast.walk(tree)
         )
 
-    in_ledger = [repo_relative(p) for p in non_test_python_files_under(ledger, include_data=True) if _builds_a_model_request(p)]
-    in_package = [repo_relative(p) for p in non_test_python_files_under(package, include_data=True) if _builds_a_model_request(p)]
+    in_ledger = [
+        repo_relative(p) for p in non_test_python_files_under(ledger, include_data=True) if _builds_a_model_request(p)
+    ]
+    in_package = [
+        repo_relative(p) for p in non_test_python_files_under(package, include_data=True) if _builds_a_model_request(p)
+    ]
 
     assert in_ledger == [], f"a model request is built in the ledger; it belongs in the inference package: {in_ledger}"
     assert in_package, "the inference package must own at least one model-talking module, or this passes over nothing"

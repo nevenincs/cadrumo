@@ -224,7 +224,7 @@ def _source_bound_revision() -> ModeloRevision:
                 id=_SOURCE_BOUND_BINDING,
                 source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
                 selector={
-                    "categories": ("domestic_general_21",),
+                    "categories": ("domestic_general",),
                     "rate_kinds": ("general",),
                     "flow_direction": "repercutido",
                     "fact": "iva_amount_sum",

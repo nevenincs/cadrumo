@@ -70,7 +70,7 @@ def _ledger_evidence() -> LedgerFilingEvidence:
                 taxable_base=Decimal("100.00"),
                 iva_rate=Decimal("0.21"),
                 iva_amount=Decimal("21.00"),
-                iva_category="domestic_general_21",
+                iva_category="domestic_general",
                 category_id="material_oficina",
                 irpf_category="actividad_economica",
                 counterparty_eu_member_state="de",

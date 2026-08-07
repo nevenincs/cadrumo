@@ -1,5 +1,5 @@
 [[regulations]]
-category = "domestic_general_21"
+category = "domestic_general"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
@@ -15,7 +15,7 @@ quoted_text = "Artículo 4. Hecho imponible. Uno. Estarán sujetas al impuesto l
 retrieval_date = 2026-04-13
 
 [[regulations]]
-category = "domestic_reduced_10"
+category = "domestic_reduced"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
@@ -31,7 +31,7 @@ quoted_text = "Uno. Se aplicará el tipo del 10 por ciento a las operaciones sig
 retrieval_date = 2026-04-13
 
 [[regulations]]
-category = "domestic_super_reduced_4"
+category = "domestic_super_reduced"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []

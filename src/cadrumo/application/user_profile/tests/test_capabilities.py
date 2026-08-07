@@ -53,9 +53,7 @@ def test_profile_fact_overrides_the_default() -> None:
         UserProfileFact(path="capabilities.llm_vision", value=False),
     )
 
-    for capability, expected_enabled in (
-        (ServiceCapability.LLM_VISION, False),
-    ):
+    for capability, expected_enabled in ((ServiceCapability.LLM_VISION, False),):
         resolved = resolve_capability(capability, profile_record=record, settings=settings)
 
         # The profile opted in, and gestor mode is off + global default off, so the
@@ -110,4 +108,3 @@ def test_the_reader_accepts_exactly_what_the_write_door_stores() -> None:
     """
     for token in ("sí", "si", "s", "y", "yes", "true", "1", "verdadero", "no", "n", "falso", "0", "false", "on", "off"):
         assert _parse_bool_fact(token) == parse_bool(token), f"reader and write door disagree on {token!r}"
-

@@ -41,10 +41,11 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
+from cadrumo.agent import iter_skill_documents
 from cadrumo.core.external_constants import UTF_8_ENCODING as _UTF_8
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.core.resources import resources
-from cadrumo.agent import iter_skill_documents
+
 from ._models import (
     LIFECYCLE_STAGE_ORDER,
     ConfirmationGateCheck,

@@ -91,9 +91,9 @@ def _gross_split(gross: Decimal, rate: Decimal) -> tuple[Decimal, Decimal]:
 # --- behavior contract: gross→base/IVA at 21/10/4 routes to M303 soportado ----------------
 def test_base_iva_rederivation_at_21_10_4_routes_to_m303_soportado() -> None:
     cases = [
-        (Decimal("0.21"), IvaCategory.DOMESTIC_GENERAL_21),
-        (Decimal("0.10"), IvaCategory.DOMESTIC_REDUCED_10),
-        (Decimal("0.04"), IvaCategory.DOMESTIC_SUPER_REDUCED_4),
+        (Decimal("0.21"), IvaCategory.DOMESTIC_GENERAL),
+        (Decimal("0.10"), IvaCategory.DOMESTIC_REDUCED),
+        (Decimal("0.04"), IvaCategory.DOMESTIC_SUPER_REDUCED),
     ]
     gross = Decimal("121.00")
     txns = []

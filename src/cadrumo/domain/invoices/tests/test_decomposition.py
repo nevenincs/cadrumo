@@ -94,7 +94,7 @@ def _invoice(
 def test_domestic_rated_invoice_decomposes_into_the_canonical_identity() -> None:
     """A fully declared invoice yields base, cuota, total and cash."""
     invoice = _invoice(
-        iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
         retention_rate=Decimal("0.15"),
         retention_amount=Decimal("150.00"),
     )
@@ -114,10 +114,10 @@ def test_domestic_rated_invoice_decomposes_into_the_canonical_identity() -> None
 
 def test_retencion_leaves_the_total_untouched_and_reduces_only_the_cash() -> None:
     """The same operation costs the same whether or not it is withheld from."""
-    without = decompose_invoice(_invoice(iva_category=IvaCategory.DOMESTIC_GENERAL_21))
+    without = decompose_invoice(_invoice(iva_category=IvaCategory.DOMESTIC_GENERAL))
     with_retencion = decompose_invoice(
         _invoice(
-            iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+            iva_category=IvaCategory.DOMESTIC_GENERAL,
             retention_rate=Decimal("0.15"),
             retention_amount=Decimal("150.00"),
         ),
@@ -267,7 +267,7 @@ def test_a_partial_record_is_still_a_valid_invoice() -> None:
 
 def test_partition_keeps_the_excluded_records_alongside_the_usable_ones() -> None:
     """Nothing is dropped: both halves come back from one call."""
-    grounded_invoice = _invoice(invoice_number="F-1", iva_category=IvaCategory.DOMESTIC_GENERAL_21)
+    grounded_invoice = _invoice(invoice_number="F-1", iva_category=IvaCategory.DOMESTIC_GENERAL)
     ungrounded_invoice = _invoice(invoice_number="F-2")
 
     partition = partition_invoices((grounded_invoice, ungrounded_invoice))
@@ -288,7 +288,7 @@ def test_a_verdict_carrying_both_components_and_defects_is_refused() -> None:
     with pytest.raises(ValidationError, match="never both and never neither"):
         InvoiceDecomposition(
             invoice_id="abc",
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             components=InvoiceComponents(
                 taxable_base=Decimal("100"),
                 cuota=Decimal("21"),

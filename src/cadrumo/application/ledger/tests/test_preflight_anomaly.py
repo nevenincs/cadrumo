@@ -35,7 +35,7 @@ def _tx(
     *,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     currency: str = "EUR",
-    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL_21,
+    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL,
     taxable_base: Decimal | None = Decimal("100.00"),
     iva_amount: Decimal | None = Decimal("21.00"),
     iva_rate: Decimal | None = Decimal("0.21"),

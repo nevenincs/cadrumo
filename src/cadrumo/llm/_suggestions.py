@@ -62,12 +62,12 @@ See Also:
 from __future__ import annotations
 
 from decimal import Decimal
-from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ..application.ledger import ManualLedgerTransactionResult
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..core import FieldOrigin
 from ..domain.categories import SpendingCategory
 from ..domain.iva import IvaCategory
 from ..domain.transactions import BusinessClassification
@@ -92,7 +92,6 @@ class LLMClassificationSuggestion(BaseModel):
     def recommends_split(self) -> bool:
         """True when the evidence read flagged the invoice as multi-component."""
         return self.multiple_components is True
-
 
 
 class LLMSaturatedSuggestion(BaseModel):
@@ -219,28 +218,6 @@ __all__ = [
 _INTERCHANGE_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
-class ExtractionSourceKind(StrEnum):
-    """How a field in an extraction payload was recovered.
-
-    Closed by construction. The distinction is load-bearing rather than
-    descriptive: a value read from a document's own structured record is
-    EXACT, while a value a model read off a rendered page is probabilistic,
-    and a persisted record must be able to answer which it was.
-    """
-
-    STRUCTURED_RECORD = "structured_record"
-    """Read from the document's own machine-readable record. Exact."""
-
-    TEXT_LAYER = "text_layer"
-    """Recovered by grounded heuristics over an extracted PDF text layer."""
-
-    VISION_MODEL = "vision_model"
-    """Read by a local vision model from a rasterised page. Probabilistic."""
-
-    OPERATOR = "operator"
-    """Supplied or corrected by the operator at the confirm boundary."""
-
-
 class ExtractionProducer(BaseModel):
     """Identity of whatever produced an extraction payload.
 
@@ -253,7 +230,7 @@ class ExtractionProducer(BaseModel):
 
     model_config = _INTERCHANGE_CONFIG
 
-    source_kind: ExtractionSourceKind
+    source_kind: FieldOrigin
     identity: str = Field(min_length=1)
     """Model identity (``qwen2.5vl:3b``) or parser identity (``en16931-cii``)."""
     revision: str = Field(min_length=1)

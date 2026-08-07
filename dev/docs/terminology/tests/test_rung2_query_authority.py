@@ -79,8 +79,10 @@ def test_bundled_authority_is_versioned_and_contains_independently_ratified_alia
             "reviewed_at": "2026-08-07",
         },
     ]
-    assert query_alias_authority_path().as_posix().endswith(
-        "src/cadrumo/_data/terminology/rung2/query-alias-authority.json"
+    assert (
+        query_alias_authority_path()
+        .as_posix()
+        .endswith("src/cadrumo/_data/terminology/rung2/query-alias-authority.json")
     )
 
 
@@ -178,11 +180,7 @@ def test_authority_rejects_held_out_aliases_and_surface_collisions() -> None:
         )
 
     collision = _entry(
-        query=next(
-            query[2]
-            for query in canonical
-            if query[0] == "prorrata" and query[1] is OutputLanguage.ES
-        )
+        query=next(query[2] for query in canonical if query[0] == "prorrata" and query[1] is OutputLanguage.ES)
     )
     with pytest.raises(QueryAliasAuthorityError, match="collides"):
         validate_query_alias_authority(_authority(collision), handbook=handbook, canonical_queries=canonical)

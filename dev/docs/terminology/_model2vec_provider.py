@@ -164,8 +164,7 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
         observations = tuple(self._embed_text(word) for word in words)
         token_ids = tuple(token_id for word_ids, _ in observations for token_id in word_ids)
         vectors = tuple(
-            self._normalize_vector(vector, text=word)
-            for word, (_, vector) in zip(words, observations, strict=True)
+            self._normalize_vector(vector, text=word) for word, (_, vector) in zip(words, observations, strict=True)
         )
         return token_ids, self._pool_vectors(vectors, text=term)
 

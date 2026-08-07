@@ -89,7 +89,7 @@ def _retention_invoice() -> Invoice:
             "counterparty_name": "Asesoria Profesional Martinez SL",
             "counterparty_tax_id": "B12345674",
             "counterparty_country": "ES",
-            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+            "iva_category": IvaCategory.DOMESTIC_GENERAL,
             "lines": (line,),
             "base_total": _BASE,
             "iva_total": _BASE * rate,

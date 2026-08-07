@@ -39,9 +39,7 @@ def _validate_source_kind(value: str) -> CounterpartSourceKind:
     return counterpart_source_kind(value)
 
 
-_CANONICAL_OPERATION_KINDS: frozenset[str] = frozenset(
-    kind.value for kind in (*OperationKind347, *OperationKind349)
-)
+_CANONICAL_OPERATION_KINDS: frozenset[str] = frozenset(kind.value for kind in (*OperationKind347, *OperationKind349))
 
 
 def _validate_operation_kind(value: str) -> str:

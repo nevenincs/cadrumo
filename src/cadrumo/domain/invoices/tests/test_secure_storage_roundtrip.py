@@ -112,7 +112,7 @@ def _domestic_retention_invoice() -> Invoice:
             "payment_status": PaymentStatus.PARTIALLY_PAID,
             "linked_transaction_ids": (_HEX64_A, _HEX64_B),
             "notes": "Factura con retención IRPF aplicable a profesional.",
-            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+            "iva_category": IvaCategory.DOMESTIC_GENERAL,
             "retention_rate": Decimal("0.15"),
             "retention_amount": Decimal("150.00"),
             "recargo_amount": Decimal("52.00"),
@@ -181,7 +181,7 @@ def test_invoice_catalogue_with_retention_and_oss_axes_survives_encrypted_storag
 
     domestic = next(v for v in loaded.values() if v.invoice_number == "F-2025-100")
     assert domestic.bucket_id == "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
-    assert domestic.iva_category is IvaCategory.DOMESTIC_GENERAL_21
+    assert domestic.iva_category is IvaCategory.DOMESTIC_GENERAL
     assert domestic.retention_rate == Decimal("0.15")
     assert domestic.retention_amount == Decimal("150.00")
     assert domestic.payment_id == _HEX64_A
@@ -297,7 +297,7 @@ def _simplificada_advance_payment_invoice() -> Invoice:
                 ),
             ),
             "payment_status": PaymentStatus.PAID,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+            "iva_category": IvaCategory.DOMESTIC_GENERAL,
         },
     )
 

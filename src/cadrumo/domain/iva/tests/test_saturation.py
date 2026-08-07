@@ -34,9 +34,9 @@ _ON_DATE = date(2025, 6, 1)
 def test_domestic_positive_rate_resolves_to_registry_fraction() -> None:
     """Domestic general/reduced/super-reduced resolve to the grounded fraction."""
     cases: tuple[tuple[IvaCategory, Decimal, IvaRateKind], ...] = (
-        (IvaCategory.DOMESTIC_GENERAL_21, Decimal("0.21"), IvaRateKind.GENERAL),
-        (IvaCategory.DOMESTIC_REDUCED_10, Decimal("0.10"), IvaRateKind.REDUCED),
-        (IvaCategory.DOMESTIC_SUPER_REDUCED_4, Decimal("0.04"), IvaRateKind.SUPER_REDUCED),
+        (IvaCategory.DOMESTIC_GENERAL, Decimal("0.21"), IvaRateKind.GENERAL),
+        (IvaCategory.DOMESTIC_REDUCED, Decimal("0.10"), IvaRateKind.REDUCED),
+        (IvaCategory.DOMESTIC_SUPER_REDUCED, Decimal("0.04"), IvaRateKind.SUPER_REDUCED),
     )
 
     for category, expected_rate, expected_kind in cases:
@@ -175,7 +175,7 @@ def test_split_gross_at_zero_rate_yields_whole_base_and_zero_iva() -> None:
 
 def test_resolve_then_split_round_trips_for_general_rate() -> None:
     """The two primitives compose: resolve a fraction, split a gross with it."""
-    resolution = resolve_category_rate(IvaCategory.DOMESTIC_GENERAL_21, on_date=_ON_DATE)
+    resolution = resolve_category_rate(IvaCategory.DOMESTIC_GENERAL, on_date=_ON_DATE)
     assert resolution.rate is not None
     base, iva = split_gross_at_rate(Decimal("121.00"), resolution.rate)
     assert base == Decimal("100.00")

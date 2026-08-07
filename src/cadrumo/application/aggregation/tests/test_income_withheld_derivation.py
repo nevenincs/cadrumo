@@ -131,7 +131,7 @@ def test_declared_cuota_row_still_derives_and_says_so() -> None:
         taxable_base="2000.00",
         iva_amount="420.00",
         iva_rate="0.21",
-        iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
     )
 
     inference = income_withheld_amount(row)
@@ -329,7 +329,7 @@ def test_the_builder_never_emits_an_unmarked_withholding() -> None:
             taxable_base="2000.00",
             iva_amount="420.00",
             iva_rate="0.21",
-            iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+            iva_category=IvaCategory.DOMESTIC_GENERAL,
         ),
     )
     catalogue = TransactionCatalogue.from_transactions(rows)

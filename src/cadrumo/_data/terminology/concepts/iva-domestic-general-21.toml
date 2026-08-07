@@ -9,7 +9,7 @@
 concept_id = "iva-domestic-general-21"
 domain = "regimen"
 lifecycle = "draft"
-domain_refs = ["iva-category:domestic_general_21"]
+domain_refs = ["iva-category:domestic_general"]
 created_at = 2026-06-10
 updated_at = 2026-06-10
 

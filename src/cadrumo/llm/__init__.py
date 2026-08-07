@@ -56,7 +56,6 @@ if TYPE_CHECKING:
     from ._suggestions import (
         ExtractionPayload,
         ExtractionProducer,
-        ExtractionSourceKind,
         LLMClassificationSuggestion,
         LLMSaturatedSuggestion,
         LLMSplitApplyResult,
@@ -100,7 +99,6 @@ __all__ = [
     "CachedEntry",
     "ExtractionPayload",
     "ExtractionProducer",
-    "ExtractionSourceKind",
     "LLMCacheError",
     "LLMClassificationSuggestion",
     "LLMClient",
@@ -135,18 +133,19 @@ __all__ = [
 ]
 
 
-_SUGGESTION_EXPORTS = frozenset({
-    "ExtractionPayload",
-    "ExtractionProducer",
-    "ExtractionSourceKind",
-    "LLMClassificationSuggestion",
-    "LLMSaturatedSuggestion",
-    "LLMSplitApplyResult",
-    "LLMSplitChildSuggestion",
-    "LLMSplitSuggestion",
-    "LLMSuggestionRejectionResult",
-    "OperatorIvaDerivationResult",
-})
+_SUGGESTION_EXPORTS = frozenset(
+    {
+        "ExtractionPayload",
+        "ExtractionProducer",
+        "LLMClassificationSuggestion",
+        "LLMSaturatedSuggestion",
+        "LLMSplitApplyResult",
+        "LLMSplitChildSuggestion",
+        "LLMSplitSuggestion",
+        "LLMSuggestionRejectionResult",
+        "OperatorIvaDerivationResult",
+    }
+)
 """Interchange DTOs resolved lazily from :mod:`._suggestions`.
 
 They live HERE rather than in the ledger because every LLM definition belongs
@@ -156,11 +155,13 @@ close the loop at import time.
 """
 
 
-_TEXT_EXTRACTION_EXPORTS = frozenset({
-    "TextInvoiceFieldExtractor",
-    "build_text_field_extraction_prompt",
-    "extract_invoice_fields_from_text",
-})
+_TEXT_EXTRACTION_EXPORTS = frozenset(
+    {
+        "TextInvoiceFieldExtractor",
+        "build_text_field_extraction_prompt",
+        "extract_invoice_fields_from_text",
+    }
+)
 """Text-to-fields reader surface resolved lazily from :mod:`._evidence_draft_text`.
 
 Lazy for the same reason as the vision reader beside it: the module imports

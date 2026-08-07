@@ -144,7 +144,6 @@ class RuleApplyResult(OutputSchema):
     applied: list[RuleApplyAppliedPayload] | None = None
 
 
-
 class LlmUsageProviderPayload(OutputSchema):
     """Per-provider LLM usage/cost row.
 

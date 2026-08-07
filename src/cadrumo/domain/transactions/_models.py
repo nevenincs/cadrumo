@@ -22,7 +22,13 @@ from pydantic import (
 )
 from pydantic_core import core_schema
 
-from ...core import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion, TipoActividad, fold_diacritics
+from ...core import (
+    ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS,
+    Art104TresExclusion,
+    ConceptoIngreso,
+    TipoActividad,
+    fold_diacritics,
+)
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
@@ -650,6 +656,17 @@ class Transaction(BaseModel):
             especial; the regime-aware aggregation routes the deducible cuota by
             this classification. ``None`` for rows that are not under especial or
             carry no per-input use declaration.
+        concepto_ingreso: Operator-declared income concept
+            (:class:`~core.ConceptoIngreso`) for base-inclusion purposes. RD
+            439/2007 art. 110.1.c) fixes the agrarian pago fraccionado on the
+            *volumen de ingresos ... excluidas las subvenciones de capital y las
+            indemnizaciones*, and the distinction runs INSIDE subsidies -- a
+            subvención corriente counts and a subvención de capital does not --
+            so no amount, category or counterparty on the row can settle it.
+            ``None`` means ordinary income and is INCLUDED, because an unmarked
+            receipt is far more likely to be ordinary than exceptional and
+            defaulting the other way would drop real income out of a declared
+            volume.
         tipo_actividad: Operator-declared Modelo 036 tipo de actividad
             (:class:`~core.TipoActividad`) the row's activity income belongs to.
             Present so a return that splits casillas by activity can route each
@@ -792,6 +809,7 @@ class Transaction(BaseModel):
     art_104_tres_exclusion: Art104TresExclusion | None = None
     input_classification: InputClassification | None = None
     tipo_actividad: TipoActividad | None = None
+    concepto_ingreso: ConceptoIngreso | None = None
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     purchase_invoice_evidence_id: str | None = None
     attachment_ids: tuple[str, ...] = ()
@@ -870,6 +888,7 @@ class Transaction(BaseModel):
         "art_104_tres_exclusion",
         "input_classification",
         "tipo_actividad",
+        "concepto_ingreso",
         mode="before",
     )
     @classmethod
@@ -894,6 +913,7 @@ class Transaction(BaseModel):
             "art_104_tres_exclusion": Art104TresExclusion,
             "input_classification": InputClassification,
             "tipo_actividad": TipoActividad,
+            "concepto_ingreso": ConceptoIngreso,
         }
         return enum_by_field[info.field_name or ""](value)
 

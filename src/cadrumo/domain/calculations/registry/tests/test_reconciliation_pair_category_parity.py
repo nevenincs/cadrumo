@@ -124,9 +124,7 @@ def _ledger_categories_by_semantic_role(revision: ModeloRevision) -> Mapping[str
         # comprehension below reads as iterating something that may not be
         # iterable. Declaring the fallback keeps the same behaviour and
         # states what a missing selector key yields.
-        categories: tuple[object, ...] = (
-            tuple(raw_categories) if isinstance(raw_categories, list | tuple) else ()
-        )
+        categories: tuple[object, ...] = tuple(raw_categories) if isinstance(raw_categories, list | tuple) else ()
         roles[str(role)] = frozenset(str(category) for category in categories)
     return roles
 

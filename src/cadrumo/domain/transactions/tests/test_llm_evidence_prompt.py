@@ -98,7 +98,7 @@ def test_multiple_components_survives_the_allow_list_parse() -> None:
                 "classification": "BUSINESS",
                 "confidence": 0.9,
                 "reason": "two distinct rate lines on the attached invoice",
-                "iva_category": "domestic_general_21",
+                "iva_category": "domestic_general",
                 "multiple_components": True,
             },
         ),

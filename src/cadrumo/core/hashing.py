@@ -41,16 +41,32 @@ def sha256_hex(data: bytes) -> str:
 
 
 def canonical_json_bytes(payload: object) -> bytes:
-    """Return deterministic canonical-JSON bytes for content hashing.
+    """Return deterministic canonical-JSON bytes.
 
-    Sorted keys, compact separators, UTF-8 — the single serialisation the
-    content-hash helpers feed into SHA-256 so two semantically equal payloads
-    produce the same bytes (and therefore the same content hash / id).
+    Sorted keys, compact separators, UTF-8, so two semantically equal payloads
+    produce the same bytes.
 
-    The payload must already be JSON-compatible. Callers normalise
-    ``Decimal``, :class:`~pathlib.Path`, datetimes, enums, and domain objects
-    into stable strings or dictionaries before entering this helper; any change
-    to that projection is a caller-owned identity change.
+    Two uses, both legitimate. Content hashing is the origin: this is the
+    single serialisation the content-hash helpers feed into SHA-256, so equal
+    payloads yield the same content hash / id. **Persisting a JSON payload is
+    the other**, and it is not a widening of the contract — determinism is a
+    stronger property than a storage payload needs, not a weaker one, so a
+    serialisation fit to key a digest is fit to write to a row. Callers that
+    persist through this helper get byte-stable payloads for free, which is
+    what makes a stored payload comparable across writes at all.
+
+    Prefer it over an ad-hoc ``json.dumps`` for either use. A hand-rolled
+    ``indent=``/``default=`` call is not equivalent: ``indent`` inflates bytes
+    for a reader that does not exist once the payload is encrypted, and
+    ``default=str`` silently coerces a value this helper would have refused,
+    turning a type error into a wrong stored value.
+
+    The payload must already be JSON-compatible — that refusal is the point,
+    not a limitation. Callers normalise ``Decimal``, :class:`~pathlib.Path`,
+    datetimes, enums, and domain objects into stable strings or dictionaries
+    before entering this helper (``model_dump(mode="json")`` does this for a
+    pydantic model); any change to that projection is a caller-owned identity
+    change.
     """
     return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode(_UTF_8)
 
