@@ -5,44 +5,11 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:a90bc88fe704019129fe980e872fda0349fa9e0aeedbb3a89695e3a0976424eb'
+body_hash: 'sha256:c0ba4b6160de871f015122d628b0c56599f96e85784e147c3fb62a0a2b9ea809'
 step_id: 'S34'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace user-docs-search-consolidation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S34 and 2026-08-01-user-docs-search-consolidation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Correct the three sites that ranked a legal provision in the DOC band above the modelo and casilla cards it grounds, and gate the agreement between a record's stamped weight and the class it displays under and ## Scope
-
-- `dev/docs/terminology/ and docs/_static/cadrumo-docs.js` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Correct the three sites that ranked a legal provision in the DOC band above the modelo and casilla cards it grounds, and gate the agreement between a record's stamped weight and the class it displays under
 

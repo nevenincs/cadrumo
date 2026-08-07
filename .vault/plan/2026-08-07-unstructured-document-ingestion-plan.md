@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:cfbf890c184d9671484fa0bab94b6ca18e63e94236c67800b9a455a824cb958b'
+body_hash: 'sha256:ed8f6b1672773e43acbc410a6f10dd2244861fbfdaef03842c5dfa61c18064af'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -202,6 +202,7 @@ Lands the uniform extra guards, the import contracts, the completed extra closur
 - [x] `W07.P15.S55` - Complete the llm extra dependency closure (Pillow, pynvml) in the packaging metadata with the boundary rationale recorded, gated by deptry and the packaging smoke lanes; `pyproject.toml`.
 - [x] `W07.P15.S56` - Add the absent-llm packaging smoke lane: install the core cohort without the extra, drive every inference-adjacent surface, and assert each refusal is the declared install guidance rather than a ModuleNotFoundError; `dev/packaging`.
 - [ ] `W07.P15.S57` - Prove the tabular split behaviour: a known fixed-layout file imports fully on a core-only install while an unknown vocabulary refuses at the mapping call with the install hint, gated by fixtures on both sides; `src/cadrumo/adapters/inbound/financial`.
+- [ ] `W07.P15.S83` - Activate the inference boundary in one commit by repointing the llm extra probe from PIL to pynvml and guarding the five unguarded cadrumo.llm entry points with require_optional_extra, gated by a meta-path-finder refusal test that proves each refusal without depending on the probe and by the absent-llm packaging lane whose precondition the repoint clears; `src/cadrumo/llm`.
 
 ## Wave `W08` - Batch ingestion
 
