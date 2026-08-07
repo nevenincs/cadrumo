@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:00631d8ee8466be9f9d86887cc72808d7d80f55b830f4bdf3a7e7ac18d33cb0a'
+body_hash: 'sha256:d9f2a9749c4f4617c5a5d0eec5cbd568c22818fa9a0cccdfb33839137217f612'
 step_id: 'S02'
 related:
   - "[[2026-08-07-justificante-identity-matching-plan]]"
@@ -19,8 +19,22 @@ related:
 
 ## Description
 
+`register_capture_justificante_metadata` - the actual caller of
+`_justificante_matches_capture_axis` - already asserts that the parsed receipt's
+CSV equals the snapshot's, and raises, before the predicate runs.
+
 ## Outcome
+
+Dropped `presentation_id=snapshot.expediente_id` from the call into
+`matches_filing_target`. Strictly subtractive: it removed a comparison that could
+never validly run, standing next to one that already does the real job, which is
+unchanged.
 
 ## Verification
 
+`test_justificante_capture_stamp.py` and the live suites stay green.
+
 ## Notes
+
+The guard this site relies on was not touched, so the site's effective strength is
+unchanged rather than reduced.

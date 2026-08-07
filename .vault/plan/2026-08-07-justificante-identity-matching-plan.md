@@ -4,7 +4,7 @@ tags:
   - '#justificante-identity-matching'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:3380e1940ff423762f428dbf911bcf4d54f4e9245d4bb9cfe16cace2fc56f5c9'
+body_hash: 'sha256:4c3935b9667a1a70670a13ea1d4279c392eec7f8f4b4a28a65ffbe05390f4495'
 tier: L2
 related:
   - '[[2026-08-07-justificante-identity-matching-adr]]'
@@ -43,23 +43,23 @@ the CSV check's defense-in-depth role against a wrong-artefact-selection bug;
 
 Promote the shared CSV-extraction helper, harden the row-scoped locator to an exact match, drop the wrong-namespace argument at the two already-guarded call sites, add the missing csv defense-in-depth check at the third rather than dropping it check-less, remove the now-unusable presentation_id parameter, and prove the fix with the corrected pinning test, a real-fixture regression, an exact-match locator test, and a mutation-proof two-filings-per-period discrimination test.
 
-- [ ] `P01.S11` - Confirm extract_csv_from_url already resolves through the sede package public facade before landing S01, promoting it only if a fresh HEAD read shows it missing; `src/cadrumo/adapters/outbound/aeat/sede/__init__.py`.
-- [ ] `P01.S13` - Harden the row-scoped locator to an exact expediente_id match instead of a substring filter, reusing the existing re import rather than a second selection idiom, with a test proving it cannot match a second row whose id merely contains the target as a substring; `src/cadrumo/adapters/outbound/aeat/sede/_declarations.py (_row_locator_for_expediente)`.
-- [ ] `P01.S01` - Add a csv-equality check recovering the CSV from the justificante_pdf artefact source_url via extract_csv_from_url, fold a resolution failure into the existing swallowed-outcome shape, and drop the now-signature-invalid expediente_id argument in the same change; `src/cadrumo/application/live/_filed_observation_persistence.py`.
-- [ ] `P01.S02` - Drop the now-signature-invalid expediente_id argument now that register_capture_justificante_metadata's existing csv equality check already covers identity; `src/cadrumo/application/live/_justificante.py (_justificante_matches_capture_axis)`.
-- [ ] `P01.S03` - Drop the now-signature-invalid expediente_id argument now that register_capture_as_filing_evidence's existing csv equality check already covers identity; `src/cadrumo/application/live/_justificante.py (register_capture_as_filing_evidence)`.
-- [ ] `P01.S04` - Remove the presentation_id parameter entirely from matches_filing_target and its three now-dead pass-through wrapper parameters; `src/cadrumo/domain/justificante/_schema.py, src/cadrumo/application/live/_justificante.py, and src/cadrumo/application/live/_filed_observation_persistence.py`.
-- [ ] `P01.S05` - Update the pinning test to the corrected signature and matching behavior, and remove the fixture's false expediente-as-presentation_id equivalence; `src/cadrumo/domain/justificante/tests/test_filing_target.py`.
-- [ ] `P01.S06` - Add a real-fixture regression proving the register-reconciliation path enrolls a committed M303 justificante via the new csv-equality check; `src/cadrumo/application/live/tests/_filed_capture_history_support.py and a new or existing test in src/cadrumo/application/live/tests`.
-- [ ] `P01.S12` - Add a mutation-proof test proving the new csv defense-in-depth check discriminates two same-period filings sharing modelo, ejercicio, period and tax_id, confirming a wrong-artefact-selection bug would be caught even though the row-scoped fetch is the primary binding; `src/cadrumo/application/live/tests`.
-- [ ] `P01.S07` - Run the domain and application justificante test suites and confirm green; `src/cadrumo/domain/justificante/tests and src/cadrumo/application/live/tests`.
+- [x] `P01.S11` - Confirm extract_csv_from_url already resolves through the sede package public facade before landing S01, promoting it only if a fresh HEAD read shows it missing; `src/cadrumo/adapters/outbound/aeat/sede/__init__.py`.
+- [x] `P01.S13` - Harden the row-scoped locator to an exact expediente_id match instead of a substring filter, reusing the existing re import rather than a second selection idiom, with a test proving it cannot match a second row whose id merely contains the target as a substring; `src/cadrumo/adapters/outbound/aeat/sede/_declarations.py (_row_locator_for_expediente)`.
+- [x] `P01.S01` - Add a csv-equality check recovering the CSV from the justificante_pdf artefact source_url via extract_csv_from_url, fold a resolution failure into the existing swallowed-outcome shape, and drop the now-signature-invalid expediente_id argument in the same change; `src/cadrumo/application/live/_filed_observation_persistence.py`.
+- [x] `P01.S02` - Drop the now-signature-invalid expediente_id argument now that register_capture_justificante_metadata's existing csv equality check already covers identity; `src/cadrumo/application/live/_justificante.py (_justificante_matches_capture_axis)`.
+- [x] `P01.S03` - Drop the now-signature-invalid expediente_id argument now that register_capture_as_filing_evidence's existing csv equality check already covers identity; `src/cadrumo/application/live/_justificante.py (register_capture_as_filing_evidence)`.
+- [x] `P01.S04` - Remove the presentation_id parameter entirely from matches_filing_target and its three now-dead pass-through wrapper parameters; `src/cadrumo/domain/justificante/_schema.py, src/cadrumo/application/live/_justificante.py, and src/cadrumo/application/live/_filed_observation_persistence.py`.
+- [x] `P01.S05` - Update the pinning test to the corrected signature and matching behavior, and remove the fixture's false expediente-as-presentation_id equivalence; `src/cadrumo/domain/justificante/tests/test_filing_target.py`.
+- [x] `P01.S06` - Add a real-fixture regression proving the register-reconciliation path enrolls a committed M303 justificante via the new csv-equality check; `src/cadrumo/application/live/tests/_filed_capture_history_support.py and a new or existing test in src/cadrumo/application/live/tests`.
+- [x] `P01.S12` - Add a mutation-proof test proving the new csv defense-in-depth check discriminates two same-period filings sharing modelo, ejercicio, period and tax_id, confirming a wrong-artefact-selection bug would be caught even though the row-scoped fetch is the primary binding; `src/cadrumo/application/live/tests`.
+- [x] `P01.S07` - Run the domain and application justificante test suites and confirm green; `src/cadrumo/domain/justificante/tests and src/cadrumo/application/live/tests`.
 
 ### Phase `P02` - Distinguish swallowed justificante-matching outcomes
 
 Surface a Notice distinguishing all five swallowed outcomes at the register-reconciliation site (unreadable artefact, manifest mismatch, unparsable PDF, CSV-resolution failure, CSV mismatch) so an operator can see why a capture produced no evidence.
 
-- [ ] `P02.S08` - Distinguish all five swallowed outcomes (unreadable artefact, manifest mismatch, unparsable PDF, CSV-resolution failure, CSV mismatch) and return a typed reason instead of returning None uniformly; `src/cadrumo/application/live/_filed_observation_persistence.py (_parse_matching_filed_justificante)`.
-- [ ] `P02.S09` - Emit a Notice through the shared envelope spine naming the unreached-evidence reason when an enrollment call finds an artefact but saves nothing; `src/cadrumo/application/live/_filed_observation_persistence.py (persist_filed_justificante_metadata and enroll_filed_justificante_evidence)`.
+- [x] `P02.S08` - Distinguish all five swallowed outcomes (unreadable artefact, manifest mismatch, unparsable PDF, CSV-resolution failure, CSV mismatch) and return a typed reason instead of returning None uniformly; `src/cadrumo/application/live/_filed_observation_persistence.py (_parse_matching_filed_justificante)`.
+- [x] `P02.S09` - Emit a Notice through the shared envelope spine naming the unreached-evidence reason when an enrollment call finds an artefact but saves nothing; `src/cadrumo/application/live/_filed_observation_persistence.py (persist_filed_justificante_metadata and enroll_filed_justificante_evidence)`.
 - [ ] `P02.S10` - Add a mutation-proof test confirming the reason-distinguishing branch fires per swallowed case and confirm the CLI report surfaces the Notice; `src/cadrumo/application/live/tests and src/cadrumo/entrypoints/cli/tests`.
 
 ## Parallelization
