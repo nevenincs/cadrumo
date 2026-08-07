@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:e26949ec167dc95e4307c5b14f2392437d6064360791a62b3f4c224b6f1969e5'
+body_hash: 'sha256:96dfe72b608dd8c15b686015b117773ba0de160290f22437bb291191a52c2ac6'
 step_id: 'S63'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -73,6 +73,23 @@ it targets:
     pause_without_saying_why      -> 2 failed, 16 passed
     deferred_counts_as_finished   -> 1 failed, 17 passed
     refuse_each_item_separately   -> 1 failed, 17 passed
+
+### Confirmed against HEAD, not the working tree
+
+Every figure above was measured in a shared tree carrying other lanes'
+uncommitted work, and two modules this runner reaches through the extractor —
+the evidence input carrier and three of the reading package's modules — were
+among the dirty ones. A green measured there does not establish that the
+committed code is green, only that the code plus somebody's WIP is.
+
+So HEAD was exported on its own and the suites re-run against it, with the
+import confirmed to resolve into the export rather than the live tree:
+
+    git archive HEAD | tar -x -C <scratch>
+    PYTHONPATH=<scratch>/src ... pytest <the two batch suites> -m "unit or integration" -n0
+    31 passed in 102.75s
+
+Same result, now about a tree with no other lane's work in it.
 
 ### The mutation that caught a real defect
 

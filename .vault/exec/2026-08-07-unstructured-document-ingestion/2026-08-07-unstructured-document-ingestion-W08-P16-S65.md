@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:284a4a42771e959a32e7e46b356ed0d6c960266a94fd76b199354841ddb97bed'
+body_hash: 'sha256:5b49ab143750044c8681259fcbcbf00699aa400e3bf5332941707f2bc2c1c452'
 step_id: 'S65'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -69,6 +69,12 @@ The runner's own integration lane, twelve tests including both no-spool proofs:
 
     uv run --no-sync pytest src/cadrumo/application/ledger/tests/test_batch_ingest_runner.py -m integration -p no:randomly
     12 passed in 22.44s
+
+Both figures above were measured in a shared tree carrying other lanes'
+uncommitted work. HEAD was therefore exported on its own and the suites re-run
+against it, with the import confirmed to resolve into the export rather than the
+live tree — **31 passed** — so the claim is about the committed code rather than
+about the committed code plus somebody's WIP.
 
 The default marker expression is worth recording, because the first run of this
 file selected **nothing**: the lane is `unit` by default and these tests are
