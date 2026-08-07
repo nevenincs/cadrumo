@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:9dd5502f01575cce24bd4477d4550b80063fe1be376467bc0e741f21a13e25fe'
+body_hash: 'sha256:41717a08c6a4ecc7553edadd7f63601d2681ff72c9c64bec6854a670c3165631'
 step_id: 'S70'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -47,9 +47,9 @@ The Step's hop list places transcription between ingest and extraction. On the e
 ## Verification
 
     uv run --no-sync pytest src/cadrumo/application/ledger/tests/test_waist_end_to_end_accounting.py -n 0
-    16 passed in 14.92s
+    17 passed in 16.91s
 
-Collected 16, zero deselected. Ruff clean after formatting; basedpyright reports zero errors, warnings and notes.
+Collected 17, zero deselected. Sixteen at first landing; seventeen once the ingest hop was rebuilt on the real path. Ruff clean after formatting; basedpyright reports zero errors, warnings and notes.
 
 Mutation at each hop, every one driven from a throwaway plugin on the interpreter path outside the repository, with nothing inside the tree edited.
 
@@ -57,7 +57,11 @@ Breaking the shape probe reds two, both routing assertions. Dropping the identif
 
 Three of those mutations initially passed and were NOT reported as unaccounted hops. Each had targeted a private module while the gate binds the name through a package facade, so the patch never reached the site under test; retargeted at the facade, all three bit. A mutation that fails to mutate is a harness fault and says nothing about the gate, and treating it as a result would have understated the gate in one direction or overstated it in the other.
 
-The ingest hop is deliberately NOT claimed as mutation-proven. Its assertion is over the constructor's own contract, and the helper that performs the ingest is the test's own, so no production seam exists there for a mutation to break. As written the assertion is close to tautological. The real ingest path resolves evidence bytes out of the encrypted attachment store, and driving that path is what would make the hop genuinely accountable; it is recorded here as the one hop this gate does not yet hold.
+The ingest hop was initially not claimed as mutation-proven: its assertion ran over the constructor's own contract with the test's own helper performing the ingest, so no production seam existed for a mutation to break. That has since been closed in a follow-up row. The hop now stores the fixture through the real attachment store into a real encrypted bucket and resolves it back through the production resolver, and a mutation on that hop reds exactly the byte-identity assertion.
+
+Finding the sound mutation took three attempts, and the two rejected ones are worth recording because both would have passed for the wrong reason. Truncating the store read reds, but at the content-address guard during construction, before any assertion runs. Moving the manifest digest with the bytes to defeat that guard also reds, because the store validates the manifest against the real stored blob on read as well as on write. Both would have been reported as proof while establishing only that the product's own integrity check works. The sound mutation is on the hop under test, the resolver projecting bytes other than the ones it read, and it is the only one of the three whose red is attributable to this gate.
+
+The general form: a mutation that reds tells you something failed, not that your gate is what failed it. It is the mirror of the fully-green tell, where an ineffective patch is indistinguishable from a well-covered site, and both are invisible from the exit code alone.
 
 ## Notes
 
