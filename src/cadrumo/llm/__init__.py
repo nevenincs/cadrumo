@@ -37,6 +37,18 @@ inward past its own tier.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    # Static counterpart to the ``__getattr__`` below. A type checker cannot see
+    # through module ``__getattr__``, so without this both lazily-resolved
+    # symbols degrade to ``object`` at every use site -- which reads as
+    # "not callable" at construction and "not allowed in a parameter
+    # annotation" wherever one is declared. This block never executes, so the
+    # import cycle the lazy resolution exists to break stays broken.
+    from ._evidence_draft_vision import extract_invoice_fields_from_images
+    from ._vision_classifier import LocalVisionLLMClassifier
+
 from ._client import LLMClient
 from ._errors import (
     LLMCacheError,
