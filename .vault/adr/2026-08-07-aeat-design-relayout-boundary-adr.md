@@ -5,12 +5,12 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:3b944b62a22edb23de7a90747b02f0b82762a0c08344e858ac11cfc23afd6f7c'
+body_hash: 'sha256:7f300a405896881d96c11096aa803d48e9ccab7abab65a4d336fedf45dad590a'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
 ---
 
-# `aeat-design-relayout-boundary` adr: `a registry revision must not span an AEAT design re-layout` | (**status:** `proposed`)
+# `aeat-design-relayout-boundary` adr: `a registry revision must not span an AEAT design re-layout` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -63,11 +63,31 @@ edit itself.
   (`2026-08-07-aeat-design-relayout-boundary-research`, "shipped pattern"
   finding). The fix this record authorizes is not a new mechanism; it is
   applying an existing, working pattern to two more modelos.
-- Cost is asymmetric by era. Modelo 303's near-term boundaries (2024→2025,
-  2025→2026) are live and affect filings being made today; its older
-  boundaries (2014-2022) and all five of Modelo 390's (2017-2024) are
-  historical, affecting only filing years long past their statutory amendment
-  window.
+- "Reachable filing window" is defined by PRESCRIPCIÓN, not by recency, and
+  the two give different answers. Spain's ordinary prescripción period is four
+  years from the end of a filing's voluntary deadline (LGT art. 66-67); a
+  filing year remains legitimately amendable — and therefore exportable —
+  until that period elapses, however long ago it nominally occurred. Checked
+  empirically against the app itself, not assumed: `create_work_unit`
+  (`src/cadrumo/application/modelo/_work_lifecycle.py`) imposes no separate
+  year-recency ceiling of its own — the ONLY gate on which `filing_year` a
+  work unit can target is whether a registry revision's `period_selector`
+  declares that year. So today, before any split, the app already permits
+  creating or amending a work unit for any year Modelo 390's `2010-y-siguientes`
+  claims, all the way back to 2010, and the reachable window this record's
+  posture depends on is exactly as wide as prescripción makes it — not
+  "recent", which decays silently and in the dangerous direction as time
+  passes while the legal window does not.
+- Applying that definition changes which boundaries are "historical" as of
+  this record's date (2026-08-07), and the count must be recomputed at
+  implementation time rather than copied from here. On a rough four-year
+  reckoning, Modelo 390's `2022→2023` and `2023→2024` boundaries sit inside
+  the open window today (2022 and 2023 both remain amendable), and Modelo
+  303's `2021→2022` boundary is at least borderline (2022 remains open even
+  where 2021 has just closed) — narrower framings that called every boundary
+  short of 2024→2025/2025→2026 "historical, no active filers" understate the
+  scope. The oldest boundaries (Modelo 303 back to 2014, Modelo 390's
+  2017→2018) are safely outside the window on any reading.
 - The two measurement instruments are NOT interchangeable and neither
   subsumes the other: on Modelo 303 they disagree — the page-length signal
   finds two boundaries (2014→2015, 2024→2025) the box-offset diff misses
@@ -88,13 +108,14 @@ edit itself.
   authoring cost with no user ever exercising the correct path, and
   legal-grounding work (`legal_refs`, `source_refs`, `corpus_ref`) for each.
 - **Split only at boundaries inside each modelo's currently-reachable filing
-  window, and refuse export for filing years before the earliest split.**
+  window — defined by prescripción, computed at implementation time, never by
+  "recent" — and refuse export for filing years before the earliest split.**
   Rejected as the general rule but adopted as the DEFAULT posture (see
-  Rationale) — bounds authoring cost to years the app can actually be asked to
-  file, and a refusal is the correct answer for a year this registry was never
-  asked to support, per `revision-resolution-is-law-determined` (a refusal
-  naming the unmodelled year is a valid resolution outcome, an incorrect
-  export is not).
+  Rationale) — bounds authoring cost to years an amendment could still
+  legitimately be filed for, and a refusal is the correct answer for a year
+  this registry was never asked to support, per
+  `revision-resolution-is-law-determined` (a refusal naming the unmodelled
+  year is a valid resolution outcome, an incorrect export is not).
 - **Leave the revisions unsplit and downgrade the gate's assertions to
   warnings.** Rejected outright — this deletes the evidence the gate exists to
   carry (see the gate's own docstring: "weakening the assertions to land green
@@ -117,6 +138,15 @@ edit itself.
   `test_revision_span_matches_published_designs.py` at implementation time
   rather than copying the numbers in this record, which may already be stale
   against a newer bundled corpus.
+- The four-year prescripción figure this record uses for scoping is general
+  Spanish tax-law knowledge (LGT art. 66-67), cited here to bound authoring
+  cost, not independently verified against the bundled BOE corpus and not
+  accounting for interruption or suspension events that can extend the period
+  for a specific taxpayer. The implementing plan must compute the actual
+  reachable window at its own execution date rather than reusing this
+  record's approximate one, and should ground the exact rule against the
+  bundled corpus if the boundary of "reachable" ends up load-bearing for a
+  specific split decision.
 
 ## Implementation
 
@@ -131,14 +161,22 @@ from the bundled corpus, never hand-transcribed), and its own declared
 encodes.
 
 Per the "Considered options" ruling: split fully within each modelo's
-currently-reachable filing window (the years an operator can actually create a
-work unit for); for filing years strictly older than the earliest split
-boundary, add a revision with `valid_from` at that boundary and no earlier
-sibling — `select_revision` then finds no matching revision for the older year
-and the existing "no revision covers this triple" refusal path fires, naming
-the unmodelled year. This is a refusal, not a crash: the mechanism already
-exists in the resolver and needs no new code, only the registry no longer
-claiming a year it cannot correctly serve.
+currently-reachable filing window, where "reachable" means still inside its
+prescripción period (four years from the voluntary filing deadline, LGT
+art. 66-67) as of the implementation date — recomputed then, not read off
+this record's date of 2026-08-07. Confirmed empirically
+(`src/cadrumo/application/modelo/_work_lifecycle.py::create_work_unit`) that
+the app imposes no narrower gate of its own: the registry revision's own
+`period_selector` is the only thing standing between an operator and a work
+unit for an arbitrary old year, so the split boundary IS the enforcement
+point, not a formality layered on top of an existing restriction. For filing
+years strictly older than the earliest split boundary, add a revision with
+`valid_from` at that boundary and no earlier sibling — `select_revision` then
+finds no matching revision for the older year and the existing "no revision
+covers this triple" refusal path fires, naming the unmodelled year. This is a
+refusal, not a crash: the mechanism already exists in the resolver and needs
+no new code, only the registry no longer claiming a year it cannot correctly
+serve.
 
 For Modelo 200: no implementation action. Its current two-design span is
 offset-identical, and the same generic gate already covers its forward risk —
@@ -160,15 +198,20 @@ rejects or misreads the filed record — the harm surfaces downstream of the
 point where this app could have caught it, which is exactly the shape
 `no-silent-under-declaration`'s posture exists to prevent, generalized from
 under-declared amounts to mis-placed bytes. Second, on how far back to model
-historically: bound at the reachable window rather than author 11 additional
-historical revisions across both modelos for years nobody can file today —
-`2026-08-07-aeat-design-relayout-boundary-research` records that the harm
-measured live (Modelo 303 2024→2025 and 2025→2026, Modelo 390's proved
-`export_draft` mis-write) is entirely in the CURRENT and recent-past window,
-so the sunk cost of full historical fidelity buys no correctness a real filer
-will ever reach. Third, Modelo 123 already demonstrates the target shape is
-buildable in this registry today, at the cost the split requires, with no new
-resolver or schema work — the correct pattern is copy, not invention.
+historically: bound at the prescripción-defined reachable window rather than
+author 11 additional historical revisions across both modelos for years no
+amendment could still legally reach — this is a narrower, later-computed
+window than "recent", not the same claim restated. The measured live harm
+(Modelo 303 2024→2025 and 2025→2026, Modelo 390's proved `export_draft`
+mis-write) sits inside that window regardless of exactly where its edge
+falls, so the sunk cost of modelling boundaries entirely outside the window
+(Modelo 303 back to 2014, Modelo 390's 2017→2018) buys no correctness a real
+filer will ever reach — while boundaries near the four-year edge (Modelo 390
+2022→2023, Modelo 303 2021→2022) must be checked against the prescripción
+computation, not assumed closed. Third, Modelo 123 already demonstrates the
+target shape is buildable in this registry today, at the cost the split
+requires, with no new resolver or schema work — the correct pattern is copy,
+not invention.
 
 ## Consequences
 
