@@ -467,6 +467,9 @@ def _pid_is_openable(pid: int) -> bool:
     caller remembers, which is exactly the state the watchdog's ancestor walk
     sees for a dead, unreferenced ancestor.
     """
+    if sys.platform != "win32":  # pragma: no cover - the caller gates on the platform
+        raise RuntimeError("the Windows handle probe is not available on this platform")
+
     import ctypes
 
     kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
@@ -611,7 +614,9 @@ def test_posix_parent_map_resolves_this_process_ancestry() -> None:
     parents = _posix_parent_map()
     assert parents is not None, "no portable ancestry backend resolved on this platform"
     assert parents[os.getpid()] == os.getppid()
-    assert _posix_ancestor_pids()[0] == os.getppid()
+    ancestors = _posix_ancestor_pids()
+    assert ancestors is not None, "the ancestry backend resolved a parent map but no ancestor list"
+    assert ancestors[0] == os.getppid()
 
 
 def test_posix_worker_reaps_itself_when_reparented(tmp_path: Path) -> None:

@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
+import sys
 import time
 from collections.abc import Callable, Generator, Iterable, Mapping
 from contextlib import contextmanager
@@ -1136,15 +1137,16 @@ def _build_modelo_coverage(reports: Iterable[WorkbookArtefactReport]) -> tuple[W
 
 
 def _detect_excel_com_clsid() -> str | None:
-    import sys
-
+    # ``sys`` is imported at module level rather than here: a checker narrows
+    # ``sys.platform`` only through a module-level binding, so the function-local
+    # import left the winreg block analysed on every platform.
     if sys.platform != "win32":  # narrows winreg to the platform that ships it
         return None
     try:
         import winreg
 
-        with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, r"Excel.Application\CLSID") as key:
-            value, _kind = winreg.QueryValueEx(key, "")
+        with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, r"Excel.Application\CLSID") as key:  # pyrefly: ignore[missing-attribute]
+            value, _kind = winreg.QueryValueEx(key, "")  # pyrefly: ignore[missing-attribute]
         return str(value)
     except (FileNotFoundError, OSError, ImportError):
         return None
