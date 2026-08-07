@@ -104,7 +104,7 @@ def _install_core_without_extras(work_dir: Path, cohort: PythonCohort, venv_path
     )
 
 
-def _assert_extra_is_real_in_the_artifact(repo_root: Path, wheel: Path) -> None:
+def _assert_extra_is_real_in_the_artifact(wheel: Path) -> None:
     """Verify the wheel declares an ``llm`` extra that adds something to core.
 
     An extra every one of whose requirements is ALSO an unconditional core
@@ -327,7 +327,7 @@ def main(argv: list[str] | None = None) -> int:
     cohort = load_python_cohort(args.cohort_dir)
     wheel = cohort.root_wheel
     assert_wheel_metadata_matches_pyproject(repo_root, wheel)
-    _assert_extra_is_real_in_the_artifact(repo_root, wheel)
+    _assert_extra_is_real_in_the_artifact(wheel)
     _assert_probe_target_is_exclusive_to_the_extra(repo_root, wheel)
 
     print("creating stdlib venv and installing the cohort with NO extras", flush=True)
