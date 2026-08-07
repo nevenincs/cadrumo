@@ -4,7 +4,7 @@ tags:
   - '#invoice-canonical-structure'
 date: '2026-08-06'
 modified: '2026-08-07'
-body_hash: 'sha256:8c6e6298d17015aba5e625b5b0e25a23cec765b7e162656aa10fc068d884bdb8'
+body_hash: 'sha256:20b0efd5e0de1c72b4d502c54ed5734d9c2bc5284fee7fb2064e709187094582'
 tier: L2
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
@@ -85,6 +85,7 @@ Move the operator CRUD surface onto the canonical aggregate, then remove the sli
 - [ ] `P03.S14` - Delete the slim model, both services, the repository, the storage namespace and the BusinessOperationInvoiceDirection enum in one atomic explicit-path commit carrying every consumer, fixture and __all__ update, with no alias, bridge or re-export left behind; `src/cadrumo/application/ledger/_business_operation_invoice.py`.
 - [ ] `P03.S15` - Delete the slim CLI payload schemas and retire the blessing test that creates one invoice in both stores and asserts only that the ids differ, keeping the surviving link tests in that module; `src/cadrumo/entrypoints/cli/_ledger_business_payloads.py`.
 - [ ] `P03.S16` - Remove every locale leaf orphaned by the deletion through the locales CLI so all four catalogues stay in parity, then run the locale and apidocs drift gates; `src/cadrumo/locales/en.yml`.
+- [ ] `P03.S38` - Build the canonical invoice update operation before the bare verbs are repointed, because the canonical surface has create, view, list and remove but NO update, so repointing the five bare verbs would silently drop the operator's only way to correct a persisted invoice and deleting the slim store would remove the sole update surface with nothing named to replace it; `src/cadrumo/application/invoices/_lifecycle.py`.
 
 ### Phase `P04` - Close the remaining second-authority, boundary and duplicate-type gaps
 
@@ -289,6 +290,26 @@ The Step therefore needs a decision it does not currently contain, and the optio
 `S13` — RED: assert the resolver loads exactly one store. Today it loads two and concatenates their observations. **A cross-store dedup helper appearing anywhere is a failed outcome, not a partial success** — building one institutionalises the split this campaign removes.
 
 `S14`, `S15`, `S16` — RED: a tree-wide search finds no `BusinessOperationInvoice`, `BusinessOperationInvoiceRepository`, `PayableInvoiceService`, `CollectibleInvoiceService`, `BusinessOperationInvoiceDirection` or `LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE` symbol, and no alias, bridge or re-export replaces any of them. Each deletion Step names its replacement in its execution record. The `payable_invoice` and `collectible_invoice` source-kind strings must **still be present** — deleting the store does not touch the taxonomy, and their disappearance is a regression, not progress. `S16` closes only when the locale drift gate and `python -m dev.docs.apidocs scaffold --check` both exit clean, with every locale change made through the locales CLI so all four catalogues stay in parity.
+
+**`P03.S38` added 2026-08-07, and it BLOCKS `S11` and `S14`. Measured at `HEAD` before starting the repoint.**
+
+`S11` reads "repoint the five bare invoice verbs add, view, list, update and remove at the canonical aggregate". Four of those five have a canonical counterpart. **`update` does not.**
+
+The canonical surface exposes `create_catalogue_invoice`, `resolve_catalogue_invoice_from_repository`, `remove_catalogue_invoice` and a catalogue `list` verb. There is no canonical update, no canonical patch model, and no canonical mutate-an-existing-invoice path of any kind. Confirmed by semantic search over the concept and by an exact sweep of the package facade: the only invoice patch surface in the tree is the slim `BusinessOperationInvoicePatch` plus its service `update` — the very thing `S14` deletes — and an unrelated evidence-record patch.
+
+So the phase as sequenced would do this: `S11` repoints the operator's verbs onto a store that cannot express a correction, and `S14` then deletes the only surface that could. An operator who mistypes a counterparty name or an amount would have no way to fix the record short of removing and re-creating it — which mints a different content-addressed id and breaks any transaction link already bound to the old one.
+
+That is a capability with no named replacement, and this plan's law is explicit that such a capability blocks the fold rather than being waived. It is the same class as the two rows the `S28` inventory ruled blocking, found one phase later because the inventory reasoned about the STORE's fields and this gap lives in the SERVICE's verb set.
+
+**`S38` — RED:** invoke a canonical update for a persisted invoice and observe that no such operation exists. It is closed when a correction can be applied to an existing canonical invoice and persisted, without minting a new invoice id and without breaking an existing transaction link.
+
+Three constraints it inherits rather than invents:
+
+- The canonical `invoice_id` is **content-addressed**, derived from kind, number, issue date, counterparty tax id, currency and grand total. So an update that changes any of those changes the record's identity, and the operation must state what it does then — refuse, or re-key and carry the links — rather than silently orphaning the old id. This is the sharpest difference from the slim store, whose id is independent of content.
+- It must emit the `UPDATED` lifecycle event, which `S37` deliberately left unemitted because no canonical update existed to emit it. `S37`'s record names this.
+- It must route through the sanctioned repository per `composition-service-no-parallel-write-path`, not re-implement the catalogue write.
+
+**Ordering:** `S38` lands before `S11`. `S11`'s own criterion — invoke each of the five bare verbs and assert the record lands in the canonical store — is unsatisfiable for `update` until it does.
 
 ### Phase `P04`
 
