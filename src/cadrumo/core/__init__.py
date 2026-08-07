@@ -179,6 +179,7 @@ from ._model_catalogue import (
     default_model_runtime_id,
     model_candidate,
 )
+from ._classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ._modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
 from ._modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ._models import STRICT_FROZEN_CONFIG
@@ -403,12 +404,14 @@ __all__: list[str] = [
     "BucketPointer",
     "CasillaId",
     "CasillaValueKind",
+    "ClassifierInputSource",
     "CompatibilityRegime",
     "ConceptLifecycle",
     "ConceptoIngreso",
     "ConfirmationBlockReason",
     "ContentionCause",
     "ConvenioOverrideKind",
+    "CounterpartyTaxablePersonStatus",
     "CorpusAnchorResolutionError",
     "DeclaracionIdioma",
     "DeploymentLicencePosture",
