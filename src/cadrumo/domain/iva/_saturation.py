@@ -17,6 +17,17 @@ number**:
   ``derivable=False`` resolution carrying an explicit operator-facing
   reason — never a fabricated rate.
 
+  A domestic tier ALSO refuses while a temporary statute has it carrying
+  two rates at once. Asking a tier for "its" rate is well defined only
+  while the tier has one: RDL 4/2024 art. 1 moved part of the reduced and
+  super-reducido supplies onto a temporary rate and left the rest on the
+  ordinary one, and which of the two applies turns on WHAT was supplied —
+  an axis no bundled AEAT surface carries. Answering with the ordinary
+  rate there would split a gross at the wrong rate, understating the base
+  and overstating the cuota, so the ambiguity is surfaced rather than
+  resolved by guess. :func:`~cadrumo.domain.iva.rate_kinds_for_declared_rate`
+  is the well-defined inverse for a caller that already holds a rate.
+
 * :func:`split_gross_at_rate` performs the inverse split of a gross at a
   rate fraction into ``(taxable_base, iva_amount)`` quantised with the
   AEAT-mandated :func:`cadrumo.core.money.round_to_cents` (ROUND_HALF_UP).
@@ -43,8 +54,9 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.money import round_to_cents
-from ._lookup import lookup_rate
-from ._schema import EUMemberState, IvaCategory, IvaRateKind
+from ._errors import IvaRateNotFoundError
+from ._lookup import coexisting_tier_rates, lookup_rate
+from ._schema import EUMemberState, IvaCategory, IvaRateKind, IvaRateRecord
 
 _ONE_HUNDRED = Decimal("100")
 _ONE = Decimal("1")
@@ -137,6 +149,36 @@ _NON_DERIVABLE_REASONS: dict[IvaCategory, str] = {
 }
 
 
+def _ambiguous_tier_reason(
+    rate_kind: IvaRateKind,
+    coexisting: tuple[IvaRateRecord, ...],
+    on_date: date,
+) -> str:
+    """Word the refusal for a tier carrying more than one rate on ``on_date``.
+
+    Names every rate actually in force so the operator can pick, rather than
+    reporting a bare "not derivable" for a tier that plainly has a rate.
+    """
+    ordinary = ", ".join(f"{record.pct} %" for record in _ordinary_tier_rates(rate_kind, on_date))
+    temporary = ", ".join(f"{record.pct} %" for record in coexisting)
+    return (
+        f"the {rate_kind.value.replace('_', '-')} tier carries more than one rate on "
+        f"{on_date.isoformat()}: {ordinary or 'its ordinary rate'} for most supplies and "
+        f"{temporary} for the supplies a temporary statute moved. Which one applies turns on "
+        "WHAT was supplied, an axis no bundled AEAT surface carries, so the base and cuota "
+        "cannot be derived from the category alone -- record the rate (or the base and cuota) "
+        "from the invoice"
+    )
+
+
+def _ordinary_tier_rates(rate_kind: IvaRateKind, on_date: date) -> tuple[IvaRateRecord, ...]:
+    """Return the tier's ordinary in-force rate, for wording the refusal only."""
+    try:
+        return (lookup_rate(EUMemberState.ES, rate_kind, on_date),)
+    except IvaRateNotFoundError:
+        return ()
+
+
 class IvaRateResolution(BaseModel):
     """Typed outcome of resolving an :class:`IvaCategory` to a rate fraction.
 
@@ -216,6 +258,15 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
             rate=None,
             rate_kind=None,
             reason=_NON_DERIVABLE_REASONS[category],
+        )
+    coexisting = coexisting_tier_rates(EUMemberState.ES, rate_kind, date(2024, 10, 15))
+    if coexisting:
+        return IvaRateResolution(
+            category=category,
+            derivable=False,
+            rate=None,
+            rate_kind=rate_kind,
+            reason=_ambiguous_tier_reason(rate_kind, coexisting, on_date),
         )
     if rate_kind in (IvaRateKind.ZERO, IvaRateKind.EXEMPT):
         return IvaRateResolution(

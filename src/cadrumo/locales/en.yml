@@ -193,6 +193,8 @@ adapters:
             contains forbidden path characters.
           namespace_not_found: Google Drive namespace {namespace} was not found.
           object_key_hmac_blank: Google Drive object key HMAC must not be blank.
+          object_key_hmac_forbidden_characters: Google Drive object key HMAC {object_key_hmac}
+            contains forbidden characters.
           object_not_found: Google Drive object {object_key_hmac} was not found in
             namespace {namespace}.
           request_failed: Google Drive request {action} failed with status {status}.
@@ -5982,6 +5984,8 @@ errors:
       is the AEAT justificante and not a different document, and that it is not corrupt.
     refused_access_gate_live_read_not_enabled: Live-read access to the AEAT is disabled.
       This operation cannot contact the AEAT under the current configuration.
+    refused_aeat_record_multi_recipient: The declared record names more than one recipient,
+      so it cannot become a single-counterparty ledger record. Reconcile it per recipient.
     refused_apoderado_invalid_represented_nif: The represented party's tax identifier
       is not a valid NIF, NIE, or CIF.
     refused_apoderado_live_check_unavailable: The live check of representatives is
@@ -6232,7 +6236,6 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
-    refused_aeat_record_multi_recipient: 'The declared record names more than one recipient, so it cannot become a single-counterparty ledger record. Reconcile it per recipient.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -66068,7 +66071,7 @@ modelo:
               help: null
               label: VAT charged at the standard rate (21%) - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8.help
+              help: null
               label: Taxable base of output VAT - standard regime - 21% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
               help: null
@@ -66083,55 +66086,63 @@ modelo:
               help: null
               label: VAT charged at the reduced rate (10%) - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5.help
+              help: null
               label: Taxable base of output VAT - standard regime - 10% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
               label: VAT charged at the super-reduced rate (4%) - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck.help
+              help: null
               label: Taxable base of output VAT - standard regime - 4% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma.help
+              help: null
               label: Taxable base of output VAT - standard regime - 0% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8.help
+              help: null
               label: Output VAT amount - standard regime - 0% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8.help
+              help: Declare the taxable base of domestic ordinary-regime transactions
+                charged at the reduced 10 % rate.
               label: Taxable base of output VAT - standard regime - 10% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31.help
+              help: Declare the output VAT charged at the reduced 10 % rate on the
+                taxable base in box 03.
               label: Output VAT amount - standard regime - 10% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma.help
+              help: null
               label: Taxable base of output VAT - standard regime - 2% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8.help
+              help: null
               label: Output VAT amount - standard regime - 2% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8.help
+              help: Declare the taxable base of domestic ordinary-regime transactions
+                charged at the general 21 % rate.
               label: Taxable base of output VAT - standard regime - 21% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31.help
+              help: Declare the output VAT charged at the general 21 % rate on the
+                taxable base in box 05.
               label: Output VAT amount - standard regime - 21% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma.help
+              help: Declare the taxable base of domestic ordinary-regime transactions
+                charged at the super-reduced 4 % rate.
               label: Taxable base of output VAT - standard regime - 4% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8.help
+              help: Declare the output VAT charged at the super-reduced 4 % rate on
+                the taxable base in box 01.
               label: Output VAT amount - standard regime - 4% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma.help
+              help: null
               label: Taxable base of output VAT - standard regime - 5% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8.help
+              help: null
               label: Output VAT amount - standard regime - 5% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5.help
+              help: Declare the taxable base of seed oils and pasta charged at 7,5
+                %. Real Decreto-ley 4/2024, article 1, set this rate from 1 October
+                to 31 December 2024.
               label: Taxable base of output VAT - standard regime - 7,5% rate - annual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4.help
+              help: null
               label: Output VAT amount - standard regime - 7,5% rate - annual
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
@@ -66144,7 +66155,7 @@ modelo:
               help: null
               label: VAT borne on ordinary domestic transactions - annual
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5.help
+              help: null
               label: Taxable base of deductible VAT - total current domestic purchases
                 of goods and services - annual
           construct:

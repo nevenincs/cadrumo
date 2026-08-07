@@ -42,10 +42,10 @@ from ...core.config import load_settings
 from ...core.decimal import coerce_finite_european_decimal
 from ...tests.secure_sql import TestRuntimeProfile
 from .._evidence_draft_vision import (
-    _FIELD_EXTRACTION_PROMPT,
     LocalVisionInvoiceFieldExtractor,
     extract_invoice_fields_from_images,
 )
+from .._invoice_extraction_prompt import build_invoice_extraction_prompt, default_extraction_period
 from .._invoice_field_grounding import (
     ExtractedInvoiceFields,
     ground_extracted_fields,
@@ -247,8 +247,9 @@ class TestLocalVisionInvoiceFieldExtractor:
         assert user_message["images"] == [image.base64_data for image in images]
 
     def test_decided_by_names_the_model(self) -> None:
+        """The transport and model halves survive the rate-provenance extension."""
         extractor = LocalVisionInvoiceFieldExtractor(model="qwen2.5vl:3b", settings=load_settings())
-        assert extractor.decided_by == "llm:local-vision:qwen2.5vl:3b"
+        assert extractor.decided_by.startswith("llm:local-vision:qwen2.5vl:3b:")
 
     def test_partial_fields_ground_and_missing_fields_stay_none(self, profile: TestRuntimeProfile) -> None:
         """A real vision response that only reads some fields never fabricates the rest."""
@@ -350,9 +351,8 @@ class TestFieldExtractionPromptShowsWellFormedJson:
 
     def test_template_parses_as_json_carrying_exactly_the_schema_keys(self) -> None:
         """The shown skeleton is valid JSON whose keys are the schema's keys."""
-        template = _FIELD_EXTRACTION_PROMPT[
-            _FIELD_EXTRACTION_PROMPT.index("{") : _FIELD_EXTRACTION_PROMPT.rindex("}") + 1
-        ]
+        compiled = build_invoice_extraction_prompt(period=default_extraction_period()).text
+        template = compiled[compiled.index("{") : compiled.rindex("}") + 1]
         # The prompt documents each value as a `<string or null, ...>` annotation
         # rather than a literal; substituting null leaves the SHAPE under test.
         skeleton = re.sub(r"<[^>]*>", "null", template, flags=re.DOTALL)
@@ -360,6 +360,7 @@ class TestFieldExtractionPromptShowsWellFormedJson:
         assert json.loads(skeleton) == dict.fromkeys(ExtractedInvoiceFields.model_fields)
 
     def test_prompt_carries_no_doubled_brace(self) -> None:
-        """No ``{{``/``}}`` survives: nothing ever ``format``s this prompt."""
-        assert "{{" not in _FIELD_EXTRACTION_PROMPT
-        assert "}}" not in _FIELD_EXTRACTION_PROMPT
+        """No ``{{``/``}}`` survives into the COMPILED text the model receives."""
+        compiled = build_invoice_extraction_prompt(period=default_extraction_period()).text
+        assert "{{" not in compiled
+        assert "}}" not in compiled

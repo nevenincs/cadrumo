@@ -57,6 +57,7 @@ from ._errors import (
     OutboundStorageValidationError,
 )
 from ._integrity import require_full_sha256_content_hash, verify_content_hash, verify_payload_byte_length
+from ._key_validation import assert_admissible_object_key_hmac
 from ._object_name import build_provider_object_name, provider_object_hmac_prefix, sanitize_provider_object_label
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
@@ -94,13 +95,13 @@ def _validate_namespace(namespace: str) -> str:
 
 
 def _validate_hmac(object_key_hmac: str) -> str:
-    cleaned = object_key_hmac.strip()
-    if not cleaned:
-        raise OutboundStorageValidationError(
-            "object_key_hmac must not be blank",
-            translated_message="adapters.outbound.storage.google_drive.errors.object_key_hmac_blank",
-        )
-    return cleaned
+    """Delegate to the one admissibility rule both backends share.
+
+    This backend previously accepted any non-blank value, so the delegation
+    NARROWS what it admits. Deliberate: the key is a contract-level digest and
+    nothing legitimate produces a character outside the admissible set.
+    """
+    return assert_admissible_object_key_hmac(object_key_hmac, backend="google_drive")
 
 
 def _translate_http_error(error: Exception, *, action: str) -> OutboundStorageError:

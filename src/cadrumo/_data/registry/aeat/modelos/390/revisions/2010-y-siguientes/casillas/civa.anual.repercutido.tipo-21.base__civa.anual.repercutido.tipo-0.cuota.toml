@@ -219,7 +219,7 @@ semantic_role_cardinality_reason = "One official AEAT box per rate; the 0 % tier
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-0-base"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 export_refs = ["modelo-390-page-02-casilla-tipo-0-base"]
 
@@ -235,6 +235,6 @@ semantic_role_cardinality_reason = "One official AEAT box per rate; the 0 % tier
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-0-cuota"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 export_refs = ["modelo-390-page-02-casilla-tipo-0-cuota"]

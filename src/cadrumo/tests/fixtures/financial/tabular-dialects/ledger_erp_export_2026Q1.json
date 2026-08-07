@@ -1,0 +1,10 @@
+{
+  "output_sha256": "da62f46e5ec677b285a2c3b9080309601cb25629b73bfd2bcfdaaeef906bac00",
+  "output_size_bytes": 808,
+  "provenance": "synthetic_generated",
+  "role": "dialect_normalization_anchor",
+  "licence": "CC0-1.0",
+  "structural_difficulty": [
+    "Legacy ERP ledger export"
+  ]
+}

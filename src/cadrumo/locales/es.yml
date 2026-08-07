@@ -215,6 +215,8 @@ adapters:
             {namespace}.
           object_key_hmac_blank: El HMAC de clave de objeto de Google Drive no puede
             estar vacío.
+          object_key_hmac_forbidden_characters: El HMAC de clave de objeto de Google
+            Drive {object_key_hmac} contiene caracteres prohibidos.
           object_not_found: No se encontró el objeto de Google Drive {object_key_hmac}
             en el espacio {namespace}.
           request_failed: La petición de Google Drive {action} falló con estado {status}.
@@ -6436,6 +6438,9 @@ errors:
     refused_access_gate_live_read_not_enabled: El acceso de lectura en vivo a la AEAT
       está desactivado. Esta operación no puede contactar con la AEAT en la configuración
       actual.
+    refused_aeat_record_multi_recipient: El registro declarado nombra a más de un
+      destinatario, por lo que no puede convertirse en un asiento de contraparte única.
+      Concílielo por destinatario.
     refused_apoderado_invalid_represented_nif: El identificador fiscal del representado
       no es un NIF, NIE o CIF válido.
     refused_apoderado_live_check_unavailable: La comprobación en vivo de apoderamientos
@@ -6707,7 +6712,6 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    refused_aeat_record_multi_recipient: 'El registro declarado nombra a más de un destinatario, por lo que no puede convertirse en un asiento de contraparte única. Concílielo por destinatario.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -68781,7 +68785,7 @@ modelo:
               help: null
               label: Cuota IVA repercutido al tipo general (21%) - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8.help
+              help: null
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 21% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
@@ -68797,64 +68801,73 @@ modelo:
               help: null
               label: Cuota IVA repercutido al tipo reducido (10%) - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5.help
+              help: null
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 10% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
               label: Cuota IVA repercutido al tipo super-reducido (4%) - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck.help
+              help: null
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 4% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma.help
+              help: null
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 0% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8.help
+              help: null
               label: Cuota IVA devengado - Regimen ordinario - Tipo 0% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8.help
+              help: Declara la base imponible de las operaciones interiores del régimen
+                ordinario gravadas al tipo reducido del 10 %.
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 10% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31.help
+              help: Declara la cuota de IVA repercutida al tipo reducido del 10 %
+                sobre la base imponible de la casilla 03.
               label: Cuota IVA devengado - Regimen ordinario - Tipo 10% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma.help
+              help: null
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 2% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8.help
+              help: null
               label: Cuota IVA devengado - Regimen ordinario - Tipo 2% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8.help
+              help: Declara la base imponible de las operaciones interiores del régimen
+                ordinario gravadas al tipo general del 21 %.
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 21% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31.help
+              help: Declara la cuota de IVA repercutida al tipo general del 21 % sobre
+                la base imponible de la casilla 05.
               label: Cuota IVA devengado - Regimen ordinario - Tipo 21% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma.help
+              help: Declara la base imponible de las operaciones interiores del régimen
+                ordinario gravadas al tipo superreducido del 4 %.
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 4% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8.help
+              help: Declara la cuota de IVA repercutida al tipo superreducido del
+                4 % sobre la base imponible de la casilla 01.
               label: Cuota IVA devengado - Regimen ordinario - Tipo 4% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma.help
+              help: null
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 5% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8.help
+              help: null
               label: Cuota IVA devengado - Regimen ordinario - Tipo 5% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5.help
+              help: Declara la base imponible de los aceites de semillas y las pastas
+                alimenticias gravados al 7,5 %. El Real Decreto-ley 4/2024, artículo
+                1, fijó este tipo desde el 1 de octubre hasta el 31 de diciembre de
+                2024.
               label: Base imponible IVA devengado - Regimen ordinario - Tipo 7,5%
                 - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4.help
+              help: null
               label: Cuota IVA devengado - Regimen ordinario - Tipo 7,5% - anual
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
@@ -68868,7 +68881,7 @@ modelo:
               help: null
               label: Cuota IVA soportado en operaciones interiores corrientes - anual
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5.help
+              help: null
               label: Base imponible IVA deducible - Total operaciones interiores corrientes
                 de bienes y servicios - anual
           construct:

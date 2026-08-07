@@ -18,6 +18,7 @@ Submodules
    cadrumo.adapters.outbound.storage._factory
    cadrumo.adapters.outbound.storage._google_drive
    cadrumo.adapters.outbound.storage._integrity
+   cadrumo.adapters.outbound.storage._key_validation
    cadrumo.adapters.outbound.storage._local
    cadrumo.adapters.outbound.storage._mirror_manifest
    cadrumo.adapters.outbound.storage._object_name

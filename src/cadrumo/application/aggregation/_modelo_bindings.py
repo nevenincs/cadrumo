@@ -144,6 +144,26 @@ _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
         IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION,
     },
 )
+
+
+def _residue_categories(observations: Sequence[IvaLedgerObservation]) -> str:
+    """Return the sorted distinct IVA categories carrying an undrawn quantity.
+
+    The screen detects per fact AND per selector, so a fact can be drawn for some
+    categories and undrawn for others -- Modelo 390 draws ``base_amount_sum`` for
+    the domestic tiers while import and the two reverse-charge categories carry it
+    undrawn. Reporting only the fact would tell an operator that base is missing
+    without saying where, which is the reading that makes a partially-closed gap
+    look wholly open (or, once the domestic half landed, wholly closed).
+
+    Naming the categories is what makes the residue attributable: it states which
+    set is still open, so a later reader can tell a genuine remainder from a
+    regression.
+    """
+    categories = sorted({observation.category.value for observation in observations})
+    return "[" + ", ".join(categories) + "]"
+
+
 _M210_RENDIMIENTOS_INTEGROS_CASILLA: CasillaId = validated_casilla_id(
     "rendimientos_integros",
     surface="_M210_RENDIMIENTOS_INTEGROS_CASILLA",
@@ -300,10 +320,11 @@ class LedgerIvaAggregationSourceResolver:
                     resolver_id=self.resolver_id,
                     message=(
                         f"{len(quantity.observations)} IVA row(s) carry {quantity.total} EUR of "
-                        f"{quantity.fact!r}, which no ledger_iva_aggregation binding on revision "
-                        f"{context.revision.id!r} draws; that amount is not declared on this calculation. "
-                        f"The rows themselves ARE consumed for their other quantities, so no other screen "
-                        f"reports them"
+                        f"{quantity.fact!r} in categories "
+                        f"{_residue_categories(quantity.observations)}, which no ledger_iva_aggregation "
+                        f"binding on revision {context.revision.id!r} draws for those categories; that "
+                        f"amount is not declared on this calculation. The rows themselves ARE consumed "
+                        f"for their other quantities, so no other screen reports them"
                     ),
                 )
                 for quantity in unrouted_quantities
@@ -773,11 +794,11 @@ def _m130_retenciones_backend_inputs(
     silently zeroes this value instead of redirecting it.
 
     A schema field expressing that divergence honestly was tried and
-    reverted: it would reopen the cross-domain routing-table design T-05
-    governs (`.vault/reference/2026-05-15-linkage-design-audit-reference.md`),
-    which needs a superseding ADR, not an implementation choice made in
-    passing. Following T-05's established remedy instead: the hardcoded
-    casilla constant lives in `domain.renta` and is validated against every
+    reverted: it would reopen the cross-domain routing-table design this
+    redirect depends on, which needs a superseding ADR, not an
+    implementation choice made in passing. Following the established remedy
+    instead: the hardcoded casilla constant lives in `domain.renta` and is
+    validated against every
     M130 revision by a `CrossDomainSnapshotCheck` registered at snapshot-build
     time (`domain.renta._retenciones_routing_integrity`), the same mechanism
     that already validates the Modelo 100 first-slice routing table. A

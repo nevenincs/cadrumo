@@ -146,11 +146,21 @@ class TestTextExtractionPrompt:
         assert "exactly as printed" in lowered
 
     def test_it_is_not_specific_to_spanish_invoices(self) -> None:
-        """The vision prompt opens "a scanned Spanish invoice"; this one must not."""
+        """The prompt must not assume the document is Spanish.
+
+        The assertion is on that PROPERTY, not on the absence of the word. The
+        prompt now enumerates the rates Spain registers, so it names Spain --
+        and it must, because the enumeration would otherwise be an unattributed
+        list of numbers a model would read as universal. What it must never do
+        is tell the model the DOCUMENT is Spanish, or present the Spanish list
+        as the only admissible one, and both of those are asserted directly.
+        """
         lowered = build_text_field_extraction_prompt("Rechnung Nr. 42").lower()
 
-        assert "spanish" not in lowered
+        assert "spanish invoice" not in lowered
         assert "may be written in any language" in lowered
+        assert "may print a rate on neither list" in lowered
+        assert "never move it onto a listed one" in lowered
 
     def test_it_carries_the_document_text_it_was_given(self) -> None:
         prompt = build_text_field_extraction_prompt("Facture 42\nTVA 20%")
@@ -277,9 +287,9 @@ class TestExtractorRequestShape:
         extractor = TextInvoiceFieldExtractor(model="some-text-model", settings=load_settings())
 
         assert extractor._build_request("Invoice 42").model_override == "some-text-model"
-        assert extractor.decided_by == "llm:text-extract:some-text-model"
+        assert extractor.decided_by.startswith("llm:text-extract:some-text-model:")
 
     def test_an_unpinned_model_says_so_rather_than_naming_one(self) -> None:
         extractor = TextInvoiceFieldExtractor(settings=load_settings())
 
-        assert extractor.decided_by == "llm:text-extract:configured"
+        assert extractor.decided_by.startswith("llm:text-extract:configured:")

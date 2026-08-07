@@ -52,17 +52,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.inbound.sanitizer._errors.SanitizationError",
-        ErrorCode(
-            code="ERROR_SANITIZATION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_sanitization",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.inbound.financial.providers._base.FinancialProviderError",
         ErrorCode(
             code="ERROR_FINANCIAL_PROVIDER",
@@ -123,61 +112,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_EINVOICE_XML_PARSE",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_einvoice_xml_parse",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.inbound.sanitizer._errors.SanitizerValidationError",
-        ErrorCode(
-            code="REFUSED_SANITIZATION_VALIDATION",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_sanitization_validation",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.inbound.sanitizer._errors.SanitizerSourceParseError",
-        ErrorCode(
-            code="FAIL_SANITIZATION_SOURCE_PARSE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_sanitization_source_parse",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.inbound.sanitizer._errors.SignaturePresentError",
-        ErrorCode(
-            code="REFUSED_SANITIZATION_SIGNATURE_PRESENT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_sanitization_signature_present",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.inbound.sanitizer._errors.AlreadySanitizedError",
-        ErrorCode(
-            code="REFUSED_SANITIZATION_ALREADY_SANITIZED",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_sanitization_already_sanitized",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.inbound.sanitizer._errors.UnknownSurfaceError",
-        ErrorCode(
-            code="REFUSED_SANITIZATION_UNKNOWN_SURFACE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_sanitization_unknown_surface",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

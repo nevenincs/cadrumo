@@ -308,8 +308,9 @@ def _dotted_literal_value(node: ast.expr | None) -> str | None:
 def _add_first_dotted_arg(node: ast.Call, findings: set[str]) -> None:
     """Collect the dotted-literal key(s) carried by a call's first argument.
 
-    A ternary first argument (``tr("key.a" if cond else "key.b")``) is walked
-    into both branches -- possibly nested -- so every literal key an operator
+    A ternary first argument (``tr(branch_a if cond else branch_b)`` where each
+    branch is a dotted-literal key) is walked into both branches -- possibly
+    nested -- so every literal key an operator
     can actually observe at runtime is discovered, not only whichever branch
     happens to sit as a plain ``Constant``. Without this, only the branch the
     regex/AST scanner happens to see first is ever enrolled, and the other

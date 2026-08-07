@@ -8,6 +8,7 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-hap-72-2013:art-1", "orden-hap-72-2013:art-7", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720"]
+export_exemption_reason = "filed_via_binding_field"
 
 [[revisions."2013-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
@@ -19,6 +20,7 @@ required = true
 input_kind = "informational"
 legal_refs = ["orden-hap-72-2013:art-2", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720"]
+export_exemption_reason = "filed_via_binding_field"
 
 [[revisions."2013-y-siguientes".casillas]]
 id = "cuentas.codigo-de-cuenta"

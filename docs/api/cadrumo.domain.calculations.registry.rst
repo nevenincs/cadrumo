@@ -116,6 +116,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_cross_revision_contiguity
    cadrumo.domain.calculations.registry._validate_dependency_sections
    cadrumo.domain.calculations.registry._validate_evidence
+   cadrumo.domain.calculations.registry._validate_export_exemption
    cadrumo.domain.calculations.registry._validate_exports
    cadrumo.domain.calculations.registry._validate_extraction_profiles
    cadrumo.domain.calculations.registry._validate_formulas

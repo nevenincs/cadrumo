@@ -1,0 +1,13 @@
+booking_date,value_date,partner_name,reference,type,amount_eur,currency,exchange_rate
+2026-01-08,2026-01-08,Pago tarjeta 5423 SUMINISTROS ARANDA SL VALLADOLID,Pago tarjeta 5423 SUMINISTROS ARANDA SL VALLADOLID,Outgoing Transfer,-469.52,EUR,1.0
+2026-01-09,2026-01-09,Transferencia recibida TALLERES BERROCAL SA,"Transferencia recibida TALLERES BERROCAL SA, ref 2026/0009",Incoming Transfer,4596.00,EUR,1.0
+2026-01-13,2026-01-13,Recibo IBERLUZ COMERCIALIZADORA,"Recibo IBERLUZ COMERCIALIZADORA, S.A.U.",Outgoing Transfer,-541.19,EUR,1.0
+2026-01-15,2026-01-15,Compra CASA PERICO,"Compra CASA PERICO, MADRID",Outgoing Transfer,-38.06,EUR,1.0
+2026-01-19,2026-01-19,Nomina enero,Nomina enero,Outgoing Transfer,-2180.44,EUR,1.0
+2026-01-22,2026-01-22,Adeudo SEPA ONDA MOVIL TELECOM SL,Adeudo SEPA ONDA MOVIL TELECOM SL,Outgoing Transfer,-141.23,EUR,1.0
+2026-01-27,2026-01-27,Traspaso a cuenta de ahorro,Traspaso a cuenta de ahorro,Outgoing Transfer,-1500.00,EUR,1.0
+2026-01-30,2026-01-30,Comision mantenimiento,Comision mantenimiento,Outgoing Transfer,-12.00,EUR,1.0
+2026-02-03,2026-02-03,Ingreso efectivo oficina 0418,Ingreso efectivo oficina 0418,Incoming Transfer,640.00,EUR,1.0
+2026-02-05,2026-02-05,Devolucion recibo,"Devolucion recibo, con ""nota"" entre comillas",Incoming Transfer,141.23,EUR,1.0
+2026-02-11,2026-02-11,Compra ES ROBLEDAL GUADARRAMA,"Compra ES ROBLEDAL GUADARRAMA, gasoleo",Outgoing Transfer,-94.62,EUR,1.0
+2026-02-17,2026-02-17,Transferencia emitida DISTRIBUCIONES ALMANZORA SL,Transferencia emitida DISTRIBUCIONES ALMANZORA SL,Outgoing Transfer,-902.79,EUR,1.0

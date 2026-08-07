@@ -95,6 +95,14 @@ _M131_HISTORICAL_15_CASILLA: CasillaId = _casilla_id("15")
 _M390_REPERCUTIDO_GENERAL_CASILLA = _casilla_id("iva.anual.repercutido.general")
 _M390_REPERCUTIDO_REDUCIDO_CASILLA = _casilla_id("iva.anual.repercutido.reducido")
 _M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA = _casilla_id("iva.anual.repercutido.super-reducido")
+# Rate-specific box-layer casillas. The tier casillas above are the rate-BLIND
+# total layer and no longer reach an official box; these do, one per AEAT rate
+# box. A draft populating a tier total while leaving its boxes empty declares a
+# breakdown that does not account for its own total, which the export gate
+# refuses -- so a coherent post-split fixture has to carry both layers.
+_M390_REPERCUTIDO_TIPO_21_CUOTA_CASILLA = _casilla_id("iva.anual.repercutido.tipo-21.cuota")
+_M390_REPERCUTIDO_TIPO_10_CUOTA_CASILLA = _casilla_id("iva.anual.repercutido.tipo-10.cuota")
+_M390_REPERCUTIDO_TIPO_4_CUOTA_CASILLA = _casilla_id("iva.anual.repercutido.tipo-4.cuota")
 _M390_SOPORTADO_INTERIORES_CASILLA = _casilla_id("iva.anual.soportado.interiores")
 _M390_SOPORTADO_IMPORTACIONES_CASILLA = _casilla_id("iva.anual.soportado.importaciones")
 _M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA = _casilla_id("iva.anual.autorepercutido.intracomunitaria")
@@ -615,6 +623,9 @@ def _approved_modelo_390_registry_draft():
             _M390_REPERCUTIDO_GENERAL_CASILLA: Decimal("18000.00"),
             _M390_REPERCUTIDO_REDUCIDO_CASILLA: Decimal("2100.50"),
             _M390_REPERCUTIDO_SUPER_REDUCIDO_CASILLA: Decimal("420.00"),
+            _M390_REPERCUTIDO_TIPO_21_CUOTA_CASILLA: Decimal("18000.00"),
+            _M390_REPERCUTIDO_TIPO_10_CUOTA_CASILLA: Decimal("2100.50"),
+            _M390_REPERCUTIDO_TIPO_4_CUOTA_CASILLA: Decimal("420.00"),
             _M390_SOPORTADO_INTERIORES_CASILLA: Decimal("9800.25"),
             _M390_SOPORTADO_IMPORTACIONES_CASILLA: Decimal("650.00"),
             _M390_AUTOREPERCUTIDO_INTRACOMUNITARIA_CASILLA: Decimal("300.00"),

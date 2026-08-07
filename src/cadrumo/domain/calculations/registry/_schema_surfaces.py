@@ -29,6 +29,7 @@ from ._ids import (
 from ._modelo_localization import resolve_modelo_localization
 from ._record_spec import ENCODING_ALIAS_MAP
 from ._schema_base import ContinuidadId, LegalRefs, RegistryModel, SourceRefs
+from ._schema_export_exemption import ExportExemptionReasonValue
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_scalars import DecimalValue
 
@@ -271,6 +272,20 @@ class CasillaDefinition(RegistryModel):
         ),
     )
     export_refs: tuple[ExportFieldId, ...] = ()
+    export_exemption_reason: ExportExemptionReasonValue | None = Field(
+        default=None,
+        description=(
+            "Why this casilla files no slot on the official fixed-width record. "
+            "Required by registry build for a completeness-manifest casilla that "
+            "the export completeness gate would otherwise demand -- one declaring "
+            "a formula or marked required -- but that no export field addresses. "
+            "Without it, exemption from that gate is expressed by absence alone, "
+            "which reads identically whether the casilla genuinely cannot reach a "
+            "box or was simply never annotated. A casilla the record DOES address "
+            "must not declare one, and ``internal_only`` already asserts the "
+            "internal-intermediate case on its own."
+        ),
+    )
     constraints: CasillaConstraints | None = None
     form_number: str | None = Field(default=None, min_length=1, max_length=16)
     continuidad_id: ContinuidadId | None = Field(
@@ -343,6 +358,19 @@ class CasillaDefinition(RegistryModel):
             raise RegistryValidationError(
                 f"internal_only casilla {self.id!r} must not declare export_refs "
                 "(an app-internal casilla cannot also be exported to a fichero record)",
+            )
+        if self.export_exemption_reason is not None and self.export_refs:
+            raise RegistryValidationError(
+                f"casilla {self.id!r} declares export_exemption_reason "
+                f"{self.export_exemption_reason.value!r} while also declaring export_refs "
+                "(a casilla the official record addresses is not exempt from the export "
+                "completeness gate)",
+            )
+        if self.internal_only and self.export_exemption_reason is not None:
+            raise RegistryValidationError(
+                f"internal_only casilla {self.id!r} must not declare export_exemption_reason "
+                f"{self.export_exemption_reason.value!r} "
+                "(internal_only already asserts the internal-intermediate exemption)",
             )
         if self.internal_only and self.input_kind != InputKind.COMPUTED:
             raise RegistryValidationError(

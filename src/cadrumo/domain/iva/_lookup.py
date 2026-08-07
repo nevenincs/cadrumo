@@ -116,6 +116,49 @@ def _render_citation(category: IvaCategory, catalogue: IvaCatalogue) -> str:
     return f"{reference.document_id}, {article}: {citation.quoted_text}"
 
 
+def coexisting_tier_rates(
+    member_state: EUMemberState,
+    kind: IvaRateKind,
+    on_date: date,
+) -> tuple[IvaRateRecord, ...]:
+    """Return the rates coexisting with ``kind``'s ordinary rate on ``on_date``.
+
+    Exactly the records :func:`lookup_rate` skips: those carrying
+    :attr:`~cadrumo.domain.iva.IvaRateRecord.supersedes_tier_default`, which a
+    statute put on PART of a tier's supplies while the rest stayed on the
+    ordinary rate. :func:`lookup_rate` is right to skip them -- it answers "what
+    is this tier's rate" and must answer with one number -- but skipping them
+    silently leaves its caller unable to tell a tier with one rate from a tier
+    that momentarily has two.
+
+    This is the question that makes that distinction askable, so a caller
+    deriving a number FROM a tier can refuse instead of returning the ordinary
+    rate as though it were unambiguous. A non-empty result means the tier is
+    ambiguous on that date and no goods axis in the bundled AEAT surfaces can
+    separate the two populations.
+
+    Args:
+        member_state: The member state whose rates are searched.
+        kind: The rate tier being interrogated.
+        on_date: The date the coexisting rate must be in force.
+
+    Returns:
+        The in-force coexisting records, in registry declaration order. Empty
+        when the tier carries only its ordinary rate on that date.
+    """
+    rates = load_iva_rate_table().get(member_state)
+    if not rates:
+        return ()
+    return tuple(
+        rate
+        for rate in rates
+        if rate.kind is kind
+        and rate.supersedes_tier_default
+        and rate.effective_from <= on_date
+        and (rate.effective_until is None or on_date <= rate.effective_until)
+    )
+
+
 def rate_kinds_for_declared_rate(
     member_state: EUMemberState,
     declared_rate: Decimal,
@@ -165,4 +208,4 @@ def rate_kinds_for_declared_rate(
     return tuple(matched)
 
 
-__all__ = ["cite", "lookup_rate", "rate_kinds_for_declared_rate"]
+__all__ = ["cite", "coexisting_tier_rates", "lookup_rate", "rate_kinds_for_declared_rate"]

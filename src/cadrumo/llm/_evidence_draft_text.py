@@ -50,8 +50,14 @@ from __future__ import annotations
 import asyncio
 
 from ..application.ledger import InvoiceDraft, PurchaseInvoiceEvidenceInputError
+from ..core import Period
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
+from ._invoice_extraction_prompt import (
+    CompiledInvoiceExtractionPrompt,
+    build_invoice_extraction_prompt,
+    default_extraction_period,
+)
 from ._invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ._models import LLMRequest
 
@@ -61,43 +67,23 @@ __all__ = [
     "extract_invoice_fields_from_text",
 ]
 
-_INSTRUCTIONS = """\
-You are reading the text of a single invoice. The invoice may be written in any \
-language and laid out in any way; field labels will not always be the ones you \
-expect, so identify each field by what it MEANS in the document, not by matching \
-a particular word.
 
-Copy each field's value EXACTLY as printed in the text. Do not calculate, infer, \
-estimate, convert, translate, reformat or guess any value. If a field is not \
-printed in the text, its value is null. Emitting null is always correct when you \
-are not certain; never substitute a plausible value for a missing one.
-
-Return ONLY one JSON object with exactly these keys (no other text):
-{
-  "supplier_tax_id": <string or null, the issuing party's tax identification \
-number (VAT/NIF/CIF/USt-IdNr/TVA/company tax number) exactly as printed>,
-  "invoice_number": <string or null, the invoice's own reference number exactly \
-as printed>,
-  "invoice_date": <string or null, the invoice issue date exactly as printed>,
-  "taxable_base": <string or null, the net amount before tax exactly as printed>,
-  "iva_rate": <string or null, the VAT/IVA percentage exactly as printed>,
-  "iva_amount": <string or null, the VAT/IVA tax amount exactly as printed>,
-  "grand_total": <string or null, the total payable amount exactly as printed>,
-  "currency": <string or null, the ISO-4217 code for the currency the amounts \
-are printed in, e.g. "EUR", "USD", "GBP". Read it from the printed symbol or \
-code next to the amounts. If no currency is shown anywhere, null>
-}
-"""
-
-
-def build_text_field_extraction_prompt(evidence_text: str) -> str:
+def build_text_field_extraction_prompt(evidence_text: str, *, period: Period | None = None) -> str:
     """Build the extraction prompt for ``evidence_text``.
 
     Separate from the transport so the exact instruction a model will receive is
     directly assertable without dispatching a request.
 
+    The instruction half is the SHARED compiled artefact
+    (:func:`~llm._invoice_extraction_prompt.build_invoice_extraction_prompt`),
+    not a second hand-maintained field list: this reader and the vision reader
+    ask for the same eight fields in the same declared forms, and maintaining
+    that agreement by hand is exactly the drift that lost a correctly-read rate.
+
     Args:
         evidence_text: The document's text representation.
+        period: Optional filing period whose registry-resolved rates the prompt
+            enumerates; defaults to the current annual period.
 
     Returns:
         The full prompt: instructions, then the document text under a delimiter
@@ -113,7 +99,8 @@ def build_text_field_extraction_prompt(evidence_text: str) -> str:
             "invoice text extraction was given no text to read",
             suggestion="aeat app ledger evidence extract --evidence-id <id>",
         )
-    return f"{_INSTRUCTIONS}\nINVOICE TEXT:\n{evidence_text}"
+    compiled = build_invoice_extraction_prompt(period=period if period is not None else default_extraction_period())
+    return f"{compiled.text}\nINVOICE TEXT:\n{evidence_text}"
 
 
 class TextInvoiceFieldExtractor:
@@ -126,6 +113,8 @@ class TextInvoiceFieldExtractor:
             injection for tests); default-constructed against the resolved
             settings otherwise.
         settings: Injected settings; defaults to ``load_settings()``.
+        period: Filing period whose registry-resolved rates the compiled prompt
+            enumerates; defaults to the current annual period.
     """
 
     def __init__(
@@ -134,9 +123,11 @@ class TextInvoiceFieldExtractor:
         model: str | None = None,
         client: LLMClient | None = None,
         settings: Settings | None = None,
+        period: Period | None = None,
     ) -> None:
         resolved_settings = settings if settings is not None else load_settings()
         self._model = model
+        self._period = period if period is not None else default_extraction_period()
         self._client = (
             client
             if client is not None
@@ -155,8 +146,12 @@ class TextInvoiceFieldExtractor:
         reader produced the fields. The model segment is ``configured`` when the
         caller pinned nothing, because the effective model is then the active
         provider's default rather than a fact this object holds.
+
+        The trailing rate-provenance token answers the question the model name
+        cannot: the prompt now enumerates registry-resolved rates, so which
+        rates were in force for this read is part of how the figure was reached.
         """
-        return f"llm:text-extract:{self._model or 'configured'}"
+        return f"llm:text-extract:{self._model or 'configured'}:rates-{self._compiled_prompt().rate_provenance}"
 
     def extract(self, *, evidence_text: str) -> InvoiceDraft:
         """Read ``evidence_text`` and return the grounded draft.
@@ -183,9 +178,17 @@ class TextInvoiceFieldExtractor:
         model on a host with no inference capacity of its own.
         """
         return LLMRequest(
-            prompt=build_text_field_extraction_prompt(evidence_text),
+            prompt=build_text_field_extraction_prompt(evidence_text, period=self._period),
             model_override=self._model,
         )
+
+    def _compiled_prompt(self) -> CompiledInvoiceExtractionPrompt:
+        """Return the compiled instruction half this reader sends.
+
+        Built without any document text, so the stamp can name the rates a read
+        was performed under without a document in hand.
+        """
+        return build_invoice_extraction_prompt(period=self._period)
 
 
 def extract_invoice_fields_from_text(

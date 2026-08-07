@@ -1,0 +1,11 @@
+FECHA	NUM_FACTURA	PROVEEDOR	NIF	CATEGORIA	BASE	TIPO_IVA	CUOTA_IVA	TOTAL	OBSERVACIONES
+2025-11-30	IBL-2025-88170342	Iberluz Comercializadora, S.A.U.	A66120932	Suministros	360,55	21%	75,72	436,27	Deducible 100%
+2026-01-31	OM-2026-0417755	Onda Movil Telecom, S.L.	B55402184	Telecomunicaciones	116,72	21%	24,51	141,23	Deducible 100%
+2026-02-19	ALM/2026/2210	Distribuciones Almanzora, S.L.	B88901145	Mercaderias	756,60	4%	118,96	902,79	Con recargo de equivalencia
+2026-03-12	ARA-26-004471	Suministros Aranda SL	B22058846	Material de oficina	399,12	21%	83,82	482,94	Deducible 100%
+2026-04-08	LC-2026-0912	Libreria Cervantes SL	B61182077	Bibliografia	221,50	4%	18,89	240,39	Tipo mixto 4% y 21%
+2026-02-06	0042/0000871	Hosteleria Perico y Sanz CB	E33882515	Dietas y manutencion	38,60	10%	3,86	42,46	Deducibilidad limitada
+2026-03-03	T-118004	Carburantes Robledal SL	B77193308	Combustible	78,20	21%	16,42	94,62	Deducibilidad limitada 50%
+2026-03-31	LIQ-2026-Q1-88214	Banco Peninsular, S.A.	A44719029	Servicios bancarios	93,25	0%	0,00	93,25	Exento art. 20.Uno.18
+2026-05-02	INV-2026-77120	Northwind Cloud Services Ltd	IE9825613K	Servicios en la nube	359,34	0%	0,00	359,34	Inversion del sujeto pasivo
+2026-06-11	SIN-NUMERO	Reformas Delta SL	B1234567X	Reparaciones	766,30	21%	160,92	890,00	REVISAR - el total impreso no cuadra

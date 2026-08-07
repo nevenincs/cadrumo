@@ -276,6 +276,7 @@ from ._period_offset_math import same_ejercicio_prior_quarter_anchors
 from ._export import (
     ResolvedExportLayout,
     derive_export_layouts_from_bindings,
+    fixed_width_record_casilla_ids,
     export_fields_for_casilla,
     export_fields_overlap,
     resolve_export_layout,
@@ -1019,6 +1020,7 @@ __all__ = [
     "derive_calculation_completeness_casillas",
     "derive_diseno_coverage_casillas",
     "derive_export_layouts_from_bindings",
+    "fixed_width_record_casilla_ids",
     "derive_modelo_202_modality",
     "derive_modelo_applicability",
     "derive_not_applicable_source_modelos",

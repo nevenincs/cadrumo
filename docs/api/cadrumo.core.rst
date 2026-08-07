@@ -59,6 +59,7 @@ Submodules
    cadrumo.core._descendant_relacion
    cadrumo.core._document_shape
    cadrumo.core._draft_discrepancy
+   cadrumo.core._export_exemption_reason
    cadrumo.core._export_layout_format
    cadrumo.core._external_oracle_corpus
    cadrumo.core._field_grounding
@@ -68,6 +69,7 @@ Submodules
    cadrumo.core._fsync
    cadrumo.core._fts_query
    cadrumo.core._google_credential_source
+   cadrumo.core._hardware
    cadrumo.core._hex
    cadrumo.core._iban
    cadrumo.core._image_media_type

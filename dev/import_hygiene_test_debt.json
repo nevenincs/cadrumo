@@ -277,6 +277,15 @@
         "reason": "White-box test of the private CLI notice builder that warns an attachment landing after a revision was verified will never reach the frozen evidence bundle. Notices are the CLI's own diagnostic channel, so the builder belongs to the CLI layer and has no application-layer promotion candidate; the test asserts the advisory's structured suggestion rather than localized prose, which requires the builder itself. Observation for a future pass: an application-layer test reaching into entrypoints is a layering smell worth revisiting when the ledger-lifecycle advisory surface is next touched, but relocating the builder out of the CLI would contradict the notices-are-the-CLI-channel contract."
       },
       {
+        "importer_path": "src/cadrumo/application/ledger/tests/test_draft_projection_parity.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.entrypoints.cli._ledger_business_payloads",
+        "imported_names": [
+          "EvidenceExtractResult"
+        ],
+        "reason": "White-box projection-parity gate: it asserts every InvoiceDraft field survives onto the operator-facing confirm payload, in both directions, so it must hold the CLI's own EvidenceExtractResult model alongside the application-layer InvoiceDraft it projects from. EvidenceExtractResult is the CLI's rendering-layer payload shape for the evidence-extract confirm surface, scoped to that one verb family; it is not a cross-package production API and has no promotion candidate on the entrypoints.cli facade. The gate exists precisely because the two ends can silently diverge, so it must see both ends directly rather than through a double."
+      },
+      {
         "importer_path": "src/cadrumo/application/modelo/tests/test_actions.py",
         "occurrence": 1,
         "target_mod": "cadrumo.application.wizard._commands",
@@ -660,15 +669,6 @@
           "data_root_cache_exclusions"
         ],
         "reason": "White-box test reach: this gate asserts that the storage taxonomy's fingerprint_participation axis and the digest that actually consumes it agree, so it has to call the settings-bound composition itself -- the generic primitive cannot answer which directories the axis excludes. `compute_data_root_sha256` and `data_root_cache_exclusions` are observability's internal wiring of compute_db_sha256 onto Settings and the storage taxonomy, producing the RunTrace.db_sha256 field; measured at HEAD, both are consumed in production ONLY inside cadrumo.core.observability itself (_context.py, _replay.py, and _fingerprint.py), with zero cross-package production consumers. Deliberately NOT promoted: the facade already exports the generic, domain-agnostic compute_db_sha256 -- whose own docstring draws exactly this line, stating it knows nothing about Settings or the storage-root taxonomy -- and that primitive is the one with a cross-package consumer. Minting the settings-bound compositions onto the public facade to serve a single test would grow the package's public contract with implementation detail no consumer needs."
-      },
-      {
-        "importer_path": "src/cadrumo/adapters/inbound/einvoice/tests/test_embedded_file_read_does_not_mutate.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.adapters.inbound.sanitizer._dynamic",
-        "imported_names": [
-          "strip_attachments"
-        ],
-        "reason": "White-box test reach asserting the cross-package non-mutation contract in BOTH directions at once: the einvoice embedded-file READ must not mutate the PDF, and the sanitiser's attachment STRIP must still remove what that read can see. Only the real `strip_attachments` proves the pair, so a double would defeat the test's purpose. Public-named but deliberately NOT promoted: the sanitizer package docstring names `_dynamic` an implementation detail and requires outside callers to import exclusively from the package facade. Its only other consumers are intra-package (`_pipeline`, `sanitizer/tests/test_dynamic.py`), so there is no shared-primitive case for widening the facade for one test."
       },
       {
         "importer_path": "src/cadrumo/domain/renta/tests/test_retenciones_routing_integrity.py",

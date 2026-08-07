@@ -55,8 +55,8 @@ class EInvoiceXmlParseError(CadrumoError, ValueError):
     translated message rather than a bare traceback -- which is what a
     read-boundary refusal of an operator-supplied file has to do.
     ``ValueError`` is kept so a pydantic validator can still absorb it, the
-    same pairing the sibling inbound adapter uses for the same reason
-    (``SanitizerValidationError``).
+    same pairing the fixture-preparation sanitiser uses for the same reason
+    (``dev.sanitizer._errors.SanitizerValidationError``).
 
     The alternative the hygiene gate offers -- declaring a
     ``__bare_base_rationale__`` and staying outside the registry -- would be a

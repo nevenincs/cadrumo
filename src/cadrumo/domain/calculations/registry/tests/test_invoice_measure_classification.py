@@ -93,16 +93,16 @@ def test_the_classified_set_holds_only_scalar_money_measures() -> None:
     quantity a screen could fold, so classifying either would hand a future screen
     a fact it cannot sum.
     """
-    assert _INVOICE_SCALAR_MEASURE_FACTS <= set(_INVOICE_FACTS)
+    assert set(_INVOICE_FACTS) >= _INVOICE_SCALAR_MEASURE_FACTS
     assert not _INVOICE_SCALAR_MEASURE_FACTS & {"operator_count", "row_field"}
 
 
 def test_the_independent_set_is_the_complement() -> None:
     """The screened set is derived, so the two halves cannot drift apart."""
-    assert _INVOICE_INDEPENDENT_QUANTITY_FACTS == _INVOICE_SCALAR_MEASURE_FACTS - set(
+    assert _INVOICE_SCALAR_MEASURE_FACTS - set(
         _INVOICE_ALTERNATIVE_MEASURE_FACTS,
-    )
-    assert _INVOICE_INDEPENDENT_QUANTITY_FACTS == {"rectified_base_delta_sum"}
+    ) == _INVOICE_INDEPENDENT_QUANTITY_FACTS
+    assert {"rectified_base_delta_sum"} == _INVOICE_INDEPENDENT_QUANTITY_FACTS
 
 
 def test_every_classified_fact_states_a_reason() -> None:

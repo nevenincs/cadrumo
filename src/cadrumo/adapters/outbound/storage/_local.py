@@ -38,6 +38,7 @@ from ._errors import (
     StorageCorruptionError,
 )
 from ._integrity import verify_content_hash, verify_payload_byte_length
+from ._key_validation import assert_admissible_object_key_hmac
 from ._object_name import build_provider_object_name, provider_object_hmac_prefix, sanitize_provider_object_label
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
@@ -65,19 +66,8 @@ def _validate_namespace(namespace: str) -> str:
 
 
 def _validate_hmac(object_key_hmac: str) -> str:
-    cleaned = object_key_hmac.strip()
-    if not cleaned:
-        raise OutboundStorageValidationError(
-            "object_key_hmac must not be blank",
-            translated_message="adapters.outbound.storage.local.errors.object_key_hmac_blank",
-        )
-    if not all(c.isalnum() or c == "-" or c == "_" for c in cleaned):
-        raise OutboundStorageValidationError(
-            f"object_key_hmac {object_key_hmac!r} contains forbidden characters",
-            context={"object_key_hmac": object_key_hmac},
-            translated_message="adapters.outbound.storage.local.errors.object_key_hmac_forbidden_characters",
-        )
-    return cleaned
+    """Delegate to the one admissibility rule both backends share."""
+    return assert_admissible_object_key_hmac(object_key_hmac, backend="local")
 
 
 def _sidecar_filename(object_key_hmac: str, label: str) -> str:

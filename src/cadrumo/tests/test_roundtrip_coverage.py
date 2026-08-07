@@ -23,8 +23,8 @@ least one roundtrip test (per aeat-quality-gates.md).
       -> src/cadrumo/adapters/outbound/aeat/sede/test_observation_store_roundtrip.py
   - Corpus sidecar (justificante inbound)
       -> src/cadrumo/adapters/inbound/justificante/test_corpus_sidecar_roundtrip.py
-  - Sanitizer pipeline (inbound)
-      -> src/cadrumo/adapters/inbound/sanitizer/test_round_trip.py
+  - Sanitizer pipeline (fixture-preparation tooling)
+      -> dev/sanitizer/tests/test_round_trip.py
   - RunTrace persistence
       -> src/cadrumo/application/workflow/test_run_persistence_roundtrip.py
   - Filing history repository
@@ -100,8 +100,8 @@ _BOUNDARY_ROUNDTRIP_INVENTORY: tuple[tuple[str, str], ...] = (
         "src/cadrumo/adapters/inbound/justificante/tests/test_corpus_sidecar_roundtrip.py",
     ),
     (
-        "Sanitizer pipeline inbound",
-        "src/cadrumo/adapters/inbound/sanitizer/tests/test_round_trip.py",
+        "Sanitizer pipeline fixture-preparation tooling",
+        "dev/sanitizer/tests/test_round_trip.py",
     ),
     (
         "RunTrace persistence",

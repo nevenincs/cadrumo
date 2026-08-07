@@ -214,6 +214,8 @@ adapters:
           namespace_not_found: No s ha trobat l espai de noms de Google Drive {namespace}.
           object_key_hmac_blank: L HMAC de clau d objecte de Google Drive no pot estar
             buit.
+          object_key_hmac_forbidden_characters: L HMAC de clau d objecte de Google
+            Drive {object_key_hmac} conté caràcters prohibits.
           object_not_found: No s ha trobat l objecte de Google Drive {object_key_hmac}
             a l espai {namespace}.
           request_failed: La petició de Google Drive {action} ha fallat amb estat
@@ -6396,6 +6398,9 @@ errors:
     refused_access_gate_live_read_not_enabled: L'accés de lectura en viu a l'AEAT
       està desactivat. Aquesta operació no pot contactar amb l'AEAT amb la configuració
       actual.
+    refused_aeat_record_multi_recipient: El registre declarat anomena més d'un destinatari,
+      de manera que no pot convertir-se en un assentament de contrapart única. Concilieu-lo
+      per destinatari.
     refused_apoderado_invalid_represented_nif: L'identificador fiscal del representat
       no és un NIF, NIE o CIF vàlid.
     refused_apoderado_live_check_unavailable: La comprovació en viu d'apoderaments
@@ -6665,7 +6670,6 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
-    refused_aeat_record_multi_recipient: 'El registre declarat anomena més d''un destinatari, de manera que no pot convertir-se en un assentament de contrapart única. Concilieu-lo per destinatari.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -66492,7 +66496,7 @@ modelo:
               help: null
               label: Quota d'IVA repercutit al tipus general (21%) - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6epbeclp62r1ec9gn6p8.help
+              help: null
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 21% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
               help: null
@@ -66507,56 +66511,63 @@ modelo:
               help: null
               label: Quota d'IVA repercutit al tipus reduït (10%) - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5.help
+              help: null
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 10% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4ds:
               help: null
               label: Quota d'IVA repercutit al tipus superreduït (4%) - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn76tbgclp2qsj5chqm6qb4dsn64objck.help
+              help: null
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 4% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj2c5pma.help
+              help: null
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 0% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj0bj3elnn8o8.help
+              help: null
               label: Quota d’IVA meritat - Règim ordinari - Tipus 0% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ec9gn6p8.help
+              help: Declara la base imposable de les operacions interiors del règim
+                ordinari gravades al tipus reduït del 10 %.
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 10% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj2c1ecdqmut31.help
+              help: Declara la quota d'IVA repercutida al tipus reduït del 10 % sobre
+                la base imposable de la casella 03.
               label: Quota d’IVA meritat - Règim ordinari - Tipus 10% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj2c5pma.help
+              help: null
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 2% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4bj3elnn8o8.help
+              help: null
               label: Quota d’IVA meritat - Règim ordinari - Tipus 2% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ec9gn6p8.help
+              help: Declara la base imposable de les operacions interiors del règim
+                ordinari gravades al tipus general del 21 %.
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 21% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj4c9ecdqmut31.help
+              help: null
               label: Quota d’IVA meritat - Règim ordinari - Tipus 21% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj2c5pma.help
+              help: Declara la base imposable de les operacions interiors del règim
+                ordinari gravades al tipus superreduït del 4 %.
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 4% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmj8bj3elnn8o8.help
+              help: Declara la quota d'IVA repercutida al tipus superreduït del 4
+                % sobre la base imposable de la casella 01.
               label: Quota d’IVA meritat - Règim ordinari - Tipus 4% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj2c5pma.help
+              help: null
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 5% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjabj3elnn8o8.help
+              help: null
               label: Quota d’IVA meritat - Règim ordinari - Tipus 5% - anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5ph62sr5.help
+              help: Declara la base imposable dels olis de llavors i les pastes alimentàries
+                gravats al 7,5 %. El Reial decret llei 4/2024, article 1, va fixar
+                aquest tipus des de l'1 d'octubre fins al 31 de desembre de 2024.
               label: Base imposable d’IVA meritat - Règim ordinari - Tipus 7,5% -
                 anual
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn78qbgdsmjeb9l5phnarrkc4.help
+              help: null
               label: Quota d’IVA meritat - Règim ordinari - Tipus 7,5% - anual
             x-d5r62bj1dpqm2r1ee9in6tbcehgm8rpde9imeqbdcln2qpr5dpin4obc:
               help: null
@@ -66569,7 +66580,7 @@ modelo:
               help: null
               label: Quota d'IVA suportat en operacions interiors corrents - anual
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5.help
+              help: null
               label: Base imposable d’IVA deduïble - Total operacions interiors corrents
                 de béns i serveis - anual
           construct:

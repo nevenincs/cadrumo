@@ -38,7 +38,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from .._errors import OutboundStorageValidationError
 from .._google_drive import GoogleDriveProvider
+from .._key_validation import assert_admissible_object_key_hmac
 from .._local import LocalFileSystemProvider
 from .._protocol import StorageProvider
 
@@ -257,3 +259,101 @@ def test_the_local_optional_batch_extension_stays_admissible(tmp_path: Path) -> 
         assert list(inspect.signature(getattr(LocalFileSystemProvider, name)).parameters) == list(
             inspect.signature(getattr(GoogleDriveProvider, name)).parameters,
         ), name
+
+
+# --- object-key admissibility -------------------------------------------------
+#
+# Signature conformance says the backends accept the same ARGUMENTS. These say
+# they accept the same VALUES, which is the half that had actually diverged:
+# local enforced an `[alnum-_]` charset on `object_key_hmac` while Drive
+# enforced only non-blank, so a key one backend refused the other stored.
+
+#: Keys no digest can produce. The quote is the one that mattered: Drive
+#: interpolates the key's 8-character prefix into a query string, so a quote
+#: inside that prefix is the shape the charset rule exists to exclude.
+_INADMISSIBLE_KEYS = ("abc'defg", "../../etc/passwd", "has space", "sla/sh", r"back\slash", "semi;colon")
+
+#: Keys every production producer actually emits: two sha256 hex digests and
+#: the sentinel both providers' `probe` writes.
+_ADMISSIBLE_KEYS = ("0" * 64, "7f343fa82f8a281192c3e4b4a1d0f5e6", "00000000probe", "with-dash_and_underscore")
+
+
+@pytest.mark.parametrize(("_name", "build"), _PROVIDERS, ids=_PROVIDER_IDS)
+@pytest.mark.parametrize("hostile", _INADMISSIBLE_KEYS)
+def test_both_backends_refuse_the_same_inadmissible_object_key(
+    _name: str,
+    build: Callable[[Path], object],
+    hostile: str,
+    tmp_path: Path,
+) -> None:
+    """Neither backend stores a key the other would reject.
+
+    Drive is the backend this changes: it previously accepted every one of
+    these. The parametrisation is over BOTH so the property is "they agree",
+    not "Drive was fixed once".
+    """
+    provider = build(tmp_path)
+
+    with pytest.raises(OutboundStorageValidationError):
+        provider.get("namespace", hostile)  # type: ignore[attr-defined]
+
+
+@pytest.mark.parametrize(("_name", "build"), _PROVIDERS, ids=_PROVIDER_IDS)
+@pytest.mark.parametrize("admissible", _ADMISSIBLE_KEYS)
+def test_neither_backend_refuses_a_key_production_actually_emits(
+    _name: str,
+    build: Callable[[Path], object],
+    admissible: str,
+    tmp_path: Path,
+) -> None:
+    """The tightened rule refuses nothing any writer in this repository produces.
+
+    The narrowing's precondition, kept as a standing assertion rather than a
+    one-off measurement: if a future producer emits something outside the
+    admissible set, this fails rather than that key being silently refused at
+    runtime on one backend only.
+    """
+    provider = build(tmp_path)
+
+    # A validation refusal is the failure under test; anything else (missing
+    # object, absent root, no credentials) means the key itself was admitted.
+    with pytest.raises(Exception) as caught:
+        provider.get("namespace", admissible)  # type: ignore[attr-defined]
+
+    assert not isinstance(caught.value, OutboundStorageValidationError), caught.value
+
+
+def test_each_backend_keeps_its_own_refusal_identity() -> None:
+    """One rule, two error identities -- an operator learns WHICH backend refused.
+
+    The shared validator is parameterised by backend rather than raising one
+    flattened message, for the reason the AEAT representation gate is: merging
+    two refusals into one loses the only information the operator can act on.
+    """
+    messages = {}
+    for backend in ("local", "google_drive"):
+        with pytest.raises(OutboundStorageValidationError) as caught:
+            assert_admissible_object_key_hmac("abc'defg", backend=backend)
+        messages[backend] = caught.value.translated_message
+
+    assert messages["local"] != messages["google_drive"]
+    for backend, message in messages.items():
+        assert message == f"adapters.outbound.storage.{backend}.errors.object_key_hmac_forbidden_characters"
+
+
+def test_the_namespace_divergence_stays_permitted_and_stated() -> None:
+    """A leading-dot namespace is refused locally and admitted by Drive, on purpose.
+
+    Recorded as an EXPLICITLY permitted divergence so the next author does not
+    "fix" it into a shared rule. A leading dot makes a hidden file on a
+    filesystem and means nothing in a Drive folder name, so the two backends
+    are answering different questions -- unlike the object key, which is one
+    contract-level value both were answering differently.
+    """
+    from .._google_drive import _validate_namespace as drive_namespace
+    from .._local import _validate_namespace as local_namespace
+
+    with pytest.raises(OutboundStorageValidationError):
+        local_namespace(".hidden")
+
+    assert drive_namespace(".hidden") == ".hidden"

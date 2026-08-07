@@ -180,3 +180,61 @@ def test_resolve_then_split_round_trips_for_general_rate() -> None:
     base, iva = split_gross_at_rate(Decimal("121.00"), resolution.rate)
     assert base == Decimal("100.00")
     assert iva == Decimal("21.00")
+
+
+# ── the tier→value question is ambiguous while a temporary rate coexists ──
+#
+# RDL 4/2024 art. 1 (BOE-A-2024-12944) put a temporary rate on PART of the
+# reduced and super-reducido tiers' supplies while the rest stayed on the
+# ordinary rate, so between those dates the tier does not have "a" rate. Which
+# one applies turns on WHAT was supplied, and no bundled AEAT surface carries
+# that goods axis. The dates below are the registry's own effective windows.
+_SUPER_REDUCED_COEXISTENCE = date(2024, 10, 15)  # 4 % ordinary, 2 % temporary
+_REDUCED_COEXISTENCE = date(2024, 8, 15)  # 10 % ordinary, 5 % temporary
+
+
+def test_ambiguous_tier_refuses_instead_of_returning_the_ordinary_rate() -> None:
+    """A tier carrying two in-force rates must not answer with the ordinary one.
+
+    Returning 4 % for a super-reducido line that RDL 4/2024 art. 1 actually
+    taxed at 2 % would split the gross at the wrong rate, understating the base
+    and OVERSTATING the cuota — an over-declaration no gate in this tree
+    watches. The contract this module states for itself is that it never
+    guesses a number, so the honest answer is the non-derivable one.
+    """
+    for category, on_date in (
+        (IvaCategory.DOMESTIC_SUPER_REDUCED, _SUPER_REDUCED_COEXISTENCE),
+        (IvaCategory.DOMESTIC_REDUCED, _REDUCED_COEXISTENCE),
+    ):
+        resolution = resolve_category_rate(category, on_date=on_date)
+        assert resolution.derivable is False, category
+        assert resolution.rate is None, category
+        # The refusal names the competing rates so the operator can choose,
+        # rather than reporting a bare "not derivable" for a tier that
+        # plainly has a rate.
+        assert "more than one rate" in resolution.reason, category
+
+
+def test_ambiguity_refusal_is_scoped_to_the_window_and_the_moved_tiers() -> None:
+    """Only the affected tiers, and only inside the statute's own window.
+
+    The guard must not become a blanket refusal: the general tier never moved,
+    and both tiers resolve normally on either side of the temporary window. A
+    refusal that over-fired here would block ordinary classification for every
+    reduced-rate supply in the country.
+    """
+    # The general tier is untouched on the very dates the others are ambiguous.
+    for on_date in (_SUPER_REDUCED_COEXISTENCE, _REDUCED_COEXISTENCE):
+        general = resolve_category_rate(IvaCategory.DOMESTIC_GENERAL, on_date=on_date)
+        assert general.derivable is True
+        assert general.rate == Decimal("0.21")
+
+    # Before the temporary rates start and after they lapse, both tiers resolve.
+    for on_date in (date(2024, 3, 1), date(2025, 6, 1)):
+        for category, expected in (
+            (IvaCategory.DOMESTIC_SUPER_REDUCED, Decimal("0.04")),
+            (IvaCategory.DOMESTIC_REDUCED, Decimal("0.10")),
+        ):
+            resolution = resolve_category_rate(category, on_date=on_date)
+            assert resolution.derivable is True, (category, on_date)
+            assert resolution.rate == expected, (category, on_date)

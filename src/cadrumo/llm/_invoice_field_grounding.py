@@ -34,6 +34,7 @@ See Also:
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Mapping
 from decimal import Decimal
 
 from pydantic import BaseModel, Field
@@ -48,6 +49,7 @@ from ..core.identity import (
     validate_spanish_tax_id,
 )
 from ..core.parsing import parse_date
+from ._invoice_field_contract import InvoiceFieldForm, contract_for_field
 
 __all__ = [
     "ExtractedInvoiceFields",
@@ -229,6 +231,41 @@ def _grounded_decimal(raw: str | None) -> Decimal | None:
     return coerce_finite_european_decimal(text)
 
 
+def _grounded_percentage(raw: str | None) -> Decimal | None:
+    """Return a transcribed rate as a bare Decimal, dropping the printed unit.
+
+    The declared form for a rate is *the bare number*
+    (:attr:`~llm._invoice_field_contract.InvoiceFieldForm.PERCENTAGE_RATE`), but
+    a document prints ``IVA (21%)`` and a model obeying "copy exactly as
+    printed" returns ``"21%"``. Routed through :func:`_grounded_decimal` that
+    lost the field outright -- measured on a corpus invoice, where the model
+    that read the rate *more* literally was the one punished for it.
+
+    A percent sign is a UNIT MARKER, not a digit, so removing it is unit
+    normalisation and the number that remains is still the one the document
+    printed -- copied, never computed. Nothing about anti-fabrication is
+    weakened: the anchor
+    (:attr:`ExtractedInvoiceFields.iva_rate`) still holds ``"21%"`` verbatim for
+    a later closure check to point at, so anchor and value become explicitly
+    distinct, which is what ADR ``2026-08-07-unstructured-document-ingestion-adr``
+    D4 asks for. Exactly one trailing unit is stripped; a value carrying digits
+    after the sign, or any other stray character, still fails the decimal
+    authority and drops to ``None``.
+
+    Deliberately NOT applied to a monetary amount. A percent sign on an amount
+    is a misread, not a unit, and tolerating it there would launder a bad
+    transcription into a filing figure.
+    """
+    if raw is None:
+        return None
+    text = raw.strip()
+    for unit in ("%", "percent", "pct"):
+        if text.lower().endswith(unit):
+            text = text[: -len(unit)].strip()
+            break
+    return _grounded_decimal(text)
+
+
 def _grounded_currency(raw: str | None) -> str | None:
     """Return *raw* as an ISO-4217 code, or ``None`` when it is not one.
 
@@ -246,22 +283,79 @@ def _grounded_currency(raw: str | None) -> str | None:
     return candidate
 
 
+_TEXT_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None], str | None]] = {
+    InvoiceFieldForm.TAX_IDENTIFIER: _grounded_tax_id,
+    InvoiceFieldForm.FREE_TEXT: _grounded_invoice_number,
+    InvoiceFieldForm.CALENDAR_DATE: _grounded_date,
+    InvoiceFieldForm.CURRENCY_CODE: _grounded_currency,
+}
+"""Validators for the declared forms whose grounded value stays a string."""
+
+_NUMERIC_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None], Decimal | None]] = {
+    InvoiceFieldForm.MONETARY_AMOUNT: _grounded_decimal,
+    InvoiceFieldForm.PERCENTAGE_RATE: _grounded_percentage,
+}
+"""Validators for the declared forms whose grounded value becomes a Decimal.
+
+Split from :data:`_TEXT_GROUNDING_BY_FORM` by RETURN TYPE, not by convenience:
+one table would have to be typed as a union and every call site would need a
+runtime narrow, trading a static guarantee for a dead branch. Together the two
+tables must cover :class:`~llm._invoice_field_contract.InvoiceFieldForm`
+exactly and disjointly, which the parity gate asserts -- so a form added to the
+enum without a validator fails there rather than falling through at runtime.
+"""
+
+
+def _ground_text(raw: str | None, field_name: str) -> str | None:
+    """Ground ``raw`` through the validator ``field_name``'s DECLARED form selects.
+
+    Raises:
+        KeyError: When the field's declared form has no string-valued validator,
+            which is a declaration error the parity gate exists to catch.
+    """
+    return _TEXT_GROUNDING_BY_FORM[contract_for_field(field_name).form](raw)
+
+
+def _ground_numeric(raw: str | None, field_name: str) -> Decimal | None:
+    """Ground ``raw`` through the validator ``field_name``'s DECLARED form selects.
+
+    Raises:
+        KeyError: When the field's declared form has no numeric validator, which
+            is a declaration error the parity gate exists to catch.
+    """
+    return _NUMERIC_GROUNDING_BY_FORM[contract_for_field(field_name).form](raw)
+
+
 def ground_extracted_fields(fields: ExtractedInvoiceFields, *, raw_text_length: int) -> InvoiceDraft:
     """Re-validate the model's transcribed strings into a grounded :class:`InvoiceDraft`.
+
+    Each field is grounded through the validator its DECLARED form selects
+    (:data:`~llm._invoice_field_contract.INVOICE_FIELD_CONTRACTS`), the same
+    declaration the compiled prompt renders its per-field guidance from, so the
+    two sides cannot state different expectations. A field left ungrounded here
+    fails the parity gate's fully-populated round.
 
     A field the model transcribed but that fails grounded validation (an invalid
     tax-id checksum, an unparsable date, a non-numeric amount) is dropped to
     ``None`` rather than trusted -- the same "never fabricate" discipline the
     text-layer heuristics apply.
+
+    Args:
+        fields: The parsed, not-yet-grounded transcription. Left untouched: it
+            carries the verbatim printed anchors.
+        raw_text_length: How much source material the reader had to work with.
+
+    Returns:
+        :class:`InvoiceDraft`: The grounded draft.
     """
     return InvoiceDraft(
-        supplier_tax_id=_grounded_tax_id(fields.supplier_tax_id),
-        invoice_number=_grounded_invoice_number(fields.invoice_number),
-        invoice_date=_grounded_date(fields.invoice_date),
-        taxable_base=_grounded_decimal(fields.taxable_base),
-        iva_rate=_grounded_decimal(fields.iva_rate),
-        iva_amount=_grounded_decimal(fields.iva_amount),
-        grand_total=_grounded_decimal(fields.grand_total),
-        currency=_grounded_currency(fields.currency),
+        supplier_tax_id=_ground_text(fields.supplier_tax_id, "supplier_tax_id"),
+        invoice_number=_ground_text(fields.invoice_number, "invoice_number"),
+        invoice_date=_ground_text(fields.invoice_date, "invoice_date"),
+        taxable_base=_ground_numeric(fields.taxable_base, "taxable_base"),
+        iva_rate=_ground_numeric(fields.iva_rate, "iva_rate"),
+        iva_amount=_ground_numeric(fields.iva_amount, "iva_amount"),
+        grand_total=_ground_numeric(fields.grand_total, "grand_total"),
+        currency=_ground_text(fields.currency, "currency"),
         raw_text_length=raw_text_length,
     )

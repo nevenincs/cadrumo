@@ -16,15 +16,24 @@ that is new.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from ....core import FieldGroundingOutcome, FieldOrigin
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from .._evidence_draft import InvoiceDraft, InvoiceDraftLine, InvoiceDraftRateBreakdown
+from .._evidence_draft import (
+    FieldAmbiguityCandidate,
+    FieldProvenance,
+    InvoiceDraft,
+    InvoiceDraftLine,
+    InvoiceDraftRateBreakdown,
+)
 from .._extraction_draft_store import (
     ExtractionDraftDocument,
+    StoredExtractionDraft,
     discard_extraction_draft,
     load_extraction_drafts,
     read_extraction_draft,
@@ -273,3 +282,138 @@ def test_a_dropped_line_set_is_not_silently_re_defaulted_to_empty() -> None:
     assert revived == payload
     assert len(revived.drafts[0].draft.lines) == 2
     assert len(revived.drafts[0].draft.iva_breakdown) == 2
+
+
+def _provenance_bearing_draft() -> InvoiceDraft:
+    """A draft whose per-field provenance is populated OFF its defaults.
+
+    Every provenance axis is set to a non-default value, and the three envelopes
+    deliberately cover different outcomes: one reconciled and anchored, one
+    ambiguous carrying competing candidates, one contradicted carrying the note
+    that explains what disagreed. A fixture that used the same outcome three
+    times could not tell a boundary that persists one envelope shape from one
+    that persists all of them.
+    """
+    return InvoiceDraft(
+        supplier_tax_id="ESB12345674",
+        supplier_name="Proveedor Ejemplo SL",
+        invoice_number="PROV-2024-0001",
+        invoice_date="2024-11-15",
+        taxable_base=Decimal("150.00"),
+        iva_amount=Decimal("26.00"),
+        grand_total=Decimal("176.00"),
+        currency="EUR",
+        provenance=(
+            FieldProvenance(
+                field="taxable_base",
+                origin=FieldOrigin.EXACT_STRUCTURED,
+                grounding=FieldGroundingOutcome.RECONCILED,
+                anchor="150,00",
+                note="reconciles against the per-rate breakdown",
+            ),
+            FieldProvenance(
+                field="supplier_tax_id",
+                origin=FieldOrigin.TEXT_LAYER,
+                grounding=FieldGroundingOutcome.AMBIGUOUS,
+                anchor="ESB12345674",
+                candidates=(
+                    FieldAmbiguityCandidate(value="ESB12345674", anchor="NIF: ESB12345674", note="header block"),
+                    FieldAmbiguityCandidate(value="ESB87654321", anchor="ESB87654321", note="footer block"),
+                ),
+                note="two tax ids printed on the same document",
+            ),
+            FieldProvenance(
+                field="grand_total",
+                origin=FieldOrigin.VISION,
+                grounding=FieldGroundingOutcome.CONTRADICTED,
+                anchor="176,00",
+                note="printed total disagrees with base plus cuota",
+            ),
+        ),
+    )
+
+
+def test_field_provenance_survives_the_real_encrypted_boundary(profile: TestRuntimeProfile) -> None:
+    """Provenance crosses the encrypted store intact, by strict equality.
+
+    Provenance is the part a reader cannot reconstruct. A value that survives
+    persistence while its origin and grounding do not looks identical to a value
+    that was read exactly -- so an ambiguous or contradicted reading silently
+    becomes a confident one, and the operator loses the reason to check it.
+
+    Asserted against the real encrypted namespace rather than a JSON round trip:
+    the serializer is not the boundary that matters, the store is, and a field
+    the repository declines to persist would round-trip through JSON perfectly.
+    """
+    written = write_extraction_draft(
+        bucket_id=profile.bucket_id,
+        evidence_reference=_REFERENCE,
+        draft=_provenance_bearing_draft(),
+        extractor="en16931-ubl",
+        settings=profile.settings,
+    )
+
+    reloaded = load_extraction_drafts(profile.bucket_id, profile.settings)
+
+    assert reloaded == written, "the boundary must return exactly what crossed it"
+    stored = reloaded.drafts[0].draft
+    assert len(stored.provenance) == 3, f"an envelope was dropped in transit: {stored.provenance}"
+
+    by_field = {entry.field: entry for entry in stored.provenance}
+    assert by_field["taxable_base"].grounding is FieldGroundingOutcome.RECONCILED
+    assert by_field["taxable_base"].origin is FieldOrigin.EXACT_STRUCTURED
+
+    # The ambiguous envelope is the one worth checking in detail: its competing
+    # candidates are what an operator adjudicates, and they are nested a level
+    # deeper than every other provenance field, so a boundary that flattens
+    # nested records loses exactly this and nothing else.
+    ambiguous = by_field["supplier_tax_id"]
+    assert ambiguous.grounding is FieldGroundingOutcome.AMBIGUOUS
+    assert len(ambiguous.candidates) == 2
+    assert {candidate.value for candidate in ambiguous.candidates} == {"ESB12345674", "ESB87654321"}
+    assert all(candidate.note for candidate in ambiguous.candidates), "a candidate lost the note that distinguishes it"
+
+    contradicted = by_field["grand_total"]
+    assert contradicted.grounding is FieldGroundingOutcome.CONTRADICTED
+    assert contradicted.origin is FieldOrigin.VISION
+    assert contradicted.note
+
+
+def test_deleting_a_persisted_provenance_field_makes_the_load_refuse() -> None:
+    """Anti-tautology: the roundtrip above must be capable of failing.
+
+    Every assertion in this module compares what came out against what went in,
+    which stays green if the boundary is a pass-through that never validates.
+    Removing a required field from the serialized payload must redden the load;
+    if it does not, the roundtrip proves only that two objects are equal, not
+    that the store enforces the shape it claims to.
+
+    ``grounding`` is chosen because it is the field an absent value would be
+    most quietly wrong about: a provenance envelope that loads with a defaulted
+    outcome reads as a verified value rather than an unverified one.
+    """
+    import json
+
+    from pydantic import ValidationError
+
+    payload = ExtractionDraftDocument(
+        bucket_id=_BUCKET_ID,
+        drafts=(
+            StoredExtractionDraft(
+                evidence_reference=_REFERENCE,
+                draft=_provenance_bearing_draft(),
+                extractor="en16931-ubl",
+                drafted_at=datetime(2024, 11, 15, 9, 0, tzinfo=UTC),
+            ),
+        ),
+    )
+    corrupted = json.loads(payload.model_dump_json())
+    del corrupted["drafts"][0]["draft"]["provenance"][0]["grounding"]
+
+    # Re-validated as JSON TEXT, not as a Python dict. The models are strict, so
+    # a dict round trip refuses the dumped Decimal as a string long before it
+    # reaches the deleted field -- the test would go green on an unrelated
+    # refusal and prove nothing about provenance. Only the genuine JSON parse
+    # path reaches the field this test is about.
+    with pytest.raises(ValidationError, match="grounding"):
+        ExtractionDraftDocument.model_validate_json(json.dumps(corrupted))

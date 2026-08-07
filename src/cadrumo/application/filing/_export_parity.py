@@ -60,11 +60,11 @@ from decimal import Decimal
 from ...core import ExportLayoutFormat, ResultDisposition, result_disposition_is_refund
 from ...domain.calculations.registry import (
     CalculationCompletenessManifest,
-    CasillaFieldKind,
     CasillaId,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     RateBoxPartition,
+    fixed_width_record_casilla_ids,
     rate_box_coverage_shortfalls,
     xml_dictionary_entries,
 )
@@ -121,6 +121,15 @@ def boe_representable_casilla_ids(
     this set: a manifest casilla absent here is a calculation-closure casilla the
     official filed record does not carry, so it is out of scope for the ``.boe``
     parity gate rather than a drift.
+
+    That out-of-scope verdict is no longer taken on trust. The fixed-width branch
+    delegates to
+    :func:`~domain.calculations.registry.fixed_width_record_casilla_ids`, the same
+    derivation the registry-build export-exemption gate runs over EVERY declared
+    record; that gate refuses at build any manifest casilla this set would exempt
+    from a demand unless the casilla declares WHY it files no slot. Absence here
+    therefore carries a reviewed reason behind it rather than being
+    indistinguishable from a forgotten annotation.
     """
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         entries = xml_dictionary_entries(
@@ -130,15 +139,9 @@ def boe_representable_casilla_ids(
         )
         return frozenset(entry.casilla_id for entry in entries if entry.casilla_id is not None)
     normalized_headers = {key.lower(): value for key, value in headers.items()}
-    representable: set[CasillaId] = set()
-    for record in layout.records:
-        if _did_page_suppressed(record, headers=normalized_headers):
-            continue
-        for field in record.fields:
-            if field.kind == CasillaFieldKind.CASILLA and field.casilla_id is not None:
-                representable.add(field.casilla_id)
-        representable.update(record.row_field_casilla_ids.values())
-    return frozenset(representable)
+    return fixed_width_record_casilla_ids(
+        tuple(record for record in layout.records if not _did_page_suppressed(record, headers=normalized_headers)),
+    )
 
 
 def rendered_casilla_ids(
