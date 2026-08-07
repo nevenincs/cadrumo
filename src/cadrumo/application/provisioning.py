@@ -256,12 +256,17 @@ def read_total_system_memory_bytes() -> int | None:
     platform answers nothing, because an unknown quantity must not be reported
     as a shortfall -- see :func:`probe_model_runtime_hardware_floor`.
     """
-    names = getattr(os, "sysconf_names", {})
-    if "SC_PAGE_SIZE" in names and "SC_PHYS_PAGES" in names:
-        try:
-            return int(os.sysconf("SC_PAGE_SIZE")) * int(os.sysconf("SC_PHYS_PAGES"))
-        except (OSError, ValueError):
-            return None
+    if sys.platform != "win32":
+        # Guarded on the platform rather than on getattr so a type checker can
+        # follow it: os.sysconf is absent from the Windows stubs entirely. The
+        # inner membership check stays for POSIX variants that omit the two
+        # constants themselves.
+        names = getattr(os, "sysconf_names", {})
+        if "SC_PAGE_SIZE" in names and "SC_PHYS_PAGES" in names:
+            try:
+                return int(os.sysconf("SC_PAGE_SIZE")) * int(os.sysconf("SC_PHYS_PAGES"))
+            except (OSError, ValueError):
+                return None
     if sys.platform == "win32":
         import ctypes
 
