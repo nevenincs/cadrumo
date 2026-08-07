@@ -125,8 +125,8 @@ class MinimoDescendientesThresholds(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    rentas_anuales_limite: Decimal = Field(ge=0)
-    declaracion_propia_rentas_limite: Decimal = Field(ge=0)
+    rentas_anuales_limite: Decimal = Field(ge=Decimal("0"))
+    declaracion_propia_rentas_limite: Decimal = Field(ge=Decimal("0"))
 
 
 class GuarderiaMonthSpend(BaseModel):
@@ -318,7 +318,7 @@ class DescendantInfo(BaseModel):
     convive_con_contribuyente: bool = True
     dependencia_economica: bool | None = None
     custodia_compartida: bool = False
-    rentas_anuales_euros: Decimal | None = Field(default=None, ge=0)
+    rentas_anuales_euros: Decimal | None = Field(default=None, ge=Decimal("0"))
     presenta_declaracion_propia: bool = False
     prorrata_minimo: bool | None = None
     meses_madre_trabajo_2024: int = Field(default=0, ge=0, le=12)
@@ -1316,7 +1316,7 @@ class RentaFamilyProfile(BaseModel):
     descendants: tuple[RentaDescendantProfile, ...] = ()
     ascendants: tuple[RentaAscendantProfile, ...] = ()
     descendientes: tuple[DescendantInfo, ...] = ()
-    anualidades_alimentos_euros: Decimal | None = Field(default=None, ge=0)
+    anualidades_alimentos_euros: Decimal | None = Field(default=None, ge=Decimal("0"))
     """Judicial anualidades por alimentos the filer PAYS, or ``None`` if undeclared.
 
     Filer-level rather than per-descendant, and that is the staged boundary

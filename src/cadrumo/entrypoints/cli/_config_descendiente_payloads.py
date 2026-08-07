@@ -83,7 +83,7 @@ class ProfileDescendientePayload(OutputSchema):
     convive_con_contribuyente: bool
     dependencia_economica: bool | None = None
     custodia_compartida: bool
-    rentas_anuales_euros: Decimal | None = Field(default=None, ge=0)
+    rentas_anuales_euros: Decimal | None = Field(default=None, ge=Decimal("0"))
     presenta_declaracion_propia: bool = False
     prorrata_minimo: bool | None = None
     meses_madre_trabajo_2024: int = Field(default=0, ge=0, le=12)
