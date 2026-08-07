@@ -268,8 +268,15 @@ reviewed_at = 2026-06-09
 reviewed_by = "operator"
 notes = "LIVA art 20: exenciones en operaciones interiores. Enumera las exenciones limitadas (sin derecho a deduccion) aplicables a las operaciones interiores: servicio postal, sanidad, educacion, asistencia social, operaciones financieras y de seguros, arrendamientos y entregas de inmuebles, entre otras. Base sustantiva de la clasificacion exenta interior en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
-    "Exenciones en operaciones interiores",
     "Estarán exentas de este impuesto las siguientes operaciones",
+    # Apartado Dos (renuncia a la exención) and the closing clause of apartado
+    # Tres, at 92% and 98% of the article. The title and the Uno preamble alone
+    # previously grounded this entry, and both sit in the first 120 characters,
+    # so any truncation of the 30,000-character enumeration passed the evidence
+    # check. Verified against the live BOE consolidated text: art. 20 has
+    # exactly three apartados and the bundled excerpt carries all three.
+    "podrán ser objeto de renuncia por el sujeto pasivo, en la forma y con los requisitos que se determinen reglamentariamente",
+    "quedará subordinada, en todo caso, a la subsistencia de las condiciones y requisitos",
 ]
 
 [legal."ley-37-1992:art-22"]
