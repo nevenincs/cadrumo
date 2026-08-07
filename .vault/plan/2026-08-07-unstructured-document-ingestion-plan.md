@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:cb1c14ec80e27b7579c53ff146e5c25eb45c2d02816d172b19543f9f31e530e6'
+body_hash: 'sha256:42fc1a0bb0c3132159037e8550b5588a2c4ee3498accdfbad58cf0a1059e9d9e'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -179,6 +179,7 @@ Lands the consent gate, its CLI token, the re-scoped deletion gate and the corpu
 - [x] `W05.P11.S42` - Mint the consent token at the CLI boundary per invocation, never persisted, recorded in provenance, gated by the documented-command and JSON schema conformance suites; `src/cadrumo/entrypoints/cli`.
 - [ ] `W05.P11.S43` - Narrow the minting-side provenance assertion to transports mintable without a consent token, keeping consented cloud stamps honest, with both directions red-green proven; `src/cadrumo/tests/test_cloud_transport_fully_deleted.py`.
 - [ ] `W05.P11.S44` - Amend the llm-package-split ADR status note to record the partial supersession of its D5 in the same change that lands the gate, gated by a clean vault check and a curate cross-check for corpus self-contradiction; `.vault/adr/2026-08-06-llm-package-split-adr.md`.
+- [ ] `W05.P11.S145` - Give the evidence consent CLI module its own tests, since it has none at all and that absence hid two live operator-facing crashes until a lane building on top of it happened to probe a real instance: the survey and the withdrawal verbs both raised on a workflow-state attribute that does not exist, and a re-derivation reader called a signature changed out from under it while being annotated loosely enough that the type checker saw nothing. Drive the real command tree rather than constructing state, since constructing it is what let both defects sit unnoticed; `src/cadrumo/entrypoints/cli`.
 
 ## Wave `W06` - Model provisioning and adaptive selection
 
