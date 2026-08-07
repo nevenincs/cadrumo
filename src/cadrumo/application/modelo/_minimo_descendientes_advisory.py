@@ -39,7 +39,7 @@ from typing import NamedTuple
 from ...core import Modelo
 from ...core.decimal import coerce_decimal
 from ...domain.calculations.registry import CasillaId, ModeloRevision
-from ...domain.contribuyente import DescendantInfo, descendant_list_from_facts
+from ...domain.contribuyente import DescendantInfo, RentaFamilyProfile, descendant_list_from_facts
 from ...domain.user_profile import ProfileNotFoundError
 from ..aggregation import CalculationSourceDiagnostic
 from ._semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
@@ -58,6 +58,9 @@ __all__ = [
 
 _MINIMO_ESTATAL_SEMANTIC_ROLE = "irpf_minimo_descendientes_estatal"
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente."
+#: Filer-level fact the Art. 58 dependency assimilation turns on. Read by
+#: `_family_profile_from_facts`, never by a descendant row.
+_ANUALIDADES_FACT_KEY = "renta_family.anualidades_alimentos_euros"
 _DESCENDANTS_COUNT_PATH = "renta_family.descendientes_count"
 
 _UNDECLARED_SOURCE_KIND = "minimo_descendientes_undeclared"
@@ -157,6 +160,29 @@ def collect_minimo_descendientes_undeclared_diagnostics(
         # declared zero is not a silent gap.
         return ()
     return (_undeclared_advisory(estatal_id),)
+
+
+def _family_profile_from_facts(facts: dict[str, str]) -> RentaFamilyProfile:
+    """Build the family profile these advisories must judge descendants against.
+
+    The descendant list alone cannot answer the Art. 58 household limb. Whether a
+    non-cohabiting descendant reaches the mínimo through the economic-dependency
+    assimilation depends on a FILER-level fact -- the judicial anualidades figure
+    -- which only the profile carries. An advisory that asks
+    :meth:`~domain.contribuyente.DescendantInfo.meets_non_income_conditions`
+    without it takes that predicate's ``False`` default and silently drops every
+    assimilated descendant from its subject population, while the figure path
+    (which does pass the flag at six sites) keeps granting them the mínimo.
+
+    Shared by all four collectors so no caller can reach for the bare descendant
+    list again and reintroduce the divergence.
+    """
+    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
+    raw_anualidades = facts.get(_ANUALIDADES_FACT_KEY)
+    return RentaFamilyProfile(
+        descendientes=descendant_list_from_facts(descendant_facts),
+        anualidades_alimentos_euros=coerce_decimal(raw_anualidades) if raw_anualidades is not None else None,
+    )
 
 
 def _profile_fact_strings(bucket_id: str) -> dict[str, str] | None:
@@ -501,11 +527,16 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
         return ()
 
     filing_year = revision.valid_to.year
-    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
+    profile = _family_profile_from_facts(facts)
+    available = profile.dependencia_assimilation_available
     undeclared = [
         index
-        for index, descendant in enumerate(descendant_list_from_facts(descendant_facts))
-        if descendant.rentas_anuales_euros is None and descendant.meets_non_income_conditions(filing_year)
+        for index, descendant in enumerate(profile.descendientes)
+        if descendant.rentas_anuales_euros is None
+        and descendant.meets_non_income_conditions(
+            filing_year,
+            dependencia_assimilation_available=available,
+        )
     ]
     if not undeclared:
         return ()
@@ -566,11 +597,15 @@ def collect_minimo_descendientes_entry_date_missing_diagnostics(
     if facts is None:
         return ()
     filing_year = revision.valid_to.year
-    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
+    profile = _family_profile_from_facts(facts)
+    available = profile.dependencia_assimilation_available
     missing = [
         index
-        for index, descendant in enumerate(descendant_list_from_facts(descendant_facts))
-        if descendant.art_58_2_window_anchor_missing(filing_year)
+        for index, descendant in enumerate(profile.descendientes)
+        if descendant.art_58_2_window_anchor_missing(
+            filing_year,
+            dependencia_assimilation_available=available,
+        )
     ]
     if not missing:
         return ()
@@ -819,14 +854,7 @@ def collect_minimo_descendientes_dependencia_diagnostics(
     if facts is None:
         return ()
 
-    from ...domain.contribuyente import RentaFamilyProfile
-
-    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
-    raw_anualidades = facts.get("renta_family.anualidades_alimentos_euros")
-    profile = RentaFamilyProfile(
-        descendientes=descendant_list_from_facts(descendant_facts),
-        anualidades_alimentos_euros=coerce_decimal(raw_anualidades) if raw_anualidades is not None else None,
-    )
+    profile = _family_profile_from_facts(facts)
     diagnostics: list[CalculationSourceDiagnostic] = []
     granted = profile.dependencia_assimilated_indices(revision.valid_to.year)
     if granted:

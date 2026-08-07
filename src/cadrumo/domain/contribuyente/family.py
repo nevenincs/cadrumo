@@ -22,10 +22,12 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ...core import ART_58_2_ENTITLING_RELACIONES, ART_81_1_MATERNIDAD_RELACIONES, DescendantRelacion
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import (
+    ART_81_1_ENTRY_WINDOW_YEARS,
     CUSTODIA_COMPARTIDA_PRORRATA_FACTOR,
     DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR,
     MINIMO_DESCENDIENTE_MAX_AGE,
     MINIMO_MENOR_TRES_MAX_AGE,
+    NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS,
 )
 from ...core.parsing import parse_iso8601_date
 from ...core.time import today_madrid
@@ -34,10 +36,9 @@ from ._errors import ProfileValidationError
 # Comunidad de Madrid "Por nacimiento o adopción de hijos" deducción autonómica
 # (DL 1/2010, de 21 octubre, arts. 4 y 18.1). Ámbito temporal: the deducción
 # applies in the period of nacimiento/adopción AND in each of the two following
-# periods — a three-period window keyed on the entry (nacimiento/adopción) year.
-# Grounded in the bundled AEAT Renta 2025 manual, parte 2 (deducciones
-# autonómicas), "Ámbito temporal de aplicación de la deducción".
-_NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS = 2
+# periods. The figure itself lives beside its Art. 58 / Art. 61 siblings in the
+# curated external-constants layer; the alias keeps internal call sites stable.
+_NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS = NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS
 
 
 def within_multi_year_applicability_window(
@@ -76,7 +77,7 @@ _MAX_AGE_MENOR_TRES = MINIMO_MENOR_TRES_MAX_AGE
 # YEARS from a date, unlike the Art. 58.2 limb above, which counts whole tax
 # PERIODS from the entry period — hence a separate constant rather than a reuse
 # of the period count, which would read as the same rule and is not.
-_ART_81_1_ENTRY_WINDOW_YEARS = 3
+_ART_81_1_ENTRY_WINDOW_YEARS = ART_81_1_ENTRY_WINDOW_YEARS
 
 
 def _months_of_year_between(
@@ -1191,7 +1192,12 @@ class DescendantInfo(BaseModel):
         """
         return self._entry_date().year
 
-    def art_58_2_window_anchor_missing(self, filing_year: int) -> bool:
+    def art_58_2_window_anchor_missing(
+        self,
+        filing_year: int,
+        *,
+        dependencia_assimilation_available: bool = False,
+    ) -> bool:
         """True when an entitling relación has no entry date, so the limb cannot fire.
 
         The recordable state the coherence validators deliberately allow: an
@@ -1219,10 +1225,22 @@ class DescendantInfo(BaseModel):
         non-excluding anyway, so the residual over-report is a descendant whose
         declared rentas breach the ceiling — a narrow case that already carries
         its own advisory.
+
+        *dependencia_assimilation_available* is forwarded to the household limb
+        for the same reason it exists there: a non-cohabiting descendant reaching
+        the mínimo through the economic-dependency assimilation carries a real
+        mínimo for the increase to attach to, so a missing anchor costs them
+        exactly what it costs a cohabiting one. Omitting it took the predicate's
+        ``False`` default and answered "no anchor missing" for that household —
+        an under-grant reported to nobody, which is the one thing this disclosure
+        exists to prevent.
         """
         if self.relacion not in ART_58_2_ENTITLING_RELACIONES:
             return False
-        if not self.meets_non_income_conditions(filing_year):
+        if not self.meets_non_income_conditions(
+            filing_year,
+            dependencia_assimilation_available=dependencia_assimilation_available,
+        ):
             return False
         if self.age_at_year_end(filing_year) < _MAX_AGE_MENOR_TRES:
             return False
