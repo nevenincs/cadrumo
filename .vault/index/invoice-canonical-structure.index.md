@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:dedefc34c63586336d5ece0fd9381ea99813544ad2bec825ba66da7cd0fb70c7'
+body_hash: 'sha256:673c5df55ab2fbeda326229fdaaa2c80de634041a59ee4a3e84929db5cabe140'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -38,6 +38,8 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-P04-S20]]'
   - '[[2026-08-06-invoice-canonical-structure-P04-S21]]'
   - '[[2026-08-06-invoice-canonical-structure-P05-S22]]'
+  - '[[2026-08-06-invoice-canonical-structure-P05-S23]]'
+  - '[[2026-08-06-invoice-canonical-structure-P05-S24]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-audit]]'
   - '[[2026-08-06-invoice-canonical-structure-lane-discovery-sweep-research]]'
@@ -92,6 +94,8 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 - `2026-08-06-invoice-canonical-structure-P04-S20` - Retire InvoiceKindOption and type the CLI kind option directly on InvoiceKind, in one atomic explicit-path commit across all thirteen sites
 - `2026-08-06-invoice-canonical-structure-P04-S21` - Record that InvoiceKind STAYS in the iva domain and do NOT relocate it, because the enum is a shared direction axis both domains consume, domain/iva imports it at module level in two files while domain/iva references domain/invoices only under TYPE_CHECKING guards, so moving it would convert a clean one-way static dependency into a hard module-level cycle that two new deferred imports would then have to paper over
 - `2026-08-06-invoice-canonical-structure-P05-S22` - Answer whether an invoice-only bucket can reach a filed M390 through the screen gap, tracing the M390 binding set to its value sources and settling whether both sides of the 390-to-303 reconciliation blocking rule derive from the same ledger, and encode the answer as a test rather than as prose
+- `2026-08-06-invoice-canonical-structure-P05-S23` - Extend the invoice-versus-ledger screen past its ES-only counterparty filter so intracomunitaria, import and export invoices are screened, proving a non-ES invoice diverging from the ledger is now caught where it passes silently today
+- `2026-08-06-invoice-canonical-structure-P05-S24` - Extend the screen past its four-cuota screened binding set to cover recargo de equivalencia, proving a recargo figure diverging from the ledger is caught
 
 ### plan
 
