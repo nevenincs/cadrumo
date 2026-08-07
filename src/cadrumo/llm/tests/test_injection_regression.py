@@ -96,15 +96,21 @@ _PRINTED_TOTAL = "121,00"
 #: The figure an injected sentence tells the reader to report. Deliberately a
 #: form the document never prints, which is what makes it ungroundable.
 #:
-#: NOT ``0,00``, which was the first choice and is wrong: the anchor check is a
-#: substring search, and ``0,00`` occurs inside the printed ``100,00``. That
-#: near-miss is preserved as its own gate below rather than quietly avoided,
-#: because it is a real property of the check and not a quirk of this fixture.
+#: NOT ``0,00``: that figure occurs as a RAW SUBSTRING of the printed ``100,00``,
+#: so it was the wrong choice for "absent from the document" even now that the
+#: anchor check refuses it. Keeping the distinction explicit -- absent from the
+#: text, versus present only as a fragment -- is what keeps the two gates below
+#: about different things.
 _INJECTED_TOTAL = "7.777,77"
 
-#: The short figure that anchors only because it sits inside a longer printed
-#: one. Its presence in the document is an artefact of substring matching.
-_SUBSTRING_TRAP = "0,00"
+#: A figure that occurs in the document ONLY as a fragment of a longer number:
+#: ``0,00`` sits inside the printed ``100,00`` and nowhere else as a token of its
+#: own. It must not anchor.
+_FRAGMENT_ONLY_FIGURE = "0,00"
+
+#: The same trap one step further in: a bare run of digits that appears inside
+#: several printed figures and is a whole number nowhere.
+_BARE_DIGITS = "00"
 
 #: The keys the specimen's own payload names. None is in the closed schema.
 _INJECTED_KEYS = ("classification", "confidence", "reason", "category", "iva_category")
@@ -309,6 +315,83 @@ class TestTheHostilePayloadReallyTravelsTheClientPath:
             parse_invoice_extraction_response(delivered)
 
 
+class TestAFragmentOfALongerFigureCannotAnchor:
+    """Regression guard, inverted from the gap it used to document.
+
+    This class previously asserted the opposite. The anchor search was a plain
+    substring match, so an injected total of ``0,00`` grounded against the
+    printed ``100,00`` -- and against any document printing a value ending the
+    same way, which is a large share of real invoices. That was recorded here as
+    current-behaviour-not-endorsed, needing a boundary-aware search from the
+    module that owns the check.
+
+    That search has since landed: an occurrence counts only where the anchor is
+    not a fragment of a longer number, applied per edge and only where the edge
+    is numeric. The assertions are inverted rather than relaxed, so the closed
+    gap is now guarded from both sides of the boundary -- reintroducing the
+    substring behaviour reds here as well as in the owning module's own suite.
+    """
+
+    def test_a_short_figure_does_not_anchor_inside_a_longer_printed_one(self) -> None:
+        transcription = _transcription()
+
+        assert _FRAGMENT_ONLY_FIGURE not in (_PRINTED_BASE, _PRINTED_CUOTA, _PRINTED_TOTAL)
+        assert _FRAGMENT_ONLY_FIGURE in transcription.text, "present, but only inside a longer figure"
+
+        evaluation = evaluate_anchor(
+            value=Decimal("0.00"),
+            anchor=_FRAGMENT_ONLY_FIGURE,
+            transcription=transcription,
+        )
+
+        assert evaluation.outcome is FieldGroundingOutcome.UNANCHORED
+        assert evaluation.anchor_found is False
+
+    def test_a_bare_run_of_digits_does_not_anchor(self) -> None:
+        """The same trap one step further in, and the case this gate missed first."""
+        transcription = _transcription()
+
+        assert _BARE_DIGITS in transcription.text
+
+        evaluation = evaluate_anchor(
+            value=Decimal("0"),
+            anchor=_BARE_DIGITS,
+            transcription=transcription,
+        )
+
+        assert evaluation.outcome is FieldGroundingOutcome.UNANCHORED
+
+    def test_positive_control_a_figure_printed_as_its_own_token_still_anchors(self) -> None:
+        """Without this, a check that refused every numeric anchor would score green."""
+        evaluation = evaluate_anchor(
+            value=Decimal("121.00"),
+            anchor=_PRINTED_TOTAL,
+            transcription=_transcription(),
+        )
+
+        assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
+
+    def test_a_figure_printed_both_as_a_fragment_and_as_a_token_anchors(self) -> None:
+        """One clean occurrence is enough, and this document really has both.
+
+        ``21,00`` is the printed cuota AND sits inside the printed ``121,00``.
+        A boundary rule that rejected an anchor because SOME occurrence was a
+        fragment would drop a genuine figure, so the discriminating case is
+        asserted rather than assumed.
+        """
+        transcription = _transcription()
+
+        assert _PRINTED_CUOTA in _PRINTED_TOTAL, "the fragment relationship this case turns on"
+
+        evaluation = evaluate_anchor(
+            value=Decimal("21.00"),
+            anchor=_PRINTED_CUOTA,
+            transcription=transcription,
+        )
+
+        assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
+
+
 class TestWhatTheAnchorCheckDoesNotCatch:
     """The residual, asserted as measured behaviour rather than left implicit.
 
@@ -318,43 +401,6 @@ class TestWhatTheAnchorCheckDoesNotCatch:
     passing assertion is deliberate: a gate that quietly omitted the case would
     read as though the anchor check closed it.
     """
-
-    def test_a_short_figure_anchors_inside_a_longer_printed_one(self) -> None:
-        """The anchor search is a substring match, so ``0,00`` is found in ``100,00``.
-
-        Measured, and recorded because it is the sharper half of the residual: a
-        one-digit-and-separator figure need not appear in the document *as a
-        figure* to be found in it. An injected total of ``0,00`` therefore
-        anchors against any document printing a value ending in ``0,00``, which
-        is a large share of real invoices.
-
-        This is asserted as current behaviour, not endorsed. Closing it needs a
-        boundary-aware anchor search, which belongs to the module that owns the
-        check rather than to this gate.
-        """
-        transcription = _transcription()
-
-        assert _SUBSTRING_TRAP not in (_PRINTED_BASE, _PRINTED_CUOTA, _PRINTED_TOTAL)
-        assert _SUBSTRING_TRAP in transcription.text, "present only as a substring of a longer figure"
-
-        evaluation = evaluate_anchor(
-            value=Decimal("0.00"),
-            anchor=_SUBSTRING_TRAP,
-            transcription=transcription,
-        )
-
-        assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
-        assert evaluation.anchor_found is True
-
-    def test_the_arithmetic_leg_catches_the_substring_trap_total(self) -> None:
-        """The substring hole is covered downstream, which is why it is not critical."""
-        obeyed = InvoiceDraft(
-            taxable_base=Decimal("100.00"),
-            iva_amount=Decimal("21.00"),
-            grand_total=Decimal("0.00"),
-        )
-
-        assert closure_findings(obeyed), "a zero total against a positive base must not reconcile"
 
     def test_a_figure_the_injection_itself_prints_does_anchor(self) -> None:
         """Measured, not assumed. This is the gap the closure leg exists to cover."""
