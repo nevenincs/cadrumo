@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:a33316f88c4861a22b9ae0e26bc23fae9cf88007fce5979d8b0427a8616055cf'
+body_hash: 'sha256:f4faa2f997258f002b21af0f1c6916fd9e44e21c13d892c85852363eec75af55'
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-lane-discovery-sweep-research]]'
@@ -150,14 +150,23 @@ imprecision is invisible to every filing surface and visible only to the operato
 
 ## Consequences
 
-- **Zero-cuota lines never reach Modelo 303, and this decision does not fix it.** The
-  aggregation loop skips every line whose IVA amount is not positive, so an exempt,
-  zero-rated or issued-reverse-charge line is dropped before an observation is built -
-  measured, and directly contrary to the Axis-A table's own declaration that these
-  categories carry a real taxable base feeding the base-only casillas. An exempt line was
-  measured to classify correctly and then to be skipped anyway. This is a separate
-  under-declaration defect that predates and outlives this record; it needs its own
-  investigation, and its prorrata-denominator consequence is unquantified here.
+- **Zero-cuota lines never reach Modelo 303, and removing the guard alone would not fix
+  it.** The aggregation loop skips every line whose IVA amount is not positive, so an
+  exempt, zero-rated or issued-reverse-charge line is dropped before an observation is
+  built - measured, and contrary to the Axis-A table's own declaration that these
+  categories carry a real taxable base feeding the base-only casillas. The guard is not
+  the whole cause, and deleting it delivers nothing: the loop builds observations through
+  the standard-case line helper, which classifies from the RATE SLOT, so an exempt line
+  becomes domestic-exempt at rate kind exempt while the casilla 59 and 60 bindings select
+  on intra-community-supply and the two export categories at rate kind zero. Verified on
+  both the 2009 and 2023 revisions - such a line misses on both axes, and no Modelo 303
+  selector absorbs domestic-exempt or domestic-zero, so a stray observation routes
+  nowhere rather than into a wrong casilla. Delivering that base to casillas 59 and 60
+  requires constructing the observation from the invoice's own category, the direct
+  construction the helper's own docstring points at, which is a second and independent
+  reason the treatment axis matters. Tracked separately from this record. The
+  prorrata-denominator consequence remains unquantified and is confirmed by no
+  investigator.
 - The record gains a treatment for the common mixed-rate document, so the decomposition
   grounds it and the renta path stops substituting bank cash for ingresos integros.
 - The stored category becomes, for this one construction, a treatment assertion carried on
