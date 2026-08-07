@@ -31,6 +31,22 @@ because that comparison needs the casilla-to-box mapping this module deliberatel
 avoids depending on. The two checks are complements: this one bounds the span,
 and a per-modelo offset gate (where the box numbers exist) bounds the contents.
 
+It also does NOT enforce the authoring policy that governs how a span is split.
+The accepted posture is to split only at boundaries inside a modelo's reachable
+filing window -- defined by prescripción, four years from the voluntary filing
+deadline (LGT arts. 66-67), computed at implementation time -- and to refuse
+export for years before the earliest split. This gate knows nothing of that. It
+compares designs across whatever span a revision CLAIMS, so it catches a span
+widened back over a boundary and objects to nothing if a revision is split where
+the window no longer requires one. The asymmetry is deliberate: this instrument
+guards byte-correctness, that policy guards authoring cost, and they answer
+different questions. Its silence about a split is not approval of the split.
+
+That window is itself dated and moves. Exercise 2021 prescribed on 2026-01-30,
+so a boundary that required a split in December 2025 does not require one now,
+and the next expiry shifts the answer again. Recompute it rather than reading a
+boundary set off any record, including this one.
+
 ANTI-VACUITY. A parser that cannot read a design returns the same answer as a
 design with no divergence, so silence has to be loud: a design file this module
 claims to read but extracts nothing from is a FAILURE, not a skip. Without that,
