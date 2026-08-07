@@ -38,6 +38,7 @@ from .. import (
     EUMemberState,
     IvaCatalogueError,
     IvaRateKind,
+    IvaRateNotFoundError,
     load_recargo_rates,
     lookup_rate,
 )
@@ -324,11 +325,43 @@ def test_iva_rate_slot_to_iva_rate_kind_mapping_is_total_and_consistent() -> Non
         assert iva_rate_percentage(rate, on_date=_BINDING_DATE) is not None
 
 
-def test_iva_rate_zero_resolves_to_zero_percent_without_rate_lookup() -> None:
-    """RATE_0 maps to the ZERO substrate tier for classification, while
-    the percentage helper returns structural Decimal('0') directly."""
+def test_iva_rate_zero_resolves_to_zero_percent_inside_its_statutory_window() -> None:
+    """RATE_0 maps to the ZERO tier, and its percentage is the slot's own zero.
+
+    The number comes from the SLOT, never from a tier lookup: `iva_rate_percentage`
+    reads `RATE_0`'s own zero and consults the registry only to CONFIRM a 0 % tipo
+    was legally usable that day. Keeping those apart is what stops a declared rate
+    being silently replaced by whatever its tier happens to mean -- the defect that
+    made a 2 % foodstuffs line compute the super-reducido 4 %.
+
+    So the date must sit INSIDE the statutory window. It previously used the
+    module's 2025 `_BINDING_DATE`, which asserted that a 0 % declared in 2025 still
+    resolves -- and from 2025-01-01 no general domestic 0 % tipo is in force (the
+    basic-foods list returned to 4 % super-reducido). That is a refusal the design
+    intends, not a regression: declaring 0 % outside a 0 % window is a claim about
+    the law, and `iva_rate_percentage` is the guard that refuses it.
+    """
+    in_window = date(2024, 8, 20)  # RDL 4/2024 art. 1.Dos.1: 0 % from 07-01 to 09-30
     assert iva_rate_kind(IvaRate.RATE_0) is IvaRateKind.ZERO
-    assert iva_rate_percentage(IvaRate.RATE_0, on_date=_BINDING_DATE) == Decimal("0")
+    assert iva_rate_percentage(IvaRate.RATE_0, on_date=in_window) == Decimal("0")
+
+
+def test_iva_rate_zero_refuses_outside_its_statutory_window() -> None:
+    """A 0 % declared where no 0 % tipo is in force must refuse, not resolve.
+
+    The anti-vacuity half of the test above: without this, moving the window would
+    silently stop exercising the guard and the pair would still pass.
+
+    PRECONDITION IF DONATIVOS EVER BECOME REACHABLE. LIVA art. 91.Cuatro carries a
+    PERMANENT domestic 0 % tipo for entregas of donativos to Ley 49/2002 entities,
+    so such a supply in 2025 legitimately carries 0 % and would refuse here. It is
+    unreachable today: `donativo` appears nowhere in the IVA classification path and
+    `domestic_zero` is reachable only through `IvaRateKind.ZERO`. If donativos are
+    ever modelled, an open-ended 0 % record scoped to art. 91.Cuatro must return
+    WITH them, and this expectation must narrow to the general-supply case.
+    """
+    with pytest.raises(IvaRateNotFoundError):
+        iva_rate_percentage(IvaRate.RATE_0, on_date=_BINDING_DATE)
 
 
 def test_iva_rate_exempt_and_not_subject_resolve_to_none() -> None:
