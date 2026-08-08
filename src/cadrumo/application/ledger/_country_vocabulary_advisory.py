@@ -45,8 +45,10 @@ Thai supplier was otherwise byte-identical, all the way to the operator, to one
 carrying no address block at all.
 
 **The judgement is borrowed, not restated.** Which bucket a code falls in is
-asked of :func:`~domain.iva.stated_country_code_status`, and whether the country
-already settled the territory is asked of
+asked of :func:`~domain.iva.record_country_code_status` -- the record-token sibling of
+the printed-value axis, which admits the alpha-3 spelling Facturae states and is
+the one authority the confirm path's relief guard asks the same question of --
+and whether the country already settled the territory is asked of
 :func:`~domain.iva.territorial_scope_for_country`. Neither rule is spelled here.
 A second copy of the user-assigned ranges sitting upstream of the authority that
 owns them is the drift this module is placed to avoid, and it would be the
@@ -67,7 +69,7 @@ See Also:
     :func:`~application.ledger.party_attribution_advisory`
         The sibling advisory, on the same non-blocking channel and projected by
         the same review surface.
-    :func:`~domain.iva.stated_country_code_status`
+    :func:`~domain.iva.record_country_code_status`
         The authority on which of the two kinds a stated code is.
     :class:`~core.DraftDiscrepancyKind`
         The blocking axis this deliberately does not join.
@@ -83,8 +85,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...domain.iva import (
     StatedCountryCodeStatus,
     country_code_for_printed_country_name,
-    country_code_for_stated_country_code,
-    stated_country_code_status,
+    record_country_code_status,
     territorial_scope_for_country,
 )
 
@@ -213,59 +214,6 @@ class CountryVocabularyAdvisory(BaseModel):
         return tuple(party for party in self.parties if party.status is status)
 
 
-_ALPHA3_LENGTH: Final = 3
-"""The other length an ISO 3166-1 country code is stated in.
-
-Facturae -- the Spanish national e-invoice format, and so the format most of
-this corpus arrives in -- states the country in alpha-3. Nothing else in this
-module cares which spelling was used; this constant exists only so a three-letter
-token is recognised as a COUNTRY CODE claim rather than as a stray string.
-"""
-
-
-def _stated_code_status(stated: str | None) -> StatedCountryCodeStatus | None:
-    """Return which kind of country-code failure a record's stated token is, if any.
-
-    :func:`~domain.iva.stated_country_code_status` is the authority and is asked
-    first, but it answers only about alpha-2 and returns ``None`` for everything
-    else -- correctly, because it is handed printed values and must not call an
-    address line that landed in a country slot a bad country code. This function
-    is asked about a STRUCTURED record's country ELEMENT, where the schema has
-    already said the token is a country code, so it can answer for the alpha-3
-    spelling that authority declines to judge.
-
-    Three answers, in the order the evidence narrows:
-
-    * a token the bundled correspondence places -- ``ES``, ``ESP``, ``DEU`` --
-      is ``CATALOGUED`` and raises nothing;
-    * a token the alpha-2 authority classifies keeps that classification, so the
-      ISO user-assigned ranges stay the operator's typo and a real jurisdiction
-      we do not carry stays our catalogue gap;
-    * a three-letter alphabetic token nothing placed is ``UNCATALOGUED``. This is
-      the case that was silent end to end: ``THA`` names Thailand, the vocabulary
-      omits it, and the alpha-2 authority cannot classify a three-letter string
-      at all.
-
-    Anything else -- a blank, an address line, a truncated fragment -- returns
-    ``None`` and stays unreported, on exactly the terms the alpha-2 authority
-    states: a string nobody claimed was a country is not a country the issuer got
-    wrong.
-    """
-    if stated is None:
-        return None
-    candidate = stated.strip().upper()
-    if not candidate:
-        return None
-    if country_code_for_stated_country_code(candidate) is not None:
-        return StatedCountryCodeStatus.CATALOGUED
-    alpha2_status = stated_country_code_status(candidate)
-    if alpha2_status is not None:
-        return alpha2_status
-    if len(candidate) == _ALPHA3_LENGTH and candidate.isalpha():
-        return StatedCountryCodeStatus.UNCATALOGUED
-    return None
-
-
 def _territory_already_settled(draft: InvoiceDraft, party: _Party) -> bool:
     """Return whether this party's country evidence settled its territory anyway.
 
@@ -313,7 +261,7 @@ def country_vocabulary_advisory(draft: InvoiceDraft) -> CountryVocabularyAdvisor
     warnings: list[CountryVocabularyWarning] = []
     for party in _PARTIES:
         stated: str | None = getattr(draft, party.stated_field, None)
-        status = _stated_code_status(stated)
+        status = record_country_code_status(stated)
         if status is None or status not in COUNTRY_VOCABULARY_ADVISED_STATUSES:
             continue
         if _territory_already_settled(draft, party):

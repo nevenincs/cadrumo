@@ -8,12 +8,18 @@ envelope, and the country advisory reading the empty field and returning nothing
 Every channel silent, on the reading path that handles the most reliable country
 evidence in the system.
 
-**Thailand is why this is not a curiosity.** ``TH`` is not a third country this
-codebase declines to place for a stated reason -- the vocabulary simply omits it.
-So a genuine Thai export arrives with no country at all, its territory
-unresolved, and nothing anywhere tells the operator that the document did state
-one. "Unresolved" is not the complement of "third country", and here a real third
-country was being erased quietly.
+**A real third country was being erased quietly, and that is not a curiosity.**
+The measured instance was Thailand: ``TH`` was not a third country this codebase
+declined to place for a stated reason -- the vocabulary simply omitted it -- so a
+genuine Thai export arrived with no country at all, its territory unresolved, and
+nothing anywhere told the operator the document had stated one. "Unresolved" is
+not the complement of "third country".
+
+Thailand has since been enrolled, which fixes that one document and none of the
+defect: the vocabulary is a bounded subset of the world's jurisdictions and the
+next omission behaves identically. So these cases select their probe from the
+vocabulary at run time rather than naming a country, and the anchor case proves
+the selection still holds.
 
 **Both spellings, because only one route reaches both.** Facturae -- the Spanish
 national format, and so the format most of this corpus arrives in -- states the
@@ -51,9 +57,17 @@ from typing import Final
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import FieldGroundingOutcome, FieldOrigin
+from ....core import FieldGroundingOutcome, FieldOrigin, IvaCategoryOutcome
 from ....core.config import Settings
-from ....domain.iva import InvoiceKind, IvaTerritorialScope, StatedCountryCodeStatus
+from ....domain.iva import (
+    InvoiceKind,
+    IvaCategory,
+    IvaTerritorialScope,
+    StatedCountryCodeStatus,
+    country_code_for_stated_country_code,
+    record_country_code_status,
+)
+from .._confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
 from .._country_vocabulary_advisory import country_vocabulary_advisory
 from .._establishment_ladder import resolve_draft_counterparty_establishment
 from .._evidence_draft import InvoiceDraft, extract_invoice_draft_from_evidence
@@ -76,17 +90,62 @@ _WITHOUT_ADDRESSES: Final = "facturae_32_recargo_invoice.xml"
 
 _CATALOGUED_ALPHA3: Final = "ESP"
 
-#: Thailand in the spelling Facturae uses. Alpha-3, uncatalogued, and the case
-#: the alpha-2 status authority structurally cannot classify.
-_UNCATALOGUED_ALPHA3: Final = "THA"
-
 #: An ISO user-assigned alpha-2 pair: reserved to name no country at all, so the
-#: document is wrong and the operator fixes it off the page.
+#: document is wrong and the operator fixes it off the page. Safe to pin, unlike
+#: the probes below: the reserved ranges are fixed by the standard and no
+#: registry commit can turn one into a country.
 _UNASSIGNED_ALPHA2: Final = "XX"
 
-#: Thailand in alpha-2. Well-formed, assigned by ISO, and absent from the bundled
-#: vocabulary -- our catalogue gap rather than the issuer's mistake.
-_UNCATALOGUED_ALPHA2: Final = "TH"
+#: Real jurisdictions in both ISO spellings, as candidate probes for "a country
+#: the bundled vocabulary does not carry".
+#:
+#: **Chosen at run time rather than pinned, because a pinned one is a hostage.**
+#: This suite was first written against ``TH``/``THA``, which was measured
+#: uncatalogued -- and a peer enrolled Thailand while the row was in flight, at
+#: which point every case here failed for a reason that had nothing to do with
+#: the behaviour under test. The property is "the vocabulary lacks this token",
+#: not "the token is Thai", so the probe is selected by that property and the
+#: anchor case below proves the selection still means what it says.
+_UNCATALOGUED_CANDIDATES: Final[tuple[tuple[str, str], ...]] = (
+    ("KH", "KHM"),
+    ("LA", "LAO"),
+    ("MM", "MMR"),
+    ("BD", "BGD"),
+    ("LK", "LKA"),
+    ("NP", "NPL"),
+    ("PK", "PAK"),
+    ("KE", "KEN"),
+    ("NG", "NGA"),
+    ("GH", "GHA"),
+    ("ET", "ETH"),
+    ("TZ", "TZA"),
+    ("UG", "UGA"),
+)
+
+
+def _uncatalogued_pair() -> tuple[str, str]:
+    """Return one jurisdiction the vocabulary carries in NEITHER spelling.
+
+    Selected through the RESOLUTION authority rather than through the status
+    axis the cases then assert on, so the selection and the assertion are not
+    the same function answering itself.
+    """
+    for alpha2, alpha3 in _UNCATALOGUED_CANDIDATES:
+        if (
+            country_code_for_stated_country_code(alpha2) is None
+            and country_code_for_stated_country_code(alpha3) is None
+        ):
+            return alpha2, alpha3
+    pytest.fail(
+        "the bundled country vocabulary now carries every candidate probe. That is good news and "
+        "it makes this suite unable to construct its own subject: add a jurisdiction the vocabulary "
+        "still omits to _UNCATALOGUED_CANDIDATES. Do NOT delete these cases -- the behaviour they "
+        "gate is that an unplaceable token stays visible, and the vocabulary being large today is "
+        "no guarantee it covers the next document.",
+    )
+
+
+_UNCATALOGUED_ALPHA2, _UNCATALOGUED_ALPHA3 = _uncatalogued_pair()
 
 
 def _corpus(name: str) -> str:
@@ -130,6 +189,50 @@ def _draft(
 
 def _country_envelopes(draft: InvoiceDraft, field: str) -> list[str]:
     return [envelope.field for envelope in draft.provenance if envelope.field == field]
+
+
+class TestTheProbeStillMeansWhatItSays:
+    """The anchor. Without it every case below could pass vacuously.
+
+    The probe is chosen for a property -- the bundled vocabulary carries this
+    jurisdiction in neither spelling -- and a registry commit can take that
+    property away silently. When it does, the cases here would stop exercising
+    an unplaceable country while still reading as though they did, which is the
+    failure mode of every gate that pins registry data. This states the property
+    outright so the loss is a named red rather than a quiet change of subject.
+    """
+
+    def test_the_selected_probe_is_uncatalogued_in_both_spellings(self) -> None:
+        """The selection was made through the resolver; this asserts the status axis.
+
+        Two different functions, deliberately: a probe selected and asserted by
+        one function would be that function agreeing with itself.
+        """
+        assert record_country_code_status(_UNCATALOGUED_ALPHA2) is StatedCountryCodeStatus.UNCATALOGUED
+        assert record_country_code_status(_UNCATALOGUED_ALPHA3) is StatedCountryCodeStatus.UNCATALOGUED
+
+    def test_the_probe_is_a_real_jurisdiction_and_not_a_reserved_range(self) -> None:
+        """UNCATALOGUED must be earned by absence, never by ISO reservation.
+
+        A probe drawn from the user-assigned ranges would classify as
+        ``UNASSIGNED``, so this would fail loudly -- but the reverse mistake is
+        the quiet one: were the alpha-3 reserved ranges ever to stop being
+        recognised, a reserved code would report as our catalogue gap and this
+        suite would happily use it as a stand-in for a real country.
+        """
+        assert record_country_code_status("ZZ") is StatedCountryCodeStatus.UNASSIGNED
+        assert record_country_code_status("ZZZ") is StatedCountryCodeStatus.UNASSIGNED
+        assert record_country_code_status(_UNASSIGNED_ALPHA2) is StatedCountryCodeStatus.UNASSIGNED
+
+    def test_the_catalogued_control_is_still_catalogued(self) -> None:
+        """The other side of the same hostage problem, on the negative control.
+
+        Every "raises no advisory" case rests on ``ESP`` being placeable. If the
+        correspondence ever lost it those cases would pass for the wrong reason
+        -- an advisory suppressed because nothing was stated rather than because
+        the country resolved.
+        """
+        assert record_country_code_status(_CATALOGUED_ALPHA3) is StatedCountryCodeStatus.CATALOGUED
 
 
 class TestTheRecordsOwnTokenSurvivesTheLookup:
@@ -295,8 +398,8 @@ class TestTheOperatorIsTold:
         """The urgent case, end to end from document bytes.
 
         The kind matters as much as the firing: reported as a typo, the operator
-        re-reads a Thai invoice that reads perfectly. It is our vocabulary that
-        is short, and the sentence has to say so.
+        re-reads an invoice that reads perfectly. It is our vocabulary that is
+        short, and the sentence has to say so.
         """
         draft = _draft(
             _stating(_UNCATALOGUED_ALPHA3),
@@ -322,7 +425,7 @@ class TestTheOperatorIsTold:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
     ) -> None:
-        """Thailand in the other spelling reaches the same sentence.
+        """The same jurisdiction in the other spelling reaches the same sentence.
 
         A document may state either form and the operator's fix is identical, so
         a route that reached only one of them would leave the population it
@@ -421,7 +524,7 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
 
         Asserted as a comparison rather than as two separate expectations,
         because the defect was never about either document on its own: each was
-        individually plausible, and it was their EQUALITY that hid a Thai export.
+        individually plausible, and it was their EQUALITY that hid a real export.
         The seller's projection is compared field by field so the difference has
         to be in the country surface rather than anywhere else in the draft.
         """
@@ -495,3 +598,227 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
             ).scope
             is IvaTerritorialScope.ES_MAINLAND
         )
+
+
+#: The authored UBL export specimen. It declares UNTDID ``G`` -- free export
+#: item, VAT not charged -- and prints NO country for either party, so as
+#: authored it exercises the guard's refusal path and never its sparing. That is
+#: consistent with the sparing having gone unnoticed: nothing in the corpus
+#: reached it.
+_UBL_EXPORT: Final = "en16931_ubl_export_third_country_invoice.xml"
+
+#: Where a customer address block is injected. The corpus tree is never written
+#: to; every edit lands in a tmp copy, the way the sibling country suite does it.
+_UBL_CUSTOMER_ANCHOR: Final = "<cac:AccountingCustomerParty>\n    <cac:Party>\n"
+
+
+def _export_billed_to(code: str | None) -> str:
+    """Return the UBL export specimen with the CUSTOMER established in *code*.
+
+    The customer side deliberately: on an invoice the filer ISSUED, the customer
+    is the counterparty whose territory decides whether the operation is an
+    export, and it is that party's establishment the declared relief rests on.
+    """
+    base = _corpus(_UBL_EXPORT)
+    if code is None:
+        return base
+    assert base.count(_UBL_CUSTOMER_ANCHOR) == 1, "the specimen's customer block has drifted"
+    block = (
+        "      <cac:PostalAddress><cac:Country>"
+        f"<cbc:IdentificationCode>{code}</cbc:IdentificationCode>"
+        "</cac:Country></cac:PostalAddress>\n"
+    )
+    injected = base.replace(_UBL_CUSTOMER_ANCHOR, _UBL_CUSTOMER_ANCHOR + block, 1)
+    assert f"<cbc:IdentificationCode>{code}</cbc:IdentificationCode>" in injected
+    return injected
+
+
+class TestTheDeclaredReliefGuardSparesACatalogueGap:
+    """The guard's sparing rung, driven from a document rather than from a literal.
+
+    A guard sits on the declared-category branch: an export or intra-community
+    claim whose counterparty residency was not established has its category
+    WITHHELD, because absence of establishment is not disproof of the claim but
+    is not evidence for it either. It carries one exemption -- a well-formed code
+    naming a jurisdiction our own vocabulary merely lacks is OUR gap, and
+    refusing there rejects a legitimate export over a row nobody has written.
+
+    **The exemption could not fire, and the reason is exactly this row's
+    defect.** Production classifies the counterparty's code off the draft, and
+    the resolved field is empty for precisely the codes the exemption is for --
+    an uncatalogued token arrived as ``None`` in either spelling, which is what a
+    document with no address block gives. So a legitimate export was refused
+    while the guard's own cases, which supply the status directly, stayed green:
+    the logic was proven and the wiring was not.
+
+    These cases supply nothing. They put a country in a document, drive the real
+    reader, and read the category the real resolver produced.
+    """
+
+    def _confirmed(
+        self,
+        code: str | None,
+        *,
+        settings: Settings,
+        objects: SecureObjectRepository,
+        tmp_path: Path,
+        name: str,
+    ) -> ConfirmedEstablishment:
+        draft = _draft(
+            _export_billed_to(code),
+            settings=settings,
+            objects=objects,
+            tmp_path=tmp_path,
+            name=name,
+        )
+        # The document's own declared relief, asserted rather than assumed: if
+        # the specimen stopped declaring `G` every case below would pass by
+        # never reaching the guard at all.
+        assert draft.iva_category == IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED.value
+        return resolve_confirmed_establishment(
+            bucket_id=_BUCKET_ID,
+            draft=draft,
+            kind=InvoiceKind.ISSUED,
+        )
+
+    @staticmethod
+    def _counterparty_unestablished(confirmed: ConfirmedEstablishment) -> bool:
+        """Return whether the assembly is short the COUNTERPARTY's own residency."""
+        return "customer_residency" in {gap.field for gap in confirmed.assembly.missing}
+
+    def test_an_uncatalogued_export_declaring_the_relief_is_spared(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The assertion nobody had: an unplaceable country stated, and the claim stands.
+
+        This is the over-refusal direction, which nothing else in this apparatus
+        watches. The document states its counterparty's country clearly and
+        correctly; only our vocabulary is short. Withholding the category here
+        tells the operator the residency was not established by a document that
+        established it.
+        """
+        confirmed = self._confirmed(
+            "TH",
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="ubl_export_th.xml",
+        )
+
+        # The gap being spared is the counterparty's own, named so this reads as
+        # a statement about the exemption rather than about the guard going
+        # quiet: the residency really is unresolved, and the claim stands anyway
+        # because the vocabulary is what failed.
+        assert self._counterparty_unestablished(confirmed)
+        assert confirmed.category.outcome is not IvaCategoryOutcome.UNSUPPORTED_RELIEF
+        assert confirmed.category.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+
+    def test_the_alpha3_spelling_of_the_same_country_is_spared_too(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The alpha-3 form reaches the exemption, which the alpha-2 status axis cannot answer.
+
+        Separate from the case above rather than parametrised with it, because
+        only one route reaches both: a fix carried by the alpha-2 status
+        authority alone closes the two-letter form and leaves the three-letter
+        one refused, and a single parametrised case would hide which half had
+        landed.
+        """
+        confirmed = self._confirmed(
+            "THA",
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="ubl_export_tha.xml",
+        )
+
+        assert self._counterparty_unestablished(confirmed)
+        assert confirmed.category.outcome is not IvaCategoryOutcome.UNSUPPORTED_RELIEF
+        assert confirmed.category.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+
+    def test_a_document_stating_no_country_still_has_the_relief_withheld(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The positive control, and it is the specimen exactly as authored.
+
+        Without it a guard that had stopped withholding anything would pass both
+        cases above vacuously -- the shape of a green run measuring the harness
+        rather than the code. Here nothing was stated, so nothing is our gap, and
+        the claim genuinely is not reached by the evidence.
+        """
+        confirmed = self._confirmed(
+            None,
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="ubl_export_silent.xml",
+        )
+
+        assert self._counterparty_unestablished(confirmed)
+        assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
+
+    def test_an_iso_unassigned_code_is_not_spared(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The other control, on the direction that costs money.
+
+        XX is reserved by ISO to name no country at all, so it is not a gap in
+        our data, and sparing it would honour a zero-rated export claimed on a
+        string with no referent. The exemption has to distinguish the two kinds:
+        a fix that simply spared every unresolved code would pass the sparing cases
+        above while opening exactly the hole the country rung was narrowed to
+        close.
+        """
+        confirmed = self._confirmed(
+            "XX",
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="ubl_export_xx.xml",
+        )
+
+        assert self._counterparty_unestablished(confirmed)
+        assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
+
+    def test_a_catalogued_third_country_needs_no_exemption_at_all(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The population the vocabulary does carry, which is most of it.
+
+        ``US`` RESOLVES a third country, so the counterparty residency is
+        established and the exemption is never consulted for this document.
+        Asserted so the sparing cases read as a bounded hole in our data rather
+        than as the normal path -- US, GB, CH, JP, CN and the rest all resolve.
+
+        **Asserted on the residency, not on the category outcome, and the
+        difference is deliberate.** Under this fixture there is no taxpayer
+        profile, so the FILER's residency is unestablished too and the guard
+        still withholds on that separate gap. Asserting "not withheld" here
+        would therefore be asserting something about the fixture's profile
+        setup, not about the country axis this file is testing.
+        """
+        confirmed = self._confirmed(
+            "US",
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="ubl_export_us.xml",
+        )
+
+        assert not self._counterparty_unestablished(confirmed)
+        assert confirmed.counterparty.scope is IvaTerritorialScope.THIRD_COUNTRY

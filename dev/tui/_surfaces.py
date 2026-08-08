@@ -1,0 +1,150 @@
+"""The seven full-screen surfaces, each built the way production builds it.
+
+Every builder here composes the app from the same doors the CLI hands it —
+the real registration door, the real login door, the real overview and
+status projections, the real setup definition. A builder that hand-made a
+view-model would produce a surface that renders, and tell you nothing
+about the one the operator meets.
+
+Surfaces that need a profile say so through ``needs_profile``; the runner
+enters the harness storage root and creates it before building.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from textual.app import App
+
+from cadrumo.core.flows import FlowMode
+
+
+@dataclass(frozen=True)
+class Surface:
+    """One drivable surface."""
+
+    name: str
+    summary: str
+    build: Callable[[], App]
+    needs_profile: bool = False
+    needs_session: bool = False
+    """Whether the surface reads through the ACTIVE-profile pointer.
+
+    A profile that merely exists is not enough for these: they resolve the
+    active bucket, so the harness must unlock one first."""
+
+
+def _setup(mode: FlowMode) -> Callable[[], App]:
+    def build() -> App:
+        from cadrumo.adapters.inbound.tui import FlowTuiApp
+        from cadrumo.application.wizard import ProfileFactsCheckpointStore, setup_flow_definition
+        from cadrumo.core.wizard_catalogue import get_setup_flow
+
+        from ._fixture import PROFILE_LABEL, ensure_profile
+
+        flow = get_setup_flow()
+        creating = mode is FlowMode.CREATE
+        definition = setup_flow_definition(flow, attach_descendants=creating)
+
+        # CREATE declares checkpointing AVAILABLE, so the app demands a real
+        # store. Injecting the production one — bound to the harness profile
+        # — is what makes save-and-exit and resume drivable here at all.
+        store = (
+            ProfileFactsCheckpointStore(flow, profile_id=ensure_profile(), profile_name=PROFILE_LABEL)
+            if creating
+            else None
+        )
+        return FlowTuiApp(definition, mode=mode, checkpoint_store=store, registered_values={})
+
+    return build
+
+
+def _registration() -> App:
+    from cadrumo.adapters.inbound.tui import RegistrationApp
+    from cadrumo.application.user_profile import assess_passphrase
+    from cadrumo.entrypoints.cli._config._manager_frontend import attempt_registration
+
+    return RegistrationApp(assess=assess_passphrase, register=attempt_registration)
+
+
+def _login() -> App:
+    from cadrumo.adapters.inbound.tui import LoginApp, LoginChoice
+    from cadrumo.application.workflow import list_profile_buckets
+    from cadrumo.entrypoints.cli._config._login_frontend import attempt_login
+
+    choices = [
+        LoginChoice(profile_id=bucket_id, label=pointer.label)
+        for bucket_id, pointer in sorted(list_profile_buckets().items())
+    ]
+    return LoginApp(choices=choices, authenticate=attempt_login)
+
+
+def _manager() -> App:
+    from cadrumo.adapters.inbound.tui import ProfileManagerApp
+    from cadrumo.entrypoints.cli._config._manager_frontend import (
+        build_active_profile_overview,
+        persist_active_profile_field,
+        profile_field_value_refusal,
+    )
+
+    return ProfileManagerApp(
+        build_active_profile_overview(),
+        persist=persist_active_profile_field,
+        validate=profile_field_value_refusal,
+    )
+
+
+def _status() -> App:
+    from cadrumo.adapters.inbound.tui import StatusApp
+    from cadrumo.entrypoints.cli._config._status_frontend import build_status_page_data
+
+    return StatusApp(build_status_page_data())
+
+
+def _form() -> App:
+    from cadrumo.adapters.inbound.tui import FormApp, FormField, FormPage
+
+    return FormApp(
+        FormPage(
+            title="Harness form",
+            section="Section",
+            fields=(
+                FormField(key="a", label="First"),
+                FormField(key="b", label="Second"),
+            ),
+        ),
+    )
+
+
+SURFACES: dict[str, Surface] = {
+    s.name: s
+    for s in (
+        Surface("setup", "Setup wizard, CREATE (with descendants)", _setup(FlowMode.CREATE), needs_profile=True),
+        Surface("setup-modify", "Setup wizard, MODIFY", _setup(FlowMode.MODIFY), needs_profile=True),
+        Surface("registration", "Credential-first profile creation", _registration, needs_profile=False),
+        Surface("login", "The way back into a locked profile", _login, needs_profile=True),
+        Surface(
+            "manager",
+            "Profile manager over the active profile",
+            _manager,
+            needs_profile=True,
+            needs_session=True,
+        ),
+        Surface("status", "Read-only status page", _status, needs_profile=True),
+        Surface("form", "Generic form surface", _form, needs_profile=False),
+    )
+}
+
+
+def resolve(name: str) -> Surface:
+    """Return the named surface, or refuse listing the accepted set."""
+    try:
+        return SURFACES[name]
+    except KeyError:
+        accepted = ", ".join(sorted(SURFACES))
+        message = f"unknown surface {name!r}; accepted: {accepted}"
+        raise KeyError(message) from None
+
+
+__all__ = ["SURFACES", "Surface", "resolve"]

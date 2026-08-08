@@ -4,7 +4,7 @@ Scenario (cross-border contract):
   Marc sells both physical goods and IT-consultancy services to a German
   GmbH (counterparty EU member state: 'de').
 
-  - Goods invoice: INTRA_COMMUNITY_SUPPLY, counterparty_eu_member_state=de,
+  - Goods invoice: INTRA_COMMUNITY_SUPPLY, counterparty_country=DE,
     iva_rate=0, iva_amount=0, taxable_base=5000.  Expected: casilla 59 += 5000.
   - Services invoice: DOMESTIC_NOT_SUBJECT (R12 — place-of-supply is Germany
     under Ley 37/1992 art. 69), iva_rate=0, iva_amount=0.  Expected: casilla 59
@@ -118,7 +118,7 @@ def _inbound_tx(
     iva_rate: Decimal = Decimal("0"),
     iva_amount: Decimal = Decimal("0"),
     iva_category: IvaCategory | None = None,
-    counterparty_eu_member_state: EUMemberState | None = None,
+    counterparty_country: str | None = None,
     counterparty_identification_state: EUMemberState | None = None,
 ) -> Transaction:
     return Transaction.model_validate(
@@ -132,9 +132,7 @@ def _inbound_tx(
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
             "iva_category": iva_category,
-            "counterparty_country": (
-                counterparty_eu_member_state.value.upper() if counterparty_eu_member_state is not None else None
-            ),
+            "counterparty_country": counterparty_country,
             "counterparty_identification_state": counterparty_identification_state,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
         },
@@ -148,7 +146,7 @@ def test_intracom_goods_supply_populates_casilla_59() -> None:
         amount=Decimal("5000.00"),
         taxable_base=Decimal("5000.00"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        counterparty_eu_member_state=_DE,
+        counterparty_country="DE",
         counterparty_identification_state=_DE,
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
@@ -169,7 +167,7 @@ def test_northern_ireland_xi_goods_supply_populates_casilla_59() -> None:
         amount=Decimal("3000.00"),
         taxable_base=Decimal("3000.00"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        counterparty_eu_member_state=_XI,
+        counterparty_country="XI",
         counterparty_identification_state=_XI,
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
@@ -206,13 +204,19 @@ def test_domestic_not_subject_services_do_not_populate_casilla_59() -> None:
 
 
 def test_export_third_country_populates_casilla_60() -> None:
-    """An EXPORT_THIRD_COUNTRY_ZERO_RATED row with no eu_member_state feeds casilla 60."""
+    """An EXPORT_THIRD_COUNTRY_ZERO_RATED row to a placed third country feeds casilla 60.
+
+    The counterparty is positively established in the US. It used to carry no
+    country at all, which passed the gate only because absence was read as
+    third-country establishment -- so the fixture asserted casilla 60 from
+    evidence that placed the party nowhere.
+    """
     tx = _inbound_tx(
         "export-us-01",
         amount=Decimal("3000.00"),
         taxable_base=Decimal("3000.00"),
         iva_category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-        counterparty_eu_member_state=None,
+        counterparty_country="US",
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
     aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
@@ -229,7 +233,7 @@ def test_export_assimilated_operation_populates_casilla_60() -> None:
         amount=Decimal("1750.00"),
         taxable_base=Decimal("1750.00"),
         iva_category=IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
-        counterparty_eu_member_state=None,
+        counterparty_country="US",
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
     aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
@@ -251,7 +255,7 @@ def test_d5_intracom_with_es_identified_counterparty_is_rejected() -> None:
         amount=Decimal("1000.00"),
         taxable_base=Decimal("1000.00"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        counterparty_eu_member_state=_DE,
+        counterparty_country="DE",
         counterparty_identification_state=_ES,
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
@@ -270,7 +274,7 @@ def test_d5_intracom_without_identification_is_rejected() -> None:
         amount=Decimal("1000.00"),
         taxable_base=Decimal("1000.00"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        counterparty_eu_member_state=None,
+        counterparty_country=None,
         counterparty_identification_state=None,
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
@@ -288,7 +292,7 @@ def test_d5_export_with_eu_member_state_is_rejected() -> None:
         amount=Decimal("800.00"),
         taxable_base=Decimal("800.00"),
         iva_category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-        counterparty_eu_member_state=_DE,
+        counterparty_country="DE",
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
     aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
@@ -305,7 +309,7 @@ def test_d5_export_assimilated_with_eu_member_state_is_rejected() -> None:
         amount=Decimal("800.00"),
         taxable_base=Decimal("800.00"),
         iva_category=IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
-        counterparty_eu_member_state=_DE,
+        counterparty_country="DE",
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
     aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
@@ -322,7 +326,7 @@ def test_marc_combined_scenario() -> None:
         amount=Decimal("5000.00"),
         taxable_base=Decimal("5000.00"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        counterparty_eu_member_state=_DE,
+        counterparty_country="DE",
         counterparty_identification_state=_DE,
     )
     services_tx = _inbound_tx(

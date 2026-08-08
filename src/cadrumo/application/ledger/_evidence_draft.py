@@ -1524,6 +1524,28 @@ class CounterpartyDraftSide(BaseModel):
             NAME rather than instead of it: the two are the same ladder rung
             reached from different readers, and a document states one or the
             other, never both.
+        stated_country_token: The token the record's country element carries,
+            verbatim, or ``None`` where it stated none. Carried beside the
+            resolved code rather than folded into it, because the two answer
+            different questions and only this one can answer the second: the
+            resolved field is empty both for a document that stated no country
+            AND for one stating a token the bundled vocabulary does not carry,
+            so a consumer asking "did the document state a country" off that
+            field gets the same answer for an unplaceable export and for an
+            invoice with no address block. A consumer deciding whether an
+            unestablished counterparty is the DOCUMENT's gap or OURS depends on
+            telling those apart.
+
+            **Named a TOKEN, and not ``stated_country_code``, deliberately.**
+            The establishment ladder takes a parameter by that exact name and it
+            wants the RESOLVED alpha-2 -- which is ``country_code`` above, and
+            which is what this object's one ladder call site correctly passes.
+            Two same-shaped attributes on one object, one safe in that slot and
+            one not, is a swap that type-checks: both are ``str | None``, and
+            feeding an alpha-3 into an alpha-2 parameter on a tax-territory path
+            fails to place the country and reintroduces exactly the silence this
+            field exists to remove. The name is the guard, because nothing else
+            here is.
         tax_id_field: Which draft field ``tax_id`` was taken from. Carried so an
             operator override is recorded against the reading it displaced
             rather than against whichever field shares the option's name.
@@ -1537,6 +1559,7 @@ class CounterpartyDraftSide(BaseModel):
     postal_code: str | None = None
     country: str | None = None
     country_code: str | None = None
+    stated_country_token: str | None = None
     tax_id_field: str = Field(min_length=1)
     name_field: str = Field(min_length=1)
 
@@ -1578,6 +1601,7 @@ def counterparty_draft_side(draft: InvoiceDraft, *, kind: InvoiceKind) -> Counte
             tax_id=draft.customer_tax_id,
             name=draft.customer_name,
             country_code=draft.customer_country_code,
+            stated_country_token=draft.customer_stated_country_code,
             postal_code=draft.customer_postal_code,
             country=draft.customer_country,
             tax_id_field="customer_tax_id",
@@ -1587,6 +1611,7 @@ def counterparty_draft_side(draft: InvoiceDraft, *, kind: InvoiceKind) -> Counte
         tax_id=draft.supplier_tax_id,
         name=draft.supplier_name,
         country_code=draft.supplier_country_code,
+        stated_country_token=draft.supplier_stated_country_code,
         postal_code=draft.supplier_postal_code,
         country=draft.supplier_country,
         tax_id_field="supplier_tax_id",

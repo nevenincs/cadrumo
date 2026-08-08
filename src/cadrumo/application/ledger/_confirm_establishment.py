@@ -68,7 +68,7 @@ from ...domain.iva import (
     IvaCategory,
     IvaRateKind,
     IvaTerritorialScope,
-    stated_country_code_status,
+    record_country_code_status,
 )
 from ._classification_assembly import (
     ClassificationAssembly,
@@ -387,13 +387,24 @@ def resolve_confirmed_establishment(
         assembly,
         declared=declared,
         rate_tier=rate_tier,
-        # The counterparty's own printed code, classified by the shipped status
+        # The counterparty's own STATED code, classified by the shipped status
         # axis rather than re-derived. It spares a declared relief whose
         # establishment failed on OUR closed vocabulary rather than on the
         # document -- a well-formed code naming a jurisdiction the vocabulary
         # does not list is our gap, and refusing a real export over it is the
         # false positive that trains an operator to stop reading refusals.
-        counterparty_country_status=stated_country_code_status(side.country_code),
+        #
+        # Asked of the record's own token, never of the resolved alpha-2 beside
+        # it, and the sparing is unreachable from the other field. The resolved
+        # field is populated only where the vocabulary PLACED the token, so it
+        # is empty for exactly the codes this exemption exists for: reading it
+        # handed the classifier `None` for `TH` and `THA` alike, which is the
+        # same answer a document with no address block gives, and the guard
+        # refused every legitimate Thai export while its own tests -- which
+        # supply the status directly -- stayed green. The record token also
+        # carries the alpha-3 spelling Facturae states, which the printed-value
+        # status axis declines to judge at all.
+        counterparty_country_status=record_country_code_status(side.stated_country_token),
     )
     items = _counterparty_review_items(counterparty, tax_identifier=side.tax_id, field=side.tax_id_field)
     if filer_item is not None:

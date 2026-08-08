@@ -73,7 +73,17 @@ def _resolved(observations) -> dict[str, Decimal]:
     return {str(k): v for k, v in resolve_iva_ledger_binding_values(_revision(), tuple(observations)).items()}
 
 
-def _as_bank_transaction(*, category: IvaCategory, member_state: EUMemberState | None) -> Transaction:
+def _country_of(member_state: EUMemberState | None) -> str | None:
+    """Return the alpha-2 code a Member State names, for the establishment axis."""
+    return member_state.value.upper() if member_state is not None else None
+
+
+def _as_bank_transaction(
+    *,
+    category: IvaCategory,
+    member_state: EUMemberState | None,
+    country: str | None = None,
+) -> Transaction:
     """The operation as the bank feed records it."""
     raw = RawTransaction(
         provider_transaction_id="feed-parity-01",
@@ -104,7 +114,7 @@ def _as_bank_transaction(*, category: IvaCategory, member_state: EUMemberState |
             "iva_rate": Decimal("0"),
             "iva_amount": Decimal("0"),
             "iva_category": category,
-            "counterparty_country": (member_state.value.upper() if member_state is not None else None),
+            "counterparty_country": (country if country is not None else _country_of(member_state)),
             # Where the acquirer is established and where it is VAT-identified
             # agree in this scenario. They are still supplied separately: the
             # art. 25 gate reads only the second, and the parity this module
@@ -147,9 +157,11 @@ def _as_invoice(*, category: IvaCategory, country: str, tax_id: str) -> Invoice:
     )
 
 
-def _bank_side(*, category: IvaCategory, member_state: EUMemberState | None):
+def _bank_side(*, category: IvaCategory, member_state: EUMemberState | None, country: str | None = None):
     aggregation = aggregate_iva_ledger_observations(
-        TransactionCatalogue.from_transactions([_as_bank_transaction(category=category, member_state=member_state)]),
+        TransactionCatalogue.from_transactions(
+            [_as_bank_transaction(category=category, member_state=member_state, country=country)],
+        ),
         period=_PERIOD,
     )
     assert not aggregation.issues, f"the bank feed refused the operation: {aggregation.issues}"
@@ -194,7 +206,9 @@ def test_both_feeds_declare_an_export_into_casilla_60() -> None:
     A feed that collapsed every exempt base into casilla 59 would satisfy the
     intra-community comparison above on its own.
     """
-    bank = _resolved(_bank_side(category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, member_state=None))
+    bank = _resolved(
+        _bank_side(category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, member_state=None, country="US"),
+    )
     invoice = _resolved(
         _invoice_side(category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country="US", tax_id="US987654321"),
     )

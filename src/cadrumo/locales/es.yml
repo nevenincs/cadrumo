@@ -376,6 +376,11 @@ aggregation:
         efectos del IVA española no es válida para una operación intracomunitaria.
       eu_member_state_on_export_transaction: Las operaciones de exportación o asimiladas
         no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
+      missing_counterparty_establishment_on_export: Una exportación está exenta porque
+        la operación sale de la Unión, por lo que depende de dónde esté ESTABLECIDA
+        la contraparte. Registre el país de la contraparte; un código ausente o no
+        asignado no establece nada, y su identificación a efectos del IVA no puede
+        responder a esto.
       missing_counterparty_identification_state: Una operación intracomunitaria requiere
         el Estado miembro en el que la contraparte está identificada a efectos del
         IVA.
@@ -1987,6 +1992,10 @@ cli:
         confirm_help: Confirma el territorio en el que está establecida una contraparte.
         country_code_help: País bajo el que se declara el identificador, cuando no
           es español.
+        evidenced_scope_help: Territorio en el que un documento en su poder sitúa
+          a esta parte. Indíquelo para preguntar qué responderá la escalera para ese
+          documento, que es la única forma de ver una discrepancia con lo que usted
+          confirmó antes de que una confirmación la rechace.
         group_help: Confirma dónde está establecida una contraparte, una sola vez,
           para todos los documentos posteriores.
         identification_state_help: 'Estado miembro que identifica a efectos de IVA
@@ -2001,7 +2010,6 @@ cli:
           aparece impreso en el documento.
         withdraw_help: Retira un establecimiento confirmado, declarando que la respuesta
           anterior era incorrecta.
-        evidenced_scope_help: 'Territorio en el que un documento en su poder sitúa a esta parte. Indíquelo para preguntar qué responderá la escalera para ese documento, que es la única forma de ver una discrepancia con lo que usted confirmó antes de que una confirmación la rechace.'
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
         batch_directory_help: Directorio cuyos ficheros se ingresan. Combínalo con
@@ -2024,6 +2032,27 @@ cli:
           de ellos y nada falló; vuelve a ejecutar cuando se resuelva la causa indicada.
         confirm_already_exists_message: Ya existe una factura con esta identidad;
           se devuelve sin cambios en lugar de crear un duplicado.
+        confirm_category_contradicted_message: 'El régimen que declara este documento
+          y el impuesto que aplica no pueden ser ciertos a la vez, así que no se ha
+          podido tomar el tratamiento de IVA de ninguno de los dos lados y no se ha
+          registrado ninguno. Vuelve a leer el documento: se ha leído mal uno de los
+          dos, o el propio documento es incorrecto.'
+        confirm_category_rate_inferred_message: El tratamiento de IVA de esta factura
+          lo ha determinado el tipo impositivo que aplican sus líneas, porque la tabla
+          de reglas no ha podido situar la operación, normalmente porque el territorio
+          de IVA de una de las partes no está establecido. El tratamiento registrado
+          es el interior ordinario para ese tipo. Compruébalo si esta entrega no era
+          interior.
+        confirm_category_unresolved_message: 'Nada ha establecido un tratamiento de
+          IVA para esta factura: el documento no ha declarado ninguno y los hechos
+          de la propia operación no han llegado a uno. La factura queda registrada
+          y no se desglosará en una declaración hasta que se establezca un tratamiento.'
+        confirm_category_unsupported_relief_message: El documento invoca una exención
+          del IVA repercutido español que depende por completo de dónde está establecida
+          la contraparte, y nada lo ha establecido. El tratamiento se retiene en lugar
+          de dar el documento por erróneo, de modo que esta factura queda registrada
+          sin tratamiento de IVA y no se desglosará en una declaración hasta que se
+          resuelva el país o el establecimiento de la contraparte.
         confirm_counterparty_name_help: Nombre de la contraparte (sin heuristica de
           extracción todavía; normalmente obligatorio).
         confirm_counterparty_nif_help: Sobrescribe el NIF del proveedor extraido.
@@ -2044,6 +2073,14 @@ cli:
           de equivalencia, o que se ha leido mal alguna cifra. Revise el documento.
         confirm_resolve_help: 'Responda un hallazgo bloqueante: <id-hallazgo>=<choose|supply|attest>:<valor-o-motivo>.
           Repita por cada hallazgo; no existe una opcion masiva.'
+        confirm_review_contradicted_regime_message: Este documento se contradice a
+          sí mismo sobre cómo tributa. El detalle siguiente nombra qué discrepaba
+          con qué.
+        confirm_review_undetermined_establishment_message: El documento, tal como
+          se ha leído, ha dejado sin decidir dónde está establecida una de las partes
+          de esta factura. El territorio de IVA determina el tratamiento y no se da
+          por supuesto que sea la península. El detalle siguiente nombra la parte
+          y lo que faltaba.
         confirm_taxable_base_help: Sobrescribe la base imponible extraida.
         consent:
           bytes_unrecallable: 'Retirar el consentimiento detiene los envíos futuros.
@@ -2117,6 +2154,12 @@ cli:
         notes_help: Notas internas sobre el justificante
         remove_help: Elimina un justificante de factura de compra
         review:
+          advised_pending_message: Algunos documentos pendientes llevan avisos. No
+            bloquean nada y se confirmarán tal como están, así que nada más volverá
+            a plantearlos. Acota la cola con `--advisory` y lee uno con `review show`.
+          advisory_help: Muestra solo los borradores que llevan este aviso no bloqueante.
+            No impiden nada, por lo que de otro modo solo se descubren abriendo cada
+            documento.
           blocked_message: Este documento no puede confirmarse hasta responder individualmente
             cada hallazgo. Cada respuesta nombra un hallazgo por su identificador.
           blocked_pending_message: Algunos documentos pendientes tienen hallazgos
@@ -2154,8 +2197,6 @@ cli:
           show_help: Muestre un borrador pendiente campo por campo, con sus hallazgos
             y bloqueos.
           unknown_reference: No hay ningun borrador pendiente para esa referencia.
-          advisory_help: 'Muestra solo los borradores que llevan este aviso no bloqueante. No impiden nada, por lo que de otro modo solo se descubren abriendo cada documento.'
-          advised_pending_message: 'Algunos documentos pendientes llevan avisos. No bloquean nada y se confirmarán tal como están, así que nada más volverá a plantearlos. Acota la cola con `--advisory` y lee uno con `review show`.'
         source_path_help: Ruta al PDF o imagen de la factura
         supplier_help: Nombre del proveedor
         taxable_base_help: Base imponible de la factura
@@ -2163,12 +2204,6 @@ cli:
         view_help: Muestra un justificante de factura de compra
         yes_help: Confirma la eliminación del justificante
         yes_required: Debes pasar --yes para eliminar un justificante
-        confirm_category_rate_inferred_message: 'El tratamiento de IVA de esta factura lo ha determinado el tipo impositivo que aplican sus líneas, porque la tabla de reglas no ha podido situar la operación, normalmente porque el territorio de IVA de una de las partes no está establecido. El tratamiento registrado es el interior ordinario para ese tipo. Compruébalo si esta entrega no era interior.'
-        confirm_category_unsupported_relief_message: 'El documento invoca una exención del IVA repercutido español que depende por completo de dónde está establecida la contraparte, y nada lo ha establecido. El tratamiento se retiene en lugar de dar el documento por erróneo, de modo que esta factura queda registrada sin tratamiento de IVA y no se desglosará en una declaración hasta que se resuelva el país o el establecimiento de la contraparte.'
-        confirm_category_contradicted_message: 'El régimen que declara este documento y el impuesto que aplica no pueden ser ciertos a la vez, así que no se ha podido tomar el tratamiento de IVA de ninguno de los dos lados y no se ha registrado ninguno. Vuelve a leer el documento: se ha leído mal uno de los dos, o el propio documento es incorrecto.'
-        confirm_category_unresolved_message: 'Nada ha establecido un tratamiento de IVA para esta factura: el documento no ha declarado ninguno y los hechos de la propia operación no han llegado a uno. La factura queda registrada y no se desglosará en una declaración hasta que se establezca un tratamiento.'
-        confirm_review_undetermined_establishment_message: 'El documento, tal como se ha leído, ha dejado sin decidir dónde está establecida una de las partes de esta factura. El territorio de IVA determina el tratamiento y no se da por supuesto que sea la península. El detalle siguiente nombra la parte y lo que faltaba.'
-        confirm_review_contradicted_regime_message: 'Este documento se contradice a sí mismo sobre cómo tributa. El detalle siguiente nombra qué discrepaba con qué.'
       inventory:
         actividad_id_help: Identificador de la actividad económica
         create_help: Crea un libro de existencias para una actividad y ejercicio
@@ -2366,9 +2401,13 @@ cli:
           solo amplía el recorrido: un par ausente de ella no prueba que no se presentara
           nada.'
         list_help: Listar declaraciones presentadas sin descargar artefactos
-        pull_all_help: cli.app.live.filed.pull_all_help
-        pull_all_limit_help: cli.app.live.filed.pull_all_limit_help
-        pull_all_pairs_refused: cli.app.live.filed.pull_all_pairs_refused
+        pull_all_help: Descarga en una sola pasada el historial de declaraciones presentadas
+          ante la AEAT y detalla lo encontrado.
+        pull_all_limit_help: Número máximo de pares de modelo y ejercicio que se recorrerán
+          en esta pasada.
+        pull_all_pairs_refused: 'No se han podido leer {count} par(es) de modelo y
+          ejercicio y NO se han declarado vacíos: {pairs}. Vuelva a ejecutar la orden
+          para reintentarlo; una negativa no prueba que no se presentara nada.'
         pull_help: Descarga datos de declaraciones presentadas del registro autenticado
           de AEAT.
         pull_modelo_help: Limita esta descarga a este modelo.
@@ -4795,12 +4834,15 @@ cli:
         already_confirmed: '''{identifier}'' ya estaba confirmada como establecida
           en ''{scope}'' por ''{asserted_by}''; esta llamada no ha creado ninguna
           confirmación nueva y se mantiene la procedencia original.'
+        evidence_contradicts_confirmation: '''{identifier}'' se confirmó como establecido
+          en {confirmed}, pero la evidencia que ha aportado sitúa a la misma parte
+          en {evidenced}. La escalera no fijará ningún territorio para esta contraparte
+          hasta que se retire uno de los dos.'
         not_confirmed: No hay ningún establecimiento confirmado para '{identifier}',
           por lo que este peldaño no resuelve nada y un documento cuyo papel no sea
           concluyente planteará la pregunta.
         nothing_to_withdraw: No había ningún establecimiento confirmado para '{identifier}',
           por lo que no se ha retirado nada y el almacén ya está en el estado solicitado.
-        evidence_contradicts_confirmation: '''{identifier}'' se confirmó como establecido en {confirmed}, pero la evidencia que ha aportado sitúa a la misma parte en {evidenced}. La escalera no fijará ningún territorio para esta contraparte hasta que se retire uno de los dos.'
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia
@@ -5170,9 +5212,11 @@ cli:
         ledger_view: Ver el detalle de una entrada del libro.
         live_filed_capture: Descargar declaraciones presentadas en vivo desde la AEAT.
         live_filed_capture_sources: Mostrar las fuentes disponibles para la descarga.
-        live_filed_discover: cli.operator_surface.help.app.live_filed_discover
+        live_filed_discover: Muestra qué pares de modelo y ejercicio recorrería una
+          descarga del historial, sin descargar nada.
         live_filed_list: Listar declaraciones presentadas capturadas desde la AEAT.
-        live_filed_pull_all: cli.operator_surface.help.app.live_filed_pull_all
+        live_filed_pull_all: Descarga el historial completo de declaraciones presentadas
+          ante la AEAT en una sola pasada.
         modelo_audit_check: Comprueba las evidencias incluidas de una revisión de
           declaración.
         modelo_audit_export: Exporta la auditoría de evidencias de una revisión de

@@ -354,6 +354,10 @@ aggregation:
         nem érvényes Közösségen belüli ügylethez.
       eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá
         eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
+      missing_counterparty_establishment_on_export: Az export azért mentes, mert az
+        ügylet elhagyja az Uniót, ezért az számít, hol van az ügyfél LETELEPEDVE.
+        Rögzítse az ügyfél országát; a hiányzó vagy ki nem osztott kód semmit sem
+        állapít meg, és az áfa-azonosítás erre nem ad választ.
       missing_counterparty_identification_state: A Közösségen belüli ügylethez meg
         kell adni azt a tagállamot, amelyben a partner héa-azonosítóval rendelkezik.
       unsupported_iva_category: 'Belső hiba: nem támogatott IVA-kategória az aggregáláshoz.'
@@ -1912,6 +1916,10 @@ cli:
         actor_help: A kijelentést tevő kezelő azonosítója, amelyet rögzítünk.
         confirm_help: Erősítse meg, mely területen letelepedett az ügyfél.
         country_code_help: Az ország, amely alatt az azonosítót megadták, ha nem spanyol.
+        evidenced_scope_help: Az a terület, ahová a kezében lévő dokumentum ezt a
+          felet helyezi. Adja meg, hogy megkérdezze, mit válaszol a létra erre a dokumentumra;
+          csak így láthatja az eltérést attól, amit korábban megerősített, mielőtt
+          egy megerősítés elutasítaná.
         group_help: Erősítse meg, hol letelepedett az ügyfél – egyszer, minden későbbi
           bizonylathoz.
         identification_state_help: 'Az a tagállam, amely a partnert ÁFA szempontjából
@@ -1924,7 +1932,6 @@ cli:
         tax_identifier_help: Az ügyfél adóazonosítója a bizonylaton nyomtatott formában.
         withdraw_help: Vonja vissza a megerősített letelepedést, kijelentve, hogy
           a korábbi válasz téves volt.
-        evidenced_scope_help: 'Az a terület, ahová a kezében lévő dokumentum ezt a felet helyezi. Adja meg, hogy megkérdezze, mit válaszol a létra erre a dokumentumra; csak így láthatja az eltérést attól, amit korábban megerősített, mielőtt egy megerősítés elutasítaná.'
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
         batch_directory_help: A könyvtár, amelynek fájljait feldolgozza. Kombinálható
@@ -1948,6 +1955,25 @@ cli:
           és semmi nem hiúsult meg; futtassa újra, ha az alábbi ok megszűnt.
         confirm_already_exists_message: Már létezik számla ezzel az azonossággal;
           változatlanul visszaadva, nem pedig duplikációt létrehozva.
+        confirm_category_contradicted_message: 'A dokumentumban megjelölt adózási
+          mód és a felszámított adó nem lehet egyszerre igaz, ezért egyik oldalról
+          sem volt átvehető áfakezelés, és nem került rögzítésre. Olvasd újra a dokumentumot:
+          a kettő egyikét félreolvasták, vagy maga a dokumentum hibás.'
+        confirm_category_rate_inferred_message: Ennek a számlának az áfakezelését
+          a tételein felszámított adókulcs döntötte el, mert a szabálytábla nem tudta
+          elhelyezni az ügyletet -- rendszerint azért, mert az egyik fél áfaterülete
+          nincs megállapítva. A rögzített kezelés az adott kulcshoz tartozó szokásos
+          belföldi kezelés. Ellenőrizd, ha ez a teljesítés nem belföldi volt.
+        confirm_category_unresolved_message: 'Semmi sem állapított meg áfakezelést
+          ehhez a számlához: a dokumentum nem jelölt meg egyet sem, és magának az
+          ügyletnek a tényei sem vezettek egyre. A számla nyilvántartásba kerül, és
+          nem bontható be bevallásba, amíg egy kezelés meg nem állapítható.'
+        confirm_category_unsupported_relief_message: A dokumentum olyan spanyol fizetendő
+          áfa alóli mentességre hivatkozik, amely teljes egészében azon múlik, hol
+          telepedett le a partner, és ezt semmi sem állapította meg. A kezelés visszatartásra
+          kerül ahelyett, hogy a dokumentumot hibásnak mondanánk, így ez a számla
+          áfakezelés nélkül kerül nyilvántartásba, és nem bontható be bevallásba,
+          amíg a partner országa vagy letelepedése nem tisztázódik.
         confirm_counterparty_name_help: A partner megjelenített neve (még nincs kinyerést
           segítő heurisztika; általában kötelező).
         confirm_counterparty_nif_help: Felülírja a kinyert szállítói adóazonosítót.
@@ -1970,6 +1996,12 @@ cli:
           került. Ellenőrizze a dokumentumot.
         confirm_resolve_help: 'Valaszoljon meg egy blokkolo eszrevetelt: <eszrevetel-azonosito>=<choose|supply|attest>:<ertek-vagy-indok>.
           Eszrevetelenkent ismetelje; tomeges kapcsolo nincs.'
+        confirm_review_contradicted_regime_message: Ez a dokumentum ellentmond önmagának
+          abban, hogyan adózik. Az alábbi részlet megnevezi, mi mivel volt ellentmondásban.
+        confirm_review_undetermined_establishment_message: A dokumentum a beolvasott
+          formájában eldöntetlenül hagyta, hogy a számla egyik fele hol telepedett
+          le. Az áfaterület dönti el a kezelést, és nem feltételezzük, hogy a félsziget.
+          Az alábbi részlet megnevezi a felet és azt, ami hiányzott.
         confirm_taxable_base_help: Felülírja a kinyert adóalapot.
         consent:
           bytes_unrecallable: 'A hozzájárulás visszavonása megállítja a további küldést.
@@ -2045,6 +2077,13 @@ cli:
         notes_help: Belső megjegyzések a bizonyítékról.
         remove_help: Vásárlásiszámla-bizonyíték törlése.
         review:
+          advised_pending_message: Néhány függőben lévő dokumentum figyelmeztetéseket
+            hordoz. Ezek semmit sem blokkolnak, és a jelenlegi állapotukban megerősítésre
+            kerülnek, így semmi más nem veti fel őket újra. Szűkítsd a sort az `--advisory`
+            kapcsolóval, és nyiss meg egyet a `review show` paranccsal.
+          advisory_help: Csak azokat a piszkozatokat mutatja, amelyek ezt a nem blokkoló
+            figyelmeztetést hordozzák. Semmit sem akadályoznak meg, ezért egyébként
+            csak az egyes dokumentumok megnyitásával derülnek ki.
           blocked_message: Ez a dokumentum addig nem erositheto meg, amig minden alabbi
             eszrevetelt egyenkent meg nem valaszolja. Minden valasz egy eszrevetelt
             nevez meg az azonositojaval.
@@ -2082,8 +2121,6 @@ cli:
           show_help: Jelenitsen meg egy fuggo piszkozatot mezonkent, eszrevetelekkel
             es akadalyokkal.
           unknown_reference: Nincs fuggo piszkozat ehhez az azonositohoz.
-          advisory_help: 'Csak azokat a piszkozatokat mutatja, amelyek ezt a nem blokkoló figyelmeztetést hordozzák. Semmit sem akadályoznak meg, ezért egyébként csak az egyes dokumentumok megnyitásával derülnek ki.'
-          advised_pending_message: 'Néhány függőben lévő dokumentum figyelmeztetéseket hordoz. Ezek semmit sem blokkolnak, és a jelenlegi állapotukban megerősítésre kerülnek, így semmi más nem veti fel őket újra. Szűkítsd a sort az `--advisory` kapcsolóval, és nyiss meg egyet a `review show` paranccsal.'
         source_path_help: A számla PDF- vagy képfájljának elérési útja.
         supplier_help: Szállító neve.
         taxable_base_help: Számla adóköteles alapja.
@@ -2091,12 +2128,6 @@ cli:
         view_help: Vásárlásiszámla-bizonyíték megjelenítése.
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót a bizonyíték törléséhez.
-        confirm_category_rate_inferred_message: 'Ennek a számlának az áfakezelését a tételein felszámított adókulcs döntötte el, mert a szabálytábla nem tudta elhelyezni az ügyletet -- rendszerint azért, mert az egyik fél áfaterülete nincs megállapítva. A rögzített kezelés az adott kulcshoz tartozó szokásos belföldi kezelés. Ellenőrizd, ha ez a teljesítés nem belföldi volt.'
-        confirm_category_unsupported_relief_message: 'A dokumentum olyan spanyol fizetendő áfa alóli mentességre hivatkozik, amely teljes egészében azon múlik, hol telepedett le a partner, és ezt semmi sem állapította meg. A kezelés visszatartásra kerül ahelyett, hogy a dokumentumot hibásnak mondanánk, így ez a számla áfakezelés nélkül kerül nyilvántartásba, és nem bontható be bevallásba, amíg a partner országa vagy letelepedése nem tisztázódik.'
-        confirm_category_contradicted_message: 'A dokumentumban megjelölt adózási mód és a felszámított adó nem lehet egyszerre igaz, ezért egyik oldalról sem volt átvehető áfakezelés, és nem került rögzítésre. Olvasd újra a dokumentumot: a kettő egyikét félreolvasták, vagy maga a dokumentum hibás.'
-        confirm_category_unresolved_message: 'Semmi sem állapított meg áfakezelést ehhez a számlához: a dokumentum nem jelölt meg egyet sem, és magának az ügyletnek a tényei sem vezettek egyre. A számla nyilvántartásba kerül, és nem bontható be bevallásba, amíg egy kezelés meg nem állapítható.'
-        confirm_review_undetermined_establishment_message: 'A dokumentum a beolvasott formájában eldöntetlenül hagyta, hogy a számla egyik fele hol telepedett le. Az áfaterület dönti el a kezelést, és nem feltételezzük, hogy a félsziget. Az alábbi részlet megnevezi a felet és azt, ami hiányzott.'
-        confirm_review_contradicted_regime_message: 'Ez a dokumentum ellentmond önmagának abban, hogyan adózik. Az alábbi részlet megnevezi, mi mivel volt ellentmondásban.'
       inventory:
         actividad_id_help: Gazdasági tevékenység azonosítója.
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.
@@ -2296,9 +2327,13 @@ cli:
           szélesíti a bejárást: egy hiányzó pár nem bizonyítja, hogy semmit sem nyújtottak
           be.'
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
-        pull_all_help: cli.app.live.filed.pull_all_help
-        pull_all_limit_help: cli.app.live.filed.pull_all_limit_help
-        pull_all_pairs_refused: cli.app.live.filed.pull_all_pairs_refused
+        pull_all_help: Egyetlen menetben letölti az adózó AEAT-nál benyújtott bevallási
+          előzményét, és jelenti a találtakat.
+        pull_all_limit_help: A menetben bejárandó modelo- és adóévpárok legnagyobb
+          száma.
+        pull_all_pairs_refused: '{count} modelo/adóév pár nem volt olvasható, és NEM
+          üresként lett jelentve: {pairs}. Futtassa újra az újrapróbálkozáshoz; az
+          elutasítás nem bizonyítja, hogy semmit sem nyújtottak be.'
         pull_help: Letölti a benyújtott nyilatkozatok adatait a hitelesített AEAT
           nyilvántartásból.
         pull_modelo_help: Korlátozza ezt a letöltést erre a modellre.
@@ -4708,13 +4743,16 @@ cli:
         already_confirmed: 'A(z) ''{identifier}'' letelepedését ''{asserted_by}''
           már megerősítette itt: ''{scope}''; ez a hívás nem hozott létre új megerősítést,
           és az eredeti forrásadat marad érvényben.'
+        evidence_contradicts_confirmation: 'A(z) ''{identifier}'' megerősítetten itt
+          telepedett le: {confirmed}, de az Ön által megadott bizonyíték ugyanezt
+          a felet ide helyezi: {evidenced}. A létra nem állapít meg területet ehhez
+          a partnerhez, amíg a kettő közül az egyiket vissza nem vonják.'
         not_confirmed: A(z) '{identifier}' esetében nincs megerősített letelepedés,
           ezért ez a fokozat semmit nem dönt el, és egy nem egyértelmű bizonylat felveti
           a kérdést.
         nothing_to_withdraw: A(z) '{identifier}' esetében nem volt megerősített letelepedés,
           ezért semmi nem került visszavonásra, és a tároló már a kért állapotban
           van.
-        evidence_contradicts_confirmation: 'A(z) ''{identifier}'' megerősítetten itt telepedett le: {confirmed}, de az Ön által megadott bizonyíték ugyanezt a felet ide helyezi: {evidenced}. A létra nem állapít meg területet ehhez a partnerhez, amíg a kettő közül az egyiket vissza nem vonják.'
     doclink:
       actor_help: Operátor címke.
       help: Letölt egy Drive dokumentumhivatkozást, és a bájtjait titkosított bizonyítékként
@@ -5101,9 +5139,11 @@ cli:
         ledger_view: Egyetlen tranzakció megtekintése.
         live_filed_capture: Csak olvasható megfigyelés letöltése az AEAT-ből.
         live_filed_capture_sources: Letöltési forráslehetőségek listázása.
-        live_filed_discover: cli.operator_surface.help.app.live_filed_discover
+        live_filed_discover: Megmutatja, mely modelo- és adóévpárokat járná be az
+          előzmény-letöltés, anélkül hogy bármit letöltene.
         live_filed_list: Helyileg rögzített benyújtott bevallás-megfigyelések listázása.
-        live_filed_pull_all: cli.operator_surface.help.app.live_filed_pull_all
+        live_filed_pull_all: Egyetlen menetben letölti a teljes AEAT-nál benyújtott
+          bevallási előzményt.
         modelo_audit_check: Ellenőrzi egy bevallásrevízió csomagolt bizonyítékait.
         modelo_audit_export: Exportálja egy bevallásrevízió bizonyíték-auditját.
         modelo_audit_show: Megjeleníti egy bevallásrevízió bizonyíték-auditját.

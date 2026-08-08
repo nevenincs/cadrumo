@@ -336,6 +336,10 @@ aggregation:
         is not valid for an intra-community transaction.
       eu_member_state_on_export_transaction: Export or export-assimilated operations
         must not carry an EU member state; got %{member_state}.
+      missing_counterparty_establishment_on_export: An export is exempt because the
+        operation leaves the Union, so it turns on where the counterparty is ESTABLISHED.
+        Record the counterparty's country; an absent or unassigned code establishes
+        nothing, and its VAT identification cannot answer this.
       missing_counterparty_identification_state: An intra-community transaction requires
         the Member State in which the counterparty is VAT-identified.
       unsupported_iva_category: 'Internal error: unsupported IVA category for aggregation.'
@@ -1839,6 +1843,10 @@ cli:
         confirm_help: Confirm the territory a counterparty is established in.
         country_code_help: Country the identifier is stated under, when it is not
           Spanish.
+        evidenced_scope_help: Territory a document in hand places this party in. Supply
+          it to ask what the ladder will answer for that document, which is the only
+          way to see a disagreement with what you confirmed before a confirm refuses
+          on it.
         group_help: Confirm where a counterparty is established, once, for every later
           document.
         identification_state_help: 'Member State that VAT-identifies the counterparty.
@@ -1850,7 +1858,6 @@ cli:
         tax_identifier_help: The counterparty's tax identifier as printed on the document.
         withdraw_help: Withdraw a confirmed establishment, stating the earlier answer
           was wrong.
-        evidenced_scope_help: 'Territory a document in hand places this party in. Supply it to ask what the ladder will answer for that document, which is the only way to see a disagreement with what you confirmed before a confirm refuses on it.'
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
         batch_directory_help: Directory whose files are ingested. Combine with or
@@ -1871,6 +1878,25 @@ cli:
           once the cause below is cleared.
         confirm_already_exists_message: An invoice with this identity already exists;
           returning it unchanged rather than creating a duplicate.
+        confirm_category_contradicted_message: 'The regime this document states and
+          the tax it charged cannot both be true, so no IVA treatment could be taken
+          from either side and none was recorded. Re-read the document: one of the
+          two was misread, or the document itself is wrong.'
+        confirm_category_rate_inferred_message: This invoice's IVA treatment was settled
+          by the tax rate its lines charged, because the rule table could not place
+          the operation -- usually because a party's IVA territory is unestablished.
+          The treatment recorded is the ordinary domestic one for that rate. Check
+          it if this supply was not a domestic one.
+        confirm_category_unresolved_message: 'Nothing established an IVA treatment
+          for this invoice: the document declared none and the operation''s own facts
+          did not reach one. The invoice is on record and will not decompose into
+          a declaration until a treatment is established.'
+        confirm_category_unsupported_relief_message: The document claims a relief
+          from Spanish output IVA that rests entirely on where the counterparty is
+          established, and nothing established it. The treatment is withheld rather
+          than the document called wrong, so this invoice is on record with no IVA
+          treatment and will not decompose into a declaration until the counterparty's
+          country or establishment is settled.
         confirm_counterparty_name_help: Counterparty display name (no extraction heuristic
           yet; normally required).
         confirm_counterparty_nif_help: Override the extracted supplier tax id.
@@ -1893,6 +1919,12 @@ cli:
           figure was misread. Check the document.
         confirm_resolve_help: 'Answer one blocking finding: <finding-id>=<choose|supply|attest>:<value-or-reason>.
           Repeat once per finding; there is no bulk flag.'
+        confirm_review_contradicted_regime_message: This document contradicts itself
+          about how it is taxed. The detail below names what disagreed with what.
+        confirm_review_undetermined_establishment_message: Where a party to this invoice
+          is established was left undecided by the document as read. IVA territory
+          decides the treatment, and it is not assumed to be the mainland. The detail
+          below names the party and what was missing.
         confirm_taxable_base_help: Override the extracted taxable base.
         consent:
           bytes_unrecallable: 'Withdrawing consent stops future transmission. It cannot
@@ -1958,6 +1990,12 @@ cli:
         notes_help: Internal notes about the evidence
         remove_help: Delete purchase invoice evidence
         review:
+          advised_pending_message: Some pending documents carry advisories. These
+            block nothing and will confirm as they are, so nothing else will raise
+            them again. Narrow the queue with `--advisory` and read one with `review
+            show`.
+          advisory_help: Show only drafts carrying this non-blocking advisory. These
+            stop nothing, so they are otherwise met only by opening each document.
           blocked_message: This document cannot be confirmed until every finding below
             is answered individually. Each answer names one finding by its id.
           blocked_pending_message: Some pending documents carry findings that must
@@ -1993,8 +2031,6 @@ cli:
           show_help: Show one pending draft field by field, with its findings and
             blockers.
           unknown_reference: No pending draft for that reference.
-          advisory_help: 'Show only drafts carrying this non-blocking advisory. These stop nothing, so they are otherwise met only by opening each document.'
-          advised_pending_message: 'Some pending documents carry advisories. These block nothing and will confirm as they are, so nothing else will raise them again. Narrow the queue with `--advisory` and read one with `review show`.'
         source_path_help: Path to the invoice PDF or image
         supplier_help: Supplier name
         taxable_base_help: Invoice taxable base
@@ -2002,12 +2038,6 @@ cli:
         view_help: Show purchase invoice evidence
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence
-        confirm_category_rate_inferred_message: 'This invoice''s IVA treatment was settled by the tax rate its lines charged, because the rule table could not place the operation -- usually because a party''s IVA territory is unestablished. The treatment recorded is the ordinary domestic one for that rate. Check it if this supply was not a domestic one.'
-        confirm_category_unsupported_relief_message: 'The document claims a relief from Spanish output IVA that rests entirely on where the counterparty is established, and nothing established it. The treatment is withheld rather than the document called wrong, so this invoice is on record with no IVA treatment and will not decompose into a declaration until the counterparty''s country or establishment is settled.'
-        confirm_category_contradicted_message: 'The regime this document states and the tax it charged cannot both be true, so no IVA treatment could be taken from either side and none was recorded. Re-read the document: one of the two was misread, or the document itself is wrong.'
-        confirm_category_unresolved_message: 'Nothing established an IVA treatment for this invoice: the document declared none and the operation''s own facts did not reach one. The invoice is on record and will not decompose into a declaration until a treatment is established.'
-        confirm_review_undetermined_establishment_message: 'Where a party to this invoice is established was left undecided by the document as read. IVA territory decides the treatment, and it is not assumed to be the mainland. The detail below names the party and what was missing.'
-        confirm_review_contradicted_regime_message: 'This document contradicts itself about how it is taxed. The detail below names what disagreed with what.'
       inventory:
         actividad_id_help: Economic activity identifier
         create_help: Create an inventory ledger for one activity and tax year
@@ -2187,9 +2217,13 @@ cli:
           scoped to the authenticated NIF is unconfirmed, so it only widens the walk:
           a pair absent from it is no proof that nothing was filed.'
         list_help: List filed declaration rows without downloading artefacts
-        pull_all_help: cli.app.live.filed.pull_all_help
-        pull_all_limit_help: cli.app.live.filed.pull_all_limit_help
-        pull_all_pairs_refused: cli.app.live.filed.pull_all_pairs_refused
+        pull_all_help: Pull this taxpayer's AEAT filed-declaration history in one
+          sweep and report what it found.
+        pull_all_limit_help: Maximum number of modelo and ejercicio pairs to walk
+          in this sweep.
+        pull_all_pairs_refused: '{count} modelo/ejercicio pair(s) could not be read
+          and were NOT reported as empty: {pairs}. Re-run to retry; a refusal is not
+          evidence that nothing was filed.'
         pull_help: Pull filed-declaration data from the authenticated AEAT register.
         pull_modelo_help: Limit this pull to this modelo.
         pull_sources_help: Pull the filed observations required by a target filing's
@@ -4434,13 +4468,16 @@ cli:
         already_confirmed: '''{identifier}'' was already confirmed as established
           in ''{scope}'' by ''{asserted_by}''; this call created no new confirmation
           and the original provenance stands.'
+        evidence_contradicts_confirmation: '''{identifier}'' was confirmed as established
+          in {confirmed}, but the evidence you supplied places the same party in {evidenced}.
+          The ladder will settle no territory for this counterparty until one of the
+          two is withdrawn.'
         not_confirmed: No establishment is confirmed for '{identifier}', so the ladder
           settles nothing from this rung and a document whose paper is non-decisive
           will raise the question.
         nothing_to_withdraw: No confirmed establishment was held for '{identifier}',
           so nothing was withdrawn and the store is already in the state you asked
           for.
-        evidence_contradicts_confirmation: '''{identifier}'' was confirmed as established in {confirmed}, but the evidence you supplied places the same party in {evidenced}. The ladder will settle no territory for this counterparty until one of the two is withdrawn.'
     doclink:
       actor_help: Operator label.
       help: Fetch a Drive document link and store its bytes as encrypted evidence
@@ -4799,9 +4836,11 @@ cli:
         ledger_view: Inspect one transaction.
         live_filed_capture: Pull a read-only observation from AEAT.
         live_filed_capture_sources: List the sources a filed pull can read.
-        live_filed_discover: cli.operator_surface.help.app.live_filed_discover
+        live_filed_discover: Show which modelo and ejercicio pairs a history pull
+          would walk, without pulling anything.
         live_filed_list: List locally captured filed-return observations.
-        live_filed_pull_all: cli.operator_surface.help.app.live_filed_pull_all
+        live_filed_pull_all: Pull the complete AEAT filed-declaration history in one
+          sweep.
         modelo_audit_check: Check bundled evidence for a filing revision.
         modelo_audit_export: Export the evidence audit for a filing revision.
         modelo_audit_show: Show the evidence audit for a filing revision.

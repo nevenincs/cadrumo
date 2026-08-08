@@ -69,8 +69,10 @@ from ...domain.iva import (
     IvaFlowDirection,
     IvaKindApplicability,
     IvaRateKind,
+    IvaTerritorialScope,
     ProrrataInputError,
     ProrrataReference,
+    StatedCountryCodeStatus,
     category_cuota_is_zero_by_law,
     deductible_percentage_for,
     derive_flow_for_classification,
@@ -78,6 +80,8 @@ from ...domain.iva import (
     iva_category_components,
     rate_kinds_for_declared_rate,
     rate_table_covers_any_positive_tier,
+    stated_country_code_status,
+    territorial_scope_for_country,
     validate_prorrata_reference,
 )
 from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterRepositoryProtocol
@@ -185,6 +189,15 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     MISSING_COUNTERPARTY_IDENTIFICATION_STATE = "missing_counterparty_identification_state"
     DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION = "domestic_identification_on_intra_community_transaction"
     EU_MEMBER_STATE_ON_EXPORT_TRANSACTION = "eu_member_state_on_export_transaction"
+    # The export families are the one place absence of an EU member state used
+    # to be read as PRESENCE of third-country establishment. It is not: the
+    # establishment field could not represent a third country at all, so every
+    # unrecorded establishment resolved to the same blank a genuine export did.
+    # This fires when nothing positively places the counterparty OUTSIDE the
+    # Union. A country our own vocabulary has not catalogued is spared -- that
+    # is our data gap, not the operator's -- so this names only an absent,
+    # malformed or ISO-unassigned code.
+    MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT = "missing_counterparty_establishment_on_export"
     CASH_ACCOUNTING_EXCLUDED_CATEGORY = "cash_accounting_excluded_category"
 
 
@@ -1324,6 +1337,7 @@ def _classify_iva_transaction(
         d5_issue = _validate_intracom_export_counterparty(
             transaction_id=transaction_id,
             category=explicit_category,
+            counterparty_country=transaction.counterparty_country,
             eu_member_state=transaction.counterparty_eu_member_state,
             identification_state=transaction.counterparty_identification_state,
         )
@@ -1630,10 +1644,53 @@ def _resolve_iva_prorrata_attachment(
     )
 
 
+#: The categories whose exemption rests on the operation LEAVING the Union.
+#:
+#: Named rather than spelled at each branch because the export rule now has two
+#: refusals reading one membership question, and a second inline literal is how
+#: the pair would drift apart.
+_EXPORT_CATEGORIES: Final[frozenset[IvaCategory]] = frozenset(
+    {
+        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+    },
+)
+
+
+def _export_establishment_is_answerable(counterparty_country: str | None) -> bool:
+    """Return whether this country evidence may carry an export exemption.
+
+    Two different situations are allowed through, and collapsing them would be
+    wrong in opposite directions.
+
+    A code the vocabulary places in a third country answers the question
+    outright -- that is the exemption's actual premise.
+
+    A code the vocabulary does NOT carry is also allowed through, and that
+    carve-out is what separates a guard from a trap. The scope resolver answers
+    from a closed table, so a well-formed code naming a real jurisdiction it
+    does not list resolves to nothing; ``TH`` is measurably exactly this. The
+    establishment is then a gap in OUR data rather than in the operator's, and
+    refusing there would reject a legitimate Thai export over a row nobody has
+    written. A refusal an operator cannot act on is how they learn to skip
+    refusals, which costs more than the case it catches. The ingestion path's
+    declared-relief guard spares the same status on the same authority, so the
+    two surfaces cannot disagree about what evidence an export needs.
+
+    Everything else is refused: an absent code, a malformed one, and an
+    ISO-unassigned pair, each of which genuinely establishes nothing about
+    where the party is.
+    """
+    if territorial_scope_for_country(counterparty_country) is IvaTerritorialScope.THIRD_COUNTRY:
+        return True
+    return stated_country_code_status(counterparty_country) is StatedCountryCodeStatus.UNCATALOGUED
+
+
 def _validate_intracom_export_counterparty(
     *,
     transaction_id: str,
     category: IvaCategory,
+    counterparty_country: str | None,
     eu_member_state: EUMemberState | None,
     identification_state: EUMemberState | None,
 ) -> IvaLedgerAggregationIssue | None:
@@ -1641,7 +1698,9 @@ def _validate_intracom_export_counterparty(
 
     Rules:
     - ``INTRA_COMMUNITY_SUPPLY`` requires a non-ES ``identification_state``.
-    - Export and export-assimilated categories must carry no ``EUMemberState``.
+    - Export and export-assimilated categories require the counterparty to be
+      POSITIVELY established in a third country, and must carry no
+      ``EUMemberState``.
 
     The two rules read DIFFERENT facts, deliberately. Ley 37/1992 art. 25
     exempts on the acquirer holding a VAT identification assigned by another
@@ -1683,25 +1742,39 @@ def _validate_intracom_export_counterparty(
                     ),
                 ),
             )
-    if (
-        category
-        in {
-            IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-            IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
-        }
-        and eu_member_state is not None
-    ):
-        return IvaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
-            detail=tr(
-                "aggregation.iva_ledger.errors.eu_member_state_on_export_transaction",
-                member_state=eu_member_state.value,
-                default=(
-                    "Export or export-assimilated operations must not carry an EU member state; got %{member_state}."
+    if category in _EXPORT_CATEGORIES:
+        if eu_member_state is not None:
+            return IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
+                detail=tr(
+                    "aggregation.iva_ledger.errors.eu_member_state_on_export_transaction",
+                    member_state=eu_member_state.value,
+                    default=(
+                        "Export or export-assimilated operations must not carry an EU member state; "
+                        "got %{member_state}."
+                    ),
                 ),
-            ),
-        )
+            )
+        # Only NOW is absence reached, and it is refused rather than read as
+        # third-country establishment. That inference is the defect this branch
+        # closes: an export leaves the Union, so the exemption turns on where
+        # the counterparty IS, and "no country recorded" is not a place. Read
+        # as one it zero-rated a supply from a fact nobody had stated, which is
+        # the under-declaration direction on the issued side.
+        if not _export_establishment_is_answerable(counterparty_country):
+            return IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT,
+                detail=tr(
+                    "aggregation.iva_ledger.errors.missing_counterparty_establishment_on_export",
+                    default=(
+                        "An export is exempt because the operation leaves the Union, so it turns on where "
+                        "the counterparty is ESTABLISHED. Record the counterparty's country; an absent or "
+                        "unassigned code establishes nothing, and its VAT identification cannot answer this."
+                    ),
+                ),
+            )
     return None
 
 
@@ -1713,6 +1786,7 @@ def validate_iva_ledger_counterparty_category(transaction: Transaction) -> IvaLe
     return _validate_intracom_export_counterparty(
         transaction_id=transaction.transaction_id,
         category=category,
+        counterparty_country=transaction.counterparty_country,
         eu_member_state=transaction.counterparty_eu_member_state,
         identification_state=transaction.counterparty_identification_state,
     )
@@ -1779,6 +1853,7 @@ IVA_LEDGER_COUNTERPARTY_GATE_REASONS: Final[frozenset[IvaLedgerAggregationIssueR
         IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE,
         IvaLedgerAggregationIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION,
         IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
+        IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT,
     },
 )
 

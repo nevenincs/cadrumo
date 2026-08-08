@@ -374,6 +374,10 @@ aggregation:
         efectes de l'IVA espanyola no és vàlida per a una operació intracomunitària.
       eu_member_state_on_export_transaction: Les operacions d'exportació o assimilades
         no poden portar un Estat membre de la UE; rebut %{member_state}.
+      missing_counterparty_establishment_on_export: Una exportació està exempta perquè
+        l'operació surt de la Unió, de manera que depèn d'on estigui ESTABLERTA la
+        contrapart. Registreu el país de la contrapart; un codi absent o no assignat
+        no estableix res, i la seva identificació a efectes d'IVA no pot respondre-hi.
       missing_counterparty_identification_state: Una operació intracomunitària requereix
         l'Estat membre en què la contrapart està identificada a efectes de l'IVA.
       unsupported_iva_category: 'Error intern: categoria d''IVA no admesa per a l''agregació.'
@@ -1976,6 +1980,10 @@ cli:
         confirm_help: Confirma el territori on està establerta una contrapart.
         country_code_help: País sota el qual es declara l'identificador, quan no és
           espanyol.
+        evidenced_scope_help: Territori on un document que teniu situa aquesta part.
+          Indiqueu-lo per preguntar què respondrà l'escala per a aquest document,
+          que és l'única manera de veure una discrepància amb el que vau confirmar
+          abans que una confirmació la rebutgi.
         group_help: Confirma on està establerta una contrapart, una sola vegada, per
           a tots els documents posteriors.
         identification_state_help: 'Estat membre que identifica a efectes d''IVA la
@@ -1989,7 +1997,6 @@ cli:
           imprès al document.
         withdraw_help: Retira un establiment confirmat, declarant que la resposta
           anterior era incorrecta.
-        evidenced_scope_help: 'Territori on un document que teniu situa aquesta part. Indiqueu-lo per preguntar què respondrà l''escala per a aquest document, que és l''única manera de veure una discrepància amb el que vau confirmar abans que una confirmació la rebutgi.'
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
         batch_directory_help: Directori els fitxers del qual s'ingressen. Combina'l
@@ -2012,6 +2019,26 @@ cli:
           no ha fallat; torna a executar quan es resolgui la causa indicada.
         confirm_already_exists_message: Ja existeix una factura amb aquesta identitat;
           es retorna sense canvis en lloc de crear-ne un duplicat.
+        confirm_category_contradicted_message: 'El règim que declara aquest document
+          i l''impost que aplica no poden ser certs alhora, de manera que no s''ha
+          pogut prendre el tractament d''IVA de cap dels dos costats i no se n''ha
+          registrat cap. Torna a llegir el document: se n''ha llegit malament un dels
+          dos, o el document mateix és incorrecte.'
+        confirm_category_rate_inferred_message: El tractament d'IVA d'aquesta factura
+          l'ha determinat el tipus impositiu que apliquen les seves línies, perquè
+          la taula de regles no ha pogut situar l'operació, normalment perquè el territori
+          d'IVA d'una de les parts no està establert. El tractament registrat és l'interior
+          ordinari per a aquest tipus. Comprova-ho si aquest lliurament no era interior.
+        confirm_category_unresolved_message: 'Res no ha establert un tractament d''IVA
+          per a aquesta factura: el document no n''ha declarat cap i els fets de la
+          mateixa operació no n''han assolit cap. La factura queda registrada i no
+          es desglossarà en una declaració fins que s''estableixi un tractament.'
+        confirm_category_unsupported_relief_message: El document invoca una exempció
+          de l'IVA repercutit espanyol que depèn completament d'on està establerta
+          la contrapart, i res no ho ha establert. El tractament es reté en lloc de
+          donar el document per erroni, de manera que aquesta factura queda registrada
+          sense tractament d'IVA i no es desglossarà en una declaració fins que es
+          resolgui el país o l'establiment de la contrapart.
         confirm_counterparty_name_help: Nom de la contrapart (sense heuristica d'extracció
           encara; normalment obligatori).
         confirm_counterparty_nif_help: Sobreescriu el NIF del proveïdor extret.
@@ -2032,6 +2059,13 @@ cli:
           o que s'ha llegit malament alguna xifra. Reviseu el document.
         confirm_resolve_help: 'Respongueu una troballa blocant: <id-troballa>=<choose|supply|attest>:<valor-o-motiu>.
           Repetiu-ho per cada troballa; no hi ha cap opcio massiva.'
+        confirm_review_contradicted_regime_message: Aquest document es contradiu a
+          si mateix sobre com tributa. El detall següent anomena què discrepava amb
+          què.
+        confirm_review_undetermined_establishment_message: El document, tal com s'ha
+          llegit, ha deixat sense decidir on està establerta una de les parts d'aquesta
+          factura. El territori d'IVA determina el tractament i no es dona per suposat
+          que sigui la península. El detall següent anomena la part i el que faltava.
         confirm_taxable_base_help: Sobreescriu la base imposable extreta.
         consent:
           bytes_unrecallable: 'Retirar el consentiment atura els enviaments futurs.
@@ -2106,6 +2140,12 @@ cli:
         notes_help: Notes internes sobre el justificant
         remove_help: Elimina un justificant de factura de compra
         review:
+          advised_pending_message: Alguns documents pendents porten avisos. No bloquegen
+            res i es confirmaran tal com estan, així que res més no els tornarà a
+            plantejar. Acota la cua amb `--advisory` i llegeix-ne un amb `review show`.
+          advisory_help: Mostra només els esborranys que porten aquest avís no bloquejant.
+            No impedeixen res, de manera que altrament només es descobreixen obrint
+            cada document.
           blocked_message: Aquest document no es pot confirmar fins que es respongui
             individualment cada troballa. Cada resposta anomena una troballa pel seu
             identificador.
@@ -2143,8 +2183,6 @@ cli:
           show_help: Mostreu un esborrany pendent camp per camp, amb les seves troballes
             i blocatges.
           unknown_reference: No hi ha cap esborrany pendent per a aquesta referencia.
-          advisory_help: 'Mostra només els esborranys que porten aquest avís no bloquejant. No impedeixen res, de manera que altrament només es descobreixen obrint cada document.'
-          advised_pending_message: 'Alguns documents pendents porten avisos. No bloquegen res i es confirmaran tal com estan, així que res més no els tornarà a plantejar. Acota la cua amb `--advisory` i llegeix-ne un amb `review show`.'
         source_path_help: Ruta al PDF o imatge de la factura
         supplier_help: Nom del proveïdor
         taxable_base_help: Base imposable de la factura
@@ -2152,12 +2190,6 @@ cli:
         view_help: Mostra un justificant de factura de compra
         yes_help: Confirma l'eliminació del justificant
         yes_required: Has de passar --yes per eliminar un justificant
-        confirm_category_rate_inferred_message: 'El tractament d''IVA d''aquesta factura l''ha determinat el tipus impositiu que apliquen les seves línies, perquè la taula de regles no ha pogut situar l''operació, normalment perquè el territori d''IVA d''una de les parts no està establert. El tractament registrat és l''interior ordinari per a aquest tipus. Comprova-ho si aquest lliurament no era interior.'
-        confirm_category_unsupported_relief_message: 'El document invoca una exempció de l''IVA repercutit espanyol que depèn completament d''on està establerta la contrapart, i res no ho ha establert. El tractament es reté en lloc de donar el document per erroni, de manera que aquesta factura queda registrada sense tractament d''IVA i no es desglossarà en una declaració fins que es resolgui el país o l''establiment de la contrapart.'
-        confirm_category_contradicted_message: 'El règim que declara aquest document i l''impost que aplica no poden ser certs alhora, de manera que no s''ha pogut prendre el tractament d''IVA de cap dels dos costats i no se n''ha registrat cap. Torna a llegir el document: se n''ha llegit malament un dels dos, o el document mateix és incorrecte.'
-        confirm_category_unresolved_message: 'Res no ha establert un tractament d''IVA per a aquesta factura: el document no n''ha declarat cap i els fets de la mateixa operació no n''han assolit cap. La factura queda registrada i no es desglossarà en una declaració fins que s''estableixi un tractament.'
-        confirm_review_undetermined_establishment_message: 'El document, tal com s''ha llegit, ha deixat sense decidir on està establerta una de les parts d''aquesta factura. El territori d''IVA determina el tractament i no es dona per suposat que sigui la península. El detall següent anomena la part i el que faltava.'
-        confirm_review_contradicted_regime_message: 'Aquest document es contradiu a si mateix sobre com tributa. El detall següent anomena què discrepava amb què.'
       inventory:
         actividad_id_help: Identificador de l'activitat econòmica
         create_help: Crea un llibre d'existències per a una activitat i exercici
@@ -2355,9 +2387,13 @@ cli:
           qual cosa només amplia el recorregut: un parell absent no prova que no es
           presentés res.'
         list_help: Llistar declaracions presentades sense descarregar artefactes
-        pull_all_help: cli.app.live.filed.pull_all_help
-        pull_all_limit_help: cli.app.live.filed.pull_all_limit_help
-        pull_all_pairs_refused: cli.app.live.filed.pull_all_pairs_refused
+        pull_all_help: Baixa en una sola passada l'historial de declaracions presentades
+          a l'AEAT i detalla el que ha trobat.
+        pull_all_limit_help: Nombre màxim de parells de model i exercici que es recorreran
+          en aquesta passada.
+        pull_all_pairs_refused: 'No s''han pogut llegir {count} parell(s) de model
+          i exercici i NO s''han declarat buits: {pairs}. Torneu a executar l''ordre
+          per reintentar-ho; una negativa no prova que no es presentés res.'
         pull_help: Descàrrega dades de declaracions presentades del registre autenticat
           d'AEAT.
         pull_modelo_help: Limita aquesta descàrrega a aquest model.
@@ -4758,12 +4794,15 @@ cli:
         already_confirmed: '''{identifier}'' ja estava confirmada com a establerta
           a ''{scope}'' per ''{asserted_by}''; aquesta crida no ha creat cap confirmació
           nova i es manté la procedència original.'
+        evidence_contradicts_confirmation: '''{identifier}'' es va confirmar com a
+          establert a {confirmed}, però l''evidència que heu aportat situa la mateixa
+          part a {evidenced}. L''escala no fixarà cap territori per a aquesta contrapart
+          fins que se''n retiri un dels dos.'
         not_confirmed: No hi ha cap establiment confirmat per a '{identifier}', de
           manera que aquest esglaó no resol res i un document el paper del qual no
           sigui concloent plantejarà la pregunta.
         nothing_to_withdraw: No hi havia cap establiment confirmat per a '{identifier}',
           de manera que no s'ha retirat res i el magatzem ja es troba en l'estat sol·licitat.
-        evidence_contradicts_confirmation: '''{identifier}'' es va confirmar com a establert a {confirmed}, però l''evidència que heu aportat situa la mateixa part a {evidenced}. L''escala no fixarà cap territori per a aquesta contrapart fins que se''n retiri un dels dos.'
     doclink:
       actor_help: Etiqueta de l'operador.
       help: Descàrrega un enllaç de document de Drive i desa'n els bytes com a evidència
@@ -5134,9 +5173,11 @@ cli:
         ledger_view: Veure el detall d'una entrada del llibre.
         live_filed_capture: Descarregar declaracions presentades en viu des de l'AEAT.
         live_filed_capture_sources: Mostrar les fonts disponibles per a la descàrrega.
-        live_filed_discover: cli.operator_surface.help.app.live_filed_discover
+        live_filed_discover: Mostra quins parells de model i exercici recorreria una
+          baixada de l'historial, sense baixar res.
         live_filed_list: Llistar declaracions presentades capturades de l'AEAT.
-        live_filed_pull_all: cli.operator_surface.help.app.live_filed_pull_all
+        live_filed_pull_all: Baixa l'historial complet de declaracions presentades
+          a l'AEAT en una sola passada.
         modelo_audit_check: Comprova les evidències incloses d'una revisió de declaració.
         modelo_audit_export: Exporta l'auditoria d'evidències d'una revisió de declaració.
         modelo_audit_show: Mostra l'auditoria d'evidències d'una revisió de declaració.

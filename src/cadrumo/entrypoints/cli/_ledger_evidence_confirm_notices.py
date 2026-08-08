@@ -234,7 +234,6 @@ def confirm_resolution_lines(establishment: ConfirmedEstablishment | None) -> li
         f"{resolution.outcome.value}",
     ]
     lines.extend(
-        f"review_item\t{item.reason.value}\t{item.field or '-'}\t{item.detail}"
-        for item in establishment.review_items
+        f"review_item\t{item.reason.value}\t{item.field or '-'}\t{item.detail}" for item in establishment.review_items
     )
     return lines
