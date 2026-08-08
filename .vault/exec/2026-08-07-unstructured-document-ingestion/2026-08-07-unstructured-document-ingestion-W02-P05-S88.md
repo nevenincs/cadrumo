@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:6b514b02fff3ca071ba1130c4d1d1893651b404e241cb5f245dcad2fe27a0248'
+body_hash: 'sha256:fd403968e5128e0ecd6c4f77fec204db249e1977327e9987fd47ed11049b3835'
 step_id: 'S88'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -326,8 +326,9 @@ time this ran, so only the deciding was left to move.
   reach before. A tier's rate changes by statute, so classifying against the
   printed date while the record is dated otherwise answers about a rate the
   supply was never charged at.
-- Surface a category contradiction as a review item under the shipped
+- Attach a category contradiction as a review item under the shipped
   contradicted-regime reason rather than declaring a second reason for it.
+  Attach, not surface: see the visibility gap recorded below.
 
 ## Outcome
 
@@ -356,8 +357,28 @@ records then reach the invoice decomposition contract undeclared, and the renta
 income path contributes the row's bank cash instead of its ingresos integros,
 dropping the base, the cuota and the retencion. So the tier inference is
 retained as a LAST resort inside the authority, under its own named outcome, so
-singularity holds and the records resting on it can be enumerated. It never
-displaces a table verdict or a declared code, and a fixture asserts that.
+singularity holds. It never displaces a table verdict or a declared code, and a
+fixture asserts that -- the precedence is enforced by the branch shape rather
+than by discipline, since the branch is reached only when both stronger inputs
+are absent.
+
+**The visibility half of that claim was FALSE and is corrected here.** An
+earlier revision of this record, and the source docstrings it described, said
+the records resting on the inference could be enumerated and that a
+contradiction was surfaced. Measured afterwards: nothing in production reads
+either the resolution or the review items on the confirmation result, the
+confirm command builds its payload from the invoice, the draft and the
+confirmation id alone, and neither the invoice nor the confirmation record
+persists the outcome. So a record resting on the weakest rung is currently
+indistinguishable from one the rule table placed outright, and a contradiction's
+explanatory item is constructed, attached and read by nobody.
+
+The prose in all three docstrings was corrected to say so rather than left
+overclaiming. What still has teeth on a contradiction is the WITHHELD category:
+a record reaching the catalogue with no treatment is refused out loud by the
+decomposition contract. The explanatory item waits on a surface. Making the
+inference operator-visible is a real gap, reported as such rather than absorbed,
+and is not closed by this slice.
 
 ## Verification
 
