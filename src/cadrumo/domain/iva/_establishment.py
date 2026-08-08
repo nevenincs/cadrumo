@@ -81,7 +81,7 @@ import tomllib
 from collections.abc import Mapping
 from enum import StrEnum
 from functools import lru_cache
-from typing import Any, Final, NamedTuple
+from typing import Any, Final, NamedTuple, TypeGuard
 
 from ...core.identity import (
     NifIvaPrefix,
@@ -280,6 +280,36 @@ def _vat_territory_carve_outs() -> dict[str, _CarveOut]:
     return _carve_out_rows_from_payload(target, payload)
 
 
+def _is_object_list(value: object) -> TypeGuard[list[object]]:
+    """Narrow an unparameterized runtime list to untrusted object entries."""
+    return isinstance(value, list)
+
+
+def _is_str_keyed_mapping(value: object) -> TypeGuard[Mapping[str, object]]:
+    """Narrow an unparameterized runtime dict to a string-keyed mapping.
+
+    True by construction for a table parsed from TOML: ``tomllib`` always
+    produces string keys.
+    """
+    return isinstance(value, dict)
+
+
+def _str_tuple_or_none(value: object) -> tuple[str, ...] | None:
+    """Validate a raw TOML array is entirely strings, returning it widened.
+
+    Returns ``None`` when *value* is not a list, or when any entry is not a
+    string, so the caller raises its own domain-specific refusal.
+    """
+    if not _is_object_list(value):
+        return None
+    widened: list[str] = []
+    for item in value:
+        if not isinstance(item, str):
+            return None
+        widened.append(item)
+    return tuple(widened)
+
+
 def _carve_out_rows_from_payload(target: object, payload: Mapping[str, Any]) -> dict[str, _CarveOut]:
     """Return the carve-out rows a parsed table declares, refusing a malformed one.
 
@@ -342,14 +372,14 @@ def _carve_out_rows_from_payload(target: object, payload: Mapping[str, Any]) -> 
             if parent == code:
                 raise IvaCatalogueError(f"{target}: carve-out {code} is assimilated to itself")
 
-        references = record.get("legal_refs", ())
-        if not isinstance(references, list) or not all(isinstance(item, str) for item in references):
+        references = _str_tuple_or_none(record.get("legal_refs", ()))
+        if references is None:
             raise IvaCatalogueError(f"{target}: carve-out {code} legal_refs must be an array of strings")
         # A territorial rule IS a regulatory value, so an uncited row is
         # ungrounded rather than merely undocumented and must not load.
         if not references:
             raise IvaCatalogueError(f"{target}: carve-out {code} cites no provision establishing its treatment")
-        citations.append((code, tuple(references)))
+        citations.append((code, references))
         resolved[code] = _CarveOut(assimilated_to=parent, scope=scope, establishes_nothing=nothing)
 
     if not resolved:
@@ -688,14 +718,14 @@ def _excluded_territories_by_prefix() -> dict[str, IvaTerritorialScope]:
             scope = IvaTerritorialScope(record["scope"])
         except (KeyError, ValueError) as exc:
             raise IvaCatalogueError(f"{target}: territory record names no known scope: {record!r}") from exc
-        references = record.get("legal_refs", ())
-        if not isinstance(references, list) or not all(isinstance(item, str) for item in references):
+        references = _str_tuple_or_none(record.get("legal_refs", ()))
+        if references is None:
             raise IvaCatalogueError(f"{target}: territory {scope.value} legal_refs must be an array of strings")
         # A territorial exclusion IS a regulatory value, so an uncited row is
         # ungrounded rather than merely undocumented and must not load.
         if not references:
             raise IvaCatalogueError(f"{target}: territory {scope.value} cites no provision establishing its exclusion")
-        citations.append((scope.value, tuple(references)))
+        citations.append((scope.value, references))
         for prefix in record.get("postal_prefixes", ()):
             resolved[str(prefix)] = scope
     if not resolved:
@@ -828,16 +858,22 @@ def _index_country_names(payload: object, *, source: str) -> dict[str, str]:
     from ._errors import IvaCatalogueError
 
     target = source
-    if not isinstance(payload, dict):
+    if not _is_str_keyed_mapping(payload):
         raise IvaCatalogueError(f"{target}: the country-name vocabulary is not a table")
 
+    countries = payload.get("country", ())
+    if not _is_object_list(countries):
+        raise IvaCatalogueError(f"{target}: the country-name vocabulary carries a malformed country table")
+
     resolved: dict[str, str] = {}
-    for record in payload.get("country", ()):
+    for record in countries:
+        if not _is_str_keyed_mapping(record):
+            raise IvaCatalogueError(f"{target}: country record is not a table: {record!r}")
         code = str(record.get("code", "")).strip().upper()
         if len(code) != _ALPHA2_LENGTH or not code.isalpha():
             raise IvaCatalogueError(f"{target}: country record names no alpha-2 code: {record!r}")
         names = record.get("names", ())
-        if not names:
+        if not _is_object_list(names) or not names:
             raise IvaCatalogueError(f"{target}: country {code} carries no printed name")
         for name in names:
             normalised = _normalise_printed_country_name(str(name))
@@ -905,12 +941,18 @@ def _index_country_alpha3(payload: object, *, source: str) -> dict[str, str]:
     from ._errors import IvaCatalogueError
 
     target = source
-    if not isinstance(payload, dict):
+    if not _is_str_keyed_mapping(payload):
         raise IvaCatalogueError(f"{target}: the country-name vocabulary is not a table")
+
+    countries = payload.get("country", ())
+    if not _is_object_list(countries):
+        raise IvaCatalogueError(f"{target}: the country-name vocabulary carries a malformed country table")
 
     resolved: dict[str, str] = {}
     alpha3_by_code: dict[str, str] = {}
-    for record in payload.get("country", ()):
+    for record in countries:
+        if not _is_str_keyed_mapping(record):
+            raise IvaCatalogueError(f"{target}: country record is not a table: {record!r}")
         code = str(record.get("code", "")).strip().upper()
         if len(code) != _ALPHA2_LENGTH or not code.isalpha():
             raise IvaCatalogueError(f"{target}: country record names no alpha-2 code: {record!r}")
