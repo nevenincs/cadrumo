@@ -406,6 +406,15 @@ class EvidenceExtractResult(OutputSchema):
     # the paper said, and the territory stays the domain's to resolve.
     supplier_country: str | None = None
     customer_country: str | None = None
+    # The country CODE each party's record states, for the structured readers,
+    # which state a code where a printed document prints a name. Carried beside
+    # the name rather than folded into it: a document states one or the other,
+    # and collapsing them would leave the operator unable to tell what the paper
+    # actually carried. Always the ISO alpha-2 form even where the record stated
+    # alpha-3 -- Facturae states `ESP` -- with the form the document itself
+    # states recoverable from the field's provenance anchor.
+    supplier_country_code: str | None = None
+    customer_country_code: str | None = None
     invoice_number: str | None = None
     invoice_series: str | None = None
     invoice_date: str | None = None
