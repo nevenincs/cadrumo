@@ -1273,15 +1273,23 @@ def test_no_bundled_design_file_disappears_from_the_inventory() -> None:
     """
     missing: list[str] = []
     seen_any = 0
-    for modelo_id in sorted({modelo.id for modelo, _, _ in _exporting_revisions()}):
-        directory = _design_dir(modelo_id)
-        if not directory.is_dir():
-            continue
+    # DELIBERATELY DOES NOT LOAD THE REGISTRY AUTHORITY. Whether a bundled file is
+    # enumerated is a fact about the corpus and the inventory; nothing about it depends
+    # on a legal catalogue validating or a revision declaring an export layout. An
+    # earlier draft derived its modelo list from the exporting revisions and was taken
+    # down by an unrelated peer condition -- a legal reference whose corpus sidecar had
+    # not been generated yet. That is a blind spot rather than bad luck: a guard that
+    # cannot run while another part of the tree is mid-edit is unavailable exactly when
+    # a withheld file is most likely to slip in unnoticed.
+    design_root = bundled_path(*_DESIGN_ROOT_PARTS)
+    for directory in sorted(path for path in design_root.glob("modelo_*") if path.is_dir()):
+        modelo_id = directory.name.removeprefix("modelo_")
         on_disk = {path for path in directory.glob("files/*") if path.suffix.lower() in _DESIGN_SUFFIXES}
+        if not on_disk:
+            continue
         seen_any += len(on_disk)
         enumerated = set(_design_sources(modelo_id))
-        for path in sorted(on_disk - enumerated):
-            missing.append(f"modelo {modelo_id} design {path.name!r}")
+        missing.extend(f"modelo {modelo_id} design {path.name!r}" for path in sorted(on_disk - enumerated))
     assert seen_any, "no bundled design file was found on disk at all; the corpus path has moved"
     assert not missing, (
         "these design files exist in the bundled corpus but the inventory does not enumerate them, so "
