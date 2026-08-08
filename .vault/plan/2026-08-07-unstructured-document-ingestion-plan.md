@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:e357676e3620e532824444d71eaa3128f431c316098f476277f76f8d0db8e67d'
+body_hash: 'sha256:90835df449e1ec8eb5cdfa0e44cc1ca21d2a9b1c9f6d88f66bc9ec06458a43f5'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -175,12 +175,13 @@ Builds the key-pinned harness and produces the stage baselines and recorded acce
 - [ ] `W04.P10.S35` - Measure the S1 baseline over the 48 stage1_reference_text transcriptions, 7 twin pairs and 130 vision-path documents via the gated cloud route, with local production-model floors deferred to GPU headroom; `dev`.
 - [ ] `W04.P10.S36` - Measure the S2 baseline over stage1_reference_text with fabrication on null-truth scored as a hard error and both COM-2026-0005 entries required to surface findings; `dev`.
 - [ ] `W04.P10.S37` - Measure the S4 category baseline over the 59 category-scorable documents only, with the acquired-real set excluded by category_scorable false; `dev`.
-- [ ] `W04.P10.S38` - Measure the tabular mapping baseline over the six csv_dialect descriptors, nine CSV exports and the libro registro header; `dev`.
+- [x] `W04.P10.S38` - Measure the tabular mapping baseline over the six csv_dialect descriptors, nine CSV exports and the libro registro header; `dev`.
 - [ ] `W04.P10.S39` - Record the acceptance floors from the first measured baselines with the key hash, and wire subsequent harness runs to compare against them; `dev`.
 - [x] `W04.P10.S81` - Report the model tier beside every harness figure, record the claude-sonnet-4-6 REC-DOM-IMG-008 result (7 of 8, zero fabricated) as an upper reference point, and re-establish the baseline at the Haiku-tier proxy and the 2B-4B on-host class, gated by the harness refusing a result row missing its tier; `dev`.
 - [ ] `W04.P10.S82` - Measure whether fewer fields per call outperforms all fields at once at the design-target tier, resolving the S2 call-shape question by a recorded comparison at fixed key hash and tier rather than by assertion; `dev`.
 - [x] `W04.P10.S274` - Build the scoring arm the harness lacks, since _runner.py does not read documents and Scored takes matched wrong and fabricated as caller-supplied integers with nothing anywhere comparing a model emitted fields against scorable_fields and fabrication_trap_fields to produce them - so fabrication on null-truth has a place to be recorded and no code that computes it - and the arm must prove it can return non-zero before any zero it reports counts as a measurement; `dev/ingest_harness`.
 - [ ] `W04.P10.S277` - Give the extraction prompt compiler a field-subset parameter so the fewer-fields-per-call arm can exist at all, since _field_lines takes no arguments and neither entry point accepts a selection (build takes period only, render takes values only) so every call emits all 18 field contracts - which means W04.P10.S82 is blocked on a compiler capability rather than on a harness run, and the split-call arm cannot be constructed let alone compared; `src/cadrumo/llm/_invoice_extraction_prompt.py`.
+- [ ] `W04.P10.S280` - Measure tabular column-role mapping quality over the 71 columns of the nine CSV exports against an operator-authored expected mapping, labelled the weaker non-key-grounded claim, since score_emission refuses all nine documents for want of authored truth and no key-grounded mapping figure can exist; `dev`.
 
 ## Wave `W05` - The reinstated consent gate
 

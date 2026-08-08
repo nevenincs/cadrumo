@@ -33,9 +33,22 @@ related:
 
 ## Outcome
 
-**This Step is PARTIALLY delivered. The plan row stays unchecked.** The
-deterministic component is measured and controlled; the model-dependent mapping
-quality figure could not be executed and no figure is reported for it.
+**This Step is CLOSED NARROWER THAN ITS TITLE, deliberately and on the record.**
+It delivers the deterministic tabular baseline — shape recovery, header location
+and the exact-header floor — each measured and each control-proved. It delivers
+**no mapping-quality figure at all**, and the row's title names one.
+
+**What the standing goal still asks that this close excludes.** The row is titled
+a *mapping* baseline. Arms A, B and C measure dialect shape, header location and
+deterministic exact-header resolution; not one of them measures how often the
+semantic column-role mapping is RIGHT. That question is not deferred for
+convenience — it has no key-grounded answer available, because the corpus authors
+no column-role truth for any of the nine documents. It is carried forward as
+`S280`, opened in the same action as this narrowing so the excluded half has an
+owner and a row rather than disappearing into a checked box.
+
+A reader comparing this record against its title should read it as *delivered
+narrower*, never as *delivered as specified*.
 
 All figures below are quoted against corpus key sha256
 `e2db6a499f6f0ffafa4cf44084f433962dd3f8a0f6f0a65facaf7df07bb38593`
@@ -224,3 +237,14 @@ The scoring arm probed against every tabular document, all nine refusing:
 - The scoring drivers live in the session scratchpad and are ephemeral. Every
   figure above is reproducible from the public entry points named in this record
   against the pinned key.
+- **An expected mapping for all 71 columns already exists and its provenance is
+  clean.** It was derived from the `FieldRole` member semantics and the observed
+  header text BEFORE any model output existed, so it cannot have been fitted to a
+  result. `S280` should consume it rather than authoring a second one, and should
+  carry forward the ambiguous slots it records — a value-date column beside a
+  booked-date column, and a debit/credit pair, each of which has more than one
+  defensible answer under a one-column-per-role constraint.
+- **No acceptance floor may be set on the encoding axis**, on this corpus or a
+  successor built the same way, until a file carries a byte that distinguishes the
+  codecs. The axis reports unscorable rather than passing, so a floor set here
+  would be a floor on an unobservable.
