@@ -5465,7 +5465,11 @@ reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a97; operator to re-stamp"
 notes = "LIRPF art 97: autoliquidación. Incluye en su apartado 6 la compensación entre cónyuges cuando, en tributación individual, el resultado de una declaración es a ingresar y el de la otra a devolver. Base legal de las casillas de resultado de la autoliquidación, compensación entre cónyuges (datos de la cuenta SEPA) y autoliquidación rectificativa en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a97; operator to confirm and re-stamp."
 required_text = [
-    "Autoliquidación",
+    "Autoliquidación",    # Apartado 6 (spousal renuncia to a refund is not a lucrative transfer),
+    # the last operative provision, at 96%. The phrase above was the single
+    # word `Autoliquidación`, which appears across the whole law.
+    # Verified against live BOE: apartados 1-6 on both sides.
+    "no existe transmisión lucrativa a efectos fiscales entre los cónyuges por la renuncia a la devolución",
 ]
 
 [legal."ley-35-2006:da-48"]
