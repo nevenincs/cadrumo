@@ -41,6 +41,15 @@
         "reason": "White-box test reach: the manager screen is driven with the REAL persist callback so an edit goes through the actual write path (blank-clears-the-fact, re-read rather than patch) instead of a double. `persist_active_profile_field` is the CLI's composition of the profile write door onto the TUI screen -- entrypoint-owned, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted, and no Ruling-4 bridge minted, for the reason recorded on the `attempt_registration` entries above."
       },
       {
+        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_screen.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.entrypoints.cli._config._manager_actions",
+        "imported_names": [
+          "logout_action"
+        ],
+        "reason": "White-box test reach: the manager app is built with the REAL logout door so the test asserts the actual session teardown (`logout_active_profile`) ran, not a stand-in's bookkeeping -- the whole point of the case is proving BOTH the session and the screen close, which a doubled action could satisfy while leaving session artefacts on disk. `logout_action` is the CLI's composition of the auth logout door onto the TUI screen, consumed in production only inside entrypoints.cli._config itself. Deliberately NOT promoted, for the reason recorded on the `manager_actions` entries below."
+      },
+      {
         "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_masked_field_preservation.py",
         "occurrence": 1,
         "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
@@ -142,6 +151,26 @@
           "persist_active_profile_field"
         ],
         "reason": "White-box test reach in the manager-overview render case: the screen is driven with the REAL persist callback so an edit travels the actual write path rather than a double's bookkeeping, matching the disposition already recorded for the sibling manager-screen tests that reach the same symbol. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface so a test can reach it would put an entrypoint-internal composition on the package's public contract for no production consumer."
+      },
+      {
+        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py",
+        "occurrence": 2,
+        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
+        "imported_names": [
+          "build_active_profile_overview",
+          "persist_active_profile_field",
+          "profile_field_value_refusal"
+        ],
+        "reason": "Second occurrence, in the manager-overview render fixture rather than the populated-manager one: the same REAL overview builder, REAL write and REAL value judge for the same reason -- a hand-built overview or a doubled judge would reproduce the stand-in shape the layout defects this enrollment guards against were found by, escaping a hand check rather than a real render. Deliberately NOT promoted, for the reason recorded on the first occurrence above."
+      },
+      {
+        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.entrypoints.cli._config._status_frontend",
+        "imported_names": [
+          "build_status_page_data"
+        ],
+        "reason": "White-box test reach: the status page is built through the REAL production door, `build_status_page_data()`, rather than a hand-built `StatusPageData`, so a freshly registered profile's zero AEAT-sourced observations produce the genuine `no_aeat_history_notice` INFO notice this fixture needs rather than a fabricated one. This is the fixture that caught the shipped defect where `NoticeBand` claimed the whole scroll column and every panel beneath it stopped painting -- every other status fixture builds with no notices at all, so none of them could have seen it. `build_status_page_data` is the CLI's composition of profile status onto the TUI screen, consumed in production only inside entrypoints.cli._config._status_frontend itself. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface so a test can reach it would put an entrypoint-internal composition on the package's public contract for no production consumer."
       },
       {
         "importer_path": "src/cadrumo/adapters/outbound/aeat/export/_formats/tests/test_record_specs.py",
@@ -809,6 +838,15 @@
           "manager_actions"
         ],
         "reason": "Second occurrence, in the manager-overview render case rather than the fixture: the same REAL action row for the same reason -- a zero-button manager renders cleanly and only a real render catches it. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface so a test can reach it would put an entrypoint-internal composition on the package's public contract for no production consumer."
+      },
+      {
+        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py",
+        "occurrence": 3,
+        "target_mod": "cadrumo.entrypoints.cli._config._manager_actions",
+        "imported_names": [
+          "manager_actions"
+        ],
+        "reason": "Third occurrence, in the masked-field width case: the same REAL action row is built alongside the REAL persist callback so the screen under a real terminal-width render carries a real action row rather than a stand-in shape, for the same reason as the two occurrences above. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface so a test can reach it would put an entrypoint-internal composition on the package's public contract for no production consumer."
       },
       {
         "importer_path": "src/cadrumo/entrypoints/cli/tests/test_source_diagnostic_notice_context.py",
