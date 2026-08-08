@@ -43,33 +43,32 @@ DRAFT_ATTRIBUTE_CANONICAL_WIDTHS: Mapping[str, int | None] = {
     # identification number of a mercantile group's ultimate parent company, and
     # binding the declarant there declares the filer to be its own parent.
     "profile_tax_id": SPANISH_TAX_ID_WIDTH,
-    # The remaining attributes abstain, and each abstention has its own reason
-    # rather than a shared "these vary" claim. Recorded per attribute because an
-    # abstention that cites the wrong reason is worse than none: it reads as a
-    # ruling that the slot widths are legitimately diverse when at least one of
-    # them is not.
+    # Neither of the two remaining abstentions is a shared "these vary" claim.
+    # Recorded per attribute because an abstention that cites the wrong reason is
+    # worse than none: it reads as a ruling that the slot widths are legitimately
+    # diverse when at least one of them is not.
     #
     # No declaration in the registry binds either of these, so no width is
     # observable to gate against and any value chosen here would be invented.
     "modelo": None,
     "period": None,
-    # ABSTAINS OVER A KNOWN DIVERGENCE, not over legitimate variability. The
-    # source is str(period.filing_year), always 4 characters, and the registry
-    # binds 4 in every declaration but one: Modelo 200's page-000 envelope-open
-    # record binds it to a 17-character slot. 17 is the width of the whole
-    # envelope-open tag, which the sibling modelos compose from a literal "<T",
-    # the modelo code, a page digit, the year, the period token and a literal
-    # "0000>" -- six or seven fields, not one. That declaration is suspected
-    # wrong, and gating this attribute at 4 would refuse the registry build until
-    # it is restructured, which needs its own decision and its own byte-level
-    # verification of the emitted tag. Until then the gate is deliberately
-    # silent HERE, so the divergence must stay recorded elsewhere to be found.
-    "filing_year": None,
-    # Uniform at 2 across every declaration, so this one is gateable on the
-    # evidence; it abstains only because the token's width has not been
-    # established against the published diseños, and a period token is the axis
-    # where a per-period-kind width difference would be plausible.
-    "period_code": None,
+    # The source is str(period.filing_year), always 4 characters, and the published
+    # diseños agree: every envelope-open tag spells the ejercicio de devengo as
+    # four digits inside a composite the modelo builds from separate literal and
+    # draft fields -- a literal "<T", the modelo code, a discriminante or page
+    # digit, the year, the period token and a literal "0000>". Binding this
+    # attribute to the whole tag's width instead collapses that composite onto one
+    # field, which emits the year and pads the rest of AEAT's required constant
+    # away as blanks; Modelo 200's page-000 record did exactly that, and the gate
+    # abstained rather than refuse a build it had no restructured declaration to
+    # accept. The composite is declared field-by-field now, so the gate asserts.
+    "filing_year": 4,
+    # Two characters in every declaration and in the diseños themselves: the
+    # Modelo 200 page-000 sheet spells the periodo as "0A" inside its 17-character
+    # envelope-open example, which is the same two-character AEAT period token the
+    # quarterly and monthly modelos carry. A per-period-kind width difference would
+    # have been plausible, and the published examples rule it out.
+    "period_code": 2,
 }
 
 

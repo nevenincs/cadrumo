@@ -50,6 +50,11 @@ from ._marriage_facts import (
     marriage_month_start,
     parse_marriage_date_flag,
 )
+from ._meses_trabajo import (
+    MESES_TRABAJO_ACCEPTED_FORM,
+    parse_meses_trabajo,
+    serialise_meses_trabajo,
+)
 from ._normalise import normalise_key
 from ._renta_codes import (
     RENTA_MODELO100_CCAA_CODIGOS,
@@ -196,6 +201,7 @@ def _normalize_region_token(raw: str) -> str:
 __all__ = [
     "CCAA",
     "GUARDERIA_MENSUAL_ACCEPTED_FORM",
+    "MESES_TRABAJO_ACCEPTED_FORM",
     "PROFILE_KEYS",
     "RENTA_MODELO100_CCAA_CODIGOS",
     "UE_EEA_COUNTRY_CODES",
@@ -236,11 +242,13 @@ __all__ = [
     "parse_descendiente_flag",
     "parse_guarderia_mensual",
     "parse_marriage_date_flag",
+    "parse_meses_trabajo",
     "parse_tax_region",
     "profile_keys",
     "register_profile_keys",
     "relacion_kwarg",
     "required_profile_keys",
     "serialise_guarderia_mensual",
+    "serialise_meses_trabajo",
     "within_multi_year_applicability_window",
 ]

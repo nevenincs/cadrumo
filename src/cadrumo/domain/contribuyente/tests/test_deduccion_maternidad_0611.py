@@ -2,7 +2,7 @@
 
 Covers the live arithmetic, the persistence boundary and the flag: the oracle and
 anti-tautology cases for ``compute_deduccion_maternidad_0611``, the roundtrip of
-``meses_madre_trabajo_2024`` through the fact index, and what the
+``meses_madre_trabajo`` through the fact index, and what the
 ``--descendiente`` flag accepts.
 
 Art. 81 LIRPF: ``sum(min(meses_trabajados × 100, 1_200))`` per eligible hijo.
@@ -40,6 +40,7 @@ from .._descendant_facts import (
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
+from .._meses_trabajo import parse_meses_trabajo
 from ..family import DescendantInfo, RentaFamilyProfile
 from ._registry_thresholds import registry_thresholds
 
@@ -55,11 +56,11 @@ _THRESHOLDS = registry_thresholds(2024)
 # ---------------------------------------------------------------------------
 
 
-def _hijo_menor_3(meses: int) -> DescendantInfo:
+def _hijo_menor_3(meses: str) -> DescendantInfo:
     """Child born 2022-06-01 → age 2 at 2024-12-31, eligible menor-3."""
     return DescendantInfo(
         birth_date=date(2022, 6, 1),
-        meses_madre_trabajo_2024=meses,
+        meses_madre_trabajo=parse_meses_trabajo(meses, field="test"),
     )
 
 
@@ -67,7 +68,7 @@ def _hijo_no_menor_3() -> DescendantInfo:
     """Child born 2020-01-01 → age 4 at 2024-12-31, NOT menor-3 eligible."""
     return DescendantInfo(
         birth_date=date(2020, 1, 1),
-        meses_madre_trabajo_2024=12,
+        meses_madre_trabajo=tuple(range(1, 13)),
     )
 
 
@@ -77,35 +78,35 @@ def _hijo_no_menor_3() -> DescendantInfo:
 
 
 class TestMesesTornoFacts:
-    """Verify meses_madre_trabajo_2024 survives descendant_facts roundtrip."""
+    """Verify meses_madre_trabajo survives descendant_facts roundtrip."""
 
     def test_roundtrip_meses_stored_and_reloaded(self) -> None:
         """Fact serialisation: meses=6 → stored as '6' → reloaded as 6."""
-        original = _hijo_menor_3(6)
+        original = _hijo_menor_3("1-6")
         facts = dict(descendant_facts_from_list((original,)))
 
-        assert facts.get("renta_family.descendiente.0.meses_madre_trabajo") == "6"
+        assert facts.get("renta_family.descendiente.0.meses_madre_trabajo") == "01;02;03;04;05;06"
 
         reloaded = descendant_list_from_facts(facts)
         assert len(reloaded) == 1
-        assert reloaded[0].meses_madre_trabajo_2024 == 6
+        assert reloaded[0].meses_madre_trabajo == (1, 2, 3, 4, 5, 6)
 
     def test_roundtrip_zero_meses_not_stored(self) -> None:
         """Fact serialisation: meses=0 is not stored (absent means 0)."""
-        original = _hijo_menor_3(0)
+        original = _hijo_menor_3("")
         facts = dict(descendant_facts_from_list((original,)))
 
         assert "renta_family.descendiente.0.meses_madre_trabajo" not in facts
 
         reloaded = descendant_list_from_facts(facts)
-        assert reloaded[0].meses_madre_trabajo_2024 == 0
+        assert reloaded[0].meses_madre_trabajo == ()
 
     def test_roundtrip_preserves_other_fields(self) -> None:
         """Adding meses does not disturb other fields on roundtrip."""
         original = DescendantInfo(
             birth_date=date(2022, 6, 1),
             custodia_compartida=True,
-            meses_madre_trabajo_2024=9,
+            meses_madre_trabajo=(1, 2, 3, 4, 5, 6, 7, 8, 9),
         )
         facts = dict(descendant_facts_from_list((original,)))
         reloaded = descendant_list_from_facts(facts)
@@ -122,25 +123,34 @@ class TestParseDescendienteFlagMesesTrabajo:
 
     def test_meses_trabajo_parsed(self) -> None:
         cases = (
-            ("twelve", "NACIMIENTO=2022-06-01,MESES_TRABAJO=12", 12),
-            ("six", "NACIMIENTO=2022-06-01,MESES_TRABAJO=6", 6),
-            ("zero", "NACIMIENTO=2022-06-01,MESES_TRABAJO=0", 0),
-            ("absent", "NACIMIENTO=2022-06-01", 0),
+            ("twelve", "NACIMIENTO=2022-06-01,MESES_TRABAJO=1-12", tuple(range(1, 13))),
+            ("six", "NACIMIENTO=2022-06-01,MESES_TRABAJO=1-6", (1, 2, 3, 4, 5, 6)),
+            ("scattered", "NACIMIENTO=2022-06-01,MESES_TRABAJO=3;7;11", (3, 7, 11)),
+            ("absent", "NACIMIENTO=2022-06-01", ()),
         )
         for case_id, spec, expected in cases:
             d = parse_descendiente_flag(spec)
-            assert d.meses_madre_trabajo_2024 == expected, case_id
+            assert d.meses_madre_trabajo == expected, case_id
 
-    def test_meses_trabajo_out_of_range_raises(self) -> None:
+    def test_meses_trabajo_malformed_raises(self) -> None:
+        """Every malformed month spec refuses; none is silently dropped.
+
+        A dropped month would change the Art. 81.2 proration basis, which is
+        now an intersection rather than a count, so a lost month changes WHICH
+        months qualify and not merely how many.
+        """
         for case_id, spec in (
             ("above-range", "NACIMIENTO=2022-06-01,MESES_TRABAJO=13"),
-            ("negative", "NACIMIENTO=2022-06-01,MESES_TRABAJO=-1"),
+            ("zero-month", "NACIMIENTO=2022-06-01,MESES_TRABAJO=0"),
+            ("inverted-range", "NACIMIENTO=2022-06-01,MESES_TRABAJO=8-5"),
+            ("repeated", "NACIMIENTO=2022-06-01,MESES_TRABAJO=3;3"),
+            ("not-a-number", "NACIMIENTO=2022-06-01,MESES_TRABAJO=abc"),
         ):
             try:
-                with pytest.raises(ValueError, match="MESES_TRABAJO must be 0"):
+                with pytest.raises(ValueError):
                     parse_descendiente_flag(spec)
             except AssertionError as exc:
-                raise AssertionError(f"out-of-range MESES_TRABAJO was accepted: {case_id}") from exc
+                raise AssertionError(f"malformed MESES_TRABAJO was accepted: {case_id}") from exc
 
 
 # ---------------------------------------------------------------------------
@@ -153,17 +163,17 @@ class TestAltaPosteriorNacimientoMes:
     """``alta_posterior_nacimiento_mes``: the operator-supplied completion month."""
 
     def test_parsed_from_the_descendiente_flag(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=8,ALTA_POSTERIOR_MES=5")
+        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=5-12,ALTA_POSTERIOR_MES=5")
         assert d.alta_posterior_nacimiento_mes == 5
 
     def test_absent_from_the_flag_stays_none(self) -> None:
-        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=8")
+        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=5-12")
         assert d.alta_posterior_nacimiento_mes is None
 
     def test_flag_out_of_range_raises(self) -> None:
         for case_id, spec in (
-            ("above-range", "NACIMIENTO=2022-06-01,MESES_TRABAJO=8,ALTA_POSTERIOR_MES=13"),
-            ("zero", "NACIMIENTO=2022-06-01,MESES_TRABAJO=8,ALTA_POSTERIOR_MES=0"),
+            ("above-range", "NACIMIENTO=2022-06-01,MESES_TRABAJO=5-12,ALTA_POSTERIOR_MES=13"),
+            ("zero", "NACIMIENTO=2022-06-01,MESES_TRABAJO=5-12,ALTA_POSTERIOR_MES=0"),
         ):
             try:
                 with pytest.raises(ValueError, match="ALTA_POSTERIOR_MES must be 1"):
@@ -173,13 +183,13 @@ class TestAltaPosteriorNacimientoMes:
 
     def test_declared_with_zero_worked_months_is_refused(self) -> None:
         """The completion month is one of the worked months, not separate from them."""
-        with pytest.raises(ValueError, match="meses_madre_trabajo_2024 is 0"):
+        with pytest.raises(ValueError, match="meses_madre_trabajo is empty"):
             DescendantInfo(birth_date=date(2023, 1, 1), alta_posterior_nacimiento_mes=5)
 
     def test_roundtrip_stored_and_reloaded(self) -> None:
         original = DescendantInfo(
             birth_date=date(2023, 1, 1),
-            meses_madre_trabajo_2024=8,
+            meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12),
             alta_posterior_nacimiento_mes=5,
         )
         facts = dict(descendant_facts_from_list((original,)))
@@ -191,7 +201,7 @@ class TestAltaPosteriorNacimientoMes:
         assert reloaded[0] == original
 
     def test_roundtrip_absent_stays_absent(self) -> None:
-        original = DescendantInfo(birth_date=date(2023, 1, 1), meses_madre_trabajo_2024=8)
+        original = DescendantInfo(birth_date=date(2023, 1, 1), meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12))
         facts = dict(descendant_facts_from_list((original,)))
 
         assert "renta_family.descendiente.0.alta_posterior_nacimiento_mes" not in facts
@@ -203,7 +213,7 @@ class TestAltaPosteriorNacimientoMes:
         """Anti-tautology: a malformed stored value must not silently withhold the increment."""
         original = DescendantInfo(
             birth_date=date(2023, 1, 1),
-            meses_madre_trabajo_2024=8,
+            meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12),
             alta_posterior_nacimiento_mes=5,
         )
         facts = dict(descendant_facts_from_list((original,)))
@@ -217,16 +227,20 @@ class TestMaternidadAltaPosteriorIncrementApplies:
     """The engine-side gate: a declared month plus the year-2023-onward boundary."""
 
     def test_applies_from_2023_when_declared(self) -> None:
-        child = DescendantInfo(birth_date=date(2023, 1, 1), meses_madre_trabajo_2024=8, alta_posterior_nacimiento_mes=5)
+        child = DescendantInfo(
+            birth_date=date(2023, 1, 1), meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12), alta_posterior_nacimiento_mes=5
+        )
         assert child.maternidad_alta_posterior_increment_applies(2023) is True
 
     def test_does_not_apply_before_2023_even_when_declared(self) -> None:
         """Same descendant, one filing year earlier: the route does not exist yet."""
-        child = DescendantInfo(birth_date=date(2020, 1, 1), meses_madre_trabajo_2024=8, alta_posterior_nacimiento_mes=5)
+        child = DescendantInfo(
+            birth_date=date(2020, 1, 1), meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12), alta_posterior_nacimiento_mes=5
+        )
         assert child.maternidad_alta_posterior_increment_applies(2022) is False
 
     def test_does_not_apply_when_nothing_is_declared(self) -> None:
-        child = DescendantInfo(birth_date=date(2023, 1, 1), meses_madre_trabajo_2024=8)
+        child = DescendantInfo(birth_date=date(2023, 1, 1), meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12))
         assert child.maternidad_alta_posterior_increment_applies(2023) is False
 
 
@@ -365,7 +379,7 @@ class TestMaternidadEligibleMeses:
     """
 
     def test_a_child_under_three_all_year_has_every_month(self) -> None:
-        assert _hijo_menor_3(0).maternidad_eligible_meses(2024) == 12
+        assert _hijo_menor_3("").maternidad_eligible_meses(2024) == 12
 
     def test_the_birth_month_counts_in_full(self) -> None:
         """Born in June 2024: June to December is seven months, not six."""
@@ -412,7 +426,7 @@ class TestArt811EntryWindowDivergesFromArt582:
         birth_date=date(2016, 3, 2),
         relacion=DescendantRelacion.ADOPTADO,
         inscripcion_registro_civil_date=date(2021, 11, 15),
-        meses_madre_trabajo_2024=12,
+        meses_madre_trabajo=tuple(range(1, 13)),
     )
 
     def test_the_entry_period_is_whole_for_art_58_2_and_partial_for_art_81_1(self) -> None:
@@ -440,7 +454,7 @@ class TestArt811EntryWindowDivergesFromArt582:
         temporal = DescendantInfo(
             birth_date=date(2016, 3, 2),
             relacion=DescendantRelacion.ACOGIMIENTO_TEMPORAL,
-            meses_madre_trabajo_2024=12,
+            meses_madre_trabajo=tuple(range(1, 13)),
         )
 
         assert temporal.art_81_1_entry_window_meses(2024) == 0
@@ -450,7 +464,7 @@ class TestArt811EntryWindowDivergesFromArt582:
         undated = DescendantInfo(
             birth_date=date(2016, 3, 2),
             relacion=DescendantRelacion.ADOPTADO,
-            meses_madre_trabajo_2024=12,
+            meses_madre_trabajo=tuple(range(1, 13)),
         )
 
         assert undated.art_81_1_entry_window_meses(2024) == 0
@@ -462,7 +476,7 @@ class TestArt811EntryWindowDivergesFromArt582:
             relacion=DescendantRelacion.ADOPTADO,
             acogimiento_resolucion_date=date(2021, 11, 15),
             inscripcion_registro_civil_date=date(2023, 6, 1),
-            meses_madre_trabajo_2024=12,
+            meses_madre_trabajo=tuple(range(1, 13)),
         )
 
         assert fostered_then_adopted.art_81_1_entry_window_meses(2024) == 10
@@ -481,7 +495,7 @@ class TestArt811EntryWindowDivergesFromArt582:
             birth_date=date(2024, 1, 10),
             relacion=DescendantRelacion.ADOPTADO,
             inscripcion_registro_civil_date=date(2024, 10, 5),
-            meses_madre_trabajo_2024=12,
+            meses_madre_trabajo=tuple(range(1, 13)),
         )
 
         assert len(infant._maternidad_edad_months(2024)) == 12
@@ -503,7 +517,7 @@ class TestArt811EntryWindowDivergesFromArt582:
             birth_date=date(2021, 4, 15),
             relacion=DescendantRelacion.ADOPTADO,
             inscripcion_registro_civil_date=date(2024, 2, 10),
-            meses_madre_trabajo_2024=12,
+            meses_madre_trabajo=tuple(range(1, 13)),
         )
 
         assert len(child._maternidad_edad_months(2024)) == 3
@@ -513,7 +527,7 @@ class TestArt811EntryWindowDivergesFromArt582:
 
     def test_a_descendant_with_no_entry_date_is_unclipped(self) -> None:
         """The clip must not touch an ordinary child, who has no entry event at all."""
-        ordinary = DescendantInfo(birth_date=date(2022, 6, 1), meses_madre_trabajo_2024=12)
+        ordinary = DescendantInfo(birth_date=date(2022, 6, 1), meses_madre_trabajo=tuple(range(1, 13)))
 
         assert ordinary.maternidad_eligible_meses(2024) == 12
         assert ordinary.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 12
@@ -537,7 +551,7 @@ class TestMaternidadContributingMeses:
     """
 
     def test_an_eligible_child_contributes_its_declared_months(self) -> None:
-        assert _hijo_menor_3(9).maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 9
+        assert _hijo_menor_3("1-9").maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 9
 
     def test_a_child_over_three_contributes_nothing(self) -> None:
         """Art. 81.1 runs only "hasta que el menor alcance los tres años de edad"."""
@@ -548,14 +562,14 @@ class TestMaternidadContributingMeses:
         child = DescendantInfo(
             birth_date=date(2022, 6, 1),
             convive_con_contribuyente=False,
-            meses_madre_trabajo_2024=12,
+            meses_madre_trabajo=tuple(range(1, 13)),
         )
 
         assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
 
     def test_an_eligible_child_with_no_declared_months_contributes_nothing(self) -> None:
         """The employment months stay the operator's: absent means none, never inferred."""
-        assert _hijo_menor_3(0).maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
+        assert _hijo_menor_3("").maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
 
     def test_a_child_over_the_rentas_ceiling_contributes_nothing(self) -> None:
         """The added half of the predicate: Art. 58.1 excludes on the descendant's own rentas.
@@ -567,7 +581,7 @@ class TestMaternidadContributingMeses:
         child = DescendantInfo(
             birth_date=date(2022, 6, 1),
             rentas_anuales_euros=_THRESHOLDS.rentas_anuales_limite + Decimal("1"),
-            meses_madre_trabajo_2024=12,
+            meses_madre_trabajo=tuple(range(1, 13)),
         )
 
         assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
@@ -580,13 +594,13 @@ class TestMaternidadContributingMeses:
         ran once at year-end and the child was three by then -- an under-grant
         for every family whose child turns three mid-year.
         """
-        child = DescendantInfo(birth_date=date(2021, 4, 15), meses_madre_trabajo_2024=12)
+        child = DescendantInfo(birth_date=date(2021, 4, 15), meses_madre_trabajo=tuple(range(1, 13)))
 
         assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 3
 
     def test_the_cap_never_raises_a_declared_figure(self) -> None:
         """An operator who declared fewer months than the window keeps their figure."""
-        child = DescendantInfo(birth_date=date(2022, 6, 1), meses_madre_trabajo_2024=4)
+        child = DescendantInfo(birth_date=date(2022, 6, 1), meses_madre_trabajo=(1, 2, 3, 4))
 
         assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 4
 
@@ -608,7 +622,7 @@ class TestArt811PopulationGate:
         return DescendantInfo(
             birth_date=date(2023, 5, 1),
             relacion=relacion,
-            meses_madre_trabajo_2024=12,
+            meses_madre_trabajo=tuple(range(1, 13)),
         )
 
     def test_a_temporal_acogimiento_carer_contributes_nothing(self) -> None:
@@ -683,7 +697,7 @@ class TestMesesMaternidadPorDescendienteHasAProductionConsumer:
         withheld rather than expecting a zero entry; asserting the shape here
         keeps that contract explicit.
         """
-        profile = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(), _hijo_menor_3(6)))
+        profile = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(), _hijo_menor_3("1-6")))
 
         pairs = profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS)
 
@@ -695,7 +709,7 @@ class TestMesesMaternidadPorDescendiente:
     """The profile-level pairing the calculate path feeds to the deducción."""
 
     def test_pairs_carry_the_descendant_index_as_the_hijo_id(self) -> None:
-        profile = RentaFamilyProfile(descendientes=(_hijo_menor_3(12), _hijo_menor_3(6)))
+        profile = RentaFamilyProfile(descendientes=(_hijo_menor_3("1-12"), _hijo_menor_3("1-6")))
 
         assert profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS) == (("0", 12), ("1", 6))
 
@@ -706,7 +720,7 @@ class TestMesesMaternidadPorDescendiente:
         child by, so a compacted list would report months against the wrong
         record in any diagnostic that names one.
         """
-        profile = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(), _hijo_menor_3(6)))
+        profile = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(), _hijo_menor_3("1-6")))
 
         assert profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS) == (("1", 6),)
 
@@ -727,7 +741,7 @@ class TestMesesMaternidadPorDescendiente:
             birth_date=date(2022, 6, 1),
             convive_con_contribuyente=False,
             dependencia_economica=True,
-            meses_madre_trabajo_2024=12,
+            meses_madre_trabajo=tuple(range(1, 13)),
         )
 
         assimilated = RentaFamilyProfile(descendientes=(dependiente,))

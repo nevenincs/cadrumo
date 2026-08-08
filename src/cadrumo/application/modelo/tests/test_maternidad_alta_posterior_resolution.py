@@ -63,17 +63,17 @@ def _record(*descendientes: DescendantInfo) -> UserProfileRecord:
     )
 
 
-def _mellizo(meses: int, *, alta_mes: int | None) -> DescendantInfo:
+def _mellizo(meses: tuple[int, ...], *, alta_mes: int | None) -> DescendantInfo:
     return DescendantInfo(
         birth_date=_MELLIZO_BIRTH,
-        meses_madre_trabajo_2024=meses,
+        meses_madre_trabajo=meses,
         alta_posterior_nacimiento_mes=alta_mes,
     )
 
 
 def test_a_declared_completion_month_is_carried_for_2023() -> None:
     """The resolved ``alta_posterior_hijos`` set names the declared child in 2023."""
-    record = _record(_mellizo(8, alta_mes=5))
+    record = _record(_mellizo((5, 6, 7, 8, 9, 10, 11, 12), alta_mes=5))
 
     resolution = resolve_maternidad_meses(record, _snapshot(2023))
 
@@ -83,7 +83,7 @@ def test_a_declared_completion_month_is_carried_for_2023() -> None:
 
 def test_the_manual_worked_example_reproduces_through_the_real_resolver() -> None:
     """Two mellizos, oracle-anchored: 950 each, 1.900 together, through the real path."""
-    record = _record(_mellizo(8, alta_mes=5), _mellizo(8, alta_mes=5))
+    record = _record(_mellizo((5, 6, 7, 8, 9, 10, 11, 12), alta_mes=5), _mellizo((5, 6, 7, 8, 9, 10, 11, 12), alta_mes=5))
 
     resolution = resolve_maternidad_meses(record, _snapshot(2023))
     deduccion = compute_deduccion_maternidad_0611(
@@ -99,7 +99,7 @@ def test_the_older_hijo_mayor_figure_reproduces_through_the_real_resolver() -> N
     """The manual's older-child line, isolated: four months, one increment, 550."""
     older_hijo = DescendantInfo(
         birth_date=date(2020, 9, 2),
-        meses_madre_trabajo_2024=4,
+        meses_madre_trabajo=(5, 6, 7, 8),
         alta_posterior_nacimiento_mes=5,
     )
     record = _record(older_hijo)
@@ -138,7 +138,7 @@ def test_the_same_declared_profile_carries_no_increment_one_filing_year_earlier(
     """
     child = DescendantInfo(
         birth_date=date(2021, 6, 1),
-        meses_madre_trabajo_2024=8,
+        meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12),
         alta_posterior_nacimiento_mes=5,
     )
     record = _record(child)
@@ -159,7 +159,7 @@ def test_the_same_declared_profile_carries_no_increment_one_filing_year_earlier(
 
 def test_a_child_with_no_declared_completion_month_is_never_in_the_increment_set() -> None:
     """The ordinary case: no month declared, no increment, regardless of filing year."""
-    record = _record(_mellizo(8, alta_mes=None))
+    record = _record(_mellizo((1, 2, 3, 4, 5, 6, 7, 8), alta_mes=None))
 
     resolution = resolve_maternidad_meses(record, _snapshot(2023))
 
@@ -176,7 +176,7 @@ def test_an_ineligible_child_is_never_in_the_increment_set_even_with_a_declared_
     non_cohabiting = DescendantInfo(
         birth_date=_MELLIZO_BIRTH,
         convive_con_contribuyente=False,
-        meses_madre_trabajo_2024=8,
+        meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12),
         alta_posterior_nacimiento_mes=5,
     )
     record = _record(non_cohabiting)

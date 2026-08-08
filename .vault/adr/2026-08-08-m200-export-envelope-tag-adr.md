@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:9e902733d5d83075af3cda28860d4ff54c7612a684b9a6b9cfe360d28a076bdc'
+body_hash: 'sha256:ce2820f6a118ab1139827e9fec30de8d462c5633c9bfb85c221ee091e325f7c7'
 related:
   - "[[2026-08-08-m200-export-envelope-tag-reference]]"
 ---
@@ -113,6 +113,27 @@ rejected) Block M200 export entirely until discriminante is modeled —
 rejected: it would regress every filer this application already correctly
 serves to fix a byte that, for all of them, is already correct.
 
+**Discriminante guard.** (A, chosen) A closed-set registry/domain-model scan
+asserting no accounts-regime concept (a symbol or field naming any of
+Aseguradoras, Entidades de crédito, Inversión colectiva, Garantía recíproca,
+or "estado de cuentas") exists outside an explicit allowlist — a value
+correct only because a concept is absent must fail the moment that concept
+appears, not silently keep rendering `"0"`, the same failure shape as the
+defect this ADR fixes. The gate has nothing to enumerate today, so it starts
+vacuously green and turns red the first time a future change introduces the
+concept, forcing that change to revisit both hardcoded `"0"` sites (the
+open-tag literal and `_computed_field_value`'s template) together rather than
+one being missed. (B, rejected) No guard, rely on the "Cost / pitfall"
+paragraph below being read — rejected: `aeat-quality-gates` requires gates
+over vigilance for anything reaching an official filing, and a consequences
+paragraph is exactly the kind of prose a future editor skims past. (C,
+rejected) A runtime assertion refusing export whenever a regime signal is
+present — rejected: no such signal exists anywhere to check today, so the
+assertion would have nothing to test against and would read as dead code; the
+build-time closed-set scan is the sanctioned no-signal-yet form, mirroring how
+`_DRAFT_ATTRIBUTE_CANONICAL_WIDTHS` is already kept total over its declarable
+attributes in this same module.
+
 **Gate abstention replacement.** (A, chosen) Once the open tag no longer binds
 `filing_year` to a 17-byte slot, flip
 `_DRAFT_ATTRIBUTE_CANONICAL_WIDTHS["filing_year"]` from `None` to `4`, closing
@@ -147,7 +168,9 @@ omission, not a cosmetic width mismatch.
   Inversión colectiva / Garantía recíproca regimes must revisit both the
   open-tag literal and the close tag's hardcoded `"0"` in
   `_computed_field_value` together — they are the same value rendered twice
-  and must not be fixed independently.
+  and must not be fixed independently. The closed-set guard test is the
+  mechanical enforcement of this constraint: it must fail, not silently
+  pass, the moment either site's assumption stops holding.
 - **Depends on `2026-07-01-fichero-boe-parity-gate-adr` staying stable**, the
   same registry-build validation surface this ADR's gate-abstention flip
   extends, per the sibling NIF-misbinding ADR's identical constraint.
@@ -199,6 +222,16 @@ output before the registry TOML changes, then confirmed green after. A
 mutation-proof reverts either restructured field and confirms the assertion
 flips red.
 
+A closed-set guard test scans registry TOML symbol names, casilla/binding
+ids, and domain-model field names for tokens indicating an accounts-regime
+concept (`aseguradora`, `entidad_credito`, `inversion_colectiva`,
+`garantia_reciproca`, `estado_cuentas`, `discriminante`, `accounts_regime`)
+against an explicit allowlist covering only the two known hardcoded `"0"`
+sites; today the scan finds nothing beyond the allowlist and passes
+vacuously. A fixture-anchor test proves the guard actually fires: add a
+scratch symbol matching one of the tokens outside the allowlist and assert
+the guard test fails; remove it.
+
 ## Rationale
 
 The chosen restructuring is the minimal change that makes every M200
@@ -235,15 +268,19 @@ same defect recur silently.
   opens the broader sweep as a follow-up, consistent with the sibling
   NIF-misbinding ADR's identical honesty discipline.
 - **Gain:** closes a structural, whole-file correctness defect with a
-  registry-only change plus one code-free record addition, and closes two
+  registry-only change plus one code-free record addition, closes two
   registry-build gate abstentions that were explicitly conditioned on this
-  fix landing.
+  fix landing, and adds a closed-set guard so the hardcoded discriminante
+  cannot silently outlive the concept-absence that currently justifies it.
 - **Cost / pitfall:** any filer under a non-Normal accounts regime
   (Aseguradoras, Entidades de crédito, Inversión colectiva, Garantía
   recíproca) still receives an incorrect discriminante byte at both tag
   positions after this fix — the same limitation the underlying computed
   template already carried, now also present in the open tag, and not closed
-  by this ADR.
+  by this ADR. The guard test bounds this cost to "known and gated" rather
+  than "known and silently drifting": it fails loudly the day a regime
+  concept is introduced, rather than letting the wrong byte persist
+  unnoticed past that point.
 - **Pathway:** modeling accounts-regime as a typed profile concept is the
   natural next investment once a regime-selection surface exists; the broader
   per-modelo diseño cross-check sweep is the natural next investment for

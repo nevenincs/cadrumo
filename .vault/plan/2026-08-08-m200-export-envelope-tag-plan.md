@@ -4,7 +4,7 @@ tags:
   - '#m200-export-envelope-tag'
 date: '2026-08-08'
 modified: '2026-08-08'
-body_hash: 'sha256:4b260cfab2ff84829c193e3c738c08c721be8accfe8d346ce90ad60391b722d1'
+body_hash: 'sha256:19e3cbec8192df22e56a448b09ca45ee25021a878cd59b3449720f35ff7f6ec2'
 tier: L2
 related:
   - '[[2026-08-08-m200-export-envelope-tag-adr]]'
@@ -38,12 +38,13 @@ Restructure the M200 page-000 open tag into its six literal/draft components, pr
 - [ ] `P01.S03` - promote the AUX and header filler fields to literal and header kind; `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0001-modelo-200-page-000.toml`.
 - [ ] `P01.S04` - add the envelope-footer export fragment reusing the existing computed closing-tag key; `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0078-modelo-200-envelope-footer.toml`.
 - [ ] `P01.S05` - confirm the byte-level test goes green for both the open tag and the close tag; `src/cadrumo/application/filing/tests/test_export.py`.
+- [ ] `P01.S09` - add a closed-set guard test asserting no accounts-regime concept (aseguradora, entidad de credito, inversion colectiva, garantia reciproca, estado de cuentas) exists anywhere in the registry or domain model outside an explicit allowlist, so a future addition fails the gate until both hardcoded discriminante literal '0' sites are revisited together; `src/cadrumo/domain/calculations/registry/tests/test_export.py`.
 
 ### Phase `P02` - close the gate abstentions and lock the fix
 
 Flip the filing_year and period_code canonical-width gate abstentions now that the divergence they name is fixed, run the fichero-BOE parity and completeness gates for M200, and prove the regression lock with a mutation test.
 
-- [ ] `P02.S06` - flip the filing_year and period_code canonical-width gate abstentions to 4 and 2, rewriting the abstention comments to state what is now established; `src/cadrumo/domain/calculations/registry/_validate_exports.py`.
+- [ ] `P02.S06` - after P01 lands, flip the filing_year and period_code canonical-width gate abstentions to 4 and 2, rewriting the abstention comments to state what is now established; `src/cadrumo/domain/calculations/registry/_validate_exports.py`.
 - [ ] `P02.S07` - run the fichero-BOE parity and completeness gates for M200 and confirm they stay green after the restructuring; `src/cadrumo/application/filing/tests/test_export_completeness_gate.py`.
 - [ ] `P02.S08` - prove the byte-level test is load bearing by reverting the open-tag composite and the envelope-footer record, confirming the test reds, then restoring the fix; `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0001-modelo-200-page-000.toml`.
 

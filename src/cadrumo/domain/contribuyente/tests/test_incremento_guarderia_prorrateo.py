@@ -22,6 +22,7 @@ from decimal import Decimal
 import pytest
 
 from .._guarderia_mensual import parse_guarderia_mensual
+from .._meses_trabajo import parse_meses_trabajo
 from ..family import DescendantInfo, RentaFamilyProfile
 from ._registry_thresholds import registry_thresholds
 
@@ -41,11 +42,11 @@ def _child(
     *,
     mensual: str = "",
     annual: int = 0,
-    meses_madre: int = 12,
+    meses_madre: str = "1-12",
 ) -> DescendantInfo:
     return DescendantInfo(
         birth_date=birth,
-        meses_madre_trabajo_2024=meses_madre,
+        meses_madre_trabajo=parse_meses_trabajo(meses_madre, field="test"),
         gastos_guarderia_euros=annual,
         gastos_guarderia_mensuales=parse_guarderia_mensual(mensual, field="test"),
     )
@@ -63,19 +64,31 @@ class TestManualWorkedOracles:
     """The two figures the bundled manual prints for its own cases."""
 
     def test_two_qualifying_months_prorate_to_166_67(self) -> None:
-        """1.000 ÷ 12 × 2 = 166,67, and the manual states it as that child's limit.
+        """Caso a on the manual's REAL facts: a PARTIAL overlap of two month sets.
 
-        Spend of 2.290 far exceeds the prorated cap, so the cap binds — which is
-        the manual's own note: "El incremento de 166,67 euros no supera el
-        límite del importe total del gasto efectivo no subvencionado: 2.290".
+        The mother does not work before May and is entitled "de mayo a agosto
+        ambos incluidos"; the nursery's complete months are January to June. The
+        two share exactly May and June, so ``1.000 ÷ 12 × 2 = 166,67``, which the
+        manual states as that child's limit. Spend far exceeds the prorated cap,
+        so the cap binds — the manual's own note: "El incremento de 166,67 euros
+        no supera el límite del importe total del gasto efectivo no
+        subvencionado: 2.290".
+
+        These facts are the point of the test and must not be substituted. This
+        case previously declared the nursery at months 5-6 only, which made the
+        NURSERY count the binding term of a ``min`` over two counts and reached
+        166,67 without ever intersecting anything. It passed both before and
+        after the count-based defect, and on AEAT's real facts the same code
+        returned 333,33 — a 2x over-grant, which under-declares tax. A test that
+        reaches the right number through the wrong mechanism is why that survived.
         """
-        child = _child(date(2022, 3, 1), mensual="5:1145;6:1145", meses_madre=4)
+        child = _child(date(2021, 9, 2), mensual="1-6:500", meses_madre="5-8")
 
         assert _total(child) == Decimal("166.67")
 
     def test_six_qualifying_months_prorate_to_500(self) -> None:
         """1.000 ÷ 12 × 6 = 500 exactly."""
-        child = _child(date(2022, 3, 1), mensual="1-6:400", meses_madre=12)
+        child = _child(date(2022, 3, 1), mensual="1-6:400")
 
         assert _total(child) == Decimal("500.00")
 
@@ -95,7 +108,7 @@ class TestManualWorkedOracles:
         takes, and the real case returned 0,00 against the manual's 500. Do not
         re-substitute convenient facts here — the birth date is the point.
         """
-        child = _child(date(2021, 9, 15), mensual="1-6:500", meses_madre=12)
+        child = _child(date(2021, 9, 15), mensual="1-6:500")
 
         assert child.age_at_year_end(_YEAR) == 3
         assert _total(child) == Decimal("500.00")
@@ -109,7 +122,7 @@ class TestManualWorkedOracles:
         Asserting the delta pins what was removed, so a regression to a
         flat cap fails with the figure that motivated the fix.
         """
-        child = _child(date(2022, 3, 1), mensual="5:1145;6:1145", meses_madre=4)
+        child = _child(date(2021, 9, 2), mensual="1-6:500", meses_madre="5-8")
 
         assert _total(child) == Decimal("166.67")
         assert Decimal("1000") - _total(child) == Decimal("833.33")
@@ -129,8 +142,8 @@ class TestTheCapIsPerChildNotPerHousehold:
         ``min(5.100, 1.166,67) = 1.166,67`` and grant child B's unused 66,67 to
         child A, who has no entitlement to it.
         """
-        heavy = _child(date(2022, 3, 1), mensual="1-12:417", meses_madre=12)
-        light = _child(date(2022, 4, 1), mensual="5:50;6:50", meses_madre=12)
+        heavy = _child(date(2022, 3, 1), mensual="1-12:417")
+        light = _child(date(2022, 4, 1), mensual="5:50;6:50")
 
         assert _total(heavy, light) == Decimal("1100.00")
 
@@ -141,9 +154,54 @@ class TestTheCapIsPerChildNotPerHousehold:
         A cap applied without the spend bound would grant 500 against 120 of
         evidenced expense.
         """
-        child = _child(date(2022, 3, 1), mensual="1-6:20", meses_madre=12)
+        child = _child(date(2022, 3, 1), mensual="1-6:20")
 
         assert _total(child) == Decimal("120")
+
+
+class TestTheThreeGeometries:
+    """Two month sets of the same SIZES can share every month, some, or none.
+
+    The article prorates by "el número de meses en que se cumplan de forma
+    simultánea los requisitos", which is a question about WHICH months. A count
+    cannot answer it: containment, partial overlap and disjointness are
+    indistinguishable once each side is reduced to its size, and the three have
+    different correct answers. Each geometry is pinned here with the same six
+    nursery months, so only the mother's months move.
+
+    The disjoint case could not be written at all before the months were
+    carried. With a stored count, "six months worked" against nursery July to
+    December was byte-identical to the overlapping declaration, so no correct
+    implementation could return zero from it — the inputs did not determine an
+    answer. It is the shape change, not a better fixture, that made this
+    testable.
+    """
+
+    def test_containment_takes_every_nursery_month(self) -> None:
+        """Mother January to December contains nursery January to June: six months."""
+        child = _child(date(2022, 3, 1), mensual="1-6:500", meses_madre="1-12")
+
+        assert _total(child) == Decimal("500.00")
+
+    def test_partial_overlap_takes_only_the_shared_months(self) -> None:
+        """Mother June to December against nursery January to August shares June to August.
+
+        Three months, not the six a ``min`` over the counts would take. Sizes
+        seven and eight; the answer is neither.
+        """
+        child = _child(date(2022, 3, 1), mensual="1-8:500", meses_madre="6-12")
+
+        assert _total(child) == Decimal("250.00")
+
+    def test_disjoint_months_grant_nothing(self) -> None:
+        """Mother January to June, nursery July to December: no simultaneous month.
+
+        Both sides declare six months, so every count-based reading yields six
+        and 500,00. The correct answer is zero, and only the months can say so.
+        """
+        child = _child(date(2022, 3, 1), mensual="7-12:500", meses_madre="1-6")
+
+        assert _total(child) == Decimal("0")
 
 
 class TestSimultaneityBound:
@@ -155,7 +213,7 @@ class TestSimultaneityBound:
         The requirements must hold SIMULTANEOUSLY, so three months is the basis:
         1.000 ÷ 12 × 3 = 250.
         """
-        child = _child(date(2022, 3, 1), mensual="1-12:500", meses_madre=3)
+        child = _child(date(2022, 3, 1), mensual="1-12:500", meses_madre="1-3")
 
         assert _total(child) == Decimal("250.00")
 
@@ -167,7 +225,7 @@ class TestSimultaneityBound:
         mother's own requirement. A mother who never met it has no simultaneous
         months whatever the child's age.
         """
-        child = _child(date(2022, 3, 1), mensual="1-12:500", meses_madre=0)
+        child = _child(date(2022, 3, 1), mensual="1-12:500", meses_madre="")
 
         assert _total(child) == Decimal("0")
 
@@ -194,7 +252,7 @@ class TestMaternidadLapsesWhileTheIncrementContinues:
         the Art. 81.1 deducción has zero months. Five declared nursery months
         from February still prorate: 1.000 ÷ 12 × 5 = 416,67.
         """
-        child = _child(date(2022, 1, 20), mensual="2-6:500", meses_madre=12)
+        child = _child(date(2022, 1, 20), mensual="2-6:500")
 
         assert child.maternidad_contributing_meses(_YEAR + 1, thresholds=registry_thresholds(_YEAR + 1)) == 0
         assert _total(child, year=_YEAR + 1) == Decimal("416.67")
@@ -206,7 +264,7 @@ class TestMaternidadLapsesWhileTheIncrementContinues:
         mother did not work; the increment prorates by her nine worked months
         bounded by the five declared nursery months: 1.000 ÷ 12 × 5 = 416,67.
         """
-        child = _child(date(2022, 3, 10), mensual="4-8:500", meses_madre=9)
+        child = _child(date(2022, 3, 10), mensual="4-8:500", meses_madre="4-12")
 
         assert _total(child, year=_YEAR + 1) == Decimal("416.67")
 
@@ -220,7 +278,7 @@ class TestMidYearBirthIsTheCommonCase:
         1.000 ÷ 12 × 7 = 583,33. The flat cap granted 1.000 on the same facts.
         No month evidence is needed, because the bound comes from the birth date.
         """
-        child = _child(date(_YEAR, 6, 15), annual=4000, meses_madre=12)
+        child = _child(date(_YEAR, 6, 15), annual=4000, meses_madre="6-12")
 
         assert _total(child) == Decimal("583.33")
 
@@ -231,4 +289,4 @@ class TestZeroCases:
 
     def test_a_child_with_no_declared_spend_contributes_nothing(self) -> None:
         """Qualifying months alone grant nothing; the increment is of SPEND."""
-        assert _total(_child(date(2022, 3, 1), meses_madre=12, annual=0)) == Decimal("0")
+        assert _total(_child(date(2022, 3, 1), annual=0)) == Decimal("0")

@@ -39,6 +39,7 @@ from ....adapters.inbound.einvoice import ParsedEInvoice, parse_einvoice_documen
 from ....adapters.persistence.storage import SecureObjectRowIdentityError
 from ....core import ClassifierInputSource
 from ....domain.iva import (
+    EUMemberState,
     InvoiceKind,
     IvaCatalogueError,
     IvaTerritorialScope,
@@ -190,13 +191,21 @@ def test_the_country_rung_stops_the_ladder_before_a_territory_outside_liva(
     assert territorial_scope_for_spanish_postal_code(_CEUTA) is IvaTerritorialScope.ES_CEUTA_MELILLA
 
 
-def test_the_identifier_rung_outranks_the_country_and_postal_rungs(
+def test_a_registration_disagreeing_with_the_address_settles_neither(
     repository: CounterpartyEstablishmentRepository,
 ) -> None:
-    """A printed German VAT number wins over an address block naming Las Palmas.
+    """A German VAT number on a page addressed to Las Palmas settles NOTHING.
 
-    Discriminating rather than agreeing: the lower rungs would resolve this page
-    to Canarias, so the assertion cannot pass by accident of every rung agreeing.
+    The same page this file once used to prove the identifier rung outranked the
+    others. That ordering is retired, and the retirement inverts the verdict
+    rather than merely restating it: a foreign registration beside Spanish
+    address evidence is the characteristic face of an entity registered abroad
+    and operating through an establecimiento permanente here, so it surfaces to
+    the operator instead of being resolved by whichever rung was consulted first.
+
+    Still discriminating, and now in BOTH directions. The lower rungs would
+    resolve this page to Canarias and the old top rung to EU_MEMBER, so the
+    assertion cannot pass by every rung agreeing — it fails if either side wins.
     """
     resolved = _resolve(
         repository,
@@ -205,12 +214,14 @@ def test_the_identifier_rung_outranks_the_country_and_postal_rungs(
         postal_code=_LAS_PALMAS,
     )
 
-    assert resolved.rung is EstablishmentRung.TAX_IDENTIFIER_PREFIX
-    assert resolved.scope is IvaTerritorialScope.EU_MEMBER
+    assert resolved.conflicted
+    assert resolved.scope is None
+    assert resolved.rung is None
 
     lower_rung_answer = territorial_scope_for_spanish_postal_code(_LAS_PALMAS)
     assert lower_rung_answer is IvaTerritorialScope.ES_CANARIAS
-    assert lower_rung_answer is not resolved.scope
+    assert resolved.scope is not lower_rung_answer
+    assert resolved.scope is not IvaTerritorialScope.EU_MEMBER
 
 
 def test_a_greek_vat_prefix_resolves_through_its_iso_code(
@@ -225,8 +236,16 @@ def test_a_greek_vat_prefix_resolves_through_its_iso_code(
 
     resolved = _resolve(repository, tax_identifier=_GREEK_VAT)
 
-    assert resolved.scope is IvaTerritorialScope.EU_MEMBER
-    assert resolved.rung is EstablishmentRung.TAX_IDENTIFIER_PREFIX
+    # The divergence now bites on the fact a registration actually settles. Left
+    # untranslated the number names no Member State at all, so the party's
+    # identification would read as unestablished rather than as Greek.
+    assert resolved.identification_state is EUMemberState.GR
+
+    # And it carries through to the territory once something corroborates it,
+    # which is where a mistranslation would have reclassified an intra-community
+    # acquisition as an import.
+    corroborated = _resolve(repository, tax_identifier=_GREEK_VAT, country_name="Grecia")
+    assert corroborated.scope is IvaTerritorialScope.EU_MEMBER
 
 
 def test_a_spanish_identifier_contributes_nothing_to_the_identifier_rung(
@@ -449,8 +468,15 @@ def test_a_corrupt_identifier_rung_refuses_from_the_top_of_the_walk(
     repository: CounterpartyEstablishmentRepository,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The first rung of the walk is covered on the same terms as the last."""
-    monkeypatch.setattr(ladder_module, "territorial_scope_for_printed_tax_identifier", _refusing_rung)
+    """The first lookup of the walk is covered on the same terms as the last.
+
+    The symbol changed with the re-runging and the property did not. The walk no
+    longer asks what territory a prefix establishes; it asks which State the
+    number identifies, and that call is now what runs first. Patching the retired
+    symbol would leave this case passing against a lookup the walk never makes —
+    a gate green because it patched nothing.
+    """
+    monkeypatch.setattr(ladder_module, "vat_identification_state_for_printed_tax_identifier", _refusing_rung)
 
     with pytest.raises(IvaCatalogueError):
         _resolve(repository, tax_identifier=_GERMAN_VAT)
@@ -578,8 +604,13 @@ class TestDraftRouting:
             repository=repository,
         )
 
-        assert resolved.scope is IvaTerritorialScope.EU_MEMBER
-        assert resolved.rung is EstablishmentRung.TAX_IDENTIFIER_PREFIX
+        # Proven on the identification rather than the territory, and it is the
+        # sharper probe: the prefix settles that fact terminally, so a DE reading
+        # can only have come from the supplier's number. The territory is
+        # deliberately unsettled on this page — neither party printed an address —
+        # which is now the honest answer rather than a routing failure.
+        assert resolved.identification_state is EUMemberState.DE
+        assert resolved.scope is None
 
     def test_the_selection_never_falls_back_to_the_other_side(
         self,

@@ -1604,7 +1604,7 @@ model_selectors = [
   "DescendantInfo.rentas_anuales_euros",
   "DescendantInfo.presenta_declaracion_propia",
   "DescendantInfo.prorrata_minimo",
-  "DescendantInfo.meses_madre_trabajo_2024",
+  "DescendantInfo.meses_madre_trabajo",
   "DescendantInfo.alta_posterior_nacimiento_mes",
   "DescendantInfo.gastos_guarderia_euros",
   "DescendantInfo.gastos_guarderia_mensuales",

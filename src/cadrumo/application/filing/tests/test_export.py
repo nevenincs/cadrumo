@@ -902,6 +902,46 @@ def test_export_leaves_modelo_200_grupo_mercantil_parent_tin_slot_blank(tmp_path
     assert filer_nif not in parent_tin_slot
 
 
+def test_export_writes_the_modelo_200_envelope_tags_aeat_publishes(tmp_path: Path) -> None:
+    """Every M200 fichero must open and close with AEAT's constant envelope tags.
+
+    Sheet ``DP200000`` of the 2024 Diseño de Registro declares four ``Constante``
+    fields around the page content: position 1 length 17 is
+    ``<T`` + modelo + discriminante + ejercicio + periodo + tipo + ``>``, position
+    18 length 5 is ``<AUX>``, position 323 length 6 is ``</AUX>``, and a final
+    18-character field carries the matching ``</T...>`` close tag after all pages.
+    The sheet prints its example content literally, and this fixture files exactly
+    the ejercicio and periodo that example uses (2024, ``0A``), so the expected
+    bytes below are AEAT's own printed strings rather than a value re-derived from
+    the registry declaration under test.
+
+    The discriminante is ``"0"`` (Normal, Abreviado y PYMES per the sheet's
+    ``(*)`` note) because that is the only estado de cuentas this application can
+    produce a draft for; the four other regimes have no domain representation.
+
+    A file missing these tags is structurally malformed against the published
+    design while still carrying a valid digest and a plausible byte count, so no
+    signal reaches the operator -- the omission is only visible at the bytes.
+    """
+    provider = _schema_provider(filing_year=2024, period="0A", modelos=("200",))
+    draft = _approved_modelo_200_registry_draft()
+    output = tmp_path / "modelo-200.txt"
+
+    export_draft(draft, output_path=output, headers=_modelo_200_export_headers(), schema_provider=provider)
+
+    payload = output.read_bytes()
+
+    assert payload[:17] == b"<T200020240A0000>"
+    assert payload[17:22] == b"<AUX>"
+    assert payload[322:328] == b"</AUX>"
+    assert payload[-18:] == b"</T200020240A0000>"
+    # The two EEDD fields the sheet marks optional ride the same record, so a
+    # promotion that reached the tags while leaving these as reserved blanks would
+    # otherwise pass. Both values come from the export headers.
+    assert payload[92:96] == b"A001"
+    assert payload[100:109] == b"B12345674"
+
+
 def test_export_writes_modelo_111_registry_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_111_registry_draft()
     output = tmp_path / "modelo-111.txt"

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#m200-export-nif-misbinding'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:45f727c14fd8b10c751f2b293696b96e4ac9a982dbbb38fe0ac5a80b2584616b'
+body_hash: 'sha256:b8a70b94d1034f732b9db65d08a994e377d138b54d3161cac3d9e44ac362d835'
 step_id: 'S04'
 related:
   - "[[2026-08-07-m200-export-nif-misbinding-plan]]"
@@ -25,8 +25,21 @@ related:
 
 ## Outcome
 
-The check lives in `src/cadrumo/domain/calculations/registry/_validate_exports.py`
-beside the existing literal-length check, NOT in the module the Step row scopes.
+The check lives in
+`src/cadrumo/domain/calculations/registry/_validate_export_field_widths.py`,
+invoked per field by the export section validator in
+`src/cadrumo/domain/calculations/registry/_validate_exports.py` beside the
+existing literal-length check, NOT in the module the Step row scopes.
+
+It landed inside the section validator first and was extracted after the
+reviewability gate refused it: the ruling table and its per-attribute rationale
+carried the module to 343 lines against a 300-line ceiling. The ceiling's own
+comment names raising the number as this gate's failure mode, so the number was
+not raised. Extraction into a sibling private module matches the family the
+package already uses for exemption, previous-filing, and relation-source
+validation, and it keeps ONE authority: the section validator still calls the
+check on every field it already walks, so there is no second traversal and no
+second dispatch table. The two modules are 246 and 117 lines.
 Semantic discovery surfaced that module, which neither the decision record nor the
 reference names, as the only export-field surface dispatched from the per-revision
 validation dispatcher and therefore the only one that runs at registry BUILD over
@@ -59,8 +72,14 @@ expected diversity.
 
 ## Verification
 
-    uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part1.py -n0 -p no:randomly
-    50 passed in 23.54s
+    uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part1.py src/cadrumo/domain/calculations/registry/tests/test_registry_reviewability.py -n0 -p no:randomly
+    54 passed in 49.58s
+
+    uv run --no-sync python -m dev.docs.apidocs scaffold
+    Scaffolded 2 changed stubs, left 1350 unchanged, removed 0 stale stubs.
+
+Both regenerated stubs name the extracted module and nothing else, so they were
+staged; no peer module's stub was touched.
 
 ## Notes
 
