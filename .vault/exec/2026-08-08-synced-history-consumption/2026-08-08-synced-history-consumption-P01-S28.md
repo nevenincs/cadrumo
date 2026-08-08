@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:18f10e87309aa6447d2c6379c99d2eba67374f7a66c52929a247cd5808da4562'
+body_hash: 'sha256:d1f2fe2cc42280ae8a1beeced952debbb7e07496b9c10d386fa00966cc2e8d5c'
 step_id: 'S28'
 related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
@@ -79,3 +79,25 @@ The correction generalises: a registry search over localized labels can miss a c
 WHAT THIS COVERS AND WHAT IT DOES NOT. The twelve Modelo 111 fed casilla 0596 carries, on the 2024 revision ONLY. The 2020 through 2023 and 2025 revisions carry the same casilla and are not covered here: a predicate is declared per revision, and copying one across revisions without checking each revision's own casilla set would be the analogy this campaign forbids. The six Modelo 123 fed 0597 carries were already expressible against existing capital-mobiliario antecedents and are untouched. The single Modelo 184 fed 1577 carry stays deliberately unassessed.
 
 A ninth peer sweep took all three of this change's files into HEAD before they could be committed here. All three were verified present in HEAD afterwards by content: the predicate id, the advisory text and the test file.
+
+## The scope limit above is now closed
+
+That limit read "the 2024 revision ONLY" with 2020 through 2023 and 2025 uncovered, because a predicate is declared per revision. All six now declare it.
+
+RESOLVED PER REVISION, NOT COPIED. Both ids were resolved from each revision's own casilla set through semantic_role, irpf_rendimiento_trabajo_total_ingresos_integros for the antecedent and irpf_retencion_trabajo for the consequent, because ids renumber across filing years and a semantic role present in one year is not guaranteed in another. All six revisions agree on 0012 and 0596. That agreement is a MEASUREMENT rather than an assumption, and resolving each independently is what makes it one: had a year renumbered, copying the 2024 pair would have declared a predicate over the wrong boxes and the load would still have succeeded.
+
+2020 through 2023 declared no verification predicates at all and each gained a fragment. 2025 appended to its existing eleven. Temp-root load reports one ADVISORY retencion predicate on each of the six, with revision totals of one, one, one, one, three and twelve. The advisory message default generalised from a single predicate id to the six.
+
+    uv run --no-sync pytest -n0 -q <the predicate test, parametrised over six revisions>
+    30 passed in 14.01s
+
+    <out-of-repo mutation: implies_nonzero always holds>
+    6 failed, 24 passed in 14.24s
+
+Exactly the six firing assertions redden and all twenty-four controls stay green, which is the same blast radius the single-revision proof had: a blind evaluator can only destroy the detection.
+
+Every changed fragment was parsed before committing, and validation was against a temp registry root extracted from HEAD, never the shared bundled path.
+
+WHAT IS STILL NOT COVERED, and it is not the same shape as this extension. The six Modelo 123 fed casilla 0597 carries need their own antecedent judgement rather than this predicate copied across: capital mobiliario ahorro declares no gross ingresos integros total, only per-source components plus a net and a net-reduced total, so the only single-casilla candidate is a NET figure carrying the objection raised against 0025 here. That has its own row. The single Modelo 184 fed 1577 carry stays unassessed.
+
+A CORRECTION TO THIS RECORD AND TO THE DISPATCH THAT SET IT. Both described the 0597 carries as already expressible against existing capital-mobiliario antecedents. That is too strong. Computed capital-mobiliario casillas do exist, so an antecedent is available, but none of them is the gross-income analogue the trabajo case uses, so "expressible" understates the tax judgement still required.
