@@ -56,7 +56,6 @@ from ._ids import InvoiceId
 if TYPE_CHECKING:
     pass
 from ._validators import (
-    assert_non_domestic_country_code,
     is_eu_member_state_code,
     validate_country_code,
     validate_iva_number,
@@ -1066,26 +1065,44 @@ class Invoice(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def _validate_intracommunity_destination_country(self) -> Self:
-        """Refuse an entrega intracomunitaria exenta naming Spain as its own destination.
+    def _validate_intracommunity_acquirer_identification(self) -> Self:
+        """Refuse an entrega intracomunitaria exenta to a Spanish-IDENTIFIED acquirer.
 
-        LIVA art. 25 exempts a delivery TO another territory; a Spanish
-        counterparty country contradicts the category by definition, and
-        would otherwise silently route :attr:`counterparty_tax_id` through
-        the Spanish CIF/NIF/NIE validator instead of a destination NIF-IVA
-        format -- accepting a structurally domestic number where
-        RD 1619/2012 art. 6.1.d requires "el Número de Identificación Fiscal
-        ... por la de otro Estado miembro". Checked unconditionally on the
-        category, independent of whether a tax id happens to be present,
-        because the contradiction is in the declared country itself.
+        RD 1619/2012 art. 6.1.d requires the invoice state "el Número de
+        Identificación Fiscal ... atribuido por la Administración ... de otro
+        Estado miembro", and LIVA art. 25 exempts on that identification. A
+        counterparty purchasing under a Spanish VAT identification therefore
+        contradicts the declared category outright, and the contradiction is
+        what this refuses.
 
-        Deliberately not an EU-membership check: Northern Ireland (``XI``)
-        and a non-EU destination are both legitimate declared facts a later
-        M349/export classification decides between; this guard only refuses
-        the one country the category can never legitimately name.
+        It reads the identification and NOT
+        :attr:`counterparty_country`, which is an address. The two diverge in
+        real trade, and keying this on the address refused a supply art. 25
+        exempts: a Spanish-established acquirer holding a French VAT number is
+        an intra-community acquirer, and could not previously be recorded at
+        all. Establishment is a question about where a party IS, and it does
+        not answer this one.
+
+        ABSENT identification is NOT refused here. It is not a contradiction --
+        it is a fact not yet recorded, and inferring it from the address is the
+        substitution this whole field exists to remove. The aggregation gate
+        withholds such a row with a resolvable review item naming the fact to
+        supply, which is where an unanswered question belongs.
+
+        Deliberately not an EU-membership check: Northern Ireland (``XI``) and
+        a non-EU destination are both legitimate declared facts a later
+        M349/export classification decides between; this guard only refuses the
+        one identification the category can never legitimately name.
         """
-        if self.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
-            assert_non_domestic_country_code(self.counterparty_country)
+        if (
+            self.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+            and self.counterparty_identification_state is EUMemberState.ES
+        ):
+            raise InvoiceValidationError(
+                "an entrega intracomunitaria exenta cannot name an acquirer purchasing under a "
+                "Spanish VAT identification (LIVA art. 25); its country of establishment does not "
+                "change that",
+            )
         return self
 
     @model_validator(mode="after")

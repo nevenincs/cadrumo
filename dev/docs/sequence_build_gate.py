@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from sphinx.application import Sphinx
 
 __all__ = [
+    "SEQUENCE_CHECK_SKIP_ENV",
     "check_sequence_goldens",
     "emit_cli_tree",
     "should_check_sequences",
@@ -42,9 +43,17 @@ _SKIP_EMIT_ENV = "CADRUMO_DOCS_SKIP_CLI_TREE"
 #: the enrolled pages, the committed goldens, and the CLI's behaviour — never
 #: on the build's scope, language, or builder — so a caller driving SEVERAL
 #: builds over one docs tree in one verification lane may run the check once
-#: (the pytest goldens gate) and skip the byte-identical repeats. Production
-#: builds never set this; the hook stays connected and red-on-divergence.
-_SKIP_CHECK_ENV = "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK"
+#: and skip the byte-identical repeats. A caller that sets this owes the check
+#: elsewhere in the same lane: the pytest goldens gate
+#: (``dev/docs/tests/test_sequence_goldens.py``) for the test harness and the
+#: POT extraction, and the first-built site root for the deploy, which refuses
+#: to publish unless exactly one of its four roots ran the check. A lone build
+#: never sets it; the hook stays connected and red-on-divergence.
+#:
+#: Public because the deploy composes its per-root environments from it: a
+#: second literal copy of the key could drift from this one silently, which is
+#: exactly how a renamed env key disables a gate without anyone noticing.
+SEQUENCE_CHECK_SKIP_ENV = "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK"
 
 
 def should_emit_cli_tree(output_path: Path, *, specific_sources: list[Path] | None) -> bool:
@@ -103,11 +112,13 @@ def should_check_sequences() -> bool:
     builds over the same docs tree (full scope, user scope, one per language):
     the check subprocess pins its own environment (English output, scrubbed
     ``CADRUMO_*``), so its verdict is identical across those builds, and the
-    lane runs it exactly once through the dedicated pytest goldens gate instead
-    of once per build. No production build path sets the opt-out, so a real
-    docs build keeps failing on a golden divergence.
+    lane runs it exactly once instead of once per build — through the dedicated
+    pytest goldens gate for the test harness and the POT extraction, and through
+    the first-built site root for the deploy, which refuses to publish unless
+    exactly one root ran it. A build that is not part of such a lane never sets
+    the opt-out, so an ordinary docs build keeps failing on a golden divergence.
     """
-    return not os.environ.get(_SKIP_CHECK_ENV)
+    return not os.environ.get(SEQUENCE_CHECK_SKIP_ENV)
 
 
 def _config_root(app: Sphinx, name: str) -> Path | None:

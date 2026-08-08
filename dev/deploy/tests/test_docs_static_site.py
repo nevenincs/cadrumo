@@ -18,6 +18,7 @@ from dev.deploy.docs_static_site import (
     CANONICAL_DOCS_BASE_URL,
     _language_build_command,
     _language_build_environment,
+    _language_build_environments,
     _language_site_url,
     _localized_languages,
     _refresh_download_latest,
@@ -29,8 +30,10 @@ from dev.deploy.docs_static_site import (
 from dev.docs.build import pagefind_index_mode
 from dev.docs.i18n import DEFAULT_SITE_LANGUAGE, TARGET_LANGUAGES
 from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
+from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV, should_check_sequences
 
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.tests.env_scope import scoped_env_var
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -148,7 +151,7 @@ def test_language_build_command_reuses_the_driver_language_and_out_dir_flags(tmp
 
 def test_language_build_environment_points_the_base_url_at_the_language_root() -> None:
     """Each localized build carries the full Pagefind contract and its own base URL."""
-    env = _language_build_environment("hu")
+    env = _language_build_environment("hu", check_sequences=True)
     assert env["CADRUMO_DOCS_BASE_URL"] == f"{CANONICAL_DOCS_BASE_URL}/hu"
     assert env["CADRUMO_DOCS_PAGEFIND_MODE"] == "full"
     assert env["CADRUMO_DOCS_JOBS"] == "1"
@@ -171,7 +174,45 @@ def test_every_deploy_root_pins_the_full_record_injected_search_contract() -> No
     assert pagefind_index_mode(_site_build_environment(base_environment={})) == "full"
     assert pagefind_index_mode(_site_build_environment(base_environment=hostile_base)) == "full"
     for language in _localized_languages():
-        assert pagefind_index_mode(_language_build_environment(language)) == "full"
+        assert pagefind_index_mode(_language_build_environment(language, check_sequences=False)) == "full"
+
+
+def test_exactly_one_site_root_runs_the_cli_sequence_goldens_check() -> None:
+    """The deploy pays for the goldens check once, and never zero times.
+
+    The check's subprocess scrubs every ``CADRUMO_*`` key and pins English, so
+    the four roots cannot disagree and running it per-root buys four identical
+    answers. Read through :func:`should_check_sequences` - the build's own
+    resolver - so this pins the behaviour the build will select rather than a
+    key that merely looks right.
+    """
+    environments = _language_build_environments()
+    checking = [language for language, env in environments if SEQUENCE_CHECK_SKIP_ENV not in env]
+
+    assert len(environments) == len(_localized_languages())
+    assert len(checking) == 1
+    for _language, env in environments:
+        with scoped_env_var(SEQUENCE_CHECK_SKIP_ENV, env.get(SEQUENCE_CHECK_SKIP_ENV)):
+            assert should_check_sequences() is (SEQUENCE_CHECK_SKIP_ENV not in env)
+
+
+def test_a_deploy_that_would_skip_the_goldens_check_everywhere_refuses(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Losing the check on every root must stop the publish, not pass quietly.
+
+    Skipping the repeats is only sound because one root still runs it. A
+    refactor that drops that root would leave the deploy publishing a site
+    whose CLI sequences were never checked against their goldens -- and would
+    look exactly like a successful build.
+    """
+    monkeypatch.setattr(
+        "dev.deploy.docs_static_site._language_build_environment",
+        lambda language, *, check_sequences: {SEQUENCE_CHECK_SKIP_ENV: "1"},
+    )
+
+    with pytest.raises(SystemExit) as refusal:
+        _language_build_environments()
+
+    assert "exactly one site root" in str(refusal.value)
 
 
 def test_validate_language_roots_accepts_a_complete_matrix(tmp_path: Path) -> None:
