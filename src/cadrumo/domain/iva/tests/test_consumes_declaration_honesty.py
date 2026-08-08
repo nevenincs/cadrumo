@@ -17,10 +17,24 @@ nobody was asked to supply.
 declaration.** A gate comparing one declaration against another proves only that
 the two agree and says nothing about the code. The extractor walks each
 predicate's AST for reads of its own criteria parameter, following module-local
-helpers the predicate hands criteria or a criteria attribute to, because that is
-where the identification reads live. The attribute-to-fact mapping is checked
-exhaustive against the criteria model's own fields, so adding a field to the
-model forces a decision here rather than defaulting to "no fact".
+helpers the predicate hands criteria or a criteria attribute to. The
+attribute-to-fact mapping is checked exhaustive against the criteria model's own
+fields, so adding a field to the model forces a decision here rather than
+defaulting to "no fact".
+
+**The helper-following is for a shape no live row has yet**, and saying so is
+the correction of a claim this module used to make. Every current row spells the
+attribute out in the call it makes, so the plain walk finds it before any helper
+is considered: measured, following changes the extracted set on 0 of 19 rows.
+The branch is kept rather than deleted because of an asymmetry in how its
+absence fails. A predicate delegating EVERYTHING would extract nothing, which
+the unreadable-row refusal already catches out loud. A predicate reading one
+attribute inline and delegating the identification extracts that one attribute,
+raises nothing, and passes the comparison while turning on a fact it never
+declared -- the silent direction, and the one this module exists to catch. Both
+shapes are pinned below against synthetic predicates, because making the
+production table adopt a shape it does not need in order to cover a gate would
+be the gate dictating the code it audits.
 
 **A row the extractor cannot read FAILS.** Contributing an empty set instead
 would let a predicate drop out of the comparison and pass by absence, which is
@@ -32,7 +46,9 @@ from __future__ import annotations
 
 import ast
 import inspect
+import sys
 from collections.abc import Callable
+from types import ModuleType
 from typing import Any
 
 import pytest
@@ -136,9 +152,17 @@ def _criteria_attributes_read(
     return found
 
 
-def _facts_read_by(predicate: Callable[..., Any]) -> set[PartyFact]:
-    """Return the party facts a predicate's reads amount to."""
-    attributes = _criteria_attributes_read(predicate)
+def _facts_read_by(predicate: Callable[..., Any], *, module: ModuleType = _classification) -> set[PartyFact]:
+    """Return the party facts a predicate's reads amount to.
+
+    Takes ``module`` for the same reason the extractor does, and threading it
+    is load-bearing rather than tidiness: a predicate whose helper is not found
+    yields its inline reads only, and where those carry no party fact the result
+    is an EMPTY fact set that raises nothing -- the attribute list was non-empty,
+    so the unreadable-row refusal never fires. Silent, and identical to an
+    honest row that turns on no party fact.
+    """
+    attributes = _criteria_attributes_read(predicate, module=module)
     if not attributes:
         raise _PredicateUnreadableError(
             f"{getattr(predicate, '__name__', predicate)} reads no criteria attribute at all; a "
@@ -219,10 +243,20 @@ def test_the_identification_reads_are_actually_reached() -> None:
 
     Every assertion above would pass identically if the extractor never found an
     identification read anywhere -- declared and actual would simply both come
-    out as establishment-only. The intra-community rows read the identifying
-    State through a module-local helper, which is precisely the path a naive
-    walk of the predicate body misses, so this pins that the helper-following
-    branch is doing work rather than being dead.
+    out as establishment-only. This pins that some row IS found to read the
+    identifying State, so the equality gate is comparing something.
+
+    **It does NOT pin the helper-following branch, and used to say it did.**
+    Measured over the live table: following changes the extracted set on 0 of 19
+    rows, and removing the branch leaves this assertion green. Every row spells
+    the attribute out in the call it makes --
+    ``_identified_in_another_member_state(criteria.issuer_identification_state)``
+    -- and the argument is an attribute OF the subject, which the plain walk
+    above already records before any helper is considered. So the branch is
+    inert here, and a failure of this assertion can only mean the rows stopped
+    reading identification. Naming a second cause it cannot observe made the
+    name convince a reader of a coverage the body never had; the branch's own
+    guard is :func:`test_the_helper_following_branch_finds_a_read_the_plain_walk_misses`.
     """
     identifying = {
         rule.rule_id
@@ -230,7 +264,101 @@ def test_the_identification_reads_are_actually_reached() -> None:
         if PartyFact.VAT_IDENTIFICATION_STATE in _facts_read_by(rule.predicate)
     }
     assert identifying, (
-        "the extractor found no rule reading the identifying State. Either the helper-following "
-        "branch stopped working, or the intra-community rows stopped reading identification -- "
-        "the equality gate cannot tell those apart, so it is asserted here"
+        "the extractor found no rule reading the identifying State, so the intra-community rows "
+        "stopped reading identification and the equality gate above is comparing establishment "
+        "against establishment"
     )
+
+
+# --------------------------------------------------------------------------
+# The helper-following branch, guarded against its own deletion.
+#
+# No live row hands a helper the WHOLE criteria object, so the branch is inert
+# on the production table and cannot be covered from it. These declarations are
+# the shape it exists for. They are deliberately synthetic: making the real
+# table adopt this shape to exercise a gate would be the gate dictating the code
+# it audits.
+# --------------------------------------------------------------------------
+
+
+def _reads_the_customer_identification(criteria: IvaInvoiceClassificationCriteria) -> bool:
+    """A helper handed the whole criteria, reading a party fact on a caller's behalf."""
+    return criteria.customer_identification_state is not None
+
+
+def _predicate_delegating_everything(criteria: IvaInvoiceClassificationCriteria) -> bool:
+    """Reads nothing directly; the helper does all of it."""
+    return _reads_the_customer_identification(criteria)
+
+
+def _predicate_reading_some_and_delegating_the_rest(criteria: IvaInvoiceClassificationCriteria) -> bool:
+    """Reads one attribute inline and delegates the identification to a helper."""
+    return criteria.kind is not None and _reads_the_customer_identification(criteria)
+
+
+def test_the_helper_following_branch_finds_a_read_the_plain_walk_misses() -> None:
+    """The branch's real guard, on the shape no live row has yet.
+
+    Both synthetic predicates hand the WHOLE criteria to a helper, which is the
+    only shape following can contribute to. Asserted against a helper declared
+    in this module rather than by teaching the production table a shape it does
+    not need.
+
+    The mixed predicate is the one that makes the branch worth keeping, and the
+    reason is a measured asymmetry rather than symmetry with its sibling. Delete
+    the branch and the fully-delegating predicate extracts NOTHING, which the
+    extractor already refuses out loud as an unreadable row -- fail-closed, and
+    visible. The mixed one extracts ``kind`` and stops: non-empty, so no refusal
+    fires, and the row passes the honesty comparison while its predicate turns
+    on an identification it never declared. That is the silent direction, and it
+    is exactly the defect this module exists to catch.
+    """
+    module = sys.modules[__name__]
+
+    delegating = _criteria_attributes_read(_predicate_delegating_everything, module=module)
+    mixed = _criteria_attributes_read(_predicate_reading_some_and_delegating_the_rest, module=module)
+
+    assert delegating == {"customer_identification_state"}, (
+        f"following a helper handed the whole criteria found {sorted(delegating)}; the branch is not reaching the read"
+    )
+    assert mixed == {"kind", "customer_identification_state"}, (
+        f"the mixed shape extracted {sorted(mixed)}; the inline read and the delegated one must both "
+        "be found, or a row reads an identification it never declares"
+    )
+    assert PartyFact.VAT_IDENTIFICATION_STATE in _facts_read_by(
+        _predicate_reading_some_and_delegating_the_rest,
+        module=module,
+    )
+
+
+def test_without_following_the_mixed_shape_would_pass_while_reading_undeclared() -> None:
+    """Why the branch is kept rather than deleted, proved rather than argued.
+
+    Deleting the branch is a defensible reading -- it is dead against every live
+    row. This is the measurement that decides against it, and it is a claim
+    about a FUTURE row rather than a present one, which is why it is pinned
+    rather than left as a comment.
+
+    A plain walk is simulated by looking helpers up in a module that has none,
+    which reproduces exactly what deleting the branch would do without editing
+    the extractor. The fully-delegating shape then extracts nothing and the
+    extractor's own refusal catches it. The mixed shape extracts ``kind``,
+    reports establishment-adjacent reads only, and is indistinguishable from an
+    honest row -- so the identification read disappears silently and the
+    producer stops demanding evidence the branch decides on.
+    """
+
+    # A real, empty module rather than a stand-in namespace: the extractor looks
+    # helpers up with getattr, so an empty module resolves every call to None and
+    # follows nothing, which is precisely the deleted-branch behaviour.
+    no_helpers = ModuleType("_no_helpers")
+
+    without = _criteria_attributes_read(_predicate_reading_some_and_delegating_the_rest, module=no_helpers)
+
+    assert without == {"kind"}, f"expected the unfollowed walk to see only the inline read; got {sorted(without)}"
+    assert PartyFact.VAT_IDENTIFICATION_STATE not in {
+        fact for attribute in without if (fact := _FACT_BY_CRITERIA_ATTRIBUTE[attribute]) is not None
+    }, "the unfollowed walk must lose the identification, or this proves nothing about the branch"
+    # And it is NOT caught by the extractor's empty-set refusal, which is the
+    # whole point: a non-empty wrong answer passes every gate in this module.
+    assert without, "a non-empty extraction is what makes the loss silent rather than refused"
