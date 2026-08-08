@@ -586,7 +586,9 @@ _PREFLIGHT_DETAIL_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, s
 #: present and it is the tier lookup that found no match.
 _IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT: Final[Mapping[IvaLedgerAggregationIssueReason, str]] = {
     IvaLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION: "upstream candidate filter, before any preflight screen",
-    IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY: "upstream candidate filter; preflight screens currency itself",
+    IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY: (
+        "upstream candidate filter; preflight screens currency itself"
+    ),
     IvaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE: (
         "upstream candidate filter; preflight screens business classification itself"
     ),

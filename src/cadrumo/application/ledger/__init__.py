@@ -164,6 +164,7 @@ if TYPE_CHECKING:
         closure_findings,
         within_rounding_allowance,
     )
+    from ._confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
     from ._confirmation_gate import (
         BLOCKING_REASON_BY_DISCREPANCY_KIND,
         IDENTITY_FIELDS,
@@ -215,7 +216,6 @@ if TYPE_CHECKING:
         deterministic_check_names,
         deterministic_findings,
     )
-    from ._confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
     from ._document_transcription import DocumentTranscription, TranscriberIdentity
     from ._establishment_ladder import (
         CounterpartyEstablishment,
@@ -689,13 +689,6 @@ __all__ = [
     "IDENTITY_FIELDS",
     "MINIMUM_DISPLAY_ID_WIDTH",
     "PARTY_ATTRIBUTED_ADDRESS_FIELDS",
-    "PartyAddress",
-    "party_addresses",
-    "PartyAttributionOutcome",
-    "PartyColocationResolution",
-    "party_attribution_findings",
-    "party_regions",
-    "resolve_party_attribution_by_colocation",
     "ROUNDING_ALLOWANCE_PER_TERM",
     "AeatRecordProjectionError",
     "AnchorEvaluation",
@@ -788,8 +781,11 @@ __all__ = [
     "MergeTransactionsResult",
     "MissingClassifierInput",
     "OnHostReader",
+    "PartyAddress",
     "PartyAttributionAdvisory",
+    "PartyAttributionOutcome",
     "PartyAttributionWarning",
+    "PartyColocationResolution",
     "PrintedTotalDiscrepancy",
     "PurchaseInvoiceEvidence",
     "PurchaseInvoiceEvidenceDocument",
@@ -873,7 +869,10 @@ __all__ = [
     "normalise_for_anchor_search",
     "order_batch_items",
     "order_batch_sources",
+    "party_addresses",
     "party_attribution_advisory",
+    "party_attribution_findings",
+    "party_regions",
     "preflight_ledger_tax_readiness",
     "preflight_transaction_catalogue",
     "printed_excerpt_occurs",
@@ -896,6 +895,7 @@ __all__ = [
     "resolve_draft_counterparty_establishment",
     "resolve_filer_territorial_scope",
     "resolve_lineage_transaction_id",
+    "resolve_party_attribution_by_colocation",
     "resolve_transaction_id",
     "resolved_blockers",
     "restore_manual_transaction",

@@ -112,6 +112,7 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the requested sweep and return its exit code."""
     args = _parser().parse_args(argv)
     try:
         return int(args.handler(args))
