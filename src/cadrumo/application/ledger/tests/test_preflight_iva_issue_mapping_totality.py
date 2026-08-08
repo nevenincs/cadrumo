@@ -1,27 +1,32 @@
-"""Every IVA aggregation issue reason is classified for the preflight layer.
+"""The preflight module refuses to import with an unclassified IVA issue reason.
 
 Preflight translates aggregation issue reasons into operator-facing readiness
-issues through two bare dict subscripts, which are total by construction: a
-reason that arrives unmapped raises rather than resolving to a wrong sentence.
-That is the right failure mode and this gate keeps it from ever firing, by
-refusing to let a new :class:`IvaLedgerAggregationIssueReason` member ship
-without a decision about which side of the boundary it falls on.
+issues through two bare dict subscripts, which are right to keep total by
+construction: a reason arriving unmapped raises rather than resolving to a
+wrong sentence. What stops that raise from ever being reachable is an
+import-time guard in the preflight module itself, the same placement the
+discrepancy-kind guard beside it uses, so an unclassified member fails the
+import rather than one test run.
 
-The gate is a partition, not a tally. It asserts the mapped set and the
-declared not-reaching set are disjoint and together cover the enum exactly, so
-it bites on an added member regardless of how many members exist -- a count
-would encode this afternoon and detect nothing tomorrow.
+That placement is what these tests have to respect. Asserting the partition's
+shape here would be tautological -- the import would have failed before the
+assertion ran -- so the structural half is proved the only way it can be: by
+re-executing the real module source against a mutated enum and watching it
+refuse. What remains a test is the half no import-time check can do, which is
+whether the declared emission sets still match what the shipped screens emit.
 
-Two lanes renamed members of this one enum inside a day, and the first
-``AttributeError`` masked the second failure entirely; the class this closes is
-that masking, not either instance.
+Two lanes renamed members of this one enum inside a day, and the first failure
+masked the second entirely; the class this closes is that masking.
 """
 
 from __future__ import annotations
 
+import importlib.util
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
@@ -43,13 +48,12 @@ from ...aggregation import (
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
 )
-from .._preflight import (
-    _IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT,
-    _PREFLIGHT_DETAIL_BY_IVA_ISSUE,
-    _PREFLIGHT_REASON_BY_IVA_ISSUE,
-)
+from .. import _preflight
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_PROBE_NAME = "MUTATION_PROBE_REASON"
+_PROBE_VALUE = "mutation_probe_reason"
 
 
 def _transaction(
@@ -102,6 +106,52 @@ def _transaction(
     )
 
 
+def _execute_preflight_module_copy(probe_name: str) -> ModuleType:
+    """Execute the real preflight source as an independent module object.
+
+    Loads it under a name inside its own package, so its relative imports
+    resolve exactly as the canonical module's do, and never touches the
+    canonical module in ``sys.modules``. Executing the shipped source is what
+    makes this a proof rather than a restatement: the guard under test is the
+    one that ships, not a copy of its condition written here.
+    """
+    source = Path(_preflight.__file__)
+    spec = importlib.util.spec_from_file_location(f"{_preflight.__package__}.{probe_name}", source)
+    if spec is None or spec.loader is None:  # pragma: no cover - defensive
+        pytest.fail(f"could not build a module spec for {source}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.fixture
+def unclassified_enum_member() -> Iterator[IvaLedgerAggregationIssueReason]:
+    """Add a real member to the live enum, then remove it again.
+
+    Adding rather than deleting, deliberately: deleting a member crashes
+    production import through a missing attribute and would red on a signature
+    that says nothing about this guard, so it would prove far less than the
+    defect actually being simulated here.
+    """
+    enum = IvaLedgerAggregationIssueReason
+    assert _PROBE_NAME not in enum.__members__, "probe member already present; the mutation would be a no-op"
+
+    member = str.__new__(enum, _PROBE_VALUE)
+    member._name_ = _PROBE_NAME
+    member._value_ = _PROBE_VALUE
+    enum._member_map_[_PROBE_NAME] = member
+    enum._member_names_.append(_PROBE_NAME)
+    enum._value2member_map_[_PROBE_VALUE] = member
+    try:
+        assert member in set(enum), "mutation ineffective: the probe member is not in set(enum)"
+        yield member
+    finally:
+        enum._member_map_.pop(_PROBE_NAME, None)
+        enum._value2member_map_.pop(_PROBE_VALUE, None)
+        if _PROBE_NAME in enum._member_names_:
+            enum._member_names_.remove(_PROBE_NAME)
+
+
 def _observed_counterparty_gate_reasons() -> frozenset[IvaLedgerAggregationIssueReason]:
     """Return every reason the real counterparty gate emits across its inputs.
 
@@ -149,58 +199,50 @@ def _observed_missing_fact_reasons() -> frozenset[IvaLedgerAggregationIssueReaso
     )
 
 
-def test_partition_covers_every_aggregation_issue_reason() -> None:
-    """Each enum member is either mapped into preflight or declared unreachable."""
-    classified = set(_PREFLIGHT_REASON_BY_IVA_ISSUE) | set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT)
-    unclassified = set(IvaLedgerAggregationIssueReason) - classified
-    assert not unclassified, (
-        "IvaLedgerAggregationIssueReason members reach the ledger preflight translation "
-        "with no decision recorded: map them in _PREFLIGHT_REASON_BY_IVA_ISSUE if preflight "
-        "can receive them, or record why it cannot in "
-        f"_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT -- {sorted(r.value for r in unclassified)}"
+def test_the_shipped_module_imports_with_every_member_classified() -> None:
+    """The positive control: the guard passes on the real, unmutated enum.
+
+    Without this the refusal below would be consistent with a module that
+    cannot load at all, and a guard that always fires is not a guard.
+    """
+    module = _execute_preflight_module_copy("_preflight_control_probe")
+
+    assert set(module._PREFLIGHT_REASON_BY_IVA_ISSUE) | set(module._IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT) == set(
+        IvaLedgerAggregationIssueReason,
     )
 
 
-def test_partition_sides_are_disjoint() -> None:
-    """No member is both mapped and declared unreachable."""
-    both = set(_PREFLIGHT_REASON_BY_IVA_ISSUE) & set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT)
-    assert not both, sorted(r.value for r in both)
+def test_an_unclassified_member_fails_the_module_import(
+    unclassified_enum_member: IvaLedgerAggregationIssueReason,
+) -> None:
+    """A member on neither side of the partition refuses at import, not at call."""
+    with pytest.raises(RuntimeError) as excinfo:
+        _execute_preflight_module_copy("_preflight_mutation_probe")
 
-
-def test_partition_classifies_nothing_outside_the_enum() -> None:
-    """Neither side carries a stale member the enum no longer declares."""
-    members = set(IvaLedgerAggregationIssueReason)
-    assert set(_PREFLIGHT_REASON_BY_IVA_ISSUE) <= members
-    assert set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT) <= members
-
-
-def test_every_not_reaching_entry_states_its_reason() -> None:
-    """The unreachable side is a judgement record, not a mute list."""
-    for reason, rationale in _IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT.items():
-        assert rationale.strip(), reason.value
-
-
-def test_reason_mapping_covers_both_preflight_facing_screens() -> None:
-    """Every reason preflight's two screens emit resolves to a preflight reason."""
-    reaching = IVA_LEDGER_MISSING_FACT_REASONS | IVA_LEDGER_COUNTERPARTY_GATE_REASONS
-    assert reaching <= set(_PREFLIGHT_REASON_BY_IVA_ISSUE)
-
-
-def test_detail_mapping_covers_the_missing_fact_screen() -> None:
-    """Every missing-fact reason carries a detail sentence.
-
-    The counterparty gate is deliberately absent: it composes its own localised
-    detail, which preflight carries through rather than re-authoring.
-    """
-    assert set(_PREFLIGHT_DETAIL_BY_IVA_ISSUE) >= IVA_LEDGER_MISSING_FACT_REASONS
+    message = str(excinfo.value)
+    assert unclassified_enum_member.value in message
+    assert "_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT" in message
 
 
 def test_declared_emission_sets_match_the_shipped_screens() -> None:
     """The declared emission sets equal what the real screens actually emit.
 
-    Without this the two declarations above would be hand-lists asserting
-    themselves, and a branch emitting a newly added reason would satisfy the
-    coverage gates while still reaching preflight unmapped.
+    The half no import-time check can carry, because it has to run the screens
+    over real transactions. Without it the import guard would be comparing a
+    hand-list against itself: a screen that starts emitting a newly added
+    reason would satisfy every set comparison at import and still arrive at a
+    subscript with no entry.
     """
     assert _observed_missing_fact_reasons() == IVA_LEDGER_MISSING_FACT_REASONS
     assert _observed_counterparty_gate_reasons() == IVA_LEDGER_COUNTERPARTY_GATE_REASONS
+
+
+def test_every_not_reaching_entry_states_its_reason() -> None:
+    """The unreachable side is a judgement record, not a mute list.
+
+    Not expressible as a set comparison, so it stays here: the import guard
+    checks which members are classified, never whether the classification says
+    anything.
+    """
+    for reason, rationale in _preflight._IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT.items():
+        assert rationale.strip(), reason.value
