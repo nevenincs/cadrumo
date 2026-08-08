@@ -2128,6 +2128,7 @@ cli:
         view_help: Vásárlásiszámla-bizonyíték megjelenítése.
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót a bizonyíték törléséhez.
+        field_anchor_uncorroborated: '{field}: az olvasó a(z) ''{anchor}'' elemre mutat, és semmi nem jelezte, hogy ez az alak hiányozna a dokumentumból. Az érték továbbra sincs megerősítve, tehát nem a nyomtatott alak az, ami tisztázatlan maradt. {detail}'
       inventory:
         actividad_id_help: Gazdasági tevékenység azonosítója.
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.

@@ -2190,6 +2190,7 @@ cli:
         view_help: Mostra un justificant de factura de compra
         yes_help: Confirma l'eliminació del justificant
         yes_required: Has de passar --yes per eliminar un justificant
+        field_anchor_uncorroborated: '{field}: el lector assenyala ''{anchor}'', i res no va indicar que aquesta forma faltés en el document. El valor continua sense estar corroborat, així que el que queda sense resoldre és una cosa diferent de la forma impresa. {detail}'
       inventory:
         actividad_id_help: Identificador de l'activitat econòmica
         create_help: Crea un llibre d'existències per a una activitat i exercici

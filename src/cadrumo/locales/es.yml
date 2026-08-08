@@ -2204,6 +2204,7 @@ cli:
         view_help: Muestra un justificante de factura de compra
         yes_help: Confirma la eliminación del justificante
         yes_required: Debes pasar --yes para eliminar un justificante
+        field_anchor_uncorroborated: '{field}: el lector señala ''{anchor}'', y nada indicó que esa forma faltara en el documento. El valor sigue sin estar corroborado, así que lo que queda sin resolver es algo distinto de la forma impresa. {detail}'
       inventory:
         actividad_id_help: Identificador de la actividad económica
         create_help: Crea un libro de existencias para una actividad y ejercicio

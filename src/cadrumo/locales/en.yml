@@ -2038,6 +2038,7 @@ cli:
         view_help: Show purchase invoice evidence
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence
+        field_anchor_uncorroborated: '{field}: the reader points at ''{anchor}'', and nothing found that form missing from the document. The value is still not corroborated, so what is unsettled is something other than the printed form. {detail}'
       inventory:
         actividad_id_help: Economic activity identifier
         create_help: Create an inventory ledger for one activity and tax year
