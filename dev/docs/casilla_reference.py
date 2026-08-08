@@ -165,8 +165,12 @@ class CasillaReferenceResult:
 class _LegalLink:
     """One catalogue provision projected for display on a casilla card."""
 
-    #: Human reading of the provision ("Ley 37/1992, art. 92").
+    #: Human reading of the whole provision ("Ley 37/1992, art. 92").
     label: str
+    #: The instrument alone ("Ley 37/1992"), so sibling provisions group under it.
+    instrument: str
+    #: The provision within that instrument ("art. 92"), or empty for a law-level row.
+    provision: str
     #: Site-relative target of the generated legal-reference destination.
     target: str
 
@@ -380,8 +384,12 @@ def _legal_numeral(tokens: list[str]) -> tuple[str | None, list[str]]:
     return None, tokens
 
 
-def _legal_provision_display(legal_id: str, provision: LegalProvisionRecord, language: OutputLanguage) -> str:
-    """Read one catalogue provision as its official Spanish name plus its article.
+def _legal_provision_display(
+    legal_id: str,
+    provision: LegalProvisionRecord,
+    language: OutputLanguage,
+) -> tuple[str, str]:
+    """Split one catalogue provision into ``(instrument, provision)`` for display.
 
     Built only from authored fields (``kind``, ``article``, ``section``) and the
     document half of the catalogue id, which encodes the instrument's number and
@@ -404,19 +412,19 @@ def _legal_provision_display(legal_id: str, provision: LegalProvisionRecord, lan
         name = f"{name}{separator if qualifier else ' '}{numeral}"
     name = name.strip()
     if not name:
-        return legal_id
+        return legal_id, ""
 
     # The authored ``section`` prose is the most human reading of a provision;
     # ``article`` is next (numeric articles take the ``art.`` prefix, worded
     # ones already read as prose); the id's own provision half is the floor.
     if provision.section:
-        return f"{name}, {provision.section}"
+        return name, provision.section
     if provision.article:
         prefix = "art. " if provision.article[:1].isdigit() else ""
-        return f"{name}, {prefix}{provision.article}"
+        return name, f"{prefix}{provision.article}"
     if provision_part:
-        return f"{name}, {provision_part.replace('-', ' ')}"
-    return name
+        return name, provision_part.replace("-", " ")
+    return name, ""
 
 
 @lru_cache(maxsize=8)
@@ -438,8 +446,11 @@ def _legal_links(repo_root: Path, language: OutputLanguage) -> dict[str, _LegalL
             corpus_ref=provision.corpus_ref,
             permalink=provision.permalink,
         )
+        instrument, within = _legal_provision_display(provision.legal_id, provision, language)
         links[provision.legal_id] = _LegalLink(
-            label=_legal_provision_display(provision.legal_id, provision, language),
+            label=f"{instrument}, {within}" if within else instrument,
+            instrument=instrument,
+            provision=within,
             target=_relative_to_casilla_page(target),
         )
     return links
@@ -453,19 +464,33 @@ def _relative_to_casilla_page(site_target: str) -> str:
 
 
 def _legal_list(refs: tuple[str, ...], links: dict[str, _LegalLink], label: str) -> tuple[list[str], int]:
-    """Render a legal-basis list, returning the lines and the resolved-link count."""
-    items: list[str] = []
+    """Render the legal basis grouped by instrument, returning lines and link count.
+
+    Four refs into one norm used to print that norm's name four times, which is
+    what made the grounding compete with the answer above it. Grouping states
+    the instrument once and lists its provisions after it, so the block reads as
+    one citation rather than as a row of equally-weighted tags.
+    """
+    grouped: OrderedDict[str, list[str]] = OrderedDict()
     resolved = 0
     for ref in refs:
         link = links.get(ref)
         if link is None:
-            items.append(f'<li><span class="casilla-legal-ref casilla-legal-ref--raw">{html.escape(ref)}</span></li>')
+            grouped.setdefault("", []).append(
+                f'<span class="casilla-legal-ref casilla-legal-ref--raw">{html.escape(ref)}</span>',
+            )
             continue
         resolved += 1
-        items.append(
-            f'<li><a class="casilla-legal-ref" href="{html.escape(link.target, quote=True)}"'
-            f' title="{html.escape(ref, quote=True)}">{html.escape(link.label)}</a></li>',
+        anchor = (
+            f'<a class="casilla-legal-ref" href="{html.escape(link.target, quote=True)}"'
+            f' title="{html.escape(ref, quote=True)}">{html.escape(link.provision or link.instrument)}</a>'
         )
+        grouped.setdefault(link.instrument, []).append(anchor)
+
+    items: list[str] = []
+    for instrument, anchors in grouped.items():
+        name = f'<span class="casilla-legal-name">{html.escape(instrument)}</span> ' if instrument else ""
+        items.append(f"<li>{name}{', '.join(anchors)}</li>")
     lines = [
         '<div class="casilla-card__legal">',
         f'<span class="casilla-card__legal-label">{html.escape(label)}</span>',
@@ -650,7 +675,7 @@ def _fill_explanation(
     input_kind = record.input_kind.value
     headline = docs_chrome(f"docs.casilla.input_kind.{input_kind}", language)
     lines = [
-        f'<div class="casilla-fill casilla-fill--{html.escape(input_kind, quote=True)}">',
+        f'<p class="casilla-fill casilla-fill--{html.escape(input_kind, quote=True)}">',
         f'<span class="casilla-fill__kind">{html.escape(headline)}</span>',
     ]
 
@@ -675,8 +700,35 @@ def _fill_explanation(
         derived = docs_chrome("docs.casilla.chrome.derived_from", language)
         lines.append(f'<span class="casilla-fill__detail">{html.escape(derived)}</span>')
         lines.append(f'<span class="casilla-derives-from">{_join_references(references, language)}</span>')
-    lines.append("</div>")
+    # What the filer types belongs in this sentence, not in a pill of its own:
+    # every casilla has a value shape, so a pill for it carried no signal and
+    # only crowded the ones that do (required, a range, a segmento).
+    data_type = docs_chrome(f"docs.casilla.data_type.{record.data_type}", language)
+    lines.append(f'<span class="casilla-fill__shape">{html.escape(data_type)}</span>')
+    lines.append("</p>")
     return lines
+
+
+def _description(help_text: str | None, box_number: str) -> str | None:
+    """Drop a leading restatement of the box number from the authored help.
+
+    Registry help routinely opens by naming the box ("Box 01: taxable base
+    for..."), which the number beside the title has already said. Keyed on the
+    number actually rendered, so it strips only a genuine echo and needs no
+    per-language prefix list.
+    """
+    if help_text is None:
+        return None
+    stripped = re.sub(
+        rf"^\s*\w+\s*0*{re.escape(box_number.lstrip('0') or box_number)}\s*[:.–-]\s*",
+        "",
+        help_text,
+        count=1,
+    )
+    stripped = stripped.strip()
+    if not stripped:
+        return None
+    return stripped[:1].upper() + stripped[1:]
 
 
 def _box_number(record: CasillaSearchRecord, facts: CasillaFacts | None) -> str:
@@ -726,8 +778,6 @@ def _constraint_phrases(constraints: CasillaConstraints | None, language: Output
 def _fact_chips(record: CasillaSearchRecord, facts: CasillaFacts | None, language: OutputLanguage) -> list[str]:
     """The scannable filing facts: what to type, whether it is required, where it sits."""
     chips: list[str] = []
-    data_type = docs_chrome(f"docs.casilla.data_type.{record.data_type}", language)
-    chips.append(f'<li class="casilla-fact">{html.escape(data_type)}</li>')
     if record.required:
         required = docs_chrome("docs.casilla.chrome.required", language)
         chips.append(f'<li class="casilla-fact casilla-fact--required">{html.escape(required)}</li>')
@@ -822,8 +872,9 @@ def _render_entry(
     if label is not None:
         lines.append(f'<h3 class="casilla-card__title">{html.escape(label)}</h3>')
     lines.append("</header>")
-    if help_text:
-        lines.append(f'<p class="casilla-card__help">{html.escape(help_text)}</p>')
+    description = _description(help_text, box_number)
+    if description:
+        lines.append(f'<p class="casilla-card__help">{html.escape(description)}</p>')
     lines.extend(_fill_explanation(record, facts, numbers_by_id, language))
     chips = _fact_chips(record, facts, language)
     if chips:
@@ -842,6 +893,51 @@ def _render_entry(
 
 
 # ── Page rendering ───────────────────────────────────────────────────────────
+
+
+def _casilla_index(
+    grouped: OrderedDict[tuple[str, ...], list[CasillaSearchRecord]],
+    schema: CompiledSchema,
+    modelo: str,
+    language: OutputLanguage,
+) -> list[str]:
+    """Render a jump index over every casilla on the page.
+
+    One chip per casilla, carrying its box number and its label as the hover
+    title, grouped under the section it belongs to. Modelo 100 renders 2258 of
+    them, so the chips flow rather than stack and the whole index scrolls inside
+    a bounded box: a reader reaches any casilla without paging through the form,
+    and the index never pushes the first card off the screen.
+    """
+    heading = docs_chrome("docs.casilla.chrome.casilla_index", language)
+    hint = docs_chrome("docs.casilla.chrome.casilla_index_hint", language)
+    lines = [
+        f'<nav class="casilla-index" aria-label="{html.escape(heading, quote=True)}">',
+        '<p class="casilla-index__lead">'
+        f'<span class="casilla-index__title">{html.escape(heading)}</span> '
+        f'<span class="casilla-index__hint">{html.escape(hint)}</span>'
+        "</p>",
+        '<div class="casilla-index__scroll">',
+    ]
+    for section, section_records in grouped.items():
+        lines.append('<div class="casilla-index__group">')
+        lines.append(
+            f'<a class="casilla-index__section" href="#{html.escape(_section_anchor(section), quote=True)}">'
+            f"{html.escape(_section_display(section, language))}</a>",
+        )
+        lines.append('<div class="casilla-index__chips">')
+        for record in section_records:
+            facts = schema.casillas.get((modelo, str(record.casilla_id)))
+            label, _help = _localised(record, language)
+            anchor = casilla_page_anchor(record.modelo, record.casilla_id)
+            title = html.escape(label or str(record.casilla_id), quote=True)
+            lines.append(
+                f'<a class="casilla-index__chip" href="#{html.escape(anchor, quote=True)}" title="{title}">'
+                f"{html.escape(_box_number(record, facts))}</a>",
+            )
+        lines.extend(["</div>", "</div>"])
+    lines.extend(["</div>", "</nav>"])
+    return lines
 
 
 def _page_header(
@@ -885,18 +981,6 @@ def _page_header(
         lines.extend(legal_lines)
     lines.append("</div>")
 
-    if len(sections) > 1:
-        nav_label = html.escape(docs_chrome("docs.casilla.chrome.sections_nav", language), quote=True)
-        lines.append(f'<nav class="casilla-section-nav" aria-label="{nav_label}">')
-        lines.append("<ul>")
-        for section, count in sections:
-            lines.append(
-                f'<li><a href="#{html.escape(_section_anchor(section), quote=True)}">'
-                f"{html.escape(_section_display(section, language))}"
-                f'<span class="casilla-section-nav__count">{count}</span>'
-                "</a></li>",
-            )
-        lines.extend(["</ul>", "</nav>"])
     return _raw_html(lines), resolved
 
 
@@ -914,7 +998,11 @@ def _render_modelo_page(
         "   projection. Do not edit by hand; regenerate.\n\n"
     )
     overview = schema.modelos.get(modelo)
-    heading = f"Modelo {modelo}" if overview is None else f"Modelo {modelo} — {overview.title}"
+    heading = (
+        f"Modelo {modelo}"
+        if overview is None
+        else docs_chrome("docs.casilla.chrome.page_heading", language, modelo=modelo, title=overview.title)
+    )
     title = _rst_heading(_rst_escape(heading), "=")
 
     grouped: OrderedDict[tuple[str, ...], list[CasillaSearchRecord]] = OrderedDict()
@@ -939,7 +1027,7 @@ def _render_modelo_page(
         for record in records
     }
     page_header, legal_links = _page_header(modelo, overview, records, section_counts, links, language)
-    blocks: list[str] = [header + title, page_header]
+    blocks: list[str] = [header + title, page_header, _raw_html(_casilla_index(grouped, schema, modelo, language))]
     anchors: list[str] = []
     seen: set[str] = set()
     rendered_legal_refs: dict[str, tuple[str, ...]] = {}
@@ -979,7 +1067,11 @@ def _render_index(pages: tuple[CasillaPage, ...], schema: CompiledSchema, langua
     lines = [".. toctree::", "   :maxdepth: 1", ""]
     for page in pages:
         overview = schema.modelos.get(page.modelo)
-        label = f"Modelo {page.modelo}" if overview is None else f"Modelo {page.modelo} — {overview.title}"
+        label = (
+            f"Modelo {page.modelo}"
+            if overview is None
+            else docs_chrome("docs.casilla.chrome.page_heading", language, modelo=page.modelo, title=overview.title)
+        )
         lines.append(f"   {_rst_escape(label)} <{page.modelo}>")
     return header + title + "\n" + intro + "\n".join(lines) + "\n"
 

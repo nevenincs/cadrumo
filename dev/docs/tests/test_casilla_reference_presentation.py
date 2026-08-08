@@ -145,7 +145,10 @@ def test_unlabelled_entry_keeps_its_number_and_its_grounding() -> None:
     spanish_only = _record(descriptions={OutputLanguage.ES: _LABELS[OutputLanguage.ES]}, localized_help={})
     rst = _render((spanish_only,), OutputLanguage.HU)
     assert '<span class="casilla-card__number">03</span>' in rst
-    assert "Ley 37/1992, art. 92" in rst
+    # The citation renders as instrument plus provision so siblings can group,
+    # so assert both parts rather than the joined string.
+    assert "Ley 37/1992" in rst
+    assert "art. 92" in rst
 
 
 def test_default_language_is_the_shared_build_signal() -> None:
@@ -389,24 +392,29 @@ def test_unresolvable_ref_still_renders_and_is_not_counted_as_a_link() -> None:
 
 
 @pytest.mark.parametrize(
-    ("legal_id", "expected"),
+    ("legal_id", "instrument", "provision"),
     [
-        ("ley-37-1992:art-92", "Ley 37/1992, art. 92"),
-        ("rd-1624-1992:art-71", "Real Decreto 1624/1992, art. 71"),
-        ("orden-eha-3111-2009:art-1", "Orden EHA/3111/2009, art. 1"),
-        ("real-decreto-ley-4-2024:art-1", "Real Decreto-ley 4/2024, art. 1"),
+        ("ley-37-1992:art-92", "Ley 37/1992", "art. 92"),
+        ("rd-1624-1992:art-71", "Real Decreto 1624/1992", "art. 71"),
+        ("orden-eha-3111-2009:art-1", "Orden EHA/3111/2009", "art. 1"),
+        ("real-decreto-ley-4-2024:art-1", "Real Decreto-ley 4/2024", "art. 1"),
     ],
 )
-def test_provision_display_reads_the_official_instrument_name(legal_id: str, expected: str) -> None:
-    """A catalogue id renders as the instrument's official Spanish name plus article.
+def test_provision_display_reads_the_official_instrument_name(
+    legal_id: str,
+    instrument: str,
+    provision: str,
+) -> None:
+    """A catalogue id splits into the official Spanish instrument name and its article.
 
-    The instrument name is identical in every build language: BOE publishes
-    "Ley 37/1992" under that name, so translating it would cite a norm that does
-    not exist.
+    The split is what lets sibling provisions of one norm group under a single
+    citation instead of repeating the instrument once per article. The instrument
+    name is identical in every build language: BOE publishes "Ley 37/1992" under
+    that name, so translating it would cite a norm that does not exist.
     """
-    provisions = {provision.legal_id: provision for provision in load_legal_provisions(_REPO_ROOT)}
+    provisions = {record.legal_id: record for record in load_legal_provisions(_REPO_ROOT)}
     for language in OutputLanguage:
-        assert _legal_provision_display(legal_id, provisions[legal_id], language) == expected
+        assert _legal_provision_display(legal_id, provisions[legal_id], language) == (instrument, provision)
 
 
 # ── Structure ────────────────────────────────────────────────────────────────
