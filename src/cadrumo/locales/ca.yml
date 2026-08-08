@@ -1663,7 +1663,7 @@ application:
         d''identitat per presentar models. Afegeix aquests flags a la mateixa ordre
         i torna-la a executar: %{missing_flags}.'
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
-        requereix supplied_question_ids — l'edició és un pedaç, no una reescriptura
+        requereix supplied_question_ids - l'edició és un pedaç, no una reescriptura
         completa.
       persist_patch_unknown_question_id: El pedaç de l'assistent referència un id
         de pregunta desconegut.
@@ -2051,7 +2051,9 @@ cli:
           el valor extret).
         confirm_link_hint_message: Vincula aquesta factura a un moviment del llibre
           amb `aeat app ledger link`.
-        confirm_operation_type_help: cli.app.ledger.evidence.confirm_operation_type_help
+        confirm_operation_type_help: 'Clau del model 349 per a un lliurament intracomunitari.
+          Obligatòria quan el document declara un lliurament intracomunitari: la categoria
+          no permet saber si va seguir una importació exempta.'
         confirm_printed_total_mismatch_message: El total imprès al document no coincideix
           amb el total registrat. El total registrat es deriva de la base imposable
           i del tipus d'IVA, de manera que una diferència significa que el document
@@ -2079,7 +2081,8 @@ cli:
           group_help: Reviseu què s'ha enviat a un model extern i recupereu els artefactes
             en aquest equip.
           list_help: Mostreu cada enviament extern i els artefactes que se'n deriven.
-          no_history: cli.app.ledger.evidence.consent.no_history
+          no_history: 'Cap byte d''evidència no ha sortit d''aquest equip: aquest
+            perfil no té cap enviament extern registrat.'
           rederive_help: Torneu a llegir un artefacte en aquest equip des de la seva
             transcripció desada.
           rederive_refused: 'Nova derivació rebutjada: {detail}'
@@ -2126,6 +2129,10 @@ cli:
         field_anchor_self_reported: '{field}: el lector afirma haver-ho llegit de
           ''{anchor}'', però aquesta afirmació prové del mateix lector que va produir
           el valor, així que res independent no ho ha confirmat.'
+        field_anchor_uncorroborated: '{field}: el lector assenyala ''{anchor}'', i
+          res no va indicar que aquesta forma faltés en el document. El valor continua
+          sense estar corroborat, així que el que queda sense resoldre és una cosa
+          diferent de la forma impresa. {detail}'
         field_contradicted: '{field}: el document indica ''{anchor}'', que no coincideix
           amb el valor registrat per a aquest camp. {detail}'
         field_no_anchor: '{field}: el lector no va oferir res en el document a què
@@ -2190,7 +2197,6 @@ cli:
         view_help: Mostra un justificant de factura de compra
         yes_help: Confirma l'eliminació del justificant
         yes_required: Has de passar --yes per eliminar un justificant
-        field_anchor_uncorroborated: '{field}: el lector assenyala ''{anchor}'', i res no va indicar que aquesta forma faltés en el document. El valor continua sense estar corroborat, així que el que queda sense resoldre és una cosa diferent de la forma impresa. {detail}'
       inventory:
         actividad_id_help: Identificador de l'activitat econòmica
         create_help: Crea un llibre d'existències per a una activitat i exercici
@@ -3053,7 +3059,7 @@ cli:
           aquest import declarable no s''assigna a cap casella i no es declara en
           aquesta presentació; revisa''l abans de presentar.'
         calculate_unauthorized_advisory: 'AVÍS: el backend de càlcul del model %{modelo}
-          NO està autoritzat — encara no s''ha provat amb un test integral al llarg
+          NO està autoritzat - encara no s''ha provat amb un test integral al llarg
           d''almenys dos exercicis de renda (porta d''autorització multi-exercici).
           El resultat s''ha calculat i desat, però tracta''l com a provisional fins
           que el model estigui autoritzat.'
@@ -3073,10 +3079,10 @@ cli:
         compare_taxation_help: 'Compara la quota IRPF en tributació conjunta (art.
           82-84 LIRPF) respecte a tributació individual per a una unitat de treball
           Model 100 existent. Executa el motor de càlcul del registre dues vegades
-          — una amb tipus de declaració = 2 (conjunta) i una altra amb tipus = 1 (individual)
-          — sobre les mateixes dades de perfil, i emet el diferencial de quota i la
+          - una amb tipus de declaració = 2 (conjunta) i una altra amb tipus = 1 (individual)
+          - sobre les mateixes dades de perfil, i emet el diferencial de quota i la
           recomanació. Operació efímera: no es persisteix cap revisió.'
-        compare_taxation_recommendation_line: 'RECOMANACIÓ: {recommendation} — {reason}'
+        compare_taxation_recommendation_line: 'RECOMANACIÓ: {recommendation} - {reason}'
         compare_taxation_work_unit_not_found: Unitat de treball {work_unit_id} no
           trobada; consulta les unitats actives amb 'aeat app modelo work list'.
         create_created: Nova unitat de treball creada.
@@ -3867,7 +3873,7 @@ cli:
         export_section_title: Exporta el paquet de perfil
         import_section_title: Importa el paquet de perfil
         transport_cleartext_description: Escriu JSON sense xifrar amb dades financeres
-          sensibles; només per a ús local o d'accés de l'interessat — no l'enviïs
+          sensibles; només per a ús local o d'accés de l'interessat - no l'enviïs
           per correu, ni el sincronitzis, ni el transfereixis.
         transport_cleartext_label: Text clar (només local/SAR)
         transport_encrypted_description: Xifra el paquet (AEAD) amb una frase de contrasenya;
@@ -5959,10 +5965,10 @@ entries:
     label: Validació de certificats electrònics
     purpose: Servei de comprovació de validesa de certificats digitals.
   portal_clave_gestiones:
-    label: Cl@ve PIN — Gestions
+    label: Cl@ve PIN - Gestions
     purpose: Gestió i obtenció del Cl@ve PIN d'accés temporal.
   portal_clave_idp_root:
-    label: Cl@ve — Identificació electrònica
+    label: Cl@ve - Identificació electrònica
     purpose: Proveïdor d'identitat Cl@ve per a l'autenticació davant l'AEAT.
   portal_clave_sede_entry:
     label: Accés amb Cl@ve
@@ -5977,74 +5983,74 @@ entries:
     label: Domiciliació bancària de pagaments
     purpose: Domiciliació bancària d'autoliquidacions i pagaments tributaris.
   portal_m036_censal:
-    label: Model 036 — Declaració censal
+    label: Model 036 - Declaració censal
     purpose: Alta, modificació i baixa en el cens d'empresaris i professionals.
   portal_m037_censal_simplificada:
-    label: Model 037 — Declaració censal simplificada (retirat)
+    label: Model 037 - Declaració censal simplificada (retirat)
     notes:
       '0': Suprimit per l'Ordre HAC/1526/2024, amb efecte des de 2025-02-03.
       '1': Utilitzeu el Model 036 per a qualsevol tràmit censal posterior.
     purpose: Declaració censal simplificada per a autònoms, suprimida el 2025.
   portal_m100_renta:
-    label: Model 100 — Declaració de la Renda (IRPF)
+    label: Model 100 - Declaració de la Renda (IRPF)
     purpose: Declaració anual de l'Impost sobre la Renda de les Persones Físiques.
   portal_m111_retenciones_trabajo:
-    label: Model 111 — Retencions del treball i activitats
+    label: Model 111 - Retencions del treball i activitats
     purpose: Autoliquidació de retencions i ingressos a compte de l'IRPF sobre rendiments
       del treball.
   portal_m115_retenciones_arrendamientos:
-    label: Model 115 — Retencions per arrendament d'immobles
+    label: Model 115 - Retencions per arrendament d'immobles
     purpose: Autoliquidació de retencions de l'IRPF per lloguer d'immobles urbans.
   portal_m123_retenciones_capital:
-    label: Model 123 — Retencions del capital mobiliari
+    label: Model 123 - Retencions del capital mobiliari
     purpose: Autoliquidació de retencions de l'IRPF sobre rendiments del capital mobiliari.
   portal_m130_pago_fraccionado_ed:
-    label: Model 130 — Pagament fraccionat IRPF (estimació directa)
+    label: Model 130 - Pagament fraccionat IRPF (estimació directa)
     purpose: Pagament fraccionat trimestral de l'IRPF per a autònoms en estimació
       directa.
   portal_m131_pago_fraccionado_eo:
-    label: Model 131 — Pagament fraccionat IRPF (estimació objectiva)
+    label: Model 131 - Pagament fraccionat IRPF (estimació objectiva)
     purpose: Pagament fraccionat trimestral de l'IRPF per a autònoms en estimació
       objectiva (mòduls).
   portal_m180_resumen_arrendamientos:
-    label: Model 180 — Resum anual d'arrendaments
+    label: Model 180 - Resum anual d'arrendaments
     purpose: Resum anual de retencions per arrendament d'immobles urbans.
   portal_m190_resumen_trabajo:
-    label: Model 190 — Resum anual de retencions del treball
+    label: Model 190 - Resum anual de retencions del treball
     purpose: Resum anual de retencions i ingressos a compte sobre rendiments del treball.
   portal_m193_resumen_capital:
-    label: Model 193 — Resum anual de retencions del capital
+    label: Model 193 - Resum anual de retencions del capital
     purpose: Resum anual de retencions sobre rendiments del capital mobiliari.
   portal_m200_sociedades_anual:
-    label: Model 200 — Impost sobre Societats
+    label: Model 200 - Impost sobre Societats
     purpose: Declaració anual de l'Impost sobre Societats.
   portal_m202_sociedades_fraccionado:
-    label: Model 202 — Pagament fraccionat de l'Impost sobre Societats
+    label: Model 202 - Pagament fraccionat de l'Impost sobre Societats
     purpose: Pagament fraccionat a compte de l'Impost sobre Societats.
   portal_m232_vinculadas:
-    label: Model 232 — Operacions vinculades
+    label: Model 232 - Operacions vinculades
     purpose: Declaració informativa d'operacions amb persones o entitats vinculades.
   portal_m303_iva_autoliquidacion:
-    label: Model 303 — Autoliquidació de l'IVA
+    label: Model 303 - Autoliquidació de l'IVA
     purpose: Autoliquidació periòdica de l'Impost sobre el Valor Afegit.
   portal_m347_operaciones_terceros:
-    label: Model 347 — Operacions amb terceres persones
+    label: Model 347 - Operacions amb terceres persones
     purpose: Declaració informativa anual d'operacions amb tercers superiors a 3.005,06
       €.
   portal_m349_intracomunitarias:
-    label: Model 349 — Operacions intracomunitàries
+    label: Model 349 - Operacions intracomunitàries
     purpose: Declaració recapitulativa d'operacions intracomunitàries de béns i serveis.
   portal_m369_oss_ioss:
-    label: Model 369 — Finestreta única IVA (OSS/IOSS)
+    label: Model 369 - Finestreta única IVA (OSS/IOSS)
     purpose: Autoliquidació de l'IVA en els règims de finestreta única OSS i IOSS.
   portal_m390_resumen_iva:
-    label: Model 390 — Resum anual de l'IVA
+    label: Model 390 - Resum anual de l'IVA
     purpose: Declaració resum anual de l'Impost sobre el Valor Afegit.
   portal_m720_bienes_extranjero:
-    label: Model 720 — Béns i drets a l'estranger
+    label: Model 720 - Béns i drets a l'estranger
     purpose: Declaració informativa de béns i drets situats a l'estranger.
   portal_m840_iae:
-    label: Model 840 — Impost sobre Activitats Econòmiques
+    label: Model 840 - Impost sobre Activitats Econòmiques
     purpose: Declaració de l'Impost sobre Activitats Econòmiques (IAE).
   portal_mi_area_personal:
     label: La Meva Àrea Personal
@@ -6068,13 +6074,13 @@ entries:
     label: Pagament de liquidacions i deutes
     purpose: Pagament de liquidacions practicades per l'AEAT i deutes tributaris.
   portal_pre303_ayuda:
-    label: Pre303 — Servei d'ajuda al Model 303
+    label: Pre303 - Servei d'ajuda al Model 303
     purpose: Servei d'ajuda Pre303 per preparar l'esborrany del Model 303.
   portal_presentar_consultar_index:
     label: Presentar i consultar declaracions
     purpose: Índex de models per presentar o consultar declaracions.
   portal_renta_web_borrador:
-    label: Renta WEB — Esborrany IRPF
+    label: Renta WEB - Esborrany IRPF
     notes:
       '0': L'esborrany es genera a partir de les dades fiscals de l'AEAT.
     purpose: Servei Renta WEB per revisar i presentar l'esborrany de l'IRPF.
@@ -7235,7 +7241,7 @@ errors:
         L'emmagatzematge de producció vinculat al perfil requereix custòdia de fitxer
         o anell de claus.
     stored_data_validation_boundary: Un registre de perfil o flux de treball emmagatzemat
-      ja no coincideix amb l'esquema esperat — les dades al disc han divergit del
+      ja no coincideix amb l'esquema esperat - les dades al disc han divergit del
       format actual. Executa `aeat config repair` per diagnosticar i recuperar.
   transaction:
     import_source_invalid: l'origen no és un extracte bancari vàlid
@@ -7376,16 +7382,16 @@ flows:
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     progress: '{present} de {total} camps emplenats, en falten {missing} per presentar'
-    section_title: '{title} — {present}/{total}'
+    section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   progress:
     current_answer: 'Resposta actual: {value}'
     current_answer_secret: 'Resposta actual: (oculta)'
     failure_mode: 'Compte: {text}'
     format_hint: 'Format esperat: {hint}'
-    legal_ref: 'Base legal: %{ref} — %{label}'
+    legal_ref: 'Base legal: %{ref} - %{label}'
     optional: Opcional
-    page_header: Pregunta {position} de {total} — secció {section}
+    page_header: Pregunta {position} de {total} - secció {section}
     required: Obligatori
   registration:
     confirm_label: Repeteix la contrasenya
@@ -7425,8 +7431,8 @@ flows:
     edit_not_editable: La pregunta {page_key} ja no es pot editar.
     edit_unknown: No hi ha cap pregunta amb el número {number}.
     edit_which: 'Quin número de pregunta vols editar? '
-    header: Revisió — {answered} preguntes respostes.
-    header_tui: 'Revisió — {answered} respostes, {remaining} obligatòries pendents,
+    header: Revisió - {answered} preguntes respostes.
+    header_tui: 'Revisió - {answered} respostes, {remaining} obligatòries pendents,
       a punt per enviar: {eligible}'
     orphan_marker: (ja no es pregunta)
     page_deferred: 'La pregunta %{page_key} està ajornada: decideix abans de presentar.'
@@ -7437,7 +7443,7 @@ flows:
       la resposta desada?
     reset_stale_done: S'ha esborrat la resposta desada de {page_key}.
     restart_confirm: Vols tornar a començar i descartar totes les respostes?
-    row: '{number}. {page_key} — estat: {status}'
+    row: '{number}. {page_key} - estat: {status}'
     save_unavailable: Desar i sortir no està disponible en el mode {mode}; completa
       el flux d'una sola vegada.
   status:
@@ -7489,7 +7495,7 @@ flows:
     button_back: Enrere
     button_next: Següent
     button_review: Revisió
-    header: '{flow} — pregunta {position} de {total}, secció {section}'
+    header: '{flow} - pregunta {position} de {total}, secció {section}'
 live:
   errors:
     expediente_not_found: No s'ha trobat l'expedient sol.licitat a l'AEAT.
@@ -7549,12 +7555,12 @@ mcp:
       que cap resultat d''eina d''aquesta sessió ha produït. Verifica la xifra amb
       una lectura de calculate/revision abans de confiar-hi.'
   harness:
-    off_host_consent: 'Avís de privadesa — llegiu-lo abans de continuar. Aquesta consola
+    off_host_consent: 'Avís de privadesa - llegiu-lo abans de continuar. Aquesta consola
       la controla un assistent d''IA que s''executa en el proveïdor de LLM que trieu.
       Les vostres paraules, i les xifres amb què treballa l''assistent (imports, valors
       de casella, obligacions), s''envien a aquest proveïdor per operar la consola.
-      Els vostres DOCUMENTS D''ORIGEN — factures, extractes bancaris i qualsevol byte
-      d''evidència — MAI no surten del vostre equip: romanen en emmagatzematge local
+      Els vostres DOCUMENTS D''ORIGEN - factures, extractes bancaris i qualsevol byte
+      d''evidència - MAI no surten del vostre equip: romanen en emmagatzematge local
       xifrat i mai no es transmeten. Si actueu per compte d''un tercer (un gestor
       o professional), confirmeu que això és acceptable abans de continuar.'
   identity_gate:
@@ -44672,7 +44678,7 @@ modelo:
               help: null
               label: Amortització de l'immobilitzat material i intangible (Ordre HAC/1347/2024
                 Annex I, instrucció 2.2; import declarat per l'operador d'acord amb
-                la seva pròpia taula d'amortització element per element — el motor
+                la seva pròpia taula d'amortització element per element - el motor
                 no modela un registre de béns d'inversió)
             '1539':
               help: null
@@ -47085,7 +47091,7 @@ modelo:
                 com obtinguts de forma notòriament irregular en el tiempo, imputats
                 en aquest único període impositivo (base sobre la que es s'aplica
                 la reducció del 30 per 100 de l'article 32.1 de la Llei de l'Impost;
-                import declarat per l'operador — véase la casella [1554])
+                import declarat per l'operador - véase la casella [1554])
           construct:
             renta-2025-mini-model-actividades-economicas-objetiva:
               field:
@@ -47676,7 +47682,7 @@ modelo:
             label: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
               als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents sota
               un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
-              segons l'activitat — consulteu el paràmetre de coeficients m131-modulos-coeficientes-2024
+              segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2024
               per a l'assignació exacta.
           irpf-pf-modulos-resultado-declaracion:
             help: null
@@ -47867,7 +47873,7 @@ modelo:
               label: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
                 als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents
                 sota un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
-                segons l'activitat — consulteu el paràmetre de coeficients m131-modulos-coeficientes-2024
+                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2024
                 per a l'assignació exacta.
             modulos-indice-inicio-actividad:
               help: null
@@ -47880,13 +47886,13 @@ modelo:
             modulos-indice-pequena-dimension:
               help: null
               label: Índex corrector per a empreses de petita dimensió (lletra b.1
-                — municipi, local únic, sense personal o fins a 2 treballadors). Índex
+                - municipi, local únic, sense personal o fins a 2 treballadors). Índex
                 declarat per l'operador (0,70/0,75/0,80/0,90, Ordre HFP/1359/2023
                 Annex II, instrucció 2.3.b.1); el motor no modela fets del contribuent.
                 Mai s'aplica a les activitats amb índex especial (721.2, 722).
             modulos-indice-temporada:
               help: null
-              label: 'Índex corrector de temporada (lletra b.2 — activitat de temporada,
+              label: 'Índex corrector de temporada (lletra b.2 - activitat de temporada,
                 fins a 180 dies/any). Índex declarat per l''operador (1,50/1,35/1,25
                 segons durada, Ordre HFP/1359/2023 Annex II, instrucció 2.3.b.2);
                 el motor no modela la durada com a fet del contribuent. Incompatible
@@ -47897,7 +47903,7 @@ modelo:
               label: Minoració per incentius a l'inversió (amortització de l'immobilitzat
                 material o intangible afecte, segons el seu llibre registre de béns
                 d'inversió). Import declarat per l'operador; el motor no modela un
-                registre de béns per element — consulteu l'Ordre HFP/1359/2023 Annex
+                registre de béns per element - consulteu l'Ordre HFP/1359/2023 Annex
                 II, instrucció 2.2.b) i la vostra pròpia taula d'amortització.
             modulos-pequena-dimension-ignorado-flag:
               help: null
@@ -47916,8 +47922,8 @@ modelo:
             modulos-rendimiento-neto-modulos:
               help: null
               label: 'Rendiment net de mòduls (Fase 3a: minorat ajustat pels índexs
-                correctors generals — petita dimensió, temporada/inici de noves activitats,
-                excés — en l''ordre i amb les incompatibilitats de l''Ordre HFP/1359/2023
+                correctors generals - petita dimensió, temporada/inici de noves activitats,
+                excés - en l''ordre i amb les incompatibilitats de l''Ordre HFP/1359/2023
                 Annex II, instrucció 2.3)'
             modulos-rendimiento-neto-previo:
               help: null
@@ -48021,7 +48027,7 @@ modelo:
               label: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
                 als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents
                 sota un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
-                segons l'activitat — consulteu el paràmetre de coeficients m131-modulos-coeficientes-2025
+                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2025
                 per a l'assignació exacta.
             modulos-indice-inicio-actividad:
               help: null
@@ -48034,13 +48040,13 @@ modelo:
             modulos-indice-pequena-dimension:
               help: null
               label: Índex corrector per a empreses de petita dimensió (lletra b.1
-                — municipi, local únic, sense personal o fins a 2 treballadors). Índex
+                - municipi, local únic, sense personal o fins a 2 treballadors). Índex
                 declarat per l'operador (0,70/0,75/0,80/0,90, Ordre HAC/1347/2024
                 Annex II, instrucció 2.3.b.1); el motor no modela fets del contribuent.
                 Mai s'aplica a les activitats amb índex especial (721.2, 722).
             modulos-indice-temporada:
               help: null
-              label: 'Índex corrector de temporada (lletra b.2 — activitat de temporada,
+              label: 'Índex corrector de temporada (lletra b.2 - activitat de temporada,
                 fins a 180 dies/any). Índex declarat per l''operador (1,50/1,35/1,25
                 segons durada, Ordre HAC/1347/2024 Annex II, instrucció 2.3.b.2);
                 el motor no modela la durada com a fet del contribuent. Incompatible
@@ -48051,7 +48057,7 @@ modelo:
               label: Minoració per incentius a l'inversió (amortització de l'immobilitzat
                 material o intangible afecte, segons el seu llibre registre de béns
                 d'inversió). Import declarat per l'operador; el motor no modela un
-                registre de béns per element — consulteu l'Ordre HAC/1347/2024 Annex
+                registre de béns per element - consulteu l'Ordre HAC/1347/2024 Annex
                 II, instrucció 2.2.b) i la vostra pròpia taula d'amortització.
             modulos-pequena-dimension-ignorado-flag:
               help: null
@@ -48070,8 +48076,8 @@ modelo:
             modulos-rendimiento-neto-modulos:
               help: null
               label: 'Rendiment net de mòduls (Fase 3a: minorat ajustat pels índexs
-                correctors generals — petita dimensió, temporada/inici de noves activitats,
-                excés — en l''ordre i amb les incompatibilitats de l''Ordre HAC/1347/2024
+                correctors generals - petita dimensió, temporada/inici de noves activitats,
+                excés - en l''ordre i amb les incompatibilitats de l''Ordre HAC/1347/2024
                 Annex II, instrucció 2.3)'
             modulos-rendimiento-neto-previo:
               help: null
@@ -48175,14 +48181,14 @@ modelo:
               label: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
                 als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents
                 sota un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
-                segons l'activitat — consulteu el paràmetre de coeficients m131-modulos-coeficientes-2026
+                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2026
                 per a l'assignació exacta.
             modulos-minoracion-inversion:
               help: null
               label: Minoració per incentius a l'inversió (amortització de l'immobilitzat
                 material o intangible afecte, segons el seu llibre registre de béns
                 d'inversió). Import declarat per l'operador; el motor no modela un
-                registre de béns per element — consulteu l'Ordre HAC/1425/2025 Annex
+                registre de béns per element - consulteu l'Ordre HAC/1425/2025 Annex
                 II, instrucció 2.2.b) i la vostra pròpia taula d'amortització.
             modulos-rendimiento-neto-actividad:
               help: null
@@ -63833,138 +63839,138 @@ modelo:
         continuidad:
           is-pf-mod-40-2-a-ingresar:
             help: null
-            label: Modalitat art. 40.2 LIS — A ingressar
+            label: Modalitat art. 40.2 LIS - A ingressar
           is-pf-mod-40-2-base-pago-fraccionado:
             help: null
-            label: Modalitat art. 40.2 LIS — Base del pagament fraccionat
+            label: Modalitat art. 40.2 LIS - Base del pagament fraccionat
           is-pf-mod-40-2-resultado-declaracion-anterior:
             help: null
-            label: Modalitat art. 40.2 LIS — Resultat de la declaració anterior (complementàries)
+            label: Modalitat art. 40.2 LIS - Resultat de la declaració anterior (complementàries)
           is-pf-mod-40-3-amortizacion-30pct-dism:
             help: null
-            label: Modalitat art. 40.3 LIS — 30% despeses d'amortització — Disminucions
+            label: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
           is-pf-mod-40-3-b1-base-pago-fraccionado:
             help: null
-            label: Modalitat art. 40.3 LIS B1 — Cas general — Base pagament fraccionat
+            label: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
           is-pf-mod-40-3-b1-compensacion-cuotas-neg-coop:
             help: null
-            label: Modalitat art. 40.3 LIS B1 — Compensació de quotes negatives (cooperatives)
+            label: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives (cooperatives)
           is-pf-mod-40-3-b1-dotaciones-art-11-12:
             help: null
-            label: Modalitat art. 40.3 LIS B1 — Dotacions de l'art. 11.12 LIS
+            label: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
           is-pf-mod-40-3-b1-porcentaje:
             help: null
-            label: Modalitat art. 40.3 LIS B1 — Cas general — Percentatge
+            label: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
           is-pf-mod-40-3-b1-reserva-nivelacion-convertida-aum:
             help: null
-            label: Modalitat art. 40.3 LIS B1 — Reserva de nivellació convertida —
+            label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida -
               Augments
           is-pf-mod-40-3-b1-reserva-nivelacion-convertida-dis:
             help: null
-            label: Modalitat art. 40.3 LIS B1 — Reserva de nivellació convertida —
+            label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida -
               Disminucions
           is-pf-mod-40-3-b1-resultado-previo:
             help: null
-            label: Modalitat art. 40.3 LIS B1 — Cas general — Resultat previ
+            label: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
           is-pf-mod-40-3-b2-base-pago-fraccionado:
             help: null
-            label: Modalitat art. 40.3 LIS B2 — Base del pagament fraccionat
+            label: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
           is-pf-mod-40-3-b2-base-tipo-1:
             help: null
-            label: Modalitat art. 40.3 LIS B2 — Base al tipus 1
+            label: Modalitat art. 40.3 LIS B2 - Base al tipus 1
           is-pf-mod-40-3-b2-base-tipo-2:
             help: null
-            label: Modalitat art. 40.3 LIS B2 — Base al tipus 2
+            label: Modalitat art. 40.3 LIS B2 - Base al tipus 2
           is-pf-mod-40-3-b2-compensacion-cuotas-neg-coop:
             help: null
-            label: Modalitat art. 40.3 LIS B2 — Compensació de quotes negatives (cooperatives)
+            label: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives (cooperatives)
           is-pf-mod-40-3-b2-dotaciones-art-11-12-coop:
             help: null
-            label: Modalitat art. 40.3 LIS B2 — Dotacions art. 11.12 LIS (cooperatives)
+            label: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
           is-pf-mod-40-3-b2-porcentaje-1:
             help: null
-            label: Modalitat art. 40.3 LIS B2 — Percentatge 1
+            label: Modalitat art. 40.3 LIS B2 - Percentatge 1
           is-pf-mod-40-3-b2-porcentaje-2:
             help: null
-            label: Modalitat art. 40.3 LIS B2 — Percentatge 2
+            label: Modalitat art. 40.3 LIS B2 - Percentatge 2
           is-pf-mod-40-3-b2-reserva-nivelacion-aumentos:
             help: null
-            label: Modalitat art. 40.3 LIS B2 — Reserva de nivellació (art. 105 LIS)
-              — Augments
+            label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
+              - Augments
           is-pf-mod-40-3-b2-reserva-nivelacion-disminuciones:
             help: null
-            label: Modalitat art. 40.3 LIS B2 — Reserva de nivellació (art. 105 LIS)
-              — Disminucions
+            label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105 LIS)
+              - Disminucions
           is-pf-mod-40-3-b2-resultado-previo:
             help: null
-            label: Modalitat art. 40.3 LIS B2 — Resultat previ
+            label: Modalitat art. 40.3 LIS B2 - Resultat previ
           is-pf-mod-40-3-base-imponible-previa:
             help: null
-            label: Modalitat art. 40.3 LIS — Base imposable prèvia
+            label: Modalitat art. 40.3 LIS - Base imposable prèvia
           is-pf-mod-40-3-bonificaciones:
             help: null
-            label: Modalitat art. 40.3 LIS — Bonificacions del període computat
+            label: Modalitat art. 40.3 LIS - Bonificacions del període computat
           is-pf-mod-40-3-cantidad-a-ingresar:
             help: null
-            label: Modalitat art. 40.3 LIS — Quantitat a ingressar (major de les claus
+            label: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les claus
               [32] i [33])
           is-pf-mod-40-3-compensacion-bases-negativas:
             help: null
-            label: Modalitat art. 40.3 LIS — Compensació de bases negatives d'exercicis
+            label: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
               anteriors
           is-pf-mod-40-3-correcciones-is-aumentos:
             help: null
-            label: Modalitat art. 40.3 LIS — Correccions per IS — Augments
+            label: Modalitat art. 40.3 LIS - Correccions per IS - Augments
           is-pf-mod-40-3-correcciones-is-disminuciones:
             help: null
-            label: Modalitat art. 40.3 LIS — Correccions per IS — Disminucions
+            label: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
           is-pf-mod-40-3-minimo-a-ingresar:
             help: null
-            label: Modalitat art. 40.3 LIS — Mínim a ingressar (CN >= 10 milions d'euros)
+            label: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions d'euros)
           is-pf-mod-40-3-pagos-previos-territorio-comun:
             help: null
-            label: Modalitat art. 40.3 LIS — Pagaments fraccionats de períodes anteriors
+            label: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
               en Territori Comú
           is-pf-mod-40-3-remanente-reserva-capitalizacion:
             help: null
-            label: Modalitat art. 40.3 LIS — Romanent de la reserva de capitalització
+            label: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
               no aplicada per insuficiència de base
           is-pf-mod-40-3-reserva-nivelacion-aumentos:
             help: null
-            label: Modalitat art. 40.3 LIS — Reserva de nivellació (art. 105 LIS)
-              — Augments
+            label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
+              - Augments
           is-pf-mod-40-3-reserva-nivelacion-disminuciones:
             help: null
-            label: Modalitat art. 40.3 LIS — Reserva de nivellació (art. 105 LIS)
-              — Disminucions
+            label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
+              - Disminucions
           is-pf-mod-40-3-resto-correcciones-aumentos:
             help: null
-            label: Modalitat art. 40.3 LIS — Resta de correccions — Augments
+            label: Modalitat art. 40.3 LIS - Resta de correccions - Augments
           is-pf-mod-40-3-resto-correcciones-disminuciones:
             help: null
-            label: Modalitat art. 40.3 LIS — Resta de correccions — Disminucions
+            label: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
           is-pf-mod-40-3-resultado:
             help: null
-            label: Modalitat art. 40.3 LIS — Resultat
+            label: Modalitat art. 40.3 LIS - Resultat
           is-pf-mod-40-3-resultado-contable:
             help: null
-            label: Modalitat art. 40.3 LIS — Resultat comptable després de l'IS
+            label: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
           is-pf-mod-40-3-resultado-declaracion-anterior:
             help: null
-            label: Modalitat art. 40.3 LIS — Resultat de la declaració anterior (complementària)
+            label: Modalitat art. 40.3 LIS - Resultat de la declaració anterior (complementària)
           is-pf-mod-40-3-total-correcciones-aumentos:
             help: null
-            label: Modalitat art. 40.3 LIS — TOTAL correccions — Augments
+            label: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
           is-pf-mod-40-3-total-correcciones-disminuciones:
             help: null
-            label: Modalitat art. 40.3 LIS — TOTAL correccions — Disminucions
+            label: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
           is-pf-mod-40-3-volumen-territorio-comun-pct:
             help: null
-            label: Modalitat art. 40.3 LIS — Volum d'operacions en Territori Comú
+            label: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
               (%)
           retenciones-ingresos-a-cuenta:
             help: null
-            label: Modalitat art. 40.3 LIS — Retencions i ingressos a compte sobre
+            label: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
               ingressos del període computat
       field:
         official_name: null
@@ -63974,152 +63980,152 @@ modelo:
           casilla:
             '01':
               help: null
-              label: Modalitat art. 40.2 LIS — Base del pagament fraccionat
+              label: Modalitat art. 40.2 LIS - Base del pagament fraccionat
             '02':
               help: null
-              label: Modalitat art. 40.2 LIS — Resultat de la declaració anterior
+              label: Modalitat art. 40.2 LIS - Resultat de la declaració anterior
                 (complementàries)
             '03':
               help: null
-              label: Modalitat art. 40.2 LIS — A ingressar
+              label: Modalitat art. 40.2 LIS - A ingressar
             '04':
               help: null
-              label: Modalitat art. 40.3 LIS — Resultat comptable després de l'IS
+              label: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
             '05':
               help: null
-              label: Modalitat art. 40.3 LIS — Correccions per IS — Augments
+              label: Modalitat art. 40.3 LIS - Correccions per IS - Augments
             '06':
               help: null
-              label: Modalitat art. 40.3 LIS — Correccions per IS — Disminucions
+              label: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
             '07':
               help: null
-              label: Modalitat art. 40.3 LIS — Resta de correccions — Augments
+              label: Modalitat art. 40.3 LIS - Resta de correccions - Augments
             08:
               help: null
-              label: Modalitat art. 40.3 LIS — Resta de correccions — Disminucions
+              label: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
             '13':
               help: null
-              label: Modalitat art. 40.3 LIS — Base imposable prèvia
+              label: Modalitat art. 40.3 LIS - Base imposable prèvia
             '14':
               help: null
-              label: Modalitat art. 40.3 LIS — Compensació de bases negatives d'exercicis
+              label: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
                 anteriors
             '16':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Cas general — Base pagament fraccionat
+              label: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
             '17':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Cas general — Percentatge
+              label: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
             '18':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Cas general — Resultat previ
+              label: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
             '19':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Base del pagament fraccionat
+              label: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
             '20':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Base al tipus 1
+              label: Modalitat art. 40.3 LIS B2 - Base al tipus 1
             '21':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Percentatge 1
+              label: Modalitat art. 40.3 LIS B2 - Percentatge 1
             '22':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Import pagament fraccionat tipus
+              label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 1
             '23':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Base al tipus 2
+              label: Modalitat art. 40.3 LIS B2 - Base al tipus 2
             '24':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Percentatge 2
+              label: Modalitat art. 40.3 LIS B2 - Percentatge 2
             '25':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Import pagament fraccionat tipus
+              label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 2
             '26':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Resultat previ
+              label: Modalitat art. 40.3 LIS B2 - Resultat previ
             '27':
               help: null
-              label: Modalitat art. 40.3 LIS — Bonificacions del període computat
+              label: Modalitat art. 40.3 LIS - Bonificacions del període computat
             '28':
               help: null
-              label: Modalitat art. 40.3 LIS — Retencions i ingressos a compte sobre
+              label: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
                 ingressos del període computat
             '29':
               help: null
-              label: Modalitat art. 40.3 LIS — Volum d'operacions en Territori Comú
+              label: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
                 (%)
             '30':
               help: null
-              label: Modalitat art. 40.3 LIS — Pagaments fraccionats de períodes anteriors
+              label: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
                 en Territori Comú
             '31':
               help: null
-              label: Modalitat art. 40.3 LIS — Resultat de la declaració anterior
+              label: Modalitat art. 40.3 LIS - Resultat de la declaració anterior
                 (complementària)
             '32':
               help: null
-              label: Modalitat art. 40.3 LIS — Resultat
+              label: Modalitat art. 40.3 LIS - Resultat
             '33':
               help: null
-              label: Modalitat art. 40.3 LIS — Mínim a ingressar (CN >= 10 milions
+              label: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
                 d'euros)
             '34':
               help: null
-              label: Modalitat art. 40.3 LIS — Quantitat a ingressar (major de les
+              label: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
                 claus [32] i [33])
             '37':
               help: null
-              label: Modalitat art. 40.3 LIS — 30% despeses d'amortització — Disminucions
+              label: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
             '38':
               help: null
-              label: Modalitat art. 40.3 LIS — TOTAL correccions — Augments
+              label: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
             '39':
               help: null
-              label: Modalitat art. 40.3 LIS — TOTAL correccions — Disminucions
+              label: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
             '40':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Compensació de quotes negatives
+              label: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives
                 (cooperatives)
             '42':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Compensació de quotes negatives
+              label: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives
                 (cooperatives)
             '44':
               help: null
-              label: Modalitat art. 40.3 LIS — Romanent de la reserva de capitalització
+              label: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
                 no aplicada per insuficiència de base
             '45':
               help: null
-              label: Modalitat art. 40.3 LIS — Reserva de nivellació (art. 105 LIS)
-                — Augments
+              label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
+                - Augments
             '46':
               help: null
-              label: Modalitat art. 40.3 LIS — Reserva de nivellació (art. 105 LIS)
-                — Disminucions
+              label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
+                - Disminucions
             '47':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Dotacions de l'art. 11.12 LIS
+              label: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
             '48':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Reserva de nivellació convertida
-                — Augments
+              label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
+                - Augments
             '49':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Reserva de nivellació convertida
-                — Disminucions
+              label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
+                - Disminucions
             '50':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Dotacions art. 11.12 LIS (cooperatives)
+              label: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
             '51':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Reserva de nivellació (art. 105
-                LIS) — Augments
+              label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
+                LIS) - Augments
             '52':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Reserva de nivellació (art. 105
-                LIS) — Disminucions
+              label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
+                LIS) - Disminucions
           construct:
             modelo-202-2019-2022-foundation:
               field:
@@ -64130,152 +64136,152 @@ modelo:
           casilla:
             '01':
               help: null
-              label: Modalitat art. 40.2 LIS — Base del pagament fraccionat
+              label: Modalitat art. 40.2 LIS - Base del pagament fraccionat
             '02':
               help: null
-              label: Modalitat art. 40.2 LIS — Resultat de la declaració anterior
+              label: Modalitat art. 40.2 LIS - Resultat de la declaració anterior
                 (complementàries)
             '03':
               help: null
-              label: Modalitat art. 40.2 LIS — A ingressar
+              label: Modalitat art. 40.2 LIS - A ingressar
             '04':
               help: null
-              label: Modalitat art. 40.3 LIS — Resultat comptable després de l'IS
+              label: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
             '05':
               help: null
-              label: Modalitat art. 40.3 LIS — Correccions per IS — Augments
+              label: Modalitat art. 40.3 LIS - Correccions per IS - Augments
             '06':
               help: null
-              label: Modalitat art. 40.3 LIS — Correccions per IS — Disminucions
+              label: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
             '07':
               help: null
-              label: Modalitat art. 40.3 LIS — Resta de correccions — Augments
+              label: Modalitat art. 40.3 LIS - Resta de correccions - Augments
             08:
               help: null
-              label: Modalitat art. 40.3 LIS — Resta de correccions — Disminucions
+              label: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
             '13':
               help: null
-              label: Modalitat art. 40.3 LIS — Base imposable prèvia
+              label: Modalitat art. 40.3 LIS - Base imposable prèvia
             '14':
               help: null
-              label: Modalitat art. 40.3 LIS — Compensació de bases negatives d'exercicis
+              label: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
                 anteriors
             '16':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Cas general — Base pagament fraccionat
+              label: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
             '17':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Cas general — Percentatge
+              label: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
             '18':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Cas general — Resultat previ
+              label: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
             '19':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Base del pagament fraccionat
+              label: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
             '20':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Base al tipus 1
+              label: Modalitat art. 40.3 LIS B2 - Base al tipus 1
             '21':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Percentatge 1
+              label: Modalitat art. 40.3 LIS B2 - Percentatge 1
             '22':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Import pagament fraccionat tipus
+              label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 1
             '23':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Base al tipus 2
+              label: Modalitat art. 40.3 LIS B2 - Base al tipus 2
             '24':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Percentatge 2
+              label: Modalitat art. 40.3 LIS B2 - Percentatge 2
             '25':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Import pagament fraccionat tipus
+              label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 2
             '26':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Resultat previ
+              label: Modalitat art. 40.3 LIS B2 - Resultat previ
             '27':
               help: null
-              label: Modalitat art. 40.3 LIS — Bonificacions del període computat
+              label: Modalitat art. 40.3 LIS - Bonificacions del període computat
             '28':
               help: null
-              label: Modalitat art. 40.3 LIS — Retencions i ingressos a compte sobre
+              label: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
                 ingressos del període computat
             '29':
               help: null
-              label: Modalitat art. 40.3 LIS — Volum d'operacions en Territori Comú
+              label: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
                 (%)
             '30':
               help: null
-              label: Modalitat art. 40.3 LIS — Pagaments fraccionats de períodes anteriors
+              label: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
                 en Territori Comú
             '31':
               help: null
-              label: Modalitat art. 40.3 LIS — Resultat de la declaració anterior
+              label: Modalitat art. 40.3 LIS - Resultat de la declaració anterior
                 (complementària)
             '32':
               help: null
-              label: Modalitat art. 40.3 LIS — Resultat
+              label: Modalitat art. 40.3 LIS - Resultat
             '33':
               help: null
-              label: Modalitat art. 40.3 LIS — Mínim a ingressar (CN >= 10 milions
+              label: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
                 d'euros)
             '34':
               help: null
-              label: Modalitat art. 40.3 LIS — Quantitat a ingressar (major de les
+              label: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
                 claus [32] i [33])
             '37':
               help: null
-              label: Modalitat art. 40.3 LIS — 30% despeses d'amortització — Disminucions
+              label: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
             '38':
               help: null
-              label: Modalitat art. 40.3 LIS — TOTAL correccions — Augments
+              label: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
             '39':
               help: null
-              label: Modalitat art. 40.3 LIS — TOTAL correccions — Disminucions
+              label: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
             '40':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Compensació de quotes negatives
+              label: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives
                 (cooperatives)
             '42':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Compensació de quotes negatives
+              label: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives
                 (cooperatives)
             '44':
               help: null
-              label: Modalitat art. 40.3 LIS — Romanent de la reserva de capitalització
+              label: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
                 no aplicada per insuficiència de base
             '45':
               help: null
-              label: Modalitat art. 40.3 LIS — Reserva de nivellació (art. 105 LIS)
-                — Augments
+              label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
+                - Augments
             '46':
               help: null
-              label: Modalitat art. 40.3 LIS — Reserva de nivellació (art. 105 LIS)
-                — Disminucions
+              label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
+                - Disminucions
             '47':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Dotacions de l'art. 11.12 LIS
+              label: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
             '48':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Reserva de nivellació convertida
-                — Augments
+              label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
+                - Augments
             '49':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Reserva de nivellació convertida
-                — Disminucions
+              label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
+                - Disminucions
             '50':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Dotacions art. 11.12 LIS (cooperatives)
+              label: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
             '51':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Reserva de nivellació (art. 105
-                LIS) — Augments
+              label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
+                LIS) - Augments
             '52':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Reserva de nivellació (art. 105
-                LIS) — Disminucions
+              label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
+                LIS) - Disminucions
           construct:
             modelo-202-2023-2024-foundation:
               field:
@@ -64286,176 +64292,176 @@ modelo:
           casilla:
             '01':
               help: null
-              label: Modalitat art. 40.2 LIS — Base del pagament fraccionat
+              label: Modalitat art. 40.2 LIS - Base del pagament fraccionat
             '02':
               help: null
-              label: Modalitat art. 40.2 LIS — Resultat de la declaració anterior
+              label: Modalitat art. 40.2 LIS - Resultat de la declaració anterior
                 (complementàries)
             '03':
               help: null
-              label: Modalitat art. 40.2 LIS — A ingressar
+              label: Modalitat art. 40.2 LIS - A ingressar
             '04':
               help: null
-              label: Modalitat art. 40.3 LIS — Resultat comptable després de l'IS
+              label: Modalitat art. 40.3 LIS - Resultat comptable després de l'IS
             '05':
               help: null
-              label: Modalitat art. 40.3 LIS — Correccions per IS — Augments
+              label: Modalitat art. 40.3 LIS - Correccions per IS - Augments
             '06':
               help: null
-              label: Modalitat art. 40.3 LIS — Correccions per IS — Disminucions
+              label: Modalitat art. 40.3 LIS - Correccions per IS - Disminucions
             '07':
               help: null
-              label: Modalitat art. 40.3 LIS — Resta de correccions — Augments
+              label: Modalitat art. 40.3 LIS - Resta de correccions - Augments
             08:
               help: null
-              label: Modalitat art. 40.3 LIS — Resta de correccions — Disminucions
+              label: Modalitat art. 40.3 LIS - Resta de correccions - Disminucions
             '13':
               help: null
-              label: Modalitat art. 40.3 LIS — Base imposable prèvia
+              label: Modalitat art. 40.3 LIS - Base imposable prèvia
             '14':
               help: null
-              label: Modalitat art. 40.3 LIS — Compensació de bases negatives d'exercicis
+              label: Modalitat art. 40.3 LIS - Compensació de bases negatives d'exercicis
                 anteriors
             '16':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Cas general — Base pagament fraccionat
+              label: Modalitat art. 40.3 LIS B1 - Cas general - Base pagament fraccionat
             '17':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Cas general — Percentatge
+              label: Modalitat art. 40.3 LIS B1 - Cas general - Percentatge
             '18':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Cas general — Resultat previ
+              label: Modalitat art. 40.3 LIS B1 - Cas general - Resultat previ
             '19':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Base del pagament fraccionat
+              label: Modalitat art. 40.3 LIS B2 - Base del pagament fraccionat
             '20':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Base al tipus 1
+              label: Modalitat art. 40.3 LIS B2 - Base al tipus 1
             '21':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Percentatge 1
+              label: Modalitat art. 40.3 LIS B2 - Percentatge 1
             '22':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Import pagament fraccionat tipus
+              label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 1
             '23':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Base al tipus 2
+              label: Modalitat art. 40.3 LIS B2 - Base al tipus 2
             '24':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Percentatge 2
+              label: Modalitat art. 40.3 LIS B2 - Percentatge 2
             '25':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Import pagament fraccionat tipus
+              label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 2
             '26':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Resultat previ
+              label: Modalitat art. 40.3 LIS B2 - Resultat previ
             '27':
               help: null
-              label: Modalitat art. 40.3 LIS — Bonificacions del període computat
+              label: Modalitat art. 40.3 LIS - Bonificacions del període computat
             '28':
               help: null
-              label: Modalitat art. 40.3 LIS — Retencions i ingressos a compte sobre
+              label: Modalitat art. 40.3 LIS - Retencions i ingressos a compte sobre
                 ingressos del període computat
             '29':
               help: null
-              label: Modalitat art. 40.3 LIS — Volum d'operacions en Territori Comú
+              label: Modalitat art. 40.3 LIS - Volum d'operacions en Territori Comú
                 (%)
             '30':
               help: null
-              label: Modalitat art. 40.3 LIS — Pagaments fraccionats de períodes anteriors
+              label: Modalitat art. 40.3 LIS - Pagaments fraccionats de períodes anteriors
                 en Territori Comú
             '31':
               help: null
-              label: Modalitat art. 40.3 LIS — Resultat de la declaració anterior
+              label: Modalitat art. 40.3 LIS - Resultat de la declaració anterior
                 (complementària)
             '32':
               help: null
-              label: Modalitat art. 40.3 LIS — Resultat
+              label: Modalitat art. 40.3 LIS - Resultat
             '33':
               help: null
-              label: Modalitat art. 40.3 LIS — Mínim a ingressar (CN >= 10 milions
+              label: Modalitat art. 40.3 LIS - Mínim a ingressar (CN >= 10 milions
                 d'euros)
             '34':
               help: null
-              label: Modalitat art. 40.3 LIS — Quantitat a ingressar (major de les
+              label: Modalitat art. 40.3 LIS - Quantitat a ingressar (major de les
                 claus [32] i [33])
             '37':
               help: null
-              label: Modalitat art. 40.3 LIS — 30% despeses d'amortització — Disminucions
+              label: Modalitat art. 40.3 LIS - 30% despeses d'amortització - Disminucions
             '38':
               help: null
-              label: Modalitat art. 40.3 LIS — TOTAL correccions — Augments
+              label: Modalitat art. 40.3 LIS - TOTAL correccions - Augments
             '39':
               help: null
-              label: Modalitat art. 40.3 LIS — TOTAL correccions — Disminucions
+              label: Modalitat art. 40.3 LIS - TOTAL correccions - Disminucions
             '40':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Compensació de quotes negatives
+              label: Modalitat art. 40.3 LIS B1 - Compensació de quotes negatives
                 (cooperatives)
             '42':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Compensació de quotes negatives
+              label: Modalitat art. 40.3 LIS B2 - Compensació de quotes negatives
                 (cooperatives)
             '44':
               help: null
-              label: Modalitat art. 40.3 LIS — Romanent de la reserva de capitalització
+              label: Modalitat art. 40.3 LIS - Romanent de la reserva de capitalització
                 no aplicada per insuficiència de base
             '45':
               help: null
-              label: Modalitat art. 40.3 LIS — Reserva de nivellació (art. 105 LIS)
-                — Augments
+              label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
+                - Augments
             '46':
               help: null
-              label: Modalitat art. 40.3 LIS — Reserva de nivellació (art. 105 LIS)
-                — Disminucions
+              label: Modalitat art. 40.3 LIS - Reserva de nivellació (art. 105 LIS)
+                - Disminucions
             '47':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Dotacions de l'art. 11.12 LIS
+              label: Modalitat art. 40.3 LIS B1 - Dotacions de l'art. 11.12 LIS
             '48':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Reserva de nivellació convertida
-                — Augments
+              label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
+                - Augments
             '49':
               help: null
-              label: Modalitat art. 40.3 LIS B1 — Reserva de nivellació convertida
-                — Disminucions
+              label: Modalitat art. 40.3 LIS B1 - Reserva de nivellació convertida
+                - Disminucions
             '50':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Dotacions art. 11.12 LIS (cooperatives)
+              label: Modalitat art. 40.3 LIS B2 - Dotacions art. 11.12 LIS (cooperatives)
             '51':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Reserva de nivellació (art. 105
-                LIS) — Augments
+              label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
+                LIS) - Augments
             '52':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Reserva de nivellació (art. 105
-                LIS) — Disminucions
+              label: Modalitat art. 40.3 LIS B2 - Reserva de nivellació (art. 105
+                LIS) - Disminucions
             '61':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Base al tipus 3
+              label: Modalitat art. 40.3 LIS B2 - Base al tipus 3
             '62':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Percentatge 3
+              label: Modalitat art. 40.3 LIS B2 - Percentatge 3
             '63':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Import pagament fraccionat tipus
+              label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 3
             '64':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Base al tipus 4
+              label: Modalitat art. 40.3 LIS B2 - Base al tipus 4
             '65':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Percentatge 4
+              label: Modalitat art. 40.3 LIS B2 - Percentatge 4
             '66':
               help: null
-              label: Modalitat art. 40.3 LIS B2 — Import pagament fraccionat tipus
+              label: Modalitat art. 40.3 LIS B2 - Import pagament fraccionat tipus
                 4
             '67':
               help: null
-              label: Modalitat art. 40.3 LIS — Correccions per l'Impost Complementari
-                (IC) — Augments
+              label: Modalitat art. 40.3 LIS - Correccions per l'Impost Complementari
+                (IC) - Augments
           construct:
             modelo-202-foundation:
               field:
@@ -66833,7 +66839,7 @@ modelo:
                 quotes per destinació)
             x-d5r62bj5f1q6asj9dtp2sp355ppmasjmd5hmaspdcdqmut31:
               help: null
-              label: Quota d'IVA repercutit a la destinació DE — serveis prestats
+              label: Quota d'IVA repercutit a la destinació DE - serveis prestats
                 (Règim exterior)
           construct:
             modelo-369-esquema-exterior:
@@ -66855,7 +66861,7 @@ modelo:
                 suma per destinació)
             x-d5r62bj9dlo6usjkc5hmirre5pi6abjcdtriqtj1dhqmabb3elnn8o8:
               help: null
-              label: Quota d'IVA IOSS a la destinació DE — vendes a distància de béns
+              label: Quota d'IVA IOSS a la destinació DE - vendes a distància de béns
                 importats ≤ 150 EUR (LIVA art. 163 quinvicies)
           construct:
             modelo-369-esquema-importacion:
@@ -66877,15 +66883,15 @@ modelo:
                 cross-flow)
             x-d5r62bjldpkmurhechiisprfdti76bb4d5pn8obecdiiqorldtq62:
               help: null
-              label: Quota d'IVA OSS Unió a la destinació DE — vendes a distància
+              label: Quota d'IVA OSS Unió a la destinació DE - vendes a distància
                 + interfícies electròniques
             x-d5r62bjldpkmurhechiissr5e9r6ior5ecmm6tbfehgg:
               help: null
-              label: Quota d'IVA OSS Unió a la destinació DE — serveis prestats (LIVA
+              label: Quota d'IVA OSS Unió a la destinació DE - serveis prestats (LIVA
                 art. 163 unvicies)
             x-d5r62bjldpkmurhecpp2ssr5e9r6ior5ecmm6tbfehgg:
               help: null
-              label: Quota d'IVA OSS Unió a la destinació FR — serveis prestats (LIVA
+              label: Quota d'IVA OSS Unió a la destinació FR - serveis prestats (LIVA
                 art. 163 unvicies)
           construct:
             modelo-369-esquema-union:
@@ -68289,19 +68295,19 @@ wizard:
       disability-grade:
         choices:
           33-64:
-            description: Discapacitat reconeguda del 33% al 64% — incrementa el mínim
+            description: Discapacitat reconeguda del 33% al 64% - incrementa el mínim
               personal.
             label: Discapacitat del 33% al 64%
           65-plus:
-            description: Discapacitat reconeguda del 65% o més — major increment del
+            description: Discapacitat reconeguda del 65% o més - major increment del
               mínim personal.
             label: Discapacitat del 65% o superior
           assistance-or-mobility:
             description: Necessitat acreditada d'ajuda de tercers o mobilitat reduïda
-              — afegeix l'increment per assistència.
+              - afegeix l'increment per assistència.
             label: Ajuda de tercers o mobilitat reduïda
           judicial-incapacity:
-            description: Incapacitat declarada judicialment — s'assimila al 65%+ amb
+            description: Incapacitat declarada judicialment - s'assimila al 65%+ amb
               independència del grau certificat.
             label: Incapacitat judicial o equivalent
       sex:
@@ -68722,11 +68728,11 @@ wizard:
         choices:
           directa-normal:
             description: 'Estimació directa normal: comptabilitat per ingressos reals
-              amb llibres complets — obligatòria per sobre de 600.000 EUR.'
+              amb llibres complets - obligatòria per sobre de 600.000 EUR.'
             label: Estimació directa normal
           directa-simplificada:
             description: 'Estimació directa simplificada: ingressos reals amb llibres
-              simplificats — l''opció habitual per a la majoria d''autònoms.'
+              simplificats - l''opció habitual per a la majoria d''autònoms.'
             label: Estimació directa simplificada
           objetiva:
             description: 'Estimació objectiva (mòduls): el rendiment es calcula per
@@ -68740,7 +68746,7 @@ wizard:
           general:
             label: Règim general
           impatriado:
-            label: Impatriat — Llei Beckham (Art. 93 LIRPF)
+            label: Impatriat - Llei Beckham (Art. 93 LIRPF)
         help: El règim d'impatriats (Llei Beckham) s'aplica durant els primers 6 anys
           des del trasllat. La majoria tributa en règim general.
         prompt: Règim especial IRPF (Llei Beckham / Art. 93 LIRPF)
@@ -68895,11 +68901,11 @@ wizard:
           non-resident-irnr:
             description: 'No resident: només tributa la renda de font espanyola, per
               IRNR (Model 210), i pot requerir-se representant fiscal.'
-            label: No resident — IRNR (RDLeg 5/2004)
+            label: No resident - IRNR (RDLeg 5/2004)
           resident-irpf:
             description: 'Resident fiscal a Espanya (183+ dies o centre d''interessos):
               renda mundial per IRPF.'
-            label: Resident habitual a Espanya — IRPF
+            label: Resident habitual a Espanya - IRPF
         prompt: Categoria de residència fiscal
       representante-fiscal-nif:
         prompt: NIF/NIE del representant fiscal a Espanya (obligatori fora UE/EEE)
@@ -68909,7 +68915,7 @@ wizard:
         prompt: Comunitat autònoma de residència fiscal
       title: Residència fiscal
     review:
-      registered-non-official-suffix: ' (del certificat censal — no verificat per
+      registered-non-official-suffix: ' (del certificat censal - no verificat per
         l''AEAT)'
     spouse:
       spouse-birth-date:
@@ -68935,22 +68941,22 @@ wizard:
       situacion-familiar:
         choices:
           casado:
-            description: Matrimoni vigent — tributació conjunta disponible (Art. 82.1.1°)
+            description: Matrimoni vigent - tributació conjunta disponible (Art. 82.1.1°)
             label: Casat/ada
           pareja-hecho-no-registrada:
-            description: Convivència sense inscripció registral — tributació conjunta
+            description: Convivència sense inscripció registral - tributació conjunta
               NO disponible
             label: Parella de fet no registrada
           pareja-hecho-registrada:
-            description: Inscrita al registre autonòmic — tributació conjunta disponible
+            description: Inscrita al registre autonòmic - tributació conjunta disponible
               (Art. 82.1.2°)
             label: Parella de fet registrada
           separado-divorciado:
-            description: Separat legalment o divorciat — la tributació conjunta només
+            description: Separat legalment o divorciat - la tributació conjunta només
               és possible amb fills a la seva unitat familiar.
             label: Separat/ada o divorciat/ada
           soltero:
-            description: Solter, vidu o divorciat sense parella registrada — tributació
+            description: Solter, vidu o divorciat sense parella registrada - tributació
               individual, o conjunta només com a família monoparental amb fills.
             label: Solter/a
         help: 'Situació familiar a efectes de l''Art. 82 LIRPF: determina si es pot
@@ -69006,7 +69012,7 @@ wizard:
       irpf-income-categories:
         choices:
           actividad-economica:
-            description: Activitat econòmica o professional per compte propi — activa
+            description: Activitat econòmica o professional per compte propi - activa
               el Model 130 trimestral i les obligacions d'IVA.
             label: Activitat econòmica
           capital-inmobiliario:
@@ -69022,7 +69028,7 @@ wizard:
               immobles, criptomonedes).
             label: Guanys patrimonials
           pension:
-            description: Pensions — tributen com a rendiments del treball a l'IRPF.
+            description: Pensions - tributen com a rendiments del treball a l'IRPF.
             label: Pensió
           trabajo:
             description: 'Rendiments del treball: salari o pensió d''un ocupador o

@@ -2065,7 +2065,9 @@ cli:
           el valor extraido).
         confirm_link_hint_message: Vincula esta factura a un movimiento del libro
           con `aeat app ledger link`.
-        confirm_operation_type_help: cli.app.ledger.evidence.confirm_operation_type_help
+        confirm_operation_type_help: 'Clave del modelo 349 para una entrega intracomunitaria.
+          Obligatoria cuando el documento declara una entrega intracomunitaria: la
+          categoría no permite saber si siguió a una importación exenta.'
         confirm_printed_total_mismatch_message: El total impreso en el documento no
           coincide con el total registrado. El total registrado se deriva de la base
           imponible y del tipo de IVA, por lo que una diferencia significa que el
@@ -2094,7 +2096,8 @@ cli:
           group_help: Revise qué se envió a un modelo externo y recupere los artefactos
             en este equipo.
           list_help: Muestre cada envío externo y los artefactos derivados de él.
-          no_history: cli.app.ledger.evidence.consent.no_history
+          no_history: 'Ningún byte de evidencia ha salido de este equipo: este perfil
+            no tiene ningún envío externo registrado.'
           rederive_help: Vuelva a leer un artefacto en este equipo desde su transcripción
             almacenada.
           rederive_refused: 'Nueva derivación rechazada: {detail}'
@@ -2140,6 +2143,10 @@ cli:
         field_anchor_self_reported: '{field}: el lector afirma haberlo leído de ''{anchor}'',
           pero esa afirmación proviene del mismo lector que produjo el valor, así
           que nada independiente lo ha confirmado.'
+        field_anchor_uncorroborated: '{field}: el lector señala ''{anchor}'', y nada
+          indicó que esa forma faltara en el documento. El valor sigue sin estar corroborado,
+          así que lo que queda sin resolver es algo distinto de la forma impresa.
+          {detail}'
         field_contradicted: '{field}: el documento indica ''{anchor}'', que no coincide
           con el valor registrado para este campo. {detail}'
         field_no_anchor: '{field}: el lector no ofreció nada en el documento a lo
@@ -2204,7 +2211,6 @@ cli:
         view_help: Muestra un justificante de factura de compra
         yes_help: Confirma la eliminación del justificante
         yes_required: Debes pasar --yes para eliminar un justificante
-        field_anchor_uncorroborated: '{field}: el lector señala ''{anchor}'', y nada indicó que esa forma faltara en el documento. El valor sigue sin estar corroborado, así que lo que queda sin resolver es algo distinto de la forma impresa. {detail}'
       inventory:
         actividad_id_help: Identificador de la actividad económica
         create_help: Crea un libro de existencias para una actividad y ejercicio
@@ -3081,7 +3087,7 @@ cli:
           este importe declarable no se asigna a ninguna casilla y no se declara en
           esta presentación; revísalo antes de presentar.'
         calculate_unauthorized_advisory: 'AVISO: el backend de cálculo del modelo
-          %{modelo} NO está autorizado — todavía no se ha probado con un test integral
+          %{modelo} NO está autorizado - todavía no se ha probado con un test integral
           a lo largo de al menos dos ejercicios de renta (puerta de autorización multi-ejercicio).
           El resultado se ha calculado y guardado, pero trátalo como provisional hasta
           que el modelo esté autorizado.'
@@ -3100,10 +3106,10 @@ cli:
         compare_taxation_help: 'Compara la cuota IRPF en tributación conjunta (Art.
           82-84 LIRPF) frente a tributación individual para una unidad de trabajo
           Modelo 100 existente. Ejecuta el motor de cálculo del registro dos veces
-          — una con tipo de declaración = 2 (conjunta) y otra con tipo = 1 (individual)
-          — sobre los mismos datos de perfil, y emite el diferencial de cuota y la
+          - una con tipo de declaración = 2 (conjunta) y otra con tipo = 1 (individual)
+          - sobre los mismos datos de perfil, y emite el diferencial de cuota y la
           recomendación. Operación efímera: no persiste ninguna revisión.'
-        compare_taxation_recommendation_line: 'RECOMENDACIÓN: {recommendation} — {reason}'
+        compare_taxation_recommendation_line: 'RECOMENDACIÓN: {recommendation} - {reason}'
         compare_taxation_work_unit_not_found: Unidad de trabajo {work_unit_id} no
           encontrada; consulta las unidades activas con 'aeat app modelo work list'.
         create_created: Nueva unidad de trabajo creada.
@@ -3896,7 +3902,7 @@ cli:
         export_section_title: Exportar el paquete de perfil
         import_section_title: Importar el paquete de perfil
         transport_cleartext_description: Escribe JSON sin cifrar con datos financieros
-          sensibles; solo para uso local o de acceso del interesado — nunca lo envíes
+          sensibles; solo para uso local o de acceso del interesado - nunca lo envíes
           por correo, lo sincronices ni lo transfieras.
         transport_cleartext_label: Texto claro (solo local/SAR)
         transport_encrypted_description: Cifra el paquete (AEAD) con una frase de
@@ -6012,10 +6018,10 @@ entries:
     label: Validación de certificados electrónicos
     purpose: Servicio de comprobación de validez de certificados digitales.
   portal_clave_gestiones:
-    label: Cl@ve PIN — Gestiones
+    label: Cl@ve PIN - Gestiones
     purpose: Gestión y obtención del Cl@ve PIN de acceso temporal.
   portal_clave_idp_root:
-    label: Cl@ve — Identificación electrónica
+    label: Cl@ve - Identificación electrónica
     purpose: Proveedor de identidad Cl@ve para autenticación ante la AEAT.
   portal_clave_sede_entry:
     label: Acceso con Cl@ve
@@ -6030,76 +6036,76 @@ entries:
     label: Domiciliación bancaria de pagos
     purpose: Domiciliación bancaria de autoliquidaciones y pagos tributarios.
   portal_m036_censal:
-    label: Modelo 036 — Declaración censal
+    label: Modelo 036 - Declaración censal
     purpose: Alta, modificación y baja en el censo de empresarios y profesionales.
   portal_m037_censal_simplificada:
-    label: Modelo 037 — Declaración censal simplificada (retirado)
+    label: Modelo 037 - Declaración censal simplificada (retirado)
     notes:
       '0': Suprimido por la Orden HAC/1526/2024, con efecto desde 2025-02-03.
       '1': Use el Modelo 036 para cualquier trámite censal posterior.
     purpose: Declaración censal simplificada para autónomos, suprimida en 2025.
   portal_m100_renta:
-    label: Modelo 100 — Declaración de la Renta (IRPF)
+    label: Modelo 100 - Declaración de la Renta (IRPF)
     purpose: Declaración anual del Impuesto sobre la Renta de las Personas Físicas.
   portal_m111_retenciones_trabajo:
-    label: Modelo 111 — Retenciones del trabajo y actividades
+    label: Modelo 111 - Retenciones del trabajo y actividades
     purpose: Autoliquidación de retenciones e ingresos a cuenta del IRPF sobre rendimientos
       del trabajo.
   portal_m115_retenciones_arrendamientos:
-    label: Modelo 115 — Retenciones por arrendamiento de inmuebles
+    label: Modelo 115 - Retenciones por arrendamiento de inmuebles
     purpose: Autoliquidación de retenciones del IRPF por alquiler de inmuebles urbanos.
   portal_m123_retenciones_capital:
-    label: Modelo 123 — Retenciones del capital mobiliario
+    label: Modelo 123 - Retenciones del capital mobiliario
     purpose: Autoliquidación de retenciones del IRPF sobre rendimientos del capital
       mobiliario.
   portal_m130_pago_fraccionado_ed:
-    label: Modelo 130 — Pago fraccionado IRPF (estimación directa)
+    label: Modelo 130 - Pago fraccionado IRPF (estimación directa)
     purpose: Pago fraccionado trimestral del IRPF para autónomos en estimación directa.
   portal_m131_pago_fraccionado_eo:
-    label: Modelo 131 — Pago fraccionado IRPF (estimación objetiva)
+    label: Modelo 131 - Pago fraccionado IRPF (estimación objetiva)
     purpose: Pago fraccionado trimestral del IRPF para autónomos en estimación objetiva
       (módulos).
   portal_m180_resumen_arrendamientos:
-    label: Modelo 180 — Resumen anual de arrendamientos
+    label: Modelo 180 - Resumen anual de arrendamientos
     purpose: Resumen anual de retenciones por arrendamiento de inmuebles urbanos.
   portal_m190_resumen_trabajo:
-    label: Modelo 190 — Resumen anual de retenciones del trabajo
+    label: Modelo 190 - Resumen anual de retenciones del trabajo
     purpose: Resumen anual de retenciones e ingresos a cuenta sobre rendimientos del
       trabajo.
   portal_m193_resumen_capital:
-    label: Modelo 193 — Resumen anual de retenciones del capital
+    label: Modelo 193 - Resumen anual de retenciones del capital
     purpose: Resumen anual de retenciones sobre rendimientos del capital mobiliario.
   portal_m200_sociedades_anual:
-    label: Modelo 200 — Impuesto sobre Sociedades
+    label: Modelo 200 - Impuesto sobre Sociedades
     purpose: Declaración anual del Impuesto sobre Sociedades.
   portal_m202_sociedades_fraccionado:
-    label: Modelo 202 — Pago fraccionado del Impuesto sobre Sociedades
+    label: Modelo 202 - Pago fraccionado del Impuesto sobre Sociedades
     purpose: Pago fraccionado a cuenta del Impuesto sobre Sociedades.
   portal_m232_vinculadas:
-    label: Modelo 232 — Operaciones vinculadas
+    label: Modelo 232 - Operaciones vinculadas
     purpose: Declaración informativa de operaciones con personas o entidades vinculadas.
   portal_m303_iva_autoliquidacion:
-    label: Modelo 303 — Autoliquidación del IVA
+    label: Modelo 303 - Autoliquidación del IVA
     purpose: Autoliquidación periódica del Impuesto sobre el Valor Añadido.
   portal_m347_operaciones_terceros:
-    label: Modelo 347 — Operaciones con terceras personas
+    label: Modelo 347 - Operaciones con terceras personas
     purpose: Declaración informativa anual de operaciones con terceros superiores
       a 3.005,06 €.
   portal_m349_intracomunitarias:
-    label: Modelo 349 — Operaciones intracomunitarias
+    label: Modelo 349 - Operaciones intracomunitarias
     purpose: Declaración recapitulativa de operaciones intracomunitarias de bienes
       y servicios.
   portal_m369_oss_ioss:
-    label: Modelo 369 — Ventanilla única IVA (OSS/IOSS)
+    label: Modelo 369 - Ventanilla única IVA (OSS/IOSS)
     purpose: Autoliquidación del IVA en los regímenes de ventanilla única OSS e IOSS.
   portal_m390_resumen_iva:
-    label: Modelo 390 — Resumen anual del IVA
+    label: Modelo 390 - Resumen anual del IVA
     purpose: Declaración resumen anual del Impuesto sobre el Valor Añadido.
   portal_m720_bienes_extranjero:
-    label: Modelo 720 — Bienes y derechos en el extranjero
+    label: Modelo 720 - Bienes y derechos en el extranjero
     purpose: Declaración informativa de bienes y derechos situados en el extranjero.
   portal_m840_iae:
-    label: Modelo 840 — Impuesto sobre Actividades Económicas
+    label: Modelo 840 - Impuesto sobre Actividades Económicas
     purpose: Declaración del Impuesto sobre Actividades Económicas (IAE).
   portal_mi_area_personal:
     label: Mi Área Personal
@@ -6123,13 +6129,13 @@ entries:
     label: Pago de liquidaciones y deudas
     purpose: Pago de liquidaciones practicadas por la AEAT y deudas tributarias.
   portal_pre303_ayuda:
-    label: Pre303 — Servicio de ayuda al Modelo 303
+    label: Pre303 - Servicio de ayuda al Modelo 303
     purpose: Servicio de ayuda Pre303 para preparar el borrador del Modelo 303.
   portal_presentar_consultar_index:
     label: Presentar y consultar declaraciones
     purpose: Índice de modelos para presentar o consultar declaraciones.
   portal_renta_web_borrador:
-    label: Renta WEB — Borrador IRPF
+    label: Renta WEB - Borrador IRPF
     notes:
       '0': El borrador se genera a partir de los datos fiscales de la AEAT.
     purpose: Servicio Renta WEB para revisar y presentar el borrador del IRPF.
@@ -7283,7 +7289,7 @@ errors:
       unsecured_backend: La sesión de bucket activa usa el backend no seguro. El almacenamiento
         de producción vinculado a perfil requiere custodia de archivo o llavero.
     stored_data_validation_boundary: Un registro de perfil o flujo de trabajo almacenado
-      ya no coincide con el esquema esperado — los datos en disco han divergido del
+      ya no coincide con el esquema esperado - los datos en disco han divergido del
       formato actual. Ejecuta `aeat config repair` para diagnosticar y recuperar.
   transaction:
     import_source_invalid: el origen no es un extracto bancario válido
@@ -7425,16 +7431,16 @@ flows:
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
     progress: '{present} de {total} campos rellenados, faltan {missing} para presentar'
-    section_title: '{title} — {present}/{total}'
+    section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   progress:
     current_answer: 'Respuesta actual: {value}'
     current_answer_secret: 'Respuesta actual: (oculta)'
     failure_mode: 'Atención: {text}'
     format_hint: 'Formato: {hint}'
-    legal_ref: 'Base legal: %{ref} — %{label}'
+    legal_ref: 'Base legal: %{ref} - %{label}'
     optional: Opcional
-    page_header: Pregunta {position} de {total} — sección {section}
+    page_header: Pregunta {position} de {total} - sección {section}
     required: Obligatorio
   registration:
     confirm_label: Repite la contraseña
@@ -7474,8 +7480,8 @@ flows:
     edit_not_editable: La pregunta {page_key} ya no se puede editar.
     edit_unknown: No existe ninguna pregunta con el número {number}.
     edit_which: '¿Qué número de pregunta quieres editar? '
-    header: Revisión — {answered} preguntas respondidas.
-    header_tui: 'Revisión — {answered} respondidas, {remaining} obligatorias pendientes,
+    header: Revisión - {answered} preguntas respondidas.
+    header_tui: 'Revisión - {answered} respondidas, {remaining} obligatorias pendientes,
       listo para enviar: {eligible}'
     orphan_marker: (ya no se pregunta)
     page_deferred: 'La pregunta %{page_key} está aplazada: decide antes de presentar.'
@@ -7486,7 +7492,7 @@ flows:
       guardada?
     reset_stale_done: Se ha borrado la respuesta guardada de {page_key}.
     restart_confirm: ¿Empezar de nuevo y descartar todas las respuestas?
-    row: '{number}. {page_key} — estado: {status}'
+    row: '{number}. {page_key} - estado: {status}'
     save_unavailable: Guardar y salir no está disponible en el modo {mode}; completa
       el flujo de una sola vez.
   status:
@@ -7538,7 +7544,7 @@ flows:
     button_back: Atrás
     button_next: Siguiente
     button_review: Revisión
-    header: '{flow} — pregunta {position} de {total}, sección {section}'
+    header: '{flow} - pregunta {position} de {total}, sección {section}'
 live:
   errors:
     expediente_not_found: No se encontró el expediente solicitado en la AEAT.
@@ -7598,12 +7604,12 @@ mcp:
       que ningún resultado de herramienta de esta sesión ha producido. Verifica la
       cifra con una lectura de calculate/revision antes de confiar en ella.'
   harness:
-    off_host_consent: 'Aviso de privacidad — léalo antes de continuar. Esta consola
+    off_host_consent: 'Aviso de privacidad - léalo antes de continuar. Esta consola
       la maneja un asistente de IA que se ejecuta en el proveedor de LLM que usted
       elija. Sus palabras, y las cifras con las que trabaja el asistente (importes,
       valores de casilla, obligaciones), se envían a ese proveedor para operar la
-      consola. Sus DOCUMENTOS DE ORIGEN — facturas, extractos bancarios y cualquier
-      byte de evidencia — NUNCA salen de su equipo: permanecen en almacenamiento local
+      consola. Sus DOCUMENTOS DE ORIGEN - facturas, extractos bancarios y cualquier
+      byte de evidencia - NUNCA salen de su equipo: permanecen en almacenamiento local
       cifrado y nunca se transmiten. Si actúa por cuenta de un tercero (un gestor
       o profesional), confirme que esto es aceptable antes de continuar.'
   identity_gate:
@@ -46899,7 +46905,7 @@ modelo:
               help: null
               label: Amortización del inmovilizado material e intangible (Orden HAC/1347/2024
                 Anexo I, instrucción 2.2; importe declarado por el operador conforme
-                a su propia tabla de amortización elemento por elemento — el motor
+                a su propia tabla de amortización elemento por elemento - el motor
                 no modela un registro de bienes de inversión)
             '1539':
               help: null
@@ -49327,7 +49333,7 @@ modelo:
                 como obtenidos de forma notoriamente irregular en el tiempo, imputados
                 en este único período impositivo (base sobre la que se aplica la reducción
                 del 30 por 100 del artículo 32.1 de la Ley del Impuesto; importe declarado
-                por el operador — véase la casilla [1554])
+                por el operador - véase la casilla [1554])
           construct:
             renta-2025-mini-model-actividades-economicas-objetiva:
               field:
@@ -49931,7 +49937,7 @@ modelo:
             label: Epígrafe IAE de la actividad en estimación objetiva (módulos).
               Para los epígrafes 659.4 y 691.9, que agrupan dos actividades distintas
               bajo un mismo código, use el sufijo "a" o "b" (p.ej. "659.4a", "691.9b")
-              según la actividad — consulte el parámetro de coeficientes m131-modulos-coeficientes-2024
+              según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes-2024
               para la asignación exacta.
           irpf-pf-modulos-resultado-declaracion:
             help: null
@@ -50124,7 +50130,7 @@ modelo:
               label: Epígrafe IAE de la actividad en estimación objetiva (módulos).
                 Para los epígrafes 659.4 y 691.9, que agrupan dos actividades distintas
                 bajo un mismo código, use el sufijo "a" o "b" (p.ej. "659.4a", "691.9b")
-                según la actividad — consulte el parámetro de coeficientes m131-modulos-coeficientes-2024
+                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes-2024
                 para la asignación exacta.
             modulos-indice-inicio-actividad:
               help: null
@@ -50137,13 +50143,13 @@ modelo:
             modulos-indice-pequena-dimension:
               help: null
               label: Índice corrector para empresas de pequeña dimensión (letra b.1
-                — municipio, local único, sin personal o hasta 2 trabajadores). Índice
+                - municipio, local único, sin personal o hasta 2 trabajadores). Índice
                 declarado por el operador (0,70/0,75/0,80/0,90, Orden HFP/1359/2023
                 Anexo II, instrucción 2.3.b.1); el motor no modela hechos del contribuyente.
                 Nunca se aplica a las actividades con índice especial (721.2, 722).
             modulos-indice-temporada:
               help: null
-              label: 'Índice corrector de temporada (letra b.2 — actividad de temporada,
+              label: 'Índice corrector de temporada (letra b.2 - actividad de temporada,
                 hasta 180 días/año). Índice declarado por el operador (1,50/1,35/1,25
                 según duración, Orden HFP/1359/2023 Anexo II, instrucción 2.3.b.2);
                 el motor no modela la duración como hecho del contribuyente. Incompatible
@@ -50154,7 +50160,7 @@ modelo:
               label: Minoración por incentivos a la inversión (amortización del inmovilizado
                 material o intangible afecto, según su libro registro de bienes de
                 inversión). Importe declarado por el operador; el motor no modela
-                un registro de bienes por elemento — consulte la Orden HFP/1359/2023
+                un registro de bienes por elemento - consulte la Orden HFP/1359/2023
                 Anexo II, instrucción 2.2.b) y su propia tabla de amortización.
             modulos-pequena-dimension-ignorado-flag:
               help: null
@@ -50173,8 +50179,8 @@ modelo:
             modulos-rendimiento-neto-modulos:
               help: null
               label: 'Rendimiento neto de módulos (Fase 3ª: minorado ajustado por
-                los índices correctores generales — pequeña dimensión, temporada/inicio
-                de nuevas actividades, exceso — en el orden y con las incompatibilidades
+                los índices correctores generales - pequeña dimensión, temporada/inicio
+                de nuevas actividades, exceso - en el orden y con las incompatibilidades
                 de la Orden HFP/1359/2023 Anexo II, instrucción 2.3)'
             modulos-rendimiento-neto-previo:
               help: null
@@ -50278,7 +50284,7 @@ modelo:
               label: Epígrafe IAE de la actividad en estimación objetiva (módulos).
                 Para los epígrafes 659.4 y 691.9, que agrupan dos actividades distintas
                 bajo un mismo código, use el sufijo "a" o "b" (p.ej. "659.4a", "691.9b")
-                según la actividad — consulte el parámetro de coeficientes m131-modulos-coeficientes-2025
+                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes-2025
                 para la asignación exacta.
             modulos-indice-inicio-actividad:
               help: null
@@ -50291,13 +50297,13 @@ modelo:
             modulos-indice-pequena-dimension:
               help: null
               label: Índice corrector para empresas de pequeña dimensión (letra b.1
-                — municipio, local único, sin personal o hasta 2 trabajadores). Índice
+                - municipio, local único, sin personal o hasta 2 trabajadores). Índice
                 declarado por el operador (0,70/0,75/0,80/0,90, Orden HAC/1347/2024
                 Anexo II, instrucción 2.3.b.1); el motor no modela hechos del contribuyente.
                 Nunca se aplica a las actividades con índice especial (721.2, 722).
             modulos-indice-temporada:
               help: null
-              label: 'Índice corrector de temporada (letra b.2 — actividad de temporada,
+              label: 'Índice corrector de temporada (letra b.2 - actividad de temporada,
                 hasta 180 días/año). Índice declarado por el operador (1,50/1,35/1,25
                 según duración, Orden HAC/1347/2024 Anexo II, instrucción 2.3.b.2);
                 el motor no modela la duración como hecho del contribuyente. Incompatible
@@ -50308,7 +50314,7 @@ modelo:
               label: Minoración por incentivos a la inversión (amortización del inmovilizado
                 material o intangible afecto, según su libro registro de bienes de
                 inversión). Importe declarado por el operador; el motor no modela
-                un registro de bienes por elemento — consulte la Orden HAC/1347/2024
+                un registro de bienes por elemento - consulte la Orden HAC/1347/2024
                 Anexo II, instrucción 2.2.b) y su propia tabla de amortización.
             modulos-pequena-dimension-ignorado-flag:
               help: null
@@ -50327,8 +50333,8 @@ modelo:
             modulos-rendimiento-neto-modulos:
               help: null
               label: 'Rendimiento neto de módulos (Fase 3ª: minorado ajustado por
-                los índices correctores generales — pequeña dimensión, temporada/inicio
-                de nuevas actividades, exceso — en el orden y con las incompatibilidades
+                los índices correctores generales - pequeña dimensión, temporada/inicio
+                de nuevas actividades, exceso - en el orden y con las incompatibilidades
                 de la Orden HAC/1347/2024 Anexo II, instrucción 2.3)'
             modulos-rendimiento-neto-previo:
               help: null
@@ -50432,14 +50438,14 @@ modelo:
               label: Epígrafe IAE de la actividad en estimación objetiva (módulos).
                 Para los epígrafes 659.4 y 691.9, que agrupan dos actividades distintas
                 bajo un mismo código, use el sufijo "a" o "b" (p.ej. "659.4a", "691.9b")
-                según la actividad — consulte el parámetro de coeficientes m131-modulos-coeficientes-2026
+                según la actividad - consulte el parámetro de coeficientes m131-modulos-coeficientes-2026
                 para la asignación exacta.
             modulos-minoracion-inversion:
               help: null
               label: Minoración por incentivos a la inversión (amortización del inmovilizado
                 material o intangible afecto, según su libro registro de bienes de
                 inversión). Importe declarado por el operador; el motor no modela
-                un registro de bienes por elemento — consulte la Orden HAC/1425/2025
+                un registro de bienes por elemento - consulte la Orden HAC/1425/2025
                 Anexo II, instrucción 2.2.b) y su propia tabla de amortización.
             modulos-rendimiento-neto-actividad:
               help: null
@@ -50561,7 +50567,7 @@ modelo:
       field:
         official_name: Modelo 140. Impuesto sobre la Renta de las Personas Físicas.
           Deducción por maternidad. Solicitud de abono anticipado.
-        title: IRPF deducción por maternidad — solicitud de abono anticipado
+        title: IRPF deducción por maternidad - solicitud de abono anticipado
       revision:
         2020-y-siguientes:
           casilla:
@@ -50582,7 +50588,7 @@ modelo:
         official_name: Modelo 143. Impuesto sobre la Renta de las Personas Físicas.
           Deducciones por familia numerosa, por ascendiente con dos hijos o por personas
           con discapacidad a cargo. Solicitud de abono anticipado.
-        title: IRPF deducciones familia numerosa/discapacidad — solicitud de abono
+        title: IRPF deducciones familia numerosa/discapacidad - solicitud de abono
           anticipado
       revision:
         2014-y-siguientes:
@@ -66199,7 +66205,7 @@ modelo:
             modelo-200-2024-foundation:
               field:
                 title: Modelo 200 IS annual settlement foundation (2024 y siguientes)
-                  — pagos fraccionados deduction chain
+                  - pagos fraccionados deduction chain
           field:
             label: Modelo 200 ejercicios 2024 y siguientes (DR200e25.xls)
     '202':
@@ -66207,129 +66213,129 @@ modelo:
         continuidad:
           is-pf-mod-40-2-a-ingresar:
             help: null
-            label: Mod. 40.2 LIS — A ingresar
+            label: Mod. 40.2 LIS - A ingresar
           is-pf-mod-40-2-base-pago-fraccionado:
             help: null
-            label: Mod. 40.2 LIS — Base del pago fraccionado
+            label: Mod. 40.2 LIS - Base del pago fraccionado
           is-pf-mod-40-2-resultado-declaracion-anterior:
             help: null
-            label: Mod. 40.2 LIS — Resultado de la declaracion anterior (complementarias)
+            label: Mod. 40.2 LIS - Resultado de la declaracion anterior (complementarias)
           is-pf-mod-40-3-amortizacion-30pct-dism:
             help: null
-            label: Mod. 40.3 LIS — 30% gastos amortizacion — Disminuciones
+            label: Mod. 40.3 LIS - 30% gastos amortizacion - Disminuciones
           is-pf-mod-40-3-b1-base-pago-fraccionado:
             help: null
-            label: Mod. 40.3 LIS B1 — Caso general — Base pago fraccionado
+            label: Mod. 40.3 LIS B1 - Caso general - Base pago fraccionado
           is-pf-mod-40-3-b1-compensacion-cuotas-neg-coop:
             help: null
-            label: Mod. 40.3 LIS B1 — Compensacion de cuotas negativas (cooperativas)
+            label: Mod. 40.3 LIS B1 - Compensacion de cuotas negativas (cooperativas)
           is-pf-mod-40-3-b1-dotaciones-art-11-12:
             help: null
-            label: Mod. 40.3 LIS B1 — Dotaciones del art. 11.12 LIS
+            label: Mod. 40.3 LIS B1 - Dotaciones del art. 11.12 LIS
           is-pf-mod-40-3-b1-porcentaje:
             help: null
-            label: Mod. 40.3 LIS B1 — Caso general — Porcentaje
+            label: Mod. 40.3 LIS B1 - Caso general - Porcentaje
           is-pf-mod-40-3-b1-reserva-nivelacion-convertida-aum:
             help: null
-            label: Mod. 40.3 LIS B1 — Reserva nivelacion convertida — Aumentos
+            label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Aumentos
           is-pf-mod-40-3-b1-reserva-nivelacion-convertida-dis:
             help: null
-            label: Mod. 40.3 LIS B1 — Reserva nivelacion convertida — Disminuciones
+            label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Disminuciones
           is-pf-mod-40-3-b1-resultado-previo:
             help: null
-            label: Mod. 40.3 LIS B1 — Caso general — Resultado previo
+            label: Mod. 40.3 LIS B1 - Caso general - Resultado previo
           is-pf-mod-40-3-b2-base-pago-fraccionado:
             help: null
-            label: Mod. 40.3 LIS B2 — Base del pago fraccionado
+            label: Mod. 40.3 LIS B2 - Base del pago fraccionado
           is-pf-mod-40-3-b2-base-tipo-1:
             help: null
-            label: Mod. 40.3 LIS B2 — Base a tipo 1
+            label: Mod. 40.3 LIS B2 - Base a tipo 1
           is-pf-mod-40-3-b2-base-tipo-2:
             help: null
-            label: Mod. 40.3 LIS B2 — Base a tipo 2
+            label: Mod. 40.3 LIS B2 - Base a tipo 2
           is-pf-mod-40-3-b2-compensacion-cuotas-neg-coop:
             help: null
-            label: Mod. 40.3 LIS B2 — Compensacion de cuotas negativas (cooperativas)
+            label: Mod. 40.3 LIS B2 - Compensacion de cuotas negativas (cooperativas)
           is-pf-mod-40-3-b2-dotaciones-art-11-12-coop:
             help: null
-            label: Mod. 40.3 LIS B2 — Dotaciones art. 11.12 LIS (cooperativas)
+            label: Mod. 40.3 LIS B2 - Dotaciones art. 11.12 LIS (cooperativas)
           is-pf-mod-40-3-b2-porcentaje-1:
             help: null
-            label: Mod. 40.3 LIS B2 — Porcentaje 1
+            label: Mod. 40.3 LIS B2 - Porcentaje 1
           is-pf-mod-40-3-b2-porcentaje-2:
             help: null
-            label: Mod. 40.3 LIS B2 — Porcentaje 2
+            label: Mod. 40.3 LIS B2 - Porcentaje 2
           is-pf-mod-40-3-b2-reserva-nivelacion-aumentos:
             help: null
-            label: Mod. 40.3 LIS B2 — Reserva de nivelacion (art. 105 LIS) — Aumentos
+            label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Aumentos
           is-pf-mod-40-3-b2-reserva-nivelacion-disminuciones:
             help: null
-            label: Mod. 40.3 LIS B2 — Reserva de nivelacion (art. 105 LIS) — Disminuciones
+            label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Disminuciones
           is-pf-mod-40-3-b2-resultado-previo:
             help: null
-            label: Mod. 40.3 LIS B2 — Resultado previo
+            label: Mod. 40.3 LIS B2 - Resultado previo
           is-pf-mod-40-3-base-imponible-previa:
             help: null
-            label: Mod. 40.3 LIS — Base imponible previa
+            label: Mod. 40.3 LIS - Base imponible previa
           is-pf-mod-40-3-bonificaciones:
             help: null
-            label: Mod. 40.3 LIS — Bonificaciones del periodo computado
+            label: Mod. 40.3 LIS - Bonificaciones del periodo computado
           is-pf-mod-40-3-cantidad-a-ingresar:
             help: null
-            label: Mod. 40.3 LIS — Cantidad a ingresar (mayor de claves [32] y [33])
+            label: Mod. 40.3 LIS - Cantidad a ingresar (mayor de claves [32] y [33])
           is-pf-mod-40-3-compensacion-bases-negativas:
             help: null
-            label: Mod. 40.3 LIS — Compensacion de bases negativas de ejercicios anteriores
+            label: Mod. 40.3 LIS - Compensacion de bases negativas de ejercicios anteriores
           is-pf-mod-40-3-correcciones-is-aumentos:
             help: null
-            label: Mod. 40.3 LIS — Correcciones por IS — Aumentos
+            label: Mod. 40.3 LIS - Correcciones por IS - Aumentos
           is-pf-mod-40-3-correcciones-is-disminuciones:
             help: null
-            label: Mod. 40.3 LIS — Correcciones por IS — Disminuciones
+            label: Mod. 40.3 LIS - Correcciones por IS - Disminuciones
           is-pf-mod-40-3-minimo-a-ingresar:
             help: null
-            label: Mod. 40.3 LIS — Minimo a ingresar (CN >= 10 millones euros)
+            label: Mod. 40.3 LIS - Minimo a ingresar (CN >= 10 millones euros)
           is-pf-mod-40-3-pagos-previos-territorio-comun:
             help: null
-            label: Mod. 40.3 LIS — Pagos fraccionados de periodos anteriores en Territorio
+            label: Mod. 40.3 LIS - Pagos fraccionados de periodos anteriores en Territorio
               Comun
           is-pf-mod-40-3-remanente-reserva-capitalizacion:
             help: null
-            label: Mod. 40.3 LIS — Remanente reserva de capitalizacion no aplicada
+            label: Mod. 40.3 LIS - Remanente reserva de capitalizacion no aplicada
               por insuficiencia de base
           is-pf-mod-40-3-reserva-nivelacion-aumentos:
             help: null
-            label: Mod. 40.3 LIS — Reserva de nivelacion (art. 105 LIS) — Aumentos
+            label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Aumentos
           is-pf-mod-40-3-reserva-nivelacion-disminuciones:
             help: null
-            label: Mod. 40.3 LIS — Reserva de nivelacion (art. 105 LIS) — Disminuciones
+            label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Disminuciones
           is-pf-mod-40-3-resto-correcciones-aumentos:
             help: null
-            label: Mod. 40.3 LIS — Resto correcciones — Aumentos
+            label: Mod. 40.3 LIS - Resto correcciones - Aumentos
           is-pf-mod-40-3-resto-correcciones-disminuciones:
             help: null
-            label: Mod. 40.3 LIS — Resto correcciones — Disminuciones
+            label: Mod. 40.3 LIS - Resto correcciones - Disminuciones
           is-pf-mod-40-3-resultado:
             help: null
-            label: Mod. 40.3 LIS — Resultado
+            label: Mod. 40.3 LIS - Resultado
           is-pf-mod-40-3-resultado-contable:
             help: null
-            label: Mod. 40.3 LIS — Resultado contable despues del IS
+            label: Mod. 40.3 LIS - Resultado contable despues del IS
           is-pf-mod-40-3-resultado-declaracion-anterior:
             help: null
-            label: Mod. 40.3 LIS — Resultado de la declaracion anterior (complementaria)
+            label: Mod. 40.3 LIS - Resultado de la declaracion anterior (complementaria)
           is-pf-mod-40-3-total-correcciones-aumentos:
             help: null
-            label: Mod. 40.3 LIS — TOTAL correcciones — Aumentos
+            label: Mod. 40.3 LIS - TOTAL correcciones - Aumentos
           is-pf-mod-40-3-total-correcciones-disminuciones:
             help: null
-            label: Mod. 40.3 LIS — TOTAL correcciones — Disminuciones
+            label: Mod. 40.3 LIS - TOTAL correcciones - Disminuciones
           is-pf-mod-40-3-volumen-territorio-comun-pct:
             help: null
-            label: Mod. 40.3 LIS — Volumen operaciones en Territorio Comun (%)
+            label: Mod. 40.3 LIS - Volumen operaciones en Territorio Comun (%)
           retenciones-ingresos-a-cuenta:
             help: null
-            label: Mod. 40.3 LIS — Retenciones e ingresos a cuenta sobre ingresos
+            label: Mod. 40.3 LIS - Retenciones e ingresos a cuenta sobre ingresos
               del periodo computado
       field:
         official_name: Impuesto sobre Sociedades. Impuesto sobre la Renta de no Residentes
@@ -66342,137 +66348,137 @@ modelo:
           casilla:
             '01':
               help: null
-              label: Mod. 40.2 LIS — Base del pago fraccionado
+              label: Mod. 40.2 LIS - Base del pago fraccionado
             '02':
               help: null
-              label: Mod. 40.2 LIS — Resultado de la declaracion anterior (complementarias)
+              label: Mod. 40.2 LIS - Resultado de la declaracion anterior (complementarias)
             '03':
               help: null
-              label: Mod. 40.2 LIS — A ingresar
+              label: Mod. 40.2 LIS - A ingresar
             '04':
               help: null
-              label: Mod. 40.3 LIS — Resultado contable despues del IS
+              label: Mod. 40.3 LIS - Resultado contable despues del IS
             '05':
               help: null
-              label: Mod. 40.3 LIS — Correcciones por IS — Aumentos
+              label: Mod. 40.3 LIS - Correcciones por IS - Aumentos
             '06':
               help: null
-              label: Mod. 40.3 LIS — Correcciones por IS — Disminuciones
+              label: Mod. 40.3 LIS - Correcciones por IS - Disminuciones
             '07':
               help: null
-              label: Mod. 40.3 LIS — Resto correcciones — Aumentos
+              label: Mod. 40.3 LIS - Resto correcciones - Aumentos
             08:
               help: null
-              label: Mod. 40.3 LIS — Resto correcciones — Disminuciones
+              label: Mod. 40.3 LIS - Resto correcciones - Disminuciones
             '13':
               help: null
-              label: Mod. 40.3 LIS — Base imponible previa
+              label: Mod. 40.3 LIS - Base imponible previa
             '14':
               help: null
-              label: Mod. 40.3 LIS — Compensacion de bases negativas de ejercicios
+              label: Mod. 40.3 LIS - Compensacion de bases negativas de ejercicios
                 anteriores
             '16':
               help: null
-              label: Mod. 40.3 LIS B1 — Caso general — Base pago fraccionado
+              label: Mod. 40.3 LIS B1 - Caso general - Base pago fraccionado
             '17':
               help: null
-              label: Mod. 40.3 LIS B1 — Caso general — Porcentaje
+              label: Mod. 40.3 LIS B1 - Caso general - Porcentaje
             '18':
               help: null
-              label: Mod. 40.3 LIS B1 — Caso general — Resultado previo
+              label: Mod. 40.3 LIS B1 - Caso general - Resultado previo
             '19':
               help: null
-              label: Mod. 40.3 LIS B2 — Base del pago fraccionado
+              label: Mod. 40.3 LIS B2 - Base del pago fraccionado
             '20':
               help: null
-              label: Mod. 40.3 LIS B2 — Base a tipo 1
+              label: Mod. 40.3 LIS B2 - Base a tipo 1
             '21':
               help: null
-              label: Mod. 40.3 LIS B2 — Porcentaje 1
+              label: Mod. 40.3 LIS B2 - Porcentaje 1
             '22':
               help: null
-              label: Mod. 40.3 LIS B2 — Importe pago fraccionado tipo 1
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 1
             '23':
               help: null
-              label: Mod. 40.3 LIS B2 — Base a tipo 2
+              label: Mod. 40.3 LIS B2 - Base a tipo 2
             '24':
               help: null
-              label: Mod. 40.3 LIS B2 — Porcentaje 2
+              label: Mod. 40.3 LIS B2 - Porcentaje 2
             '25':
               help: null
-              label: Mod. 40.3 LIS B2 — Importe pago fraccionado tipo 2
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 2
             '26':
               help: null
-              label: Mod. 40.3 LIS B2 — Resultado previo
+              label: Mod. 40.3 LIS B2 - Resultado previo
             '27':
               help: null
-              label: Mod. 40.3 LIS — Bonificaciones del periodo computado
+              label: Mod. 40.3 LIS - Bonificaciones del periodo computado
             '28':
               help: null
-              label: Mod. 40.3 LIS — Retenciones e ingresos a cuenta sobre ingresos
+              label: Mod. 40.3 LIS - Retenciones e ingresos a cuenta sobre ingresos
                 del periodo computado
             '29':
               help: null
-              label: Mod. 40.3 LIS — Volumen operaciones en Territorio Comun (%)
+              label: Mod. 40.3 LIS - Volumen operaciones en Territorio Comun (%)
             '30':
               help: null
-              label: Mod. 40.3 LIS — Pagos fraccionados de periodos anteriores en
+              label: Mod. 40.3 LIS - Pagos fraccionados de periodos anteriores en
                 Territorio Comun
             '31':
               help: null
-              label: Mod. 40.3 LIS — Resultado de la declaracion anterior (complementaria)
+              label: Mod. 40.3 LIS - Resultado de la declaracion anterior (complementaria)
             '32':
               help: null
-              label: Mod. 40.3 LIS — Resultado
+              label: Mod. 40.3 LIS - Resultado
             '33':
               help: null
-              label: Mod. 40.3 LIS — Minimo a ingresar (CN >= 10 millones euros)
+              label: Mod. 40.3 LIS - Minimo a ingresar (CN >= 10 millones euros)
             '34':
               help: null
-              label: Mod. 40.3 LIS — Cantidad a ingresar (mayor de claves [32] y [33])
+              label: Mod. 40.3 LIS - Cantidad a ingresar (mayor de claves [32] y [33])
             '37':
               help: null
-              label: Mod. 40.3 LIS — 30% gastos amortizacion — Disminuciones
+              label: Mod. 40.3 LIS - 30% gastos amortizacion - Disminuciones
             '38':
               help: null
-              label: Mod. 40.3 LIS — TOTAL correcciones — Aumentos
+              label: Mod. 40.3 LIS - TOTAL correcciones - Aumentos
             '39':
               help: null
-              label: Mod. 40.3 LIS — TOTAL correcciones — Disminuciones
+              label: Mod. 40.3 LIS - TOTAL correcciones - Disminuciones
             '40':
               help: null
-              label: Mod. 40.3 LIS B1 — Compensacion de cuotas negativas (cooperativas)
+              label: Mod. 40.3 LIS B1 - Compensacion de cuotas negativas (cooperativas)
             '42':
               help: null
-              label: Mod. 40.3 LIS B2 — Compensacion de cuotas negativas (cooperativas)
+              label: Mod. 40.3 LIS B2 - Compensacion de cuotas negativas (cooperativas)
             '44':
               help: null
-              label: Mod. 40.3 LIS — Remanente reserva de capitalizacion no aplicada
+              label: Mod. 40.3 LIS - Remanente reserva de capitalizacion no aplicada
                 por insuficiencia de base
             '45':
               help: null
-              label: Mod. 40.3 LIS — Reserva de nivelacion (art. 105 LIS) — Aumentos
+              label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Aumentos
             '46':
               help: null
-              label: Mod. 40.3 LIS — Reserva de nivelacion (art. 105 LIS) — Disminuciones
+              label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Disminuciones
             '47':
               help: null
-              label: Mod. 40.3 LIS B1 — Dotaciones del art. 11.12 LIS
+              label: Mod. 40.3 LIS B1 - Dotaciones del art. 11.12 LIS
             '48':
               help: null
-              label: Mod. 40.3 LIS B1 — Reserva nivelacion convertida — Aumentos
+              label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Aumentos
             '49':
               help: null
-              label: Mod. 40.3 LIS B1 — Reserva nivelacion convertida — Disminuciones
+              label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Disminuciones
             '50':
               help: null
-              label: Mod. 40.3 LIS B2 — Dotaciones art. 11.12 LIS (cooperativas)
+              label: Mod. 40.3 LIS B2 - Dotaciones art. 11.12 LIS (cooperativas)
             '51':
               help: null
-              label: Mod. 40.3 LIS B2 — Reserva de nivelacion (art. 105 LIS) — Aumentos
+              label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Aumentos
             '52':
               help: null
-              label: Mod. 40.3 LIS B2 — Reserva de nivelacion (art. 105 LIS) — Disminuciones
+              label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Disminuciones
           construct:
             modelo-202-2019-2022-foundation:
               field:
@@ -66484,137 +66490,137 @@ modelo:
           casilla:
             '01':
               help: null
-              label: Mod. 40.2 LIS — Base del pago fraccionado
+              label: Mod. 40.2 LIS - Base del pago fraccionado
             '02':
               help: null
-              label: Mod. 40.2 LIS — Resultado de la declaracion anterior (complementarias)
+              label: Mod. 40.2 LIS - Resultado de la declaracion anterior (complementarias)
             '03':
               help: null
-              label: Mod. 40.2 LIS — A ingresar
+              label: Mod. 40.2 LIS - A ingresar
             '04':
               help: null
-              label: Mod. 40.3 LIS — Resultado contable despues del IS
+              label: Mod. 40.3 LIS - Resultado contable despues del IS
             '05':
               help: null
-              label: Mod. 40.3 LIS — Correcciones por IS — Aumentos
+              label: Mod. 40.3 LIS - Correcciones por IS - Aumentos
             '06':
               help: null
-              label: Mod. 40.3 LIS — Correcciones por IS — Disminuciones
+              label: Mod. 40.3 LIS - Correcciones por IS - Disminuciones
             '07':
               help: null
-              label: Mod. 40.3 LIS — Resto correcciones — Aumentos
+              label: Mod. 40.3 LIS - Resto correcciones - Aumentos
             08:
               help: null
-              label: Mod. 40.3 LIS — Resto correcciones — Disminuciones
+              label: Mod. 40.3 LIS - Resto correcciones - Disminuciones
             '13':
               help: null
-              label: Mod. 40.3 LIS — Base imponible previa
+              label: Mod. 40.3 LIS - Base imponible previa
             '14':
               help: null
-              label: Mod. 40.3 LIS — Compensacion de bases negativas de ejercicios
+              label: Mod. 40.3 LIS - Compensacion de bases negativas de ejercicios
                 anteriores
             '16':
               help: null
-              label: Mod. 40.3 LIS B1 — Caso general — Base pago fraccionado
+              label: Mod. 40.3 LIS B1 - Caso general - Base pago fraccionado
             '17':
               help: null
-              label: Mod. 40.3 LIS B1 — Caso general — Porcentaje
+              label: Mod. 40.3 LIS B1 - Caso general - Porcentaje
             '18':
               help: null
-              label: Mod. 40.3 LIS B1 — Caso general — Resultado previo
+              label: Mod. 40.3 LIS B1 - Caso general - Resultado previo
             '19':
               help: null
-              label: Mod. 40.3 LIS B2 — Base del pago fraccionado
+              label: Mod. 40.3 LIS B2 - Base del pago fraccionado
             '20':
               help: null
-              label: Mod. 40.3 LIS B2 — Base a tipo 1
+              label: Mod. 40.3 LIS B2 - Base a tipo 1
             '21':
               help: null
-              label: Mod. 40.3 LIS B2 — Porcentaje 1
+              label: Mod. 40.3 LIS B2 - Porcentaje 1
             '22':
               help: null
-              label: Mod. 40.3 LIS B2 — Importe pago fraccionado tipo 1
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 1
             '23':
               help: null
-              label: Mod. 40.3 LIS B2 — Base a tipo 2
+              label: Mod. 40.3 LIS B2 - Base a tipo 2
             '24':
               help: null
-              label: Mod. 40.3 LIS B2 — Porcentaje 2
+              label: Mod. 40.3 LIS B2 - Porcentaje 2
             '25':
               help: null
-              label: Mod. 40.3 LIS B2 — Importe pago fraccionado tipo 2
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 2
             '26':
               help: null
-              label: Mod. 40.3 LIS B2 — Resultado previo
+              label: Mod. 40.3 LIS B2 - Resultado previo
             '27':
               help: null
-              label: Mod. 40.3 LIS — Bonificaciones del periodo computado
+              label: Mod. 40.3 LIS - Bonificaciones del periodo computado
             '28':
               help: null
-              label: Mod. 40.3 LIS — Retenciones e ingresos a cuenta sobre ingresos
+              label: Mod. 40.3 LIS - Retenciones e ingresos a cuenta sobre ingresos
                 del periodo computado
             '29':
               help: null
-              label: Mod. 40.3 LIS — Volumen operaciones en Territorio Comun (%)
+              label: Mod. 40.3 LIS - Volumen operaciones en Territorio Comun (%)
             '30':
               help: null
-              label: Mod. 40.3 LIS — Pagos fraccionados de periodos anteriores en
+              label: Mod. 40.3 LIS - Pagos fraccionados de periodos anteriores en
                 Territorio Comun
             '31':
               help: null
-              label: Mod. 40.3 LIS — Resultado de la declaracion anterior (complementaria)
+              label: Mod. 40.3 LIS - Resultado de la declaracion anterior (complementaria)
             '32':
               help: null
-              label: Mod. 40.3 LIS — Resultado
+              label: Mod. 40.3 LIS - Resultado
             '33':
               help: null
-              label: Mod. 40.3 LIS — Minimo a ingresar (CN >= 10 millones euros)
+              label: Mod. 40.3 LIS - Minimo a ingresar (CN >= 10 millones euros)
             '34':
               help: null
-              label: Mod. 40.3 LIS — Cantidad a ingresar (mayor de claves [32] y [33])
+              label: Mod. 40.3 LIS - Cantidad a ingresar (mayor de claves [32] y [33])
             '37':
               help: null
-              label: Mod. 40.3 LIS — 30% gastos amortizacion — Disminuciones
+              label: Mod. 40.3 LIS - 30% gastos amortizacion - Disminuciones
             '38':
               help: null
-              label: Mod. 40.3 LIS — TOTAL correcciones — Aumentos
+              label: Mod. 40.3 LIS - TOTAL correcciones - Aumentos
             '39':
               help: null
-              label: Mod. 40.3 LIS — TOTAL correcciones — Disminuciones
+              label: Mod. 40.3 LIS - TOTAL correcciones - Disminuciones
             '40':
               help: null
-              label: Mod. 40.3 LIS B1 — Compensacion de cuotas negativas (cooperativas)
+              label: Mod. 40.3 LIS B1 - Compensacion de cuotas negativas (cooperativas)
             '42':
               help: null
-              label: Mod. 40.3 LIS B2 — Compensacion de cuotas negativas (cooperativas)
+              label: Mod. 40.3 LIS B2 - Compensacion de cuotas negativas (cooperativas)
             '44':
               help: null
-              label: Mod. 40.3 LIS — Remanente reserva de capitalizacion no aplicada
+              label: Mod. 40.3 LIS - Remanente reserva de capitalizacion no aplicada
                 por insuficiencia de base
             '45':
               help: null
-              label: Mod. 40.3 LIS — Reserva de nivelacion (art. 105 LIS) — Aumentos
+              label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Aumentos
             '46':
               help: null
-              label: Mod. 40.3 LIS — Reserva de nivelacion (art. 105 LIS) — Disminuciones
+              label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Disminuciones
             '47':
               help: null
-              label: Mod. 40.3 LIS B1 — Dotaciones del art. 11.12 LIS
+              label: Mod. 40.3 LIS B1 - Dotaciones del art. 11.12 LIS
             '48':
               help: null
-              label: Mod. 40.3 LIS B1 — Reserva nivelacion convertida — Aumentos
+              label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Aumentos
             '49':
               help: null
-              label: Mod. 40.3 LIS B1 — Reserva nivelacion convertida — Disminuciones
+              label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Disminuciones
             '50':
               help: null
-              label: Mod. 40.3 LIS B2 — Dotaciones art. 11.12 LIS (cooperativas)
+              label: Mod. 40.3 LIS B2 - Dotaciones art. 11.12 LIS (cooperativas)
             '51':
               help: null
-              label: Mod. 40.3 LIS B2 — Reserva de nivelacion (art. 105 LIS) — Aumentos
+              label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Aumentos
             '52':
               help: null
-              label: Mod. 40.3 LIS B2 — Reserva de nivelacion (art. 105 LIS) — Disminuciones
+              label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Disminuciones
           construct:
             modelo-202-2023-2024-foundation:
               field:
@@ -66626,159 +66632,159 @@ modelo:
           casilla:
             '01':
               help: null
-              label: Mod. 40.2 LIS — Base del pago fraccionado
+              label: Mod. 40.2 LIS - Base del pago fraccionado
             '02':
               help: null
-              label: Mod. 40.2 LIS — Resultado de la declaracion anterior (complementarias)
+              label: Mod. 40.2 LIS - Resultado de la declaracion anterior (complementarias)
             '03':
               help: null
-              label: Mod. 40.2 LIS — A ingresar
+              label: Mod. 40.2 LIS - A ingresar
             '04':
               help: null
-              label: Mod. 40.3 LIS — Resultado contable despues del IS
+              label: Mod. 40.3 LIS - Resultado contable despues del IS
             '05':
               help: null
-              label: Mod. 40.3 LIS — Correcciones por IS — Aumentos
+              label: Mod. 40.3 LIS - Correcciones por IS - Aumentos
             '06':
               help: null
-              label: Mod. 40.3 LIS — Correcciones por IS — Disminuciones
+              label: Mod. 40.3 LIS - Correcciones por IS - Disminuciones
             '07':
               help: null
-              label: Mod. 40.3 LIS — Resto correcciones — Aumentos
+              label: Mod. 40.3 LIS - Resto correcciones - Aumentos
             08:
               help: null
-              label: Mod. 40.3 LIS — Resto correcciones — Disminuciones
+              label: Mod. 40.3 LIS - Resto correcciones - Disminuciones
             '13':
               help: null
-              label: Mod. 40.3 LIS — Base imponible previa
+              label: Mod. 40.3 LIS - Base imponible previa
             '14':
               help: null
-              label: Mod. 40.3 LIS — Compensacion de bases negativas de ejercicios
+              label: Mod. 40.3 LIS - Compensacion de bases negativas de ejercicios
                 anteriores
             '16':
               help: null
-              label: Mod. 40.3 LIS B1 — Caso general — Base pago fraccionado
+              label: Mod. 40.3 LIS B1 - Caso general - Base pago fraccionado
             '17':
               help: null
-              label: Mod. 40.3 LIS B1 — Caso general — Porcentaje
+              label: Mod. 40.3 LIS B1 - Caso general - Porcentaje
             '18':
               help: null
-              label: Mod. 40.3 LIS B1 — Caso general — Resultado previo
+              label: Mod. 40.3 LIS B1 - Caso general - Resultado previo
             '19':
               help: null
-              label: Mod. 40.3 LIS B2 — Base del pago fraccionado
+              label: Mod. 40.3 LIS B2 - Base del pago fraccionado
             '20':
               help: null
-              label: Mod. 40.3 LIS B2 — Base a tipo 1
+              label: Mod. 40.3 LIS B2 - Base a tipo 1
             '21':
               help: null
-              label: Mod. 40.3 LIS B2 — Porcentaje 1
+              label: Mod. 40.3 LIS B2 - Porcentaje 1
             '22':
               help: null
-              label: Mod. 40.3 LIS B2 — Importe pago fraccionado tipo 1
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 1
             '23':
               help: null
-              label: Mod. 40.3 LIS B2 — Base a tipo 2
+              label: Mod. 40.3 LIS B2 - Base a tipo 2
             '24':
               help: null
-              label: Mod. 40.3 LIS B2 — Porcentaje 2
+              label: Mod. 40.3 LIS B2 - Porcentaje 2
             '25':
               help: null
-              label: Mod. 40.3 LIS B2 — Importe pago fraccionado tipo 2
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 2
             '26':
               help: null
-              label: Mod. 40.3 LIS B2 — Resultado previo
+              label: Mod. 40.3 LIS B2 - Resultado previo
             '27':
               help: null
-              label: Mod. 40.3 LIS — Bonificaciones del periodo computado
+              label: Mod. 40.3 LIS - Bonificaciones del periodo computado
             '28':
               help: null
-              label: Mod. 40.3 LIS — Retenciones e ingresos a cuenta sobre ingresos
+              label: Mod. 40.3 LIS - Retenciones e ingresos a cuenta sobre ingresos
                 del periodo computado
             '29':
               help: null
-              label: Mod. 40.3 LIS — Volumen operaciones en Territorio Comun (%)
+              label: Mod. 40.3 LIS - Volumen operaciones en Territorio Comun (%)
             '30':
               help: null
-              label: Mod. 40.3 LIS — Pagos fraccionados de periodos anteriores en
+              label: Mod. 40.3 LIS - Pagos fraccionados de periodos anteriores en
                 Territorio Comun
             '31':
               help: null
-              label: Mod. 40.3 LIS — Resultado de la declaracion anterior (complementaria)
+              label: Mod. 40.3 LIS - Resultado de la declaracion anterior (complementaria)
             '32':
               help: null
-              label: Mod. 40.3 LIS — Resultado
+              label: Mod. 40.3 LIS - Resultado
             '33':
               help: null
-              label: Mod. 40.3 LIS — Minimo a ingresar (CN >= 10 millones euros)
+              label: Mod. 40.3 LIS - Minimo a ingresar (CN >= 10 millones euros)
             '34':
               help: null
-              label: Mod. 40.3 LIS — Cantidad a ingresar (mayor de claves [32] y [33])
+              label: Mod. 40.3 LIS - Cantidad a ingresar (mayor de claves [32] y [33])
             '37':
               help: null
-              label: Mod. 40.3 LIS — 30% gastos amortizacion — Disminuciones
+              label: Mod. 40.3 LIS - 30% gastos amortizacion - Disminuciones
             '38':
               help: null
-              label: Mod. 40.3 LIS — TOTAL correcciones — Aumentos
+              label: Mod. 40.3 LIS - TOTAL correcciones - Aumentos
             '39':
               help: null
-              label: Mod. 40.3 LIS — TOTAL correcciones — Disminuciones
+              label: Mod. 40.3 LIS - TOTAL correcciones - Disminuciones
             '40':
               help: null
-              label: Mod. 40.3 LIS B1 — Compensacion de cuotas negativas (cooperativas)
+              label: Mod. 40.3 LIS B1 - Compensacion de cuotas negativas (cooperativas)
             '42':
               help: null
-              label: Mod. 40.3 LIS B2 — Compensacion de cuotas negativas (cooperativas)
+              label: Mod. 40.3 LIS B2 - Compensacion de cuotas negativas (cooperativas)
             '44':
               help: null
-              label: Mod. 40.3 LIS — Remanente reserva de capitalizacion no aplicada
+              label: Mod. 40.3 LIS - Remanente reserva de capitalizacion no aplicada
                 por insuficiencia de base
             '45':
               help: null
-              label: Mod. 40.3 LIS — Reserva de nivelacion (art. 105 LIS) — Aumentos
+              label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Aumentos
             '46':
               help: null
-              label: Mod. 40.3 LIS — Reserva de nivelacion (art. 105 LIS) — Disminuciones
+              label: Mod. 40.3 LIS - Reserva de nivelacion (art. 105 LIS) - Disminuciones
             '47':
               help: null
-              label: Mod. 40.3 LIS B1 — Dotaciones del art. 11.12 LIS
+              label: Mod. 40.3 LIS B1 - Dotaciones del art. 11.12 LIS
             '48':
               help: null
-              label: Mod. 40.3 LIS B1 — Reserva nivelacion convertida — Aumentos
+              label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Aumentos
             '49':
               help: null
-              label: Mod. 40.3 LIS B1 — Reserva nivelacion convertida — Disminuciones
+              label: Mod. 40.3 LIS B1 - Reserva nivelacion convertida - Disminuciones
             '50':
               help: null
-              label: Mod. 40.3 LIS B2 — Dotaciones art. 11.12 LIS (cooperativas)
+              label: Mod. 40.3 LIS B2 - Dotaciones art. 11.12 LIS (cooperativas)
             '51':
               help: null
-              label: Mod. 40.3 LIS B2 — Reserva de nivelacion (art. 105 LIS) — Aumentos
+              label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Aumentos
             '52':
               help: null
-              label: Mod. 40.3 LIS B2 — Reserva de nivelacion (art. 105 LIS) — Disminuciones
+              label: Mod. 40.3 LIS B2 - Reserva de nivelacion (art. 105 LIS) - Disminuciones
             '61':
               help: null
-              label: Mod. 40.3 LIS B2 — Base a tipo 3
+              label: Mod. 40.3 LIS B2 - Base a tipo 3
             '62':
               help: null
-              label: Mod. 40.3 LIS B2 — Porcentaje 3
+              label: Mod. 40.3 LIS B2 - Porcentaje 3
             '63':
               help: null
-              label: Mod. 40.3 LIS B2 — Importe pago fraccionado tipo 3
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 3
             '64':
               help: null
-              label: Mod. 40.3 LIS B2 — Base a tipo 4
+              label: Mod. 40.3 LIS B2 - Base a tipo 4
             '65':
               help: null
-              label: Mod. 40.3 LIS B2 — Porcentaje 4
+              label: Mod. 40.3 LIS B2 - Porcentaje 4
             '66':
               help: null
-              label: Mod. 40.3 LIS B2 — Importe pago fraccionado tipo 4
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 4
             '67':
               help: null
-              label: Mod. 40.3 LIS — Correcciones por Impuesto Complementario (IC)
-                — Aumentos
+              label: Mod. 40.3 LIS - Correcciones por Impuesto Complementario (IC)
+                - Aumentos
           construct:
             modelo-202-foundation:
               field:
@@ -67818,7 +67824,7 @@ modelo:
             label: Cuota IVA soportado en operaciones interiores corrientes
           iva-prorrata-porcentaje:
             help: null
-            label: Prorrata general — porcentaje (volumen con derecho / volumen total
+            label: Prorrata general - porcentaje (volumen con derecho / volumen total
               × 100)
           iva-prorrata-volumen-con-derecho:
             help: null
@@ -68187,7 +68193,7 @@ modelo:
                 en adquisiciones intracomunitarias)
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
               help: null
-              label: Prorrata general — porcentaje (volumen con derecho / volumen
+              label: Prorrata general - porcentaje (volumen con derecho / volumen
                 total × 100)
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
               help: null
@@ -68612,7 +68618,7 @@ modelo:
                 en adquisiciones intracomunitarias)
             x-d5r62bjge9nn4sj1ehgiqs3fe9hmarjkc5l6a:
               help: null
-              label: Prorrata general — porcentaje (volumen con derecho / volumen
+              label: Prorrata general - porcentaje (volumen con derecho / volumen
                 total × 100)
             x-d5r62bjge9nn4sj1ehgiqtjfdhqmqpbe5lhmurhdchin4pb3d1ng:
               help: null
@@ -69121,7 +69127,7 @@ modelo:
                 por destino)
             x-d5r62bj5f1q6asj9dtp2sp355ppmasjmd5hmaspdcdqmut31:
               help: null
-              label: Cuota IVA repercutido al destino DE — servicios prestados (Esquema
+              label: Cuota IVA repercutido al destino DE - servicios prestados (Esquema
                 Exterior)
           construct:
             modelo-369-esquema-exterior:
@@ -69146,7 +69152,7 @@ modelo:
                 por destino)
             x-d5r62bj9dlo6usjkc5hmirre5pi6abjcdtriqtj1dhqmabb3elnn8o8:
               help: null
-              label: Cuota IVA IOSS al destino DE — ventas a distancia de bienes importados
+              label: Cuota IVA IOSS al destino DE - ventas a distancia de bienes importados
                 ≤ 150 EUR (LIVA art 163 quinvicies)
           construct:
             modelo-369-esquema-importacion:
@@ -69170,15 +69176,15 @@ modelo:
                 cross-flow)
             x-d5r62bjldpkmurhechiisprfdti76bb4d5pn8obecdiiqorldtq62:
               help: null
-              label: Cuota IVA OSS Unión al destino DE — ventas a distancia + interfaces
+              label: Cuota IVA OSS Unión al destino DE - ventas a distancia + interfaces
                 electrónicas
             x-d5r62bjldpkmurhechiissr5e9r6ior5ecmm6tbfehgg:
               help: null
-              label: Cuota IVA OSS Unión al destino DE — servicios prestados (LIVA
+              label: Cuota IVA OSS Unión al destino DE - servicios prestados (LIVA
                 art 163 unvicies)
             x-d5r62bjldpkmurhecpp2ssr5e9r6ior5ecmm6tbfehgg:
               help: null
-              label: Cuota IVA OSS Unión al destino FR — servicios prestados (LIVA
+              label: Cuota IVA OSS Unión al destino FR - servicios prestados (LIVA
                 art 163 unvicies)
           construct:
             modelo-369-esquema-union:
@@ -69670,7 +69676,7 @@ modelo:
       field:
         official_name: Modelo 490. Impuesto sobre Determinados Servicios Digitales.
           Autoliquidación.
-        title: Impuesto sobre Determinados Servicios Digitales — autoliquidación
+        title: Impuesto sobre Determinados Servicios Digitales - autoliquidación
       revision:
         2021-y-siguientes:
           casilla:
@@ -69691,7 +69697,7 @@ modelo:
       field:
         official_name: Modelo 576. Impuesto Especial sobre Determinados Medios de
           Transporte. Autoliquidación.
-        title: IEDMT — autoliquidación por matriculación de determinados medios de
+        title: IEDMT - autoliquidación por matriculación de determinados medios de
           transporte
       revision:
         2007-y-siguientes:
@@ -69712,7 +69718,7 @@ modelo:
       field:
         official_name: Modelo 592. Impuesto especial sobre los envases de plástico
           no reutilizables. Autoliquidación.
-        title: Impuesto especial sobre envases de plástico no reutilizables — autoliquidación
+        title: Impuesto especial sobre envases de plástico no reutilizables - autoliquidación
       revision:
         2022-y-siguientes:
           casilla:
@@ -69732,7 +69738,7 @@ modelo:
     '604':
       field:
         official_name: Modelo 604. Impuesto sobre las Transacciones Financieras. Autoliquidación.
-        title: Impuesto sobre las Transacciones Financieras — autoliquidación
+        title: Impuesto sobre las Transacciones Financieras - autoliquidación
       revision:
         2021-y-siguientes:
           casilla:
@@ -69907,7 +69913,7 @@ modelo:
       field:
         official_name: Modelo 763. Impuesto sobre actividades de juego en los supuestos
           de actividades anuales o plurianuales. Autoliquidación.
-        title: Impuesto sobre actividades de juego — autoliquidación (anuales/plurianuales)
+        title: Impuesto sobre actividades de juego - autoliquidación (anuales/plurianuales)
       revision:
         2011-y-siguientes:
           casilla:
@@ -70621,19 +70627,19 @@ wizard:
       disability-grade:
         choices:
           33-64:
-            description: Discapacidad reconocida del 33% al 64% — incrementa el mínimo
+            description: Discapacidad reconocida del 33% al 64% - incrementa el mínimo
               personal.
             label: Discapacidad del 33% al 64%
           65-plus:
-            description: Discapacidad reconocida del 65% o más — mayor incremento
+            description: Discapacidad reconocida del 65% o más - mayor incremento
               del mínimo personal.
             label: Discapacidad del 65% o superior
           assistance-or-mobility:
             description: Necesidad acreditada de ayuda de terceros o movilidad reducida
-              — añade el incremento por asistencia.
+              - añade el incremento por asistencia.
             label: Ayuda de terceros o movilidad reducida
           judicial-incapacity:
-            description: Incapacidad declarada judicialmente — se asimila al 65%+
+            description: Incapacidad declarada judicialmente - se asimila al 65%+
               con independencia del grado certificado.
             label: Incapacidad judicial o equivalente
       sex:
@@ -70937,15 +70943,15 @@ wizard:
       situacion-familiar:
         choices:
           casado:
-            description: Matrimonio vigente — tributación conjunta disponible (Art.
+            description: Matrimonio vigente - tributación conjunta disponible (Art.
               82.1.1°)
             label: Casado/a
           pareja-hecho-no-registrada:
-            description: Convivencia sin inscripción registral — tributación conjunta
+            description: Convivencia sin inscripción registral - tributación conjunta
               NO disponible
             label: Pareja de hecho no registrada
           pareja-hecho-registrada:
-            description: Inscrita en el registro autonómico — tributación conjunta
+            description: Inscrita en el registro autonómico - tributación conjunta
               disponible (Art. 82.1.2°)
             label: Pareja de hecho registrada
           separado-divorciado:
@@ -71060,11 +71066,11 @@ wizard:
         choices:
           directa-normal:
             description: 'Estimación directa normal: contabilidad por ingresos reales
-              con libros completos — obligatoria por encima de 600.000 EUR.'
+              con libros completos - obligatoria por encima de 600.000 EUR.'
             label: Estimación directa normal
           directa-simplificada:
             description: 'Estimación directa simplificada: ingresos reales con libros
-              simplificados — la opción habitual para la mayoría de autónomos.'
+              simplificados - la opción habitual para la mayoría de autónomos.'
             label: Estimación directa simplificada
           objetiva:
             description: 'Estimación objetiva (módulos): el rendimiento se calcula
@@ -71078,7 +71084,7 @@ wizard:
           general:
             label: Régimen general
           impatriado:
-            label: Impatriado — Ley Beckham (Art. 93 LIRPF)
+            label: Impatriado - Ley Beckham (Art. 93 LIRPF)
         help: El régimen de impatriados (Ley Beckham) se aplica durante los primeros
           6 años tras el traslado. La mayoría tributa en régimen general.
         prompt: Régimen especial IRPF (Ley Beckham / Art. 93 LIRPF)
@@ -71233,11 +71239,11 @@ wizard:
           non-resident-irnr:
             description: 'No residente: solo tributa la renta de fuente española,
               por IRNR (Modelo 210), y puede requerirse representante fiscal.'
-            label: No residente — IRNR (RDLeg 5/2004)
+            label: No residente - IRNR (RDLeg 5/2004)
           resident-irpf:
             description: 'Residente fiscal en España (183+ días o centro de intereses):
               renta mundial por IRPF.'
-            label: Residente habitual en España — IRPF
+            label: Residente habitual en España - IRPF
         prompt: Categoría de residencia fiscal
       representante-fiscal-nif:
         prompt: NIF/NIE del representante fiscal en España (obligatorio fuera UE/EEE)
@@ -71247,7 +71253,7 @@ wizard:
         prompt: Comunidad autónoma de residencia fiscal
       title: Residencia fiscal
     review:
-      registered-non-official-suffix: ' (del certificado censal — no verificado por
+      registered-non-official-suffix: ' (del certificado censal - no verificado por
         la AEAT)'
     spouse:
       spouse-birth-date:
@@ -71273,23 +71279,23 @@ wizard:
       situacion-familiar:
         choices:
           casado:
-            description: Matrimonio vigente — tributación conjunta disponible (Art.
+            description: Matrimonio vigente - tributación conjunta disponible (Art.
               82.1.1°)
             label: Casado/a
           pareja-hecho-no-registrada:
-            description: Convivencia sin inscripción registral — tributación conjunta
+            description: Convivencia sin inscripción registral - tributación conjunta
               NO disponible
             label: Pareja de hecho no registrada
           pareja-hecho-registrada:
-            description: Inscrita en el registro autonómico — tributación conjunta
+            description: Inscrita en el registro autonómico - tributación conjunta
               disponible (Art. 82.1.2°)
             label: Pareja de hecho registrada
           separado-divorciado:
-            description: Separado legalmente o divorciado — la tributación conjunta
+            description: Separado legalmente o divorciado - la tributación conjunta
               solo es posible con hijos en su unidad familiar.
             label: Separado/a o divorciado/a
           soltero:
-            description: Soltero, viudo o divorciado sin pareja registrada — tributación
+            description: Soltero, viudo o divorciado sin pareja registrada - tributación
               individual, o conjunta solo como familia monoparental con hijos.
             label: Soltero/a
         help: 'Situación familiar a efectos del Art. 82 LIRPF: determina si puede
@@ -71346,7 +71352,7 @@ wizard:
       irpf-income-categories:
         choices:
           actividad-economica:
-            description: Actividad económica o profesional por cuenta propia — activa
+            description: Actividad económica o profesional por cuenta propia - activa
               el Modelo 130 trimestral y las obligaciones de IVA.
             label: Actividad económica
           capital-inmobiliario:
@@ -71362,7 +71368,7 @@ wizard:
               inmuebles, criptomonedas).
             label: Ganancias patrimoniales
           pension:
-            description: Pensiones — tributan como rendimientos del trabajo en el
+            description: Pensiones - tributan como rendimientos del trabajo en el
               IRPF.
             label: Pensión
           trabajo:

@@ -1533,7 +1533,7 @@ application:
         details incomplete. Add these flags to the same command and run it again:
         %{missing_flags}.'
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
-        requires supplied_question_ids — edit is a patch, not a full rewrite.
+        requires supplied_question_ids - edit is a patch, not a full rewrite.
       persist_patch_unknown_question_id: Wizard patch references an unknown question
         id.
       profile_flag_required: Wizard requires --profile NAME (no implicit 'default'
@@ -1549,7 +1549,7 @@ application:
         are calculated for %{ccaa}. Set --tax-residence-ccaa to use a different comunidad.
       modify_descendants_via_door: Descendants are not part of profile edit. Manage
         them with '{command}'.
-      modify_no_resume: Changes in modify mode are staged only — leaving without submitting
+      modify_no_resume: Changes in modify mode are staged only - leaving without submitting
         discards them; save-and-resume is available on profile create only.
       setup_saved_resume_later: 'Saved. Resume anytime with: aeat config profile create
         %{name}'
@@ -1936,7 +1936,8 @@ cli:
           group_help: Review what was sent to an off-host model, and bring artefacts
             back on-host.
           list_help: List every off-host dispatch and the artefacts derived from one.
-          no_history: cli.app.ledger.evidence.consent.no_history
+          no_history: 'No evidence bytes have left this host: this profile has no
+            recorded off-host dispatch.'
           rederive_help: Re-read one artefact on this host from its cached transcription.
           rederive_refused: 'Re-derivation refused: {detail}'
           rederived: Re-derived {reference} on this host. It previously carried {previous};
@@ -1977,6 +1978,10 @@ cli:
         field_anchor_self_reported: '{field}: the reader reports having read this
           from ''{anchor}'', but that claim came from the same reader that produced
           the value, so nothing independent has confirmed it.'
+        field_anchor_uncorroborated: '{field}: the reader points at ''{anchor}'',
+          and nothing found that form missing from the document. The value is still
+          not corroborated, so what is unsettled is something other than the printed
+          form. {detail}'
         field_contradicted: '{field}: the document reads ''{anchor}'', which does
           not agree with the value recorded for this field. {detail}'
         field_no_anchor: '{field}: the reader offered nothing in the document to point
@@ -2038,7 +2043,6 @@ cli:
         view_help: Show purchase invoice evidence
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence
-        field_anchor_uncorroborated: '{field}: the reader points at ''{anchor}'', and nothing found that form missing from the document. The value is still not corroborated, so what is unsettled is something other than the printed form. {detail}'
       inventory:
         actividad_id_help: Economic activity identifier
         create_help: Create an inventory ledger for one activity and tax year
@@ -2568,7 +2572,7 @@ cli:
           Two cases:\n\n --amount 0   True first-period: this is the taxpayer's first\
           \ ever Modelo 303 filing under this NIF. Casilla 110 is zero because no\
           \ prior compensation balance exists (LIVA art. 99.5, Ley 37/1992). The reconciliation\
-          \ layer treats this as first_period_zero — non-blocking and legally certain.\n\
+          \ layer treats this as first_period_zero - non-blocking and legally certain.\n\
           \n  --amount X   Carry-in: the taxpayer has filed prior M303s under a different\
           \ tool or directly with AEAT. X is the compensacion pendiente de periodos\
           \ posteriores from the last filed M303."
@@ -2844,7 +2848,7 @@ cli:
           but this declarable amount is not routed to any casilla and is not declared
           on this filing; review it before filing.'
         calculate_unauthorized_advisory: 'ADVISORY: modelo %{modelo} calculation backend
-          is UNAUTHORIZED — it has not yet been proven by an end-to-end test across
+          is UNAUTHORIZED - it has not yet been proven by an end-to-end test across
           at least two renta years (multi-year-renta authorization gate). The result
           was computed and saved, but treat it as provisional until the modelo is
           authorized.'
@@ -2862,11 +2866,11 @@ cli:
           {detail}'
         compare_taxation_help: 'Compare IRPF cuota under joint (conjunta, Art. 82-84
           LIRPF) vs. individual filing for an existing Modelo 100 work unit. Runs
-          the registry engine twice — once with declaration_type=2 (conjunta) and
-          once with declaration_type=1 (individual) — over identical profile bindings,
+          the registry engine twice - once with declaration_type=2 (conjunta) and
+          once with declaration_type=1 (individual) - over identical profile bindings,
           and outputs the cuota differential and a recommendation. Ephemeral: no revision
           is persisted.'
-        compare_taxation_recommendation_line: 'RECOMMENDATION: {recommendation} —
+        compare_taxation_recommendation_line: 'RECOMMENDATION: {recommendation} -
           {reason}'
         compare_taxation_work_unit_not_found: Work unit {work_unit_id} not found;
           check active units with 'aeat app modelo work list'.
@@ -3598,7 +3602,7 @@ cli:
         export_section_title: Export profile bundle
         import_section_title: Import profile bundle
         transport_cleartext_description: Write unencrypted JSON containing sensitive
-          financial data; local or subject-access handling only — never email, sync,
+          financial data; local or subject-access handling only - never email, sync,
           or transfer it.
         transport_cleartext_label: Cleartext (local/SAR only)
         transport_encrypted_description: AEAD-encrypt the bundle with a passphrase;
@@ -3625,7 +3629,7 @@ cli:
         compare_help: Compare AEAT censo and this profile field by field
         dropped_fields_notice: 'AEAT''s censo no longer reports fields your last snapshot
           carried: {dropped_fields}. If you did not change or close these registrations,
-          this may be a partial pull — re-run the censo pull or re-enter the values;
+          this may be a partial pull - re-run the censo pull or re-enter the values;
           the home-office deduction ratio may stop resolving.'
         file_help: Read a downloaded Certificado de Situación Censal and preview or
           enroll its censal facts.
@@ -5591,10 +5595,10 @@ entries:
     label: Electronic Certificate Validation
     purpose: Service that checks the validity of digital certificates.
   portal_clave_gestiones:
-    label: Cl@ve PIN — Procedures
+    label: Cl@ve PIN - Procedures
     purpose: Management and issuance of the temporary Cl@ve PIN credential.
   portal_clave_idp_root:
-    label: Cl@ve — Electronic Identification
+    label: Cl@ve - Electronic Identification
     purpose: Cl@ve identity provider for authentication with the AEAT.
   portal_clave_sede_entry:
     label: Sign in with Cl@ve
@@ -5609,75 +5613,75 @@ entries:
     label: Set Up Direct Debit for Payments
     purpose: Direct-debit setup for self-assessments and tax payments.
   portal_m036_censal:
-    label: Form 036 — Censo Declaration
+    label: Form 036 - Censo Declaration
     purpose: Registration, amendment and deregistration in the censo of businesses
       and professionals.
   portal_m037_censal_simplificada:
-    label: Form 037 — Simplified Censo Declaration (retired)
+    label: Form 037 - Simplified Censo Declaration (retired)
     notes:
       '0': Abolished by Order HAC/1526/2024, effective from 2025-02-03.
       '1': Use Form 036 for any subsequent censo procedure.
     purpose: Simplified censo declaration for sole traders, abolished in 2025.
   portal_m100_renta:
-    label: Form 100 — Personal Income Tax Return
+    label: Form 100 - Personal Income Tax Return
     purpose: Annual personal income tax (IRPF) return.
   portal_m111_retenciones_trabajo:
-    label: Form 111 — Withholdings on Employment Income
+    label: Form 111 - Withholdings on Employment Income
     purpose: Self-assessment of IRPF withholdings and payments on account for employment
       income.
   portal_m115_retenciones_arrendamientos:
-    label: Form 115 — Withholdings on Property Rental
+    label: Form 115 - Withholdings on Property Rental
     purpose: Self-assessment of IRPF withholdings on urban property rentals.
   portal_m123_retenciones_capital:
-    label: Form 123 — Withholdings on Investment Income
+    label: Form 123 - Withholdings on Investment Income
     purpose: Self-assessment of IRPF withholdings on investment income.
   portal_m130_pago_fraccionado_ed:
-    label: Form 130 — IRPF Instalment Payment (direct assessment)
+    label: Form 130 - IRPF Instalment Payment (direct assessment)
     purpose: Quarterly IRPF instalment payment for sole traders under direct assessment.
   portal_m131_pago_fraccionado_eo:
-    label: Form 131 — IRPF Instalment Payment (objective assessment)
+    label: Form 131 - IRPF Instalment Payment (objective assessment)
     purpose: Quarterly IRPF instalment payment for sole traders under objective assessment
       (modules).
   portal_m180_resumen_arrendamientos:
-    label: Form 180 — Annual Summary of Property Rentals
+    label: Form 180 - Annual Summary of Property Rentals
     purpose: Annual summary of withholdings on urban property rentals.
   portal_m190_resumen_trabajo:
-    label: Form 190 — Annual Summary of Employment Withholdings
+    label: Form 190 - Annual Summary of Employment Withholdings
     purpose: Annual summary of withholdings and payments on account for employment
       income.
   portal_m193_resumen_capital:
-    label: Form 193 — Annual Summary of Investment Withholdings
+    label: Form 193 - Annual Summary of Investment Withholdings
     purpose: Annual summary of withholdings on investment income.
   portal_m200_sociedades_anual:
-    label: Form 200 — Corporate Income Tax Return
+    label: Form 200 - Corporate Income Tax Return
     purpose: Annual corporate income tax return.
   portal_m202_sociedades_fraccionado:
-    label: Form 202 — Corporate Income Tax Instalment Payment
+    label: Form 202 - Corporate Income Tax Instalment Payment
     purpose: Instalment payment on account of corporate income tax.
   portal_m232_vinculadas:
-    label: Form 232 — Related-Party Transactions
+    label: Form 232 - Related-Party Transactions
     purpose: Informational return of transactions with related persons or entities.
   portal_m303_iva_autoliquidacion:
-    label: Form 303 — IVA Self-Assessment
+    label: Form 303 - IVA Self-Assessment
     purpose: Periodic IVA self-assessment.
   portal_m347_operaciones_terceros:
-    label: Form 347 — Transactions with Third Parties
+    label: Form 347 - Transactions with Third Parties
     purpose: Annual informational return of transactions with third parties above
       EUR 3,005.06.
   portal_m349_intracomunitarias:
-    label: Form 349 — Intra-Community Transactions
+    label: Form 349 - Intra-Community Transactions
     purpose: Recapitulative statement of intra-Community supplies of goods and services.
   portal_m369_oss_ioss:
-    label: Form 369 — IVA One-Stop Shop (OSS/IOSS)
+    label: Form 369 - IVA One-Stop Shop (OSS/IOSS)
     purpose: IVA self-assessment under the OSS and IOSS one-stop-shop schemes.
   portal_m390_resumen_iva:
-    label: Form 390 — Annual IVA Summary
+    label: Form 390 - Annual IVA Summary
     purpose: Annual summary return for IVA.
   portal_m720_bienes_extranjero:
-    label: Form 720 — Assets and Rights Held Abroad
+    label: Form 720 - Assets and Rights Held Abroad
     purpose: Informational return of assets and rights located abroad.
   portal_m840_iae:
-    label: Form 840 — Tax on Economic Activities
+    label: Form 840 - Tax on Economic Activities
     purpose: Return for the tax on economic activities (IAE).
   portal_mi_area_personal:
     label: My Personal Area
@@ -5701,13 +5705,13 @@ entries:
     label: Pay Assessments and Debts
     purpose: Payment of assessments raised by the AEAT and tax debts.
   portal_pre303_ayuda:
-    label: Pre303 — Form 303 Assistance Service
+    label: Pre303 - Form 303 Assistance Service
     purpose: Pre303 assistance service for preparing the Form 303 draft.
   portal_presentar_consultar_index:
     label: File and Review Tax Returns
     purpose: Index of forms for filing or reviewing tax returns.
   portal_renta_web_borrador:
-    label: Renta WEB — Income Tax Draft
+    label: Renta WEB - Income Tax Draft
     notes:
       '0': The draft is generated from the tax data held by the AEAT.
     purpose: Renta WEB service to review and file the personal income tax draft.
@@ -6776,7 +6780,7 @@ errors:
       unsecured_backend: The active bucket session uses the unsecured backend. Production
         profile-bound storage requires file or keyring custody.
     stored_data_validation_boundary: A stored profile or workflow record no longer
-      matches the expected schema — the data on disk has drifted from the current
+      matches the expected schema - the data on disk has drifted from the current
       format. Run `aeat config repair` to diagnose and recover.
   transaction:
     import_source_invalid: the source is not a valid ledger document
@@ -6914,16 +6918,16 @@ flows:
     language:
       unavailable: This profile does not offer a language setting.
     progress: '{present} of {total} fields filled in, {missing} still needed for filing'
-    section_title: '{title} — {present}/{total}'
+    section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'
   progress:
     current_answer: 'Current answer: {value}'
     current_answer_secret: 'Current answer: (hidden)'
     failure_mode: 'Watch out: {text}'
     format_hint: 'Format: {hint}'
-    legal_ref: 'Legal basis: %{ref} — %{label}'
+    legal_ref: 'Legal basis: %{ref} - %{label}'
     optional: Optional
-    page_header: Question {position} of {total} — section {section}
+    page_header: Question {position} of {total} - section {section}
     required: Required
   registration:
     confirm_label: Repeat the password
@@ -6963,8 +6967,8 @@ flows:
     edit_not_editable: Question {page_key} can no longer be edited.
     edit_unknown: There is no question numbered {number}.
     edit_which: 'Which question number do you want to edit? '
-    header: Review — {answered} questions answered.
-    header_tui: 'Review — {answered} answered, {remaining} required still open, ready
+    header: Review - {answered} questions answered.
+    header_tui: 'Review - {answered} answered, {remaining} required still open, ready
       to submit: {eligible}'
     orphan_marker: (no longer asked)
     page_deferred: Question %{page_key} is deferred - decide before submitting.
@@ -6975,7 +6979,7 @@ flows:
       answer?
     reset_stale_done: Cleared the stored answer for {page_key}.
     restart_confirm: Start over and discard every answer?
-    row: '{number}. {page_key} — status: {status}'
+    row: '{number}. {page_key} - status: {status}'
     save_unavailable: Save and exit is not available in mode {mode}; finish the flow
       in one sitting.
   status:
@@ -7027,7 +7031,7 @@ flows:
     button_back: Back
     button_next: Next
     button_review: Review
-    header: '{flow} — question {position} of {total}, section {section}'
+    header: '{flow} - question {position} of {total}, section {section}'
 live:
   errors:
     expediente_not_found: AEAT declaration register did not return the requested expediente.
@@ -7083,11 +7087,11 @@ mcp:
       that no tool result in this session produced. Verify the figure against a calculate/revision
       read before relying on it.'
   harness:
-    off_host_consent: 'Privacy notice — read before continuing. This console is operated
+    off_host_consent: 'Privacy notice - read before continuing. This console is operated
       by an AI assistant running on your chosen LLM provider. Your words, and the
       figures the assistant works with (amounts, casilla values, obligations), are
-      sent to that provider to operate the console. Your SOURCE DOCUMENTS — invoices,
-      bank statements, and any evidence bytes — NEVER leave your machine: they stay
+      sent to that provider to operate the console. Your SOURCE DOCUMENTS - invoices,
+      bank statements, and any evidence bytes - NEVER leave your machine: they stay
       in encrypted local storage and are never transmitted. If you are acting for
       a third party (a gestor or professional), confirm this is acceptable before
       you proceed.'
@@ -43973,7 +43977,7 @@ modelo:
               help: null
               label: Depreciation of tangible and intangible fixed assets (Order HAC/1347/2024,
                 Annex I, instruction 2.2; amount declared by the filer per their own
-                item-by-item depreciation schedule — the engine does not model a capital-asset
+                item-by-item depreciation schedule - the engine does not model a capital-asset
                 register)
             '1539':
               help: null
@@ -46391,7 +46395,7 @@ modelo:
                 with a generation period exceeding two years, or classed by regulation
                 as obtained in a markedly irregular manner over time, imputed to this
                 single tax period (the base to which the 30% reduction of article
-                32.1 of the Tax Law applies; amount declared by the filer — see box
+                32.1 of the Tax Law applies; amount declared by the filer - see box
                 [1554])
           construct:
             renta-2025-mini-model-actividades-economicas-objetiva:
@@ -46970,7 +46974,7 @@ modelo:
             label: IAE heading of the activity under the objective estimation (módulos)
               regime. For headings 659.4 and 691.9, which group two different activities
               under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
-              according to the activity — see the coefficient parameter m131-modulos-coeficientes-2024
+              according to the activity - see the coefficient parameter m131-modulos-coeficientes-2024
               for the exact assignment.
           irpf-pf-modulos-resultado-declaracion:
             help: null
@@ -47159,7 +47163,7 @@ modelo:
               label: IAE heading of the activity under the objective estimation (módulos)
                 regime. For headings 659.4 and 691.9, which group two different activities
                 under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
-                according to the activity — see the coefficient parameter m131-modulos-coeficientes-2024
+                according to the activity - see the coefficient parameter m131-modulos-coeficientes-2024
                 for the exact assignment.
             modulos-indice-inicio-actividad:
               help: null
@@ -47171,14 +47175,14 @@ modelo:
                 seasonal index (b.2): if both are declared, the seasonal index prevails.'
             modulos-indice-pequena-dimension:
               help: null
-              label: Corrective index for small enterprises (letter b.1 — single municipality,
+              label: Corrective index for small enterprises (letter b.1 - single municipality,
                 single premises, no staff or up to 2 employees). Index declared by
                 the operator (0.70/0.75/0.80/0.90, Order HFP/1359/2023 Annex II, instruction
                 2.3.b.1); the engine does not model taxpayer facts. Never applies
                 to activities with a special index (721.2, 722).
             modulos-indice-temporada:
               help: null
-              label: 'Seasonal corrective index (letter b.2 — seasonal activity, up
+              label: 'Seasonal corrective index (letter b.2 - seasonal activity, up
                 to 180 days/year). Index declared by the operator (1.50/1.35/1.25
                 depending on duration, Order HFP/1359/2023 Annex II, instruction 2.3.b.2);
                 the engine does not model duration as a taxpayer fact. Incompatible
@@ -47189,7 +47193,7 @@ modelo:
               label: Reduction for investment incentives (depreciation of tangible
                 or intangible fixed assets in use, per the investment-goods register).
                 Amount declared by the operator; the engine does not model a per-item
-                asset register — see Order HFP/1359/2023 Annex II, instruction 2.2.b)
+                asset register - see Order HFP/1359/2023 Annex II, instruction 2.2.b)
                 and your own depreciation schedule.
             modulos-pequena-dimension-ignorado-flag:
               help: null
@@ -47208,8 +47212,8 @@ modelo:
             modulos-rendimiento-neto-modulos:
               help: null
               label: 'Net income from módulos (Phase 3: reduced amount adjusted by
-                the general corrective indices — small enterprise, seasonal/new-activity
-                start-up, excess — in the order and with the incompatibilities of
+                the general corrective indices - small enterprise, seasonal/new-activity
+                start-up, excess - in the order and with the incompatibilities of
                 Order HFP/1359/2023 Annex II, instruction 2.3)'
             modulos-rendimiento-neto-previo:
               help: null
@@ -47313,7 +47317,7 @@ modelo:
               label: IAE heading of the activity under the objective estimation (módulos)
                 regime. For headings 659.4 and 691.9, which group two different activities
                 under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
-                according to the activity — see the coefficient parameter m131-modulos-coeficientes-2025
+                according to the activity - see the coefficient parameter m131-modulos-coeficientes-2025
                 for the exact assignment.
             modulos-indice-inicio-actividad:
               help: null
@@ -47325,14 +47329,14 @@ modelo:
                 seasonal index (b.2): if both are declared, the seasonal index prevails.'
             modulos-indice-pequena-dimension:
               help: null
-              label: Corrective index for small enterprises (letter b.1 — single municipality,
+              label: Corrective index for small enterprises (letter b.1 - single municipality,
                 single premises, no staff or up to 2 employees). Index declared by
                 the operator (0.70/0.75/0.80/0.90, Order HAC/1347/2024 Annex II, instruction
                 2.3.b.1); the engine does not model taxpayer facts. Never applies
                 to activities with a special index (721.2, 722).
             modulos-indice-temporada:
               help: null
-              label: 'Seasonal corrective index (letter b.2 — seasonal activity, up
+              label: 'Seasonal corrective index (letter b.2 - seasonal activity, up
                 to 180 days/year). Index declared by the operator (1.50/1.35/1.25
                 depending on duration, Order HAC/1347/2024 Annex II, instruction 2.3.b.2);
                 the engine does not model duration as a taxpayer fact. Incompatible
@@ -47343,7 +47347,7 @@ modelo:
               label: Reduction for investment incentives (depreciation of tangible
                 or intangible fixed assets in use, per the investment-goods register).
                 Amount declared by the operator; the engine does not model a per-item
-                asset register — see Order HAC/1347/2024 Annex II, instruction 2.2.b)
+                asset register - see Order HAC/1347/2024 Annex II, instruction 2.2.b)
                 and your own depreciation schedule.
             modulos-pequena-dimension-ignorado-flag:
               help: null
@@ -47362,8 +47366,8 @@ modelo:
             modulos-rendimiento-neto-modulos:
               help: null
               label: 'Net income from módulos (Phase 3: reduced amount adjusted by
-                the general corrective indices — small enterprise, seasonal/new-activity
-                start-up, excess — in the order and with the incompatibilities of
+                the general corrective indices - small enterprise, seasonal/new-activity
+                start-up, excess - in the order and with the incompatibilities of
                 Order HAC/1347/2024 Annex II, instruction 2.3)'
             modulos-rendimiento-neto-previo:
               help: null
@@ -47467,14 +47471,14 @@ modelo:
               label: IAE heading of the activity under the objective estimation (módulos)
                 regime. For headings 659.4 and 691.9, which group two different activities
                 under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
-                according to the activity — see the coefficient parameter m131-modulos-coeficientes-2026
+                according to the activity - see the coefficient parameter m131-modulos-coeficientes-2026
                 for the exact assignment.
             modulos-minoracion-inversion:
               help: null
               label: Reduction for investment incentives (depreciation of tangible
                 or intangible fixed assets in use, per the investment-goods register).
                 Amount declared by the operator; the engine does not model a per-item
-                asset register — see Order HAC/1425/2025 Annex II, instruction 2.2.b)
+                asset register - see Order HAC/1425/2025 Annex II, instruction 2.2.b)
                 and your own depreciation schedule.
             modulos-rendimiento-neto-actividad:
               help: null
@@ -63397,148 +63401,148 @@ modelo:
         continuidad:
           is-pf-mod-40-2-a-ingresar:
             help: null
-            label: Method under art. 40.2 LIS — Payable
+            label: Method under art. 40.2 LIS - Payable
           is-pf-mod-40-2-base-pago-fraccionado:
             help: null
-            label: Method under art. 40.2 LIS — Instalment payment base
+            label: Method under art. 40.2 LIS - Instalment payment base
           is-pf-mod-40-2-resultado-declaracion-anterior:
             help: null
-            label: Method under art. 40.2 LIS — Result of the previous return (supplementary)
+            label: Method under art. 40.2 LIS - Result of the previous return (supplementary)
           is-pf-mod-40-3-amortizacion-30pct-dism:
             help: null
-            label: Method under art. 40.3 LIS — 30% depreciation expense — Decreases
+            label: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
           is-pf-mod-40-3-b1-base-pago-fraccionado:
             help: null
-            label: Method under art. 40.3 LIS, block B1 — General case — Instalment
+            label: Method under art. 40.3 LIS, block B1 - General case - Instalment
               payment base
           is-pf-mod-40-3-b1-compensacion-cuotas-neg-coop:
             help: null
-            label: Method under art. 40.3 LIS, block B1 — Offset of negative tax liabilities
+            label: Method under art. 40.3 LIS, block B1 - Offset of negative tax liabilities
               (cooperatives)
           is-pf-mod-40-3-b1-dotaciones-art-11-12:
             help: null
-            label: Method under art. 40.3 LIS, block B1 — Provisions under art. 11.12
+            label: Method under art. 40.3 LIS, block B1 - Provisions under art. 11.12
               LIS
           is-pf-mod-40-3-b1-porcentaje:
             help: null
-            label: Method under art. 40.3 LIS, block B1 — General case — Percentage
+            label: Method under art. 40.3 LIS, block B1 - General case - Percentage
           is-pf-mod-40-3-b1-reserva-nivelacion-convertida-aum:
             help: null
-            label: Method under art. 40.3 LIS, block B1 — Converted levelling reserve
-              — Increases
+            label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+              - Increases
           is-pf-mod-40-3-b1-reserva-nivelacion-convertida-dis:
             help: null
-            label: Method under art. 40.3 LIS, block B1 — Converted levelling reserve
-              — Decreases
+            label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+              - Decreases
           is-pf-mod-40-3-b1-resultado-previo:
             help: null
-            label: Method under art. 40.3 LIS, block B1 — General case — Preliminary
+            label: Method under art. 40.3 LIS, block B1 - General case - Preliminary
               result
           is-pf-mod-40-3-b2-base-pago-fraccionado:
             help: null
-            label: Method under art. 40.3 LIS, block B2 — Instalment payment base
+            label: Method under art. 40.3 LIS, block B2 - Instalment payment base
           is-pf-mod-40-3-b2-base-tipo-1:
             help: null
-            label: Method under art. 40.3 LIS, block B2 — Base at rate 1
+            label: Method under art. 40.3 LIS, block B2 - Base at rate 1
           is-pf-mod-40-3-b2-base-tipo-2:
             help: null
-            label: Method under art. 40.3 LIS, block B2 — Base at rate 2
+            label: Method under art. 40.3 LIS, block B2 - Base at rate 2
           is-pf-mod-40-3-b2-compensacion-cuotas-neg-coop:
             help: null
-            label: Method under art. 40.3 LIS, block B2 — Offset of negative tax liabilities
+            label: Method under art. 40.3 LIS, block B2 - Offset of negative tax liabilities
               (cooperatives)
           is-pf-mod-40-3-b2-dotaciones-art-11-12-coop:
             help: null
-            label: Method under art. 40.3 LIS, block B2 — Provisions under art. 11.12
+            label: Method under art. 40.3 LIS, block B2 - Provisions under art. 11.12
               LIS (cooperatives)
           is-pf-mod-40-3-b2-porcentaje-1:
             help: null
-            label: Method under art. 40.3 LIS, block B2 — Percentage 1
+            label: Method under art. 40.3 LIS, block B2 - Percentage 1
           is-pf-mod-40-3-b2-porcentaje-2:
             help: null
-            label: Method under art. 40.3 LIS, block B2 — Percentage 2
+            label: Method under art. 40.3 LIS, block B2 - Percentage 2
           is-pf-mod-40-3-b2-reserva-nivelacion-aumentos:
             help: null
-            label: Method under art. 40.3 LIS, block B2 — Levelling reserve (art.
-              105 LIS) — Increases
+            label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+              105 LIS) - Increases
           is-pf-mod-40-3-b2-reserva-nivelacion-disminuciones:
             help: null
-            label: Method under art. 40.3 LIS, block B2 — Levelling reserve (art.
-              105 LIS) — Decreases
+            label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+              105 LIS) - Decreases
           is-pf-mod-40-3-b2-resultado-previo:
             help: null
-            label: Method under art. 40.3 LIS, block B2 — Preliminary result
+            label: Method under art. 40.3 LIS, block B2 - Preliminary result
           is-pf-mod-40-3-base-imponible-previa:
             help: null
-            label: Method under art. 40.3 LIS — Preliminary taxable base
+            label: Method under art. 40.3 LIS - Preliminary taxable base
           is-pf-mod-40-3-bonificaciones:
             help: null
-            label: Method under art. 40.3 LIS — Tax credits for the computed period
+            label: Method under art. 40.3 LIS - Tax credits for the computed period
           is-pf-mod-40-3-cantidad-a-ingresar:
             help: null
-            label: Method under art. 40.3 LIS — Amount payable (greater of boxes [32]
+            label: Method under art. 40.3 LIS - Amount payable (greater of boxes [32]
               and [33])
           is-pf-mod-40-3-compensacion-bases-negativas:
             help: null
-            label: Method under art. 40.3 LIS — Offset of negative bases from prior
+            label: Method under art. 40.3 LIS - Offset of negative bases from prior
               tax years
           is-pf-mod-40-3-correcciones-is-aumentos:
             help: null
-            label: Method under art. 40.3 LIS — Corporate income tax adjustments —
+            label: Method under art. 40.3 LIS - Corporate income tax adjustments -
               Increases
           is-pf-mod-40-3-correcciones-is-disminuciones:
             help: null
-            label: Method under art. 40.3 LIS — Corporate income tax adjustments —
+            label: Method under art. 40.3 LIS - Corporate income tax adjustments -
               Decreases
           is-pf-mod-40-3-minimo-a-ingresar:
             help: null
-            label: Method under art. 40.3 LIS — Minimum payable (turnover >= EUR 10
+            label: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR 10
               million)
           is-pf-mod-40-3-pagos-previos-territorio-comun:
             help: null
-            label: Method under art. 40.3 LIS — Instalment payments from prior periods
+            label: Method under art. 40.3 LIS - Instalment payments from prior periods
               in Common Territory
           is-pf-mod-40-3-remanente-reserva-capitalizacion:
             help: null
-            label: Method under art. 40.3 LIS — Capitalisation reserve remainder not
+            label: Method under art. 40.3 LIS - Capitalisation reserve remainder not
               applied due to insufficient base
           is-pf-mod-40-3-reserva-nivelacion-aumentos:
             help: null
-            label: Method under art. 40.3 LIS — Levelling reserve (art. 105 LIS) —
+            label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS) -
               Increases
           is-pf-mod-40-3-reserva-nivelacion-disminuciones:
             help: null
-            label: Method under art. 40.3 LIS — Levelling reserve (art. 105 LIS) —
+            label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS) -
               Decreases
           is-pf-mod-40-3-resto-correcciones-aumentos:
             help: null
-            label: Method under art. 40.3 LIS — Other adjustments — Increases
+            label: Method under art. 40.3 LIS - Other adjustments - Increases
           is-pf-mod-40-3-resto-correcciones-disminuciones:
             help: null
-            label: Method under art. 40.3 LIS — Other adjustments — Decreases
+            label: Method under art. 40.3 LIS - Other adjustments - Decreases
           is-pf-mod-40-3-resultado:
             help: null
-            label: Method under art. 40.3 LIS — Result
+            label: Method under art. 40.3 LIS - Result
           is-pf-mod-40-3-resultado-contable:
             help: null
-            label: Method under art. 40.3 LIS — Accounting result after corporate
+            label: Method under art. 40.3 LIS - Accounting result after corporate
               income tax
           is-pf-mod-40-3-resultado-declaracion-anterior:
             help: null
-            label: Method under art. 40.3 LIS — Result of the previous return (supplementary)
+            label: Method under art. 40.3 LIS - Result of the previous return (supplementary)
           is-pf-mod-40-3-total-correcciones-aumentos:
             help: null
-            label: Method under art. 40.3 LIS — TOTAL adjustments — Increases
+            label: Method under art. 40.3 LIS - TOTAL adjustments - Increases
           is-pf-mod-40-3-total-correcciones-disminuciones:
             help: null
-            label: Method under art. 40.3 LIS — TOTAL adjustments — Decreases
+            label: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
           is-pf-mod-40-3-volumen-territorio-comun-pct:
             help: null
-            label: Method under art. 40.3 LIS — Volume of transactions in Common Territory
+            label: Method under art. 40.3 LIS - Volume of transactions in Common Territory
               (%)
           retenciones-ingresos-a-cuenta:
             help: null
-            label: Method under art. 40.3 LIS — Withholdings and payments on account
+            label: Method under art. 40.3 LIS - Withholdings and payments on account
               on income for the computed period
       field:
         official_name: null
@@ -63548,157 +63552,157 @@ modelo:
           casilla:
             '01':
               help: null
-              label: Method under art. 40.2 LIS — Instalment payment base
+              label: Method under art. 40.2 LIS - Instalment payment base
             '02':
               help: null
-              label: Method under art. 40.2 LIS — Result of the previous return (supplementary)
+              label: Method under art. 40.2 LIS - Result of the previous return (supplementary)
             '03':
               help: null
-              label: Method under art. 40.2 LIS — Payable
+              label: Method under art. 40.2 LIS - Payable
             '04':
               help: null
-              label: Method under art. 40.3 LIS — Accounting result after corporate
+              label: Method under art. 40.3 LIS - Accounting result after corporate
                 income tax
             '05':
               help: null
-              label: Method under art. 40.3 LIS — Corporate income tax adjustments
-                — Increases
+              label: Method under art. 40.3 LIS - Corporate income tax adjustments
+                - Increases
             '06':
               help: null
-              label: Method under art. 40.3 LIS — Corporate income tax adjustments
-                — Decreases
+              label: Method under art. 40.3 LIS - Corporate income tax adjustments
+                - Decreases
             '07':
               help: null
-              label: Method under art. 40.3 LIS — Other adjustments — Increases
+              label: Method under art. 40.3 LIS - Other adjustments - Increases
             08:
               help: null
-              label: Method under art. 40.3 LIS — Other adjustments — Decreases
+              label: Method under art. 40.3 LIS - Other adjustments - Decreases
             '13':
               help: null
-              label: Method under art. 40.3 LIS — Preliminary taxable base
+              label: Method under art. 40.3 LIS - Preliminary taxable base
             '14':
               help: null
-              label: Method under art. 40.3 LIS — Offset of negative bases from prior
+              label: Method under art. 40.3 LIS - Offset of negative bases from prior
                 tax years
             '16':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — General case — Instalment
+              label: Method under art. 40.3 LIS, block B1 - General case - Instalment
                 payment base
             '17':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — General case — Percentage
+              label: Method under art. 40.3 LIS, block B1 - General case - Percentage
             '18':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — General case — Preliminary
+              label: Method under art. 40.3 LIS, block B1 - General case - Preliminary
                 result
             '19':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Instalment payment base
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment base
             '20':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Base at rate 1
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 1
             '21':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Percentage 1
+              label: Method under art. 40.3 LIS, block B2 - Percentage 1
             '22':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Instalment payment amount,
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
                 rate 1
             '23':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Base at rate 2
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 2
             '24':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Percentage 2
+              label: Method under art. 40.3 LIS, block B2 - Percentage 2
             '25':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Instalment payment amount,
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
                 rate 2
             '26':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Preliminary result
+              label: Method under art. 40.3 LIS, block B2 - Preliminary result
             '27':
               help: null
-              label: Method under art. 40.3 LIS — Tax credits for the computed period
+              label: Method under art. 40.3 LIS - Tax credits for the computed period
             '28':
               help: null
-              label: Method under art. 40.3 LIS — Withholdings and payments on account
+              label: Method under art. 40.3 LIS - Withholdings and payments on account
                 on income for the computed period
             '29':
               help: null
-              label: Method under art. 40.3 LIS — Volume of transactions in Common
+              label: Method under art. 40.3 LIS - Volume of transactions in Common
                 Territory (%)
             '30':
               help: null
-              label: Method under art. 40.3 LIS — Instalment payments from prior periods
+              label: Method under art. 40.3 LIS - Instalment payments from prior periods
                 in Common Territory
             '31':
               help: null
-              label: Method under art. 40.3 LIS — Result of the previous return (supplementary)
+              label: Method under art. 40.3 LIS - Result of the previous return (supplementary)
             '32':
               help: null
-              label: Method under art. 40.3 LIS — Result
+              label: Method under art. 40.3 LIS - Result
             '33':
               help: null
-              label: Method under art. 40.3 LIS — Minimum payable (turnover >= EUR
+              label: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR
                 10 million)
             '34':
               help: null
-              label: Method under art. 40.3 LIS — Amount payable (greater of boxes
+              label: Method under art. 40.3 LIS - Amount payable (greater of boxes
                 [32] and [33])
             '37':
               help: null
-              label: Method under art. 40.3 LIS — 30% depreciation expense — Decreases
+              label: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
             '38':
               help: null
-              label: Method under art. 40.3 LIS — TOTAL adjustments — Increases
+              label: Method under art. 40.3 LIS - TOTAL adjustments - Increases
             '39':
               help: null
-              label: Method under art. 40.3 LIS — TOTAL adjustments — Decreases
+              label: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
             '40':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — Offset of negative tax
+              label: Method under art. 40.3 LIS, block B1 - Offset of negative tax
                 liabilities (cooperatives)
             '42':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Offset of negative tax
+              label: Method under art. 40.3 LIS, block B2 - Offset of negative tax
                 liabilities (cooperatives)
             '44':
               help: null
-              label: Method under art. 40.3 LIS — Capitalisation reserve remainder
+              label: Method under art. 40.3 LIS - Capitalisation reserve remainder
                 not applied due to insufficient base
             '45':
               help: null
-              label: Method under art. 40.3 LIS — Levelling reserve (art. 105 LIS)
-                — Increases
+              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
+                - Increases
             '46':
               help: null
-              label: Method under art. 40.3 LIS — Levelling reserve (art. 105 LIS)
-                — Decreases
+              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
+                - Decreases
             '47':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — Provisions under art.
+              label: Method under art. 40.3 LIS, block B1 - Provisions under art.
                 11.12 LIS
             '48':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — Converted levelling reserve
-                — Increases
+              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+                - Increases
             '49':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — Converted levelling reserve
-                — Decreases
+              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+                - Decreases
             '50':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Provisions under art.
+              label: Method under art. 40.3 LIS, block B2 - Provisions under art.
                 11.12 LIS (cooperatives)
             '51':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Levelling reserve (art.
-                105 LIS) — Increases
+              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+                105 LIS) - Increases
             '52':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Levelling reserve (art.
-                105 LIS) — Decreases
+              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+                105 LIS) - Decreases
           construct:
             modelo-202-2019-2022-foundation:
               field:
@@ -63709,157 +63713,157 @@ modelo:
           casilla:
             '01':
               help: null
-              label: Method under art. 40.2 LIS — Instalment payment base
+              label: Method under art. 40.2 LIS - Instalment payment base
             '02':
               help: null
-              label: Method under art. 40.2 LIS — Result of the previous return (supplementary)
+              label: Method under art. 40.2 LIS - Result of the previous return (supplementary)
             '03':
               help: null
-              label: Method under art. 40.2 LIS — Payable
+              label: Method under art. 40.2 LIS - Payable
             '04':
               help: null
-              label: Method under art. 40.3 LIS — Accounting result after corporate
+              label: Method under art. 40.3 LIS - Accounting result after corporate
                 income tax
             '05':
               help: null
-              label: Method under art. 40.3 LIS — Corporate income tax adjustments
-                — Increases
+              label: Method under art. 40.3 LIS - Corporate income tax adjustments
+                - Increases
             '06':
               help: null
-              label: Method under art. 40.3 LIS — Corporate income tax adjustments
-                — Decreases
+              label: Method under art. 40.3 LIS - Corporate income tax adjustments
+                - Decreases
             '07':
               help: null
-              label: Method under art. 40.3 LIS — Other adjustments — Increases
+              label: Method under art. 40.3 LIS - Other adjustments - Increases
             08:
               help: null
-              label: Method under art. 40.3 LIS — Other adjustments — Decreases
+              label: Method under art. 40.3 LIS - Other adjustments - Decreases
             '13':
               help: null
-              label: Method under art. 40.3 LIS — Preliminary taxable base
+              label: Method under art. 40.3 LIS - Preliminary taxable base
             '14':
               help: null
-              label: Method under art. 40.3 LIS — Offset of negative bases from prior
+              label: Method under art. 40.3 LIS - Offset of negative bases from prior
                 tax years
             '16':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — General case — Instalment
+              label: Method under art. 40.3 LIS, block B1 - General case - Instalment
                 payment base
             '17':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — General case — Percentage
+              label: Method under art. 40.3 LIS, block B1 - General case - Percentage
             '18':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — General case — Preliminary
+              label: Method under art. 40.3 LIS, block B1 - General case - Preliminary
                 result
             '19':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Instalment payment base
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment base
             '20':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Base at rate 1
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 1
             '21':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Percentage 1
+              label: Method under art. 40.3 LIS, block B2 - Percentage 1
             '22':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Instalment payment amount,
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
                 rate 1
             '23':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Base at rate 2
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 2
             '24':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Percentage 2
+              label: Method under art. 40.3 LIS, block B2 - Percentage 2
             '25':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Instalment payment amount,
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
                 rate 2
             '26':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Preliminary result
+              label: Method under art. 40.3 LIS, block B2 - Preliminary result
             '27':
               help: null
-              label: Method under art. 40.3 LIS — Tax credits for the computed period
+              label: Method under art. 40.3 LIS - Tax credits for the computed period
             '28':
               help: null
-              label: Method under art. 40.3 LIS — Withholdings and payments on account
+              label: Method under art. 40.3 LIS - Withholdings and payments on account
                 on income for the computed period
             '29':
               help: null
-              label: Method under art. 40.3 LIS — Volume of transactions in Common
+              label: Method under art. 40.3 LIS - Volume of transactions in Common
                 Territory (%)
             '30':
               help: null
-              label: Method under art. 40.3 LIS — Instalment payments from prior periods
+              label: Method under art. 40.3 LIS - Instalment payments from prior periods
                 in Common Territory
             '31':
               help: null
-              label: Method under art. 40.3 LIS — Result of the previous return (supplementary)
+              label: Method under art. 40.3 LIS - Result of the previous return (supplementary)
             '32':
               help: null
-              label: Method under art. 40.3 LIS — Result
+              label: Method under art. 40.3 LIS - Result
             '33':
               help: null
-              label: Method under art. 40.3 LIS — Minimum payable (turnover >= EUR
+              label: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR
                 10 million)
             '34':
               help: null
-              label: Method under art. 40.3 LIS — Amount payable (greater of boxes
+              label: Method under art. 40.3 LIS - Amount payable (greater of boxes
                 [32] and [33])
             '37':
               help: null
-              label: Method under art. 40.3 LIS — 30% depreciation expense — Decreases
+              label: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
             '38':
               help: null
-              label: Method under art. 40.3 LIS — TOTAL adjustments — Increases
+              label: Method under art. 40.3 LIS - TOTAL adjustments - Increases
             '39':
               help: null
-              label: Method under art. 40.3 LIS — TOTAL adjustments — Decreases
+              label: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
             '40':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — Offset of negative tax
+              label: Method under art. 40.3 LIS, block B1 - Offset of negative tax
                 liabilities (cooperatives)
             '42':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Offset of negative tax
+              label: Method under art. 40.3 LIS, block B2 - Offset of negative tax
                 liabilities (cooperatives)
             '44':
               help: null
-              label: Method under art. 40.3 LIS — Capitalisation reserve remainder
+              label: Method under art. 40.3 LIS - Capitalisation reserve remainder
                 not applied due to insufficient base
             '45':
               help: null
-              label: Method under art. 40.3 LIS — Levelling reserve (art. 105 LIS)
-                — Increases
+              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
+                - Increases
             '46':
               help: null
-              label: Method under art. 40.3 LIS — Levelling reserve (art. 105 LIS)
-                — Decreases
+              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
+                - Decreases
             '47':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — Provisions under art.
+              label: Method under art. 40.3 LIS, block B1 - Provisions under art.
                 11.12 LIS
             '48':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — Converted levelling reserve
-                — Increases
+              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+                - Increases
             '49':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — Converted levelling reserve
-                — Decreases
+              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+                - Decreases
             '50':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Provisions under art.
+              label: Method under art. 40.3 LIS, block B2 - Provisions under art.
                 11.12 LIS (cooperatives)
             '51':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Levelling reserve (art.
-                105 LIS) — Increases
+              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+                105 LIS) - Increases
             '52':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Levelling reserve (art.
-                105 LIS) — Decreases
+              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+                105 LIS) - Decreases
           construct:
             modelo-202-2023-2024-foundation:
               field:
@@ -63870,180 +63874,180 @@ modelo:
           casilla:
             '01':
               help: null
-              label: Method under art. 40.2 LIS — Instalment payment base
+              label: Method under art. 40.2 LIS - Instalment payment base
             '02':
               help: null
-              label: Method under art. 40.2 LIS — Result of the previous return (supplementary)
+              label: Method under art. 40.2 LIS - Result of the previous return (supplementary)
             '03':
               help: null
-              label: Method under art. 40.2 LIS — Payable
+              label: Method under art. 40.2 LIS - Payable
             '04':
               help: null
-              label: Method under art. 40.3 LIS — Accounting result after corporate
+              label: Method under art. 40.3 LIS - Accounting result after corporate
                 income tax
             '05':
               help: null
-              label: Method under art. 40.3 LIS — Corporate income tax adjustments
-                — Increases
+              label: Method under art. 40.3 LIS - Corporate income tax adjustments
+                - Increases
             '06':
               help: null
-              label: Method under art. 40.3 LIS — Corporate income tax adjustments
-                — Decreases
+              label: Method under art. 40.3 LIS - Corporate income tax adjustments
+                - Decreases
             '07':
               help: null
-              label: Method under art. 40.3 LIS — Other adjustments — Increases
+              label: Method under art. 40.3 LIS - Other adjustments - Increases
             08:
               help: null
-              label: Method under art. 40.3 LIS — Other adjustments — Decreases
+              label: Method under art. 40.3 LIS - Other adjustments - Decreases
             '13':
               help: null
-              label: Method under art. 40.3 LIS — Preliminary taxable base
+              label: Method under art. 40.3 LIS - Preliminary taxable base
             '14':
               help: null
-              label: Method under art. 40.3 LIS — Offset of negative bases from prior
+              label: Method under art. 40.3 LIS - Offset of negative bases from prior
                 tax years
             '16':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — General case — Instalment
+              label: Method under art. 40.3 LIS, block B1 - General case - Instalment
                 payment base
             '17':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — General case — Percentage
+              label: Method under art. 40.3 LIS, block B1 - General case - Percentage
             '18':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — General case — Preliminary
+              label: Method under art. 40.3 LIS, block B1 - General case - Preliminary
                 result
             '19':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Instalment payment base
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment base
             '20':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Base at rate 1
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 1
             '21':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Percentage 1
+              label: Method under art. 40.3 LIS, block B2 - Percentage 1
             '22':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Instalment payment amount,
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
                 rate 1
             '23':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Base at rate 2
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 2
             '24':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Percentage 2
+              label: Method under art. 40.3 LIS, block B2 - Percentage 2
             '25':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Instalment payment amount,
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
                 rate 2
             '26':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Preliminary result
+              label: Method under art. 40.3 LIS, block B2 - Preliminary result
             '27':
               help: null
-              label: Method under art. 40.3 LIS — Tax credits for the computed period
+              label: Method under art. 40.3 LIS - Tax credits for the computed period
             '28':
               help: null
-              label: Method under art. 40.3 LIS — Withholdings and payments on account
+              label: Method under art. 40.3 LIS - Withholdings and payments on account
                 on income for the computed period
             '29':
               help: null
-              label: Method under art. 40.3 LIS — Volume of transactions in Common
+              label: Method under art. 40.3 LIS - Volume of transactions in Common
                 Territory (%)
             '30':
               help: null
-              label: Method under art. 40.3 LIS — Instalment payments from prior periods
+              label: Method under art. 40.3 LIS - Instalment payments from prior periods
                 in Common Territory
             '31':
               help: null
-              label: Method under art. 40.3 LIS — Result of the previous return (supplementary)
+              label: Method under art. 40.3 LIS - Result of the previous return (supplementary)
             '32':
               help: null
-              label: Method under art. 40.3 LIS — Result
+              label: Method under art. 40.3 LIS - Result
             '33':
               help: null
-              label: Method under art. 40.3 LIS — Minimum payable (turnover >= EUR
+              label: Method under art. 40.3 LIS - Minimum payable (turnover >= EUR
                 10 million)
             '34':
               help: null
-              label: Method under art. 40.3 LIS — Amount payable (greater of boxes
+              label: Method under art. 40.3 LIS - Amount payable (greater of boxes
                 [32] and [33])
             '37':
               help: null
-              label: Method under art. 40.3 LIS — 30% depreciation expense — Decreases
+              label: Method under art. 40.3 LIS - 30% depreciation expense - Decreases
             '38':
               help: null
-              label: Method under art. 40.3 LIS — TOTAL adjustments — Increases
+              label: Method under art. 40.3 LIS - TOTAL adjustments - Increases
             '39':
               help: null
-              label: Method under art. 40.3 LIS — TOTAL adjustments — Decreases
+              label: Method under art. 40.3 LIS - TOTAL adjustments - Decreases
             '40':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — Offset of negative tax
+              label: Method under art. 40.3 LIS, block B1 - Offset of negative tax
                 liabilities (cooperatives)
             '42':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Offset of negative tax
+              label: Method under art. 40.3 LIS, block B2 - Offset of negative tax
                 liabilities (cooperatives)
             '44':
               help: null
-              label: Method under art. 40.3 LIS — Capitalisation reserve remainder
+              label: Method under art. 40.3 LIS - Capitalisation reserve remainder
                 not applied due to insufficient base
             '45':
               help: null
-              label: Method under art. 40.3 LIS — Levelling reserve (art. 105 LIS)
-                — Increases
+              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
+                - Increases
             '46':
               help: null
-              label: Method under art. 40.3 LIS — Levelling reserve (art. 105 LIS)
-                — Decreases
+              label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS)
+                - Decreases
             '47':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — Provisions under art.
+              label: Method under art. 40.3 LIS, block B1 - Provisions under art.
                 11.12 LIS
             '48':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — Converted levelling reserve
-                — Increases
+              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+                - Increases
             '49':
               help: null
-              label: Method under art. 40.3 LIS, block B1 — Converted levelling reserve
-                — Decreases
+              label: Method under art. 40.3 LIS, block B1 - Converted levelling reserve
+                - Decreases
             '50':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Provisions under art.
+              label: Method under art. 40.3 LIS, block B2 - Provisions under art.
                 11.12 LIS (cooperatives)
             '51':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Levelling reserve (art.
-                105 LIS) — Increases
+              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+                105 LIS) - Increases
             '52':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Levelling reserve (art.
-                105 LIS) — Decreases
+              label: Method under art. 40.3 LIS, block B2 - Levelling reserve (art.
+                105 LIS) - Decreases
             '61':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Base at rate 3
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 3
             '62':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Percentage 3
+              label: Method under art. 40.3 LIS, block B2 - Percentage 3
             '63':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Instalment payment amount,
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
                 rate 3
             '64':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Base at rate 4
+              label: Method under art. 40.3 LIS, block B2 - Base at rate 4
             '65':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Percentage 4
+              label: Method under art. 40.3 LIS, block B2 - Percentage 4
             '66':
               help: null
-              label: Method under art. 40.3 LIS, block B2 — Instalment payment amount,
+              label: Method under art. 40.3 LIS, block B2 - Instalment payment amount,
                 rate 4
             '67':
               help: null
-              label: Method under art. 40.3 LIS — Top-up Tax (IC) adjustments — Increases
+              label: Method under art. 40.3 LIS - Top-up Tax (IC) adjustments - Increases
           construct:
             modelo-202-foundation:
               field:
@@ -66391,7 +66395,7 @@ modelo:
                 by destination)
             x-d5r62bj5f1q6asj9dtp2sp355ppmasjmd5hmaspdcdqmut31:
               help: null
-              label: VAT output tax to destination DE — services supplied (Non-Union
+              label: VAT output tax to destination DE - services supplied (Non-Union
                 scheme)
           construct:
             modelo-369-esquema-exterior:
@@ -66412,7 +66416,7 @@ modelo:
               label: Total VAT output tax under the Import scheme (IOSS, sum by destination)
             x-d5r62bj9dlo6usjkc5hmirre5pi6abjcdtriqtj1dhqmabb3elnn8o8:
               help: null
-              label: IOSS VAT to destination DE — distance sales of imported goods
+              label: IOSS VAT to destination DE - distance sales of imported goods
                 ≤ EUR 150 (LIVA art. 163 quinvicies)
           construct:
             modelo-369-esquema-importacion:
@@ -66434,15 +66438,15 @@ modelo:
                 sum)
             x-d5r62bjldpkmurhechiisprfdti76bb4d5pn8obecdiiqorldtq62:
               help: null
-              label: OSS Union scheme VAT amount to destination DE — distance sales
+              label: OSS Union scheme VAT amount to destination DE - distance sales
                 + electronic interfaces
             x-d5r62bjldpkmurhechiissr5e9r6ior5ecmm6tbfehgg:
               help: null
-              label: OSS Union scheme VAT amount to destination DE — services supplied
+              label: OSS Union scheme VAT amount to destination DE - services supplied
                 (LIVA art. 163 unvicies)
             x-d5r62bjldpkmurhecpp2ssr5e9r6ior5ecmm6tbfehgg:
               help: null
-              label: OSS Union scheme VAT amount to destination FR — services supplied
+              label: OSS Union scheme VAT amount to destination FR - services supplied
                 (LIVA art. 163 unvicies)
           construct:
             modelo-369-esquema-union:
@@ -67827,19 +67831,19 @@ wizard:
       disability-grade:
         choices:
           33-64:
-            description: Recognised disability of 33% to 64% — increases the personal
+            description: Recognised disability of 33% to 64% - increases the personal
               minimum.
             label: Disability grade 33% to 64%
           65-plus:
-            description: Recognised disability of 65% or more — higher increase to
+            description: Recognised disability of 65% or more - higher increase to
               the personal minimum.
             label: Disability grade 65% or higher
           assistance-or-mobility:
             description: Certified need of third-party assistance or reduced mobility
-              — adds the assistance increase.
+              - adds the assistance increase.
             label: Third-party assistance or reduced mobility
           judicial-incapacity:
-            description: Judicially declared incapacity — treated as 65%+ regardless
+            description: Judicially declared incapacity - treated as 65%+ regardless
               of the certified grade.
             label: Judicial incapacity or equivalent
       sex:
@@ -68247,11 +68251,11 @@ wizard:
       irpf-estimation-regime:
         choices:
           directa-normal:
-            description: Real-income accounting, full books — required above 600.000
+            description: Real-income accounting, full books - required above 600.000
               EUR turnover.
             label: Direct estimation, normal
           directa-simplificada:
-            description: Real-income accounting with simplified books — the usual
+            description: Real-income accounting with simplified books - the usual
               choice for most autónomos.
             label: Direct estimation, simplified
           objetiva:
@@ -68266,7 +68270,7 @@ wizard:
           general:
             label: General regime
           impatriado:
-            label: Inbound expatriate — Beckham Law (Art. 93 LIRPF)
+            label: Inbound expatriate - Beckham Law (Art. 93 LIRPF)
         help: The inpatriate (Beckham Law) regime applies for the first 6 tax years
           after relocation. Most taxpayers are on the general regime.
         prompt: IRPF special regime (Beckham Law / Art. 93 LIRPF)
@@ -68421,11 +68425,11 @@ wizard:
           non-resident-irnr:
             description: 'Non-resident: only Spanish-source income is taxed, under
               IRNR (Modelo 210), and a fiscal representative may be required.'
-            label: Non-resident — IRNR (RDLeg 5/2004)
+            label: Non-resident - IRNR (RDLeg 5/2004)
           resident-irpf:
             description: 'Tax resident in Spain (183+ days or centre of interests):
               worldwide income under IRPF.'
-            label: Habitual resident in Spain — IRPF
+            label: Habitual resident in Spain - IRPF
         prompt: Fiscal residency category
       representante-fiscal-nif:
         prompt: NIF/NIE of fiscal representative in Spain (required outside EU/EEA)
@@ -68435,7 +68439,7 @@ wizard:
         prompt: Tax-residence autonomous community
       title: Tax residence
     review:
-      registered-non-official-suffix: ' (from censal certificate — not AEAT-verified)'
+      registered-non-official-suffix: ' (from censal certificate - not AEAT-verified)'
     spouse:
       spouse-birth-date:
         prompt: Spouse birth date
@@ -68460,23 +68464,23 @@ wizard:
       situacion-familiar:
         choices:
           casado:
-            description: Valid marriage — joint taxation available (Art. 82.1.1°)
+            description: Valid marriage - joint taxation available (Art. 82.1.1°)
             label: Married
           pareja-hecho-no-registrada:
-            description: De-facto couple without registration — joint taxation NOT
+            description: De-facto couple without registration - joint taxation NOT
               available
             label: Unregistered civil partnership
           pareja-hecho-registrada:
-            description: Registered in the corresponding autonomic registry — joint
+            description: Registered in the corresponding autonomic registry - joint
               taxation available (Art. 82.1.2°)
             label: Registered civil partnership
           separado-divorciado:
-            description: Legally separated or divorced — joint taxation is only possible
+            description: Legally separated or divorced - joint taxation is only possible
               with children in your family unit.
             label: Separated or divorced
           soltero:
             description: Single, widowed, or divorced without a registered partner
-              — individual taxation, or joint only as a single parent with children.
+              - individual taxation, or joint only as a single parent with children.
             label: Single
         help: 'Family situation under Art. 82 LIRPF: determines whether joint taxation
           is available and which family unit variant applies.'
@@ -68530,7 +68534,7 @@ wizard:
       irpf-income-categories:
         choices:
           actividad-economica:
-            description: Self-employed business or professional activity — enables
+            description: Self-employed business or professional activity - enables
               quarterly Modelo 130 and IVA obligations.
             label: Economic activity
           capital-inmobiliario:
@@ -68544,7 +68548,7 @@ wizard:
               crypto).
             label: Capital gains
           pension:
-            description: Pension income — treated as employment income under IRPF.
+            description: Pension income - treated as employment income under IRPF.
             label: Pension
           trabajo:
             description: Salary or pension income from an employer or Social Security.
