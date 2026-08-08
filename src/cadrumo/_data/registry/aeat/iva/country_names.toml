@@ -57,10 +57,31 @@
 #     in the EU: a Dutch or Polish supplier billing a Spanish customer very
 #     commonly prints the whole document in English. A vocabulary that silently
 #     failed there would fail on a large and entirely ordinary population.
-# Nothing further. Adding French, German or Italian exonyms for third countries
-# would multiply the table past the point a reviewer can check it, for a
-# population that barely exists: an issuer writing in French prints their own
-# country's endonym and, for anywhere else, usually English.
+# Nothing further -- and "three" understates what that already covers, which is
+# the thing a reader re-opening this question gets wrong first. The endonym axis
+# is every official language of every country listed, so French, German and
+# Italian are in this table TODAY: "Belgique", "Schweiz", "Svizzera" and
+# "Letzebuerg" all resolve. A supplier printing their OWN country in their OWN
+# language is already matched, whatever that language is.
+#
+# WHAT A FOURTH LANGUAGE WOULD ACTUALLY BUY. Only the cross-exonym is left
+# uncovered -- "Germania", "Allemagne", "Alemanha" -- and reaching it needs a
+# document that names a THIRD country, because the country in an address block
+# is a party's own. An Italian invoice naming Germany is a shipping line or a
+# place-of-supply note, not the party block this vocabulary is read for.
+#
+# And the most frequent uncovered name buys nothing at all. "Espagne",
+# "Spanien" and "Spagna" would resolve to ES, and the country resolver returns
+# NOTHING for ES by design: the code names the State while the IVA territory
+# inside it stays undetermined. Coverage and absence give the identical answer
+# there. ("Espanha" is listed while those three are not; that asymmetry is an
+# oddity of this table rather than a rule, and closing it changes no outcome.)
+#
+# The cost is not symmetric with that. Exonyms in several more languages would
+# more than double this vocabulary and multiply both failure modes it is built
+# against -- two names folding together, and one name sitting inside another --
+# while the loader refuses the WHOLE table on a single collision. The scarce
+# resource here is a reviewer's attention, and that is where it would be spent.
 #
 # WHICH COUNTRIES. Every EU Member State, because the Member State catalogue is
 # what the intra-community branch turns on and a missing State there is a real
