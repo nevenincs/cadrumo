@@ -6,7 +6,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:693603e707881d41ddbd7c0883c7606219973287d5be0d994e52af088b337bde'
+body_hash: 'sha256:64e4f6e25501f28eaba8a5d176253adabd5dfe18c42abb5abf345ebe1b6f0042'
 related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
   - '[[2026-08-07-m303-carry-reconciliation-S01]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-08-07-m303-carry-reconciliation-S03]]'
   - '[[2026-08-07-m303-carry-reconciliation-S04]]'
   - '[[2026-08-07-m303-carry-reconciliation-S09]]'
+  - '[[2026-08-07-m303-carry-reconciliation-S10]]'
   - '[[2026-08-07-m303-carry-reconciliation-plan]]'
 ---
 
@@ -34,6 +35,7 @@ Auto-generated index of all documents tagged with `#m303-carry-reconciliation`.
 - `2026-08-07-m303-carry-reconciliation-S03` - Replace the algebraically vacuous available equals posterior plus generated assertion on the resultado basis with an independent check
 - `2026-08-07-m303-carry-reconciliation-S04` - Record the four deferred review findings as follow-up rows without implementing them
 - `2026-08-07-m303-carry-reconciliation-S09` - Rebind the four further twin literals discovery found in the registry binding validator, which a hand-listed inventory of nine had also missed
+- `2026-08-07-m303-carry-reconciliation-S10` - Add a standing real-site regression restoring an actual twin at every discovered module and confirming the verdict names it
 
 ### plan
 

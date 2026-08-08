@@ -4,7 +4,7 @@ tags:
   - '#m303-carry-reconciliation'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:ab79a41d066ae02eb1d2c5c0de5ef5d39e4828cf42890342a278ad58f717860f'
+body_hash: 'sha256:f574bba88017927a89f8babe32870d975468f1602f0d17320065b3b08b2915e6'
 tier: L1
 related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
@@ -73,6 +73,7 @@ decimal expectations and call itself parity.
 - [ ] `S06` - DEFERRED - assert the disposition-blind available reconstruction in the annual partition instead of relying on a transitive upstream rewrite in another package; `src/cadrumo/application/calculations/_iva_compensation_annual_partition.py`.
 - [ ] `S07` - DEFERRED - refuse a persisted compensation pair where a directly filed disponible casilla overwrites available without generated following it; `src/cadrumo/application/calculations/_iva_compensation_history.py`.
 - [ ] `S08` - DEFERRED - feed the recovered refund disposition into the IVA wallet gate, the fourth unimplemented implementation bullet of the governing decision record; `src/cadrumo/application/modelo/_iva_wallet_gate.py`.
+- [x] `S10` - Add a standing real-site regression restoring an actual twin at every discovered module and confirming the verdict names it; `src/cadrumo/application/calculations/tests/test_iva_compensation_casillas.py`.
 
 ## Parallelization
 
