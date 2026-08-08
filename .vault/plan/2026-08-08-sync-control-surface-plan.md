@@ -4,7 +4,7 @@ tags:
   - '#sync-control-surface'
 date: '2026-08-08'
 modified: '2026-08-08'
-body_hash: 'sha256:f4a269fc91504c46edf6a8527c5383f069f055b1695e02c26710615c491f9118'
+body_hash: 'sha256:d6d04569ab6ee8f3c6c1426228c993c5ca03d7509e26e6e48fe65398d4ac614b'
 tier: L2
 related:
   - '[[2026-08-08-sync-control-surface-adr]]'
