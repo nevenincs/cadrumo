@@ -28,13 +28,15 @@ Three limits on this audit, stated so the coverage is not overread. First, no
 live AEAT session was exercised: every reading is against real local storage,
 real encryption and the real application doors, but offline. Second, the
 harness itself proved unfaithful in two of its six surface builders (see the
-harness-fidelity finding), and although the findings initially blamed on that
+harness-fidelity finding), and although every finding initially blamed on that
 turned out to be sound, the instrument was not trustworthy for part of the
-window. Third, several axes were not reached: conditional-page gating on the
-paged flow, submit-gating visibility on an unanswered required page, and
-styled-frame legibility of focus states were all left undriven, and the
-rendering axis did not report at all. Absence of a finding on those axes is
-absence of evidence.
+window. Third, some axes were not reached: conditional-page gating on the paged
+flow, submit-gating visibility on an unanswered required page, styled-frame
+legibility of focus states, and a deep walk of the real multi-page wizard
+content. Absence of a finding on those is absence of evidence.
+
+Every surface was driven at eighty by twenty-four, one hundred by thirty, one
+hundred and twenty by forty and two hundred by fifty, under both appearances.
 
 ## Findings
 
@@ -310,19 +312,34 @@ identifier and preselect nothing — but they did not corrupt the findings blame
 on them. Damage attributed to a defect should be measured, not inferred from
 the defect's existence.
 
-### manager-action-row-overflow | medium | real when observed, fixed by concurrent peer work, and wrongly retracted in between
+### manager-action-row-overflow | high | six action buttons were unreachable at every terminal width, and the coordinator retracted the finding while it was being fixed
 
-Reported as three action buttons painted past the right edge at one hundred
-columns. The coordinator retracted it as fabricated, reasoning that the harness
-had built the manager with no actions at the time of the reading. **That
-reasoning was wrong and the retraction is itself withdrawn.** The harness wired
-the real actions at 10:29:41; the reading is timestamped 10:30:58, seventy-seven
-seconds later, so the buttons were on screen. Separately, the manager screen's
-action panel used a horizontal container until 10:51:43, when unrelated
-concurrent work moved it to a vertical one — six buttons in a row became one
-button per row, and the overflow disappeared. The finding was real when
-observed, and had been fixed by a peer, independently, before the coordinator
-re-drove the surface and read `ok`.
+The action panel was a plain horizontal container, which in this framework
+neither wraps nor scrolls. With real AEAT-length labels the row of six buttons
+overflowed the right edge **unconditionally — at eighty columns, at one
+hundred, at one hundred and twenty, and still at two hundred**, where the
+export button sat at columns 180 to 201. The overflowing buttons remained in
+the tab order, so an operator could focus a control that could never be
+scrolled into view: the host was not scrollable and the page's own scroll host
+is vertical-only. This is worse than the original report, which observed it at
+one width; it was never a width-dependent clip but a permanent unreachability.
+It shipped with zero coverage, because the manager is not enrolled in the
+appearance gates. Fixed by making the panel vertical — one full-width button
+per row — which follows the house rule the gate module's own docstring states,
+that these surfaces scroll vertically only; a horizontal scroll host would have
+contradicted it. A regression test using real-length labels at the eighty-column
+floor now pins it.
+
+**The coordinator retracted this finding as fabricated while it was being
+fixed.** The reasoning was that the harness had built the manager with no
+actions when the reading was taken. That was wrong twice over. The harness
+wired the real actions at 10:29:41 and the reading is timestamped 10:30:58, so
+the buttons were on screen. And the repair at 10:51:43 was not unrelated peer
+work, as a first correction assumed — it was this campaign's own rendering
+reviewer, acting on the very lead the coordinator had forwarded, who reproduced
+the defect at four widths, fixed it, and wrote the gate. So the coordinator
+instructed a reviewer to strike a finding that the same reviewer had already
+confirmed and closed.
 
 Two lessons, the second being the one worth keeping. First, a finding that fails
 to reproduce in a tree with many concurrent writers has two explanations — it
