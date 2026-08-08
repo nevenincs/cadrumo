@@ -135,6 +135,7 @@ from .._record_design import (
     extract_record_design_workbook,
     extract_record_design_xls_workbook,
 )
+from .._record_design_coverage import _CASILLA_TAG_RE
 from .._record_design_schema import RecordDesignSheet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -142,9 +143,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DESIGN_ROOT_PARTS = ("corpus", "aeat_official", "disenos_registro")
 
-# The extracted design tables render one field per row as
-# "order | offset | length | kind | description [box] | ... ".
-_BOX_MARKER = re.compile(r"\[(\d{1,4})\]")
+#: The bracketed box number AEAT embeds in a design field description, IMPORTED from the
+#: registry's canonical definition rather than re-declared here.
+#:
+#: This module carried its own copy capped at FOUR digits, and Modelo 200 numbers its
+#: boxes with FIVE. Measured on its newest bundled design: 5538 of 5561 bracketed tokens
+#: are five digits, so the private copy keyed 23 boxes -- under 0.4% of the modelo -- and
+#: the box-offset and box-set signals were effectively switched off there while reporting
+#: nothing wrong. The description-keyed population is defined as the slots carrying NO
+#: box number, so the same cap also mis-classified those 5538 numbered fields as
+#: unnumbered.
+#:
+#: The worst part was not the blindness but that it presented as agreement: an
+#: independently derived boundary union and this gate's verdict both said Modelo 200 had
+#: exactly one boundary and no gap, because BOTH used a four-digit marker. Agreement
+#: between two instruments sharing one blind spot is worth nothing, and unlike a wrong
+#: answer it offers nothing to notice.
+#:
+#: The canonical definition is bounded at five digits deliberately rather than left open:
+#: its own rationale records that an unbounded ``\d+`` would admit amounts, NIF fragments
+#: and position offsets that appear bracketed in the same columns. That reasoning is not
+#: restated here, because restating it is how a third copy begins.
+_BOX_MARKER = _CASILLA_TAG_RE
 _DESIGN_YEAR = re.compile(r"ejercicios?-(\d{4})(?:-(y|a|hasta)-(\d{4}))?")
 #: A design filename may name TWO explicit ejercicios ("ejercicio-2015-y-2016"),
 #: and the corpus holds four such spans (2007-y-2008, 2008-y-2009, 2015-y-2016,
@@ -943,6 +963,56 @@ def test_a_year_aeat_split_mid_course_keeps_both_of_its_designs() -> None:
             f"{year} should carry two distinct Modelo 303 designs (AEAT split it mid-course) "
             f"but {len(distinct)} distinct payload(s) survived enumeration"
         )
+
+
+def test_the_box_marker_is_the_registry_canonical_one_and_reads_every_modelo() -> None:
+    """This module must not hold its own box-number pattern, and must read every modelo.
+
+    ASSERTS IDENTITY WITH THE CANONICAL DEFINITION, NOT A DIGIT WIDTH. Pinning "five
+    digits" here would recreate the defect one modelo later and would train the next
+    author to bump a literal; worse, it would make this module an independent authority
+    on the pattern again, which is what went wrong. The durable property is that there is
+    ONE definition and this module uses it.
+
+    The concrete failure it closes: this module's private copy was capped at four digits
+    while Modelo 200 numbers its boxes with five, so the box-offset and box-set signals
+    read 23 of that modelo's 5561 bracketed tokens and reported nothing amiss. The
+    canonical definition had already been widened to five for exactly this reason, and
+    its own docstring records the same failure shape -- a matchless sweep reading as
+    "0 casillas, 0 gap" for 36 of 38 revisions.
+
+    The second assertion is the one that would have caught it: every modelo whose designs
+    bracket a box number at all must yield boxes here. A modelo that parses designs but
+    keys zero boxes is not clean, it is unread, and it reports identically to a modelo
+    with nothing to find.
+    """
+    from .._record_design_coverage import _CASILLA_TAG_RE as _CANONICAL_TAG_RE
+
+    assert _BOX_MARKER is _CANONICAL_TAG_RE, (
+        "this module re-declared the bracketed box-number pattern instead of using the registry's "
+        "canonical one; two definitions of one concept is how the four-digit cap survived while "
+        "production already read five"
+    )
+
+    unread: list[str] = []
+    measured = 0
+    for modelo_id in sorted({modelo.id for modelo, _, _ in _exporting_revisions()}):
+        ordered, _unorderable = _designs_in_publication_order(modelo_id)
+        for path in ordered:
+            bracketed = any(
+                re.search(r"\[\d+\]", field.description) for sheet in _design_sheets(path) for field in sheet.fields
+            )
+            if not bracketed:
+                continue
+            measured += 1
+            if not _parse_design(path):
+                unread.append(f"modelo {modelo_id} design {path.name!r}")
+    assert measured, "no bundled design brackets a box number at all; the assertion below would be vacuous"
+    assert not unread, (
+        "these designs bracket box numbers that this module's marker does not match, so every box "
+        "signal is silently switched off for them and reports identically to a design with no "
+        "divergence:\n  " + "\n  ".join(sorted(set(unread)))
+    )
 
 
 def test_a_box_added_or_removed_without_movement_reaches_the_verdict() -> None:
