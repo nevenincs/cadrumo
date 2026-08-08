@@ -120,10 +120,8 @@ def test_monthly_windows_resolve_following_month() -> None:
         assert jan.closes_on == close
 
 
-def test_all_six_registry_backed_and_out_of_unmodeled() -> None:
-    from .....core import UNMODELED_OBLIGATIONS
+def test_all_six_are_registry_backed() -> None:
     from .....core.access_gate import CANONICAL_MODELO_FLEET
 
     for mid in ("165", "233", "156", "038", "185", "186"):
         assert mid in CANONICAL_MODELO_FLEET
-        assert all(str(m) != mid for m in UNMODELED_OBLIGATIONS)

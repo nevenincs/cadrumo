@@ -18,7 +18,7 @@ same failure mode for any applicable obligation omitted from the surfaced set.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import date
 
 import pytest
@@ -26,6 +26,7 @@ import pytest
 from ....core import (
     OUT_OF_SCOPE_OBLIGATIONS,
     UNMODELED_OBLIGATIONS,
+    Modelo,
 )
 from ....domain.calculations.registry import has_applicability_rule
 from ....domain.deadlines import (
@@ -37,6 +38,7 @@ from ....domain.deadlines import (
     TaxpayerProfile,
 )
 from ...modelo import registry_modelo_codes
+from .. import _coverage
 from .._agenda import build_overview_agenda
 from .._backlog import build_overview_backlog
 from .._calendar import build_overview_calendar
@@ -85,16 +87,27 @@ _PERSONAS = pytest.mark.parametrize(
 )
 
 
-def _universe() -> set[str]:
-    """The AEAT obligation universe: registry plus recognized-unmodeled plus out-of-scope."""
+def _universe(unmodeled: Mapping[Modelo, str] = UNMODELED_OBLIGATIONS) -> set[str]:
+    """The AEAT obligation universe: registry plus recognized-unmodeled plus out-of-scope.
+
+    ``unmodeled`` is a parameter rather than a fixed read of
+    :data:`~core.UNMODELED_OBLIGATIONS` so the partition invariant can be checked
+    against a declaration the builder was actually given, which is how the
+    registry-unmodeled disposition gets exercised while the real declaration is
+    still empty.
+    """
     return (
         set(registry_modelo_codes())
-        | {str(code) for code in UNMODELED_OBLIGATIONS}
+        | {str(code) for code in unmodeled}
         | {str(code) for code in OUT_OF_SCOPE_OBLIGATIONS}
     )
 
 
-def _assert_total_partition(report: ObligationCoverageReport) -> None:
+def _assert_total_partition(
+    report: ObligationCoverageReport,
+    *,
+    unmodeled: Mapping[Modelo, str] = UNMODELED_OBLIGATIONS,
+) -> None:
     surfaced = set(report.surfaced)
     excluded = set(report.confidently_excluded)
     advised = set(report.advised_modelos)
@@ -105,7 +118,7 @@ def _assert_total_partition(report: ObligationCoverageReport) -> None:
     # invariant binds to AEAT reality (registry + recognized-unmodeled), not to
     # the registry's current contents, so nothing can be silently absent.
     union = surfaced | excluded | advised | out_of_scope
-    assert union == _universe()
+    assert union == _universe(unmodeled)
 
     # The buckets are pairwise disjoint (each modelo has exactly one disposition).
     for i, left in enumerate(buckets):
@@ -169,15 +182,15 @@ def test_applicable_but_unsurfaced_modelo_is_advised_not_silently_absent() -> No
     assert advised["190"] is CoverageAdviceReason.APPLICABLE_WINDOW_MISSING
 
 
-def test_unmodeled_universe_obligations_surface_as_advised() -> None:
-    """Recognized AEAT obligations the registry does not model are advised.
+def test_every_declared_unmodeled_obligation_surfaces_as_advised() -> None:
+    """Whatever the real declaration holds reaches the report as registry-unmodeled.
 
-    The external-universe gate: an obligation AEAT expects (in
-    `UNMODELED_OBLIGATIONS`) but the registry never modeled must surface as
-    advised with the registry-unmodeled reason, never invisible. This is what
-    binds the guarantee to AEAT reality rather than the registry's contents.
-    When the authoritative declaration is empty, the registry-unmodeled bucket
-    is empty too; the total-partition assertion remains the load-bearing guard.
+    The external-universe guarantee, asserted against the live declaration in
+    both directions so it cannot drift: no declared obligation is missing from
+    the registry-unmodeled bucket, and nothing else is in it. The declaration is
+    EMPTY today, so this holds trivially — the discriminating power lives in
+    `test_a_recognized_unmodeled_obligation_is_advised_not_invisible`, which
+    exercises the same disposition over a non-empty declaration.
     """
     report = build_obligation_coverage(_paying_autonomo(), {"100", "303"}, today=_TODAY)
     _assert_total_partition(report)
@@ -186,6 +199,49 @@ def test_unmodeled_universe_obligations_surface_as_advised() -> None:
         item.modelo for item in report.advised if item.reason is CoverageAdviceReason.REGISTRY_UNMODELED
     }
     assert registry_unmodeled_advised == {str(modelo) for modelo in UNMODELED_OBLIGATIONS}
+
+
+def test_a_recognized_unmodeled_obligation_is_advised_not_invisible(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A universe member the registry cannot model lands in advised, never nowhere.
+
+    This is the property the registry-unmodeled disposition exists to guarantee,
+    and it is unreachable through the real declaration while that declaration is
+    empty — so the declaration the builder reads is substituted for one naming a
+    genuinely registry-less obligation (:data:`~core.Modelo.M037`, retired by
+    Orden HAC/1526/2024 and therefore absent from every registry directory).
+    Only the input data is substituted: registry loading, the universe union and
+    the disposition walk all run unmodified.
+
+    The baseline half is what makes it discriminate. The code is proven absent
+    from all four buckets before the substitution and present in exactly one
+    after, so a filter that stopped classifying it — or a substitution that
+    never reached the live holder — fails here rather than reading green.
+    """
+    unmodelled_code = str(Modelo.M037)
+    surfaced_input = {"100", "303"}
+
+    baseline = build_obligation_coverage(_paying_autonomo(), surfaced_input, today=_TODAY)
+    assert unmodelled_code not in _dispositions(baseline)
+
+    declared = {Modelo.M037: "censo simplificada suprimida; reconocida sin definicion en el registro"}
+    assert _coverage._UNMODELED_OBLIGATIONS is UNMODELED_OBLIGATIONS, (
+        "the builder no longer reads the module-level declaration this test rebinds"
+    )
+    monkeypatch.setattr(_coverage, "_UNMODELED_OBLIGATIONS", declared)
+
+    report = build_obligation_coverage(_paying_autonomo(), surfaced_input, today=_TODAY)
+    _assert_total_partition(report, unmodeled=declared)
+
+    advised = {item.modelo: item.reason for item in report.advised}
+    assert advised[unmodelled_code] is CoverageAdviceReason.REGISTRY_UNMODELED
+    assert unmodelled_code not in set(report.surfaced) | set(report.confidently_excluded) | set(report.out_of_scope)
+
+
+def _dispositions(report: ObligationCoverageReport) -> set[str]:
+    """Every modelo code the report accounts for, in any bucket."""
+    return (
+        set(report.surfaced) | set(report.confidently_excluded) | set(report.advised_modelos) | set(report.out_of_scope)
+    )
 
 
 def test_calendar_attaches_coverage_by_default() -> None:
