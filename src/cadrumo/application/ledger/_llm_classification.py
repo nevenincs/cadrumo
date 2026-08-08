@@ -52,7 +52,12 @@ from ...core import PDF_CONTAINER_SHAPES, ImageMediaType, detect_image_media_typ
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware, now
-from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
+from ...domain.buckets import (
+    BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH,
+    BucketEventHistoryRepositoryProtocol,
+    BucketEventObjectType,
+    BucketEventType,
+)
 from ...domain.categories import SpendingCategory
 from ...domain.iva import IvaCategory, resolve_category_rate, split_gross_at_rate
 from ...domain.transactions import (
@@ -176,6 +181,25 @@ def _transport_from_provenance(provenance: str) -> str:
     artefact a withdrawal most needs to surface.
     """
     return provenance_stamp_transport(provenance) or provenance
+
+
+_PROVENANCE_ELISION = "..."
+
+
+def _bounded_transport_label(label: str) -> str:
+    """Shorten a transport label to fit one bucket-event payload value.
+
+    The recognised transport segment is always short, but the malformed-stamp
+    fallback in :func:`_transport_from_provenance` echoes the whole,
+    operator-supplied provenance stamp, which carries no length bound of its
+    own. Truncating silently would misreport a malformed stamp as a
+    recognised one, so the elision marker keeps a shortened value
+    self-evidently shortened.
+    """
+    if len(label) <= BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH:
+        return label
+    keep = BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH - len(_PROVENANCE_ELISION)
+    return label[:keep] + _PROVENANCE_ELISION
 
 
 def _bytes_bearing_evidence_input(
@@ -664,7 +688,7 @@ def apply_llm_classification(
             "classification": classification.value,
             "category_id": category_id or "",
             "classified_by": suggestion.provenance,
-            "provider": _transport_from_provenance(suggestion.provenance),
+            "provider": _bounded_transport_label(_transport_from_provenance(suggestion.provenance)),
             "confidence": format(suggestion.confidence, "f"),
             "mutation_kind": "llm_classification",
         },
