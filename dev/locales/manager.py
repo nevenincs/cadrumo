@@ -359,8 +359,7 @@ class LocaleManager:
 
             new_data = self._build_nested_dict(codebase_keys, data, namespace_prefixes)
 
-            with open(f, "w", encoding=UTF_8_ENCODING, newline="\n") as f_obj:
-                yaml.dump(new_data, f_obj, allow_unicode=True, sort_keys=True, default_flow_style=False)
+            _rewrite_locale_mapping(f, new_data)
 
     def canonicalize_product_identity_references(
         self,
@@ -715,7 +714,7 @@ def _replace_existing_yaml_leaf(path: Path, parts: list[str], value: str) -> Non
             newline = "\r\n" if line.endswith("\r\n") else "\n"
             replacement = match.group("indent") + key + ": " + _yaml_quoted_scalar(value) + newline
             lines[index : _yaml_leaf_end(lines, index, indent)] = [replacement]
-            path.write_text("".join(lines), encoding=UTF_8_ENCODING, newline="\n")
+            atomic_write_text(path, "".join(lines), encoding=UTF_8_ENCODING)
             return
 
     raise LocaleError(f"Locale key not found in YAML text: {'.'.join(parts)!r}")
@@ -740,7 +739,7 @@ def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
                 insertion_index,
                 " " * (indent + 2) + leaf + ": " + _yaml_quoted_scalar(value) + newline,
             )
-            path.write_text("".join(lines), encoding=UTF_8_ENCODING, newline="\n")
+            atomic_write_text(path, "".join(lines), encoding=UTF_8_ENCODING)
             return
 
     raise LocaleError(f"Locale parent key not found in YAML text: {'.'.join(parent_parts)!r}")
@@ -770,7 +769,7 @@ def _remove_existing_yaml_leaf(path: Path, parts: list[str], *, allow_empty_leaf
                 raise LocaleError(f"Cannot remove {'.'.join(parts)!r}: it resolves to a namespace")
             del lines[index : _yaml_leaf_end(lines, index, indent)]
             _prune_empty_yaml_namespaces(lines, parts[:-1])
-            path.write_text("".join(lines), encoding=UTF_8_ENCODING, newline="\n")
+            atomic_write_text(path, "".join(lines), encoding=UTF_8_ENCODING)
             return
 
     raise LocaleError(f"Locale key not found in YAML text: {'.'.join(parts)!r}")
