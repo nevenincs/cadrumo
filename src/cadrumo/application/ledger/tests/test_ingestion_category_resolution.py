@@ -37,6 +37,7 @@ from ....domain.iva import (
     IvaRateKind,
     IvaTerritorialScope,
     SupplyNature,
+    stated_country_code_status,
 )
 from .._classification_assembly import (
     DeclaredFact,
@@ -331,3 +332,152 @@ def test_the_inference_never_displaces_a_verdict_or_a_declaration() -> None:
         "the tier inference displaced the document's own declaration, which is the "
         "signal only a structured reader recovers"
     )
+
+
+# --------------------------------------------------------------------------
+# A declared relief resting on an establishment nothing established.
+# --------------------------------------------------------------------------
+
+
+def _relief(
+    stated: IvaCategory,
+    *,
+    country_code: str | None = None,
+    direction: InvoiceKind = InvoiceKind.ISSUED,
+):
+    """Resolve a declared relief claim through the real assembly and resolver."""
+    declared = _facts(established=False, stated=stated)
+    assembly = assemble_classification_criteria(
+        transaction_date=_WHEN,
+        direction=direction,
+        inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
+        declared=declared,
+    )
+    return resolve_ingestion_iva_category(
+        assembly,
+        declared=declared,
+        counterparty_country_status=stated_country_code_status(country_code),
+    )
+
+
+@pytest.mark.parametrize(
+    "stated",
+    [IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, IvaCategory.INTRA_COMMUNITY_SUPPLY],
+)
+def test_a_declared_relief_is_withheld_when_no_establishment_was_reached(stated: IvaCategory) -> None:
+    """The gap the DECLARED branch left open, closed for both relieving codes.
+
+    Each relieves the supply of Spanish output IVA purely on where the
+    counterparty is -- LIVA art. 25 for the intra-community supply, art. 21 for
+    the export. Nothing else in the resolution catches this: the tier
+    corroboration is silent on every non-domestic category by construction, and
+    there is no rule-table verdict to disagree with precisely BECAUSE the
+    establishment is missing. So the claim passed every other rung.
+    """
+    resolution = _relief(stated)
+
+    assert resolution.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
+    assert resolution.category is None, "a relieved category was honoured for a party nobody could place"
+    assert resolution.declared is not None, "the document's own claim must survive on the record"
+    assert stated.value in resolution.note
+
+
+def test_the_withheld_relief_is_not_reported_as_a_contradiction() -> None:
+    """Absent establishment does not make the document wrong, and must not say so.
+
+    A contradiction sends the operator to decide which half to believe; this
+    sends them to supply the establishment. Collapsing the two would send them
+    to re-read a page that was never the problem -- the document may be entirely
+    correct and the evidence simply does not reach its claim.
+    """
+    resolution = _relief(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED)
+
+    assert resolution.outcome is not IvaCategoryOutcome.CONTRADICTED
+    assert "not established by this document" in resolution.note
+    assert "does not disprove the claim" in resolution.note
+
+
+def test_a_resolved_export_to_a_genuine_third_country_is_honoured() -> None:
+    """The other direction: the guard must not reject real exports.
+
+    A guard that fires on the legitimate population is worse than none, because
+    an operator meeting false refusals stops reading them. Here both territories
+    resolve, so no residency gap is recorded and the claim stands untouched.
+    """
+    declared = DeclaredFacts(
+        issuer_scope=_fact(_ES),
+        customer_scope=_fact(IvaTerritorialScope.THIRD_COUNTRY),
+        stated_category=_fact(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED),
+    )
+    assembly = assemble_classification_criteria(
+        transaction_date=_WHEN,
+        direction=InvoiceKind.ISSUED,
+        inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
+        declared=declared,
+    )
+    resolution = resolve_ingestion_iva_category(
+        assembly,
+        declared=declared,
+        counterparty_country_status=stated_country_code_status("US"),
+    )
+
+    assert resolution.outcome is IvaCategoryOutcome.DECLARED
+    assert resolution.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+
+
+def test_a_country_our_vocabulary_does_not_carry_is_spared() -> None:
+    """Our data gap must not be charged to the taxpayer.
+
+    ``TH`` is measured, not hypothetical: the shipped country vocabulary
+    classifies it UNCATALOGUED, so the scope resolver answers nothing and the
+    establishment is recorded as a gap -- while the document printed a
+    well-formed code naming a real third country. Refusing there would reject a
+    legitimate Thai export over a row we have not written.
+
+    The control below is what makes this attributable to the STATUS rather than
+    to the guard being inert: the identical claim with no country printed at all
+    is refused.
+    """
+    spared = _relief(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country_code="TH")
+
+    assert spared.outcome is IvaCategoryOutcome.DECLARED
+    assert spared.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+
+    refused = _relief(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country_code=None)
+    assert refused.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF, (
+        "positive control: with no country printed the same claim must still be refused, "
+        "or the sparing above proves nothing about the status axis"
+    )
+
+
+@pytest.mark.parametrize("country_code", ["XX", "E1"])
+def test_a_code_naming_no_country_does_not_spare_the_claim(country_code: str) -> None:
+    """The sparing is narrow: only a well-formed UNCATALOGUED code earns it.
+
+    ``XX`` sits in the ISO 3166-1 user-assigned range, which names no country by
+    construction, and ``E1`` is not a two-letter code at all. Neither can name a
+    jurisdiction our vocabulary merely lacks, so neither is our data gap and
+    neither establishes anything about where the party is.
+    """
+    resolution = _relief(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country_code=country_code)
+
+    assert resolution.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
+
+
+@pytest.mark.parametrize(
+    "stated",
+    [IvaCategory.DOMESTIC_REVERSE_CHARGE, IvaCategory.DOMESTIC_EXEMPT, IvaCategory.OPERACION_NO_SUJETA],
+)
+def test_a_declared_code_that_rests_on_no_establishment_is_untouched(stated: IvaCategory) -> None:
+    """The guard is scoped to the two relieving categories and nothing else.
+
+    A domestic reverse charge also prints no cuota, but it OBLIGES the recipient
+    to self-assess output IVA, so mis-honouring it over-declares rather than
+    under-declares and is not this hazard. Widening the set to every zero-cuota
+    code would withhold the reverse-charge treatment this campaign exists to
+    preserve.
+    """
+    resolution = _relief(stated)
+
+    assert resolution.outcome is IvaCategoryOutcome.DECLARED
+    assert resolution.category is stated

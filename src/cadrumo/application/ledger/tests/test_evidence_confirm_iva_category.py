@@ -124,3 +124,70 @@ def test_an_operator_supplied_category_still_wins(
     )
 
     assert result.invoice.iva_category is IvaCategory.DOMESTIC_EXEMPT
+
+
+# UNTDID 5305 code G (export outside the Community, LIVA art. 21) on a 2.000,00
+# base with a 0,00 cuota, printing NO counterparty country at all.
+_EXPORT_NO_COUNTRY_FIXTURE = Path(__file__).parent / "_evidence_corpus" / "en16931_ubl_export_third_country_invoice.xml"
+
+
+def test_an_export_claim_with_no_establishment_does_not_reach_the_record(
+    isolated_settings: Settings,
+    secure_objects: SecureObjectRepository,
+    tmp_path: Path,
+) -> None:
+    """A declared code survives confirm, EXCEPT where it relieves on an absent fact.
+
+    The counter-case to the module's other tests, and the reason the rule is
+    "carry what the document declared" rather than "trust what the document
+    declared". An export zero-rates the supply purely on where the parties are
+    established (LIVA art. 21), and this document prints no country for either
+    of them -- so the rule table cannot place the operation, the rate-tier
+    corroboration is silent on every non-domestic category by construction, and
+    nothing else in the chain disagrees. The code would otherwise have been
+    honoured and a zero-rated supply recorded for parties nobody could locate.
+
+    Confirmed as RECEIVED because the guard turns on an unestablished residency
+    and not on which side is missing, and this fixture prints a name for the
+    supplier only. An export code arriving on a received document is itself
+    unusual, which is beside the point: the treatment it claims rests on
+    establishment evidence either way, and neither party has any.
+
+    Asserted on the PERSISTED record rather than on the resolution, because the
+    record is what a filing is built from: a withholding that stopped short of
+    the catalogue would satisfy an internal check and change no declaration.
+
+    The parse assertion beside it is a positive control. Were the reader to stop
+    emitting the code, the category would be absent for an entirely different
+    reason and this test would pass while proving nothing.
+    """
+    source = tmp_path / _EXPORT_NO_COUNTRY_FIXTURE.name
+    source.write_bytes(_EXPORT_NO_COUNTRY_FIXTURE.read_bytes())
+    svc = _make_svc(isolated_settings, secure_objects)
+    record = svc.add(bucket_id=_BUCKET_ID, source_path=source).record
+
+    result = confirm_invoice_draft_from_evidence(
+        counterparty_country="ES",
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.RECEIVED,
+        evidence_id=record.evidence_id,
+        # The document prints no name for this party, which is ordinary and is
+        # not what is under test. Supplied so the confirm reaches the
+        # classification rather than refusing earlier for an unrelated reason.
+        counterparty_name="Exportadora Peninsular SL",
+        settings=isolated_settings,
+        invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
+    )
+
+    assert result.draft.iva_category == IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED.value, (
+        "positive control: the reader must still be emitting the export code, or the "
+        f"withholding below is attributable to the parser instead: {result.draft.iva_category!r}"
+    )
+    assert result.invoice.iva_category is not IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, (
+        "a zero-rated export reached the record for a counterparty whose establishment "
+        "the classification recorded as a gap"
+    )
+    assert result.invoice.iva_category is None
+    # The figures still land: withholding the treatment must not be achieved by
+    # discarding what the document said about the money.
+    assert result.invoice.base_total == _PRINTED_BASE

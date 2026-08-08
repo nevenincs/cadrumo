@@ -963,11 +963,95 @@ def _rate_tier_contradiction(declared: IvaCategory, rate_tier: IvaRateKind | Non
     )
 
 
+#: Declared categories whose whole legal basis is WHERE the counterparty is.
+#:
+#: Both relieve the supply of Spanish output IVA on an establishment premise and
+#: on nothing else: LIVA art. 25 exempts an entrega intracomunitaria to an
+#: acquirer in another Member State, and LIVA art. 21 zero-rates an export to a
+#: party outside the Community. Honouring either without that establishment
+#: declares a relieved supply for a party nobody could place.
+#:
+#: The set is narrow on purpose and every exclusion is a decision. The domestic
+#: members presuppose Spanish establishment, which is what the tier corroboration
+#: already checks. ``domestic_reverse_charge`` also carries no cuota, but it
+#: OBLIGES the recipient to self-assess output IVA, so mis-honouring it
+#: over-declares rather than under-declares and is not this hazard. Only the two
+#: relieving categories are here, and only these two are reachable as a declared
+#: code anyway -- the structured readers emit exactly one UNTDID token per
+#: member (``K`` and ``G``).
+_RELIEF_ON_AN_ESTABLISHMENT_PREMISE: frozenset[IvaCategory] = frozenset(
+    {
+        IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+    },
+)
+
+
+#: Criteria fields naming a party's territorial establishment.
+_RESIDENCY_FIELDS: frozenset[str] = frozenset({"issuer_residency", "customer_residency"})
+
+
+def _unsupported_relief_claim(
+    declared: IvaCategory,
+    assembly: ClassificationAssembly,
+    *,
+    counterparty_country_status: StatedCountryCodeStatus | None,
+) -> str:
+    """Say why a declared relief cannot be honoured on this evidence, if it cannot.
+
+    The gap the ``DECLARED`` branch leaves open on its own. When the rule table
+    returns nothing the document's own code is taken at face value, and the tier
+    corroboration is silent on every non-domestic category by construction --
+    so a document asserting an export or an intra-community supply routed an
+    unplaceable counterparty straight to a relieved category with nothing
+    disagreeing anywhere.
+
+    **Absence of establishment is not disproof of the claim**, so this is not
+    read as a contradiction and the document is not called wrong. It is a claim
+    the evidence does not reach, which is a different thing and takes a different
+    remedy: the category is withheld and the establishment is named as the fact
+    that would settle it.
+
+    **A country our own vocabulary does not carry is exempted, and that
+    exemption is the difference between a guard and a trap.** The scope resolver
+    answers from a closed vocabulary, so a well-formed code naming a real
+    jurisdiction it does not list resolves to nothing -- measured, ``TH`` is
+    exactly this -- and the establishment is then a gap in OUR data rather than
+    in the document. Refusing there would reject a legitimate Thai export
+    because of a row we have not written, which is the false-positive direction
+    that makes an operator stop reading refusals. Only an absent, malformed or
+    ISO-unassigned code reaches the refusal, and each of those genuinely
+    established nothing about where the party is.
+
+    Args:
+        declared: The treatment the document's record declares.
+        assembly: The criteria, or the inputs that stopped them.
+        counterparty_country_status: What the counterparty's printed country
+            code turned out to be, or ``None`` when no code was printed.
+
+    Returns:
+        The operator-facing reason, or ``""`` when the claim stands.
+    """
+    if declared not in _RELIEF_ON_AN_ESTABLISHMENT_PREMISE:
+        return ""
+    unestablished = sorted({gap.field for gap in assembly.missing} & _RESIDENCY_FIELDS)
+    if not unestablished:
+        return ""
+    if counterparty_country_status is StatedCountryCodeStatus.UNCATALOGUED:
+        return ""
+    return (
+        f"the document's record declares the IVA treatment {declared.value!r}, which relieves the "
+        f"supply of Spanish IVA only because of where the counterparty is established, and "
+        f"{' and '.join(unestablished)} was not established by this document"
+    )
+
+
 def resolve_ingestion_iva_category(
     assembly: ClassificationAssembly,
     *,
     declared: DeclaredFacts,
     rate_tier: IvaRateKind | None = None,
+    counterparty_country_status: StatedCountryCodeStatus | None = None,
 ) -> IvaCategoryResolution:
     """Resolve the IVA category of one document being ingested.
 
@@ -1018,6 +1102,10 @@ def resolve_ingestion_iva_category(
         rate_tier: The tier the document's lines charged, for corroboration.
             The SAME value handed to :func:`assemble_classification_criteria`,
             so the two cannot read the document differently.
+        counterparty_country_status: What the counterparty's printed country
+            code turned out to be, or ``None`` when none was printed. Consulted
+            only to spare a relief claim whose establishment failed on OUR
+            vocabulary rather than on the document.
 
     Returns:
         :class:`IvaCategoryResolution`: the resolved treatment and what
@@ -1038,6 +1126,26 @@ def resolve_ingestion_iva_category(
         return IvaCategoryResolution(outcome=IvaCategoryOutcome.RATE_INFERRED, category=inferred)
 
     stated = stated_fact.value
+    # Asked BEFORE the tier check and before the verdict comparison, because it
+    # is the only rung that fires when nothing disagrees. A relief claim on an
+    # unestablished counterparty passes every other check by construction: the
+    # tier corroboration is silent on non-domestic categories, and there is no
+    # verdict to compare against precisely because the establishment is missing.
+    unsupported = _unsupported_relief_claim(
+        stated,
+        assembly,
+        counterparty_country_status=counterparty_country_status,
+    )
+    if unsupported:
+        return IvaCategoryResolution(
+            outcome=IvaCategoryOutcome.UNSUPPORTED_RELIEF,
+            classified=classified,
+            declared=stated_fact,
+            note=(
+                f"{unsupported}; the category is withheld rather than the document called wrong, "
+                "because absent establishment does not disprove the claim"
+            ),
+        )
     tier_conflict = _rate_tier_contradiction(stated, rate_tier)
     if tier_conflict:
         return IvaCategoryResolution(

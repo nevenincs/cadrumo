@@ -63,7 +63,13 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource, ConfirmationBlockReason, IvaCategoryOutcome
 from ...core.parsing import parse_iso8601_date
-from ...domain.iva import InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
+from ...domain.iva import (
+    InvoiceKind,
+    IvaCategory,
+    IvaRateKind,
+    IvaTerritorialScope,
+    stated_country_code_status,
+)
 from ._classification_assembly import (
     ClassificationAssembly,
     DeclaredFact,
@@ -376,9 +382,19 @@ def resolve_confirmed_establishment(
         # and the assembly's own derivation would answer the same questions a
         # second time -- reaching exactly the values the ladder refused.
     )
-    category = resolve_ingestion_iva_category(assembly, declared=declared, rate_tier=rate_tier)
-
     side = counterparty_draft_side(draft, kind=kind)
+    category = resolve_ingestion_iva_category(
+        assembly,
+        declared=declared,
+        rate_tier=rate_tier,
+        # The counterparty's own printed code, classified by the shipped status
+        # axis rather than re-derived. It spares a declared relief whose
+        # establishment failed on OUR closed vocabulary rather than on the
+        # document -- a well-formed code naming a jurisdiction the vocabulary
+        # does not list is our gap, and refusing a real export over it is the
+        # false positive that trains an operator to stop reading refusals.
+        counterparty_country_status=stated_country_code_status(side.country_code),
+    )
     items = _counterparty_review_items(counterparty, tax_identifier=side.tax_id, field=side.tax_id_field)
     if filer_item is not None:
         items = (*items, filer_item)
