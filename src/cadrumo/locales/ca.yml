@@ -66419,7 +66419,8 @@ modelo:
               help: Total d'IVA repercutit calculat al tipus superreduït del 4%.
               label: Quota d'IVA repercutit al tipus superreduït (4%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng:
-              help: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f5pq74obeedkn8rrid5ng.help
+              help: Casella transitòria del RDL 4/2024 per al tipus superreduït, que
+                conviu amb el tipus superreduït ordinari del 4%.
               label: Quota d’IVA repercutit al tipus superreduït transitori (2%)
             x-d5r62bjiclpnar3kc5i6u:
               help: Resultat de l'autoliquidació després de la fórmula d'ajust del

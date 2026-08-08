@@ -22245,10 +22245,11 @@ modelo:
               label: null
             '1075':
               help: null
-              label: modelo.schema.100.revision.2022.casilla.1075.label
+              label: 0-3 éves gyermekenként, La Rioja bármely településén lévő bölcsődék
+                vagy kisgyermeknevelési központok kiadásai után
             '1076':
               help: modelo.schema.100.revision.2022.casilla.1076.help
-              label: modelo.schema.100.revision.2022.casilla.1076.label
+              label: Az iskola, központ vagy bölcsőde adóazonosító száma
             '1077':
               help: null
               label: null
