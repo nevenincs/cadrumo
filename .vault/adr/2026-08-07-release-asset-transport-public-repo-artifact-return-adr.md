@@ -175,3 +175,44 @@ not when someone complains about a symptom.
 - Reverting the repository to private would reinstate the original constraint. That event
   must reopen this record; the pipeline would otherwise begin failing uploads exactly as
   it did before the prior decision.
+
+## Amendment 2026-08-08 — D4's no-callers premise was false for the download surface
+
+D4 states that with the drafts gone "the seal, verify, download and garbage-collect
+surfaces have no callers". That is correct for three of its four surfaces and wrong for
+the fourth. It is contradicted by D3 in this same record, which preserves the operator's
+locally-minted evidence release unchanged because it has no backing run, and therefore
+"stays a release download". A release download needs a release-download transport, so
+the download surface had a caller at the moment this record was accepted.
+
+Three modules import it and did so throughout: `dev/release/release_candidate.py`,
+`dev/release/seal_candidate.py` and `dev/release/soak_promoter.py`. Between them they
+take `download_release_assets`, `list_releases`, `resolve_gh`, `run_gh_with_retry`,
+`EvidenceLane` and `evidence_tag`.
+
+D4 is not rewritten. It was true when written for the surfaces it was reasoning about,
+and its ruling on those stands: seal, verify, manifest emission and garbage collection
+are retired, and the garbage collector is removed rather than left dormant because it
+could delete releases. Only the download surface is exempted from the no-callers claim.
+
+The consequence recorded here is not the error itself but what the error did. A reader
+executing D4 literally deletes what D3 requires, and that is what happened: the module
+was deleted, the workflow was repointed and the rename landed, while the three consumers
+were never swept. The developer tree then failed collection outright, which blocked
+every test in the release package rather than only the deleted module's own — and that
+in turn masked seven unrelated failures in the publish-workflow gate for as long as the
+break stood.
+
+The remedy keeps both decisions true. The surviving transport moved to
+`dev/release/_asset_transport.py`, beside the three consumers that need it and out of
+the packaging package, whose remaining evidence concern is the publication leak sweep.
+The retired surfaces stayed deleted, and a property gate now refuses any developer-harness
+module that can delete a release, so D4's ruling on the collector is enforced by
+construction rather than by the absence of one file.
+
+Two general points are worth carrying out of this record. A ruling whose stated premise
+is contradicted by a sibling decision in the same document does not bind on the
+contradicted point, and the contradiction is only visible to a reader holding both
+decisions at once. And a decision that rules on code is not self-executing: the rows
+implementing it must be opened in the same action as the decision, or the record reads
+as in force while the tree carries the shape it rejected.

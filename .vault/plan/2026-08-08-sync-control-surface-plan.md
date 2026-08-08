@@ -71,8 +71,12 @@ the divergence computation runs ahead of the write.
 
 ## Verification
 
-- The interruption regression added in `P01.S01` fails against the current
-  adapter and passes after `P01.S02`, proving the window was real and is closed.
+- The window is closed structurally rather than by reproduction: no code path
+  clears a bare tab range, and the stale set is derived from what the write
+  returned so it can never name a cell the write covered. An interruption
+  reproduction is deliberately absent -- it would need a write-shaped online
+  test against a real account, which is forbidden here -- so nothing in this
+  plan should be read as claiming one exists.
 - A dry-run on each surface leaves the observation store and the remote
   spreadsheet byte-identical, asserted against the real store rather than a
   mock.
