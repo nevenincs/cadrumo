@@ -41,6 +41,7 @@ from ...core import Modelo as _Modelo
 from ...core import PostFilingEventKind as _PostFilingEventKind
 from ...core import classify_post_filing_event_kind as _classify_post_filing_event_kind
 from ...core import post_filing_event_is_actionable as _post_filing_event_is_actionable
+from ...core import resolve_notificacion_estado_servicio as _resolve_notificacion_estado_servicio
 from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.i18n import tr as _tr
 from ...core.logging import get_logger as _get_logger
@@ -405,6 +406,7 @@ def calendar_events_from_notification_snapshots(
     snapshots: tuple[PersistedNotificationsSnapshot, ...],
     calendar_range: OverviewCalendarRange,
     *,
+    as_of: date,
     expected_tax_id: str | None = None,
 ) -> tuple[OverviewCalendarEvent, ...]:
     """Project persisted AEAT notifications into message events.
@@ -412,6 +414,17 @@ def calendar_events_from_notification_snapshots(
     Notifications become :class:`OverviewCalendarEventType.MESSAGE` rows only;
     they are additive calendar observations and never imply
     :class:`OverviewAeatSubmissionState` or filing evidence for an obligation.
+
+    Each row also carries its :class:`~core.NotificacionEstadoServicio` service
+    state, computed against ``as_of`` so a projection over stored snapshots is
+    reproducible rather than dependent on when it happened to run.
+
+    Args:
+        snapshots: Persisted notification snapshots loaded by the caller.
+        calendar_range: Inclusive window rows are filtered to.
+        as_of: Date the Ley 39/2015 art. 43.2 window is evaluated against.
+            Required and threaded from the caller, never defaulted to today.
+        expected_tax_id: Taxpayer identity rows must match, when known.
 
     Returns:
         A tuple of :class:`OverviewCalendarEvent` message observations inside
@@ -439,10 +452,16 @@ def calendar_events_from_notification_snapshots(
             status = read_state or row.tipo
             summary = row.concepto.strip() or row.tipo
             post_filing_kind = _classify_post_filing_event_kind(concepto=row.concepto, tipo=row.tipo)
+            estado_servicio = _resolve_notificacion_estado_servicio(
+                fecha_notificacion=row.fecha_notificacion,
+                leida=row.leida,
+                as_of=as_of,
+            )
             events.append(
                 OverviewCalendarEvent(
                     event_type=OverviewCalendarEventType.MESSAGE,
                     post_filing_kind=post_filing_kind,
+                    notificacion_estado_servicio=estado_servicio,
                     event_date=event_date,
                     source="aeat_sede_notifications",
                     summary=summary,
@@ -532,6 +551,7 @@ def _notification_matches_expected_tax_id(
 def build_overview_calendar_events(
     *,
     calendar_range: OverviewCalendarRange,
+    as_of: date,
     expedientes_snapshots: tuple[PersistedExpedientesSnapshot, ...] = (),
     notification_snapshots: tuple[PersistedNotificationsSnapshot, ...] = (),
     justificante_capture_snapshots: tuple[JustificanteCaptureSnapshot, ...] = (),
@@ -546,6 +566,16 @@ def build_overview_calendar_events(
     :func:`calendar_events_from_justificante_capture_snapshots`, then dedupes
     :class:`OverviewCalendarEvent` rows by their stable observation keys. It
     performs no storage or AEAT I/O.
+
+    Args:
+        calendar_range: Inclusive window rows are filtered to.
+        as_of: Date the notification service-state window is evaluated against,
+            threaded to :func:`calendar_events_from_notification_snapshots`.
+        expedientes_snapshots: Persisted expedientes snapshots.
+        notification_snapshots: Persisted notification snapshots.
+        justificante_capture_snapshots: Persisted justificante captures.
+        justificantes: Loaded justificante metadata for capture verification.
+        expected_tax_id: Taxpayer identity rows must match, when known.
     """
     events = [
         *calendar_events_from_expedientes_snapshots(
@@ -556,6 +586,7 @@ def build_overview_calendar_events(
         *calendar_events_from_notification_snapshots(
             notification_snapshots,
             calendar_range,
+            as_of=as_of,
             expected_tax_id=expected_tax_id,
         ),
         *calendar_events_from_justificante_capture_snapshots(

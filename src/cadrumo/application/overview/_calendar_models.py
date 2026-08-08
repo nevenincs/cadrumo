@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ElidedProse
+from ...core import NotificacionEstadoServicio as _NotificacionEstadoServicio
 from ...core import Period as _Period
 from ...core import PostFilingEventKind as _PostFilingEventKind
 from ...core.time import validate_inclusive_date_range as _validate_inclusive_date_range
@@ -296,12 +297,21 @@ class OverviewCalendarEvent(BaseModel):
     pulled notification / expediente, so the coarse ``event_type`` axis does not
     collapse a demand for documents and an informational comunicación onto the
     same ``message`` row.
+
+    ``notificacion_estado_servicio`` carries the orthogonal
+    :class:`~core.NotificacionEstadoServicio` service state — whether the
+    notification is still inside its Ley 39/2015 art. 43.2 window, was accessed,
+    or has lapsed into rechazo tácito and is therefore legally served. It is
+    populated only for ``message`` rows projected from notification snapshots,
+    where a ``fecha de notificación`` and an access flag exist to compute it
+    from; every other event source leaves it ``None``.
     """
 
     model_config = _STRICT_FROZEN
 
     event_type: OverviewCalendarEventType
     post_filing_kind: _PostFilingEventKind | None = None
+    notificacion_estado_servicio: _NotificacionEstadoServicio | None = None
     event_date: date
     source: str = Field(min_length=1, max_length=64)
     summary: _EventSummary

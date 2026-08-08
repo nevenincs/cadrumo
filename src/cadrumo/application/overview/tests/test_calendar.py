@@ -622,6 +622,7 @@ def test_notification_snapshots_project_message_events_on_notification_date() ->
     events = calendar_events_from_notification_snapshots(
         (snapshot,),
         OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31)),
+        as_of=date(2025, 3, 13),
     )
 
     assert len(events) == 1
@@ -672,6 +673,7 @@ def test_notification_snapshots_filter_message_events_by_expected_taxpayer() -> 
     events = calendar_events_from_notification_snapshots(
         (snapshot,),
         OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31)),
+        as_of=date(2025, 3, 13),
         expected_tax_id="B12345674",
     )
 
@@ -729,6 +731,7 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
     events = calendar_events_from_notification_snapshots(
         (matching_snapshot, other_snapshot),
         OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31)),
+        as_of=date(2025, 3, 13),
         expected_tax_id="B12345674",
     )
 
@@ -737,6 +740,7 @@ def test_notification_snapshots_filter_message_events_by_authenticated_snapshot_
 
 def test_build_overview_calendar_accepts_observed_events() -> None:
     event = build_overview_calendar_events(
+        as_of=date(2025, 3, 13),
         calendar_range=OverviewCalendarRange(from_date=date(2025, 3, 1), to_date=date(2025, 3, 31)),
         notification_snapshots=(
             PersistedNotificationsSnapshot(
