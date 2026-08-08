@@ -74,6 +74,7 @@ from ...domain.invoices import (
     InvoicePersistenceError,
     IvaRate,
     invoice_line_to_iva_observation,
+    iva_rate_slot_percentage,
     iva_rate_kind,
 )
 from ...core.money import round_to_cents
@@ -1814,8 +1815,15 @@ def _recargo_rate_divergence(invoice: Invoice, *, devengo_date: date) -> _Recarg
     if line_index is None:
         return None
     line = invoice.lines[line_index]
-    applied_rate = line.iva_rate
+    # The line carries a rate SLOT, not a number, and the table is keyed on the
+    # number. Converted through the UNDATED derivation on purpose: the dated one
+    # re-asks whether the slot was in force, which the invoice validator has
+    # already established at construction, and asking it again here against a
+    # different date would refuse a line the record legitimately holds.
+    applied_rate = iva_rate_slot_percentage(line.iva_rate)
     if applied_rate is None:
+        # Exempt and not-subject slots name no percentage, so there is no
+        # pairing to look up and nothing to disagree with.
         return None
     recargo_rate = recargo_rate_for_applied_rate(applied_rate, devengo_date)
     if recargo_rate is None:

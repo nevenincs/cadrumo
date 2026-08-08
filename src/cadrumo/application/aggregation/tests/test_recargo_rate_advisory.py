@@ -30,9 +30,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from ....domain.invoices import Invoice, IvaRate
-from ....domain.iva import InvoiceKind, IvaCategory
+from ....domain.iva import InvoiceKind, IvaCategory, recargo_rate_for_applied_rate
 from .._modelo_bindings import (
     _recargo_rate_divergence,
     _recargo_rate_mismatch_diagnostics,
@@ -45,14 +46,20 @@ _BASE = Decimal("1000.00")
 #: Inside the ordinary art. 161 pairing: 21 % general carries 5,2 % recargo.
 _ORDINARY_DAY = date(2025, 6, 15)
 
-#: Before Ley 41/1994 art. 78.Segundo, so no ES window of any tier covers it and
-#: the table has nothing to say about any rate.
-_UNCOVERED_DAY = date(1994, 6, 15)
+#: An exempt slot names no percentage at all, so there is no pairing to look up.
+#: This is the reachable silence; the test below records why the table's OWN
+#: silence cannot be reached through a validly-constructed invoice.
+_EXEMPT_SLOT = IvaRate.EXEMPT
 
 
 def _recargo_invoice(*, recargo: str, day: date = _ORDINARY_DAY, slot: IvaRate = IvaRate.RATE_21) -> Invoice:
-    """A retailer's purchase invoice bearing recargo de equivalencia."""
-    cuota = Decimal("210.00")
+    """A retailer's purchase invoice bearing recargo de equivalencia.
+
+    The cuota follows the slot rather than being fixed: an exempt line must
+    carry zero, which the invoice model enforces, so a hardcoded figure would
+    make the exempt variant unconstructible.
+    """
+    cuota = Decimal("210.00") if slot is IvaRate.RATE_21 else Decimal("0.00")
     total = _BASE + cuota + Decimal(recargo)
     return Invoice.model_validate(
         {
@@ -110,20 +117,44 @@ def test_a_mistyped_recargo_is_reported_with_both_figures() -> None:
     assert divergence.recargo_rate == Decimal("0.052")
 
 
-def test_an_uncovered_date_stays_silent_rather_than_alleging_a_mismatch() -> None:
-    """The silence that must survive, and the one most likely to be removed.
+def test_the_exempt_silence_is_guaranteed_upstream_rather_than_here() -> None:
+    """The invoice model refuses the case the detector guards, so the guard is depth.
 
-    Before 1995 the table holds no ES window at all, so it has no opinion about
-    what this invoice should carry. Reporting that as a mismatch would convert a
-    gap in our own data into a claim that the supplier's invoice is wrong.
+    The detector returns early when the slot names no percentage. Trying to
+    construct that invoice shows why it never arrives: the model refuses a
+    non-zero recargo when every line is exempt or not-subject, so an
+    exempt-with-recargo invoice cannot exist to be screened.
 
-    A later reader finding this branch may well read it as an unhandled case.
-    It is not: an unmodelled window and a wrong figure are different facts and
-    only one of them is the operator's to act on.
+    Asserted at the model rather than at the detector because that is where the
+    guarantee actually lives. Writing this as a detector test would have looked
+    like coverage while proving nothing -- the input could not be built, so the
+    assertion would only ever have exercised a construction error.
+
+    The detector branch stays. Two independent guards on one precondition is the
+    right amount when the failure mode is a false accusation against a
+    supplier's invoice.
     """
-    invoice = _recargo_invoice(recargo="999.00", day=_UNCOVERED_DAY)
+    with pytest.raises(ValidationError, match="recargo_amount must be zero"):
+        _recargo_invoice(recargo="999.00", slot=_EXEMPT_SLOT)
 
-    assert _recargo_rate_divergence(invoice, devengo_date=_UNCOVERED_DAY) is None
+
+def test_the_table_silence_branch_is_defensive_and_currently_unreachable() -> None:
+    """Measured at the lookup, because it cannot be reached through an Invoice.
+
+    The detector stays silent when the table resolves no pairing, so a gap in
+    OUR data is never reported as a mismatch on the supplier's invoice. That
+    branch is real and worth keeping, but constructing an Invoice cannot reach
+    it: every rate the table declines is a rate outside its force window, and
+    the Invoice validator refuses those at construction. The two guards cover
+    the same population from opposite ends.
+
+    That is recorded rather than left as a gap in coverage, because the honest
+    statement is "unreachable today", not "untested". Asserted at the lookup so
+    the premise is measured: 2 % pairs with 0,26 % only inside the October to
+    December 2024 window, and the table declines outside it.
+    """
+    assert recargo_rate_for_applied_rate(Decimal("0.02"), date(2024, 11, 15)) == Decimal("0.0026")
+    assert recargo_rate_for_applied_rate(Decimal("0.02"), date(2025, 6, 15)) is None
 
 
 def test_an_invoice_bearing_no_recargo_is_not_this_screens_business() -> None:
