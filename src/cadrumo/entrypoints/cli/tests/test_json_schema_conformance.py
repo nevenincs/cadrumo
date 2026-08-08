@@ -52,6 +52,14 @@ from ...schema_surface import (
 # decorators populate SCHEMA_REGISTRY before the gate inspects it.
 # The CLI loads these lazily at dispatch time, so without an explicit
 # import here the registry is empty when this test module collects.
+#
+# The ``app.*`` families are enrolled in batches rather than all at once. Only
+# the live family is enrolled so far: before it, every parametrised case was a
+# ``config`` or root key and no ``app`` command was inside this gate at all,
+# which is not something a passing run could reveal. Enrolling it adds 33 schema
+# keys and 66 cases. The agent-workspace, contract, maintenance and quickfile
+# payload modules remain unenrolled and are the outstanding batches.
+from .. import _app_live_payloads as _app_live_payloads
 from .. import _config_bucket_history_payloads as _config_bucket_history_payloads
 from .. import _config_descendiente_payloads as _config_descendiente_payloads
 from .. import _config_payloads as _config_payloads
