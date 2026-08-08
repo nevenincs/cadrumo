@@ -1204,6 +1204,10 @@ class CounterpartyDraftSide(BaseModel):
         name: The counterparty's stated name, or ``None``.
         postal_code: The postal code printed in the counterparty's address, or
             ``None``.
+        country: The country NAME printed in the counterparty's address, or
+            ``None``. A name rather than a code, because that is what an address
+            block prints; the match against the bounded vocabulary is the
+            establishment ladder's own second rung.
         tax_id_field: Which draft field ``tax_id`` was taken from. Carried so an
             operator override is recorded against the reading it displaced
             rather than against whichever field shares the option's name.
@@ -1215,6 +1219,7 @@ class CounterpartyDraftSide(BaseModel):
     tax_id: str | None = None
     name: str | None = None
     postal_code: str | None = None
+    country: str | None = None
     tax_id_field: str = Field(min_length=1)
     name_field: str = Field(min_length=1)
 
@@ -1256,6 +1261,7 @@ def counterparty_draft_side(draft: InvoiceDraft, *, kind: InvoiceKind) -> Counte
             tax_id=draft.customer_tax_id,
             name=draft.customer_name,
             postal_code=draft.customer_postal_code,
+            country=draft.customer_country,
             tax_id_field="customer_tax_id",
             name_field="customer_name",
         )
@@ -1263,6 +1269,7 @@ def counterparty_draft_side(draft: InvoiceDraft, *, kind: InvoiceKind) -> Counte
         tax_id=draft.supplier_tax_id,
         name=draft.supplier_name,
         postal_code=draft.supplier_postal_code,
+        country=draft.supplier_country,
         tax_id_field="supplier_tax_id",
         name_field="supplier_name",
     )

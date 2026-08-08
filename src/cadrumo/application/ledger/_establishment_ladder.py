@@ -331,16 +331,16 @@ def resolve_draft_counterparty_establishment(
     printed block to a ladder built for the counterparty would answer a question
     the profile already answers, and would answer it from weaker evidence.
 
-    **Two rungs cannot fire from a draft today, and the gap is upstream of this
-    function.** Nothing in the reading path recovers a party's printed country:
-    the field contract asks for both postal codes and neither country, and the
-    structured parsers read a postal element and no country element. So the
-    country rung has no source, and the postal rung -- gated on country evidence
-    positively naming Spain -- cannot be reached even though the draft carries
-    the postal code it would consult. A Spanish counterparty therefore exhausts
-    to nothing and is asked once, which is the honest outcome rather than a
-    defective one; what would be defective is reading this function's correct
-    answers as evidence that the whole ladder is reachable.
+    **Every rung is reachable from a read document, and only from a read one.**
+    The reading path recovers each party's printed country name, so the country
+    rung has a source and the postal rung -- gated on country evidence positively
+    naming Spain -- can be triggered by it. The STRUCTURED path is the remaining
+    gap and it is upstream of this function: the e-invoice parsers read a postal
+    element and no country element, so a Facturae, UBL or CII document reaches
+    only the identifier and confirmed-fact rungs. A Spanish counterparty on one
+    of those exhausts to nothing and is asked once, which is the honest outcome
+    rather than a defective one; what would be defective is reading this
+    function's correct answers as evidence that every path reaches every rung.
 
     Args:
         bucket_id: Active profile bucket, for the confirmed-fact rung.
@@ -364,6 +364,7 @@ def resolve_draft_counterparty_establishment(
     return resolve_counterparty_establishment_scope(
         bucket_id=bucket_id,
         tax_identifier=side.tax_id,
+        printed_country_name=side.country,
         postal_code=side.postal_code,
         repository=repository,
     )

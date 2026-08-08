@@ -35,6 +35,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.inbound.einvoice import ParsedEInvoice
 from ....core import ClassifierInputSource
 from ....domain.iva import (
     InvoiceKind,
@@ -548,35 +549,86 @@ class TestDraftRouting:
         assert counterparty_draft_side(draft, kind=InvoiceKind.RECEIVED).postal_code == _LAS_PALMAS
 
 
-class TestRungsUnreachableFromADraft:
-    """The two rungs a draft cannot reach today, asserted so the gap stays visible.
+class TestRungReachabilityFromADraft:
+    """Which rungs a draft can reach, asserted so neither the gap nor its closing goes quiet.
 
-    **These tests exist to keep a known gap from being certified away.** The
-    routing above is correct and its gates are green, which is exactly the danger:
-    a wired ladder returning right answers reads as a reachable ladder. It is not
-    one. Nothing in the reading path recovers a party's printed country -- the
-    field contract asks for both postal codes and neither country, and the
-    structured parsers read a postal element and no country element -- so the
-    country rung has no source and the postal rung, gated on country evidence
-    positively naming Spain, cannot be reached even though the draft carries the
-    postal code it would consult.
+    This class began as a record of a gap: no reader recovered a party's printed
+    country, so the country rung had no source and the postal rung -- gated on
+    country evidence naming Spain -- could not be triggered. **The assertion that
+    the draft carried no country field failed the day the reading contract grew
+    one, which is what it was for.** A wired ladder returning correct answers
+    reads as a reachable ladder whether or not it is one, so the reachability
+    question is kept in gates rather than in anyone's memory.
 
-    **Delete these when that changes, not before.** They are expected to fail the
-    day a country reaches the draft, and that failure is the notification: it
-    means the postal rung became reachable and the territory table stopped being
-    dead weight. A lane that finds them failing should replace them with gates
-    asserting the rungs now DO fire, never relax them.
+    The gap did not close everywhere. **The read path reaches every rung; the
+    structured path still reaches only two**, because the e-invoice parsers read
+    a postal element and no country element. Both halves are asserted below.
+
+    **Replace these when reachability changes, never relax them.** A failure here
+    means a path gained or lost a rung, and the right response is a gate saying
+    which.
     """
 
-    def test_a_spanish_counterparty_exhausts_despite_a_readable_postal_code(
+    def test_a_printed_country_name_reaches_the_country_rung(
         self,
         repository: CounterpartyEstablishmentRepository,
     ) -> None:
-        """The postal rung stays shut because no country evidence can name Spain.
+        """The rung the read path's country field exists to feed now fires from a draft."""
+        draft = InvoiceDraft(supplier_country="Alemania", supplier_postal_code=_BERLIN)
 
-        The code itself is perfectly readable, and the rung would answer it -- the
-        second assertion proves that, so this is a statement about the missing
-        country evidence rather than about the postal code.
+        resolved = resolve_draft_counterparty_establishment(
+            bucket_id=_BUCKET_ID,
+            draft=draft,
+            kind=InvoiceKind.RECEIVED,
+            repository=repository,
+        )
+
+        assert resolved.scope is IvaTerritorialScope.EU_MEMBER
+        assert resolved.rung is EstablishmentRung.PRINTED_COUNTRY
+
+    def test_a_printed_spanish_country_name_reaches_the_postal_rung(
+        self,
+        repository: CounterpartyEstablishmentRepository,
+    ) -> None:
+        """The postal rung is reachable end to end, which is what the territory table is for.
+
+        The whole chain runs from draft fields: the country name opens the rung
+        that the country resolver deliberately refuses to answer, and the postal
+        code separates the three Spanish territories behind it.
+        """
+        draft = InvoiceDraft(
+            supplier_tax_id=_SPANISH_CIF,
+            supplier_country="España",
+            supplier_postal_code=_LAS_PALMAS,
+        )
+
+        resolved = resolve_draft_counterparty_establishment(
+            bucket_id=_BUCKET_ID,
+            draft=draft,
+            kind=InvoiceKind.RECEIVED,
+            repository=repository,
+        )
+
+        assert resolved.scope is IvaTerritorialScope.ES_CANARIAS
+        assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
+
+    def test_the_side_selector_carries_each_party_country_to_its_own_rung(self) -> None:
+        """The country follows the direction selection, or the rung reads the wrong party's."""
+        draft = InvoiceDraft(supplier_country="España", customer_country="France")
+
+        assert counterparty_draft_side(draft, kind=InvoiceKind.ISSUED).country == "France"
+        assert counterparty_draft_side(draft, kind=InvoiceKind.RECEIVED).country == "España"
+
+    def test_a_draft_stating_no_country_still_exhausts(
+        self,
+        repository: CounterpartyEstablishmentRepository,
+    ) -> None:
+        """A readable postal code is still not on its own evidence of Spain.
+
+        The rung would answer this code -- the last assertion proves it -- so this
+        is a statement about the absent country evidence, not about the code.
+        Unchanged by the reading contract gaining a country field: a document that
+        prints no country still states none.
         """
         draft = InvoiceDraft(supplier_tax_id=_SPANISH_CIF, supplier_postal_code=_LAS_PALMAS)
 
@@ -591,13 +643,15 @@ class TestRungsUnreachableFromADraft:
         assert resolved.rung is None
         assert territorial_scope_for_spanish_postal_code(_LAS_PALMAS) is IvaTerritorialScope.ES_CANARIAS
 
-    def test_the_draft_carries_no_party_country_for_the_country_rung(self) -> None:
-        """No draft field can supply the country rung, which is why it cannot fire.
+    def test_the_structured_parsers_still_supply_no_party_country(self) -> None:
+        """The structured path reaches two rungs, and this is why.
 
-        Asserted against the model's own fields rather than against a resolved
-        value, so it stays true for a draft populated by any reader.
+        Asserted against the parser's own fields rather than against a parsed
+        document, so it holds for every format the reader accepts rather than for
+        whichever specimen happens to be in the corpus. Expected to fail when the
+        structured country source lands, and that failure is the notification.
         """
-        draft_fields = set(InvoiceDraft.model_fields)
+        parsed_fields = set(ParsedEInvoice.__slots__)
 
-        assert not {field for field in draft_fields if "country" in field}
-        assert {"supplier_postal_code", "customer_postal_code"} <= draft_fields
+        assert not {field for field in parsed_fields if "country" in field}
+        assert {"supplier_postal_code", "customer_postal_code"} <= parsed_fields
