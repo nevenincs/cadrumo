@@ -267,7 +267,7 @@ if TYPE_CHECKING:
     )
     from ._evidence_input import EvidenceInput
     from ._evidence_textlayer import text_layer_transcriber_identity, transcribe_text_layer
-    from ._extracted_document_cache import write_cached_transcription
+    from ._extracted_document_cache import ExtractedDocumentCacheRepository, write_cached_transcription
     from ._extraction_draft_store import (
         ExtractionDraftDocument,
         ExtractionDraftRepository,
@@ -448,6 +448,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "load_extraction_drafts": "._extraction_draft_store",
     "read_extraction_draft": "._extraction_draft_store",
     "write_extraction_draft": "._extraction_draft_store",
+    "ExtractedDocumentCacheRepository": "._extracted_document_cache",
     "write_cached_transcription": "._extracted_document_cache",
     "BLOCKING_REASON_BY_DISCREPANCY_KIND": "._confirmation_gate",
     "IDENTITY_FIELDS": "._confirmation_gate",
@@ -781,6 +782,7 @@ __all__ = [
     "EstablishmentRung",
     "EvidenceInput",
     "ExportSerializationFormat",
+    "ExtractedDocumentCacheRepository",
     "ExtractionDraftDocument",
     "ExtractionDraftRepository",
     "FieldAmbiguityCandidate",

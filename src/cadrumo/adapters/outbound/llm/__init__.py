@@ -54,7 +54,11 @@ Examples:
 """
 
 from ._cache import LLMCache
-from ._consent_ledger import EvidenceConsentLedger, EvidenceConsentLedgerEntry
+from ._consent_ledger import (
+    EvidenceConsentLedger,
+    EvidenceConsentLedgerEntry,
+    evidence_consent_ledger_entry_object_key,
+)
 from ._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder, LLMRunTelemetrySummary
 from ._usage import UsageRecorder
 
@@ -66,4 +70,5 @@ __all__ = [
     "LLMRunTelemetryRecorder",
     "LLMRunTelemetrySummary",
     "UsageRecorder",
+    "evidence_consent_ledger_entry_object_key",
 ]

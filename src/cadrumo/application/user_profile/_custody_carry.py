@@ -41,6 +41,10 @@ from ...adapters.outbound.aeat.sede import (
     filed_declaracion_observation_object_key,
     iva_compensation_wallet_observation_object_key,
 )
+from ...adapters.outbound.llm import (
+    EvidenceConsentLedgerEntry,
+    evidence_consent_ledger_entry_object_key,
+)
 from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...adapters.persistence.profile.submission import SubmissionRepository
@@ -75,6 +79,10 @@ from ..calculations import (
 from ..evidence import EvidenceBundleRepository
 from ..filing import ModeloHistoryRepository
 from ..ledger import (
+    ConfirmationRecordRepository,
+    ConfirmedCounterpartyFactsRepository,
+    ExtractedDocumentCacheRepository,
+    ExtractionDraftRepository,
     LedgerClassificationRuleRepository,
     PurchaseInvoiceEvidenceRepository,
 )
@@ -82,10 +90,12 @@ from ..live import (
     Borrador100Snapshot,
     IvaRemoteStateAcquisitionManifestRepository,
     JustificanteCaptureSnapshot,
+    PersistedDeudasSnapshot,
     PersistedExpedientesSnapshot,
     PersistedNotificationsSnapshot,
     VerifyObservation,
     borrador_100_snapshot_object_key,
+    deudas_snapshot_object_key,
     expedientes_snapshot_object_key,
     justificante_capture_snapshot_object_key,
     notifications_snapshot_object_key,
@@ -419,6 +429,48 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
         )
 
     resolvers["cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations"] = _iva_wallet_observation_key
+
+    # --- Ledger extraction pipeline (SecureBoundRepository) --------------------
+    def _extracted_document_cache_repo() -> ExtractedDocumentCacheRepository:
+        return ExtractedDocumentCacheRepository()
+
+    resolvers["cadrumo.application.ledger.extracted_document_cache"] = _bound_resolver(
+        _extracted_document_cache_repo,
+    )
+
+    def _extraction_draft_repo() -> ExtractionDraftRepository:
+        return ExtractionDraftRepository()
+
+    resolvers["cadrumo.application.ledger.extraction_draft"] = _bound_resolver(_extraction_draft_repo)
+
+    def _confirmation_record_repo() -> ConfirmationRecordRepository:
+        return ConfirmationRecordRepository()
+
+    resolvers["cadrumo.application.ledger.confirmation_record"] = _bound_resolver(_confirmation_record_repo)
+
+    def _confirmed_counterparty_facts_repo() -> ConfirmedCounterpartyFactsRepository:
+        return ConfirmedCounterpartyFactsRepository()
+
+    resolvers["cadrumo.application.ledger.confirmed_counterparty_facts"] = _bound_resolver(
+        _confirmed_counterparty_facts_repo,
+    )
+
+    # --- Live deudas snapshot (SecureSnapshotRepository) -----------------------
+    def _deudas_payload() -> type[PersistedDeudasSnapshot]:
+        return PersistedDeudasSnapshot
+
+    def _deudas_key(bucket_id: str, snapshot_id: str) -> str:
+        return deudas_snapshot_object_key(bucket_id, snapshot_id)
+
+    resolvers["cadrumo.application.live.deudas_snapshot"] = _snapshot_resolver(_deudas_payload, _deudas_key)
+
+    # --- Off-host evidence-consent audit ledger --------------------------------
+    def _evidence_consent_ledger_key(record: SecureObjectRecord, _bucket_id: str) -> str:
+        entry_payload = json.loads(record.payload.decode(_UTF_8))["entry"]
+        entry = EvidenceConsentLedgerEntry.model_validate_json(json.dumps(entry_payload))
+        return evidence_consent_ledger_entry_object_key(entry)
+
+    resolvers["cadrumo.outbound.llm.evidence_consent_ledger"] = _evidence_consent_ledger_key
 
     return resolvers
 
