@@ -42,6 +42,14 @@ M303_COMPENSATION_AVAILABLE_CASILLA: CasillaId = _casilla_id("iva.compensacion-d
 M303_COMPENSATION_POSTERIOR_CASILLA: CasillaId = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
 M303_COMPENSATION_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
 M303_COMPENSATION_GENERADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-generada-periodo")
+M303_COMPENSATION_APLICADA_CASILLA: CasillaId = _casilla_id("iva.compensacion-aplicada-periodo")
+"""The applied-in-period casilla of the same chain.
+
+Declared here rather than one layer up because the registry's own binding
+validator names it, and the registry cannot reach an application-layer
+declaration. A second literal there would drift from this one exactly as the
+others did.
+"""
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,6 +148,7 @@ def derive_m303_compensation_available_from_casillas(
 
 
 __all__ = [
+    "M303_COMPENSATION_APLICADA_CASILLA",
     "M303_COMPENSATION_AVAILABLE_CASILLA",
     "M303_COMPENSATION_GENERADA_CASILLA",
     "M303_COMPENSATION_POSTERIOR_CASILLA",

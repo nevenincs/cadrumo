@@ -43,7 +43,7 @@ import typer
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
-from ....domain.contribuyente import DescendantInfo
+from ....domain.contribuyente import DescendantInfo, serialise_meses_trabajo
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
@@ -214,7 +214,7 @@ def _ambiguous_relacion_indices(new_rows: list[DescendantInfo], *, index_offset:
     return tuple(
         index_offset + position
         for position, row in enumerate(new_rows)
-        if row.meses_madre_trabajo_2024 > 0 and row.relacion is DescendantRelacion.DESCENDIENTE
+        if row.meses_madre_trabajo and row.relacion is DescendantRelacion.DESCENDIENTE
     )
 
 
@@ -263,7 +263,7 @@ def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[s
                     f"convivencia={str(descendant.convive_con_contribuyente).lower()}",
                     f"dependencia={_tri(descendant.dependencia_economica)}",
                     f"custodia={str(descendant.custodia_compartida).lower()}",
-                    f"meses_madre_trabajo_2024={descendant.meses_madre_trabajo_2024}",
+                    f"meses_madre_trabajo={serialise_meses_trabajo(descendant.meses_madre_trabajo) or '-'}",
                     f"alta_posterior_nacimiento_mes={descendant.alta_posterior_nacimiento_mes or '-'}",
                     f"gastos_guarderia_euros={descendant.gastos_guarderia_euros}",
                     f"gastos_guarderia_mensuales={_guarderia_mensual_or_dash(descendant)}",
@@ -304,7 +304,7 @@ def _emit_descendiente_list(
                 rentas_anuales_euros=descendant.rentas_anuales_euros,
                 presenta_declaracion_propia=descendant.presenta_declaracion_propia,
                 prorrata_minimo=descendant.prorrata_minimo,
-                meses_madre_trabajo_2024=descendant.meses_madre_trabajo_2024,
+                meses_madre_trabajo=descendant.meses_madre_trabajo,
                 alta_posterior_nacimiento_mes=descendant.alta_posterior_nacimiento_mes,
                 gastos_guarderia_euros=descendant.gastos_guarderia_euros,
                 gastos_guarderia_mensuales=tuple(

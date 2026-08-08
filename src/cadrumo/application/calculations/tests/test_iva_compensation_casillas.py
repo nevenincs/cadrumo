@@ -48,6 +48,29 @@ def _authority_by_token() -> dict[str, str]:
     return tokens
 
 
+def _named_tokens(module: ModuleType, *, authority: dict[str, str]) -> tuple[tuple[str, str], ...]:
+    """Every authority token the module's namespace holds, and where it holds it.
+
+    A token reached through a module-level tuple or frozenset counts. The
+    registry's binding validator held four twins inside one such tuple, and a
+    scan looking only at string-valued attributes reported that module as naming
+    nothing -- the shape hid the twins from the check that existed to find them.
+    """
+    found: list[tuple[str, str]] = []
+    for attribute, value in vars(module).items():
+        if isinstance(value, str):
+            if value in authority:
+                found.append((attribute, value))
+            continue
+        if isinstance(value, (tuple, list, frozenset, set)):
+            found.extend(
+                (f"{attribute}[{index}]", item)
+                for index, item in enumerate(value)
+                if isinstance(item, str) and item in authority
+            )
+    return tuple(found)
+
+
 def _module_name_for(source: Path, *, package: ModuleType) -> str:
     root = Path(package.__file__).parent  # ty: ignore[invalid-argument-type]
     relative = source.relative_to(root).with_suffix("")
@@ -69,7 +92,13 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
     not importing it is cheap, and only the discovered few are then imported for
     the identity verdict.
     """
-    tokens = set(_authority_by_token())
+    # A bare-numeric token is excluded from LITERAL discovery: "71" collides with
+    # any unrelated module that happens to contain that string, and because
+    # CPython interns it the identity verdict could not discriminate its twin
+    # anyway. Including it manufactures subjects the check cannot rule on. It
+    # stays in the authority set, so a module discovered for another reason is
+    # still checked against it.
+    literal_tokens = {token for token in _authority_by_token() if not token.isdigit()}
     authority_names = set(_iva_compensation_casillas.__all__)
     discovered: dict[str, ModuleType] = {}
     for package in _SWEPT_PACKAGES:
@@ -79,13 +108,15 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
                 continue
             tree = ast.parse(source.read_text(encoding="utf-8"))
             literal = any(
-                isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in tokens
+                isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in literal_tokens
                 for node in ast.walk(tree)
             )
+            # Module-level imports only. A function-local import binds the
+            # authority's own object when the call runs and cannot be a twin, and
+            # it leaves nothing in the module namespace for the verdict to read.
             imported = any(
-                isinstance(node, ast.ImportFrom)
-                and any(alias.name in authority_names for alias in node.names)
-                for node in ast.walk(tree)
+                isinstance(node, ast.ImportFrom) and any(alias.name in authority_names for alias in node.names)
+                for node in tree.body
             )
             if not (literal or imported):
                 continue
@@ -140,12 +171,10 @@ def test_no_module_declares_a_second_object_for_an_authority_token(module: Modul
     Only the dotted registry ids are covered.
     """
     authority = _authority_by_token()
-    named = {
-        attribute: value for attribute, value in vars(module).items() if isinstance(value, str) and value in authority
-    }
+    named = _named_tokens(module, authority=authority)
 
     assert named, "the module names no compensation casilla, so this parametrisation is vacuous"
-    for attribute, value in named.items():
+    for attribute, value in named:
         assert value is authority[value], f"{module.__name__}.{attribute} is a second object for {value!r}"
 
 

@@ -58,10 +58,12 @@ from ...domain.calculations.registry import (
     CasillaId,
     CasillaObservation,
     RegistryModeloObservation,
-    validated_casilla_id,
 )
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ..calculations import (
+    M303_DISPONIBLE_CASILLA,
+    M303_GENERADA_CASILLA,
+    M303_POSTERIOR_CASILLA,
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
     ObservationSourceKind,
@@ -78,28 +80,17 @@ satisfy the cross-period clean-state filing gate.
 """
 
 
-def _casilla_id(value: object) -> CasillaId:
-    """Validate a static filed-observation casilla constant.
-
-    Returns a :class:`~cadrumo.domain.calculations.registry.CasillaId`.
-    """
-    try:
-        return validated_casilla_id(value, surface="filed-revision observation casilla constant")
-    except ValueError as exc:
-        raise RuntimeError(f"filed-revision observation casilla constant {value!r} is not a CasillaId") from exc
-
-
 #: Canonical id for the Modelo 303 end-of-period available compensation carry-forward casilla. A
 #: refunded (devolución) period must carry ZERO generated credit forward, so when
 #: the filed revision is refunded this casilla is re-stamped to its posterior-only
 #: value before the cross-period observation is persisted (RD 1624/1992 art. 30 /
 #: Ley 37/1992 art. 116).
-_M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
+_M303_DISPONIBLE_CASILLA: Final[CasillaId] = M303_DISPONIBLE_CASILLA
 #: Canonical id for Modelo 303 compensación pendiente de periodos posteriores (AEAT box 87):
 #: the posterior-only component that survives a refund.
-_M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_M303_POSTERIOR_CASILLA: Final[CasillaId] = M303_POSTERIOR_CASILLA
 #: The per-period generated-credit casilla, zeroed on a refunded period.
-_M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
+_M303_GENERADA_CASILLA: Final[CasillaId] = M303_GENERADA_CASILLA
 _ZERO: Final = Decimal("0")
 
 

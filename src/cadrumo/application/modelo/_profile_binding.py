@@ -442,7 +442,7 @@ def resolve_maternidad_meses(
         withheld_indices=tuple(
             str(index)
             for index, descendant in enumerate(profile.descendientes)
-            if descendant.meses_madre_trabajo_2024 > 0 and contributed.get(str(index), 0) == 0
+            if descendant.meses_madre_trabajo and contributed.get(str(index), 0) == 0
         ),
         ceilings_resolved=True,
         declares_meses=declares_meses,

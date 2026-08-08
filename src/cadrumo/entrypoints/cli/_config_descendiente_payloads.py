@@ -6,7 +6,7 @@ transport can carry the full canonical contract without growing that module.
 :class:`ProfileDescendientePayload` is a lossless projection of
 :class:`~cadrumo.domain.contribuyente.DescendantInfo`: every field the canonical
 record validates is re-declared here with the same shape, including the two
-tax-driving inputs (``meses_madre_trabajo_2024``, ``gastos_guarderia_euros``) that
+tax-driving inputs (``meses_madre_trabajo``, ``gastos_guarderia_euros``) that
 feed the Art. 81 LIRPF deducción maternidad (81.1) and guardería increment (81.2).
 Dropping either at the transport boundary would silently remove a taxpayer's
 deduction from every machine-readable surface, so they are carried, not summarised.
@@ -86,7 +86,7 @@ class ProfileDescendientePayload(OutputSchema):
     rentas_anuales_euros: Decimal | None = Field(default=None, ge=Decimal("0"))
     presenta_declaracion_propia: bool = False
     prorrata_minimo: bool | None = None
-    meses_madre_trabajo_2024: int = Field(default=0, ge=0, le=12)
+    meses_madre_trabajo: tuple[int, ...] = ()
     alta_posterior_nacimiento_mes: int | None = Field(default=None, ge=1, le=12)
     gastos_guarderia_euros: int = Field(default=0, ge=0)
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpendPayload, ...] = ()
@@ -158,9 +158,15 @@ class ProfileDescendientePayload(OutputSchema):
         consumer could construct but the canonical record would refuse is a
         shape that exists only on the wire.
         """
-        if self.alta_posterior_nacimiento_mes is not None and self.meses_madre_trabajo_2024 <= 0:
+        if self.alta_posterior_nacimiento_mes is None:
+            return self
+        if not self.meses_madre_trabajo:
             raise ValueError(
-                "alta_posterior_nacimiento_mes is declared but meses_madre_trabajo_2024 is 0",
+                "alta_posterior_nacimiento_mes is declared but meses_madre_trabajo is empty",
+            )
+        if self.alta_posterior_nacimiento_mes != self.meses_madre_trabajo[0]:
+            raise ValueError(
+                "alta_posterior_nacimiento_mes must equal the first declared working month",
             )
         return self
 

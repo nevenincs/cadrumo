@@ -13,12 +13,14 @@ validated through :func:`~core.validated_casilla_id` at import time, so a token
 that is not a well-formed casilla id fails at module load rather than at the
 first compensation calculation that touches it.
 
-Four of the Modelo 303 chain tokens are NOT declared here: the pure carry-forward
+Five of the Modelo 303 chain tokens are NOT declared here: the pure carry-forward
 derivation policy in the domain layer names the same casillas, and a policy that
-decides a figure from a casilla owns that casilla's identity. Those four are
+decides a figure from a casilla owns that casilla's identity. Those five are
 bound to the domain declarations rather than re-typed, so the calculations layer
 and the policy cannot be renamed apart -- which is the same drift this module was
-created to end, one layer further down.
+created to end, one layer further down. The applied-in-period token is among them
+because the registry's binding validator names it too, and the registry cannot
+reach an application-layer declaration.
 """
 
 from __future__ import annotations
@@ -27,6 +29,7 @@ from typing import Final
 
 from ...core import CasillaId, validated_casilla_id
 from ...domain.iva_compensation import (
+    M303_COMPENSATION_APLICADA_CASILLA,
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
     M303_COMPENSATION_POSTERIOR_CASILLA,
@@ -84,7 +87,7 @@ M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Final[CasillaId] = iva_compensat
 )
 """Compensation carried in from earlier periods."""
 
-M303_COMPENSACION_APLICADA_CASILLA: Final[CasillaId] = iva_compensation_casilla_id("iva.compensacion-aplicada-periodo")
+M303_COMPENSACION_APLICADA_CASILLA: Final[CasillaId] = M303_COMPENSATION_APLICADA_CASILLA
 """Compensation actually applied in the period."""
 
 M303_RESULTADO_FINAL_CASILLA: Final[CasillaId] = iva_compensation_casilla_id("71")

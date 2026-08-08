@@ -34,7 +34,7 @@ import pytest
 from ....domain.iva import IvaTerritorialScope
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from .._evidence_draft import PurchaseInvoiceEvidenceInputError
-from .._own_territory import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
+from .._filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

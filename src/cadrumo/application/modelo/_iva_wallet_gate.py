@@ -56,7 +56,6 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistrySnapshotError,
     previous_filing_observation_requirements,
-    validated_casilla_id,
 )
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ...domain.modelos import (
@@ -67,7 +66,11 @@ from ...domain.modelos import (
     WorkUnit,
     WorkUnitCatalogueRepositoryProtocol,
 )
-from ..calculations import IvaWalletDecisionRepository
+from ..calculations import (
+    M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+    M303_DISPONIBLE_CASILLA,
+    IvaWalletDecisionRepository,
+)
 
 
 class _IvaWalletBlockedDecision(Protocol):
@@ -89,20 +92,8 @@ _M303_PRIOR_COMPENSATION_ORIGIN_IDS: Final[frozenset[str]] = frozenset(
 )
 
 
-def _casilla_id(value: object) -> CasillaId:
-    """Validate a static IVA-wallet casilla constant as a :class:`~cadrumo.domain.calculations.registry.CasillaId`."""
-    try:
-        return validated_casilla_id(value, surface="IVA wallet gate casilla constant")
-    except ValueError as exc:
-        raise RuntimeError(f"IVA wallet gate casilla constant {value!r} is not a CasillaId") from exc
-
-
-_M303_PRIOR_COMPENSATION_CASILLA_ID: Final[CasillaId] = _casilla_id(
-    "iva.compensacion-pendiente-periodos-anteriores",
-)
-_M303_AVAILABLE_COMPENSATION_CASILLA_ID: Final[CasillaId] = _casilla_id(
-    "iva.compensacion-disponible-fin-periodo",
-)
+_M303_PRIOR_COMPENSATION_CASILLA_ID: Final[CasillaId] = M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
+_M303_AVAILABLE_COMPENSATION_CASILLA_ID: Final[CasillaId] = M303_DISPONIBLE_CASILLA
 
 
 class ModeloIvaWalletReconciliationBlockedError(ModeloError):

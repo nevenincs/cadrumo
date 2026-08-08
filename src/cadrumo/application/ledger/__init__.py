@@ -256,6 +256,7 @@ if TYPE_CHECKING:
         printed_excerpt_occurs,
         strip_printed_unit,
     )
+    from ._filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
     from ._id_resolution import (
         MINIMUM_DISPLAY_ID_WIDTH,
         compute_display_id_width,
@@ -547,6 +548,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "list_manual_transactions": "._actions_manual",
     "mark_transaction_reviewed_excluded": "._actions_lifecycle",
     "merge_transactions": "._actions_split_merge",
+    "FILER_POSTCODE_FACT_PATH": "._filer_establishment",
     "preflight_ledger_tax_readiness": "._preflight",
     "preflight_transaction_catalogue": "._preflight",
     "printed_total_discrepancy": "._evidence_draft",
@@ -554,6 +556,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "reject_llm_suggestion": "._llm_classification",
     "remove_manual_transaction": "._actions_lifecycle",
     "reset_ledger_catalogue": "._actions_lifecycle",
+    "resolve_filer_territorial_scope": "._filer_establishment",
     "resolve_lineage_transaction_id": "._id_resolution",
     "resolve_transaction_id": "._id_resolution",
     "restore_manual_transaction": "._actions_lifecycle",
@@ -614,6 +617,7 @@ __all__ = [
     "CLASSIFIED_BY_MANUAL",
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD",
     "DETERMINISTIC_CHECKS",
+    "FILER_POSTCODE_FACT_PATH",
     "GROUNDABLE_ORIGINS",
     "IDENTITY_FIELDS",
     "MINIMUM_DISPLAY_ID_WIDTH",
@@ -795,6 +799,7 @@ __all__ = [
     "remove_manual_transaction",
     "reset_ledger_catalogue",
     "resolve_counterparty_identity",
+    "resolve_filer_territorial_scope",
     "resolve_lineage_transaction_id",
     "resolve_transaction_id",
     "resolved_blockers",

@@ -37,6 +37,8 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, cast
 
 from ...core import Period as _Period
+from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.modelos import is_justificante_backed_external_evidence
 from ..calculations import is_official_aeat_observation_source
 from ._calendar_models import (
@@ -88,6 +90,46 @@ def _dedupe_calendar_events(events: list[OverviewCalendarEvent]) -> tuple[Overvi
         )
         by_key[key] = event
     return tuple(sorted(by_key.values(), key=_calendar_event_sort_key))
+
+
+NO_AEAT_HISTORY_NOTICE_CODE = "overview.no_aeat_history"
+"""Notice code for a workable profile carrying no official AEAT observation."""
+
+
+def no_aeat_history_notice(calculation_observations: tuple[object, ...]) -> Notice | None:
+    """Point a workable profile with no AEAT-sourced history at the history pull.
+
+    Fires only when NOT ONE persisted calculation observation carries an official
+    AEAT source kind. A profile with even one is not a fresh profile any more, so
+    the nudge would be noise; a profile with none has nothing AEAT-sourced to
+    reconcile against, and until this shipped nothing told the operator that a
+    single verb would fetch it.
+
+    Keyed on the official-source predicate rather than on an empty observation
+    list, deliberately. A profile whose only observations are locally filed or
+    operator-entered has the same gap as one with no observations at all -- it
+    holds nothing AEAT ever confirmed -- and testing for emptiness would leave
+    exactly that taxpayer unprompted.
+
+    Returns ``None`` when any official observation exists, so an onboarded
+    profile stays quiet.
+    """
+    for payload in calculation_observations:
+        if is_official_aeat_observation_source(str(getattr(payload, "source_kind", ""))):
+            return None
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code=NO_AEAT_HISTORY_NOTICE_CODE,
+        message=tr(
+            "overview.no_aeat_history",
+            default=(
+                "This profile holds no filing evidence AEAT confirmed. Run "
+                "`aeat app live filed pull-all` to fetch the history AEAT holds for it."
+            ),
+        ),
+        suggestion="aeat app live filed pull-all",
+        context={"observation_count": str(len(calculation_observations))},
+    )
 
 
 def calendar_filing_evidence_from_sources(

@@ -742,7 +742,7 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
     affected = [
         index
         for index, descendant in enumerate(context.descendants)
-        if descendant.meses_madre_trabajo_2024 <= 0
+        if not descendant.meses_madre_trabajo
         and descendant.guarderia_qualifying_meses(context.filing_year) > 0
         and descendant.guarderia_contributing_spend(context.filing_year) > 0
     ]
@@ -801,7 +801,7 @@ def collect_guarderia_simultaneity_approximation_diagnostics(
     affected = [
         index
         for index, descendant in enumerate(context.descendants)
-        if 0 < descendant.meses_madre_trabajo_2024 < _MONTHS_IN_YEAR
+        if 0 < len(descendant.meses_madre_trabajo) < _MONTHS_IN_YEAR
         and 0 < descendant.guarderia_qualifying_meses(context.filing_year) < _MONTHS_IN_YEAR
     ]
     if not affected:
