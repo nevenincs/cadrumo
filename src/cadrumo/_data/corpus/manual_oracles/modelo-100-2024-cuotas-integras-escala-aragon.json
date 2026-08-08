@@ -14,5 +14,16 @@
     "0533": "2094.64",
     "0545": "2406.50",
     "0546": "2360.64"
+  },
+  "declared_inputs": {
+    "corpus_locator": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L48604-L48609",
+    "by_casilla_id": {
+      "0102": "23900.00",
+      "0429": "2800.00"
+    },
+    "locator_by_casilla_id": {
+      "0102": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L48605",
+      "0429": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L48605-L48606"
+    }
   }
 }

@@ -73,8 +73,6 @@ BLOCKING_REASON_BY_DISCREPANCY_KIND: Mapping[DraftDiscrepancyKind, ConfirmationB
     DraftDiscrepancyKind.ROLE_UNRESOLVED: ConfirmationBlockReason.UNRESOLVED_DIRECTION,
     DraftDiscrepancyKind.REGIME_CONTRADICTED: ConfirmationBlockReason.CONTRADICTED_REGIME,
     DraftDiscrepancyKind.POSTAL_CODE_UNREADABLE: ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT,
-    DraftDiscrepancyKind.COUNTRY_CODE_UNASSIGNED: ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT,
-    DraftDiscrepancyKind.COUNTRY_CODE_UNCATALOGUED: ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT,
     DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED: ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT,
 }
 """Which review-gate reason each deterministic check's failure raises.
@@ -85,6 +83,14 @@ produce a finding that silently does not block. Every member maps to a reason
 because every member names a real defect: an unmapped member would be a check
 whose failure the product decided not to care about, and that decision belongs in
 the check's own existence rather than hidden in this table.
+
+A deterministic condition the product decides NOT to block on is therefore not
+represented here at all. It is reported through the non-blocking advisory channel
+instead -- :func:`~application.ledger.country_vocabulary_advisory` and
+:func:`~application.ledger.party_attribution_advisory` are the two -- which the
+review surface projects onto the envelope's typed notices. An exemption row in
+this table would be the worse shape: the reader could no longer tell a blocking
+axis from an advisory one by looking at the axis.
 """
 
 if set(BLOCKING_REASON_BY_DISCREPANCY_KIND) != set(DraftDiscrepancyKind):

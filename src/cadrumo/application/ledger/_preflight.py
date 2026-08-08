@@ -48,6 +48,8 @@ from ...domain.transactions import (
 )
 from ...domain.usage_ratios import CensoRatioMismatchError
 from ..aggregation import (
+    IVA_LEDGER_COUNTERPARTY_GATE_REASONS,
+    IVA_LEDGER_MISSING_FACT_REASONS,
     IvaLedgerAggregationIssueReason,
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
@@ -619,6 +621,61 @@ _IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT: Final[Mapping[IvaLedgerAggregationIss
         "projection-path regime screen requiring the bucket's cash-accounting treatment"
     ),
 }
+
+# Fails the import, not a test run, so an unclassified member cannot reach a
+# run at all. The same placement and message shape as the discrepancy-kind
+# guard in ``_confirmation_gate``, deliberately: that axis absorbed two
+# independent misses in one week and both reached a test run rather than an
+# import failure.
+#
+# What differs is the SHAPE of the classification, and only because the axes
+# differ. That guard maps one enum onto one target and needs no second side,
+# because every DraftDiscrepancyKind is a real defect its single consumer acts
+# on. This enum has TWO consumers with different reach: the projection path
+# raises all twenty members, and preflight runs two of the screens and never
+# enters the rest. Thirteen members therefore have no preflight counterpart to
+# map onto, and inventing one would ship an operator-facing message for a
+# condition this layer cannot detect -- the failure S200 was written against.
+# The partition records that reachability fact per member instead. Its sibling
+# is right that an exemption ROW would be the worse shape on an axis where
+# severity is a product choice; here the second side is a structural fact about
+# which code path can emit what, which is not expressible by omission.
+#
+# The honest structural alternative is splitting the enum so preflight's
+# consumer sees only its own reach. That is a cross-surface refactor of the
+# aggregation package, and the shared members are deliberately shared with the
+# renta ledger enum for cross-ledger telemetry, so it is not this module's to
+# make.
+_reaching_preflight = IVA_LEDGER_MISSING_FACT_REASONS | IVA_LEDGER_COUNTERPARTY_GATE_REASONS
+_classified = set(_PREFLIGHT_REASON_BY_IVA_ISSUE) | set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT)
+
+if _classified != set(IvaLedgerAggregationIssueReason):
+    _unclassified = ", ".join(sorted(r.value for r in set(IvaLedgerAggregationIssueReason) - _classified))
+    _stale = ", ".join(sorted(str(r) for r in _classified - set(IvaLedgerAggregationIssueReason)))
+    raise RuntimeError(
+        "every IvaLedgerAggregationIssueReason must be classified for the ledger preflight: map it in "
+        "_PREFLIGHT_REASON_BY_IVA_ISSUE if preflight can receive it, or record why it cannot in "
+        f"_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT; unclassified: {_unclassified or 'none'}; "
+        f"stale: {_stale or 'none'}",
+    )
+
+if _both := set(_PREFLIGHT_REASON_BY_IVA_ISSUE) & set(_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT):
+    raise RuntimeError(
+        "an IvaLedgerAggregationIssueReason cannot be both mapped into preflight and declared unable to "
+        f"reach it; on both sides: {', '.join(sorted(r.value for r in _both))}",
+    )
+
+if _unmapped := _reaching_preflight - set(_PREFLIGHT_REASON_BY_IVA_ISSUE):
+    raise RuntimeError(
+        "a preflight-facing screen emits an IvaLedgerAggregationIssueReason with no preflight counterpart; "
+        f"unmapped: {', '.join(sorted(r.value for r in _unmapped))}",
+    )
+
+if _detailless := IVA_LEDGER_MISSING_FACT_REASONS - set(_PREFLIGHT_DETAIL_BY_IVA_ISSUE):
+    raise RuntimeError(
+        "a missing-fact reason reaches preflight with no detail sentence; "
+        f"missing: {', '.join(sorted(r.value for r in _detailless))}",
+    )
 
 
 def _preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> LedgerPreflightIssueReason:

@@ -2052,6 +2052,7 @@ cli:
             es akadalyokkal.
           unknown_reference: Nincs fuggo piszkozat ehhez az azonositohoz.
           country_code_unassigned_message: 'Az egyik fél országkódja az ISO 3166-1 által fenntartott tartományba esik, amelyhez soha nem rendelnek országot, így a dokumentum ország helyett csak egy karakterláncot ad meg, és semmi sem helyezi el ezt a felet. Javítsa a kódot a dokumentum alapján. Ez a piszkozat ettől még megerősíthető; a fél egyszerűen letelepedés nélkül marad addig.'
+          country_code_uncatalogued_message: 'Az egyik fél országkódja valós országot jelölhet, amelyet a rendszer beépített szótára még nem tartalmaz, így semmit sem lehet mondani arról, hol telepedett le ez a fél. A dokumentum újraolvasása nem dönti el: az országot fel kell venni. Ez a piszkozat ettől még megerősíthető; a fél egyszerűen letelepedés nélkül marad addig.'
         source_path_help: A számla PDF- vagy képfájljának elérési útja.
         supplier_help: Szállító neve.
         taxable_base_help: Számla adóköteles alapja.

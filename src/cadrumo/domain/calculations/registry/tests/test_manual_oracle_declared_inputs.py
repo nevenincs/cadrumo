@@ -89,9 +89,6 @@ _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
         "scenario facts still hand-written in "
         "test_m100_2024_capital_inmobiliario_arrendamiento_vivienda_manual_worked_example.py"
     ),
-    "modelo-100-2024-cuotas-integras-escala-aragon.json": (
-        "scenario facts still hand-written in test_m100_2024_cuotas_integras_escala_aragon_manual_worked_example.py"
-    ),
     "modelo-100-2024-ganancias-patrimoniales-transmision-inmueble.json": (
         "scenario facts still hand-written in "
         "test_m100_2024_ganancias_patrimoniales_transmision_inmueble_manual_worked_example.py"
