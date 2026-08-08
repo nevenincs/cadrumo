@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:bae77b159cba946243077dcaa713f9a9c8c6b372330ec1f504a2d46c7581e828'
+body_hash: 'sha256:6f54aa582fcad95afa88705557f8d7c05203cb37f6a94230af685924b3c1acbd'
 step_id: 'S75'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -51,3 +51,18 @@ The fourth mutation, walking every node instead of the module body so an inner h
 The full lane was NOT run: it requires a built Python cohort and two real virtualenvs, and building one in this shared worktree is not available here. The re-run command is `uv run --no-sync python -m dev.packaging.smoke_absent_llm --cohort-dir <dir>`. The originating plan row is left unchecked on that basis.
 
 Two live findings emerged and belong to the packaging lane rather than to this Step. The extra's registered probe target is supplied by an unconditional core requirement, which a shipped gate already reds; while that holds, the extra can never probe absent in a core install, and this Step's uninstall assertion would fail loudly rather than pass falsely. Separately, the driver inventory demands the extra's refusal from four surfaces that carry no such guard, which the derivation added here now makes visible.
+
+A later pass closed the gap that kept this lane from ever running, and re-measured the two findings above.
+
+Both findings are now resolved upstream. The extra's probe target was repointed from the package the core closure supplies to one only the extra declares, so the extra can probe absent in a core install. The guard count rose from one to six, and the derivation now yields six operator-reachable guarded surfaces with none unreached by the driver; the driven-but-unguarded set fell from four to the two convenience wrappers, which refuse transitively through the guarded constructors they build.
+
+The lane itself was invoked by nothing. It was named in no campaign lane registry, no justfile recipe and no workflow step, while every other lane module in the directory had at least one dispatch path. Every assertion it makes was true and none had ever been evaluated, which reads identically to a passing lane in every report. It is now registered as a standalone lane, with its own invariant, and selected by both the host-portable profile and the CI superset. Standalone rather than a core form because the core lane asks whether the product works once installed and this one asks what it says when a model-bearing surface is reached without the model-bearing dependencies; and cohort-consuming, unlike the developer lane, because only the built wheel's own metadata can settle whether the extra is real.
+
+A gate now enforces the property rather than the enrolment. Lanes legitimately dispatch three ways, so requiring registry membership would red the four lanes that correctly use a recipe or a workflow instead; what cannot be legitimate is a lane reachable from none of the three. No tally is pinned: both sides are derived at read time.
+
+    uv run --no-sync pytest dev/packaging/tests/test_smoke_lane_dispatch_reachability.py dev/packaging/tests/test_campaign.py -n0 -p no:cacheprovider -q
+    16 passed in 1.77s
+
+The reachability gate was mutation-proven by reconstructing the registry as it stood before the enrolment, from outside the repository and with nothing on disk changed. It reddened naming exactly the orphaned lane, and returned green when the real registry was restored. Its positive control drives the detector with a constructed module no surface names, so a detector that returned the empty set unconditionally would fail there rather than pass silently.
+
+The full lane still has NOT been executed end to end, and the reason is now measured rather than assumed. The immutable cohort builder refuses to build against a working tree carrying any drift, and this shared worktree carries peer drift permanently by design; the refusal enumerated twenty dirty paths, none of them this lane's. So the lane cannot be run from this tree at all, and the originating row stays unchecked on that basis. What changed is that CI can now reach it: before the enrolment no profile, recipe or workflow would ever have invoked it, so the run this row waits on could not have happened anywhere.

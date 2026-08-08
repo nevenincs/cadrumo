@@ -5,45 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:6d330e052cefd35ee79ffadb58e82ea29828fbc0101455618bc2cc00322c02e7'
+body_hash: 'sha256:05104138c4ddfc1800b13f07ca78fed2a0948ef9c3078b0331238f1ab9ba903c'
 step_id: 'S268'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S268 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Accept the displayed digest as a candidate selector on the evidence review surface, since the operator can already DECIDE between two redacted candidates on the surviving note field but cannot EXPRESS the decision - resolve requires the literal value string and resolved_blockers refuses anything absent from candidate_values - and the chosen value is never consumed beyond that membership check, so it need not cross the confidentiality boundary for the choice to be expressible - match a supplied token against the redacted form as well as the raw value, which costs zero disclosure and strengthens the gate because a digest matching an offered candidate is provably a choice rather than an assertion and ## Scope
-
-- `src/cadrumo/entrypoints/cli/_ledger_evidence`
-- `src/cadrumo/application/ledger/_confirmation_gate.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Accept the displayed digest as a candidate selector on the evidence review surface, since the operator can already DECIDE between two redacted candidates on the surviving note field but cannot EXPRESS the decision - resolve requires the literal value string and resolved_blockers refuses anything absent from candidate_values - and the chosen value is never consumed beyond that membership check, so it need not cross the confidentiality boundary for the choice to be expressible - match a supplied token against the redacted form as well as the raw value, which costs zero disclosure and strengthens the gate because a digest matching an offered candidate is provably a choice rather than an assertion
 
