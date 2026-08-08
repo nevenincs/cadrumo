@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:e5d8979e149bf8d2a3a3360a2cca3ac3a61bd1d895a9fe532e337a2c4fbed459'
+body_hash: 'sha256:ce803d1a7d67173eacef4dea3aade42bc0bf6dde0156cc6956319a1978f65126'
 step_id: 'S04'
 related:
   - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
@@ -39,7 +39,7 @@ The full adjacent-pair inventory, keyed on the design file:
 - **2024-late to 2025.** 0 of 182 shared boxes moved, 0 added, 0 removed, sheet DP30302 grows from 1706 to 1900 positions, **1 slot retired** at offset 1425 and **1 revived** at offset 1535, which is the same Regimen Simplificado surface module relocating rather than disappearing.
 - **2025 to 2026.** **127 of 182 shared boxes moved**, 1 box added (112), 0 removed, sheet DP30305 grows from 1523 to 1528, 0 retired, **1 revived** at offset 441 carrying the rectificativa importe for box 111, 1 box number re-described.
 
-A second finding falls out and it invalidates a rationale recorded in the gate itself. The gate declines to assert the **reserved-to-real** direction on the stated ground that it "measures zero across the whole bundled corpus, so an assertion for it would ship vacuous". Keyed on the design file rather than on the parsed year, that direction has **five positive cases in Modelo 303 alone**: three at the mid-2024 boundary, one at 2024-late to 2025, and one at 2025 to 2026. The recorded rationale is an artefact of the one-design-per-year inventory, not a property of the corpus, and it expires the moment the occupancy inventory is re-keyed.
+A second finding falls out and it invalidates a rationale recorded in the gate itself. The gate declines to assert the **reserved-to-real** direction on the stated ground that it "measures zero across the whole bundled corpus, so an assertion for it would ship vacuous". Keyed on the design file rather than on the parsed year, that direction has **five positive cases in Modelo 303 alone**: three at the mid-2024 boundary, one at 2024-late to 2025, and one at 2025 to 2026. **Corrected by a later measurement:** the recorded rationale is not an artefact of the one-design-per-year inventory, as this record first concluded. Measured across every exporting revision's claimed span under the inventory exactly as it ships, the reverse direction has 32 transitions in four modelos against 16 retirements, so the rationale was never true of the corpus it describes and did not depend on the keying at all. The five Modelo 303 cases named above are real; only the explanation for the gate's silence was wrong.
 
 ## Verification
 
