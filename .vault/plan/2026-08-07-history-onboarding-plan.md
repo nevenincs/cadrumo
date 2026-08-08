@@ -4,7 +4,7 @@ tags:
   - '#history-onboarding'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:e820aac16e741f6bb95eebaa513388c12ec540a4b18c430a479620346296cfab'
+body_hash: 'sha256:39b0f1c8dca8e6477c292ab34d5eee51138e2caf490462b78e6cb402e7ca900a'
 tier: L2
 related:
   - '[[2026-08-07-history-onboarding-adr]]'
@@ -150,6 +150,7 @@ values in all four catalogues.
 - [x] `P04.S16` - update the agent-harness docs under src/cadrumo/_data/agent that name the filed verb group to cite the new discover and pull-all verbs, verified by the harness-citation conformance check confirming every named verb resolves against the live operator-surface manifest; `src/cadrumo/_data/agent`.
 - [ ] `P04.S30` - enroll the app.* payload modules into the JSON-schema conformance parametrisation in staged per-family batches, since SCHEMA_REGISTRY is populated at collection time from the config payload modules only and 73 of 73 parametrised cases are config or root with zero app, leaving app.live.filed.list and app.live.filed.pull uncovered by test_registered_schema_envelope_round_trips and test_registered_schema_has_no_bespoke_notice_field, and a one-line import of _app_live_payloads would sweep roughly 31 schemas into two gates at once and could red several concurrent campaigns, verified by each batch landing green and by a test asserting the parametrised case set contains at least one app.* key; `src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
 - [ ] `P04.S31` - add a fixture-anchor assertion beside every test that intersects a candidate set against UNMODELED_OBLIGATIONS, which is currently EMPTY so any such intersection assertion passes vacuously and keeps passing if the filter it guards is deleted, gating instead on the PROPERTY the filter guarantees so the test stays meaningful whether the collection is empty today or populated tomorrow, verified by the anchor failing when the constant is empty and by the property assertion failing when the filter is removed; `src/cadrumo/core/tests, src/cadrumo/application/live/tests`.
+- [x] `P04.S33` - Enroll app live filed discover in the profile-bound write allowlist with a comment stating why a read-shaped verb writes: it persists nothing of the register it reads, which is why it is discover rather than pull, but it resolves its session through the central live-session writer, which opens an active-profile storage span and an auth mutation span. Its own docstring asserting that nothing is persisted is true of register data and false of session state, so enrolling on the docstring's word would be the error the census gate's own message warns against. Gate: the name-independent leaf census no longer reports the leaf as accounted for by no mechanism, and the MCP write-policy mutability parity gate still passes, since it requires every write-allowlist entry to map to a non-read-only family; `src/cadrumo/application/storage_write_policy.py`.
 
 The envelope command= identifier for each new verb is established by that verb's own Step
 (`P01.S04`, `P03.S09`) and verified by the same documented-command-conformance gate; it is not a
