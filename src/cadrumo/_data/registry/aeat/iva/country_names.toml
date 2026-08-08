@@ -258,15 +258,29 @@
 # exactly what the printed register grounds, so the two checks are complementary
 # rather than redundant.
 #
-# THE ALPHA-3 COLUMN HAS NO BUNDLED AUTHORITY, and saying so is more useful than
-# implying one. Nothing in this tree ships an alpha-2-to-alpha-3 correspondence:
-# not the corpus, and not any installed package. The column is therefore
-# author-supplied from the ISO register, and what actually defends it is
-# mechanical rather than documentary -- the loader refuses two records claiming
-# one alpha-3, one alpha-2 claiming two, and any record missing the column at
-# all. Those refusals catch a contradiction; they cannot catch a value that is
-# wrong and consistent. A bundled register would, and until one exists this is
-# the weakest column in the file.
+# THE ALPHA-3 COLUMN IS GROUNDED IN THE SCHEMA THAT MADE IT NECESSARY. It exists
+# for one reason -- a Facturae invoice states the country as a three-letter code
+# -- so the authority for it is the Facturae CountryType enumeration, which is
+# not merely AN authority for the column but the definition of the question it
+# answers. A general ISO register would have answered a broader question the
+# column does not ask. The enumeration is extracted from the published Facturae
+# 3.2.2 schema and bundled under corpus/facturae/ with a provenance stamp naming
+# the source URL, the schema version, the retrieval date and the SHA-256 of the
+# payload it came from; a gate asserts every alpha-3 here is a value that
+# enumeration carries. What is bundled is the ENUMERATION and not the schema:
+# the schema is a 190 KB authored artefact stating no redistribution terms,
+# while a list of ISO codes is fact rather than expression.
+#
+# WHAT THAT PROVES, AND THE RESIDUAL IT LEAVES. It proves every alpha-3 here is
+# a code a Facturae document can legitimately state, so a fabricated or mistyped
+# value reds. It does NOT prove the code names the country written beside it:
+# the enumeration is bare values with no annotations, so PRY and PER are both
+# members and swapping them would pass. The correspondence is grounded instead by
+# the hand-check against AEAT's printed register, and the two are complementary.
+# The residual is therefore precise: a CONSISTENT swap of two real codes between
+# two real countries survives every check this repository can make. Closing it
+# needs an authority mapping alpha-3 to a country name, which nothing bundled
+# here provides -- and saying so is more useful than implying otherwise.
 #
 # AND THE BUNDLED REGISTER IS NOT INFALLIBLE EITHER. It still spells North
 # Macedonia under its pre-2019 name. The current name is carried first and the
