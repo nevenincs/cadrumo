@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:6c8041a8b63e018802c292f96f2db9a0651a95c04297f66d3da12513d790d1eb'
+body_hash: 'sha256:6602f119616bcacbb42a46d7cea53533a521ef3373ccf08c029c8194c34e7fc5'
 step_id: 'S78'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -109,3 +109,54 @@ set. Both belong to concurrent lanes.
 
 No inference was run. No model was loaded and no cloud request was issued, so no
 claim here rests on a measured extraction result.
+
+## Follow-up: the deferred relocation is closed
+
+The divergence named above -- the compiler running in the llm package rather
+than the application layer -- is now closed, and the deferral's stated blocker
+(both consumers carrying another lane's uncommitted work) was worked around with
+the HEAD-anchored own-only staging drive rather than by editing peer WIP.
+
+Resolution moved, rendering stayed. `application/ledger/_invoice_extraction_authority.py`
+resolves the IVA percentages overlapping a period, the RIRPF art. 95 retencion
+percentages, the no-printed-tax `IvaCategory` members and the mandated regime
+phrases into one frozen `InvoiceExtractionAuthorityValues`. The llm module keeps
+the template and the rendering and holds no runtime reach into any of those
+authorities: `render_invoice_extraction_prompt` substitutes what it is handed and
+can print no figure the application layer did not resolve.
+
+The rate table is read at CALL time inside the resolver, not bound at import. A
+module-level `from ... import load_iva_rate_table` captured the function once and
+silently broke the pre-existing registry-follows gate -- an unplanned but real
+mutation proof that the gate bites.
+
+The compiler now has a production consumer. `_read_transcription_semantically`
+resolves the values once per document and passes them to both reader branches, so
+the on-host and consented off-host reads of one document use identical values.
+The reader's `period` parameter is replaced by `authority_values`, which is what
+makes "handed as data" structural rather than conventional.
+
+Files: `src/cadrumo/application/ledger/_invoice_extraction_authority.py` (new),
+`src/cadrumo/application/ledger/__init__.py`,
+`src/cadrumo/application/ledger/_evidence_draft.py`,
+`src/cadrumo/llm/_invoice_extraction_prompt.py`,
+`src/cadrumo/llm/_evidence_draft_text.py`, `src/cadrumo/llm/__init__.py`,
+`src/cadrumo/application/ledger/tests/test_invoice_extraction_authority.py` (new),
+`src/cadrumo/llm/tests/test_invoice_prompt_cache_binding.py`.
+
+### Mutation proof of the new gate
+
+The new property -- the renderer cannot reach around its argument -- was proven by
+rebinding `_join_pcts` from a pytest plugin living OUTSIDE the repository, so no
+tracked file changed and a concurrent sweep could not commit the mutation. Three
+rungs: a banner proved the plugin loaded, a counter proved the rebound function
+was reached seven times, and an assertion inside the plugin proved the rebinding
+changed observable output before any test ran.
+
+    2 failed, 7 passed in 1.50s
+
+The two behavioural assertions reddened. The other seven stayed green
+legitimately and the distinction is the finding: the artefact-stamp test asserts
+the model's `iva_rate_pcts` field rather than the rendered text, so it survives a
+renderer that prints something else entirely. The text assertion is the
+load-bearing one.

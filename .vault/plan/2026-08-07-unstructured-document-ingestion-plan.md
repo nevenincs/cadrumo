@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:f3844ff00d01d769633e667d53401f56f2d71aae359895af444e74733d3cbfcd'
+body_hash: 'sha256:6082d1bf3a2135ef94126d274f02b49191952008a5c877e68d54d1ea0a631e17'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -86,7 +86,7 @@ Lands the anchored candidate schema and the local extraction surface, and record
 - [x] `W02.P05.S16` - Carry the gated cloud multimodal transport on the Anthropic in-memory HTTP adapter for the measurement engine, landed at HEAD by the peer lane and verified by the capability-boundary suite; `src/cadrumo/llm/_providers/anthropic.py`.
 - [x] `W02.P05.S17` - Refuse cloud provider selection on real-evidence paths absent the explicit per-invocation consent acknowledgement, default-off and gestor-barred, gated by refusal tests on both the extract and confirm surfaces; `src/cadrumo/llm`.
 - [x] `W02.P05.S77` - Declare the field-form contract once and compile it into both the extraction prompt and the grounding validators (a rate as a bare number, amounts preserving the printed decimal separator, dates exactly as printed), resolving the printed-percent mismatch, gated by a contract-parity test proving prompt guidance and validator vocabulary derive from one declaration; `src/cadrumo/llm`.
-- [ ] `W02.P05.S78` - Build the prompt compiler in the application layer: template plus registry-resolved IVA and retencion rates for the filing year and period plus IvaCategory members, handed to the extension as data, with no numeric rate literal in any template, gated by the model-free anti-drift gate proven by mutation in both directions; `src/cadrumo/application/ledger`.
+- [x] `W02.P05.S78` - Build the prompt compiler in the application layer: template plus registry-resolved IVA and retencion rates for the filing year and period plus IvaCategory members, handed to the extension as data, with no numeric rate literal in any template, gated by the model-free anti-drift gate proven by mutation in both directions; `src/cadrumo/application/ledger`.
 - [x] `W02.P05.S79` - Fold the compiled prompt hash and its registry revision into the LLM cache key and the provenance stamp so a cached response cannot outlive a revision change and an audit can answer under which rates a figure was read, gated by cache-key collision tests and a provenance roundtrip; `src/cadrumo/llm/_client.py`.
 - [x] `W02.P05.S86` - Add the transcriptive regime_legend field to ExtractedInvoiceFields and InvoiceDraft carrying the printed statutory legend verbatim with its anchor at parity with every other copied field, gated by a strict roundtrip populating it non-default and an anchor test proving an unprinted legend yields no value; `src/cadrumo/llm, src/cadrumo/application/ledger`.
 - [x] `W02.P05.S87` - Compile the statutory legend vocabulary from RD 1619/2012 art. 6.1 mandated mentions as prompt data with the instruction to copy verbatim if printed and never to choose one, gated by extending the anti-drift literal scan so the legend set carries no hardcoded prose literal outside its single home, proven by mutation in both directions; `src/cadrumo/llm`.
