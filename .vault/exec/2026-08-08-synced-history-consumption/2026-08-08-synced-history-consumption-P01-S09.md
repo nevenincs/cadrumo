@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:5191896a579cdc25d3550f06c7b52a61d1fe37c605123f26d8de9e096092e124'
+body_hash: 'sha256:975a6ca1b711c69928c27cd197b0904b71a93f2231fb1cff6846785b2f0bb99d'
 step_id: 'S09'
 related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
@@ -75,3 +75,39 @@ WHAT I COULD NOT ESTABLISH, stated plainly rather than inferred. Whether AEAT se
 AN ADJACENT FINDING, reported rather than chased because it is outside this row. All four locale catalogues carry the notice's message key with its value equal to the key itself, which is the self-referencing scaffold placeholder shape the locale honesty ratchet exists to refuse. The notice's own test asserts the rendered message does not contain the raw key, so the default text is winning at runtime today, but the catalogue entries are placeholders rather than translations. Whoever wires the notice should land real values in all four catalogues in the same change.
 
 A ROW THAT MAY BE CHECKED WITHOUT ITS DELIVERABLE. The history-onboarding plan carries a closed row for adding this overview notice. The builder and its test exist, so the row is not fraudulent, but nothing calls the builder, so no operator can receive the notice the row was opened to give them. That is the delivered-narrower shape rather than delivered-as-specified, and it is named here because this row's own question ran into it.
+
+## The projection, run rather than read
+
+The finding above that the no-AEAT-history notice has no wired consumer was
+reached by search, and a data-driven surface is invisible to search, so it was
+re-established by execution against the real operator surface.
+
+A real isolated encrypted profile was created holding a Sociedades taxpayer and
+ZERO calculation observations, which is exactly the state the notice's predicate
+is written for, and the shipped CLI was invoked over it.
+
+    uv run --no-sync python <scratch>/probe_notice_projection.py
+    === --format json app overview status  exit=0
+      notice codes emitted: ['overview.status.next_step', 'overview.status.next_step',
+                             'overview.status.next_step', 'overview.coverage.incomplete']
+      overview.no_aeat_history present: False
+
+Four notices reach the operator on the surface that succeeds for this profile,
+and the no-AEAT-history notice is not among them. That matches what the CLI's own
+assembly shows: the overview envelope's notices come from the next-step builder,
+the coverage builder and the evidence list, and none of the three is the
+no-AEAT-history builder.
+
+WHAT THE PROJECTION COULD NOT COVER, stated rather than glossed. The calendar and
+agenda verbs refuse for this profile before emitting anything, on unresolved
+profile checks (`has_employees`, `does_intracomunitario` and others), so the
+executed evidence covers the status surface only. The static evidence covers all
+three, since the builder is referenced nowhere under the entrypoints tree at all.
+Seeding those checks would widen the executed half, and is worth doing by whoever
+wires the notice, because they will need the same harness.
+
+AN INCIDENTAL CORROBORATION FROM THE SAME RUN. Both refusals came back as
+`REFUSED_CLI_BOUNDARY` with a null suggestion, which is a live sighting of one of
+the operator-reachable refusals inventoried as carrying no next step in the
+error-registry reachability partition. The operator is told the calendar has
+unresolved profile checks and is given no command to resolve them.
