@@ -406,6 +406,20 @@ def _modelo_200_envelope_discriminante_field() -> ExportFieldDefinition:
     )
 
 
+def _declarable_draft_attributes() -> set[str]:
+    """Return every ``draft_attribute`` token an export field may declare."""
+    return {
+        token
+        for member in get_args(ExportFieldDefinition.model_fields["draft_attribute"].annotation)
+        for token in get_args(member)
+    }
+
+
+def _declared_binding_source_kinds() -> set[str]:
+    """Return every declared binding source kind's stored token."""
+    return {member.value for member in BindingSourceKind}
+
+
 def _accounts_regime_declarations(declared: set[str]) -> list[str]:
     """Return the tokens in ``declared`` that name the estado-de-cuentas axis.
 
@@ -499,18 +513,43 @@ def test_no_typed_declaration_channel_names_an_accounts_regime_concept() -> None
     The scan covers closed sets small enough to enumerate, so it needs no exception
     allowlist and cannot rot into one.
     """
-    declarable_draft_attributes = {
-        token
-        for member in get_args(ExportFieldDefinition.model_fields["draft_attribute"].annotation)
-        for token in get_args(member)
-    }
-    binding_source_kinds = {member.value for member in BindingSourceKind}
+    declarable_draft_attributes = _declarable_draft_attributes()
+    binding_source_kinds = _declared_binding_source_kinds()
 
     assert declarable_draft_attributes, "the draft-attribute set must be readable for this scan to mean anything"
     assert binding_source_kinds, "the binding-source set must be readable for this scan to mean anything"
 
     assert _accounts_regime_declarations(declarable_draft_attributes) == []
     assert _accounts_regime_declarations(binding_source_kinds) == []
+
+
+def test_the_accounts_regime_scan_fires_on_the_real_declaration_sets() -> None:
+    """The scan must fire on the real vocabulary the day one regime token joins it.
+
+    The fixture anchor. Both assertions in the guard above are green today because
+    their subject does not exist yet, and a gate that passes because nothing matches
+    it proves nothing about what it would do when something does. This scans the two
+    REAL sets with one regime token added, which is the shape a future addition
+    actually takes: a whole live vocabulary plus one new member. It proves the match
+    survives contact with the real vocabulary -- that no real token's normalisation
+    or ordering masks a positive, and that the scan reports the offender rather than
+    merely reporting non-empty.
+
+    What it does NOT prove is that the real sets are populated: an empty set plus the
+    injected token would satisfy it too. That is the guard's job above, which asserts
+    both sets are non-empty before scanning them; the two together close the vacuity.
+
+    Both channels are anchored because they are read through different mechanisms --
+    the draft attributes from a ``Literal`` annotation, the source kinds from an enum
+    -- so a change breaking one would leave the other resolving.
+    """
+    for channel, declared in (
+        ("draft attribute", _declarable_draft_attributes()),
+        ("binding source kind", _declared_binding_source_kinds()),
+    ):
+        assert _accounts_regime_declarations(declared | {"estado_cuentas"}) == ["estado_cuentas"], (
+            f"the {channel} scan did not fire on its real set plus one regime token"
+        )
 
 
 def test_the_accounts_regime_scan_flags_a_channel_that_names_the_axis() -> None:
