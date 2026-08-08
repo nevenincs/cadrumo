@@ -34,6 +34,19 @@ always "gesture, look".
 | `size WxH` / `theme ...` | re-render the same walk elsewhere |
 | `shot [--out PATH]` | write the frame as SVG, for colour review |
 
+## Concurrent reviewers
+
+Set `CADRUMO_TUI_WORKSPACE` to a name of your own before any command:
+
+```sh
+export CADRUMO_TUI_WORKSPACE=rendering
+```
+
+Each workspace gets its own session journal **and** its own storage root, so
+two reviewers working at once cannot clobber each other's walk or contend on
+the same bucket and active-profile pointer. Without it everyone shares
+`default`.
+
 ## Surfaces
 
 `setup`, `setup-modify`, `registration`, `login`, `manager`, `status`, `form`.

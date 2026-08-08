@@ -23,8 +23,27 @@ from cadrumo.application.user_profile import logout_active_profile
 from cadrumo.entrypoints.cli._config._manager_frontend import attempt_registration
 from cadrumo.tests.secure_sql import isolated_profile_storage_root
 
-STATE_DIR = Path(__file__).resolve().parent / ".state"
-"""Where the harness keeps its root and its sessions. Gitignored."""
+WORKSPACE_ENV_VAR = "CADRUMO_TUI_WORKSPACE"
+
+_STATE_ROOT = Path(__file__).resolve().parent / ".state"
+
+
+def workspace() -> Path:
+    """This caller's private corner of the harness state.
+
+    Concurrent reviewers each need their own session journal AND their own
+    storage root: one shared journal means every ``open`` clobbers someone
+    else's walk, and one shared root means two agents contend on the same
+    SQLite bucket and active-profile pointer. Set
+    ``CADRUMO_TUI_WORKSPACE`` to a name per reviewer and neither can
+    happen.
+    """
+    name = os.environ.get(WORKSPACE_ENV_VAR, "").strip() or "default"
+    return _STATE_ROOT / name
+
+
+STATE_DIR = workspace()
+"""Where this caller keeps its root, session and screenshots. Gitignored."""
 
 PASSPHRASE_ENV_VAR = "CADRUMO_TUI_HARNESS_PASSPHRASE"  # noqa: S105 - the variable NAME, not a secret
 
@@ -52,7 +71,7 @@ def harness_storage(*, fresh: bool = False) -> Iterator[Path]:
     nothing about it requires that path be throwaway. Pointing it at a
     persistent directory is the whole of "reuse my profile".
     """
-    root = STATE_DIR / ("fresh" if fresh else "profile")
+    root = workspace() / ("fresh" if fresh else "profile")
     root.mkdir(parents=True, exist_ok=True)
     with isolated_profile_storage_root(tmp_path=root) as storage_root:
         yield storage_root
@@ -99,8 +118,10 @@ __all__ = [
     "PASSPHRASE_ENV_VAR",
     "PROFILE_LABEL",
     "STATE_DIR",
+    "WORKSPACE_ENV_VAR",
     "ensure_profile",
     "ensure_session",
     "harness_storage",
     "passphrase",
+    "workspace",
 ]
