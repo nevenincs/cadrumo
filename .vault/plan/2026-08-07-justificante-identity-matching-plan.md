@@ -4,7 +4,7 @@ tags:
   - '#justificante-identity-matching'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:1426ad9c64638093e2851bb8c1df82569f9385797deccbc69e6d87241ffbbde7'
+body_hash: 'sha256:62fb40f36492bfdb45d87b4975d64db3737cd51526a9ce2e78f6fc927b129bc5'
 tier: L2
 related:
   - '[[2026-08-07-justificante-identity-matching-adr]]'
@@ -134,3 +134,29 @@ with `git show <sha> --numstat` after, not a pre-commit `git diff --cached`
   branch is reverted to the uniform `logger.warning` plus `return None` shape,
   and passes against the corrected code.
 - No legal-catalogue entry is added or modified by this plan.
+
+- Closeout run at the plan's actual final state, after every row including
+  `P02.S10` and `P02.S14` had landed, sequential and unfiltered so no marker
+  lane could hide a module:
+
+      uv run --no-sync pytest src/cadrumo/domain/justificante/tests
+      src/cadrumo/application/live/tests
+      src/cadrumo/entrypoints/cli/tests/test_app_live_filed_notice_relay.py -n0 -q
+      324 passed, 2 deselected in 103.60s (0:01:43)
+
+  An earlier attempt at this same run reported 48 failures, every one of them a
+  single cause outside this plan: a peer's corpus hydration was mid-landing, so
+  a bundled consolidated-law HTML file existed without its extracted sidecar and
+  the legal catalogue refused, which reds every registry-loading test. A second
+  reported cause, a construct missing a legal ref, came from a CACHED validation
+  failure list and did not exist at HEAD. Both cleared once the sidecar landed.
+  Recorded because a closeout that had accepted those 48 as its own would have
+  either falsely blamed this plan or, worse, been "fixed" by editing another
+  campaign's registry files.
+- NOT verified in the closing session: the bullet above asserting that the
+  `P02.S10` mutation-proof test fails when the reason-distinguishing branch is
+  reverted to the uniform warn-and-return-None shape. The mutation actually run
+  for `P02.S10` rebound the run model's advisory channel to empty, which proves
+  the CLI transport forwards it; it does not exercise the branch revert. The
+  branch-level claim may have been proven when `P02.S08` and `P02.S09` landed,
+  but this session did not re-run it and does not assert it.
