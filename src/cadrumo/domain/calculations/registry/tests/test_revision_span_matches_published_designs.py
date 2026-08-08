@@ -1134,6 +1134,63 @@ def test_the_box_marker_is_the_registry_canonical_one_and_reads_every_modelo() -
     )
 
 
+def test_a_boundary_only_the_description_pass_sees_is_reported_and_marked_for_review() -> None:
+    """The least precise signal must still reach the verdict, and must say when it is alone.
+
+    A slot carrying no bracketed box number can change what it declares while keeping its
+    offset and its width. Modelo 303 does exactly that between the 2024 halves, where a
+    one-byte flag and the reference beside it stop declaring a complementaria and start
+    declaring an autoliquidacion rectificativa. No offset check, length check, occupancy
+    check or digest detects it, and the box-number key structurally cannot.
+
+    TWO PROPERTIES, NEITHER A COUNT. First, the pass must have a positive case somewhere,
+    or it has become unfalsifiable and its silence means nothing. Second, every boundary
+    resting SOLELY on it must be marked in the verdict text.
+
+    The marking is the honest part. This pass runs roughly one false positive in three on
+    individual verdicts -- a measured example survives at Modelo 303 2014/2015, where a
+    leaf goes from ``regimen simplificado`` to ``Regimen Simplificado (RS)``, a rewording
+    rather than a meaning change. That costs nothing there, because three other signals
+    already name that boundary and a false positive on an already-named boundary adds
+    noise to the evidence rather than a wrong split. The case a reader must judge is a
+    boundary this pass names ALONE, and that case is invisible unless the verdict says so.
+    """
+    positive: list[str] = []
+    alone: list[tuple[str, str, tuple[int, int]]] = []
+    for modelo, revision_id, revision in _exporting_revisions():
+        for earlier, later in pairwise(_designs_claimed_by(modelo.id, revision)):
+            if _description_flip_evidence(earlier, later):
+                positive.append(f"modelo {modelo.id} {_boundary_label(earlier, later)}")
+        for key, evidence in _boundaries_for(modelo.id, revision).items():
+            if len(evidence) == 1 and "unnumbered slot(s) re-described" in evidence[0]:
+                alone.append((modelo.id, revision_id, key))
+
+    assert positive, (
+        "no design pair anywhere re-describes an unnumbered slot at an unchanged position and "
+        "width, so this pass can no longer fail and its silence about the complementaria-to-"
+        "rectificativa class means nothing"
+    )
+
+    for modelo_id, revision_id, key in alone:
+        modelo, revision = next(
+            (candidate, current)
+            for candidate, current_id, current in _exporting_revisions()
+            if candidate.id == modelo_id and current_id == revision_id
+        )
+        boundaries = _boundaries_for(modelo.id, revision)
+        rendered = "; ".join(
+            f"{f'{a} mid-year' if a == b else f'{a}/{b}'}"
+            f"{' ' + _DESCRIPTION_ONLY if len(ev) == 1 and 'unnumbered slot(s) re-described' in ev[0] else ''}"
+            for (a, b), ev in sorted(boundaries.items())
+        )
+        assert _DESCRIPTION_ONLY in rendered, (
+            f"modelo {modelo_id} revision {revision_id!r} boundary {key} rests only on the "
+            "description-keyed pass, which runs roughly one false positive in three, and the "
+            "verdict does not mark it as such -- a reader cannot tell which boundaries to judge "
+            "rather than act on"
+        )
+
+
 def test_a_box_added_or_removed_without_movement_reaches_the_verdict() -> None:
     """A boundary only the box-SET comparison can see must reach the failure text.
 
