@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#invoice-canonical-structure'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:10abd76cbfb2d62d658f1e5c20f5ccb039a9520a598d42ecb131c7097794a76a'
+body_hash: 'sha256:eaadba3d126eed3382124248980b63e41f41375fa593069ad7bb6f438f59f30a'
 related:
   - "[[2026-08-07-invoice-canonical-structure-iva-treatment-axis-adr]]"
 ---
@@ -254,6 +254,50 @@ by the sweep above, which is near enough to be the gate itself. Neither correcti
 be authored by an agent: requoting means choosing which phrase is operative, and choosing
 wrongly on an article nobody has re-read from BOE leaves the entry looking better-grounded
 while checking something equally incidental. Both belong in the operator corpus refresh.
+
+### The bank-transaction path already does what the invoice path should, and the gap costs a reverse-charge entry
+
+Checked because a landed test docstring asserts the routing fix should follow "the way the
+bank-transaction path already does". The premise is correct, and comparing the two paths
+surfaces a second divergence nobody had costed.
+
+The bank path prefers the DECLARED category and falls back to rate derivation only when
+none is declared - `effective_category = explicit_category`, else
+`domestic_categories_by_rate_kind()[rate_kind]` - and it guards the declared branch twice
+(a category impossible on that invoice kind, and a non-zero rate on a zero-cuota category).
+It then RECOMPUTES the flow from the effective category through
+`derive_flow_for_classification`. The invoice-line path does only the fallback, and fixes
+the flow from the invoice kind alone.
+
+So the fix template exists, is live, and already carries the guards worth having.
+
+The second divergence is the cost. Measured, on the realistic shape - a supplier under
+inversion del sujeto pasivo charges no cuota, so the received invoice carries a base and a
+zero cuota:
+
+```
+invoice line slot=RATE_0 -> category=domestic_zero   flow=soportado  cuota=0
+invoice line slot=EXEMPT -> category=domestic_exempt flow=soportado  cuota=0
+
+Axis-A for DOMESTIC_REVERSE_CHARGE / RECEIVED: cuota=required, settlement=inversion_sujeto_pasivo
+correct flow:                                   inversion_sujeto_pasivo
+bank path, same category declared:              inversion_sujeto_pasivo
+```
+
+A received reverse-charge invoice recorded in the CATALOGUE therefore cannot produce the
+self-assessed devengada entry at all: the path never reads the invoice's category and never
+recomputes the flow, so the operation lands as an ordinary zero-cuota purchase. The Axis-A
+row calls this pair "two entries, one cuota"; the invoice path produces neither.
+
+Direction, stated honestly. For a taxpayer deducting in full the two missing entries offset
+and the net cuota is unchanged, so this is not always money. For a prorrata or partially
+deductible taxpayer the devengada side is owed in full while the soportada side is only
+partly recoverable, so the omission is a real underpayment. In both cases the declaration
+is wrong on its face, and the same operation recorded as a BANK ROW with its category
+declared is handled correctly - so two records of one operation disagree.
+
+This is the third consequence of one root cause. Constructing the invoice observation from
+the invoice's own category closes casillas 59/60, the prorrata bucket misrouting, and this.
 
 ## Sources
 
