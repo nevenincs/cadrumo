@@ -28,10 +28,21 @@ cached transcription -- and re-reading is free on the text-layer path and a paid
 model call on the vision path, which is the path the cache exists for.
 
 **Is the scope smaller than it looks?** Yes, and this is the finding that should
-be read first. A structured record answers attribution by its ORIGIN --
-``EXACT_STRUCTURED`` is one of the establishing origins -- so co-location is
-never consulted for a syntax that names its parties in elements. Only prose is
-in scope, and within prose only the text-layer transport can carry coordinates.
+be read first. Co-location is never consulted for a structured record, for two
+independent reasons and the stronger one is structural: the draft path RETURNS
+on a structured shape before grounding is reached, and the structured builder
+calls neither the grounding entry point nor the co-location resolver nor the
+stamp. There is nothing to co-locate against either, because a structured shape
+is read exactly and never transcribed. The second reason is the guard that would
+catch such an envelope if one arrived by another route --
+``ATTRIBUTION_ESTABLISHING_ORIGINS`` in
+``cadrumo.application.ledger._party_attribution``, which carries
+``EXACT_STRUCTURED`` and clears the stamp by origin.
+
+Naming the weaker one alone would misdescribe the mechanism: it governs whether
+a value is STAMPED, which is a different question from whether co-location is
+CONSULTED. Only prose is in scope, and within prose only the text-layer
+transport can carry coordinates.
 
 **And the geometry may not need to be preserved at all.**
 :func:`column_aware_rendering_partitions` measures the alternative: consume the
