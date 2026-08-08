@@ -6,7 +6,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:5ea925f0a4cd2af6d72af8e5461226ce30a6728826d53f758e962c8e89d44ad4'
+body_hash: 'sha256:8ecb98b2ceb1098ca58f47d8a8f3035320daa7f4c84b4882d5fdb36f5b03c09c'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -30,6 +30,7 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S12]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S13]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S14]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S74]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
 ---
 
@@ -65,6 +66,7 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-08-08-aeat-design-relayout-boundary-W01-P03-S12` - Widen the binding-readiness helper's refusal handling
 - `2026-08-08-aeat-design-relayout-boundary-W01-P03-S13` - Handle the ambiguity refusal in the registry revision diff surface
 - `2026-08-08-aeat-design-relayout-boundary-W01-P03-S14` - Handle the ambiguity refusal in the registry describe and bindings query
+- `2026-08-08-aeat-design-relayout-boundary-W01-P03-S74` - Record and verify that the profile inspect surface already refuses on the ambiguity error
 
 ### plan
 

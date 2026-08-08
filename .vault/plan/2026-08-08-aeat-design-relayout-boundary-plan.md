@@ -4,7 +4,7 @@ tags:
   - '#aeat-design-relayout-boundary'
 date: '2026-08-08'
 modified: '2026-08-08'
-body_hash: 'sha256:8f244564300d3c31ef02f886a7e684a8e5a9518a8b97753f0cc702d8f4e58277'
+body_hash: 'sha256:9648ffced1eb4fdaf85d5c52463658438b8910bcd09e2351a46a76a89d375ca7'
 tier: L3
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
@@ -82,7 +82,7 @@ Make the year-only revision selector refuse instructively for a year carrying a 
 - [x] `W01.P03.S12` - Widen the binding-readiness helper's refusal handling so the ambiguity error is handled the way a missing revision for a period already is, rather than propagating out of a read-only discovery surface; `src/cadrumo/application/modelo/_binding_readiness.py`.
 - [x] `W01.P03.S13` - Handle the ambiguity refusal in the registry revision diff surface alongside its existing missing-revision handling; `src/cadrumo/application/registry/_diff.py`.
 - [x] `W01.P03.S14` - Handle the ambiguity refusal in the registry describe and bindings query, which calls the year-only selector bare with no handling at all, rather than in the profile inspect surface the row originally named - measured, profile inspect does not call the year-only selector and already refuses on this error through its own boundary path with a translated message listing the candidate ids, while the query resolver is the third caller the sub-year record names and the only one still unguarded; `src/cadrumo/domain/calculations/registry/_queries.py`.
-- [ ] `W01.P03.S74` - Record that the profile inspect surface already refuses on the ambiguity error through its own boundary path with a translated message listing the candidate ids, so the row that named it was satisfied before the campaign began, and confirm no regression by exercising that refusal rather than by reading the code; `src/cadrumo/entrypoints/cli/_config/tests/`.
+- [x] `W01.P03.S74` - Record that the profile inspect surface already refuses on the ambiguity error through its own boundary path with a translated message listing the candidate ids, so the row that named it was satisfied before the campaign began, and confirm no regression by exercising that refusal rather than by reading the code; `src/cadrumo/entrypoints/cli/_config/tests/`.
 
 ## Wave `W02` - Modelo 303 - the proving pass and the only sub-year epoch
 
