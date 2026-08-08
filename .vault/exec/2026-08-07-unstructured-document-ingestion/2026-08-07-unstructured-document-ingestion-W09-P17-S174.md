@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:6b89bac9c2900b2b7bfae9617081e08feba92903316b2908c2d0790cda1c931f'
+body_hash: 'sha256:02a32e708d43799a607108fcadfff841f87b9bf74834e09f1e141abdb580d2a2'
 step_id: 'S174'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -23,7 +23,18 @@ related:
 - Map criteria attribute to party fact through one table keyed by the criteria model's field names, and assert that mapping exhaustive against the model, so a field added to the model forces a decision instead of defaulting to carrying no fact.
 - Assert declared equals actual per row, reporting the two directions as separate diagnostics because they are different defects: a fact read but not declared stops the producer demanding evidence the branch decides on, and a fact declared but not read asks an operator for evidence that changes no outcome.
 - Carry the non-vacuity trio: the table floored as a bound rather than pinned as a count, a per-row assertion that some attribute was extracted, and a refusal rather than an empty set when a predicate cannot be read.
-- Anchor the extractor itself with an assertion that some row is found to read the identifying State, since every other assertion would pass identically if the helper-following branch were dead.
+- Anchor the extractor itself with an assertion that some row is found to read the identifying State, since every other assertion would pass identically if the extractor found no identification read anywhere.
+
+**Correction, measured afterwards.** That anchor was originally recorded, and named,
+as pinning the helper-following branch. It does not and cannot: following changes the
+extracted set on 0 of the 19 live rows, because every predicate spells the attribute
+out in the call it makes and the argument is an attribute OF the subject, which the
+plain walk records before any helper is considered. Removing the branch left all five
+tests green, this anchor included. What the anchor really pins is that the equality
+gate is comparing something rather than establishment against establishment, which is
+worth having and is a narrower claim than the one recorded here. The branch's own
+guard, and the reason it was kept rather than deleted, are recorded under the row that
+closed the gap.
 
 ## Outcome
 
