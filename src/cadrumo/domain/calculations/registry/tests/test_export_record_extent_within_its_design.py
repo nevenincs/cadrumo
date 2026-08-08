@@ -36,9 +36,9 @@ deliberately avoids depending on.
 
 UNREADABLE IS UNMEASURED, NEVER PASSING. A design whose POSICIONES totals cannot be
 extracted is reported, not skipped. Six revisions are in that state today, including
-Modelo 200 -- the modelo whose tree this campaign inspected most closely is the one this
+Modelo 200 -- the modelo most closely inspected during this work is the one this
 check cannot speak about. A parser that cannot read a total returns the same answer as a
-layout that fits, and that equivalence is what every instrument this campaign corrected
+layout that fits, and that equivalence is what every instrument corrected here
 had in common.
 
 No count is hardcoded. The number of revisions, records and design totals all move as
@@ -166,7 +166,7 @@ def test_a_revision_whose_design_publishes_no_readable_total_is_reported_as_unme
     """An unreadable design total is UNMEASURED, never a pass.
 
     A parser that cannot extract a POSICIONES figure returns the same answer as a layout
-    that fits, and that equivalence is what every instrument this campaign corrected had
+    that fits, and that equivalence is what every instrument corrected here had
     in common. This names the revisions the extent check cannot speak about, so its
     silence about them is not read as their being correct.
 

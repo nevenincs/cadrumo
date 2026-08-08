@@ -682,7 +682,7 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
 async def test_the_manager_states_the_recovery_boundary_by_name(tmp_path) -> None:
     """Recovery create/rotate stay CLI-only; the manager must say so, and say which verbs.
 
-    Per the recovery-mnemonic-surface ADR, the TUI may never paint a
+    Per the recovery-mnemonic-surface decision, the TUI may never paint a
     recovery mnemonic the application mints -- create and rotate are
     permanently CLI-only, because both display 24 generated words no
     framework compositor can show "once". The manager is where every

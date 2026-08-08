@@ -5,8 +5,8 @@ revision, so the year-only selector refuses rather than picking one. This surfac
 already handled that refusal before the split campaign began, and this module
 EXERCISES it rather than asserting it from a reading of the code.
 
-That distinction is the point. A surface that looks handled is what this campaign
-repeatedly found was not: a notice that read as wired had no caller, a box-number
+That distinction is the point. A surface that looks handled is repeatedly what
+turned out not to be: a notice that read as wired had no caller, a box-number
 marker that read as matching covered under one percent of a modelo, and a record
 declared required was never written by the writer. Read-then-conclude is how all
 three survived. So this asserts the refusal by raising the domain error through the

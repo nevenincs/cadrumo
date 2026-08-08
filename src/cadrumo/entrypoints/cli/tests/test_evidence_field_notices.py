@@ -381,8 +381,9 @@ def test_the_identity_resolver_really_emits_the_located_but_unroled_shape() -> N
 
     The shape above is only worth a notice of its own if something actually
     emits it. A hand-built envelope proves which branch the selection takes and
-    nothing about whether the producer ever hands it one -- and this campaign's
-    dominant defect is precisely a correct branch a producer cannot reach.
+    nothing about whether the producer ever hands it one -- and the dominant
+    defect this suite guards against is precisely a correct branch a producer
+    cannot reach.
 
     So the envelope here comes from the real resolver: one identifier that
     verified, its anchor located on the page, and nothing printed that assigns

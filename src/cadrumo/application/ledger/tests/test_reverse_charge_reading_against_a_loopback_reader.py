@@ -10,9 +10,9 @@ code: the real provider client, the real router, the real grounding stage.
 and the repercutido line are printed on the page and come back through the
 transcription, so the reply reports what its document actually says. A pair of
 hand-built drafts would exercise the finding while proving nothing about
-whether a document reaches it -- the failure shape this campaign has paid for
-repeatedly, where a guard is correct in logic and unreachable in wiring because
-its tests supplied the derived value directly.
+whether a document reaches it -- a recurring failure shape in this codebase,
+where a guard is correct in logic and unreachable in wiring because its tests
+supplied the derived value directly.
 
 **Why reverse charge specifically.** A domestic reverse charge prints no cuota
 and *obliges the recipient to self-assess* output IVA, so mis-honouring it

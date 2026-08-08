@@ -1592,7 +1592,7 @@ def _filed_130_observation(
 def test_discovery_driven_capture_stamps_the_same_official_source_kind(tmp_path: Path) -> None:
     """A discovery-nominated pair is provenance-identical to a single-pair capture.
 
-    This is the point of the Step, not a formality. The design deliberately adds
+    This is the point of the test, not a formality. The design deliberately adds
     NO sixth ``ObservationSourceKind`` for a backfilled historical filing, on the
     ground that an imported filing IS an AEAT-sourced filed declaración rather
     than a lesser-trust echo of one. That is only safe if the discovery signal
@@ -1672,8 +1672,8 @@ def test_the_official_source_kind_set_gains_no_discovery_specific_member() -> No
 
     Gated on membership of the official set rather than on a total count of the
     enum, so adding a genuinely unrelated NON-official kind does not force an edit
-    here -- while adding a discovery-specific official kind, which is the decision
-    this Step settled, fails.
+    here -- while adding a discovery-specific official kind, which this test
+    settles against, fails.
     """
     official = {kind for kind in ObservationSourceKind if kind.is_official_aeat}
     assert official == {

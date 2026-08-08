@@ -170,7 +170,7 @@ def test_a_transient_server_error_is_retried_until_it_succeeds(tmp_path: Path) -
 
 
 def test_a_dropped_connection_is_retried(tmp_path: Path) -> None:
-    """A runtime that accepts and dies mid-request is the transient case the ADR names."""
+    """A runtime that accepts and dies mid-request is the transient case the design names."""
     script = _Script(responses=[(HTTPStatus.OK, _OK_BODY)], drop_connection=frozenset({0, 1}))
     with _serve_scripted(script) as endpoint, override_settings(cadrumo_llm_ollama_chat_url=endpoint):
         response = asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="hello")))

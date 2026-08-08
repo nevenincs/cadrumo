@@ -82,9 +82,9 @@ def test_the_suggestion_is_honestly_unsupported_rather_than_unfollowable() -> No
     """An instruction the operator cannot carry out is worse than saying so.
 
     There is no verb that records a charge account, so a suggestion naming one
-    would be a dead instruction -- the defect class this campaign has repeatedly
-    caught. The suggestion says the capability is missing and offers the two
-    routes that do exist.
+    would be a dead instruction -- a defect class this codebase's tests have
+    repeatedly caught. The suggestion says the capability is missing and offers
+    the two routes that do exist.
     """
     with pytest.raises(ModeloRefundAccountMissingError) as caught:
         _refuse_domiciliacion_without_charge_account(None)

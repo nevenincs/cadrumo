@@ -506,7 +506,7 @@ def test_a_declared_code_that_rests_on_no_establishment_is_untouched(stated: Iva
     A domestic reverse charge also prints no cuota, but it OBLIGES the recipient
     to self-assess output IVA, so mis-honouring it over-declares rather than
     under-declares and is not this hazard. Widening the set to every zero-cuota
-    code would withhold the reverse-charge treatment this campaign exists to
+    code would withhold the reverse-charge treatment this guard exists to
     preserve.
     """
     resolution = _relief(stated)

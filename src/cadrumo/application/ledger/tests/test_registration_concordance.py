@@ -224,7 +224,7 @@ class TestConflictedPapersSurface:
         self,
         repository: ConfirmedCounterpartyFactsRepository,
     ) -> None:
-        """The ADR's named conflict fixture, and never a silent EU_MEMBER."""
+        """The design's named conflict fixture, and never a silent EU_MEMBER."""
         resolved = _resolve(
             repository,
             tax_identifier=_GERMAN_VAT,

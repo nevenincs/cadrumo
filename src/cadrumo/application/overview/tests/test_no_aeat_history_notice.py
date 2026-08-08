@@ -1,7 +1,7 @@
 """The overview nudge for a profile with no AEAT-confirmed filing evidence.
 
 The predicate is official-source membership, not observation emptiness, and that
-choice is the whole substance of this Step. A profile whose only observations are
+choice is what this module tests. A profile whose only observations are
 locally filed or operator-entered has exactly the same gap as one with no
 observations at all — it holds nothing AEAT ever confirmed — so testing for an
 empty list would leave precisely that taxpayer unprompted.

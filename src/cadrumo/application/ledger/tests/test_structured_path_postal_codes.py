@@ -273,8 +273,8 @@ def test_a_cii_document_carries_the_postcode_code(
     invoice states its address the way this one does.
 
     It is here rather than omitted because the alternative is a reader that
-    exists and is never exercised, which is the shape this campaign has shipped
-    repeatedly. Both codes name excluded territories -- Santa Cruz de Tenerife
+    exists and is never exercised, a recurring shape in this codebase. Both
+    codes name excluded territories -- Santa Cruz de Tenerife
     and Ceuta -- so a reader that silently produced the mainland would fail.
     """
     evidence_id = _stored(
