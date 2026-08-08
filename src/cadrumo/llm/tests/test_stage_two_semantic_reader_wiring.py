@@ -40,10 +40,10 @@ from ...core.time import now
 from .._evidence_draft_text import TextInvoiceFieldExtractor
 from .._models import LLMProvider, LLMResponse
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
 if TYPE_CHECKING:
     from .._models import LLMRequest
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _REPLY = json.dumps(
     {

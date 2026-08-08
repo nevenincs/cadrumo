@@ -40,6 +40,8 @@ from .._grounded_reading import (
 )
 from .._identity_roles import IdentityCandidate, resolve_counterparty_identity
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 _DOCUMENT_TEXT = (
     "FACTURA 2026-0142\n"
     "Proveedor: EJEMPLO SL B12345674\n"
@@ -53,8 +55,6 @@ A fixture printing no heading at all would make every dropped-evidence
 assertion pass for the wrong reason -- nothing could ever be found, so the
 check would look decisive while testing nothing.
 """
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CORPUS = Path(__file__).parent / "_evidence_corpus"
 _CONTROL = _CORPUS / "com_2026_0005_layout_minimal.pdf"
