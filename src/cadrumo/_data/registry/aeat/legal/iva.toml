@@ -92,7 +92,13 @@ notes = "Apartado primero de la Orden HAC/3625/2003: aprobacion del modelo 309 '
 required_text = [
     "Aprobación del modelo 309",
     "Declaración-liquidación no periódica",
-    "Impuesto sobre el Valor Añadido",
+    "Impuesto sobre el Valor Añadido",    # The art. 80.Cinco.5.a case (regimen especial filers who become debtors
+    # when an unpaid operation's base imponible is modified), at 67% of
+    # apartado primero and above the amendment block. The three phrases above
+    # all sit in the first 200 characters. Verified against live BOE: this
+    # entry is scoped to apartado primero, which runs 6,852 characters live
+    # against 6,508 bundled, the difference being amendment chrome.
+    "que resulten deudores de un crédito a favor de la hacienda pública, como consecuencia de la modificación de la base imponible",
 ]
 
 [legal."orden-hac-3625-2003:apartado-3"]
@@ -2138,4 +2144,23 @@ reviewed_by = "agent-prepared-pending-operator"
 notes = "RDL 20/2012 art. 23, apartado Tres: da nueva redaccion al art. 91 LIVA y fija el tipo reducido en el 10 por ciento, con efectos desde el 1 de septiembre de 2012. Entrada SEPARADA de la del apartado Dos deliberadamente: el mismo articulo fija dos tipos en dos apartados distintos, y una sola entrada obligaria a cada tipo a citar una provision que no es exactamente la suya. La nota de modificacion del art. 90 consolidado cita 23.2, que es correcta para el 21 por ciento y NO para este tipo. El tipo super-reducido del 4 por ciento es anterior a esta norma y necesita su propia provision. PROVENANCIA. Mismo documento y mismo sha256 que la entrada del apartado Dos, d0ef2bae3d07e5a2fed52315c29808306f0a3ec197b1bc0501186ce16181c9df; adquirido con dev/corpus/fetch_boe_normative.py. Entrada preparada por agente, no revisada por un operador humano."
 required_text = [
     "Se aplicará el tipo del 10 por ciento",
+]
+
+[legal."ley-41-1994:art-78-segundo"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-41-1994-art-78.html#segundo"
+document_id = "BOE-A-1994-28967"
+article = "78.Segundo"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-28967"
+published_at = 1994-12-31
+effective_from = 1995-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-08
+reviewed_by = "agent-prepared-pending-operator"
+notes = "Ley 41/1994, de 30 de diciembre, de Presupuestos Generales del Estado para 1995, art. 78 (Tipos impositivos), apartado Segundo: da nueva redaccion al art. 91 LIVA y fija el tipo super-reducido en el 4 por 100, elevando ademas el reducido del 6 al 7 por 100 en el mismo apartado. Esta es la provision que ESTABLECE el 4 por ciento; el art. 91 LIVA es el articulo marco que lo aloja. Las dos entradas hermanas de RDL 20/2012 lo dicen explicitamente en sus propias notas: el tipo super-reducido es ANTERIOR a aquella norma y no puede heredarla por proximidad. EFECTOS: el propio encabezado del articulo dice 'Con efectos a partir del dia 1 de enero de 1995 se da nueva redaccion a los siguientes preceptos de la Ley 37/1992', de modo que la fecha citable esta en el texto y no en una nota. El atributo fecha_vigencia del endpoint marca 19950120, diecinueve dias mas tarde; tomarlo como effective_from seria erroneo. IDENTIFICACION DEL APARTADO: el apartado Primero modifica el art. 90 (tipo general, 16 por 100) y el Segundo el art. 91, por lo que citar el Primero para el 4 por ciento seria erroneo en un apartado, el mismo error que las notas de 2012 documentan. No hay trampa de ancla en este documento: contiene una sola cadena 'Articulo 78', a diferencia del de 2012, que contiene tres 'Articulo 23' de los cuales el primero pertenece a otra ley. CORROBORACION INDEPENDIENTE: recorrer las 41 redacciones consolidadas del art. 91 LIVA muestra Dos = 3 por 100 hasta la redaccion previa a esta norma y Dos = 4 por 100 desde ella, ininterrumpidamente hasta hoy; es un diff antes/despues, no una lectura de prosa. PROVENANCIA. Documento adquirido con dev/corpus/fetch_boe_normative.py (fetch_article), sha256 1c484707bac3ccf0ef6a252fe1272fb8dedde5150a9bf35f81048450b8308b61, 15448 bytes, leido de nuevo desde disco antes de redactar esta entrada. La captura se hizo SIN required_text a proposito: fijar la frase del 4 por ciento antes de leer el fichero habria hecho tautologica la comprobacion. Entrada preparada por agente y fundamentada en el texto empaquetado leido directamente; no la ha revisado un operador humano, y reviewed_by lo declara asi."
+required_text = [
+    "Se modifica el artículo 91",
+    "Se aplicará el tipo del 4 por 100",
 ]
