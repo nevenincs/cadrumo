@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:96dfe72b608dd8c15b686015b117773ba0de160290f22437bb291191a52c2ac6'
+body_hash: 'sha256:3c51ed8afdc7eb59d203cd8c8fe232f64008869b4ea03caadc08b218979eba4a'
 step_id: 'S63'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -18,133 +18,37 @@ related:
 
 ## Description
 
-- Close the inference lane batch-wide on a standing contention refusal, leaving
-  every document that reads without a model to run regardless.
-- Add `paused` as the one status meaning the work did not happen, carrying no
-  per-item refusal.
-- State the cause once per run, with the provisioning snapshot's own causes and
-  remediation.
-- Separate deferral from failure, so a caller can tell "finished" from "the
-  deterministic half is finished".
+- Add a process-wide, per-provider rate-limit window armed when a dispatch is rate limited and awaited before any later dispatch at that provider.
+- Arm the window before the retry loop decides whether the current request may continue, so a limit found on the final attempt still paces the run.
+- Bound the shared wait by the retry budget, leaving the window armed and readable rather than blocking on it.
+- Carry a per-item record of whether a document needed the inference lane, and report deterministic-completed and paced as separate run figures.
+- Extend the batch CLI payload with both figures and the per-item flag.
 
 ## Outcome
 
-The lane closes two ways, and the asymmetry is the design rather than an
-accident of implementation.
+A rate limit now paces the run rather than the request that met it. Per-item backoff against a shared limit is not a rate limit: N items each discover the same account-wide window independently and issue N calls into it, which is N limits being ignored rather than one being respected.
 
-**Measured contention closes it BEFORE any attempt.** Admission control exists
-precisely so an unsafe load is never attempted, so learning about it by
-attempting would defeat the point.
-
-**A missing reader closes it AFTER the first attempt.** Nothing is unsafe about
-trying, there is no selected model for admission to judge, and predicting which
-documents need a reader would mean reproducing the extractor's routing here — a
-second copy of a decision that would drift from the first. One document pays for
-the discovery and every later one is paused on it.
-
-Classification is limited to the one question the shared shape probe already
-answers: does this document carry a machine-readable record. Everything else is
-treated as possibly needing a model. That is conservative in the safe direction —
-the cost of over-pausing is a re-run that is free, and the cost of
-under-pausing is the model load nobody admitted.
-
-`paused` is deliberately not a failure and deliberately not silent. Nothing went
-wrong with a paused document and a re-run costs nothing, but the run is not
-finished either, so deferral is its own axis rather than folded into the failure
-flag; one boolean cannot carry both claims.
-
-The pause carries the provisioning snapshot's `causes`, `detail` and
-`remediation` through verbatim. Flattening them would erase the distinction the
-provisioning record was built around: reclaiming memory the local runtime holds
-is an action this product can offer, and closing a peer application is not.
+The batch's pausing half was already in place -- deterministic items keep completing while inference-bearing ones park, with one run-level cause rather than N identical refusals stamped onto innocent documents. What was missing was the ability to SEE it. A completed row looks identical whether it was read by a parser or through a model, so a pooled figure reports a run that paced everything and a run that paced nothing the same way. The two counts are now separate, and the completed set is derived by subtraction from the status taxonomy so a new success-shaped status counts as progress by construction rather than being silently omitted.
 
 ## Verification
 
-    uv run --no-sync pytest src/cadrumo/application/ledger/tests/test_batch_ingest_runner.py src/cadrumo/application/ledger/tests/test_batch_ingest.py -m "unit or integration" -p no:randomly
-    30 passed in 77.76s
+uv run --no-sync pytest src/cadrumo/llm/tests/test_shared_rate_limit_pacing.py -m unit -p no:randomly -n 0 -q
+    5 passed in 6.71s
 
-Thirty collected, thirty ran, none deselected.
+    uv run --no-sync pytest src/cadrumo/application/ledger/tests/test_batch_ingest.py src/cadrumo/application/ledger/tests/test_batch_ingest_runner.py src/cadrumo/application/ledger/tests/test_batch_inference_pacing.py -m integration -p no:randomly -n 0 -q
+    24 passed, 12 deselected in 113.23s (0:01:53)
 
-Five mutations from a plugin outside the repository, each reddening the property
-it targets:
+    uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py -m "unit or integration" -p no:randomly -n 0 -q
+    333 passed in 40.19s
 
-    ignore_contention             -> 5 failed, 13 passed
-    pause_everything              -> 6 failed, 12 passed
-    pause_without_saying_why      -> 2 failed, 16 passed
-    deferred_counts_as_finished   -> 1 failed, 17 passed
-    refuse_each_item_separately   -> 1 failed, 17 passed
+The pacing is measured at the SERVER, on the gap between arrivals, because that is where the question is decided: a client that recorded a delay and dispatched anyway would look identical from inside. The control runs the same two dispatches without the rate limit and asserts the gap is small, which establishes both that the measured gap is the pacing rather than fixture overhead and that a paced dispatch genuinely would have gone immediately.
 
-### Confirmed against HEAD, not the working tree
+The batch control runs the same folder with headroom available and asserts nothing paced, which is what makes the parked row a window that OPENED rather than an item that could never have been read either way.
 
-Every figure above was measured in a shared tree carrying other lanes'
-uncommitted work, and two modules this runner reaches through the extractor —
-the evidence input carrier and three of the reading package's modules — were
-among the dirty ones. A green measured there does not establish that the
-committed code is green, only that the code plus somebody's WIP is.
-
-So HEAD was exported on its own and the suites re-run against it, with the
-import confirmed to resolve into the export rather than the live tree:
-
-    git archive HEAD | tar -x -C <scratch>
-    PYTHONPATH=<scratch>/src ... pytest <the two batch suites> -m "unit or integration" -n0
-    31 passed in 102.75s
-
-Same result, now about a tree with no other lane's work in it.
-
-### The mutation that caught a real defect
-
-`refuse_each_item_separately` — never close the lane, so every affected document
-collects its own copy of one identical environment refusal — **passed** against
-the first implementation. That is the whole reason it was worth running.
-
-The first version decided "this is the environment's fault, not the document's"
-by matching the refusal's own remediation text against the provisioning verb.
-That was wrong twice over. It coupled this module to strings another package
-owns, and it silently HALF-worked: the text reader names a fixed provisioning
-verb, while the vision reader composes its remediation from a runtime probe. So
-one missing reader closed the lane for text-layer documents and left scans
-refusing one by one — and the gate did not notice, because the test that
-exercised the pause used the contention path, where the lane closes before any
-attempt and the broken branch never runs.
-
-The fix replaces the string match with a measurement: after a refusal, ask the
-runtime once whether a reader is actually available. Same answer for both kinds
-of document, no cross-package string coupling, and the mutation now reds.
-
-### Two findings about the hardware seam, both measured rather than assumed
-
-**Selection and admission share the free-memory bar.** A profile small enough to
-refuse a load is also small enough that no model is selected, so it never
-reaches the pacing decision. The reachable state where a model IS selected and
-the load still refused is an accelerator whose free figure cannot be READ —
-"could not tell" is not evidence of headroom, and refusing it is the primitive's
-fail-closed core. Found by sweeping free-VRAM values and printing both answers,
-after two guesses at the fixture were wrong.
-
-**This host fails that check for real.** It reports no readable accelerator, so
-its admission check refuses closed — correctly. Left to the host, every gate in
-the file would have measured the pause path and none would have measured the
-behaviour it names. The hardware profile is therefore injected in the tests,
-through the same parameter the admission primitive exposes to its own suite, so
-the production function computes every refusal from stated measurements rather
-than having its decision substituted.
+Proven by two mutations. Removing the shared wait turned the two cross-item pacing cases red while the controls stayed green; making a closed lane park every item turned the deterministic-progress case red while the two headroom controls, where the lane never closes, stayed green.
 
 ## Notes
 
-No model was loaded, pulled, or contacted. The one test that needs a genuinely
-absent reader points the runtime at a closed loopback port, so the client's
-connect really fails rather than being told to.
+The contended batch case needed a widened safety margin to be reachable at all. On the shipped catalogue, selection and admission read the same measured free figure and their thresholds sit within tens of megabytes of each other, so a headroom low enough to refuse admission is usually also low enough for selection to find no candidate -- which is deliberately NOT a pause. The first attempt at this fixture fell into exactly that gap and reported a paced count of zero while the run had actually closed its lane for a different reason. The margin is a real operator setting, raised on a machine that also drives a display, so widening it separates the two thresholds without altering either decision.
 
-That test also corrected its own expectation. It first asserted the remediation
-was `aeat config provision pull`, per the brief. The real remediation is the
-probe's own and said to start the runtime — which is *more* accurate, because in
-that scenario the server is down rather than the model unprovisioned, and the
-brief's fixed string would have sent the operator to download a model they may
-already have. The assertion now pins the property.
-
-The batch-wide cloud rate limiting the Step also names is **not built**. No
-consented cloud route reaches this runner yet — the consent gate is still
-unbuilt — so there is no dispatch here to apply a shared backoff across. Adding
-one now would mean inventing the call site the consent design has not yet fixed,
-which is the routing-around this campaign forbids. Recorded as an open remainder
-of this Step rather than silently absorbed.
+Adding a per-item field reddened the batch CLI's strict output schema, which is the projection working as designed: the payload is built by re-validating the engine's own serialisation precisely so an upstream field either arrives by name or fails loudly.
