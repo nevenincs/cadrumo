@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:8ce7207bf0ccc1b717a0c3780e78968c24a6e20b59200d5bd4457ac0b5a34f57'
+body_hash: 'sha256:1412465359b0ba9e3ba5e80849a6ae97adb89d61c125ca712079496c9de97c29'
 related:
   - '[[2026-08-08-recovery-mnemonic-surface-reference]]'
   - '[[2026-07-25-auth-cert-recovery-custody-adr]]'
@@ -49,10 +49,15 @@ one.
   field carries a secret flag that renders its input in password mode. Nothing
   in the TUI paints a secret, and the masked-field render gate asserts exactly
   that over every enrolled surface.
-- That render gate has a stated blind spot: it cannot see a secret collected
-  inside a modal the base screen pushes only on a button press, because it does
-  not drive navigation into nested screens. Any new secret surface reached
-  through a modal is invisible to the gate that would otherwise catch it.
+- That render gate HAD a stated blind spot — it could not see a secret collected
+  inside a modal the base screen pushes only on a button press — and the blind
+  spot is now closed. A companion gate expresses the property over every shipped
+  manager action and every field its own form page declares secret, drives the
+  dialog open, and asserts both that the edit input masks and that the committed
+  summary-table cell masks, read off the table cell rather than sniffed out of a
+  screenshot. Closing it caught two live leaks: the edit dialog was rebuilding
+  the field and dropping the secret flag, and the summary table wrote raw values
+  regardless. A secret collected in a modal is therefore covered.
 - A full-screen framework application does not "display once". It composes a
   widget tree, holds the value in a renderable for the screen's lifetime,
   repaints it on every refresh, and can export the composited screen to an
@@ -67,8 +72,10 @@ one.
 - **Build full recovery in the TUI, rendering the candidate words in a modal.**
   Rejected. A rendered modal cannot satisfy the show-once contract with any
   existing primitive: the value lives in the widget tree, survives repaints, and
-  is reachable by screen export. Worse, the one gate that would catch a leak is
-  structurally blind to modals, so the failure would ship looking covered.
+  is reachable by screen export. At the time of the decision this was compounded
+  by the only leak gate being blind to modals, so the failure would have shipped
+  looking covered; that blind spot has since closed, and the rejection rests on
+  the compositor argument alone, which is unaffected.
 - **Specify a new show-once TUI primitive and build recovery on it.** Rejected
   on cost-versus-benefit, not on impossibility. Such a primitive would have to
   own the terminal device directly beneath the framework's compositor, bypass
@@ -83,13 +90,12 @@ one.
 
 ## Constraints
 
-- The masked-field render gate cannot reach modal-nested inputs. Any TUI verb
-  that collects a mnemonic is therefore outside the coverage of the gate that
-  would prove it does not leak, until that gate is extended.
 - The custody record's echo-suppression guarantee is enforced in the CLI secret
-  helper, which has a real-console precondition. A TUI field's password mode is
-  a framework-level render choice with no equivalent precondition, so the two
-  are not the same guarantee even though both hide the characters.
+  helper, which carries a real-console precondition. A TUI field's password mode
+  is a framework-level render choice with no equivalent precondition, so the two
+  are not the same guarantee even though both hide the characters. A TUI
+  collecting surface inherits masked rendering, proven by gate; it does not
+  inherit the console precondition.
 
 ## Implementation
 
@@ -126,11 +132,16 @@ behaviour rather than about the system. The CLI path does not have this problem
 because it writes past stdout to the controlling terminal and never retains the
 value.
 
-The second knockout is evidential. The only gate that would catch a painted
-secret in the TUI is documented as blind to modals, which is precisely where a
-recovery modal would live. Building the surface would create a leak path in the
-one region the leak detector cannot see, and it would look covered because the
-gate is green.
+The second knockout was evidential, and it has since been retired by other
+work: when this decision was taken, the only gate that would catch a painted
+secret in the TUI was blind to modals — precisely where a recovery modal would
+live — so building the surface would have created a leak path in the one region
+the leak detector could not see, looking covered because the gate was green.
+That blind spot is now closed. The decision does not move: the
+compositor-retention argument above stands alone and is sufficient, and it is
+the reason a rendered modal cannot satisfy a device-level show-once contract
+however well instrumented it is. What changed is only that the collecting half
+of this ruling is now backed by a gate rather than by a promise.
 
 Choosing "CLI-only for display" over "no TUI recovery at all" matters because
 the two failures are different. Being unable to *see* a new recovery code in the
@@ -151,11 +162,10 @@ would be a genuine dead end — and neither of those requires displaying anythin
   touch them. What lands here is the ruling and its enforcement gate; the
   operator-facing prose and the verify/recover screens are a separate change on
   a quiet tree.
-- **Open gap: the render gate's modal blind spot is not closed.** Before any
-  mnemonic-collecting modal ships in the TUI, the masked-field render gate must
-  be extended to drive navigation into pushed screens. Shipping the collecting
-  surface first would put a secret input in the one place the leak gate cannot
-  look.
+- The precondition on the collecting half is **met**. A mnemonic-collecting
+  modal is now covered by a gate that drives navigation into pushed screens and
+  checks the committed table cell as well as the edit input, so the verify and
+  recover screens this record permits may be built without first extending it.
 - Reversing the display prohibition requires a genuine show-once primitive that
   bypasses the compositor and is proven against screen export and repaint. This
   record does not forbid building one; it declines to build recovery on the
