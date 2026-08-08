@@ -363,7 +363,12 @@ def _relief(
         # forgives nothing: a caller that cannot name the counterparty cannot
         # claim our vocabulary is what failed.
         direction=direction,
-        counterparty_country_status=stated_country_code_status(country_code),
+        # The RECORD authority, which is the one the confirm path uses. The
+        # printed-value sibling beside it answers differently for an alpha-3
+        # token -- measured, 'ESP' is catalogued to this one and unresolved to
+        # that one -- so deriving the status here through the other authority
+        # would gate this guard on a value production never hands it.
+        counterparty_country_status=record_country_code_status(country_code),
     )
 
 
