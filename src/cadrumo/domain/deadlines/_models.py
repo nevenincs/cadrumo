@@ -305,22 +305,15 @@ class ModeloEnrollment(BaseModel):
 
 
 class RefundAccount(BaseModel):
-    """The taxpayer's bank account: AEAT pays refunds into it and debits it.
+    """The cuenta-devolución refund account AEAT pays a Modelo 303 refund into.
 
-    ONE account, both directions, because the official record models it that way:
-    DR303 position 23 is a single field labelled
-    ``Domiciliación/Devolución - IBAN``. A filing is a refund or a charge and
-    never both, which is why one slot suffices.
-
-    The IBAN therefore serves both. The foreign-bank block below does NOT: every
-    one of those fields is labelled ``Devolución -`` on the record, so they apply
-    to a refund only, and a domiciliación needs an IBAN specifically rather than
-    any account.
-
-    Named for the refund alone until the profile prompt was checked and found to
-    already collect it as a payment account for whatever the filing context
-    needs. The narrower name is retained for now; the meaning here is the
-    authority.
+    Refund-only. AEAT's DR303 position 23 is a single dual-purpose field
+    labelled ``Domiciliación/Devolución - IBAN``, so the record has somewhere to
+    state a charge account too -- but this profile carries no separate charge
+    account, and the export path must not infer one by reusing this account for
+    a domiciliación del ingreso: nominating an account to RECEIVE a refund is
+    not an authorisation to DEBIT it. The export path refuses that election
+    unconditionally rather than make the inference.
 
     Groups the IBAN with the foreign-bank block used for a non-SEPA
     account. Every field is sensitive financial identity data: per the
