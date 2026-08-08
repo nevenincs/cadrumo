@@ -4610,10 +4610,6 @@ cli:
       counterparty_country_help: Az ügyfél letelepedési országa (ISO 3166-1 alfa-2,
         például US, DE). Csak letelepedés; az áfa-azonosításhoz használja a --counterparty-identification-state
         kapcsolót.
-      counterparty_eu_member_state_help: A szerződő fél EU-tagállama vagy észak-írországi
-        IVA-előtagja (ISO 3166-1 alpha-2 kisbetűs, pl. de vagy xi); kötelező --iva-category
-        intra_community_supply esetén, tiltott export_third_country_zero_rated vagy
-        export_assimilated_zero_rated esetén.
       counterparty_identification_state_help: Az a tagállam, amelynek közösségi adószámával
         a partner kereskedik (a 37/1992. sz. törvény 25. cikke ez alapján mentesít,
         nem a letelepedés helye alapján)
@@ -4822,7 +4818,6 @@ cli:
       classified_by: Osztályozta
       counterparty: Szerződő fél
       counterparty_country: Letelepedés helye
-      counterparty_eu_member_state: EU-s szerződő fél
       counterparty_identification_state: ÁFA-azonosítás helye
       created_event_id: Létrehozó bucket-esemény
       currency: Pénznem

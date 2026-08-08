@@ -4695,10 +4695,6 @@ cli:
       counterparty_country_help: País de establecimiento de la contraparte (ISO 3166-1
         alfa-2, p. ej. US, DE). Solo establecimiento; para la identificación a efectos
         de IVA use --counterparty-identification-state.
-      counterparty_eu_member_state_help: Estado miembro de la UE o prefijo IVA de
-        Irlanda del Norte de la contraparte (ISO 3166-1 alfa-2 minúsculas, p. ej.
-        de o xi); obligatorio con --iva-category intra_community_supply, prohibido
-        con export_third_country_zero_rated o export_assimilated_zero_rated
       counterparty_identification_state_help: Estado miembro cuyo NIF-IVA utiliza
         la contraparte (la Ley 37/1992 art. 25 exime por este dato, no por dónde esté
         establecida)
@@ -4909,7 +4905,6 @@ cli:
       classified_by: Clasificado por
       counterparty: Contraparte
       counterparty_country: Establecido en
-      counterparty_eu_member_state: Contraparte UE
       counterparty_identification_state: Identificada a efectos de IVA en
       created_event_id: Evento bucket de creación
       currency: Moneda

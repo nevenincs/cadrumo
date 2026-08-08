@@ -4341,10 +4341,6 @@ cli:
       counterparty_country_help: Country where the counterparty is established (ISO
         3166-1 alpha-2, e.g. US, DE). Establishment only; use --counterparty-identification-state
         for VAT identification.
-      counterparty_eu_member_state_help: EU member state or Northern Ireland IVA prefix
-        of the counterparty (ISO 3166-1 alpha-2 lowercase, e.g. de or xi); required
-        with --iva-category intra_community_supply, prohibited with export_third_country_zero_rated
-        or export_assimilated_zero_rated
       counterparty_identification_state_help: Member State whose VAT number the counterparty
         trades under (Ley 37/1992 art. 25 exempts on this, not on where it is established)
       file_exclusive: --file cannot be combined with a transaction id or --classification.
@@ -4542,7 +4538,6 @@ cli:
       classified_by: Classified by
       counterparty: Counterparty
       counterparty_country: Established in
-      counterparty_eu_member_state: EU counterparty
       counterparty_identification_state: VAT identified in
       created_event_id: Created bucket event
       currency: Currency

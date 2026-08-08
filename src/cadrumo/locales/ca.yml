@@ -4659,10 +4659,6 @@ cli:
       counterparty_country_help: País d'establiment de la contrapart (ISO 3166-1 alfa-2,
         p. ex. US, DE). Només establiment; per a la identificació a efectes d'IVA
         feu servir --counterparty-identification-state.
-      counterparty_eu_member_state_help: Estat membre de la UE o prefix IVA d'Irlanda
-        del Nord de la contrapart (ISO 3166-1 alfa-2 minúscules, p. ex. de o xi);
-        obligatori amb --iva-category intra_community_supply, prohibit amb export_third_country_zero_rated
-        o export_assimilated_zero_rated
       counterparty_identification_state_help: Estat membre el NIF-IVA del qual utilitza
         la contrapart (la Llei 37/1992 art. 25 exempta per aquesta dada, no per on
         estigui establerta)
@@ -4873,7 +4869,6 @@ cli:
       classified_by: Classificat per
       counterparty: Contrapart
       counterparty_country: Establert a
-      counterparty_eu_member_state: Contrapart UE
       counterparty_identification_state: Identificada a efectes d'IVA a
       created_event_id: Esdeveniment bucket de creació
       currency: Moneda
