@@ -6,7 +6,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:817071240822e26b3d50544e12fe09bf5fecd3042e595587b67919051bd75878'
+body_hash: 'sha256:058f9461bc297a510458bbbd4c8fd24290abee45c2730a64102f2c354957a52a'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -32,6 +32,7 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S14]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S74]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W04-P09-S43]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
 ---
@@ -46,6 +47,7 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 
 - `2026-08-07-aeat-design-relayout-boundary-adr` - `aeat-design-relayout-boundary` adr: `a registry revision must not span an AEAT design re-layout` | (**status:** `accepted`)
 - `2026-08-07-aeat-design-relayout-boundary-sub-year-epoch-adr` - `aeat-design-relayout-boundary` adr: `a design epoch narrower than a filing year is expressed by period-token partition` | (**status:** `accepted`)
+- `2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr` - `aeat-design-relayout-boundary` adr: `the export fragment tree is generated from the bundled diseno, never transcribed` | (**status:** `accepted`)
 - `2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr` - `aeat-design-relayout-boundary` adr: `Modelo 200 partitions by inheritance, and 2024-y-siguientes narrows to 2024` | (**status:** `accepted`)
 
 ### exec
