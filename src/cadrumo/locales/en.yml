@@ -1922,6 +1922,7 @@ cli:
           an amount this record does not, such as a recargo de equivalencia, or a
           figure was misread. Check the document.
         confirm_resolve_help: 'Answer one blocking finding: <finding-id>=<choose|supply|attest>:<value-or-reason>.
+          For choose, name the reading by its value or by the digest review showed.
           Repeat once per finding; there is no bulk flag.'
         confirm_review_contradicted_regime_message: This document contradicts itself
           about how it is taxed. The detail below names what disagreed with what.
@@ -2037,6 +2038,7 @@ cli:
             from.
           resolve_action: Unknown resolution action.
           resolve_shape: Each --resolve is <finding-id>=<choose|supply|attest>:<value-or-reason>.
+            A choose names the reading by its value or by the digest review showed.
           show_help: Show one pending draft field by field, with its findings and
             blockers.
           unknown_reference: No pending draft for that reference.
@@ -6436,9 +6438,6 @@ errors:
       matched more than one revision; refine the selector.
     modelo_calculation_revision_selector_state: The selected calculation revision
       is not in a usable state for this operation.
-    modelo_censo_stale: 'The operation is refused because you applied a new censo
-      after this work was produced. The AEAT is the binding legal source: regenerate
-      it against the current censo.'
     modelo_compare_need_two_years: Comparison requires two different filing years.
     modelo_export_cross_bucket: The addressed revision belongs to a bucket other than
       the active profile's. Export only operates within the active profile bucket.
@@ -6659,7 +6658,7 @@ errors:
     refused_profile_lifo_forbidden: LIFO stock valuation is not admitted for tax purposes.
       Use FIFO, weighted average price, or average cost.
     refused_profile_login_throttled: Too many failed login attempts. Wait %{seconds}
-      seconds before running `aeat config login` again.
+      seconds before trying again.
     refused_profile_logout_override: Logout cannot change an active profile selected
       by --profile. Drop the --profile option and retry.
     refused_profile_not_configured: RENTA verification needs a tax-residence profile.
@@ -7038,6 +7037,7 @@ flows:
       state: Recovery code
     section:
       auth: Authentication
+      notices: Advisories
       profile: Active profile
       profiles: Profiles
       recovery: Recovery
@@ -66596,7 +66596,9 @@ modelo:
               label: Taxable base of intra-Community acquisitions of goods at the
                 general rate, no rate breakdown - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.help
+              help: Add up the taxable base of intra-Community acquisitions of goods
+                in the reduced rate tier, whatever percentage each transaction was
+                taxed at.
               label: Taxable base of intra-Community acquisitions of goods at the
                 reduced rate, no rate breakdown - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
@@ -66606,7 +66608,8 @@ modelo:
               label: Taxable base of intra-Community acquisitions of goods at the
                 super-reduced rate, no rate breakdown - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.help
+              help: Add up the taxable base of intra-Community acquisitions of goods
+                taxed at 0 %.
               label: Taxable base of intra-Community acquisitions of goods at the
                 0% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
@@ -66655,102 +66658,132 @@ modelo:
               label: VAT amount of intra-Community acquisitions of goods at the 4%
                 rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.help
+              help: Add up the taxable base of intra-Community acquisitions of goods
+                taxed at 5 %.
               label: Taxable base of intra-Community acquisitions of goods at the
                 5% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.help
+              help: Declare the VAT amount on intra-Community acquisitions of goods
+                taxed at 5 %.
               label: VAT amount of intra-Community acquisitions of goods at the 5%
                 rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.help
+              help: Add up the taxable base of intra-Community acquisitions of goods
+                taxed at 7.5 %.
               label: Taxable base of intra-Community acquisitions of goods at the
                 7.5% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.help
+              help: Declare the VAT amount on intra-Community acquisitions of goods
+                taxed at 7.5 %.
               label: VAT amount of intra-Community acquisitions of goods at the 7.5%
                 rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.help
+              help: Add up the taxable base of intra-Community acquisitions of goods
+                in the zero rate tier, whatever percentage each transaction was taxed
+                at.
               label: Taxable base of intra-Community acquisitions of goods at the
                 zero rate, no rate breakdown - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.help
+              help: Add up the taxable base of intra-Community acquisitions of services
+                in the general rate tier, whatever percentage each transaction was
+                taxed at.
               label: Taxable base of intra-Community acquisitions of services at the
                 general rate, no rate breakdown - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.help
+              help: Add up the taxable base of intra-Community acquisitions of services
+                in the reduced rate tier, whatever percentage each transaction was
+                taxed at.
               label: Taxable base of intra-Community acquisitions of services at the
                 reduced rate, no rate breakdown - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig.help
+              help: Add up the taxable base of intra-Community acquisitions of services
+                in the super-reduced rate tier, whatever percentage each transaction
+                was taxed at.
               label: Taxable base of intra-Community acquisitions of services at the
                 super-reduced rate, no rate breakdown - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5.help
+              help: Add up the taxable base of intra-Community acquisitions of services
+                taxed at 0 %.
               label: Taxable base of intra-Community acquisitions of services at the
                 0% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4.help
+              help: Declare the VAT amount on intra-Community acquisitions of services
+                taxed at 0 %.
               label: VAT amount of intra-Community acquisitions of services at the
                 0% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck.help
+              help: Add up the taxable base of intra-Community acquisitions of services
+                taxed at 10 %.
               label: Taxable base of intra-Community acquisitions of services at the
                 10% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg.help
+              help: Declare the VAT amount on intra-Community acquisitions of services
+                taxed at 10 %.
               label: VAT amount of intra-Community acquisitions of services at the
                 10% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5.help
+              help: Add up the taxable base of intra-Community acquisitions of services
+                taxed at 2 %.
               label: Taxable base of intra-Community acquisitions of services at the
                 2% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4.help
+              help: Declare the VAT amount on intra-Community acquisitions of services
+                taxed at 2 %.
               label: VAT amount of intra-Community acquisitions of services at the
                 2% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck.help
+              help: Add up the taxable base of intra-Community acquisitions of services
+                taxed at 21 %.
               label: Taxable base of intra-Community acquisitions of services at the
                 21% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg.help
+              help: Declare the VAT amount on intra-Community acquisitions of services
+                taxed at 21 %.
               label: VAT amount of intra-Community acquisitions of services at the
                 21% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5.help
+              help: Add up the taxable base of intra-Community acquisitions of services
+                taxed at 4 %.
               label: Taxable base of intra-Community acquisitions of services at the
                 4% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4.help
+              help: Declare the VAT amount on intra-Community acquisitions of services
+                taxed at 4 %.
               label: VAT amount of intra-Community acquisitions of services at the
                 4% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5.help
+              help: Add up the taxable base of intra-Community acquisitions of services
+                taxed at 5 %.
               label: Taxable base of intra-Community acquisitions of services at the
                 5% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4.help
+              help: Declare the VAT amount on intra-Community acquisitions of services
+                taxed at 5 %.
               label: VAT amount of intra-Community acquisitions of services at the
                 5% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig.help
+              help: Add up the taxable base of intra-Community acquisitions of services
+                taxed at 7.5 %.
               label: Taxable base of intra-Community acquisitions of services at the
                 7.5% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62.help
+              help: Declare the VAT amount on intra-Community acquisitions of services
+                taxed at 7.5 %.
               label: VAT amount of intra-Community acquisitions of services at the
                 7.5% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma.help
+              help: Add up the taxable base of intra-Community acquisitions of services
+                in the zero rate tier, whatever percentage each transaction was taxed
+                at.
               label: Taxable base of intra-Community acquisitions of services at the
                 zero rate, no rate breakdown - annual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8.help
+              help: Add up the self-charged taxable base on domestic transactions
+                for the year.
               label: Taxable base of reverse-charge domestic transactions - annual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31.help
+              help: Declare the self-charged VAT amount on domestic transactions for
+                the year.
               label: Reverse-charge VAT amount on domestic transactions - annual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: null

@@ -2078,8 +2078,9 @@ cli:
           imponible y del tipo de IVA, por lo que una diferencia significa que el
           documento incluye un importe que este registro no recoge, como un recargo
           de equivalencia, o que se ha leido mal alguna cifra. Revise el documento.
-        confirm_resolve_help: 'Responda un hallazgo bloqueante: <id-hallazgo>=<choose|supply|attest>:<valor-o-motivo>.
-          Repita por cada hallazgo; no existe una opcion masiva.'
+        confirm_resolve_help: 'Responda a un hallazgo bloqueante: <finding-id>=<choose|supply|attest>:<valor-o-motivo>.
+          Para choose, indique la lectura por su valor o por el resumen que mostró
+          review. Repita una vez por hallazgo; no hay opción masiva.'
         confirm_review_contradicted_regime_message: Este documento se contradice a
           sí mismo sobre cómo tributa. El detalle siguiente nombra qué discrepaba
           con qué.
@@ -2205,7 +2206,8 @@ cli:
           reference_help: Referencia de evidencia o adjunto de la que se leyo el borrador
             pendiente.
           resolve_action: Accion de resolucion desconocida.
-          resolve_shape: Cada --resolve es <id-hallazgo>=<choose|supply|attest>:<valor-o-motivo>.
+          resolve_shape: Cada --resolve es <finding-id>=<choose|supply|attest>:<valor-o-motivo>.
+            Un choose indica la lectura por su valor o por el resumen que mostró review.
           show_help: Muestre un borrador pendiente campo por campo, con sus hallazgos
             y bloqueos.
           unknown_reference: No hay ningun borrador pendiente para esa referencia.
@@ -6921,9 +6923,6 @@ errors:
       coincide con más de una revisión; refine el selector.
     modelo_calculation_revision_selector_state: La revisión de cálculo seleccionada
       no está en un estado utilizable para esta operación.
-    modelo_censo_stale: 'La operación se rechaza porque aplicaste un censo nuevo después
-      de generar este trabajo. La AEAT es la fuente legal vinculante: vuelve a generarlo
-      con el censo actual.'
     modelo_compare_need_two_years: La comparación requiere dos ejercicios fiscales
       distintos.
     modelo_export_cross_bucket: La revisión apuntada pertenece a un bucket distinto
@@ -7163,7 +7162,7 @@ errors:
     refused_profile_lifo_forbidden: La valoración de existencias por el método LIFO
       no está admitida fiscalmente. Usa FIFO, precio medio ponderado o coste medio.
     refused_profile_login_throttled: Demasiados intentos de inicio de sesión fallidos.
-      Espera %{seconds} segundos antes de volver a ejecutar `aeat config login`.
+      Espera %{seconds} segundos antes de volver a intentarlo.
     refused_profile_logout_override: El cierre de sesión no puede cambiar un perfil
       activo seleccionado mediante --profile. Quita la opción --profile y vuelve a
       intentarlo.
@@ -7553,6 +7552,7 @@ flows:
       state: Código de recuperación
     section:
       auth: Autenticación
+      notices: Avisos
       profile: Perfil activo
       profiles: Perfiles
       recovery: Recuperación
@@ -68632,7 +68632,8 @@ modelo:
               label: Cuota IVA autorepercutida devengada en adquisiciones intracomunitarias
                 (LIVA art 13 + art 15 + art 84.Uno.2; oficial casillas 10/11)
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck.help
+              help: Suma la base imponible autorrepercutida devengada en adquisiciones
+                intracomunitarias.
               label: Base imponible autorepercutida devengada en adquisiciones intracomunitarias
                 (LIVA art 13 + art 15 + art 84.Uno.2; oficial casillas 10/11)
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
@@ -69410,98 +69411,127 @@ modelo:
               label: Base imponible de adquisiciones intracomunitarias de bienes al
                 tipo del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.help
+              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
+                de bienes gravadas al tipo del 5 %.
               label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
                 del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de bienes gravadas al tipo del 7,5 %.
               label: Base imponible de adquisiciones intracomunitarias de bienes al
                 tipo del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.help
+              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
+                de bienes gravadas al tipo del 7,5 %.
               label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
                 del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de bienes al tipo cero, sea cual sea el porcentaje aplicado a cada
+                operación.
               label: Base imponible de adquisiciones intracomunitarias de bienes al
                 tipo cero, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de servicios al tipo general, sea cual sea el porcentaje aplicado
+                a cada operación.
               label: Base imponible de adquisiciones intracomunitarias de servicios
                 al tipo general, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de servicios al tipo reducido, sea cual sea el porcentaje aplicado
+                a cada operación.
               label: Base imponible de adquisiciones intracomunitarias de servicios
                 al tipo reducido, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de servicios al tipo super-reducido, sea cual sea el porcentaje aplicado
+                a cada operación.
               label: Base imponible de adquisiciones intracomunitarias de servicios
                 al tipo superreducido, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de servicios gravadas al tipo del 0 %.
               label: Base imponible de adquisiciones intracomunitarias de servicios
                 al tipo del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4.help
+              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
+                de servicios gravadas al tipo del 0 %.
               label: Cuota IVA de adquisiciones intracomunitarias de servicios al
                 tipo del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de servicios gravadas al tipo del 10 %.
               label: Base imponible de adquisiciones intracomunitarias de servicios
                 al tipo del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg.help
+              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
+                de servicios gravadas al tipo del 10 %.
               label: Cuota IVA de adquisiciones intracomunitarias de servicios al
                 tipo del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de servicios gravadas al tipo del 2 %.
               label: Base imponible de adquisiciones intracomunitarias de servicios
                 al tipo del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4.help
+              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
+                de servicios gravadas al tipo del 2 %.
               label: Cuota IVA de adquisiciones intracomunitarias de servicios al
                 tipo del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de servicios gravadas al tipo del 21 %.
               label: Base imponible de adquisiciones intracomunitarias de servicios
                 al tipo del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg.help
+              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
+                de servicios gravadas al tipo del 21 %.
               label: Cuota IVA de adquisiciones intracomunitarias de servicios al
                 tipo del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de servicios gravadas al tipo del 4 %.
               label: Base imponible de adquisiciones intracomunitarias de servicios
                 al tipo del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4.help
+              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
+                de servicios gravadas al tipo del 4 %.
               label: Cuota IVA de adquisiciones intracomunitarias de servicios al
                 tipo del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de servicios gravadas al tipo del 5 %.
               label: Base imponible de adquisiciones intracomunitarias de servicios
                 al tipo del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4.help
+              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
+                de servicios gravadas al tipo del 5 %.
               label: Cuota IVA de adquisiciones intracomunitarias de servicios al
                 tipo del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de servicios gravadas al tipo del 7,5 %.
               label: Base imponible de adquisiciones intracomunitarias de servicios
                 al tipo del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62.help
+              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
+                de servicios gravadas al tipo del 7,5 %.
               label: Cuota IVA de adquisiciones intracomunitarias de servicios al
                 tipo del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de servicios al tipo cero, sea cual sea el porcentaje aplicado a cada
+                operación.
               label: Base imponible de adquisiciones intracomunitarias de servicios
                 al tipo cero, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8.help
+              help: Suma la base imponible autorrepercutida en operaciones interiores
+                durante el ejercicio.
               label: Base imponible autorepercutida en operaciones interiores - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31.help
+              help: Declara la cuota de IVA autorrepercutida en operaciones interiores
+                durante el ejercicio.
               label: Cuota IVA autorepercutida en operaciones interiores - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: null

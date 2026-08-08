@@ -67,6 +67,7 @@ def _socio_row(share_pct: str, *, index: int = 0) -> tuple[UserProfileFact, ...]
         UserProfileFact(path=f"{_SOCIOS}.{index}.name", value="Socio Uno"),
         UserProfileFact(path=f"{_SOCIOS}.{index}.share_pct", value=share_pct),
         UserProfileFact(path=f"{_SOCIOS}.{index}.base_imponible_assigned", value="1000"),
+        UserProfileFact(path=f"{_SOCIOS}.{index}.participe_clave", value="1"),
     )
 
 

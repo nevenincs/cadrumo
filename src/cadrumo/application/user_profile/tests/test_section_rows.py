@@ -196,6 +196,7 @@ def test_a_row_assembled_here_satisfies_the_write_door() -> None:
             "name": "Socio Uno",
             "share_pct": "50",
             "base_imponible_assigned": "1000",
+            "participe_clave": "1",
         },
     )
 

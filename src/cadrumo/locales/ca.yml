@@ -2064,8 +2064,9 @@ cli:
           i del tipus d'IVA, de manera que una diferència significa que el document
           inclou un import que aquest registre no recull, com ara un recàrrec d'equivalència,
           o que s'ha llegit malament alguna xifra. Reviseu el document.
-        confirm_resolve_help: 'Respongueu una troballa blocant: <id-troballa>=<choose|supply|attest>:<valor-o-motiu>.
-          Repetiu-ho per cada troballa; no hi ha cap opcio massiva.'
+        confirm_resolve_help: 'Respongui a una troballa bloquejant: <finding-id>=<choose|supply|attest>:<valor-o-motiu>.
+          Per a choose, indiqui la lectura pel seu valor o pel resum que va mostrar
+          review. Repeteixi un cop per troballa; no hi ha opció massiva.'
         confirm_review_contradicted_regime_message: Aquest document es contradiu a
           si mateix sobre com tributa. El detall següent anomena què discrepava amb
           què.
@@ -2191,7 +2192,8 @@ cli:
           reference_help: Referencia d'evidencia o adjunt de la qual s'ha llegit l'esborrany
             pendent.
           resolve_action: Accio de resolucio desconeguda.
-          resolve_shape: Cada --resolve es <id-troballa>=<choose|supply|attest>:<valor-o-motiu>.
+          resolve_shape: Cada --resolve és <finding-id>=<choose|supply|attest>:<valor-o-motiu>.
+            Un choose indica la lectura pel seu valor o pel resum que va mostrar review.
           show_help: Mostreu un esborrany pendent camp per camp, amb les seves troballes
             i blocatges.
           unknown_reference: No hi ha cap esborrany pendent per a aquesta referencia.
@@ -6875,9 +6877,6 @@ errors:
       coincideix amb més d'una revisió; refineu el selector.
     modelo_calculation_revision_selector_state: La revisió de càlcul seleccionada
       no està en un estat utilitzable per a aquesta operació.
-    modelo_censo_stale: 'L''operació es rebutja perquè has aplicat un cens nou després
-      de generar aquesta feina. L''AEAT és la font legal vinculant: torna a generar-la
-      amb el cens actual.'
     modelo_compare_need_two_years: La comparació requereix dos exercicis fiscals diferents.
     modelo_export_cross_bucket: La revisió apuntada pertany a un bucket diferent del
       perfil actiu. L'exportació només opera dins el bucket del perfil actiu.
@@ -7115,7 +7114,7 @@ errors:
     refused_profile_lifo_forbidden: La valoració d'existències pel mètode LIFO no
       està admesa fiscalment. Fes servir FIFO, preu mitjà ponderat o cost mitjà.
     refused_profile_login_throttled: Massa intents d'inici de sessió fallits. Espera
-      %{seconds} segons abans de tornar a executar `aeat config login`.
+      %{seconds} segons abans de tornar-ho a intentar.
     refused_profile_logout_override: El tancament de sessió no pot canviar un perfil
       actiu seleccionat mitjançant --profile. Treu l'opció --profile i torna-ho a
       provar.
@@ -7504,6 +7503,7 @@ flows:
       state: Codi de recuperació
     section:
       auth: Autenticació
+      notices: Avisos
       profile: Perfil actiu
       profiles: Perfils
       recovery: Recuperació
@@ -67052,7 +67052,9 @@ modelo:
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 reduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns al tipus superreduït, sigui quin sigui el percentatge aplicat
+                a cada operació.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 superreduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
@@ -67066,7 +67068,8 @@ modelo:
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns gravades al tipus del 10 %.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
@@ -67090,7 +67093,8 @@ modelo:
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                béns gravades al tipus del 21 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
@@ -67104,102 +67108,132 @@ modelo:
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns gravades al tipus del 5 %.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                béns gravades al tipus del 5 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns gravades al tipus del 7,5 %.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                béns gravades al tipus del 7,5 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns al tipus zero, sigui quin sigui el percentatge aplicat a cada
+                operació.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 zero, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis al tipus general, sigui quin sigui el percentatge aplicat
+                a cada operació.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus general, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis al tipus reduït, sigui quin sigui el percentatge aplicat a
+                cada operació.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus reduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis al tipus superreduït, sigui quin sigui el percentatge aplicat
+                a cada operació.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus superreduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 0 %.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 0 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
                 del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 10 %.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 10 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
                 del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 2 %.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 2 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
                 del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 21 %.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 21 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
                 del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 4 %.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 4 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
                 del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 5 %.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 5 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
                 del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 7,5 %.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                serveis gravades al tipus del 7,5 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
                 del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                serveis al tipus zero, sigui quin sigui el percentatge aplicat a cada
+                operació.
               label: Base imposable d'adquisicions intracomunitàries de serveis al
                 tipus zero, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8.help
+              help: Suma la base imposable autorepercutida en operacions interiors
+                durant l'exercici.
               label: Base imposable autorepercutida en operacions interiors - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31.help
+              help: Declara la quota d'IVA autorepercutida en operacions interiors
+                durant l'exercici.
               label: Quota d'IVA autorepercutida en operacions interiors - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: null

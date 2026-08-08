@@ -48,6 +48,8 @@ def test_attribution_entity_socios_section_uses_repeatable_profile_pattern(
         "name",
         "share_pct",
         "base_imponible_assigned",
+        "participe_clave",
+        "country_of_residence",
         "role",
     }
     assert {
@@ -55,6 +57,8 @@ def test_attribution_entity_socios_section_uses_repeatable_profile_pattern(
         "attribution_entity_socios.name",
         "attribution_entity_socios.share_pct",
         "attribution_entity_socios.base_imponible_assigned",
+        "attribution_entity_socios.participe_clave",
+        "attribution_entity_socios.country_of_residence",
         "attribution_entity_socios.role",
     } <= set(schema.field_paths)
 

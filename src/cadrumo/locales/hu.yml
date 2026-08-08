@@ -1999,8 +1999,9 @@ cli:
           olyan összeget tartalmaz, amelyet ez a nyilvántartás nem, például egyenértékűségi
           felárat (recargo de equivalencia), vagy valamelyik érték félreolvasásra
           került. Ellenőrizze a dokumentumot.
-        confirm_resolve_help: 'Valaszoljon meg egy blokkolo eszrevetelt: <eszrevetel-azonosito>=<choose|supply|attest>:<ertek-vagy-indok>.
-          Eszrevetelenkent ismetelje; tomeges kapcsolo nincs.'
+        confirm_resolve_help: 'Válaszoljon egy blokkoló észrevételre: <finding-id>=<choose|supply|attest>:<érték-vagy-indok>.
+          A choose esetén az olvasatot az értékével vagy a review által mutatott kivonattal
+          nevezze meg. Észrevételenként egyszer ismételje; nincs tömeges kapcsoló.'
         confirm_review_contradicted_regime_message: Ez a dokumentum ellentmond önmagának
           abban, hogyan adózik. Az alábbi részlet megnevezi, mi mivel volt ellentmondásban.
         confirm_review_undetermined_establishment_message: A dokumentum a beolvasott
@@ -2127,7 +2128,9 @@ cli:
           reference_help: A fuggo piszkozat forrasakent szolgalo bizonyitek- vagy
             mellekletazonosito.
           resolve_action: Ismeretlen feloldasi muvelet.
-          resolve_shape: Minden --resolve alakja <eszrevetel-azonosito>=<choose|supply|attest>:<ertek-vagy-indok>.
+          resolve_shape: Minden --resolve alakja <finding-id>=<choose|supply|attest>:<érték-vagy-indok>.
+            A choose az olvasatot az értékével vagy a review által mutatott kivonattal
+            nevezi meg.
           show_help: Jelenitsen meg egy fuggo piszkozatot mezonkent, eszrevetelekkel
             es akadalyokkal.
           unknown_reference: Nincs fuggo piszkozat ehhez az azonositohoz.
@@ -6776,9 +6779,6 @@ errors:
       revízióra illeszkedik; pontosítsa a választót.
     modelo_calculation_revision_selector_state: A kiválasztott számítási revízió nincs
       ehhez a művelethez használható állapotban.
-    modelo_censo_stale: 'A műveletet elutasítottuk, mert új censot alkalmazott az
-      után, hogy ez a munka elkészült. Az AEAT a kötelező jogi forrás: generálja újra
-      a legfrissebb censo alapján.'
     modelo_compare_need_two_years: Az összehasonlításhoz két különböző benyújtási
       év szükséges.
     modelo_export_cross_bucket: A megcímzett revízió egy másik bucket-hez tartozik,
@@ -7005,7 +7005,7 @@ errors:
     refused_profile_lifo_forbidden: A LIFO készletértékelés adózási célból nem megengedett.
       Használjon FIFO-t, súlyozott átlagárat vagy átlagköltséget.
     refused_profile_login_throttled: Túl sok sikertelen bejelentkezési kísérlet. Várj
-      %{seconds} másodpercet, mielőtt újra futtatnád az `aeat config login` parancsot.
+      %{seconds} másodpercet, mielőtt újra próbálkoznál.
     refused_profile_logout_override: A kijelentkezés nem módosíthat --profile használatával
       kiválasztott aktív profilt. Hagyja el a --profile kapcsolót, majd próbálja újra.
     refused_profile_not_configured: A RENTA-ellenőrzéshez adóügyi illetőségi profil
@@ -7389,6 +7389,7 @@ flows:
       state: Helyreállítási kód
     section:
       auth: Hitelesítés
+      notices: Figyelmeztetések
       profile: Aktív profil
       profiles: Profilok
       recovery: Helyreállítás
@@ -67165,7 +67166,8 @@ modelo:
               label: Közösségen belüli termékbeszerzések adóalapja kedvezményes kulcson,
                 kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.help
+              help: Adja össze a Közösségen belüli, szupercsökkentett adókulcsú termékbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli termékbeszerzések adóalapja szupercsökkentett
                 kulcson, kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
@@ -67179,7 +67181,8 @@ modelo:
               label: Közösségen belüli termékbeszerzések ÁFA összege 0%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.help
+              help: Adja össze a Közösségen belüli, 10 %-os adókulccsal adózó termékbeszerzések
+                adóalapját.
               label: Közösségen belüli termékbeszerzések adóalapja 10%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
@@ -67218,102 +67221,127 @@ modelo:
               label: Közösségen belüli termékbeszerzések ÁFA összege 4%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.help
+              help: Adja össze a Közösségen belüli, 5 %-os adókulccsal adózó termékbeszerzések
+                adóalapját.
               label: Közösségen belüli termékbeszerzések adóalapja 5%-os kulcson -
                 éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.help
+              help: Vallja be a Közösségen belüli, 5 %-os adókulccsal adózó termékbeszerzések
+                áfaösszegét.
               label: Közösségen belüli termékbeszerzések ÁFA összege 5%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.help
+              help: Adja össze a Közösségen belüli, 7.5 %-os adókulccsal adózó termékbeszerzések
+                adóalapját.
               label: Közösségen belüli termékbeszerzések adóalapja 7,5%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.help
+              help: Vallja be a Közösségen belüli, 7.5 %-os adókulccsal adózó termékbeszerzések
+                áfaösszegét.
               label: Közösségen belüli termékbeszerzések ÁFA összege 7,5%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.help
+              help: Adja össze a Közösségen belüli, nulla adókulcsú termékbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli termékbeszerzések adóalapja nulla kulcson,
                 kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.help
+              help: Adja össze a Közösségen belüli, általános adókulcsú szolgáltatásbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja általános
                 kulcson, kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.help
+              help: Adja össze a Közösségen belüli, kedvezményes adókulcsú szolgáltatásbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja kedvezményes
                 kulcson, kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig.help
+              help: Adja össze a Közösségen belüli, szupercsökkentett adókulcsú szolgáltatásbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja szupercsökkentett
                 kulcson, kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5.help
+              help: Adja össze a Közösségen belüli, 0 %-os adókulccsal adózó szolgáltatásbeszerzések
+                adóalapját.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja 0%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4.help
+              help: Vallja be a Közösségen belüli, 0 %-os adókulccsal adózó szolgáltatásbeszerzések
+                áfaösszegét.
               label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 0%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck.help
+              help: Adja össze a Közösségen belüli, 10 %-os adókulccsal adózó szolgáltatásbeszerzések
+                adóalapját.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja 10%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg.help
+              help: Vallja be a Közösségen belüli, 10 %-os adókulccsal adózó szolgáltatásbeszerzések
+                áfaösszegét.
               label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 10%-os
                 kulcson - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5.help
+              help: Adja össze a Közösségen belüli, 2 %-os adókulccsal adózó szolgáltatásbeszerzések
+                adóalapját.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja 2%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4.help
+              help: Vallja be a Közösségen belüli, 2 %-os adókulccsal adózó szolgáltatásbeszerzések
+                áfaösszegét.
               label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 2%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck.help
+              help: Adja össze a Közösségen belüli, 21 %-os adókulccsal adózó szolgáltatásbeszerzések
+                adóalapját.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja 21%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg.help
+              help: Vallja be a Közösségen belüli, 21 %-os adókulccsal adózó szolgáltatásbeszerzések
+                áfaösszegét.
               label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 21%-os
                 kulcson - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5.help
+              help: Adja össze a Közösségen belüli, 4 %-os adókulccsal adózó szolgáltatásbeszerzések
+                adóalapját.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja 4%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4.help
+              help: Vallja be a Közösségen belüli, 4 %-os adókulccsal adózó szolgáltatásbeszerzések
+                áfaösszegét.
               label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 4%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5.help
+              help: Adja össze a Közösségen belüli, 5 %-os adókulccsal adózó szolgáltatásbeszerzések
+                adóalapját.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja 5%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4.help
+              help: Vallja be a Közösségen belüli, 5 %-os adókulccsal adózó szolgáltatásbeszerzések
+                áfaösszegét.
               label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 5%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig.help
+              help: Adja össze a Közösségen belüli, 7.5 %-os adókulccsal adózó szolgáltatásbeszerzések
+                adóalapját.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja 7,5%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62.help
+              help: Vallja be a Közösségen belüli, 7.5 %-os adókulccsal adózó szolgáltatásbeszerzések
+                áfaösszegét.
               label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 7,5%-os
                 kulcson - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma.help
+              help: Adja össze a Közösségen belüli, nulla adókulcsú szolgáltatásbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli szolgáltatásbeszerzések adóalapja nulla kulcson,
                 kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8.help
+              help: Adja össze az adóévben belföldi ügyletek után önszámlázással megállapított
+                adóalapot.
               label: Belföldi fordított adózású ügyletek adóalapja - éves
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31.help
+              help: Vallja be az adóévben belföldi ügyletek után önszámlázással megállapított
+                áfaösszeget.
               label: Belföldi fordított adózású ügyletek ÁFA összege - éves
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: null
