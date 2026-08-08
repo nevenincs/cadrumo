@@ -1221,12 +1221,14 @@ def _structured_provenance(
         )
     # A derived value is grounded against the form the RECORD states, not against
     # itself. Facturae states `ESP` and the draft carries `ES`, so looking for the
-    # carried form would search for a string the document never states -- and
-    # would find it anyway, since the anchor search is boundary-aware only at
-    # NUMERIC edges and `ES` is an ordinary substring of `ESP`. That accidental
-    # hit is the failure this pairing removes: the operator is pointed at the
-    # element the value actually came from, and the anchor differing from the
-    # value is what records that a lookup happened.
+    # carried form would search for a string the document never states. It used to
+    # find it anyway -- the anchor search was boundary-aware only at NUMERIC edges,
+    # so `ES` matched inside `ESP` -- and that accidental hit is what this pairing
+    # was built to route around. The search is boundary-aware for word-shaped
+    # anchors too now, so the hit is impossible rather than merely avoided; the
+    # pairing stays because it never depended on it, and because it is what points
+    # the operator at the element the value actually came from and records that a
+    # lookup happened.
     for field, pair in derived.items():
         if pair is None:
             continue
@@ -1536,9 +1538,9 @@ class CounterpartyDraftSide(BaseModel):
             unestablished counterparty is the DOCUMENT's gap or OURS depends on
             telling those apart.
 
-            **Named a TOKEN, and not ``stated_country_code``, deliberately.**
-            The establishment ladder takes a parameter by that exact name and it
-            wants the RESOLVED alpha-2 -- which is ``country_code`` above, and
+            **Named a TOKEN, and not a country CODE, deliberately.**
+            The establishment ladder's ``resolved_country_code`` parameter wants
+            the RESOLVED alpha-2 -- which is ``country_code`` above, and
             which is what this object's one ladder call site correctly passes.
             Two same-shaped attributes on one object, one safe in that slot and
             one not, is a swap that type-checks: both are ``str | None``, and

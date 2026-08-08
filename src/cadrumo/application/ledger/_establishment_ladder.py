@@ -285,10 +285,10 @@ class CounterpartyEstablishment(BaseModel):
         return DeclaredFact[IvaTerritorialScope](value=self.scope, source=self.source)
 
 
-def _stated_country_code(
+def _party_country_code(
     *,
     stated_country_name: str | None,
-    stated_country_code: str | None,
+    resolved_country_code: str | None,
 ) -> str | None:
     """Return the country code the document states about this party, if any.
 
@@ -311,7 +311,7 @@ def _stated_country_code(
     from_name = country_code_for_printed_country_name(stated_country_name)
     if from_name is not None:
         return from_name
-    return stated_country_code
+    return resolved_country_code
 
 
 _PERCENT: Final[Decimal] = Decimal("100")
@@ -578,7 +578,7 @@ def scope_printed_evidence_would_establish(
     *,
     tax_identifier: str | None = None,
     stated_country_name: str | None = None,
-    stated_country_code: str | None = None,
+    resolved_country_code: str | None = None,
     postal_code: str | None = None,
 ) -> IvaTerritorialScope | None:
     """Return the territory this printed evidence alone would settle, or ``None``.
@@ -611,7 +611,11 @@ def scope_printed_evidence_would_establish(
     Args:
         tax_identifier: The party's identifier as printed, if any.
         stated_country_name: The country the document states for this party.
-        stated_country_code: An alpha-2 country code the document states.
+        resolved_country_code: The party's country as an alpha-2 code, already
+            RESOLVED through the bounded vocabulary -- never the token a
+            record stated. A structured document states an alpha-3 as
+            readily as an alpha-2, and both are ``str | None``, so feeding
+            the stated token here type-checks and silently places nobody.
         postal_code: The party's printed postal code.
 
     Returns:
@@ -619,9 +623,9 @@ def scope_printed_evidence_would_establish(
     """
     scope, _rung, _conflict = _printed_evidence(
         tax_identifier=tax_identifier,
-        country_code=_stated_country_code(
+        country_code=_party_country_code(
             stated_country_name=stated_country_name,
-            stated_country_code=stated_country_code,
+            resolved_country_code=resolved_country_code,
         ),
         postal_code=postal_code,
     )
@@ -633,7 +637,7 @@ def resolve_counterparty_establishment_scope(
     bucket_id: str,
     tax_identifier: str | None = None,
     stated_country_name: str | None = None,
-    stated_country_code: str | None = None,
+    resolved_country_code: str | None = None,
     postal_code: str | None = None,
     regime_legend: str | None = None,
     charged_iva_rates: tuple[Decimal, ...] = (),
@@ -659,7 +663,8 @@ def resolve_counterparty_establishment_scope(
             a rendered document, carried in a country element on a structured
             one; the rung treats the two alike, so the parameter claims only
             that the document stated it.
-        stated_country_code: An alpha-2 country code the document states, for
+        resolved_country_code: The party's country as an already-resolved
+            alpha-2 code, never the stated token, for
             surfaces that carry one instead of a name.
         postal_code: The counterparty's printed postal code. Consulted only
             where the country evidence positively named Spain.
@@ -696,9 +701,9 @@ def resolve_counterparty_establishment_scope(
             because none is caught: the store owns its own vocabulary and this
             function is transparent to it.
     """
-    country_code = _stated_country_code(
+    country_code = _party_country_code(
         stated_country_name=stated_country_name,
-        stated_country_code=stated_country_code,
+        resolved_country_code=resolved_country_code,
     )
     identification = vat_identification_state_for_printed_tax_identifier(tax_identifier)
     evidenced, rung, conflict = _printed_evidence(
@@ -858,7 +863,7 @@ def resolve_draft_counterparty_establishment(
     return resolve_counterparty_establishment_scope(
         bucket_id=bucket_id,
         tax_identifier=side.tax_id,
-        stated_country_code=side.country_code,
+        resolved_country_code=side.country_code,
         stated_country_name=side.country,
         postal_code=side.postal_code,
         regime_legend=draft.regime_legend,
