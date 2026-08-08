@@ -45,6 +45,13 @@ import pytest
 
 from ......core import AuthProviderKind
 from ......core.config import Settings
+from ......tests.aeat_literal_fixtures import (
+    INWINVOC_LANDING_PATH_CANARY,
+    INWINVOC_SIBLING_PATH_CANARY,
+    INWINVOC_TARGET_PATH_CANARY,
+    OTHERAPP_LANDING_PATH_CANARY,
+    WLPL_INWINVOC_TWO_SEGMENT_PATH_CANARY,
+)
 from ......tests.secure_sql import isolated_runtime_profile
 from .. import _session_store
 from .._clave_movil import ClaveMovilAuthProvider
@@ -363,15 +370,15 @@ def test_the_application_path_comparison_matches_on_the_first_two_segments(
 
     assert (
         provider._same_aeat_application_path(
-            landing_path="/wlpl/inwinvoc/es.aeat.dit.adu.eeca.catalogo.vis.VisorCatalogo",
-            target_path="/wlpl/inwinvoc/other/page",
+            landing_path=INWINVOC_LANDING_PATH_CANARY,
+            target_path=INWINVOC_SIBLING_PATH_CANARY,
         )
         is True
     )
     assert (
         provider._same_aeat_application_path(
-            landing_path="/wlpl/otherapp/page",
-            target_path="/wlpl/inwinvoc/page",
+            landing_path=OTHERAPP_LANDING_PATH_CANARY,
+            target_path=INWINVOC_TARGET_PATH_CANARY,
         )
         is False
     )
@@ -402,8 +409,14 @@ def test_a_single_segment_path_cannot_satisfy_the_comparison(
     """Fewer than two segments on either side refuses, rather than index-erroring."""
     provider = profile.build(tmp_path)
 
-    assert provider._same_aeat_application_path(landing_path="/wlpl", target_path="/wlpl/inwinvoc") is False
-    assert provider._same_aeat_application_path(landing_path="/wlpl/inwinvoc", target_path="/wlpl") is False
+    assert (
+        provider._same_aeat_application_path(landing_path="/wlpl", target_path=WLPL_INWINVOC_TWO_SEGMENT_PATH_CANARY)
+        is False
+    )
+    assert (
+        provider._same_aeat_application_path(landing_path=WLPL_INWINVOC_TWO_SEGMENT_PATH_CANARY, target_path="/wlpl")
+        is False
+    )
 
 
 # ── Encrypted session persistence ───────────────────────────────────────────

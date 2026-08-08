@@ -29,6 +29,7 @@ import pytest
 
 from ......core import Modelo, Period
 from ......domain.calculations.registry import bundled_authority, resolve_export_layout
+from ......tests.aeat_literal_fixtures import aeat_url
 from .._declarations_observations import (
     _observed_headers_from_submitted_file,
     observed_casillas_from_submitted_file,
@@ -69,7 +70,7 @@ def _artefact(payload: bytes) -> FiledDeclaracionArtefact:
 
     return FiledDeclaracionArtefact(
         kind="submitted_file",
-        source_url="https://www6.agenciatributaria.gob.es/probe/submitted-file",
+        source_url=aeat_url("www6", "/probe/submitted-file"),
         content_type="text/plain",
         byte_count=len(payload),
         sha256=hashlib.sha256(payload).hexdigest(),
