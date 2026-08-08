@@ -48,6 +48,7 @@ Submodules
    cadrumo.application.ledger._grounding_anchor
    cadrumo.application.ledger._id_resolution
    cadrumo.application.ledger._identity_roles
+   cadrumo.application.ledger._invoice_extraction_authority
    cadrumo.application.ledger._llm_classification
    cadrumo.application.ledger._llm_diagnostics
    cadrumo.application.ledger._llm_review_workflow

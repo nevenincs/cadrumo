@@ -102,6 +102,7 @@ from ._errors import (
     LLMRateLimitError,
     LLMValidationError,
 )
+from ._invoice_extraction_prompt import render_invoice_extraction_prompt
 from ._models import (
     CachedEntry,
     CacheKey,
@@ -174,6 +175,7 @@ __all__ = [
     "parse_invoice_extraction_response",
     "permitted_column_roles",
     "rasterise_pdf_pages_to_base64_png",
+    "render_invoice_extraction_prompt",
     "select_retention_removal_keys",
     "transcribe_document_images",
 ]
