@@ -27,15 +27,54 @@ from pathlib import Path
 
 import pytest
 
-from ......core import Modelo
-from ......domain.calculations.registry import bundled_authority
-from .._declarations_observations import _observed_headers_from_submitted_file
+from ......core import Modelo, Period
+from ......domain.calculations.registry import bundled_authority, resolve_export_layout
+from .._declarations_observations import (
+    _observed_headers_from_submitted_file,
+    observed_casillas_from_submitted_file,
+)
+from .._declarations_schema import Declaracion
+from .._schema import FiledDeclaracionArtefact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
 
 
 def _snapshot():
     return bundled_authority().snapshot(modelo_id=Modelo.M303.value, filing_year=2025, period="1T")
+
+
+def _declaration() -> Declaracion:
+    """A Declaracion matching the exported fichero's own modelo, year and period.
+
+    The projection cross-checks the parsed draft fields against this, so a
+    mismatch would refuse before provenance could be asserted.
+    """
+    from datetime import UTC, datetime
+
+    return Declaracion(
+        modelo="303",
+        ejercicio=2025,
+        period=Period.from_year_and_code(2025, "1T"),
+        expediente_id="2025303PROBE0001",
+        estado="ALTA",
+        presented_at=datetime(2025, 4, 15, 10, 0, tzinfo=UTC),
+        justificante_cell_index=7,
+    )
+
+
+def _artefact(payload: bytes) -> FiledDeclaracionArtefact:
+    """The submitted-file artefact wrapper the projection reports against."""
+    import hashlib
+    from datetime import UTC, datetime
+
+    return FiledDeclaracionArtefact(
+        kind="submitted_file",
+        source_url="https://www6.agenciatributaria.gob.es/probe/submitted-file",
+        content_type="text/plain",
+        byte_count=len(payload),
+        sha256=hashlib.sha256(payload).hexdigest(),
+        captured_at=datetime(2025, 4, 15, 10, 5, tzinfo=UTC),
+    )
 
 
 def _exported_fichero(tmp_path: Path, *, declaration_type: str) -> bytes:
@@ -128,6 +167,52 @@ def test_a_non_refund_fichero_is_parsed_back_and_reports_its_disposition(tmp_pat
 
     assert headers.get("declaration_type") == code
     assert headers, "the projection returned nothing, so the payload did not parse"
+
+
+@pytest.mark.parametrize("code", ["C", "I", "N"])
+def test_a_non_refund_fichero_yields_casillas_through_the_layout_not_the_positional_fallback(
+    tmp_path: Path,
+    code: str,
+) -> None:
+    """The casillas come from the LAYOUT, which is the only assertion that discriminates.
+
+    Asserting that a value came back cannot show the layout parse works. The
+    casilla projection falls back to a positional Modelo 303 read when the layout
+    parse raises, and that fallback SUCCEEDS, so a value arrives either way and a
+    value-shaped assertion passes over a still-broken parse.
+
+    The two paths are distinguishable by provenance rather than by value: a
+    layout-parsed casilla records ``{layout_id}:{record_id}:{field_id}:...`` while
+    the positional fallback records ``record:T30303:pos:...``. This asserts the
+    layout form POSITIVELY rather than merely asserting the absence of the
+    fallback form, so it keeps its meaning once the fallback stops substituting
+    and starts refusing: in that world no positional locator can be produced at
+    all, and this test still states where the values legitimately came from.
+    """
+    payload = _exported_fichero(tmp_path, declaration_type=code)
+    snapshot = _snapshot()
+
+    observations = observed_casillas_from_submitted_file(
+        snapshot=snapshot,
+        declaration=_declaration(),
+        body=payload,
+        artefact=_artefact(payload),
+    )
+
+    assert observations, "the projection produced nothing, so neither path ran"
+    layout_prefix = f"{resolve_export_layout(snapshot).layout.id}:"
+    off_layout = sorted(
+        {
+            observation.source_locator
+            for observation in observations
+            if not observation.source_locator.startswith(layout_prefix)
+        }
+    )
+    assert not off_layout, (
+        f"casillas did not come through the layout: {off_layout[:3]}. A locator of the form "
+        "'record:T30303:pos:...' means the layout parse still failed and the positional "
+        "fallback answered in its place."
+    )
 
 
 def _observed_headers_from_projection(payload: bytes) -> dict[str, str]:
