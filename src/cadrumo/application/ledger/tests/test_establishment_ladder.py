@@ -760,29 +760,23 @@ class TestRungReachabilityFromADraft:
         assert {"supplier_country_code", "customer_country_code"} <= parsed_fields
         assert {"supplier_postal_code", "customer_postal_code"} <= parsed_fields
 
-    def test_asserted_gap_the_cross_industry_invoice_branch_states_no_country(self) -> None:
-        """The one structured syntax whose country is still unread, kept visible.
+    def test_the_cross_industry_invoice_branch_now_states_a_country_too(self) -> None:
+        """The last unread structured country, and the rung it was holding shut.
 
-        Facturae and UBL now state a country the ladder can use; CII does not,
-        because no Cross Industry Invoice is bundled anywhere in the corpus and
-        lighting that branch means authoring the first specimen for an
-        unexercised syntax rather than reading an element already sitting in a
-        real document. So the gap is narrower than it was and it is not closed,
-        and the difference is recorded here rather than in anyone's memory.
+        Replaces ``test_asserted_gap_the_cross_industry_invoice_branch_states_no_country``,
+        which asserted this document's ``supplier_country_code`` was ``None``
+        and went red the day the CII read landed -- the notification it existed
+        to give. Replaced with the positive contract rather than relaxed, per
+        that test's own instruction: a gap test that gets adjusted to match the
+        code cancels the gate at the moment it fires.
 
-        **This asserts a gap, not a contract**, and it belongs to the same class
-        for the same reason its predecessor did: it is expected to fail when the
-        CII country source lands, and that failure is the notification. A lane
-        finding it red should replace it with a gate asserting the rung now
-        fires, never relax it.
-
-        **The ``test_asserted_gap_`` prefix is the convention carrying that**,
-        and it is in the NAME rather than only here on purpose. An operator
-        triaging a red at speed reads the name and treats it as a contract, then
-        "fixes" the test to match the code -- which relaxes exactly the gate that
-        was doing its job. The prefix makes the whole population greppable and
-        says, at the only place a triager reliably looks, that a failure here
-        means a gap CLOSED and the test must be replaced rather than adjusted.
+        The document is kept byte for byte from the gap assertion so this is a
+        statement about the SAME bytes. It always stated ``ram:CountryID``; what
+        changed is that the reader now takes it, which is why the postal code
+        alone was never the question. ``38001`` is Santa Cruz de Tenerife, so
+        the answer the chain produces is Canarias -- an answer no default could
+        return, and one the postal rung cannot even be asked for until the
+        country evidence names Spain.
         """
         specimen = b"""<?xml version="1.0" encoding="UTF-8"?>
 <rsm:CrossIndustryInvoice
@@ -804,7 +798,8 @@ class TestRungReachabilityFromADraft:
 """
         parsed = parse_einvoice_document(specimen)
 
-        # The postal code IS read, so this is a statement about the country
-        # element rather than about the CII branch being unreached.
         assert parsed.supplier_postal_code == "38001"
-        assert parsed.supplier_country_code is None
+        assert parsed.supplier_country_code == "ES"
+        # The pairing is the point: a country that names Spain is what admits
+        # the postal code as territory evidence at all.
+        assert territorial_scope_for_spanish_postal_code("38001") is IvaTerritorialScope.ES_CANARIAS
