@@ -27,13 +27,19 @@ Disposition is the axis running through all three
 ---------------------------------------------------
 
 None of the three is a property of the layout alone: each is scoped to what
-*this* filing's disposition actually files. The refund (DID) page is the worked
-case -- it belongs to the layout but reaches disk only on a refund disposition,
-so a casilla it carries is required on a refund filing and out of scope on a
-non-refund one. :func:`_did_page_suppressed` is therefore the shared predicate
-behind representability and record order alike, and lives here with the
-disposition-scoped concern rather than beside the renderer that also consults
-it.
+*this* filing's disposition actually files. The bank-account (DID) page is the
+worked case -- it belongs to the layout but reaches disk only where the fichero
+must carry an account, so a casilla it carries is required on such a filing and
+out of scope otherwise. :func:`_did_page_suppressed` is therefore the shared
+predicate behind representability and record order alike, and lives here with the
+disposition-scoped concern rather than beside the renderer that also consults it.
+
+"Must carry an account" is NOT "is a refund", and this prose said it was until a
+domiciliación filing was measured going out with no account for AEAT to debit.
+The three refund codes need the page because AEAT pays into the account; ``U``
+needs it because AEAT charges the account. The Diseño settles it by labelling
+position 23 ``Domiciliación/Devolución - IBAN`` -- one field for both directions
+-- while every other field on the page is prefixed ``Devolución -``.
 
 Set derivation and the gate are one concern
 --------------------------------------------
