@@ -36,21 +36,34 @@ it, which is the specific failure that produced today's three instances.
 Migrating a payload: what to declare
 -------------------------------------
 
-**A declared input is a fact the scenario CONSUMES, not a figure that happens to
-appear on the page.** Three cases have come up, and they look alike from a
-distance:
+**A declared input is a fact the scenario CONSUMES.** Not a fact the manual prints
+prominently, and not a fact the scenario derives from. Four cases have come up, and
+they look alike from a distance.
+
+**Read this one first — it is the only one that fails SILENTLY.**
+
+* The corpus prints the ANTECEDENT, not the figure. The example opens with raw
+  facts — a retention certificate, a book of ingresos and gastos — and its solución
+  works them into the figures the casillas actually take. Declare the worked figure
+  and cite the solución line. Citing the raw one instead looks entirely reasonable,
+  sits on the manual's headline lines, passes every check, and points a reviewer at
+  a number that does not match the declaration: 10.100 cited for a declared input of
+  20.300. The cases below fail visibly, by a missing figure or a refused collision.
+  This one succeeds and is wrong.
+
+The rest:
 
 * The corpus does not print it. Scenario scaffolding the engine needs and the
-  manual never states — component boxes under a stated total, neutral zeros.
-  Keep it local and labelled. Declaring it would attach a locator to a figure the
-  corpus does not carry.
+  manual never states — component boxes under a stated total, neutral zeros, a
+  marked-X flag whose encoding is ours rather than the page's. Keep it local and
+  labelled. Declaring it would attach a locator to a figure the corpus does not
+  carry.
 * The corpus prints it, as an ANSWER. A stated total that is an expected OUTPUT of
   this same scenario. Declaring it as an input makes the oracle assert what it was
   handed, which :func:`test_no_declared_input_is_also_an_expected_output` refuses.
-* The corpus prints its ANTECEDENT, not it. The example opens with raw facts — a
-  retention certificate, a book of ingresos and gastos — and its solución works
-  them into the figures the casillas actually take. Declare the worked figure and
-  cite the solución line, not the more prominent raw one.
+* One casilla COMBINES several printed items. The registry lumps intereses and
+  reparación into a single box; the declared figure is their sum, so the locator
+  spans every item it is made of rather than whichever appears first.
 
 Migrating a payload: where the locator points
 ----------------------------------------------
@@ -71,9 +84,9 @@ rather than the framework article, one layer down:
 
 Read every locator off the year's OWN manual. Sibling years state the same caso
 práctico at different lines, so copying a sibling's references is the mistake this
-is most likely to invite — and none of the three cases above would fail a test if
-got wrong. That is what the declaration is for: not catching a wrong locator, but
-putting it in one reviewable place beside the figure it claims.
+is most likely to invite — and no case above would fail a test if got wrong. That
+is what the declaration is for: not catching a wrong locator, but putting it in one
+reviewable place beside the figure it claims.
 """
 
 from __future__ import annotations
@@ -121,10 +134,6 @@ def _payload(name: str) -> ManualWorkedExamplePayload:
 #: is stated here for the same reason none is asserted: it would be wrong the moment a
 #: payload migrates, and the entries themselves are the inventory.
 _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
-    "modelo-100-2024-ganancias-patrimoniales-transmision-inmueble.json": (
-        "scenario facts still hand-written in "
-        "test_m100_2024_ganancias_patrimoniales_transmision_inmueble_manual_worked_example.py"
-    ),
     "modelo-100-2024-integracion-compensacion-ganancias-patrimoniales.json": (
         "scenario facts still hand-written in "
         "test_m100_2024_integracion_compensacion_ganancias_patrimoniales_manual_worked_example.py"

@@ -10,5 +10,24 @@
     "1830": "96380.00",
     "1836": "51720.00",
     "1840": "49562.95"
+  },
+  "declared_inputs": {
+    "corpus_locator": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L42733-L42828",
+    "by_casilla_id": {
+      "1839": "2157.05",
+      "1911": "150000.00",
+      "1912": "1900.00",
+      "1913": "90000.00",
+      "1914": "8000.00",
+      "1915": "1620.00"
+    },
+    "locator_by_casilla_id": {
+      "1839": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L42784",
+      "1911": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L42733",
+      "1912": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L42734",
+      "1913": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L42736",
+      "1914": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L42740",
+      "1915": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L42828,#L42829-L42832"
+    }
   }
 }
