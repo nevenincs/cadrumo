@@ -4,7 +4,7 @@ tags:
   - '#justificante-identity-matching'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:67fe093a9bf4a4d586ee5d78d6233677ee7d3ac1fa55a70cf8e01685f5144c2e'
+body_hash: 'sha256:92f6614657b6728aab5278e3fa0ec36b7c9f64dfab8cd2b74041f3aede9eb520'
 tier: L2
 related:
   - '[[2026-08-07-justificante-identity-matching-adr]]'
@@ -56,9 +56,9 @@ Promote the shared CSV-extraction helper, harden the row-scoped locator to an ex
 
 ### Phase `P02` - Distinguish swallowed justificante-matching outcomes
 
-Surface a Notice distinguishing all five swallowed outcomes at the register-reconciliation site (unreadable artefact, manifest mismatch, unparsable PDF, CSV-resolution failure, CSV mismatch) so an operator can see why a capture produced no evidence.
+Surface a Notice distinguishing all six swallowed outcomes at the register-reconciliation site (unreadable artefact, manifest mismatch, unparsable PDF, CSV-resolution failure, CSV mismatch, filing-target mismatch) so an operator can see why a capture produced no evidence.
 
-- [x] `P02.S08` - Distinguish all five swallowed outcomes (unreadable artefact, manifest mismatch, unparsable PDF, CSV-resolution failure, CSV mismatch) and return a typed reason instead of returning None uniformly; `src/cadrumo/application/live/_filed_observation_persistence.py (_parse_matching_filed_justificante)`.
+- [x] `P02.S08` - Distinguish all six swallowed outcomes (unreadable artefact, manifest mismatch, unparsable PDF, CSV-resolution failure, CSV mismatch, filing-target mismatch) and return a typed reason instead of returning None uniformly; `src/cadrumo/application/live/_filed_observation_persistence.py (_parse_matching_filed_justificante)`.
 - [x] `P02.S09` - Emit a Notice through the shared envelope spine naming the unreached-evidence reason when an enrollment call finds an artefact but saves nothing; `src/cadrumo/application/live/_filed_observation_persistence.py (persist_filed_justificante_metadata and enroll_filed_justificante_evidence)`.
 - [ ] `P02.S10` - Add a mutation-proof test confirming the reason-distinguishing branch fires per swallowed case and confirm the CLI report surfaces the Notice; `src/cadrumo/application/live/tests and src/cadrumo/entrypoints/cli/tests`.
 
@@ -82,16 +82,19 @@ it is a regression against that exact check. `P01.S07` gates the Phase closed
 and must run last within `P01`. `P02` depends on `P01` closing first: the
 reason-distinguishing branch in `P02.S08` reads the same predicate call site
 `P01.S01` corrects, so building it before `P01.S01` lands would encode only
-the current four swallowed outcomes and miss the fifth (CSV mismatch) that
-Phase `P01` introduces. Before
+the pre-fix four swallowed outcomes and miss the two `P01.S01` introduces
+(`CSV_MISMATCH` and `CSV_UNRESOLVABLE`) plus the pre-existing
+`FILING_TARGET_MISMATCH` this plan's earlier draft had also omitted from its
+own count — six total. Before
 `P01.S05` begins, re-check whether the parallel-authored pinning test
 mentioned in the ADR's Constraints has landed elsewhere in the tree; if so,
 absorb and update that test in place rather than authoring a second one, per
-`aeat-agent-orchestration`'s in-scope-regression mandate. Before `P01.S11`
-begins, re-verify against a fresh `git show HEAD:src/cadrumo/adapters/outbound/aeat/sede/__init__.py`
-whether `extract_csv_from_url` already resolves through the facade — a peer
-landed this in the shared tree during this decision's review, so the row may
-already be satisfied. Every implementing row in this plan touches a shared,
+`aeat-agent-orchestration`'s in-scope-regression mandate. `P01.S11` closed
+against `extract_csv_from_url` already resolving through the facade — an
+earlier draft of this plan credited that to a peer's independent change; it
+was in fact the `S11` executor's own uncommitted edit, carried into HEAD by
+a broad tree-wide sweep before this plan's review pass read it back and
+misattributed it. Every implementing row in this plan touches a shared,
 actively-contended worktree: commit each landed row with an explicit
 pathspec (never a bare `git commit`), and verify what was actually committed
 with `git show <sha> --numstat` after, not a pre-commit `git diff --cached`

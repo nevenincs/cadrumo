@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#m303-carry-reconciliation'
 date: '2026-08-07'
-modified: '2026-08-07'
-body_hash: 'sha256:0872609e86c89f4f5a6cc0cb5670f84966578ec27ba244ee03c61decf9bbe935'
+modified: '2026-08-08'
+body_hash: 'sha256:ab79a41d066ae02eb1d2c5c0de5ef5d39e4828cf42890342a278ad58f717860f'
 tier: L1
 related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
@@ -64,11 +64,11 @@ decimal expectations and call itself parity.
 
 ## Steps
 
-- [ ] `S01` - Discover token-naming modules by AST scan instead of a hand-listed tuple, and rebind the nine surviving twin declarations to the authority; `src/cadrumo/application/calculations/tests/test_iva_compensation_casillas.py src/cadrumo/application/calculations/__init__.py src/cadrumo/application/calculations/_iva_compensation_annual_partition.py src/cadrumo/application/modelo/_filed_revision_observation.py src/cadrumo/application/modelo/_iva_wallet_gate.py`.
-- [ ] `S09` - Rebind the four further twin literals discovery found in the registry binding validator, which a hand-listed inventory of nine had also missed; `src/cadrumo/domain/iva_compensation/_filed_derivation.py src/cadrumo/domain/iva_compensation/__init__.py src/cadrumo/domain/calculations/registry/_bindings.py src/cadrumo/application/calculations/_iva_compensation_casillas.py`.
-- [ ] `S02` - Route the local filing path refunded rewrite through the canonical derivation and drop the contradicted formula provenance to match the sede path; `src/cadrumo/application/modelo/_filed_revision_observation.py src/cadrumo/application/modelo/tests`.
-- [ ] `S03` - Replace the algebraically vacuous available equals posterior plus generated assertion on the resultado basis with an independent check; `src/cadrumo/domain/iva_compensation/tests/test_filed_derivation_disposition.py`.
-- [ ] `S04` - Record the four deferred review findings as follow-up rows without implementing them; `.vault/plan/2026-08-07-m303-carry-reconciliation-plan.md`.
+- [x] `S01` - Discover token-naming modules by AST scan instead of a hand-listed tuple, and rebind the nine surviving twin declarations to the authority; `src/cadrumo/application/calculations/tests/test_iva_compensation_casillas.py src/cadrumo/application/calculations/__init__.py src/cadrumo/application/calculations/_iva_compensation_annual_partition.py src/cadrumo/application/modelo/_filed_revision_observation.py src/cadrumo/application/modelo/_iva_wallet_gate.py`.
+- [x] `S09` - Rebind the four further twin literals discovery found in the registry binding validator, which a hand-listed inventory of nine had also missed; `src/cadrumo/domain/iva_compensation/_filed_derivation.py src/cadrumo/domain/iva_compensation/__init__.py src/cadrumo/domain/calculations/registry/_bindings.py src/cadrumo/application/calculations/_iva_compensation_casillas.py`.
+- [x] `S02` - Route the local filing path refunded rewrite through the canonical derivation and drop the contradicted formula provenance to match the sede path; `src/cadrumo/application/modelo/_filed_revision_observation.py src/cadrumo/application/modelo/tests`.
+- [x] `S03` - Replace the algebraically vacuous available equals posterior plus generated assertion on the resultado basis with an independent check; `src/cadrumo/domain/iva_compensation/tests/test_filed_derivation_disposition.py`.
+- [x] `S04` - Record the four deferred review findings as follow-up rows without implementing them; `.vault/plan/2026-08-07-m303-carry-reconciliation-plan.md`.
 - [ ] `S05` - DEFERRED - report a refunded basis rather than resultado once disposition recovery from the justificante Tipo de declaracion makes the branch reachable; `src/cadrumo/domain/iva_compensation/_filed_derivation.py`.
 - [ ] `S06` - DEFERRED - assert the disposition-blind available reconstruction in the annual partition instead of relying on a transitive upstream rewrite in another package; `src/cadrumo/application/calculations/_iva_compensation_annual_partition.py`.
 - [ ] `S07` - DEFERRED - refuse a persisted compensation pair where a directly filed disponible casilla overwrites available without generated following it; `src/cadrumo/application/calculations/_iva_compensation_history.py`.

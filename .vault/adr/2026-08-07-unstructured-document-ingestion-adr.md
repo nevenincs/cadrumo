@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:240499c99fa3c73bc32a259a3785722bc0d018d758b04a1bc65799966bcbedf6'
+body_hash: 'sha256:ce35a7ed9f6ff2667e5dfbcaf9fe01f8e4dc20876d6dc63921a43d794cbc1de6'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -983,6 +983,60 @@ code of no country is the same lesson. The ruling:
   resolver); an issued-side fixture with an unassigned code must reach
   the review gate and never a zero-rated category; and an
   assigned-but-uncatalogued code must emit the catalogue-gap advisory.
+
+**Ruling (eighth amendment): the fact split reaches the persisted
+ledger, and identification is never derived from country.** A sweep
+found the fifth amendment's conflation surviving one layer down:
+`_validate_intracom_export_counterparty` gates `INTRA_COMMUNITY_SUPPLY`
+on `counterparty_eu_member_state`, a derived property of
+`counterparty_country` — an address fact, establishment — while the
+operative fact for the art. 25 exemption is the acquirer's VAT
+IDENTIFICATION in another Member State, and the persisted transaction
+and invoice models carry no identification field at all. Both error
+directions land in money: a Spanish-established acquirer holding a
+German VAT number is refused an exemption art. 25 grants
+(over-declaration, the unwatched direction), and a German-established
+acquirer purchasing under a Spanish NIF-IVA is zero-rated on a domestic
+supply (silent under-declaration). The ruling:
+
+- **The split is a property of the domain, not of the criteria model.**
+  The persisted counterparty state gains a typed, nullable
+  `identification_state` beside the country field. The ingestion path
+  populates it terminally from the printed prefix per the fifth
+  amendment; the structured formats populate it exactly from the VAT
+  identifier they carry; on document-less paths (a manually added
+  transaction) the operator supplies it. Absent means absent: NO
+  consumer derives identification from country, in either direction,
+  ever — the derived `counterparty_eu_member_state` property answers
+  establishment-flavoured questions only and is barred from
+  identification-keyed gates.
+- **The art. 25 gate re-keys on identification, and the country-keyed
+  check is deleted, not kept beside it.** Identification present and
+  non-ES is the operative test; establishment does not enter this gate
+  (the transport-of-goods condition is separate evidence, out of this
+  record's scope). Per `no-legacy-compatibility` there is no interim in
+  which country masquerades as identification: the field lands, the
+  gate re-keys, and the old derivation goes, in one change. The lane's
+  refusal to ship a gate over the current shape is endorsed — a gate
+  pinning the conflation would have converted the defect into verified
+  behaviour.
+- **When a decision needs identification and it is absent,** the claim
+  is refused with a resolvable review item — never derived, never
+  defaulted. Identification is a stable counterparty-entity fact, so it
+  joins the fourth amendment's once-per-counterparty `DeclaredFacts`
+  home: one operator answer serves every later document and manual
+  entry for that counterparty.
+- **Gates, paired deliberately** because either case alone can be
+  satisfied by tightening the wrong side: a Spanish-established,
+  German-identified acquirer with transport evidence MUST reach the
+  exemption, and a German-established acquirer on a Spanish NIF-IVA
+  MUST NOT — one fixture pair, both directions asserted, plus an
+  absent-identification fixture proving refusal-with-review-item rather
+  than country-derived fallback, a mutation proof at the re-keyed gate,
+  and a consumer sweep asserting nothing derives identification from
+  country. The OSS surfaces are recorded as settled by the same sweep:
+  `destination_member_state` is the Member State of consumption,
+  neither party fact, taken from its own field — correct as read.
 
 ### D8c — the evidence marker is a stated judgement; column headers are not taxpayer evidence
 

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#justificante-identity-matching'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:323c2cfac4fe1f9155a831075f42b40a3484749fa171dc32ccc0f67dde58c85b'
+body_hash: 'sha256:3db455d979f5f04b4f4ddc8609b0ae32f5f4f66dfd65e793b213db3e47d69add'
 related:
   - "[[2026-08-07-justificante-identity-matching-reference]]"
   - "[[2026-06-10-live-justificante-reconcile-adr]]"
@@ -61,10 +61,17 @@ per `no-silent-under-declaration` and `sensitive-financial-data-secure-storage-o
 - `extract_csv_from_url` is the sole canonical helper for this extraction
   (its own docstring: "shared more widely, by `_declarations.py` and
   `_parse.py` as well"). As of the most recent verification it is ALREADY
-  exported through the sede package's public facade (`__init__.py:97,204`) —
-  a peer landed this in the shared tree since this decision's earlier draft;
-  the implementing row must re-verify this before executing rather than
-  re-promoting a symbol that already resolves, per `aeat-agent-orchestration`.
+  exported through the sede package's public facade (`__init__.py:97,204`).
+  **Correction: this was misattributed in an earlier draft as a peer's
+  independent change landed ahead of this ADR.** The exporting docstring
+  line ("and is re-exported through the package facade") that this ADR
+  earlier cited as evidence of a peer's promotion was itself written by the
+  `P01.S11` implementing row's own executor; a broad tree-wide sweep carried
+  that uncommitted edit into HEAD before this ADR's review pass read it back,
+  which made the executor's own work look like prior, unrelated third-party
+  provenance. `P01.S11` was correctly executed and closed against its own
+  change, not a peer's; this record now credits it correctly rather than
+  crediting the wrong party for a real change.
 - **The recovered CSV's provenance chain must stay independent of the
   receipt's own self-reported CSV, and this is not self-evident from the code
   today — it depends on how `source_url` is constructed.** The chain is:
@@ -212,9 +219,33 @@ per `no-silent-under-declaration` and `sensitive-financial-data-secure-storage-o
 ## Constraints
 
 - No live AEAT access from this record's implementing rows; every fix is
-  verified against committed fixtures (`src/cadrumo/tests/fixtures/justificantes/303/*.pdf`,
-  already real-corpus per fixture-provenance discipline) and unit coverage,
-  never a fresh live pull.
+  verified against committed fixtures
+  (`src/cadrumo/tests/fixtures/justificantes/303/*.pdf`) and unit coverage,
+  never a fresh live pull. **Correction: these fixtures are `synthetic_generated`
+  in all fifteen sidecars, not `real_corpus`** — an earlier draft of this
+  record stated otherwise on a relayed, unverified claim. No inference in
+  this decision rests on the fixtures being real AEAT-issued bytes; the
+  empirical grounding (`presentation_id != expediente_id` on real receipts)
+  came from a separate live-captured pair loaded from encrypted storage, not
+  from this committed corpus. **Directly re-measured against the real
+  production parser** (`parse_justificante_bytes`) rather than trusting the
+  relayed figure: ALL FIFTEEN committed `303` fixtures parse to
+  `presentation_id = None`, not merely "two" as an earlier relay in this
+  campaign stated. Before the fix, `matches_filing_target`'s
+  `presentation_id` comparison only fired when the receipt's own
+  `presentation_id` was non-empty (`_schema.py:120-126`); against a
+  null-`presentation_id` fixture it was a silent no-op returning a MATCH
+  regardless of what was passed. A "pinning test" built to demonstrate the
+  original defect (predicate rejects a valid receipt because
+  `presentation_id != expediente_id`) using any fixture from this corpus
+  would therefore have silently NOT exercised the defect at all — it would
+  have matched trivially and reported the fix as proven when nothing
+  specific to `presentation_id` was ever tested. This corpus's fixtures do
+  carry a non-null `csv` (each `SANITIZED303<year>`, shape-valid per
+  `is_aeat_csv`), so they remain usable for the corrected code's CSV-equality
+  checks; they are simply unusable as a demonstration of the specific
+  original `presentation_id`/`expediente_id` defect, which needed the
+  separate live-captured receipts to establish.
 - A pinning test asserting today's (defective) rejection is being authored in
   parallel by another agent and had not landed as of this decision's most
   recent verification; the implementing row that lands the fix MUST re-check
@@ -262,12 +293,13 @@ equality check before calling the narrowed predicate on `modelo`,
   pre-existing `justificante.csv == snapshot.csv` check (`:549-552`)
   unchanged and drops the same now-signature-invalid argument from its call
   into `_justificante_matches_capture_axis`.
-- `extract_csv_from_url` (`_declarations_remote.py`) is already promoted into
-  the sede package's public facade (`__all__` in
-  `adapters/outbound/aeat/sede/__init__.py:97,204`, landed by a peer in the
-  shared tree since this decision's earlier draft) — a precondition of
-  consuming it from `application/live/`, per `aeat-architecture-boundaries`,
-  now satisfied. The implementing row re-verifies rather than re-lands it.
+- `extract_csv_from_url` (`_declarations_remote.py`) is promoted into the
+  sede package's public facade (`__all__` in
+  `adapters/outbound/aeat/sede/__init__.py:97,204`) by `P01.S11` itself — a
+  precondition of consuming it from `application/live/`, per
+  `aeat-architecture-boundaries`. (An earlier draft of this row
+  misattributed the promotion to a peer; see the correction in
+  Considerations.)
 - `_parse_matching_filed_justificante`
   (`_filed_observation_persistence.py`) GAINS a `csv == csv` check it did not
   have: recover the CSV from the `justificante_pdf` artefact's
@@ -294,13 +326,21 @@ equality check before calling the narrowed predicate on `modelo`,
   file, `page.get_by_text(label_text, exact=True)` at `:794,829`, is a
   different Playwright API shape for a different selection need, not a
   `filter(has_text=...)` call).
-- Observability: `_parse_matching_filed_justificante` distinguishes its five
-  swallowed outcomes (unreadable artefact, manifest mismatch, unparsable PDF,
-  CSV-resolution failure from a malformed `source_url`, CSV mismatch) and the
-  two enrollment call sites surface a non-blocking `Notice` (via the shared
+- Observability: `_parse_matching_filed_justificante` distinguishes its SIX
+  swallowed outcomes — `UNREADABLE_ARTEFACT`, `MANIFEST_MISMATCH`,
+  `UNPARSABLE_PDF`, `CSV_UNRESOLVABLE` (a malformed or CSV-less
+  `source_url`), `CSV_MISMATCH`, and `FILING_TARGET_MISMATCH` (the receipt
+  parsed and its CSV agrees, but its `modelo`/`ejercicio`/`period`/taxpayer
+  does not describe this observation — the pre-existing filing-target
+  rejection this ADR's earlier draft omitted from its own count). Folding
+  `FILING_TARGET_MISMATCH` into a neighbouring reason would recreate exactly
+  the collapse this observability work exists to undo — a diagnostic
+  taxonomy merging two distinguishable causes reproduces the defect it fixes
+  — so it is named as its own member, not absorbed. The two enrollment call
+  sites surface a non-blocking `Notice` (via the shared
   `cadrumo.core.json_contract.Notice` channel, per `aeat-cli-contract`) when a
   justificante artefact was present but produced no saved evidence, naming
-  which of the five reasons applies. This does not invent a bespoke advisory
+  which of the six reasons applies. This does not invent a bespoke advisory
   field; it routes through the existing typed channel.
 
 ## Rationale
