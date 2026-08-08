@@ -5,12 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:b3e1c2c686a3cf946b052db9c98f3875d2b897630876256cfd4492e2300ffcba'
+body_hash: 'sha256:1dcfe22b3eac7a88d7a564bad3581a86d3237422b1078daaf190dc3152108e1e'
 related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
   - "[[2026-08-08-synced-history-consumption-pulled-fact-consumption-census-reference]]"
 ---
-
 # `synced-history-consumption` reference: `calculation input, reconciliation target, or display only`
 
 ## Summary
@@ -75,8 +74,15 @@ Modelo 100's dependency on modelo 193 is `factual_evidence`, citing
 retención the taxpayer SUFFERS and the payer files, evidenced by the income
 certificate rather than settled from a return the taxpayer never filed.
 
-Three of the 12 are pull-reachable; the other 9 are the Sociedades slots the
-register cannot serve.
+Five of the 12 are pull-reachable and seven are the Sociedades slots the register
+cannot serve. The five are three relation slots plus the two `previous_filing`
+bindings declared `factual_evidence`, whose source modelos do carry the read
+surface. Counting only the relation half understates the reachable side by two
+and, worse, attributes two extra slots to the Sociedades coverage gap, which is a
+different finding with its own row: the nine unreachable slots are two
+`direct_annual_settlement` on modelo 200 fed by modelo 202, plus seven
+`factual_evidence`, three on modelo 200 and four on modelo 202. Two plus seven is
+the census subtotal of nine, and no other bucket contributes to it.
 
 ## The resolver does not distinguish the two classes
 
