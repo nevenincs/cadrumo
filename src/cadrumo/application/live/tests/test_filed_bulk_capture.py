@@ -125,6 +125,32 @@ def test_bulk_capture_reports_registry_unsupported_modelos_as_local_boundaries(t
     assert "does not offer modelo '721'" in failures["721"].message
 
 
+def test_bulk_capture_report_exposes_its_evidence_notices_channel(tmp_path: Path) -> None:
+    """The report carries ``evidence_notices``, and a caller can read it off the report.
+
+    The per-artefact evidence advisories are raised during enrolment and accumulated
+    during capture; the report is what carries them out to a caller. When it did not,
+    :func:`pull_filed_history` read the attribute anyway and raised ``AttributeError``
+    on a path nothing in this suite executed — so the missing channel and the caller
+    that wanted it were both invisible.
+
+    Asserts the attribute READS and is the declared empty tuple, not that it holds any
+    particular advisory: this scenario is refused before live contact and captures
+    nothing, so an empty channel is the correct answer here and a populated expectation
+    would be manufactured from a capture that never happened.
+    """
+    report = asyncio.run(
+        capture_filed_data_bulk(
+            year_from=2024,
+            year_to=2024,
+            output_root=tmp_path,
+            modelos=("151",),
+        ),
+    )
+
+    assert report.evidence_notices == ()
+
+
 def test_bulk_capture_accepts_limit_for_locally_bounded_unsupported_modelos(tmp_path: Path) -> None:
     report = asyncio.run(
         capture_filed_data_bulk(
