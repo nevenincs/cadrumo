@@ -71,9 +71,11 @@ and the field occupancy the derivatives do not carry, which is what the box and
 retirement signals are made of.
 
 THREE INDEPENDENT SIGNALS, ONE VERDICT -- and the third reports two directions.
-The count in this heading was wrong for as long as the occupancy signal existed,
+The count in this heading read TWO for as long as the occupancy signal existed,
 which is worth stating rather than quietly correcting: a module that miscounts its
-own instruments invites a reader to act on the two it names. The box-offset diff sees which boxes moved
+own instruments invites a reader to act on the ones it names and miss the rest.
+
+The box-offset diff sees which boxes moved
 but needs bracketed box markers. The page-length diff sees only that a page
 changed size, but reads designs the box table cannot -- several older PDF
 extractions publish their page totals while yielding no box markers -- so it
@@ -829,10 +831,15 @@ def test_a_mid_split_ejercicio_orders_its_halves_by_declared_coverage_not_by_fil
     for year, paths in sorted(multi.items()):
         if year in unorderable:
             continue
-        starts = [_coverage_start_period(path.name) for path in paths]
-        assert starts == sorted(starts), (
-            f"ejercicio {year} designs are not in declared-coverage order: {starts}"
+        declared = [_coverage_start_period(path.name) for path in paths]
+        # A year reported orderable must have a bound on every member; otherwise the
+        # unorderable report is itself wrong and the comparisons below are meaningless.
+        assert all(start is not None for start in declared), (
+            f"ejercicio {year} was reported orderable but a design declares no coverage bound: "
+            f"{[path.name for path in paths]}"
         )
+        starts = [start for start in declared if start is not None]
+        assert starts == sorted(starts), f"ejercicio {year} designs are not in declared-coverage order: {starts}"
         assert len(set(starts)) == len(starts), (
             f"ejercicio {year} has two designs declaring the same coverage start {starts}, "
             "so their order is not determined by what AEAT published"
@@ -868,13 +875,6 @@ def test_the_added_boxes_attach_to_the_epoch_that_introduced_them() -> None:
     Asserts the DIRECTION, never the tally: "no box-set change" against "some box-set
     change". The eight could become nine at the next publication without touching this.
     """
-    ordered, _unorderable = _designs_in_publication_order("303")
-    by_start: dict[tuple[int, int], Path] = {}
-    for path in ordered:
-        year = min(_design_years(path.name))
-        by_start[(year, _coverage_start_period(path.name) or 1)] = path
-    for key in ((2023, 1), (2024, 1), (2024, 9)):
-        assert key in by_start, f"the Modelo 303 design for {key} is absent, so this assertion would be vacuous"
 
     def numbered(path: Path) -> set[str]:
         found: set[str] = set()
@@ -885,15 +885,30 @@ def test_the_added_boxes_attach_to_the_epoch_that_introduced_them() -> None:
                     found.add(boxes[-1])
         return found
 
-    across_years = numbered(by_start[(2024, 1)]) - numbered(by_start[(2023, 1)])
-    within_2024 = numbered(by_start[(2024, 9)]) - numbered(by_start[(2024, 1)])
+    # Walk the ORDERED sequence adjacently, exactly as a boundary-deriving consumer
+    # does. Re-deriving the order here from the coverage helper would make this test
+    # insensitive to the ordering function it exists to guard.
+    ordered, _unorderable = _designs_in_publication_order("303")
+    window = [path for path in ordered if min(_design_years(path.name)) >= 2023]
+    assert len(window) >= 3, "fewer than three Modelo 303 designs from 2023 on; this assertion would be vacuous"
 
-    assert not across_years, (
+    introduced: dict[str, set[str]] = {}
+    for earlier, later in pairwise(window):
+        left, right = max(_design_years(earlier.name)), min(_design_years(later.name))
+        label = f"{left} mid-year" if left == right else f"{left}/{right}"
+        introduced[label] = numbered(later) - numbered(earlier)
+
+    for label in ("2023/2024", "2024 mid-year"):
+        assert label in introduced, (
+            f"the {label} boundary is absent from the ordered walk, so this assertion would be vacuous"
+        )
+
+    assert not introduced["2023/2024"], (
         "the 2023-to-early-2024 transition must introduce NO new numbered box -- boxes "
-        f"{sorted(across_years, key=int)} attributed there instead, which is the signature "
-        "of the two 2024 halves being paired in the wrong order"
+        f"{sorted(introduced['2023/2024'], key=int)} attributed there instead, which is the "
+        "signature of the two 2024 halves being paired in the wrong order"
     )
-    assert within_2024, (
+    assert introduced["2024 mid-year"], (
         "the mid-2024 transition must introduce the numbered boxes AEAT added at periods "
         "09 and 3T, but none attributed there, so the halves are paired in the wrong order"
     )

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:97979ea9778b3cc68ae74fa6d107493be20536a582bcb4927080a16d4796f00d'
+body_hash: 'sha256:8897752855317141425f7bcc3ccca8868cee6ab321d6f78bac28b2c26a728fc6'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -17,6 +17,7 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P01-S04]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P01-S05]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S65]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S68]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
 ---
 
@@ -39,6 +40,7 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-08-08-aeat-design-relayout-boundary-W01-P01-S04` - Settle whether the 2023 and 2024-early Modelo 303 designs are layout-identical
 - `2026-08-08-aeat-design-relayout-boundary-W01-P01-S05` - Settle and record what a split must not change across a re-layout boundary
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S65` - Assert the reserved-to-real occupancy transition alongside the retirement direction
+- `2026-08-08-aeat-design-relayout-boundary-W01-P02-S68` - Order the design inventories chronologically rather than by filename
 
 ### plan
 
