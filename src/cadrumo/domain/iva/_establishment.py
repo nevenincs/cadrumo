@@ -58,6 +58,12 @@ import tomllib
 from functools import lru_cache
 from typing import Final
 
+from ...core.identity import (
+    NifIvaPrefix,
+    iso_country_for_nif_iva_prefix,
+    nif_iva_format_for_country,
+    normalise_nif_iva,
+)
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction
 from ...core.resources import bundled_path
 from ...core.text_fold import fold_diacritics
@@ -67,8 +73,10 @@ from ._schema import EUMemberState
 __all__ = [
     "SPAIN_COUNTRY_CODE",
     "country_code_for_printed_country_name",
+    "country_code_for_printed_tax_identifier",
     "territorial_scope_for_country",
     "territorial_scope_for_printed_country_name",
+    "territorial_scope_for_printed_tax_identifier",
     "territorial_scope_for_spanish_postal_code",
 ]
 
@@ -138,6 +146,81 @@ def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialSco
     if normalised in _EU_MEMBER_CODES:
         return IvaTerritorialScope.EU_MEMBER
     return IvaTerritorialScope.THIRD_COUNTRY
+
+
+def country_code_for_printed_tax_identifier(printed_identifier: str | None) -> str | None:
+    """Return the alpha-2 code a printed tax IDENTIFIER names, or ``None``.
+
+    The first rung of the establishment ladder. An intra-community VAT number
+    leads with its Member State's VAT prefix, so a document printing
+    ``DE811234567`` states a country in the one place a domestic invoice's
+    address block often does not.
+
+    **The prefix is matched against the closed VAT prefix vocabulary, and the
+    body against that State's published VIES structure.** The prefix alone is
+    not evidence: two leading letters occur in plenty of strings a reader might
+    put in an identifier field, and ``FRANCISCO`` would otherwise place a party
+    in France. Requiring the whole number to match the shape its own prefix
+    claims makes the rung answer only where a real VAT number was printed.
+
+    **A Spanish identifier contributes nothing here, by design.** ``ES`` is
+    absent from the prefix vocabulary because Spanish identifiers are checksum
+    identifiers rather than structural ones -- and, more deeply, because
+    registration is not establishment: the non-resident ``N`` leader, the
+    ``L``/``M`` identifiers and the ``X``/``Y``/``Z`` series all belong to
+    parties registered in Spain and established elsewhere, and establishment for
+    IVA is the sede de actividad económica (Ley 37/1992 arts. 69-70). So a
+    Spanish-prefixed number is handed back to the ladder, where the printed
+    address country -- a statement about WHERE the party is, not about where it
+    is registered -- is what may name Spain and open the postal rung.
+
+    Args:
+        printed_identifier: The identifier as transcribed, or ``None``. Spacing
+            and separator punctuation are normalised away, because an issuer
+            prints ``BE 0123.456.789`` as readily as ``BE0123456789``.
+
+    Returns:
+        The ISO 3166-1 alpha-2 code -- ``GR`` for a Greek ``EL`` number, since
+        the VAT prefix and the ISO code diverge there and every catalogue
+        downstream is ISO-keyed -- or ``None`` when no VAT number was printed,
+        the prefix names no Member State, or the body does not match the shape
+        its prefix claims.
+    """
+    if printed_identifier is None:
+        return None
+    normalised = normalise_nif_iva(printed_identifier)
+    if len(normalised) < _ALPHA2_LENGTH:
+        return None
+    candidate = normalised[:_ALPHA2_LENGTH]
+    try:
+        prefix = NifIvaPrefix(candidate)
+    except ValueError:
+        return None
+    spec = nif_iva_format_for_country(prefix.value)
+    if spec is None or not spec.pattern.match(normalised):
+        return None
+    return iso_country_for_nif_iva_prefix(prefix)
+
+
+def territorial_scope_for_printed_tax_identifier(printed_identifier: str | None) -> IvaTerritorialScope | None:
+    """Return the territorial scope a printed tax IDENTIFIER establishes.
+
+    The identifier rung expressed against the same target every other rung
+    resolves into, and deliberately a composition rather than a second rule set:
+    :func:`country_code_for_printed_tax_identifier` answers "which country did
+    the number name" and :func:`territorial_scope_for_country` stays the single
+    authority on "what does that country establish".
+
+    Args:
+        printed_identifier: The identifier as transcribed, or ``None``.
+
+    Returns:
+        The scope the named country establishes, or ``None`` when no VAT number
+        was recognised. Spain cannot arise here -- the prefix vocabulary excludes
+        it -- so this rung never opens the Spanish territory question and never
+        answers it.
+    """
+    return territorial_scope_for_country(country_code_for_printed_tax_identifier(printed_identifier))
 
 
 _POSTAL_PREFIX_LENGTH: Final[int] = 2

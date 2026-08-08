@@ -91,8 +91,10 @@ from ._errors import (
 from ._establishment import (
     SPAIN_COUNTRY_CODE,
     country_code_for_printed_country_name,
+    country_code_for_printed_tax_identifier,
     territorial_scope_for_country,
     territorial_scope_for_printed_country_name,
+    territorial_scope_for_printed_tax_identifier,
     territorial_scope_for_spanish_postal_code,
 )
 from ._flow import (
@@ -313,6 +315,7 @@ __all__ = [
     "compute_regularizacion_prorrata_anual",
     "compute_sectoral_prorrata",
     "country_code_for_printed_country_name",
+    "country_code_for_printed_tax_identifier",
     "cuota_less_m303_categories_from_table",
     "deductible_percentage_for",
     "derive_category_from_regime_legend",
@@ -359,6 +362,7 @@ __all__ = [
     "supply_nature_is_required",
     "territorial_scope_for_country",
     "territorial_scope_for_printed_country_name",
+    "territorial_scope_for_printed_tax_identifier",
     "territorial_scope_for_spanish_postal_code",
     "validate_prorrata_reference",
     "verify_catalogue",

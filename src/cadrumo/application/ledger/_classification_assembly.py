@@ -198,7 +198,7 @@ def _customer_tax_status_gap(inputs: ClassifierInputs) -> MissingClassifierInput
     )
 
 
-def _names_spain(country_code: str | None) -> bool:
+def names_spain(country_code: str | None) -> bool:
     """Whether the printed country evidence POSITIVELY names Spain.
 
     Asked instead of reading the country resolver's ``None`` as "Spanish",
@@ -254,7 +254,7 @@ def _scope(
     if resolved is not None:
         return resolved, None
 
-    if _names_spain(country_code):
+    if names_spain(country_code):
         territory = territorial_scope_for_spanish_postal_code(postal_code)
         if territory is not None:
             return territory, None

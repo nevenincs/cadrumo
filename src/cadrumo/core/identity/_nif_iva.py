@@ -37,6 +37,7 @@ __all__ = [
     "NIF_IVA_FORMATS",
     "NifIvaFormatSpec",
     "NifIvaPrefix",
+    "iso_country_for_nif_iva_prefix",
     "nif_iva_format_for_country",
     "nif_iva_prefix_for_country",
     "normalise_nif_iva",
@@ -175,6 +176,33 @@ _ISO_COUNTRY_TO_PREFIX: Final[Mapping[str, NifIvaPrefix]] = {
     **{prefix.value: prefix for prefix in NifIvaPrefix},
     "GR": NifIvaPrefix.EL,
 }
+
+
+# VAT prefix -> ISO 3166-1 alpha-2 country code, the inverse direction of
+# ``_ISO_COUNTRY_TO_PREFIX``. Written rather than derived by inversion because
+# that map is not injective: both ``EL`` and ``GR`` key the Greek prefix, so an
+# inversion would resolve Greece to whichever key was read last.
+_PREFIX_TO_ISO_COUNTRY: Final[Mapping[NifIvaPrefix, str]] = {
+    **{prefix: prefix.value for prefix in NifIvaPrefix},
+    NifIvaPrefix.EL: "GR",
+}
+
+
+def iso_country_for_nif_iva_prefix(prefix: NifIvaPrefix) -> str:
+    """Return the ISO 3166-1 alpha-2 code the VAT *prefix* names.
+
+    Identity for every Member State except Greece, whose VAT numbers lead with
+    ``EL`` while its ISO code is ``GR``. That one divergence is the whole reason
+    this exists: a caller reading a country off a printed VAT number and handing
+    ``EL`` to an ISO-keyed catalogue gets no match, and a catalogue that answers
+    "not a Member State" for Greece places a Greek party outside the EU.
+
+    Northern Ireland's ``XI`` is returned unchanged. It is not an ISO country
+    code, and it is deliberately not translated to ``GB``: the two are not
+    interchangeable for VAT, and the catalogues that consume this carry ``XI``
+    as its own member.
+    """
+    return _PREFIX_TO_ISO_COUNTRY[prefix]
 
 
 def normalise_nif_iva(value: str) -> str:
