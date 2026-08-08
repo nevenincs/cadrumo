@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:2816843a2cfd0869547105b75876b667f71d9c198d0f224e0fe98dcd4ad97f07'
+body_hash: 'sha256:a742bd74059fefd4fffbb297fc1bb484631c9f42463de8b1e8367ae4dfac9a11'
 step_id: 'S10'
 related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
@@ -119,6 +119,36 @@ explicitly, since a new diagnostic is exactly what would break them: 21 passed.
     uv run --no-sync python -m dev.quality.types         ->  zero occurrences of any of the three files
 
 ## Notes
+
+CORRECTION, MEASURED LATER AND NARROWING THIS ROW'S CLAIM. The Outcome above says
+the previous-filing channel now reports. That is true on ONE branch, not on the
+channel generally, and the volume-measurement row established the difference by
+running both.
+
+Modelo 130 for 2025 1T, empty observation store, two buckets identical but for one
+profile fact:
+
+    no activity start declared      -> ADVISED, 3 diagnostics, 3 unresolved ids
+    activity start 2015-01-01       -> REFUSED, RegistryValidationError:
+                                       binding 'irpf.previous_year_economic_activity_net_income'
+                                       expected one observed filing '100'/2024/'0A', found 0
+
+The reason is the early return this row was written around. With no observations
+AND no declared activity start, `resolve_bindings_from_local_store` returns early
+and the unsatisfied set is reported. With an activity start declared the early
+return does not fire, `resolve_previous_filing_binding_values` runs, and it RAISES
+before the unsatisfied computation is reached. The resolver catches only
+storage-degradation errors, so that raise propagates.
+
+So the silence this row closed was narrower than the Outcome implies: for a
+long-running filer with a declared activity start the pre-existing behaviour was
+already a loud refusal rather than a silent zero. The advisory is real and the
+gates are sound; the scope claim was too broad and is corrected here rather than
+left standing.
+
+That the same absent filing produces a refusal or an advisory according to an
+unrelated profile fact is its own defect, and it is pre-existing rather than
+introduced here. It is opened as `P01.S27`.
 
 MECHANISM TWO IS NOT DONE, and this row does not fully satisfy its own gate. The
 gate was written to cover both silent mechanisms. This implements the
