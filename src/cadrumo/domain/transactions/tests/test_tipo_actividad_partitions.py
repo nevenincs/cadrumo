@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _SELECTOR_UNIT: Final[str] = "m036-tipo-actividad-code-set"
 
 
-class _StubParameter:
+class _ParameterLike:
     """A parameter-shaped value object for exercising the pure parser.
 
     Not a mock of the registry: the parser reads ``unit`` and ``value`` off
@@ -130,7 +130,7 @@ def test_codes_art_95_fixes_no_rate_for_select_nothing(tipo: TipoActividad) -> N
 def test_parser_refuses_a_token_that_is_not_a_modelo_036_code() -> None:
     """A selector naming an unknown code is refused, and the message lists the set."""
     with pytest.raises(TransactionValidationError, match="'Z99'") as raised:
-        _code_set({"p": _StubParameter(unit=_SELECTOR_UNIT, value="A04,Z99")}, "p")
+        _code_set({"p": _ParameterLike(unit=_SELECTOR_UNIT, value="A04,Z99")}, "p")
 
     # The refusal must name the accepted set, not just the offending token.
     assert "A04" in str(raised.value)
@@ -144,7 +144,7 @@ def test_parser_refuses_a_parameter_carrying_the_wrong_unit() -> None:
     the unit is what stops ``0.15`` being read as a code list.
     """
     with pytest.raises(TransactionValidationError, match="carries unit"):
-        _code_set({"p": _StubParameter(unit="fraction", value="0.15")}, "p")
+        _code_set({"p": _ParameterLike(unit="fraction", value="0.15")}, "p")
 
 
 def test_parser_refuses_an_absent_parameter() -> None:

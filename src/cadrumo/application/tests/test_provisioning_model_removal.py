@@ -53,7 +53,7 @@ TEXT = "qwen2.5:3b"
 MAPPING = "qwen2.5:1.5b"
 
 
-class _StoreStub(BaseHTTPRequestHandler):
+class _ModelStoreLoopbackHandler(BaseHTTPRequestHandler):
     """A real endpoint speaking the runtime's ``/api/tags`` and ``/api/delete`` wire shape.
 
     ``models`` is the store, and ``do_DELETE`` removes from it. That mutation is
@@ -100,11 +100,11 @@ class _StoreStub(BaseHTTPRequestHandler):
 def store() -> Iterator[tuple[str, Queue[dict[str, object]]]]:
     """Serve a real runtime store on a loopback port; yield its chat URL and event queue."""
     events: Queue[dict[str, object]] = Queue()
-    _StoreStub.events = events
-    _StoreStub.models = []
-    _StoreStub.delete_status = HTTPStatus.OK
-    _StoreStub.delete_is_a_lie = False
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _StoreStub)
+    _ModelStoreLoopbackHandler.events = events
+    _ModelStoreLoopbackHandler.models = []
+    _ModelStoreLoopbackHandler.delete_status = HTTPStatus.OK
+    _ModelStoreLoopbackHandler.delete_is_a_lie = False
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _ModelStoreLoopbackHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
@@ -133,7 +133,7 @@ def _selected(chat_url: str) -> dict[str, str]:
 def test_installed_inventory_is_read_from_the_tags_endpoint(store: tuple[str, Queue[dict[str, object]]]) -> None:
     """Installed models come from ``/api/tags``, the on-disk inventory, not ``/api/ps``."""
     chat_url, events = store
-    _StoreStub.models = [{"name": VISION, "size": 4 * GIB}]
+    _ModelStoreLoopbackHandler.models = [{"name": VISION, "size": 4 * GIB}]
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
         installed = read_installed_models()
     assert installed == (InstalledModel(name=VISION, size_bytes=4 * GIB),)
@@ -156,7 +156,7 @@ def test_removal_reports_the_runtimes_own_size_only_after_the_store_confirms_the
 ) -> None:
     """The positive control: a real delete, a real re-read, and a measured figure."""
     chat_url, events = store
-    _StoreStub.models = [{"name": VISION, "size": 4 * GIB}, {"name": TEXT, "size": 2 * GIB}]
+    _ModelStoreLoopbackHandler.models = [{"name": VISION, "size": 4 * GIB}, {"name": TEXT, "size": 2 * GIB}]
     with override_settings(**_selected(chat_url)):
         outcome = remove_runtime_model(VISION)
     assert outcome.removed is True
@@ -165,7 +165,7 @@ def test_removal_reports_the_runtimes_own_size_only_after_the_store_confirms_the
     # The figure is the removed model's size, never the store total: a report of
     # 6 GiB would be an aggregate the operator cannot reconcile against what left.
     assert outcome.freed_bytes != 6 * GIB
-    assert [row["name"] for row in _StoreStub.models] == [TEXT]
+    assert [row["name"] for row in _ModelStoreLoopbackHandler.models] == [TEXT]
 
     methods = []
     while not events.empty():
@@ -180,14 +180,14 @@ def test_removal_refuses_a_model_cadrumo_did_not_select_and_sends_nothing(
 ) -> None:
     """Deleting a peer's model costs a re-download; the guard is proven by silence on the wire."""
     chat_url, events = store
-    _StoreStub.models = [{"name": "llama3:70b", "size": 40 * GIB}]
+    _ModelStoreLoopbackHandler.models = [{"name": "llama3:70b", "size": 40 * GIB}]
     with override_settings(**_selected(chat_url)):
         outcome = remove_runtime_model("llama3:70b")
     assert outcome.removed is False
     assert outcome.freed_bytes is None
     assert "not a model Cadrumo selected" in outcome.detail
     assert events.empty(), "a refused removal must not reach the runtime at all"
-    assert [row["name"] for row in _StoreStub.models] == ["llama3:70b"]
+    assert [row["name"] for row in _ModelStoreLoopbackHandler.models] == ["llama3:70b"]
 
 
 def test_removal_of_a_model_that_is_not_installed_frees_nothing_and_deletes_nothing(
@@ -195,7 +195,7 @@ def test_removal_of_a_model_that_is_not_installed_frees_nothing_and_deletes_noth
 ) -> None:
     """Zero freed is a measurement here, distinct from the unmeasured ``None`` below."""
     chat_url, events = store
-    _StoreStub.models = [{"name": TEXT, "size": 2 * GIB}]
+    _ModelStoreLoopbackHandler.models = [{"name": TEXT, "size": 2 * GIB}]
     with override_settings(**_selected(chat_url)):
         outcome = remove_runtime_model(VISION)
     assert outcome.removed is False
@@ -221,8 +221,8 @@ def test_a_delete_the_runtime_accepted_but_did_not_perform_reports_no_freed_byte
 ) -> None:
     """An estimate is worse than no figure: an unconfirmed removal must report neither."""
     chat_url, _events = store
-    _StoreStub.models = [{"name": VISION, "size": 4 * GIB}]
-    _StoreStub.delete_is_a_lie = True
+    _ModelStoreLoopbackHandler.models = [{"name": VISION, "size": 4 * GIB}]
+    _ModelStoreLoopbackHandler.delete_is_a_lie = True
     with override_settings(**_selected(chat_url)):
         outcome = remove_runtime_model(VISION)
     assert outcome.removed is False
@@ -236,8 +236,8 @@ def test_a_runtime_that_refuses_the_delete_reports_no_freed_bytes(
 ) -> None:
     """A transport failure is a refusal, never a silent success carrying a number."""
     chat_url, _events = store
-    _StoreStub.models = [{"name": VISION, "size": 4 * GIB}]
-    _StoreStub.delete_status = HTTPStatus.INTERNAL_SERVER_ERROR
+    _ModelStoreLoopbackHandler.models = [{"name": VISION, "size": 4 * GIB}]
+    _ModelStoreLoopbackHandler.delete_status = HTTPStatus.INTERNAL_SERVER_ERROR
     with override_settings(**_selected(chat_url)):
         outcome = remove_runtime_model(VISION)
     assert outcome.removed is False
@@ -250,7 +250,7 @@ def test_removal_reports_no_figure_when_the_size_was_never_measured(
 ) -> None:
     """A runtime that omits ``size`` yields a removal with an honest absent figure, never a zero."""
     chat_url, _events = store
-    _StoreStub.models = [{"name": VISION}]
+    _ModelStoreLoopbackHandler.models = [{"name": VISION}]
     with override_settings(**_selected(chat_url)):
         outcome = remove_runtime_model(VISION)
     assert outcome.removed is True

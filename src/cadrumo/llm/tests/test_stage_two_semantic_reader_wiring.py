@@ -56,7 +56,7 @@ _REPLY = json.dumps(
 )
 
 
-class _RecordingClient:
+class _CapturingClient:
     """Captures the request the reader builds. No transport, no inference."""
 
     def __init__(self) -> None:
@@ -86,8 +86,8 @@ def _transcription(origin: FieldOrigin, *, name: str = "pdfplumber") -> Document
     )
 
 
-def _extract(transcription: DocumentTranscription) -> tuple[_RecordingClient, object]:
-    client = _RecordingClient()
+def _extract(transcription: DocumentTranscription) -> tuple[_CapturingClient, object]:
+    client = _CapturingClient()
     extractor = TextInvoiceFieldExtractor(model="stub-text", client=client, settings=load_settings())  # type: ignore[arg-type]
     return client, extractor.extract(transcription=transcription)
 
@@ -134,13 +134,13 @@ def test_the_request_is_marked_evidence_derived_unless_the_corpus_is_named() -> 
     The default direction is fail-closed, so a caller that says nothing about
     where its pages came from is treated as holding a taxpayer's document.
     """
-    client = _RecordingClient()
+    client = _CapturingClient()
     TextInvoiceFieldExtractor(model="stub-text", client=client, settings=load_settings()).extract(  # type: ignore[arg-type]
         transcription=_transcription(FieldOrigin.TEXT_LAYER),
     )
     assert client.requests[0].evidence_derived is True
 
-    corpus_client = _RecordingClient()
+    corpus_client = _CapturingClient()
     TextInvoiceFieldExtractor(
         model="stub-text",
         client=corpus_client,  # type: ignore[arg-type]
@@ -160,7 +160,7 @@ def test_the_default_local_model_is_the_text_extraction_role_not_the_vision_one(
     on exactly those machines.
     """
     settings = load_settings()
-    client = _RecordingClient()
+    client = _CapturingClient()
     TextInvoiceFieldExtractor(client=client, settings=settings).extract(  # type: ignore[arg-type]
         transcription=_transcription(FieldOrigin.TEXT_LAYER),
     )

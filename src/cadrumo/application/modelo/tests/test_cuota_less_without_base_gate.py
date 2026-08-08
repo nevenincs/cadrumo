@@ -78,7 +78,7 @@ def _transaction(
     return Transaction.model_validate(payload)
 
 
-class _StubCatalogue:
+class _InMemoryCatalogue:
     def __init__(self, transactions: dict[str, Transaction]) -> None:
         self._transactions = transactions
 
@@ -86,32 +86,32 @@ class _StubCatalogue:
         return self._transactions.get(transaction_id)
 
 
-class _StubRepository:
+class _InMemoryRepository:
     """Minimal stand-in for the catalogue repository the gate loads from."""
 
     def __init__(self, transactions: dict[str, Transaction]) -> None:
-        self._catalogue = _StubCatalogue(transactions)
+        self._catalogue = _InMemoryCatalogue(transactions)
 
-    def load(self) -> _StubCatalogue:
+    def load(self) -> _InMemoryCatalogue:
         return self._catalogue
 
 
-class _StubRevision:
+class _TargetRevision:
     def __init__(self, source_transaction_ids: tuple[str, ...]) -> None:
         self.source_transaction_ids = source_transaction_ids
         self.observations = ()
 
 
-class _StubWorkUnit:
+class _TargetWorkUnit:
     bucket_id = "bucket-under-test"
 
 
 def _findings(transactions: dict[str, Transaction], *, consumed: tuple[str, ...] | None = None):
     ids = tuple(transactions) if consumed is None else consumed
     return _cuota_less_without_base_findings(
-        target=_StubRevision(ids),  # ty: ignore[invalid-argument-type]  # reason: the gate reads two fields
-        work_unit=_StubWorkUnit(),  # ty: ignore[invalid-argument-type]  # reason: the gate reads bucket_id
-        transaction_repository=_StubRepository(transactions),  # ty: ignore[invalid-argument-type]  # reason: load() only
+        target=_TargetRevision(ids),  # ty: ignore[invalid-argument-type]  # reason: the gate reads two fields
+        work_unit=_TargetWorkUnit(),  # ty: ignore[invalid-argument-type]  # reason: the gate reads bucket_id
+        transaction_repository=_InMemoryRepository(transactions),  # ty: ignore[invalid-argument-type]  # reason: load() only
     )
 
 

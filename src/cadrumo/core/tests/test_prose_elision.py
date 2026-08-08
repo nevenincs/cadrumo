@@ -32,7 +32,7 @@ class _Capped(BaseModel):
     text: elided_prose(40)  # ty: ignore[invalid-type-form]
 
 
-class _Raising(BaseModel):
+class _LengthConstrained(BaseModel):
     """The behaviour the annotation replaces, for contrast."""
 
     text: str = Field(min_length=1, max_length=40)
@@ -113,4 +113,4 @@ def test_the_raising_shape_is_what_the_annotation_replaces() -> None:
     a plain capped field does raise, so the elision is a real behaviour change.
     """
     with pytest.raises(ValidationError):
-        _Raising(text="word " * 100)
+        _LengthConstrained(text="word " * 100)

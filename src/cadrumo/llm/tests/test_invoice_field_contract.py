@@ -490,11 +490,11 @@ class TestTheSafetyPropertiesSurviveCompilation:
         assert "}}" not in text
 
 
-class TestCannedResponsesStillDropFabricatedValues:
+class TestAuthoredResponsesStillDropFabricatedValues:
     """A malformed or invented value per field type reaches the draft as ``None``.
 
     Fed through the real parser and the real grounder -- the exact production
-    path -- with a canned response string standing in for the transport.
+    path -- with an authored response string standing in for the transport.
     """
 
     def test_a_wholly_malformed_response_drops_every_field(self) -> None:

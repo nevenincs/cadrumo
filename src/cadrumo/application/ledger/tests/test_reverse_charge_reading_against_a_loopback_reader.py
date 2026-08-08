@@ -98,7 +98,7 @@ _RETENCION_REPLY = _LAWFUL_REPLY | {
 }
 
 
-class _ReaderStub(BaseHTTPRequestHandler):
+class _LoopbackRequestHandler(BaseHTTPRequestHandler):
     """A real endpoint speaking the runtime's ``/api/chat`` shape."""
 
     reply: ClassVar[str]
@@ -137,14 +137,14 @@ def serve(secure_objects: object) -> Iterator[object]:
     rather than disabling the telemetry write to make the test pass.
     """
     requests: Queue[dict[str, object]] = Queue()
-    _ReaderStub.requests = requests
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _ReaderStub)
+    _LoopbackRequestHandler.requests = requests
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _LoopbackRequestHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     url = f"http://127.0.0.1:{server.server_port}/api/chat"
 
     def read(document: Path, reply: dict[str, str | None]):
-        _ReaderStub.reply = json.dumps(reply)
+        _LoopbackRequestHandler.reply = json.dumps(reply)
         payload = document.read_bytes()
         evidence = EvidenceInput(
             mime_type="application/pdf",

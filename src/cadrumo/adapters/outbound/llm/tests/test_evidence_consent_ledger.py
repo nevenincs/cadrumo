@@ -56,7 +56,7 @@ _PROMPT = "Read the invoice total from this document, DISTINCTIVE-PROMPT-TOKEN."
 _COMPLETION_TEXT = "DISTINCTIVE-RESPONSE-TOKEN: 1.234,56 EUR"
 
 
-class _RecordingAdapter(_ProviderAdapter):
+class _CapturingAdapter(_ProviderAdapter):
     """An off-host adapter that records the dispatch instead of calling a vendor."""
 
     provider = LLMProvider.ANTHROPIC
@@ -71,7 +71,7 @@ class _RecordingAdapter(_ProviderAdapter):
         return ProviderCompletion(text=_COMPLETION_TEXT, model=request.model, input_tokens=11, output_tokens=7)
 
 
-class _RecordingClient(LLMClient):
+class _CapturingClient(LLMClient):
     """``LLMClient`` with only the vendor call replaced."""
 
     def __init__(
@@ -88,7 +88,7 @@ class _RecordingClient(LLMClient):
         client the way production does.
         """
         super().__init__(settings=settings, consent_ledger=consent_ledger)
-        self.adapter = _RecordingAdapter()
+        self.adapter = _CapturingAdapter()
 
     @override
     def _build_adapter(self, provider: LLMProvider) -> _ProviderAdapter:
@@ -113,13 +113,13 @@ def _evidence_request() -> LLMRequest:
 
 
 @pytest.fixture
-def client(secure_object_test_profile: object) -> Iterator[_RecordingClient]:
+def client(secure_object_test_profile: object) -> Iterator[_CapturingClient]:
     _ = secure_object_test_profile
-    yield _RecordingClient(settings=_consented_settings())
+    yield _CapturingClient(settings=_consented_settings())
 
 
 def test_a_consented_off_host_dispatch_reaches_the_adapter_and_lands_one_entry(
-    client: _RecordingClient,
+    client: _CapturingClient,
 ) -> None:
     """The positive control: consent working means the transmission DOES happen."""
     response = asyncio.run(client.complete(_evidence_request()))
@@ -137,7 +137,7 @@ def test_a_consented_off_host_dispatch_reaches_the_adapter_and_lands_one_entry(
     assert entry.profile_bucket_id
 
 
-def test_an_on_host_or_unmarked_request_records_nothing(client: _RecordingClient) -> None:
+def test_an_on_host_or_unmarked_request_records_nothing(client: _CapturingClient) -> None:
     """The ledger records off-host EVIDENCE dispatches, not every completion."""
     asyncio.run(client.complete(LLMRequest(prompt=_PROMPT, provider_override=LLMProvider.ANTHROPIC)))
 
@@ -145,7 +145,7 @@ def test_an_on_host_or_unmarked_request_records_nothing(client: _RecordingClient
     assert EvidenceConsentLedger().load_entries() == ()
 
 
-def test_the_persisted_entry_carries_neither_prompt_nor_response_text(client: _RecordingClient) -> None:
+def test_the_persisted_entry_carries_neither_prompt_nor_response_text(client: _CapturingClient) -> None:
     """The ledger holds the address, never the bytes."""
     asyncio.run(client.complete(_evidence_request()))
 
@@ -164,7 +164,7 @@ def test_the_persisted_entry_carries_neither_prompt_nor_response_text(client: _R
 
 
 def test_a_failed_append_refuses_the_dispatch_and_the_adapter_is_never_reached(
-    client: _RecordingClient,
+    client: _CapturingClient,
 ) -> None:
     """A ledger that cannot record must stop the transmission, not proceed unrecorded.
 
@@ -214,17 +214,17 @@ def test_a_failed_append_refuses_even_a_cache_hit(secure_object_test_profile: ob
     _ = secure_object_test_profile
     settings = _consented_settings()
 
-    primed = _RecordingClient(settings=settings)
+    primed = _CapturingClient(settings=settings)
     first = asyncio.run(primed.complete(_evidence_request()))
     assert first.cache_hit is False
     assert len(primed.adapter.dispatched) == 1
 
-    served = _RecordingClient(settings=settings)
+    served = _CapturingClient(settings=settings)
     cache_hit = asyncio.run(served.complete(_evidence_request()))
     assert cache_hit.cache_hit is True, "the positive control must show the entry really is served from cache"
     assert served.adapter.dispatched == []
 
-    refused = _RecordingClient(settings=settings, consent_ledger=_FailingLedger())
+    refused = _CapturingClient(settings=settings, consent_ledger=_FailingLedger())
     with pytest.raises(LLMConsentError):
         asyncio.run(refused.complete(_evidence_request()))
     assert refused.adapter.dispatched == []
