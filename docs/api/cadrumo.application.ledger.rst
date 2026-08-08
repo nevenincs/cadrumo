@@ -29,6 +29,7 @@ Submodules
    cadrumo.application.ledger._confirmation_record
    cadrumo.application.ledger._consent_withdrawal
    cadrumo.application.ledger._counterparty_establishment
+   cadrumo.application.ledger._country_vocabulary_finding
    cadrumo.application.ledger._deterministic_findings
    cadrumo.application.ledger._document_transcription
    cadrumo.application.ledger._establishment_ladder
