@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:79141d1bbdf268dcd58bc11bb39306a8aa6be2a0d360233a476b742596fd9396'
+body_hash: 'sha256:775da8c290ad14550168bc1537d9db9f3929ad65e80a5f99dba37bf24d4c4b01'
 step_id: 'S22'
 related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
@@ -77,3 +77,63 @@ WHAT I DID NOT ESTABLISH. Whether casilla 1577, fed by Modelo 184, has an availa
 WHY THIS IS NOT SIMPLY A REGISTRY OMISSION TO FILE. The absent trabajo-income total may be correct for this modelo: the official Renta return does not necessarily carry a single rendimiento-neto-del-trabajo box that a predicate could read, and inventing one to make an advisory expressible would put a casilla in the registry that AEAT's own form does not model, which is the failure the export-parity discipline exists to prevent. Establishing whether AEAT models such a total is a diseño question, and it is the precondition for the trabajo half rather than a detail of it.
 
 THE COUNTERVAILING DESIGN POSITION STANDS AND IS NOT OVERRIDDEN HERE. A blank retencion is a legitimate zero for a filer who had none, and the export-completeness discipline already treats optional operator-input retenciones that way. Nothing in this recommendation makes a blank retencion an error. The proposal is an ADVISORY that fires only when the same return declares the income the withholding would have accompanied.
+
+## The diseno question, answered from the bundled material
+
+This row named the missing trabajo antecedent as its own precondition. Answering it
+from the bundled official material rather than from our registry's shape, because an
+absence in our registry is not evidence of an absence in AEAT's form.
+
+AEAT DOES MODEL THE CONCEPT, and models it as a computed total rather than as an
+input. The Manual practico de Renta 2024, Parte 1, page 234 sets out a three-phase
+determination scheme whose phases each terminate in an explicit equals-marked total:
+rendimiento neto previo del trabajo, then rendimiento neto del trabajo, then
+rendimiento neto reducido del trabajo. The manual's own annex indexes it as an
+"Esquema general: determinacion del rendimiento neto reducido del trabajo", so it is
+a named structure in AEAT's material and not an incidental phrase.
+
+THE BUNDLED MATERIAL DOES NOT ESTABLISH THAT IT IS A NUMBERED CASILLA, and that
+distinction is the one that resolved the Modelo 303 boxes-72-and-73 question. The
+manual cites numbered boxes explicitly and consistently, in the form "casilla [0505]"
+and "casilla [105]". No bracketed casilla number appears within two lines of any of
+the three trabajo totals. Modelo 100's only export layout in this registry is an XML
+dictionary carrying zero trabajo-named fields, and no fixed-width diseno de registro
+is bundled for the modelo at all.
+
+So the verdict is split rather than either of the two the row anticipated. The
+concept is AEAT-modelled, which removes the objection that a predicate antecedent
+would be an invention. Whether it is a numbered box on the form is NOT settled here,
+and what would settle it is the Modelo 100 diseno de registro, which is not bundled,
+or the Renta WEB box list.
+
+AND THE UNSETTLED HALF TURNS OUT NOT TO BLOCK THE RECOMMENDATION. The predicate's
+antecedent does not have to be an official numbered box. This registry already
+supports a computed casilla declared internal_only, which production treats as
+app-internal calculation support and drops from the export layout, so it never enters
+the official box surface and cannot breach export parity. Six casilla fragments
+declare it today across Modelo 131, Modelo 303 and Modelo 100 itself, so the
+precedent exists in the very modelo at issue.
+
+The recommendation therefore firms up. Declare the trabajo net total as an
+internal_only computed casilla grounded in the manual's own three-phase scheme with
+its LIRPF provisions, and use it as the antecedent of an ADVISORY implies_nonzero
+predicate whose consequent is casilla 0596. That invents no AEAT box, needs no
+diseno answer, and reuses two mechanisms this registry already ships. It remains a
+recommendation: declaring a grounded casilla requires legal refs citing the provision
+that establishes it plus a construct-and-bindings sweep in the same change, which is
+its own row and is deliberately not done here.
+
+    rg -i -n "neto reducido del trabajo" <bundled manual>
+    9827:(=) Rendimiento neto reducido del trabajo.
+    60670:Esquema general: determinacion del rendimiento neto reducido del trabajo
+
+    bracketed casilla numbers within two lines of a trabajo net total: none
+    the manual's numbered-box convention, for contrast: "casilla [0505]", "casilla [105]"
+    Modelo 100 2024 export layout: xml_dictionary, trabajo-named fields = 0
+    internal_only casilla fragments in the registry: 6, including Modelo 100
+
+One correction to this record's own earlier claim. It said the revision carries no
+trabajo income total, which is true of the registry and was read as though it settled
+the design question too. It does not: the total exists in AEAT's determination scheme
+and is absent from our registry, which is a different statement with a different
+remedy.
