@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:36bea903630707ca18b4c0417a43466a48377cc8aa7216eaa1021b79198a88a5'
+body_hash: 'sha256:6b514b02fff3ca071ba1130c4d1d1893651b404e241cb5f245dcad2fe27a0248'
 step_id: 'S88'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -247,6 +247,55 @@ alone. Repaired in its own commit against the facade its sibling suite already
 reads from. The convergence of the two minting sites in the draft module is NOT
 part of this slice: that file carried another lane's uncommitted work throughout.
 
+## Census of category-producing surfaces, complete and counted
+
+Enumerated by walking every production module with `ast` and reporting BOTH
+shapes -- a construction of the category type, and a function whose return
+annotation names it -- with no truncation and no sampling. A census answering an
+existence question must be read whole; reading its first page is how the row's
+own premise came to be wrong.
+
+Before, at the tree this slice started from: **16** surfaces tree-wide, **4** of
+them on the ingestion path, spread across **2** modules --
+
+    application/ledger/_classification_assembly.py:727   returns IvaCategory              (the probe)
+    application/ledger/_evidence_draft.py:2332           returns IvaCategory | None       (the rate deriver)
+    application/ledger/_evidence_draft.py:2392           returns IvaCategory | None       (the code reader)
+    application/ledger/_evidence_draft.py:2425           constructs IvaCategory(...)
+
+After: **18** surfaces tree-wide, **5** of them on the ingestion path, all in
+**1** module --
+
+    application/ledger/_classification_assembly.py:745   returns IvaCategory              (the probe)
+    application/ledger/_classification_assembly.py:851   returns DeclaredFact[IvaCategory] | None
+    application/ledger/_classification_assembly.py:892   constructs IvaCategory(...)
+    application/ledger/_classification_assembly.py:925   returns IvaCategory | None       (the table verdict)
+    application/ledger/_classification_assembly.py:966   returns IvaCategoryResolution
+
+**The ingestion count went UP by one while the module count went from two to
+one, and that is the whole argument for gating on the property rather than on a
+tally.** A gate pinned to "four surfaces" would have reddened on a change that
+made the tree strictly more singular; a gate pinned to "one module decides"
+reads the convergence correctly. The tree-wide rise from sixteen to eighteen is
+likewise not this slice growing: one of the two is a peer's addition in the
+domain classification module.
+
+The surfaces off the ingestion path were each read for what they DO rather than
+what they are called, and each is excluded on a stated ground rather than
+allowlisted. Three registry binding accessors and two component accessors return
+category SETS for routing decisions over already-classified data. Two
+transaction-lane accessors bound what a model may answer, on the bank-transaction
+path rather than the document path. The persisted-model coercion and the
+registry regulation parser both build a category from data that is already a
+category. The manual invoice CLI verb maps an operator-supplied operation type.
+None reads a document to decide a treatment.
+
+Two surfaces the search-by-meaning offered were confirmed NOT to be live minting
+sites by reading their consumers rather than their names. The legend axis derives
+a category, but its only production consumer reads the contradicted outcome and
+never the value. The invoice-line classifier is called only from inside its own
+module, on the aggregation path over persisted invoices.
+
 ## The convergence itself: the two live minting sites
 
 The slice the earlier entries deferred. Both rival deriving surfaces sat on the
@@ -333,11 +382,20 @@ campaign's surface, touches no classification code, and is not owned here.
 
 ## Notes
 
-The row's premise was measured stale before any code was written. It states the
-criteria assembly has no production caller at all; it had gained one that
-morning from the establishment lane. The remaining premise held, so the
-substance of the work was unchanged, and the correction was relayed rather than
-absorbed silently.
+**Half of the row was already closed before this slice began, and not by it.**
+The row states the criteria assembly has no production caller at all. That was
+never true of any tree this slice ran against: the establishment lane had wired
+the caller earlier the same morning, and it was at HEAD throughout. The premise
+was a measurement artefact rather than a stale reading -- an existence question
+was asked with a truncating pipeline, so the first page of results showed only
+test callers while the sole production call site sat in the part that was cut.
+
+The correction was measured with the committed blobs rather than the working
+copy, and relayed before any code was written. Nothing here may be read as
+having reached the assembly; what this slice did was make the assembly's verdict
+DECIDE the category, which is a different claim. Carrying the verdict onto the
+confirmation result and never consulting it for the category is the sharper form
+of the defect -- computed, carried, ignored, and wired-looking.
 
 A behavioural test carried a stale premise of its own, asserting a rate refusal
 at a date chosen because the registered rate records were believed to begin in
