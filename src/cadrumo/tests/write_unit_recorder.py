@@ -20,6 +20,16 @@ that persists the same catalogues through two independent saves and asserts the
 recorder reports a non-zero count. Without it, a recorder that could never
 report a seam would make the primary assertion vacuous.
 
+That pairing is necessary and NOT sufficient, and the gap has bitten once. An
+anti-tautology case proves the recorder can still FIRE; it says nothing about
+the granularity at which it fires. When the write funnel became set-based, a
+batch of N rows became one statement, and a statement-counting recorder went on
+reporting seams correctly while losing the ability to tell four rows from one --
+so the anti-tautology case kept passing while a group-size assertion became
+unsatisfiable. Resolution can narrow silently underneath a proof that only
+checks for a pulse. When something changes how many statements a write costs,
+re-ask what every count here MEANS, not merely whether it still moves.
+
 See Also:
     :func:`~cadrumo.tests.secure_sql.isolated_runtime_profile`:
         Yields the encrypted-SQLite profile whose ``repository.engine`` this
