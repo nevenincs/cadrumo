@@ -419,17 +419,76 @@ async def test_ctrl_r_resets_the_cursor_page_answer() -> None:
 
 
 @pytest.mark.asyncio
-async def test_ctrl_n_restarts_the_flow_from_the_first_page() -> None:
+async def test_ctrl_n_asks_before_restarting_and_leaves_answers_alone_until_confirmed() -> None:
+    """A single ``ctrl+n`` must not wipe the flow by itself.
+
+    ``restart_flow`` is unconditional at the engine layer by design — the
+    substrate's own docstring states the confirmation is "a frontend
+    responsibility". A frontend that called straight through discharged
+    none of that: one mis-struck chord on a long walk erased every
+    answer with nothing to undo. The dialog is what discharges it.
+    """
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        answers_before = dict(app.state.answers)
+        assert answers_before
+
+        await pilot.press("ctrl+n")
+        await pilot.pause()
+
+        # The engine state is untouched while the dialog is open.
+        assert app.state.answers == answers_before
+        assert app.screen.query_one("#confirm-title")
+
+        await pilot.click("#btn-confirm-cancel")
+        await pilot.pause()
+
+        # Declining leaves every answer exactly where it was.
+        assert app.state.answers == answers_before
+
+
+@pytest.mark.asyncio
+async def test_ctrl_n_restarts_the_flow_from_the_first_page_once_confirmed() -> None:
     app = _app()
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await _answer_all_required(pilot, app)
         assert app.state.answers
 
         await pilot.press("ctrl+n")
+        await pilot.pause()
+        await pilot.click("#btn-confirm-accept")
+        await pilot.pause()
 
         assert app.state.answers == {}
         assert app.state.cursor == "p_name"
         assert not _on_review(app)
+
+
+@pytest.mark.asyncio
+async def test_ctrl_n_on_the_review_screen_also_asks_before_restarting() -> None:
+    """The review page is where every answer is visible at once — and
+    exactly where an accidental restart is costliest, since the operator
+    may have just reached the end of a long walk. The guard must not be
+    only on the question screen."""
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await _answer_all_required(pilot, app)
+        await pilot.press("f2")
+        await pilot.pause()
+        assert _on_review(app)
+        answers_before = dict(app.state.answers)
+
+        await pilot.press("ctrl+n")
+        await pilot.pause()
+
+        assert app.state.answers == answers_before
+        assert app.screen.query_one("#confirm-title")
+
+        await pilot.click("#btn-confirm-accept")
+        await pilot.pause()
+
+        assert app.state.answers == {}
 
 
 @pytest.mark.asyncio

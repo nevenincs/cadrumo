@@ -1995,8 +1995,8 @@ cli:
         show_help: Mostra l'establiment confirmat per a una contrapart, si n'hi ha.
         tax_identifier_help: L'identificador fiscal de la contrapart tal com apareix
           imprès al document.
-        withdraw_help: Retira un establiment confirmat, declarant que la resposta
-          anterior era incorrecta.
+        withdraw_help: Retira el que es va confirmar sobre una contrapart, declarant
+          que la resposta anterior era incorrecta.
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
         batch_directory_help: Directori els fitxers del qual s'ingressen. Combina'l
@@ -3898,6 +3898,9 @@ cli:
         apply_help: Registra les dades censals analitzades al perfil actiu (per defecte
           només previsualitza).
         compare_help: Compara camp a camp el cens AEAT amb aquest perfil
+        divergencia_leaf_artefact_value: valor de l'AEAT
+        divergencia_leaf_axis: camp
+        divergencia_leaf_source: origen
         dropped_fields_notice: 'El cens de l''AEAT ja no inclou camps que tenia la
           teva darrera instantània: {dropped_fields}. Si no has canviat ni donat de
           baixa aquestes dades, pot tractar-se d''una descàrrega parcial: torna a
@@ -4798,9 +4801,9 @@ cli:
         unverifiable_identifier: '''{identifier}'' no és un identificador fiscal verificable,
           per la qual cosa no hi ha cap contrapart de la qual es pugui confirmar l''establiment.'
       notices:
-        already_confirmed: '''{identifier}'' ja estava confirmada com a establerta
-          a ''{scope}'' per ''{asserted_by}''; aquesta crida no ha creat cap confirmació
-          nova i es manté la procedència original.'
+        already_confirmed: '''{identifier}'' ja havia estat confirmada per ''{asserted_by}'',
+          establerta a ''{scope}''; aquesta crida no ha creat cap confirmació nova
+          i es manté la procedència original.'
         evidence_contradicts_confirmation: '''{identifier}'' es va confirmar com a
           establert a {confirmed}, però l''evidència que heu aportat situa la mateixa
           part a {evidenced}. L''escala no fixarà cap territori per a aquesta contrapart
@@ -4808,8 +4811,8 @@ cli:
         not_confirmed: No hi ha cap establiment confirmat per a '{identifier}', de
           manera que aquest esglaó no resol res i un document el paper del qual no
           sigui concloent plantejarà la pregunta.
-        nothing_to_withdraw: No hi havia cap establiment confirmat per a '{identifier}',
-          de manera que no s'ha retirat res i el magatzem ja es troba en l'estat sol·licitat.
+        nothing_to_withdraw: No hi havia res confirmat per a '{identifier}', de manera
+          que no s'ha retirat res i el magatzem ja es troba en l'estat sol·licitat.
     doclink:
       actor_help: Etiqueta de l'operador.
       help: Descàrrega un enllaç de document de Drive i desa'n els bytes com a evidència

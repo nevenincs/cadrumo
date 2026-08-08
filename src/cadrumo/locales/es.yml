@@ -1989,7 +1989,8 @@ cli:
           {accepted}'
       counterparty:
         actor_help: Identificador del operador que se registra como autor de la afirmación.
-        confirm_help: Confirma el territorio en el que está establecida una contraparte.
+        confirm_help: Confirma dónde está establecida una contraparte y qué Estado
+          la identifica a efectos de IVA.
         country_code_help: País bajo el que se declara el identificador, cuando no
           es español.
         evidenced_scope_help: Territorio en el que un documento en su poder sitúa
@@ -3927,6 +3928,9 @@ cli:
         apply_help: Registra los datos censales analizados en el perfil activo (por
           defecto solo previsualiza).
         compare_help: Compara campo a campo el censo AEAT con este perfil
+        divergencia_leaf_artefact_value: valor de la AEAT
+        divergencia_leaf_axis: campo
+        divergencia_leaf_source: origen
         dropped_fields_notice: 'El censo de la AEAT ya no incluye campos que tenia
           tu última instantánea: {dropped_fields}. Si no has cambiado ni dado de baja
           estos datos, puede tratarse de una descarga parcial: vuelve a ejecutar la
@@ -4836,7 +4840,7 @@ cli:
           por lo que confirmar '{asserted}' descartaría la respuesta anterior. Retírela
           primero con 'aeat app ledger counterparty withdraw'. {detail}
         unverifiable_identifier: '''{identifier}'' no es un identificador fiscal verificable,
-          por lo que no hay ninguna contraparte cuyo establecimiento se pueda confirmar.'
+          por lo que no hay ninguna contraparte sobre la que confirmar nada.'
       notices:
         already_confirmed: '''{identifier}'' ya estaba confirmada como establecida
           en ''{scope}'' por ''{asserted_by}''; esta llamada no ha creado ninguna
@@ -4848,8 +4852,8 @@ cli:
         not_confirmed: No hay ningún establecimiento confirmado para '{identifier}',
           por lo que este peldaño no resuelve nada y un documento cuyo papel no sea
           concluyente planteará la pregunta.
-        nothing_to_withdraw: No había ningún establecimiento confirmado para '{identifier}',
-          por lo que no se ha retirado nada y el almacén ya está en el estado solicitado.
+        nothing_to_withdraw: No había nada confirmado para '{identifier}', por lo
+          que no se ha retirado nada y el almacén ya está en el estado solicitado.
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia

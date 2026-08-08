@@ -925,12 +925,25 @@ class RelationPrefillSourceResolver:
         # had no obligation for has no entry at all. Testing ``value is None``
         # alone would fire on every genuine first-ejercicio filer, because a
         # scoped-out relation still appears in ``relation_values`` unresolved.
+        #
+        # The second narrowing is ``taxpayer_files_source``. A carry the taxpayer
+        # does not FILE — a retención suffered, where the payer files the source
+        # modelo — cannot be remedied by capturing or filing anything, so advising
+        # on it would put an unactionable line in front of every filer who simply
+        # had no such withholding. That axis is registry-declared per dependency
+        # (the same signal the clean-state gate scopes on), never inferred.
+        taxpayer_filed_source_modelos = frozenset(
+            classification.source_modelo
+            for classification in snapshot.revision.dependency_classifications
+            if classification.taxpayer_files_source
+        )
         unresolved_bound_relation_ids = frozenset(
             item.relation
             for item in relation_values.values
             if item.value is None
             and item.relation not in formula_relation_ids
             and item.relation in requirements_by_relation
+            and requirements_by_relation[item.relation].source_modelo in taxpayer_filed_source_modelos
             and relation_target_binding.get(item.relation) in declared_binding_ids
         )
         resolved_relation_values = {item.relation: item.value for item in resolved if item.value is not None}

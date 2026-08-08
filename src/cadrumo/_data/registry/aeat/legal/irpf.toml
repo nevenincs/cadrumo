@@ -5417,7 +5417,11 @@ reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#a92; operator to re-stamp"
 notes = "LIRPF art 92: imputación de rentas por la cesión de derechos de imagen. Base legal de las casillas del régimen especial de imputación por cesión de derechos de imagen en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#a92; operator to confirm and re-stamp."
 required_text = [
-    "Imputación de rentas por la cesión de derechos de imagen",
+    "Imputación de rentas por la cesión de derechos de imagen",    # Apartado 8 (the ingreso a cuenta declaration duty), the last operative
+    # provision, at 97%. The title alone previously grounded it. Verified
+    # against live BOE apartado by apartado: 1 through 8 present on both
+    # sides, 9 on neither.
+    "al tiempo de presentar la declaración deberá determinar su importe y efectuar su ingreso en el Tesoro",
 ]
 
 [legal."ley-35-2006:art-95"]

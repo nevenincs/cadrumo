@@ -1930,8 +1930,8 @@ cli:
         scope_help: Az áfa szempontjából irányadó terület, ahol az ügyfél letelepedett.
         show_help: Mutassa meg az ügyfélhez megerősített letelepedést, ha van ilyen.
         tax_identifier_help: Az ügyfél adóazonosítója a bizonylaton nyomtatott formában.
-        withdraw_help: Vonja vissza a megerősített letelepedést, kijelentve, hogy
-          a korábbi válasz téves volt.
+        withdraw_help: Vonja vissza az ügyfélről rögzített megerősítést, kijelentve,
+          hogy a korábbi válasz téves volt.
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
         batch_directory_help: A könyvtár, amelynek fájljait feldolgozza. Kombinálható
@@ -4746,11 +4746,11 @@ cli:
           ezért a(z) '{asserted}' megerősítése eldobná a korábbi választ. Előbb vonja
           vissza az 'aeat app ledger counterparty withdraw' paranccsal. {detail}
         unverifiable_identifier: A(z) '{identifier}' nem ellenőrizhető adóazonosító,
-          ezért nincs olyan ügyfél, amelynek letelepedését meg lehetne erősíteni.
+          ezért nincs olyan ügyfél, amelyről bármit meg lehetne erősíteni.
       notices:
-        already_confirmed: 'A(z) ''{identifier}'' letelepedését ''{asserted_by}''
-          már megerősítette itt: ''{scope}''; ez a hívás nem hozott létre új megerősítést,
-          és az eredeti forrásadat marad érvényben.'
+        already_confirmed: 'A(z) ''{identifier}'' megerősítését ''{asserted_by}''
+          már elvégezte, letelepedés: ''{scope}''; ez a hívás nem hozott létre új
+          megerősítést, és az eredeti forrásadat marad érvényben.'
         evidence_contradicts_confirmation: 'A(z) ''{identifier}'' megerősítetten itt
           telepedett le: {confirmed}, de az Ön által megadott bizonyíték ugyanezt
           a felet ide helyezi: {evidenced}. A létra nem állapít meg területet ehhez

@@ -420,10 +420,46 @@ def _repeatable_section_views(
     ]
 
 
+#: Operator-facing suffixes for the ``censo.divergencia`` namespace's three
+#: leaves, keyed by the raw stored leaf name. Rendered instead of the bare
+#: leaf key (``" (axis)"``, ``" (artefact_value)"``, ``" (source)"``), which
+#: leaked the writing family's internal field names onto a localized screen:
+#: an operator reading "Divergencias del cotejo censal (artefact_value)" has
+#: no way to know that names AEAT's disputed value. Scoped to this one
+#: namespace rather than made a generic leaf-translation mechanism, because
+#: a leaf name is chosen by whichever family writes the namespace and other
+#: namespaces (``renta_family.descendiente`` and siblings) are repeatable
+#: SECTIONS with their own declared field labels, not this shape.
+_CENSO_DIVERGENCIA_LEAF_LABEL_KEYS: Final[Mapping[str, str]] = {
+    "axis": "cli.config.profile.censo.divergencia_leaf_axis",
+    "artefact_value": "cli.config.profile.censo.divergencia_leaf_artefact_value",
+    "source": "cli.config.profile.censo.divergencia_leaf_source",
+}
+
+
+def _resolve_schema_field_label(schema: ProfileSchemaDefinition, path: str) -> str | None:
+    """Return the operator-facing label the schema declares for ``path``, or ``None``.
+
+    Scans every non-repeatable section's own (undexed) fields for one whose
+    ``section.field`` dotted address matches ``path``. A repeatable section's
+    row fields and a namespace field's own indexed leaves are deliberately
+    not resolved here: a cotejo divergence axis names a plain schema path
+    (``contact.fiscal_address``), never an indexed instance.
+    """
+    for section in schema.sections:
+        if section.repeatable:
+            continue
+        for candidate in section.fields:
+            if f"{section.key}.{candidate.key}" == path:
+                return profile_field_label(section.key, candidate)
+    return None
+
+
 def _namespace_field_views(
     section_key: str,
     field: ProfileFieldDefinition,
     values: Mapping[str, str],
+    schema: ProfileSchemaDefinition,
 ) -> list[ProfileFieldView]:
     """Expand one object/array field into a row per indexed leaf it holds.
 
@@ -439,10 +475,13 @@ def _namespace_field_views(
     ``axis``, ``source``.
 
     The leaf is named in the label because it is the only thing telling two
-    rows of one instance apart, and it is a stored key rather than prose, so
-    it is shown as itself rather than translated.
+    rows of one instance apart. For the ``censo.divergencia`` namespace it is
+    translated through :data:`_CENSO_DIVERGENCIA_LEAF_LABEL_KEYS`; every
+    other namespace still shows the stored key itself, since the leaf is not
+    prose this layer may invent a translation for.
     """
     prefix = f"{section_key}.{field.key}."
+    is_censo_divergencia = section_key == "censo" and field.key == "divergencia"
     instances: dict[str, list[str]] = {}
     for path in values:
         if not path.startswith(prefix):
@@ -453,24 +492,39 @@ def _namespace_field_views(
         leaves = instances.setdefault(index, [])
         if leaf not in leaves:
             leaves.append(leaf)
-    return [
-        _field_view(
-            path=f"{prefix}{index}.{leaf}",
-            section_key=section_key,
-            field=field,
-            values=values,
-            label_suffix=f" ({leaf})",
-            row_index=index,
-        )
-        for index in sorted(instances, key=int)
-        for leaf in instances[index]
-    ]
+    views: list[ProfileFieldView] = []
+    for index in sorted(instances, key=int):
+        for leaf in instances[index]:
+            leaf_path = f"{prefix}{index}.{leaf}"
+            view = _field_view(
+                path=leaf_path,
+                section_key=section_key,
+                field=field,
+                values=values,
+                label_suffix=(
+                    f" ({tr(_CENSO_DIVERGENCIA_LEAF_LABEL_KEYS[leaf], default=leaf)})"
+                    if is_censo_divergencia and leaf in _CENSO_DIVERGENCIA_LEAF_LABEL_KEYS
+                    else f" ({leaf})"
+                ),
+                row_index=index,
+            )
+            if is_censo_divergencia and leaf == "axis" and view.value is not None:
+                # The stored value is the raw schema PATH of the field AEAT
+                # disagrees on (e.g. "contact.fiscal_address"), which no
+                # operator reads. Render the field's own label instead, so
+                # this row answers "which field" rather than "which path".
+                resolved = _resolve_schema_field_label(schema, view.value)
+                if resolved is not None:
+                    view = view.model_copy(update={"value": resolved})
+            views.append(view)
+    return views
 
 
 def _section_field_views(
     section: ProfileSectionDefinition,
     values: Mapping[str, str],
     present: frozenset[str],
+    schema: ProfileSchemaDefinition,
     derived_selectors: Iterable[ProfileDerivedSelectorDefinition] = (),
 ) -> list[ProfileFieldView]:
     """Every row one section contributes, expanding whatever repeats.
@@ -489,7 +543,7 @@ def _section_field_views(
         if derived_selector_for_path(f"{section.key}.{field.key}", derived_selectors) is not None:
             continue
         if field.type in _NAMESPACE_FIELD_TYPES:
-            views.extend(_namespace_field_views(section.key, field, values))
+            views.extend(_namespace_field_views(section.key, field, values, schema))
             continue
         views.append(
             _field_view(
@@ -561,7 +615,13 @@ def build_profile_overview(
                 key=section.key,
                 title=profile_section_title(section),
                 fields=tuple(
-                    _section_field_views(section, values, present, resolved_schema.derived_selectors),
+                    _section_field_views(
+                        section,
+                        values,
+                        present,
+                        resolved_schema,
+                        resolved_schema.derived_selectors,
+                    ),
                 ),
             ),
         )

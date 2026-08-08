@@ -1840,14 +1840,15 @@ cli:
         unknown_disposal_regime: 'Unknown disposal regime {regime!r}; accepted: {accepted}'
       counterparty:
         actor_help: Operator identifier recorded as having made the assertion.
-        confirm_help: Confirm the territory a counterparty is established in.
+        confirm_help: Confirm where a counterparty is established and which State
+          VAT-identifies it.
         country_code_help: Country the identifier is stated under, when it is not
           Spanish.
         evidenced_scope_help: Territory a document in hand places this party in. Supply
           it to ask what the ladder will answer for that document, which is the only
           way to see a disagreement with what you confirmed before a confirm refuses
           on it.
-        group_help: Confirm where a counterparty is established, once, for every later
+        group_help: Confirm what is known about a counterparty, once, for every later
           document.
         identification_state_help: 'Member State that VAT-identifies the counterparty.
           A different fact from --scope: art. 25 exempts on this, not on where the
@@ -1856,8 +1857,8 @@ cli:
         scope_help: The IVA territory the counterparty is established in.
         show_help: Show the establishment confirmed for a counterparty, if any.
         tax_identifier_help: The counterparty's tax identifier as printed on the document.
-        withdraw_help: Withdraw a confirmed establishment, stating the earlier answer
-          was wrong.
+        withdraw_help: Withdraw what was confirmed about a counterparty, stating the
+          earlier answer was wrong.
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
         batch_directory_help: Directory whose files are ingested. Combine with or
@@ -3627,6 +3628,9 @@ cli:
         apply_help: Enroll the parsed censal facts onto the active profile (default
           is preview only).
         compare_help: Compare AEAT censo and this profile field by field
+        divergencia_leaf_artefact_value: AEAT value
+        divergencia_leaf_axis: field
+        divergencia_leaf_source: origin
         dropped_fields_notice: 'AEAT''s censo no longer reports fields your last snapshot
           carried: {dropped_fields}. If you did not change or close these registrations,
           this may be a partial pull - re-run the censo pull or re-enter the values;
@@ -4468,11 +4472,11 @@ cli:
           so confirming '{asserted}' would discard the earlier answer. Withdraw it
           first with 'aeat app ledger counterparty withdraw'. {detail}
         unverifiable_identifier: '''{identifier}'' is not a verifiable tax identifier,
-          so there is no counterparty to confirm an establishment for.'
+          so there is no counterparty to confirm anything about.'
       notices:
-        already_confirmed: '''{identifier}'' was already confirmed as established
-          in ''{scope}'' by ''{asserted_by}''; this call created no new confirmation
-          and the original provenance stands.'
+        already_confirmed: '''{identifier}'' was already confirmed by ''{asserted_by}'',
+          established in ''{scope}''; this call created no new confirmation and the
+          original provenance stands.'
         evidence_contradicts_confirmation: '''{identifier}'' was confirmed as established
           in {confirmed}, but the evidence you supplied places the same party in {evidenced}.
           The ladder will settle no territory for this counterparty until one of the
@@ -4480,9 +4484,8 @@ cli:
         not_confirmed: No establishment is confirmed for '{identifier}', so the ladder
           settles nothing from this rung and a document whose paper is non-decisive
           will raise the question.
-        nothing_to_withdraw: No confirmed establishment was held for '{identifier}',
-          so nothing was withdrawn and the store is already in the state you asked
-          for.
+        nothing_to_withdraw: Nothing was confirmed for '{identifier}', so nothing
+          was withdrawn and the store is already in the state you asked for.
     doclink:
       actor_help: Operator label.
       help: Fetch a Drive document link and store its bytes as encrypted evidence

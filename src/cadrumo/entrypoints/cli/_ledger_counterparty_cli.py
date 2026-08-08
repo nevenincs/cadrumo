@@ -66,7 +66,7 @@ counterparty_app = typer.Typer(
     name="counterparty",
     help=tr(
         "cli.app.ledger.counterparty.group_help",
-        default="Confirm where a counterparty is established, once, for every later document.",
+        default="Confirm what is known about a counterparty, once, for every later document.",
     ),
     no_args_is_help=True,
 )
@@ -94,7 +94,7 @@ def _payload(fact: ConfirmedCounterpartyFacts) -> CounterpartyEstablishmentPaylo
     "confirm",
     help=tr(
         "cli.app.ledger.counterparty.confirm_help",
-        default="Confirm the territory a counterparty is established in.",
+        default="Confirm where a counterparty is established and which State VAT-identifies it.",
     ),
 )
 def counterparty_confirm(
@@ -194,7 +194,7 @@ def counterparty_confirm(
                 identifier=tax_identifier,
                 default=(
                     f"'{tax_identifier}' is not a verifiable tax identifier, so there is no counterparty "
-                    f"to confirm an establishment for."
+                    f"to confirm anything about."
                 ),
             ),
         ) from exc
@@ -226,8 +226,8 @@ def counterparty_confirm(
                     scope=fact.territorial_scope.value,
                     asserted_by=fact.asserted_by,
                     default=(
-                        f"'{fact.canonical_tax_identifier}' was already confirmed as established in "
-                        f"'{fact.territorial_scope.value}' by '{fact.asserted_by}'; this call created no new "
+                        f"'{fact.canonical_tax_identifier}' was already confirmed by '{fact.asserted_by}', "
+                        f"established in '{fact.territorial_scope.value}'; this call created no new "
                         f"confirmation and the original provenance stands."
                     ),
                 ),
@@ -256,7 +256,7 @@ def counterparty_confirm(
     "withdraw",
     help=tr(
         "cli.app.ledger.counterparty.withdraw_help",
-        default="Withdraw a confirmed establishment, stating the earlier answer was wrong.",
+        default="Withdraw what was confirmed about a counterparty, stating the earlier answer was wrong.",
     ),
 )
 def counterparty_withdraw(
@@ -288,7 +288,7 @@ def counterparty_withdraw(
                 identifier=tax_identifier,
                 default=(
                     f"'{tax_identifier}' is not a verifiable tax identifier, so there is no counterparty "
-                    f"to confirm an establishment for."
+                    f"to confirm anything about."
                 ),
             ),
         )
@@ -307,7 +307,7 @@ def counterparty_withdraw(
                     "cli.ledger.counterparty.notices.nothing_to_withdraw",
                     identifier=tax_identifier,
                     default=(
-                        f"No confirmed establishment was held for '{tax_identifier}', so nothing was "
+                        f"Nothing was confirmed for '{tax_identifier}', so nothing was "
                         f"withdrawn and the store is already in the state you asked for."
                     ),
                 ),

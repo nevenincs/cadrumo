@@ -160,6 +160,21 @@ _M202_C34_BY_PERIOD: dict[str, Decimal] = {
 _M200_PRIOR_CUOTA = Decimal("48000.00")
 
 _RELATION_PREFILL_SOURCE = "relation_prefill"
+#: The M200 relations that fold the same-year M202 pagos fraccionados.
+_M202_PAGO_RELATIONS = frozenset(
+    {
+        "modelo-200-2024-rel-202-pagos-fraccionados",
+        "modelo-200-2024-rel-202-pagos-fraccionados-40-2",
+    },
+)
+#: The M200 cross-year self-carries, absent for this pagos-only persona.
+_M200_SELF_CARRY_RELATIONS = frozenset(
+    {
+        "modelo-200-2024-rel-self-bin-pendiente-anterior",
+        "modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior",
+        "modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior",
+    },
+)
 
 # ── M200 ← M202 pagos fold proof ────────────────────────────────────────────
 
@@ -570,8 +585,20 @@ def test_m200_0a_folds_m202_pagos_fraccionados_into_cuota_diferencial_live(
         f"M200 00611 must fold the three M202 pagos (sum {expected_pagos_sum}) out of "
         f"00599 ({cuota_a_ingresar}); got 00611={cuota_diferencial}"
     )
-    # The pagos relation runs through a claimed source — no unhandled advisory.
-    assert not any(diag.source_kind == _RELATION_PREFILL_SOURCE for diag in result.source_diagnostics)
-    assert result.source_diagnostics == (), (
-        f"M200 source_diagnostics must be clean for the sociedad fold persona; got {result.source_diagnostics}"
+    # The pagos relation runs through a claimed source — no advisory names IT.
+    assert not any(
+        diag.source_kind == _RELATION_PREFILL_SOURCE and diag.relation_id in _M202_PAGO_RELATIONS
+        for diag in result.source_diagnostics
+    ), f"the M202 pagos fold must resolve cleanly; got {result.source_diagnostics}"
+    # This persona seeds the M202 pagos and nothing else, so it has no prior-year
+    # M200 closing stock and declares no activity start. The three cross-year
+    # self-carries therefore declare a zero opening stock that nothing can confirm
+    # the filer was entitled to, and each is advised. That is correct for this
+    # persona and orthogonal to the pagos fold under test; the sibling M200 module
+    # covers the advisory's own behaviour and its first-ejercicio silence.
+    advised = {
+        diag.relation_id for diag in result.source_diagnostics if diag.source_kind == _RELATION_PREFILL_SOURCE
+    }
+    assert advised == _M200_SELF_CARRY_RELATIONS, (
+        f"only the three absent self-carries may be advised here; got {advised}"
     )
