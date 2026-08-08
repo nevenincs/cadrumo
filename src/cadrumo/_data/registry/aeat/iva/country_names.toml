@@ -155,7 +155,11 @@
 #      admitting a country into one, and this test does not authorise it.
 #
 # The test this replaced said a country became defensible "the day somebody
-# measures the traffic rather than the plausibility". That cannot be performed
+# measures the traffic rather than the plausibility" -- QUOTED HERE AS A RETIRED
+# TEST, never as a live one. A grep for that phrase finds this line and nothing
+# else in the tree, and a residue check reading only the match will report the
+# retired criterion as still in force. Explaining a rule by quoting the rule it
+# replaced is worth the trap; the trap is worth naming. That cannot be performed
 # from this repository and never could: the only document population here is the
 # specimen corpus, sixteen of whose twenty items were authored in-tree, and
 # whose four real documents are two Wikimedia invoices, a derived scan and a
