@@ -20,6 +20,7 @@ from urllib.parse import urlsplit
 
 from defusedxml import ElementTree
 from dev.docs.i18n import DEFAULT_SITE_LANGUAGE, DEFAULT_SOURCE_LANGUAGE, SITE_ROOT_LANGUAGES
+from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
 CANONICAL_DOCS_BASE_URL = "https://cadrumo.neve.md/docs"
 CANONICAL_SITE_DOMAIN = "cadrumo.neve.md"
@@ -341,7 +342,7 @@ def _language_build_command(language: str, out_dir: Path) -> list[str]:
     return command
 
 
-def _language_build_environment(language: str) -> dict[str, str]:
+def _language_build_environment(language: str, *, check_sequences: bool) -> dict[str, str]:
     """Return the deploy build environment for one localized site root.
 
     The shared deployment environment (serial workers, full record-injected
@@ -349,8 +350,41 @@ def _language_build_environment(language: str) -> dict[str, str]:
     root so the per-language sitemap and canonical/OpenGraph URLs are correct.
     Each localized root therefore carries the injected records too: a reader on
     ``/es/`` searches the same record kinds as a reader on the English root.
+
+    ``check_sequences`` selects whether this root runs the cli-sequence goldens
+    gate. The check's verdict cannot vary by root -- its subprocess scrubs every
+    ``CADRUMO_*`` key and pins English output -- so the four roots produce four
+    identical answers for four times the cost. One root runs it and the rest set
+    the documented opt-out; which root is decided by
+    :func:`_language_build_environments`, never here.
     """
-    return {**_site_build_environment(), "CADRUMO_DOCS_BASE_URL": _language_site_url(language)}
+    environment = {**_site_build_environment(), "CADRUMO_DOCS_BASE_URL": _language_site_url(language)}
+    if not check_sequences:
+        environment[SEQUENCE_CHECK_SKIP_ENV] = "1"
+    return environment
+
+
+def _language_build_environments() -> tuple[tuple[str, dict[str, str]], ...]:
+    """Return each site root paired with the environment it is built under.
+
+    The cli-sequence goldens gate runs on exactly one root. Pairing the decision
+    with the languages here -- rather than branching inside the build loop --
+    makes the invariant checkable without running a build, and the refusal below
+    is the teeth: a future edit that skips the check on every root (silently
+    dropping the gate from the whole deploy) cannot reach a published site.
+    """
+    environments = tuple(
+        (language, _language_build_environment(language, check_sequences=index == 0))
+        for index, language in enumerate(_localized_languages())
+    )
+    checked = [language for language, environment in environments if SEQUENCE_CHECK_SKIP_ENV not in environment]
+    if len(checked) != 1:
+        raise SystemExit(
+            f"The deploy must run the cli-sequence goldens check on exactly one site root; "
+            f"{len(checked)} root(s) would run it ({', '.join(checked) or 'none'}). "
+            "Refusing to publish a site whose CLI sequences were never checked against their goldens.",
+        )
+    return environments
 
 
 def _build_language_roots(repo_root: Path, html_root: Path) -> None:
@@ -361,13 +395,13 @@ def _build_language_roots(repo_root: Path, html_root: Path) -> None:
     Spanish tax, so it sits at ``/en/`` like the rest and ``/`` resolves to the
     reader's own language instead (:func:`_write_language_entry`).
     """
-    for language in _localized_languages():
+    for language, environment in _language_build_environments():
         out_dir = html_root / language
         try:
             _run(
                 _language_build_command(language, out_dir),
                 cwd=repo_root,
-                env=_language_build_environment(language),
+                env=environment,
                 stream_output=True,
             )
         except SystemExit as exc:

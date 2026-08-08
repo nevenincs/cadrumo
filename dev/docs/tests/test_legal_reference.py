@@ -12,7 +12,7 @@ import pytest
 from docutils import nodes
 from docutils.core import publish_doctree
 
-from ..legal_reference import LegalProvisionRecord, render_legal_reference
+from ..legal_reference import LegalProvisionRecord, generate_legal_reference, render_legal_reference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -212,3 +212,45 @@ def test_authoritative_legal_pages_are_docutils_clean() -> None:
     ]
 
     assert not failures, "generated legal-reference RST has docutils diagnostics:\n" + "\n".join(failures)
+
+
+def _generated_legal_dir(tmp_path: Path) -> Path:
+    """Return a docs root prepared for the generator's validated output directory."""
+    (tmp_path / "_generated").mkdir(parents=True)
+    return tmp_path / "_generated" / "legal"
+
+
+def test_regenerating_an_unchanged_catalogue_leaves_every_page_untouched(tmp_path: Path) -> None:
+    """A second render rewrites nothing, so Sphinx has no reason to re-read the tree.
+
+    The generator prunes before writing. While that prune deleted every page
+    unconditionally, the write-if-changed comparison downstream always saw a
+    missing file, so all 141 pages were recreated with fresh mtimes on every
+    build and the whole legal tree was re-read and re-written for free.
+    """
+    out_dir = _generated_legal_dir(tmp_path)
+    generate_legal_reference(tmp_path, repo_root=_REPO_ROOT)
+    before = {path.name: path.stat().st_mtime_ns for path in out_dir.glob("*.rst")}
+
+    generate_legal_reference(tmp_path, repo_root=_REPO_ROOT)
+    after = {path.name: path.stat().st_mtime_ns for path in out_dir.glob("*.rst")}
+
+    assert before, "the legal catalogue rendered no pages, so this proves nothing"
+    assert after == before
+
+
+def test_a_page_the_catalogue_no_longer_produces_is_still_pruned(tmp_path: Path) -> None:
+    """Narrowing the prune to unrendered files must not cost it its purpose.
+
+    A dropped legal document leaves a page behind that Sphinx would keep
+    reading; the sweep exists to remove exactly that.
+    """
+    out_dir = _generated_legal_dir(tmp_path)
+    generate_legal_reference(tmp_path, repo_root=_REPO_ROOT)
+    stale = out_dir / "retired-document.rst"
+    stale.write_text("Stale\n=====\n", encoding="utf-8", newline="\n")
+
+    generate_legal_reference(tmp_path, repo_root=_REPO_ROOT)
+
+    assert not stale.exists()
+    assert list(out_dir.glob("*.rst")), "the prune removed the pages it was meant to keep"

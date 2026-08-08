@@ -944,7 +944,7 @@ def generate_legal_reference(
         output_paths.append(page_path)
     if len(set(output_paths)) != len(output_paths):
         raise LegalReferenceError("generated legal output paths collide")
-    _remove_generated_rst(out_dir)
+    _remove_generated_rst(out_dir, frozenset(output_paths))
     _write_if_changed(output_paths[0], _render_index(result.pages, resolved_language))
     for page, path in zip(result.pages, output_paths[1:], strict=True):
         _write_if_changed(path, page.rst)
@@ -974,13 +974,25 @@ def _validated_output_dir(docs_root: Path) -> Path:
     return out_dir
 
 
-def _remove_generated_rst(out_dir: Path) -> None:
-    """Remove only direct generated RST files from the validated legal directory."""
+def _remove_generated_rst(out_dir: Path, keep: frozenset[Path]) -> None:
+    """Remove direct generated RST files this render no longer produces.
+
+    Pruning is why the sweep exists: a legal document dropped from the
+    catalogue must not leave its page behind for Sphinx to read. Only the
+    pages absent from ``keep`` are unlinked, so a page this render still owns
+    keeps its inode and its mtime, and :func:`_write_if_changed` can then leave
+    it untouched when its bytes are unchanged. Deleting every page first made
+    that comparison vacuous -- all 141 were recreated with fresh mtimes on
+    every build, so Sphinx re-read and re-wrote the whole legal tree even when
+    the catalogue had not moved.
+    """
     for path in out_dir.iterdir():
         if path.suffix != ".rst":
             continue
         if path.is_symlink() or not path.is_file() or path.parent != out_dir:
             raise LegalReferenceError(f"refusing to remove unsafe generated legal path: {path}")
+        if path in keep:
+            continue
         path.unlink()
 
 
