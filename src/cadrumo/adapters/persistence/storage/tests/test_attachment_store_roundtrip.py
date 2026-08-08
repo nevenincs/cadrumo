@@ -24,6 +24,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Callable
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
@@ -60,6 +61,18 @@ from ..sql.engine import get_engine
 from ..sql.session import session_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+@contextmanager
+def _replacing(target: object, name: str, value: object):
+    """Replace ``target.name`` for the scope, restoring the original on exit."""
+    original = getattr(target, name)
+    setattr(target, name, value)
+    try:
+        yield
+    finally:
+        setattr(target, name, original)
+
 
 _CAPTURED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
 # The store refuses a manifest from another profile bucket, so the fixture
@@ -420,10 +433,7 @@ def test_put_many_bytes_collapses_a_repeated_payload_within_one_batch(tmp_path: 
         assert store.read_bytes(digests[1]) == distinct
 
 
-def test_put_many_bytes_writes_a_repeated_payload_only_once(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_put_many_bytes_writes_a_repeated_payload_only_once(tmp_path: Path) -> None:
     """The in-batch dedup must actually skip the redundant write.
 
     Asserted by COUNTING the writes handed to ``save_many``, because the state
@@ -455,8 +465,8 @@ def test_put_many_bytes_writes_a_repeated_payload_only_once(
             seen.append(len(writes))
             real_save_many(writes)
 
-        monkeypatch.setattr(objects, "save_many", counting_save_many)
-        store.put_many_bytes([repeated, distinct, repeated])
+        with _replacing(objects, "save_many", counting_save_many):
+            store.put_many_bytes([repeated, distinct, repeated])
 
         assert seen == [2], f"three payloads carrying two distinct digests must produce two writes, saw {seen}"
 

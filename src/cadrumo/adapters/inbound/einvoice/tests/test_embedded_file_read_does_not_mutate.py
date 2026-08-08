@@ -28,6 +28,7 @@ that actually guarantees it.
 
 from __future__ import annotations
 
+import contextlib
 from io import BytesIO
 
 import pytest
@@ -82,7 +83,7 @@ def test_the_embedded_xml_payload_is_readable() -> None:
     assert [payload for _, payload in embedded] == [_XML_PAYLOAD]
 
 
-def test_reading_the_payload_writes_nothing_to_disk(tmp_path, monkeypatch) -> None:
+def test_reading_the_payload_writes_nothing_to_disk(tmp_path) -> None:
     """The read side leaves no file behind.
 
     The in-memory half of "does not mutate" needs no test and must not pretend
@@ -98,10 +99,10 @@ def test_reading_the_payload_writes_nothing_to_disk(tmp_path, monkeypatch) -> No
     secure-storage violation rather than a correctness one, which is why it is
     worth a gate even though the payload assertions would never notice.
     """
-    monkeypatch.chdir(tmp_path)
-    before = set(tmp_path.rglob("*"))
+    with contextlib.chdir(tmp_path):
+        before = set(tmp_path.rglob("*"))
 
-    iter_pdf_embedded_files(_pdf_with_embedded_xml())
+        iter_pdf_embedded_files(_pdf_with_embedded_xml())
 
     assert set(tmp_path.rglob("*")) == before, (
         "reading an embedded payload left a file behind; evidence bytes must never reach disk outside encrypted storage"
