@@ -34,7 +34,7 @@ import pytest
 
 from ......core import Modelo, Period
 from ......core.errors import get_error_suggestion
-from ......domain.calculations.registry import bundled_authority, validated_casilla_id
+from ......domain.calculations.registry import bundled_authority, resolve_export_layout, validated_casilla_id
 from .._declarations_observations import _observed_casillas_from_submitted_file
 from .._declarations_schema import Declaracion
 from .._errors import SedeParseError
@@ -149,24 +149,27 @@ def test_a_real_fichero_is_read_through_the_layout_on_every_disposition(
     "refuses always", and the deleted fallback would have been replaced by a
     surface that reads nothing at all.
 
-    The locator assertion is the discriminating one. The positional fallback
-    also SUCCEEDED, so a value arriving proves nothing about which path
-    produced it -- but a locator naming the layout record and field can only
-    come from the layout parse, and the fallback's ``record:T30303:pos:``
-    locator can only come from the byte-offset guess.
+    The locator assertion is the discriminating one, and it is stated
+    POSITIVELY: every observation must carry the resolved layout's own id as its
+    provenance. Asserting the absence of one known bad prefix would decay to
+    nothing now that the guessing path cannot produce a locator at all, whereas
+    requiring the layout form keeps saying where the values legitimately came
+    from. The prefix is read from the resolved layout rather than written out,
+    so renaming the layout cannot make this pass vacuously.
+
+    What this case adds over the sibling coverage on the header-facts surface is
+    the refund disposition, the older revision, and the roundtrip below.
     """
     draft, payload = _exported_draft_and_payload(filing_year=filing_year, declaration_type=declaration_type)
-    assert _snapshot(filing_year).revision.id == revision_id, "the filing year no longer selects this revision"
+    snapshot = _snapshot(filing_year)
+    assert snapshot.revision.id == revision_id, "the filing year no longer selects this revision"
+    layout_prefix = f"{resolve_export_layout(snapshot).layout.id}:"
 
     observed = _project(payload, filing_year=filing_year)
 
     assert observed, "the projection returned nothing, so the layout read the payload as empty"
-    assert not any(casilla.source_locator.startswith("record:T30303:pos:") for casilla in observed), (
-        "a positional byte-offset locator survived, so a guessed value reached the observation set"
-    )
-    assert all(casilla.source_locator.startswith("modelo-303-fichero-boe:") for casilla in observed), (
-        f"an observation carries a non-layout locator: {sorted({c.source_locator for c in observed})[:3]}"
-    )
+    off_layout = sorted({c.source_locator for c in observed if not c.source_locator.startswith(layout_prefix)})
+    assert not off_layout, f"an observation carries provenance from outside the layout: {off_layout[:3]}"
     # Writer-to-reader roundtrip: the draft that produced the bytes is the
     # authority for what the bytes say, so this pins the layout read without
     # asserting any figure the engine also computed. Scored over every casilla
