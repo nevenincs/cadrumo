@@ -6,7 +6,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:8ecb98b2ceb1098ca58f47d8a8f3035320daa7f4c84b4882d5fdb36f5b03c09c'
+body_hash: 'sha256:817071240822e26b3d50544e12fe09bf5fecd3042e595587b67919051bd75878'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -31,6 +31,8 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S13]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S14]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S74]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W04-P09-S43]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
 ---
 
@@ -44,6 +46,7 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 
 - `2026-08-07-aeat-design-relayout-boundary-adr` - `aeat-design-relayout-boundary` adr: `a registry revision must not span an AEAT design re-layout` | (**status:** `accepted`)
 - `2026-08-07-aeat-design-relayout-boundary-sub-year-epoch-adr` - `aeat-design-relayout-boundary` adr: `a design epoch narrower than a filing year is expressed by period-token partition` | (**status:** `accepted`)
+- `2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr` - `aeat-design-relayout-boundary` adr: `Modelo 200 partitions by inheritance, and 2024-y-siguientes narrows to 2024` | (**status:** `accepted`)
 
 ### exec
 
@@ -67,6 +70,7 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-08-08-aeat-design-relayout-boundary-W01-P03-S13` - Handle the ambiguity refusal in the registry revision diff surface
 - `2026-08-08-aeat-design-relayout-boundary-W01-P03-S14` - Handle the ambiguity refusal in the registry describe and bindings query
 - `2026-08-08-aeat-design-relayout-boundary-W01-P03-S74` - Record and verify that the profile inspect surface already refuses on the ambiguity error
+- `2026-08-08-aeat-design-relayout-boundary-W04-P09-S43` - Narrow the Modelo 200 revision to filing year 2025 onward
 
 ### plan
 
