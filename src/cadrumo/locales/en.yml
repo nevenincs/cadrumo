@@ -332,8 +332,6 @@ aggregation:
         aggregation bucket.
       candidate_outside_period: 'Internal error: IVA candidate falls outside the aggregation
         period.'
-      domestic_counterparty_on_intra_community_transaction: Spanish counterparties
-        are not valid for intra-community transactions.
       eu_member_state_on_export_transaction: Export or export-assimilated operations
         must not carry an EU member state; got %{member_state}.
       unsupported_iva_category: 'Internal error: unsupported IVA category for aggregation.'
@@ -1965,6 +1963,8 @@ cli:
           show_help: Show one pending draft field by field, with its findings and
             blockers.
           unknown_reference: No pending draft for that reference.
+          country_code_unassigned_message: 'A party''s country code is one ISO 3166-1 reserves so that no country is ever allocated to it, so the document states a string rather than a country and nothing places that party. Correct the code against the document. This draft can still be confirmed; the party simply stays unestablished until it is.'
+          country_code_uncatalogued_message: 'A party''s country code may name a real country this system''s bundled vocabulary does not yet carry, so nothing can be said about where that party is established. Re-reading the document will not settle it: the country has to be added. This draft can still be confirmed; the party simply stays unestablished until it is.'
         source_path_help: Path to the invoice PDF or image
         supplier_help: Supplier name
         taxable_base_help: Invoice taxable base

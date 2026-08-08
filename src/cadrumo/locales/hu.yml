@@ -350,8 +350,6 @@ aggregation:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
       candidate_outside_period: 'Belső hiba: az IVA-jelölt az aggregálási időszakon
         kívül esik.'
-      domestic_counterparty_on_intra_community_transaction: Spanyol partner nem érvényes
-        Közösségen belüli ügylethez.
       eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá
         eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
       unsupported_iva_category: 'Belső hiba: nem támogatott IVA-kategória az aggregáláshoz.'
@@ -2053,6 +2051,7 @@ cli:
           show_help: Jelenitsen meg egy fuggo piszkozatot mezonkent, eszrevetelekkel
             es akadalyokkal.
           unknown_reference: Nincs fuggo piszkozat ehhez az azonositohoz.
+          country_code_unassigned_message: 'Az egyik fél országkódja az ISO 3166-1 által fenntartott tartományba esik, amelyhez soha nem rendelnek országot, így a dokumentum ország helyett csak egy karakterláncot ad meg, és semmi sem helyezi el ezt a felet. Javítsa a kódot a dokumentum alapján. Ez a piszkozat ettől még megerősíthető; a fél egyszerűen letelepedés nélkül marad addig.'
         source_path_help: A számla PDF- vagy képfájljának elérési útja.
         supplier_help: Szállító neve.
         taxable_base_help: Számla adóköteles alapja.

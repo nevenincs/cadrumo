@@ -370,8 +370,6 @@ aggregation:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
         bucket d'agregació sol·licitat.
       candidate_outside_period: La candidatura queda fora del període.
-      domestic_counterparty_on_intra_community_transaction: Les contraparts espanyoles
-        no són vàlides per a operacions intracomunitàries.
       eu_member_state_on_export_transaction: Les operacions d'exportació o assimilades
         no poden portar un Estat membre de la UE; rebut %{member_state}.
       unsupported_iva_category: 'Error intern: categoria d''IVA no admesa per a l''agregació.'
@@ -2111,6 +2109,8 @@ cli:
           show_help: Mostreu un esborrany pendent camp per camp, amb les seves troballes
             i blocatges.
           unknown_reference: No hi ha cap esborrany pendent per a aquesta referencia.
+          country_code_unassigned_message: 'El codi de país d''una de les parts pertany als rangs que la norma ISO 3166-1 reserva perquè mai no s''hi assigni cap país, de manera que el document indica una cadena i no un país, i res no situa aquesta part. Corregiu el codi contrastant-lo amb el document. Aquest esborrany es pot confirmar igualment; la part simplement queda sense establir fins llavors.'
+          country_code_uncatalogued_message: 'El codi de país d''una de les parts pot designar un país real que el vocabulari incorporat d''aquest sistema encara no recull, de manera que no es pot dir res sobre on està establerta aquesta part. Tornar a llegir el document no ho resoldrà: cal afegir el país. Aquest esborrany es pot confirmar igualment; la part simplement queda sense establir fins llavors.'
         source_path_help: Ruta al PDF o imatge de la factura
         supplier_help: Nom del proveïdor
         taxable_base_help: Base imposable de la factura
