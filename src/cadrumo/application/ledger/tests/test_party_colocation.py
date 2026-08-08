@@ -36,6 +36,7 @@ from ....core import (
 from .._document_transcription import DocumentTranscription, TranscriberIdentity
 from .._evidence_draft import FieldProvenance, InvoiceDraft
 from .._grounded_reading import ground_draft_against_transcription
+from .._party_attribution import party_attribution_advisory
 from .._party_colocation import (
     PartyAttributionOutcome,
     party_regions,
@@ -282,3 +283,91 @@ def test_an_unresolvable_document_advises_rather_than_refuses() -> None:
     assert DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED not in [f.kind for f in grounded.discrepancies]
     stamps = {e.field: e.attribution_unverified for e in grounded.provenance}
     assert stamps["supplier_postal_code"] is True
+
+
+# The layout every real document measured actually has: a two-column header,
+# which a reading-order extractor emits as one line carrying BOTH parties. The
+# fixtures above use a stacked header, which is the layout the resolver was
+# designed against and which the scored corpus does not contain.
+_TWO_COLUMN_PAGE: Final = "\n".join(
+    (
+        "FACTURA",
+        f"{_SUPPLIER_HEADING}  {_CUSTOMER_HEADING}",
+        "Calle Sin Nombre 0  Poligono Industrial Asipo, Nave 27",
+        "28901 Getafe  35001 Las Palmas",
+        "NIF B12345674  NIF/CIF B44444444",
+        "Base imponible 766,30",
+        "TOTAL 890,00 EUR",
+    ),
+)
+
+
+def test_asserted_gap_a_two_column_header_resolves_nothing() -> None:
+    """The measured real-document case, pinned where a reader meets the resolver.
+
+    Scored against authored anchors over the reference corpus, NO document could
+    be partitioned, and every one failed here: both role headings arrive on one
+    line, the earlier span is zero-width, and the region builder drops it. That
+    is the correct behaviour -- keeping the span would attribute one party's
+    values to the other -- but it means this resolver does not fire on the
+    layout real invoices use, and a suite testing only a stacked header would
+    never say so.
+
+    Asserted on the partition rather than on the outcomes, because an empty
+    outcome map is also what a resolver that was never called produces.
+
+    **This asserts a GAP, not a contract.** It is expected to fail the day the
+    region builder learns to split a line carrying both role labels, or the
+    pipeline preserves the geometry to segment a column -- and that failure is
+    the notification. A lane finding it red should replace it with a gate
+    asserting the two-column layout now partitions, and update the module
+    docstrings that state the ceiling, never relax it to match the code. The
+    ``test_asserted_gap_`` prefix carries that at the only place a triager
+    reliably looks, because a name read at speed is taken for a contract and
+    then "fixed" -- which cancels the gate at the moment it fires.
+    """
+    assert party_regions(draft=_straight(), transcription=_transcription(_TWO_COLUMN_PAGE)) == {}
+
+
+def test_the_stacked_header_still_partitions_so_the_zero_is_about_layout() -> None:
+    """The positive control, and the reason the zero is not a broken resolver.
+
+    Without it "resolves nothing" is indistinguishable from "resolver is
+    unwired", and the two call for opposite responses: one is a pipeline
+    question about preserving geometry, the other is a bug here. Same parties,
+    same values, same draft -- only the line structure differs -- so the
+    difference in outcome can only be the layout.
+    """
+    regions = party_regions(draft=_straight(), transcription=_transcription())
+
+    assert len(regions) == 2
+    assert set(regions) == {"supplier", "customer"}
+
+
+def test_a_two_column_document_keeps_the_stamp_and_the_operator_keeps_the_advisory() -> None:
+    """On the real layout the unverified-attribution stamp IS the mechanism.
+
+    The honest state made executable. On a document the resolver cannot
+    partition every address value stays stamped and the operator is still
+    warned, so nothing reads as verified that was not, and the failure direction
+    stays safe.
+
+    Measured rather than claimed: a mutation giving an unsegmentable document a
+    clean bill reds this and two neighbours, so the stamp is not resting on this
+    test alone. What it adds over those two is the LAYOUT -- they reach an empty
+    resolution by removing role evidence or by transposing values, both
+    constructed shapes, while this reaches it through the header real invoices
+    actually print. The stamp surviving on the real layout is the claim, and a
+    fixture-shaped route to the same resolution does not make it.
+    """
+    grounded = ground_draft_against_transcription(
+        draft=_straight(),
+        transcription=_transcription(_TWO_COLUMN_PAGE),
+    )
+
+    stamps = {envelope.field: envelope.attribution_unverified for envelope in grounded.provenance}
+    assert stamps["supplier_postal_code"] is True
+    assert stamps["customer_postal_code"] is True
+    # Advisory, never blocker: an unpartitionable layout is not a contradiction.
+    assert DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED not in [f.kind for f in grounded.discrepancies]
+    assert party_attribution_advisory(grounded) is not None

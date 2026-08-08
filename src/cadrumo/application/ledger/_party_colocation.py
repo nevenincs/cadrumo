@@ -1,10 +1,30 @@
 """Attribute a party's address values by the block of the document they sit in.
 
-The structural answer to party attribution, replacing the interim stamp for
-every document whose layout can carry it. The model's job does not change and
-the prompt does not grow: it copies values and quotes role evidence for the two
-identity fields, exactly as before. CODE attributes, which is where every other
-attribution in this design already lives.
+The structural answer to party attribution, for every document whose layout can
+carry it. The model's job does not change and the prompt does not grow: it
+copies values and quotes role evidence for the two identity fields, exactly as
+before. CODE attributes, which is where every other attribution in this design
+already lives.
+
+**Measured, no real document's layout carries it, and that is stated here
+because this is where a reader meets the resolver.** Scored against authored
+anchors rather than against the reader whose output would otherwise be being
+graded: of the documents carrying a hand-written reference transcription and a
+hand-written identity for both parties, NONE could be partitioned by any
+authored anchor pair, and every one failed for the single cause described under
+:func:`_regions` -- a two-column header arriving as one line. The zero is a
+ceiling rather than a rate, since a perfect reader bounds every real one, so no
+prompt, model or second pass raises it. Segmenting such a header needs spatial
+information the extractor discards before this module is reached.
+
+Two consequences, and neither is that this module is unwired. It attributes
+correctly on a stacked header and its gates prove it, so the finding is about
+which documents exist, not about the code. And on a prose document the
+unverified-attribution stamp and its review-gate advisory are the operating
+control rather than a placeholder -- see
+:func:`~application.ledger.stamp_unverified_party_attribution`, whose own
+docstring carries the same correction. The failure direction stays safe:
+unresolved keeps the warning.
 
 **The mechanism is containment, never proximity.** A party's role evidence is a
 printed heading the reader copied -- ``FACTURAR A``, ``Verkaufer``, the label a
@@ -27,7 +47,7 @@ its own party's region is ATTRIBUTED. A value found only in the OTHER party's
 region is CONTRADICTED -- the transposition this whole apparatus exists for, and
 the one case where refusing is right. Everything else is UNRESOLVED: no role
 evidence to segment on, a value in both regions, a value in neither. Unresolved
-keeps the interim stamp and the operator advisory rather than inventing a
+keeps the unverified-attribution stamp and the operator advisory rather than inventing a
 verdict, because a document that cannot answer the question has not answered it.
 
 The zugferd specimen in the corpus is why the both-regions case is not
@@ -37,7 +57,8 @@ and no containment rule can honestly resolve it.
 
 See Also:
     :func:`~application.ledger.stamp_unverified_party_attribution`
-        The interim stamp this resolution clears, retires or leaves standing.
+        The unverified-attribution stamp this resolution clears or leaves standing,
+        and which on a real prose document it leaves standing.
     :func:`~application.ledger.printed_excerpt_occurs_in_text`
         The one authority for whether a region prints a given form.
 """
@@ -72,14 +93,14 @@ class PartyAttributionOutcome(StrEnum):
     Attributes:
         ATTRIBUTED: The value occurs inside its own party's region and not the
             other's. The reader's assignment is confirmed by the document's own
-            layout, so the interim stamp is cleared.
+            layout, so the unverified-attribution stamp is cleared.
         CONTRADICTED: The value occurs only inside the OTHER party's region.
             The reader filed it under the wrong party -- the transposition the
             territory axis is silently wrong on -- and it is refused rather than
             corrected, because swapping it here would substitute one unverified
             assignment for another.
         UNRESOLVED: The document did not answer. No role evidence to segment on,
-            the value printed on both sides, or printed on neither. The interim
+            the value printed on both sides, or printed on neither. The
             stamp stays and the operator keeps the advisory.
     """
 
@@ -163,6 +184,18 @@ def _regions(
     A party whose region would be empty is dropped rather than kept as a
     zero-width span, so two headings printed on one line cannot produce a region
     that matches nothing and reads as a clean negative.
+
+    **That drop is the single cause of every unresolved real document measured,
+    and it is not an edge case.** A two-column invoice header reaches this
+    function as ONE line carrying both parties, because the extractor emits
+    reading order; both anchors resolve to the same index, the earlier span is
+    zero-width, and the partition comes back empty. Every scored document failed
+    here and no other cause appeared. The drop is still right -- keeping the
+    zero-width span would attribute one party's values to the other, which is
+    the transposition this module exists to refuse -- so this is a statement
+    about the primitive rather than about the guard. Line containment cannot
+    segment a layout whose separation is horizontal, and the spatial information
+    that could is discarded upstream.
     """
     ordered = sorted(anchors.items(), key=lambda item: item[1])
     spans: dict[str, tuple[int, int]] = {}
@@ -203,7 +236,8 @@ def resolve_party_attribution_by_colocation(
     Returns:
         :class:`PartyColocationResolution`: an outcome per enrolled address field
         the draft carried a value for. Empty when the document states no usable
-        party heading, which leaves every value on the interim stamp.
+        party heading, which leaves every value on the unverified-attribution
+        stamp. Measured, that is the outcome on every real document scored.
     """
     region_text = party_regions(draft=draft, transcription=transcription)
     if len(region_text) < 2:

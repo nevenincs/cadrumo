@@ -22,14 +22,34 @@ internally consistent, anchored throughout, blocking nothing -- and places both
 parties in territories neither is established in, which the criteria then consume
 as an established fact. There is no red anywhere.
 
-**This module is the honest interim, not the fix.** The fix is deterministic
-co-location: an address block containing a role-evidenced identity anchors the
-whole block to that party, and its postal and country values inherit attribution
-by containment. Until that lands, the affected values say on their face that
-their attribution is unchecked, and the operator is told at the review gate --
-so the gap cannot read as closed while it is open. When co-location lands, an
-attributed value simply stops being stamped here; the field, the advisory and the
-surfaces all keep their shape.
+**This module is the operating mechanism for prose documents, not an interim.**
+It was written as one. The intended successor is deterministic co-location: an
+address block containing a role-evidenced identity anchors the whole block to
+that party, and its postal and country values inherit attribution by
+containment. That resolver shipped, and it does not fire.
+
+Measured against authored truth rather than against its own reader: of the
+documents carrying a hand-written reference transcription AND a hand-written
+identity for both parties, NONE could be partitioned by any authored anchor
+pair, and every one failed for the same cause. A two-column invoice header --
+issuer left, recipient right -- reaches the resolver as a SINGLE line carrying
+both parties, because the text extractor emits reading order and the visual gap
+between the two blocks leaves no character behind. Two anchors on one line
+produce a zero-width span that the region builder drops by design.
+
+Because that ceiling was measured with authored anchors, and a perfect reader is
+an upper bound on every real one, **no prompt, larger model or second pass moves
+it.** It is not a coverage gap that better reading closes. Segmenting a
+two-column header needs spatial information discarded before the resolver is
+reached, which is a change to the transcription pipeline rather than to this
+package.
+
+So the stamp is not waiting to be retired. On a prose document it is what the
+operator actually gets, and the advisory at the review gate is the control, not
+a placeholder for one. The successor still clears the stamp on any document
+whose layout it can partition -- the wiring is real and its gates pass on that
+shape -- so this is a statement about which documents exist, never about the
+resolver being unwired.
 
 See Also:
     :class:`~application.ledger.FieldProvenance`
