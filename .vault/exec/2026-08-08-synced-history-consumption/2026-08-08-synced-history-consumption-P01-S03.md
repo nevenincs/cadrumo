@@ -59,10 +59,15 @@ read of `classification.treatment` on the resolution path is in
 `relation_source_requirements`, which folds it into the requirement's GROUPING
 KEY. It discriminates which requirements bucket together and gates nothing, so a
 `factual_evidence` relation and a `direct_annual_settlement` relation resolve
-identically into binding values. A pulled modelo 193 retención — declared
-evidence, suffered rather than filed by this taxpayer — reaches the annual return
-by the same path a pulled modelo 130 pago fraccionado does. The registry draws
-the line; the code does not stand on it.
+identically into binding values.
+
+The precise statement is stronger than "the classification is unused". A pulled
+modelo 193 retención is evidence of tax SUFFERED, which this taxpayer did not file
+and the payer did. A pulled modelo 130 pago fraccionado is a payment this taxpayer
+made and filed. Those are different legal objects carrying different provenance,
+and they reach the annual return by the identical path: THE ENGINE CANNOT TELL
+THEM APART AT THE POINT IT CONSUMES THEM. The registry draws the line; the code
+has no access to it where the consumption happens.
 
 SECOND: the registry is silent on 21 % of the carry surface. 15 `previous_filing`
 bindings and both `iva_compensation_annual_partition` bindings are governed by no

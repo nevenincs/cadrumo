@@ -59,6 +59,18 @@ carry that reads another modelo's annual return, which makes it exactly the carr
 a pulled modelo 100 history would feed, and it is the one modelled outside the
 declared mechanism set.
 
+THIS IS AN EXISTING VIOLATION OF A STANDING RULE, not an unclassified row, and the
+two get different treatment. An unclassified row invites a judgement call about
+where it belongs. A rule violation admits only two dispositions: the fix, or an
+explicit amendment that names the rejected design.
+
+The standing rule requires that a new aggregation surface enrol under an existing
+taxonomy row or amend the record before shipping. This binding does neither. It is
+the taxonomy's own defect class — a fold-in modelled by the wrong mechanism, so the
+enrolled resolver's coverage and the binding's actual shape diverge — which is
+precisely what the taxonomy was written to prevent. Recording it as "unclassified"
+would let the ruling absorb it as one more thing to classify, and it is not that.
+
 REVISION RE-CONFIRMATION, and what it cannot do. Modelo 100 ships one revision
 per filing year, 2020 through 2025, each covering exactly its own year. Modelo 130
 ships one revision covering 2019 through 2030.
@@ -140,11 +152,16 @@ I have NOT amended the taxonomy. The gate offers naming the row or recording tha
 none covers it, and this record takes the second branch. Amending an aggregation
 taxonomy is a decision-record change belonging to `P02.S07`, and doing it here
 would pre-empt the ruling this lane exists to produce. The debt is stated so the
-ruling has to dispose of it.
+ruling has to dispose of it, and stated as a rule violation so it cannot be
+absorbed as a classification question.
 
-The dated cliff is recorded as a finding rather than opened as a row, because it
-is not yet a live defect: the 2026 modelo 100 revision is not missing so much as
-not yet published, and a filing year whose forms AEAT has not released cannot
-carry. It becomes a defect if modelo 100 2026 ships without the carry being
-re-checked, and if that has not happened by the time this lane closes it should
-become a row rather than survive as a note here.
+THE DATED CLIFF IS NOW A ROW, `P01.S13`. This record originally kept it as a
+finding on the ground that a filing year AEAT has not published cannot carry, which
+is true and is also the argument against keeping it a note: the failure is silent
+by documented design, it arrives at BOTH ends of the range, and the condition that
+makes it live is modelo 100 shipping a 2026 revision, which nobody is watching for.
+"Re-check if X ships before this lane closes" is the shape that vanishes when a
+lane closes. The row gates on the PROPERTY — every carry source's revision coverage
+must span the consuming modelo's own coverage — rather than on the 2020-2025 and
+2019-2030 spans, which are today's corpus and would turn the gate into a constant
+someone updates.
