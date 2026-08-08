@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import ast
 import pathlib
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import pytest
@@ -276,6 +277,15 @@ async def test_a_notice_paints_its_severity_glyph_message_and_suggestion() -> No
         suggestion_line = app.query_one("#notice-1-suggestion", Static)
         assert "aeat config example" in str(suggestion_line.content)
 
+        # The class name alone is not the claim: the CSS the class selects
+        # must actually resolve to two DIFFERENT colours, or "severity
+        # drives presentation" is true of the markup and false on screen.
+        # Only INFO has a real application-layer producer today
+        # (``no_aeat_history_notice``); WARNING is exercised here at the
+        # rendering layer only, with a hand-built Notice — there is no
+        # shipped WARNING producer this suite can drive end to end yet.
+        assert info_line.styles.color != warning_line.styles.color
+
 
 @pytest.mark.asyncio
 async def test_no_notices_leaves_no_empty_advisory_box() -> None:
@@ -283,6 +293,109 @@ async def test_no_notices_leaves_no_empty_advisory_box() -> None:
     app = StatusApp(_populated_data())
     async with app.run_test(size=_TERMINAL_SIZE):
         assert not app.query("#panel-notices")
+
+
+_UNREASONABLE_NOTICE_PANEL_HEIGHT = 8
+"""Row ceiling for a panel holding a single one-line notice.
+
+Real content bounds this panel's height to a handful of rows regardless of
+terminal size; the regression this test pins made it claim the ENTIRE
+scroll column instead (measured 82-92 rows against a 2-row healthy render,
+at both 100x50 and 140x60), which is what actually pushed every sibling
+panel out of practical reach. A generous ceiling well above the honest
+2-row render, but nowhere near what the regression produced."""
+
+
+@pytest.mark.asyncio
+async def test_a_notice_does_not_eliminate_the_other_panels() -> None:
+    """A panel must never take over the whole scroll column and starve its siblings.
+
+    Regression pin. ``NoticeBand`` inherited Textual's ``Vertical`` default
+    height (``1fr``); inside the auto-height ``#panel-notices`` ``Static``,
+    that resolved against the nearest ancestor with a definite size and grew
+    the panel to consume nearly the entire scrollable column (measured 82-92
+    rows for ONE notice line, against 2 once fixed) — burying every sibling
+    panel far past any practically reachable scroll position, at every
+    terminal size the operator's bug report and the fix commit tested.
+
+    None of the earlier notice tests could catch this: each one only ever
+    asserted what the band itself shows, never a property relating it to a
+    SIBLING panel. This is that property, expressed the way that actually
+    reproduces and reds under the defect — a plain ``query_one`` presence
+    check does NOT: a widget the notice band buried is still fully present
+    in the DOM, mounted, non-empty, row-count intact. Two independent shapes
+    of size assertion were tried and rejected before this one: a bare
+    ``size.height > 0`` on each sibling survived the reverted CSS unchanged
+    (the siblings kept their own natural few-row heights even while pushed
+    far down-column), and reading their screen ``region`` is viewport-size
+    dependent. The height CEILING on the notices panel itself is what
+    actually discriminates in both directions and at both terminal sizes
+    tested, because it pins the one measurement that is grossly different
+    between the two states — TENS of rows apart, not on/off.
+
+    Mutation-proved by hand, both terminal sizes the original report and
+    fix cited (100x50, 140x60): a live ``NoticeBand`` subclass overriding
+    ``CSS`` with the ``height: auto`` rule stripped (subclassing was
+    necessary — Textual compiles ``CSS`` once at class-body execution, so
+    reassigning the attribute on the live class after the fact is a no-op)
+    measured the notices panel at 82-92 rows and reds this test; the
+    shipped, unmodified ``StatusApp`` measures 2 rows and passes. No tracked
+    file was edited to prove this — the broken CSS lived only in a
+    throwaway subclass in an ad-hoc verification script, never committed.
+    """
+    data = replace(
+        _populated_data(),
+        notices=(Notice(severity=NoticeSeverity.WARNING, code="test.regression", message="REGRESSION-NOTICE"),),
+    )
+    app = StatusApp(data)
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        # A DataTable's intrinsic auto-height is not settled by the single
+        # implicit pass ``run_test`` performs on entry; unrelated to the
+        # regression itself, but without this pause every panel measures
+        # zero height on the FIXED code too, which would make the checks
+        # below fail for the wrong reason.
+        await pilot.pause()
+        assert "REGRESSION-NOTICE" in str(app.query_one("#notice-0", Static).content)
+
+        notices_panel = app.query_one("#panel-notices", Static)
+        assert notices_panel.size.height <= _UNREASONABLE_NOTICE_PANEL_HEIGHT, (
+            f"the notices panel claimed {notices_panel.size.height} rows for one notice "
+            "line — it is starving the panels beneath it, the exact regression this pins"
+        )
+
+        profile_panel = app.query_one("#panel-profile", Static)
+        assert str(profile_panel.border_title) == "SEC-PROFILE"
+        assert app.query_one("#profile-facts", DataTable).row_count == 3
+
+        profiles_panel = app.query_one("#panel-profiles", Static)
+        assert str(profiles_panel.border_title) == "SEC-PROFILES"
+        assert app.query_one("#profiles-table", DataTable).row_count == 3
+
+        auth_panel = app.query_one("#panel-auth", Static)
+        assert str(auth_panel.border_title) == "SEC-AUTH"
+        assert "AUTH-READY" in str(app.query_one("#auth-lines", Static).content)
+
+        recovery_panel = app.query_one("#panel-recovery", Static)
+        assert str(recovery_panel.border_title) == "SEC-RECOVERY"
+        assert "REC-ENROLLED" in str(app.query_one("#recovery-lines", Static).content)
+
+
+@pytest.mark.asyncio
+async def test_a_notice_does_not_eliminate_the_other_panels_at_a_smaller_terminal() -> None:
+    """The same property at 100x50 — the second size the original bug report named."""
+    data = replace(
+        _populated_data(),
+        notices=(Notice(severity=NoticeSeverity.WARNING, code="test.regression", message="REGRESSION-NOTICE"),),
+    )
+    app = StatusApp(data)
+    async with app.run_test(size=(100, 50)) as pilot:
+        await pilot.pause()
+        notices_panel = app.query_one("#panel-notices", Static)
+        assert notices_panel.size.height <= _UNREASONABLE_NOTICE_PANEL_HEIGHT
+        assert app.query_one("#profile-facts", DataTable).row_count == 3
+        assert app.query_one("#profiles-table", DataTable).row_count == 3
+        assert "AUTH-READY" in str(app.query_one("#auth-lines", Static).content)
+        assert "REC-ENROLLED" in str(app.query_one("#recovery-lines", Static).content)
 
 
 def test_status_screen_never_imports_the_application_layer() -> None:
