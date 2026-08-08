@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:eaadba3d126eed3382124248980b63e41f41375fa593069ad7bb6f438f59f30a'
+body_hash: 'sha256:3754f426986833472ee5ab77fd3b767902f2f36262cd7a31c4ee7f279932cd19'
 related:
   - "[[2026-08-07-invoice-canonical-structure-iva-treatment-axis-adr]]"
 ---
@@ -298,6 +298,38 @@ declared is handled correctly - so two records of one operation disagree.
 
 This is the third consequence of one root cause. Constructing the invoice observation from
 the invoice's own category closes casillas 59/60, the prorrata bucket misrouting, and this.
+
+### The reverse-charge case is reachable by two paths, and one got more frequent this week
+
+The reachability question this research left open was answered by the team lead and
+re-verified here on all three points.
+
+**The CLI does not narrow the choice.** The catalogue `--iva-category` option is typed
+`IvaCategory | None` over the full enum, so an operator can attach any category, including
+a reverse-charge one, to a catalogue invoice.
+
+**The structured confirm path now carries it.** A test at HEAD asserts that a Facturae tax
+category reaches a real catalogue invoice as `DOMESTIC_REVERSE_CHARGE`. That test exists
+because the category used to be DROPPED at the confirm boundary and was recently fixed.
+
+The sequencing point is worth stating plainly: closing the dropped-category hole is what
+populated the field, so the population of reverse-charge catalogue invoices went from
+approximately none to however many such documents are confirmed. The earlier fix did not
+cause the defect recorded above - it removed the accident that was masking it.
+
+**Scope correction, and it decides how the fix must be written.**
+`_RECIPIENT_ONLY_REVERSE_CHARGE_CATEGORIES` holds ONLY the two intra-community acquisition
+categories; `DOMESTIC_REVERSE_CHARGE` is deliberately absent, and the frozenset's own
+docstring gives the reason: an intra-community acquisition self-assesses on either
+direction because its supply counterpart is not located in Spain, whereas domestic reverse
+charge resolves BY DIRECTION because both sides are Spanish and the form asks for them
+separately.
+
+So the frozenset is correct, not deficient - but a fix keying on it would miss the domestic
+case, which is exactly the case the defect above is about. The correct construction is the
+one the bank path already uses: call `derive_flow_for_classification` with the effective
+category and the invoice direction, which routes both families correctly, rather than
+testing membership of the frozenset.
 
 ## Sources
 
