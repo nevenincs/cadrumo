@@ -79,7 +79,12 @@ from ...domain.calculations.registry import InputKind, RegistrySnapshotError, Re
 from ...domain.user_profile import ProfileNotFoundError
 from ._errors import CliOutboundPayloadBoundaryError
 from ._modelo_cli_support import MISSING_INPUT_TRANSLATED_MESSAGES, work_calculate_input_bundle_from_cli
-from ._modelo_rendering import advisory_notice, calculation_revision_lines, calculation_revision_payload
+from ._modelo_rendering import (
+    advisory_notice,
+    calculation_revision_lines,
+    calculation_revision_payload,
+    source_diagnostic_notice,
+)
 from ._modelo_work_options import (
     _ActorOpt,
     _BucketIdOpt,
@@ -726,12 +731,10 @@ def _emit_wizard_result(
     notices: list[Notice] = []
     diagnostics = calculation_result.source_diagnostics
     if diagnostics:
+        # Shares the calculate path's projection, so the wizard's advisories carry
+        # the same routable context AND the remedy this call site previously dropped.
         notices.extend(
-            advisory_notice(
-                "modelo.work.wizard.source_advisory",
-                diagnostic.message,
-                context={"reason": str(diagnostic.reason), "source_kind": diagnostic.source_kind},
-            )
+            source_diagnostic_notice(diagnostic, code="modelo.work.wizard.source_advisory")
             for diagnostic in diagnostics
         )
     _emit_envelope(ctx, command="modelo.work.wizard", result=result, lines=lines, notices=notices or None)

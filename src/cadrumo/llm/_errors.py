@@ -22,6 +22,27 @@ class LLMProviderError(LLMError):
     """Raised when a provider adapter cannot return a completion."""
 
 
+class LLMTransientTransportError(LLMProviderError):
+    """Raised when a dispatch failed on the way to the model, not at it.
+
+    A connection refused or reset while the runtime loads a model, a 5xx from
+    the runtime, a read timeout on a model still coming up: the request never
+    produced an answer, and the same request sent again may well produce one.
+
+    Split out of :exc:`~adapters.outbound.llm.LLMProviderError` because that
+    class covers both directions and the retry decision needs them apart. A 4xx
+    and a malformed 2xx body are deterministic -- the identical request fails
+    identically forever -- so retrying them burns the budget and delays the real
+    refusal. Retryability is declared once, on the registered
+    :class:`~core.errors.ErrorCode` for each class, and the transport reads it
+    from there rather than keeping a second list of its own.
+
+    A subclass rather than a sibling, so every existing ``except
+    LLMProviderError`` handler keeps catching it: the split refines the
+    boundary, it does not move it.
+    """
+
+
 class LLMPdfRasterisationError(LLMError):
     """Raised when :func:`~adapters.outbound.llm.rasterise_pdf_pages_to_base64_png` fails."""
 

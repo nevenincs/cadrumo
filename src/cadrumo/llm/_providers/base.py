@@ -17,7 +17,7 @@ from collections.abc import Mapping
 import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from .._errors import LLMProviderError, LLMRateLimitError
+from .._errors import LLMProviderError, LLMRateLimitError, LLMTransientTransportError
 from .._models import LLMProvider, MultimodalImageInput
 
 
@@ -268,14 +268,19 @@ async def post_provider_request(
         remains :func:`check_http_error`'s job.
 
     Raises:
-        LLMProviderError: When the request never produced a response
-            (connection refused, DNS failure, timeout, protocol error).
+        LLMTransientTransportError: When the request never produced a response
+            (connection refused, DNS failure, timeout, protocol error). Typed as
+            the TRANSIENT half of the boundary because that is what the failure
+            is: nothing was decided at the model, and a local runtime that is
+            still loading a multi-gigabyte model refuses connections for exactly
+            as long as the load takes. ``httpx.TimeoutException`` is a
+            ``RequestError`` subclass, so a read timeout arrives here too.
     """
     try:
         return await client.post(url, headers=headers, json=json)
     except httpx.RequestError as exc:
         logger.debug("%s connection failure model=%s", provider_name, model, exc_info=True)
-        raise LLMProviderError(f"{provider_name} connection failure.") from exc
+        raise LLMTransientTransportError(f"{provider_name} connection failure.") from exc
 
 
 def check_http_error(response: httpx.Response, *, provider_name: str, model: str, logger: logging.Logger) -> None:
@@ -285,6 +290,13 @@ def check_http_error(response: httpx.Response, *, provider_name: str, model: str
     any other non-2xx status raises a provider error. Shared by the OpenAI,
     Gemini, and local adapters, whose status-dispatch is otherwise identical.
 
+    The 5xx and 4xx branches raise DIFFERENT types, and the split is the whole
+    basis of the retry decision. A 5xx is the server saying it failed to answer
+    a request it accepted, which the same request may survive on a second
+    attempt; a 4xx is the server saying the request itself is wrong, which the
+    same request will never survive. Retrying the second kind spends a bounded
+    budget on a certainty and delays the real refusal.
+
     Args:
         response: Provider HTTP response to inspect.
         provider_name: Human-readable provider label for log and error text.
@@ -293,6 +305,7 @@ def check_http_error(response: httpx.Response, *, provider_name: str, model: str
 
     Raises:
         LLMRateLimitError: On HTTP 429.
+        LLMTransientTransportError: On any 5xx status.
         LLMProviderError: On any other non-2xx status.
     """
     status = response.status_code
@@ -303,6 +316,6 @@ def check_http_error(response: httpx.Response, *, provider_name: str, model: str
         return
     if status >= 500:
         logger.error("%s: server error status=%d model=%s", provider_name, status, model)
-        raise LLMProviderError(f"{provider_name} API failure ({status}).")
+        raise LLMTransientTransportError(f"{provider_name} API failure ({status}).")
     logger.warning("%s: unexpected HTTP status=%d model=%s", provider_name, status, model)
     raise LLMProviderError(f"{provider_name} API failure ({status}).")

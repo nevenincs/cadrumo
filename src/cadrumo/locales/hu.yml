@@ -6464,6 +6464,8 @@ errors:
       vissza.
     fail_llm_rate_limit: A nyelvi modell szolgáltatója sebességkorlátozás miatt elutasította
       a kérést. Várjon néhány percet, és próbálja újra.
+    fail_llm_transient_transport: A kérés nem jutott el a nyelvi modell futtatókörnyezetéhez,
+      és az újrapróbálkozási keret elfogyott.
     fail_manuals_manual_parse: Egy kézikönyv-rekord nem ment át a sémaérvényesítésen.
     fail_mcp_launch: Az MCP-kiszolgálót nem sikerült elindítani.
     fail_modelo_calculation_revision_persistence: A számítás-revízió katalógust nem
@@ -6945,6 +6947,8 @@ errors:
     refused_live_portal_not_found: Nem létezik AEAT portál a megadott azonosítóval.
     refused_live_verify_observation_not_found: Nem létezik ellenőrzési megfigyelés
       a megadott azonosítóval.
+    refused_llm_busy: Ez a gép már a beállított maximális számú helyi nyelvi modell
+      kérést futtatja.
     refused_llm_config: A nyelvi modell kliens konfigurációja érvénytelen vagy hiányos.
     refused_llm_consent: A dokumentum gépen kívüli olvasása elutasítva, mert a külső
       továbbításhoz nem történt hozzájárulás.
@@ -7078,7 +7082,6 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
-    refused_llm_busy: 'Ez a gép már a beállított maximális számú helyi nyelvi modell kérést futtatja.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
@@ -65554,7 +65557,8 @@ modelo:
             help: null
             label: Az önbevallás adóéve
           iva-base-autorepercutida-intracomunitaria-devengado:
-            help: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.help
+            help: Adja össze a Közösségen belüli beszerzések után önszámlázással keletkezett
+              adóalapot.
             label: Keletkezett fordított adózású ÁFA adóalapja Közösségen belüli beszerzéseknél
           iva-compensacion-aplicada-periodo:
             help: null
@@ -66479,7 +66483,8 @@ modelo:
                 önadózott ÁFA.
               label: Keletkezett fordított adózású ÁFA Közösségen belüli beszerzéseknél
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck.help
+              help: Adja össze a Közösségen belüli beszerzések után önszámlázással
+                keletkezett adóalapot.
               label: Keletkezett fordított adózású ÁFA adóalapja Közösségen belüli
                 beszerzéseknél
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
@@ -67150,11 +67155,13 @@ modelo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.help
+              help: Adja össze a Közösségen belüli, általános adókulcsú termékbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli termékbeszerzések adóalapja általános kulcson,
                 kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.help
+              help: Adja össze a Közösségen belüli, kedvezményes adókulcsú termékbeszerzések
+                adóalapját, függetlenül az egyes ügyletekre alkalmazott százaléktól.
               label: Közösségen belüli termékbeszerzések adóalapja kedvezményes kulcson,
                 kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
@@ -67162,11 +67169,13 @@ modelo:
               label: Közösségen belüli termékbeszerzések adóalapja szupercsökkentett
                 kulcson, kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.help
+              help: Adja össze a Közösségen belüli, 0 %-os adókulccsal adózó termékbeszerzések
+                adóalapját.
               label: Közösségen belüli termékbeszerzések adóalapja 0%-os kulcson -
                 éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.help
+              help: Vallja be a Közösségen belüli, 0 %-os adókulccsal adózó termékbeszerzések
+                áfaösszegét.
               label: Közösségen belüli termékbeszerzések ÁFA összege 0%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
@@ -67174,11 +67183,13 @@ modelo:
               label: Közösségen belüli termékbeszerzések adóalapja 10%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.help
+              help: Vallja be a Közösségen belüli, 10 %-os adókulccsal adózó termékbeszerzések
+                áfaösszegét.
               label: Közösségen belüli termékbeszerzések ÁFA összege 10%-os kulcson
                 - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.help
+              help: Adja össze a Közösségen belüli, 2 %-os adókulccsal adózó termékbeszerzések
+                adóalapját.
               label: Közösségen belüli termékbeszerzések adóalapja 2%-os kulcson -
                 éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
@@ -67840,10 +67851,15 @@ profile:
       attribution_entity_socios:
         base_imponible_assigned:
           label: Tagra jutó adóalap
+        country_of_residence:
+          label: Illetőség szerinti ország (csak állandó telephely nélküli külföldi
+            illetőségű esetén)
         name:
           label: Tag neve
         nif:
           label: Tag NIF-je
+        participe_clave:
+          label: Tagsági típus kódja
         role:
           label: Tagi szerepkör
         share_pct:

@@ -343,7 +343,10 @@ adapters:
       session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
         la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
         a intentar.
-      submitted_file_layout_parse_failed: 'No s''ha pogut llegir el fitxer presentat amb el disseny de registre oficial del model, de manera que no s''ha recuperat cap valor de casella. El disseny i el fitxer presentat no coincideixen en quins registres conté el fitxer.'
+      submitted_file_layout_parse_failed: No s'ha pogut llegir el fitxer presentat
+        amb el disseny de registre oficial del model, de manera que no s'ha recuperat
+        cap valor de casella. El disseny i el fitxer presentat no coincideixen en
+        quins registres conté el fitxer.
 aggregation:
   grouping:
     errors:
@@ -6544,6 +6547,8 @@ errors:
     fail_llm_provider: El proveïdor del model de llenguatge ha retornat un error irrecuperable.
     fail_llm_rate_limit: El proveïdor del model de llenguatge ha rebutjat la sol·licitud
       per límit d'ús. Espera uns minuts i torna-ho a provar.
+    fail_llm_transient_transport: La petició no ha arribat al motor del model de llenguatge
+      i s'ha exhaurit el pressupost de reintents.
     fail_manuals_manual_parse: Un registre de manual no ha superat la validació de
       l'esquema.
     fail_mcp_launch: No s'ha pogut iniciar el servidor MCP.
@@ -7050,6 +7055,8 @@ errors:
       indicat.
     refused_live_verify_observation_not_found: No existeix cap observació de verificació
       amb l'identificador indicat.
+    refused_llm_busy: Aquest equip ja executa el màxim configurat de peticions al
+      model de llenguatge en local.
     refused_llm_config: La configuració del client de model de llenguatge no és vàlida
       o està incompleta.
     refused_llm_consent: S'ha rebutjat la lectura del document fora de l'equip perquè
@@ -7190,7 +7197,6 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
-    refused_llm_busy: 'Aquest equip ja executa el màxim configurat de peticions al model de llenguatge en local.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -65450,7 +65456,8 @@ modelo:
             help: null
             label: Exercici fiscal de l'autoliquidació
           iva-base-autorepercutida-intracomunitaria-devengado:
-            help: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.help
+            help: Suma la base imposable autorepercutida meritada en adquisicions
+              intracomunitàries.
             label: Base imposable autorepercutida meritada en adquisicions intracomunitàries
           iva-compensacion-aplicada-periodo:
             help: null
@@ -66367,7 +66374,8 @@ modelo:
                 béns i serveis.
               label: IVA autorepercutit meritat en adquisicions intracomunitàries
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck.help
+              help: Suma la base imposable autorepercutida meritada en adquisicions
+                intracomunitàries.
               label: Base imposable autorepercutida meritada en adquisicions intracomunitàries
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
               help: Quotes pendents de períodes anteriors aplicades en aquest període.
@@ -67032,11 +67040,15 @@ modelo:
               help: null
               label: Tipus de declaració (original / substitutiva / complementària)
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns al tipus general, sigui quin sigui el percentatge aplicat a cada
+                operació.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 general, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns al tipus reduït, sigui quin sigui el percentatge aplicat a cada
+                operació.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 reduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
@@ -67044,11 +67056,13 @@ modelo:
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 superreduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns gravades al tipus del 0 %.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                béns gravades al tipus del 0 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
@@ -67056,11 +67070,13 @@ modelo:
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.help
+              help: Declara la quota d'IVA de les adquisicions intracomunitàries de
+                béns gravades al tipus del 10 %.
               label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
                 del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.help
+              help: Suma la base imposable de les adquisicions intracomunitàries de
+                béns gravades al tipus del 2 %.
               label: Base imposable d'adquisicions intracomunitàries de béns al tipus
                 del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
@@ -67709,10 +67725,14 @@ profile:
       attribution_entity_socios:
         base_imponible_assigned:
           label: Base imposable atribuïda al soci
+        country_of_residence:
+          label: País de residència (només no resident sense establiment permanent)
         name:
           label: Nom del soci
         nif:
           label: NIF del soci
+        participe_clave:
+          label: Clau tipus de partícip
         role:
           label: Paper del membre
         share_pct:

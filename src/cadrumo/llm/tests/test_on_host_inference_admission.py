@@ -188,10 +188,14 @@ def test_both_concurrent_requests_proceed_when_the_bound_permits_two(tmp_path: P
     """
     runtime = _HeldRuntime()
     with _serve_held_ollama(runtime) as endpoint, override_settings(cadrumo_llm_ollama_chat_url=endpoint):
-        client = _client(tmp_path, concurrency=2)
+        # One client per concurrent caller, each with its own response cache --
+        # the production shape, and it keeps this case measuring admission
+        # rather than two threads writing one cache partition at once.
+        client = _client(tmp_path / "first", concurrency=2)
+        second_client = _client(tmp_path / "second", concurrency=2)
         first_thread, first_outcome = _run_in_thread(client, "first")
         assert runtime.arrived.get(timeout=_SERVER_WAIT_S) == "first"
-        second_thread, second_outcome = _run_in_thread(client, "second")
+        second_thread, second_outcome = _run_in_thread(second_client, "second")
         assert runtime.arrived.get(timeout=_SERVER_WAIT_S) == "second"
 
         runtime.release.set()
@@ -232,18 +236,23 @@ def test_a_failed_dispatch_gives_its_slot_back(tmp_path: Path) -> None:
     the symptom (everything is busy, nothing is running) points nowhere near the
     release path.
     """
+    from .._client import _on_host_inference_arena
+
     runtime = _HeldRuntime()
     runtime.status = HTTPStatus.SERVICE_UNAVAILABLE
     runtime.release.set()
     with _serve_held_ollama(runtime) as endpoint, override_settings(cadrumo_llm_ollama_chat_url=endpoint):
         client = _client(tmp_path, concurrency=1)
+        arena = _on_host_inference_arena(client.settings)
         with pytest.raises(LLMProviderError):
             asyncio.run(client.complete(LLMRequest(prompt="doomed")))
+        assert arena.held == 0
 
         runtime.status = HTTPStatus.OK
         response = asyncio.run(client.complete(LLMRequest(prompt="after")))
 
     assert response.text == "local completion"
+    assert arena.held == 0
 
 
 def test_an_off_host_provider_does_not_occupy_an_on_host_slot(tmp_path: Path) -> None:

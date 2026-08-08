@@ -18,6 +18,18 @@ ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
 IRPF_INCOME_CATEGORIES_PATH = "taxpayer_type.irpf_income_categories"
 IVA_REGIME_PATH = "iva.regime"
 
+ATRIBUCION_SOCIOS_SECTION = "attribution_entity_socios"
+PARTICIPE_CLAVE_FIELD = "participe_clave"
+SOCIO_COUNTRY_FIELD = "country_of_residence"
+#: The one clave whose Modelo 184 record carries a country at positions 79-80.
+#:
+#: The other two claves -- residente, and no residente CON establecimiento
+#: permanente -- require BLANCOS there, so the country is not merely optional
+#: for them: the layout prohibits it. Both directions are enforced, because a
+#: rule that only asks for the value when it is due leaves the prohibited case
+#: to whatever the operator typed.
+PARTICIPE_CLAVE_BEARING_COUNTRY = "2"
+
 
 def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[str, ...]:
     """Return profile paths conditionally required by declared taxpayer facts.
@@ -44,6 +56,60 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
 def conditional_profile_missing_required(values: Mapping[str, object]) -> tuple[str, ...]:
     """Return conditionally required profile paths absent from ``values``."""
     return tuple(path for path in conditional_profile_required_paths(values) if not _has_value(values, path))
+
+
+def _socio_row_indices(values: Mapping[str, object]) -> tuple[str, ...]:
+    """Return the declared attribution-socio row indices, in declaration order."""
+    prefix = f"{ATRIBUCION_SOCIOS_SECTION}."
+    seen: dict[str, None] = {}
+    for path in values:
+        if not path.startswith(prefix):
+            continue
+        index = path[len(prefix) :].split(".", 1)[0]
+        if index.isdigit():
+            seen.setdefault(index, None)
+    return tuple(seen)
+
+
+def atribucion_socio_missing_country_paths(values: Mapping[str, object]) -> tuple[str, ...]:
+    """Return socio country paths the clave requires but the profile omits.
+
+    Modelo 184 fills positions 79-80 of the declarado record only for clave 2,
+    so a socio declared a non-resident without a permanent establishment owes a
+    country and one declared under any other clave does not.
+    """
+    missing: list[str] = []
+    for index in _socio_row_indices(values):
+        clave = _token(values.get(f"{ATRIBUCION_SOCIOS_SECTION}.{index}.{PARTICIPE_CLAVE_FIELD}"))
+        if clave != PARTICIPE_CLAVE_BEARING_COUNTRY:
+            continue
+        path = f"{ATRIBUCION_SOCIOS_SECTION}.{index}.{SOCIO_COUNTRY_FIELD}"
+        if not _has_value(values, path):
+            missing.append(path)
+    return tuple(missing)
+
+
+def atribucion_socio_forbidden_country_paths(values: Mapping[str, object]) -> tuple[str, ...]:
+    """Return socio country paths carrying a value the record layout prohibits.
+
+    The direction a conditional rule usually omits. Claves 1 and 3 require
+    BLANCOS at positions 79-80, so a country stated under either is not a
+    harmless extra fact: it is a value the layout forbids, and it was the shape
+    a Spanish default produced on the majority case.
+
+    A row that declares no clave yet is not judged here. The clave is a required
+    field and its own absence is reported as such; refusing the country as well
+    would report one unfinished row twice and name the wrong field second.
+    """
+    forbidden: list[str] = []
+    for index in _socio_row_indices(values):
+        clave = _token(values.get(f"{ATRIBUCION_SOCIOS_SECTION}.{index}.{PARTICIPE_CLAVE_FIELD}"))
+        if not clave or clave == PARTICIPE_CLAVE_BEARING_COUNTRY:
+            continue
+        path = f"{ATRIBUCION_SOCIOS_SECTION}.{index}.{SOCIO_COUNTRY_FIELD}"
+        if _has_value(values, path):
+            forbidden.append(path)
+    return tuple(forbidden)
 
 
 def iva_regime_required(values: Mapping[str, object]) -> bool:
@@ -192,8 +258,11 @@ __all__ = [
     "FISCAL_RESIDENCY_PATH",
     "IRPF_INCOME_CATEGORIES_PATH",
     "IVA_REGIME_PATH",
+    "PARTICIPE_CLAVE_BEARING_COUNTRY",
     "REPRESENTANTE_FISCAL_NIF_PATH",
     "REPRESENTANTE_FISCAL_NOMBRE_PATH",
+    "atribucion_socio_forbidden_country_paths",
+    "atribucion_socio_missing_country_paths",
     "conditional_profile_missing_required",
     "conditional_profile_required_paths",
     "iva_regime_required",

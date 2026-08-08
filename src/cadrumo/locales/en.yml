@@ -305,7 +305,9 @@ adapters:
         failed.
       session_expired_nav_failed: The AEAT declarations register did not load; your
         session has likely expired. Run 'aeat config auth test' and retry.
-      submitted_file_layout_parse_failed: 'The submitted file could not be read through the modelo''s official record layout, so no box value was recovered from it. The layout and the filed file disagree about which records the file carries.'
+      submitted_file_layout_parse_failed: The submitted file could not be read through
+        the modelo's official record layout, so no box value was recovered from it.
+        The layout and the filed file disagree about which records the file carries.
 aggregation:
   grouping:
     errors:
@@ -6128,6 +6130,8 @@ errors:
     fail_llm_provider: The language-model provider returned an unrecoverable error.
     fail_llm_rate_limit: The language-model provider rejected the request due to rate
       limits. Wait a few minutes and try again.
+    fail_llm_transient_transport: The request did not reach the language-model runtime
+      and the retry budget was exhausted.
     fail_manuals_manual_parse: A manual record failed schema validation.
     fail_mcp_launch: The MCP server could not be launched.
     fail_modelo_calculation_revision_persistence: The calculation-revision catalogue
@@ -6599,6 +6603,8 @@ errors:
     refused_live_portal_not_found: No AEAT portal exists with the identifier provided.
     refused_live_verify_observation_not_found: No verification observation exists
       with the identifier provided.
+    refused_llm_busy: This machine is already running its configured maximum of on-host
+      language-model requests.
     refused_llm_config: The language-model client configuration is invalid or incomplete.
     refused_llm_consent: Reading this document off-host was refused because consent
       for off-host transmission was not granted.
@@ -6732,7 +6738,6 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
-    refused_llm_busy: 'This machine is already running its configured maximum of on-host language-model requests.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -65028,7 +65033,8 @@ modelo:
             help: null
             label: Self-assessment tax year
           iva-base-autorepercutida-intracomunitaria-devengado:
-            help: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.help
+            help: Add up the self-charged taxable base accrued on intra-Community
+              acquisitions.
             label: Taxable base of accrued reverse-charge VAT on intra-Community acquisitions
           iva-compensacion-aplicada-periodo:
             help: null
@@ -65923,7 +65929,8 @@ modelo:
                 and services.
               label: Accrued reverse-charge VAT on intra-Community acquisitions
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: modelo.schema.303.revision.2023-y-siguientes.casilla.x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck.help
+              help: Add up the self-charged taxable base accrued on intra-Community
+                acquisitions.
               label: Taxable base of accrued reverse-charge VAT on intra-Community
                 acquisitions
             x-d5r62bj3dtmn0pbeedgm6qbfdomm2s3cd5hm2p315lo6asj9dti6u:
@@ -66583,7 +66590,9 @@ modelo:
               help: null
               label: Return type (original / substitute / supplementary)
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.help
+              help: Add up the taxable base of intra-Community acquisitions of goods
+                in the general rate tier, whatever percentage each transaction was
+                taxed at.
               label: Taxable base of intra-Community acquisitions of goods at the
                 general rate, no rate breakdown - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
@@ -66591,7 +66600,9 @@ modelo:
               label: Taxable base of intra-Community acquisitions of goods at the
                 reduced rate, no rate breakdown - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.help
+              help: Add up the taxable base of intra-Community acquisitions of goods
+                in the super-reduced rate tier, whatever percentage each transaction
+                was taxed at.
               label: Taxable base of intra-Community acquisitions of goods at the
                 super-reduced rate, no rate breakdown - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
@@ -66599,19 +66610,23 @@ modelo:
               label: Taxable base of intra-Community acquisitions of goods at the
                 0% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.help
+              help: Declare the VAT amount on intra-Community acquisitions of goods
+                taxed at 0 %.
               label: VAT amount of intra-Community acquisitions of goods at the 0%
                 rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.help
+              help: Add up the taxable base of intra-Community acquisitions of goods
+                taxed at 10 %.
               label: Taxable base of intra-Community acquisitions of goods at the
                 10% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.help
+              help: Declare the VAT amount on intra-Community acquisitions of goods
+                taxed at 10 %.
               label: VAT amount of intra-Community acquisitions of goods at the 10%
                 rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.help
+              help: Add up the taxable base of intra-Community acquisitions of goods
+                taxed at 2 %.
               label: Taxable base of intra-Community acquisitions of goods at the
                 2% rate - annual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
@@ -67248,10 +67263,15 @@ profile:
       attribution_entity_socios:
         base_imponible_assigned:
           label: Assigned taxable base
+        country_of_residence:
+          label: Country of residence (non-resident without permanent establishment
+            only)
         name:
           label: Member name
         nif:
           label: Member NIF
+        participe_clave:
+          label: Type of member (Modelo 184 clave)
         role:
           label: Member role
         share_pct:

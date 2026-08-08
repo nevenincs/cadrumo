@@ -45,6 +45,7 @@ from ._modelo_cli_support import OutputLanguageOpt
 from ._modelo_payloads import WorkCalculateResult
 from ._modelo_rendering import (
     advisory_notice,
+    source_diagnostic_notice,
     calculation_revision_lines,
     calculation_revision_payload,
     calculation_revision_state_label,
@@ -631,16 +632,7 @@ def _work_calculate_source_advisory_output(
     if not diagnostics:
         return [], []
     notices = [
-        advisory_notice(
-            "modelo.work.calculate.source_advisory",
-            diagnostic.message,
-            suggestion=diagnostic.remedy,
-            context={
-                "reason": str(diagnostic.reason),
-                "source_kind": diagnostic.source_kind,
-                **({"resolver_id": diagnostic.resolver_id} if diagnostic.resolver_id else {}),
-            },
-        )
+        source_diagnostic_notice(diagnostic, code="modelo.work.calculate.source_advisory")
         for diagnostic in diagnostics
     ]
     lines = [

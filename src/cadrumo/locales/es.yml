@@ -344,7 +344,10 @@ adapters:
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
-      submitted_file_layout_parse_failed: 'No se pudo leer el fichero presentado con el diseño de registro oficial del modelo, así que no se recuperó ningún valor de casilla. El diseño y el fichero presentado no coinciden en qué registros contiene el fichero.'
+      submitted_file_layout_parse_failed: No se pudo leer el fichero presentado con
+        el diseño de registro oficial del modelo, así que no se recuperó ningún valor
+        de casilla. El diseño y el fichero presentado no coinciden en qué registros
+        contiene el fichero.
 aggregation:
   grouping:
     errors:
@@ -6595,6 +6598,8 @@ errors:
     fail_llm_provider: El proveedor del modelo de lenguaje devolvió un error irrecuperable.
     fail_llm_rate_limit: El proveedor del modelo de lenguaje rechazó la solicitud
       por límite de uso. Espera unos minutos y vuelve a intentarlo.
+    fail_llm_transient_transport: La petición no llegó al motor del modelo de lenguaje
+      y se agotó el presupuesto de reintentos.
     fail_manuals_manual_parse: Un registro de manual no superó la validación del esquema.
     fail_mcp_launch: No se pudo iniciar el servidor MCP.
     fail_modelo_calculation_revision_persistence: No se pudo guardar o leer el catálogo
@@ -7097,6 +7102,8 @@ errors:
       indicado.
     refused_live_verify_observation_not_found: No existe ninguna observación de verificación
       con el identificador indicado.
+    refused_llm_busy: Este equipo ya ejecuta el máximo configurado de peticiones al
+      modelo de lenguaje en local.
     refused_llm_config: La configuración del cliente de modelo de lenguaje no es válida
       o está incompleta.
     refused_llm_consent: Se ha rechazado la lectura del documento fuera del equipo
@@ -7239,7 +7246,6 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    refused_llm_busy: 'Este equipo ya ejecuta el máximo configurado de peticiones al modelo de lenguaje en local.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -67786,7 +67792,8 @@ modelo:
             help: null
             label: Ejercicio al que se refiere la autoliquidacion
           iva-base-autorepercutida-intracomunitaria-devengado:
-            help: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.help
+            help: Suma la base imponible autorrepercutida devengada en adquisiciones
+              intracomunitarias.
             label: Base imponible autorepercutida devengada en adquisiciones intracomunitarias
               (LIVA art 13 + art 15 + art 84.Uno.2; oficial casillas 10/11)
           iva-compensacion-aplicada-periodo:
@@ -69330,39 +69337,51 @@ modelo:
               help: null
               label: Tipo de declaracion (originaria / sustitutiva / complementaria)
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de bienes al tipo general, sea cual sea el porcentaje aplicado a cada
+                operación.
               label: Base imponible de adquisiciones intracomunitarias de bienes al
                 tipo general, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de bienes al tipo reducido, sea cual sea el porcentaje aplicado a
+                cada operación.
               label: Base imponible de adquisiciones intracomunitarias de bienes al
                 tipo reducido, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de bienes al tipo super-reducido, sea cual sea el porcentaje aplicado
+                a cada operación.
               label: Base imponible de adquisiciones intracomunitarias de bienes al
                 tipo superreducido, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de bienes gravadas al tipo del 0 %.
               label: Base imponible de adquisiciones intracomunitarias de bienes al
                 tipo del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.help
+              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
+                de bienes gravadas al tipo del 0 %.
               label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
                 del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de bienes gravadas al tipo del 10 %.
               label: Base imponible de adquisiciones intracomunitarias de bienes al
                 tipo del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.help
+              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
+                de bienes gravadas al tipo del 10 %.
               label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
                 del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.help
+              help: Suma la base imponible de las adquisiciones intracomunitarias
+                de bienes gravadas al tipo del 2 %.
               label: Base imponible de adquisiciones intracomunitarias de bienes al
                 tipo del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.help
+              help: Declara la cuota de IVA de las adquisiciones intracomunitarias
+                de bienes gravadas al tipo del 2 %.
               label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
                 del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
@@ -70041,10 +70060,14 @@ profile:
       attribution_entity_socios:
         base_imponible_assigned:
           label: Base imponible atribuida al socio
+        country_of_residence:
+          label: País de residencia (sólo no residente sin establecimiento permanente)
         name:
           label: Nombre del socio
         nif:
           label: NIF del socio
+        participe_clave:
+          label: Clave tipo de partícipe
         role:
           label: Papel del miembro
         share_pct:

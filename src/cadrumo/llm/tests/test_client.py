@@ -177,7 +177,9 @@ def test_client_records_run_telemetry_on_provider_failure(tmp_path: Path) -> Non
     records = run_recorder.load_records()
     assert len(records) == 1
     assert records[0].succeeded is False
-    assert records[0].error_kind == "LLMProviderError"
+    # A 5xx is the transient half of the provider boundary, so the recorded kind
+    # names the class the retry policy actually classified on.
+    assert records[0].error_kind == "LLMTransientTransportError"
 
 
 def test_secretstr_masks_llm_keys_in_settings_repr() -> None:

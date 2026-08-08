@@ -135,6 +135,22 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.FAIL,
             message_key="errors.fail.fail_llm_provider",
             default_suggestion=None,
+            # The permanent half of the provider boundary: a 4xx, or a 2xx whose
+            # body does not match the provider schema. The identical request
+            # fails identically forever, so retrying it spends the budget and
+            # delays the real refusal. The transient half is
+            # LLMTransientTransportError below, which is retryable.
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.llm._errors.LLMTransientTransportError",
+        ErrorCode(
+            code="FAIL_LLM_TRANSIENT_TRANSPORT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_llm_transient_transport",
+            default_suggestion=None,
             retryable=True,
             runbook_id=None,
         ),
@@ -189,7 +205,12 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_LLM_BUSY",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_llm_busy",
-            default_suggestion=None,
+            # The next step is to see WHAT is running before retrying: the check
+            # renders the resident set and the contention snapshot, which
+            # distinguishes "my own read is still going" from "a peer process
+            # holds the device". Telling the operator to simply retry would
+            # misdirect in the second case, and the agent-operator follows it.
+            default_suggestion="aeat config check",
             # Not retryable by the transport: occupancy does not decay on a
             # timer, it decays when the running read finishes, and an automatic
             # retry would spin against a full arena inside its own budget.

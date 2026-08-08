@@ -9,6 +9,8 @@ Coordinates :class:`~adapters.outbound.llm.LLMRequest` inputs,
 
 from __future__ import annotations
 
+import asyncio
+import secrets
 import threading
 import time
 from collections.abc import Iterator
@@ -17,9 +19,10 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from pydantic import SecretStr
+from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 from ..core.config import Settings
+from ..core.errors import get_registered_error_code
 from ..core.hashing import content_hash_hex
 from ..core.i18n import tr
 from ..core.logging import get_logger
@@ -49,7 +52,7 @@ from ._providers import (
     OpenAIAdapter,
     ProviderRequest,
 )
-from ._providers.base import _ProviderAdapter
+from ._providers.base import ProviderCompletion, _ProviderAdapter
 
 # AnthropicAdapter stays lazy here so provider construction remains behind the
 # optional-extra guard in _build_adapter.
@@ -62,6 +65,100 @@ _EVIDENCE_CONSENT_DISPATCH_REFUSAL_LOCALE_KEY = "llm.evidence.consent.dispatch_r
 def _elapsed_ms(monotonic_start: float) -> int:
     """Return the whole-millisecond elapsed duration since ``monotonic_start``."""
     return max(0, round((time.monotonic() - monotonic_start) * 1000))
+
+
+def transport_retry_permitted(exc: BaseException) -> bool:
+    """Whether ``exc`` may be retried by re-sending the identical request.
+
+    **Derived from the error taxonomy, never listed here.** Every
+    :class:`~core.errors.CadrumoError` subclass is required to carry a
+    registered :class:`~core.errors.ErrorCode`, and that record already declares
+    ``retryable`` for the operator-facing envelope. Reading the answer from
+    there means a new failure class cannot be silently omitted from a retry set:
+    it cannot exist at all without declaring the answer, because the registry
+    bind refuses an unregistered subclass at class-creation time. A hand-kept
+    set is the shape that has already shipped in this repository carrying half
+    its members.
+
+    Anything that is not a registered error is NOT retryable. That is the
+    fail-closed direction: an exception leaking from a dependency has made no
+    statement about whether re-sending is safe, and inventing one for it is how
+    a contention or consent refusal would end up retried by accident.
+
+    Args:
+        exc: The exception raised by the provider adapter.
+
+    Returns:
+        True only when the taxonomy declares this failure class retryable.
+    """
+    try:
+        return get_registered_error_code(exc).retryable
+    except ValueError:
+        # An unregistered exception type. Not a retry decision to guess at.
+        return False
+
+
+class LLMRetryPolicy(BaseModel):
+    """The typed, bounded retry policy applied to one transport dispatch.
+
+    Data on the client rather than behaviour scattered through the adapters, so
+    the answer to "how many times, how long, and for which failures" is one
+    readable record instead of four vendor-specific loops.
+
+    **Scoped by the taxonomy, not by this model.** Which failures are eligible
+    is :func:`transport_retry_permitted`'s answer, read from the registered
+    error code; this model only decides how often and how long. That separation
+    is deliberate: the eligibility question has exactly one right answer for the
+    whole process, while the timing is a deployment tuning knob.
+
+    Attributes:
+        max_attempts: Total attempts including the first. One disables retrying.
+        initial_backoff_s: The first backoff, doubling per subsequent attempt.
+        max_backoff_s: Ceiling on a single backoff, before jitter.
+        budget_s: Total wall-clock ceiling across every attempt and every wait.
+            A bounded budget, not merely a bounded count: a retry schedule whose
+            waits grow can otherwise outlive the operator's patience while
+            technically respecting its attempt limit.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True)
+
+    max_attempts: int = Field(default=3, ge=1)
+    initial_backoff_s: float = Field(default=0.5, gt=0.0)
+    max_backoff_s: float = Field(default=8.0, gt=0.0)
+    budget_s: float = Field(default=30.0, gt=0.0)
+
+    def backoff_for(self, attempt: int, *, retry_after_s: float | None = None) -> float:
+        """Return the wait before the attempt following ``attempt``.
+
+        Exponential from :attr:`initial_backoff_s`, capped at
+        :attr:`max_backoff_s`, then jittered into the upper half of that
+        interval. Jitter is not decoration: without it, a batch that failed
+        together retries together, and the synchronised burst is itself a
+        plausible cause of the next failure.
+
+        A server-supplied ``Retry-After`` wins whenever it asks for LONGER than
+        the computed backoff. It is never allowed to shorten the wait, because a
+        vendor's hint about its own rate window says nothing about this
+        machine's recovery.
+
+        Args:
+            attempt: The 1-based number of the attempt that just failed.
+            retry_after_s: A server-supplied delay hint, when the failure
+                carried one.
+
+        Returns:
+            Seconds to wait before the next attempt.
+        """
+        exponential = self.initial_backoff_s * (2 ** (attempt - 1))
+        capped = min(exponential, self.max_backoff_s)
+        # Full-jitter in the upper half: still spreads a synchronised batch,
+        # while never collapsing the backoff toward zero the way [0, capped)
+        # would on an unlucky draw.
+        jittered = capped * (0.5 + secrets.randbelow(501) / 1000)
+        if retry_after_s is not None:
+            return max(jittered, retry_after_s)
+        return jittered
 
 
 class _OnHostInferenceArena:
@@ -190,6 +287,10 @@ class LLMClient:
             :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder` override.
         prompt_registry: Optional
             :class:`~adapters.outbound.llm.PromptRegistry` override.
+        retry_policy: Optional :class:`LLMRetryPolicy` override governing how
+            often and how long a transient transport failure is re-sent. Which
+            failures qualify is not tunable here -- that is the error taxonomy's
+            answer, read through :func:`transport_retry_permitted`.
         caller: Stable caller identifier recorded in usage logs.
         prompt_id: Stable prompt identifier recorded in usage logs.
     """
@@ -203,6 +304,7 @@ class LLMClient:
         run_telemetry_recorder: LLMRunTelemetryRecorder | None = None,
         consent_ledger: EvidenceConsentLedger | None = None,
         prompt_registry: PromptRegistry | None = None,
+        retry_policy: LLMRetryPolicy | None = None,
         caller: str = "cadrumo.llm.client",
         prompt_id: str = "adhoc",
     ) -> None:
@@ -229,6 +331,7 @@ class LLMClient:
         # store, so it has no prune to call.
         self.consent_ledger = consent_ledger or EvidenceConsentLedger()
         self.prompt_registry = prompt_registry or PromptRegistry.seeded()
+        self.retry_policy = retry_policy or LLMRetryPolicy()
         self.caller = caller
         self.prompt_id = prompt_id
         self._sweep_retention_stores()
@@ -298,7 +401,7 @@ class LLMClient:
         run_clock_start = time.monotonic()
         try:
             with self._on_host_admission(provider):
-                completion = await adapter.complete(provider_request)
+                completion = await self._complete_with_retries(adapter, provider_request)
         except Exception as exc:  # LLM provider adapters surface heterogeneous exceptions; log+re-raise here
             _LOGGER.error(
                 "llm request failed provider=%s model=%s request_id=%s",
@@ -350,6 +453,61 @@ class LLMClient:
             completion.output_tokens,
         )
         return response
+
+    async def _complete_with_retries(
+        self,
+        adapter: _ProviderAdapter,
+        provider_request: ProviderRequest,
+    ) -> ProviderCompletion:
+        """Run one dispatch, re-sending it only while the taxonomy permits.
+
+        **Inside the admission slot, not around it.** A retrying request keeps
+        its on-host slot across its waits, which is the safe direction:
+        releasing it would let a second request take the arena and turn this
+        one's next attempt into a busy refusal -- converting a transient
+        failure into a different refusal for no reason. The bounded budget is
+        what keeps holding the slot honest.
+
+        The budget is checked BEFORE sleeping, so a wait that would outlive the
+        budget is not taken at all: the caller gets the real failure at the
+        moment the budget is spent rather than after one last pointless pause.
+
+        Args:
+            adapter: The resolved provider adapter.
+            provider_request: The normalized request, re-sent unchanged on every
+                attempt -- an attempt that altered the request would be a
+                different question, and its success would not mean the first one
+                would have worked.
+
+        Returns:
+            The provider completion from whichever attempt succeeded.
+
+        Raises:
+            Exception: The final attempt's failure, re-raised unchanged, so a
+                caller still sees the typed refusal it would have seen with no
+                retry policy at all.
+        """
+        policy = self.retry_policy
+        started = time.monotonic()
+        attempt = 1
+        while True:
+            try:
+                return await adapter.complete(provider_request)
+            except Exception as exc:  # classification is the taxonomy's job, not this loop's
+                if attempt >= policy.max_attempts or not transport_retry_permitted(exc):
+                    raise
+                delay = policy.backoff_for(attempt, retry_after_s=getattr(exc, "retry_after_seconds", None))
+                if time.monotonic() - started + delay > policy.budget_s:
+                    raise
+                _LOGGER.info(
+                    "llm transport retry attempt=%d/%d after=%s in=%.2fs",
+                    attempt,
+                    policy.max_attempts,
+                    type(exc).__name__,
+                    delay,
+                )
+                await asyncio.sleep(delay)
+                attempt += 1
 
     @contextmanager
     def _on_host_admission(self, provider: LLMProvider) -> Iterator[None]:
