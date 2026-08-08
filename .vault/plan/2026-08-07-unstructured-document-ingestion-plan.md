@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:d7ade22808b965292773200976f40efc2cfbee76cb8ab12d87b0020d6d2b1fd1'
+body_hash: 'sha256:bdad4c9987948083bb51303cf3ec824cbf35b61cc221cfde0ba3169fc03787d0'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -298,6 +298,7 @@ Lands the review surface, the blocking-findings gate, assertion-shaped correctio
 - [x] `W09.P17.S147` - Build provenance envelopes on the structured projection, since it constructs none for any field at all, not the tax identifier, not the regime legend and not the postal codes, so a value read exactly from a machine-readable document reaches the operator with no origin while a transcribed value carries a full envelope. Path-wide rather than specific to any one field, and the reason the postal carry could not stamp an origin without inventing one; `src/cadrumo/application/ledger`.
 - [ ] `W09.P17.S148` - Decide whether the printed country vocabulary should carry fourth-language exonyms, since it holds Spanish, each country own official names and English, so an Italian supplier printing Germania or a French one printing Allemagne is a known uncovered case on a real population. Table-only addition needing no code change, so this is a scope decision about how many languages stay reviewable rather than an oversight. Absence degrades safely to not-established, which is why it was left rather than guessed; `src/cadrumo/_data/registry`.
 - [ ] `W09.P17.S149` - Correct the campaign note asserting that no production site constructs an exact-structured field origin, since the core origin enum already declares that member and the grounded-reading accepted-origin set already references it, so the gap was a missing PRODUCER rather than a missing member. Read as a missing member the note sends a lane to the taxonomy owner for a change nobody needs, and one lane nearly took that route before measuring; `src/cadrumo/application/ledger`.
+- [ ] `W09.P17.S150` - Coordinator probe result recorded for the ladder assembly, measured against HEAD rather than reasoned: the three landed rungs compose correctly under the first-decisive-rung reading. A printed Espana yields no scope but the code ES, which triggers the postal rung and resolves Las Palmas to Canarias and Madrid to the mainland. A printed France with a Paris postal code resolves through the name rung to EU member and never consults the postal rung at all, so the five-digit collision cannot fire. Espana with no readable postal exhausts to nothing rather than the mainland, and an absent country name with a Spanish-looking postal also exhausts. The assembly row therefore starts from a proven composition rather than a design, and any implementation that fails these six cases has departed from it; `src/cadrumo/application/ledger`.
 
 ## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
 
