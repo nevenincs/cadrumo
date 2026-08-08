@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:5e96d4067b7945bfb25495d32ca929ea6513484216b7b6f2542b8b3c1a4537fb'
+body_hash: 'sha256:92f6ac71cb9414fcee10aae098b63ff2fe399711cc428213dc6ef28f449cc126'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -349,7 +349,7 @@ Lands the review surface, the blocking-findings gate, assertion-shaped correctio
 - [ ] `W09.P17.S198` - Measure what fraction of real documents clear the co-location bar, since the resolver only fires when the reader supplied role evidence for BOTH identities and both excerpts occur in the transcription, and on a document quoting one heading or none every address value stays unresolved and falls back to the interim advisory. The implementing lane declined to guess, having no labelled sample of model-quoted role evidence to measure against, and the failure direction is safe either way because unresolved keeps the warning. But the resolver landing is not the same as the hole closing, and only a measurement distinguishes them. Needs an authored ground truth rather than a derived one, since a coverage figure computed from the same reader whose output is being scored is not evidence; `src/cadrumo/application/ledger, dev`.
 - [ ] `W09.P17.S199` - Give the operator a verb to answer a counterparty establishment question, since the recording function has no production caller and there is no surface to persist a counterparty-level answer, so the once-per-counterparty loop the fourth amendment designed is not closed. That is why exhaustion on the confirm path SURFACES a review item rather than refusing: refusing today would make every bare-identifier domestic invoice permanently unconfirmable rather than asking once, and a refusal nobody can answer is not a review gate. Closing this is the prerequisite for making exhaustion refuse, and the interim is written into the module own prose rather than left implicit; `src/cadrumo/entrypoints/cli, src/cadrumo/application/ledger`.
 - [x] `W09.P17.S200` - Map UNSUPPORTED_IVA_RATE in both total preflight mappings so an unsupported-year rate surfaces an operator-facing issue instead of raising KeyError, since both are bare dict lookups total by construction and the member ships unmapped; `src/cadrumo/application/ledger/_preflight.py`.
-- [ ] `W09.P17.S201` - Make both preflight issue mappings total by construction against IvaLedgerAggregationIssueReason so a new enum member cannot ship unmapped, since two lanes renamed members of this one enum in a day and the first failure masked the second entirely; `src/cadrumo/application/ledger/_preflight.py`.
+- [x] `W09.P17.S201` - Make both preflight issue mappings total by construction against IvaLedgerAggregationIssueReason so a new enum member cannot ship unmapped, since two lanes renamed members of this one enum in a day and the first failure masked the second entirely; `src/cadrumo/application/ledger/_preflight.py`.
 - [x] `W09.P17.S202` - Finish the identification rename sweep the owning lane left open: the intracom preflight fixtures still express a counterparty COUNTRY where the check now reads an identification state, so they assert the wrong reason, and the four locale catalogues still carry the old domestic_counterparty_on_intra_community_transaction key with no new key present. Both need the owning lane's judgement, not a mechanical substitution; `src/cadrumo/application/ledger`.
 
 ## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
