@@ -699,6 +699,32 @@ def _resolve_available_relation_values(
     return resolved
 
 
+def _requirement_periods_are_datable(requirement: RegistryFoldRequirement) -> bool:
+    """Whether every source period of ``requirement`` can be positioned against a date.
+
+    The activity-start scoping that keeps the absent-bound-carry advisory honest
+    can only suppress a period it can place on a calendar: a non-calendar
+    instalment clave (1P/2P/3P) has no span and is documented as never suppressed.
+    For such a period the scoping cannot establish that the taxpayer HAD the
+    obligation, so the advisory must not claim they did — a sociedad whose activity
+    began after the first instalment window would otherwise be told a filing it
+    never owed is missing.
+
+    Silence is the fail-closed direction here, and deliberately so: it preserves
+    the prior behaviour for exactly the periods where the obligation is
+    undeterminable, rather than guessing.
+    """
+    for token in requirement.periods:
+        try:
+            period = Period.from_year_and_code(requirement.filing_year, token)
+        except Exception:
+            # A token that will not construct a Period is by definition undatable.
+            return False
+        if not period.has_date_span():
+            return False
+    return True
+
+
 def _absent_bound_carry_diagnostics(
     *,
     unresolved_relation_ids: frozenset[RelationId],
@@ -944,6 +970,7 @@ class RelationPrefillSourceResolver:
             and item.relation not in formula_relation_ids
             and item.relation in requirements_by_relation
             and requirements_by_relation[item.relation].source_modelo in taxpayer_filed_source_modelos
+            and _requirement_periods_are_datable(requirements_by_relation[item.relation])
             and relation_target_binding.get(item.relation) in declared_binding_ids
         )
         resolved_relation_values = {item.relation: item.value for item in resolved if item.value is not None}
