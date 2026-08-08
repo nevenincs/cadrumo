@@ -25,11 +25,7 @@ import pytest
 
 from ....core import LOCAL_TRANSPORT_LABEL, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from ....core.config import load_settings
-from ....llm import LLMProviderError
-from ....llm._invoice_field_grounding import (
-    ground_extracted_fields,
-    parse_invoice_extraction_response,
-)
+from ....llm import LLMProviderError, ground_extracted_fields, parse_invoice_extraction_response
 from .. import _evidence_draft as _router_module
 from .._document_transcription import DocumentTranscription, TranscriberIdentity
 from .._evidence import PurchaseInvoiceEvidenceInputError
