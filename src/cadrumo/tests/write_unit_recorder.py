@@ -30,6 +30,15 @@ unsatisfiable. Resolution can narrow silently underneath a proof that only
 checks for a pulse. When something changes how many statements a write costs,
 re-ask what every count here MEANS, not merely whether it still moves.
 
+The cheap check, worth applying to any gate and not just this one: ask what
+would have to change in the system UNDERNEATH it for its number to keep being
+produced while meaning something else. Here that change is "the storage layer
+batches", and nothing about it is visible from inside the gate. Both failures
+of this kind found so far shared a shape -- the assertion was true of the world
+and false of its own NAME. Neither was lying; the name promised a property the
+measurement had quietly stopped delivering, which is why neither was findable
+by reading the gate and both surfaced only when something else broke nearby.
+
 Standing hazard, unguarded on purpose. This recorder and
 ``test_secure_object_write_batching`` now encode OPPOSITE expectations of one
 funnel: that test asserts a batch collapses to a single ``INSERT``, while this
