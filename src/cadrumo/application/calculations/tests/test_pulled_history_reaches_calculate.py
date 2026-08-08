@@ -382,3 +382,20 @@ def test_pulled_history_and_no_history_profiles_compute_different_annual_credits
         "a zero credit would be indistinguishable from the legally valid zero a "
         "genuine no-activity filer produces, so the divergence must be strictly non-zero"
     )
+
+    # The divergence is CONSUMPTION, not a refusal that happened to yield a number.
+    # Three runtime conditions can refuse a pulled filing on the way in -- an
+    # incomplete extraction coverage, a non-canonical or ungrounded casilla, and a
+    # divergent revision stamp -- and each would leave the relation unresolved and
+    # named on this channel. A silent one would be indistinguishable from a clean
+    # carry if only the value were asserted, so the absence of the refusal is
+    # asserted separately from the presence of the value.
+    refusals = tuple(
+        diagnostic
+        for diagnostic in pulled_result.source_diagnostics
+        if diagnostic.relation_id == _M130_PAGOS_RELATION_ID
+    )
+    assert refusals == (), (
+        "the pulled-history pole must carry NO diagnostic for the M130 relation; a "
+        f"refusal here would mean the credit came from somewhere else. Got {refusals}"
+    )
