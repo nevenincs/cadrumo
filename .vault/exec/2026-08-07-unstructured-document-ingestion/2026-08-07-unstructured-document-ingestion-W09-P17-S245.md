@@ -174,12 +174,61 @@ what it emits. Until that lands, no combination should be called unreachable.
       275 distinct at test_classification_assembly.py:848   (the exhaustive sweep)
        12 distinct across domain rule-table tests           (candidates, denominator-limited)
 
+## The suite-independent denominator now exists
+
+The enumerator drives the assembly across the cross-product of its own inputs and
+collects what comes back, so what counts as emittable is a property of the producer
+rather than of whichever suite ran. Every axis is derived from its authority -- the
+enums themselves, and the bundled country vocabulary the scope resolver consults --
+because a hand-listed axis pins today's catalogue exactly as a hand-listed country
+list once did.
+
+Two axes are collapsed BY the producer's own gating rather than by judgement about
+the rule table. Country and postal are paired instead of crossed, since the postal
+half is consulted only where the country names Spain; and one country per distinct
+territorial scope is enough, since the assembly reads a country only through the
+scope it resolves to.
+
+**It found the previous denominator wrong by a factor of eighty-five, and that is
+the deliverable.** 52 harvested shapes against 4438 enumerated ones. 103 of the
+combinations the harvested run called unreachable are emittable -- false positives
+that a list of names would have sent someone to investigate.
+
+**What remains is 192, of which 177 are the exhaustive sweep** that exists to visit
+shapes the assembly may never produce. The residue is roughly fifteen domain
+rule-table tests, one combination each, now measured against a denominator that can
+be defended.
+
+**They are still not findings, and the reason is now narrow rather than fundamental.**
+The enumerated space is a subset of the true one: the collapsed axes are justified by
+the producer's gating, but justified is not proven, and a shape the collapse excludes
+would read as unreachable exactly as a real instance does. Closing that gap means
+proving each collapse cannot lose a shape, which is the next step rather than a
+caveat to attach to a list.
+
+## Verification, enumerator
+
+    assembly calls made        : 31488
+    calls that emitted criteria: 6874
+    DISTINCT EMITTABLE SHAPES  : 4438
+
+    harvested denominator      : 52 shapes
+    enumerated denominator     : 4438 shapes
+    asserted shapes            : 303
+    UNREACHABLE against enumerated: 192
+    cleared by the better denominator: 103
+      177 at test_classification_assembly.py:848   (the exhaustive sweep)
+
+The enumerator refuses to report at all if it emitted nothing, so a comparison can
+never be drawn against an empty denominator -- the control the harvesting instrument
+lacked, in the form the dead hook taught.
+
 ## Notes
 
 **This Step is NOT complete and the row stays open.** The anchor axis is finished,
-exhaustively and with controls. The category axis is instrumented but not concluded:
-the instrument needs a suite-independent denominator before any of its twelve
-candidates may be called findings. The relief axis is not started, and the export
+exhaustively and with controls. The category axis has its
+suite-independent denominator and roughly fifteen surviving candidates, which stay
+candidates until the enumerator's collapsed axes are proven lossless. The relief axis is not started, and the export
 axis produced a retracted claim rather than an audit.
 
 The instrument generalises only where a producer invariant can be written down. The
