@@ -423,6 +423,19 @@ ignore_imports =
     # per origin rather than by widening the contract, so a NEW production
     # edge that is not a DTO consumer still fails loudly.
     cadrumo.application.ledger._llm_review_workflow -> cadrumo.llm
+    # SEAM tests: they assert the ledger router consumes llm-owned surfaces
+    # correctly, so they belong to neither side and cannot be relocated into
+    # either without looking like a unit test of something that package does
+    # not own. The mirror image is already enrolled above --
+    # llm.tests.test_llm_vision_classifier -> application.ledger._llm_classification --
+    # and sanctioning one direction of a seam while refusing the other would be
+    # arbitrary. Both reach the PUBLIC facade, so what is pinned here is only
+    # the layer direction, not a private reach.
+    cadrumo.application.ledger.tests.test_grounded_reading_wiring -> cadrumo.llm
+    # Same seam, through the PUBLIC facade: the terminal-state test builds the
+    # llm-owned suggestion DTOs the ledger consumes, so it exercises the same
+    # boundary the production edges above are pinned for.
+    cadrumo.application.ledger.tests.test_reviewed_invoice_draft_terminal -> cadrumo.llm
     # The tabular fallback lane reaches the gated subpackage for the one
     # judgement it cannot make deterministically: what a file's own header
     # vocabulary means. Deferred inside the resolver, and pinned here because

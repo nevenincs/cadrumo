@@ -79,9 +79,6 @@ def _payload(name: str) -> ManualWorkedExamplePayload:
 #: is stated here for the same reason none is asserted: it would be wrong the moment a
 #: payload migrates, and the entries themselves are the inventory.
 _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
-    "modelo-100-2020-rendimientos-trabajo-despido-improcedente.json": (
-        "scenario facts still hand-written in test_m100_2020_rendimientos_trabajo_despido_manual_worked_example.py"
-    ),
     "modelo-100-2024-capital-inmobiliario-arrendamiento-vivienda-tensionada.json": (
         "scenario facts still hand-written in "
         "test_m100_2024_capital_inmobiliario_arrendamiento_vivienda_manual_worked_example.py"
@@ -106,9 +103,6 @@ _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
     "modelo-100-2024-minimo-descendientes-prorrateo-asturias.json": (
         "scenario facts still hand-written in test_minimo_descendientes_manual_oracles.py; same "
         "mid-verification hold as the Rioja payload"
-    ),
-    "modelo-100-2024-rendimientos-trabajo-despido-improcedente.json": (
-        "scenario facts still hand-written in test_m100_2024_rendimientos_trabajo_despido_manual_worked_example.py"
     ),
     "modelo-200-2024-ejemplo1-tributacion-minima-empresa-grande.json": (
         "scenario facts still hand-written in test_modelo_200_2024_ejemplo1_tributacion_minima_manual_worked_example.py"

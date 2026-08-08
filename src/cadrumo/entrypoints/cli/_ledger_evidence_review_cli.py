@@ -14,7 +14,7 @@ whole value of the gate is the per-document attention it forces.
 
 from __future__ import annotations
 
-from typing import Final, NamedTuple
+from typing import Final
 
 import typer
 
@@ -185,37 +185,11 @@ def _party_attribution_lines(notice: Notice) -> list[str]:
     return lines
 
 
-class _CountryNoticeWording(NamedTuple):
-    """The one notice code and one message a country-vocabulary kind is told under."""
-
-    code: str
-    locale_key: str
-    default: str
-
-
-_COUNTRY_NOTICE_WORDING: Final[dict[StatedCountryCodeStatus, _CountryNoticeWording]] = {
-    StatedCountryCodeStatus.UNASSIGNED: _CountryNoticeWording(
-        code="ledger.evidence.review.country_code_unassigned",
-        locale_key="cli.app.ledger.evidence.review.country_code_unassigned_message",
-        default=(
-            "A party's country code is one ISO 3166-1 reserves so that no country is ever "
-            "allocated to it, so the document states a string rather than a country and nothing "
-            "places that party. Correct the code against the document. This draft can still be "
-            "confirmed; the party simply stays unestablished until it is."
-        ),
-    ),
-    StatedCountryCodeStatus.UNCATALOGUED: _CountryNoticeWording(
-        code="ledger.evidence.review.country_code_uncatalogued",
-        locale_key="cli.app.ledger.evidence.review.country_code_uncatalogued_message",
-        default=(
-            "A party's country code may name a real country this system's bundled vocabulary "
-            "does not yet carry, so nothing can be said about where that party is established. "
-            "Re-reading the document will not settle it: the country has to be added. This "
-            "draft can still be confirmed; the party simply stays unestablished until it is."
-        ),
-    ),
+_COUNTRY_NOTICE_CODE: Final[dict[StatedCountryCodeStatus, str]] = {
+    StatedCountryCodeStatus.UNASSIGNED: "ledger.evidence.review.country_code_unassigned",
+    StatedCountryCodeStatus.UNCATALOGUED: "ledger.evidence.review.country_code_uncatalogued",
 }
-"""One code and one sentence per kind, because the kinds have different OWNERS.
+"""One notice code per kind, because the kinds have different OWNERS.
 
 Both are non-blocking and both name the stated code, so a single notice carrying
 every affected party would read identically for a typo the operator fixes off the
@@ -223,6 +197,35 @@ page and a gap only a registry commit closes. Splitting on the status keeps that
 distinction machine-readable in the notice ``code``, which is what a JSON
 consumer routes on, rather than only in the prose.
 """
+
+
+def _country_notice_message(status: StatedCountryCodeStatus) -> str:
+    """Return the operator-facing sentence for one country-vocabulary kind.
+
+    Branching rather than a status-keyed table of keys, because the catalogue
+    scaffold discovers keys by reading literal :func:`tr` arguments out of the
+    source. A key reached through a table entry is invisible to it, and the key
+    is then reported as an orphan and swept out from under the notice.
+    """
+    if status is StatedCountryCodeStatus.UNASSIGNED:
+        return tr(
+            "cli.app.ledger.evidence.review.country_code_unassigned_message",
+            default=(
+                "A party's country code is one ISO 3166-1 reserves so that no country is ever "
+                "allocated to it, so the document states a string rather than a country and nothing "
+                "places that party. Correct the code against the document. This draft can still be "
+                "confirmed; the party simply stays unestablished until it is."
+            ),
+        )
+    return tr(
+        "cli.app.ledger.evidence.review.country_code_uncatalogued_message",
+        default=(
+            "A party's country code may name a real country this system's bundled vocabulary "
+            "does not yet carry, so nothing can be said about where that party is established. "
+            "Re-reading the document will not settle it: the country has to be added. This "
+            "draft can still be confirmed; the party simply stays unestablished until it is."
+        ),
+    )
 
 
 def _country_vocabulary_notices(advisory: CountryVocabularyAdvisory) -> list[Notice]:
@@ -238,7 +241,7 @@ def _country_vocabulary_notices(advisory: CountryVocabularyAdvisory) -> list[Not
     and the zero-rated export category is unreachable whatever this notice says.
     """
     notices: list[Notice] = []
-    for status, wording in _COUNTRY_NOTICE_WORDING.items():
+    for status, code in _COUNTRY_NOTICE_CODE.items():
         affected = advisory.by_status(status)
         if not affected:
             continue
@@ -248,8 +251,8 @@ def _country_vocabulary_notices(advisory: CountryVocabularyAdvisory) -> list[Not
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
-                code=wording.code,
-                message=tr(wording.locale_key, default=wording.default),
+                code=code,
+                message=_country_notice_message(status),
                 context=context,
             ),
         )
