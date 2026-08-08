@@ -97,6 +97,14 @@ _AUTHORING_CANDIDATES = frozenset(
         "REFUSED_M145_COMMUNICATION_RECORD_EXPORT",
         "REFUSED_M145_COMMUNICATION_RECORD_TRANSITION",
         "REFUSED_M145_COMMUNICATION_RECORD_VALIDATION",
+        # A record closed by a baja is terminal, but what comes next is not a
+        # single verb: filing a fresh alta (resuming), doing nothing (the
+        # deregistration was correct and intended), or correcting a wrongly
+        # dated declaration (which no verb here supports -- declarations are
+        # append-only, never amended) are all live readings, and only the
+        # operator knows which. No single suggestion could name the right one
+        # without risking the wrong one.
+        "REFUSED_MODELO_036_TERMINAL_STATE",
         "REFUSED_MODELO_184_SHARE_SUM",
         "REFUSED_MODELO_210_AGRUPACION_RENTA_ROWS",
         "REFUSED_MODELO_347_THRESHOLD",

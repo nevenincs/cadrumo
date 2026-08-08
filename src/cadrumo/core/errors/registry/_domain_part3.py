@@ -475,7 +475,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_MODELO_036_PRIOR_ALTA_REQUIRED",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.modelo_036_prior_alta_required",
-            default_suggestion=None,
+            default_suggestion="aeat app modelo m036 alta --declared-on YYYY-MM-DD",
             retryable=False,
             runbook_id=None,
         ),
