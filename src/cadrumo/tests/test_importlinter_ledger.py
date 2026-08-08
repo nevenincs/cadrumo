@@ -30,9 +30,156 @@ _SOURCE_ROOT = REPO_ROOT / "src"
 _CONTRACT_RE = re.compile(r"^\[importlinter:contract:(?P<contract>[^\]]+)\]$")
 _IGNORE_EDGE_RE = re.compile(r"^\s*(?P<source>cadrumo\.[\w.*]+)\s*->\s*(?P<target>cadrumo\.[\w.*]+)\s*$")
 
-_APPLICATION_TO_ADAPTERS_BASELINE = 206  # reconciled live ceiling; this ratchet may decrease but not grow
 _APPLICATION_SOURCE_WILDCARD_BASELINE = (
-    75  # reconciled live ceiling for application edges targeting cadrumo.adapters.**; may only decrease
+    3  # reconciled live ceiling for application edges targeting cadrumo.adapters.**; may only decrease
+)
+
+# Every PRODUCTION application module sanctioned to pin an application -> adapters
+# ignore edge. This is the ledger's own documented intent -- "the exception ledger
+# pins each existing application source module individually; full inversion remains
+# deferred, but new source modules fail loudly" -- expressed as the property rather
+# than proxied by a tally.
+#
+# A count could not express it. One already-sanctioned module pinning a second
+# target grew the number without widening the boundary, so the honest response to a
+# red run was indistinguishable from the dishonest one, and the number was raised
+# rather than reconciled the day after it was introduced. Naming the modules makes
+# the diff legible: a new entry is a new production module reaching adapters, and
+# it has to be argued for rather than absorbed.
+#
+# The set may only SHRINK. Inversion removes entries; nothing legitimately adds one
+# without a decision recorded alongside it.
+_RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
+    {
+        "cadrumo.application.aggregation._impatriado_income_ledger",
+        "cadrumo.application.aggregation._iva_ledger",
+        "cadrumo.application.aggregation._modelo_bindings",
+        "cadrumo.application.aggregation._observation_window",
+        "cadrumo.application.aggregation._oss_ioss",
+        "cadrumo.application.aggregation._percepciones_observations_repository",
+        "cadrumo.application.aggregation._renta_gasto_ledger",
+        "cadrumo.application.aggregation._renta_income_ledger",
+        "cadrumo.application.aggregation._renta_ledger",
+        "cadrumo.application.aggregation._retencion_observations_repository",
+        "cadrumo.application.aggregation._withholding_source",
+        "cadrumo.application.auth._apoderado",
+        "cadrumo.application.auth._certificate_secret_backend",
+        "cadrumo.application.auth._diagnostics",
+        "cadrumo.application.auth._operator_probes",
+        "cadrumo.application.auth._operator_scope",
+        "cadrumo.application.auth._sessions",
+        "cadrumo.application.bienes_inversion",
+        "cadrumo.application.bucket_maintenance._manifest_digest",
+        "cadrumo.application.bucket_maintenance._sandbox",
+        "cadrumo.application.bucket_maintenance._service",
+        "cadrumo.application.calculations._cross_period_clean_state",
+        "cadrumo.application.calculations._iva_compensation_annual_partition",
+        "cadrumo.application.calculations._iva_compensation_history",
+        "cadrumo.application.calculations._multi_year",
+        "cadrumo.application.calculations._observations_repository",
+        "cadrumo.application.calculations._prorrata_regularizacion",
+        "cadrumo.application.calculations._relation_prefill",
+        "cadrumo.application.diagnostics",
+        "cadrumo.application.diagnostics_run_health",
+        "cadrumo.application.evidence._service",
+        "cadrumo.application.filing._complementaria",
+        "cadrumo.application.filing._history_repository",
+        "cadrumo.application.filing._import",
+        "cadrumo.application.filing._review",
+        "cadrumo.application.filing._runtime_repository",
+        "cadrumo.application.inventory._service",
+        "cadrumo.application.invoices._bulk_import",
+        "cadrumo.application.invoices._creation",
+        "cadrumo.application.invoices._lifecycle",
+        "cadrumo.application.invoices._linking",
+        "cadrumo.application.invoices._queries",
+        "cadrumo.application.invoices._reconciliation",
+        "cadrumo.application.invoices._source_resolver",
+        "cadrumo.application.invoices._wizard",
+        "cadrumo.application.ledger._actions_common",
+        "cadrumo.application.ledger._actions_import",
+        "cadrumo.application.ledger._actions_lifecycle",
+        "cadrumo.application.ledger._actions_split_merge",
+        "cadrumo.application.ledger._evidence",
+        "cadrumo.application.ledger._evidence_draft",
+        "cadrumo.application.ledger._evidence_textlayer",
+        "cadrumo.application.ledger._llm_classification",
+        "cadrumo.application.ledger._llm_diagnostics",
+        "cadrumo.application.ledger._participation_read",
+        "cadrumo.application.ledger._preflight",
+        "cadrumo.application.ledger._ratios",
+        "cadrumo.application.ledger._review_projection",
+        "cadrumo.application.ledger._rule_repository",
+        "cadrumo.application.live",
+        "cadrumo.application.live._borrador_100",
+        "cadrumo.application.live._errors",
+        "cadrumo.application.live._expedientes",
+        "cadrumo.application.live._filed_capture_finalizer",
+        "cadrumo.application.live._filed_data",
+        "cadrumo.application.live._filed_data_capture",
+        "cadrumo.application.live._filed_observation_persistence",
+        "cadrumo.application.live._iva_remote_state",
+        "cadrumo.application.live._justificante",
+        "cadrumo.application.live._notifications",
+        "cadrumo.application.live._session",
+        "cadrumo.application.live._verify",
+        "cadrumo.application.modelo._amendment_actions",
+        "cadrumo.application.modelo._art109_activity_income",
+        "cadrumo.application.modelo._borrador_binding",
+        "cadrumo.application.modelo._calculate_input",
+        "cadrumo.application.modelo._calculation_actions",
+        "cadrumo.application.modelo._calculation_preparation",
+        "cadrumo.application.modelo._export",
+        "cadrumo.application.modelo._external_import_actions",
+        "cadrumo.application.modelo._filing_actions",
+        "cadrumo.application.modelo._history",
+        "cadrumo.application.modelo._iva_wallet_gate",
+        "cadrumo.application.modelo._iva_wallet_seed",
+        "cadrumo.application.modelo._ledger_drift_gate",
+        "cadrumo.application.modelo._m036_lifecycle",
+        "cadrumo.application.modelo._m145_communication_records",
+        "cadrumo.application.modelo._m349_ledger_guard",
+        "cadrumo.application.modelo._participation_index_rebuild",
+        "cadrumo.application.modelo._reconcile",
+        "cadrumo.application.modelo._reconciliation_records",
+        "cadrumo.application.modelo._review_package_keypair",
+        "cadrumo.application.modelo._review_package_recipient_encryption",
+        "cadrumo.application.modelo._review_package_recipient_registry",
+        "cadrumo.application.modelo._review_package_recipient_replay_guard",
+        "cadrumo.application.modelo._review_package_signing",
+        "cadrumo.application.modelo._revision_persistence",
+        "cadrumo.application.modelo._selectors",
+        "cadrumo.application.modelo._taxation_comparison",
+        "cadrumo.application.modelo._verification_actions",
+        "cadrumo.application.modelo._work_lifecycle",
+        "cadrumo.application.modelo._workflow_gate",
+        "cadrumo.application.operator_output._sandbox_notice",
+        "cadrumo.application.prorrata_register",
+        "cadrumo.application.registry",
+        "cadrumo.application.repair_integrity",
+        "cadrumo.application.review._adapters",
+        "cadrumo.application.state_projection",
+        "cadrumo.application.storage.calc_sheets._parity_harness",
+        "cadrumo.application.user_profile._aggregate",
+        "cadrumo.application.user_profile._bundle",
+        "cadrumo.application.user_profile._bundle_encryption",
+        "cadrumo.application.user_profile._capabilities",
+        "cadrumo.application.user_profile._custody",
+        "cadrumo.application.user_profile._custody_carry",
+        "cadrumo.application.user_profile._language_resolver",
+        "cadrumo.application.user_profile._lifecycle",
+        "cadrumo.application.user_profile._login_session",
+        "cadrumo.application.user_profile._orchestration",
+        "cadrumo.application.user_profile._profile_repository",
+        "cadrumo.application.user_profile._repository",
+        "cadrumo.application.verification._verify",
+        "cadrumo.application.workflow._adapters",
+        "cadrumo.application.workflow._events",
+        "cadrumo.application.workflow._models",
+        "cadrumo.application.workflow._persistence",
+        "cadrumo.application.workflow._profile_bucket_scan",
+        "cadrumo.application.workflow._profile_health",
+    },
 )
 _DOMAIN_TO_ADAPTERS_BASELINE = 2  # reconciled live ceiling for test-only carveouts; may only decrease
 _SANCTIONED_DOMAIN_TO_ADAPTERS_TEST_PAIRS = frozenset(
@@ -115,7 +262,24 @@ def test_ignore_import_modules_resolve_on_disk(ignore_edges: tuple[IgnoreEdge, .
     assert missing == []
 
 
-def test_application_to_adapters_pin_count_does_not_grow(layered_edges: tuple[IgnoreEdge, ...]) -> None:
+def _is_test_tier(source: str) -> bool:
+    """Report whether an ignore-edge source is a test module or a conftest.
+
+    The test tier crosses layers by roundtrip-discipline design and is carved out
+    wholesale; only production sources carry ports-inversion debt. Counting the two
+    together let a new fixture carve-out read as new production coupling.
+    """
+    return ".tests." in f"{source}." or source.endswith(".conftest")
+
+
+def test_application_to_adapters_sources_are_reconciled(layered_edges: tuple[IgnoreEdge, ...]) -> None:
+    """Only reconciled production application modules may pin an adapters edge.
+
+    Replaces an edge-count ratchet. The count was raised the day after it landed,
+    which is the failure the quality-gate rule names: a tally encodes a moment,
+    trains everyone to update the constant, and then detects nothing. It also could
+    not say WHICH coupling was new, so nobody could act on a red run.
+    """
     application_adapter_edges = tuple(
         edge
         for edge in layered_edges
@@ -129,8 +293,40 @@ def test_application_to_adapters_pin_count_does_not_grow(layered_edges: tuple[Ig
     source_wildcard_edges = tuple(edge for edge in application_adapter_edges if edge.target == "cadrumo.adapters.**")
 
     assert not blanket_edges
-    assert len(application_adapter_edges) <= _APPLICATION_TO_ADAPTERS_BASELINE
     assert len(source_wildcard_edges) <= _APPLICATION_SOURCE_WILDCARD_BASELINE
+
+    production_sources = {edge.source for edge in application_adapter_edges if not _is_test_tier(edge.source)}
+
+    unreconciled = sorted(production_sources - _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES)
+    assert unreconciled == [], (
+        "production application module(s) newly pin an application -> adapters ignore edge without being "
+        "reconciled. Invert the coupling behind a port, or enroll the module in "
+        "_RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES with the decision recorded alongside it: "
+        f"{unreconciled}"
+    )
+
+
+def test_reconciled_application_sources_all_answer_a_live_pin(layered_edges: tuple[IgnoreEdge, ...]) -> None:
+    """A reconciled entry whose coupling is gone must be removed, not left standing.
+
+    This is what keeps the enrolment from rotting into a rubber stamp. An entry that
+    outlives its edge is a pre-approval sitting in the ledger, ready to launder the
+    next pin from the same module without anyone re-deciding. Removing one is a
+    one-line edit and always means the boundary got cleaner.
+    """
+    production_sources = {
+        edge.source
+        for edge in layered_edges
+        if edge.source.startswith("cadrumo.application.")
+        and edge.target.startswith("cadrumo.adapters")
+        and not _is_test_tier(edge.source)
+    }
+
+    stale = sorted(_RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES - production_sources)
+    assert stale == [], (
+        "reconciled application -> adapters source(s) no longer pin any edge; the coupling was removed, so "
+        f"drop them from _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES and let the ratchet record the win: {stale}"
+    )
 
 
 def test_domain_to_adapters_pin_count_does_not_grow(layered_edges: tuple[IgnoreEdge, ...]) -> None:
