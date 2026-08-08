@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:7e8073f2ba6a86b1257f476dcce9e0c864f216440f2d382b6d8b7d05f0a031f3'
+body_hash: 'sha256:70d683010ef4ca7f3e523f90602fadb8789484b95633071bcc116fac0d1cf71f'
 related: []
 ---
 
@@ -31,9 +31,13 @@ harness itself proved unfaithful in two of its six surface builders (see the
 harness-fidelity finding), and although every finding initially blamed on that
 turned out to be sound, the instrument was not trustworthy for part of the
 window. Third, some axes were not reached: conditional-page gating on the paged
-flow, submit-gating visibility on an unanswered required page, styled-frame
-legibility of focus states, and a deep walk of the real multi-page wizard
-content. Absence of a finding on those is absence of evidence.
+flow, submit-gating visibility on an unanswered required page, a deep walk of
+the real multi-page wizard content, and vertical behaviour at heights below
+twenty-four rows. Absence of a finding on those is absence of evidence. Note
+also that the shared question and review screens were driven through the
+retired paged surface rather than through the live modelo wizards; the widget
+tree is identical, so the findings transfer, but that is an inference and no
+harness entry exists for the live wizard entrypoint.
 
 Every surface was driven at eighty by twenty-four, one hundred by thirty, one
 hundred and twenty by forty and two hundred by fifty, under both appearances.
