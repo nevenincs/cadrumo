@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:601791210842384e1af1a0cdf8f945efb62fb2699f404b5173a0903aa3c15f0e'
+body_hash: 'sha256:4ac9b23f9f275e0806e782bc98509917093d4bfd2cea2974f22fc7970cbd31cd'
 step_id: 'S243'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -40,7 +40,13 @@ Measured effect on the axis those keys sit on: `es` identical to `en` fell from 
 
 **What is left, and why it is not what the row scoped.** Forty modelo casilla `help` keys remain, all placeholders in all four catalogues. They are the M303 and M390 intracomunitarias block — the adquisiciones intracomunitarias de bienes bases and cuotas per rate, and the M303 autorepercutido intracomunitaria base. Their siblings ARE authored, so this is a genuine gap in a series rather than a category that carries no help, and the authored siblings establish the register.
 
-Closing them is authoring roughly one hundred and sixty strings of AEAT casilla guidance in four languages, originating the Spanish rather than translating it. Two things make that a decision rather than a continuation of this row. The gate does not require it: `.help` is not among the suffixes the Spanish-authority check enforces, and an absent leaf is the sanctioned unauthored state that some twenty-two thousand leaves already occupy — so removal is an honest resolution and not a dodge. And originating guidance for tax casillas is regulated prose; writing it from the casilla identifier alone would be inventing guidance rather than grounding it, which the calculation-grounding rule forbids. The two honest resolutions are therefore to author the Spanish against the official M390 instructions and translate outward, or to make the leaves absent and accept that these casillas carry no help. Both are larger than a locale pass and neither is this lane's to choose.
+Closing them is authoring roughly one hundred and sixty strings of AEAT casilla guidance in four languages, originating the Spanish rather than translating it.
+
+**A semantic after-pass corrected this Step's first reading of that, and the correction narrows it to one resolution rather than two.** The first reading argued from the gate: `.help` is not among the suffixes the Spanish-authority check enforces, and an absent leaf is the sanctioned unauthored state some twenty-two thousand leaves already occupy, so removal looked as honest as authoring. The gate facts are correct and the inference from them is not. The project's own new-modelo checklist states that derived casilla labels AND help text are authored in the shared catalogues through the locales CLI, with Spanish in `es.yml` as the official Casilla source. So removal contradicts the documented authoring path; what the gate declines to enforce, the convention still requires.
+
+**The grounding objection also weakens on measurement.** Writing help from the casilla identifier alone would indeed be invention, but it does not have to be written that way: the official Diseño de Registros for M390 is bundled in this repository and is authoritative on each casilla's segment, number and label, and the already-authored sibling help strings are descriptive restatements of what a casilla holds rather than legal interpretation. That is a groundable register, not an invented one.
+
+So the remaining work is authoring, not a choice between authoring and deletion. It is still larger than a locale pass and still not this lane's to start unasked, but it is a scoping decision rather than an open question about which resolution is legitimate.
 
 **A second reason the ratchet cannot be closed by one lane.** Eleven new key-echoes appeared in the catalogues DURING this Step — seven passphrase keys and four TUI restart keys from another lane's live work. The tail is being refilled while it is drained, which is the mechanism by which this gate stays red for everyone regardless of who works it.
 
