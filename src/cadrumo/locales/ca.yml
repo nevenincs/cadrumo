@@ -1989,6 +1989,7 @@ cli:
           imprès al document.
         withdraw_help: Retira un establiment confirmat, declarant que la resposta
           anterior era incorrecta.
+        evidenced_scope_help: 'Territori on un document que teniu situa aquesta part. Indiqueu-lo per preguntar què respondrà l''escala per a aquest document, que és l''única manera de veure una discrepància amb el que vau confirmar abans que una confirmació la rebutgi.'
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
         batch_directory_help: Directori els fitxers del qual s'ingressen. Combina'l
@@ -4758,6 +4759,7 @@ cli:
           sigui concloent plantejarà la pregunta.
         nothing_to_withdraw: No hi havia cap establiment confirmat per a '{identifier}',
           de manera que no s'ha retirat res i el magatzem ja es troba en l'estat sol·licitat.
+        evidence_contradicts_confirmation: '''{identifier}'' es va confirmar com a establert a {confirmed}, però l''evidència que heu aportat situa la mateixa part a {evidenced}. L''escala no fixarà cap territori per a aquesta contrapart fins que se''n retiri un dels dos.'
     doclink:
       actor_help: Etiqueta de l'operador.
       help: Descàrrega un enllaç de document de Drive i desa'n els bytes com a evidència

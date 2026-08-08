@@ -107,15 +107,51 @@ class CounterpartyShowResult(OutputSchema):
     stored and still settle nothing; a payload read from the repository would
     show the operator a territory that no later document will actually use.
 
+    **Which of the two questions was asked depends on whether evidence was
+    supplied**, and the payload says which. Asked bare, the verb has no document
+    in hand, no evidence can contradict anything, and the answer is what the
+    rung holds. Asked with an ``evidenced_scope``, it is the real ladder
+    question -- what will this rung answer for a document placing the party
+    HERE -- and that is the only form in which a contradiction can arise.
+
+    The distinction is load-bearing rather than descriptive, because a
+    contradiction and an empty store are indistinguishable on the other fields:
+    the resolver returns no fact in both cases, so ``confirmed`` is ``False``
+    and ``territorial_scope`` is ``None`` either way. :attr:`contradicted` is
+    what separates "nobody has answered for this counterparty" from "somebody
+    did, and this document disagrees with them" -- two situations whose operator
+    remedies are opposite, one asking for a first answer and the other asking
+    which of two existing claims to withdraw.
+
     Attributes:
         tax_identifier: Whom the question was asked about, as supplied.
         confirmed: Whether the rung will answer. ``False`` is the ordinary state
-            for a counterparty nobody has been asked about yet, not a failure.
+            for a counterparty nobody has been asked about yet, not a failure,
+            and is ALSO what a contradiction produces -- read it beside
+            :attr:`contradicted`, never alone.
         territorial_scope: What it will answer, or ``None``.
         source: Who established it, which for this rung is always the operator.
+        evidenced_scope: The territory the operator's document places the party
+            in, when they supplied one. ``None`` means the bare question was
+            asked and no contradiction was reachable.
+        contradicted: Whether the supplied evidence disagrees with the confirmed
+            fact. Never ``True`` when :attr:`evidenced_scope` is ``None``.
+        confirmed_scope: What the operator had confirmed, carried ONLY on a
+            contradiction. It is deliberately absent from
+            :attr:`territorial_scope` there, because that field is what the rung
+            will answer and on a contradiction the rung answers nothing -- a
+            consumer reading the confirmed territory out of it would use a value
+            no document will resolve to.
+        contradiction_detail: The disagreement in words, taken from the resolver
+            rather than recomposed, so the sentence an operator reads here and
+            the one a confirm raises cannot drift.
     """
 
     tax_identifier: str = Field(min_length=1)
     confirmed: bool
     territorial_scope: IvaTerritorialScope | None = None
     source: ClassifierInputSource | None = None
+    evidenced_scope: IvaTerritorialScope | None = None
+    contradicted: bool = False
+    confirmed_scope: IvaTerritorialScope | None = None
+    contradiction_detail: str | None = None

@@ -1850,6 +1850,7 @@ cli:
         tax_identifier_help: The counterparty's tax identifier as printed on the document.
         withdraw_help: Withdraw a confirmed establishment, stating the earlier answer
           was wrong.
+        evidenced_scope_help: 'Territory a document in hand places this party in. Supply it to ask what the ladder will answer for that document, which is the only way to see a disagreement with what you confirmed before a confirm refuses on it.'
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
         batch_directory_help: Directory whose files are ingested. Combine with or
@@ -4435,6 +4436,7 @@ cli:
         nothing_to_withdraw: No confirmed establishment was held for '{identifier}',
           so nothing was withdrawn and the store is already in the state you asked
           for.
+        evidence_contradicts_confirmation: '''{identifier}'' was confirmed as established in {confirmed}, but the evidence you supplied places the same party in {evidenced}. The ladder will settle no territory for this counterparty until one of the two is withdrawn.'
     doclink:
       actor_help: Operator label.
       help: Fetch a Drive document link and store its bytes as encrypted evidence

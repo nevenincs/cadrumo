@@ -2001,6 +2001,7 @@ cli:
           aparece impreso en el documento.
         withdraw_help: Retira un establecimiento confirmado, declarando que la respuesta
           anterior era incorrecta.
+        evidenced_scope_help: 'Territorio en el que un documento en su poder sitúa a esta parte. Indíquelo para preguntar qué responderá la escalera para ese documento, que es la única forma de ver una discrepancia con lo que usted confirmó antes de que una confirmación la rechace.'
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
         batch_directory_help: Directorio cuyos ficheros se ingresan. Combínalo con
@@ -4795,6 +4796,7 @@ cli:
           concluyente planteará la pregunta.
         nothing_to_withdraw: No había ningún establecimiento confirmado para '{identifier}',
           por lo que no se ha retirado nada y el almacén ya está en el estado solicitado.
+        evidence_contradicts_confirmation: '''{identifier}'' se confirmó como establecido en {confirmed}, pero la evidencia que ha aportado sitúa a la misma parte en {evidenced}. La escalera no fijará ningún territorio para esta contraparte hasta que se retire uno de los dos.'
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia

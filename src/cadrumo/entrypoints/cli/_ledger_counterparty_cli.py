@@ -350,12 +350,39 @@ def counterparty_show(
             default="Country the identifier is stated under, when it is not Spanish.",
         ),
     ),
+    evidenced_scope: IvaTerritorialScope | None = typer.Option(
+        None,
+        "--evidenced-scope",
+        help=tr(
+            "cli.app.ledger.counterparty.evidenced_scope_help",
+            default=(
+                "Territory a document in hand places this party in. Supply it to ask what the "
+                "ladder will answer for that document, which is the only way to see a "
+                "disagreement with what you confirmed before a confirm refuses on it."
+            ),
+        ),
+    ),
 ) -> None:
     """Report what the ladder's last rung will answer for this counterparty.
 
     Deliberately asks the same resolver the ladder asks rather than reading the
     repository directly, so what an operator is shown and what a later document
     resolves to cannot drift apart.
+
+    **That guarantee only holds for the question actually asked**, which is why
+    the evidence option exists. The rung's answer depends on what a document
+    places the party in: the resolver withholds a confirmed fact the document's
+    own evidence contradicts, and that branch is reachable only when an
+    evidenced territory is supplied. Asked bare, this reports what is
+    confirmed -- true, and a narrower claim than the one the payload's design
+    rests on. Asked with ``--evidenced-scope``, it asks the ladder's real
+    question and can show the disagreement BEFORE a confirm surfaces it as a
+    blocker.
+
+    Without the option threaded, an operator who confirmed one territory and
+    then held a document printing another was shown the confirmed value with
+    nothing indicating that a confirm would refuse to use it -- the two surfaces
+    diverging in exactly the case the verb exists for, invisibly.
     """
     from ...application.ledger import resolve_counterparty_establishment
 
@@ -363,10 +390,40 @@ def counterparty_show(
         bucket_id=_counterparty_bucket_id(),
         tax_identifier=tax_identifier,
         country_code=country_code,
+        evidenced_scope=evidenced_scope,
     )
     fact = resolution.fact
+    contradiction = resolution.contradiction
     notices: list[Notice] = []
-    if fact is None:
+    if contradiction is not None:
+        # A WARNING rather than INFO: nothing here is a next-step hint. The
+        # store and the document make incompatible claims about the same party,
+        # and until one is withdrawn every confirm against this counterparty
+        # settles no territory at all.
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.counterparty.evidence_contradicts_confirmation",
+                message=tr(
+                    "cli.ledger.counterparty.notices.evidence_contradicts_confirmation",
+                    identifier=tax_identifier,
+                    confirmed=contradiction.confirmed_scope.value,
+                    evidenced=contradiction.evidenced_scope.value,
+                    default=(
+                        f"'{tax_identifier}' was confirmed as established in "
+                        f"{contradiction.confirmed_scope.value}, but the evidence you supplied places "
+                        f"the same party in {contradiction.evidenced_scope.value}. The ladder will "
+                        f"settle no territory for this counterparty until one of the two is withdrawn."
+                    ),
+                ),
+                context={
+                    "tax_identifier": tax_identifier,
+                    "confirmed_scope": contradiction.confirmed_scope.value,
+                    "evidenced_scope": contradiction.evidenced_scope.value,
+                },
+            ),
+        )
+    elif fact is None:
         notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
@@ -391,9 +448,28 @@ def counterparty_show(
             confirmed=fact is not None,
             territorial_scope=fact.value if fact is not None else None,
             source=fact.source if fact is not None else None,
+            evidenced_scope=evidenced_scope,
+            contradicted=contradiction is not None,
+            # Carried only here and deliberately NOT in `territorial_scope`:
+            # that field is what the rung will answer, and on a contradiction it
+            # answers nothing.
+            confirmed_scope=contradiction.confirmed_scope if contradiction is not None else None,
+            contradiction_detail=contradiction.detail if contradiction is not None else None,
         ),
         lines=[
-            f"{tax_identifier}: {fact.value.value if fact is not None else 'not confirmed'}",
+            # Rebuilt from the same three states the payload reports, so the
+            # text and the JSON cannot describe different outcomes. A
+            # contradiction must not read as "not confirmed": the store holds an
+            # answer, and it is the document that disagrees with it.
+            f"{tax_identifier}: "
+            + (
+                f"contradicted (confirmed {contradiction.confirmed_scope.value}, "
+                f"evidence {contradiction.evidenced_scope.value})"
+                if contradiction is not None
+                else fact.value.value
+                if fact is not None
+                else "not confirmed"
+            ),
         ],
         notices=notices,
     )

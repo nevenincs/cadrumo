@@ -1924,6 +1924,7 @@ cli:
         tax_identifier_help: Az ügyfél adóazonosítója a bizonylaton nyomtatott formában.
         withdraw_help: Vonja vissza a megerősített letelepedést, kijelentve, hogy
           a korábbi válasz téves volt.
+        evidenced_scope_help: 'Az a terület, ahová a kezében lévő dokumentum ezt a felet helyezi. Adja meg, hogy megkérdezze, mit válaszol a létra erre a dokumentumra; csak így láthatja az eltérést attól, amit korábban megerősített, mielőtt egy megerősítés elutasítaná.'
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
         batch_directory_help: A könyvtár, amelynek fájljait feldolgozza. Kombinálható
@@ -4709,6 +4710,7 @@ cli:
         nothing_to_withdraw: A(z) '{identifier}' esetében nem volt megerősített letelepedés,
           ezért semmi nem került visszavonásra, és a tároló már a kért állapotban
           van.
+        evidence_contradicts_confirmation: 'A(z) ''{identifier}'' megerősítetten itt telepedett le: {confirmed}, de az Ön által megadott bizonyíték ugyanezt a felet ide helyezi: {evidenced}. A létra nem állapít meg területet ehhez a partnerhez, amíg a kettő közül az egyiket vissza nem vonják.'
     doclink:
       actor_help: Operátor címke.
       help: Letölt egy Drive dokumentumhivatkozást, és a bájtjait titkosított bizonyítékként
