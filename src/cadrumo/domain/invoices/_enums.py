@@ -306,9 +306,12 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
             window, or a standing slot the registry no longer serves. Refusing
             is the point: substituting whatever the tier happens to mean that
             day would record a number the invoice never carried. When the rate
-            table does not REACH ``on_date`` at all the refusal says so instead,
-            because "not in force" would be a false claim about the law rather
-            than a true one about our coverage.
+            table does not reach ``on_date`` FOR THAT TIER the refusal says so
+            instead, because "not in force" would be a false claim about the law
+            rather than a true one about our coverage. The reach differs between
+            tiers, so the question is never whether the table reaches a date at
+            all: it carries the general and reducido records well before the
+            super-reducido ones.
             :attr:`IvaRate.RATE_0` is never refused, because
             :func:`~cadrumo.domain.iva.rate_kinds_for_declared_rate` answers
             ZERO on every date -- Spain zero-rates on three permanent grounds

@@ -843,6 +843,13 @@ def test_a_date_outside_the_rate_table_blames_the_year_not_the_rate() -> None:
     # The 21 % is named as NOT the thing to correct -- a filer who reads only
     # the number in the message must not go looking for a rate error.
     assert "not what needs correcting" in result.issues[0].detail
+    # The message must not describe the table's extent in terms a data change
+    # can falsify. It once said the table "holds current rates only", which was
+    # true when written and stopped being true the moment the windows were
+    # corrected back to 2012 -- with nothing tying the sentence to the data it
+    # described. It now states the condition the branch actually tested.
+    assert "current rates only" not in result.issues[0].detail
+    assert "no tier bearing a positive rate" in result.issues[0].detail
 
 
 def test_the_applied_rate_survives_tier_resolution() -> None:
