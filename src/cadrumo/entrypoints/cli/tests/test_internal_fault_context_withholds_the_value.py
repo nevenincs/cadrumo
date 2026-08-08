@@ -59,10 +59,18 @@ class _RecordWithDeclaredConstraints(BaseModel):
 
 
 def _fault_of(model: type[BaseModel], **payload: object) -> dict[str, object]:
+    """Project a failure of *model*, naming the model as a real caller does.
+
+    The model is supplied because these cases assert what an operator SEES, and
+    a caller that knows which record it validated passes it. The fail-safe path
+    -- no model, every path component redacted -- is asserted on its own below
+    rather than made the default here, which would quietly weaken every
+    field-name assertion into a redaction assertion.
+    """
     try:
         model(**payload)
     except ValidationError as exc:
-        return internal_record_fault_context(exc)
+        return internal_record_fault_context(exc, record=model)
     raise AssertionError("the fixture must fail validation, or the case proves nothing")
 
 
@@ -135,3 +143,80 @@ def test_nothing_is_counted_as_withheld_when_nothing_was() -> None:
     context = _fault_of(_RecordWithDeclaredConstraints, code="lower", amount="x")
 
     assert "violation_messages_withheld" not in context
+
+
+class _Row(BaseModel):
+    quantity: int
+
+
+class _RecordWithAKeyedMapping(BaseModel):
+    """A record whose mapping is keyed by a party identifier.
+
+    The second vector on the same helper. A violation under such a key puts the
+    key into pydantic's ``loc``, and the projection joined ``loc`` verbatim --
+    so the docstring calling the field path non-sensitive was false for exactly
+    this shape.
+    """
+
+    by_party: dict[str, int]
+    rows: list[_Row]
+
+
+def _keyed_fault(**kwargs: object) -> dict[str, object]:
+    try:
+        _RecordWithAKeyedMapping(by_party={_TAXPAYER_VALUE: "x"}, rows=[{"quantity": "y"}])  # type: ignore[list-item]
+    except ValidationError as exc:
+        return internal_record_fault_context(exc, **kwargs)  # type: ignore[arg-type]
+    raise AssertionError("the fixture must fail validation, or the case proves nothing")
+
+
+def test_a_mapping_key_does_not_reach_the_context_without_the_model() -> None:
+    """Fail safe: with no model to check against, no string component is trusted.
+
+    A caller that cannot say which model failed -- several raise sites guard a
+    block validating more than one -- must not have its path guessed at.
+    """
+    assert _TAXPAYER_VALUE not in json.dumps(_keyed_fault(), default=str)
+
+
+def test_a_mapping_key_does_not_reach_the_context_with_the_model() -> None:
+    """And supplying the model must not re-admit it.
+
+    This is the case that would silently regress if the allowlist were ever
+    built from the input rather than from the declared fields.
+    """
+    assert _TAXPAYER_VALUE not in json.dumps(_keyed_fault(record=_RecordWithAKeyedMapping), default=str)
+
+
+def test_the_fixture_really_would_have_leaked_through_the_path() -> None:
+    """Anti-tautology for the path vector: the key must be in ``loc``."""
+    with pytest.raises(ValidationError) as raised:
+        _RecordWithAKeyedMapping(by_party={_TAXPAYER_VALUE: "x"}, rows=[])  # type: ignore[dict-item]
+
+    assert any(_TAXPAYER_VALUE in item["loc"] for item in raised.value.errors()), (
+        "pydantic no longer reproduces the mapping key in loc; this suite's premise has changed"
+    )
+
+
+def test_the_model_buys_back_the_declared_field_names() -> None:
+    """The whole point of the parameter, and the bound on the redaction.
+
+    Without this the change is indistinguishable from redacting every path, and
+    the diagnostic that makes an internal fault reportable would be gone.
+    """
+    violations = str(_keyed_fault(record=_RecordWithAKeyedMapping)["violations"])
+
+    assert "by_party." in violations, "a declared field name must survive"
+    assert "rows.0.quantity" in violations, "an index and a nested field name must both survive"
+
+
+def test_the_redaction_keeps_the_paths_depth() -> None:
+    """Replaced, never elided.
+
+    Dropping the component would make a mapping indistinguishable from a plain
+    nested field, hiding the presence of a mapping exactly where an engineer
+    needs to see one.
+    """
+    violations = str(_keyed_fault(record=_RecordWithAKeyedMapping)["violations"])
+
+    assert "by_party.<key>" in violations

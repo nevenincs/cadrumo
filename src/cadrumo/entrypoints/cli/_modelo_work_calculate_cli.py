@@ -492,7 +492,11 @@ def _run_work_calculate(
             },
         )
     except ValidationError as exc:
-        raise CliOutboundPayloadBoundaryError(exc) from exc
+        # The model is named here because this block validates exactly one, so the
+        # fault can report its field path instead of redacting every component. The
+        # block above guards a call that validates several and cannot say which
+        # failed, so it deliberately names none.
+        raise CliOutboundPayloadBoundaryError(exc, record=WorkCalculateResult) from exc
     lines = [
         "operation\tmodelo.work.calculate",
         *calculation_revision_lines(calculation_revision),
