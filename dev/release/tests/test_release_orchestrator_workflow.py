@@ -623,8 +623,8 @@ def test_the_seal_module_refuses_a_run_id_as_an_evidence_release() -> None:
     mistake unrepresentable from any caller, and it fails at seal time rather
     than after the soak.
     """
-    from dev.packaging.evidence_release import EvidenceReleaseError
     from dev.release import seal_candidate as seal_module
+    from dev.release._asset_transport import ReleaseAssetTransportError
     from dev.release.release_candidate import ReleaseCandidateError
 
     with (
@@ -637,11 +637,11 @@ def test_the_seal_module_refuses_a_run_id_as_an_evidence_release() -> None:
     # assertion above would pass just as well against a guard that rejected
     # every value. Past the guard, `main` reaches the real `gh` boundary
     # (`resolve_gh`/`download_release_assets`, both raising
-    # EvidenceReleaseError) before any later ReleaseCandidateError site, so
+    # ReleaseAssetTransportError) before any later ReleaseCandidateError site, so
     # the two are the concrete failure modes this sandboxed run can hit.
     with (
         scoped_env_var("CLAUDE_EVIDENCE_RELEASE", "claude-evidence-2026-08-02"),
-        pytest.raises((EvidenceReleaseError, ReleaseCandidateError)) as caught,
+        pytest.raises((ReleaseAssetTransportError, ReleaseCandidateError)) as caught,
     ):
         seal_module.main(["--repository", "nevenincs/cadrumo", "--packaging-run-id", "42"])
     assert "run id rather than a release tag" not in str(caught.value)

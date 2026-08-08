@@ -7378,6 +7378,8 @@ flows:
       google_export_period: Període
       google_export_year: Any
       google_export_year_invalid: Introdueix un any entre 2000 i 2099.
+      logout: Tanca la sessió
+      logout_done: Sessió tancada.
       passphrase: Canviar la contrasenya
       passphrase_confirm: Confirma la nova contrasenya
       passphrase_current: Contrasenya actual

@@ -27,7 +27,8 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 from textual.containers import ScrollableContainer
-from textual.widgets import Button, DataTable, Input
+from textual.css.query import NoMatches
+from textual.widgets import Button, DataTable, Input, Static
 
 from .....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
 from .....application.user_profile import ProfileRepository, build_profile_overview, register_profile_with_credentials
@@ -185,6 +186,80 @@ def _login(tmp_path: Path) -> Iterator[LoginApp]:
 
 
 @contextmanager
+def _status_populated(tmp_path: Path) -> Iterator[StatusApp]:
+    """The status page with its NOTICES region genuinely populated.
+
+    Built through the real production door, ``build_status_page_data()``,
+    rather than a hand-built ``StatusPageData`` -- a freshly registered
+    profile has zero AEAT-sourced calculation observations by construction,
+    which is exactly the condition ``no_aeat_history_notice`` fires an INFO
+    notice for, so this reaches a real notice without fabricating one.
+
+    This is the fixture that would have caught the shipped defect:
+    ``NoticeBand`` inherited Textual's ``Vertical`` default ``height: 1fr``,
+    so once a notice was present it claimed the whole scroll column and the
+    profile, profiles, auth and recovery panels beneath it did not paint at
+    ANY terminal size. Every existing gate below builds ``status`` with no
+    notices at all (:func:`_status`), so none of them could have seen it --
+    a widget that eliminates its siblings passes edge, scroll, theme, tab
+    and masking checks identically whether the siblings are there or not.
+    """
+    from .....entrypoints.cli._config._status_frontend import build_status_page_data
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
+        yield StatusApp(build_status_page_data())
+
+
+@contextmanager
+def _manager_populated(tmp_path: Path) -> Iterator[ProfileManagerApp]:
+    """The manager with a REPEATABLE section's row count grown past one.
+
+    ``manager`` (:func:`_manager`) always renders its full declared field
+    set regardless of whether any field holds a value -- that is the
+    surface's whole design, per its own module docstring -- so a bare
+    profile and a fact-filled one have the IDENTICAL row set and would not
+    exercise a region-eviction defect the way a populated status page does.
+    What DOES change the structure is a repeatable section gaining a row,
+    the same mechanism ``add_row_action`` drives, added here directly
+    through the write door rather than by pressing the button: the
+    property under test is rendering, not the seam.
+
+    ``activities`` is picked over ``attribution_entity_socios`` (used
+    elsewhere in this package) because its only required field is
+    ``description`` -- stable against the unrelated peer schema change that
+    made a socio row require a ``clave`` this fixture would otherwise have
+    to track.
+    """
+    from .....application.user_profile import (
+        next_section_row_index,
+        section_row_facts,
+        set_active_fields,
+    )
+    from .....application.workflow import workflow_state_repository
+    from .....domain.user_profile import load_user_profile_schema
+    from .....entrypoints.cli._config._manager_actions import manager_actions
+    from .....entrypoints.cli._config._manager_frontend import (
+        build_active_profile_overview,
+        persist_active_profile_field,
+        profile_field_value_refusal,
+    )
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
+        schema = load_user_profile_schema()
+        section = next(item for item in schema.sections if item.key == "activities")
+        facts = section_row_facts(section, row_index=next_section_row_index(section.key, ()), values={"description": "Consultoria"})
+        workflow_state_repository().update(lambda state: set_active_fields(state, facts))
+        yield ProfileManagerApp(
+            build_active_profile_overview(),
+            persist=persist_active_profile_field,
+            actions=manager_actions(),
+            validate=profile_field_value_refusal,
+        )
+
+
+@contextmanager
 def _question(tmp_path: Path) -> Iterator[FlowTuiApp]:
     """The wizard question screen, carrying more content than a short terminal holds.
 
@@ -263,8 +338,10 @@ _SURFACES = [
     pytest.param(_registration, id="registration"),
     pytest.param(_form, id="form"),
     pytest.param(_status, id="status"),
+    pytest.param(_status_populated, id="status-populated"),
     pytest.param(_question, id="question"),
     pytest.param(_manager, id="manager"),
+    pytest.param(_manager_populated, id="manager-populated"),
     pytest.param(_login, id="login"),
 ]
 """Every builder here takes ``tmp_path`` and is a context manager, uniformly
@@ -353,6 +430,89 @@ async def test_every_surface_actually_renders_under_both_appearances(build, them
             rendered = app.export_screenshot()
             assert "<text" in rendered, "the surface rendered no text at all"
             assert len(rendered) > 1000, "the surface rendered a suspiciously empty frame"
+            app.exit(None)
+
+
+_CONDITIONAL_REGION_SURFACES = [
+    pytest.param(
+        _status_populated,
+        ("panel-notices", "panel-profile", "panel-profiles", "panel-auth", "panel-recovery"),
+        id="status-populated",
+    ),
+    pytest.param(
+        _manager_populated,
+        ("section-identity", "section-preferences", "section-activities"),
+        id="manager-populated",
+    ),
+]
+"""Every surface audited for a REGION a populated state could evict, paired
+with every region id that must survive populating it.
+
+This is the property that would have caught the shipped defect directly:
+``NoticeBand`` inherited Textual's ``Vertical`` default ``height: 1fr``, so
+a populated notices region silently claimed the whole scroll column and
+every sibling panel beneath it stopped painting -- at every terminal size,
+including 100x50. No existing gate in this module could have seen it,
+because every one of them builds its surfaces in their EMPTIEST reachable
+state (:func:`_status` carries no notices, :func:`_manager` carries no
+extra rows) -- a widget that eliminates its siblings passes edge, scroll,
+theme, tab and masking checks identically whether the siblings are still
+there or not.
+
+Audited but NOT enrolled, with the reason stated rather than left silent:
+
+- ``registration``/``login`` (:mod:`_credential_screen.py`): the refusal
+  line is ``.credential-refusal``, a bare :class:`~textual.widgets.Static`,
+  not a :class:`~textual.containers.Vertical` subclass with an unset
+  height -- Static's own default height is ``auto``, so the specific
+  Vertical-1fr defect shape this property targets does not apply to it.
+  Driving either screen to a populated refusal needs a failed pilot
+  submission on top of the storage fixture already required, which is
+  disproportionate scaffolding for a region already structurally safe from
+  this defect class.
+- ``form`` (:mod:`_form_screen.py`): ``#form-refusal`` is the same bare
+  Static shape. Its OTHER conditional region -- the summary table's row
+  set growing as fields are edited -- is already exercised end to end by
+  ``test_a_modal_secret_never_paints_its_value``, which drives every
+  manager action's form through a row edit and re-render.
+- ``question``: the flow engine's paged review table overflowing the
+  question panel is a real conditional-region concern, but it is already
+  covered on its own terms by ``test_the_screen_itself_never_scrolls_on_a_flow_surface``
+  below, built for exactly that overflow rather than a bare presence check.
+"""
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(("build", "region_ids"), _CONDITIONAL_REGION_SURFACES)
+async def test_populating_a_conditional_region_does_not_evict_its_siblings(build, region_ids, tmp_path: Path) -> None:
+    """Every declared region stays painted once one of them holds real content.
+
+    Read directly off the widget's own laid-out ``region`` rather than off
+    an exported screenshot. A border-title substring search was tried
+    first and rejected: this file's OWN earlier mutation-proof against the
+    modal-secret gate already established that Rich's SVG export can split
+    or truncate a string across multiple runs, so a substring absent from
+    the export text is not evidence of anything -- it would have made this
+    gate exactly as unsound as the one that lesson was learned from.
+    ``display`` and ``region.height`` are the compositor's own layout
+    verdict, not a rendering of it, which is what the shipped defect
+    actually broke: the panels stayed mounted (``display=True``) while
+    ``NoticeBand``'s inherited ``height: 1fr`` left them zero paintable
+    space.
+    """
+    with build(tmp_path) as app:
+        async with app.run_test(size=(100, 50)) as pilot:
+            await pilot.pause()
+            starved = []
+            for region_id in region_ids:
+                try:
+                    widget = app.query_one(f"#{region_id}", Static)
+                except NoMatches:
+                    starved.append(f"#{region_id} (not mounted)")
+                    continue
+                if not widget.display or widget.region.height <= 0:
+                    starved.append(f"#{region_id} (display={widget.display}, height={widget.region.height})")
+            assert not starved, f"populating one region evicted its sibling(s): {starved}"
             app.exit(None)
 
 

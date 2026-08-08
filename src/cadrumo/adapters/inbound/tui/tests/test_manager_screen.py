@@ -22,7 +22,7 @@ from .....application.user_profile import (
     build_profile_overview,
     register_profile_with_credentials,
 )
-from .....core import require_active_bucket_id
+from .....core import require_active_bucket_id, resolve_active_bucket_id
 from .....core.i18n import tr
 from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
 from .....tests.manager_pilot import wait_until_settled
@@ -711,3 +711,42 @@ async def test_the_manager_states_the_recovery_boundary_by_name(tmp_path) -> Non
             # rather than an explained constraint.
             assert "una sola vez" in text
             app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_logout_closes_both_the_session_and_the_surface(tmp_path) -> None:
+    """Logout must actually end the session AND close the manager -- verify both.
+
+    Neither half alone is the fix. A logout that closed the session but
+    left the screen up would keep rendering a now-locked profile's fields
+    as though they were still live -- worse than no affordance, because
+    the operator would be looking at data the application no longer
+    considers current. A logout that closed the screen without actually
+    calling the real teardown would look identical from the pilot's side
+    while leaving the session artefacts on disk. So this asserts the
+    session is gone (the real ``logout_active_profile`` door, not a
+    stand-in) AND that the app is no longer running, not either alone.
+    """
+    from .....entrypoints.cli._config._manager_actions import logout_action
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        assert resolve_active_bucket_id() is not None, "the fixture must start logged in, or this proves nothing"
+
+        app = ProfileManagerApp(_live_overview(), persist=_persist, actions=[logout_action()])
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            await pilot.click("#action-logout")
+            for _ in range(200):
+                if not app.is_running:
+                    break
+                await pilot.pause()
+
+            # Checked INSIDE the pilot context deliberately: ``run_test``'s
+            # own ``__aexit__`` force-stops the app when the block ends
+            # regardless of what the code under test did, so asserting
+            # ``is_running`` after the block would pass even if nothing
+            # here ever called ``exit()`` -- it would just be observing the
+            # harness's own teardown.
+            assert not app.is_running, "the surface must actually close, not merely blank itself"
+            assert resolve_active_bucket_id() is None, "the real session teardown must have run"

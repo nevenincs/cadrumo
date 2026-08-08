@@ -207,7 +207,7 @@ async def test_an_action_that_starts_its_own_loop_is_carried_by_the_seam(tmp_pat
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("action_key", [action.key for action in manager_actions()])
+@pytest.mark.parametrize("action_key", [action.key for action in manager_actions() if action.key != "logout"])
 async def test_pressing_a_real_action_reports_the_outcome_it_actually_reached(tmp_path, action_key: str) -> None:
     """Every shipped action must run to its own conclusion when pressed.
 
@@ -225,6 +225,18 @@ async def test_pressing_a_real_action_reports_the_outcome_it_actually_reached(tm
     is that the press reaches the action and its answer reaches the page.
     That the answer carries the operator's values is proved separately, by
     committing one.
+
+    ``logout`` is deliberately excluded from this parametrization. Every
+    other action's conclusion is a notice line written into a page that is
+    still there to read it from; logout's conclusion is that the page
+    stops existing, by design (see ``ManagerActionOutcome.close_session``
+    and ``ProfileManagerApp._settle_action``), so there is no notice text
+    to assert equality against — reading one back would pin whatever the
+    page happened to say a moment before it closed, which is exactly the
+    flaky-instrument shape this test's own docstring warns against.
+    ``test_logout_closes_both_the_session_and_the_surface`` in
+    ``test_manager_screen.py`` covers logout's actual, differently-shaped
+    conclusion.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)

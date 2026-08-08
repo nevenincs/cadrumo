@@ -27,7 +27,7 @@ identify-MY-run hazard this module exists to close. It closes both gaps:
   so a badly sized wait starves the fleet for hours per release.
 
 See Also:
-    :mod:`dev.packaging.evidence_release`
+    :mod:`dev.release._asset_transport`
         The sibling per-run identity verification (Gate 2-shape) this
         module's resolved run id feeds into; every dispatched run is checked
         exactly as a hand-typed one is, so a machine-supplied run id carries

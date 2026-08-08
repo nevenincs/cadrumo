@@ -34,7 +34,7 @@ from ...application.ledger import (
     suggest_evidence_split,
     suggest_llm_classification,
 )
-from ...core import resolve_active_bucket_id
+from ...core import provenance_stamp_transport, resolve_active_bucket_id
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.iva import IvaCategory
@@ -142,11 +142,15 @@ def reader_from_provenance(provenance: str) -> str:
     keeps the field truthful if a second on-host reader is ever added, where a
     hardcoded constant would quietly misreport.
 
+    **Delegated rather than parsed here**, for the reason the audit payload's
+    sibling is: the stamp's middle segment is ``<transport>-<reader>``, so a
+    colon split returned both glued together. Two implementations of one grammar
+    agree only while somebody maintains both.
+
     Falls back to the whole string when the shape is unexpected, so a malformed
     provenance surfaces in the payload instead of being silently blanked.
     """
-    parts = provenance.split(":")
-    return parts[1] if len(parts) >= 2 and parts[1] else provenance
+    return provenance_stamp_transport(provenance) or provenance
 
 
 def split_recommendation_notice(transaction_id: str) -> Notice:

@@ -48,7 +48,7 @@ from uuid import uuid4
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-from ...core import PDF_CONTAINER_SHAPES, ImageMediaType, detect_image_media_type
+from ...core import PDF_CONTAINER_SHAPES, ImageMediaType, detect_image_media_type, provenance_stamp_transport
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware, now
@@ -157,9 +157,25 @@ def _transport_from_provenance(provenance: str) -> str:
     true: off-host reading was re-sanctioned behind a per-invocation consent
     gate, so this value is again the thing that says whether a document left the
     host.
+
+    **Delegated rather than parsed here.** The stamp's middle segment is
+    ``<transport>-<reader>``, so a colon split alone returned both glued
+    together -- ``local-text`` where the field means ``local``. That was
+    invisible while every read was on-host and one label was as good as another;
+    with off-host reading back it would have published ``openai-text`` as the
+    provider, which is wrong in a way a reader believes rather than questions.
+
+    The fix is convergence, not a second split. Two implementations of one
+    grammar agree only while somebody maintains both, and this pair had already
+    stopped agreeing.
+
+    Falls back to the whole stamp when the grammar does not recognise it, so a
+    malformed provenance surfaces in the payload rather than being blanked --
+    and deliberately NOT to a transport label, because an unreadable stamp is a
+    question this cannot answer and answering it optimistically would hide the
+    artefact a withdrawal most needs to surface.
     """
-    parts = provenance.split(":")
-    return parts[1] if len(parts) >= 3 else provenance
+    return provenance_stamp_transport(provenance) or provenance
 
 
 def _bytes_bearing_evidence_input(

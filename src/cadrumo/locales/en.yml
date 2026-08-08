@@ -6911,6 +6911,8 @@ flows:
       google_export_period: Period
       google_export_year: Year
       google_export_year_invalid: Enter a year between 2000 and 2099.
+      logout: Log out
+      logout_done: Logged out.
       passphrase: Change passphrase
       passphrase_confirm: Confirm new passphrase
       passphrase_current: Current passphrase

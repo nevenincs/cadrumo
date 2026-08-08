@@ -31,6 +31,15 @@ type LocaleNode = str | dict[str, "LocaleNode"] | None
 _log = get_logger(__name__)
 _INTENTIONAL_IDENTICAL_FILENAME = "_intentional_identical.json"
 
+_MODELO_SCHEMA_PREFIX = "modelo.schema."
+"""The one key family whose catalogues accept an explicitly absent value.
+
+Declared here rather than beside its other reader because the scaffold decides
+what an unvalued key becomes, and that decision has to agree with the status
+report's view of which keys may legitimately be null. Two copies of the literal
+would let the writer and the reader disagree about the same key.
+"""
+
 
 class _MissingLocaleLeaf(Enum):
     """Single-member sentinel for a key absent from the catalogue.
@@ -601,16 +610,42 @@ def _collect_required_leaves(
 ) -> dict[str, LocaleNode]:
     """Resolve each dotted ``key`` against ``existing_data`` to its leaf value.
 
-    Returns a flat ``{dotted_key: value}`` map. A key that resolves to a
-    non-dict leaf carries its existing translation; a key that is
-    missing or whose path bottoms out at a dict (i.e. an interior node,
-    not a leaf) carries its own dotted path as a placeholder — the
-    scaffold convention for "no translation yet".
+    Returns a flat ``{dotted_key: value}`` map holding only keys that have a
+    value. A key that resolves to a non-dict leaf carries its existing
+    translation; a MISSING key -- absent, or bottoming out at an interior node
+    -- is handled by what the catalogues actually accept for "no translation
+    yet", which is not one answer:
+
+    * A Modelo-schema key carries ``None``. That is the representation
+      :meth:`LocaleManager.set_locale_values` already reserves for exactly
+      these keys: it holds inter-locale key parity without fabricating text,
+      and the Modelo resolver then applies its documented Spanish-source
+      fallback.
+    * Any other key is OMITTED. The parity check reports it as missing, which
+      is an honest statement that the author still owes four values, and
+      ``set`` creates it with the first real one.
+
+    **Neither writes the key's own dotted path as its value, and that is the
+    whole change.** Doing so was described here as the scaffold convention for
+    "no translation yet", but no consumer in the tree accepts it: the
+    translation-honesty ratchet refuses a key-echo outright, and three separate
+    coverage gates fail on one. A convention nothing reads is not a convention,
+    and this was its only producer -- so every echo the catalogues carried was
+    written here and forbidden everywhere else.
+
+    The failure directions are not symmetric, which is why omission is right
+    rather than merely tidier. An omitted key costs the authoring lane a
+    missing-key report it can clear with the values only it knows. An echoed
+    key costs EVERY lane a red honesty gate it did not cause, cannot clear
+    without those same values, and meets while working on something else.
     """
     resolved: dict[str, LocaleNode] = {}
     for key in keys:
         leaf = _resolve_leaf(existing_data, key.split("."))
-        resolved[key] = key if leaf is _MISSING_LOCALE_LEAF else leaf
+        if leaf is not _MISSING_LOCALE_LEAF:
+            resolved[key] = leaf
+        elif key.startswith(_MODELO_SCHEMA_PREFIX):
+            resolved[key] = None
     return resolved
 
 
@@ -667,14 +702,30 @@ def _resolve_leaf_parent(
 ) -> dict[str, LocaleNode]:
     """Walk to the mapping that owns ``parts[-1]``, refusing every wrong shape.
 
-    Each refusal names what the path actually resolved to, so an operator
-    who addressed a namespace, a leaf's child, or a key the catalogue has
-    not scaffolded yet is told which of those happened.
+    Each refusal names what the path actually resolved to, so an operator who
+    addressed a namespace or a leaf's child is told which of those happened.
+
+    **A namespace that does not exist yet is CREATED rather than refused**, and
+    the batch writer beside this one has always done so through
+    :func:`_set_nested_leaf`; the two disagreed about the same operation. The
+    refusal here said "run locale scaffold first", which was only ever true
+    because the scaffold answered it by writing the key's own dotted path as a
+    placeholder -- a value the honesty ratchet and three coverage gates all
+    refuse. So the one route to a new key ran through a value nothing accepts.
+    Creating the namespace is what lets the scaffold stop fabricating: an author
+    adds a ``tr()`` call and supplies the four values directly, and no
+    unvalued key exists at any point.
+
+    The shape refusals below are unchanged. Addressing a namespace as a leaf, or
+    a leaf's child, is still a mistake about the catalogue rather than a key
+    that does not exist yet.
     """
     cursor: LocaleNode = data
     for part in parts[:-1]:
-        if not isinstance(cursor, dict) or part not in cursor:
-            raise LocaleError(f"Locale key not found: {dotted_key!r}; run locale scaffold first")
+        if isinstance(cursor, dict) and part not in cursor:
+            cursor[part] = {}
+        if not isinstance(cursor, dict):
+            raise LocaleError(f"Cannot set {dotted_key!r}: parent path resolves to a leaf")
         cursor = cursor[part]
     if not isinstance(cursor, dict):
         raise LocaleError(f"Cannot set {dotted_key!r}: parent path resolves to a leaf")

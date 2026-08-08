@@ -61,10 +61,23 @@ class ManagerActionOutcome:
     record, and is ``None`` when it did not — an export writes a file and
     leaves the profile alone. The screen re-renders only when it is given
     something new, so a read-only action cannot silently redraw stale data.
+
+    ``close_session`` is the one general close signal: an action whose
+    outcome ends the operator's session (today, only logout) sets it so
+    :meth:`ProfileManagerApp._settle_action` exits the surface instead of
+    re-rendering it. Without this the screen kept rendering the
+    now-logged-out profile's stale table after logout ran underneath it —
+    worse than no affordance, because the operator would be looking at
+    data the application no longer considers live. Deliberately one flag
+    rather than a family of close *reasons*: nothing today needs to
+    distinguish "closed because logged out" from any other closing action,
+    and inventing that distinction ahead of a second consumer would be
+    exactly the speculative variant this primitive is meant not to be.
     """
 
     message: str
     overview: ProfileOverview | None = None
+    close_session: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -739,6 +752,15 @@ class ProfileManagerApp(App[None]):
             self._refuse_worker(worker.error, message_key="flows.manager.action.failed")
             return
         outcome = worker.result
+        if outcome.close_session:
+            # The surface itself must go, not merely repaint: re-rendering
+            # here would show the just-logged-out profile's table as if it
+            # were still live. Exiting is what actually closes the operator
+            # back to their shell, the same coherent landing the quit
+            # binding already gives them -- there is nowhere else to route
+            # a session that just ended.
+            self.app.exit(None)
+            return
         if outcome.overview is not None:
             # A full redraw, not a cell diff: an action can change the
             # profile's shape, which is exactly what the diff cannot do.

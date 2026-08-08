@@ -31,7 +31,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from dev.packaging.evidence_release import (
+from dev.release._asset_transport import (
     EvidenceLane,
     download_release_assets,
     evidence_tag,

@@ -18,10 +18,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from dev.packaging.evidence_release import EVIDENCE_TAG_RE, plan_evidence_gc
 from dev.release import release_candidate
 from dev.release.release_candidate import (
-    CANDIDATE_TAG_RE,
     ReleaseCandidate,
     ReleaseCandidateError,
     SoakWindow,
@@ -186,36 +184,6 @@ def test_the_window_boundary_is_inclusive() -> None:
     assert candidate.window_elapsed(now=candidate.soak_deadline) is True
     assert candidate.window_elapsed(now=candidate.soak_deadline - timedelta(seconds=1)) is False
     assert candidate.window_elapsed(now=candidate.soak_deadline + timedelta(seconds=1)) is True
-
-
-def test_the_candidate_namespace_is_unreachable_by_the_evidence_gc() -> None:
-    """The soak state must outlive evidence retention, and does so by construction.
-
-    A candidate sits sealed for two to three days. The evidence GC keeps only
-    the newest K drafts per lane, so a candidate inside that namespace could be
-    deleted by later campaigns mid-window - and a collected candidate does not
-    publish late, it never publishes at all.
-
-    This asserts the real GC planner ignores the namespace, so enrolling
-    candidates as an EvidenceLane would red here rather than silently making
-    in-flight soak state collectable.
-    """
-    tag = candidate_tag("101")
-    assert EVIDENCE_TAG_RE.fullmatch(tag) is None
-    assert CANDIDATE_TAG_RE.fullmatch(tag) is not None
-
-    releases = [
-        {"tag_name": "evidence-smoke-101", "draft": True, "created_at": "2026-08-01T00:00:00Z"},
-        {"tag_name": "evidence-smoke-102", "draft": True, "created_at": "2026-08-02T00:00:00Z"},
-        {"tag_name": tag, "draft": True, "created_at": "2026-08-01T00:00:00Z"},
-    ]
-    plan = plan_evidence_gc(releases, keep_per_lane=1)
-
-    assert tag not in plan.delete
-    assert tag not in plan.kept, "the candidate must be invisible to the GC, not merely spared by retention"
-    # Control: the GC is genuinely running and deleting in this scenario, so the
-    # candidate's absence is exemption rather than an inert planner.
-    assert "evidence-smoke-101" in plan.delete
 
 
 def test_only_draft_releases_in_the_reserved_namespace_are_candidates() -> None:

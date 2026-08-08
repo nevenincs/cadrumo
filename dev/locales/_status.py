@@ -28,6 +28,7 @@ from cadrumo.core.i18n import extract_placeholders
 
 from .manager import (
     _INTENTIONAL_IDENTICAL_FILENAME,
+    _MODELO_SCHEMA_PREFIX,
     LocaleManager,
     _covered_by_namespace,
     _flatten_raw_locale_leaves,
@@ -36,7 +37,6 @@ from .manager import (
 
 _REFERENCE_LOCALE_FILE = "en.yml"
 _MODELO_SOURCE_LOCALE_FILE = "es.yml"
-_MODELO_SCHEMA_PREFIX = "modelo.schema."
 _PENDING_BUCKET_KEY = "untranslated_pending"
 
 # tr() consumes these kwargs as rendering directives and strips them from the

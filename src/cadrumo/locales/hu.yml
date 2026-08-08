@@ -7261,6 +7261,8 @@ flows:
       google_export_period: Időszak
       google_export_year: Év
       google_export_year_invalid: Adjon meg egy 2000 és 2099 közötti évet.
+      logout: Kijelentkezés
+      logout_done: Kijelentkezve.
       passphrase: Jelmondat módosítása
       passphrase_confirm: Új jelmondat megerősítése
       passphrase_current: Jelenlegi jelmondat

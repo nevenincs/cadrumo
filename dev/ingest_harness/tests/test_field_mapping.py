@@ -13,7 +13,6 @@ import pytest
 from cadrumo.application.ledger import InvoiceDraft
 
 from .._field_mapping import (
-    COUNTRY_LEAF_IS_UNSCORED_FOR_NOW,
     KEY_FIELD_MAPPINGS,
     FieldMapping,
     MappingKind,
@@ -142,23 +141,24 @@ def test_a_composite_expands_to_one_slot_per_leaf(key: CorpusKey) -> None:
     assert {"issuer.name", "issuer.tax_id"} <= set(slots)
 
 
-def test_the_country_leaf_is_excluded_and_says_why(key: CorpusKey) -> None:
-    """The interim exclusion is pinned, so it cannot quietly become permanent.
+def test_the_country_leaf_is_scored_against_the_resolved_code(key: CorpusKey) -> None:
+    """The interim exclusion is retired, and the leaf now measures a real capability.
 
-    The reader reports the country CORRECTLY as a printed name while the corpus
-    states an ISO code, and the resolution between them exists on another path.
-    Scoring it today would dock a reading score for a capability this path lacks;
-    leaving the omission silent would make a decision with an expiry look like a
-    field nobody considered.
+    The corpus states the country as an ISO code and the reader reports a
+    printed name; the reading path derives the code from the name through the
+    same vocabulary the structured e-invoice lane uses, so the leaf scores
+    against something the path produces rather than docking it for a capability
+    it lacked. The mapping points at the RESOLVED code field, not at the printed
+    name, because the name would never equal the corpus value.
     """
     document = next(d for d in key.documents if isinstance(d.ground_truth.get("issuer"), dict))
 
     slots = expand_document_slots(document).ground_truth
 
-    assert "issuer.country" not in slots
-    assert "recipient.country" not in slots
-    assert "INTERIM" in COUNTRY_LEAF_IS_UNSCORED_FOR_NOW
-    assert "delete this note" in COUNTRY_LEAF_IS_UNSCORED_FOR_NOW
+    assert "issuer.country" in slots
+    assert "recipient.country" in slots
+    assert KEY_FIELD_MAPPINGS["issuer"].leaves["country"] == "supplier_country_code"
+    assert KEY_FIELD_MAPPINGS["recipient"].leaves["country"] == "customer_country_code"
 
 
 def test_one_wrong_leaf_does_not_destroy_the_others(key: CorpusKey) -> None:

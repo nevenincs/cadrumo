@@ -7427,6 +7427,8 @@ flows:
       google_export_period: Periodo
       google_export_year: Año
       google_export_year_invalid: Introduce un año entre 2000 y 2099.
+      logout: Cerrar sesión
+      logout_done: Sesión cerrada.
       passphrase: Cambiar la contraseña
       passphrase_confirm: Confirme la nueva contraseña
       passphrase_current: Contraseña actual
