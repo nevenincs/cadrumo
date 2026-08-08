@@ -360,16 +360,26 @@ def test_cross_border_criteria_do_not_require_rate_tier() -> None:
 
 
 def test_classification_rate_resolution_uses_transaction_date() -> None:
-    """The 2024 baseline lookup returns the 2024 rate record."""
-    result = classify_iva(
-        _criteria(
-            transaction_date=date(2024, 6, 15),
-            rate_tier=IvaRateKind.GENERAL,
-        ),
-    )
-    assert result.rate is not None
-    assert result.rate.effective_from == date(2024, 1, 1)
-    assert result.rate.effective_until == date(2024, 12, 31)
+    """Two dates in different windows resolve DIFFERENT records.
+
+    Asserts the property rather than one record's bounds. The previous version
+    pinned ``effective_from == 2024-01-01``, which was a bulk-refresh boundary
+    the table mistook for legal effect; when that was corrected to the statutory
+    2012-09-01 the test failed for a reason that had nothing to do with
+    classification. Comparing two windows tests what this function actually does
+    -- pick by transaction date -- and survives any later correction to either
+    window's edges.
+    """
+    earlier = classify_iva(_criteria(transaction_date=date(2024, 6, 15), rate_tier=IvaRateKind.GENERAL))
+    later = classify_iva(_criteria(transaction_date=date(2025, 6, 15), rate_tier=IvaRateKind.GENERAL))
+
+    assert earlier.rate is not None
+    assert later.rate is not None
+    assert earlier.rate.effective_from != later.rate.effective_from
+    assert earlier.rate.effective_until == date(2024, 12, 31)
+    assert later.rate.effective_until is None
+    # Same tier, same value, different record: the date is what discriminates.
+    assert earlier.rate.pct == later.rate.pct
 
 
 def test_classification_rate_resolution_returns_none_for_export() -> None:

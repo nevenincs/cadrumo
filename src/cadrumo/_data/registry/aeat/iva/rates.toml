@@ -1,18 +1,45 @@
+# El tipo general es del 21 % de forma CONTINUA desde el 1 de septiembre de 2012,
+# fecha y cifra que fija RDL 20/2012 art. 23 apartado Dos al dar nueva redaccion
+# al art. 90 Uno LIVA. El art. 90 es el articulo marco que aloja el valor; la
+# norma modificativa es la que lo establece, y por eso se citan las dos.
+#
+# EL effective_from ANTERIOR ERA 2024-01-01, Y ESO ERA UNA FRONTERA DE REFRESCO
+# LEIDA COMO EFECTO LEGAL. El campo esta definido como "First date the rate
+# applies" y todos los consumidores lo comprueban por ventana, de modo que la
+# tabla afirmaba que el 21 % empezo en 2024 -- por lo que ninguna linea de 2022
+# ni 2023 podia valorarse, pese a que ambos ejercicios estan dentro del plazo de
+# prescripcion y el registro declara revisiones anteriores a 2024 en mas de
+# treinta modelos. El corte 2024/2025 se conserva: ambos tramos son ciertos y
+# contiguos, y borrar una fila no aporta nada.
 [[rates]]
 member_state = "es"
 kind = "general"
 pct = "21"
-effective_from = 2024-01-01
+effective_from = 2012-09-01
 effective_until = 2024-12-31
-legal_refs = ["ley-37-1992:art-90"]
+legal_refs = ["ley-37-1992:art-90", "real-decreto-ley-20-2012:art-23-dos"]
 
+# El tipo reducido es del 10 % de forma continua desde el 1 de septiembre de 2012,
+# que fija RDL 20/2012 art. 23 apartado TRES al dar nueva redaccion al art. 91.
+#
+# APARTADO TRES, NO DOS. El mismo articulo fija los dos tipos en apartados
+# distintos: Dos el general y Tres el reducido. La nota de modificacion del art.
+# 90 consolidado cita "art. 23.2", que es correcta para el 21 % y erronea en un
+# apartado para este. Citar 23.2 aqui seria fundamentar el valor en la provision
+# del tipo de al lado.
+#
+# LAS FILAS TRANSITORIAS NO CHOCAN con esta ventana ampliada: 5 % y 7,5 % llevan
+# supersedes_tier_default, y _assert_no_overlap excluye esas filas justamente
+# porque existen para solaparse -- una norma aplico un tipo a parte de los bienes
+# del escalon mientras el resto seguia en el ordinario, y ambas son ciertas a la
+# vez. Comprobado antes de ampliar, no supuesto.
 [[rates]]
 member_state = "es"
 kind = "reduced"
 pct = "10"
-effective_from = 2024-01-01
+effective_from = 2012-09-01
 effective_until = 2024-12-31
-legal_refs = ["ley-37-1992:art-91"]
+legal_refs = ["ley-37-1992:art-91", "real-decreto-ley-20-2012:art-23-tres"]
 
 [[rates]]
 member_state = "es"
