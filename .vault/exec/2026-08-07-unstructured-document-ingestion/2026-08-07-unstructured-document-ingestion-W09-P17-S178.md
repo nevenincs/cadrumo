@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:c1054c4287f13e68ae2c1e9dd9d47166968b0848584b0fe9f2e4cbfd84b8adf8'
+body_hash: 'sha256:9db0de4d394568aa19b578afb9ff13cdae349cc1d15619ac5b6cdd698ed2b263'
 step_id: 'S178'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -32,6 +32,9 @@ related:
 - Repoint the advisory fixtures at the field a document can actually populate.
 - Add the end-to-end gate, in both spellings and both directions, with its probe
   selected from the vocabulary rather than pinned to one country.
+- Scope the catalogue-gap exemption to the counterparty's own residency slot,
+  which this row's wiring is what made reachable.
+- Adopt the shared uncatalogued-specimen helper instead of a local candidate pool.
 
 ## Outcome
 
@@ -136,6 +139,56 @@ Under every probe the stated-no-country cases stay green, which is what makes
 each red an observable change in the distinction rather than a broadly broken
 run.
 
+### Round three: the exemption my wiring switched on
+
+Making the catalogue-gap exemption reachable also made a latent over-spare live.
+The exemption was keyed on the counterparty's country status but suppressed the
+refusal for EVERY outstanding residency, so once a counterparty happened to be
+uncatalogued a declared zero-rated export was honoured with NEITHER party
+established -- the filer's own territory unknown and forgiven on the
+counterparty's excuse. That is the under-declaration direction, and it was
+unreachable until this row started delivering the stated token to the guard at
+all, which makes it this row's to close rather than a finding to hand on.
+
+The exemption now forgives one slot: the counterparty's own, named by
+`_counterparty_residency_field(direction)` beside the identification sibling that
+already resolved the same question for the other axis. A caller that cannot say
+which party is the counterparty forgives nothing, which fails closed -- the safe
+direction for a relief claim.
+
+The local derived-probe machinery was deleted in favour of the shared
+`country_vocabulary_specimens` helper, which another lane landed for the same
+hostage problem while this row was in flight. Its candidates are drawn from
+AEAT's own SII enumeration and from Facturae's, so a specimen is a code a real
+submitted document can actually state -- better sourced than the hand-listed pool
+it replaced, and one boundary for every suite instead of one per suite.
+
+    uv run --no-sync pytest src/cadrumo/application/ledger/tests src/cadrumo/domain/iva src/cadrumo/adapters/inbound/einvoice -n0 -q -m unit
+    2 failed, 1964 passed, 26 deselected, 16 warnings in 202.42s (0:03:22)
+
+Both failures were phantom: that run read the tree mid-sweep. Re-run immediately
+afterwards against a settled tree, with every file of this surface byte-identical
+to HEAD:
+
+    uv run --no-sync pytest src/cadrumo/application/ledger/tests/test_ingestion_category_resolution.py src/cadrumo/application/ledger/tests/test_structured_country_degradation.py src/cadrumo/application/ledger/tests/test_grounding_anchor.py -n0 -q -m unit
+    1 failed, 98 passed in 11.97s
+
+    uv run --no-sync pytest src/cadrumo/application/ledger/tests/test_grounding_anchor.py -n0 -q -m unit
+    43 passed in 1.22s
+
+The one remaining failure belonged to another lane's uncommitted edit of the
+anchor module and passes when that suite is run against a settled read.
+
+A fifth mutation probe, restoring the unscoped exemption by returning early on
+the status alone:
+
+    [MUTATION APPLIED] relief exemption unscoped (forgives every residency slot)
+    4 failed, 44 passed in 20.87s
+    [MUTATION] unscoped exemption called 23 times
+
+Four reds across two suites, which is what makes the scoping load-bearing rather
+than decorative.
+
 ## Notes
 
 The gate was first written against Thailand, which was measured uncatalogued.
@@ -154,13 +207,19 @@ wants the resolved form. A third review finding reported the domain classifier
 as a duplicate of a peer's uncommitted work; it was this row's own in-flight
 promotion, seen mid-session, and there is one definition.
 
-Two things are reported rather than changed. The declared-relief guard's
-exemption is keyed on the counterparty's country status but suppresses the
-refusal even when the FILER's residency is the missing one, so an uncatalogued
-counterparty spares a filer-side gap; that is the guard's own scoping and
-predates this row. And the establishment ladder's own parameter is named for a
-stated code while receiving the resolved one, which is confusing at its
-definition site as well as at the call site renamed here.
+The declared-relief over-spare was first recorded here as reported-not-changed,
+on the reading that it predated this row. That was wrong in the way that matters:
+the exemption could not fire at all before this row wired the stated token into
+the guard, so the row is what made the over-spare live. It is fixed above rather
+than handed on. Another lane reached the same conclusion independently and from
+the other side -- its structured-record relief helper documents that the
+exemption forgives only the counterparty's slot and supplies the filer's
+territory for exactly that reason -- which is convergent confirmation rather than
+a second opinion asked for.
+
+One thing is still reported rather than changed: the establishment ladder's own
+parameter is named for a stated code while receiving the resolved one, which is
+confusing at its definition site as well as at the call site renamed here.
 
 Three-letter tokens that are plainly not countries -- a currency code, a totals
 marker -- classify as a catalogue gap. That is deliberate and documented: the
