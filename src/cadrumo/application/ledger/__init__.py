@@ -215,6 +215,7 @@ if TYPE_CHECKING:
         deterministic_check_names,
         deterministic_findings,
     )
+    from ._confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
     from ._document_transcription import DocumentTranscription, TranscriberIdentity
     from ._establishment_ladder import (
         CounterpartyEstablishment,
@@ -352,10 +353,19 @@ if TYPE_CHECKING:
     from ._party_attribution import (
         ATTRIBUTION_ESTABLISHING_ORIGINS,
         PARTY_ATTRIBUTED_ADDRESS_FIELDS,
+        PartyAddress,
         PartyAttributionAdvisory,
         PartyAttributionWarning,
+        party_addresses,
         party_attribution_advisory,
         stamp_unverified_party_attribution,
+    )
+    from ._party_colocation import (
+        PartyAttributionOutcome,
+        PartyColocationResolution,
+        party_attribution_findings,
+        party_regions,
+        resolve_party_attribution_by_colocation,
     )
     from ._preflight import (
         LedgerPreflightIssue,
@@ -423,6 +433,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "classify_from_assembled_criteria": "._classification_assembly",
     "ClassifierInputs": "._classifier_inputs",
     "collect_classifier_inputs": "._classifier_inputs",
+    "ConfirmedEstablishment": "._confirm_establishment",
+    "resolve_confirmed_establishment": "._confirm_establishment",
     "CounterpartyEstablishment": "._establishment_ladder",
     "EstablishmentRung": "._establishment_ladder",
     "RegistrationEstablishmentConflict": "._establishment_ladder",
@@ -431,6 +443,13 @@ _LAZY_EXPORTS: dict[str, str] = {
     "scope_printed_evidence_would_establish": "._establishment_ladder",
     "ATTRIBUTION_ESTABLISHING_ORIGINS": "._party_attribution",
     "PARTY_ATTRIBUTED_ADDRESS_FIELDS": "._party_attribution",
+    "PartyAddress": "._party_attribution",
+    "party_addresses": "._party_attribution",
+    "PartyAttributionOutcome": "._party_colocation",
+    "PartyColocationResolution": "._party_colocation",
+    "party_attribution_findings": "._party_colocation",
+    "party_regions": "._party_colocation",
+    "resolve_party_attribution_by_colocation": "._party_colocation",
     "PartyAttributionAdvisory": "._party_attribution",
     "PartyAttributionWarning": "._party_attribution",
     "party_attribution_advisory": "._party_attribution",
@@ -670,6 +689,13 @@ __all__ = [
     "IDENTITY_FIELDS",
     "MINIMUM_DISPLAY_ID_WIDTH",
     "PARTY_ATTRIBUTED_ADDRESS_FIELDS",
+    "PartyAddress",
+    "party_addresses",
+    "PartyAttributionOutcome",
+    "PartyColocationResolution",
+    "party_attribution_findings",
+    "party_regions",
+    "resolve_party_attribution_by_colocation",
     "ROUNDING_ALLOWANCE_PER_TERM",
     "AeatRecordProjectionError",
     "AnchorEvaluation",
@@ -862,6 +888,7 @@ __all__ = [
     "reject_llm_suggestion",
     "remove_manual_transaction",
     "reset_ledger_catalogue",
+    "resolve_confirmed_establishment",
     "resolve_counterparty_establishment",
     "resolve_counterparty_establishment_scope",
     "resolve_counterparty_identity",
