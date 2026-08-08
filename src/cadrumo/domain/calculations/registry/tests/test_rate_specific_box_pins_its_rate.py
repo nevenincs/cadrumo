@@ -95,13 +95,13 @@ def _rate_specific_boxes(modelo_id: str) -> set[str]:
     return boxes
 
 
-def _pinned_rates(binding) -> tuple[object, ...] | None:  # noqa: ANN001 - registry model
+def _pinned_rates(binding) -> tuple[object, ...] | None:
     """The binding's ``applied_rates`` narrowing, or None when it has no such axis."""
     selector = getattr(binding, "selector", None)
     return getattr(selector, "applied_rates", None) if selector is not None else None
 
 
-def _selector_supports_rates(binding) -> bool:  # noqa: ANN001 - registry model
+def _selector_supports_rates(binding) -> bool:
     selector = getattr(binding, "selector", None)
     return selector is not None and hasattr(selector, "applied_rates")
 

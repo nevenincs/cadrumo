@@ -273,7 +273,7 @@ def _design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
         return ()
     try:
         return parser(path)
-    except Exception:  # noqa: BLE001 - an unparseable design is reported, never raised
+    except Exception:
         return ()
 
 
@@ -416,7 +416,7 @@ def _designs_for(modelo_id: str) -> tuple[dict[int, dict[str, int]], dict[int, s
     return parsed, unreadable
 
 
-def _span_years(revision) -> set[int]:  # noqa: ANN001 - registry model, typed at the boundary
+def _span_years(revision) -> set[int]:
     """Every filing year the revision's period selector claims."""
     selector = revision.period_selector
     if selector.years:
@@ -441,7 +441,7 @@ def _exporting_revisions() -> list[tuple[ModeloDefinition, str, object]]:
     ]
 
 
-def _claimed_years(revision, design_years: set[int]) -> set[int]:  # noqa: ANN001
+def _claimed_years(revision, design_years: set[int]) -> set[int]:
     """Design years the revision claims, honouring an open-ended upper bound."""
     selector = revision.period_selector
     explicit = _span_years(revision)
@@ -492,7 +492,7 @@ def test_the_design_parser_reads_every_markdown_design_it_claims() -> None:
     )
 
 
-def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]]:  # noqa: ANN001
+def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]]:
     """Every re-layout boundary inside one revision's span, keyed year-pair to evidence.
 
     Both signals contribute to ONE verdict rather than reporting separately,
