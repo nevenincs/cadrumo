@@ -41,6 +41,10 @@ from __future__ import annotations
 from hmac import compare_digest
 from typing import TYPE_CHECKING
 
+# Runtime import, not TYPE_CHECKING: the PEP 695 bound on ``TPayload`` is
+# evaluated lazily, and pydantic resolves it when it builds the envelope schema.
+from pydantic import BaseModel
+
 from ....core.errors import CadrumoError
 from ....core.time import now
 from ..storage import (
@@ -57,8 +61,6 @@ from ..storage.sql import SecureObjectRepository
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-    from pydantic import BaseModel
 
     from ..storage import SecureObjectNamespaceDefinition
     from ..storage.sql import SecureObjectRecord

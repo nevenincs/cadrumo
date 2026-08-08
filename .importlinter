@@ -355,6 +355,13 @@ ignore_imports =
     # ── D9 follow-up: local-import lifts made these concrete storage edges
     #    import-linter-visible; pin exact targets, not broad source modules. ──
     cadrumo.application.modelo._m145_communication_records -> cadrumo.adapters.persistence.storage
+    # The M145 communication records persist through the shared
+    # SecureSnapshotRepository, which moved into the persistence adapter with
+    # the live-snapshot relocation. Its sibling _m036_lifecycle needed no new
+    # line because that module is pinned at `persistence.**`; this one is
+    # pinned at the narrower `persistence.storage`, so the new target is named
+    # exactly rather than widening the existing pin.
+    cadrumo.application.modelo._m145_communication_records -> cadrumo.adapters.persistence.profile.snapshots
     cadrumo.application.modelo._reconciliation_records -> cadrumo.adapters.persistence.storage
     # The sandbox notice reads a bucket manifest through the storage primitives
     # behind function-local imports, deliberately keeping the heavier
@@ -586,14 +593,24 @@ ignore_imports =
     cadrumo.application.live._borrador_100 -> cadrumo.adapters.persistence.**
     cadrumo.application.live._errors -> cadrumo.adapters.outbound.aeat.auth
     cadrumo.application.live._errors -> cadrumo.adapters.outbound.aeat.sede
-    # DeudasSnapshotService is a line-for-line clone of ExpedientesSnapshotService
-    # below: same two imports, same StatelessSnapshotService base, same
-    # per-bucket repository factory. Both -- and _notifications, _borrador_100
-    # and the shared _snapshot_base they all inherit from -- hold the same
-    # direct reach, so inverting this one alone would put a second shape on one
-    # concern rather than removing it. The whole live-snapshot family is one
-    # inversion, not six, and it stays deferred under the ADR sec. 538
-    # allowance with the sibling pins beside it.
+    # ── live-snapshot family: concrete relocated, construction edge retained ──
+    # SecureSnapshotRepository -- the encrypted secure-object backend these
+    # services persist through -- now lives in the persistence adapter, as
+    # adapters.persistence.profile.snapshots. The application layer keeps only
+    # the SnapshotRepository PORT and the lifecycle service bases, which is why
+    # _snapshot_base carries no pin at all any more.
+    #
+    # Each service below still holds a persistence pin, and that is the
+    # finished state, not leftover work: it imports its own
+    # LIVE_*_SNAPSHOT_NAMESPACE constant from the central 72-entry namespace
+    # registry and resolves its per-bucket store, both independently of the
+    # repository class. This is exactly the prorrata-register end state
+    # recorded below -- concrete behind the port in the adapter, sanctioned
+    # sec. 538 default-construction edge retained at the caller.
+    #
+    # The sede pins are a different axis: they carry AEAT boundary DTOs
+    # (Deuda, Declaracion, NotificationsSnapshot) as payload shapes, shared
+    # with live modules that are not snapshot services at all.
     cadrumo.application.live._deudas -> cadrumo.adapters.outbound.aeat.sede
     cadrumo.application.live._deudas -> cadrumo.adapters.persistence.**
     cadrumo.application.live._expedientes -> cadrumo.adapters.outbound.aeat.sede
@@ -612,7 +629,6 @@ ignore_imports =
     cadrumo.application.live._notifications -> cadrumo.adapters.outbound.aeat.sede
     cadrumo.application.live._notifications -> cadrumo.adapters.persistence.**
     cadrumo.application.live._session -> cadrumo.adapters.outbound.aeat.auth
-    cadrumo.application.live._snapshot_base -> cadrumo.adapters.persistence.**
     cadrumo.application.live._verify -> cadrumo.adapters.persistence.**
     cadrumo.application.modelo._borrador_binding -> cadrumo.adapters.persistence.**
     cadrumo.application.modelo._m036_lifecycle -> cadrumo.adapters.persistence.**
