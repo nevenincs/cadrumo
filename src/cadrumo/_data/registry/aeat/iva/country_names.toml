@@ -247,6 +247,17 @@
 # Manual práctico de Sociedades. That is the right authority for a tax-facing
 # table: it is what AEAT itself keys country declarations on.
 #
+# THE ALPHA-2 COLUMN IS NOW CHECKED, NOT ONLY ATTESTED. The hand-check above
+# holds until the next author adds a row without repeating it, and nothing would
+# notice. So the codes are also verified against a SECOND bundled AEAT
+# authority that is machine-readable: the CountryType2 enumeration in AEAT's SII
+# record schema, which is the closed set of country codes AEAT accepts on a
+# submitted libro de registro. A gate asserts every code here is one that
+# enumeration carries. It cannot prove a code names the country written beside
+# it -- PY and PE are both accepted, and swapping them would pass -- which is
+# exactly what the printed register grounds, so the two checks are complementary
+# rather than redundant.
+#
 # THE ALPHA-3 COLUMN HAS NO BUNDLED AUTHORITY, and saying so is more useful than
 # implying one. Nothing in this tree ships an alpha-2-to-alpha-3 correspondence:
 # not the corpus, and not any installed package. The column is therefore
