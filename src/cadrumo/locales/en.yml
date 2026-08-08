@@ -66606,269 +66606,309 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: modelo.schema.390.casilla.continuidad.filing-year.help
-            label: modelo.schema.390.casilla.continuidad.filing-year.label
+            help: null
+            label: Self-assessment tax year
           iva-aic-bienes-tipo-0-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-base.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods at the 0%
+              rate - taxable base
           iva-aic-bienes-tipo-0-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-cuota.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods at the 0%
+              rate - VAT amount
           iva-aic-bienes-tipo-10-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-base.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods at the 10%
+              rate - taxable base
           iva-aic-bienes-tipo-10-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-cuota.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods at the 10%
+              rate - VAT amount
           iva-aic-bienes-tipo-2-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-base.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods at the 2%
+              rate - taxable base
           iva-aic-bienes-tipo-2-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-cuota.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods at the 2%
+              rate - VAT amount
           iva-aic-bienes-tipo-21-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-base.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods at the 21%
+              rate - taxable base
           iva-aic-bienes-tipo-21-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-cuota.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods at the 21%
+              rate - VAT amount
           iva-aic-bienes-tipo-4-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-base.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods at the 4%
+              rate - taxable base
           iva-aic-bienes-tipo-4-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-cuota.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods at the 4%
+              rate - VAT amount
           iva-aic-bienes-tipo-5-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-base.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods at the 5%
+              rate - taxable base
           iva-aic-bienes-tipo-5-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-cuota.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods at the 5%
+              rate - VAT amount
           iva-aic-bienes-tipo-7-5-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-base.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods at the 7.5%
+              rate - taxable base
           iva-aic-bienes-tipo-7-5-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-cuota.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of goods at the 7.5%
+              rate - VAT amount
           iva-aic-servicios-tipo-0-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-base.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of services at the
+              0% rate - taxable base
           iva-aic-servicios-tipo-0-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-cuota.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of services at the
+              0% rate - VAT amount
           iva-aic-servicios-tipo-10-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-base.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of services at the
+              10% rate - taxable base
           iva-aic-servicios-tipo-10-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-cuota.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of services at the
+              10% rate - VAT amount
           iva-aic-servicios-tipo-2-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-base.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of services at the
+              2% rate - taxable base
           iva-aic-servicios-tipo-2-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-cuota.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of services at the
+              2% rate - VAT amount
           iva-aic-servicios-tipo-21-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-base.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of services at the
+              21% rate - taxable base
           iva-aic-servicios-tipo-21-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-cuota.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of services at the
+              21% rate - VAT amount
           iva-aic-servicios-tipo-4-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-base.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of services at the
+              4% rate - taxable base
           iva-aic-servicios-tipo-4-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-cuota.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of services at the
+              4% rate - VAT amount
           iva-aic-servicios-tipo-5-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-base.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of services at the
+              5% rate - taxable base
           iva-aic-servicios-tipo-5-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-cuota.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of services at the
+              5% rate - VAT amount
           iva-aic-servicios-tipo-7-5-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-base.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of services at the
+              7.5% rate - taxable base
           iva-aic-servicios-tipo-7-5-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-cuota.label
+            help: null
+            label: Accrued VAT on intra-Community acquisitions of services at the
+              7.5% rate - VAT amount
           iva-anual-compensacion-generada-ejercicio:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-generada-ejercicio.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-generada-ejercicio.label
+            help: null
+            label: Offset balance generated in the year
           iva-anual-compensacion-ultimo-periodo:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-ultimo-periodo.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-ultimo-periodo.label
+            help: null
+            label: Amounts to offset from the last settlement period
           iva-anual-cuota-deducible-total:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-cuota-deducible-total.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-cuota-deducible-total.label
+            help: null
+            label: Total deductible VAT amount for the year
           iva-anual-cuota-devengada-total:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-cuota-devengada-total.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-cuota-devengada-total.label
+            help: null
+            label: Total accrued VAT amount for the year
           iva-anual-reconciliacion-deducible-303:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-deducible-303.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-deducible-303.label
+            help: null
+            label: Annual reconciliation - deductible VAT amount declared on Form
+              303 returns
           iva-anual-reconciliacion-devengada-303:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-303.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-303.label
+            help: null
+            label: Annual reconciliation - accrued VAT amount declared on Form 303
+              returns
           iva-anual-reconciliacion-devengada-simplificado-303:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-simplificado-303.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-simplificado-303.label
+            help: null
+            label: Annual reconciliation - simplified regime accrued VAT declared
+              on Form 303 returns
           iva-anual-reconciliacion-resultado-303:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-resultado-303.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-resultado-303.label
+            help: null
+            label: Annual reconciliation - result declared on Form 303 returns
           iva-anual-regularizacion-bienes-inversion:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-bienes-inversion.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-bienes-inversion.label
+            help: null
+            label: Capital goods adjustment
           iva-anual-regularizacion-prorrata-definitiva:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-prorrata-definitiva.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-prorrata-definitiva.label
+            help: null
+            label: Pro rata regularization using final percentage - amount
           iva-anual-resultado-regimen-general:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-resultado-regimen-general.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-resultado-regimen-general.label
+            help: null
+            label: General regime result
           iva-anual-total-bases-cuotas-iva:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-total-bases-cuotas-iva.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-total-bases-cuotas-iva.label
+            help: null
+            label: Total VAT bases and amounts for the year
           iva-base-imponible-aic-bienes-general:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-general.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-general.label
+            help: null
+            label: Total taxable base of intra-Community acquisitions of goods at
+              the standard rate (21%)
           iva-base-imponible-aic-bienes-reduced:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-reduced.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-reduced.label
+            help: null
+            label: Total taxable base of intra-Community acquisitions of goods at
+              the reduced rate (10%)
           iva-base-imponible-aic-bienes-super-reduced:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-super-reduced.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-super-reduced.label
+            help: null
+            label: Total taxable base of intra-Community acquisitions of goods at
+              the super-reduced rate (4%)
           iva-base-imponible-aic-bienes-zero:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-zero.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-zero.label
+            help: null
+            label: Total taxable base of intra-Community acquisitions of goods at
+              the zero rate (0%)
           iva-base-imponible-aic-servicios-general:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-general.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-general.label
+            help: null
+            label: Total taxable base of intra-Community acquisitions of services
+              at the standard rate (21%)
           iva-base-imponible-aic-servicios-reduced:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-reduced.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-reduced.label
+            help: null
+            label: Total taxable base of intra-Community acquisitions of services
+              at the reduced rate (10%)
           iva-base-imponible-aic-servicios-super-reduced:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-super-reduced.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-super-reduced.label
+            help: null
+            label: Total taxable base of intra-Community acquisitions of services
+              at the super-reduced rate (4%)
           iva-base-imponible-aic-servicios-zero:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-zero.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-zero.label
+            help: null
+            label: Total taxable base of intra-Community acquisitions of services
+              at the zero rate (0%)
           iva-base-imponible-repercutida-general:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-general.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-general.label
+            help: null
+            label: Taxable base of output VAT at the standard rate (21%)
           iva-base-imponible-repercutida-reducido:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-reducido.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-reducido.label
+            help: null
+            label: Taxable base of output VAT at the reduced rate (10%)
           iva-base-imponible-repercutida-super-reducido:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-super-reducido.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-super-reducido.label
+            help: null
+            label: Taxable base of output VAT at the super-reduced rate (4%)
           iva-base-imponible-repercutida-tipo-0:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-0.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-0.label
+            help: null
+            label: Taxable base of output VAT at the 0% rate
           iva-base-imponible-repercutida-tipo-10:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-10.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-10.label
+            help: null
+            label: Taxable base of output VAT at the 10% rate
           iva-base-imponible-repercutida-tipo-2:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-2.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-2.label
+            help: null
+            label: Taxable base of output VAT at the 2% rate
           iva-base-imponible-repercutida-tipo-21:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-21.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-21.label
+            help: null
+            label: Taxable base of output VAT at the 21% rate
           iva-base-imponible-repercutida-tipo-4:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-4.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-4.label
+            help: null
+            label: Taxable base of output VAT at the 4% rate
           iva-base-imponible-repercutida-tipo-5:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-5.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-5.label
+            help: null
+            label: Taxable base of output VAT at the 5% rate
           iva-base-imponible-repercutida-tipo-7-5:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-7-5.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-7-5.label
+            help: null
+            label: Taxable base of output VAT at the 7.5% rate
           iva-base-imponible-repercutida-zero:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-zero.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-zero.label
+            help: null
+            label: Taxable base of output VAT at the zero rate (0%)
           iva-base-imponible-soportada-interiores:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-soportada-interiores.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-soportada-interiores.label
+            help: null
+            label: Taxable base of deductible input VAT on domestic current transactions
           iva-cuota-autorepercutida-intracomunitaria:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-autorepercutida-intracomunitaria.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-autorepercutida-intracomunitaria.label
+            help: null
+            label: Reverse-charge VAT amount on intra-Community acquisitions
           iva-cuota-recargo-equivalencia-general:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-general.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-general.label
+            help: null
+            label: Equivalence surcharge at the standard rate (5.2%) - surcharge amount
           iva-cuota-recargo-equivalencia-reducido:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-reducido.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-reducido.label
+            help: null
+            label: Equivalence surcharge at the reduced rate (1.4%) - surcharge amount
           iva-cuota-recargo-equivalencia-super-reducido:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-super-reducido.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-super-reducido.label
+            help: null
+            label: Equivalence surcharge at the super-reduced rate (0.5%) - surcharge
+              amount
           iva-cuota-recargo-equivalencia-tipo-0-26:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-26.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-26.label
+            help: null
+            label: Equivalence surcharge at 0.26% - surcharge amount
           iva-cuota-recargo-equivalencia-tipo-0-5:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-5.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-5.label
+            help: null
+            label: Equivalence surcharge at 0.5% - surcharge amount
           iva-cuota-recargo-equivalencia-tipo-0-62:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-62.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-62.label
+            help: null
+            label: Equivalence surcharge at 0.62% - surcharge amount
           iva-cuota-recargo-equivalencia-tipo-1:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1.label
+            help: null
+            label: Equivalence surcharge at 1% - surcharge amount
           iva-cuota-recargo-equivalencia-tipo-1-4:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1-4.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1-4.label
+            help: null
+            label: Equivalence surcharge at 1.4% - surcharge amount
           iva-cuota-recargo-equivalencia-tipo-5-2:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-5-2.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-5-2.label
+            help: null
+            label: Equivalence surcharge at 5.2% - surcharge amount
           iva-cuota-repercutida-general:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-general.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-general.label
+            help: null
+            label: Output VAT amount at the standard rate (21%)
           iva-cuota-repercutida-reducido:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-reducido.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-reducido.label
+            help: null
+            label: Output VAT amount at the reduced rate (10%)
           iva-cuota-repercutida-super-reducido:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-super-reducido.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-super-reducido.label
+            help: null
+            label: Output VAT amount at the super-reduced rate (4%)
           iva-cuota-repercutida-tipo-0:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-0.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-0.label
+            help: null
+            label: Output VAT amount at the 0% rate
           iva-cuota-repercutida-tipo-10:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-10.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-10.label
+            help: null
+            label: Output VAT amount at the 10% rate
           iva-cuota-repercutida-tipo-2:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-2.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-2.label
+            help: null
+            label: Output VAT amount at the 2% rate
           iva-cuota-repercutida-tipo-21:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-21.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-21.label
+            help: null
+            label: Output VAT amount at the 21% rate
           iva-cuota-repercutida-tipo-4:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-4.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-4.label
+            help: null
+            label: Output VAT amount at the 4% rate
           iva-cuota-repercutida-tipo-5:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-5.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-5.label
+            help: null
+            label: Output VAT amount at the 5% rate
           iva-cuota-repercutida-tipo-7-5:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-7-5.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-7-5.label
+            help: null
+            label: Output VAT amount at the 7.5% rate
           iva-cuota-soportada-importaciones:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-importaciones.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-importaciones.label
+            help: null
+            label: Deductible input VAT on imports of current goods
           iva-cuota-soportada-interiores:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-interiores.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-interiores.label
+            help: null
+            label: Deductible input VAT on domestic current transactions
           iva-isp-interior-base:
-            help: modelo.schema.390.casilla.continuidad.iva-isp-interior-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-isp-interior-base.label
+            help: null
+            label: Taxable base of accrued reverse-charge VAT on domestic transactions
           iva-isp-interior-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-isp-interior-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-isp-interior-cuota.label
+            help: null
+            label: Accrued reverse-charge VAT on domestic transactions
           iva-volumen-operaciones-entregas-intracomunitarias:
-            help: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-entregas-intracomunitarias.help
-            label: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-entregas-intracomunitarias.label
+            help: null
+            label: Intra-Community supplies of goods and services
           iva-volumen-operaciones-exportaciones-exentas:
-            help: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-exportaciones-exentas.help
-            label: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-exportaciones-exentas.label
+            help: null
+            label: Exports and assimilated transactions
           tipo-declaracion:
-            help: modelo.schema.390.casilla.continuidad.tipo-declaracion.help
-            label: modelo.schema.390.casilla.continuidad.tipo-declaracion.label
+            help: null
+            label: Return type
       field:
         official_name: null
         title: null

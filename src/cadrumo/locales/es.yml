@@ -69355,269 +69355,312 @@ modelo:
       casilla:
         continuidad:
           filing-year:
-            help: modelo.schema.390.casilla.continuidad.filing-year.help
-            label: modelo.schema.390.casilla.continuidad.filing-year.label
+            help: null
+            label: Ejercicio al que se refiere la autoliquidacion
           iva-aic-bienes-tipo-0-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-base.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+              0% - Base imponible
           iva-aic-bienes-tipo-0-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-cuota.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+              0% - Cuota
           iva-aic-bienes-tipo-10-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-base.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+              10% - Base imponible
           iva-aic-bienes-tipo-10-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-cuota.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+              10% - Cuota
           iva-aic-bienes-tipo-2-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-base.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+              2% - Base imponible
           iva-aic-bienes-tipo-2-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-cuota.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+              2% - Cuota
           iva-aic-bienes-tipo-21-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-base.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+              21% - Base imponible
           iva-aic-bienes-tipo-21-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-cuota.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+              21% - Cuota
           iva-aic-bienes-tipo-4-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-base.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+              4% - Base imponible
           iva-aic-bienes-tipo-4-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-cuota.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+              4% - Cuota
           iva-aic-bienes-tipo-5-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-base.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+              5% - Base imponible
           iva-aic-bienes-tipo-5-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-cuota.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+              5% - Cuota
           iva-aic-bienes-tipo-7-5-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-base.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+              7,5% - Base imponible
           iva-aic-bienes-tipo-7-5-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-cuota.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de bienes al tipo
+              7,5% - Cuota
           iva-aic-servicios-tipo-0-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-base.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
+              0% - Base imponible
           iva-aic-servicios-tipo-0-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-cuota.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
+              0% - Cuota
           iva-aic-servicios-tipo-10-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-base.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
+              10% - Base imponible
           iva-aic-servicios-tipo-10-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-cuota.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
+              10% - Cuota
           iva-aic-servicios-tipo-2-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-base.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
+              2% - Base imponible
           iva-aic-servicios-tipo-2-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-cuota.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
+              2% - Cuota
           iva-aic-servicios-tipo-21-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-base.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
+              21% - Base imponible
           iva-aic-servicios-tipo-21-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-cuota.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
+              21% - Cuota
           iva-aic-servicios-tipo-4-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-base.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
+              4% - Base imponible
           iva-aic-servicios-tipo-4-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-cuota.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
+              4% - Cuota
           iva-aic-servicios-tipo-5-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-base.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
+              5% - Base imponible
           iva-aic-servicios-tipo-5-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-cuota.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
+              5% - Cuota
           iva-aic-servicios-tipo-7-5-base:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-base.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
+              7,5% - Base imponible
           iva-aic-servicios-tipo-7-5-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-cuota.label
+            help: null
+            label: IVA devengado adquisiciones intracomunitarias de servicios al tipo
+              7,5% - Cuota
           iva-anual-compensacion-generada-ejercicio:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-generada-ejercicio.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-generada-ejercicio.label
+            help: null
+            label: Saldo a compensar generado en el ejercicio
           iva-anual-compensacion-ultimo-periodo:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-ultimo-periodo.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-ultimo-periodo.label
+            help: null
+            label: Cuotas a compensar del último período de liquidación
           iva-anual-cuota-deducible-total:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-cuota-deducible-total.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-cuota-deducible-total.label
+            help: null
+            label: Total cuota IVA deducible del ejercicio
           iva-anual-cuota-devengada-total:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-cuota-devengada-total.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-cuota-devengada-total.label
+            help: null
+            label: Total cuota IVA devengada del ejercicio
           iva-anual-reconciliacion-deducible-303:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-deducible-303.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-deducible-303.label
+            help: null
+            label: Reconciliación anual - cuota deducible declarada en los modelos
+              303
           iva-anual-reconciliacion-devengada-303:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-303.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-303.label
+            help: null
+            label: Reconciliación anual - cuota devengada declarada en los modelos
+              303
           iva-anual-reconciliacion-devengada-simplificado-303:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-simplificado-303.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-simplificado-303.label
+            help: null
+            label: Reconciliación anual - cuota devengada del régimen simplificado
+              declarada en los modelos 303
           iva-anual-reconciliacion-resultado-303:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-resultado-303.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-resultado-303.label
+            help: null
+            label: Reconciliación anual - resultado declarado en los modelos 303
           iva-anual-regularizacion-bienes-inversion:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-bienes-inversion.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-bienes-inversion.label
+            help: null
+            label: Regularización por bienes de inversión (LIVA arts. 107-110)
           iva-anual-regularizacion-prorrata-definitiva:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-prorrata-definitiva.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-prorrata-definitiva.label
+            help: null
+            label: Regularización prorrata por porcentaje definitivo - Cuota
           iva-anual-resultado-regimen-general:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-resultado-regimen-general.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-resultado-regimen-general.label
+            help: null
+            label: Resultado del regimen general (cuota devengada - cuota deducible)
           iva-anual-total-bases-cuotas-iva:
-            help: modelo.schema.390.casilla.continuidad.iva-anual-total-bases-cuotas-iva.help
-            label: modelo.schema.390.casilla.continuidad.iva-anual-total-bases-cuotas-iva.label
+            help: null
+            label: Total bases y cuotas de IVA del ejercicio
           iva-base-imponible-aic-bienes-general:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-general.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-general.label
+            help: null
+            label: Base imponible total adquisiciones intracomunitarias de bienes
+              al tipo general (21%)
           iva-base-imponible-aic-bienes-reduced:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-reduced.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-reduced.label
+            help: null
+            label: Base imponible total adquisiciones intracomunitarias de bienes
+              al tipo reducido (10%)
           iva-base-imponible-aic-bienes-super-reduced:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-super-reduced.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-super-reduced.label
+            help: null
+            label: Base imponible total adquisiciones intracomunitarias de bienes
+              al tipo super-reducido (4%)
           iva-base-imponible-aic-bienes-zero:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-zero.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-zero.label
+            help: null
+            label: Base imponible total adquisiciones intracomunitarias de bienes
+              al tipo cero (0%)
           iva-base-imponible-aic-servicios-general:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-general.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-general.label
+            help: null
+            label: Base imponible total adquisiciones intracomunitarias de servicios
+              al tipo general (21%)
           iva-base-imponible-aic-servicios-reduced:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-reduced.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-reduced.label
+            help: null
+            label: Base imponible total adquisiciones intracomunitarias de servicios
+              al tipo reducido (10%)
           iva-base-imponible-aic-servicios-super-reduced:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-super-reduced.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-super-reduced.label
+            help: null
+            label: Base imponible total adquisiciones intracomunitarias de servicios
+              al tipo super-reducido (4%)
           iva-base-imponible-aic-servicios-zero:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-zero.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-zero.label
+            help: null
+            label: Base imponible total adquisiciones intracomunitarias de servicios
+              al tipo cero (0%)
           iva-base-imponible-repercutida-general:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-general.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-general.label
+            help: null
+            label: Base imponible IVA repercutido al tipo general (21%)
           iva-base-imponible-repercutida-reducido:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-reducido.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-reducido.label
+            help: null
+            label: Base imponible IVA repercutido al tipo reducido (10%)
           iva-base-imponible-repercutida-super-reducido:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-super-reducido.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-super-reducido.label
+            help: null
+            label: Base imponible IVA repercutido al tipo super-reducido (4%)
           iva-base-imponible-repercutida-tipo-0:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-0.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-0.label
+            help: null
+            label: Base imponible IVA repercutido al tipo 0%
           iva-base-imponible-repercutida-tipo-10:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-10.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-10.label
+            help: null
+            label: Base imponible IVA repercutido al tipo 10%
           iva-base-imponible-repercutida-tipo-2:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-2.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-2.label
+            help: null
+            label: Base imponible IVA repercutido al tipo 2%
           iva-base-imponible-repercutida-tipo-21:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-21.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-21.label
+            help: null
+            label: Base imponible IVA repercutido al tipo 21%
           iva-base-imponible-repercutida-tipo-4:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-4.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-4.label
+            help: null
+            label: Base imponible IVA repercutido al tipo 4%
           iva-base-imponible-repercutida-tipo-5:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-5.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-5.label
+            help: null
+            label: Base imponible IVA repercutido al tipo 5%
           iva-base-imponible-repercutida-tipo-7-5:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-7-5.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-7-5.label
+            help: null
+            label: Base imponible IVA repercutido al tipo 7,5%
           iva-base-imponible-repercutida-zero:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-zero.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-zero.label
+            help: null
+            label: Base imponible IVA repercutido al tipo cero (0%)
           iva-base-imponible-soportada-interiores:
-            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-soportada-interiores.help
-            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-soportada-interiores.label
+            help: null
+            label: Base imponible IVA soportado en operaciones interiores corrientes
           iva-cuota-autorepercutida-intracomunitaria:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-autorepercutida-intracomunitaria.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-autorepercutida-intracomunitaria.label
+            help: null
+            label: Cuota IVA autorepercutida en adquisiciones intracomunitarias (LIVA
+              art 84.Uno.2)
           iva-cuota-recargo-equivalencia-general:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-general.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-general.label
+            help: null
+            label: Recargo de equivalencia al tipo general (5,2%) - Cuota
           iva-cuota-recargo-equivalencia-reducido:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-reducido.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-reducido.label
+            help: null
+            label: Recargo de equivalencia al tipo reducido (1,4%) - Cuota
           iva-cuota-recargo-equivalencia-super-reducido:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-super-reducido.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-super-reducido.label
+            help: null
+            label: Recargo de equivalencia al tipo super-reducido (0,5%) - Cuota
           iva-cuota-recargo-equivalencia-tipo-0-26:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-26.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-26.label
+            help: null
+            label: Recargo de equivalencia al tipo 0,26% - Cuota
           iva-cuota-recargo-equivalencia-tipo-0-5:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-5.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-5.label
+            help: null
+            label: Recargo de equivalencia al tipo 0,5% - Cuota
           iva-cuota-recargo-equivalencia-tipo-0-62:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-62.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-62.label
+            help: null
+            label: Recargo de equivalencia al tipo 0,62% - Cuota
           iva-cuota-recargo-equivalencia-tipo-1:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1.label
+            help: null
+            label: Recargo de equivalencia al tipo 1% - Cuota
           iva-cuota-recargo-equivalencia-tipo-1-4:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1-4.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1-4.label
+            help: null
+            label: Recargo de equivalencia al tipo 1,4% - Cuota
           iva-cuota-recargo-equivalencia-tipo-5-2:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-5-2.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-5-2.label
+            help: null
+            label: Recargo de equivalencia al tipo 5,2% - Cuota
           iva-cuota-repercutida-general:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-general.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-general.label
+            help: null
+            label: Cuota IVA repercutido al tipo general (21%)
           iva-cuota-repercutida-reducido:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-reducido.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-reducido.label
+            help: null
+            label: Cuota IVA repercutido al tipo reducido (10%)
           iva-cuota-repercutida-super-reducido:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-super-reducido.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-super-reducido.label
+            help: null
+            label: Cuota IVA repercutido al tipo super-reducido (4%)
           iva-cuota-repercutida-tipo-0:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-0.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-0.label
+            help: null
+            label: Cuota IVA repercutido al tipo 0%
           iva-cuota-repercutida-tipo-10:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-10.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-10.label
+            help: null
+            label: Cuota IVA repercutido al tipo 10%
           iva-cuota-repercutida-tipo-2:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-2.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-2.label
+            help: null
+            label: Cuota IVA repercutido al tipo 2%
           iva-cuota-repercutida-tipo-21:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-21.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-21.label
+            help: null
+            label: Cuota IVA repercutido al tipo 21%
           iva-cuota-repercutida-tipo-4:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-4.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-4.label
+            help: null
+            label: Cuota IVA repercutido al tipo 4%
           iva-cuota-repercutida-tipo-5:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-5.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-5.label
+            help: null
+            label: Cuota IVA repercutido al tipo 5%
           iva-cuota-repercutida-tipo-7-5:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-7-5.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-7-5.label
+            help: null
+            label: Cuota IVA repercutido al tipo 7,5%
           iva-cuota-soportada-importaciones:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-importaciones.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-importaciones.label
+            help: null
+            label: Cuota IVA soportado deducible en importaciones de bienes corrientes
+              (LIVA art 17 + art 92; oficial casilla 33)
           iva-cuota-soportada-interiores:
-            help: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-interiores.help
-            label: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-interiores.label
+            help: null
+            label: Cuota IVA soportado en operaciones interiores corrientes
           iva-isp-interior-base:
-            help: modelo.schema.390.casilla.continuidad.iva-isp-interior-base.help
-            label: modelo.schema.390.casilla.continuidad.iva-isp-interior-base.label
+            help: null
+            label: Base imponible IVA autorepercutido en operaciones interiores con
+              inversión del sujeto pasivo
           iva-isp-interior-cuota:
-            help: modelo.schema.390.casilla.continuidad.iva-isp-interior-cuota.help
-            label: modelo.schema.390.casilla.continuidad.iva-isp-interior-cuota.label
+            help: null
+            label: Cuota IVA autorepercutida en operaciones interiores con inversion
+              del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)
           iva-volumen-operaciones-entregas-intracomunitarias:
-            help: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-entregas-intracomunitarias.help
-            label: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-entregas-intracomunitarias.label
+            help: null
+            label: Entregas intracomunitarias de bienes y servicios
           iva-volumen-operaciones-exportaciones-exentas:
-            help: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-exportaciones-exentas.help
-            label: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-exportaciones-exentas.label
+            help: null
+            label: Exportaciones y operaciones asimiladas
           tipo-declaracion:
-            help: modelo.schema.390.casilla.continuidad.tipo-declaracion.help
-            label: modelo.schema.390.casilla.continuidad.tipo-declaracion.label
+            help: null
+            label: Tipo de declaración
       field:
         official_name: Modelo 390. Declaración-resumen anual del Impuesto sobre el
           Valor Añadido.
