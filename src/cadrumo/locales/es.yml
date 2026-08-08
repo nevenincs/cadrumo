@@ -5242,11 +5242,11 @@ cli:
         ledger_view: Ver el detalle de una entrada del libro.
         live_filed_capture: Descargar declaraciones presentadas en vivo desde la AEAT.
         live_filed_capture_sources: Mostrar las fuentes disponibles para la descarga.
-        live_filed_discover: Muestra qué pares de modelo y ejercicio recorrería una
-          descarga del historial, sin descargar nada.
+        live_filed_discover: Muestra qué modelo/ejercicio recorrería una descarga,
+          sin descargar nada.
         live_filed_list: Listar declaraciones presentadas capturadas desde la AEAT.
-        live_filed_pull_all: Descarga el historial completo de declaraciones presentadas
-          ante la AEAT en una sola pasada.
+        live_filed_pull_all: Descarga el historial completo de declaraciones de la
+          AEAT en una sola pasada.
         modelo_audit_check: Comprueba las evidencias incluidas de una revisión de
           declaración.
         modelo_audit_export: Exporta la auditoría de evidencias de una revisión de
