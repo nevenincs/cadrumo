@@ -51,7 +51,7 @@ from .....domain.calculations.registry import (
     assert_remote_operation_allowed as _assert_remote_operation_allowed,
 )
 from .....domain.justificante import JustificanteVerificationError as _JustificanteVerificationError
-from .._html import parse_html
+from .._html import parse_html as _parse_html
 from .._playwright import PlaywrightError as _PlaywrightError
 from ..sede import BrowserAdapterTypeError as _BrowserAdapterTypeError
 
@@ -272,7 +272,7 @@ def _response_confirms_valid_csv(body: str, *, expected_csv: str, final_url: str
     if final.path != _VERIFY_EXTERNAL.aeat.sede_paths.cotejo_query:
         return False
 
-    soup = parse_html(body)
+    soup = _parse_html(body)
     viewer = soup.find("iframe", id="iframe-visualiza")
     if viewer is None:
         return False
