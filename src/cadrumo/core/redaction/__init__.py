@@ -59,7 +59,7 @@ The redaction strategies, defined in
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from types import MappingProxyType
 from typing import overload
 from urllib.parse import urlparse
@@ -452,12 +452,58 @@ def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionR
     return default_rules_for(_default_policy_for(sensitivity))
 
 
+#: An ISO-8601 instant, matched whole. The fractional-second form is what
+#: ``model_dump(mode="json")`` writes, and it collides with the identity
+#: shapes: the seconds and microseconds of ``...T09:32:12.345678Z`` are seven
+#: digits with separators and a trailing letter, which is a NIF, and
+#: ``12345678Z`` even carries a valid check character -- so validating the
+#: match cannot tell the two apart. Only the surrounding span can.
+_ISO_INSTANT_RE = re.compile(
+    r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|z|[+-]\d{2}:?\d{2})?",
+)
+
+
+def _timestamp_spans(value: str) -> tuple[tuple[int, int], ...]:
+    """Return the spans of ``value`` that are complete ISO-8601 instants."""
+    return tuple(match.span() for match in _ISO_INSTANT_RE.finditer(value))
+
+
+def _outside_timestamps(
+    replace: Callable[[re.Match[str]], str],
+    spans: tuple[tuple[int, int], ...],
+) -> Callable[[re.Match[str]], str]:
+    """Wrap ``replace`` so a match overlapping a timestamp is left alone.
+
+    A timestamp is not a tax identity, an IBAN or a token, so no rule has
+    anything to redact inside one. Exempting the span is safe in a way that
+    narrowing the identity patterns would not be: the patterns legitimately
+    allow ``.`` and ``-`` separators, and an exclusion tight enough to spare a
+    microsecond field would also spare a genuine dotted identity.
+
+    Redacting one was not cosmetic. The rewritten stamp no longer parses, so a
+    model that re-validates it on the way to storage refuses the whole record.
+    """
+
+    def _replace_outside(match: re.Match[str]) -> str:
+        start, end = match.span()
+        if any(span_start < end and start < span_end for span_start, span_end in spans):
+            return match.group(0)
+        return replace(match)
+
+    return _replace_outside
+
+
 def _apply_one(rule: _RedactionRule, value: str) -> str:
     pattern = re.compile(rule.pattern, re.MULTILINE)
+    protected = _timestamp_spans(value)
+
+    def _sub(replace: Callable[[re.Match[str]], str]) -> str:
+        return pattern.sub(_outside_timestamps(replace, protected), value)
+
     if rule.strategy is _RedactionStrategy.ELLIPSIS:
-        return pattern.sub("...", value)
+        return _sub(lambda m: "...")
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX:
-        return pattern.sub(lambda m: _sha256_prefix(m.group(0)), value)
+        return _sub(lambda m: _sha256_prefix(m.group(0)))
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IDENTITY:
         # Imported here, not at module scope: ``core.identity`` reaches
         # ``core.errors``, which reaches this module — the same cycle the
@@ -472,7 +518,7 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
                 return span
             return _sha256_prefix(span)
 
-        return pattern.sub(_hash_if_identity, value)
+        return _sub(_hash_if_identity)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA:
         # Imported at call time for the reason the identity arm above states.
         from ..identity import IdentityError, nif_iva_format_for_country, normalise_nif_iva, validate_identity
@@ -496,7 +542,7 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
                 return span
             return _sha256_prefix(span)
 
-        return pattern.sub(_hash_if_nif_iva, value)
+        return _sub(_hash_if_nif_iva)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IBAN:
 
         def _hash_if_iban(match: re.Match[str]) -> str:
@@ -505,11 +551,11 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
                 return _sha256_prefix(span)
             return span
 
-        return pattern.sub(_hash_if_iban, value)
+        return _sub(_hash_if_iban)
     if rule.strategy is _RedactionStrategy.HOST_ONLY:
-        return pattern.sub(lambda m: _host_only(m.group(0)), value)
+        return _sub(lambda m: _host_only(m.group(0)))
     if rule.strategy is _RedactionStrategy.FINGERPRINT:
-        return pattern.sub(lambda m: _fingerprint(m.group(0)), value)
+        return _sub(lambda m: _fingerprint(m.group(0)))
     return value  # pragma: no cover - exhaustive enum
 
 

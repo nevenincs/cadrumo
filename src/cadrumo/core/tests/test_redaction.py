@@ -17,6 +17,7 @@ from ..redaction import (
     CLI_OBJECT_KEY_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,
     default_rules_for_class,
+    redact,
     redact_for_cli_output,
     redact_structured,
     redact_structured_for_cli_output,
@@ -426,3 +427,34 @@ def test_structured_redaction_keeps_two_colliding_keys_distinct() -> None:
     ellipsis = RedactionRule(name="ellipsis", pattern=r"secret-\w+", strategy=RedactionStrategy.ELLIPSIS)
     collapsed = redact_structured({"secret-alpha": 1, "secret-beta": 2}, rules=(ellipsis,))
     assert len(collapsed) == 2, f"a colliding key overwrote another entry: {collapsed}"
+
+
+def test_iso_instant_survives_the_diagnostic_funnel_unchanged() -> None:
+    """A serialised UTC timestamp is not a tax identity.
+
+    ``model_dump(mode="json")`` writes the ``Z``-suffixed fractional form, and
+    its seconds-plus-microseconds field is a valid NIF by shape AND by check
+    character -- so the rule hashed it, the stamp stopped parsing, and every
+    model that re-validated it on the way to storage refused the record.
+    """
+    rules = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
+
+    for stamp in (
+        "2026-08-08T09:32:12.345678Z",
+        "2026-08-08T09:32:12.345678+00:00",
+        "2026-08-08T09:32:12Z",
+        "2026-08-08 09:32:12.345678Z",
+    ):
+        assert redact(stamp, rules=rules) == stamp, f"the funnel corrupted the timestamp {stamp!r}"
+
+
+def test_identities_beside_a_timestamp_are_still_redacted() -> None:
+    """Positive control: the exemption covers the stamp, not the line."""
+    rules = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
+
+    line = "2026-08-08T09:32:12.345678Z declarante 12345678Z presented the filing"
+    redacted = redact(line, rules=rules)
+
+    assert "2026-08-08T09:32:12.345678Z" in redacted, "the timestamp must survive"
+    assert "12345678Z" not in redacted, "a real identity beside a timestamp must still be redacted"
+    assert "sha256:" in redacted, "the identity must be replaced by its hash"
