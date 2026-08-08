@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-100-renta'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:1675a027fa79fbeea9efbb0a95c42176678fc2340c28c582d5be0d96f6c7289f'
 related:

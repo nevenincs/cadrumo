@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m200-internal-casilla-discipline'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:b2a497f983a49cdf98aeb1c4cc88092a3c3903148523b480ce730da4fdba90f6'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#canonicalisation-rulings'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:4141ceb6faff788500a06023d7c42054b5b1461ed9b8faee5d35f21e6f485c54'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calculation-chain-integrity'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:a7888b1b47362cfa2b4d351ca1c725525feba461009f99575c851d5c10171089'
 related:

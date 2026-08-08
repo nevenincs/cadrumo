@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#wrong-surface-gates'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:9505a815219f0f5b82af837bb97e713cc0eadbee7b49e727e22d9e747dda1fc3'
 related:

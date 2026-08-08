@@ -5,12 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:e2f48b4cb7d712533a3d7ce4489d2564136e3b52cad46c3c84b6797e90663600'
+body_hash: 'sha256:e056a70fe52e3d6a512f3c849738439af4b5a5c1597d766ee2462d4ed76fd5a0'
 related:
   - "[[2026-08-08-synced-history-consumption-research]]"
 ---
 # `synced-history-consumption` adr: `Which pulled AEAT facts are calculation inputs` | (**status:** `accepted`)
-
 
 ## Problem Statement
 

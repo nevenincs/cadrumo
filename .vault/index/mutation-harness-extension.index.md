@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mutation-harness-extension'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:7edb91cea30120e10c455a1e31a9f73c6aebfa2ef1466a536f3b962bfac445b9'
 related:

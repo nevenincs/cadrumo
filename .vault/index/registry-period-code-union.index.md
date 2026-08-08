@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-period-code-union'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:4c427c3b74dbf78a131574e6682a5bc2adb6a35c0732eae1e5b6447145818bf8'
 related:

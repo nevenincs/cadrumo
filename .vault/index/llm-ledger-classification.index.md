@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#llm-ledger-classification'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:bedf089613e95a58c0dd307f7433b5db32778f6bb5e384df8a9789ea0d15d854'
 related:

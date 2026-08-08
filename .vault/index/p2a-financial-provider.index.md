@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#p2a-financial-provider'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:b329dd021a1be16c52669c1d697689d2fb738713e95ae49f2f739121f97eb5a3'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-multiyear-renta'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:9437a47bfe3a545912a6ed097c4fe11418546ddf6ee596da40680c1e73b2b2c5'
 related:

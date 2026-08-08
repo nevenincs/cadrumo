@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#state-architecture'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:63e7edbcc85205b74d47d2e6e52df785932cb6e3b201a86bcb1c8a964eaf49a0'
 related:

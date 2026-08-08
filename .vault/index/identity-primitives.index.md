@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#identity-primitives'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:4b7f444953bee6b6442fdd942d12bdbbad300b0fd6815ae8343b33088b89b6cb'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#error-code-registry'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:63dac3020674970db0a2d9c2aefe8573db52c775d0d820bfcb12e364ff9534ee'
 related:

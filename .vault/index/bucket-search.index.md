@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#bucket-search'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:993706fee9120f4c073beb8a707381025ae90ad3d9bd5f161ba5667f9ed0daa7'
 related:

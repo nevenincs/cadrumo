@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cadrumo-product-rename-s69-release-runbook'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:912d204d953d569b95764d187f2ea4fb6b4783588d6a0fbb7a815eb94042fbb8'
 related:

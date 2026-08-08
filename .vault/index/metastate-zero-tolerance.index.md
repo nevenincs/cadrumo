@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#metastate-zero-tolerance'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:af215e4d7ab9a2bcb210d77321bf1d8216abf638eefcffc11ab461ffe3c1ae12'
 related:

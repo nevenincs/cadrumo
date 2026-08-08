@@ -5,44 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:7984e7c5c8e2f054b10dbb39e215ae096f250d749f2ef3a95d743156351cc63f'
+body_hash: 'sha256:a23592257f3f87361dc02866f451611cf8fffdd364b436aa9776825858f66b48'
 step_id: 'S254'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S254 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Close the second leak vector on the internal fault projection: a violation's loc tuple reproduces mapping KEYS as well as field names, so a taxpayer identifier used as a dict key reaches the context verbatim. Reproduced through pydantic directly, loc is by_party then the identifier itself, and the helper's docstring claiming the field path is not sensitive is false for that case. The message vector was closed separately by withholding value_error and assertion_error prose while reporting the error type and the raising exception class, but loc is a different vector on the same helper with the same guarantee and the same confidentiality class. NOT a filter: telling a key from a field name needs the model class, which a ValidationError does not carry, so it is a design change, and a pattern-matching redactor there would be exactly the guess the projection exists to avoid. Reachability measured rather than assumed: the outbound boundary's result-model tree carries exactly one string-keyed mapping whose keys are per-modelo detail-row field names, so it is not reachable with taxpayer data there today, while the stored-data boundary accepts arbitrary persisted records and was not enumerated. Same unreachable-today-but-guarded-elsewhere shape that justified the message vector and ## Scope
-
-- `src/cadrumo/entrypoints/cli` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Close the second leak vector on the internal fault projection: a violation's loc tuple reproduces mapping KEYS as well as field names, so a taxpayer identifier used as a dict key reaches the context verbatim. Reproduced through pydantic directly, loc is by_party then the identifier itself, and the helper's docstring claiming the field path is not sensitive is false for that case. The message vector was closed separately by withholding value_error and assertion_error prose while reporting the error type and the raising exception class, but loc is a different vector on the same helper with the same guarantee and the same confidentiality class. NOT a filter: telling a key from a field name needs the model class, which a ValidationError does not carry, so it is a design change, and a pattern-matching redactor there would be exactly the guess the projection exists to avoid. Reachability measured rather than assumed: the outbound boundary's result-model tree carries exactly one string-keyed mapping whose keys are per-modelo detail-row field names, so it is not reachable with taxpayer data there today, while the stored-data boundary accepts arbitrary persisted records and was not enumerated. Same unreachable-today-but-guarded-elsewhere shape that justified the message vector
 

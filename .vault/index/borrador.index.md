@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#borrador'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:36a1105b93e60f79ea12687d17210b3db8bfd80af7a90bf40dac25d187911244'
 related:

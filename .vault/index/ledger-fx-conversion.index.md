@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-fx-conversion'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:3ba6d4e9a0fdfe36d38700897f67b382e9be7aa275f40f0639f1baa9509e973b'
 related:

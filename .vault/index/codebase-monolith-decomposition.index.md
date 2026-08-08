@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#codebase-monolith-decomposition'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:517216fd73d41dc64a52754599b33148f2eda93dbddd0baf12ba60dbf378a30c'
 related:

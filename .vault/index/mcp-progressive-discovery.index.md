@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mcp-progressive-discovery'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:ad6ae6062b839b7ca0cc0a3bc578b20a5a9b17a47bdd2a6d3e11d1c92b2bd04b'
 related:

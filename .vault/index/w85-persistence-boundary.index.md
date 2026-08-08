@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#w85-persistence-boundary'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:0792f00c4929a37331539feda0f1d42b913ec7d6aee34f0a9239518c7e665844'
 related:

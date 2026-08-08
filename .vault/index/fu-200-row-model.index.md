@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#fu-200-row-model'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:72abb37dcbfe5f070bb5fb81776c063c7234689c650e8bb1208e2200848476f5'
 related:

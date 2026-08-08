@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-classification-enrichment'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:51461e8be55281003964e34ef93f736894360628fc92931277c9c68fcffddcff'
 related:

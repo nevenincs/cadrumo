@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#renta-region-deductibility'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:2b9a916cd11e433beeaaba8453d74bdb3e680547e93bfa05ffb9a00d45238cca'
 related:

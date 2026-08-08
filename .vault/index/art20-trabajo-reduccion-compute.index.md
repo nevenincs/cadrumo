@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#art20-trabajo-reduccion-compute'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:86d63d83b0876e5758aa36d283e06a3a1d4764143272fbabac5a3928b52f7b8c'
 related:

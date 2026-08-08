@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-100-anualidades-separate-escala'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:bc791cd8079ac97ca9943e09799e4297da89d868ee8e57219db79768909c0f2f'
 related:

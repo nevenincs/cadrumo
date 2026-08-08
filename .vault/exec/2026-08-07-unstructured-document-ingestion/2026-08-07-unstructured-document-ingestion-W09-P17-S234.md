@@ -5,44 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:d1f940d348acefa3d4b1297de89f295abeca0fa2770c160bb4107cfa157a28a2'
+body_hash: 'sha256:60a4b2d274b8bc079b8955a69d7b65cc90caf241811a0d4a279cd3bbf663f230'
 step_id: 'S234'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S234 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The RULED, and it precedes any widening. Derive the uncatalogued specimen from the VOCABULARY rather than pinning a country, everywhere a behaviour class is gated by one. The property under test is a country we cannot place, and TH is an accident of when the test was written, so the fixture is coupled to a boundary that was always going to move. Landing the argued tier reds 15 tests: six anti-rot anchors firing exactly as authored, and nine across two peer files, one of which is built NARRATIVELY on Thailand's absence with a module docstring opening Thailand is why this is not a curiosity and constants naming it. Repointing constants is two lines and would leave the rationale prose contradicting the data, which is the defect class this campaign has hit six times. So the fix takes the prose as well as the constants: take any assigned code the table lacks, so the test follows the boundary instead of pinning it. Correct regardless of whether the tier is ever admitted, which is why it lands first and separately. Verified alternates should the derivation prove impractical at a site: SA EG NG VA all still resolve uncatalogued and ## Scope
-
-- `src/cadrumo/application/ledger` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # RULED, and it precedes any widening. Derive the uncatalogued specimen from the VOCABULARY rather than pinning a country, everywhere a behaviour class is gated by one. The property under test is a country we cannot place, and TH is an accident of when the test was written, so the fixture is coupled to a boundary that was always going to move. Landing the argued tier reds 15 tests: six anti-rot anchors firing exactly as authored, and nine across two peer files, one of which is built NARRATIVELY on Thailand's absence with a module docstring opening Thailand is why this is not a curiosity and constants naming it. Repointing constants is two lines and would leave the rationale prose contradicting the data, which is the defect class this campaign has hit six times. So the fix takes the prose as well as the constants: take any assigned code the table lacks, so the test follows the boundary instead of pinning it. Correct regardless of whether the tier is ever admitted, which is why it lands first and separately. Verified alternates should the derivation prove impractical at a site: SA EG NG VA all still resolve uncatalogued
 
@@ -51,8 +18,6 @@ related:
 - `src/cadrumo/application/ledger`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - Rest the structured-country degradation suite's ARGUMENT on the property
   rather than on a named country, not only its constants.
@@ -148,8 +113,6 @@ A no-op control, identical imports at session start with no mutation, run twice:
     25 passed
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 The derivation must carry an ANCHOR, and that is the half most easily dropped. A
 derived specimen with no anchor can quietly come to name a country the vocabulary

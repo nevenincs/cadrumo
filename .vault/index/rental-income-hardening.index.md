@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#rental-income-hardening'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:4ce90924c1fc8ab33ccd4e7959bc50e004dfa406ab745ffc1ecb3c260e745f4c'
 related:

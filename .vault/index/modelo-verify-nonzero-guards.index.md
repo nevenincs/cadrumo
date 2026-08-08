@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-verify-nonzero-guards'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:43d1d2b06f60cfd06fb96f9fabd5c992ddf4584bd2875ce9e80a859e07e53d56'
 related:

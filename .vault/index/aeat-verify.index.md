@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-verify'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:7191def042a73a990d83f68f15a01ecc4925df038b3109dd6451d4e79af05871'
 related:

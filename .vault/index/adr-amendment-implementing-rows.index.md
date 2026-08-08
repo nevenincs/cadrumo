@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#adr-amendment-implementing-rows'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:7ad9ee0133340a4d39a98e9b86f5b8cfe699e4949608bd52cab4ead5658d606d'
 related:

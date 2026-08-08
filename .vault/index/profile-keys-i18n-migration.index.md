@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-keys-i18n-migration'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:126211eca640c662bd31c8310c65a3593f6435ceac3792e7e2eb08470ddc8b84'
 related:

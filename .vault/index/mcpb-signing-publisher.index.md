@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mcpb-signing-publisher'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:0b957765a9d91bb684c35ae6346fc1e84d7b4d073be3014e4d0bfd4474606c41'
 related:

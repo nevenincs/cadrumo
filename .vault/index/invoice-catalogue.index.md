@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#invoice-catalogue'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:941b197961ab96b8c3a215a815c7ae99bcc297a805f664bd84d0aea5c4cda151'
 related:

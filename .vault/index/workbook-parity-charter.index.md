@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#workbook-parity-charter'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:e4b13c30dc942cd242e19d76672c29802b4e6a7fface65fe46fb8b0bece1f27d'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#inss-art7h-exempt'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:0c672715fc3166d47adda4ab641c02aeaac81beb982a62538ff160cc711b984c'
 related:

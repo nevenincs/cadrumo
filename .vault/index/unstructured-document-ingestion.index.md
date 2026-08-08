@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#unstructured-document-ingestion'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:e75da5e1d150bd9de6db2e2fc562e05112b61302505d93b125e8342d468294f8'
+body_hash: 'sha256:f9657f9bce2d2db035922009133e80a2428afa60c54a0b53d39b06cd3e088403'
 related:
   - '[[2026-08-07-unstructured-document-ingestion-W01-P01-S01]]'
   - '[[2026-08-07-unstructured-document-ingestion-W01-P01-S02]]'
@@ -22,20 +22,29 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W02-P04-S12]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S100]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S101]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S102]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S103]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S104]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S105]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S107]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S108]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S112]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S114]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S13]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S14]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S17]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S206]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S207]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S209]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S210]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S217]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S77]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S78]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S79]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S86]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S87]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S88]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S90]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S94]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S95]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S96]]'
@@ -47,6 +56,9 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W02-P06-S20]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P06-S21]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P06-S22]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P07-S205]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P07-S216]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P07-S23]]'
   - '[[2026-08-07-unstructured-document-ingestion-W03-P08-S25]]'
   - '[[2026-08-07-unstructured-document-ingestion-W03-P08-S26]]'
   - '[[2026-08-07-unstructured-document-ingestion-W03-P08-S27]]'
@@ -57,6 +69,10 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W04-P09-S33]]'
   - '[[2026-08-07-unstructured-document-ingestion-W04-P10-S34]]'
   - '[[2026-08-07-unstructured-document-ingestion-W04-P10-S81]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W05-P11-S145]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W05-P11-S159]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W05-P11-S163]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W05-P11-S169]]'
   - '[[2026-08-07-unstructured-document-ingestion-W05-P11-S41]]'
   - '[[2026-08-07-unstructured-document-ingestion-W05-P11-S42]]'
   - '[[2026-08-07-unstructured-document-ingestion-W06-P12-S45]]'
@@ -86,7 +102,77 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S121]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S123]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S124]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S127]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S129]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S130]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S131]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S132]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S135]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S137]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S138]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S139]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S143]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S144]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S147]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S151]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S153]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S154]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S155]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S156]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S162]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S164]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S165]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S166]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S172]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S173]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S174]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S175]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S178]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S181]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S182]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S184]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S185]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S188]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S189]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S190]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S191]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S192]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S194]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S195]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S196]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S197]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S198]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S199]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S200]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S201]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S202]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S203]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S204]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S208]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S211]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S212]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S215]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S219]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S220]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S221]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S223]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S225]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S229]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S230]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S231]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S232]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S233]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S234]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S235]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S236]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S238]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S241]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S243]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S245]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S248]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S249]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S250]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S251]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S66]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S67]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S68]]'
@@ -172,6 +258,7 @@ Auto-generated index of all documents tagged with `#unstructured-document-ingest
 - `2026-08-07-unstructured-document-ingestion-W04-P09-S33` - Run the mutation-proof pass over every W01 through W03 gate, breaking from outside the repo, observing red, restoring, and recording each red signature
 - `2026-08-07-unstructured-document-ingestion-W04-P10-S34` - Build the harness runner pinned to key sha256 e2db6a49, recording model identity, revision and engine route on every result, stamping the corpus GAPS section-1 optimism caveat on every Spanish figure, and resolving twin pairs from the prose notes field until the corpus grows a structured link
 - `2026-08-07-unstructured-document-ingestion-W04-P10-S81` - Report the model tier beside every harness figure, record the claude-sonnet-4-6 REC-DOM-IMG-008 result (7 of 8, zero fabricated) as an upper reference point, and re-establish the baseline at the Haiku-tier proxy and the 2B-4B on-host class, gated by the harness refusing a result row missing its tier
+- `2026-08-07-unstructured-document-ingestion-W05-P11-S145` - Give the evidence consent CLI module its own tests, since it has none at all and that absence hid two live operator-facing crashes until a lane building on top of it happened to probe a real instance: the survey and the withdrawal verbs both raised on a workflow-state attribute that does not exist, and a re-derivation reader called a signature changed out from under it while being annotated loosely enough that the type checker saw nothing. Drive the real command tree rather than constructing state, since constructing it is what let both defects sit unnoticed
 - `2026-08-07-unstructured-document-ingestion-W05-P11-S41` - 2026-08-07-unstructured-document-ingestion-W05-P11-S41
 - `2026-08-07-unstructured-document-ingestion-W05-P11-S42` - 2026-08-07-unstructured-document-ingestion-W05-P11-S42
 - `2026-08-07-unstructured-document-ingestion-W06-P12-S45` - Add the HardwareProfile probe carrying free system memory, accelerator presence, and NVML-backed total and free VRAM, with unknown reported as unverified on diagnostic rows, gated by injected-measurement tests covering every branch
@@ -202,6 +289,13 @@ Auto-generated index of all documents tagged with `#unstructured-document-ingest
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S123` - Add Ley 37/1992 art. 3 to the bundled consolidated corpus, since the territorial exclusion the Spanish territory table rests on cites art. 3.Dos by identifier while only arts. 1 and 102 are bundled, so the evidence gate cannot validate the citation and the grounding resolves by name alone. Take the LAST version in the consolidated payload rather than the first, since it carries every historical version oldest first and the first block is repealed law, assert the amending norm identifier, never pass the legal text through a shell, and read the file back before trusting it. Same class as the arts. 68 to 70 gap and worth fetching in the same pass
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S124` - 2026-08-07-unstructured-document-ingestion-W09-P17-S124
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S129` - 2026-08-07-unstructured-document-ingestion-W09-P17-S129
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S130` - 2026-08-07-unstructured-document-ingestion-W09-P17-S130
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S131` - Scope the territory grounding assertions to the article and read the same artefact the catalogue gate reads, since the statute phrases are currently asserted against the entire six-hundred-thousand-character law rather than against article 3, which is non-vacuous today only because each phrase happens to occur exactly once, and a consolidation repeating an exclusion phrase elsewhere would silently convert the discriminating check into a passing one. The silence assertion about the Balearic Islands is the mirror problem and will red on any unrelated future amendment mentioning them, with a message pointing at territorial scope. Separately the test reads the markdown sidecar while the catalogue reference resolves through the json sidecar, so two artefacts regenerated by different paths can diverge and leave the gate green over bytes nobody checked. Resolving the anchored unit closes both at once. Also correct the exec record character count, which states 2733 against a measured 2311
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S132` - Derive each party territorial residency from the transcribed postal code, since the contract now carries a supplier and a customer postal code and the domain resolver can turn a Spanish code into its territory, but nothing joins them so neither residency resolves for a Spanish party on the real path and the classification assembly still refuses an ordinary domestic invoice. This is the last producer between the read path and the assembly answering, so the held minting convergence stays blocked until it lands. Hold the safety asymmetry through the join: an absent or unreadable code resolves to nothing rather than to the mainland, and a party whose residency cannot be established must refuse rather than be assumed domestic
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S135` - Make the structural status-blindness sweep prove it exercised its own assertion, since the counter increments before the skip so the count assertion equals the loop bounds unconditionally and cannot fail, while the inner assertion runs only on shapes matching a non-fallthrough rule and nothing requires any shape to. Proven vacuous by emptying the rule table so every shape fell through, after which the gate still passed. Latent rather than live today because forty-seven of the hundred swept shapes reach a real rule, but it sits on the test described as the stronger structural guarantee and a future narrowing of the table would degrade it silently into an assertion-free loop. Count the shapes that actually exercise the assertion and gate on that, dropping the tautological line rather than replacing it with another
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S137` - 2026-08-07-unstructured-document-ingestion-W09-P17-S137
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S139` - Prove the ladder never defaults to the peninsula with a fixture whose invoice prints a bare B-CIF, no country and no gated postal evidence, asserting unknown and never the mainland, mutation-proven. Add the companion probe feeding a Paris five-digit code with the country gate removed and asserting it reds, since Spain France Germany and Italy all use five-digit codes so the shape guard discriminates nothing and a Paris code otherwise resolves to the Spanish peninsula
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S147` - 2026-08-07-unstructured-document-ingestion-W09-P17-S147
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S66` - Add the review list and filter verbs surfacing per-field value, origin, verbatim anchor, grounding outcome, ambiguity candidates, findings and suggestions, gated by documented-command and JSON schema conformance
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S67` - Make blocking findings block: an unresolved closure discrepancy, ambiguous identity or unresolved direction refuses confirm until each named finding carries an explicit per-finding resolution, with no bulk confirm flag, gated by refusal tests per finding class
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S68` - Record corrections as assertions: an operator override re-stamps the field OPERATOR while the confirmation record retains the prior value and origin, gated by a roundtrip asserting both values survive
@@ -213,6 +307,84 @@ Auto-generated index of all documents tagged with `#unstructured-document-ingest
 - `2026-08-07-unstructured-document-ingestion-W10-P18-S73` - Add the withdrawal verb: list consent-ledger entries, state plainly that transmitted bytes cannot be recalled, mark cloud-derived artefacts, and offer local re-derivation from the cached transcription that re-stamps provenance without rewriting history
 - `2026-08-07-unstructured-document-ingestion-W10-P18-S74` - Add the model remove action reporting freed bytes and the doctor row detecting partially-installed states in both directions (extra without models, models without extra), gated by doctor row tests
 - `2026-08-07-unstructured-document-ingestion-W10-P18-S75` - Extend the packaging smoke lane with the uninstall step proving every guarded surface returns to the instructive install refusal after the extra is removed
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S102` - 2026-08-07-unstructured-document-ingestion-W02-P05-S102
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S103` - `unstructured-document-ingestion` exec W02.P05.S103
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S114` - Add the singularity gate asserting exactly one production surface constructs an IVA category on the ingestion path, AST-walked against the real tree with no stored baseline and no per-violation allowlist, following the shipped prompter and profile-field singularity precedents. Mutation-proven by teaching the projection bridge or the legend axis to mint and confirming it reds. This lands ONLY after the convergence and never before, because written against today's tree it would either red on two real sites or need those sites carved into a sanctioned set, and a singularity gate with the competing voices allowlisted into it is the gate lying. Sequenced after the convergence it ratchets a true statement, sequenced before it ratchets an aspiration
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S206` - 2026-08-07-unstructured-document-ingestion-W02-P05-S206
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S207` - Refuse a DECLARED category that presupposes an establishment the classification assembly recorded as a gap, since when the rule table returns nothing the document's own UNTDID code is taken as DECLARED and the rate-tier contradiction check is by its own docstring silent on every non-domestic category including export. So a document asserting an export code routes an unresolved counterparty straight to a zero-rated category. The chain is incomplete at HEAD and completes when the concurrent ingestion-category resolver lands, which is why it is rowed now rather than after
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S209` - Re-anchor the rate coverage premise, and close the vacuous tier guard
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S210` - 2026-08-07-unstructured-document-ingestion-W02-P05-S210
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S217` - Pin the sidecar part-infix regex to its producer
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S90` - The reverse-charge classification pair, read off real documents
+- `2026-08-07-unstructured-document-ingestion-W02-P07-S205` - Thread the filer's identifier to the grounding entry point
+- `2026-08-07-unstructured-document-ingestion-W02-P07-S216` - RULED. Narrow the counterparty role resolver so an ABSENT counterparty identifier is not a role failure while an UNVERIFIABLE one still is. Measured after the filer-id threading landed: every DraftDiscrepancyKind blocks by construction, nine of nine, so a document that simply does not print a counterparty NIF can no longer be confirmed without an individual resolution. A factura simplificada may legitimately omit it and the issuer-establishment module's own docstring calls an ordinary domestic ticket with no identified customer common and legitimate practice, while a receipt carrying no identifiers at all raises role_unresolved where there is nothing to resolve. That is a blocker firing across a large correct population, which trains the operator to clear it unread and destroys its value on the checksum-failure case where it is genuinely right. Rejected leaving it, which blocks legitimate documents, and rejected routing role_unresolved to the advisory channel, which also weakens the checksum case that is the genuine catch. CONDITION on the fix: absence must mean the question was not asked, never that the role is fine, so verify nothing downstream reads an unresolved role as a resolved one
+- `2026-08-07-unstructured-document-ingestion-W02-P07-S23` - Derive direction deterministically from the taxpayer own NIF role on the document and cross-check the verb-supplied kind, surfacing divergence as a finding, gated by real tests in both directions
+- `2026-08-07-unstructured-document-ingestion-W05-P11-S159` - Make the column-role mapping request declare its evidence posture
+- `2026-08-07-unstructured-document-ingestion-W05-P11-S163` - Make the reinstated-consent-symbol set drive its own verification
+- `2026-08-07-unstructured-document-ingestion-W05-P11-S169` - Constrain the withdrawal survey's completeness
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S127` - Bring the IVA registry tables inside the evidence gate, since they are read by the IVA domain directly rather than through the registry authority and their legal refs are therefore validated by nothing at all, which the territory table only escaped once a bespoke gate was written for it. The rate tables, the recargo rates and the place-of-supply tables carry the same structural exposure, and these are regulatory values where an ungrounded citation reads as grounded to every later reader. The bespoke territory gate is explicitly NOT the template and its author says so: it hardcodes the catalogue files it searches and checks a citation by substring-matching the raw TOML rather than loading the catalogue, which was proportionate for one table and one provision but does not scale, and four copies of it would be worse than the gap. Route these files legal refs through the real catalogue verification and evidence validator path so they get anchor-scoped required-text checking, and treat the bespoke gate as a candidate for deletion once they do
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S138` - Assemble the counterparty establishment ladder
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S143` - Surface a populated postal code that is not five digits as a draft discrepancy, since the free-text grounder passes an address blob through verbatim into the draft and the operator payload where the surface labels it a postal code. Not a safety defect because the domain resolver returns nothing for it rather than the mainland, and the grounder must stay permissive because dropping the value would destroy the anchor the operator reviews. Add the check at the layer that already owns deterministic read-time findings rather than a second copy of the rule upstream of the domain authority
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S144` - Drive the anchor-not-equal-to-value gate from the contract declaration rather than a hardcoded name tuple, since the postal fixtures honour the property by author convention and collapsing an anchor to equal its value reds nothing, following the sibling gates in the same file that already derive their subjects. Rename the free-text grounder which now serves four fields while naming one of them
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S151` - Promote the classification criteria assembly onto the package facade
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S153` - 2026-08-07-unstructured-document-ingestion-W09-P17-S153
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S154` - Ask each party printed country name on the read path, since the field contract asks for both postal codes and both tax ids and no country at all, its postal instruction explicitly excluding the country, so the ladder country rung has no source for the vision and text population and the postal rung gated behind it can never fire for them. Transcribe the printed name verbatim for the bounded vocabulary to match, never an alpha-2 code, because asking a reader for a code is asking it to translate. Same atomic contract widening the postal codes needed across every surface plus fully populated fixtures, so it is the not-started-is-safe shape and must not be begun without room to finish
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S155` - 2026-08-07-unstructured-document-ingestion-W09-P17-S155
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S156` - 2026-08-07-unstructured-document-ingestion-W09-P17-S156
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S162` - `unstructured-document-ingestion` exec W09.P17.S162
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S164` - 2026-08-07-unstructured-document-ingestion-W09-P17-S164
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S165` - 2026-08-07-unstructured-document-ingestion-W09-P17-S165
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S166` - 2026-08-07-unstructured-document-ingestion-W09-P17-S166
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S172` - Decide whether a Spanish VAT identification can be established from evidence
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S173` - Migrate the intra-community predicates onto the identification axis, since the fact split landed at the model and producer layers and NOT in the decision table: the criteria carry both identification fields, the producer populates them at all three construction sites, four rows declare consuming the identification fact, and no predicate reads either field even once. Those rows key on a customer tax status that says the customer is registered somewhere and never where, substituting an establishment test for the identification the law requires, so a customer identified in another Member State whose establishment the reader could not settle fails to classify and a legitimate exempt intra-community supply is refused as missing data rather than reported as a defect. Ground the change against LIVA art. 25, which exempts on the acquirer being identified in another Member State, with a worked oracle, since this changes which operations classify and is legal behaviour rather than a refactor
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S174` - Gate the consumes declaration against what each predicate reads
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S175` - Correct the consumes docstring which tells a reader that every row consuming territorial establishment is by design, since it describes the pre-split decision table accurately while the sibling party-fact docstring describes the intent and the law, and both cannot be true. Every later reader currently sees the split as in force while the table carries the pre-split design, and the four declarations of the identification fact read as evidence the migration happened. Lands with the migration rather than before it
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S178` - Surface a stated country code the vocabulary does not carry, since the resolver returns nothing for it and the provenance builder skips a null pair, so the operator sees an absent country and nothing else, indistinguishable from a record that stated none. That is precisely the failure the required alpha-3 column exists to close, reproduced one layer up where no refusal guards it. Emit the degradation through the notice channel already extended into the extract envelope, naming the unrecognised code, or attach an unanchored-equivalent envelope. Silence is the one outcome that should not be available
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S181` - Tell the operator that an anchor was supplied and refused rather than that none was supplied, since nulling the anchor on a miss makes a refused explicit anchor fall through to the no-anchor notice while the anchor-not-found notice cannot be reached from this producer at all. Messaging drift rather than dead code, since another producer does reach it. Preserve the refused anchor behind a distinct flag or branch the note selection on whether an explicit anchor was supplied
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S182` - Narrow both country legs to the bounded vocabulary in one change
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S184` - Gate the unassigned-country ruling with the three fixtures the amendment names
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S185` - Sweep the callers of the country resolver
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S188` - Widen the concordance signal beyond its single source
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S189` - 2026-08-07-unstructured-document-ingestion-W09-P17-S189
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S190` - 2026-08-07-unstructured-document-ingestion-W09-P17-S190
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S191` - 2026-08-07-unstructured-document-ingestion-W09-P17-S191
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S192` - 2026-08-07-unstructured-document-ingestion-W09-P17-S192
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S194` - 2026-08-07-unstructured-document-ingestion-W09-P17-S194
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S195` - Move the two country-vocabulary conditions onto the non-blocking advisory channel
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S196` - Widen the bundled country vocabulary, bounded by an argued principle
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S197` - Build the VAT-territory carve-out table
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S198` - `unstructured-document-ingestion` exec W09.P17.S198
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S199` - Build the operator answer channel for counterparty establishment
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S200` - 2026-08-07-unstructured-document-ingestion-W09-P17-S200
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S201` - Make both preflight issue mappings total by construction against IvaLedgerAggregationIssueReason so a new enum member cannot ship unmapped, since two lanes renamed members of this one enum in a day and the first failure masked the second entirely
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S202` - 2026-08-07-unstructured-document-ingestion-W09-P17-S202
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S203` - Ground the alpha-3 column in the schema that made it necessary
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S204` - Close the eight undocumented test-only cross-package private reaches
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S208` - Project the three computed-but-unread confirm-path signals onto the shared Notice channel, since all three are constructed, carried on a field nothing reads, and seen by nobody. Measured at HEAD: zero production readers of InvoiceConfirmationResult.establishment, the only production review_items hits are its own constructor, and the confirm payload is built from invoice, created, provenance, discrepancies, confirmed_provenance and confirmation_id and never touches establishment. (1) The country advisory, reachable only from review show, where before the advisory move both kinds drove blocking_count and were filterable by reason and finding, a queue removal nothing has ruled on, since S193 is an open question about the ATTRIBUTION advisory rather than a recorded ruling, so queue visibility is undecided for both advisories. (2) The ladder's review_items, whose exhaustion, contradiction, registration conflict and filer-profile gap are all computed and carried. (3) The IvaCategoryOutcome, which is neither persisted nor emitted, so a RATE_INFERRED record is indistinguishable at rest from one the rule table placed outright and enumerating them requires re-running resolution rather than querying a store. RATE_INFERRED is the most urgent: a contradiction at least has teeth because the withheld category is refused out loud by the decomposition contract, while an inferred category produces a perfectly ordinary-looking record. Notice channel per the CLI contract, never a bespoke result field
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S211` - Refuse an assimilation cycle at registry load
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S212` - Let the counterparty show verb ask the question its own justification cites, since it calls resolve_confirmed_counterparty_facts with bucket_id, tax_identifier and country_code and omits evidenced_scope, while the contradiction branch fires only when evidenced_scope is not None. So show structurally cannot reach the path the record justifies it by. Operator consequence measured: someone who confirmed ES_CANARIAS and then holds a document printing mainland evidence is shown confirmed es_canarias, while the ladder mid-confirm returns a contradiction and no scope and the review items raise a blocker naming it, so the two surfaces diverge in exactly the case the verb exists for and the divergence is invisible from show. Add an optional evidenced-scope option threaded to the resolver so an operator holding a document can see the contradiction before confirming, or narrow the record and docstring to the architectural claim that one authority answers both surfaces and drop the contradiction sentence, which describes a sibling call site
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S215` - RULED S186 by the coordinator. YES, follow the rename. The resolver's printed-country-name and printed-country-code parameters take a machine-read code from the structured path, so the name asserts typography that path never observed. This campaign already paid for that exact conflation once, when a derived value was treated as printed evidence and shipped a false anchor, and the rung itself was renamed ADDRESS_COUNTRY for the same reason. Consistency is not the argument. The argument is that the parameter name makes a provenance claim which is false on one of its two callers
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S219` - Rename the counterparty record now that it holds two facts
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S220` - Give the honesty gate's helper-following branch a guard that fails when the branch is deleted, and correct the docstring and record that claim it. Measured: removing the branch entirely leaves all five tests passing including the anchor written to pin it, and following adds nothing on any of the 19 live rows, because every predicate spells the attribute out in the call arguments as _identified_in_another_member_state(criteria.issuer_identification_state), which a plain attribute walk already finds. The branch would only matter for a helper handed the WHOLE criteria object, and no row does that today. So the anchor's failure message advertising that either the branch stopped working or the rows stopped reading identification is blind to the first cause while its name convinces a reader it is covered. Add a synthetic predicate in the test module that hands the whole criteria to a module-local helper and assert it yields the attribute the helper reads, which exercises the branch without requiring the production table to adopt that shape. Deleting the branch is the defensible alternative
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S221` - Amend the AEAT-register gate's header
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S223` - Fold diacritics in the regime-legend match
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S225` - Sweep the counterparty-country consumers for a resolved-versus-stated read
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S229` - `unstructured-document-ingestion` exec W09.P17.S229
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S230` - `unstructured-document-ingestion` exec W09.P17.S230
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S231` - Carry refused_anchor to the review surface, the one surface it exists for. Measured: FieldProvenance.refused_anchor reaches the extract envelope and is mirrored on the business payload, and appears zero times in the review CLI, whose per-field row builder passes anchor and anchor_self_reported and nothing for the refused form. Its own docstring says the point is that the operator surface can say which of the two happened, a reader that offered nothing versus one that offered something the document does not carry, and the per-field review rows are where an operator reads a field's grounding. There the two remain indistinguishable, which is the exact state the field was added to end. Same shape as anchor_self_reported beside it
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S232` - `unstructured-document-ingestion` exec W09.P17.S232
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S233` - Distinguish an offered-but-unroled anchor from an anchor the document does not carry, the third state the notice surface lacks. The single-competitor branch in the identity-roles module emits an UNANCHORED envelope carrying an anchor the document DOES print, since the candidate verified and only role evidence is missing. That envelope reaches the anchor-not-found notice, which tells the operator the form does not occur in the document's transcription, and that is false. Same class as the refused-anchor work but a different defect: there a refusal was reported as an absence, here an anchored-but-unroled value is reported as anchor-not-found. Three states now share two notices, so the honest shape is probably a fifth notice for offered, not refuted, not corroborated. Note the envelope staying UNANCHORED is deliberate and documented as load-bearing at that site, so the fix belongs in the notice selection rather than the grounding outcome
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S234` - RULED, and it precedes any widening. Derive the uncatalogued specimen from the VOCABULARY rather than pinning a country, everywhere a behaviour class is gated by one. The property under test is a country we cannot place, and TH is an accident of when the test was written, so the fixture is coupled to a boundary that was always going to move. Landing the argued tier reds 15 tests: six anti-rot anchors firing exactly as authored, and nine across two peer files, one of which is built NARRATIVELY on Thailand's absence with a module docstring opening Thailand is why this is not a curiosity and constants naming it. Repointing constants is two lines and would leave the rationale prose contradicting the data, which is the defect class this campaign has hit six times. So the fix takes the prose as well as the constants: take any assigned code the table lacks, so the test follows the boundary instead of pinning it. Correct regardless of whether the tier is ever admitted, which is why it lands first and separately. Verified alternates should the derivation prove impractical at a site: SA EG NG VA all still resolve uncatalogued
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S235` - Replace the country vocabulary's admission criterion
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S236` - Decide the anchor search's matching rule for short codes, since closing the markup route narrowed the class rather than eliminating it. Measured against the same country-less UBL document through the same entry point: ID is now unanchored, and ES ANCHORS by matching inside the VAT identifier ESB12345674, while SL anchors against a company suffix. ES is the worst possible value for this to hit since it prefixes every Spanish VAT identifier. Measured as unreachable today rather than assumed, because every country reader returns its own element's text or None and the provenance builder skips a field the record did not state, so no structured reader can emit a country the document lacks. But THE GUARD IS THE PARSER, NOT THE ANCHOR CHECK, while the anchor check's own docstring claims it catches a reader that pointed at an element the document does not carry, which for a two-letter code it demonstrably does not. That is a live gap between a documented property and the behaviour, masked by a guard in a different module. Closing it changes the matching rule to be boundary-aware beyond numeric edges, which is a decision rather than a patch, and it interacts with the deliberate ES-inside-ESP acceptance on the Facturae path
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S238` - REWRITTEN. The original premise was void: the German fixture confirms at HEAD unmodified, and the refusal that prompted this row was a correct refusal of a wrong input, since evidence confirm's --country-code is required and names the COUNTERPARTY's country while ES was supplied for a Swedish supplier. The line originally blamed cannot produce that symptom either, because it returns None on a failed checksum rather than raising. The real defect is narrow: canonical_identity_token picks its validator from the ADDRESS country while the identifier's own PREFIX already answers, and the invoice normaliser documents that exact rule in its own comment, that the source is the printed VAT number's own prefix and nothing else and the country beside it is an address deliberately not consulted. So the authority exists and this site disagrees with it. Measured: the Swedish identifier yields None by address while its prefix reads se, and an ES-prefixed Spanish one already strips correctly, so the site handles one prefix and ignores every other. BLOCKING GATE on the fix: reachability is unproven rather than proven-nil, since the structured reader takes the identifier from the record and never reaches this call, and the text and semantic reading paths cannot be exercised on this box for want of an on-host model. Require a caller measured to reach it with a non-None foreign identifier before claiming the fix is felt
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S241` - Rename the establishment ladder's backwards country parameter
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S243` - `unstructured-document-ingestion` exec W09.P17.S243
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S245` - Audit this campaign's fixtures for shapes no producer emits, the inverse of the drive-the-real-producer discipline. A notice fixture was found building a CARRIED anchor under an UNANCHORED outcome, which no producer at that surface emits, and because the gate asserted that shape was correct it DEFENDED the conflation of three states into two notices. So the fixture did not merely miss the defect, it certified it. The discriminating question per fixture is whether its shape was hand-built from what the code currently DOES or derived from what a producer actually EMITS, and the first is how a gate comes to protect the behaviour it was written to constrain. Four other instances landed this campaign already: three export fixtures asserting routing from rows recording no counterparty country, with a docstring saying so, and a feed-parity fixture placing one party in the US and the other nowhere on the very axis it existed to prove agreement about. Prioritise fixtures on the money paths, category resolution, relief and export routing, over presentation surfaces
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S248` - Settle whether the relief exemption depends on the code system
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S249` - Build the counterparty-only fixture the spelling assertion needs
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S250` - URGENT CONFIDENTIALITY. Add an EU VAT identity rule to the CLI redaction funnel, whose tax-identity matchers are Spanish-shaped only and carry no EU VAT rule at all. Verified at HEAD through redact_for_cli_output: B12345674 and 12345678Z redact to a sha256 digest, while SE556677889901, DE811234567 and ESB12345674 all pass through RAW. The last is the sharpest, since it is a SPANISH taxpayer's own identifier written in the EU-prefixed form our own structured readers produce and our own parsers emit, and the ES prefix defeats the word boundary the CIF rule anchors on so the rule that catches the bare form does not fire. The IBAN pattern does not incidentally cover them either. It reaches real envelopes on the SUCCESS path: a German intra-community fixture confirming with exit 0 emits the counterparty identifier raw inside a notice context, and the same funnel governs every log line. The project rules name this apparatus the load-bearing confidentiality guarantee of the application, and it currently holds only for unprefixed Spanish shapes. Cover the prefixed form for every Member State INCLUDING ES, prove it on both redact_for_cli_output and redact_for_log, and anchor the gate on the PROPERTY that an identifier the VAT-prefix authority recognises must not survive the funnel, rather than a fixed list which would pin today's Member States the way a country pinned the vocabulary
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S251` - Stop the internal fault projection passing a value_error message through verbatim, since its never-emit-the-input guarantee is defeated by any domain validator that formats the offending value into its own message text. Measured: a boundary carrying a domain exception emits Value error, tax identifier SE556677889901 must be exactly 9 characters, got 14 inside the violations context, so the value crosses the boundary inside the constraint message rather than as the input field the helper correctly withholds. The helper's docstring claims a protection it does not have on that path. This already applies to the two boundary members using it today, so it is a live class rather than one introduced by widening. BLOCKS the input-boundary widening ruled under S239, which would make it three surfaces rather than two
 
 ### plan
 

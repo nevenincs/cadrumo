@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-cli-buildtime'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:2c0f0b199d7b7b32316964974575ffd3771eed28502373601471aeb559b07c70'
 related:

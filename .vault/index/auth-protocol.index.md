@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#auth-protocol'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:ae12e915b809f2dc049e5cf19b46fef06e5c1acc053f1705365c22285a5cd8cb'
 related:

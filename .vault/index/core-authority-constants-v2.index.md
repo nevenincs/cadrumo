@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#core-authority-constants-v2'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:0ef3e6cba01809e27efff246b0c0c3905075650890be0e3cad3ab8433d444862'
 related:

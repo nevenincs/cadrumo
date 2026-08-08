@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#path-handling-safety'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:1b8d9e0dfc42743db68775303720606a70ab689597373477ae3033b54c45163a'
 related:

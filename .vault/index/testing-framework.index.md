@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#testing-framework'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:ecfefbc2c6c5146054d3bb0dc65d0faa7ce806ae21dd950b2c1563a9f96b4948'
 related:

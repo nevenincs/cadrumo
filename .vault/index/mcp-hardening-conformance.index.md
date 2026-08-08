@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mcp-hardening-conformance'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:ef31ff8a1c3af6051355d40a97f44d7d85408ed6909b2b85579f839431d582d1'
 related:

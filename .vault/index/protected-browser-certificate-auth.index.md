@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#protected-browser-certificate-auth'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:2a5325eb420253625ef04b2ab8e5484193b5fb9b4627bd739bfaec840d714204'
 related:

@@ -5,44 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:3b0783bb2b838d42ae9dd22e6ed2794081e8508a0e2c0f30d813160044c56bf8'
+body_hash: 'sha256:3b840311d0ae0f5011243098072bb29910a29fa489da30d50b3ce0bc9aff9eef'
 step_id: 'S251'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S251 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Stop the internal fault projection passing a value_error message through verbatim, since its never-emit-the-input guarantee is defeated by any domain validator that formats the offending value into its own message text. Measured: a boundary carrying a domain exception emits Value error, tax identifier SE556677889901 must be exactly 9 characters, got 14 inside the violations context, so the value crosses the boundary inside the constraint message rather than as the input field the helper correctly withholds. The helper's docstring claims a protection it does not have on that path. This already applies to the two boundary members using it today, so it is a live class rather than one introduced by widening. BLOCKS the input-boundary widening ruled under S239, which would make it three surfaces rather than two and ## Scope
-
-- `src/cadrumo/entrypoints/cli` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Stop the internal fault projection passing a value_error message through verbatim, since its never-emit-the-input guarantee is defeated by any domain validator that formats the offending value into its own message text. Measured: a boundary carrying a domain exception emits Value error, tax identifier SE556677889901 must be exactly 9 characters, got 14 inside the violations context, so the value crosses the boundary inside the constraint message rather than as the input field the helper correctly withholds. The helper's docstring claims a protection it does not have on that path. This already applies to the two boundary members using it today, so it is a live class rather than one introduced by widening. BLOCKS the input-boundary widening ruled under S239, which would make it three surfaces rather than two
 

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#renta-scope-audit'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:d0c50aee2d3afface57b6342e532e9ae72aab8ce8647f2b3ade872a5dadbfa31'
 related:

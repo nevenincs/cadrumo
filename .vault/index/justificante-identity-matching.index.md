@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#justificante-identity-matching'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:b92b292e33fd94ed236ed5af12ef54d8fa7ba5024f1e46ac17c7120827b7b10d'
+body_hash: 'sha256:597754b173a2721b7e0342a9b6e10725f6195cfd445905c969926ee061320ee8'
 related:
   - '[[2026-08-07-justificante-identity-matching-P01-S01]]'
   - '[[2026-08-07-justificante-identity-matching-P01-S02]]'
@@ -20,6 +20,8 @@ related:
   - '[[2026-08-07-justificante-identity-matching-P01-S13]]'
   - '[[2026-08-07-justificante-identity-matching-P02-S08]]'
   - '[[2026-08-07-justificante-identity-matching-P02-S09]]'
+  - '[[2026-08-07-justificante-identity-matching-P02-S10]]'
+  - '[[2026-08-07-justificante-identity-matching-P02-S14]]'
   - '[[2026-08-07-justificante-identity-matching-adr]]'
   - '[[2026-08-07-justificante-identity-matching-plan]]'
   - '[[2026-08-07-justificante-identity-matching-reference]]'
@@ -49,6 +51,8 @@ Auto-generated index of all documents tagged with `#justificante-identity-matchi
 - `2026-08-07-justificante-identity-matching-P01-S13` - Harden the row-scoped locator to an exact expediente_id match instead of a substring filter, reusing the existing re import rather than a second selection idiom, with a test proving it cannot match a second row whose id merely contains the target as a substring
 - `2026-08-07-justificante-identity-matching-P02-S08` - Distinguish all five swallowed outcomes (unreadable artefact, manifest mismatch, unparsable PDF, CSV-resolution failure, CSV mismatch) and return a typed reason instead of returning None uniformly
 - `2026-08-07-justificante-identity-matching-P02-S09` - Emit a Notice through the shared envelope spine naming the unreached-evidence reason when an enrollment call finds an artefact but saves nothing
+- `2026-08-07-justificante-identity-matching-P02-S10` - Add a mutation-proof test confirming the reason-distinguishing branch fires per swallowed case and confirm the CLI report surfaces the Notice
+- `2026-08-07-justificante-identity-matching-P02-S14` - Narrow the application-layer relay test's name and docstring to what its assertions actually prove. It constructs the advisories onto the run model and reads them back off the same object, so it is a pydantic storage roundtrip that cannot fail when the CLI forwarding is deleted, while its name and docstring both claim to cover the relay. The fold itself is now covered at the transport boundary, so this is a truthfulness repair rather than a coverage gap. Gate: the renamed test still derives its expected set from the enum, and a reader can tell from the name alone that it proves the taxonomy has members and the model stores one advisory per member, not that anything reaches an operator
 
 ### plan
 

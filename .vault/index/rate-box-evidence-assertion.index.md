@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#rate-box-evidence-assertion'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:c4140ac9753f168d293f04ec2ee79326e06332fef95929eae11e35b6683d0f76'
 related:

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:24680d05023ea93a03d138569d773a538699d21237dc6df6fa13765c23b11654'
+body_hash: 'sha256:8429142f1286ef2036dbf5cb6f910d6cbc658b1bd0988485ce77ebea2dcce8cb'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -22,6 +22,7 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S09]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S65]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S68]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S69]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S71]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S72]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
@@ -51,6 +52,7 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S09` - Add the description-keyed companion check for unnumbered slot meaning flips
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S65` - Assert the reserved-to-real occupancy transition alongside the retirement direction
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S68` - Order the design inventories chronologically rather than by filename
+- `2026-08-08-aeat-design-relayout-boundary-W01-P02-S69` - Reconcile the hardened gate's verdict against the re-derived boundary union
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S71` - Add a box-set MEMBERSHIP signal alongside the movement signal
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S72` - Widen the bracketed box-number marker beyond four digits
 

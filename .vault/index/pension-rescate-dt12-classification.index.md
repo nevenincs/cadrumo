@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#pension-rescate-dt12-classification'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:74abc392babdcd272b1319ad53b338e7c235f9efbb02d08974bb36ab527ab678'
 related:

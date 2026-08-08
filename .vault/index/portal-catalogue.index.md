@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#portal-catalogue'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:3e1676998d0894c0cf8f0991f574343708361eb7712444a75fd940f5f9fb6815'
 related:

@@ -5,45 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:80a4dd485683eebf8642195eafa030559912f0e773eb66e0af1f4ef02e79bbc7'
+body_hash: 'sha256:e1f17e74d7d9a2bcb496f147c4cbd9e973b709bbae0f3c0deee1074a2c36486b'
 step_id: 'S12'
 related:
   - "[[2026-08-07-m303-carry-reconciliation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace m303-carry-reconciliation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S12 and 2026-08-07-m303-carry-reconciliation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Surface the filed disposition from the parsed fichero, which already holds it. REFUSED shape, do not add casillas 72 and 73: the AEAT diseño declares 70, 71, 74, 75, 76 and 77 and not 72 or 73, our export layout carries exactly that set, and AEAT models the disposition as a HEADER at offset 13 plus sin-actividad at offset 391, so two casillas would disagree with the official structure about the concept's kind. THREE FINDINGS FROM THE FIRST WORK, recorded so they are not re-derived. ONE, the value is usable as-is: every field regardless of kind is read through _parse_field_value and appended as a ParsedExportFieldValue carrying raw, a decoded value and a source_locator, so a text header yields a decoded string and the projection change is small. TWO, parsed.fields today has exactly one consumer, _verify_submitted_file_context, which reads only DRAFT-kind fields to cross-check modelo, year and period, so every header field is parsed and discarded. THREE, and this is the blocking design question: NO sibling modelo represents a non-casilla fichero fact anywhere. ObservedCasillaValue requires a casilla_id, there is no ObservedHeaderValue or equivalent, and no observation path surfaces a header. Inventing the first such representation is a design decision to be taken deliberately and NOT settled inside a projection fix, so choose the representation before writing the projection and ## Scope
-
-- `src/cadrumo/adapters/outbound/aeat/sede/_declarations_observations.py`
-- `src/cadrumo/adapters/outbound/aeat/sede/_schema.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Surface the filed disposition from the parsed fichero, which already holds it. REFUSED shape, do not add casillas 72 and 73: the AEAT diseño declares 70, 71, 74, 75, 76 and 77 and not 72 or 73, our export layout carries exactly that set, and AEAT models the disposition as a HEADER at offset 13 plus sin-actividad at offset 391, so two casillas would disagree with the official structure about the concept's kind. THREE FINDINGS FROM THE FIRST WORK, recorded so they are not re-derived. ONE, the value is usable as-is: every field regardless of kind is read through _parse_field_value and appended as a ParsedExportFieldValue carrying raw, a decoded value and a source_locator, so a text header yields a decoded string and the projection change is small. TWO, parsed.fields today has exactly one consumer, _verify_submitted_file_context, which reads only DRAFT-kind fields to cross-check modelo, year and period, so every header field is parsed and discarded. THREE, and this is the blocking design question: NO sibling modelo represents a non-casilla fichero fact anywhere. ObservedCasillaValue requires a casilla_id, there is no ObservedHeaderValue or equivalent, and no observation path surfaces a header. Inventing the first such representation is a design decision to be taken deliberately and NOT settled inside a projection fix, so choose the representation before writing the projection
 

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#suite-redgreen-2026-06-02'
-date: '2026-08-07'
-modified: '2026-08-07'
+date: '2026-08-08'
+modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:541534e54486286103365f7e8e2f5189333a5ef95bf19f3e518c430f1cb0e512'
 related:

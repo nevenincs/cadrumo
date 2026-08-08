@@ -5,44 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:dc76947766457b405be0d8d3c71e4b5455568b72133414aeb562a0edd296a43f'
+body_hash: 'sha256:821f358bc7f78e72fd003c65c5ca9719f486fbd090910f4b523de5926b25b9e5'
 step_id: 'S252'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S252 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Sweep for the campaign's dominant defect stated as a searchable pattern, beyond this feature: a rule PROVEN IN TESTS and WIRED TO A FIELD THAT IS EMPTY in exactly the cases the rule exists for. Two separate defects on one row shared it and neither is country-specific. The declared-relief guard read the resolved country code, empty for precisely the uncatalogued codes its exemption is for, while its own cases supplied the status directly. The country advisory had the identical defect, reading the resolved field while its fixtures set that field by hand, so it had never fired from a real document in its life. Both were invisible to a green suite because the tests entered BELOW the wiring. The generalisation: a gate that supplies its subject directly proves the RULE and says nothing about REACHABILITY, and the tell is a fixture setting a field no production path populates. Sweep other advisory and guard surfaces for that tell. Pairs with the fixture-provenance audit, which asks whether a fixture's SHAPE is one a producer emits, where this asks whether the fixture's INPUT arrives the way production supplies it and ## Scope
-
-- `src/cadrumo` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Sweep for the campaign's dominant defect stated as a searchable pattern, beyond this feature: a rule PROVEN IN TESTS and WIRED TO A FIELD THAT IS EMPTY in exactly the cases the rule exists for. Two separate defects on one row shared it and neither is country-specific. The declared-relief guard read the resolved country code, empty for precisely the uncatalogued codes its exemption is for, while its own cases supplied the status directly. The country advisory had the identical defect, reading the resolved field while its fixtures set that field by hand, so it had never fired from a real document in its life. Both were invisible to a green suite because the tests entered BELOW the wiring. The generalisation: a gate that supplies its subject directly proves the RULE and says nothing about REACHABILITY, and the tell is a fixture setting a field no production path populates. Sweep other advisory and guard surfaces for that tell. Pairs with the fixture-provenance audit, which asks whether a fixture's SHAPE is one a producer emits, where this asks whether the fixture's INPUT arrives the way production supplies it
 
@@ -51,8 +18,6 @@ related:
 - `src/cadrumo`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - State the invariant independently of the two instances that motivated it, and
   build the sweep instrument from the invariant rather than from their shape.
@@ -162,8 +127,6 @@ model, the field role -- and none is a producer. The Facturae element name itsel
 appears nowhere in the package.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 The first probe could not run: the draft assembler imports the
 deterministic-findings module, which loads the modelo registry, and a peer's
