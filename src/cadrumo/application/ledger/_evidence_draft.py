@@ -326,6 +326,21 @@ class FieldProvenance(BaseModel):
             here -- always-truthy text in this slot permanently satisfies the
             guard that exists to refuse an unevidenced identity, which is a
             measured defect rather than a hypothetical one.
+        attribution_unverified: ``True`` when nothing checked WHICH PARTY this
+            value belongs to. Party attribution is its own axis, distinct from
+            whether the value was read correctly: a postal code can be copied
+            perfectly off the page and still be filed under the wrong party,
+            and every anchor check in this record would pass. Role evidence
+            answers the attribution question for the identity fields, and the
+            document's own record answers it for a structured read, where the
+            element path names the party. For a model-read address value there
+            is no such answer today -- the reader's assignment is final and
+            unchecked -- so the value is stamped here and the operator is told.
+            Per FIELD for the same reason everything else on this envelope is:
+            one party's postal code may be attributed while their country is
+            not, and a draft-level or party-level flag could not say so. When
+            deterministic co-location lands, an attributed value simply stops
+            carrying the stamp; nothing here changes shape.
         note: Operator-facing explanation, e.g. which identity contradicted the
             value.
     """
@@ -340,6 +355,7 @@ class FieldProvenance(BaseModel):
     anchor_self_reported: bool = False
     derived_from: tuple[str, ...] = ()
     role_evidence: str | None = None
+    attribution_unverified: bool = False
     note: str = ""
 
     @model_validator(mode="after")

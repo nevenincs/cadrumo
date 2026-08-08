@@ -79,3 +79,26 @@ class DraftDiscrepancyKind(StrEnum):
     disagreement is a fact about the document under every reading, not a doubt
     about one figure, and confirming past it silently picks a side.
     """
+
+    POSTAL_CODE_UNREADABLE = "postal_code_unreadable"
+    """A party's postal code field holds something that is not a postal code.
+
+    Raised only where that costs a territorial answer: the postal code is the
+    sub-national evidence separating the three Spanish IVA territories, and it
+    is consulted exactly when the printed country did not settle the territory
+    on its own. So a party whose country evidence already resolves -- any
+    country but Spain -- raises nothing here however its code is printed, and a
+    correctly printed non-numeric foreign code is not a finding.
+
+    What remains is the case that costs something: a Spanish or unstated party
+    whose code cannot be read, so Canarias, Ceuta y Melilla and the peninsula
+    stay undecided. The reading is what failed rather than the document -- the
+    free-text validator keeps whatever the field held, by design, because
+    dropping it would destroy the anchor the operator reviews -- and an address
+    line sitting in a slot the operator surface labels a postal code reads as a
+    postal code until someone looks.
+
+    Blocking rather than advisory on the sibling terms: which territory a party
+    is established in decides the IVA treatment of the operation, and confirming
+    past an undetermined one picks the majority answer by omission.
+    """

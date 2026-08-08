@@ -97,6 +97,7 @@ __all__ = [
     "EstablishmentRung",
     "resolve_counterparty_establishment_scope",
     "resolve_draft_counterparty_establishment",
+    "scope_printed_evidence_would_establish",
 ]
 
 
@@ -229,6 +230,53 @@ def _printed_evidence(
             return from_postal, EstablishmentRung.SPANISH_POSTAL_CODE
 
     return None, None
+
+
+def scope_printed_evidence_would_establish(
+    *,
+    tax_identifier: str | None = None,
+    printed_country_name: str | None = None,
+    printed_country_code: str | None = None,
+    postal_code: str | None = None,
+) -> IvaTerritorialScope | None:
+    """Return the territory this printed evidence alone would settle, or ``None``.
+
+    The document rungs only, with no store consulted and nothing persisted. It
+    exists so a DIAGNOSTIC can name a territory without re-deriving the boundary
+    that produces it: an advisory warning that a party's address values are of
+    unverified attribution is far more actionable when it also says where those
+    values would place the party, and the operator is then contesting a concrete
+    claim rather than an abstraction.
+
+    Quoting rather than copying is the whole point. A second walk of the rungs
+    written for the advisory would be a second copy of a regulatory boundary,
+    free to drift from this one -- and the ordering it would have to reproduce
+    is precisely the safety property this module exists to hold.
+
+    **Not a resolution, and never a substitute for one.** No confirmed
+    counterparty fact is consulted, so a contradiction cannot surface here and
+    an answer from this function must never reach the criteria. Callers wanting
+    the settled territory call
+    :func:`resolve_counterparty_establishment_scope`.
+
+    Args:
+        tax_identifier: The party's identifier as printed, if any.
+        printed_country_name: The country as printed in the address block.
+        printed_country_code: An already-printed alpha-2 country code.
+        postal_code: The party's printed postal code.
+
+    Returns:
+        The territory the printed rungs settle, or ``None`` where they exhaust.
+    """
+    scope, _rung = _printed_evidence(
+        tax_identifier=tax_identifier,
+        country_code=_printed_country_code(
+            printed_country_name=printed_country_name,
+            printed_country_code=printed_country_code,
+        ),
+        postal_code=postal_code,
+    )
+    return scope
 
 
 def resolve_counterparty_establishment_scope(

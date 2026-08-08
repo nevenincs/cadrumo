@@ -5,44 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:f159e722de82bb8f82f2578f6ec97efd32a04ac45431c49b4d94cdf8b5e25e00'
+body_hash: 'sha256:835891c89b08848fda5384cf85eea6ad303751a7aef268217e8de660276e9e74'
 step_id: 'S144'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S144 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Drive the anchor-not-equal-to-value gate from the contract declaration rather than a hardcoded name tuple, since the postal fixtures honour the property by author convention and collapsing an anchor to equal its value reds nothing, following the sibling gates in the same file that already derive their subjects. Rename the free-text grounder which now serves four fields while naming one of them and ## Scope
-
-- `src/cadrumo/llm` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Drive the anchor-not-equal-to-value gate from the contract declaration rather than a hardcoded name tuple, since the postal fixtures honour the property by author convention and collapsing an anchor to equal its value reds nothing, following the sibling gates in the same file that already derive their subjects. Rename the free-text grounder which now serves four fields while naming one of them
 
@@ -80,17 +47,6 @@ The dispatch tables key on the declared form, so the form is what the name says.
 
 ## Verification
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
-
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
-
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
-
 Both lanes were run sequentially over the owning suite.
 
     uv run --no-sync pytest -n0 -q -p no:randomly src/cadrumo/llm/tests
@@ -113,8 +69,6 @@ old shape was blind to the defect the new one catches, rather than an assertion
 that it was.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 The originating row describes the free-text grounder as serving four fields. It
 serves six as of this change; the two printed-country fields landed after the row

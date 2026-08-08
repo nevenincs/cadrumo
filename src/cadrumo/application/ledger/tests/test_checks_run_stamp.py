@@ -43,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_the_stamp_names_every_declared_check() -> None:
     """The stamp and the executed set are the same declaration, read two ways."""
     assert deterministic_check_names() == tuple(check.name for check in DETERMINISTIC_CHECKS)
-    assert deterministic_check_names() == ("closure_identities", "regime_contradiction")
+    assert deterministic_check_names() == ("closure_identities", "regime_contradiction", "postal_code_shape")
 
 
 def test_a_check_added_to_the_declaration_moves_the_stamp_by_itself(

@@ -51,6 +51,8 @@ Submodules
    cadrumo.application.ledger._llm_review_workflow
    cadrumo.application.ledger._models
    cadrumo.application.ledger._participation_read
+   cadrumo.application.ledger._party_attribution
+   cadrumo.application.ledger._postal_shape_finding
    cadrumo.application.ledger._preflight
    cadrumo.application.ledger._protocols
    cadrumo.application.ledger._ratios

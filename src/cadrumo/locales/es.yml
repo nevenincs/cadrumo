@@ -2113,6 +2113,7 @@ cli:
           show_help: Muestre un borrador pendiente campo por campo, con sus hallazgos
             y bloqueos.
           unknown_reference: No hay ningun borrador pendiente para esa referencia.
+          party_attribution_unverified_message: 'Nada verifica a qué parte pertenecen estos datos de dirección. Si se leyeran dos bloques de dirección al revés, ambas partes quedarían situadas en un territorio de IVA en el que ninguna está establecida y ninguna comprobación lo detectaría. Contraste cada valor con el documento antes de confirmar este borrador.'
         source_path_help: Ruta al PDF o imagen de la factura
         supplier_help: Nombre del proveedor
         taxable_base_help: Base imponible de la factura

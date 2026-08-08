@@ -48,6 +48,7 @@ from ._document_transcription import DocumentTranscription
 from ._evidence_draft import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
 from ._grounding_anchor import evaluate_anchor, printed_excerpt_occurs
 from ._identity_roles import IdentityCandidate, resolve_counterparty_identity
+from ._party_attribution import stamp_unverified_party_attribution
 
 __all__ = [
     "GROUNDABLE_ORIGINS",
@@ -91,12 +92,18 @@ def verified_provenance(
 
     Returns:
         The envelopes, in their original order, each either upgraded by the
-        anchor check or passed through unchanged where no check applies.
+        anchor check or passed through unchanged where no check applies, and
+        each per-party address envelope additionally stamped with whether
+        anything verified the party it was filed under.
     """
     upgraded: list[FieldProvenance] = []
     for envelope in draft.provenance:
         upgraded.append(_verified_envelope(envelope=envelope, draft=draft, transcription=transcription))
-    return tuple(upgraded)
+    # Applied AFTER the anchor check, on its output rather than beside it,
+    # because the two answer different questions and the second must not read as
+    # a consequence of the first: an anchor check that passed says the value is
+    # on the page, and says nothing whatever about whose it is.
+    return stamp_unverified_party_attribution(tuple(upgraded))
 
 
 def _verified_envelope(

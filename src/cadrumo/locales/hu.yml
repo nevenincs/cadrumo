@@ -2046,6 +2046,7 @@ cli:
           show_help: Jelenitsen meg egy fuggo piszkozatot mezonkent, eszrevetelekkel
             es akadalyokkal.
           unknown_reference: Nincs fuggo piszkozat ehhez az azonositohoz.
+          party_attribution_unverified_message: 'Semmi sem ellenőrzi, hogy ezek a címadatok melyik félhez tartoznak. Ha két címblokkot fordítva olvasnának be, mindkét fél olyan áfaterületre kerülne, ahol egyikük sem telepedett le, és ezt egyetlen ellenőrzés sem szűrné ki. Vesse össze minden értéket a dokumentummal, mielőtt jóváhagyja ezt a piszkozatot.'
         source_path_help: A számla PDF- vagy képfájljának elérési útja.
         supplier_help: Szállító neve.
         taxable_base_help: Számla adóköteles alapja.

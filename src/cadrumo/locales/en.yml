@@ -1958,6 +1958,7 @@ cli:
           show_help: Show one pending draft field by field, with its findings and
             blockers.
           unknown_reference: No pending draft for that reference.
+          party_attribution_unverified_message: 'Nothing verifies which party these address values belong to. Were two address blocks read the wrong way round, both parties would be placed in an IVA territory neither is established in and no check would catch it. Confirm each value against the document before confirming this draft.'
         source_path_help: Path to the invoice PDF or image
         supplier_help: Supplier name
         taxable_base_help: Invoice taxable base

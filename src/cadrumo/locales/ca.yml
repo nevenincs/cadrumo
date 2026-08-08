@@ -2104,6 +2104,7 @@ cli:
           show_help: Mostreu un esborrany pendent camp per camp, amb les seves troballes
             i blocatges.
           unknown_reference: No hi ha cap esborrany pendent per a aquesta referencia.
+          party_attribution_unverified_message: 'Res no verifica a quina part pertanyen aquestes dades d''adreça. Si es llegissin dos blocs d''adreça a l''inrevés, ambdues parts quedarien situades en un territori d''IVA on cap no està establerta i cap comprovació no ho detectaria. Contrasteu cada valor amb el document abans de confirmar aquest esborrany.'
         source_path_help: Ruta al PDF o imatge de la factura
         supplier_help: Nom del proveïdor
         taxable_base_help: Base imposable de la factura
