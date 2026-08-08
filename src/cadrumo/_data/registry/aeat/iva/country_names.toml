@@ -42,11 +42,33 @@
 # caught. A gate now refuses any name that another name in the same record folds
 # onto, so the redundancy cannot come back and quietly disarm the check.
 #
-# FOLDING IS NOT TRANSLITERATION, and the tell is Austria. Stripping the
-# diaeresis from "Osterreich" is what the fold does; the convention a German
-# keyboard actually uses is "Oesterreich", which no accent rule produces. Any
-# such convention has to be listed as data, which is the second reason the
-# folding is kept narrow rather than being taught more tricks.
+# FOLDING IS NARROW, NOT ASCII-FORCING -- and it is not nothing, either.
+# Neither stage is a pure accent strip. `str.casefold` applies Unicode FULL case
+# folding, which rewrites the eszett to "ss", the Latin ligatures to their
+# letters, and the dotted capital I; and the NFKD decomposition behind the
+# accent fold rewrites compatibility forms, turning a roman numeral into plain
+# letters and a vulgar fraction into digits.
+#
+# THE TWO PASSES OVERLAP BUT ARE NOT THE SAME PASS, and one example each way is
+# what shows it: the eszett is rewritten by casefold alone, and NFKD leaves it
+# untouched; the roman numeral is rewritten by NFKD alone, and casefold only
+# lowercases it. A ligature is caught by both, which is why it illustrates
+# nothing about the difference. What NEITHER pass does is force ASCII: "ø", "Æ"
+# and "ł" pass through whole, and that is the property this vocabulary relies
+# on.
+#
+# The tell is still Austria. Stripping the diaeresis from "Österreich" is what
+# the fold does; the convention a German keyboard actually uses is
+# "Oesterreich", which no fold produces. Any such convention has to be listed as
+# data, which is the second reason the folding is kept narrow rather than being
+# taught more tricks.
+#
+# THE ONE MAPPING THIS TABLE ACTUALLY DEPENDS ON IS GREEK, and it is not an
+# expansion at all -- it is the place where casefold and `str.lower` diverge.
+# Casefold maps a FINAL sigma to a medial one; lower leaves it as it found it.
+# That is load-bearing because the final sigma is in the STORED name: "Κύπρος"
+# ends in one, while any capitalised or uppercased spelling an issuer prints
+# ends in the medial form. Without the fold the stored key never matches them.
 #
 # WHICH LANGUAGES, DELIBERATELY THREE.
 #   * Spanish, because the reading population is a Spanish taxpayer's documents
