@@ -713,6 +713,7 @@ __all__ = [
     "ConfirmationBlocker",
     "ConfirmationRecordDocument",
     "ConfirmationRecordRepository",
+    "ConfirmedEstablishment",
     "ConsentWithdrawalSurvey",
     "ConsentedDispatch",
     "CounterpartyDraftSide",
