@@ -573,7 +573,10 @@ def parse_finding_resolution(raw: str) -> FindingResolution:
         raise _bad(
             tr(
                 "cli.app.ledger.evidence.review.resolve_shape",
-                default="Each --resolve is <finding-id>=<choose|supply|attest>:<value-or-reason>.",
+                default=(
+                    "Each --resolve is <finding-id>=<choose|supply|attest>:<value-or-reason>. "
+                    "A choose names the reading by its value or by the digest review showed."
+                ),
             ),
         )
     action_token, _, payload = remainder.partition(":")

@@ -17,7 +17,7 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_validator, model_validator
 
-from ...core import IBAN_SHAPE_RE, Modelo, Period, iban_mod_97
+from ...core import IBAN_SHAPE_RE, Modelo, Period, iban_mod_97, normalise_iban
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import (
     MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR,
@@ -358,7 +358,7 @@ class RefundAccount(BaseModel):
             return None
         if not isinstance(value, str):
             raise DeadlineValidationError("refund-account iban must be a string")
-        canonical = value.replace(" ", "").replace("-", "").upper()
+        canonical = normalise_iban(value)
         if not canonical:
             return None
         if not IBAN_SHAPE_RE.match(canonical):

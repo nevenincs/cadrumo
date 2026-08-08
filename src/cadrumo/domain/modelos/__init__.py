@@ -90,6 +90,9 @@ from ._dt12_reduccion import (
     dt12_regime_window_eligibility,
 )
 from ._errors import (
+    Modelo036LifecycleError,
+    Modelo036PriorAltaRequiredError,
+    Modelo036TerminalStateError,
     ModeloError,
     ModeloExportError,
     ModeloValidationError,
@@ -193,6 +196,9 @@ __all__ = (
     "LedgerFilingStalenessVerdict",
     "LedgerRowFingerprint",
     "ManualFactBasisEntry",
+    "Modelo036LifecycleError",
+    "Modelo036PriorAltaRequiredError",
+    "Modelo036TerminalStateError",
     "Modelo184MemberRow",
     "Modelo184ShareSumError",
     "Modelo210AgrupacionRentaRow",

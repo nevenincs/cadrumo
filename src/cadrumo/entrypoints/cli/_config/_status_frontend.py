@@ -35,6 +35,7 @@ if TYPE_CHECKING:
         StatusRecoveryView,
     )
     from ....application.workflow import WorkflowState
+    from ....core.json_contract import Notice
     from ....domain.user_profile import ProfileSchemaDefinition, UserProfileRecord
 
 
@@ -81,6 +82,7 @@ def build_status_page_data() -> StatusPageData:
         profiles=_build_profile_rows(active_uuid),
         auth=_build_auth_view(state),
         recovery=_build_recovery_view(),
+        notices=_build_notices(active_uuid),
     )
 
 
@@ -190,6 +192,45 @@ def _build_recovery_view() -> StatusRecoveryView:
         enrolled=recovery.recovery_enrolled,
         fingerprint=recovery.recovery_fingerprint,
     )
+
+
+def _build_notices(active_uuid: str | None) -> tuple[Notice, ...]:
+    """Project application-layer advisories onto the status page's notices zone.
+
+    The status page is where an operator checks in on a profile's health,
+    so this is the natural landing spot for the same typed
+    :class:`~cadrumo.core.json_contract.Notice` values a CLI envelope
+    already carries — never a second, TUI-only advisory vocabulary.
+    Degrades to no notices for a locked or absent bucket, matching every
+    other zone this page builds.
+    """
+    if active_uuid is None:
+        return ()
+    notices: list[Notice] = []
+    history_notice = _no_aeat_history_notice()
+    if history_notice is not None:
+        notices.append(history_notice)
+    return tuple(notices)
+
+
+def _no_aeat_history_notice() -> Notice | None:
+    """Point an operator at the filing-history pull when the bucket holds no AEAT-sourced observation.
+
+    Reads the same persisted calculation observations
+    :func:`~cadrumo.application.overview.no_aeat_history_notice` was built
+    to judge, gathered across every modelo through
+    :meth:`~cadrumo.application.calculations.CalculationObservationRepository.iter_records`
+    rather than one modelo at a time — the status page asks about the
+    profile as a whole, not one filing.
+    """
+    from ....application.calculations import CalculationObservationRepository
+    from ....application.overview import no_aeat_history_notice
+
+    try:
+        observations = tuple(CalculationObservationRepository().iter_records())
+    except _guarded_read_errors():
+        return None
+    return no_aeat_history_notice(observations)
 
 
 def _build_fact_rows(

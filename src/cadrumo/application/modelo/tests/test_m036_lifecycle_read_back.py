@@ -106,8 +106,16 @@ def test_view_returns_exact_recorded_record_strict_equality(tmp_path: Path) -> N
     ``sede_justificante`` and ``note``) per the roundtrip discipline, so a
     save-drops-field / load-re-defaults-field regression cannot hide behind a
     default value.
+
+    A ``modificacion`` amends an existing registration, so this records the
+    requisite alta first — the sequence guard refuses a bare ``modificacion``
+    with nothing on record.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
+        record_m036_declaration(
+            _command(event_kind=CensoModeloEventKind.ALTA, declared_on=date(2026, 1, 1)),
+            bucket_id=runtime.bucket_id,
+        )
         recorded = record_m036_declaration(
             _command(
                 event_kind=CensoModeloEventKind.MODIFICACION,

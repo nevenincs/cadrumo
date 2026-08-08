@@ -3,8 +3,9 @@
 This adapter is a pure projection surface. It renders a
 :class:`StatusPageData` view-model — assembled by the entry-point layer
 from the application authorities (the active profile record, the profile
-bucket scan, the workflow auth state, and the recovery-wrapper status) —
-into four bordered zones and mutates nothing. It owns no data access: the
+bucket scan, the workflow auth state, the recovery-wrapper status, and any
+operator-facing :class:`~cadrumo.core.json_contract.Notice` advisories) —
+into five bordered zones and mutates nothing. It owns no data access: the
 adapter tier may name Textual but must not reach the application layer, so
 the entry-point gathers the view-model and injects it here, mirroring the
 way :func:`~cadrumo.adapters.inbound.tui.run_flow_tui` receives a
@@ -14,6 +15,11 @@ Masking is a rendering invariant, not a policy decision: a fact row
 carrying ``masked=True`` renders the mask token in place of its value and
 its raw value never reaches a widget, so a SECRET-shaped or otherwise
 key-like fact can never appear on screen (or in a captured session log).
+
+The notices zone is this surface's share of the shared
+:class:`~cadrumo.adapters.inbound.tui.NoticeBand` — the same typed
+``Notice`` objects a CLI envelope carries on its ``notices`` channel,
+rendered here rather than re-modelled as a bespoke TUI-only advisory.
 """
 
 from __future__ import annotations
@@ -27,7 +33,8 @@ from textual.containers import Vertical
 from textual.widgets import DataTable, Footer, Static
 
 from ....core.i18n import tr
-from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
+from ....core.json_contract import Notice
+from ._theme import BASE_CSS, ContentScroll, NoticeBand, install_cadrumo_themes, toggle_appearance
 
 # Copyable custody / recovery next-step lines. These are literal CLI
 # invocations (command tokens, not operator prose), rendered verbatim so an
@@ -100,6 +107,10 @@ class StatusPageData:
     profiles: tuple[StatusProfileRow, ...] = ()
     auth: StatusAuthView = field(default_factory=StatusAuthView)
     recovery: StatusRecoveryView = field(default_factory=StatusRecoveryView)
+    notices: tuple[Notice, ...] = ()
+    """Operator-facing advisories, off the same typed channel a CLI envelope
+    carries. Empty on a healthy profile; the panel that renders these is
+    omitted entirely rather than shown blank."""
 
 
 _PROFILE_STATUS_KEYS: dict[str, str] = {
@@ -141,6 +152,7 @@ class StatusApp(App[None]):
         """Yield the status screen's widgets: header and the scrollable status body."""
         yield Static(id="status-header", classes="cadrumo-banner")
         with ContentScroll(id="status-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
+            yield Static(id="panel-notices", classes="status-panel cadrumo-panel")
             yield Static(id="panel-profile", classes="status-panel cadrumo-panel")
             yield Static(id="panel-profiles", classes="status-panel cadrumo-panel")
             yield Static(id="panel-auth", classes="status-panel cadrumo-panel")
@@ -151,6 +163,7 @@ class StatusApp(App[None]):
         install_cadrumo_themes(self)
         self._localize_bindings()
         self.query_one("#status-header", Static).update(tr("flows.status.title"))
+        self._mount_notices_panel()
         self._mount_profile_panel()
         self._mount_profiles_panel()
         self._mount_auth_panel()
@@ -172,6 +185,23 @@ class StatusApp(App[None]):
             ],
         )
         self.refresh_bindings()
+
+    # ── zone (0): operator-facing advisories ────────────────────────────
+
+    def _mount_notices_panel(self) -> None:
+        """Render the notices zone, or remove it outright when there is nothing to say.
+
+        An empty bordered box reads as a rendering defect on a page whose
+        every other zone always has something to show; a healthy profile
+        should not carry a permanent "no advisories" placeholder that
+        trains the operator to stop reading it.
+        """
+        panel = self.query_one("#panel-notices", Static)
+        if not self._data.notices:
+            panel.remove()
+            return
+        panel.border_title = tr("flows.status.section.notices")
+        panel.mount(NoticeBand(self._data.notices, id="status-notice-band"))
 
     # ── zone (a): active profile facts ──────────────────────────────────
 

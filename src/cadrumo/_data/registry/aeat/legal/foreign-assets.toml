@@ -107,7 +107,12 @@ reviewed_by = "operator"
 notes = "RGAT art 54 bis: obligacion de informar sobre bienes inmuebles y derechos sobre bienes inmuebles situados en el extranjero (Modelo 720, seccion de inmuebles)."
 required_text = [
     "Obligación de informar sobre bienes inmuebles y derechos sobre bienes inmuebles situados en el extranjero",
-    "extranjero",
+    "extranjero",    # Apartado 6.d) (each transmission date and value as a separate `dato`),
+    # the last operative provision, at 92% and above the amendment block.
+    # The phrases above are the article title and the bare word `extranjero`,
+    # which appears in every sibling article in this file. Modelo 720
+    # grounding. Verified against live BOE: apartados 1-7 on both sides.
+    "cada fecha y valor de transmisión a que se refiere el apartado 5, en relación con cada uno de los inmuebles",
 ]
 
 [legal."orden-hap-72-2013:art-1"]

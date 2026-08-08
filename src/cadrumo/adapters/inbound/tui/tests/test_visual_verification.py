@@ -20,6 +20,10 @@ would have caught by looking.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+from pathlib import Path
+
 import pytest
 from pydantic import BaseModel
 from textual.containers import ScrollableContainer
@@ -32,6 +36,8 @@ from .. import (
     FormApp,
     FormField,
     FormPage,
+    LoginApp,
+    ProfileManagerApp,
     RegistrationApp,
     StatusApp,
     StatusFactRow,
@@ -40,9 +46,23 @@ from .. import (
 from .._theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME, ContentScroll
 
 pytestmark = [
-    pytest.mark.unit,
+    pytest.mark.integration,
     pytest.mark.hex_inbound_adapter,
 ]
+"""``integration``, not ``unit``: a test carries EXACTLY ONE execution-lane
+marker (``test_marker_integrity.py``), so a per-``pytest.param`` override
+on only the ``manager``/``login`` entries would leave those items carrying
+BOTH ``unit`` (from this module-level mark) and ``integration`` at once --
+a real gate violation, not a style choice, and the shape that turned into a
+collection-time crash the first time this was tried. ``manager`` and
+``login`` drive a real encrypted profile through
+``isolated_profile_storage_root`` -- real SQLite, real Argon2id key
+derivation -- the same reason ``test_manager_screen.py`` is ``integration``
+rather than ``unit``; the whole module moves with them rather than
+duplicating every gate into a unit-only and an integration-only copy."""
+
+_VISUAL_LABEL = "Visual Verification Subject"
+_VISUAL_PASSWORD = "visual-verification-operator-secret"  # noqa: S105 - synthetic test fixture
 
 
 class _VisualAnswers(BaseModel):
@@ -59,15 +79,19 @@ overflowing layout stops being cosmetic and starts hiding controls.
 _THEMES = [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME]
 
 
-def _registration() -> RegistrationApp:
+@contextmanager
+def _registration(tmp_path: Path) -> Iterator[RegistrationApp]:
     from .....application.user_profile import assess_passphrase
     from .....entrypoints.cli._config._manager_frontend import attempt_registration
 
-    return RegistrationApp(assess=assess_passphrase, register=attempt_registration)
+    del tmp_path  # unused: this surface writes nothing until a real submit, which no gate here does
+    yield RegistrationApp(assess=assess_passphrase, register=attempt_registration)
 
 
-def _form() -> FormApp:
-    return FormApp(
+@contextmanager
+def _form(tmp_path: Path) -> Iterator[FormApp]:
+    del tmp_path  # unused: FormApp holds no storage of its own
+    yield FormApp(
         FormPage(
             title="TITLE",
             section="SECTION",
@@ -76,8 +100,10 @@ def _form() -> FormApp:
     )
 
 
-def _status() -> StatusApp:
-    return StatusApp(
+@contextmanager
+def _status(tmp_path: Path) -> Iterator[StatusApp]:
+    del tmp_path  # unused: the projection is hand-built, matching this file's existing status fixture
+    yield StatusApp(
         StatusPageData(
             active_profile_label="Subject",
             facts=(StatusFactRow(label="Field", value="Value"),),
@@ -85,7 +111,76 @@ def _status() -> StatusApp:
     )
 
 
-def _question() -> FlowTuiApp:
+@contextmanager
+def _manager(tmp_path: Path) -> Iterator[ProfileManagerApp]:
+    """The manager, composed the way ``present_profile_manager`` composes it.
+
+    ``manager`` was absent from every gate in this module -- the geometry
+    and reachability defects that shipped on it (a permanently-unreachable
+    action row, a value column sitting off the right edge) were both found
+    by hand, and neither would have been caught here. It was absent because
+    it needs a real, unlocked profile, which none of the other builders
+    require; a real profile is precisely what ``isolated_profile_storage_root``
+    plus ``register_profile_with_credentials`` provide -- the same primitive
+    ``test_manager_screen.py`` already uses, real Argon2id and real AEAD, no
+    stand-in storage.
+
+    ``manager_actions()`` is passed for the same reason it now is in
+    ``dev/tui/_surfaces.py``: building the screen without it renders cleanly
+    and shows a manager with zero buttons, which is exactly the bug this
+    enrollment exists to catch on a real terminal render rather than by hand.
+    """
+    from .....application.user_profile import register_profile_with_credentials
+    from .....entrypoints.cli._config._manager_actions import manager_actions
+    from .....entrypoints.cli._config._manager_frontend import (
+        build_active_profile_overview,
+        persist_active_profile_field,
+        profile_field_value_refusal,
+    )
+    from .....tests.secure_sql import isolated_profile_storage_root
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
+        yield ProfileManagerApp(
+            build_active_profile_overview(),
+            persist=persist_active_profile_field,
+            actions=manager_actions(),
+            validate=profile_field_value_refusal,
+        )
+
+
+@contextmanager
+def _login(tmp_path: Path) -> Iterator[LoginApp]:
+    """The login screen, composed the way ``present_login`` composes it.
+
+    Needs a real profile that exists but is LOCKED -- registration leaves it
+    unlocked, so this logs back out before building the screen, matching
+    the machine state ``login`` exists for. ``choices`` and ``preselected``
+    come from the real frontend functions rather than being reproduced here,
+    for the same reason ``dev/tui/_surfaces.py`` now does: a hand-built
+    choice list or a dropped preselection is the identical stand-in shape
+    that bug was.
+    """
+    from .....application.user_profile import logout_active_profile, register_profile_with_credentials
+    from .....entrypoints.cli._config._login_frontend import (
+        _login_choices,
+        attempt_login,
+        preselected_profile_id,
+    )
+    from .....tests.secure_sql import isolated_profile_storage_root
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
+        logout_active_profile()
+        yield LoginApp(
+            choices=_login_choices(),
+            authenticate=attempt_login,
+            preselected=preselected_profile_id(None),
+        )
+
+
+@contextmanager
+def _question(tmp_path: Path) -> Iterator[FlowTuiApp]:
     """The wizard question screen, carrying more content than a short terminal holds.
 
     Enrolled here because it is the surface the operator sees on every page
@@ -96,6 +191,7 @@ def _question() -> FlowTuiApp:
     as a dead stop — the exact two defects the gates below already pin on
     every other surface.
     """
+    del tmp_path  # unused: a bare FlowTuiApp holds no storage of its own
     copy = CopyRef(kind=CopyRefKind.LOCALE_KEY, ref="wizard.setup.title")
     page = FlowPage(
         id="p0",
@@ -116,7 +212,7 @@ def _question() -> FlowTuiApp:
             FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
         },
     )
-    return FlowTuiApp(definition, mode=FlowMode.MODIFY, registered_values={})
+    yield FlowTuiApp(definition, mode=FlowMode.MODIFY, registered_values={})
 
 
 def _many_page_flow() -> FlowTuiApp:
@@ -163,14 +259,29 @@ _SURFACES = [
     pytest.param(_form, id="form"),
     pytest.param(_status, id="status"),
     pytest.param(_question, id="question"),
+    pytest.param(_manager, id="manager"),
+    pytest.param(_login, id="login"),
 ]
+"""Every builder here takes ``tmp_path`` and is a context manager, uniformly
+-- ``manager`` and ``login`` need it live for the whole test body (their
+persist/auth doors read storage at RUNTIME, not only at build time), and
+the four that do not simply ignore the argument. A bare ``() -> App``
+builder cannot express "this needs a resource alive for the test's
+duration" at all, which is exactly the gap that let ``manager`` and
+``login`` go unenrolled."""
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("build", _SURFACES)
 @pytest.mark.parametrize(("width", "height"), _SIZES)
 @pytest.mark.parametrize("theme", _THEMES)
-async def test_nothing_is_painted_past_the_side_edges(build, width: int, height: int, theme: str) -> None:
+async def test_nothing_is_painted_past_the_side_edges(
+    build,
+    width: int,
+    height: int,
+    theme: str,
+    tmp_path: Path,
+) -> None:
     """No widget may extend past the left or right edge of the screen.
 
     Horizontal only, deliberately. Content taller than the viewport is
@@ -180,24 +291,27 @@ async def test_nothing_is_painted_past_the_side_edges(build, width: int, height:
     cannot reach and text they cannot read. Checked at 80 columns
     because that is where a layout that looks generous on a wide
     terminal starts truncating.
+
+    This is the exact gate that would have caught the manager's value
+    column sitting off the right edge, had ``manager`` been enrolled.
     """
-    app = build()
-    async with app.run_test(size=(width, height)) as pilot:
-        app.theme = theme
-        await pilot.pause()
-        offenders = [
-            f"{type(widget).__name__}{widget.region}"
-            for widget in app.screen.walk_children()
-            if widget.display and (widget.region.x < 0 or widget.region.right > width)
-        ]
-        assert not offenders, f"painted past the side edges of a {width}-column terminal: {offenders}"
-        app.exit(None)
+    with build(tmp_path) as app:
+        async with app.run_test(size=(width, height)) as pilot:
+            app.theme = theme
+            await pilot.pause()
+            offenders = [
+                f"{type(widget).__name__}{widget.region}"
+                for widget in app.screen.walk_children()
+                if widget.display and (widget.region.x < 0 or widget.region.right > width)
+            ]
+            assert not offenders, f"painted past the side edges of a {width}-column terminal: {offenders}"
+            app.exit(None)
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("build", _SURFACES)
 @pytest.mark.parametrize(("width", "height"), _SIZES)
-async def test_content_taller_than_the_screen_stays_reachable(build, width: int, height: int) -> None:
+async def test_content_taller_than_the_screen_stays_reachable(build, width: int, height: int, tmp_path: Path) -> None:
     """Overflowing content must be scrollable, not merely overflowing.
 
     On a 24-row terminal the registration form is taller than the screen,
@@ -205,41 +319,53 @@ async def test_content_taller_than_the_screen_stays_reachable(build, width: int,
     A scroll host that overflows without being able to scroll has simply
     hidden its own submit button.
     """
-    app = build()
-    async with app.run_test(size=(width, height)) as pilot:
-        await pilot.pause()
-        for host in app.query(ContentScroll):
-            if host.virtual_size.height > host.container_size.height:
-                assert host.max_scroll_y > 0, (
-                    f"content is {host.virtual_size.height} rows in a {host.container_size.height}-row "
-                    f"viewport at {width}x{height} but cannot be scrolled"
-                )
-        app.exit(None)
+    with build(tmp_path) as app:
+        async with app.run_test(size=(width, height)) as pilot:
+            await pilot.pause()
+            for host in app.query(ContentScroll):
+                if host.virtual_size.height > host.container_size.height:
+                    assert host.max_scroll_y > 0, (
+                        f"content is {host.virtual_size.height} rows in a {host.container_size.height}-row "
+                        f"viewport at {width}x{height} but cannot be scrolled"
+                    )
+            app.exit(None)
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("build", _SURFACES)
 @pytest.mark.parametrize("theme", _THEMES)
-async def test_every_surface_actually_renders_under_both_appearances(build, theme: str) -> None:
+async def test_every_surface_actually_renders_under_both_appearances(build, theme: str, tmp_path: Path) -> None:
     """The compositor produces real output, not an empty frame.
 
     Exporting the screenshot forces a full render through the same path a
     terminal drives, so a theme token that fails to resolve surfaces here
     rather than on the operator's screen.
     """
-    app = build()
-    async with app.run_test(size=(100, 30)) as pilot:
-        app.theme = theme
-        await pilot.pause()
-        rendered = app.export_screenshot()
-        assert "<text" in rendered, "the surface rendered no text at all"
-        assert len(rendered) > 1000, "the surface rendered a suspiciously empty frame"
-        app.exit(None)
+    with build(tmp_path) as app:
+        async with app.run_test(size=(100, 30)) as pilot:
+            app.theme = theme
+            await pilot.pause()
+            rendered = app.export_screenshot()
+            assert "<text" in rendered, "the surface rendered no text at all"
+            assert len(rendered) > 1000, "the surface rendered a suspiciously empty frame"
+            app.exit(None)
+
+
+_INTERACTIVE_SURFACES = [
+    pytest.param(_registration, id="registration"),
+    pytest.param(_form, id="form"),
+    pytest.param(_manager, id="manager"),
+    pytest.param(_login, id="login"),
+]
+"""Surfaces with a real tab cycle. ``status`` and ``question`` are excluded
+deliberately: ``status`` is read-only chrome with no operator input, and
+``question`` is driven by the flow engine's own paged navigation rather
+than a plain tab cycle -- neither is what this gate exists to pin."""
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("build", [pytest.param(_registration, id="registration"), pytest.param(_form, id="form")])
-async def test_tab_visits_every_control_and_comes_back(build) -> None:
+@pytest.mark.parametrize("build", _INTERACTIVE_SURFACES)
+async def test_tab_visits_every_control_and_comes_back(build, tmp_path: Path) -> None:
     """Every tab stop must be a real control, and the cycle must close.
 
     The defect this pins shipped: a scrollable container is focusable by
@@ -250,82 +376,127 @@ async def test_tab_visits_every_control_and_comes_back(build) -> None:
     no container may be a tab stop, only controls the operator can
     actually operate.
     """
-    app = build()
-    async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
-        chain = app.screen.focus_chain
-        assert chain, "an interactive surface must have focusable controls"
+    with build(tmp_path) as app:
+        async with app.run_test(size=(120, 40)) as pilot:
+            await pilot.pause()
+            chain = app.screen.focus_chain
+            assert chain, "an interactive surface must have focusable controls"
 
-        # Specifically our own scroll host. A blanket ScrollableContainer
-        # check would be wrong: DataTable is one too, and it is a real
-        # control the operator drives with the arrow keys.
-        hosts = [type(widget).__name__ for widget in chain if isinstance(widget, ContentScroll)]
-        assert not hosts, f"the content scroll host is a dead tab stop: {hosts}"
+            # Specifically our own scroll host. A blanket ScrollableContainer
+            # check would be wrong: DataTable is one too, and it is a real
+            # control the operator drives with the arrow keys.
+            hosts = [type(widget).__name__ for widget in chain if isinstance(widget, ContentScroll)]
+            assert not hosts, f"the content scroll host is a dead tab stop: {hosts}"
 
-        app.screen.set_focus(chain[0])
-        await pilot.pause()
-        visited = [app.focused]
-        for _ in range(len(chain)):
-            await pilot.press("tab")
-            visited.append(app.focused)
+            app.screen.set_focus(chain[0])
+            await pilot.pause()
+            visited = [app.focused]
+            for _ in range(len(chain)):
+                await pilot.press("tab")
+                visited.append(app.focused)
 
-        assert visited[-1] is chain[0], f"tab did not close the cycle: {[type(w).__name__ for w in visited]}"
-        assert set(visited) == set(chain), (
-            f"tab skipped a control: chain={[type(w).__name__ for w in chain]} "
-            f"visited={[type(w).__name__ for w in visited]}"
-        )
-        app.exit(None)
+            assert visited[-1] is chain[0], f"tab did not close the cycle: {[type(w).__name__ for w in visited]}"
+            assert set(visited) == set(chain), (
+                f"tab skipped a control: chain={[type(w).__name__ for w in chain]} "
+                f"visited={[type(w).__name__ for w in visited]}"
+            )
+            app.exit(None)
+
+
+_MULTI_BUTTON_SURFACES = [
+    pytest.param(_form, id="form"),
+    pytest.param(_manager, id="manager"),
+    pytest.param(_login, id="login"),
+]
+"""Surfaces carrying at least two buttons to compare focus against. Bare
+``registration`` is excluded -- it has exactly one (``btn-create``) -- and
+the gate itself asserts the precondition rather than assuming it, so a
+surface that stops qualifying reds here instead of passing vacuously."""
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("build", _MULTI_BUTTON_SURFACES)
 @pytest.mark.parametrize("theme", _THEMES)
-async def test_a_focused_button_is_painted_differently_from_an_unfocused_one(theme: str) -> None:
+async def test_a_focused_button_is_painted_differently_from_an_unfocused_one(
+    build,
+    theme: str,
+    tmp_path: Path,
+) -> None:
     """Focus must be visible in the cells, not merely true in a property.
 
     Read off the rendered screen through ``get_style_at``: a rule that
     fails to apply leaves the property set and the pixels unchanged, and
-    only the pixels are what the operator sees.
+    only the pixels are what the operator sees. Was pinned only against
+    ``form``; ``manager`` and ``login`` are real buttoned surfaces this
+    property is equally a claim about, and the manager's own button row
+    was the site of the surface that went unenrolled entirely.
     """
-    app = _form()
-    async with app.run_test(size=(120, 40)) as pilot:
-        app.theme = theme
-        await pilot.pause()
-        buttons = list(app.screen.query(Button))
-        assert len(buttons) >= 2, "this surface needs two buttons to compare"
+    with build(tmp_path) as app:
+        async with app.run_test(size=(120, 40)) as pilot:
+            app.theme = theme
+            await pilot.pause()
+            buttons = list(app.screen.query(Button))
+            assert len(buttons) >= 2, "this surface needs two buttons to compare"
 
-        target, other = buttons[0], buttons[1]
-        app.screen.set_focus(other)
-        await pilot.pause()
-        unfocused = app.screen.get_style_at(target.region.x + 1, target.region.y + 1)
+            target, other = buttons[0], buttons[1]
+            app.screen.set_focus(other)
+            await pilot.pause()
+            unfocused = app.screen.get_style_at(target.region.x + 1, target.region.y + 1)
 
-        app.screen.set_focus(target)
-        await pilot.pause()
-        focused = app.screen.get_style_at(target.region.x + 1, target.region.y + 1)
+            app.screen.set_focus(target)
+            await pilot.pause()
+            focused = app.screen.get_style_at(target.region.x + 1, target.region.y + 1)
 
-        assert (focused.bgcolor, focused.color, focused.bold) != (
-            unfocused.bgcolor,
-            unfocused.color,
-            unfocused.bold,
-        ), f"focus is invisible under {theme}: {focused!r} == {unfocused!r}"
-        app.exit(None)
+            assert (focused.bgcolor, focused.color, focused.bold) != (
+                unfocused.bgcolor,
+                unfocused.color,
+                unfocused.bold,
+            ), f"focus is invisible under {theme}: {focused!r} == {unfocused!r}"
+            app.exit(None)
 
 
 @pytest.mark.asyncio
-async def test_a_password_field_never_paints_its_secret() -> None:
-    """The typed passphrase must not appear in the rendered cells.
+@pytest.mark.parametrize("build", _SURFACES)
+async def test_a_masked_field_never_paints_its_secret(build, tmp_path: Path) -> None:
+    """No ``Input`` this application marks ``password=True`` may render its value.
+
+    Expressed as a PROPERTY over every enrolled surface rather than naming
+    ``registration`` specifically -- the prior shape of this gate. A
+    name-enumerated gate only proves the names on its list; the export
+    passphrase field went two weeks in clear on a surface (the manager's
+    export action) this gate never looked at, because nothing generalised
+    "collects a secret" past the one screen it was written against. This
+    version walks every ``Input`` on whichever surface is under test and
+    checks the ones the application itself declared masked, so a new
+    masked field on any FUTURE surface is covered on arrival rather than
+    needing its own name added here.
+
+    Still cannot see a secret collected inside a MODAL the base screen
+    pushes only on a button press (the manager's certificate and passphrase
+    forms) -- this renders the surface as built, once, and does not drive
+    navigation into a nested screen. That is a real boundary of what a
+    static per-surface render can prove, stated rather than silently
+    assumed: a modal FormScreen's own masked fields are exercised by
+    driving the specific action that opens it, not by this generic sweep.
 
     Asserting ``password=True`` on the widget proves the flag, not the
     output. This reads the exported render and requires the secret to be
     absent from it, which is the property that matters on a shared screen
     or in a captured session log.
     """
-    app = _registration()
-    async with app.run_test(size=(120, 40)) as pilot:
-        await pilot.pause()
-        app.query_one("#field-password", Input).value = "SENTINEL-SECRET-VALUE"
-        await pilot.pause()
-        assert "SENTINEL-SECRET-VALUE" not in app.export_screenshot()
-        app.exit(None)
+    with build(tmp_path) as app:
+        async with app.run_test(size=(120, 40)) as pilot:
+            await pilot.pause()
+            masked = [widget for widget in app.screen.query(Input) if widget.password]
+            for index, field in enumerate(masked):
+                field.value = f"SENTINEL-SECRET-VALUE-{index}"
+            await pilot.pause()
+            rendered = app.export_screenshot()
+            leaked = [
+                f"#{field.id}" for index, field in enumerate(masked) if f"SENTINEL-SECRET-VALUE-{index}" in rendered
+            ]
+            assert not leaked, f"masked field(s) painted their secret in clear: {leaked}"
+            app.exit(None)
 
 
 @pytest.mark.asyncio

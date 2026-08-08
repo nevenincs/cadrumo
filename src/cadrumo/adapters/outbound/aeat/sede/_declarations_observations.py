@@ -26,7 +26,7 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from .....core import CasillaValueKind, ExportLayoutFormat, Modelo, Period
+from .....core import CasillaValueKind, ExportLayoutFormat, Modelo, ObservedHeaderFact, Period
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.hashing import sha256_hex
@@ -88,6 +88,7 @@ __all__ = [
     "_with_derived_303_compensation_available_observation",
     "non_numeric_observed_casillas",
     "observed_casillas_from_submitted_file",
+    "observed_header_facts_from_submitted_file",
     "observed_headers_from_submitted_file",
     "registry_observation_from_filed_declaration",
     "resolve_previous_filing_bindings_from_filed_declarations",
@@ -244,12 +245,12 @@ def _observed_value_token(casilla: ParsedExportFieldValue) -> str:
     return str(casilla.value)
 
 
-def _observed_headers_from_submitted_file(
+def _observed_header_facts_from_submitted_file(
     *,
     snapshot: RegistrySnapshot,
     body: bytes,
-) -> dict[str, str]:
-    """Return the header facts AEAT states in the submitted fichero, keyed by header key.
+) -> tuple[ObservedHeaderFact, ...]:
+    """Return the header facts AEAT states in the submitted fichero, with provenance.
 
     The disposition is one of these. AEAT models the tipo de declaración as a
     header field in its diseño de registro, the export layout models it as a
@@ -264,10 +265,18 @@ def _observed_headers_from_submitted_file(
     them a synthetic casilla id would put this registry and the official
     structure in disagreement about the concept's kind.
 
-    Returns an empty mapping rather than raising when the payload cannot be
-    parsed against the layout. The casilla projection is the caller's primary
-    result and already reports its own failure; a header read that fails must not
-    take the casillas down with it.
+    This is the canonical projection and it is TYPED. Each fact carries the
+    export parser's own ``source_locator`` alongside the token, because a bare
+    ``key -> value`` pair cannot answer where the value was read from, and a
+    header fact that reaches persisted evidence without its record-design
+    position is not auditable back to the bytes.
+    :func:`_observed_headers_from_submitted_file` is a derived flat view over
+    this result for readers that only want the tokens.
+
+    Returns an empty tuple rather than raising when the payload cannot be parsed
+    against the layout. The casilla projection is the caller's primary result and
+    reports its own failure loudly; a header read that fails must not take the
+    casillas down with it.
     """
     try:
         resolved = resolve_export_layout(snapshot)
@@ -278,15 +287,16 @@ def _observed_headers_from_submitted_file(
             sources=snapshot.sources,
         )
     except RegistryValidationError:
-        return {}
+        return ()
 
-    headers: dict[str, str] = {}
+    facts: list[ObservedHeaderFact] = []
+    seen: set[str] = set()
     for field_value in parsed.fields:
         definition = resolved.fields_by_id.get(field_value.field_id)
         if definition is None or definition.kind is not CasillaFieldKind.HEADER:
             continue
         header_key = definition.header_key
-        if header_key is None or field_value.value is None:
+        if header_key is None or field_value.value is None or header_key in seen:
             continue
         token = str(field_value.value).strip()
         if not token:
@@ -294,8 +304,44 @@ def _observed_headers_from_submitted_file(
             # indistinguishable from AEAT stating a value, so it is omitted --
             # the same honesty the register's request-type projection applies.
             continue
-        headers[header_key] = token
-    return headers
+        seen.add(header_key)
+        facts.append(
+            ObservedHeaderFact(
+                header_key=header_key,
+                value=token,
+                source_artefact_kind="submitted_file",
+                source_locator=field_value.source_locator,
+            ),
+        )
+    return tuple(facts)
+
+
+def _observed_headers_from_submitted_file(
+    *,
+    snapshot: RegistrySnapshot,
+    body: bytes,
+) -> dict[str, str]:
+    """Return the submitted fichero's header tokens, keyed by header key.
+
+    A derived flat view over
+    :func:`_observed_header_facts_from_submitted_file`, which is the canonical
+    typed projection. Kept because a reader that only needs "what did AEAT say
+    for this key" should not have to walk a tuple, and dropped provenance is
+    acceptable in a convenience view precisely because the typed result is the
+    one that reaches persisted evidence.
+
+    One key wins once. The typed projection already keeps the FIRST fact per
+    key, so this view cannot silently disagree with it about which of two
+    same-key fields was authoritative -- which a second independent walk over
+    ``parsed.fields`` would have been free to do.
+    """
+    return {
+        fact.header_key: fact.value
+        for fact in _observed_header_facts_from_submitted_file(
+            snapshot=snapshot,
+            body=body,
+        )
+    }
 
 
 def _observed_casillas_from_submitted_file(
@@ -387,6 +433,7 @@ def _submitted_file_layout_refusal(
 
 
 observed_casillas_from_submitted_file = _observed_casillas_from_submitted_file
+observed_header_facts_from_submitted_file = _observed_header_facts_from_submitted_file
 observed_headers_from_submitted_file = _observed_headers_from_submitted_file
 
 

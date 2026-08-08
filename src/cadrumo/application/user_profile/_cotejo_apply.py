@@ -41,6 +41,7 @@ from ...domain.user_profile import UserProfileFact
 from ._orchestration import build_lifecycle_service, require_active, set_active_fields
 
 if TYPE_CHECKING:
+    from ...domain.censo import CertificadoSituacionCensal
     from ...domain.user_profile import UserProfileRecord
     from ..workflow import WorkflowState
 
@@ -54,6 +55,21 @@ _DIVERGENCE_AXIS = "axis"
 _DIVERGENCE_ARTEFACT_VALUE = "artefact_value"
 _DIVERGENCE_SOURCE = "source"
 
+#: Axis namespace for a certified field the cotejo does not adopt and that
+#: has no profile counterpart. A divergence row addressed here records
+#: certificate evidence, NOT a writable profile schema path: a consumer that
+#: resolves a divergence axis against the profile schema must tolerate it.
+CENSO_CERTIFICATE_AXIS_PREFIX = "censo.certificado"
+
+#: The certified fields projected as unadopted evidence rather than adopted
+#: as facts. Both are obligation-bearing free-form prose whose vocabulary is
+#: unpinned until a real G313 specimen exists, so their lines are preserved
+#: verbatim and never parsed into typed facts.
+CENSO_UNADOPTED_EVIDENCE_FIELDS: tuple[str, ...] = (
+    "situacion_tributaria",
+    "obligaciones_periodicas",
+)
+
 #: Notice code for the open-divergence advisory a profile read surfaces.
 CENSO_DIVERGENCE_NOTICE_CODE = "profile.censo.divergences_open"
 
@@ -66,11 +82,17 @@ _CENSO_DIVERGENCE_NOTICE_LOCALE_KEY = "application.user_profile.notices.censo_di
 class CensoDivergence(BaseModel):
     """One deferred cotejo axis: a certificate value the operator did not adopt.
 
-    ``axis`` is the schema path of the diverging fact (the operator keeps
-    their own answer at that path); ``artefact_value`` is the stringified
-    certificate value left unadopted; ``source`` is the non-official
-    artefact provenance token. A divergence row carries no AEAT-verified
-    stamp — it records unadopted evidence, never an official fact.
+    ``axis`` is the axis of the diverging EVIDENCE. Where the certificate
+    axis has a profile counterpart it is that profile schema path, and the
+    operator keeps their own answer there. Where it has none — a certified
+    field the cotejo cannot adopt because its vocabulary is unpinned — it is
+    a :data:`CENSO_CERTIFICATE_AXIS_PREFIX` path naming the certificate
+    field, which is NOT writable profile state.
+
+    ``artefact_value`` is the stringified certificate value left unadopted;
+    ``source`` is the non-official artefact provenance token. A divergence
+    row carries no AEAT-verified stamp — it records unadopted evidence,
+    never an official fact.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -78,6 +100,50 @@ class CensoDivergence(BaseModel):
     axis: str = Field(min_length=1)
     artefact_value: str = Field(min_length=1)
     source: str = PROVENANCE_SOURCE_CENSO_ARTEFACT
+
+
+def censo_unadopted_evidence(
+    certificado: CertificadoSituacionCensal,
+) -> tuple[CensoDivergence, ...]:
+    """Project the certificate's unadopted obligation fields into divergence rows.
+
+    The certificate's ``situacion_tributaria`` and ``obligaciones_periodicas``
+    are certified statements about the taxpayer's obligation surface, and the
+    cotejo does NOT adopt them as profile facts: both are free-form prose
+    whose vocabulary stays unpinned until a real G313 specimen exists, so any
+    mapping onto a typed profile axis — the Ley 49/2002 régimen among them —
+    would be invented tax semantics rather than grounded ones.
+
+    Discarding them is equally wrong: AEAT's certified statement would reach
+    the operator nowhere at all. So each certified line is preserved as one
+    unadopted-evidence :class:`CensoDivergence` at
+    ``censo.certificado.<field>.<line index>``, carrying that line verbatim.
+    One row per line, never a joined string, so no separator has to be
+    invented and a line containing punctuation cannot be silently re-split.
+
+    Nothing here parses, classifies or interprets the prose. The rows ride
+    :func:`apply_cotejo` like any operator-deferred axis, inheriting the
+    namespace-replace on re-cotejo and the standing warning
+    :class:`~cadrumo.core.json_contract.Notice` that surfaces on every
+    profile read until the operator resolves them.
+
+    Args:
+        certificado: The parsed :class:`CertificadoSituacionCensal` whose
+            obligation-bearing certified fields are projected.
+    """
+    rows: list[CensoDivergence] = []
+    for field in CENSO_UNADOPTED_EVIDENCE_FIELDS:
+        lines: tuple[str, ...] = getattr(certificado, field)
+        for index, line in enumerate(lines):
+            if not line.strip():
+                continue
+            rows.append(
+                CensoDivergence(
+                    axis=f"{CENSO_CERTIFICATE_AXIS_PREFIX}.{field}.{index}",
+                    artefact_value=line,
+                ),
+            )
+    return tuple(rows)
 
 
 def _divergence_path(index: int, field: str) -> str:
@@ -219,11 +285,14 @@ def apply_cotejo(
 
 
 __all__ = [
+    "CENSO_CERTIFICATE_AXIS_PREFIX",
     "CENSO_DIVERGENCE_NOTICE_CODE",
     "CENSO_DIVERGENCE_PREFIX",
+    "CENSO_UNADOPTED_EVIDENCE_FIELDS",
     "CensoDivergence",
     "apply_cotejo",
     "censo_divergence_notice",
+    "censo_unadopted_evidence",
     "divergence_facts",
     "open_censo_divergences",
 ]

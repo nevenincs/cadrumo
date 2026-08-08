@@ -178,11 +178,14 @@ if TYPE_CHECKING:
     )
     from ._completeness import iva_regime_required, profile_section_rows
     from ._cotejo_apply import (
+        CENSO_CERTIFICATE_AXIS_PREFIX,
         CENSO_DIVERGENCE_NOTICE_CODE,
         CENSO_DIVERGENCE_PREFIX,
+        CENSO_UNADOPTED_EVIDENCE_FIELDS,
         CensoDivergence,
         apply_cotejo,
         censo_divergence_notice,
+        censo_unadopted_evidence,
         divergence_facts,
         open_censo_divergences,
     )
@@ -430,11 +433,14 @@ _LAZY_EXPORTS: dict[str, str] = {
         (
             "._cotejo_apply",
             (
+                "CENSO_CERTIFICATE_AXIS_PREFIX",
                 "CENSO_DIVERGENCE_NOTICE_CODE",
                 "CENSO_DIVERGENCE_PREFIX",
+                "CENSO_UNADOPTED_EVIDENCE_FIELDS",
                 "CensoDivergence",
                 "apply_cotejo",
                 "censo_divergence_notice",
+                "censo_unadopted_evidence",
                 "divergence_facts",
                 "open_censo_divergences",
             ),
@@ -558,8 +564,10 @@ def __getattr__(name: str):
 
 __all__ = [
     "CENSAL_ADOPTABLE_PATHS",
+    "CENSO_CERTIFICATE_AXIS_PREFIX",
     "CENSO_DIVERGENCE_NOTICE_CODE",
     "CENSO_DIVERGENCE_PREFIX",
+    "CENSO_UNADOPTED_EVIDENCE_FIELDS",
     "CENSO_SOURCE_TAG",
     "MASKED_PLACEHOLDER",
     "PASSPHRASE_MINIMUM_LENGTH",
@@ -646,6 +654,7 @@ __all__ = [
     "carried_namespace_definitions",
     "censal_facts_from_read",
     "censo_divergence_notice",
+    "censo_unadopted_evidence",
     "change_passphrase",
     "close_profile_session_artefacts",
     "cloud_evidence_upload_eligible_for_active_profile",

@@ -23,6 +23,7 @@ import yaml
 from textual.widgets import DataTable, Static
 
 from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+from .....core.json_contract import Notice, NoticeSeverity
 from .....tests.locales_root_fixture import locales_root_scope
 from .. import (
     StatusApp,
@@ -58,6 +59,7 @@ _STATUS_CATALOGUE: dict[str, object] = {
                 "profiles": "SEC-PROFILES",
                 "auth": "SEC-AUTH",
                 "recovery": "SEC-RECOVERY",
+                "notices": "SEC-NOTICES",
             },
             "profile": {
                 "none": "NO-ACTIVE-PROFILE",
@@ -236,6 +238,51 @@ async def test_recovery_panel_shows_enrollment_and_copyable_commands() -> None:
         for command in _RECOVERY_COMMANDS:
             assert command in commands_text
         assert all(command.startswith("aeat config") for command in _RECOVERY_COMMANDS)
+
+
+@pytest.mark.asyncio
+async def test_a_notice_paints_its_severity_glyph_message_and_suggestion() -> None:
+    """The band renders exactly what the typed Notice carries, glyph and all.
+
+    Severity drives the glyph and the CSS class rather than only the
+    colour, per the surface's own "colour is never the sole carrier of
+    meaning" convention; the suggestion, when present, renders as its own
+    line beneath the message.
+    """
+    data = StatusPageData(
+        notices=(
+            Notice(severity=NoticeSeverity.INFO, code="test.info", message="INFO-MESSAGE"),
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="test.warning",
+                message="WARNING-MESSAGE",
+                suggestion="aeat config example",
+            ),
+        ),
+    )
+    app = StatusApp(data)
+    async with app.run_test(size=_TERMINAL_SIZE):
+        panel = app.query_one("#panel-notices", Static)
+        assert str(panel.border_title) == "SEC-NOTICES"
+
+        info_line = app.query_one("#notice-0", Static)
+        assert "INFO-MESSAGE" in str(info_line.content)
+        assert "info" in str(info_line.classes)
+        assert not app.query("#notice-0-suggestion")
+
+        warning_line = app.query_one("#notice-1", Static)
+        assert "WARNING-MESSAGE" in str(warning_line.content)
+        assert "warning" in str(warning_line.classes)
+        suggestion_line = app.query_one("#notice-1-suggestion", Static)
+        assert "aeat config example" in str(suggestion_line.content)
+
+
+@pytest.mark.asyncio
+async def test_no_notices_leaves_no_empty_advisory_box() -> None:
+    """A healthy profile carries no permanent 'nothing to report' placeholder."""
+    app = StatusApp(_populated_data())
+    async with app.run_test(size=_TERMINAL_SIZE):
+        assert not app.query("#panel-notices")
 
 
 def test_status_screen_never_imports_the_application_layer() -> None:

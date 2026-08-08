@@ -170,13 +170,11 @@ class BucketEventType(StrEnum):
     PROFILE_IMPORTED = "profile.imported"
     PROFILE_ACTIVATED = "profile.activated"
     PROFILE_SETUP_COMPLETED = "profile.setup.completed"
-    # 036 censo cotejo: dormant until re-enrolled with a live emission
-    # site at the cotejo artefact-apply reconciliation. The live-refresh
-    # scrape against the sede Mis Datos Censales endpoint was retired and
-    # its snapshot substrate deleted, so no refresh event remains.
+    # 036 censo cotejo: emitted once per artefact-apply reconciliation
+    # commit (``apply_cotejo``). The live-refresh scrape against the sede
+    # Mis Datos Censales endpoint was retired and its snapshot substrate
+    # deleted, so no refresh event remains.
     CENSO_APPLIED = "profile.censo.applied"
-    CENSO_DEPENDENT_STAMPED_STALE = "modelo.censo.dependent_stamped_stale"
-    MODELO_LEDGER_DEPENDENT_STAMPED_STALE = "modelo.ledger.dependent_stamped_stale"
 
     # 036 declarative-recording verbs (operator declares an alta /
     # modificacion / baja was filed at sede). The local app never

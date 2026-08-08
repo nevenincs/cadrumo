@@ -631,3 +631,48 @@ async def test_the_action_row_never_paints_past_a_floor_terminal(tmp_path) -> No
             ]
             assert not offenders, f"painted past the side edge of an 80-column terminal: {offenders}"
             app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) -> None:
+    """A real AEAT-length field name must not carry the value column past column 80.
+
+    ``DataTable`` sums its columns' natural content width with no clamp
+    against the container: on the IRPF section, whose declared labels run
+    long (``irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur``
+    alone is over fifty characters), the field-name column pushed the
+    value column past the right edge, with the table's own horizontal
+    scroll left at its default leftmost position and no visible
+    affordance hinting a value sits further right. The geometry band used
+    by the sibling action-row gate is blind to this: nothing here is
+    painted PAST the edge, the value column is simply never scrolled into
+    view.
+
+    This reads the real compositor rather than widget geometry, because
+    "the value is on screen" is a claim about painted cells, not about a
+    coordinate: a wide DataTable can hold a cell inside its virtual
+    content while that cell sits outside the visible viewport.
+    """
+    _long_label_field_path = "irpf.objective_estimation_prior_year_agri_livestock_forest_gross_eur"
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        _persist(_long_label_field_path, "12345.67")
+
+        app = ProfileManagerApp(_live_overview(), persist=_persist)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            # The IRPF section sits well below the fold on an 80x24
+            # terminal; scroll the page (and, transitively, the section's
+            # own table) to the edited row so what is checked is "does the
+            # value column fit once the operator can see the row", not
+            # "is the row above or below the fold" -- a separate, already
+            # -covered question the vertical ContentScroll host answers.
+            table = app._table_by_section["irpf"]
+            table.scroll_visible(animate=False)
+            await pilot.pause()
+            rendered = app.export_screenshot()
+            assert "12345.67" in rendered, (
+                "the long IRPF field-name label pushed the value column out of the 80-column viewport"
+            )
+            app.exit(None)

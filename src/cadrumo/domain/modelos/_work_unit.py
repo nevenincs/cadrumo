@@ -64,10 +64,6 @@ _DiscardReason = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
 ]
-_StaleReason = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
-]
 _OptionalHex64 = Annotated[
     str | None,
     StringConstraints(
@@ -169,16 +165,6 @@ class WorkUnit(BaseModel):
         discard_reason: Operator-supplied free-text reason for
             the discard. ``None`` when no reason was given (or
             when the unit is not discarded).
-        censo_stamped_stale_at: Timezone-aware UTC timestamp the
-            stale-cascade walker set when ``aeat config profile edit``
-            superseded the censo facts the work unit depended
-            on. ``None`` while the unit is still censo-current.
-            Set/unset together with ``censo_stale_reason``.
-        censo_stale_reason: Operator-readable text recording why the
-            unit was marked stale (typically the
-            superseding snapshot id). ``None`` while not stale; both
-            this and ``censo_stamped_stale_at`` set together when
-            stale, both ``None`` otherwise.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -199,14 +185,6 @@ class WorkUnit(BaseModel):
     current_calculation_revision_id: _OptionalHex64 = None
     filed_calculation_revision_id: _OptionalHex64 = None
     current_filing_record_id: _OptionalHex64 = None
-    censo_stamped_stale_at: datetime | None = None
-    censo_stale_reason: _StaleReason | None = None
-    # Ledger-snapshot drift axis: set together
-    # when a contributing ledger row changes after the unit's revision was
-    # verified/filed, so the operator sees the modelo's inputs went stale. Mirrors
-    # the censo stale-marker pair above.
-    ledger_stamped_stale_at: datetime | None = None
-    ledger_stale_reason: _StaleReason | None = None
     # ISD (Modelo 650/660) and ITPyAJD (Modelo 600/620) context axis:
     # CCAA of the causante (Ley 22/2009 Art. 32) or the bien-location CCAA.
     # None for modelos where jurisdiction follows the declarant's profile CCAA.
@@ -270,32 +248,6 @@ class WorkUnit(BaseModel):
                 raise ModeloValidationError(
                     f"discarded_at {self.discarded_at.isoformat()} precedes created_at {self.created_at.isoformat()}",
                 )
-        stamped = self.censo_stamped_stale_at is not None
-        reasoned = self.censo_stale_reason is not None
-        if stamped != reasoned:
-            raise ModeloValidationError(
-                "censo_stamped_stale_at and censo_stale_reason must be set or unset together",
-            )
-        if stamped and self.censo_stamped_stale_at is not None and self.censo_stamped_stale_at < self.created_at:
-            raise ModeloValidationError(
-                f"censo_stamped_stale_at {self.censo_stamped_stale_at.isoformat()} "
-                f"precedes created_at {self.created_at.isoformat()}",
-            )
-        ledger_stamped = self.ledger_stamped_stale_at is not None
-        ledger_reasoned = self.ledger_stale_reason is not None
-        if ledger_stamped != ledger_reasoned:
-            raise ModeloValidationError(
-                "ledger_stamped_stale_at and ledger_stale_reason must be set or unset together",
-            )
-        if (
-            ledger_stamped
-            and self.ledger_stamped_stale_at is not None
-            and self.ledger_stamped_stale_at < self.created_at
-        ):
-            raise ModeloValidationError(
-                f"ledger_stamped_stale_at {self.ledger_stamped_stale_at.isoformat()} "
-                f"precedes created_at {self.created_at.isoformat()}",
-            )
         return self
 
 

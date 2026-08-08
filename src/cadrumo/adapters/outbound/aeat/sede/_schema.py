@@ -445,6 +445,14 @@ class FiledDeclaracionObservation(BaseModel):
     submitted machine-readable data, declaration PDFs, and justificante
     PDFs. Parsed casillas are observations only; downstream calculation
     logic must validate them through registry extraction profiles.
+
+    ``headers`` carries the diseño header facts AEAT states in the submitted
+    fichero -- the tipo de declaración, the sin-actividad and REDEME markers --
+    as typed :class:`~core.ObservedHeaderFact` rows rather than in the flat
+    ``metadata`` map. A header is not a casilla, so it does not belong in
+    ``casillas``; and it is not free-form provenance text, so a flat map loses
+    the record-design position that makes it auditable. ``metadata`` remains the
+    home for register-row provenance that genuinely is untyped text.
     """
 
     model_config = _STRICT_FROZEN
@@ -458,6 +466,7 @@ class FiledDeclaracionObservation(BaseModel):
     authenticated_identity: str = Field(min_length=1, max_length=32)
     artefacts: tuple[FiledDeclaracionArtefact, ...] = Field(min_length=1)
     casillas: tuple[ObservedCasillaValue, ...] = ()
+    headers: tuple[ObservedHeaderFact, ...] = ()
     metadata: dict[str, str] = Field(default_factory=dict)
     extraction_coverage: dict[str, float] = Field(default_factory=dict)
     registry_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)

@@ -89,8 +89,16 @@ from ._runner import (
     sorted_rows_by_document,
     verify_decimal_comparison_path,
 )
+from ._scoring import (
+    ABSTENTION_SENTINELS,
+    FieldOutcome,
+    FieldScoring,
+    FieldVerdict,
+    score_emission,
+)
 
 __all__ = [
+    "ABSTENTION_SENTINELS",
     "AUTHORED_LABEL_PAIRS",
     "CORPUS_ROOT",
     "EXPECTED_KEY_BYTES",
@@ -108,6 +116,9 @@ __all__ = [
     "Denominators",
     "EmittedOnly",
     "EngineRoute",
+    "FieldOutcome",
+    "FieldScoring",
+    "FieldVerdict",
     "HarnessRefusalError",
     "HarnessReport",
     "ModelTier",
@@ -131,6 +142,7 @@ __all__ = [
     "reference_points_with_key_context",
     "render_page_text",
     "require_model_tier",
+    "score_emission",
     "sorted_rows_by_document",
     "verify_decimal_comparison_path",
 ]

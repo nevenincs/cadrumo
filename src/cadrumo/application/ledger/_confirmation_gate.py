@@ -145,6 +145,41 @@ class ConfirmationBlocker(BaseModel):
         """Return the candidate values, for checking a choose-candidate resolution."""
         return tuple(candidate.value for candidate in self.candidates)
 
+    @property
+    def candidate_digests(self) -> tuple[str, ...]:
+        """Return each candidate's value as the review surface renders it.
+
+        The operator-facing surfaces emit every payload through the redaction
+        funnel, so an ambiguous IDENTITY reaches the operator as a digest. That
+        is correct and stays: the value that could not be established is exactly
+        the value that must not cross an output boundary.
+
+        It also means the value is not a token the operator can type back. This
+        is the form they actually saw, so it is the form they can name.
+        """
+        # Imported at call time rather than module scope: this module is reached
+        # by the CLI error path, and ``core.redaction`` reaches ``core.errors``
+        # in turn -- the same cycle the sibling arms in this package defer.
+        from ...core.redaction import redact_for_cli_output
+
+        return tuple(redact_for_cli_output(candidate.value) for candidate in self.candidates)
+
+    def names_a_candidate(self, token: str) -> bool:
+        """Return whether *token* identifies one of this blocker's readings.
+
+        Accepts the value or the digest the surface rendered it as. **Both are
+        choices rather than assertions**, which is the property the refusal below
+        exists to enforce: a digest matches only a reading the document actually
+        offered, and it cannot be constructed for a value that was never a
+        candidate without already holding that value.
+
+        Accepting the digest does not weaken the check -- it makes it reachable.
+        A resolution can only ever have been expressed by an operator who had the
+        value in hand, which excluded every operator adjudicating from the review
+        surface, where the value is redacted by design.
+        """
+        return token in self.candidate_values or token in self.candidate_digests
+
 
 class FindingResolution(BaseModel):
     """The operator's explicit answer to exactly one named blocker.
@@ -285,8 +320,22 @@ def resolved_blockers(
     Raises:
         ConfirmationBlockedError: When a blocker carries no resolution, when a
             resolution names no blocker this draft raises, when two resolutions
-            answer one blocker, or when a ``CHOOSE_CANDIDATE`` picks a value
-            that was never a recorded candidate.
+            answer one blocker, or when a ``CHOOSE_CANDIDATE`` names neither a
+            recorded candidate's value nor the digest the surface rendered it
+            as.
+
+    A choose-candidate resolution may name its reading EITHER way, and the
+    second form is what makes the ambiguity surface usable at all. An ambiguous
+    identity reaches the operator through the redaction funnel, so both
+    competing readings render as digests; requiring the value asked them to type
+    a string the surface had deliberately withheld, and the review command's
+    whole purpose for identity fields is that the operator -- who holds the
+    document -- decides between the readings. They could see which was right and
+    had no way to say so.
+
+    The value is never consumed beyond this check: it attests WHICH reading was
+    chosen and never becomes the record's data, so nothing downstream needed it
+    to have crossed the boundary.
     """
     blockers = confirmation_blockers(draft)
     by_id = {blocker.blocker_id: blocker for blocker in blockers}
@@ -312,12 +361,16 @@ def resolved_blockers(
     for blocker_id, resolution in answered.items():
         if resolution.action is not FindingResolutionAction.CHOOSE_CANDIDATE:
             continue
-        candidates = by_id[blocker_id].candidate_values
-        if resolution.value not in candidates:
-            offered = ", ".join(candidates) or "none"
+        blocker = by_id[blocker_id]
+        if resolution.value is None or not blocker.names_a_candidate(resolution.value):
+            # The refusal enumerates the DIGESTS, not the values. They are what
+            # the review surface showed, so they are what the operator can check
+            # their answer against -- and naming the raw values here would put
+            # the identity this blocker exists to protect into a refusal message.
+            offered = ", ".join(blocker.candidate_digests) or "none"
             raise ConfirmationBlockedError(
-                f"finding {blocker_id!r} was never offered {resolution.value!r} as a reading; "
-                f"candidates read from the document: {offered}. Supplying a value the document does not "
+                f"finding {blocker_id!r} was never offered that reading; "
+                f"candidates read from the document: {offered}. Naming a reading the document does not "
                 f"state is an assertion, not a choice",
                 context={"blocker_id": blocker_id},
                 suggestion="aeat app ledger evidence review show <reference>",

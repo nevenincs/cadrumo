@@ -33,14 +33,19 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, override
 
-from textual.containers import VerticalScroll
+from textual.app import ComposeResult
+from textual.containers import Vertical, VerticalScroll
 from textual.theme import Theme
+from textual.widgets import Static
 
 from ....core.config import TuiAppearance, load_settings
+from ....core.json_contract import Notice, NoticeSeverity
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from textual.app import App
 
 
@@ -235,6 +240,61 @@ class ContentScroll(VerticalScroll, can_focus=False):
     """
 
 
+NOTICE_BAND_CSS: Final[str] = """
+    .cadrumo-notice { margin: 0 0 1 0; }
+    .cadrumo-notice-info { color: $text; }
+    .cadrumo-notice-warning { color: $warning; text-style: bold; }
+    .cadrumo-notice-suggestion { color: $text-muted; margin: 0 0 1 2; }
+"""
+"""Styling for :class:`NoticeBand`. Severity drives both the glyph the band
+prints and this colour, so meaning never rests on colour alone — the same
+convention every other status glyph on these surfaces follows."""
+
+_NOTICE_GLYPH: Final[dict[NoticeSeverity, str]] = {
+    NoticeSeverity.INFO: "ⓘ",
+    NoticeSeverity.WARNING: "⚠",
+}
+
+
+class NoticeBand(Vertical, can_focus=False):
+    """Render :class:`~cadrumo.core.json_contract.Notice` values on a full-screen surface.
+
+    The single reusable projection of the envelope's typed ``notices``
+    channel onto a Cadrumo full-screen surface. A command's JSON envelope and
+    its text-mode rendering already share one :class:`Notice` list per the
+    ``aeat-cli-contract`` rule; this widget is that same list's third
+    rendering, so a full-screen operator meets the identical advisory a
+    scripted caller would see on stderr rather than a second, TUI-only
+    vocabulary invented to route around the gap.
+
+    Read-only and inert: it owns no interaction, no dismissal, and no state
+    beyond the notices it was built with — a caller that wants a different
+    set mounts a new band rather than mutating this one.
+    """
+
+    def __init__(self, notices: Sequence[Notice], *, id: str | None = None) -> None:  # noqa: A002 - Textual's own kwarg name
+        super().__init__(id=id)
+        self._notices = tuple(notices)
+
+    @override
+    def compose(self) -> ComposeResult:
+        for index, notice in enumerate(self._notices):
+            glyph = _NOTICE_GLYPH.get(notice.severity, "•")
+            yield Static(
+                f"{glyph} {notice.message}",
+                classes=f"cadrumo-notice cadrumo-notice-{notice.severity.value}",
+                id=f"notice-{index}",
+                markup=False,
+            )
+            if notice.suggestion:
+                yield Static(
+                    notice.suggestion,
+                    classes="cadrumo-notice-suggestion",
+                    id=f"notice-{index}-suggestion",
+                    markup=False,
+                )
+
+
 def resolve_theme_name(appearance: TuiAppearance, *, host_prefers_dark: bool = True) -> str:
     """Return the registered theme name for the operator's appearance choice.
 
@@ -287,7 +347,9 @@ __all__ = [
     "CADRUMO_LIGHT_THEME_NAME",
     "CADRUMO_THEMES",
     "CONTENT_WIDTH_PERCENT",
+    "NOTICE_BAND_CSS",
     "ContentScroll",
+    "NoticeBand",
     "install_cadrumo_themes",
     "resolve_theme_name",
     "toggle_appearance",

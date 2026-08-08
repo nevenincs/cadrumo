@@ -48,6 +48,7 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 import os
 import re
 import shutil
@@ -749,10 +750,29 @@ def _drop_handlers_bound_to_a_dead_stream() -> None:
     capture, is untouched; the next ``configure_logging`` in a fresh process
     installs its own.
     """
+    from cadrumo.core.logging import allow_logging_reconfiguration
+
+    evicted = False
     for handler in list(logging.getLogger().handlers):
         stream = getattr(handler, "stream", None)
-        if stream is not None and getattr(stream, "closed", False):
+        if stream is None:
+            continue
+        # A CliRunner capture buffer is SWAPPED OUT, not closed, so asking
+        # `stream.closed` misses the case this eviction exists for: the handler
+        # keeps writing into a buffer nobody will read, and the stdlib reports
+        # the failure by printing its own stack and object reprs to the real
+        # stderr, where they land in an unrelated frame's captured output and
+        # can never be normalised away.
+        if getattr(stream, "closed", False) or stream is not sys.stderr:
             logging.getLogger().removeHandler(handler)
+            evicted = True
+
+    # Detaching alone leaves the configure-once latch set, so the next frame
+    # installs nothing and the root logger is left bare. Clearing it lets the
+    # next CLI invocation bind to ITS own live stream, which is the state a real
+    # operator's fresh process would have.
+    if evicted:
+        allow_logging_reconfiguration()
 
 
 def _invoke_frame(args: tuple[str, ...]) -> Result:

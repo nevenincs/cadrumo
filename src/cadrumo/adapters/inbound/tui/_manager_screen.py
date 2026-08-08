@@ -118,6 +118,27 @@ _ABSENT_GLYPH = "○"
 _REQUIRED_MARK = "*"
 """Marks a field filing will eventually require."""
 
+_FIELD_COLUMN_WIDTH = 24
+"""Cap, in cells, on the field-name column of every section table.
+
+``DataTable`` sums its columns' natural content width with no clamp against
+the container: an unbounded field-name column on a long-label section (the
+declared AEAT field names run long) grows wide enough on its own to push the
+value column past the right edge of an eighty-column terminal, with the
+table's own horizontal scroll left at its default leftmost position and no
+visible affordance hinting a value sits further right. The operator sees a
+table that looks like it has no value column at all.
+
+A fixed cap paired with the row's auto height (see the ``add_row`` calls
+below) wraps a long label onto more lines instead, which is what keeps the
+state and value columns inside the viewport at every terminal width this
+screen supports — not merely at whatever width the widest declared label
+happens to fit. The value column is deliberately left uncapped: it is the
+column the operator opened the page to see, and it is a real fact from the
+profile rather than a fixed schema label, so letting it use whatever room
+the field-name column no longer claims is the point of the cap.
+"""
+
 _ROW_INDEX_SEPARATOR = " · "
 """Sits between a repeated row's instance number and its field label.
 
@@ -330,15 +351,19 @@ class ProfileManagerApp(App[None]):
             table: DataTable[str] = DataTable(cursor_type="row", zebra_stripes=True)
             panel.mount(table)
             self._table_by_section[section.key] = table
-            self._columns_by_section[section.key] = table.add_columns(
-                tr("flows.manager.column.state"),
-                tr("flows.manager.column.field"),
-                tr("flows.manager.column.value"),
-            )
+            self._columns_by_section[section.key] = [
+                table.add_column(tr("flows.manager.column.state")),
+                table.add_column(tr("flows.manager.column.field"), width=_FIELD_COLUMN_WIDTH),
+                table.add_column(tr("flows.manager.column.value")),
+            ]
             for field in section.fields:
                 key = field.path
                 self._field_by_key[key] = field
-                table.add_row(*self._rendered_row(field), key=key)
+                # ``height=None`` is what lets a field name past the capped
+                # column width wrap onto more lines instead of being clipped
+                # or pushing the value column off-screen — see
+                # ``_FIELD_COLUMN_WIDTH``.
+                table.add_row(*self._rendered_row(field), key=key, height=None)
 
     def _apply_overview(self, updated: ProfileOverview) -> None:
         """Show ``updated`` by repainting only what differs from the page on screen.

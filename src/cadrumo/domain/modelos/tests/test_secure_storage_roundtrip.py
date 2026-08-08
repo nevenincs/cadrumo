@@ -89,12 +89,6 @@ def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
         discarded_at=_WORK_UNIT_TIMESTAMP,
         discarded_by="cli/aeat",
         discard_reason="superseded by amended revision for roundtrip test fixture",
-        # Censo-stale marker pair — defaults to (None, None). Without
-        # non-default fixture values, a save-drops-field regression on
-        # either side would still pass strict equality. Stamp at
-        # created_at so the validator's not-before invariant holds.
-        censo_stamped_stale_at=_WORK_UNIT_TIMESTAMP,
-        censo_stale_reason="censo apply snapshot abc123 superseded prior facts",
     )
 
 
@@ -142,11 +136,6 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
     assert loaded_unit.discarded_by == "cli/aeat"
     assert loaded_unit.discard_reason is not None
     assert "superseded" in loaded_unit.discard_reason
-    # Censo-stale marker pair survives - protects against the
-    # save-drops / load-re-defaults regression on either field.
-    assert loaded_unit.censo_stamped_stale_at == work_unit.censo_stamped_stale_at
-    assert loaded_unit.censo_stale_reason is not None
-    assert "snapshot abc123" in loaded_unit.censo_stale_reason
 
 
 def test_work_unit_catalogue_lifecycle_drift_surfaces_at_load(
