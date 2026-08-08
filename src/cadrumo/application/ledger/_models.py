@@ -107,6 +107,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     notes: str = ""
     iva_category: IvaCategory | None = None
     counterparty_eu_member_state: EUMemberState | None = None
+    counterparty_identification_state: EUMemberState | None = None
     art_104_tres_exclusion: Art104TresExclusion | None = None
     input_classification: InputClassification | None = None
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
@@ -255,6 +256,7 @@ class ManualLedgerTransactionPatch(BaseModel):
     notes: str | None = None
     iva_category: IvaCategory | None = None
     counterparty_eu_member_state: EUMemberState | None = None
+    counterparty_identification_state: EUMemberState | None = None
     source_jurisdiction: str | None = None
     group_label: str | None = None
 
@@ -343,6 +345,7 @@ class LedgerTransactionPayload(BaseModel):
     iva_amount: str | None = None
     iva_category: str | None = None
     counterparty_eu_member_state: str | None = None
+    counterparty_identification_state: str | None = None
     irpf_category: str | None = None
     m210_income_classification: M210IncomeClassification | None = None
     usage_ratio_id: str | None = None
@@ -867,6 +870,7 @@ class LedgerExportRow(BaseModel):
     iva_amount: str = ""
     iva_category: str = ""
     counterparty_eu_member_state: str = ""
+    counterparty_identification_state: str = ""
     irpf_category: str = ""
     usage_ratio_id: str = ""
     prorrata_reference: str = ""

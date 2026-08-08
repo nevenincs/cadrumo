@@ -9,5 +9,18 @@
     "DP200014:00562": "500000.00",
     "DP200014B:00592": "300000.00",
     "DP200014B:00611": "300000.00"
+  },
+  "declared_inputs": {
+    "corpus_locator": "corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf.extracted.md#L15896-L15903",
+    "by_casilla_id": {
+      "00501": "2000000.00",
+      "00573": "150000.00",
+      "DP200014B:00588": "80000.00"
+    },
+    "locator_by_casilla_id": {
+      "00501": "corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf.extracted.md#L15899,#L15938",
+      "00573": "corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf.extracted.md#L15902",
+      "DP200014B:00588": "corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf.extracted.md#L15903"
+    }
   }
 }

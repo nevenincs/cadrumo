@@ -26,6 +26,7 @@ from datetime import datetime
 
 from pydantic import Field
 
+from ...core import ClassifierInputSource
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.iva import IvaTerritorialScope
 
@@ -84,3 +85,33 @@ class CounterpartyWithdrawResult(OutputSchema):
 
     canonical_tax_identifier: str = Field(min_length=1)
     withdrawn: bool
+
+
+@register_schema("ledger.counterparty.show")
+class CounterpartyShowResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger counterparty show``.
+
+    The operator's read of their own answer, and a first-class verb rather than
+    test scaffolding: an answer that cannot be inspected cannot be audited or
+    corrected with confidence, and the confirm verb's conflict refusal was
+    otherwise the only way to discover what is stored -- learning a fact by
+    triggering an error is not a read path.
+
+    **It reports what the LADDER will answer, not what the repository holds**,
+    and the two are deliberately not the same question. The resolver declines to
+    return a fact the document's own evidence contradicts, so a row can be
+    stored and still settle nothing; a payload read from the repository would
+    show the operator a territory that no later document will actually use.
+
+    Attributes:
+        tax_identifier: Whom the question was asked about, as supplied.
+        confirmed: Whether the rung will answer. ``False`` is the ordinary state
+            for a counterparty nobody has been asked about yet, not a failure.
+        territorial_scope: What it will answer, or ``None``.
+        source: Who established it, which for this rung is always the operator.
+    """
+
+    tax_identifier: str = Field(min_length=1)
+    confirmed: bool
+    territorial_scope: IvaTerritorialScope | None = None
+    source: ClassifierInputSource | None = None

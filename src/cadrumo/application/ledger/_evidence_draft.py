@@ -142,8 +142,8 @@ from ...domain.iva import (
     EUMemberState,
     InvoiceKind,
     IvaCategory,
+    IvaRateKind,
     country_code_for_stated_country_code,
-    domestic_categories_by_rate_kind,
     rate_kinds_for_declared_rate,
 )
 from ...llm import (
@@ -2021,7 +2021,30 @@ def confirm_invoice_draft_from_evidence(
     #
     # Placed AFTER the blocking gate and before any resolution work, so a draft
     # whose findings are unanswered never reaches the ladder or the fact store.
-    establishment = resolve_confirmed_establishment(bucket_id=bucket_id, draft=draft, kind=kind)
+    #
+    # The rate tier is resolved HERE and handed in, rather than left for the
+    # classification apparatus to re-read: which tier a document charged is the
+    # reading stage's business, and re-deciding it inside the classifier would
+    # be a second authority on the same lines. It is skipped when the operator
+    # restated the amounts, for the same reason the per-rate split is -- their
+    # figures are the authority, not the reader's.
+    operator_restated_amounts = taxable_base is not None or iva_rate is not None or iva_amount is not None
+    # Resolved without the raising variant below, which runs later. An
+    # unresolvable date is reported by the assembly as a missing input beside
+    # the operator's other gaps; raising here would abort before that list is
+    # built, and the confirm refuses on the same missing date a few lines on.
+    classification_date = invoice_date if invoice_date is not None else parse_iso8601_date(draft.invoice_date)
+    establishment = resolve_confirmed_establishment(
+        bucket_id=bucket_id,
+        draft=draft,
+        kind=kind,
+        invoice_date=classification_date,
+        rate_tier=(
+            None
+            if operator_restated_amounts or classification_date is None
+            else domestic_rate_tier_from_the_document(draft, invoice_date=classification_date)
+        ),
+    )
     extracted_counterparty_tax_id = counterparty_side.tax_id
     extracted_counterparty_name = counterparty_side.name
     counterparty_tax_id_field = counterparty_side.tax_id_field
@@ -2112,22 +2135,18 @@ def confirm_invoice_draft_from_evidence(
         # disagreeing authorities on the same figures, which is the reason the
         # per-rate split is skipped on that path too.
         resolved_recargo_amount = recargo_amount
-    resolved_iva_category = iva_category if iva_category is not None else _category_stated_by_the_document(draft)
-    if resolved_iva_category is None and not operator_overrode_the_amounts:
-        # A document charging an ordinary rate states the category code for
-        # "standard rate", which by design carries no special treatment: the
-        # rate itself is the meaning. That left the record with no declared IVA
-        # treatment at all, which the decomposition contract refuses -- so the
-        # renta income path counted the row's bank cash instead of its ingresos
-        # integros, dropping the base, the cuota and the retencion.
-        #
-        # Resolved from the rate the document states, never assumed. Skipped
-        # when the operator restated the amounts, for the same reason the
-        # per-rate split is: their figures are the authority, not the reader's.
-        resolved_iva_category = _domestic_category_from_the_declared_rate(
-            draft,
-            invoice_date=resolved_invoice_date,
-        )
+    # Taken from the classification authority, and from nowhere else on this
+    # path. Two rival surfaces once decided it here -- one reading the
+    # document's declared tax-category code, one re-deriving a domestic
+    # category from the rate -- while the rule table they were meant to feed
+    # was never consulted. Both evidences still reach the decision, as a
+    # declared FACT and as the criteria's rate-tier axis respectively; only the
+    # deciding moved. A contradiction between them resolves to no category and
+    # surfaces as a review item, because a wrong category is worse than an
+    # absent one: an absent category asks the operator and a wrong one does not.
+    #
+    # The operator's explicit value still wins, as it does on every field.
+    resolved_iva_category = iva_category if iva_category is not None else establishment.category.category
 
     repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     # Built with the SAME argument set `create_catalogue_invoice` is handed below,
@@ -2342,18 +2361,21 @@ def _evidence_content_address(*, bucket_id: str, evidence_id: str | None, settin
     return record.source_sha256 if record is not None else None
 
 
-def _domestic_category_from_the_declared_rate(draft: InvoiceDraft, *, invoice_date: date) -> IvaCategory | None:
-    """Return the domestic IVA category the document's own rate denotes, or ``None``.
+def domestic_rate_tier_from_the_document(draft: InvoiceDraft, *, invoice_date: date) -> IvaRateKind | None:
+    """Return the domestic rate tier the document's own lines charged, or ``None``.
 
-    Composed from two shipped authorities rather than a new table.
+    **A tier, not a category.** This resolution used to end in a domestic
+    :class:`~domain.iva.IvaCategory`, which made it a second classifier sitting
+    ahead of the rule table and reaching it never -- and it reached that
+    category through :func:`~domain.iva.domestic_categories_by_rate_kind`, the
+    exact mapping the table's own ``R05`` rule consults. Stopping at the tier
+    keeps every one of the declines below and hands the answer to the table as
+    a criteria axis, so the mapping is applied once, where the law is.
+
     :func:`~domain.iva.rate_kinds_for_declared_rate` answers which tier a
     declared rate WAS on a given date, against the registered rate records; it
     returns a tuple because that question can legitimately have more than one
     answer, so a caller detects ambiguity instead of picking one.
-    :func:`~domain.iva.domestic_categories_by_rate_kind` is the single authority
-    for which domestic category a tier denotes -- three independent copies of
-    that mapping existed before it was promoted, so re-deriving it here would
-    make a fourth.
 
     The date is load-bearing and is the invoice's own issue date, not today's.
     A tier's rate changes by statute, so resolving a 2024 document against
@@ -2364,7 +2386,7 @@ def _domestic_category_from_the_declared_rate(draft: InvoiceDraft, *, invoice_da
     - **More than one rate.** One invoice carries one category field and a
       two-tier document has two answers. Picking either declares part of the
       base under a rate it was not charged at, and picking by size is an
-      invention. Which category a multi-rate invoice takes is a modelling
+      invention. Which tier a multi-rate invoice takes is a modelling
       decision this resolution does not make.
     - **A recargo de equivalencia.** The rate resolves cleanly, but a supply
       carrying a recargo may belong to the ordinary domestic tier or to the
@@ -2376,15 +2398,16 @@ def _domestic_category_from_the_declared_rate(draft: InvoiceDraft, *, invoice_da
       failure, and a rate matching two tiers is the ambiguity the tuple exists
       to surface.
 
-    Declining is visible: the record stays undeclared, the decomposition reports
-    it, and the renta income path raises an advisory. A guess would not be.
+    Declining is visible: the criteria carry no tier, the rule table refuses the
+    domestic branch that needs one, and the resolution reports the operation
+    unresolved. A guess would not be.
 
     Args:
         draft: The re-run extraction being confirmed.
         invoice_date: The resolved issue date the rate must be read against.
 
     Returns:
-        The resolved :class:`~domain.iva.IvaCategory`, or ``None`` when the
+        The resolved :class:`~domain.iva.IvaRateKind`, or ``None`` when the
         document does not settle it unambiguously.
     """
     if len(draft.iva_breakdown) != 1:
@@ -2399,45 +2422,7 @@ def _domestic_category_from_the_declared_rate(draft: InvoiceDraft, *, invoice_da
     tiers = rate_kinds_for_declared_rate(EUMemberState.ES, entry.iva_rate / Decimal("100"), invoice_date)
     if len(tiers) != 1:
         return None
-    return domestic_categories_by_rate_kind().get(tiers[0])
-
-
-def _category_stated_by_the_document(draft: InvoiceDraft) -> IvaCategory | None:
-    """Return the IVA treatment the document's own record declares, or ``None``.
-
-    The UNTDID 5305 tax-category code is a fact only a structured reader can
-    recover: it is IN the document and no text or vision reader can supply it.
-    Dropping it here is not a missing label but a missing declaration. A
-    domestic reverse charge, an exempt supply and a zero-rated supply all print
-    a base and no cuota, so once the code is gone the record cannot be told
-    apart from an ordinary zero-cuota supply -- and the self-assessed output IVA
-    a reverse charge obliges, which Modelo 303 collects in its own inversión del
-    sujeto pasivo tier, is never assessed at all.
-
-    A standard-rated supply maps to the empty string rather than a member: the
-    rate itself carries the meaning there and there is no special category to
-    state, so it resolves to ``None`` exactly as an absent code does.
-
-    An unrecognised token also resolves to ``None`` rather than raising. The
-    parser only ever writes values from its own closed UNTDID mapping, so a
-    token outside it means that mapping changed shape; refusing the whole
-    confirm over a label the operator can supply themselves would block a
-    filing the rest of the record fully supports.
-
-    Args:
-        draft: The re-run extraction being confirmed.
-
-    Returns:
-        The stated :class:`~domain.iva.IvaCategory`, or ``None`` when the
-        document states no special category.
-    """
-    stated = (draft.iva_category or "").strip()
-    if not stated:
-        return None
-    try:
-        return IvaCategory(stated)
-    except ValueError:
-        return None
+    return tiers[0]
 
 
 def _confirmed_lines_from_the_document(

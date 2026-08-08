@@ -261,16 +261,25 @@ _EXPECTED_SETUP_QUESTION_IDS = frozenset(
         "third-party-transactions-above-347-threshold",
     }
 )
-_EXPECTED_SETUP_QUESTION_COUNT = 76
-
-
 def test_profile_create_prompted_question_inventory_is_pinned() -> None:
     """A silent add, drop, or rename of a setup-flow question fails loudly.
 
     The wizard surfaces one flow; ``create`` writes every declared question id to
-    the payload. Pinning the exact id set plus the declared count catches an added
-    or dropped question and a same-size rename swap, while conditional per-answer
+    the payload. The pinned SET is the contract, and it already catches an added
+    question, a dropped one and a same-size rename swap; conditional per-answer
     visibility stays covered by the interactive persisted-fact tests above.
+
+    There is deliberately no pinned COUNT. A tally encodes a moment rather than a
+    property: it trains everyone to bump the constant, and once bumped it detects
+    nothing the set does not already catch. It is also strictly worse at
+    reporting — a count answers "something moved", the set answers WHICH question
+    moved, which is the fact a reader needs. This gate previously failed with
+    ``assert 75 == 76`` while the id naming the real defect sat one assertion
+    below, unreached.
+
+    Duplicates are still refused, as a property of the declaration rather than a
+    size: the list being longer than the set means an id appears twice, and that
+    holds at any inventory size.
     """
     assert len(WIZARD_FLOWS) == 1, WIZARD_FLOWS
     flow = WIZARD_FLOWS[0]
@@ -279,8 +288,13 @@ def test_profile_create_prompted_question_inventory_is_pinned() -> None:
     declared_ids = [question.id for section in flow.sections for question in section.questions]
     surfaced_ids = frozenset(declared_ids)
 
-    # No id is declared twice (declared count == unique count) and the set is exactly
-    # the pinned inventory of the decided size.
-    assert len(declared_ids) == _EXPECTED_SETUP_QUESTION_COUNT
-    assert len(surfaced_ids) == _EXPECTED_SETUP_QUESTION_COUNT
-    assert surfaced_ids == _EXPECTED_SETUP_QUESTION_IDS
+    duplicated = sorted({question_id for question_id in declared_ids if declared_ids.count(question_id) > 1})
+    assert not duplicated, f"setup declares these question ids more than once: {duplicated}"
+
+    pinned_but_absent = sorted(_EXPECTED_SETUP_QUESTION_IDS - surfaced_ids)
+    declared_but_unpinned = sorted(surfaced_ids - _EXPECTED_SETUP_QUESTION_IDS)
+    assert not (pinned_but_absent or declared_but_unpinned), (
+        "setup question inventory drifted from the pinned set. "
+        f"Pinned but not declared by the flow: {pinned_but_absent}. "
+        f"Declared by the flow but not pinned: {declared_but_unpinned}."
+    )

@@ -61,14 +61,17 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource, ConfirmationBlockReason
+from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource, ConfirmationBlockReason, IvaCategoryOutcome
 from ...core.parsing import parse_iso8601_date
-from ...domain.iva import InvoiceKind, IvaTerritorialScope
+from ...domain.iva import InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 from ._classification_assembly import (
     ClassificationAssembly,
     DeclaredFact,
     DeclaredFacts,
+    IvaCategoryResolution,
     assemble_classification_criteria,
+    declared_category_from_document_record,
+    resolve_ingestion_iva_category,
 )
 from ._classifier_inputs import collect_classifier_inputs
 from ._confirmation_gate import ConfirmationBlocker, _blocker_id
@@ -77,6 +80,8 @@ from ._establishment_ladder import CounterpartyEstablishment, resolve_draft_coun
 from ._filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
 
 if TYPE_CHECKING:
+    from datetime import date
+
     from ...domain.user_profile import UserProfileRecord
     from ._evidence_draft import InvoiceDraft
 
@@ -104,6 +109,9 @@ class ConfirmedEstablishment(BaseModel):
         assembly: The criteria the rule table consumes, or every input that
             stopped them. Present whether or not the scopes resolved: the
             missing-input list is what tells an operator all their gaps at once.
+        category: The IVA treatment this document resolves to, and what
+            established it. The confirm path takes the persisted category from
+            here and from nowhere else.
         review_items: The resolvable questions this document leaves open, in the
             review gate's own blocker shape so one surface reads them all.
     """
@@ -114,6 +122,7 @@ class ConfirmedEstablishment(BaseModel):
     filer_scope: IvaTerritorialScope | None = None
     declared: DeclaredFacts = DeclaredFacts()
     assembly: ClassificationAssembly = ClassificationAssembly()
+    category: IvaCategoryResolution = IvaCategoryResolution(outcome=IvaCategoryOutcome.UNRESOLVED)
     review_items: tuple[ConfirmationBlocker, ...] = ()
 
     @property
@@ -207,6 +216,7 @@ def _declared_facts(
     kind: InvoiceKind,
     counterparty: CounterpartyEstablishment,
     filer_scope: IvaTerritorialScope | None,
+    stated_category: DeclaredFact[IvaCategory] | None,
 ) -> DeclaredFacts:
     """Place each resolved fact on the party it belongs to, by direction.
 
@@ -216,6 +226,10 @@ def _declared_facts(
     customer's; ISSUED is the mirror. Filling both slots from one resolution --
     or filling them in the printed order -- would place every operation inside a
     single territory, which classifies as domestic whatever the document said.
+
+    The stated category takes no side: it is a fact about the OPERATION rather
+    than about either party, so it rides the same channel without a direction
+    swap.
     """
     counterparty_scope = counterparty.declared_fact
     counterparty_identification = (
@@ -231,11 +245,36 @@ def _declared_facts(
             issuer_scope=counterparty_scope,
             customer_scope=filer,
             issuer_identification_state=counterparty_identification,
+            stated_category=stated_category,
         )
     return DeclaredFacts(
         issuer_scope=filer,
         customer_scope=counterparty_scope,
         customer_identification_state=counterparty_identification,
+        stated_category=stated_category,
+    )
+
+
+def _contradiction_item(resolution: IvaCategoryResolution) -> tuple[ConfirmationBlocker, ...]:
+    """Return the review item a self-contradicting IVA declaration raises.
+
+    Surfaced rather than refused, on the stated interim terms the establishment
+    items already run under, and carried under the shipped
+    ``CONTRADICTED_REGIME`` reason rather than a new one: that reason already
+    names "the document's stated regime and the tax it charged cannot both be
+    true", which is exactly this conflict. Declaring a second reason for it
+    would give an operator two id schemes for one class of question.
+    """
+    if resolution.outcome is not IvaCategoryOutcome.CONTRADICTED:
+        return ()
+    reason = ConfirmationBlockReason.CONTRADICTED_REGIME
+    return (
+        ConfirmationBlocker(
+            blocker_id=_blocker_id(reason=reason, field="iva_category", detail=resolution.note),
+            reason=reason,
+            field="iva_category",
+            detail=resolution.note,
+        ),
     )
 
 
@@ -244,14 +283,17 @@ def resolve_confirmed_establishment(
     bucket_id: str,
     draft: InvoiceDraft,
     kind: InvoiceKind,
+    invoice_date: date | None = None,
+    rate_tier: IvaRateKind | None = None,
     repository: CounterpartyEstablishmentRepository | None = None,
 ) -> ConfirmedEstablishment:
-    """Resolve both parties' territories for one confirm, and assemble the criteria.
+    """Resolve both parties' territories for one confirm, and classify the operation.
 
-    The confirm path's single call into the establishment apparatus. Everything
-    it reaches -- the ladder, the profile authority, the declared-facts channel
-    and the criteria assembly -- had no production caller before this function,
-    so this is the whole of what makes them reachable.
+    The confirm path's single call into the establishment and classification
+    apparatus. Everything it reaches -- the ladder, the profile authority, the
+    declared-facts channel, the criteria assembly and the rule table behind it
+    -- had no production caller before this function, so this is the whole of
+    what makes them reachable.
 
     Args:
         bucket_id: Active profile bucket, for the ladder's confirmed-fact rung.
@@ -259,12 +301,22 @@ def resolve_confirmed_establishment(
         kind: Which side of the invoice the filer is on, as the operator settled
             it at confirm. Never the reader's suggestion, and never inferred
             here: it decides which party the ladder is even asked about.
+        invoice_date: The operator's date override, when they supplied one. It
+            layers over the printed date exactly as it does on every other
+            field, and it must reach HERE rather than only the writer: the tier
+            a rate belonged to changes by statute, so classifying against the
+            printed date while the record is dated otherwise answers about a
+            rate the supply was never charged at.
+        rate_tier: The tier the document's lines charged, resolved by the
+            reading stage. Reaches the criteria as the axis rule ``R05``
+            consults, which is what makes the rule table -- rather than a
+            second copy of its mapping -- produce a domestic category.
         repository: Injected counterparty-fact store.
 
     Returns:
         :class:`ConfirmedEstablishment`: both territories where they resolved,
-        the criteria or the inputs that stopped them, and every question left
-        for a person.
+        the criteria or the inputs that stopped them, the resolved IVA category,
+        and every question left for a person.
     """
     # Call-time imports: the side selector and the refusal type live in the
     # draft module, which imports this one's neighbours; the workflow reach is
@@ -287,31 +339,45 @@ def resolve_confirmed_establishment(
     except WizardStatusError:
         profile = None
 
-    declared = _declared_facts(kind=kind, counterparty=counterparty, filer_scope=filer_scope)
+    declared = _declared_facts(
+        kind=kind,
+        counterparty=counterparty,
+        filer_scope=filer_scope,
+        # Read through the classification authority, never minted beside the
+        # document reader: what a tax-category token means about the operation
+        # is a classification question, and a reader answering it was a second
+        # authority working from weaker evidence than the rule table.
+        stated_category=declared_category_from_document_record(draft.iva_category),
+    )
     assembly = assemble_classification_criteria(
-        # Parsed through the shipped date authority, never re-read here. An
-        # unparseable date is an ordinary outcome of reading a page, so it
+        # The operator's override layers over the printed date, parsed through
+        # the shipped date authority and never re-read here. An unparseable date
+        # with no override is an ordinary outcome of reading a page, so it
         # arrives as ``None`` and the assembly reports it as a missing input
         # beside the others rather than aborting the confirm.
-        transaction_date=parse_iso8601_date(draft.invoice_date),
+        transaction_date=invoice_date if invoice_date is not None else parse_iso8601_date(draft.invoice_date),
         direction=kind,
         inputs=collect_classifier_inputs(draft, profile=profile),
         declared=declared,
+        rate_tier=rate_tier,
         # No printed country, postal code or identifier is handed through. Both
         # parties have already been resolved by the authority that owns them,
         # and the assembly's own derivation would answer the same questions a
         # second time -- reaching exactly the values the ladder refused.
     )
+    category = resolve_ingestion_iva_category(assembly, declared=declared, rate_tier=rate_tier)
 
     side = counterparty_draft_side(draft, kind=kind)
     items = _counterparty_review_items(counterparty, tax_identifier=side.tax_id, field=side.tax_id_field)
     if filer_item is not None:
         items = (*items, filer_item)
+    items = (*items, *_contradiction_item(category))
 
     return ConfirmedEstablishment(
         counterparty=counterparty,
         filer_scope=filer_scope,
         declared=declared,
         assembly=assembly,
+        category=category,
         review_items=items,
     )

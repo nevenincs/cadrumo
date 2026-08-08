@@ -292,6 +292,11 @@ def ledger_add(
         "--counterparty-eu-member-state",
         help=tr("cli.ledger.classify.counterparty_eu_member_state_help"),
     ),
+    counterparty_identification_state: EUMemberState | None = typer.Option(
+        None,
+        "--counterparty-identification-state",
+        help=tr("cli.ledger.classify.counterparty_identification_state_help"),
+    ),
     recargo_amount: str | None = typer.Option(None, "--recargo-amount", help=tr("cli.ledger.add.recargo_amount_help")),
     irpf_category: str | None = typer.Option(None, "--irpf-category", help=tr("cli.ledger.add.irpf_category_help")),
     usage_ratio_id: str | None = typer.Option(None, "--usage-ratio-id", help=tr("cli.ledger.add.usage_ratio_help")),
@@ -397,6 +402,7 @@ def ledger_add(
             iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
             iva_category=iva_category,
             counterparty_eu_member_state=counterparty_eu_member_state,
+            counterparty_identification_state=counterparty_identification_state,
             recargo_amount=_parse_decimal(recargo_amount, label="recargo-amount"),
             irpf_category=irpf_category,
             usage_ratio_id=usage_ratio_id,
@@ -619,6 +625,11 @@ def ledger_classify(
         "--counterparty-eu-member-state",
         help=tr("cli.ledger.classify.counterparty_eu_member_state_help"),
     ),
+    counterparty_identification_state: EUMemberState | None = typer.Option(
+        None,
+        "--counterparty-identification-state",
+        help=tr("cli.ledger.classify.counterparty_identification_state_help"),
+    ),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.classify.actor_help")),
     reaffirm: bool = typer.Option(False, "--reaffirm", help=tr("cli.ledger.classify.reaffirm_help")),
     llm: bool = typer.Option(False, "--llm", help=tr("cli.ledger.classify.llm_help")),
@@ -750,6 +761,7 @@ def ledger_classify(
             m210_income_classification=m210_income_classification,
             iva_category=iva_category,
             counterparty_eu_member_state=counterparty_eu_member_state,
+            counterparty_identification_state=counterparty_identification_state,
             notes=reason,
         )
         result = update_manual_transaction_fields(

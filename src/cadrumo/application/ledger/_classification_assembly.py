@@ -84,7 +84,12 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource, CounterpartyTaxablePersonStatus
+from ...core import (
+    STRICT_FROZEN_CONFIG,
+    ClassifierInputSource,
+    CounterpartyTaxablePersonStatus,
+    IvaCategoryOutcome,
+)
 from ...domain.iva import (
     SPAIN_COUNTRY_CODE,
     CustomerTaxStatus,
@@ -92,12 +97,15 @@ from ...domain.iva import (
     InvoiceKind,
     IvaCategory,
     IvaInvoiceClassificationCriteria,
+    IvaRateKind,
     IvaTerritorialScope,
     PartyFact,
     StatedCountryCodeStatus,
     SupplyNature,
     TransactionKind,
     classify_iva,
+    domestic_categories_by_rate_kind,
+    rate_kind_for_domestic_category,
     stated_country_code_status,
     territorial_scope_for_country,
     territorial_scope_for_spanish_postal_code,
@@ -107,16 +115,19 @@ from ...domain.iva import (
 if TYPE_CHECKING:
     from datetime import date
 
-    from ...domain.iva import IvaClassificationResult, IvaRateKind
+    from ...domain.iva import IvaClassificationResult
     from ._classifier_inputs import ClassifierInputs
 
 __all__ = [
     "ClassificationAssembly",
     "DeclaredFact",
     "DeclaredFacts",
+    "IvaCategoryResolution",
     "MissingClassifierInput",
     "assemble_classification_criteria",
     "classify_from_assembled_criteria",
+    "declared_category_from_document_record",
+    "resolve_ingestion_iva_category",
 ]
 
 
@@ -577,6 +588,12 @@ class DeclaredFacts(BaseModel):
             issuer, where no VAT number was printed to establish it. Never
             supplies the establishment, symmetrically.
         customer_identification_state: The same for the customer.
+        stated_category: The IVA treatment the document's own machine-readable
+            record declares. Supplied as a FACT rather than used as a category
+            in its own right: it is evidence about the operation on the same
+            footing as the country codes beside it, and
+            :func:`resolve_ingestion_iva_category` is the one place it is
+            weighed against what the rule table reaches.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -587,6 +604,7 @@ class DeclaredFacts(BaseModel):
     customer_scope: DeclaredFact[IvaTerritorialScope] | None = None
     issuer_identification_state: DeclaredFact[EUMemberState] | None = None
     customer_identification_state: DeclaredFact[EUMemberState] | None = None
+    stated_category: DeclaredFact[IvaCategory] | None = None
 
 
 def _value_of[T](fact: DeclaredFact[T] | None) -> T | None:
@@ -828,3 +846,223 @@ def classify_from_assembled_criteria(
     if assembly.criteria is None:
         return None
     return classify_iva(assembly.criteria)
+
+
+def declared_category_from_document_record(
+    printed_code: IvaCategory | str | None,
+) -> DeclaredFact[IvaCategory] | None:
+    """Read the IVA treatment a document's own machine-readable record declares.
+
+    **The one place a category is built from a document token**, and it is here
+    rather than beside the reader on purpose: interpreting what the operation's
+    treatment is belongs to the classification authority, and a reader that
+    minted the value itself was a second authority answering the same question
+    from weaker evidence.
+
+    The UNTDID 5305 tax-category code is a fact only a structured reader can
+    recover: it is IN the document and no text or vision reader can supply it.
+    Dropping it is not a missing label but a missing declaration. A domestic
+    reverse charge, an exempt supply and a zero-rated supply all print a base
+    and no cuota, so once the code is gone the record cannot be told apart from
+    an ordinary zero-cuota supply -- and the self-assessed output IVA a reverse
+    charge obliges, which Modelo 303 collects in its own inversión del sujeto
+    pasivo tier, is never assessed at all.
+
+    A standard-rated supply maps to the empty string rather than a member: the
+    rate itself carries the meaning there and there is no special category to
+    state, so it resolves to ``None`` exactly as an absent code does.
+
+    An unrecognised token also resolves to ``None`` rather than raising. The
+    parser only ever writes values from its own closed UNTDID mapping, so a
+    token outside it means that mapping changed shape; refusing the whole
+    confirm over a label the operator can supply themselves would block a
+    filing the rest of the record fully supports.
+
+    Args:
+        printed_code: The tax-category token the document's record carried.
+
+    Returns:
+        The declaration beside its attribution, or ``None`` when the document
+        states no special category.
+    """
+    stated = str(printed_code or "").strip()
+    if not stated:
+        return None
+    try:
+        category = IvaCategory(stated)
+    except ValueError:
+        return None
+    return DeclaredFact(value=category, source=ClassifierInputSource.DOCUMENT_EVIDENCE)
+
+
+class IvaCategoryResolution(BaseModel):
+    """The category one confirmed document resolves to, and what established it.
+
+    Attributes:
+        outcome: Which of the five states applies.
+        category: The resolved treatment. ``None`` on ``CONTRADICTED`` and
+            ``UNRESOLVED`` alike -- on the same terms
+            :class:`~domain.iva.LegendDerivation` withholds one, so a caller
+            cannot hold the value while ignoring the conflict that produced it.
+        classified: What the rule table reached from the operation's own facts,
+            where it could place the operation at all. Carried beside the
+            verdict rather than folded into it, so a contradiction can name both
+            halves of what disagreed.
+        declared: What the document's own record declared, where it did.
+        note: Operator-facing explanation, populated on ``CONTRADICTED`` to say
+            what disagreed with what.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    outcome: IvaCategoryOutcome
+    category: IvaCategory | None = None
+    classified: IvaCategory | None = None
+    declared: DeclaredFact[IvaCategory] | None = None
+    note: str = ""
+
+
+def _table_verdict(assembly: ClassificationAssembly) -> IvaCategory | None:
+    """Return the category the rule table placed this operation in, if any.
+
+    :attr:`~domain.iva.IvaCategory.UNKNOWN` is read as "not established" rather
+    than as a treatment, matching how :func:`_axis_forks_the_law` reads it: it
+    is the table's no-rule-matched sentinel, and carrying it forward as a
+    verdict would make an unplaced operation indistinguishable from a placed
+    one at every later reader.
+    """
+    result = classify_from_assembled_criteria(assembly)
+    if result is None or result.category is IvaCategory.UNKNOWN:
+        return None
+    return result.category
+
+
+def _rate_tier_contradiction(declared: IvaCategory, rate_tier: IvaRateKind | None) -> str:
+    """Say how a declared domestic category disagrees with the tier charged, if it does.
+
+    The corroboration the rate evidence now performs. It derives nothing: the
+    tier already reached the rule table as a criteria axis, where rule ``R05``
+    turns it into a domestic category through the one shipped mapping. Asking
+    the inverse of that mapping here checks the document against ITSELF -- the
+    treatment its record declares against the tier its lines charged -- which is
+    a question the table cannot answer, because the declared code never enters
+    the criteria.
+
+    Silent on every non-domestic category. ``rate_kind_for_domestic_category``
+    returns ``None`` for intra-community, export, import, reverse-charge and
+    recargo treatments, and that is the honest answer rather than a mismatch:
+    those categories carry no rate tier derivable from the category alone, so a
+    tier beside one of them corroborates nothing either way.
+    """
+    expected_tier = rate_kind_for_domestic_category(declared)
+    if expected_tier is None or rate_tier is None or expected_tier is rate_tier:
+        return ""
+    return (
+        f"the document's record declares the IVA treatment {declared.value!r}, which is charged at the "
+        f"{expected_tier.value!r} tier, but its lines charge the {rate_tier.value!r} tier"
+    )
+
+
+def resolve_ingestion_iva_category(
+    assembly: ClassificationAssembly,
+    *,
+    declared: DeclaredFacts,
+    rate_tier: IvaRateKind | None = None,
+) -> IvaCategoryResolution:
+    """Resolve the IVA category of one document being ingested.
+
+    **The single production surface that decides an ingested record's IVA
+    category.** Two rival deriving surfaces once sat on the confirm path ahead
+    of the rule table and reached it never: one read the document's declared
+    tax-category code, the other re-derived a domestic category from the rate.
+    Both are still consulted and neither decides any more -- the code arrives as
+    a declared FACT and the rate as the criteria's own ``rate_tier`` axis, which
+    is what rule ``R05`` already consults through the mapping the rate surface
+    used to copy.
+
+    Six outcomes, and "probably" is not one, matching the legend axis this
+    sits beside:
+
+    * The table places the operation and the code agrees -- ``CORROBORATED``.
+    * The table places it and the document declared no code -- ``CLASSIFIED``.
+      A standard-rated supply states no special category because the rate is
+      the meaning, so there is nothing to corroborate against.
+    * The document declares a code the table could not reach -- ``DECLARED``.
+      The reverse-charge, exempt and zero-rated population, whose treatments
+      turn on facts a printed page does not carry.
+    * They disagree, or the declared code disagrees with the tier charged --
+      ``CONTRADICTED``, carrying no category. **Which half is wrong is not
+      decided here.** A wrong category is worse than an absent one, because an
+      absent category asks the operator and a wrong one does not; and the two
+      halves lead to different declarations, so picking silently picks a filing.
+    * The table refused, no code was declared, and the document charged a
+      registered Spanish tier -- ``RATE_INFERRED``. **The weakest answer, and
+      the one that keeps the commonest document declarable.** The table refuses
+      whenever a party's territory is unestablished, which an ordinary domestic
+      invoice printing no country routinely leaves so; without this branch those
+      records reach the invoice decomposition contract undeclared and the renta
+      income path contributes their bank cash instead of their ingresos
+      íntegros. What carries it is the charged tax rather than a default --
+      Canarias and Ceuta y Melilla levy IGIC and IPSI, not IVA -- and the
+      outcome records that the record rests on an inference.
+    * Nothing established one -- ``UNRESOLVED``. An honest blank, never a
+      restrictive provision applied as a default.
+
+    Args:
+        assembly: The criteria the rule table consumes, or the inputs that
+            stopped them.
+        declared: The facts supplied into this classification, whose
+            ``stated_category`` carries the document's own declaration.
+        rate_tier: The tier the document's lines charged, for corroboration.
+            The SAME value handed to :func:`assemble_classification_criteria`,
+            so the two cannot read the document differently.
+
+    Returns:
+        :class:`IvaCategoryResolution`: the resolved treatment and what
+        established it, or the conflict that stopped it.
+    """
+    classified = _table_verdict(assembly)
+    stated_fact = declared.stated_category
+    if stated_fact is None:
+        if classified is not None:
+            return IvaCategoryResolution(
+                outcome=IvaCategoryOutcome.CLASSIFIED,
+                category=classified,
+                classified=classified,
+            )
+        inferred = domestic_categories_by_rate_kind().get(rate_tier) if rate_tier is not None else None
+        if inferred is None:
+            return IvaCategoryResolution(outcome=IvaCategoryOutcome.UNRESOLVED)
+        return IvaCategoryResolution(outcome=IvaCategoryOutcome.RATE_INFERRED, category=inferred)
+
+    stated = stated_fact.value
+    tier_conflict = _rate_tier_contradiction(stated, rate_tier)
+    if tier_conflict:
+        return IvaCategoryResolution(
+            outcome=IvaCategoryOutcome.CONTRADICTED,
+            classified=classified,
+            declared=stated_fact,
+            note=(
+                f"{tier_conflict}; the document disagrees with itself and the category cannot be "
+                "taken from either side"
+            ),
+        )
+    if classified is None:
+        return IvaCategoryResolution(outcome=IvaCategoryOutcome.DECLARED, category=stated, declared=stated_fact)
+    if classified is stated:
+        return IvaCategoryResolution(
+            outcome=IvaCategoryOutcome.CORROBORATED,
+            category=stated,
+            classified=classified,
+            declared=stated_fact,
+        )
+    return IvaCategoryResolution(
+        outcome=IvaCategoryOutcome.CONTRADICTED,
+        classified=classified,
+        declared=stated_fact,
+        note=(
+            f"the document's record declares the IVA treatment {stated.value!r}, but this operation's own "
+            f"establishment, status and supply facts classify it as {classified.value!r}; the two cannot both "
+            "be true and the category cannot be taken from either side"
+        ),
+    )

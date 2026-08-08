@@ -262,6 +262,14 @@ number = "59"
 casilla_id = "60"
 number = "60"
 
+# Casilla 122 joins them for the same reason, one box further along the same
+# información adicional line: the supplier's side of a domestic reverse charge
+# (LIVA art. 84.Uno.2.º) is base-only turnover with no cuota, and it became a
+# computed projection target when its ledger_iva_aggregation binding landed.
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "122"
+number = "122"
+
 # Recargo de equivalencia cuota casillas join the calculation closure once their
 # ledger_iva_aggregation recargo_amount_sum bindings landed (LIVA art. 161 tiers:
 # general 5.2%, reducido 1.4%, super-reducido 0.5%).

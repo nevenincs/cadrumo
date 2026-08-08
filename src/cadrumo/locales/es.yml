@@ -1992,6 +1992,8 @@ cli:
         note_help: En qué se basa la respuesta, con sus propias palabras. Se registra,
           nunca se consulta.
         scope_help: El territorio a efectos de IVA en el que está establecida la contraparte.
+        show_help: Muestra el establecimiento confirmado para una contraparte, si
+          lo hay.
         tax_identifier_help: El identificador fiscal de la contraparte tal y como
           aparece impreso en el documento.
         withdraw_help: Retira un establecimiento confirmado, declarando que la respuesta
@@ -4682,6 +4684,9 @@ cli:
         Irlanda del Norte de la contraparte (ISO 3166-1 alfa-2 minúsculas, p. ej.
         de o xi); obligatorio con --iva-category intra_community_supply, prohibido
         con export_third_country_zero_rated o export_assimilated_zero_rated
+      counterparty_identification_state_help: Estado miembro cuyo NIF-IVA utiliza
+        la contraparte (la Ley 37/1992 art. 25 exime por este dato, no por dónde esté
+        establecida)
       file_exclusive: --file no puede combinarse con un id de transacción ni --classification.
       file_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
@@ -4779,6 +4784,9 @@ cli:
         already_confirmed: '''{identifier}'' ya estaba confirmada como establecida
           en ''{scope}'' por ''{asserted_by}''; esta llamada no ha creado ninguna
           confirmación nueva y se mantiene la procedencia original.'
+        not_confirmed: No hay ningún establecimiento confirmado para '{identifier}',
+          por lo que este peldaño no resuelve nada y un documento cuyo papel no sea
+          concluyente planteará la pregunta.
         nothing_to_withdraw: No había ningún establecimiento confirmado para '{identifier}',
           por lo que no se ha retirado nada y el almacén ya está en el estado solicitado.
     doclink:
@@ -4885,6 +4893,7 @@ cli:
       classified_by: Clasificado por
       counterparty: Contraparte
       counterparty_eu_member_state: Contraparte UE
+      counterparty_identification_state: Identificada a efectos de IVA en
       created_event_id: Evento bucket de creación
       currency: Moneda
       date: Fecha

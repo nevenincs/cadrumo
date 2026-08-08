@@ -1917,6 +1917,7 @@ cli:
         note_help: Mire alapozza a választ, saját szavaival. Rögzítjük, de soha nem
           használjuk fel.
         scope_help: Az áfa szempontjából irányadó terület, ahol az ügyfél letelepedett.
+        show_help: Mutassa meg az ügyfélhez megerősített letelepedést, ha van ilyen.
         tax_identifier_help: Az ügyfél adóazonosítója a bizonylaton nyomtatott formában.
         withdraw_help: Vonja vissza a megerősített letelepedést, kijelentve, hogy
           a korábbi válasz téves volt.
@@ -4598,6 +4599,9 @@ cli:
         IVA-előtagja (ISO 3166-1 alpha-2 kisbetűs, pl. de vagy xi); kötelező --iva-category
         intra_community_supply esetén, tiltott export_third_country_zero_rated vagy
         export_assimilated_zero_rated esetén.
+      counterparty_identification_state_help: Az a tagállam, amelynek közösségi adószámával
+        a partner kereskedik (a 37/1992. sz. törvény 25. cikke ez alapján mentesít,
+        nem a letelepedés helye alapján)
       file_exclusive: --file nem kombinálható tranzakció-azonosítóval vagy --classification
         értékkel.
       file_help: 'Egy CSV-fájl útvonala, amelynek oszlopai: transaction_id, classification[,
@@ -4693,6 +4697,9 @@ cli:
         already_confirmed: 'A(z) ''{identifier}'' letelepedését ''{asserted_by}''
           már megerősítette itt: ''{scope}''; ez a hívás nem hozott létre új megerősítést,
           és az eredeti forrásadat marad érvényben.'
+        not_confirmed: A(z) '{identifier}' esetében nincs megerősített letelepedés,
+          ezért ez a fokozat semmit nem dönt el, és egy nem egyértelmű bizonylat felveti
+          a kérdést.
         nothing_to_withdraw: A(z) '{identifier}' esetében nem volt megerősített letelepedés,
           ezért semmi nem került visszavonásra, és a tároló már a kért állapotban
           van.
@@ -4799,6 +4806,7 @@ cli:
       classified_by: Osztályozta
       counterparty: Szerződő fél
       counterparty_eu_member_state: EU-s szerződő fél
+      counterparty_identification_state: ÁFA-azonosítás helye
       created_event_id: Létrehozó bucket-esemény
       currency: Pénznem
       date: Dátum

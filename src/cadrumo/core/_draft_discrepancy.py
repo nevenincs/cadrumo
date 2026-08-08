@@ -93,6 +93,32 @@ class DraftDiscrepancyKind(StrEnum):
     about one figure, and confirming past it silently picks a side.
     """
 
+    DIRECTION_CONTRADICTED = "direction_contradicted"
+    """The document places the filer on the opposite side from the stated direction.
+
+    Two independent sources disagree about a binary fact. The operator's verb
+    supplied a direction; the document prints the filer's own tax identifier
+    inside the OTHER party's block. One of them is wrong, and which is not
+    decidable here -- the operator may have mistyped, or the reader may have
+    filed the identifier under the wrong party.
+
+    Blocking rather than advisory, and the distinction from the advisory
+    conditions is the population it fires on. A check earns an operator's
+    attention only if every firing is a genuine defect, so a condition that
+    fires across a large correct population belongs on the advisory channel.
+    This one cannot: it requires the document to positively place the filer on
+    the side the operator did not state, which no correct invoice does. The
+    single family where a taxpayer legitimately occupies both roles --
+    autoconsumo, Ley 37/1992 art. 9 -- never reaches this member, because a
+    document naming the filer as both parties settles no direction at all and
+    raises nothing.
+
+    And the cost of confirming through is not a doubtful figure but an inverted
+    record: a purchase filed as a sale reaches the counterparty totals of the
+    wrong informativa, where Modelo 347 and Modelo 349 are reconciled against
+    what the counterparty declared.
+    """
+
     POSTAL_CODE_UNREADABLE = "postal_code_unreadable"
     """A party's postal code field holds something that is not a postal code.
 
