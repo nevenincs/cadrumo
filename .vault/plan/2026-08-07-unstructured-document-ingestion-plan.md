@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:92f6ac71cb9414fcee10aae098b63ff2fe399711cc428213dc6ef28f449cc126'
+body_hash: 'sha256:82fbd1229da9467436a2de1d2a9963800731b76a05d44e71846617d03f57a179'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -351,6 +351,7 @@ Lands the review surface, the blocking-findings gate, assertion-shaped correctio
 - [x] `W09.P17.S200` - Map UNSUPPORTED_IVA_RATE in both total preflight mappings so an unsupported-year rate surfaces an operator-facing issue instead of raising KeyError, since both are bare dict lookups total by construction and the member ships unmapped; `src/cadrumo/application/ledger/_preflight.py`.
 - [x] `W09.P17.S201` - Make both preflight issue mappings total by construction against IvaLedgerAggregationIssueReason so a new enum member cannot ship unmapped, since two lanes renamed members of this one enum in a day and the first failure masked the second entirely; `src/cadrumo/application/ledger/_preflight.py`.
 - [x] `W09.P17.S202` - Finish the identification rename sweep the owning lane left open: the intracom preflight fixtures still express a counterparty COUNTRY where the check now reads an identification state, so they assert the wrong reason, and the four locale catalogues still carry the old domestic_counterparty_on_intra_community_transaction key with no new key present. Both need the owning lane's judgement, not a mechanical substitution; `src/cadrumo/application/ledger`.
+- [ ] `W09.P17.S203` - Source the alpha-3 correspondence for the widened country register, the half of the code-axis split that was never opened as its own row: nothing in this tree ships an alpha-2 to alpha-3 map and no dependency provides one, so the 78-entry table's alpha-3 column is hand-authored with no bundled authority and its header says so. Both legs must narrow together or a two-letter code establishes what its three-letter form does not, which is the asymmetry the seventh amendment closed. The source is a decision between a new dependency, a fetched and grounded registry file, and per-code verification against the AEAT ISO register already bundled in the Manual practico de Sociedades; `src/cadrumo/_data/registry`.
 
 ## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
 
