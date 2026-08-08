@@ -52,6 +52,7 @@ if TYPE_CHECKING:
         ManagerActionOutcome,
     )
     from ....application.auth import AuthConfigureResult
+    from ....application.live import FiledHistoryOnboardingRun
     from ....application.user_profile import CensalReconciliation, EffectiveFact, ProfileOverview
     from ....core import AuthProviderKind
     from ....domain.user_profile import ProfileFieldDefinition, ProfileSectionDefinition
@@ -341,6 +342,93 @@ def _split_divergences(
         target = cleared if fact is not None and fact.value is None else contested
         target.append(path)
     return tuple(cleared), tuple(contested)
+
+
+def filed_history_pull_all_action() -> ManagerAction:
+    """Pull this taxpayer's AEAT-declared filing history in one sweep.
+
+    Composes ``pull_filed_history`` -- discovery, bulk filed capture, IVA
+    wallet reconciliation and the notificaciones pull -- exactly as
+    ``aeat app live filed pull-all`` does, so the manager offers the same
+    capability the verb already ships rather than a second, thinner
+    implementation of it. Gated on the same auth-readiness predicate the
+    censal pull uses, for the same reason: the live navigation can push a
+    Cl@ve prompt to the operator's phone, and spending it on a sweep that
+    cannot authenticate is worse than saying so first.
+    """
+    from ....adapters.inbound.tui import ManagerAction
+
+    return ManagerAction(
+        key="filed-history-pull-all",
+        label=tr("flows.manager.action.filed_history_pull_all"),
+        label_key="flows.manager.action.filed_history_pull_all",
+        run=_run_filed_history_pull_all,
+    )
+
+
+def _run_filed_history_pull_all() -> ManagerActionOutcome:
+    """Run the history-onboarding sweep and report every stage's outcome.
+
+    Reads the same profile the discover and pull-all CLI verbs read, so a
+    profile that has not yet declared enough to derive an expectation grid
+    downgrades the report the same way the CLI does rather than refusing.
+    The sweep persists filed observations and reconciliation state of its
+    own accord; it writes no profile field, so the outcome carries no
+    rebuilt overview.
+    """
+    import asyncio
+
+    from ....adapters.inbound.tui import ManagerActionOutcome
+    from ....application.live import pull_filed_history
+    from ....application.wizard import load_active_taxpayer_profile
+    from ....application.workflow import workflow_state_repository
+    from ....core.config import load_settings
+    from ....core.errors import CadrumoError
+
+    unavailable = _censal_pull_unavailable()
+    if unavailable is not None:
+        return ManagerActionOutcome(message=unavailable)
+
+    try:
+        profile = load_active_taxpayer_profile(workflow_state_repository().load())
+    except CadrumoError:
+        profile = None
+
+    output_root = load_settings().cadrumo_filed_declarations_dir
+    run = asyncio.run(pull_filed_history(output_root=output_root, profile=profile))
+    return ManagerActionOutcome(message=_filed_history_pull_all_summary(run))
+
+
+def _filed_history_pull_all_summary(run: FiledHistoryOnboardingRun) -> str:
+    """Report what the sweep found, in the operator's terms.
+
+    Counts rather than a completeness fraction, for the reason the run
+    model itself carries none: part of the walked grid comes from AEAT's
+    own offered option list, whose scoping to this NIF is unconfirmed, so a
+    ratio over it would read as coverage while resting on a denominator
+    that may say nothing about this taxpayer. The prose denominator note
+    the run already carries says what was actually measured, and is
+    appended verbatim rather than re-derived.
+    """
+    refused = len(run.refused_pairs)
+    parts = [
+        tr(
+            "flows.manager.action.filed_history_pull_all_done",
+            captured=run.captured_count,
+            refused=refused,
+            iva_wallet_status=run.iva_wallet_status,
+            notificaciones_status=run.notificaciones_status,
+        ),
+    ]
+    if refused:
+        parts.append(
+            tr(
+                "flows.manager.action.filed_history_pull_all_refused",
+                pairs=", ".join(f"{pair.modelo}/{pair.ejercicio}" for pair in run.refused_pairs),
+            ),
+        )
+    parts.append(run.denominator_note)
+    return " ".join(parts)
 
 
 def export_action() -> ManagerAction:
@@ -1207,6 +1295,7 @@ def manager_actions() -> tuple[ManagerAction, ...]:
         certificate_action(),
         passphrase_action(),
         censal_pull_action(),
+        filed_history_pull_all_action(),
         add_row_action(),
         export_action(),
     )
@@ -1217,6 +1306,7 @@ __all__ = [
     "censal_pull_action",
     "certificate_action",
     "export_action",
+    "filed_history_pull_all_action",
     "manager_actions",
     "passphrase_action",
 ]

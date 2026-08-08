@@ -27,17 +27,17 @@ import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
 from dev.docs.pagefind_inject import SearchRecordProjection, materialise_search_records
+from dev.docs.terminology._query_aliases import (
+    QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
+    QueryAliasAuthority,
+    QueryAliasEntry,
+)
 from dev.docs.terminology._resolution import (
     ChunkHit,
     GroundingSurface,
     ResolutionResult,
     TargetResolver,
     resolve_chunk_hits,
-)
-from dev.docs.terminology._rung2_query_authority import (
-    QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
-    Rung2QueryAliasAuthority,
-    Rung2QueryAliasEntry,
 )
 from dev.docs.terminology._search_record import SearchRecordKind
 from dev.docs.terminology._sweep import (
@@ -197,11 +197,11 @@ def test_run_sweep_uses_explicit_alias_authority_for_the_same_pipeline(
     proves the authority is threaded through enumeration rather than copied
     into a separate mapping path.
     """
-    authority = Rung2QueryAliasAuthority(
+    authority = QueryAliasAuthority(
         schema_version=QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
         authority_version=2,
         entries=(
-            Rung2QueryAliasEntry(
+            QueryAliasEntry(
                 concept_id="prorrata",
                 language=OutputLanguage.EN,
                 query="pro-rata",

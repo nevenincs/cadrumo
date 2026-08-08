@@ -79,7 +79,7 @@ invoice is the operator, whose territory is a profile fact resolved by
 counterparty's scope is ever sought on the paper.
 
 See Also:
-    :func:`~application.ledger.resolve_counterparty_establishment`
+    :func:`~application.ledger.resolve_confirmed_counterparty_facts`
         The fourth rung, and the store an operator's answer persists into.
     :class:`~application.ledger.DeclaredFacts`
         The one channel a resolved scope reaches the criteria assembly through.
@@ -114,9 +114,9 @@ from ...domain.iva import (
 # declared-fact channel below is owned there too.
 from ._classification_assembly import DeclaredFact, names_spain
 from ._counterparty_establishment import (
+    ConfirmedCounterpartyFactsRepository,
     CounterpartyEstablishmentContradiction,
-    CounterpartyEstablishmentRepository,
-    resolve_counterparty_establishment,
+    resolve_confirmed_counterparty_facts,
 )
 
 if TYPE_CHECKING:
@@ -642,7 +642,7 @@ def resolve_counterparty_establishment_scope(
     regime_legend: str | None = None,
     charged_iva_rates: tuple[Decimal, ...] = (),
     on_date: date | None = None,
-    repository: CounterpartyEstablishmentRepository | None = None,
+    repository: ConfirmedCounterpartyFactsRepository | None = None,
 ) -> CounterpartyEstablishment:
     """Resolve where a counterparty is established, or settle nothing and say so.
 
@@ -725,7 +725,7 @@ def resolve_counterparty_establishment_scope(
             registration_conflict=conflict,
         )
 
-    remembered = resolve_counterparty_establishment(
+    remembered = resolve_confirmed_counterparty_facts(
         bucket_id=bucket_id,
         tax_identifier=tax_identifier,
         country_code=country_code,
@@ -806,7 +806,7 @@ def resolve_draft_counterparty_establishment(
     bucket_id: str,
     draft: InvoiceDraft,
     kind: InvoiceKind,
-    repository: CounterpartyEstablishmentRepository | None = None,
+    repository: ConfirmedCounterpartyFactsRepository | None = None,
 ) -> CounterpartyEstablishment:
     """Route a read document's COUNTERPARTY into the ladder, by direction.
 

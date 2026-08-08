@@ -1,6 +1,6 @@
 """Encrypted-boundary roundtrip for the counterparty establishment store.
 
-A :class:`~application.ledger.CounterpartyEstablishmentFact` is the answer to a
+A :class:`~application.ledger.ConfirmedCounterpartyFacts` is the answer to a
 question the operator was asked once and will never be asked again for that
 counterparty, so the record has to come back exactly as it went in. A dropped
 ``territorial_scope`` would not read as corruption downstream -- it would read as
@@ -25,7 +25,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage import (
-    LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE,
+    LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE,
     SensitivityClass,
 )
 from ....adapters.persistence.storage.sql import SecureObjectRepository
@@ -33,8 +33,8 @@ from ....core import ClassifierInputSource
 from ....domain.iva import EUMemberState, IvaTerritorialScope
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._counterparty_establishment import (
-    CounterpartyEstablishmentFact,
-    CounterpartyEstablishmentRepository,
+    ConfirmedCounterpartyFacts,
+    ConfirmedCounterpartyFactsRepository,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -54,7 +54,7 @@ def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepositor
     return runtime_profile.repository
 
 
-def _fully_populated_fact() -> CounterpartyEstablishmentFact:
+def _fully_populated_fact() -> ConfirmedCounterpartyFacts:
     """Build a fact whose defaultable fields all carry non-default values.
 
     ``note`` defaults to the empty string, and it is the field a
@@ -74,7 +74,7 @@ def _fully_populated_fact() -> CounterpartyEstablishmentFact:
     default here to leave in place -- the fixture states it, and the persisted
     payload carries it.
     """
-    return CounterpartyEstablishmentFact.create(
+    return ConfirmedCounterpartyFacts.create(
         tax_identifier="B12345674",
         territorial_scope=IvaTerritorialScope.ES_CANARIAS,
         asserted_by="operator@example.test",
@@ -89,11 +89,11 @@ def test_establishment_fact_roundtrips_through_encrypted_storage(
 ) -> None:
     """Save, load through a FRESH handle, assert strict model equality."""
     original = _fully_populated_fact()
-    CounterpartyEstablishmentRepository(objects=secure_objects).save(original)
+    ConfirmedCounterpartyFactsRepository(objects=secure_objects).save(original)
 
     # A fresh repository handle: the record is genuinely re-read from storage
     # rather than returned from state the writing handle still held.
-    loaded = CounterpartyEstablishmentRepository(objects=secure_objects).load(original.counterparty_key)
+    loaded = ConfirmedCounterpartyFactsRepository(objects=secure_objects).load(original.counterparty_key)
 
     assert loaded == original
     assert loaded is not None
@@ -119,14 +119,14 @@ def test_persisted_fact_stripped_of_its_territory_is_refused_at_load(
     roundtrip above would prove nothing.
     """
     original = _fully_populated_fact()
-    repository = CounterpartyEstablishmentRepository(objects=secure_objects)
+    repository = ConfirmedCounterpartyFactsRepository(objects=secure_objects)
     repository.save(original)
 
     record = secure_objects.load(
-        LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.namespace,
+        LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.namespace,
         original.counterparty_key,
         expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.schema_version,
+        max_supported_version=LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.schema_version,
     )
     assert record is not None
     envelope = json.loads(record.payload.decode("utf-8"))
@@ -137,7 +137,7 @@ def test_persisted_fact_stripped_of_its_territory_is_refused_at_load(
 
     def _rewrite(payload: dict[str, object]) -> None:
         secure_objects.save(
-            namespace=LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.namespace,
+            namespace=LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.namespace,
             object_key=original.counterparty_key,
             classification=record.classification,
             schema_version=record.schema_version,
@@ -149,13 +149,13 @@ def test_persisted_fact_stripped_of_its_territory_is_refused_at_load(
     # surgery must still load, or a refusal below could come from the surgery
     # rather than from the missing field.
     _rewrite(envelope)
-    assert CounterpartyEstablishmentRepository(objects=secure_objects).load(original.counterparty_key) is not None
+    assert ConfirmedCounterpartyFactsRepository(objects=secure_objects).load(original.counterparty_key) is not None
 
     del stored["territorial_scope"]
     _rewrite(envelope)
 
     with pytest.raises(ValidationError):
-        CounterpartyEstablishmentRepository(objects=secure_objects).load(original.counterparty_key)
+        ConfirmedCounterpartyFactsRepository(objects=secure_objects).load(original.counterparty_key)
 
 
 def test_persisted_fact_relabelled_as_document_evidence_is_refused_at_load(
@@ -170,20 +170,20 @@ def test_persisted_fact_relabelled_as_document_evidence_is_refused_at_load(
     boundary rather than only at the constructor a caller may bypass.
     """
     original = _fully_populated_fact()
-    CounterpartyEstablishmentRepository(objects=secure_objects).save(original)
+    ConfirmedCounterpartyFactsRepository(objects=secure_objects).save(original)
 
     record = secure_objects.load(
-        LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.namespace,
+        LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.namespace,
         original.counterparty_key,
         expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.schema_version,
+        max_supported_version=LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.schema_version,
     )
     assert record is not None
     envelope = json.loads(record.payload.decode("utf-8"))
     envelope["payload"]["source"] = ClassifierInputSource.DOCUMENT_EVIDENCE.value
 
     secure_objects.save(
-        namespace=LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.namespace,
+        namespace=LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.namespace,
         object_key=original.counterparty_key,
         classification=record.classification,
         schema_version=record.schema_version,
@@ -192,7 +192,7 @@ def test_persisted_fact_relabelled_as_document_evidence_is_refused_at_load(
     )
 
     with pytest.raises(ValidationError):
-        CounterpartyEstablishmentRepository(objects=secure_objects).load(original.counterparty_key)
+        ConfirmedCounterpartyFactsRepository(objects=secure_objects).load(original.counterparty_key)
 
 
 def test_object_key_carries_no_tax_identifier(secure_objects: SecureObjectRepository) -> None:
@@ -204,7 +204,7 @@ def test_object_key_carries_no_tax_identifier(secure_objects: SecureObjectReposi
     forbids regardless of how convenient the lookup would be.
     """
     original = _fully_populated_fact()
-    CounterpartyEstablishmentRepository(objects=secure_objects).save(original)
+    ConfirmedCounterpartyFactsRepository(objects=secure_objects).save(original)
 
     assert original.counterparty_key != original.canonical_tax_identifier
     assert original.canonical_tax_identifier not in original.counterparty_key

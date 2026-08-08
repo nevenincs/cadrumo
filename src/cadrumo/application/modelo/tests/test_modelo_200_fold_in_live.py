@@ -60,7 +60,7 @@ or a binding retraction, would red the assertions.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -160,6 +160,14 @@ _PRIOR_DOTACIONES_NO_CUMPLIDO = Decimal("8000.00")
 _PRIOR_DOTACIONES_CUMPLIDO = Decimal("5000.00")
 
 _RELATION_PREFILL_SOURCE = "relation_prefill"
+#: The three cross-year self-carries whose absence declares a zero opening stock.
+_M200_SELF_CARRY_RELATIONS = frozenset(
+    {
+        "modelo-200-2024-rel-self-bin-pendiente-anterior",
+        "modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior",
+        "modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior",
+    },
+)
 
 
 @pytest.fixture
@@ -169,7 +177,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
         yield profile.repository
 
 
-def _seed_m200_sociedad_profile() -> None:
+def _seed_m200_sociedad_profile(*, activity_start_date: date | None = None) -> None:
     """Seed a legal-entity ``UserProfileRecord`` covering M200's six profile bindings.
 
     M200 declares six ``source = "profile"`` bindings. Four are consumed by
@@ -195,6 +203,11 @@ def _seed_m200_sociedad_profile() -> None:
             UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
             UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
             UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
+            *(
+                (UserProfileFact(path="censo.activity_start_date", value=activity_start_date),)
+                if activity_start_date is not None
+                else ()
+            ),
         ),
         created_at=_T0,
         updated_at=_T0,
@@ -266,6 +279,7 @@ def _calculate_m200(
     secure_objects: SecureObjectRepository,
     *,
     seed_m202_pagos: bool = True,
+    activity_start_date: date | None = None,
 ) -> BucketAggregationCalculationResult:
     """Run the live M200 calculate over the seeded bucket.
 
@@ -278,7 +292,7 @@ def _calculate_m200(
     The same-year M202 pagos relation (a direct formula operand) is seeded zero so
     the cuota-diferencial formula resolves; it is not the carry under test.
     """
-    _seed_m200_sociedad_profile()
+    _seed_m200_sociedad_profile(activity_start_date=activity_start_date)
     if seed_m202_pagos:
         _seed_zero_m202_pagos(obs_repo=CalculationObservationRepository())
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
@@ -363,16 +377,22 @@ def test_m200_self_cross_year_stock_carries_fire_on_live_calculate(
 def test_m200_self_carries_resolve_zero_with_no_prior_filing_on_live_calculate(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """Pin the CURRENT live behaviour of the M200 self-carries with NO prior filing.
+    """Pin the live behaviour of the M200 self-carries with NO prior filing.
 
     The BIN-stock and dotaciones-deterioro self-carries use the previous_filing
     observation-coverage semantics: with NO prior M200 in the store, the
-    ``filing_year_delta = -1`` carries resolve present-or-zero rather than raising
-    (a first-ejercicio filer simply has no prior stock to carry — a correct zero,
-    not a silent under-declaration of a declared prior). The live calculate
-    succeeds and all three opening-stock casillas resolve to zero. This documents
-    the status quo and fails loudly if it drifts. (xfail/skip-free per the testing
-    mandate.)
+    ``filing_year_delta = -1`` carries resolve present-or-zero rather than raising.
+    The live calculate succeeds and all three opening-stock casillas resolve to
+    zero. (xfail/skip-free per the testing mandate.)
+
+    The zero remains correct and this test's original premise remains valid for the
+    population it named: a first-ejercicio filer genuinely has no prior stock to
+    carry. What changed is that this persona declares NO activity start date, so
+    nothing upstream can establish that it is such a filer, and the carries now
+    also raise a non-blocking advisory. The advisory is asserted here rather than
+    the previously-empty diagnostics tuple — the values are unchanged, and the
+    silence was the only thing that moved. The sibling test below pins the
+    first-ejercicio case, where the advisory correctly does NOT fire.
     """
     result = _calculate_m200(secure_objects)
 
@@ -388,7 +408,56 @@ def test_m200_self_carries_resolve_zero_with_no_prior_filing_on_live_calculate(
         f"M200 {_FILING_YEAR} casilla 01495 with no prior 01499 must resolve zero; "
         f"got {values[_SALDO_INICIAL_CUMPLIDO]}"
     )
-    assert result.source_diagnostics == ()
+    # The zeros above are the whole of what an operator sees, and each one is a
+    # carry that would have reduced the liability. With no declared activity start
+    # nothing can rule out that this filer had the obligation, so each absent carry
+    # is named. Asserted by property — every self-carry relation appears — not by a
+    # diagnostic count.
+    advised = {
+        diagnostic.relation_id
+        for diagnostic in result.source_diagnostics
+        if diagnostic.source_kind == _RELATION_PREFILL_SOURCE
+    }
+    assert _M200_SELF_CARRY_RELATIONS <= advised, (
+        f"each absent self-carry must be advised; missing {_M200_SELF_CARRY_RELATIONS - advised}"
+    )
+    for diagnostic in result.source_diagnostics:
+        assert diagnostic.reason == "source_issue"
+
+
+def test_m200_first_ejercicio_filer_carries_zero_without_an_advisory(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A company in its FIRST ejercicio gets the same zeros and no carry advisory.
+
+    The control that keeps the advisory honest. A first-ejercicio filer has no
+    prior stock by construction, so naming its absent carries would be noise on the
+    whole population of new companies — the alert-fatigue failure that makes a
+    channel worthless on the day one divergence matters.
+
+    Nothing here suppresses the advisory specially. The declared activity start
+    puts the prior ejercicio before the company existed, and
+    ``_scoped_relation_source_requirements`` removes those source periods upstream
+    against the shared no-obligation predicate, so the requirements never reach the
+    advisory at all. The zeros are identical to the sibling test; only the silence
+    differs, and it differs because of a declared fact rather than a special case.
+    """
+    result = _calculate_m200(secure_objects, activity_start_date=date(_FILING_YEAR, 1, 1))
+
+    values = result.revision.casilla_values
+    assert Decimal(values[_BIN_PENDIENTE_INICIO]) == Decimal("0")
+    assert Decimal(values[_SALDO_INICIAL_NO_CUMPLIDO]) == Decimal("0")
+    assert Decimal(values[_SALDO_INICIAL_CUMPLIDO]) == Decimal("0")
+
+    advised = {
+        diagnostic.relation_id
+        for diagnostic in result.source_diagnostics
+        if diagnostic.source_kind == _RELATION_PREFILL_SOURCE
+    }
+    assert not (_M200_SELF_CARRY_RELATIONS & advised), (
+        "a first-ejercicio filer has no prior stock, so its self-carries must not be advised; "
+        f"got {_M200_SELF_CARRY_RELATIONS & advised}"
+    )
 
 
 def test_m200_missing_m202_relation_becomes_unresolved_advisory_on_live_calculate(

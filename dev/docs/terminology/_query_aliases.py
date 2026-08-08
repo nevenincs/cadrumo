@@ -1,9 +1,15 @@
-"""Strict, build-time authority for additional Rung-2 query aliases.
+"""Strict, build-time authority for additional search query aliases.
 
 The Handbook owns the user-facing terminology and its existing query forms.
-This module owns only the separately reviewed aliases admitted to the Rung-2
-closed vocabulary.  It deliberately contains no embeddings, retrieval output,
-or runtime search code.
+This module owns only the separately reviewed aliases admitted to the closed
+query vocabulary the sweep runs, which produces the committed relevance
+mapping that boosts LEXICAL results.  It contains no embeddings, retrieval
+output, or runtime search code, and never did -- it outlived the semantic tier
+it was first written beside.
+
+The on-disk authority keeps its published ``schema_version`` string: that value
+identifies a reviewed data artefact, and renaming a schema id to tidy a
+vocabulary would invalidate the file it names.
 """
 
 from __future__ import annotations
@@ -28,10 +34,10 @@ from ..terminology_handbook._errors import TerminologyLoadError
 __all__ = [
     "QUERY_ALIAS_AUTHORITY_RELPATH",
     "QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION",
+    "QueryAliasAuthority",
     "QueryAliasAuthorityError",
     "QueryAliasAuthorityProvenance",
-    "Rung2QueryAliasAuthority",
-    "Rung2QueryAliasEntry",
+    "QueryAliasEntry",
     "build_query_alias_authority_provenance",
     "load_query_alias_authority",
     "query_alias_authority_path",
@@ -61,7 +67,7 @@ class QueryAliasAuthorityError(TerminologyLoadError):
     """Raised when the committed Rung-2 alias authority is unusable."""
 
 
-class Rung2QueryAliasEntry(BaseModel):
+class QueryAliasEntry(BaseModel):
     """One independently reviewed alias admitted to the closed vocabulary."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -93,25 +99,25 @@ class Rung2QueryAliasEntry(BaseModel):
         return value
 
 
-class Rung2QueryAliasAuthority(BaseModel):
+class QueryAliasAuthority(BaseModel):
     """Versioned, ratified-only authority for additional Rung-2 aliases."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     schema_version: Literal["cadrumo.docs-search.rung2-query-aliases.v1"]
     authority_version: PositiveInt
-    entries: tuple[Rung2QueryAliasEntry, ...] = Field(default=())
+    entries: tuple[QueryAliasEntry, ...] = Field(default=())
 
     @field_validator("entries", mode="before")
     @classmethod
     def _parse_entries(cls, value: object) -> object:
         if isinstance(value, list):
             items = cast(list[object], value)
-            return tuple(Rung2QueryAliasEntry.model_validate(item) for item in items)
+            return tuple(QueryAliasEntry.model_validate(item) for item in items)
         return value
 
     @model_validator(mode="after")
-    def _require_canonical_order_and_unique_aliases(self) -> Rung2QueryAliasAuthority:
+    def _require_canonical_order_and_unique_aliases(self) -> QueryAliasAuthority:
         keys = tuple(_entry_sort_key(entry) for entry in self.entries)
         if len(keys) != len(set(keys)):
             raise ValueError("Rung-2 query alias authority contains duplicate entries")
@@ -141,7 +147,7 @@ def query_alias_authority_path() -> Path:
     return bundled_path(*QUERY_ALIAS_AUTHORITY_RELPATH.parts[3:])
 
 
-def load_query_alias_authority(path: Path | None = None) -> Rung2QueryAliasAuthority:
+def load_query_alias_authority(path: Path | None = None) -> QueryAliasAuthority:
     """Load and validate the committed alias authority from raw JSON."""
     target = path if path is not None else query_alias_authority_path()
     try:
@@ -151,7 +157,7 @@ def load_query_alias_authority(path: Path | None = None) -> Rung2QueryAliasAutho
     _repository_relative_path(_REPO_ROOT, target)
     try:
         payload = json.loads(raw.decode(_UTF_8))
-        return Rung2QueryAliasAuthority.model_validate(payload)
+        return QueryAliasAuthority.model_validate(payload)
     except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
         raise QueryAliasAuthorityError(f"{target}: query alias authority is invalid: {exc}") from exc
 
@@ -159,7 +165,7 @@ def load_query_alias_authority(path: Path | None = None) -> Rung2QueryAliasAutho
 def build_query_alias_authority_provenance(
     path: Path | None = None,
     *,
-    authority: Rung2QueryAliasAuthority | None = None,
+    authority: QueryAliasAuthority | None = None,
 ) -> QueryAliasAuthorityProvenance:
     """Build raw-byte source identity for the committed authority."""
     target = path if path is not None else query_alias_authority_path()
@@ -183,7 +189,7 @@ def build_query_alias_authority_provenance(
 
 
 def validate_query_alias_authority(
-    authority: Rung2QueryAliasAuthority,
+    authority: QueryAliasAuthority,
     *,
     handbook: TerminologyHandbook,
     canonical_queries: Iterable[tuple[str, OutputLanguage, str]],
@@ -195,7 +201,7 @@ def validate_query_alias_authority(
     than recreated here.  That keeps one owner for Handbook query enumeration
     and avoids an import cycle when the sweep later consumes this authority.
     """
-    if type(authority) is not Rung2QueryAliasAuthority:
+    if type(authority) is not QueryAliasAuthority:
         raise QueryAliasAuthorityError("Rung-2 query alias authority must be the validated authority model")
     if authority.schema_version != QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION:
         raise QueryAliasAuthorityError("Rung-2 query alias authority has an unsupported schema version")
@@ -228,7 +234,7 @@ def validate_query_alias_authority(
         seen_surface_keys.add(surface_key)
 
 
-def _entry_sort_key(entry: Rung2QueryAliasEntry) -> tuple[str, str, str]:
+def _entry_sort_key(entry: QueryAliasEntry) -> tuple[str, str, str]:
     return (entry.concept_id, entry.language.value, _normalise_query(entry.query))
 
 

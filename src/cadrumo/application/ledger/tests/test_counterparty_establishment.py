@@ -40,14 +40,14 @@ from .._classification_assembly import (
 )
 from .._classifier_inputs import ClassifierInputs
 from .._counterparty_establishment import (
+    ConfirmedCounterpartyFacts,
+    ConfirmedCounterpartyFactsInputError,
+    ConfirmedCounterpartyFactsRepository,
     CounterpartyEstablishmentConflictError,
-    CounterpartyEstablishmentFact,
-    CounterpartyEstablishmentInputError,
-    CounterpartyEstablishmentRepository,
-    counterparty_establishment_key,
-    forget_counterparty_establishment,
-    record_counterparty_establishment,
-    resolve_counterparty_establishment,
+    confirmed_counterparty_facts_key,
+    forget_confirmed_counterparty_facts,
+    record_confirmed_counterparty_facts,
+    resolve_confirmed_counterparty_facts,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -65,18 +65,18 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 
 @pytest.fixture
-def repository(runtime_profile: TestRuntimeProfile) -> CounterpartyEstablishmentRepository:
-    return CounterpartyEstablishmentRepository(objects=runtime_profile.repository)
+def repository(runtime_profile: TestRuntimeProfile) -> ConfirmedCounterpartyFactsRepository:
+    return ConfirmedCounterpartyFactsRepository(objects=runtime_profile.repository)
 
 
 def _confirm(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
     *,
     tax_identifier: str = _SUPPLIER_CIF,
     scope: IvaTerritorialScope = IvaTerritorialScope.ES_CANARIAS,
     note: str = "",
-) -> CounterpartyEstablishmentFact:
-    return record_counterparty_establishment(
+) -> ConfirmedCounterpartyFacts:
+    return record_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=tax_identifier,
         territorial_scope=scope,
@@ -94,7 +94,7 @@ def _confirm(
 
 @pytest.mark.parametrize("scope", list(IvaTerritorialScope))
 def test_an_empty_store_never_answers_with_any_territory(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
     scope: IvaTerritorialScope,
 ) -> None:
     """No member of the enum is reachable from an empty store.
@@ -104,7 +104,7 @@ def test_an_empty_store_never_answers_with_any_territory(
     invisible, and the sweep joins a new member on the day it is declared rather
     than on the day someone remembers this test.
     """
-    resolution = resolve_counterparty_establishment(
+    resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_SUPPLIER_CIF,
         repository=repository,
@@ -116,7 +116,7 @@ def test_an_empty_store_never_answers_with_any_territory(
 
 
 def test_the_bare_cif_domestic_invoice_resolves_to_nothing(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """The commonest ingested document, and it must produce no territory at all.
 
@@ -124,7 +124,7 @@ def test_the_bare_cif_domestic_invoice_resolves_to_nothing(
     shape the ladder was ruled for. Nothing here may resolve to the mainland,
     and nothing may resolve to anything else either.
     """
-    resolution = resolve_counterparty_establishment(
+    resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_SUPPLIER_CIF,
         country_code=None,
@@ -138,13 +138,13 @@ def test_the_bare_cif_domestic_invoice_resolves_to_nothing(
 
 
 def test_a_document_printing_no_identifier_resolves_to_nothing(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """No identifier means no entity to have remembered anything about."""
     _confirm(repository)
 
     for absent in (None, "", "   "):
-        resolution = resolve_counterparty_establishment(
+        resolution = resolve_confirmed_counterparty_facts(
             bucket_id=_BUCKET_ID,
             tax_identifier=absent,
             repository=repository,
@@ -154,7 +154,7 @@ def test_a_document_printing_no_identifier_resolves_to_nothing(
 
 
 def test_an_unverifiable_identifier_has_no_key_and_finds_nothing(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """A reading that does not verify addresses no record, in either direction.
 
@@ -162,26 +162,26 @@ def test_an_unverifiable_identifier_has_no_key_and_finds_nothing(
     one page would collide under it and share one entity's territory with
     another.
     """
-    assert counterparty_establishment_key("B99999999") is None
+    assert confirmed_counterparty_facts_key("B99999999") is None
     # The bare body, genuinely without its prefix. This assertion previously
     # named that property while passing `DE123456789`, which CARRIES its prefix
     # -- so it locked in the absent-country-means-Spain default it was written
     # to describe, and read as protection while doing the opposite.
-    assert counterparty_establishment_key("123456789") is None, "a foreign number without its prefix is not one"
+    assert confirmed_counterparty_facts_key("123456789") is None, "a foreign number without its prefix is not one"
 
-    resolution = resolve_counterparty_establishment(
+    resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier="B99999999",
         repository=repository,
     )
     assert resolution.fact is None
 
-    with pytest.raises(CounterpartyEstablishmentInputError):
+    with pytest.raises(ConfirmedCounterpartyFactsInputError):
         _confirm(repository, tax_identifier="B99999999")
 
 
 def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_country(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """An intra-community VAT number states its own country, so it has an identity.
 
@@ -196,13 +196,13 @@ def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_count
     Spanish control below is what keeps this from being read as "any string now
     verifies".
     """
-    key = counterparty_establishment_key("SE556677889901")
+    key = confirmed_counterparty_facts_key("SE556677889901")
     assert key is not None
-    assert key == counterparty_establishment_key("SE 556677889901"), "separators are not identity"
+    assert key == confirmed_counterparty_facts_key("SE 556677889901"), "separators are not identity"
 
     stored = _confirm(repository, tax_identifier="SE556677889901", scope=IvaTerritorialScope.EU_MEMBER)
     assert stored.counterparty_key == key
-    resolution = resolve_counterparty_establishment(
+    resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier="SE556677889901",
         repository=repository,
@@ -213,7 +213,7 @@ def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_count
     # A country the caller SUPPLIES still decides, so a stated country that
     # disagrees with the printed prefix stays a refusal rather than being
     # silently resolved in the prefix's favour.
-    assert counterparty_establishment_key("SE556677889901", country_code="ES") is None
+    assert confirmed_counterparty_facts_key("SE556677889901", country_code="ES") is None
 
 
 # --------------------------------------------------------------------------
@@ -223,7 +223,7 @@ def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_count
 
 @pytest.mark.parametrize("printed", ["B12345674", "ESB12345674", "B-1234567-4", "  b12345674 "])
 def test_every_printed_spelling_of_one_identifier_finds_the_one_record(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
     printed: str,
 ) -> None:
     """The confirmation is remembered against the entity, not against a string.
@@ -234,7 +234,7 @@ def test_every_printed_spelling_of_one_identifier_finds_the_one_record(
     """
     _confirm(repository)
 
-    resolution = resolve_counterparty_establishment(
+    resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=printed,
         repository=repository,
@@ -245,12 +245,12 @@ def test_every_printed_spelling_of_one_identifier_finds_the_one_record(
 
 
 def test_a_different_counterparty_is_not_answered_by_this_one(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """A fact confirmed about one entity must not leak onto another."""
     _confirm(repository)
 
-    resolution = resolve_counterparty_establishment(
+    resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_OTHER_CIF,
         repository=repository,
@@ -260,7 +260,7 @@ def test_a_different_counterparty_is_not_answered_by_this_one(
 
 
 def test_the_remembered_fact_is_attributed_to_the_operator(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """A classification standing on this must record that a person said so.
 
@@ -271,7 +271,7 @@ def test_the_remembered_fact_is_attributed_to_the_operator(
     stored = _confirm(repository)
 
     assert stored.source is ClassifierInputSource.OPERATOR_ASSERTION
-    resolution = resolve_counterparty_establishment(
+    resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_SUPPLIER_CIF,
         repository=repository,
@@ -288,7 +288,7 @@ def test_a_document_sourced_fact_is_refused_by_the_model() -> None:
     the population it protects.
     """
     with pytest.raises(ValueError, match="confirmed by an operator"):
-        CounterpartyEstablishmentFact(
+        ConfirmedCounterpartyFacts(
             counterparty_key="a" * 64,
             canonical_tax_identifier=_SUPPLIER_CIF,
             territorial_scope=IvaTerritorialScope.ES_CANARIAS,
@@ -304,12 +304,12 @@ def test_a_document_sourced_fact_is_refused_by_the_model() -> None:
 
 
 def test_agreeing_printed_evidence_corroborates_rather_than_contradicts(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """Evidence matching the confirmed fact leaves the fact usable."""
     _confirm(repository)
 
-    resolution = resolve_counterparty_establishment(
+    resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_SUPPLIER_CIF,
         evidenced_scope=IvaTerritorialScope.ES_CANARIAS,
@@ -322,7 +322,7 @@ def test_agreeing_printed_evidence_corroborates_rather_than_contradicts(
 
 
 def test_disagreeing_printed_evidence_yields_a_contradiction_and_no_fact(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """Neither side wins, and the caller is left nothing to proceed on.
 
@@ -333,7 +333,7 @@ def test_disagreeing_printed_evidence_yields_a_contradiction_and_no_fact(
     """
     _confirm(repository)
 
-    resolution = resolve_counterparty_establishment(
+    resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_SUPPLIER_CIF,
         evidenced_scope=IvaTerritorialScope.EU_MEMBER,
@@ -352,7 +352,7 @@ def test_disagreeing_printed_evidence_yields_a_contradiction_and_no_fact(
 
 
 def test_reconfirming_the_same_territory_is_a_no_op(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """A retry returns the stored record, unre-stamped.
 
@@ -361,7 +361,7 @@ def test_reconfirming_the_same_territory_is_a_no_op(
     must not be told.
     """
     first = _confirm(repository, note="confirmed by telephone")
-    again = record_counterparty_establishment(
+    again = record_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier="ESB-1234567-4",
         territorial_scope=IvaTerritorialScope.ES_CANARIAS,
@@ -377,7 +377,7 @@ def test_reconfirming_the_same_territory_is_a_no_op(
 
 
 def test_asserting_a_different_territory_refuses_rather_than_overwriting(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """A silent overwrite would reclassify every invoice already derived under the old answer."""
     _confirm(repository)
@@ -389,7 +389,7 @@ def test_asserting_a_different_territory_refuses_rather_than_overwriting(
     assert IvaTerritorialScope.ES_CANARIAS.value in message
     assert IvaTerritorialScope.ES_MAINLAND.value in message
 
-    resolution = resolve_counterparty_establishment(
+    resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_SUPPLIER_CIF,
         repository=repository,
@@ -399,18 +399,18 @@ def test_asserting_a_different_territory_refuses_rather_than_overwriting(
 
 
 def test_withdrawing_a_fact_is_the_route_to_correcting_one(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """Correction is a deliberate two-step, so retracting an answer is visible."""
     _confirm(repository)
 
-    assert forget_counterparty_establishment(
+    assert forget_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_SUPPLIER_CIF,
         repository=repository,
     )
     assert (
-        resolve_counterparty_establishment(
+        resolve_confirmed_counterparty_facts(
             bucket_id=_BUCKET_ID,
             tax_identifier=_SUPPLIER_CIF,
             repository=repository,
@@ -421,7 +421,7 @@ def test_withdrawing_a_fact_is_the_route_to_correcting_one(
     corrected = _confirm(repository, scope=IvaTerritorialScope.ES_MAINLAND)
     assert corrected.territorial_scope is IvaTerritorialScope.ES_MAINLAND
 
-    assert not forget_counterparty_establishment(
+    assert not forget_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_OTHER_CIF,
         repository=repository,
@@ -434,7 +434,7 @@ def test_withdrawing_a_fact_is_the_route_to_correcting_one(
 
 
 def test_the_remembered_fact_unblocks_the_criteria_assembly(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """The pair that shows the row's purpose: blocked without it, derived with it.
 
@@ -460,7 +460,7 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
         inputs=ClassifierInputs(),
         declared=DeclaredFacts(
             customer_scope=filer_side,
-            issuer_scope=resolve_counterparty_establishment(
+            issuer_scope=resolve_confirmed_counterparty_facts(
                 bucket_id=_BUCKET_ID,
                 tax_identifier=_SUPPLIER_CIF,
                 repository=repository,
@@ -472,7 +472,7 @@ def test_the_remembered_fact_unblocks_the_criteria_assembly(
 
     _confirm(repository)
 
-    remembered = resolve_counterparty_establishment(
+    remembered = resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_SUPPLIER_CIF,
         repository=repository,

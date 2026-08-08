@@ -59,7 +59,7 @@ from typing import TYPE_CHECKING, ClassVar, override
 from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.storage import (
-    LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE,
+    LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE,
     SecureBoundRepository,
     SensitivityClass,
 )
@@ -74,16 +74,16 @@ if TYPE_CHECKING:
     from typing import Self
 
 __all__ = [
+    "ConfirmedCounterpartyFacts",
+    "ConfirmedCounterpartyFactsInputError",
+    "ConfirmedCounterpartyFactsRepository",
+    "ConfirmedCounterpartyResolution",
     "CounterpartyEstablishmentConflictError",
     "CounterpartyEstablishmentContradiction",
-    "CounterpartyEstablishmentFact",
-    "CounterpartyEstablishmentInputError",
-    "CounterpartyEstablishmentRepository",
-    "CounterpartyEstablishmentResolution",
-    "counterparty_establishment_key",
-    "forget_counterparty_establishment",
-    "record_counterparty_establishment",
-    "resolve_counterparty_establishment",
+    "confirmed_counterparty_facts_key",
+    "forget_confirmed_counterparty_facts",
+    "record_confirmed_counterparty_facts",
+    "resolve_confirmed_counterparty_facts",
 ]
 
 _COUNTERPARTY_KEY_LENGTH: int = 64
@@ -103,7 +103,7 @@ def _canonical_identity_token(value: str, *, country_code: str | None) -> str | 
     return canonical_identity_token(value, country_code=country_code)
 
 
-class CounterpartyEstablishmentInputError(CadrumoError):
+class ConfirmedCounterpartyFactsInputError(CadrumoError):
     """Raised when a counterparty establishment assertion is not storable."""
 
 
@@ -111,7 +111,7 @@ class CounterpartyEstablishmentConflictError(CadrumoError):
     """Raised when an assertion contradicts the one already confirmed for a counterparty."""
 
 
-def counterparty_establishment_key(
+def confirmed_counterparty_facts_key(
     tax_identifier: str,
     *,
     country_code: str | None = None,
@@ -155,7 +155,7 @@ def counterparty_establishment_key(
     return sha256_hex(token.encode())
 
 
-class CounterpartyEstablishmentFact(BaseModel):
+class ConfirmedCounterpartyFacts(BaseModel):
     """One confirmed statement of where a counterparty is established.
 
     Attributes:
@@ -248,12 +248,12 @@ class CounterpartyEstablishmentFact(BaseModel):
         """Build a fact for one counterparty, refusing an identifier with no identity.
 
         Raises:
-            CounterpartyEstablishmentInputError: When the identifier does not
+            ConfirmedCounterpartyFactsInputError: When the identifier does not
                 verify, so there is nothing stable to key the fact to.
         """
         token = _canonical_identity_token(tax_identifier, country_code=country_code)
         if token is None:
-            raise CounterpartyEstablishmentInputError(
+            raise ConfirmedCounterpartyFactsInputError(
                 f"the identifier {tax_identifier!r} does not verify, so an establishment fact "
                 f"confirmed against it could not be found again on a later document",
                 context={"tax_identifier": tax_identifier, "country_code": country_code},
@@ -291,12 +291,12 @@ class CounterpartyEstablishmentFact(BaseModel):
         return DeclaredFact[EUMemberState](value=self.identification_state, source=self.source)
 
 
-class CounterpartyEstablishmentRepository(SecureBoundRepository[CounterpartyEstablishmentFact]):
+class ConfirmedCounterpartyFactsRepository(SecureBoundRepository[ConfirmedCounterpartyFacts]):
     """Encrypted profile-local store of confirmed counterparty establishment facts.
 
     The namespace, its :class:`SensitivityClass`, schema version and object-key
     contract all come from
-    :data:`~adapters.persistence.storage.LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE`,
+    :data:`~adapters.persistence.storage.LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE`,
     so the record's confidentiality tier is declared once beside the namespace
     rather than restated here.
     Writes go through the shared single-writer envelope primitive rather than
@@ -304,13 +304,13 @@ class CounterpartyEstablishmentRepository(SecureBoundRepository[CounterpartyEsta
     other bucket-scoped record gets.
     """
 
-    namespace: ClassVar[str] = LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.namespace
-    sensitivity: ClassVar[SensitivityClass] = LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.sensitivity
-    schema_version: ClassVar[int] = LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.schema_version
-    payload_type: ClassVar[type[BaseModel]] = CounterpartyEstablishmentFact
+    namespace: ClassVar[str] = LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.namespace
+    sensitivity: ClassVar[SensitivityClass] = LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.schema_version
+    payload_type: ClassVar[type[BaseModel]] = ConfirmedCounterpartyFacts
 
     @override
-    def extract_identifier(self, payload: CounterpartyEstablishmentFact) -> str:
+    def extract_identifier(self, payload: ConfirmedCounterpartyFacts) -> str:
         return payload.counterparty_key
 
 
@@ -340,7 +340,7 @@ class CounterpartyEstablishmentContradiction(BaseModel):
     detail: str = Field(min_length=1)
 
 
-class CounterpartyEstablishmentResolution(BaseModel):
+class ConfirmedCounterpartyResolution(BaseModel):
     """What the store had to say about one counterparty on one document.
 
     Three states, and "probably" is not one of them: a usable fact, a
@@ -375,15 +375,15 @@ class CounterpartyEstablishmentResolution(BaseModel):
 def _repository(
     *,
     bucket_id: str,
-    repository: CounterpartyEstablishmentRepository | None,
-) -> CounterpartyEstablishmentRepository:
+    repository: ConfirmedCounterpartyFactsRepository | None,
+) -> ConfirmedCounterpartyFactsRepository:
     """Return the injected repository, or one bound to ``bucket_id``."""
     if repository is not None:
         return repository
-    return CounterpartyEstablishmentRepository(bucket_id=bucket_id)
+    return ConfirmedCounterpartyFactsRepository(bucket_id=bucket_id)
 
 
-def record_counterparty_establishment(
+def record_confirmed_counterparty_facts(
     *,
     bucket_id: str,
     tax_identifier: str,
@@ -393,8 +393,8 @@ def record_counterparty_establishment(
     country_code: str | None = None,
     note: str = "",
     asserted_at: datetime | None = None,
-    repository: CounterpartyEstablishmentRepository | None = None,
-) -> CounterpartyEstablishmentFact:
+    repository: ConfirmedCounterpartyFactsRepository | None = None,
+) -> ConfirmedCounterpartyFacts:
     """Confirm where a counterparty is established, once, for every later document.
 
     Idempotent on the whole record rather than on the key alone. A retry
@@ -434,12 +434,12 @@ def record_counterparty_establishment(
         The persisted fact, or the pre-existing one on an idempotent retry.
 
     Raises:
-        CounterpartyEstablishmentInputError: When the identifier does not verify.
+        ConfirmedCounterpartyFactsInputError: When the identifier does not verify.
         CounterpartyEstablishmentConflictError: When a different territory, or
             a different identification, is already confirmed for this
             counterparty.
     """
-    fact = CounterpartyEstablishmentFact.create(
+    fact = ConfirmedCounterpartyFacts.create(
         tax_identifier=tax_identifier,
         territorial_scope=territorial_scope,
         asserted_by=asserted_by,
@@ -495,12 +495,12 @@ def record_counterparty_establishment(
     return fact
 
 
-def forget_counterparty_establishment(
+def forget_confirmed_counterparty_facts(
     *,
     bucket_id: str,
     tax_identifier: str,
     country_code: str | None = None,
-    repository: CounterpartyEstablishmentRepository | None = None,
+    repository: ConfirmedCounterpartyFactsRepository | None = None,
 ) -> bool:
     """Withdraw a confirmed establishment fact, returning whether one was held.
 
@@ -508,20 +508,20 @@ def forget_counterparty_establishment(
     from making one: withdrawing states that the earlier answer was wrong, which
     an overwrite would have performed silently.
     """
-    key = counterparty_establishment_key(tax_identifier, country_code=country_code)
+    key = confirmed_counterparty_facts_key(tax_identifier, country_code=country_code)
     if key is None:
         return False
     return _repository(bucket_id=bucket_id, repository=repository).delete(key)
 
 
-def resolve_counterparty_establishment(
+def resolve_confirmed_counterparty_facts(
     *,
     bucket_id: str,
     tax_identifier: str | None,
     country_code: str | None = None,
     evidenced_scope: IvaTerritorialScope | None = None,
-    repository: CounterpartyEstablishmentRepository | None = None,
-) -> CounterpartyEstablishmentResolution:
+    repository: ConfirmedCounterpartyFactsRepository | None = None,
+) -> ConfirmedCounterpartyResolution:
     """Ask the store what is confirmed about this counterparty, and never guess.
 
     The last rung of the establishment ladder. It is consulted after the printed
@@ -549,17 +549,17 @@ def resolve_counterparty_establishment(
         The fact, a contradiction, or neither.
     """
     if not (tax_identifier or "").strip():
-        return CounterpartyEstablishmentResolution()
-    key = counterparty_establishment_key(tax_identifier or "", country_code=country_code)
+        return ConfirmedCounterpartyResolution()
+    key = confirmed_counterparty_facts_key(tax_identifier or "", country_code=country_code)
     if key is None:
-        return CounterpartyEstablishmentResolution()
+        return ConfirmedCounterpartyResolution()
 
     stored = _repository(bucket_id=bucket_id, repository=repository).load(key)
     if stored is None:
-        return CounterpartyEstablishmentResolution()
+        return ConfirmedCounterpartyResolution()
 
     if evidenced_scope is not None and evidenced_scope is not stored.territorial_scope:
-        return CounterpartyEstablishmentResolution(
+        return ConfirmedCounterpartyResolution(
             contradiction=CounterpartyEstablishmentContradiction(
                 counterparty_key=stored.counterparty_key,
                 canonical_tax_identifier=stored.canonical_tax_identifier,
@@ -574,7 +574,7 @@ def resolve_counterparty_establishment(
             ),
         )
 
-    return CounterpartyEstablishmentResolution(
+    return ConfirmedCounterpartyResolution(
         fact=stored.declared_fact,
         identification=stored.declared_identification,
     )

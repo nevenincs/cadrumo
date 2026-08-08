@@ -588,3 +588,46 @@ async def test_an_action_owning_nothing_leaves_every_row_editable(tmp_path) -> N
 
             assert len(app.screen_stack) > settled, "no ownership declared means the row edits as usual"
             app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_the_action_row_never_paints_past_a_floor_terminal(tmp_path) -> None:
+    """Several real-length action labels must stay reachable at 80 columns.
+
+    The action row used to be a plain ``Horizontal``, which never wraps
+    and never scrolls: a fifth or sixth action with a real AEAT-length
+    label (``Rellenar con los datos censales de la AEAT``) painted past
+    column 80 and was permanently unreachable regardless of terminal
+    width -- even the widest fixture in this suite's sibling visual gates
+    (200 columns) did not clear it. Stacking the actions vertically keeps
+    every one of them, however many or however long, inside the surface's
+    one sanctioned overflow mechanism: the page's own vertical scroll.
+    """
+    from .. import ManagerAction, ManagerActionOutcome
+
+    long_labels = [
+        "Certificado digital",
+        "Cambiar la contraseña",
+        "Rellenar con los datos censales de la AEAT",
+        "Traer historial de declaraciones de la AEAT",
+        "Añadir una fila",
+        "Exportar copia cifrada",
+    ]
+    actions = [
+        ManagerAction(key=f"a{i}", label=label, run=lambda: ManagerActionOutcome(message="x"))
+        for i, label in enumerate(long_labels)
+    ]
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+
+        app = ProfileManagerApp(_live_overview(), persist=_persist, actions=actions)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            offenders = [
+                f"{type(widget).__name__}{widget.region}"
+                for widget in app.screen.walk_children()
+                if widget.display and widget.region.right > 80
+            ]
+            assert not offenders, f"painted past the side edge of an 80-column terminal: {offenders}"
+            app.exit(None)

@@ -93,13 +93,19 @@ class Modelo184MemberRow(BaseModel):
     row_type: Literal["miembro"] = "miembro"
     nif: _NifStr
     nombre: _NameStr = Field(default="")
-    # Required, and deliberately not defaulted to Spain. The row is built from
-    # operator-supplied key-value pairs, so a default is an INFERENCE about a
-    # fact the operator did not state -- and it inferred the one value that
-    # makes the row domestic. A foreign member or a cross-border related-party
-    # operation silently declared as Spanish is the direction AEAT reconciles
-    # against what the counterparty itself declared.
-    pais: _IsoCountryCode
+    # Optional, and deliberately not defaulted to Spain. A default is an
+    # INFERENCE about a fact nobody stated, and it inferred the one value that
+    # makes the member domestic -- a foreign member silently declared as
+    # Spanish is the direction AEAT reconciles against what that member itself
+    # declared.
+    #
+    # Absent rather than required because the profile-driven producer has no
+    # country to supply: the atribucion socio facts carry nif, name, share and
+    # base and no territory at all. Demanding one here would refuse every
+    # profile-resolved row while naming a fact no surface records, which is a
+    # refusal nobody can answer. Recording the socio's country on the profile
+    # is the fix that would let this be required.
+    pais: _IsoCountryCode | None = None
     porcentaje: Decimal = Field(description="Share percentage in the entity [0, 100]")
     importe: Decimal = Field(description="Attributed income/base imponible in EUR")
 

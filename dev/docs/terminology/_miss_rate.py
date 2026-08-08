@@ -20,7 +20,6 @@ from cadrumo.core.resources import bundled_path
 from ._sweep import SweepResult
 
 __all__ = [
-    "DEFAULT_RUNG2_MISS_RATE_THRESHOLD",
     "TOP_RESULTS_BOUND",
     "HeldOutCaseKind",
     "HeldOutQueryCase",
@@ -28,9 +27,6 @@ __all__ = [
     "MissRateEvaluation",
     "MissRateRow",
     "MissReason",
-    "Rung2Adjudication",
-    "Rung2Decision",
-    "adjudicate_rung2",
     "evaluate_held_out_miss_rate",
     "held_out_query_set_path",
     "load_committed_relevance",
@@ -41,7 +37,6 @@ __all__ = [
 # The materiality line: implement rung 2 only when MORE THAN ten percent of
 # held-out queries miss the top-five shipped results. The gate default IS
 # that accepted number; never loosen it ad hoc.
-DEFAULT_RUNG2_MISS_RATE_THRESHOLD = 0.10
 #: A hit counts only within the top five shipped results.
 TOP_RESULTS_BOUND = 5
 _UTF_8: Final[str] = "utf-8"
@@ -54,14 +49,6 @@ class MissReason(StrEnum):
     QUERY_NOT_COMPILED = "query-not-compiled"
     NO_TARGETS = "no-targets"
     TARGET_MISMATCH = "target-mismatch"
-
-
-class Rung2Decision(StrEnum):
-    """Measured decision for the static term-embedding matrix."""
-
-    KEEP_DEFERRED = "keep-deferred"
-    REFRESH_RELEVANCE_FIRST = "refresh-relevance-first"
-    IMPLEMENT_RUNG2 = "implement-rung-2"
 
 
 class HeldOutCaseKind(StrEnum):
@@ -126,17 +113,6 @@ class MissRateEvaluation(BaseModel):
     compiled_failed_query_count: int = Field(ge=0)
     compiled_targeted_query_count: int = Field(ge=0)
     rows: tuple[MissRateRow, ...] = Field(min_length=1)
-
-
-class Rung2Adjudication(BaseModel):
-    """Rung-2 decision derived from a miss-rate evaluation."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-    decision: Rung2Decision
-    miss_rate_threshold: float = Field(ge=0.0, le=1.0)
-    measured_miss_rate: float = Field(ge=0.0, le=1.0)
-    rationale: str = Field(min_length=20, max_length=800)
 
 
 def relevance_mapping_path() -> Path:
@@ -248,42 +224,6 @@ def _evaluate_out_of_sample(case: HeldOutQueryCase, relevance: SweepResult) -> M
         reason=MissReason.HIT if matched is not None else MissReason.TARGET_MISMATCH,
         matched_record_id=matched,
         target_count=len(target_ids),
-    )
-
-
-def adjudicate_rung2(
-    evaluation: MissRateEvaluation,
-) -> Rung2Adjudication:
-    """Adjudicate rung 2 against the ratified materiality line."""
-
-    if evaluation.compiled_failed_query_count > 0:
-        return Rung2Adjudication(
-            decision=Rung2Decision.REFRESH_RELEVANCE_FIRST,
-            miss_rate_threshold=DEFAULT_RUNG2_MISS_RATE_THRESHOLD,
-            measured_miss_rate=evaluation.miss_rate,
-            rationale=(
-                "The compiled relevance artifact records failed sweep queries, so misses first require a full "
-                "relevance refresh from the resident RAG service before they can justify a static embedding matrix."
-            ),
-        )
-    if evaluation.miss_rate > DEFAULT_RUNG2_MISS_RATE_THRESHOLD:
-        return Rung2Adjudication(
-            decision=Rung2Decision.IMPLEMENT_RUNG2,
-            miss_rate_threshold=DEFAULT_RUNG2_MISS_RATE_THRESHOLD,
-            measured_miss_rate=evaluation.miss_rate,
-            rationale=(
-                "The relevance artifact is not marked degraded and the held-out miss-rate exceeds the accepted "
-                "threshold, so rung-2 static term embeddings are justified."
-            ),
-        )
-    return Rung2Adjudication(
-        decision=Rung2Decision.KEEP_DEFERRED,
-        miss_rate_threshold=DEFAULT_RUNG2_MISS_RATE_THRESHOLD,
-        measured_miss_rate=evaluation.miss_rate,
-        rationale=(
-            "The relevance artifact is not marked degraded and the held-out miss-rate is within the accepted "
-            "threshold, so rung-2 static term embeddings remain deferred."
-        ),
     )
 
 

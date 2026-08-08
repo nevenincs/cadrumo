@@ -66,6 +66,7 @@ _EXPECTED_KEY = {
     "censal-pull": "flows.manager.action.censal_pull_no_provider",
     "certificate": "flows.manager.action.abandoned",
     "export": "flows.manager.action.abandoned",
+    "passphrase": "flows.manager.action.abandoned",
 }
 """What each action concludes on a freshly registered profile.
 

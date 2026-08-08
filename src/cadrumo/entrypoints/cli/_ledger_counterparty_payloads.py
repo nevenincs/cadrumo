@@ -14,7 +14,7 @@ distinctions are on the envelope: the fact carries its own provenance, and the
 retry is named by an info notice rather than by a field.
 
 See Also:
-    :class:`~application.ledger.CounterpartyEstablishmentFact`
+    :class:`~application.ledger.ConfirmedCounterpartyFacts`
         The persisted record these payloads project.
     :class:`~domain.iva.IvaTerritorialScope`
         The closed territory axis the answer settles.
@@ -34,7 +34,7 @@ from ...domain.iva import EUMemberState, IvaTerritorialScope
 class CounterpartyEstablishmentPayload(OutputSchema):
     """One confirmed statement of where a counterparty is established.
 
-    Mirrors :class:`~application.ledger.CounterpartyEstablishmentFact`. The
+    Mirrors :class:`~application.ledger.ConfirmedCounterpartyFacts`. The
     canonical identifier travels beside the key because the key alone is a
     digest: an operator reading the payload back has to be able to see whom the
     record is about, and a caller reconciling two answers has to compare

@@ -58,7 +58,7 @@ def _vinculada_from_operator_input(**overrides: str) -> Modelo232VinculadaRow:
     string would make each case pass on the amount rather than the catalogue.
     """
     return Modelo232VinculadaRow.model_validate(
-        {"row_type": "vinculada", "nif": "A12345678", "importe": Decimal("1"), **overrides},
+        {"row_type": "vinculada", "nif": "A12345678", "pais": "ES", "importe": Decimal("1"), **overrides},
     )
 
 
@@ -81,7 +81,7 @@ _M232_INVALID_CASES = (
     ),
     _ValidationErrorCase(
         "blank-nif",
-        lambda: Modelo232VinculadaRow(nif="   ", importe=Decimal("1")),
+        lambda: Modelo232VinculadaRow(pais="ES", nif="   ", importe=Decimal("1")),
     ),
     # Off-catalogue codes arrive the way the CLI delivers them -- as untyped
     # `--row vinculada k=v` text through `model_validate` -- so these exercise
@@ -150,9 +150,13 @@ class TestModelo184MemberRow:
                 "12345678A",
             ),
             (
+                # A member row stating no country carries NONE, not Spain. The
+                # field defaulted to "ES", so a foreign member whose country
+                # nobody supplied was declared domestic -- and this case
+                # asserted that default, which made the defect the contract.
                 Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("30"), importe=Decimal("0")),
                 "pais",
-                "ES",
+                None,
             ),
             (
                 Modelo184MemberRow(nif="12345678A", porcentaje=Decimal("30"), importe=Decimal("0")),
@@ -232,16 +236,16 @@ class TestModelo232VinculadaRow:
     def test_vinculada_row_scalar_contracts(self) -> None:
         """Scalar normalization and defaults use the real model."""
         cases = (
-            (Modelo232VinculadaRow(nif="a12345678", importe=Decimal("1")), "nif", "A12345678"),
-            (Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1")), "pais", "ES"),
-            (Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1")), "metodo", ""),
-            (Modelo232VinculadaRow(nif="A12345678", metodo="1a", importe=Decimal("1")), "metodo", "1A"),
+            (Modelo232VinculadaRow(pais="ES", nif="a12345678", importe=Decimal("1")), "nif", "A12345678"),
+            (Modelo232VinculadaRow(pais="ES", nif="A12345678", importe=Decimal("1")), "pais", "ES"),
+            (Modelo232VinculadaRow(pais="ES", nif="A12345678", importe=Decimal("1")), "metodo", ""),
+            (Modelo232VinculadaRow(pais="ES", nif="A12345678", metodo="1a", importe=Decimal("1")), "metodo", "1A"),
             (
-                Modelo232VinculadaRow(nif="A12345678", tipo_vinculacion="d", importe=Decimal("1")),
+                Modelo232VinculadaRow(pais="ES", nif="A12345678", tipo_vinculacion="d", importe=Decimal("1")),
                 "tipo_vinculacion",
                 "D",
             ),
-            (Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1")), "tipo_operacion", ""),
+            (Modelo232VinculadaRow(pais="ES", nif="A12345678", importe=Decimal("1")), "tipo_operacion", ""),
         )
         for row, field_name, expected in cases:
             assert getattr(row, field_name) == expected, field_name
@@ -261,12 +265,12 @@ class TestModelo232VinculadaRow:
         Grounded against M232 form constraint (each operación is declared
         separately per counterparty + operation kind + method).
         """
-        row1 = Modelo232VinculadaRow(nif="A12345678", tipo_operacion="01", importe=Decimal("50000"))
-        row2 = Modelo232VinculadaRow(nif="B87654321", tipo_operacion="05", importe=Decimal("30000"))
+        row1 = Modelo232VinculadaRow(pais="ES", nif="A12345678", tipo_operacion="01", importe=Decimal("50000"))
+        row2 = Modelo232VinculadaRow(pais="ES", nif="B87654321", tipo_operacion="05", importe=Decimal("30000"))
         assert row1.importe != row2.importe
         assert row1.nif != row2.nif
         # Modify row1's importe → row2 unchanged
-        row1_modified = Modelo232VinculadaRow(nif="A12345678", tipo_operacion="01", importe=Decimal("75000"))
+        row1_modified = Modelo232VinculadaRow(pais="ES", nif="A12345678", tipo_operacion="01", importe=Decimal("75000"))
         assert row1_modified.importe == Decimal("75000")
         assert row2.importe == Decimal("30000")
 
@@ -280,7 +284,7 @@ def test_row_models_are_frozen() -> None:
     """Row models are immutable once validated."""
     cases = (
         (Modelo184MemberRow(nif="55555555E", porcentaje=Decimal("50"), importe=Decimal("0")), "99999999Z"),
-        (Modelo232VinculadaRow(nif="A12345678", importe=Decimal("1")), "Z99999999"),
+        (Modelo232VinculadaRow(pais="ES", nif="A12345678", importe=Decimal("1")), "Z99999999"),
     )
     for row, replacement_nif in cases:
         with pytest.raises((ValidationError, TypeError)):

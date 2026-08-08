@@ -22,10 +22,7 @@ from typing import Annotated, Final
 
 import typer
 
-from ._miss_rate import (
-    adjudicate_rung2,
-    evaluate_held_out_miss_rate,
-)
+from ._miss_rate import evaluate_held_out_miss_rate
 
 _UTF_8: Final[str] = "utf-8"
 
@@ -42,13 +39,11 @@ def write_miss_rate_report(
     *,
     note: str,
 ) -> None:
-    """Evaluate, adjudicate, and write the canonical report JSON."""
+    """Evaluate the held-out miss rate and write the canonical report JSON."""
     evaluation = evaluate_held_out_miss_rate()
-    adjudication = adjudicate_rung2(evaluation)
     payload = {
         "note": note,
         "evaluation": json.loads(evaluation.model_dump_json()),
-        "rung2": json.loads(adjudication.model_dump_json()),
     }
     output.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
@@ -62,15 +57,11 @@ def report(
     output: Annotated[Path, typer.Option("--output", help="Report JSON path.")],
     note: Annotated[str, typer.Option("--note", help="One-line report provenance note.")],
 ) -> None:
-    """Write the miss-rate report and print the adjudicated decision."""
+    """Write the miss-rate report and print the measured result."""
     write_miss_rate_report(output, note=note)
     evaluation = evaluate_held_out_miss_rate()
-    adjudication = adjudicate_rung2(evaluation)
     typer.echo(
-        f"cases {evaluation.case_count}  hits {evaluation.hit_count}  "
-        f"miss-rate {evaluation.miss_rate:.4f}  "
-        f"threshold {adjudication.miss_rate_threshold}  "
-        f"decision {adjudication.decision.value}"
+        f"cases {evaluation.case_count}  hits {evaluation.hit_count}  miss-rate {evaluation.miss_rate:.4f}"
     )
     typer.echo(f"wrote miss-rate report -> {output}")
 

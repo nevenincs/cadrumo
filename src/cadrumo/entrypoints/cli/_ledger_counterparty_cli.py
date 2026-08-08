@@ -34,9 +34,9 @@ confirmation. The caller is told through an info notice and a ``recorded`` flag
 rather than being left to infer it from an unchanged timestamp.
 
 See Also:
-    :func:`~application.ledger.record_counterparty_establishment`
+    :func:`~application.ledger.record_confirmed_counterparty_facts`
         The single writer this delegates to, which owns the idempotency rules.
-    :func:`~application.ledger.resolve_counterparty_establishment`
+    :func:`~application.ledger.resolve_confirmed_counterparty_facts`
         The ladder rung that reads what this writes.
 """
 
@@ -60,7 +60,7 @@ from ._ledger_counterparty_payloads import (
 )
 
 if TYPE_CHECKING:
-    from ...application.ledger import CounterpartyEstablishmentFact
+    from ...application.ledger import ConfirmedCounterpartyFacts
 
 counterparty_app = typer.Typer(
     name="counterparty",
@@ -77,7 +77,7 @@ def register_counterparty_commands(app: typer.Typer) -> None:
     app.add_typer(counterparty_app, name="counterparty")
 
 
-def _payload(fact: CounterpartyEstablishmentFact) -> CounterpartyEstablishmentPayload:
+def _payload(fact: ConfirmedCounterpartyFacts) -> CounterpartyEstablishmentPayload:
     """Project the persisted fact onto its wire shape."""
     return CounterpartyEstablishmentPayload(
         counterparty_key=fact.counterparty_key,
@@ -162,9 +162,9 @@ def counterparty_confirm(
 ) -> None:
     """Persist the operator's answer, or report the stored one unchanged."""
     from ...application.ledger import (
+        ConfirmedCounterpartyFactsInputError,
         CounterpartyEstablishmentConflictError,
-        CounterpartyEstablishmentInputError,
-        record_counterparty_establishment,
+        record_confirmed_counterparty_facts,
     )
 
     bucket_id = _counterparty_bucket_id()
@@ -177,7 +177,7 @@ def counterparty_confirm(
     # stamp on a retry precisely so a repeat cannot look like a fresh answer.
     stamped_at = now()
     try:
-        fact = record_counterparty_establishment(
+        fact = record_confirmed_counterparty_facts(
             bucket_id=bucket_id,
             tax_identifier=tax_identifier,
             territorial_scope=scope,
@@ -187,7 +187,7 @@ def counterparty_confirm(
             note=note,
             asserted_at=stamped_at,
         )
-    except CounterpartyEstablishmentInputError as exc:
+    except ConfirmedCounterpartyFactsInputError as exc:
         raise _bad(
             tr(
                 "cli.ledger.counterparty.errors.unverifiable_identifier",
@@ -278,10 +278,10 @@ def counterparty_withdraw(
     ),
 ) -> None:
     """Remove a confirmed fact so a corrected one can be confirmed."""
-    from ...application.ledger import counterparty_establishment_key, forget_counterparty_establishment
+    from ...application.ledger import confirmed_counterparty_facts_key, forget_confirmed_counterparty_facts
 
     bucket_id = _counterparty_bucket_id()
-    if counterparty_establishment_key(tax_identifier, country_code=country_code) is None:
+    if confirmed_counterparty_facts_key(tax_identifier, country_code=country_code) is None:
         raise _bad(
             tr(
                 "cli.ledger.counterparty.errors.unverifiable_identifier",
@@ -292,7 +292,7 @@ def counterparty_withdraw(
                 ),
             ),
         )
-    withdrawn = forget_counterparty_establishment(
+    withdrawn = forget_confirmed_counterparty_facts(
         bucket_id=bucket_id,
         tax_identifier=tax_identifier,
         country_code=country_code,
@@ -384,9 +384,9 @@ def counterparty_show(
     nothing indicating that a confirm would refuse to use it -- the two surfaces
     diverging in exactly the case the verb exists for, invisibly.
     """
-    from ...application.ledger import resolve_counterparty_establishment
+    from ...application.ledger import resolve_confirmed_counterparty_facts
 
-    resolution = resolve_counterparty_establishment(
+    resolution = resolve_confirmed_counterparty_facts(
         bucket_id=_counterparty_bucket_id(),
         tax_identifier=tax_identifier,
         country_code=country_code,

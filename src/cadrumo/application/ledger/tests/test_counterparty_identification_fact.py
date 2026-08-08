@@ -29,11 +29,11 @@ import pytest
 from ....domain.iva import EUMemberState, IvaTerritorialScope
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._counterparty_establishment import (
+    ConfirmedCounterpartyFactsRepository,
     CounterpartyEstablishmentConflictError,
-    CounterpartyEstablishmentRepository,
-    forget_counterparty_establishment,
-    record_counterparty_establishment,
-    resolve_counterparty_establishment,
+    forget_confirmed_counterparty_facts,
+    record_confirmed_counterparty_facts,
+    resolve_confirmed_counterparty_facts,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -50,18 +50,18 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 
 @pytest.fixture
-def repository(runtime_profile: TestRuntimeProfile) -> CounterpartyEstablishmentRepository:
-    return CounterpartyEstablishmentRepository(objects=runtime_profile.repository)
+def repository(runtime_profile: TestRuntimeProfile) -> ConfirmedCounterpartyFactsRepository:
+    return ConfirmedCounterpartyFactsRepository(objects=runtime_profile.repository)
 
 
 def _confirm(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
     *,
     scope: IvaTerritorialScope = IvaTerritorialScope.ES_MAINLAND,
     identification_state: EUMemberState | None = None,
     note: str = "",
 ):
-    return record_counterparty_establishment(
+    return record_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_CIF,
         territorial_scope=scope,
@@ -73,15 +73,15 @@ def _confirm(
     )
 
 
-def _resolve(repository: CounterpartyEstablishmentRepository):
-    return resolve_counterparty_establishment(
+def _resolve(repository: ConfirmedCounterpartyFactsRepository):
+    return resolve_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_CIF,
         repository=repository,
     )
 
 
-def test_one_answer_serves_every_later_read(repository: CounterpartyEstablishmentRepository) -> None:
+def test_one_answer_serves_every_later_read(repository: ConfirmedCounterpartyFactsRepository) -> None:
     """The row's whole justification: asked once, answered for every document after.
 
     The establishment is Spanish and the identification German -- the divergent
@@ -98,7 +98,7 @@ def test_one_answer_serves_every_later_read(repository: CounterpartyEstablishmen
 
 
 def test_an_unanswered_identification_resolves_to_nothing(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """Absence is absence: a confirmed TERRITORY never supplies a registration.
 
@@ -115,7 +115,7 @@ def test_an_unanswered_identification_resolves_to_nothing(
 
 @pytest.mark.parametrize("scope", list(IvaTerritorialScope))
 def test_no_territory_ever_produces_an_identification(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
     scope: IvaTerritorialScope,
 ) -> None:
     """Swept across every member of the territory enum, not just a convenient one.
@@ -129,7 +129,7 @@ def test_no_territory_ever_produces_an_identification(
 
 
 def test_answering_the_identification_later_is_an_addition_not_a_conflict(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """A second question answered later must not read as overwriting the first.
 
@@ -154,7 +154,7 @@ def test_answering_the_identification_later_is_an_addition_not_a_conflict(
 
 
 def test_a_different_identification_refuses_and_names_both_values(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """Replacing a confirmed registration takes the withdraw path, like a territory."""
     _confirm(repository, identification_state=EUMemberState.DE)
@@ -171,7 +171,7 @@ def test_a_different_identification_refuses_and_names_both_values(
 
 
 def test_a_retry_omitting_the_identification_does_not_withdraw_it(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """The silent-erasure case, which is the one that would move money.
 
@@ -190,12 +190,12 @@ def test_a_retry_omitting_the_identification_does_not_withdraw_it(
 
 
 def test_withdrawing_removes_both_axes_together(
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """Withdrawal is about the entity, so it cannot leave half a record standing."""
     _confirm(repository, identification_state=EUMemberState.DE)
 
-    assert forget_counterparty_establishment(
+    assert forget_confirmed_counterparty_facts(
         bucket_id=_BUCKET_ID,
         tax_identifier=_CIF,
         repository=repository,
@@ -208,7 +208,7 @@ def test_withdrawing_removes_both_axes_together(
 
 def test_a_dropped_identification_on_disk_does_not_reload_as_an_answer(
     runtime_profile: TestRuntimeProfile,
-    repository: CounterpartyEstablishmentRepository,
+    repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """Anti-tautology proof for the new axis, keyed on inequality rather than refusal.
 
@@ -225,7 +225,7 @@ def test_a_dropped_identification_on_disk_does_not_reload_as_an_answer(
     import json
 
     from ....adapters.persistence.storage import (
-        LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE,
+        LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE,
         SensitivityClass,
     )
 
@@ -233,10 +233,10 @@ def test_a_dropped_identification_on_disk_does_not_reload_as_an_answer(
     objects = runtime_profile.repository
 
     record = objects.load(
-        LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.namespace,
+        LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.namespace,
         stored.counterparty_key,
         expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.schema_version,
+        max_supported_version=LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.schema_version,
     )
     assert record is not None
     envelope = json.loads(record.payload.decode("utf-8"))
@@ -246,7 +246,7 @@ def test_a_dropped_identification_on_disk_does_not_reload_as_an_answer(
 
     def _rewrite(payload: dict[str, object]) -> None:
         objects.save(
-            namespace=LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.namespace,
+            namespace=LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE.namespace,
             object_key=stored.counterparty_key,
             classification=record.classification,
             schema_version=record.schema_version,
@@ -255,13 +255,13 @@ def test_a_dropped_identification_on_disk_does_not_reload_as_an_answer(
         )
 
     _rewrite(envelope)
-    control = CounterpartyEstablishmentRepository(objects=objects).load(stored.counterparty_key)
+    control = ConfirmedCounterpartyFactsRepository(objects=objects).load(stored.counterparty_key)
     assert control == stored, "the surgery itself must be lossless, or the proof below is meaningless"
 
     del envelope["payload"]["identification_state"]
     _rewrite(envelope)
 
-    reloaded = CounterpartyEstablishmentRepository(objects=objects).load(stored.counterparty_key)
+    reloaded = ConfirmedCounterpartyFactsRepository(objects=objects).load(stored.counterparty_key)
     assert reloaded != stored, "a dropped identification re-defaulted silently: the boundary is tautological"
     assert reloaded is not None
     assert reloaded.identification_state is None

@@ -295,6 +295,7 @@ def test_m232_row_mapping_error_too_many_rows() -> None:
     )
 
     sample_row = Modelo232VinculadaRow(
+        pais="ES",
         nif="12345678A",
         tipo_vinculacion="A",
         tipo_operacion="01",

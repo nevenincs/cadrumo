@@ -44,8 +44,8 @@ from cadrumo.core.external_constants import OutputLanguage
 
 from ..terminology_handbook import TerminologyHandbook, load_terminology_handbook
 from ..terminology_handbook._enums import TermStatus
+from ._query_aliases import QueryAliasAuthority, load_query_alias_authority, validate_query_alias_authority
 from ._resolution import ChunkHit, GroundingSurface, TargetResolver, resolve_chunk_hits
-from ._rung2_query_authority import Rung2QueryAliasAuthority, load_query_alias_authority, validate_query_alias_authority
 from ._search_record import SearchRecordKind
 from ._unified_record import SearchRecord
 from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR, WrangledResult, read_clusters, wrangle
@@ -191,7 +191,7 @@ def enumerate_query_vocabulary(
     handbook: TerminologyHandbook | None = None,
     *,
     concept_ids: Iterable[str] | None = None,
-    query_alias_authority: Rung2QueryAliasAuthority | None = None,
+    query_alias_authority: QueryAliasAuthority | None = None,
 ) -> tuple[SweepQuery, ...]:
     """Enumerate the closed query vocabulary from the Handbook concepts.
 
@@ -457,7 +457,7 @@ def run_sweep(
     repo_root: Path | None = None,
     handbook: TerminologyHandbook | None = None,
     concept_ids: Iterable[str] | None = None,
-    query_alias_authority: Rung2QueryAliasAuthority | None = None,
+    query_alias_authority: QueryAliasAuthority | None = None,
     resolver: TargetResolver | None = None,
     search_record_projection: SearchRecordProjection | None = None,
     max_results: int = DEFAULT_MAX_RESULTS,

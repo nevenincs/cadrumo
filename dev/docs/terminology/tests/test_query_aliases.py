@@ -1,4 +1,4 @@
-"""Real-behaviour tests for the independent Rung-2 query authority."""
+"""Real-behaviour tests for the independent search query authority."""
 
 from __future__ import annotations
 
@@ -10,11 +10,11 @@ from pydantic import ValidationError
 
 from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
-from dev.docs.terminology._rung2_query_authority import (
+from dev.docs.terminology._query_aliases import (
     QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
+    QueryAliasAuthority,
     QueryAliasAuthorityError,
-    Rung2QueryAliasAuthority,
-    Rung2QueryAliasEntry,
+    QueryAliasEntry,
     build_query_alias_authority_provenance,
     load_query_alias_authority,
     query_alias_authority_path,
@@ -26,7 +26,7 @@ from dev.docs.terminology_handbook import load_terminology_handbook
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 
-def _entry(**updates: object) -> Rung2QueryAliasEntry:
+def _entry(**updates: object) -> QueryAliasEntry:
     data: dict[str, object] = {
         "concept_id": "prorrata",
         "language": OutputLanguage.ES,
@@ -37,17 +37,17 @@ def _entry(**updates: object) -> Rung2QueryAliasEntry:
         "reviewed_at": date(2026, 8, 6),
     }
     data.update(updates)
-    return Rung2QueryAliasEntry.model_validate(data)
+    return QueryAliasEntry.model_validate(data)
 
 
-def _authority(*entries: Rung2QueryAliasEntry, **updates: object) -> Rung2QueryAliasAuthority:
+def _authority(*entries: QueryAliasEntry, **updates: object) -> QueryAliasAuthority:
     data: dict[str, object] = {
         "schema_version": QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
         "authority_version": 1,
         "entries": entries,
     }
     data.update(updates)
-    return Rung2QueryAliasAuthority.model_validate(data)
+    return QueryAliasAuthority.model_validate(data)
 
 
 def _canonical_queries() -> tuple[tuple[str, OutputLanguage, str], ...]:
@@ -148,7 +148,7 @@ def test_authority_rejects_wrong_version_unratified_or_incomplete_rows(
             _authority(_entry(), schema_version="old")
     else:
         with pytest.raises(ValidationError, match=message):
-            Rung2QueryAliasEntry.model_validate(data)
+            QueryAliasEntry.model_validate(data)
 
 
 def test_authority_rejects_unknown_or_nonapproved_concepts() -> None:
@@ -188,7 +188,7 @@ def test_authority_rejects_held_out_aliases_and_surface_collisions() -> None:
 
 def test_authority_rejects_extra_fields_and_mutation() -> None:
     with pytest.raises(ValidationError):
-        Rung2QueryAliasAuthority.model_validate(
+        QueryAliasAuthority.model_validate(
             {
                 "schema_version": QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
                 "authority_version": 1,

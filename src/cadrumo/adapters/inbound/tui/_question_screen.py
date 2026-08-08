@@ -44,6 +44,7 @@ from ....application.flows import (
 from ....core.flows import DEFER_TOKEN, FlowWidgetKind
 from ....core.i18n import tr
 from ....core.parsing import parse_bool
+from ._confirm_screen import confirm_restart_dialog
 from ._theme import ContentScroll
 
 if TYPE_CHECKING:
@@ -417,7 +418,20 @@ class QuestionScreen(Screen[None]):
         self.flow_app.action_reset_current()
 
     def action_restart_flow(self) -> None:
-        self.flow_app.action_restart()
+        """Ask before wiping every answer; the engine transition itself is unconditional.
+
+        ``ctrl+r`` above resets one page and is left unguarded — its blast
+        radius is a single answer the operator just gave and can re-enter in
+        seconds. ``restart_flow`` wipes the whole walk, which on a long
+        setup flow can be dozens of committed pages, so it is the one
+        transition here that must not fire on a single, easily mis-struck
+        key chord with no way back.
+        """
+        self.app.push_screen(confirm_restart_dialog(), self._apply_restart_decision)
+
+    def _apply_restart_decision(self, confirmed: bool | None) -> None:
+        if confirmed:
+            self.flow_app.action_restart()
 
     def action_save_exit(self) -> None:
         self.flow_app.action_save_exit()

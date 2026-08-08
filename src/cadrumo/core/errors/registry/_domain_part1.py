@@ -547,7 +547,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger._counterparty_establishment.CounterpartyEstablishmentInputError",
+        "cadrumo.application.ledger._counterparty_establishment.ConfirmedCounterpartyFactsInputError",
         ErrorCode(
             code="REFUSED_LEDGER_COUNTERPARTY_ESTABLISHMENT_INPUT",
             category=ErrorCategory.REFUSED,

@@ -47,7 +47,7 @@ def _member_row() -> Modelo184MemberRow:
 
 
 def _vinculada_row() -> Modelo232VinculadaRow:
-    return Modelo232VinculadaRow(nif="22222222B", importe=Decimal("2000"))
+    return Modelo232VinculadaRow(pais="ES", nif="22222222B", importe=Decimal("2000"))
 
 
 def _operador_row() -> Modelo349OperadorRow:

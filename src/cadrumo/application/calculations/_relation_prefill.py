@@ -699,6 +699,65 @@ def _resolve_available_relation_values(
     return resolved
 
 
+def _absent_bound_carry_diagnostics(
+    *,
+    unresolved_relation_ids: frozenset[RelationId],
+    requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
+    relation_target_binding: Mapping[RelationId, BindingId],
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise on a bound carry whose source filing is absent, so the slot threads a zero.
+
+    Distinct from the orphaned-relation advisory in what it tells the operator.
+    An orphan reaches nothing; this one reaches a casilla, as a zero, and every
+    carry on this path reduces the amount owed — a prior instalment already paid,
+    a loss carried forward, an opening stock. So the zero does not look wrong. It
+    looks like a taxpayer who had no prior filing, and it declares more tax than
+    is owed.
+
+    The advisory is non-blocking, and it does not fire for a filer who genuinely
+    had no obligation: those source periods are scoped out upstream against the
+    declared activity start before any requirement reaches here.
+    """
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for relation_id in sorted(unresolved_relation_ids):
+        requirement = requirements_by_relation.get(relation_id)
+        binding_id = relation_target_binding.get(relation_id)
+        if requirement is None:
+            diagnostics.append(
+                CalculationSourceDiagnostic(
+                    reason="source_issue",
+                    source_kind="relation_prefill",
+                    resolver_id=resolver_id,
+                    binding_id=binding_id,
+                    relation_id=relation_id,
+                    message=(
+                        f"carry {relation_id!r} has no resolved source filing, so its bound casilla "
+                        "declares zero; a carry that reduces the amount owed is missing, which "
+                        "over-declares"
+                    ),
+                ),
+            )
+            continue
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind="relation_prefill",
+                resolver_id=resolver_id,
+                binding_id=binding_id,
+                relation_id=relation_id,
+                message=(
+                    f"carry {relation_id!r} found no modelo {requirement.source_modelo} "
+                    f"{requirement.filing_year} {','.join(requirement.periods)} filing in the local "
+                    f"store, so its bound casilla declares zero rather than the carried "
+                    f"{requirement.source_casilla_ids[0]}. That reduces no liability and therefore "
+                    "over-declares. Capture or file the source period, or enter the value by hand."
+                ),
+            ),
+        )
+    return tuple(diagnostics)
+
+
 def _formula_relation_ids(snapshot: RegistrySnapshot) -> frozenset[RelationId]:
     return frozenset(
         relation_id
@@ -832,17 +891,25 @@ class RelationPrefillSourceResolver:
             for item in relation_values.values
             if item.value is None and item.relation in formula_relation_ids
         )
-        # Narrow silent gap (no-silent-under-declaration): a declared relation
-        # that resolves to no value, is referenced by no formula, AND whose
-        # ``target_binding`` is NOT a declared binding on the revision produces
-        # neither a value, nor a materialised binding slot, nor a diagnostic — its
-        # absence reaches nothing observable. Surface a non-blocking advisory for
-        # exactly that orphaned case. A non-formula relation whose target_binding
-        # IS a declared binding still materialises an (absent/zero) slot the engine
-        # threads, which is the intended cold-start behaviour for the cross-modelo
-        # carries (M200/M202/M100), so it is deliberately NOT flagged here (and its
-        # unresolved-source detail is a debug breadcrumb, never operator-facing
-        # stderr, per aeat-cli-contract).
+        # Two non-formula silences, both advised (no-silent-under-declaration).
+        #
+        # An ORPHANED relation — one whose ``target_binding`` is not declared on
+        # the revision — produces no value, no slot and nothing observable, so its
+        # absence reaches nothing at all.
+        #
+        # A BOUND relation — one whose ``target_binding`` IS declared — is the
+        # subtler case and was previously left silent as "intended cold-start
+        # behaviour". It is advised now because cold start is not what the silence
+        # was protecting. A source period the taxpayer had no obligation for is
+        # already removed upstream by ``_scoped_relation_source_requirements``
+        # against the declared activity start, so a genuine first-ejercicio filer's
+        # prior-year carries never reach this point. What the exclusion additionally
+        # silenced was the filer who DID have the obligation and whose filing is
+        # simply not in the store — and there the engine threads the absent slot as
+        # a zero, which reduces no liability and therefore over-declares.
+        #
+        # The two remain separate sets because their consequences differ: the
+        # orphan reaches nothing, the bound one reaches a casilla as a zero.
         declared_binding_ids = frozenset(binding.id for binding in snapshot.revision.bindings)
         relation_target_binding = {relation.id: relation.target_binding for relation in snapshot.revision.relations}
         unresolved_non_formula_relation_ids = frozenset(
@@ -851,6 +918,20 @@ class RelationPrefillSourceResolver:
             if item.value is None
             and item.relation not in formula_relation_ids
             and relation_target_binding.get(item.relation) not in declared_binding_ids
+        )
+        # Membership in ``requirements_by_relation`` is what makes this advisory
+        # safe, and it is load-bearing rather than incidental. That mapping is
+        # built from the SCOPED requirement set, so a source period the taxpayer
+        # had no obligation for has no entry at all. Testing ``value is None``
+        # alone would fire on every genuine first-ejercicio filer, because a
+        # scoped-out relation still appears in ``relation_values`` unresolved.
+        unresolved_bound_relation_ids = frozenset(
+            item.relation
+            for item in relation_values.values
+            if item.value is None
+            and item.relation not in formula_relation_ids
+            and item.relation in requirements_by_relation
+            and relation_target_binding.get(item.relation) in declared_binding_ids
         )
         resolved_relation_values = {item.relation: item.value for item in resolved if item.value is not None}
         # Materialise the resolved relation values into their declared
@@ -887,6 +968,12 @@ class RelationPrefillSourceResolver:
             + _unresolved_relation_diagnostics(
                 unresolved_relation_ids=unresolved_non_formula_relation_ids,
                 requirements_by_relation=requirements_by_relation,
+                resolver_id=self.resolver_id,
+            )
+            + _absent_bound_carry_diagnostics(
+                unresolved_relation_ids=unresolved_bound_relation_ids,
+                requirements_by_relation=requirements_by_relation,
+                relation_target_binding=relation_target_binding,
                 resolver_id=self.resolver_id,
             ),
             provenance=tuple(

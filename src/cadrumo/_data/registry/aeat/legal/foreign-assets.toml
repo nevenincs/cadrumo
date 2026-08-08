@@ -74,7 +74,15 @@ notes = "RGAT art 42 ter: obligacion de informar sobre valores, derechos, seguro
 required_text = [
     "valores",
     "rentas",
-    "extranjero",
+    "extranjero",    # Apartado 7 (what counts as a `dato` for each asset class), the last
+    # operative provision, at 95% of the article and above the amendment
+    # block. The three phrases above are single words from the article TITLE:
+    # any document mentioning valores, rentas and extranjero satisfies them,
+    # so they identified neither the article nor its completeness. This is the
+    # Modelo 720 foreign-asset obligation, where a truncated excerpt would
+    # ground a reporting duty on a heading. Verified complete against live
+    # BOE: apartados 1-7 on both sides.
+    "también tendrá la consideración de dato cada uno de los saldos a que se refieren el último párrafo",
 ]
 
 [legal."rd-1065-2007:art-54-bis"]

@@ -6878,13 +6878,23 @@ flows:
       export_done: Encrypted copy written to %{destination}.
       export_passphrase: Passphrase that will protect the copy
       failed: The operation did not finish.
+      filed_history_pull_all: Pull AEAT filing history
+      filed_history_pull_all_done: '{captured} filing(s) captured, {refused} refused;
+        IVA wallet: {iva_wallet_status}; notificaciones: {notificaciones_status}.'
+      filed_history_pull_all_refused: 'These pairs could not be read and were NOT
+        reported as empty: {pairs}. Re-run to retry.'
+      passphrase: Change passphrase
+      passphrase_confirm: Confirm new passphrase
+      passphrase_current: Current passphrase
+      passphrase_done: Passphrase changed.
+      passphrase_mismatch: The new passphrase and its confirmation do not match.
+      passphrase_new: New passphrase
+      passphrase_wrong_current: That is not the current passphrase.
       provider:
         certificate: Electronic certificate
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
       working: Running {action}...
-      passphrase: 'Change passphrase'
-      passphrase_current: 'Current passphrase'
     actions:
       section: Actions
     column:
@@ -7033,6 +7043,12 @@ flows:
     button_back: Back
     button_next: Next
     button_review: Review
+    confirm_restart:
+      cancel: Cancel
+      confirm: Restart
+      message: This clears every answer given so far and returns to the first page.
+        This cannot be undone.
+      title: Restart the whole flow?
     header: '{flow} - question {position} of {total}, section {section}'
 live:
   errors:
@@ -7050,9 +7066,15 @@ live:
       denominator_note_register_only: 'No taxpayer-specific denominator: all {offered_only}
         walked pair(s) came from AEAT''s offered option list, whose scoping to this
         NIF is unconfirmed. This run measures nothing.'
-      expected_but_not_found: live.filed.pull_all.expected_but_not_found
-      found_more_than_expected: live.filed.pull_all.found_more_than_expected
-      recapture_divergence: live.filed.pull_all.recapture_divergence
+      expected_but_not_found: 'Your declared profile expects a filing for {count}
+        modelo/ejercicio pair(s) where AEAT''s register returned none: {pairs}. Check
+        whether these were filed.'
+      found_more_than_expected: AEAT's register holds {raw_count} filings for modelo
+        {modelo} {period} {ejercicio}; the most recent registration ({expediente})
+        was kept and {superseded} earlier one(s) were superseded.
+      recapture_divergence: 'Re-capturing modelo {modelo} {period} {ejercicio} changed
+        {count} previously observed casilla value(s): {casillas}. AEAT may hold a
+        corrected filing.'
 llm:
   evidence:
     consent:
@@ -67188,7 +67210,8 @@ modelo:
           field:
             label: null
 overview:
-  no_aeat_history: overview.no_aeat_history
+  no_aeat_history: This profile holds no filing evidence AEAT confirmed. Run `aeat
+    app live filed pull-all` to fetch the history AEAT holds for it.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50 % prorrata (Art. 61 LIRPF) applied for

@@ -7224,6 +7224,18 @@ flows:
       export_done: 'A titkosított másolat ide került: %{destination}.'
       export_passphrase: A másolatot védő jelszó
       failed: A művelet nem fejeződött be.
+      filed_history_pull_all: AEAT bevallási előzmények lekérése
+      filed_history_pull_all_done: '{captured} bevallás rögzítve, {refused} elutasítva;
+        ÁFA-egyenleg: {iva_wallet_status}; értesítések: {notificaciones_status}.'
+      filed_history_pull_all_refused: 'Ezeket a párokat nem sikerült beolvasni, és
+        NEM lettek üresként jelentve: {pairs}. Az újbóli próbálkozáshoz futtassa újra.'
+      passphrase: flows.manager.action.passphrase
+      passphrase_confirm: flows.manager.action.passphrase_confirm
+      passphrase_current: flows.manager.action.passphrase_current
+      passphrase_done: flows.manager.action.passphrase_done
+      passphrase_mismatch: flows.manager.action.passphrase_mismatch
+      passphrase_new: flows.manager.action.passphrase_new
+      passphrase_wrong_current: flows.manager.action.passphrase_wrong_current
       provider:
         certificate: Elektronikus tanúsítvány
         clave_movil: Cl@ve Móvil
@@ -7399,9 +7411,15 @@ live:
         {offered_only} bejárt pár az AEAT felkínált választéklistájából származik,
         amelynek ehhez a NIF-hez való tartozása nem igazolt. Ez a futás semmit nem
         mér.'
-      expected_but_not_found: live.filed.pull_all.expected_but_not_found
-      found_more_than_expected: live.filed.pull_all.found_more_than_expected
-      recapture_divergence: live.filed.pull_all.recapture_divergence
+      expected_but_not_found: 'A bevallott profil {count} modelo/év párra vár benyújtást,
+        amelyekre az AEAT nyilvántartása egyet sem adott vissza: {pairs}. Ellenőrizze,
+        benyújtották-e ezeket.'
+      found_more_than_expected: Az AEAT nyilvántartása {raw_count} benyújtást tart
+        nyilván a(z) {modelo} modelóhoz ({period} {ejercicio}); a legutóbbi iktatás
+        ({expediente}) maradt meg, és {superseded} korábbi felülírásra került.
+      recapture_divergence: 'A(z) {modelo} modelo {period} {ejercicio} ismételt lekérése
+        {count} korábban megfigyelt casilla-értéket változtatott meg: {casillas}.
+        Az AEAT helyesbített bevallást tarthat nyilván.'
 llm:
   evidence:
     consent:
@@ -67772,7 +67790,8 @@ modelo:
           field:
             label: null
 overview:
-  no_aeat_history: overview.no_aeat_history
+  no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás. Futtassa
+    az `aeat app live filed pull-all` parancsot az AEAT által őrzött előzmények lekéréséhez.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50%-os arányosítás alkalmazva (LIRPF 61.

@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING, ClassVar, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal, Vertical
+from textual.containers import Vertical
 from textual.widgets import Button, DataTable, Footer, LoadingIndicator, Static
 from textual.worker import Worker, WorkerState
 
@@ -193,7 +193,7 @@ class ProfileManagerApp(App[None]):
     #manager-notice.-progress { color: $text-muted; }
     .manager-section DataTable { height: auto; width: 100%; background: $surface; }
     #manager-actions { height: auto; width: 100%; }
-    #manager-actions Button { margin: 0 2 0 0; }
+    #manager-actions Button { width: 100%; margin: 0 0 1 0; }
     #manager-busy { display: none; height: 1; margin: 1 0 0 0; }
     #manager-busy.busy { display: block; }
     """
@@ -293,7 +293,7 @@ class ProfileManagerApp(App[None]):
         with ContentScroll(id="manager-body", classes="cadrumo-scroll"), Vertical(classes="cadrumo-column"):
             if self._actions:
                 with Vertical(id="manager-actions-panel", classes="cadrumo-panel"):
-                    with Horizontal(id="manager-actions"):
+                    with Vertical(id="manager-actions"):
                         for action in self._actions:
                             yield Button(self._action_label(action), id=f"action-{action.key}")
                     yield LoadingIndicator(id="manager-busy")

@@ -7341,6 +7341,18 @@ flows:
       export_done: Còpia xifrada escrita a %{destination}.
       export_passphrase: Contrasenya que protegirà la còpia
       failed: L'operació no s'ha completat.
+      filed_history_pull_all: Recollir l'historial de declaracions de l'AEAT
+      filed_history_pull_all_done: '{captured} declaració(ns) capturada(es), {refused}
+        rebutjada(es); cartera d''IVA: {iva_wallet_status}; notificacions: {notificaciones_status}.'
+      filed_history_pull_all_refused: 'No s''han pogut llegir aquests parells i NO
+        s''han declarat buits: {pairs}. Torneu a executar per reintentar-ho.'
+      passphrase: Canviar la contrasenya
+      passphrase_confirm: Confirma la nova contrasenya
+      passphrase_current: Contrasenya actual
+      passphrase_done: Contrasenya canviada.
+      passphrase_mismatch: La nova contrasenya i la seva confirmació no coincideixen.
+      passphrase_new: Nova contrasenya
+      passphrase_wrong_current: Aquesta no és la contrasenya actual.
       provider:
         certificate: Certificat electrònic
         clave_movil: Cl@ve Mòbil
@@ -7495,6 +7507,12 @@ flows:
     button_back: Enrere
     button_next: Següent
     button_review: Revisió
+    confirm_restart:
+      cancel: Cancel·lar
+      confirm: Reiniciar
+      message: Això esborra totes les respostes donades fins ara i torna a la primera
+        pàgina. No es pot desfer.
+      title: Reiniciar tot el procés?
     header: '{flow} - pregunta {position} de {total}, secció {section}'
 live:
   errors:
@@ -7514,9 +7532,15 @@ live:
         {offered_only} parells recorreguts provenen de la llista d''opcions que ofereix
         l''AEAT, la vinculació de la qual a aquest NIF no està confirmada. Aquesta
         execució no mesura res.'
-      expected_but_not_found: live.filed.pull_all.expected_but_not_found
-      found_more_than_expected: live.filed.pull_all.found_more_than_expected
-      recapture_divergence: live.filed.pull_all.recapture_divergence
+      expected_but_not_found: 'El vostre perfil declarat espera una declaració en
+        {count} parell(s) model/exercici per als quals el registre de l''AEAT no en
+        va retornar cap: {pairs}. Comproveu si es van arribar a presentar.'
+      found_more_than_expected: El registre de l'AEAT conté {raw_count} declaracions
+        del model {modelo} {period} {ejercicio}; s'ha conservat el registre més recent
+        ({expediente}) i s'han substituït {superseded} d'anterior(s).
+      recapture_divergence: 'Tornar a capturar el model {modelo} {period} {ejercicio}
+        ha canviat {count} valor(s) de casella observats anteriorment: {casillas}.
+        L''AEAT pot tenir una declaració rectificada.'
 llm:
   evidence:
     consent:
@@ -67645,7 +67669,8 @@ modelo:
           field:
             label: null
 overview:
-  no_aeat_history: overview.no_aeat_history
+  no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT. Executeu
+    `aeat app live filed pull-all` per obtenir l'historial que l'AEAT conserva.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 61 LIRPF)

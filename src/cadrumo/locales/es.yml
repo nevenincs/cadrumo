@@ -7390,6 +7390,18 @@ flows:
       export_done: Copia cifrada escrita en %{destination}.
       export_passphrase: Contraseña que protegerá la copia
       failed: La operación no se completó.
+      filed_history_pull_all: Traer historial de declaraciones de la AEAT
+      filed_history_pull_all_done: '{captured} declaración(es) capturada(s), {refused}
+        rechazada(s); cartera de IVA: {iva_wallet_status}; notificaciones: {notificaciones_status}.'
+      filed_history_pull_all_refused: 'No se pudieron leer estos pares y NO se declararon
+        vacíos: {pairs}. Repita la operación para reintentarlo.'
+      passphrase: Cambiar la contraseña
+      passphrase_confirm: flows.manager.action.passphrase_confirm
+      passphrase_current: Contraseña actual
+      passphrase_done: Contraseña cambiada.
+      passphrase_mismatch: La nueva contraseña y su confirmación no coinciden.
+      passphrase_new: Nueva contraseña
+      passphrase_wrong_current: Esa no es la contraseña actual.
       provider:
         certificate: Certificado electrónico
         clave_movil: Cl@ve Móvil
@@ -7544,6 +7556,12 @@ flows:
     button_back: Atrás
     button_next: Siguiente
     button_review: Revisión
+    confirm_restart:
+      cancel: Cancelar
+      confirm: Reiniciar
+      message: Esto borra todas las respuestas dadas hasta ahora y vuelve a la primera
+        página. No se puede deshacer.
+      title: ¿Reiniciar todo el proceso?
     header: '{flow} - pregunta {position} de {total}, sección {section}'
 live:
   errors:
@@ -7563,9 +7581,15 @@ live:
         {offered_only} pares recorridos proceden de la lista de opciones que ofrece
         la AEAT, cuya vinculación a este NIF no está confirmada. Esta ejecución no
         mide nada.'
-      expected_but_not_found: live.filed.pull_all.expected_but_not_found
-      found_more_than_expected: live.filed.pull_all.found_more_than_expected
-      recapture_divergence: live.filed.pull_all.recapture_divergence
+      expected_but_not_found: 'Su perfil declarado espera una declaración en {count}
+        par(es) modelo/ejercicio para los que el registro de la AEAT no devolvió ninguna:
+        {pairs}. Compruebe si llegaron a presentarse.'
+      found_more_than_expected: El registro de la AEAT contiene {raw_count} declaraciones
+        del modelo {modelo} {period} {ejercicio}; se conservó el registro más reciente
+        ({expediente}) y se sustituyeron {superseded} anterior(es).
+      recapture_divergence: 'Volver a capturar el modelo {modelo} {period} {ejercicio}
+        cambió {count} valor(es) de casilla observados anteriormente: {casillas}.
+        La AEAT puede tener una declaración rectificada.'
 llm:
   evidence:
     consent:
@@ -69978,7 +70002,8 @@ modelo:
           field:
             label: Modelo 848 (orden-hac-85-2003), ejercicios 2003 y siguientes
 overview:
-  no_aeat_history: overview.no_aeat_history
+  no_aeat_history: Este perfil no tiene ninguna presentación confirmada por la AEAT.
+    Ejecute `aeat app live filed pull-all` para obtener el historial que la AEAT conserva.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 % (Art. 61 LIRPF)
