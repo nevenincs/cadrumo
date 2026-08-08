@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:31830889ee88038171cb2d07742481f88a7ce8efd59717bc5cc08c5bdd0eb799'
+body_hash: 'sha256:994e011f0e2963a0a02900d27b19f7366aa85b1e5e0b374bd6857ab4cc73cc83'
 related:
   - "[[2026-08-07-invoice-canonical-structure-iva-treatment-axis-adr]]"
 ---
@@ -359,8 +359,9 @@ That half of the gap is closed.
 **Why the supplier half could be closed and the recipient half cannot, structurally.** The
 supplier-side base binding selects `rate_kinds = ["general", "reduced", "super_reduced",
 "zero", "exempt"]` - it ADMITS the zero and exempt tiers, which is exactly why routing a
-base into it works for a document carrying no cuota. Every recipient-side binding selects
-only the three rated tiers.
+base into it works for a document carrying no cuota. Every recipient-side binding IN MODELO 303
+selects only the three rated tiers; this enumeration is M303-scoped and Modelo 390 differs,
+see the correspondence note below.
 
 **A refinement to the "no recipient-side base binding" reading, because it differs by
 family.** Enumerating every binding whose `flow_direction` is `inversion_sujeto_pasivo`:
@@ -393,10 +394,30 @@ intra_community_service_acquisition_reverse_charge received base=required cuota=
 
 Every RECIPIENT-side row requires a cuota. The single cuota-less row is the domestic
 SUPPLIER side - and that is precisely the side casilla 122's binding serves, which is
-precisely the binding that admits `zero` and `exempt`. The registry's admitted rate kinds
-track the component table's cuota column exactly: cuota-zero-by-law admits the cuota-less
-tiers, cuota-required refuses them. The asymmetry noted above is not an accident to be
-patched.
+precisely the binding that admits `zero` and `exempt`. Within Modelo 303 the registry's admitted rate kinds
+track the component table's cuota column: cuota-zero-by-law admits the cuota-less tiers,
+cuota-required refuses them. The asymmetry noted above is not an accident to be patched.
+
+**That correspondence is a strong tendency, NOT an invariant, and must not be gated.**
+Established as a negative result by the under-declaration sweep, which built the gate this
+paragraph invites and then withdrew it. Across Modelos 303, 390 and 322 the property holds
+for 77 of 79 selector pairs, and both exception classes are correct:
+
+- The Modelo 390 rate-BOX layer populates per-rate lines the official form actually has, so
+  a tipo-0 binding must admit the zero tier for a box that exists. Verified here:
+  `modelo-390-iva-aic-bienes-tipo-0-base` selects
+  `intra_community_acquisition_reverse_charge` at `rate_kinds = ["zero"]` on flow
+  `inversion_sujeto_pasivo`, while the Axis-A row for that pair declares cuota REQUIRED.
+  The binding is right and the correspondence simply does not reach it.
+- A deliberate rate-blind base capture, equally grounded, survives excluding that layer by
+  its structural marker.
+
+The gate was deleted rather than shipped with two carve-outs discovered BY ITS OWN
+FAILURES - which is where judgement migrates quietly into an allowlist, and a property
+needing exceptions found that way describes the current tree rather than constraining it.
+The correspondence keeps its explanatory power and loses any claim to be a rule the
+registry is built to obey. Recorded because the next reader will re-derive it, find it
+holding everywhere they happen to look, and reach for the same gate.
 
 **So widening the intra-community recipient base binding to admit the cuota-less tiers is
 NOT a candidate remedy, and this research withdraws it as one.** No recipient-side pair is
@@ -418,7 +439,7 @@ recipient's base belongs on the form is not settled here.
 
 **The blocker is unchanged and is the same one this whole document is about.** The rate
 slot is not the operation's treatment, so the record arrives at the binding layer carrying
-the wrong category and, for a cuota-less document, a tier no recipient-side binding admits.
+the wrong category and, for a cuota-less document, a tier the Modelo 303 recipient-side bindings do not admit.
 
 ## Sources
 
