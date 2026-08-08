@@ -335,9 +335,17 @@ Script the same changes with the flag verbs:
 `add` takes one `--descendiente` per child as `KEY=VALUE` pairs separated by
 commas. `NACIMIENTO` (birth date, `AAAA-MM-DD`) is required; `ADOPCION`,
 `DISCAPACIDAD` (`0`, `33`, or `65`), `CONVIVENCIA`, `CUSTODIA`,
-`MESES_TRABAJO` (`0`–`12`), `GASTOS_GUARDERIA`, and `NIF` are optional. A
+`MESES_TRABAJO`, `GASTOS_GUARDERIA`, and `NIF` are optional. A
 descendiente without a tax identifier is fine. Leave `NIF` out. `remove`
 takes the position from `list`, counting from `0`.
+
+`MESES_TRABAJO` names *which* months the mother worked, not how many. Write a
+month as two digits, a run as `MM-MM`, and separate entries with `;`. Write
+`MESES_TRABAJO=05-08` for May to August. Write `MESES_TRABAJO=01;03;09-12` for
+January, March, and September to December.
+
+Name the months. The guardería increment counts only the months the mother
+worked *and* the child attended, so a count cannot say whether the two overlap.
 
 ## Maintain your profile
 
