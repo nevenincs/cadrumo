@@ -379,17 +379,25 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
     read only the annual figure. This drives the real CLI end to end so the
     claim being made is the one an operator can check.
 
-    The child turns three in April, so Art. 81.2 admits only the months after
-    the birthday: May, June and July. Art. 81.3 then prorates the annual ceiling
-    across exactly those three months, and the mother qualified in all twelve so
-    the overlap is the guardería side outright.
+    The child turns three in April, and ALL SEVEN declared months count. The
+    birthday is not a boundary for the Art. 81.2 increment: Capítulo 18's
+    "gastos incurridos con posterioridad al cumplimiento de dicha edad" GRANTS
+    the months after it, which the under-three limb could not otherwise reach,
+    and does not withdraw the ones before. The manual's own caso b settles it —
+    a child who "en septiembre cumple 3 años" is granted "6 meses completos (de
+    enero a junio)", every one of them BEFORE the birthday. Reading that
+    sentence as a restriction returns zero on the manual's own facts.
 
-    The expected figure is three twelfths of the registry's own annual ceiling,
-    read from the parameter rather than restated. It is BELOW the 600 those
-    three months cost, and that is the whole point: the ceiling is prorated, not
-    flat. Before this formula consumed the prorated value the answer here was
-    the full 600 — the declared spend passed through untouched because the only
-    ceiling in its way was ``1 x 1.000``, which no month rule ever reduced.
+    The declared months are January to July, all inside the window, which closes
+    at the month before the second infant-education cycle may begin. The mother
+    qualified in all twelve, so the simultaneity intersection is the guardería
+    side outright: seven months.
+
+    The expected figure is seven twelfths of the registry's own annual ceiling,
+    read from the parameter rather than restated, and derived from the fixture
+    by hand: seven declared months intersected with twelve mother-months. It is
+    BELOW the 1.000 those seven months cost, which is the whole point — the
+    ceiling is prorated, not flat.
     """
     _seed_natural_person_profile(runtime_profile)
 
@@ -438,7 +446,7 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
     # Only May, June and July fall after the April birthday, so Art. 81.3
     # prorates the annual ceiling to three twelfths of it. The 600 those months
     # actually cost is above that ceiling and is therefore NOT what is granted.
-    assert Decimal(str(calc_payload["casilla_values"]["0613"])) == (_registry_guarderia_cap_anual() / 12 * 3).quantize(
+    assert Decimal(str(calc_payload["casilla_values"]["0613"])) == (_registry_guarderia_cap_anual() / 12 * 7).quantize(
         Decimal("0.01"),
     )
 
