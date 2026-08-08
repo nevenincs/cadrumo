@@ -374,9 +374,11 @@ class TestContractParityAcrossBothDerivations:
         populated = ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields(
                 supplier_tax_id="B44531218",
+                supplier_name="Ferretería Insular S.L.",
                 supplier_postal_code="35001",
                 supplier_country="España",
                 customer_tax_id="12345678Z",
+                customer_name="Talleres Mayor S.A.",
                 customer_postal_code="28013",
                 customer_country="Alemania",
                 invoice_number="2026-0142",

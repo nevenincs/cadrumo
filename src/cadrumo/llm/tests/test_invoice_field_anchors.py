@@ -86,6 +86,10 @@ _SPANISH_CUSTOMER_NIF = "12345678Z"
 #: an anchor equal to its value makes the downstream parse check vacuous.
 _SPANISH_INVOICE: dict[str, str | None] = {
     "supplier_tax_id": _SPANISH_CIF,
+    # The name the identifier belongs to, printed as the document prints it --
+    # accented and with its legal-form suffix, because a fixture spelled in
+    # ASCII cannot fail when a reader silently folds diacritics.
+    "supplier_name": "Ferretería Insular S.L.",
     # Las Palmas: a Canarian prefix, deliberately not a peninsular one. A
     # fixture whose two parties both sit on the mainland cannot fail when the
     # territorial reading is dropped, because the mainland is what a lost code
@@ -96,6 +100,7 @@ _SPANISH_INVOICE: dict[str, str | None] = {
     # exists to avoid asking of it.
     "supplier_country": "España",
     "customer_tax_id": _SPANISH_CUSTOMER_NIF,
+    "customer_name": "Talleres Mayor S.A.",
     "customer_postal_code": "28013",
     "customer_country": "España",
     "invoice_number": "2026-0142",
@@ -111,12 +116,16 @@ _SPANISH_INVOICE: dict[str, str | None] = {
 }
 _SPANISH_ANCHORS: dict[str, str | None] = {
     "supplier_tax_id": f"CIF: {_SPANISH_CIF}",
+    # The printed heading carries the role, so the anchor is not byte-identical
+    # to the name and a value-versus-anchor comparison stays meaningful.
+    "supplier_name": "Emisor: Ferretería Insular S.L.",
     "supplier_postal_code": "35001 Las Palmas de Gran Canaria",
     # Deliberately not byte-identical to the value, for the reason every anchor
     # here is not: an anchor equal to its value makes the downstream parse check
     # compare a value to itself.
     "supplier_country": "35001 Las Palmas de Gran Canaria, España",
     "customer_tax_id": f"NIF cliente: {_SPANISH_CUSTOMER_NIF}",
+    "customer_name": "Cliente: Talleres Mayor S.A.",
     "customer_postal_code": "Calle Mayor 3, 28013 Madrid",
     "customer_country": "Calle Mayor 3, 28013 Madrid, España",
     "invoice_number": "Factura n.º 2026-0142",
