@@ -204,13 +204,30 @@ class TestTheFindingIsEnrolledAsBlocking:
         assert any(blocker.reason is ConfirmationBlockReason.CONTRADICTED_REGIME for blocker in blockers)
 
     def test_a_coherent_draft_produces_no_contradiction_blocker(self) -> None:
-        """The positive control at the gate, not only at the producer."""
+        """The negative case carried through the same producer-to-gate wire as the positive.
+
+        The gate reads findings off the draft; it does not run the producer. So a
+        coherent draft handed to it bare raises no contradiction blocker whatever
+        the producer does, and asserting that measures nothing -- the shape this
+        case previously had, under a docstring that vouched for the coverage it
+        lacked. The producer runs here for real, exactly as it does in the
+        contradicted case above, and whatever it returns is stamped before the
+        gate is asked -- deliberately without asserting the producer's answer
+        first. An intermediate ``assert finding is None`` would red on the
+        producer line and the gate assertion below would never execute, leaving
+        the very claim this case makes unexercised. The stamping adapter is the
+        one the shared check list uses, so a producer that started firing on a
+        coherent document would reach the gate here exactly as it would in
+        production.
+        """
         draft = InvoiceDraft(
             regime_legend=_REVERSE_CHARGE_MENTION,
             taxable_base=Decimal("1000.00"),
             grand_total=Decimal("1000.00"),
         )
+        finding = regime_contradiction_finding(draft)
+        stamped = draft.model_copy(update={"discrepancies": () if finding is None else (finding,)})
 
-        blockers = confirmation_blockers(draft=draft)
+        blockers = confirmation_blockers(draft=stamped)
 
         assert not any(blocker.reason is ConfirmationBlockReason.CONTRADICTED_REGIME for blocker in blockers)
