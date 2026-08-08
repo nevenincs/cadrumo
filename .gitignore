@@ -410,6 +410,11 @@ cache/
 # friends). Durable docs images live under docs/_static/; a loose one at the
 # root is the review artefact, not the asset.
 /*.png
+# Locale merge workspace: <lang>.mine.yml / <lang>.head.yml / <lang>.patch
+# staged while reconciling a catalogue conflict. The catalogues under
+# src/cadrumo/locales/ are the durable artefact; these are the scratch copies
+# the merge was worked out in.
+/locale_patch_scratch/
 # Underscore-prefixed one-shot agent run workspaces (persona reruns, m303/m390
 # capture dirs) — carry secrets/*.key/*.kdf/*.db; ephemeral, never in git.
 /_scratch*/
