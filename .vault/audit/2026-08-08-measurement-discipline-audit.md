@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:5a2b2611fb87967c3dd6e9ba36fb0051a6c0edb8865589c93ecd50186e73784a'
+body_hash: 'sha256:1d75929fcba2e7d8a16d1b71a435dff05e1123c3fc948960a25ae5d58ea78365'
 related: []
 ---
 
@@ -37,15 +37,27 @@ Two corollaries earned in the same session.
 
 ## The related failure: an inferred cause reported as the cause
 
-Separately, three agents independently diagnosed the same symptom as a missing extracted corpus sidecar. The file was present with both sidecars. The verbatim error, when finally captured, named anchor resolution failing against a file that exists — a different defect, a different owner, a different fix. A fourth reading proposed a stale loader cache, also wrong: a peer was editing the file, so it oscillated between consistent and inconsistent within seconds, and different observers sampled different instants.
+**This section originally claimed that three agents converged on an inferred cause. That claim was wrong and is corrected here rather than quietly rewritten, because the corrected version carries a sharper lesson than the mistaken one.**
 
-All four readings were plausible and consistent with the symptom. **A verbatim error names the defect; an inferred one names a guess**, and the guess is what gets quoted afterwards.
+What actually happened: a peer's corpus file passed through **two distinct broken states**, and two agents each captured a **verbatim** error describing the state in front of them.
 
-The agent that finally produced the verbatim text disclaimed credit for it, and the disclaimer is the practical lesson: it had the exact wording only because the failure happened while it was doing something else, so it pasted the error rather than paraphrasing it. Not diligence — an absence of reformulation.
+The HTML file was created at 11:34:23 and its extracted sidecars at 11:45:33 — an eleven-minute window in which the file existed with no sidecar. One agent's failing run wrote its log at 11:43:50, inside that window, and its captured text reads `missing extracted corpus sidecar`, with zero occurrences of any other cause in the same log. After 11:45:33 the sidecars existed and a different failure appeared: `cannot resolve one corpus unit for anchor 'a78'`. A third observer, loading at 11:49:29, found the authority clean.
 
-Which argues for a habit cheap enough to keep unconditionally: **paste the error, never summarise it, even when the summary seems obviously equivalent.** Every one of the four wrong readings was a summary that seemed equivalent. A summary is a hypothesis wearing the clothes of an observation, and it is indistinguishable from one after the terminal scrolls.
+So three readings, three instants, three correct observations. Not a convergence on a guess. The coordinator's own hypothesis — a stale loader cache — was the only genuinely inferred cause in the sequence, and it was wrong; the artefact mtimes settled it in one call, where a re-run would have shown green and explained nothing.
 
-One further nuance, since it changes who was wrong about what. None of the three reports was wrong about what it saw — the file was mid-churn and each observer sampled a different instant. They were wrong about what they generalised to. A reading taken during another agent's edit is a true observation of a state that no longer exists, which is the same shape as a tree read mid-sweep yielding phantom findings.
+## The corrected lesson: a verbatim error is authoritative about its instant, not about the file
+
+Capturing the exact text is necessary and it is **not sufficient**. Both agents quoted correctly and then let the quotation stand as a description of *the condition* when it described a snapshot seconds old. The error was true; the tense was wrong.
+
+So: **pair every captured error with the clock, and pair both with the artefact's mtime.** The mtime is what distinguishes "the tree changed between us" from "one of us measured wrong" — different owners, different fixes — and it is what showed two competing-looking accounts were sequential rather than contradictory.
+
+This is the same shape as a point-in-time read of a plan row going stale twenty minutes later, and as a working copy and HEAD disagreeing across a sweep. A reading has a timestamp whether or not anyone records it.
+
+The habit worth keeping unconditionally is still cheap: **paste the error, never summarise it** — a summary is a hypothesis wearing the clothes of an observation. Add the clock beside it, and the artefact's mtime when two readings disagree.
+
+## A note on this correction
+
+The mistaken version of this section was published for roughly ten minutes and mischaracterised two agents' work as guessing when both had measured. It is corrected in place with the original claim stated, because a reader who sees only the final text cannot tell which parts were measured — which is the subject of this document.
 
 ## What follows
 
