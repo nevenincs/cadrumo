@@ -543,9 +543,7 @@ _PREFLIGHT_REASON_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, L
     IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: LedgerPreflightIssueReason.MISSING_TAXABLE_BASE,
     IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: LedgerPreflightIssueReason.MISSING_IVA_AMOUNT,
     IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: LedgerPreflightIssueReason.MISSING_IVA_RATE,
-    IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE: (
-        LedgerPreflightIssueReason.MISSING_EUR_TAX_SUBSTRATE
-    ),
+    IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE: (LedgerPreflightIssueReason.MISSING_EUR_TAX_SUBSTRATE),
     IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE: (
         LedgerPreflightIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE
     ),

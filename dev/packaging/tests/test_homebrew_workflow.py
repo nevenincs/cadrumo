@@ -135,7 +135,6 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     )
 
 
-
 def test_homebrew_workflow_runs_the_real_source_install_and_oracles() -> None:
     """The matrix generates channel metadata then invokes the real lifecycle harness."""
     document = _workflow()

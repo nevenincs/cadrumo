@@ -409,7 +409,7 @@ def _write_language_entry(html_root: Path) -> Path:
         "(function () {\n"
         f"  var roots = [{languages}];\n"
         f'  var fallback = "{DEFAULT_SITE_LANGUAGE}";\n'
-        '  var cookie = document.cookie.match(/(?:^|;\\s*)cadrumo_docs_lang=([a-zA-Z-]+)/);\n'
+        "  var cookie = document.cookie.match(/(?:^|;\\s*)cadrumo_docs_lang=([a-zA-Z-]+)/);\n"
         "  var wanted = [];\n"
         "  if (cookie) { wanted.push(cookie[1]); }\n"
         "  var declared = navigator.languages || [navigator.language];\n"

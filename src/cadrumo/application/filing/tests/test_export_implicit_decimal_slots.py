@@ -137,7 +137,7 @@ def test_width_4_rate_slot_matches_the_aeat_worked_example() -> None:
 
 
 def test_width_7_rate_slot_uses_its_own_four_decimal_scale() -> None:
-    """"3 enteros y 4 decimales": the scale is the field's, not money's fixed two."""
+    """ "3 enteros y 4 decimales": the scale is the field's, not money's fixed two."""
     field = _field("modelo-200-page-015b-casilla-00103")
 
     rendered = _format_field(field, Decimal("25"))

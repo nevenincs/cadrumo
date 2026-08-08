@@ -167,7 +167,11 @@ def test_no_aggregation_module_builds_an_identification_from_a_country() -> None
                 offences.append(f"{module_name}:{node.lineno} builds an EUMemberState from a country-shaped source")
 
             # <...>identification_state<...> = <something country-shaped>
-            if isinstance(node, ast.Assign) and _targets_identification(node.targets) and _mentions_a_country_source(node.value):
+            if (
+                isinstance(node, ast.Assign)
+                and _targets_identification(node.targets)
+                and _mentions_a_country_source(node.value)
+            ):
                 offences.append(f"{module_name}:{node.lineno} assigns an identification from a country-shaped source")
 
     assert not offences, "identification must never be derived from a country:\n" + "\n".join(offences)
@@ -191,6 +195,10 @@ def _targets_identification(targets: list[ast.expr]) -> bool:
                 return True
             if isinstance(child, ast.Name) and "identification_state" in child.id:
                 return True
-            if isinstance(child, ast.Constant) and isinstance(child.value, str) and "identification_state" in child.value:
+            if (
+                isinstance(child, ast.Constant)
+                and isinstance(child.value, str)
+                and "identification_state" in child.value
+            ):
                 return True
     return False

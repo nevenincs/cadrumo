@@ -155,7 +155,9 @@ def test_a_domestic_exemption_is_not_routed_to_either_base_casilla() -> None:
     routing keyed on "the cuota is zero" rather than on the declared category
     would put this base in casilla 59 and over-declare intra-community volume.
     """
-    resolved = _resolved_for(_invoice(category=IvaCategory.DOMESTIC_EXEMPT, country="ES", tax_id="ESB12345674", identification="es"))
+    resolved = _resolved_for(
+        _invoice(category=IvaCategory.DOMESTIC_EXEMPT, country="ES", tax_id="ESB12345674", identification="es")
+    )
 
     assert not resolved.get(_CASILLA_59)
     assert not resolved.get(_CASILLA_60)

@@ -132,7 +132,9 @@ def test_art25_turns_on_identification_in_both_directions() -> None:
     """
     # Established in Spain, VAT-identified in Germany. Art. 25 exempts this.
     spanish_established_german_identified = _aggregate(
-        _intracom_supply("es-established-de-identified", established_in=EUMemberState.ES, identified_in=EUMemberState.DE),
+        _intracom_supply(
+            "es-established-de-identified", established_in=EUMemberState.ES, identified_in=EUMemberState.DE
+        ),
     )
     assert spanish_established_german_identified.issues == (), (
         "a Spanish-established acquirer holding a German VAT number is an intra-community "
@@ -143,7 +145,9 @@ def test_art25_turns_on_identification_in_both_directions() -> None:
 
     # Established in Germany, purchasing under a Spanish NIF-IVA. Domestic supply.
     german_established_spanish_identified = _aggregate(
-        _intracom_supply("de-established-es-identified", established_in=EUMemberState.DE, identified_in=EUMemberState.ES),
+        _intracom_supply(
+            "de-established-es-identified", established_in=EUMemberState.DE, identified_in=EUMemberState.ES
+        ),
     )
     assert german_established_spanish_identified.observations == (), (
         "a counterparty purchasing under a Spanish VAT identification is not an "
@@ -169,7 +173,9 @@ def test_absent_identification_refuses_and_never_falls_back_to_the_country() -> 
         ("no establishment", None),
     ):
         aggregation = _aggregate(
-            _intracom_supply(f"absent-identification-{established_in}", established_in=established_in, identified_in=None),
+            _intracom_supply(
+                f"absent-identification-{established_in}", established_in=established_in, identified_in=None
+            ),
         )
         assert aggregation.observations == (), f"{label}: absent identification must withhold the base"
         assert [issue.reason for issue in aggregation.issues] == [
