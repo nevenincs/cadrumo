@@ -35,13 +35,12 @@ before being carried into ``detail_rows`` on the ``CalculationRevision``.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from decimal import Decimal
 from enum import StrEnum
-from types import MappingProxyType
-from typing import Annotated, Final, Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, StringConstraints, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field_validator, model_validator
 
 from ...core import (
     M210_TIPO_RENTA_CODE_PROJECTION,
@@ -145,14 +144,22 @@ class Modelo184MemberRow(BaseModel):
 # and :class:`~core.MetodoValoracion` -- because the registry's own
 # related-party observation is typed with the same sets.
 
-_M232_CODE_SETS: Final[Mapping[str, type[StrEnum]]] = MappingProxyType(
-    {
-        "tipo_vinculacion": TipoVinculacion,
-        "tipo_operacion": TipoOperacionVinculada,
-        "metodo": MetodoValoracion,
-    },
-)
-"""Field name to its DR23200 code set, read by the hydrating validator."""
+def _hydrate_m232_codigo[EnumT: StrEnum](*, field_name: str, value: object, code_set: type[EnumT]) -> EnumT | object:
+    """Hydrate the operator's text into its typed DR23200 code set.
+
+    The CLI delivers `--row vinculada k=v` as plain strings and the model is
+    strict, so this is the boundary that turns a token into a member. An
+    off-catalogue token is refused here rather than by the strict-instance
+    check, so the message can name the codes AEAT actually publishes instead
+    of only reporting the wrong type.
+    """
+    if not isinstance(value, str):
+        return value
+    try:
+        return code_set(value.upper())
+    except ValueError:
+        accepted = ", ".join(repr(str(member)) for member in code_set)
+        raise ValueError(f"{field_name} must be one of {accepted}; got {value!r}") from None
 
 
 class Modelo232VinculadaRow(BaseModel):
@@ -187,9 +194,20 @@ class Modelo232VinculadaRow(BaseModel):
     # operation silently declared as Spanish is the direction AEAT reconciles
     # against what the counterparty itself declared.
     pais: _IsoCountryCode
-    tipo_vinculacion: TipoVinculacion = TipoVinculacion.NO_DECLARADO
-    tipo_operacion: TipoOperacionVinculada = TipoOperacionVinculada.NO_DECLARADO
-    metodo: MetodoValoracion = MetodoValoracion.NO_DECLARADO
+    tipo_vinculacion: Annotated[
+        TipoVinculacion,
+        BeforeValidator(lambda v: _hydrate_m232_codigo(field_name="tipo_vinculacion", value=v, code_set=TipoVinculacion)),
+    ] = TipoVinculacion.NO_DECLARADO
+    tipo_operacion: Annotated[
+        TipoOperacionVinculada,
+        BeforeValidator(
+            lambda v: _hydrate_m232_codigo(field_name="tipo_operacion", value=v, code_set=TipoOperacionVinculada),
+        ),
+    ] = TipoOperacionVinculada.NO_DECLARADO
+    metodo: Annotated[
+        MetodoValoracion,
+        BeforeValidator(lambda v: _hydrate_m232_codigo(field_name="metodo", value=v, code_set=MetodoValoracion)),
+    ] = MetodoValoracion.NO_DECLARADO
     importe: Decimal
 
     @field_validator("pais")
@@ -205,26 +223,6 @@ class Modelo232VinculadaRow(BaseModel):
         if not value.strip():
             raise ValueError("nif cannot be blank")
         return value.upper()
-
-    @field_validator("tipo_vinculacion", "tipo_operacion", "metodo", mode="before")
-    @classmethod
-    def _hydrate_m232_codigo(cls, value: object, info: ValidationInfo) -> object:
-        """Hydrate the operator's text into its typed DR23200 code set.
-
-        The CLI delivers `--row vinculada k=v` as plain strings and the model is
-        strict, so this is the boundary that turns a token into a member. An
-        off-catalogue token is refused here rather than by the strict-instance
-        check, so the message can name the codes AEAT actually publishes instead
-        of only reporting the wrong type.
-        """
-        if not isinstance(value, str):
-            return value
-        code_set = _M232_CODE_SETS[info.field_name]
-        try:
-            return code_set(value.upper())
-        except ValueError:
-            accepted = ", ".join(repr(str(member)) for member in code_set)
-            raise ValueError(f"{info.field_name} must be one of {accepted}; got {value!r}") from None
 
 
 # ---------------------------------------------------------------------------
