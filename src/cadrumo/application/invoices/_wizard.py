@@ -493,6 +493,14 @@ def create_invoice_via_wizard(
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
 
     try:
+        # Derived once, before both construction sites, so the built candidate
+        # and the persisted record cannot disagree about the category. An
+        # operator-supplied value always wins: this only fills a silence.
+        effective_category = iva_category or _derived_domestic_category(
+            country_code=resolved_country,
+            iva_rate=resolved_rate,
+            on_date=resolved_operation_date or resolved_date,
+        )
         candidate = build_catalogue_invoice(
             bucket_id=bucket_id,
             kind=kind,
@@ -505,7 +513,7 @@ def create_invoice_via_wizard(
             iva_rate=resolved_rate,
             currency=resolved_currency,
             notes=notes,
-            iva_category=iva_category,
+            iva_category=effective_category,
             operation_type=operation_type,
             retention_rate=resolved_retention_rate,
             retention_amount=resolved_retention_amount,
@@ -539,7 +547,7 @@ def create_invoice_via_wizard(
         iva_rate=resolved_rate,
         currency=resolved_currency,
         notes=notes,
-        iva_category=iva_category,
+        iva_category=effective_category,
         operation_type=operation_type,
         operation_date=resolved_operation_date,
         retention_rate=resolved_retention_rate,
