@@ -178,10 +178,12 @@ def test_a_missing_anchor_is_distinct_from_an_anchor_that_was_not_found() -> Non
     assert "anchor" not in _context(offered_nothing)
 
 
-def _grounded_against(text: str, *, envelopes: tuple[FieldProvenance, ...], **values: object) -> tuple[
-    FieldProvenance,
-    ...,
-]:
+def _grounded_against(
+    text: str,
+    *,
+    envelopes: tuple[FieldProvenance, ...],
+    **values: object,
+) -> tuple[FieldProvenance, ...]:
     """Return *envelopes* as the REAL grounding stage leaves them.
 
     Hand-built envelopes prove which branch a selector takes; they cannot prove
