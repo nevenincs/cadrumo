@@ -63,16 +63,22 @@ from __future__ import annotations
 
 import asyncio
 
-from ..application.ledger import DocumentTranscription, InvoiceDraft, PurchaseInvoiceEvidenceInputError
-from ..core import Period, build_provenance_stamp
+from ..application.ledger import (
+    DocumentTranscription,
+    InvoiceDraft,
+    InvoiceExtractionAuthorityValues,
+    PurchaseInvoiceEvidenceInputError,
+    resolve_invoice_extraction_authority_values,
+)
+from ..core import build_provenance_stamp
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._consent import EvidenceConsentToken
 from ._errors import LLMConfigError
 from ._invoice_extraction_prompt import (
     CompiledInvoiceExtractionPrompt,
-    build_invoice_extraction_prompt,
     default_extraction_period,
+    render_invoice_extraction_prompt,
 )
 from ._invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ._models import LLMProvider, LLMRequest
@@ -80,26 +86,46 @@ from ._models import LLMProvider, LLMRequest
 __all__ = [
     "TextInvoiceFieldExtractor",
     "build_text_field_extraction_prompt",
+    "default_extraction_authority_values",
     "extract_invoice_fields_from_text",
 ]
 
 
-def build_text_field_extraction_prompt(evidence_text: str, *, period: Period | None = None) -> str:
+def default_extraction_authority_values() -> InvoiceExtractionAuthorityValues:
+    """Resolve the authority values for the fallback period.
+
+    The one place this package turns "no values were supplied" into values, and
+    it does so by asking the application layer's compiler rather than by reading
+    any authority itself.
+
+    Returns:
+        :class:`~application.ledger.InvoiceExtractionAuthorityValues`: The values
+        in force across the current civil year.
+    """
+    return resolve_invoice_extraction_authority_values(period=default_extraction_period())
+
+
+def build_text_field_extraction_prompt(
+    evidence_text: str,
+    *,
+    values: InvoiceExtractionAuthorityValues | None = None,
+) -> str:
     """Build the extraction prompt for ``evidence_text``.
 
     Separate from the transport so the exact instruction a model will receive is
     directly assertable without dispatching a request.
 
-    The instruction half is the SHARED compiled artefact
-    (:func:`~llm._invoice_extraction_prompt.build_invoice_extraction_prompt`),
+    The instruction half is the SHARED rendered artefact
+    (:func:`~llm._invoice_extraction_prompt.render_invoice_extraction_prompt`),
     not a second hand-maintained field list: this reader and the vision reader
     ask for the same eight fields in the same declared forms, and maintaining
     that agreement by hand is exactly the drift that lost a correctly-read rate.
 
     Args:
         evidence_text: The document's text representation.
-        period: Optional filing period whose registry-resolved rates the prompt
-            enumerates; defaults to the current annual period.
+        values: Regulatory values to enumerate, resolved by the application
+            layer. ``None`` resolves the current civil year's, which is the
+            honest fallback for a document not yet bound to a filing period.
 
     Returns:
         The full prompt: instructions, then the document text under a delimiter
@@ -115,7 +141,8 @@ def build_text_field_extraction_prompt(evidence_text: str, *, period: Period | N
             "invoice text extraction was given no text to read",
             suggestion="aeat app ledger evidence extract --evidence-id <id>",
         )
-    compiled = build_invoice_extraction_prompt(period=period if period is not None else default_extraction_period())
+    resolved = values if values is not None else default_extraction_authority_values()
+    compiled = render_invoice_extraction_prompt(values=resolved)
     return f"{compiled.text}\nINVOICE TEXT:\n{evidence_text}"
 
 
@@ -133,8 +160,14 @@ class TextInvoiceFieldExtractor:
             injection for tests); default-constructed against the resolved
             settings otherwise.
         settings: Injected settings; defaults to ``load_settings()``.
-        period: Filing period whose registry-resolved rates the compiled prompt
-            enumerates; defaults to the current annual period.
+        authority_values: The regulatory values the compiled prompt enumerates,
+            resolved by
+            :func:`~application.ledger.resolve_invoice_extraction_authority_values`.
+            Taken as resolved DATA rather than as a period this reader would
+            look up for itself: the rates are the application layer's to
+            determine, and a reader that resolves its own has quietly become a
+            second consumer of the calculation authorities. ``None`` falls back
+            to the current civil year's values.
         consent_token: Per-invocation off-host consent proof, minted through
             :func:`~llm._consent.mint_evidence_consent_token`. Required only for
             an off-host read of real evidence; ``None`` is correct for every
@@ -153,7 +186,7 @@ class TextInvoiceFieldExtractor:
         provider: LLMProvider = LLMProvider.LOCAL,
         client: LLMClient | None = None,
         settings: Settings | None = None,
-        period: Period | None = None,
+        authority_values: InvoiceExtractionAuthorityValues | None = None,
         consent_token: EvidenceConsentToken | None = None,
         public_corpus: bool = False,
     ) -> None:
@@ -173,7 +206,9 @@ class TextInvoiceFieldExtractor:
             raise LLMConfigError(msg, suggestion="pass model=<vendor text model id>")
         else:
             self._model = model
-        self._period = period if period is not None else default_extraction_period()
+        self._authority_values = (
+            authority_values if authority_values is not None else default_extraction_authority_values()
+        )
         self._client = (
             client
             if client is not None
@@ -269,7 +304,7 @@ class TextInvoiceFieldExtractor:
         environment.
         """
         return LLMRequest(
-            prompt=build_text_field_extraction_prompt(evidence_text, period=self._period),
+            prompt=build_text_field_extraction_prompt(evidence_text, values=self._authority_values),
             provider_override=self._provider,
             model_override=self._model,
             evidence_derived=not self._public_corpus,
@@ -282,7 +317,7 @@ class TextInvoiceFieldExtractor:
         Built without any document text, so the stamp can name the rates a read
         was performed under without a document in hand.
         """
-        return build_invoice_extraction_prompt(period=self._period)
+        return render_invoice_extraction_prompt(values=self._authority_values)
 
 
 def extract_invoice_fields_from_text(
@@ -290,6 +325,7 @@ def extract_invoice_fields_from_text(
     *,
     model: str | None = None,
     settings: Settings | None = None,
+    authority_values: InvoiceExtractionAuthorityValues | None = None,
 ) -> InvoiceDraft:
     """Convenience wrapper: build a :class:`TextInvoiceFieldExtractor` and extract.
 
@@ -313,9 +349,18 @@ def extract_invoice_fields_from_text(
         transcription: The acquisition-stage transcription to read.
         model: Optional model override.
         settings: Optional resolved settings override.
+        authority_values: Application-resolved regulatory values for the prompt.
+            The routing caller resolves these ONCE per document and passes them
+            here, so a document read through several stages is read under one
+            set of rates rather than one per prompt construction.
 
     Returns:
         :class:`InvoiceDraft`: The grounded, best-effort extracted fields.
     """
-    extractor = TextInvoiceFieldExtractor(model=model, settings=settings, provider=LLMProvider.LOCAL)
+    extractor = TextInvoiceFieldExtractor(
+        model=model,
+        settings=settings,
+        provider=LLMProvider.LOCAL,
+        authority_values=authority_values,
+    )
     return extractor.extract(transcription=transcription)

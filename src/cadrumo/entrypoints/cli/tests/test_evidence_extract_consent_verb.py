@@ -43,12 +43,12 @@ from ....application.ledger import DocumentTranscription, TranscriberIdentity
 from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ....core.config import override_settings
 from ....llm import (
+    LLMClient,
     LLMConsentError,
     LLMProvider,
     TextInvoiceFieldExtractor,
     mint_evidence_consent_token,
 )
-from ....llm._client import LLMClient
 from ....tests.fixtures.settings import EnvFileFreeSettings
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 

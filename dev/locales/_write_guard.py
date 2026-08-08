@@ -23,7 +23,7 @@ mechanism that actually fits it:
 - **Writers that never took the lock** -- a hand edit, an editor save, a bulk
   sweep. No lock can exclude those, so :class:`CatalogueWriteGuard` digests each
   file as it is read and refuses the write if the bytes moved underneath. The
-  refusal is a :class:`~dev.locales._errors.LocaleWriteConflict`, telling the
+  refusal is a :class:`~dev.locales._errors.LocaleWriteConflictError`, telling the
   operator to retry rather than silently clobbering.
 
 The lock alone would leave the second class unguarded; the digest check alone
@@ -38,8 +38,8 @@ from __future__ import annotations
 import hashlib
 import os
 import time
-from collections.abc import Iterator
-from contextlib import contextmanager
+from collections.abc import Generator
+from contextlib import contextmanager, suppress
 from pathlib import Path
 
 from cadrumo.core import pid_is_alive
@@ -47,7 +47,7 @@ from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.logging import get_logger
 
-from ._errors import LocaleError, LocaleWriteConflict
+from ._errors import LocaleError, LocaleWriteConflictError
 
 _log = get_logger(__name__)
 
@@ -56,6 +56,7 @@ LOCK_FILENAME = ".catalogue-write.lock"
 
 _DEFAULT_WAIT_SECONDS = 60.0
 _POLL_SECONDS = 0.02
+_UNLINK_RETRY_SECONDS = 10.0
 _ABSENT_DIGEST = ""
 
 
@@ -73,7 +74,7 @@ def _digest_path(path: Path) -> str:
 
 
 def _decode_universal_newlines(raw: bytes) -> str:
-    """Decode ``raw`` exactly as :meth:`Path.read_text` would.
+    r"""Decode ``raw`` exactly as :meth:`Path.read_text` would.
 
     The line-oriented leaf writers rebuild a catalogue from
     ``splitlines(keepends=True)``, so their output depends on whether the
@@ -121,7 +122,7 @@ class CatalogueWriteGuard:
         """Atomically write ``text`` unless ``path`` changed since it was read.
 
         Raises:
-            LocaleWriteConflict: When ``path`` no longer carries the bytes this
+            LocaleWriteConflictError: When ``path`` no longer carries the bytes this
                 guard read, meaning another writer landed a change that this
                 write would silently discard.
             LocaleError: When ``path`` was never read through this guard.
@@ -134,7 +135,7 @@ class CatalogueWriteGuard:
                 "Every catalogue write must be paired with the read it is based on."
             )
         if _digest_path(path) != expected:
-            raise LocaleWriteConflict(
+            raise LocaleWriteConflictError(
                 f"{path.name} changed while this edit was in flight; the edit was not written. "
                 "Another writer or a hand edit landed first. Re-run the command to apply it on top."
             )
@@ -147,7 +148,7 @@ def catalogue_write_guard(
     locales_dir: Path,
     *,
     wait_seconds: float = _DEFAULT_WAIT_SECONDS,
-) -> Iterator[CatalogueWriteGuard]:
+) -> Generator[CatalogueWriteGuard]:
     """Hold the catalogue write lock for one read-modify-write cycle.
 
     Args:
@@ -169,12 +170,18 @@ def catalogue_write_guard(
 
 
 def _try_create(lock: Path) -> bool:
-    """Atomically create ``lock`` stamped with this PID, or report it held."""
+    """Atomically create ``lock`` stamped with this PID, or report it held.
+
+    A ``PermissionError`` counts as held rather than propagating: on Windows a
+    lockfile whose delete is still pending, or one a peer has open to read the
+    holder PID, refuses the open with ``ERROR_ACCESS_DENIED``. Both clear on
+    their own, so the caller should keep polling.
+    """
     flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY
     flags |= getattr(os, "O_NOINHERIT", 0) | getattr(os, "O_CLOEXEC", 0)
     try:
         descriptor = os.open(lock, flags, 0o600)
-    except FileExistsError:
+    except (FileExistsError, PermissionError):
         return False
     try:
         os.write(descriptor, str(os.getpid()).encode("ascii"))
@@ -211,7 +218,10 @@ def _reclaim_if_stale(lock: Path) -> None:
         _log.debug("locale catalogue lock reclaim aborted; holder changed under reclaim")
         return
     _log.debug("reclaiming locale catalogue lock stamped with dead pid=%s", holder)
-    lock.unlink(missing_ok=True)
+    # Best effort: a peer reclaiming the same stale lock, or reading its stamp,
+    # can block the unlink briefly. Losing the race just means another poll.
+    with suppress(PermissionError):
+        lock.unlink(missing_ok=True)
 
 
 def _acquire(lock: Path, *, wait_seconds: float) -> None:
@@ -235,11 +245,32 @@ def _acquire(lock: Path, *, wait_seconds: float) -> None:
 
 
 def _release(lock: Path) -> None:
-    """Drop the catalogue lock, never removing one stamped by another process."""
+    """Drop the catalogue lock, never removing one stamped by another process.
+
+    The unlink is retried because Windows refuses to delete a file while any
+    handle is open, and every waiting writer opens the lockfile to read its
+    holder PID. Failing to release would be worse than slow: the stamped holder
+    is this live process, so no peer would ever reclaim the lock as stale and
+    every later writer would block until its own timeout.
+
+    Raises:
+        LocaleError: When the lock could not be removed within the retry window.
+    """
     if _read_holder(lock) != os.getpid():
         _log.debug("locale catalogue lock not released; it is no longer stamped with this pid")
         return
-    lock.unlink(missing_ok=True)
+    deadline = time.monotonic() + _UNLINK_RETRY_SECONDS
+    while True:
+        try:
+            lock.unlink(missing_ok=True)
+            return
+        except PermissionError:
+            if time.monotonic() >= deadline:
+                raise LocaleError(
+                    f"Could not release the locale catalogue lock at {lock} within "
+                    f"{_UNLINK_RETRY_SECONDS:g}s. Delete it by hand once no catalogue edit is running."
+                ) from None
+            time.sleep(_POLL_SECONDS)
 
 
 __all__ = ["LOCK_FILENAME", "CatalogueWriteGuard", "catalogue_write_guard"]

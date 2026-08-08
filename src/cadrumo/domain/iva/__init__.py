@@ -58,6 +58,7 @@ from ._classification import (
     IvaTerritorialScope,
     PartyFact,
     TransactionKind,
+    classifiable_categories,
     classify_iva,
     domestic_categories_by_rate_kind,
     rate_kind_for_domestic_category,
@@ -122,7 +123,13 @@ from ._legend_derivation import (
     derive_category_from_regime_legend,
     match_regime_legend,
 )
-from ._lookup import cite, lookup_rate, rate_kinds_for_declared_rate, rate_table_covers
+from ._lookup import (
+    cite,
+    lookup_rate,
+    rate_kinds_for_declared_rate,
+    rate_table_covers,
+    rate_table_covers_any_positive_tier,
+)
 from ._m303_settlement import (
     is_m303_annual_settlement_period,
     m303_annual_settlement_order_key,
@@ -314,6 +321,7 @@ __all__ = [
     "category_bears_taxable_base",
     "category_cuota_is_zero_by_law",
     "cite",
+    "classifiable_categories",
     "classify_input_deduction",
     "classify_invoice_line_for_iva",
     "classify_iva",
@@ -355,6 +363,7 @@ __all__ = [
     "rate_kind_for_domestic_category",
     "rate_kinds_for_declared_rate",
     "rate_table_covers",
+    "rate_table_covers_any_positive_tier",
     "recargo_rate_for_applied_rate",
     "refund_disposition_available",
     "refund_eligibility_reason",

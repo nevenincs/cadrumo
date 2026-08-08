@@ -154,9 +154,12 @@ if TYPE_CHECKING:
         ClassificationAssembly,
         DeclaredFact,
         DeclaredFacts,
+        IvaCategoryResolution,
         MissingClassifierInput,
         assemble_classification_criteria,
         classify_from_assembled_criteria,
+        declared_category_from_document_record,
+        resolve_ingestion_iva_category,
     )
     from ._classifier_inputs import ClassifierInputs, collect_classifier_inputs
     from ._closure_findings import (
@@ -198,12 +201,6 @@ if TYPE_CHECKING:
         rederive_artefact_on_host,
         survey_cloud_consent,
     )
-    from ._country_vocabulary_advisory import (
-        COUNTRY_VOCABULARY_ADVISED_STATUSES,
-        CountryVocabularyAdvisory,
-        CountryVocabularyWarning,
-        country_vocabulary_advisory,
-    )
     from ._counterparty_establishment import (
         CounterpartyEstablishmentConflictError,
         CounterpartyEstablishmentContradiction,
@@ -215,6 +212,12 @@ if TYPE_CHECKING:
         forget_counterparty_establishment,
         record_counterparty_establishment,
         resolve_counterparty_establishment,
+    )
+    from ._country_vocabulary_advisory import (
+        COUNTRY_VOCABULARY_ADVISED_STATUSES,
+        CountryVocabularyAdvisory,
+        CountryVocabularyWarning,
+        country_vocabulary_advisory,
     )
     from ._deterministic_findings import (
         DETERMINISTIC_CHECKS,
@@ -256,6 +259,7 @@ if TYPE_CHECKING:
     )
     from ._evidence_input import EvidenceInput
     from ._evidence_textlayer import text_layer_transcriber_identity, transcribe_text_layer
+    from ._extracted_document_cache import write_cached_transcription
     from ._extraction_draft_store import (
         ExtractionDraftDocument,
         ExtractionDraftRepository,
@@ -292,6 +296,11 @@ if TYPE_CHECKING:
         IdentityRoleResolution,
         canonical_identity_token,
         resolve_counterparty_identity,
+    )
+    from ._invoice_extraction_authority import (
+        InvoiceExtractionAuthorityValues,
+        default_invoice_extraction_period,
+        resolve_invoice_extraction_authority_values,
     )
     from ._llm_classification import (
         apply_evidence_classification,
@@ -424,6 +433,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "load_extraction_drafts": "._extraction_draft_store",
     "read_extraction_draft": "._extraction_draft_store",
     "write_extraction_draft": "._extraction_draft_store",
+    "write_cached_transcription": "._extracted_document_cache",
     "BLOCKING_REASON_BY_DISCREPANCY_KIND": "._confirmation_gate",
     "IDENTITY_FIELDS": "._confirmation_gate",
     "ConfirmationBlockedError": "._confirmation_gate",
@@ -437,6 +447,9 @@ _LAZY_EXPORTS: dict[str, str] = {
     "MissingClassifierInput": "._classification_assembly",
     "assemble_classification_criteria": "._classification_assembly",
     "classify_from_assembled_criteria": "._classification_assembly",
+    "declared_category_from_document_record": "._classification_assembly",
+    "IvaCategoryResolution": "._classification_assembly",
+    "resolve_ingestion_iva_category": "._classification_assembly",
     "ClassifierInputs": "._classifier_inputs",
     "collect_classifier_inputs": "._classifier_inputs",
     "ConfirmedEstablishment": "._confirm_establishment",
@@ -535,6 +548,9 @@ _LAZY_EXPORTS: dict[str, str] = {
     "InvoiceDraft": "._evidence_draft",
     "InvoiceDraftLine": "._evidence_draft",
     "InvoiceDraftRateBreakdown": "._evidence_draft",
+    "InvoiceExtractionAuthorityValues": "._invoice_extraction_authority",
+    "resolve_invoice_extraction_authority_values": "._invoice_extraction_authority",
+    "default_invoice_extraction_period": "._invoice_extraction_authority",
     "LedgerCatalogueResetReport": "._models",
     "LedgerClassificationRuleRepository": "._rule_repository",
     "LedgerExportCommand": "._models",
@@ -692,6 +708,7 @@ __all__ = [
     "BLOCKING_REASON_BY_DISCREPANCY_KIND",
     "BULK_CLASSIFY_ALLOWED_COLUMNS",
     "CLASSIFIED_BY_MANUAL",
+    "COUNTRY_VOCABULARY_ADVISED_STATUSES",
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD",
     "DETERMINISTIC_CHECKS",
     "FILER_POSTCODE_FACT_PATH",
@@ -699,7 +716,6 @@ __all__ = [
     "IDENTITY_FIELDS",
     "MINIMUM_DISPLAY_ID_WIDTH",
     "PARTY_ATTRIBUTED_ADDRESS_FIELDS",
-    "COUNTRY_VOCABULARY_ADVISED_STATUSES",
     "ROUNDING_ALLOWANCE_PER_TERM",
     "AeatRecordProjectionError",
     "AnchorEvaluation",
@@ -754,6 +770,8 @@ __all__ = [
     "InvoiceDraftDeclineResult",
     "InvoiceDraftLine",
     "InvoiceDraftRateBreakdown",
+    "InvoiceExtractionAuthorityValues",
+    "IvaCategoryResolution",
     "LedgerCatalogueResetReport",
     "LedgerClassificationRuleRepository",
     "LedgerExportCommand",
@@ -846,6 +864,8 @@ __all__ = [
     "counterparty_establishment_key",
     "country_vocabulary_advisory",
     "create_manual_transaction",
+    "declared_category_from_document_record",
+    "default_invoice_extraction_period",
     "derive_confirmation_id",
     "derive_operator_iva_substrate",
     "describe_aeat_party_identifier",
@@ -908,6 +928,8 @@ __all__ = [
     "resolve_counterparty_identity",
     "resolve_draft_counterparty_establishment",
     "resolve_filer_territorial_scope",
+    "resolve_ingestion_iva_category",
+    "resolve_invoice_extraction_authority_values",
     "resolve_lineage_transaction_id",
     "resolve_party_attribution_by_colocation",
     "resolve_transaction_id",
@@ -936,6 +958,7 @@ __all__ = [
     "validate_ratios_profile",
     "verified_provenance",
     "within_rounding_allowance",
+    "write_cached_transcription",
     "write_confirmation_record",
     "write_extraction_draft",
 ]

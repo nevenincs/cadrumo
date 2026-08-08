@@ -17,12 +17,15 @@ Major declarations:
   catalogues.
 * :class:`StrictUniqueKeyLoader` rejects duplicate YAML keys at parse time.
 * :class:`LocaleError` reports maintenance failures.
+* :func:`catalogue_write_guard` serialises catalogue edits and refuses a write
+  that would discard a change landed by another writer.
 * :data:`LocaleNode` documents the recursive locale-tree shape consumers walk.
 """
 
 from __future__ import annotations
 
 from ._ast_scanner import scan_namespace_markers, scan_source_tree
+from ._errors import LocaleError, LocaleWriteConflictError
 from ._fstring_registry import get_registered_keys
 from ._paths import DOCS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
@@ -33,7 +36,8 @@ from ._status import (
     catalogue_status,
     classify_catalogue_leaf,
 )
-from .manager import LocaleError, LocaleManager, LocaleNode, StrictUniqueKeyLoader
+from ._write_guard import CatalogueWriteGuard, catalogue_write_guard
+from .manager import LocaleManager, LocaleNode, StrictUniqueKeyLoader
 
 __all__ = [
     "DOCS_SRC_DIR",
@@ -42,11 +46,14 @@ __all__ = [
     "SRC_DIR",
     "CatalogueLeafState",
     "CatalogueStatusRecord",
+    "CatalogueWriteGuard",
     "LocaleError",
     "LocaleManager",
     "LocaleNode",
+    "LocaleWriteConflictError",
     "StrictUniqueKeyLoader",
     "catalogue_status",
+    "catalogue_write_guard",
     "classify_catalogue_leaf",
     "get_registered_keys",
     "scan_modelo_schema_keys",

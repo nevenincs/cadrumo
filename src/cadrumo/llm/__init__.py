@@ -56,6 +56,10 @@ if TYPE_CHECKING:
         LocalVisionDocumentTranscriber,
         transcribe_document_images,
     )
+    from ._invoice_field_grounding import (
+        ground_extracted_fields,
+        parse_invoice_extraction_response,
+    )
     from ._suggestions import (
         ExtractionPayload,
         ExtractionProducer,
@@ -98,6 +102,7 @@ from ._errors import (
     LLMRateLimitError,
     LLMValidationError,
 )
+from ._invoice_extraction_prompt import render_invoice_extraction_prompt
 from ._models import (
     CachedEntry,
     CacheKey,
@@ -163,11 +168,14 @@ __all__ = [
     "build_text_field_extraction_prompt",
     "cloud_evidence_read_permitted",
     "extract_invoice_fields_from_text",
+    "ground_extracted_fields",
     "map_column_roles",
     "mint_evidence_consent_token",
     "parse_column_role_mapping_response",
+    "parse_invoice_extraction_response",
     "permitted_column_roles",
     "rasterise_pdf_pages_to_base64_png",
+    "render_invoice_extraction_prompt",
     "select_retention_removal_keys",
     "transcribe_document_images",
 ]
@@ -226,6 +234,23 @@ time.
 """
 
 
+_INVOICE_FIELD_GROUNDING_EXPORTS = frozenset(
+    {
+        "ground_extracted_fields",
+        "parse_invoice_extraction_response",
+    }
+)
+"""Extraction-response parsing and field grounding, resolved lazily from :mod:`._invoice_field_grounding`.
+
+The two entry points of the invoice reading chain: one turns a model response
+into the typed response envelope, the other grounds those fields into a draft
+carrying provenance. Lazy for the reason the readers above are: the module
+imports ``application.ledger`` for the draft shape it returns, while the
+ledger's own paths import this package, so an eager binding would close that
+loop at import time.
+"""
+
+
 def __getattr__(name: str) -> object:
     """Resolve the application-facing readers and interchange DTOs lazily.
 
@@ -253,4 +278,8 @@ def __getattr__(name: str) -> object:
         from . import _evidence_draft_text
 
         return getattr(_evidence_draft_text, name)
+    if name in _INVOICE_FIELD_GROUNDING_EXPORTS:
+        from . import _invoice_field_grounding
+
+        return getattr(_invoice_field_grounding, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

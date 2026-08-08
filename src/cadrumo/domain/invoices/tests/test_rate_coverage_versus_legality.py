@@ -12,8 +12,8 @@ guessed historical value rather than an authored, corpus-backed one.
 
 The ledger path already drew this distinction. The invoice path did not, so the
 same registry gap produced a truthful message on one surface and a false one on
-the other. These tests pin the distinction on the invoice path and pin that
-both paths answer from the SAME predicate, so they cannot drift back apart.
+the other. These tests pin the distinction on the invoice path and pin the
+scoped predicate both paths now call, so they cannot drift back apart.
 """
 
 from __future__ import annotations
@@ -23,13 +23,13 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.aggregation._iva_ledger import _rate_table_covers
 from cadrumo.domain.invoices import IvaRate, iva_rate_percentage
 from cadrumo.domain.iva import (
     EUMemberState,
     IvaRateKind,
     IvaRateNotFoundError,
     rate_table_covers,
+    rate_table_covers_any_positive_tier,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -94,26 +94,26 @@ def test_a_covered_date_resolves_normally() -> None:
     assert iva_rate_percentage(IvaRate.RATE_2, date(2024, 11, 1)) == Decimal("0.02")
 
 
-def test_both_layers_answer_coverage_from_one_predicate() -> None:
-    """The ledger predicate must DELEGATE, not reimplement.
+def test_the_positive_tier_reading_is_exactly_the_three_positive_tiers() -> None:
+    """The scoped predicate both layers ask must not quietly re-admit the zero tier.
 
-    Two predicates over the same table can drift into disagreeing about the
-    same date, which is exactly how this asymmetry arose. Comparing them across
-    a span that crosses the coverage edge catches a reimplementation that agrees
-    on the easy cases.
+    A caller resolving a POSITIVE declared rate asks a narrower question than
+    the bare date form: only the tiers bearing a positive ordinary rate can
+    say whether such a rate could have been priced. Widening it to any tier
+    made a 2023 date look covered the moment the RDL 20/2022 food rows landed,
+    routing a 21 % line back to the false legality message on exactly the dates
+    the coverage wording exists for.
 
-    The ledger asks a NARROWER question than the bare date form: it only reaches
-    this branch for a positive declared rate, so it scopes coverage to the tiers
-    bearing a positive ordinary rate. Comparing against that scoped reading
-    rather than the any-tier one is the honest equivalence -- the earlier
-    date-only comparison passed for the wrong reason once the zero tier gained
-    2023 records, since both sides then said "covered" about different tiers.
+    Reconstructing the tier set here rather than importing it is the point: an
+    edit that adds ZERO to the predicate's own tuple must fail this, which it
+    could not if both sides read one constant. The span crosses the coverage
+    edge so a widening that agrees on the easy dates is still caught.
     """
     positive_tiers = (IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED)
     for year in (2022, 2023, 2024, 2025, 2026):
         for month in (1, 6, 12):
             probe = date(year, month, 1)
             expected = any(rate_table_covers(EUMemberState.ES, probe, kind) for kind in positive_tiers)
-            assert _rate_table_covers(probe) == expected, (
-                f"the ledger and domain coverage answers disagree on {probe.isoformat()}"
+            assert rate_table_covers_any_positive_tier(EUMemberState.ES, probe) == expected, (
+                f"the positive-tier coverage answer is not the three positive tiers on {probe.isoformat()}"
             )

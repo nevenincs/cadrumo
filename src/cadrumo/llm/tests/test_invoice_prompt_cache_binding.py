@@ -34,6 +34,7 @@ from ...core.time import now
 from ...domain.transactions import DecisionProvenance
 from .._evidence_draft_text import TextInvoiceFieldExtractor
 from .._evidence_draft_vision import LocalVisionDocumentTranscriber
+from ...application.ledger import resolve_invoice_extraction_authority_values
 from .._invoice_extraction_prompt import build_invoice_extraction_prompt
 from .._models import LLMProvider, LLMRequest
 
@@ -41,6 +42,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
 _Q4_2024 = Period.from_year_and_code(2024, "4T")
+_ANNUAL_2026_VALUES = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026)
+_Q4_2024_VALUES = resolve_invoice_extraction_authority_values(period=_Q4_2024)
 
 
 class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
@@ -117,7 +120,7 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
     """
 
     def test_the_text_stamp_carries_the_period_and_the_prompt_fingerprint(self) -> None:
-        extractor = TextInvoiceFieldExtractor(model="some-text-model", period=_ANNUAL_2026)
+        extractor = TextInvoiceFieldExtractor(model="some-text-model", authority_values=_ANNUAL_2026_VALUES)
         compiled = build_invoice_extraction_prompt(period=_ANNUAL_2026)
 
         assert extractor.decided_by == f"llm:local-text-extract:some-text-model:rates-{compiled.rate_provenance}"
@@ -125,18 +128,18 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
 
     def test_a_different_rate_period_produces_a_different_stamp(self) -> None:
         """The discriminating control: the stamp moves when the rates move."""
-        annual = TextInvoiceFieldExtractor(model="m", period=_ANNUAL_2026)
-        q4 = TextInvoiceFieldExtractor(model="m", period=_Q4_2024)
+        annual = TextInvoiceFieldExtractor(model="m", authority_values=_ANNUAL_2026_VALUES)
+        q4 = TextInvoiceFieldExtractor(model="m", authority_values=_Q4_2024_VALUES)
 
         assert annual.decided_by != q4.decided_by
 
     def test_the_transport_half_is_still_derived_from_the_provider(self) -> None:
         """The pre-existing property survives the extension."""
-        local = TextInvoiceFieldExtractor(model="m", period=_ANNUAL_2026)
+        local = TextInvoiceFieldExtractor(model="m", authority_values=_ANNUAL_2026_VALUES)
         cloud = TextInvoiceFieldExtractor(
             model="m",
             provider=LLMProvider.ANTHROPIC,
-            period=_ANNUAL_2026,
+            authority_values=_ANNUAL_2026_VALUES,
         )
 
         assert local.decided_by.startswith("llm:local-text-extract:")
@@ -152,7 +155,7 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         extractor = TextInvoiceFieldExtractor(
             model="claude-haiku-4-5-20251001",
             provider=LLMProvider.ANTHROPIC,
-            period=_ANNUAL_2026,
+            authority_values=_ANNUAL_2026_VALUES,
         )
 
         provenance = DecisionProvenance(decided_by=extractor.decided_by, decided_at=now())

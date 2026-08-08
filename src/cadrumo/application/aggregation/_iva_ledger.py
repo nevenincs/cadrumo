@@ -77,7 +77,7 @@ from ...domain.iva import (
     domestic_categories_by_rate_kind,
     iva_category_components,
     rate_kinds_for_declared_rate,
-    rate_table_covers,
+    rate_table_covers_any_positive_tier,
     validate_prorrata_reference,
 )
 from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterRepositoryProtocol
@@ -1287,7 +1287,7 @@ def _classify_iva_transaction(
         )
     rate_kind = _iva_rate_kind_for(transaction.iva_rate, on_date=operation_date)
     if rate_kind is None:
-        covered = _rate_table_covers(operation_date)
+        covered = rate_table_covers_any_positive_tier(EUMemberState.ES, operation_date)
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
@@ -1812,30 +1812,6 @@ def _prorrata_reference_for(
             reason=IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE,
             detail=str(exc),
         )
-
-
-def _rate_table_covers(on_date: date) -> bool:
-    """Return whether ANY Spanish rate record covers ``on_date``.
-
-    Separates the two ways :func:`_iva_rate_kind_for` returns ``None``, so a
-    date the registry simply does not reach is not reported as an unsupported
-    rate. Delegates to :func:`~cadrumo.domain.iva.rate_table_covers`, which
-    lives beside the table it reads and answers the same question for the
-    invoice path -- one authority consulted from both layers, rather than two
-    predicates that can drift into disagreeing about the same date.
-
-    Asks only about the tiers bearing a POSITIVE ordinary rate. A declared zero
-    always classifies through the zero-tier exemption, so this branch is only
-    reached for a positive rate, and the zero tier's own coverage says nothing
-    about whether such a rate could have been priced. Counting it made a 2023
-    date look covered the moment the RDL 20/2022 food rows landed -- which
-    would have restored the "unsupported rate" message this function exists to
-    replace, on exactly the dates it was written for.
-    """
-    return any(
-        rate_table_covers(EUMemberState.ES, on_date, kind)
-        for kind in (IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED)
-    )
 
 
 def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:

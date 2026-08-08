@@ -1,7 +1,8 @@
-"""Compile the invoice-extraction prompt from the authorities that own its numbers.
+"""Render the invoice-extraction prompt from values an authority already resolved.
 
 The prompt is an ARTEFACT, not a literal: a digit-free template plus values
-resolved at compile time from the registry surfaces that already own them.
+substituted at render time. This module owns the TEMPLATE and the rendering; it
+owns none of the numbers.
 
 Why that matters more here than anywhere else. ``aeat-registry-authority-flow``
 forbids inlining an AEAT rate, threshold or regulatory code as a Python literal,
@@ -11,23 +12,32 @@ the codebase for such a literal to hide: nothing type-checks it, no gate reads
 it, and a stale ``21`` would keep steering a reading model long after the
 registry moved.
 
-Where each number comes from:
+**So the renderer cannot reach an authority at all.** Every regulatory value
+arrives as data, in one frozen
+:class:`~application.ledger.InvoiceExtractionAuthorityValues` resolved by
+:func:`~application.ledger.resolve_invoice_extraction_authority_values`. This
+package is an adapter over a model transport, and an adapter that looks a rate up
+for itself has made itself a second consumer of the calculation authorities.
+Removing the reach is a stronger guarantee than remembering not to write ``21``:
+the only rate this module can print is one it was handed.
 
-* IVA rates: :func:`~domain.iva.load_iva_rate_table`, the dated legal-grade
-  authority over ``registry/aeat/iva/rates.toml``. Every record whose effective
-  window OVERLAPS the requested :class:`~core.Period` is enumerated, not the
-  single record in force on one chosen day -- RD-ley 4/2024 stepped part of the
-  reducido and super-reducido tiers mid-year, so a one-date read would omit a
-  rate the period's documents genuinely print.
-* Retención rates: :func:`~domain.transactions.statutory_activity_retencion_rates`,
-  the RIRPF art. 95 parameters under ``registry/aeat/legal/``.
-* The no-printed-tax vocabulary: :data:`~domain.iva.NO_PRINTED_TAX_IVA_CATEGORIES`,
-  derived from the canonical :class:`~domain.iva.IvaCategory` closed set.
-* The regime mentions: :data:`~domain.iva.REGIME_LEGENDS`, quoted from RD
-  1619/2012 art. 6.1's own guillemets in the bundled consolidated text. The
+What arrives, and what each part is for:
+
+* IVA rate percentages for the requested :class:`~core.Period` -- every record
+  whose effective window OVERLAPS it, because a period is a span and RD-ley
+  4/2024 stepped part of the reducido and super-reducido tiers mid-year.
+* Retención rate percentages, the RIRPF art. 95 figures.
+* The no-printed-tax :class:`~domain.iva.IvaCategory` members, rendered here into
+  the prose tokens the model reads.
+* The regime mentions RD 1619/2012 art. 6.1 obliges an issuer to print. The
   prompt asks the model to COPY one if printed, never to choose one -- a closed
   list offered as a recognition aid, not as a menu, because selecting from it
   would be the classification this stage does not do.
+
+**The two template scanners deliberately keep their own read** of the vocabulary
+they assert is absent. They are checks, not substitutions: a scanner handed its
+needle by the same caller that supplied the template could be handed an empty
+needle and would then report clean over anything at all.
 
 **Shape is a design constraint.** The target is the lowest-bound vision-capable
 model, so the prompt is enumerated bullets and per-field micro-guidance, never
@@ -88,6 +98,9 @@ from ._models import PromptDefinition, PromptRegistry
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from ..application.ledger import InvoiceExtractionAuthorityValues
+    from ..domain.iva import IvaCategory
+
 __all__ = [
     "INVOICE_EXTRACTION_PROMPT_ID",
     "INVOICE_EXTRACTION_PROMPT_VERSION",
@@ -96,6 +109,7 @@ __all__ = [
     "build_invoice_extraction_prompt",
     "default_extraction_period",
     "invoice_extraction_prompt_registry",
+    "render_invoice_extraction_prompt",
     "template_numeric_literals",
     "template_unsourced_legend_phrases",
 ]
@@ -253,25 +267,20 @@ def invoice_extraction_prompt_registry() -> PromptRegistry:
 
 
 def default_extraction_period() -> Period:
-    """Return the annual period a reader falls back to when the caller names none.
+    """Return the period a reader falls back to when the caller names none.
 
-    A document arriving for reading may not yet be bound to a filing period, so
-    the reader needs a coordinate to resolve rates against. The current civil
-    year's annual period (``0A``) is the honest default: it is derived from the
-    canonical civil-date authority (:func:`~core.time.today_madrid`) rather than
-    guessed, and it spans the whole year, so its enumeration is the UNION of
-    every rate in force at any point in it -- never a mid-year window that would
-    omit a rate a document legitimately prints.
-
-    A caller that knows the document's period passes it explicitly and gets a
-    narrower, more useful enumeration.
+    Delegates to
+    :func:`~application.ledger.default_invoice_extraction_period` rather than
+    re-deriving the fallback. Which coordinate an unbound document is read
+    against is a decision, and a decision with two homes is a decision that will
+    eventually be made two ways.
 
     Returns:
         :class:`~core.Period`: The current civil year's annual period.
     """
-    from ..core.time import today_madrid
+    from ..application.ledger import default_invoice_extraction_period
 
-    return Period.from_year_and_code(today_madrid().year, "0A")
+    return default_invoice_extraction_period()
 
 
 def template_numeric_literals(template: str | None = None) -> tuple[str, ...]:
@@ -313,54 +322,19 @@ def _join_pcts(values: Iterable[Decimal]) -> str:
     return ", ".join(_format_pct(value) for value in values)
 
 
-def _iva_rate_pcts_for(period: Period) -> tuple[Decimal, ...]:
-    """Return every registered Spanish IVA percentage overlapping ``period``.
-
-    Raises:
-        IvaCatalogueError: When the bundled rate registry cannot be read.
-    """
-    from ..domain.iva import EUMemberState, load_iva_rate_table
-
-    start = period.start_date
-    end = period.end_date
-    overlapping = {
-        record.pct
-        for record in load_iva_rate_table().get(EUMemberState.ES, ())
-        if record.effective_from <= end and (record.effective_until is None or record.effective_until >= start)
-    }
-    return tuple(sorted(overlapping))
-
-
-def _retencion_rate_pcts() -> tuple[Decimal, ...]:
-    """Return every RIRPF art. 95 retención rate as a percentage, ascending.
-
-    The registry stores these as fractions (``0.15``) because that is how a
-    transaction carries them; a printed invoice states the percentage, so the
-    prompt does too.
-
-    Raises:
-        TransactionValidationError: When the registry parameters cannot be read.
-    """
-    from ..domain.transactions import statutory_activity_retencion_rates
-
-    return tuple(sorted(rate * Decimal("100") for rate in statutory_activity_retencion_rates()))
-
-
-def _regime_legends() -> str:
+def _regime_legends(phrases: Iterable[str]) -> str:
     """Return the mandated regime mentions as one quoted, comma-joined line.
 
-    Read from :data:`~domain.iva.REGIME_LEGENDS` rather than restated here, for
-    the same reason the rates are: the phrases are fixed by RD 1619/2012 art. 6.1
-    and a copy in the template would be a second home for a legal vocabulary,
-    drifting silently the moment the regulation's list moves.
+    Substituted from the values handed in rather than restated here, for the same
+    reason the rates are: the phrases are fixed by RD 1619/2012 art. 6.1 and a
+    copy in the template would be a second home for a legal vocabulary, drifting
+    silently the moment the regulation's list moves.
 
     Quoted, because the model is being told to copy a phrase and the quotes mark
     where each one starts and ends -- a bare comma-joined line of Spanish prose
     gives a small model no boundary to copy between.
     """
-    from ..domain.iva import regime_legend_phrases
-
-    return ", ".join(f'"{phrase}"' for phrase in regime_legend_phrases())
+    return ", ".join(f'"{phrase}"' for phrase in phrases)
 
 
 def template_unsourced_legend_phrases(template: str | None = None) -> tuple[str, ...]:
@@ -392,22 +366,21 @@ def template_unsourced_legend_phrases(template: str | None = None) -> tuple[str,
     return tuple(phrase for phrase in regime_legend_phrases() if phrase.casefold() in folded)
 
 
-def _zero_cuota_reasons() -> str:
+def _zero_cuota_reasons(categories: Iterable[IvaCategory]) -> str:
     """Return the no-printed-tax category tokens as one comma-joined line.
 
-    Derived from :data:`~domain.iva.NO_PRINTED_TAX_IVA_CATEGORIES` rather than
-    listed here, so a category the law moves in or out of the set moves in the
-    prompt too.
+    Substituted from the members handed in rather than listed here, so a category
+    the law moves in or out of the set moves in the prompt too. The members
+    arrive typed and are rendered to prose only here, which keeps the closed-set
+    fact and its presentation apart.
 
-    Reading this line off the M303 cuota-less set instead would be the closest
-    available answer and the wrong one: that set excludes the received side of
-    inversión del sujeto pasivo *because* it bears a self-assessed 303 cuota,
-    while the invoice for it repercutes nothing at all. The question the prompt
-    asks is about the paper, so it takes the paper's authority.
+    The resolver reads that set off the paper's own authority rather than the
+    M303 cuota-less set, which would be the closest available answer and the
+    wrong one: that set excludes the received side of inversión del sujeto pasivo
+    *because* it bears a self-assessed 303 cuota, while the invoice for it
+    repercutes nothing at all.
     """
-    from ..domain.iva import NO_PRINTED_TAX_IVA_CATEGORIES
-
-    return ", ".join(sorted(category.value.replace("_", " ") for category in NO_PRINTED_TAX_IVA_CATEGORIES))
+    return ", ".join(sorted(category.value.replace("_", " ") for category in categories))
 
 
 def _field_lines() -> str:
@@ -461,11 +434,59 @@ def _json_skeleton() -> str:
     return "{\n" + body + "\n}"
 
 
-def build_invoice_extraction_prompt(*, period: Period) -> CompiledInvoiceExtractionPrompt:
-    """Compile the extraction prompt for ``period`` from the registry authorities.
+def render_invoice_extraction_prompt(
+    *,
+    values: InvoiceExtractionAuthorityValues,
+) -> CompiledInvoiceExtractionPrompt:
+    """Render the extraction prompt from already-resolved authority ``values``.
+
+    The whole of this module's regulatory content arrives through this one
+    argument. Nothing here reads a rate table, a parameter file or a category
+    set, so the prompt cannot carry a number the application layer did not
+    resolve for the period it names.
 
     Args:
-        period: Filing period whose in-force rates the prompt enumerates. The
+        values: The regulatory values to substitute, resolved by
+            :func:`~application.ledger.resolve_invoice_extraction_authority_values`
+            against a law-determined period.
+
+    Returns:
+        :class:`CompiledInvoiceExtractionPrompt`: The prompt text plus the
+        values that produced it.
+    """
+    definition = invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID)
+    text = definition.template.format(
+        anchor_suffix=ANCHOR_KEY_SUFFIX,
+        field_lines=_field_lines(),
+        role_evidence_suffix=ROLE_EVIDENCE_KEY_SUFFIX,
+        role_evidence_lines=_role_evidence_lines(),
+        iva_rates=_join_pcts(values.iva_rate_pcts),
+        retencion_rates=_join_pcts(values.retencion_rate_pcts),
+        zero_cuota_reasons=_zero_cuota_reasons(values.no_printed_tax_categories),
+        regime_legends=_regime_legends(values.regime_legend_phrases),
+        json_skeleton=_json_skeleton(),
+    )
+    return CompiledInvoiceExtractionPrompt(
+        text=text,
+        period=values.period,
+        iva_rate_pcts=values.iva_rate_pcts,
+        retencion_rate_pcts=values.retencion_rate_pcts,
+        fingerprint=sha256_hex(text.encode("utf-8"))[:_FINGERPRINT_LENGTH],
+        template_version=definition.version,
+    )
+
+
+def build_invoice_extraction_prompt(*, period: Period) -> CompiledInvoiceExtractionPrompt:
+    """Resolve ``period``'s authority values and render the prompt from them.
+
+    The convenience shape for a caller holding only a period. It resolves through
+    the application layer's compiler and renders; it does not itself know where
+    any number comes from. A caller that already holds resolved values -- the
+    evidence-reading chain does, and resolves once per document rather than once
+    per prompt -- calls :func:`render_invoice_extraction_prompt` directly.
+
+    Args:
+        period: Filing period whose in-force values the prompt enumerates. The
             period is the caller's law-determined coordinate, never a stored
             revision id fed back into resolution
             (``aeat-registry-authority-flow``).
@@ -478,25 +499,6 @@ def build_invoice_extraction_prompt(*, period: Period) -> CompiledInvoiceExtract
         PeriodError: When ``period`` carries no calendar span, so no rate window
             can be resolved against it.
     """
-    definition = invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID)
-    iva_rate_pcts = _iva_rate_pcts_for(period)
-    retencion_rate_pcts = _retencion_rate_pcts()
-    text = definition.template.format(
-        anchor_suffix=ANCHOR_KEY_SUFFIX,
-        field_lines=_field_lines(),
-        role_evidence_suffix=ROLE_EVIDENCE_KEY_SUFFIX,
-        role_evidence_lines=_role_evidence_lines(),
-        iva_rates=_join_pcts(iva_rate_pcts),
-        retencion_rates=_join_pcts(retencion_rate_pcts),
-        zero_cuota_reasons=_zero_cuota_reasons(),
-        regime_legends=_regime_legends(),
-        json_skeleton=_json_skeleton(),
-    )
-    return CompiledInvoiceExtractionPrompt(
-        text=text,
-        period=period,
-        iva_rate_pcts=iva_rate_pcts,
-        retencion_rate_pcts=retencion_rate_pcts,
-        fingerprint=sha256_hex(text.encode("utf-8"))[:_FINGERPRINT_LENGTH],
-        template_version=definition.version,
-    )
+    from ..application.ledger import resolve_invoice_extraction_authority_values
+
+    return render_invoice_extraction_prompt(values=resolve_invoice_extraction_authority_values(period=period))

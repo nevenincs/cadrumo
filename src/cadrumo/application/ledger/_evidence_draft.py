@@ -901,6 +901,18 @@ def _read_transcription_semantically(
 
     from ...llm import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
     from ._grounded_reading import ground_draft_against_transcription
+    from ._invoice_extraction_authority import (
+        default_invoice_extraction_period,
+        resolve_invoice_extraction_authority_values,
+    )
+
+    # Resolved HERE, once, and handed down. The rates, the statutory retención
+    # figures and the no-printed-tax category set are regulatory values, so this
+    # layer determines them and the reading adapter receives them; the adapter
+    # holds no authority of its own and cannot print a rate this call did not
+    # produce. Resolving once per document also means both branches below read
+    # under the same values, which a per-prompt resolution does not guarantee.
+    authority_values = resolve_invoice_extraction_authority_values(period=default_invoice_extraction_period())
 
     try:
         # The pinned wrapper stays the on-host route and is left untouched: its
@@ -910,12 +922,13 @@ def _read_transcription_semantically(
         # explicitly-consented read constructs the extractor DIRECTLY instead,
         # so the reach-around gate keeps the wrapper as its target.
         if off_host_provider is None:
-            read = extract_invoice_fields_from_text(transcription)
+            read = extract_invoice_fields_from_text(transcription, authority_values=authority_values)
         else:
             read = TextInvoiceFieldExtractor(
                 provider=off_host_provider,
                 model=settings.cadrumo_llm_cloud_text_model,
                 settings=settings,
+                authority_values=authority_values,
                 consent_token=consent_token,
             ).extract(transcription=transcription)
     except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:

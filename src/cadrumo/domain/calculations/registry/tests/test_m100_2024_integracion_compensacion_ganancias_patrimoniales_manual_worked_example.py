@@ -57,11 +57,17 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaId, ValidatedRegistryAuthority, validated_casilla_id
+from .. import (
+    CasillaId,
+    ManualWorkedExamplePayload,
+    ValidatedRegistryAuthority,
+    validated_casilla_id,
+)
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -124,10 +130,29 @@ _REL_2024: dict[str, Decimal] = {
 }
 
 
+_ORACLE_PAYLOAD_NAME = "modelo-100-2024-integracion-compensacion-ganancias-patrimoniales.json"
+
+
+def _oracle_payload() -> ManualWorkedExamplePayload:
+    """Read the bundled oracle through the registry's own strict payload model."""
+    path = Path(bundled_path("corpus", "manual_oracles")) / _ORACLE_PAYLOAD_NAME
+    return ManualWorkedExamplePayload.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+def _declared_gp_inputs() -> dict[CasillaId, Decimal]:
+    """The manual's four ganancia/pérdida figures, read FROM the oracle."""
+    declared = _oracle_payload().declared_inputs
+    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
+    return {
+        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
+        for casilla_id, value in declared.by_casilla_id.items()
+    }
+
+
 def _scenario(
     *,
-    ganancia_general: str,
-    perdida_general: str,
+    ganancia_general: str | None = None,
+    perdida_general: str | None = None,
     scenario_id: str,
     grounded: bool,
 ) -> RegistryCalculationScenario:
@@ -154,18 +179,21 @@ def _scenario(
             ),
         )
     )
+    # The manual's own four figures by default; a caller overrides the two general
+    # legs only to build a scenario the example does NOT state, so a departure from
+    # the printed case is visible at the call site rather than buried in a literal.
+    inputs = _declared_gp_inputs()
+    if ganancia_general is not None:
+        inputs[_GANANCIA_BASE_GENERAL_LEAF] = Decimal(ganancia_general)
+    if perdida_general is not None:
+        inputs[_PERDIDA_BASE_GENERAL_LEAF] = Decimal(perdida_general)
     return RegistryCalculationScenario(
         id=scenario_id,
         modelo="100",
         revision="2024",
         filing_year=2024,
         period="0A",
-        inputs={
-            _GANANCIA_BASE_GENERAL_LEAF: Decimal(ganancia_general),
-            _PERDIDA_BASE_GENERAL_LEAF: Decimal(perdida_general),
-            _GANANCIA_BASE_AHORRO_LEAF: Decimal("5600.00"),
-            _PERDIDA_BASE_AHORRO_LEAF: Decimal("1600.00"),
-        },
+        inputs=inputs,
         binding_values=_BASE_BINDINGS_2024,
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2024,
@@ -186,8 +214,6 @@ def test_integracion_compensacion_ganancias_patrimoniales_manual_worked_example(
     figure quoted verbatim from the manual's own solucion.
     """
     scenario = _scenario(
-        ganancia_general="4500.00",
-        perdida_general="9600.00",
         scenario_id="m100-2024-integracion-compensacion-ganancias-patrimoniales",
         grounded=True,
     )
@@ -207,8 +233,6 @@ def test_integracion_compensacion_anti_tautology_saldo_slot_flips() -> None:
     does not hand-compute the swapped figures; only the slot flip is asserted.
     """
     net_loss = _scenario(
-        ganancia_general="4500.00",
-        perdida_general="9600.00",
         scenario_id="m100-2024-gp-net-loss",
         grounded=True,
     )

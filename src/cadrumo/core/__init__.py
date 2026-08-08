@@ -164,6 +164,7 @@ from ._irnr import (
     TipoRentaIrnr,
     project_m210_tipo_renta_code,
 )
+from ._iva_category_resolution import IvaCategoryOutcome
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._model_catalogue import (
     ANTHROPIC_COMMERCIAL_TERMS,
@@ -452,6 +453,7 @@ __all__: list[str] = [
     "IdentityReferent",
     "ImageMediaType",
     "IntracomOperationType",
+    "IvaCategoryOutcome",
     "LedgerSortField",
     "LedgerSortOrder",
     "LicenceVerification",

@@ -18,7 +18,7 @@ class LocaleError(Exception):
     """
 
 
-class LocaleWriteConflict(LocaleError):
+class LocaleWriteConflictError(LocaleError):
     """Raised when a catalogue changed under an in-flight read-modify-write.
 
     A subclass of :class:`LocaleError` so the developer CLI's existing
@@ -27,4 +27,4 @@ class LocaleWriteConflict(LocaleError):
     """
 
 
-__all__ = ["LocaleError", "LocaleWriteConflict"]
+__all__ = ["LocaleError", "LocaleWriteConflictError"]

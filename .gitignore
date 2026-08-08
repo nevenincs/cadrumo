@@ -461,3 +461,8 @@ cache/
 /aeat-bp-continue*.json
 /m100xsd_probe_out.xml
 /*_probe_out.xml
+
+# Transient lockfile serialising `python -m dev.locales` catalogue writers. It
+# lives beside the catalogues because that is what the writers contend over,
+# and is reclaimed on the next attempt if its holder died.
+/src/cadrumo/locales/.catalogue-write.lock
