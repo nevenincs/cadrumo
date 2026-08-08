@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:1aecc4690357b540a07028940c0d0e9ec4bcb7eafce89345ce5d0ee94cf9eb52'
+body_hash: 'sha256:a7a2f98bc548df48c835bc641183562b20ca5e3f76bfc167b7d0e24546c66c74'
 step_id: 'S166'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -30,6 +30,8 @@ related:
 The stamp is per field, which is the shape the retiring gate needs: one party's postal code can read attributed while the country beside it does not, and a regression proves exactly that pair disagreeing. A draft-level or party-level flag could not express it, so the two states would have shipped together indefinitely.
 
 The advisory reaches the operator through the envelope's one diagnostic channel rather than the review payload. That payload deliberately prints each party's postal code and country and never the territory read off them, on the recorded ground that a second copy of a regulatory boundary must not live on the review surface. An advisory about a territory therefore has no target there. The notice names the territory each party's values would establish, quoted from the ladder's own printed-evidence walk, so the operator gets a concrete claim to contest while the boundary keeps one home.
+
+There is a second and independent reason the Notice channel is right, established by the postal-shape lane after this row was scoped. Every discrepancy kind blocks by construction: there is no advisory tier on the findings channel, and the confirmation gate refuses to import when a kind is unmapped. So the choice was never between a quieter finding and a notice. An attribution stamp routed through findings would REFUSE CONFIRMATION on every draft carrying an unresolved party, which on the majority population is exactly the alert-fatigue failure the ledger contract names for the unconsumed-IVA advisory -- an alert that fires on the ordinary case trains operators to dismiss it, and then it protects nobody on the case that matters. The Notice channel is therefore not merely the sanctioned route for this diagnostic; it is the only one that produces an advisory at all rather than a refusal. This record originally justified the route on the review-payload conflict alone, which is true and weaker.
 
 The establishment ladder has NO production caller at HEAD: outside its own module and the package facade's lazy map, nothing routes a document's parties into it. The notice is therefore written conditionally throughout — it says where the values WOULD place each party, never that a territory was established — and the context key carrying it is named for that mood. The values are the ladder's declared inputs, so the warning is about real exposure, but nothing has yet consumed them on a live path.
 
