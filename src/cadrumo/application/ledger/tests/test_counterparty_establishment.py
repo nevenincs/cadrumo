@@ -163,7 +163,11 @@ def test_an_unverifiable_identifier_has_no_key_and_finds_nothing(
     another.
     """
     assert counterparty_establishment_key("B99999999") is None
-    assert counterparty_establishment_key("DE123456789") is None, "a foreign number without its prefix is not one"
+    # The bare body, genuinely without its prefix. This assertion previously
+    # named that property while passing `DE123456789`, which CARRIES its prefix
+    # -- so it locked in the absent-country-means-Spain default it was written
+    # to describe, and read as protection while doing the opposite.
+    assert counterparty_establishment_key("123456789") is None, "a foreign number without its prefix is not one"
 
     resolution = resolve_counterparty_establishment(
         bucket_id=_BUCKET_ID,
@@ -174,6 +178,42 @@ def test_an_unverifiable_identifier_has_no_key_and_finds_nothing(
 
     with pytest.raises(CounterpartyEstablishmentInputError):
         _confirm(repository, tax_identifier="B99999999")
+
+
+def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_country(
+    repository: CounterpartyEstablishmentRepository,
+) -> None:
+    """An intra-community VAT number states its own country, so it has an identity.
+
+    The population this whole apparatus exists for. While an absent country
+    defaulted to Spain, a foreign counterparty printing a prefixed VAT number
+    and no address block got no key at all -- so the operator's answer to "where
+    is this party established" could be neither stored nor retrieved, and the
+    ladder's remembered-fact rung was unreachable for them.
+
+    Asserted through the key AND through a real store round trip, because the
+    key alone would pass against a repository that still refused the fact. The
+    Spanish control below is what keeps this from being read as "any string now
+    verifies".
+    """
+    key = counterparty_establishment_key("SE556677889901")
+    assert key is not None
+    assert key == counterparty_establishment_key("SE 556677889901"), "separators are not identity"
+
+    stored = _confirm(repository, tax_identifier="SE556677889901", scope=IvaTerritorialScope.EU_MEMBER)
+    assert stored.counterparty_key == key
+    resolution = resolve_counterparty_establishment(
+        bucket_id=_BUCKET_ID,
+        tax_identifier="SE556677889901",
+        repository=repository,
+    )
+    assert resolution.fact is not None
+    assert resolution.fact.value is IvaTerritorialScope.EU_MEMBER
+
+    # A country the caller SUPPLIES still decides, so a stated country that
+    # disagrees with the printed prefix stays a refusal rather than being
+    # silently resolved in the prefix's favour.
+    assert counterparty_establishment_key("SE556677889901", country_code="ES") is None
 
 
 # --------------------------------------------------------------------------

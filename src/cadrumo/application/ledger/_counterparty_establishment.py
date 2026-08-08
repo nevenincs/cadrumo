@@ -132,10 +132,19 @@ def counterparty_establishment_key(
     Args:
         tax_identifier: The counterparty's identifier as printed.
         country_code: The country the identifier is stated under, when the
-            document says. ``None`` takes the Spanish path, matching the
-            identifier authority — an unqualified identifier on a Spanish
-            invoice is Spanish, and a foreign one printed without its prefix
-            simply does not verify.
+            document says. ``None`` asks the identifier's own prefix, matching
+            the identifier authority — an unqualified identifier on a Spanish
+            invoice is Spanish, a prefixed intra-community one names its own
+            Member State, and a foreign one printed without its prefix simply
+            does not verify.
+
+            That distinction is load-bearing here rather than cosmetic. While
+            the absence defaulted to Spain, a foreign counterparty whose
+            document printed a prefixed VAT number and no address country got
+            no key at all — so no confirmed establishment fact could be stored
+            for them and none could be retrieved, disabling the ladder's
+            remembered-fact rung for exactly the population the
+            intra-community and export treatment exists for.
 
     Returns:
         The 64-character key, or ``None`` when the identifier does not verify.
