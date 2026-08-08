@@ -327,7 +327,14 @@ class ProfileManagerApp(App[None]):
             panel = self.query_one(f"#section-{section.key}", Static)
             panel.border_title = self._section_title(section)
             panel.remove_children()
-            table: DataTable[str] = DataTable(cursor_type="row", zebra_stripes=True)
+            # Named per section: a profile with two dozen sections tabs
+            # through as many identical, anonymous DataTable stops
+            # otherwise — indistinguishable in the accessibility tree and
+            # to anything inspecting focus (a screen reader, this
+            # widget's own id-addressed CSS, the evaluation harness) even
+            # though the row cursor and the panel's own border title tell
+            # the operator apart visually.
+            table: DataTable[str] = DataTable(id=f"table-{section.key}", cursor_type="row", zebra_stripes=True)
             panel.mount(table)
             self._table_by_section[section.key] = table
             self._columns_by_section[section.key] = table.add_columns(
