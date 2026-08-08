@@ -8,9 +8,9 @@ related:
   - "[[2026-07-20-release-asset-transport-audit]]"
 supersedes:
   - '2026-07-20-release-asset-transport-adr'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:4f22ea040b9dbcbc1c43b6fcdcf2650b6eda19b763b0916570b4b93b9e8b711e'
+body_hash: 'sha256:0cf6d81c4a78bb962276db580b62344aca1ba32a3aab918dd5ffc1cb89924775'
 ---
 # `release-asset-transport` adr: `evidence and cohort transport returns to Actions artifacts` | (**status:** `accepted`)
 

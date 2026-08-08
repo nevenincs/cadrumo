@@ -4,7 +4,7 @@ tags:
   - '#aeat-design-relayout-boundary'
 date: '2026-08-08'
 modified: '2026-08-08'
-body_hash: 'sha256:0d5e0209b2da593b137e7834e1ce507c78b86956427ece5d41e22c483ef93c05'
+body_hash: 'sha256:f715b181d1f60b709da2ef356b4f62fd8c72dd1efd44f8c2e69ccc77c90dbdc3'
 tier: L3
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
@@ -198,6 +198,7 @@ Run the hardened gate and the full tree with owner triage, record the divergence
 - [ ] `W05.P11.S70` - Record in the campaign audit document that Modelo 200 filing years 2022 and 2023 sit inside the prescripcion window while no registry revision claims them, so they refuse today as a coverage gap rather than as a mis-write, and state that this campaign deliberately does not close that gap because its standing goal is that no filing year is written at wrong offsets rather than that every reachable year is served; `.vault/audit/`.
 - [ ] `W05.P11.S75` - Decide whether the ambiguous-revision refusal's localised sentence should name the filing year, deferred deliberately rather than overlooked - the year already reaches the operator through structured context and the raiser-supplied suggestion so the omission costs clarity rather than actionability, while changing the text means the four locale catalogues which currently carry several agents' uncommitted translations, so the trade was judged not worth it for information already delivered; `src/cadrumo/locales/`.
 - [ ] `W05.P11.S81` - Report to the Modelo 720 owner that its 2013-y-siguientes revision claims filing year 2012 while its only declared layout design applies from 2013, a one-year underhang rather than the multi-year drift this campaign addresses - either the period selector reaches a year before AEAT published a record design for the modelo, or the source catalogue's applies_from is a year conservative, and deciding which needs someone who knows the modelo's first filing year rather than an outside guess. Outside this campaign's scope and reported for the same reason the Modelo 123 finding was: scope governs what is changed, not what is reported; `.vault/audit/`.
+- [ ] `W05.P11.S82` - Build the identity-pattern canary the 2026-05-30 security audit recommended and nobody built, reusing the sanitiser's existing residual-identity detection rather than a second copy - pattern plus the project's own control-letter checksum via validate_identity, findings that never carry the matched text, and path-scoped exclusions with a stated reason each rather than any value allowlist since an allowlist would itself carry the identifier. Census measured first across 40325 text files: 2247 checksum-valid occurrences in 778 files, 33 distinct values, split 1922 in tests, 272 in vault, 15 in docs, 15 in eleven production-source files, 12 in locales - so pattern plus checksum alone is unusable as a gate and the fixture convention is undocumented; `dev/`.
 
 ## Parallelization
 

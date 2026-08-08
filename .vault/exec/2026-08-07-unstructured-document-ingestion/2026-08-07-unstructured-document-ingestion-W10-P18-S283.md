@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:18b854d5cc081c7d29c8e74f770c1e5bcefba801662dbd79bcf2aaf78875f141'
+body_hash: 'sha256:5c0ef6c68946da8f53aec94c70a6502498f40de5c3d28931b11fbb97fd02fef3'
 step_id: 'S283'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -63,3 +63,17 @@ The same pattern that deleted this module also stripped the workflow steps that 
 That surface was deliberately not repaired here. The gate also fails on job-permission drift unrelated to evidence release, restoring steps into a workflow that has been restructured since needs the lane that owns it, and a security control re-landed piecemeal by a lane that does not own the path is how a control comes back in name only.
 
 The recurring mechanism behind all of this is worth naming once: a bare commit takes the entire index, so it takes whatever any other agent has staged. Three separate strips of one subsystem were carried by commits whose messages describe unrelated work. The deletions are individually invisible in review, because each commit's message and its actual contents are about different things.
+
+## Correction 2026-08-08
+
+The reading above is half wrong, and the half that is wrong is the conclusion rather than the evidence.
+
+The MECHANISM was collateral, and that finding stands unchanged: the deleting commit carried a message about the ingestion review gate, its stated pathspec sat inside its own message body because the quote was never closed before the separator, and it therefore ran bare and took whatever was staged. Nothing about that commit selected these files.
+
+But the module's RETIREMENT was deliberate and ruled. The transport ADR that this record cited as governing had been superseded, and the superseding record retires the seal, verify, manifest-emission and garbage-collection surfaces explicitly, requiring the module be reduced to the publication leak sweep and renamed — which is exactly what `evidence_leak_sweep.py` is. The method error was quoting an ADR as authority without checking whether it had been superseded; the one-spelling grep that read a renamed control as a deleted one was downstream of that.
+
+So the full restoration recorded above was too broad. It returned the retired surfaces along with the live ones, including the garbage-collect verb the superseding record removed rather than left dormant precisely because it can delete releases. No gate reddened, because the gates forbid release-deleting CALLS from workflows and the restored module added none — the hazard was dormant capability, which is the shape that ruling exists to refuse.
+
+The narrowing supersedes it. What survives moved to a release-asset transport module beside the three consumers that hold it; the retired surfaces stayed deleted; and a property gate now refuses any developer-harness module that can delete a release, so the ruling is enforced by construction rather than by one file's absence.
+
+What remains true from the original finding is the part that mattered most: the retirement was landed without sweeping the three consumers, so a ruling that read as in force left the tree unable to collect at all. A deliberate execution would have taken the consumers in the same change.
