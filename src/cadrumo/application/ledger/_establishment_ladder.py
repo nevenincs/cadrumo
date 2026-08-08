@@ -155,17 +155,26 @@ class EstablishmentRung(StrEnum):
             independent signal agreeing with it, where the address rungs settled
             nothing and no rung indicated Spain. Weaker than the printed rungs
             above it, which is why it is consulted after them.
-        PRINTED_COUNTRY: The printed address country named a country whose
-            territory is settled by the country alone.
-        SPANISH_POSTAL_CODE: The country evidence named Spain and the printed
-            postal code separated the three Spanish IVA territories.
+        ADDRESS_COUNTRY: The country stated in the party's address block named
+            a country whose territory is settled by the country alone.
+
+            Named for WHERE the evidence sits, not for how it was rendered.
+            It was ``PRINTED_COUNTRY`` while a printed document was the only
+            thing that could feed it; a structured record states the same
+            country in an element, and an operator reading "printed" against
+            a machine-readable invoice is told the value came from somewhere
+            it did not. The rung is one rung either way -- the same
+            authority decides what a country establishes -- so the label
+            names the address rather than the medium.
+        SPANISH_POSTAL_CODE: The country evidence named Spain and the postal
+            code in the address separated the three Spanish IVA territories.
         CONFIRMED_COUNTERPARTY_FACT: An operator had already confirmed this
             counterparty's establishment, and the paper settled nothing that
             disagreed.
     """
 
     CONCORDANT_REGISTRATION = "concordant_registration"
-    PRINTED_COUNTRY = "printed_country"
+    ADDRESS_COUNTRY = "address_country"
     SPANISH_POSTAL_CODE = "spanish_postal_code"
     CONFIRMED_COUNTERPARTY_FACT = "confirmed_counterparty_fact"
 
@@ -441,7 +450,7 @@ def _printed_evidence(
 
     from_country = territorial_scope_for_country(country_code)
     if from_country is not None:
-        return from_country, EstablishmentRung.PRINTED_COUNTRY, None
+        return from_country, EstablishmentRung.ADDRESS_COUNTRY, None
 
     # Spain reaches here rather than above BY DESIGN: the country rung refuses to
     # resolve `ES` because it names the State while the IVA territory inside it

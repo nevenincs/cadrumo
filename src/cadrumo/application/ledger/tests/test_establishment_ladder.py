@@ -115,8 +115,8 @@ _MEASURED_CASES: tuple[tuple[str | None, str | None, EstablishmentRung | None, I
     ("España", _LAS_PALMAS, EstablishmentRung.SPANISH_POSTAL_CODE, IvaTerritorialScope.ES_CANARIAS),
     ("España", _MADRID, EstablishmentRung.SPANISH_POSTAL_CODE, IvaTerritorialScope.ES_MAINLAND),
     ("España", None, None, None),
-    ("France", _PARIS, EstablishmentRung.PRINTED_COUNTRY, IvaTerritorialScope.EU_MEMBER),
-    ("Alemania", _BERLIN, EstablishmentRung.PRINTED_COUNTRY, IvaTerritorialScope.EU_MEMBER),
+    ("France", _PARIS, EstablishmentRung.ADDRESS_COUNTRY, IvaTerritorialScope.EU_MEMBER),
+    ("Alemania", _BERLIN, EstablishmentRung.ADDRESS_COUNTRY, IvaTerritorialScope.EU_MEMBER),
     (None, _MADRID, None, None),
 )
 
@@ -168,7 +168,7 @@ def test_the_country_rung_stops_the_ladder_before_a_foreign_postal_code(
     resolved = _resolve(repository, country_name="France", postal_code=_PARIS)
 
     assert resolved.scope is IvaTerritorialScope.EU_MEMBER
-    assert resolved.rung is EstablishmentRung.PRINTED_COUNTRY
+    assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
 
     skipped_rung_answer = territorial_scope_for_spanish_postal_code(_PARIS)
     assert skipped_rung_answer is IvaTerritorialScope.ES_MAINLAND
@@ -683,7 +683,7 @@ class TestRungReachabilityFromADraft:
         )
 
         assert resolved.scope is IvaTerritorialScope.EU_MEMBER
-        assert resolved.rung is EstablishmentRung.PRINTED_COUNTRY
+        assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
 
     def test_a_printed_spanish_country_name_reaches_the_postal_rung(
         self,

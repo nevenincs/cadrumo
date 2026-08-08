@@ -169,7 +169,7 @@ class TestConcordantPapersResolveSilently:
         resolved = _resolve(repository, tax_identifier=_GERMAN_VAT, country_name="Alemania", postal_code=_BERLIN)
 
         assert resolved.scope is IvaTerritorialScope.EU_MEMBER
-        assert resolved.rung is EstablishmentRung.PRINTED_COUNTRY
+        assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
         assert resolved.source is ClassifierInputSource.DOCUMENT_EVIDENCE
         assert resolved.registration_conflict is None
 
