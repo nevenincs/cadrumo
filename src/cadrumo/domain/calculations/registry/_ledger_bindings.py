@@ -547,7 +547,7 @@ class _IvaLedgerSelector(BaseModel):
         return self
 
 
-def _iva_ledger_selector(binding: DataBindingDefinition) -> _IvaLedgerSelector:
+def iva_ledger_selector(binding: DataBindingDefinition) -> _IvaLedgerSelector:
     """Validate and parse a binding selector into a typed IVA selector."""
     try:
         return _IvaLedgerSelector.model_validate(_selector_as_dict(binding))
@@ -572,7 +572,7 @@ def validate_ledger_iva_aggregation_binding_definition(
     """
     if binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_iva_aggregation source")
-    selector = _iva_ledger_selector(binding)
+    selector = iva_ledger_selector(binding)
 
     if binding.aggregation is not None:
         op = binding_aggregation_op(binding)
@@ -781,7 +781,7 @@ def resolve_ledger_iva_aggregation_binding_values(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        parse_selector=_iva_ledger_selector,
+        parse_selector=iva_ledger_selector,
         build_matcher=_iva_build_matcher,
         aggregate=_iva_aggregate,
     )
@@ -830,7 +830,7 @@ def unsupported_ledger_iva_observations(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        parse_selector=_iva_ledger_selector,
+        parse_selector=iva_ledger_selector,
         build_matcher=_iva_build_matcher,
         is_declarable=lambda observation: True,
         extra_exclusion=lambda observation: observation.category in CUOTA_LESS_M303_IVA_CATEGORIES,
@@ -923,7 +923,7 @@ def unrouted_ledger_iva_quantities(
         revision,
         observations,
         source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        parse_selector=_iva_ledger_selector,
+        parse_selector=iva_ledger_selector,
         build_matcher=_iva_build_matcher,
         read_fact=lambda selector: selector.fact,
         independent_facts=_IVA_INDEPENDENT_QUANTITY_FACTS,
@@ -982,7 +982,7 @@ def structurally_unroutable_iva_base_categories(
     registry-expressiveness gap in its own right), so a caller working a
     different modelo must supply its own set rather than default into M303's.
 
-    Uses the real production selector parser (:func:`_iva_ledger_selector`)
+    Uses the real production selector parser (:func:`iva_ledger_selector`)
     and matcher (:func:`_iva_build_matcher`) -- never a re-implementation of
     the match rule. For each ``base_amount_sum`` binding whose declared
     categories include the candidate, a probe observation is assembled from
@@ -1007,7 +1007,7 @@ def structurally_unroutable_iva_base_categories(
         observation of that category, in enum declaration order.
     """
     base_selectors = [
-        _iva_ledger_selector(binding)
+        iva_ledger_selector(binding)
         for binding in revision.bindings
         if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
     ]

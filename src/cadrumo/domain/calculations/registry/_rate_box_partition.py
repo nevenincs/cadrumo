@@ -40,12 +40,13 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
+from typing import TypeGuard
 
 from pydantic import Field
 
 from ....core.aggregation import BindingSourceKind
 from ._ids import BindingId, CasillaId
-from ._ledger_bindings import _iva_ledger_selector
+from ._ledger_bindings import iva_ledger_selector
 from ._schema import DataBindingDefinition, ModeloRevision
 from ._schema_base import RegistryModel
 
@@ -135,8 +136,13 @@ def _distinct(casilla_ids: Iterable[CasillaId]) -> list[CasillaId]:
     return list(dict.fromkeys(casilla_ids))
 
 
+def _is_object_sequence(value: object) -> TypeGuard[Sequence[object]]:
+    """Narrow an unparameterized runtime sequence to untrusted object entries, excluding ``str``."""
+    return isinstance(value, Sequence) and not isinstance(value, str)
+
+
 def _rate_kind_names(value: object) -> tuple[str, ...]:
-    if not isinstance(value, Sequence) or isinstance(value, str):
+    if not _is_object_sequence(value):
         return ()
     return tuple(str(getattr(kind, "value", kind)) for kind in value)
 
@@ -151,7 +157,7 @@ def _iva_selector_axes(binding: DataBindingDefinition) -> Mapping[str, object]:
     otherwise split one partition into two groups, silencing the gate for
     exactly the return it exists to catch.
     """
-    return _iva_ledger_selector(binding).model_dump()
+    return iva_ledger_selector(binding).model_dump()
 
 
 def _casillas_by_binding(revision: ModeloRevision) -> dict[BindingId, list[CasillaId]]:
