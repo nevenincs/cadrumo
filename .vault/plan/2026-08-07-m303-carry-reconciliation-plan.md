@@ -4,7 +4,7 @@ tags:
   - '#m303-carry-reconciliation'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:5124082ab02f3a0bd4dc6c7f27a00903b7a6eb85f1c9647c83dca8f4e44562d7'
+body_hash: 'sha256:0872609e86c89f4f5a6cc0cb5670f84966578ec27ba244ee03c61decf9bbe935'
 tier: L1
 related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
@@ -65,6 +65,7 @@ decimal expectations and call itself parity.
 ## Steps
 
 - [ ] `S01` - Discover token-naming modules by AST scan instead of a hand-listed tuple, and rebind the nine surviving twin declarations to the authority; `src/cadrumo/application/calculations/tests/test_iva_compensation_casillas.py src/cadrumo/application/calculations/__init__.py src/cadrumo/application/calculations/_iva_compensation_annual_partition.py src/cadrumo/application/modelo/_filed_revision_observation.py src/cadrumo/application/modelo/_iva_wallet_gate.py`.
+- [ ] `S09` - Rebind the four further twin literals discovery found in the registry binding validator, which a hand-listed inventory of nine had also missed; `src/cadrumo/domain/iva_compensation/_filed_derivation.py src/cadrumo/domain/iva_compensation/__init__.py src/cadrumo/domain/calculations/registry/_bindings.py src/cadrumo/application/calculations/_iva_compensation_casillas.py`.
 - [ ] `S02` - Route the local filing path refunded rewrite through the canonical derivation and drop the contradicted formula provenance to match the sede path; `src/cadrumo/application/modelo/_filed_revision_observation.py src/cadrumo/application/modelo/tests`.
 - [ ] `S03` - Replace the algebraically vacuous available equals posterior plus generated assertion on the resultado basis with an independent check; `src/cadrumo/domain/iva_compensation/tests/test_filed_derivation_disposition.py`.
 - [ ] `S04` - Record the four deferred review findings as follow-up rows without implementing them; `.vault/plan/2026-08-07-m303-carry-reconciliation-plan.md`.
