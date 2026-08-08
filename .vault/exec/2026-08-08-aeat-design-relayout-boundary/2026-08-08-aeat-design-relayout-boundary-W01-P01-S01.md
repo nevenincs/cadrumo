@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:2b7f201f54aa885df71d55d2f59d3867132775d6dbe359013283308422bc1865'
+body_hash: 'sha256:ff0534e129b032ff1a307f4e890cd83c4b4fe7e1ed5417feb8397edd327998a4'
 step_id: 'S01'
 related:
   - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
@@ -29,7 +29,7 @@ related:
 
 Per revision, with the pass that found each boundary. `P1` is box-number movement, `P2` page length and record set, `P3` occupancy, `P4` the description-keyed unnumbered pass.
 
-**Modelo 200 `2024-y-siguientes` - union 1, gate 1, no gap.**
+**Modelo 200 `2024-y-siguientes` - union 1, gate 1.** **CORRECTED by `W01.P02.S72`: that agreement was worthless as evidence.** Both this union and the gate used a box-number marker capped at four digits while Modelo 200 numbers its boxes with five, so both were blind to 99.6% of its boxes and agreed by sharing one defect. Re-derived with the canonical marker the boundary COUNT is unchanged at 1 - Modelo 200's revision claims a single adjacent design pair, already flagged by other signals - but the evidence changes completely: 1140 of 3194 shared boxes moved, 246 added, 145 removed, none of which any instrument could previously see. The number survived; the method did not.
 
     2024/2025        P2,P3,P4    SPLIT
 

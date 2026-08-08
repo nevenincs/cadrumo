@@ -6,7 +6,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:e5219865e83b2ed83bce9357a29ee6091657abe07a247bdd0eab1a0062707bd4'
+body_hash: 'sha256:3d8b0911ca206b652af7a4fa4922c32f8ba6ddf97c0302787c63831607fc8f5f'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -22,6 +22,7 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S65]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S68]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S71]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S72]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
 ---
 
@@ -49,6 +50,7 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S65` - Assert the reserved-to-real occupancy transition alongside the retirement direction
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S68` - Order the design inventories chronologically rather than by filename
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S71` - Add a box-set MEMBERSHIP signal alongside the movement signal
+- `2026-08-08-aeat-design-relayout-boundary-W01-P02-S72` - Widen the bracketed box-number marker beyond four digits
 
 ### plan
 
