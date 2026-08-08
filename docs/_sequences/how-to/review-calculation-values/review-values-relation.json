@@ -74,12 +74,12 @@
           "revision_id": "2025",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "28667392b7ba",
+          "short_work_unit_id": "cdafd119d9fd",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "23dd9f2506c3295a8ba8eb6f0c5c3f2eaa1fead98c53d24196e728667392b7ba"
+          "work_unit_id": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
         },
         "schema_version": "2",
         "status": "success"
@@ -165,7 +165,7 @@
             "renta-2025-profile-taxpayer-birth-date": "1985-06-15",
             "renta-2025-profile-unidad-familiar-otros-miembros-base": "0"
           },
-          "calculation_revision_id": "033b4ac5684135a42f44f7a63ce46f6690004f066989929f99b592cc9ffbe659",
+          "calculation_revision_id": "8a4112bbfd37052fbfdeea08a228d06dabe693beea27dc6f48c61211e38bf14a",
           "casilla_values": {
             "0001": "0",
             "0002": "0",
@@ -57950,13 +57950,13 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 033b4ac5684135a42f44f7a63ce46f6690004f066989929f99b592cc9ffbe659 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 100 --year 2025 --period 0A` and re-inspect this one with `aeat app modelo work revision 033b4ac5684135a42f44f7a63ce46f6690004f066989929f99b592cc9ffbe659`.",
+          "saved_confirmation": "Saved as draft calculation revision 8a4112bbfd37052fbfdeea08a228d06dabe693beea27dc6f48c61211e38bf14a (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 100 --year 2025 --period 0A` and re-inspect this one with `aeat app modelo work revision 8a4112bbfd37052fbfdeea08a228d06dabe693beea27dc6f48c61211e38bf14a`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "23dd9f2506c3295a8ba8eb6f0c5c3f2eaa1fead98c53d24196e728667392b7ba"
+          "work_unit_id": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
         },
         "schema_version": "2",
         "status": "warning"

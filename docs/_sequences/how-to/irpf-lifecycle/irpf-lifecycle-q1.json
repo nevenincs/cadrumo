@@ -197,12 +197,12 @@
           "revision_id": "2019-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "41987b138584",
+          "short_work_unit_id": "3d88172f4204",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+          "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
         "status": "success"
@@ -252,7 +252,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "5b4c684d0fbf3b566ff088ca60cb51a471a4e7b06343fcb94b1d1b160bfef7f5",
+          "calculation_revision_id": "b1671a3e6e17861361b59524813a948619239903d95ae5ef9f068f1e0afe5483",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -867,13 +867,13 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 5b4c684d0fbf3b566ff088ca60cb51a471a4e7b06343fcb94b1d1b160bfef7f5 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 5b4c684d0fbf3b566ff088ca60cb51a471a4e7b06343fcb94b1d1b160bfef7f5`.",
+          "saved_confirmation": "Saved as draft calculation revision b1671a3e6e17861361b59524813a948619239903d95ae5ef9f068f1e0afe5483 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision b1671a3e6e17861361b59524813a948619239903d95ae5ef9f068f1e0afe5483`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+          "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
         "status": "success"
@@ -938,7 +938,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "5b4c684d0fbf3b566ff088ca60cb51a471a4e7b06343fcb94b1d1b160bfef7f5",
+          "calculation_revision_id": "b1671a3e6e17861361b59524813a948619239903d95ae5ef9f068f1e0afe5483",
           "completeness_status": "complete",
           "findings": [
             {
@@ -978,7 +978,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "843d948c31f6d42f20bafab52f0b2887027ae02cdd5119fbdc6872487de98101",
+          "verification_report_id": "476075dca01051e47072adb4d73cc707c439c2da23a97e0409526668e42d8587",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -1026,10 +1026,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "9ce1e107f3274efedf521e4206f71c5571122d30e64bbb54a91f6b2774e830b9",
+          "bucket_event_id": "f3d4343440cc1dde51e0a99aca720688154321c364c19b8399bd1e48b902de27",
           "bucket_id": "<bucket-id>",
           "byte_size": 946,
-          "calculation_revision_id": "5b4c684d0fbf3b566ff088ca60cb51a471a4e7b06343fcb94b1d1b160bfef7f5",
+          "calculation_revision_id": "b1671a3e6e17861361b59524813a948619239903d95ae5ef9f068f1e0afe5483",
           "file_sha256": "53811a0d55fa5f20dd0a84f5edfa7e8d2cb010cd7e69d5a2212eb8f59f69eb6b",
           "filing_year": 2026,
           "format": "fichero-boe",
@@ -1040,7 +1040,7 @@
             "code": "1T",
             "filing_year": 2026
           },
-          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+          "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
         "status": "warning"

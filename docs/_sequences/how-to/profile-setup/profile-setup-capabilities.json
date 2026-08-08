@@ -39,7 +39,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "llm_vision\tenabled\tprofile\tprofile opted in to llm_vision\ngoogle_export\tenabled\tprofile\tprofile opted in to google_export\n"
+      "text": "llm_vision\tenabled\tprofile\tprofile opted in to llm_vision\ngoogle_export\tenabled\tprofile\tprofile opted in to google_export\ncloud_evidence_upload\tdisabled\tdefault\tcloud_evidence_upload is off by default (no profile opt-in)\n"
     },
     {
       "argv": [
@@ -87,6 +87,12 @@
               "enabled": true,
               "reason": "profile opted in to google_export",
               "source": "profile"
+            },
+            {
+              "capability": "cloud_evidence_upload",
+              "enabled": false,
+              "reason": "cloud_evidence_upload is off by default (no profile opt-in)",
+              "source": "default"
             }
           ],
           "profile_id": "<profile-id>"

@@ -8,8 +8,7 @@
         "app",
         "ledger",
         "invoice",
-        "catalogue",
-        "create",
+        "add",
         "--kind",
         "issued",
         "--counterparty-nif",
@@ -38,20 +37,26 @@
       ],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.invoice.catalogue.create",
+        "command": "ledger.invoice.add",
         "notices": [],
         "result": {
           "base_total": "2000.00",
+          "base_total_eur": "2000.00",
           "bucket_id": "<bucket-id>",
           "counterparty_country": "DE",
           "counterparty_name": "Kunde GmbH",
           "counterparty_tax_id": "DE345678901",
           "currency": "EUR",
+          "fx_rate": null,
+          "fx_rate_date": null,
+          "fx_rate_source": null,
           "grand_total": "2000.00",
+          "grand_total_eur": "2000.00",
           "invoice_id": "5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17",
           "invoice_number": "EU-CAT-001",
           "issued_at": "2026-02-10",
           "iva_total": "0.00",
+          "iva_total_eur": "0.00",
           "kind": "issued",
           "linked_transaction_ids": [],
           "notes": "",
@@ -73,7 +78,6 @@
         "app",
         "ledger",
         "invoice",
-        "catalogue",
         "list"
       ],
       "captures": [],
@@ -92,27 +96,32 @@
         "app",
         "ledger",
         "invoice",
-        "catalogue",
         "view",
         "5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17"
       ],
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": "ledger.invoice.catalogue.view",
+        "command": "ledger.invoice.view",
         "notices": [],
         "result": {
           "base_total": "2000.00",
+          "base_total_eur": "2000.00",
           "bucket_id": "<bucket-id>",
           "counterparty_country": "DE",
           "counterparty_name": "Kunde GmbH",
           "counterparty_tax_id": "DE345678901",
           "currency": "EUR",
+          "fx_rate": null,
+          "fx_rate_date": null,
+          "fx_rate_source": null,
           "grand_total": "2000.00",
+          "grand_total_eur": "2000.00",
           "invoice_id": "5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17",
           "invoice_number": "EU-CAT-001",
           "issued_at": "2026-02-10",
           "iva_total": "0.00",
+          "iva_total_eur": "0.00",
           "kind": "issued",
           "linked_transaction_ids": [],
           "notes": "",
@@ -148,7 +157,7 @@
         {
           "json_path": "result.work_unit_id",
           "name": "work_unit_id",
-          "value": "7aa78645808773b506f3b2a73f0777b1b00172783713700bbd08e95ad170b07d"
+          "value": "1609deb31dbe07e1b21281e26d114d5a4ef4230a5e9d2f387e8c253f06e07c9f"
         }
       ],
       "envelope": {
@@ -178,12 +187,12 @@
           "revision_id": "2020-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "e95ad170b07d",
+          "short_work_unit_id": "253f06e07c9f",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "7aa78645808773b506f3b2a73f0777b1b00172783713700bbd08e95ad170b07d"
+          "work_unit_id": "1609deb31dbe07e1b21281e26d114d5a4ef4230a5e9d2f387e8c253f06e07c9f"
         },
         "schema_version": "2",
         "status": "success"
@@ -203,7 +212,7 @@
         "modelo",
         "work",
         "calculate",
-        "7aa78645808773b506f3b2a73f0777b1b00172783713700bbd08e95ad170b07d"
+        "1609deb31dbe07e1b21281e26d114d5a4ef4230a5e9d2f387e8c253f06e07c9f"
       ],
       "captures": [],
       "envelope": {
@@ -239,7 +248,7 @@
             "iva-349-declarante-numero-rectificaciones": "0",
             "iva-349-declarante-numero-rectificaciones-adquisicion": "0"
           },
-          "calculation_revision_id": "11ae9a6e78393de0f37d3b02acdd16a84a7658c753cf0921ac88d9fcf5429c5c",
+          "calculation_revision_id": "f144e5b7cbe826ee3e785fe192672cdcfd74b34959fc9419bd6d054ce35669e7",
           "casilla_values": {
             "decl.importe-operaciones": "2000.00",
             "decl.importe-rectificaciones": "0",
@@ -365,13 +374,13 @@
           "relation_overrides": {},
           "result_summary": [],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 11ae9a6e78393de0f37d3b02acdd16a84a7658c753cf0921ac88d9fcf5429c5c (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 349 --year 2026 --period 02` and re-inspect this one with `aeat app modelo work revision 11ae9a6e78393de0f37d3b02acdd16a84a7658c753cf0921ac88d9fcf5429c5c`.",
+          "saved_confirmation": "Saved as draft calculation revision f144e5b7cbe826ee3e785fe192672cdcfd74b34959fc9419bd6d054ce35669e7 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 349 --year 2026 --period 02` and re-inspect this one with `aeat app modelo work revision f144e5b7cbe826ee3e785fe192672cdcfd74b34959fc9419bd6d054ce35669e7`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "7aa78645808773b506f3b2a73f0777b1b00172783713700bbd08e95ad170b07d"
+          "work_unit_id": "1609deb31dbe07e1b21281e26d114d5a4ef4230a5e9d2f387e8c253f06e07c9f"
         },
         "schema_version": "2",
         "status": "warning"

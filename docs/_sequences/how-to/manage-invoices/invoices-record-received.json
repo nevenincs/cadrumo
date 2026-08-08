@@ -12,7 +12,9 @@
         "--kind",
         "received",
         "--counterparty-nif",
-        "A87654321",
+        "A87654323",
+        "--country-code",
+        "ES",
         "--counterparty-name",
         "Proveedor SA",
         "--invoice-number",
@@ -22,17 +24,13 @@
         "--taxable-base",
         "500",
         "--iva-rate",
-        "0.21",
-        "--iva-amount",
-        "105",
-        "--total-amount",
-        "605"
+        "21"
       ],
       "captures": [
         {
           "json_path": "result.invoice_id",
           "name": "invoice_id",
-          "value": "1610aa13bee81e99"
+          "value": "2d276305600c31de666ddd61dc33377cde314c59c10f99608db208ec0f46da1b"
         }
       ],
       "envelope": {
@@ -40,29 +38,28 @@
         "command": "ledger.invoice.add",
         "notices": [],
         "result": {
-          "bucket_event_ids": [
-            "d1f10d6c4241c2615dc8921392e049dbdeb99154e841e0d8fa6cd493a5151564"
-          ],
+          "base_total": "500.00",
+          "base_total_eur": "500.00",
           "bucket_id": "<bucket-id>",
+          "counterparty_country": "ES",
           "counterparty_name": "Proveedor SA",
-          "counterparty_nif": "A87654321",
-          "country_code": null,
-          "created_at": "2026-04-01T09:00:00Z",
+          "counterparty_tax_id": "sha256:c1fcd88f",
           "currency": "EUR",
-          "eu_iva_id": null,
           "fx_rate": null,
           "fx_rate_date": null,
-          "invoice_date": "2026-02-20",
-          "invoice_id": "1610aa13bee81e99",
+          "fx_rate_source": null,
+          "grand_total": "605.00",
+          "grand_total_eur": "605.00",
+          "invoice_id": "2d276305600c31de666ddd61dc33377cde314c59c10f99608db208ec0f46da1b",
           "invoice_number": "PROV-99",
-          "iva_amount": "105",
-          "iva_rate": "0.21",
+          "issued_at": "2026-02-20",
+          "iva_total": "105.00",
+          "iva_total_eur": "105.00",
+          "kind": "received",
+          "linked_transaction_ids": [],
           "notes": "",
           "operation_type": null,
-          "source_kind": "payable_invoice",
-          "taxable_base": "500",
-          "total_amount": "605",
-          "updated_at": "2026-04-01T09:00:00Z"
+          "payment_status": "PENDING"
         },
         "schema_version": "2",
         "status": "success"
@@ -82,9 +79,7 @@
         "ledger",
         "invoice",
         "view",
-        "1610aa13bee81e99",
-        "--kind",
-        "received"
+        "2d276305600c31de666ddd61dc33377cde314c59c10f99608db208ec0f46da1b"
       ],
       "captures": [],
       "envelope": {
@@ -92,27 +87,28 @@
         "command": "ledger.invoice.view",
         "notices": [],
         "result": {
-          "bucket_event_ids": [],
+          "base_total": "500.00",
+          "base_total_eur": "500.00",
           "bucket_id": "<bucket-id>",
+          "counterparty_country": "ES",
           "counterparty_name": "Proveedor SA",
-          "counterparty_nif": "A87654321",
-          "country_code": null,
-          "created_at": "2026-04-01T09:00:00Z",
+          "counterparty_tax_id": "sha256:c1fcd88f",
           "currency": "EUR",
-          "eu_iva_id": null,
           "fx_rate": null,
           "fx_rate_date": null,
-          "invoice_date": "2026-02-20",
-          "invoice_id": "1610aa13bee81e99",
+          "fx_rate_source": null,
+          "grand_total": "605.00",
+          "grand_total_eur": "605.00",
+          "invoice_id": "2d276305600c31de666ddd61dc33377cde314c59c10f99608db208ec0f46da1b",
           "invoice_number": "PROV-99",
-          "iva_amount": "105",
-          "iva_rate": "0.21",
+          "issued_at": "2026-02-20",
+          "iva_total": "105.00",
+          "iva_total_eur": "105.00",
+          "kind": "received",
+          "linked_transaction_ids": [],
           "notes": "",
           "operation_type": null,
-          "source_kind": "payable_invoice",
-          "taxable_base": "500",
-          "total_amount": "605",
-          "updated_at": "2026-04-01T09:00:00Z"
+          "payment_status": "PENDING"
         },
         "schema_version": "2",
         "status": "success"

@@ -41,12 +41,12 @@
         "notices": [],
         "result": {
           "bucket_event_ids": [
-            "57ab81047755faa7fbe047f687822adc264bc6585fbfb5e3e1906c0e04428107"
+            "ec10496135191214d662a70eacf77db3f739a457585f0bb2e8ce45e6bb5805b5"
           ],
           "bucket_id": "<bucket-id>",
-          "byte_size": 922,
+          "byte_size": 950,
           "export_format": "csv",
-          "export_id": "43892fa5a11089b1770c689d4e3a96d24fb53d61fb899414a3c65dc7a9cd9950",
+          "export_id": "5f0ddcff2e977990b1b5fd3fc6e107cf9b3cb3b5f7ac82e87d072c77fed11cf4",
           "fieldnames": [
             "bucket_id",
             "transaction_id",
@@ -67,7 +67,8 @@
             "iva_rate",
             "iva_amount",
             "iva_category",
-            "counterparty_eu_member_state",
+            "counterparty_country",
+            "counterparty_identification_state",
             "irpf_category",
             "usage_ratio_id",
             "prorrata_reference",
@@ -93,7 +94,8 @@
               "business_pct": "",
               "category_id": "",
               "counterparty": "",
-              "counterparty_eu_member_state": "",
+              "counterparty_country": "",
+              "counterparty_identification_state": "",
               "created_by": "",
               "created_source_command": "",
               "currency": "EUR",
@@ -125,7 +127,8 @@
               "business_pct": "",
               "category_id": "",
               "counterparty": "",
-              "counterparty_eu_member_state": "",
+              "counterparty_country": "",
+              "counterparty_identification_state": "",
               "created_by": "",
               "created_source_command": "",
               "currency": "EUR",
@@ -149,7 +152,7 @@
               "value_in_eur": ""
             }
           ],
-          "sha256": "6aac89c113e83ea14bb8268062d66bd0881208a6969c503c2220b44b9e18438f"
+          "sha256": "0becceaa2ef5f6edba6a89f5fee123b09f1a044d477005dd381cecb52f66213d"
         },
         "schema_version": "2",
         "status": "success"

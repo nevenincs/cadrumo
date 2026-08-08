@@ -133,12 +133,12 @@
           "revision_id": "2023-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "87619640518f",
+          "short_work_unit_id": "f713b22348af",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
+          "work_unit_id": "8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af"
         },
         "schema_version": "2",
         "status": "success"
@@ -167,7 +167,7 @@
         "command": "modelo.casillas",
         "notices": [],
         "result": {
-          "casilla_count": 126,
+          "casilla_count": 129,
           "modelo": "303",
           "operation": "modelo.casillas",
           "revision": "2023-y-siguientes",
@@ -860,11 +860,10 @@
             {
               "casilla_id": "120",
               "help_text": "Box 120: additional information on transactions not subject to VAT due to place-of-supply rules, excluding box 123.",
-              "input_kind": "manual",
+              "input_kind": "bound",
               "label": "Additional information - transactions not subject due to place-of-supply rules, excluding box 123",
               "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-92",
+                "ley-37-1992:art-69",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -877,11 +876,10 @@
             {
               "casilla_id": "122",
               "help_text": "Box 122: additional information on transactions subject to reverse charge.",
-              "input_kind": "manual",
+              "input_kind": "bound",
               "label": "Additional information - transactions subject to reverse charge",
               "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-92",
+                "ley-37-1992:art-84",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -1256,6 +1254,42 @@
               ]
             },
             {
+              "casilla_id": "iva.repercutido.reducido.transitorio",
+              "help_text": "Transitional box under RD-ley 4/2024 for the reduced rate, coexisting with the ordinary 10% reduced rate.",
+              "input_kind": "bound",
+              "label": "Output VAT amount at the transitional reduced rate (5%/7.5%)",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "iva.repercutido.reducido.transitorio",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.repercutido.super-reducido.transitorio",
+              "help_text": "Transitional box under RD-ley 4/2024 for the super-reduced rate, coexisting with the ordinary 4% super-reduced rate.",
+              "input_kind": "bound",
+              "label": "Output VAT amount at the transitional super-reduced rate (2%)",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "iva.repercutido.super-reducido.transitorio",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
               "casilla_id": "iva.soportado.interiores",
               "help_text": "Deductible input VAT borne on domestic current transactions.",
               "input_kind": "bound",
@@ -1337,6 +1371,26 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "number": "iva.autorepercutido.intracomunitaria.devengado",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ]
+            },
+            {
+              "casilla_id": "iva.autorepercutido.intracomunitaria.devengado.base",
+              "help_text": null,
+              "input_kind": "bound",
+              "label": "Taxable base of accrued reverse-charge VAT on intra-Community acquisitions",
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "iva.autorepercutido.intracomunitaria.devengado.base",
               "required": false,
               "source_refs": [
                 "aeat-dr-303-2025"
@@ -1759,12 +1813,13 @@
             {
               "casilla_id": "153",
               "help_text": "Box 153: taxable base for accrued VAT under the general regime new rate tier 2.",
-              "input_kind": "manual",
+              "input_kind": "bound",
               "label": "Accrued VAT, general regime new rate tier 2 - taxable base",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -1777,12 +1832,14 @@
             {
               "casilla_id": "154",
               "help_text": "Box 154: rate percentage for accrued VAT under the general regime new rate tier 2.",
-              "input_kind": "manual",
+              "input_kind": "computed",
               "label": "Accrued VAT, general regime new rate tier 2 - rate percentage",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-20-2022:art-72",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -1795,12 +1852,13 @@
             {
               "casilla_id": "155",
               "help_text": "Box 155: VAT amount for accrued VAT under the general regime new rate tier 2.",
-              "input_kind": "manual",
+              "input_kind": "computed",
               "label": "Accrued VAT, general regime new rate tier 2 - VAT amount",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -1849,7 +1907,7 @@
             {
               "casilla_id": "158",
               "help_text": "Box 158: surcharge amount for the 0.5% equivalence surcharge.",
-              "input_kind": "bound",
+              "input_kind": "manual",
               "label": "Equivalence surcharge at 0.5% - surcharge amount",
               "legal_refs": [
                 "ley-37-1992:art-88",
@@ -1868,12 +1926,13 @@
             {
               "casilla_id": "165",
               "help_text": "Box 165: taxable base for accrued VAT under the general regime 2% rate from 2024.",
-              "input_kind": "manual",
+              "input_kind": "bound",
               "label": "Accrued VAT, general regime 2% rate from 2024 - taxable base",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -1886,12 +1945,14 @@
             {
               "casilla_id": "166",
               "help_text": "Box 166: rate percentage for accrued VAT under the general regime 2% rate from 2024.",
-              "input_kind": "manual",
+              "input_kind": "computed",
               "label": "Accrued VAT, general regime 2% rate from 2024 - rate percentage",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-20-2022:art-72",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -1904,12 +1965,13 @@
             {
               "casilla_id": "167",
               "help_text": "Box 167: VAT amount for accrued VAT under the general regime 2% rate from 2024.",
-              "input_kind": "manual",
+              "input_kind": "computed",
               "label": "Accrued VAT, general regime 2% rate from 2024 - VAT amount",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -1958,12 +2020,13 @@
             {
               "casilla_id": "170",
               "help_text": "Box 170: surcharge amount for the new equivalence surcharge rate from 2024.",
-              "input_kind": "manual",
+              "input_kind": "bound",
               "label": "New equivalence surcharge rate from 2024 - surcharge amount",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "ley-37-1992:art-161",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -2138,12 +2201,14 @@
             {
               "casilla_id": "10",
               "help_text": "Box 10: base for accrued VAT on intra-Community acquisitions of goods and services.",
-              "input_kind": "manual",
+              "input_kind": "computed",
               "label": "Accrued VAT on intra-Community acquisitions of goods and services - base",
               "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -2479,11 +2544,24 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.calculate",
-        "notices": [],
+        "notices": [
+          {
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "reason": "operator_override_diverges_from_computed",
+              "source_kind": "operator_casilla_input"
+            },
+            "message": "Casilla '44' was filed with the value you supplied (150.00), not the 0.00 this calculation derived. Your value wins by design, because you may hold facts the calculation cannot see. The derived figure was discarded",
+            "severity": "warning",
+            "suggestion": "Confirm the supplied value is the one you intend to file; to file the derived figure instead, recalculate without setting this casilla."
+          }
+        ],
         "result": {
           "authorization_state": null,
           "binding_overrides": {
             "modelo-303-bienes-inversion-regularizacion-casilla-43": "0",
+            "modelo-303-casilla-120-no-sujetas-localizacion-base": "0",
+            "modelo-303-casilla-122-inversion-sujeto-pasivo-base": "0",
             "modelo-303-casilla-59-entregas-intracomunitarias-base": "0",
             "modelo-303-casilla-60-exportaciones-base": "0",
             "modelo-303-compensacion-pendiente-anteriores": "0",
@@ -2495,13 +2573,18 @@
             "modelo-303-iva-autorepercutido-interior-devengado-cuota": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-cuota": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota": "0",
+            "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base": "0",
             "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota": "0",
             "modelo-303-iva-repercutido-general-base": "1000",
             "modelo-303-iva-repercutido-general-cuota": "210",
             "modelo-303-iva-repercutido-reducido-base": "0",
             "modelo-303-iva-repercutido-reducido-cuota": "0",
+            "modelo-303-iva-repercutido-reducido-transitorio-base": "0",
+            "modelo-303-iva-repercutido-reducido-transitorio-cuota": "0",
             "modelo-303-iva-repercutido-super-reducido-base": "0",
             "modelo-303-iva-repercutido-super-reducido-cuota": "0",
+            "modelo-303-iva-repercutido-super-reducido-transitorio-base": "0",
+            "modelo-303-iva-repercutido-super-reducido-transitorio-cuota": "0",
             "modelo-303-iva-soportado-importaciones-cuota": "0",
             "modelo-303-iva-soportado-interiores-base": "500",
             "modelo-303-iva-soportado-interiores-cuota": "105",
@@ -2511,7 +2594,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "e73936cbec05b19073e582c4551ae9cf5593ced653ebb0c1d6b0752e98f54174",
+          "calculation_revision_id": "3c863b2bc50996ff04444175cbb9b4c49c13112d976b86598db4e2a9d2382bba",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -2522,7 +2605,7 @@
             "07": "1000",
             "08": "0",
             "09": "210.00",
-            "10": "0",
+            "10": "0.00",
             "108": "0",
             "109": "0",
             "11": "0.00",
@@ -2539,15 +2622,15 @@
             "151": "0",
             "152": "0",
             "153": "0",
-            "154": "0",
-            "155": "0",
+            "154": "0.00",
+            "155": "0.00",
             "156": "0",
             "157": "0",
             "158": "0",
             "16": "0",
             "165": "0",
-            "166": "0",
-            "167": "0",
+            "166": "0.00",
+            "167": "0.00",
             "168": "0",
             "169": "0",
             "17": "0",
@@ -2615,6 +2698,7 @@
             "iva.autorepercutido.intracomunitaria": "0",
             "iva.autorepercutido.intracomunitaria.deducible": "0",
             "iva.autorepercutido.intracomunitaria.devengado": "0",
+            "iva.autorepercutido.intracomunitaria.devengado.base": "0",
             "iva.compensacion-aplicada-periodo": "0.00",
             "iva.compensacion-disponible-fin-periodo": "45.00",
             "iva.compensacion-generada-periodo": "45.00",
@@ -2628,7 +2712,9 @@
             "iva.regularizacion-inversiones": "0",
             "iva.repercutido.general": "210",
             "iva.repercutido.reducido": "0",
+            "iva.repercutido.reducido.transitorio": "0",
             "iva.repercutido.super-reducido": "0",
+            "iva.repercutido.super-reducido.transitorio": "0",
             "iva.resultado": "-45.00",
             "iva.resultado-regimen-general": "-45.00",
             "iva.soportado.importaciones": "0",
@@ -2654,7 +2740,11 @@
             "01": "0",
             "04": "0",
             "07": "1000",
-            "158": "0",
+            "120": "0",
+            "122": "0",
+            "153": "0",
+            "165": "0",
+            "170": "0",
             "21": "0",
             "24": "0",
             "28": "500",
@@ -2674,10 +2764,13 @@
             "iva.autorepercutido.intracomunitaria": "0",
             "iva.autorepercutido.intracomunitaria.deducible": "0",
             "iva.autorepercutido.intracomunitaria.devengado": "0",
+            "iva.autorepercutido.intracomunitaria.devengado.base": "0",
             "iva.compensacion-pendiente-periodos-anteriores": "0",
             "iva.repercutido.general": "210",
             "iva.repercutido.reducido": "0",
+            "iva.repercutido.reducido.transitorio": "0",
             "iva.repercutido.super-reducido": "0",
+            "iva.repercutido.super-reducido.transitorio": "0",
             "iva.soportado.importaciones": "0",
             "iva.soportado.interiores": "105"
           },
@@ -2891,22 +2984,32 @@
             {
               "absent_by_design": false,
               "casilla_id": "10",
-              "formula_id": null,
+              "formula_id": "modelo-303-dr303-10-projection",
               "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2025"
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.autorepercutido.intracomunitaria.devengado.base"
               ],
-              "value": "0"
+              "operand_refs": [
+                "iva.autorepercutido.intracomunitaria.devengado.base"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
@@ -3021,8 +3124,7 @@
               "casilla_id": "120",
               "formula_id": null,
               "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-92",
+                "ley-37-1992:art-69",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -3040,8 +3142,7 @@
               "casilla_id": "122",
               "formula_id": null,
               "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-92",
+                "ley-37-1992:art-84",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -3228,6 +3329,7 @@
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -3243,42 +3345,57 @@
             {
               "absent_by_design": false,
               "casilla_id": "154",
-              "formula_id": null,
+              "formula_id": "modelo-303-dr303-154-rate",
               "legal_refs": [
                 "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-20-2022:art-72",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
+              "op": "value",
               "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2025"
+              "operand_refs": [
+                "m303-dr303-154-transitional-rate-percent"
               ],
-              "value": "0"
+              "operand_values": [
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
               "casilla_id": "155",
-              "formula_id": null,
+              "formula_id": "modelo-303-dr303-155-projection",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2025"
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.repercutido.reducido.transitorio"
               ],
-              "value": "0"
+              "operand_refs": [
+                "iva.repercutido.reducido.transitorio"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
@@ -3369,6 +3486,7 @@
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -3384,42 +3502,57 @@
             {
               "absent_by_design": false,
               "casilla_id": "166",
-              "formula_id": null,
+              "formula_id": "modelo-303-dr303-166-rate",
               "legal_refs": [
                 "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-20-2022:art-72",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
+              "op": "value",
               "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2025"
+              "operand_refs": [
+                "m303-dr303-166-transitional-rate-percent"
               ],
-              "value": "0"
+              "operand_values": [
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
               "casilla_id": "167",
-              "formula_id": null,
+              "formula_id": "modelo-303-dr303-167-projection",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
-              "op": null,
-              "operand_casilla_refs": [],
-              "operand_refs": [],
-              "operand_values": [],
-              "source_refs": [
-                "aeat-dr-303-2025"
+              "op": "value",
+              "operand_casilla_refs": [
+                "iva.repercutido.super-reducido.transitorio"
               ],
-              "value": "0"
+              "operand_refs": [
+                "iva.repercutido.super-reducido.transitorio"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-303-2025",
+                "aeat-modelo-303-procedure",
+                "boe-modelo-303-2008-form"
+              ],
+              "value": "0.00"
             },
             {
               "absent_by_design": false,
@@ -3489,6 +3622,7 @@
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
+                "ley-37-1992:art-161",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -4857,6 +4991,28 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "iva.autorepercutido.intracomunitaria.devengado.base",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "iva.compensacion-aplicada-periodo",
               "formula_id": "modelo-303-compensacion-aplicada-periodo",
               "legal_refs": [
@@ -5066,23 +5222,37 @@
                 "iva.repercutido.general",
                 "iva.repercutido.reducido",
                 "iva.repercutido.super-reducido",
+                "iva.repercutido.reducido.transitorio",
+                "iva.repercutido.super-reducido.transitorio",
                 "iva.autorepercutido.intracomunitaria",
                 "iva.autorepercutido.interior.devengado",
                 "iva.autoconsumo.promotor.cuota",
                 "18",
                 "21",
-                "24"
+                "24",
+                "158",
+                "170",
+                "26",
+                "15",
+                "152"
               ],
               "operand_refs": [
                 "iva.repercutido.general",
                 "iva.repercutido.reducido",
                 "iva.repercutido.super-reducido",
+                "iva.repercutido.reducido.transitorio",
+                "iva.repercutido.super-reducido.transitorio",
                 "iva.autorepercutido.intracomunitaria",
                 "iva.autorepercutido.interior.devengado",
                 "iva.autoconsumo.promotor.cuota",
                 "18",
                 "21",
-                "24"
+                "24",
+                "158",
+                "170",
+                "26",
+                "15",
+                "152"
               ],
               "operand_values": [
                 "210",
@@ -5090,7 +5260,14 @@
                 "0",
                 "0",
                 "0",
+                "0",
+                "0",
                 "0.00",
+                "0",
+                "0",
+                "0",
+                "0",
+                "0",
                 "0",
                 "0",
                 "0"
@@ -5230,10 +5407,50 @@
             },
             {
               "absent_by_design": false,
+              "casilla_id": "iva.repercutido.reducido.transitorio",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
               "casilla_id": "iva.repercutido.super-reducido",
               "formula_id": null,
               "legal_refs": [
                 "ley-37-1992:art-88",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-303-2025"
+              ],
+              "value": "0"
+            },
+            {
+              "absent_by_design": false,
+              "casilla_id": "iva.repercutido.super-reducido.transitorio",
+              "formula_id": null,
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-91",
+                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
@@ -5564,16 +5781,16 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision e73936cbec05b19073e582c4551ae9cf5593ced653ebb0c1d6b0752e98f54174 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision e73936cbec05b19073e582c4551ae9cf5593ced653ebb0c1d6b0752e98f54174`.",
+          "saved_confirmation": "Saved as draft calculation revision 3c863b2bc50996ff04444175cbb9b4c49c13112d976b86598db4e2a9d2382bba (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 3c863b2bc50996ff04444175cbb9b4c49c13112d976b86598db4e2a9d2382bba`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "98f076c6ff3f4ab123206dc06d9bf9a6dbfe1d9c0b213ae4483b87619640518f"
+          "work_unit_id": "8f0c67734152d161da3519c86d15b19ad105967a20d34cab3982f713b22348af"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

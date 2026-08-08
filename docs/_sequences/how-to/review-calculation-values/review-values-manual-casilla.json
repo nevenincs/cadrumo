@@ -109,7 +109,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\t98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584\nshort_work_unit_id\t41987b138584\nbucket_id\t<bucket-id>\nmodelo\t130\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2019-y-siguientes\nname\t130-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew work unit created.\n"
+      "text": "operation\tmodelo.work.create\nstatus\tcreated\nwork_unit_id\tca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204\nshort_work_unit_id\t3d88172f4204\nbucket_id\t<bucket-id>\nmodelo\t130\nfiling_year\t2026\nperiod\t1T\nrevision_id\t2019-y-siguientes\nname\t130-2026-1T\nstate\tdraft\ncurrent_calculation_revision_id\t\nshort_current_calculation_revision_id\t\nfiled_calculation_revision_id\t\nshort_filed_calculation_revision_id\t\ncurrent_filing_record_id\t\ncreated_at\t2026-04-01T09:00:00+00:00\nupdated_at\t2026-04-01T09:00:00+00:00\nplazo_closes_on\t2026-04-20\ndays_remaining\t19\nNew work unit created.\n"
     },
     {
       "argv": [
@@ -139,7 +139,18 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "modelo.work.calculate",
-        "notices": [],
+        "notices": [
+          {
+            "code": "modelo.work.calculate.source_advisory",
+            "context": {
+              "reason": "operator_override_diverges_from_computed",
+              "source_kind": "operator_casilla_input"
+            },
+            "message": "Casilla '06' was filed with the value you supplied (100.00), not the 0 this calculation derived. Your value wins by design, because you may hold facts the calculation cannot see. The derived figure was discarded",
+            "severity": "warning",
+            "suggestion": "Confirm the supplied value is the one you intend to file; to file the derived figure instead, recalculate without setting this casilla."
+          }
+        ],
         "result": {
           "authorization_state": null,
           "binding_overrides": {
@@ -152,7 +163,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "3bc948b99234c432e138cdfbf2b6368bf97a3bd5ed9cd43d149d6f05266f8cac",
+          "calculation_revision_id": "a42bbcca3d40a399e5dabef7b0949cb15d69d271c5313746e0c8d0f6d2594fc8",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -767,16 +778,16 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 3bc948b99234c432e138cdfbf2b6368bf97a3bd5ed9cd43d149d6f05266f8cac (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 3bc948b99234c432e138cdfbf2b6368bf97a3bd5ed9cd43d149d6f05266f8cac`.",
+          "saved_confirmation": "Saved as draft calculation revision a42bbcca3d40a399e5dabef7b0949cb15d69d271c5313746e0c8d0f6d2594fc8 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision a42bbcca3d40a399e5dabef7b0949cb15d69d271c5313746e0c8d0f6d2594fc8`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
           "verified_at": null,
           "verified_by": null,
-          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+          "work_unit_id": "ca5815c72d1ed564e582924ad157fd1c3349eba45264da2a7b843d88172f4204"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

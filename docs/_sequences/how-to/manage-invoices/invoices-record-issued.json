@@ -12,7 +12,9 @@
         "--kind",
         "issued",
         "--counterparty-nif",
-        "B12345678",
+        "B12345674",
+        "--country-code",
+        "ES",
         "--counterparty-name",
         "Cliente SL",
         "--invoice-number",
@@ -22,17 +24,13 @@
         "--taxable-base",
         "1000",
         "--iva-rate",
-        "0.21",
-        "--iva-amount",
-        "210",
-        "--total-amount",
-        "1210"
+        "21"
       ],
       "captures": [
         {
           "json_path": "result.invoice_id",
           "name": "invoice_id",
-          "value": "16c46d3abaaa8553"
+          "value": "8156e70ce16a05f4588f7516d49da7ffd4115964a75b079061e624a41ad30211"
         }
       ],
       "envelope": {
@@ -40,29 +38,28 @@
         "command": "ledger.invoice.add",
         "notices": [],
         "result": {
-          "bucket_event_ids": [
-            "1f74e78f5976582dd91fa7876e4d0cf7f823659c8fc92fa3a40283cadc3614bd"
-          ],
+          "base_total": "1000.00",
+          "base_total_eur": "1000.00",
           "bucket_id": "<bucket-id>",
+          "counterparty_country": "ES",
           "counterparty_name": "Cliente SL",
-          "counterparty_nif": "B12345678",
-          "country_code": null,
-          "created_at": "2026-04-01T09:00:00Z",
+          "counterparty_tax_id": "sha256:133cad41",
           "currency": "EUR",
-          "eu_iva_id": null,
           "fx_rate": null,
           "fx_rate_date": null,
-          "invoice_date": "2026-02-15",
-          "invoice_id": "16c46d3abaaa8553",
+          "fx_rate_source": null,
+          "grand_total": "1210.00",
+          "grand_total_eur": "1210.00",
+          "invoice_id": "8156e70ce16a05f4588f7516d49da7ffd4115964a75b079061e624a41ad30211",
           "invoice_number": "FAC-2026-001",
-          "iva_amount": "210",
-          "iva_rate": "0.21",
+          "issued_at": "2026-02-15",
+          "iva_total": "210.00",
+          "iva_total_eur": "210.00",
+          "kind": "issued",
+          "linked_transaction_ids": [],
           "notes": "",
           "operation_type": null,
-          "source_kind": "collectible_invoice",
-          "taxable_base": "1000",
-          "total_amount": "1210",
-          "updated_at": "2026-04-01T09:00:00Z"
+          "payment_status": "PENDING"
         },
         "schema_version": "2",
         "status": "success"
@@ -82,9 +79,7 @@
         "ledger",
         "invoice",
         "view",
-        "16c46d3abaaa8553",
-        "--kind",
-        "issued"
+        "8156e70ce16a05f4588f7516d49da7ffd4115964a75b079061e624a41ad30211"
       ],
       "captures": [],
       "envelope": {
@@ -92,27 +87,28 @@
         "command": "ledger.invoice.view",
         "notices": [],
         "result": {
-          "bucket_event_ids": [],
+          "base_total": "1000.00",
+          "base_total_eur": "1000.00",
           "bucket_id": "<bucket-id>",
+          "counterparty_country": "ES",
           "counterparty_name": "Cliente SL",
-          "counterparty_nif": "B12345678",
-          "country_code": null,
-          "created_at": "2026-04-01T09:00:00Z",
+          "counterparty_tax_id": "sha256:133cad41",
           "currency": "EUR",
-          "eu_iva_id": null,
           "fx_rate": null,
           "fx_rate_date": null,
-          "invoice_date": "2026-02-15",
-          "invoice_id": "16c46d3abaaa8553",
+          "fx_rate_source": null,
+          "grand_total": "1210.00",
+          "grand_total_eur": "1210.00",
+          "invoice_id": "8156e70ce16a05f4588f7516d49da7ffd4115964a75b079061e624a41ad30211",
           "invoice_number": "FAC-2026-001",
-          "iva_amount": "210",
-          "iva_rate": "0.21",
+          "issued_at": "2026-02-15",
+          "iva_total": "210.00",
+          "iva_total_eur": "210.00",
+          "kind": "issued",
+          "linked_transaction_ids": [],
           "notes": "",
           "operation_type": null,
-          "source_kind": "collectible_invoice",
-          "taxable_base": "1000",
-          "total_amount": "1210",
-          "updated_at": "2026-04-01T09:00:00Z"
+          "payment_status": "PENDING"
         },
         "schema_version": "2",
         "status": "success"
