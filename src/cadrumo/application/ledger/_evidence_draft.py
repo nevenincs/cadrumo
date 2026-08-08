@@ -984,15 +984,11 @@ _STRUCTURED_ELEMENT_PATHS: Final[dict[str, dict[DocumentShape, str]]] = {
     },
     "supplier_country_code": {
         DocumentShape.XML_FACTURAE: "SellerParty/AddressInSpain/CountryCode",
-        DocumentShape.XML_UBL: (
-            "cac:AccountingSupplierParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode"
-        ),
+        DocumentShape.XML_UBL: ("cac:AccountingSupplierParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode"),
     },
     "customer_country_code": {
         DocumentShape.XML_FACTURAE: "BuyerParty/AddressInSpain/CountryCode",
-        DocumentShape.XML_UBL: (
-            "cac:AccountingCustomerParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode"
-        ),
+        DocumentShape.XML_UBL: ("cac:AccountingCustomerParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode"),
     },
     "customer_postal_code": {
         DocumentShape.XML_FACTURAE: "BuyerParty/AddressInSpain/PostCode",
