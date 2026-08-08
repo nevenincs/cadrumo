@@ -241,6 +241,9 @@ class ContentScroll(VerticalScroll, can_focus=False):
 
 
 NOTICE_BAND_CSS: Final[str] = """
+    NoticeBand {
+        height: auto;
+    }
     .cadrumo-notice { margin: 0 0 1 0; }
     .cadrumo-notice-info { color: $text; }
     .cadrumo-notice-warning { color: $warning; text-style: bold; }

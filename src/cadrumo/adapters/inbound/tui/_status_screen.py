@@ -35,7 +35,14 @@ from textual.widgets import DataTable, Footer, Static
 
 from ....core.i18n import tr
 from ....core.json_contract import Notice
-from ._theme import BASE_CSS, ContentScroll, NoticeBand, install_cadrumo_themes, toggle_appearance
+from ._theme import (
+    BASE_CSS,
+    NOTICE_BAND_CSS,
+    ContentScroll,
+    NoticeBand,
+    install_cadrumo_themes,
+    toggle_appearance,
+)
 
 # Copyable custody / recovery next-step lines. These are literal CLI
 # invocations (command tokens, not operator prose), rendered verbatim so an
@@ -141,6 +148,7 @@ class StatusApp(App[None]):
 
     CSS = (
         BASE_CSS
+        + NOTICE_BAND_CSS
         + """
     .status-panel DataTable { height: auto; width: 100%; background: $surface; }
     .status-empty { color: $text-muted; text-style: italic; }
