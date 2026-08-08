@@ -3844,6 +3844,9 @@ cli:
         apply_help: 'A beolvasott censal adatok rögzítése az aktív profilban (alapértelmezés:
           csak előnézet).'
         compare_help: Az AEAT nyilvántartás és a profil mezőnkénti összehasonlítása.
+        divergencia_leaf_artefact_value: AEAT-érték
+        divergencia_leaf_axis: mező
+        divergencia_leaf_source: eredet
         dropped_fields_notice: 'Az AEAT censo már nem tartalmaz olyan mezőket, amelyek
           a legutóbbi pillanatfelvételben szerepeltek: {dropped_fields}. Ha nem változtattad
           meg és nem szüntetted meg ezeket a bejegyzéseket, előfordulhat, hogy részleges
@@ -7204,17 +7207,17 @@ flows:
       auth_tax_id_invalid: Ez a NIF vagy NIE nem érvényes. Ellenőrizze a záró betűt,
         és úgy adja meg, ahogy az okmányán szerepel, például 12345678Z.
       busy: Egy másik művelet még mindig fut. Várja meg, amíg befejeződik.
-      censal_pull: Kitöltés az AEAT censusadataiból
+      censal_pull: Kitöltés az AEAT nyilvántartási adataiból
       censal_pull_auth_incomplete: Az azonosítása hiányos, ezért az AEAT még nem olvasható.
         Előbb egészítse ki.
       censal_pull_cleared: 'Az AEAT-nál még szerepel érték az Ön által kiürített mezőkhöz:
         %{paths}. Ezek üresen maradtak; a kiürítés itt nem módosítja az AEAT nyilvántartását.'
       censal_pull_contested: 'Az AEAT eltér az Ön bevallásától itt: %{paths}. Az Ön
         válasza marad érvényben; oldja meg egyenként.'
-      censal_pull_done: 'AEAT censusadatok beolvasva: %{adopted} mező kitöltve, %{unchanged}
-        már egyezett, %{diverging} eltér.'
-      censal_pull_no_provider: A censusadatok beolvasása előtt válassza ki, hogyan
-        azonosítja magát az AEAT felé.
+      censal_pull_done: 'AEAT nyilvántartási adatok beolvasva: %{adopted} mező kitöltve,
+        %{unchanged} már egyezett, %{diverging} eltér.'
+      censal_pull_no_provider: A nyilvántartási adatok beolvasása előtt válassza ki,
+        hogyan azonosítja magát az AEAT felé.
       certificate: Tanúsítvány
       certificate_active: Aktív tanúsítvány
       certificate_done: 'Azonosítás: %{provider}; aktív tanúsítvány: %{name}.'
@@ -7229,13 +7232,13 @@ flows:
         ÁFA-egyenleg: {iva_wallet_status}; értesítések: {notificaciones_status}.'
       filed_history_pull_all_refused: 'Ezeket a párokat nem sikerült beolvasni, és
         NEM lettek üresként jelentve: {pairs}. Az újbóli próbálkozáshoz futtassa újra.'
-      passphrase: flows.manager.action.passphrase
-      passphrase_confirm: flows.manager.action.passphrase_confirm
-      passphrase_current: flows.manager.action.passphrase_current
-      passphrase_done: flows.manager.action.passphrase_done
-      passphrase_mismatch: flows.manager.action.passphrase_mismatch
-      passphrase_new: flows.manager.action.passphrase_new
-      passphrase_wrong_current: flows.manager.action.passphrase_wrong_current
+      passphrase: Jelmondat módosítása
+      passphrase_confirm: Új jelmondat megerősítése
+      passphrase_current: Jelenlegi jelmondat
+      passphrase_done: Jelmondat módosítva.
+      passphrase_mismatch: Az új jelmondat és a megerősítése nem egyezik.
+      passphrase_new: Új jelmondat
+      passphrase_wrong_current: Ez nem a jelenlegi jelmondat.
       provider:
         certificate: Elektronikus tanúsítvány
         clave_movil: Cl@ve Móvil
@@ -7392,6 +7395,12 @@ flows:
     button_back: Vissza
     button_next: Tovább
     button_review: Áttekintés
+    confirm_restart:
+      cancel: Mégse
+      confirm: Újraindítás
+      message: Ez törli az eddig megadott összes választ, és visszatér az első oldalra.
+        Ez nem vonható vissza.
+      title: Újraindítja a teljes folyamatot?
     header: '{flow} - {position}. kérdés a(z) {total} közül, {section} szakasz'
 live:
   errors:
