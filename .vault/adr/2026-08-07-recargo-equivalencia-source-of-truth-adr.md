@@ -10,7 +10,7 @@ related:
   - "[[2026-08-07-recargo-equivalencia-source-of-truth-research]]"
 ---
 
-# `recargo-equivalencia-source-of-truth` adr: `the invoice or the table: what establishes a recargo de equivalencia cuota` | (**status:** `proposed`)
+# `recargo-equivalencia-source-of-truth` adr: `the invoice or the table: what establishes a recargo de equivalencia cuota` | (**status:** `accepted`)
 
 ## Problem Statement
 

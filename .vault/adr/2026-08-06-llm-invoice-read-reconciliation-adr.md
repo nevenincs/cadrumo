@@ -9,7 +9,7 @@ body_hash: 'sha256:2de8a4e3e0dc5795dbeb7b0d623f525660ecf620e0cce75dcee9864788007
 related:
   - "[[2026-08-06-llm-invoice-read-reconciliation-research]]"
 ---
-# `llm-invoice-read-reconciliation` adr: `Direction-aware evidence reading, and the two questions the invoice-read path cannot answer alone` | (**status:** `proposed`)
+# `llm-invoice-read-reconciliation` adr: `Direction-aware evidence reading, and the two questions the invoice-read path cannot answer alone` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -132,6 +132,30 @@ the country it tests defaults to `ES` at both the CLI option and the application
 so an invoice whose counterparty country was never stated is already treated as domestic
 for Modelo 303. Whoever rules on this should decide the default at the same time, because
 choosing the discriminator does not by itself make the fact declared.
+
+**RULED: the first reading, with the default made fail-closed in the same change.**
+
+`counterparty_country` is the discriminator. The precedent decides it: production already
+answers this question that way for Modelo 303 settlement, and either alternative creates a
+second discriminator that must agree with the first. Two discriminators for one fact is the
+fragmented-authority shape this codebase keeps paying for; adopting the incumbent leaves
+one.
+
+The ruling is conditional on the second half, and the two land together. An unstated
+counterparty country MUST stop resolving to `ES`. The absent case is absent, not domestic,
+and it degrades to no category exactly as it does today - which the record already
+establishes is the safe direction, because an absent category is refused while a wrong one
+is believed. Silently defaulting an undeclared fact to the value that widens the domestic
+population is the fail-open shape the no-silent-under-declaration posture forbids, and it
+is live today rather than hypothetical.
+
+Adopting the discriminator without fixing the default would be the worst of the three
+readings: it would extend an already-wrong default onto a second consumer and call the
+extension a decision. The point of ruling on both at once is that the discriminator only
+becomes safe once the fact it reads is declared rather than assumed.
+
+Deriving the category then follows mechanically from the existing closed rate-to-category
+mapping wherever domesticity is affirmatively established, and not otherwise.
 
 Scope worth knowing before ruling, because it narrows the urgency: the missing category does
 NOT break the IVA path. The Modelo 303 observations derive their settlement side from the
