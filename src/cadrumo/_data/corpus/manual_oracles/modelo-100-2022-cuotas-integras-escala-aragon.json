@@ -14,5 +14,20 @@
     "0533": "2140.50",
     "0545": "2406.50",
     "0546": "2406.50"
+  },
+  "declared_inputs": {
+    "corpus_locator": "corpus/manuals/renta/2022/part1/source.pdf.extracted.md#L37744-L37748",
+    "by_casilla_id": {
+      "0102": "23900.00",
+      "0429": "2800.00",
+      "0511": "5550.00",
+      "0512": "5550.00"
+    },
+    "locator_by_casilla_id": {
+      "0102": "corpus/manuals/renta/2022/part1/source.pdf.extracted.md#L37745",
+      "0429": "corpus/manuals/renta/2022/part1/source.pdf.extracted.md#L37745",
+      "0511": "corpus/manuals/renta/2022/part1/source.pdf.extracted.md#L37746",
+      "0512": "corpus/manuals/renta/2022/part1/source.pdf.extracted.md#L37746"
+    }
   }
 }

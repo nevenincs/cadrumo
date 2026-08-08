@@ -85,9 +85,6 @@ _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
     "modelo-100-2020-rendimientos-trabajo-despido-improcedente.json": (
         "scenario facts still hand-written in test_m100_2020_rendimientos_trabajo_despido_manual_worked_example.py"
     ),
-    "modelo-100-2022-cuotas-integras-escala-aragon.json": (
-        "consumed by test_m100_2022_cuotas_integras_escala_aragon_manual_worked_example.py, which references the case by scenario id, hardcodes its own expected figures and never reads this payload -- so the two are independent transcriptions of one page and migrating means connecting them, not only adding a declared_inputs block"
-    ),
     "modelo-100-2024-capital-inmobiliario-arrendamiento-vivienda-tensionada.json": (
         "scenario facts still hand-written in "
         "test_m100_2024_capital_inmobiliario_arrendamiento_vivienda_manual_worked_example.py"
@@ -133,16 +130,16 @@ _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
         "test_prorrata_regularizacion_source_resolver.py; two consumers must move together"
     ),
     "modelo-322-2024-grupo-entidades-delta.json": (
-        "consumed by test_m322_2024_grupo_entidades_manual_worked_example.py, which references the case by scenario id, hardcodes its own expected figures and never reads this payload -- so the two are independent transcriptions of one page and migrating means connecting them, not only adding a declared_inputs block"
+        "consumed by test_m322_2024_grupo_entidades_manual_worked_example.py, which drives the registry through IvaLedgerObservation rows rather than casilla inputs, so DeclaredScenarioInputs.by_casilla_id cannot express its scenario: the manual's printed figures are ledger amounts carrying a category, rate kind and flow direction, not casilla values. Declaring them casilla-keyed would also collide with this payload's own expected_by_casilla_id, which asserts the very devengada/deducible totals those amounts project onto. Needs a ledger-observation declaration shape on the payload, or a ruling that this family stays out of scope"
     ),
     "modelo-322-2024-grupo-entidades-omega.json": (
-        "consumed by test_m322_2024_grupo_entidades_manual_worked_example.py, which references the case by scenario id, hardcodes its own expected figures and never reads this payload -- so the two are independent transcriptions of one page and migrating means connecting them, not only adding a declared_inputs block"
+        "consumed by test_m322_2024_grupo_entidades_manual_worked_example.py, which drives the registry through IvaLedgerObservation rows rather than casilla inputs, so DeclaredScenarioInputs.by_casilla_id cannot express its scenario: the manual's printed figures are ledger amounts carrying a category, rate kind and flow direction, not casilla values. Declaring them casilla-keyed would also collide with this payload's own expected_by_casilla_id, which asserts the very devengada/deducible totals those amounts project onto. Needs a ledger-observation declaration shape on the payload, or a ruling that this family stays out of scope"
     ),
     "modelo-353-2024-grupo-entidades-agregado.json": (
-        "consumed by test_m353_2024_grupo_entidades_manual_worked_example.py, which references the case by scenario id, hardcodes its own expected figures and never reads this payload -- so the two are independent transcriptions of one page and migrating means connecting them, not only adding a declared_inputs block"
+        "consumed by test_m353_2024_grupo_entidades_manual_worked_example.py, which drives the registry through IvaLedgerObservation rows rather than casilla inputs, so DeclaredScenarioInputs.by_casilla_id cannot express its scenario: the manual's printed figures are ledger amounts carrying a category, rate kind and flow direction, not casilla values. Declaring them casilla-keyed would also collide with this payload's own expected_by_casilla_id, which asserts the very devengada/deducible totals those amounts project onto. Needs a ledger-observation declaration shape on the payload, or a ruling that this family stays out of scope"
     ),
     "modelo-390-2024-resumen-anual-cuatro-trimestres.json": (
-        "consumed by test_m390_2024_annual_manual_worked_example.py, which references the case by scenario id, hardcodes its own expected figures and never reads this payload -- so the two are independent transcriptions of one page and migrating means connecting them, not only adding a declared_inputs block"
+        "consumed by test_m390_2024_annual_manual_worked_example.py, which drives the registry through IvaLedgerObservation rows rather than casilla inputs, so DeclaredScenarioInputs.by_casilla_id cannot express its scenario: the manual's printed figures are ledger amounts carrying a category, rate kind and flow direction, not casilla values. Declaring them casilla-keyed would also collide with this payload's own expected_by_casilla_id, which asserts the very devengada/deducible totals those amounts project onto. Needs a ledger-observation declaration shape on the payload, or a ruling that this family stays out of scope"
     ),
 }
 
