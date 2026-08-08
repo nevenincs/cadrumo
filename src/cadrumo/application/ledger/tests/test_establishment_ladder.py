@@ -44,8 +44,8 @@ from ....domain.iva import (
     territorial_scope_for_printed_tax_identifier,
     territorial_scope_for_spanish_postal_code,
 )
-from ....domain.iva import _establishment as establishment_module
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from .. import _establishment_ladder as ladder_module
 from .._counterparty_establishment import (
     CounterpartyEstablishmentRepository,
     record_counterparty_establishment,
@@ -379,40 +379,24 @@ def test_agreeing_paper_leaves_the_evidence_rung_as_the_answer(
     assert not resolved.contradicted
 
 
-_COLLIDING_VOCABULARY = """
-[[country]]
-code = "FR"
-names = ["Mexico"]
+def _refusing_rung(*_args: object, **_kwargs: object) -> str | None:
+    """Stand in for a rung whose bundled table is corrupt.
 
-[[country]]
-code = "MX"
-names = ["México"]
-"""
-
-
-@pytest.fixture
-def corrupt_country_vocabulary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    """Point the country rung at a bundled table two countries claim one name in.
-
-    The redirection is of the bundled DATA FILE, not of any code under test: the
-    vocabulary loader, its collision refusal and the whole ladder run for real
-    against it. That is the only way to reach this failure from the ladder's own
-    boundary, and the failure is the one the loader was built to refuse -- accent
-    folding is sound only while no two distinct countries fold together.
+    Fault injection, not a stand-in for behaviour under test. What the bundled
+    vocabulary DOES on a fold-colliding or malformed table is gated for real in
+    the domain lane, against real files; the untestable-by-data half is what the
+    LADDER does with that refusal, and no legitimate input reaches it, because a
+    correct registry never raises. Raising the real error type through the real
+    call path is the only way to ask the question, and the property it asks about
+    -- that no rung is wrapped in a bare ``except`` -- is exactly the one a bare
+    ``except`` would silently take away.
     """
-    corrupt = tmp_path / "country_names.toml"
-    corrupt.write_text(_COLLIDING_VOCABULARY, encoding="utf-8")
-    monkeypatch.setattr(establishment_module, "bundled_path", lambda *_parts: corrupt)
-    establishment_module._country_codes_by_printed_name.cache_clear()
-    try:
-        yield
-    finally:
-        establishment_module._country_codes_by_printed_name.cache_clear()
+    raise IvaCatalogueError("the bundled country-name vocabulary is unusable")
 
 
 def test_a_corrupt_vocabulary_refuses_rather_than_reporting_an_unestablished_party(
     repository: CounterpartyEstablishmentRepository,
-    corrupt_country_vocabulary: None,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A broken data file raises out of the ladder, and is not a counterparty question.
 
@@ -421,8 +405,39 @@ def test_a_corrupt_vocabulary_refuses_rather_than_reporting_an_unestablished_par
     told nothing while the registry is broken is handed a wrong answer with no
     remedy, since confirming the counterparty would paper over a defect.
     """
+    monkeypatch.setattr(ladder_module, "country_code_for_printed_country_name", _refusing_rung)
+
     with pytest.raises(IvaCatalogueError):
         _resolve(repository, country_name="España", postal_code=_MADRID)
+
+
+def test_a_corrupt_territory_registry_refuses_from_inside_the_rung_walk(
+    repository: CounterpartyEstablishmentRepository,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The postal rung's refusal survives the walk too, not only the lookup before it.
+
+    Asked separately because the two rungs raise at different depths: the country
+    vocabulary is consulted before the ordered walk begins, while the territory
+    registry is read from inside it. A single ``except`` placed around the walk
+    would leave the first test green and swallow this one, which is precisely the
+    shape that turns a broken data file into a counterparty question.
+    """
+    monkeypatch.setattr(ladder_module, "territorial_scope_for_spanish_postal_code", _refusing_rung)
+
+    with pytest.raises(IvaCatalogueError):
+        _resolve(repository, country_name="España", postal_code=_MADRID)
+
+
+def test_a_corrupt_identifier_rung_refuses_from_the_top_of_the_walk(
+    repository: CounterpartyEstablishmentRepository,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The first rung of the walk is covered on the same terms as the last."""
+    monkeypatch.setattr(ladder_module, "territorial_scope_for_printed_tax_identifier", _refusing_rung)
+
+    with pytest.raises(IvaCatalogueError):
+        _resolve(repository, tax_identifier=_GERMAN_VAT)
 
 
 def test_the_same_call_reports_an_unestablished_party_against_the_real_registry(

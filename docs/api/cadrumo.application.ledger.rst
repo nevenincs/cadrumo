@@ -31,6 +31,7 @@ Submodules
    cadrumo.application.ledger._counterparty_establishment
    cadrumo.application.ledger._deterministic_findings
    cadrumo.application.ledger._document_transcription
+   cadrumo.application.ledger._establishment_ladder
    cadrumo.application.ledger._evidence
    cadrumo.application.ledger._evidence_advisory
    cadrumo.application.ledger._evidence_draft
