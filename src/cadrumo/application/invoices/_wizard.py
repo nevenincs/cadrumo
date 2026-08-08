@@ -293,7 +293,14 @@ def create_invoice_via_wizard(
     iva_rate: str | None,
     currency: str,
     operation_date: str | None = None,
-    country_code: str = "ES",
+    # Required, never defaulted. The country routes both informativas and
+    # decides domesticity for the Modelo 303 invoice screen, so assuming Spain
+    # for an unstated counterparty would silently widen the domestic population
+    # -- an undeclared fact resolving to the value that declares more. The CLI
+    # option that feeds this is already required and says so in its own help;
+    # this closes the same door on the application entry point, where a default
+    # would have been reachable by any future caller that simply omitted it.
+    country_code: str,
     notes: str = "",
     iva_category: IvaCategory | None = None,
     operation_type: IntracomOperationType | None = None,
