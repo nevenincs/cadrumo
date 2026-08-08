@@ -133,6 +133,24 @@ _NIF_PATTERN = r"\b[XYZxyz]?\d{7,8}[A-Za-z]\b"
 # every such reference.
 _CIF_PATTERN = r"\b[A-HJNPQRSUVWa-hjnpqrsuvw]\d{7}[0-9A-Ja-j]\b"
 
+# NIF-IVA — the PREFIXED form of a tax identity, which the two rules above
+# cannot see. Both anchor on `\b`, and a country prefix is a word character, so
+# `ESB12345674` presents no boundary before the CIF body and the rule that
+# redacts the bare `B12345674` does not fire. That is not only the foreign case:
+# it is a SPANISH taxpayer's own identifier in the form this app's own
+# structured readers recover and its own parsers emit.
+#
+# Every Member State, not just the foreign ones, for the reason the IBAN arm
+# below states in the other direction: an ES-only arm protects the domestic
+# spelling and leaks the prefixed one, and both name the same taxpayer.
+#
+# Deliberately a WIDE scan admitted by a STRICT gate, following the IBAN arm
+# rather than the identity arms: two leading letters plus an alphanumeric run
+# collides with hashes, opaque ids and document references, so the shape cannot
+# be the evidence. `SHA256_PREFIX_IF_NIF_IVA` decides on the per-State
+# structure, and a prefix naming no State admits nothing at all.
+_NIF_IVA_PATTERN = r"\b[A-Za-z]{2}[0-9A-Za-z]{2,13}\b"
+
 # IBAN — a bank account number is sensitive financial data, so it is hashed
 # out of operator-facing output by operator decision. That decision is BROADER
 # than this module's stated must-handle list, which names the tax-identity
@@ -273,6 +291,11 @@ _DEFAULT_RULES: Mapping[str, _RedactionRule] = MappingProxyType(
             pattern=_CIF_PATTERN,
             strategy=_RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
         ),
+        "nif-iva-hash": _RedactionRule(
+            name="nif-iva-hash",
+            pattern=_NIF_IVA_PATTERN,
+            strategy=_RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA,
+        ),
         "iban-hash": _RedactionRule(
             name="iban-hash",
             pattern=_IBAN_PATTERN,
@@ -393,6 +416,30 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
             return _sha256_prefix(span)
 
         return pattern.sub(_hash_if_identity, value)
+    if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA:
+        # Imported at call time for the reason the identity arm above states.
+        from ..identity import IdentityError, nif_iva_format_for_country, normalise_nif_iva, validate_identity
+
+        def _hash_if_nif_iva(match: re.Match[str]) -> str:
+            span = match.group(0)
+            normalised = normalise_nif_iva(span)
+            prefix, body = normalised[:2], normalised[2:]
+            if prefix == "ES":
+                # Spain is absent from the per-State VAT table, because its own
+                # identities are the AEAT control-character authority's. So the
+                # ES arm asks that authority about the BODY -- which is the
+                # whole of what the prefixed spelling adds.
+                try:
+                    validate_identity(body)
+                except IdentityError:
+                    return span
+                return _sha256_prefix(span)
+            spec = nif_iva_format_for_country(prefix)
+            if spec is None or not spec.pattern.match(normalised):
+                return span
+            return _sha256_prefix(span)
+
+        return pattern.sub(_hash_if_nif_iva, value)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IBAN:
 
         def _hash_if_iban(match: re.Match[str]) -> str:
