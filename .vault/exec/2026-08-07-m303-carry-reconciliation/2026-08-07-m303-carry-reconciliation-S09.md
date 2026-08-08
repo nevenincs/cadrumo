@@ -5,44 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:40f265d89d957dead98d16b47f8e1c3479ceca7f103b18e5e5f809cb03e5e7fc'
+body_hash: 'sha256:84b7b273d666ec7a09e622120a27115c519484ca4f50b99413f2473caea86ce9'
 step_id: 'S09'
 related:
   - "[[2026-08-07-m303-carry-reconciliation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace m303-carry-reconciliation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S09 and 2026-08-07-m303-carry-reconciliation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Rebind the four further twin literals discovery found in the registry binding validator, which a hand-listed inventory of nine had also missed and ## Scope
-
-- `src/cadrumo/domain/iva_compensation/_filed_derivation.py src/cadrumo/domain/iva_compensation/__init__.py src/cadrumo/domain/calculations/registry/_bindings.py src/cadrumo/application/calculations/_iva_compensation_casillas.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Rebind the four further twin literals discovery found in the registry binding validator, which a hand-listed inventory of nine had also missed
 
@@ -57,8 +24,6 @@ review's own inventory of nine had both missed. They sat inside a module-level
 tuple in the registry binding validator, which is why a scan reading only
 string-valued attributes reported that module as naming nothing: the shape hid
 the twins from the check that existed to find them.
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 ## Outcome
 
@@ -94,21 +59,8 @@ runs there too. Green with the mutation removed.
 Import-linter contract status verified as described in the sibling record: the
 four contracts this edge could affect are KEPT.
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
-
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
-
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
-
 ## Notes
 
 The four twins were a genuine finding beyond the brief's inventory, which is the
 argument for discovery over enumeration stated as evidence rather than as
 reasoning.
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
