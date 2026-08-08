@@ -4,7 +4,7 @@ tags:
   - '#aeat-design-relayout-boundary'
 date: '2026-08-08'
 modified: '2026-08-08'
-body_hash: 'sha256:43feeb77edd0ef4c5284a88f1f5419017318e6f8ddf6943762cfa9e52f66ed9e'
+body_hash: 'sha256:870e2c8179b4ebfb9cbf8269deb0742734e9b1feab17b3422f90d94a2793d6e7'
 tier: L3
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
@@ -78,10 +78,10 @@ Re-key every per-signal design inventory on the design file rather than the pars
 
 Make the year-only revision selector refuse instructively for a year carrying a mid-year design boundary, and make all three of its callers handle that refusal.
 
-- [ ] `W01.P03.S11` - Make the year-only revision selector refuse instructively when more than one revision covers a filing year, noting the typed error and its candidate-id tuple already exist so the work is the REMEDY the message omits - it must name the filing year and state that the year carries a mid-year design boundary so the caller must supply a period or an as-of date, without disturbing the period-scoped selector that shares the error and for which that remedy would be wrong; `src/cadrumo/domain/calculations/registry/_temporal.py`.
-- [ ] `W01.P03.S12` - Widen the binding-readiness helper's refusal handling so the ambiguity error is handled the way a missing revision for a period already is, rather than propagating out of a read-only discovery surface; `src/cadrumo/application/modelo/_binding_readiness.py`.
-- [ ] `W01.P03.S13` - Handle the ambiguity refusal in the registry revision diff surface alongside its existing missing-revision handling; `src/cadrumo/application/registry/_diff.py`.
-- [ ] `W01.P03.S14` - Handle the ambiguity refusal in the registry describe and bindings query, which calls the year-only selector bare with no handling at all, rather than in the profile inspect surface the row originally named - measured, profile inspect does not call the year-only selector and already refuses on this error through its own boundary path with a translated message listing the candidate ids, while the query resolver is the third caller the sub-year record names and the only one still unguarded; `src/cadrumo/domain/calculations/registry/_queries.py`.
+- [x] `W01.P03.S11` - Make the year-only revision selector refuse instructively when more than one revision covers a filing year, noting the typed error and its candidate-id tuple already exist so the work is the REMEDY the message omits - it must name the filing year and state that the year carries a mid-year design boundary so the caller must supply a period or an as-of date, without disturbing the period-scoped selector that shares the error and for which that remedy would be wrong; `src/cadrumo/domain/calculations/registry/_temporal.py`.
+- [x] `W01.P03.S12` - Widen the binding-readiness helper's refusal handling so the ambiguity error is handled the way a missing revision for a period already is, rather than propagating out of a read-only discovery surface; `src/cadrumo/application/modelo/_binding_readiness.py`.
+- [x] `W01.P03.S13` - Handle the ambiguity refusal in the registry revision diff surface alongside its existing missing-revision handling; `src/cadrumo/application/registry/_diff.py`.
+- [x] `W01.P03.S14` - Handle the ambiguity refusal in the registry describe and bindings query, which calls the year-only selector bare with no handling at all, rather than in the profile inspect surface the row originally named - measured, profile inspect does not call the year-only selector and already refuses on this error through its own boundary path with a translated message listing the candidate ids, while the query resolver is the third caller the sub-year record names and the only one still unguarded; `src/cadrumo/domain/calculations/registry/_queries.py`.
 - [ ] `W01.P03.S74` - Record that the profile inspect surface already refuses on the ambiguity error through its own boundary path with a translated message listing the candidate ids, so the row that named it was satisfied before the campaign began, and confirm no regression by exercising that refusal rather than by reading the code; `src/cadrumo/entrypoints/cli/_config/tests/`.
 
 ## Wave `W02` - Modelo 303 - the proving pass and the only sub-year epoch

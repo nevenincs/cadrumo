@@ -6,7 +6,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:8429142f1286ef2036dbf5cb6f910d6cbc658b1bd0988485ce77ebea2dcce8cb'
+body_hash: 'sha256:4105390261c44c82bdb00fa13825c2b6f022802be789239920902f3779f72283'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -25,6 +25,10 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S69]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S71]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S72]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S11]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S12]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S13]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S14]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
 ---
 
@@ -55,6 +59,10 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S69` - Reconcile the hardened gate's verdict against the re-derived boundary union
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S71` - Add a box-set MEMBERSHIP signal alongside the movement signal
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S72` - Widen the bracketed box-number marker beyond four digits
+- `2026-08-08-aeat-design-relayout-boundary-W01-P03-S11` - Make the year-only revision selector refuse instructively
+- `2026-08-08-aeat-design-relayout-boundary-W01-P03-S12` - Widen the binding-readiness helper's refusal handling
+- `2026-08-08-aeat-design-relayout-boundary-W01-P03-S13` - Handle the ambiguity refusal in the registry revision diff surface
+- `2026-08-08-aeat-design-relayout-boundary-W01-P03-S14` - Handle the ambiguity refusal in the registry describe and bindings query
 
 ### plan
 
