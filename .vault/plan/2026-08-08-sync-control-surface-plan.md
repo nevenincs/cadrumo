@@ -4,7 +4,7 @@ tags:
   - '#sync-control-surface'
 date: '2026-08-08'
 modified: '2026-08-08'
-body_hash: 'sha256:70a29a59611af90d56cc21fcbcfa5aeb93536bba2f4b57c81321271c7f6f4ee9'
+body_hash: 'sha256:f4a269fc91504c46edf6a8527c5383f069f055b1695e02c26710615c491f9118'
 tier: L2
 related:
   - '[[2026-08-08-sync-control-surface-adr]]'
@@ -35,8 +35,8 @@ live defect that can empty an operator's workbook today.
 
 An interruption between the batch clear and the batch update empties the operator's workbook today. This is a live defect and the precondition for any cancellation affordance.
 
-- [ ] `P01.S01` - reproduce the emptied-workbook state by interrupting between the clear and the update, as a real failing regression; `src/cadrumo/adapters/outbound/google/tests/`.
-- [ ] `P01.S02` - make the tab surface survive an interruption between the two calls, so a partial apply never leaves the operator's workbook empty; `src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py`.
+- [x] `P01.S01` - gate the ordering property offline - the whole-tab clear is gone and the stale set never names a written cell - since an interruption between two live Sheets calls cannot be reproduced without a forbidden online write; `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_apply_no_empty_window.py`.
+- [x] `P01.S02` - make the tab surface survive an interruption between the two calls, so a partial apply never leaves the operator's workbook empty; `src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py`.
 
 ### Phase `P02` - Dry-run on both sync surfaces
 
