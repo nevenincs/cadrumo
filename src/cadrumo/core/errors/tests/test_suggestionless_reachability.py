@@ -191,32 +191,145 @@ def _raised_short_name(node: ast.Raise, local: dict[str, str]) -> str | None:
     return name if name in _short_name_owners() else None
 
 
+_GUARD_IDENTIFIER_COMPONENTS = frozenset({"pytest", "live_tests_enabled", "cadrumo_live_tests_enabled"})
+"""Guard tokens matched as a whole underscore-delimited COMPONENT of a
+``Name``, ``Attribute``, or called-function identifier appearing inside a
+conditional test -- e.g. ``_running_under_pytest()`` carries the component
+``pytest``, and ``self.settings.live_tests_enabled`` carries the attribute
+``live_tests_enabled`` verbatim. Component matching (split on ``_``, exact
+membership) rather than substring matching is what keeps a name like
+``pytest_current_test`` -- an ordinary parameter threading a DI seam, not a
+guard -- from being confused with one; it shares the component ``pytest``
+only when actually used as a guard operand, i.e. inside a test expression this
+scan visits in the first place."""
+
+_GUARD_STRING_CONSTANTS = frozenset({"pytest", "PYTEST_CURRENT_TEST"})
+"""Guard literals matched only as an exact string ``Constant`` appearing
+inside a conditional test or an ``except`` handler's caught-type expression
+-- e.g. ``"pytest" in sys.modules`` -- never as a docstring or any other
+string elsewhere in the function, because this scan never looks outside
+those two expression positions."""
+
+_GUARD_EXCEPT_TYPE_NAMES = frozenset({"AeatLiveReadNotEnabledError"})
+"""Exception types whose ``except`` clause is ITSELF the non-operator gate.
+
+Narrow and explicit rather than a general interprocedural resolution: this
+is the one class in the tree whose entire purpose is the pytest / live-test
+opt-in boundary (the module's own pinned worked example -- see
+``test_the_live_read_gate_is_still_the_worked_non_operator_example``), so a
+handler naming it catches only what it itself raises only under that same
+gate. A handler naming anything else is deliberately NOT treated as guarded:
+that would readmit the very over-matching this rewrite removes, just one
+hop away from the raise instead of zero."""
+
+
+def _identifier_carries_guard_component(identifier: str) -> bool:
+    """Whether ``identifier``'s underscore-delimited parts contain a guard token."""
+    return any(part in _GUARD_IDENTIFIER_COMPONENTS for part in identifier.split("_") if part)
+
+
+def _expr_is_guard(node: ast.expr) -> bool:
+    """Whether ``node`` -- a conditional test, IN ISOLATION -- is itself the guard.
+
+    Walked as its own subtree only. A docstring or an unrelated comment
+    elsewhere in the enclosing function is invisible here: neither is part
+    of this expression's AST at all, so there is nothing for this scan to
+    mismatch against.
+    """
+    for sub in ast.walk(node):
+        if isinstance(sub, ast.Name) and _identifier_carries_guard_component(sub.id):
+            return True
+        if isinstance(sub, ast.Attribute) and _identifier_carries_guard_component(sub.attr):
+            return True
+        if isinstance(sub, ast.Constant) and isinstance(sub.value, str) and sub.value in _GUARD_STRING_CONSTANTS:
+            return True
+    return False
+
+
+def _except_type_is_guard(handler_type: ast.expr, local: dict[str, str]) -> bool:
+    """Whether an ``except`` clause's caught type(s) resolve to a known guard exception."""
+    candidates = handler_type.elts if isinstance(handler_type, ast.Tuple) else [handler_type]
+    for candidate in candidates:
+        name = (
+            candidate.id
+            if isinstance(candidate, ast.Name)
+            else candidate.attr
+            if isinstance(candidate, ast.Attribute)
+            else None
+        )
+        if name is not None and local.get(name, name) in _GUARD_EXCEPT_TYPE_NAMES:
+            return True
+    return False
+
+
 def _guarded_raise_sites(source: str) -> dict[str, list[bool]]:
     """Return, per declared short name, whether each raise sits behind a guard.
 
-    A raise is guarded when its enclosing function mentions a token only a
-    non-operator context produces. Enclosing-function scope is deliberately
-    coarse: a narrower window would miss an early ``if pytest ...: return`` that
-    makes the whole body unreachable for an operator.
+    Structural, not textual: a raise is guarded when it is nested inside an
+    ``if`` whose test expression is itself a guard (:func:`_expr_is_guard`),
+    or inside an ``except`` clause whose caught type is itself a guard
+    exception (:func:`_except_type_is_guard`) -- climbing every enclosing
+    conditional within the SAME function, since an early
+    ``if pytest ...: raise`` must still be caught however deep the raise
+    sits beneath it. A ``FunctionDef`` boundary resets the accumulated
+    guard: a raise inside a nested helper is not "inside" an outer
+    function's ``if`` merely by lexical nesting, because the helper only
+    runs when something calls it, which this scan cannot see.
+
+    Older revisions matched the guard tokens as a raw substring of the
+    WHOLE enclosing function body, which a comment or a docstring mentioning
+    "pytest" for an unrelated reason (documenting a test-environment quirk,
+    for instance) satisfied just as well as a real guard -- misclassifying
+    every raise in that function, guarded or not.
     """
     tree = ast.parse(source)
-    lines = source.splitlines()
     local = _local_error_names(tree)
     found: dict[str, list[bool]] = defaultdict(list)
 
-    def _walk(node: ast.AST, enclosing: str) -> None:
-        for child in ast.iter_child_nodes(node):
-            if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef):
-                body = "\n".join(lines[child.lineno - 1 : (child.end_lineno or child.lineno)])
-                _walk(child, body)
-                continue
-            if isinstance(child, ast.Raise):
-                short = _raised_short_name(child, local)
-                if short is not None:
-                    found[short].append(any(token in enclosing for token in _NON_OPERATOR_TOKENS))
-            _walk(child, enclosing)
+    def _visit(node: ast.AST, guarded: bool) -> None:
+        """Dispatch on ``node`` ITSELF, not on its children.
 
-    _walk(tree, "")
+        The earlier shape called itself with a body statement already bound
+        to ``node`` and then asked ``ast.iter_child_nodes(node)`` -- the
+        statement's own children, never the statement -- which silently
+        skipped every ``Raise`` sitting directly in an ``If`` or ``except``
+        body. Testing ``node``'s own type first, before ever descending,
+        is what keeps a statement from being inspected only as someone
+        else's child.
+        """
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            for stmt in node.body:
+                _visit(stmt, False)
+            return
+        if isinstance(node, ast.If):
+            body_guarded = guarded or _expr_is_guard(node.test)
+            for stmt in node.body:
+                _visit(stmt, body_guarded)
+            for stmt in node.orelse:
+                _visit(stmt, guarded)
+            return
+        if isinstance(node, ast.Try):
+            for stmt in node.body:
+                _visit(stmt, guarded)
+            for handler in node.handlers:
+                handler_guarded = guarded or (
+                    handler.type is not None and _except_type_is_guard(handler.type, local)
+                )
+                for stmt in handler.body:
+                    _visit(stmt, handler_guarded)
+            for stmt in (*node.orelse, *node.finalbody):
+                _visit(stmt, guarded)
+            return
+        if isinstance(node, ast.Raise):
+            short = _raised_short_name(node, local)
+            if short is not None:
+                found[short].append(guarded)
+            return  # a raise statement's own arguments cannot themselves raise
+        for child in ast.iter_child_nodes(node):
+            _visit(child, guarded)
+
+    for stmt in tree.body:
+        _visit(stmt, False)
     return found
 
 
@@ -313,6 +426,72 @@ def test_the_guard_detector_separates_a_gated_raise_from_an_open_one() -> None:
     assert sorted(guards) == [False, True], (
         f"the guard detector did not separate the two raises: {guards}. "
         "Both-true means it flags everything; both-false means it flags nothing."
+    )
+
+
+def test_the_detector_still_recognizes_every_guard_shape_live_in_the_tree() -> None:
+    """Positive control: today's real guard shapes are still detected after the rewrite.
+
+    Two distinct shapes coexist in production and each must still resolve to
+    non-operator-guarded: a direct attribute check in the ``if`` test itself
+    (``core.access_gate``'s own worked example -- the class the module
+    docstring reasons from), and an ``except`` clause catching THAT worked
+    example's error class one call away (``application.auth``'s login
+    refusal, reached through ``AeatAccessGate.require_live_read``). A
+    rewrite that only proved the substring false-positive gone, while
+    silently losing recognition of either real shape, would misclassify a
+    genuinely non-operator-reachable refusal as reachable -- exactly the
+    false-negative failure mode the module warns is as harmful as the
+    false-positive it was written to fix.
+    """
+    direct_qualname = next(
+        q for q, e in _DECLARED_CODE_BY_QUALNAME.items() if e.code == "REFUSED_ACCESS_GATE_LIVE_READ_NOT_ENABLED"
+    )
+    except_qualname = next(
+        q for q, e in _DECLARED_CODE_BY_QUALNAME.items() if e.code == "REFUSED_AUTH_LOGIN_LIVE_TESTS_DISABLED"
+    )
+    assert _classify(direct_qualname) == _NON_OPERATOR_ONLY, (
+        "the if-test attribute-check guard shape (AeatAccessGate.require_live_read) is no longer recognized"
+    )
+    assert _classify(except_qualname) == _NON_OPERATOR_ONLY, (
+        "the except-clause guard shape (AuthLoginNotEnabledError catching AeatLiveReadNotEnabledError) "
+        "is no longer recognized"
+    )
+
+
+def test_a_comment_or_docstring_mentioning_a_guard_token_no_longer_reclassifies_anything() -> None:
+    """Regression: pin the exact defect a live comment produced today.
+
+    ``application/workflow/_resume.py`` carried a comment reading "a pytest
+    failure line" beside an UNGUARDED raise -- ``prior.aborted_reason in
+    _NON_RESUMABLE_REASONS`` has nothing to do with pytest -- and the old
+    substring-over-the-whole-function-body scan flagged all four raises in
+    that function as non-operator-guarded regardless, moving
+    ``REFUSED_WORKFLOW_RESUME`` in and out of the reviewed set between two
+    runs of the very test this module exists to keep stable. The synthetic
+    case here is the same shape, isolated: a docstring and a trailing
+    comment both name every guard token, and an ``if`` guards nothing.
+    """
+    source = "\n".join(
+        (
+            "from cadrumo.core.access_gate._errors import AeatLiveReadNotEnabledError",
+            "",
+            "def refuses(prior):",
+            '    """Mentions pytest, live_tests_enabled and PYTEST_CURRENT_TEST here.',
+            "",
+            "    None of that makes this guarded: cadrumo_live_tests_enabled too.",
+            '    """',
+            "    if prior.reason in _SOME_REASONS:",
+            "        # a pytest failure line, live_tests_enabled, PYTEST_CURRENT_TEST,",
+            "        # cadrumo_live_tests_enabled -- still just a comment",
+            "        raise AeatLiveReadNotEnabledError('open')",
+        ),
+    )
+
+    guards = _guarded_raise_sites(source)["AeatLiveReadNotEnabledError"]
+
+    assert guards == [False], (
+        f"a docstring/comment mentioning every guard token wrongly reclassified an unguarded raise: {guards}"
     )
 
 

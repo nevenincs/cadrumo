@@ -104,7 +104,7 @@ def emit_llm_rejection(
         {
             "llm": True,
             "rejected": True,
-            "provider": reader_from_provenance(suggestion.provenance),
+            "provider": transport_from_provenance(suggestion.provenance),
             "transaction_id": result.transaction_id,
             "suggestion_kind": result.suggestion_kind,
             "provenance": result.provenance,
@@ -133,11 +133,17 @@ def emit_llm_rejection(
     _emit_envelope(ctx, command="ledger.classify", result=payload, lines=lines, notices=[notice])
 
 
-def reader_from_provenance(provenance: str) -> str:
-    """Return the reader segment of an ``llm:<reader>:<model>`` provenance.
+def transport_from_provenance(provenance: str) -> str:
+    """Return the transport segment of an ``llm:<transport>-<reader>:<model>`` stamp.
+
+    Named for the transport rather than the reader because that is what it
+    returns and what every one of its call sites publishes: each feeds the audit
+    payload's ``provider`` key, which answers whether a document left the host.
+    The earlier name and grammar sketch described the segment before the hyphen
+    as the whole segment, which is the same conflation the slice made.
 
     The suggestion DTOs carried a ``provider`` enum until the cloud transport was
-    retired; the payloads still publish a reader label, so it is derived from the
+    retired; the payloads still publish this label, so it is derived from the
     provenance the suggestion already carries rather than restated. Deriving it
     keeps the field truthful if a second on-host reader is ever added, where a
     hardcoded constant would quietly misreport.
@@ -316,7 +322,7 @@ def _emit_split(
                 "parent_transaction_id": suggestion.transaction_id,
                 "llm": True,
                 "persisted": False,
-                "provider": reader_from_provenance(suggestion.provenance),
+                "provider": transport_from_provenance(suggestion.provenance),
                 "provenance": suggestion.provenance,
                 "reason": suggestion.reason,
                 "parent_amount": format(suggestion.parent_amount, "f"),
@@ -380,7 +386,7 @@ def _emit_single(
                 "llm": True,
                 "persisted": False,
                 "transaction_id": suggestion.transaction_id,
-                "provider": reader_from_provenance(suggestion.provenance),
+                "provider": transport_from_provenance(suggestion.provenance),
                 "classification": BusinessClassification.BUSINESS.value,
                 "category": child.category.value if child.category is not None else None,
                 "confidence": "1",
@@ -515,7 +521,7 @@ def _llm_suggestion_base_payload(
         "llm": True,
         "persisted": False,
         "transaction_id": suggestion.transaction_id,
-        "provider": reader_from_provenance(suggestion.provenance),
+        "provider": transport_from_provenance(suggestion.provenance),
         "classification": suggestion.classification.value,
         "category": suggestion.category.value if suggestion.category is not None else None,
         "confidence": format(suggestion.confidence, "f"),

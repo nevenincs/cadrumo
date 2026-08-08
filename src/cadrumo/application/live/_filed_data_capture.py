@@ -320,6 +320,9 @@ class _CaptureAccumulator:
     conflicting_filing_record_ids: list[str] = field(default_factory=list)
     observations_for_calculation: list[FiledDeclaracionObservation] = field(default_factory=list)
     evidence_notices: list[Notice] = field(default_factory=list)
+    #: Recapture-divergence advisories, one per re-captured filing whose casilla
+    #: values this sweep changed. Read before each upsert, never after.
+    recapture_notices: list[Notice] = field(default_factory=list)
     justificante_csvs_by_observation: dict[tuple[str, int, str, str], tuple[str, ...]] = field(default_factory=dict)
     casilla_count: int = 0
 
@@ -332,6 +335,13 @@ class _CaptureAccumulator:
         output_root: Path,
     ) -> None:
         """Persist one captured observation and fold its artefacts into the run."""
+        # Read the recapture divergence BEFORE the upsert, because a re-capture
+        # is an unconditional upsert and afterwards the prior values are gone.
+        # This is the only ordering that can answer "what did this sweep change";
+        # the advisory it produces was built and exported but never called from
+        # any production path, so a corrected filing silently overwrote the
+        # previously observed values and the operator was never told.
+        self.recapture_notices.extend(recapture_divergence_notices((observation,)))
         manifest_path = store.persist_observation(observation)
         self.observation_paths.append(capture_report_path(manifest_path, output_root=output_root))
         self.artefact_refs.extend(
@@ -666,6 +676,7 @@ async def capture_filed_data_bulk(
         failures=tuple(failures),
         skipped_casillas=finalization.skipped_casillas,
         evidence_notices=tuple(accumulator.evidence_notices),
+        recapture_notices=tuple(accumulator.recapture_notices),
     )
 
 
@@ -1330,6 +1341,9 @@ class FiledHistoryOnboardingRun(BaseModel):
     notificaciones_row_count: int = Field(default=0, ge=0)
     stage_failures: tuple[str, ...] = ()
     evidence_notices: tuple[Notice, ...] = ()
+    #: One advisory per re-captured filing whose casilla values this sweep
+    #: changed, forwarded from the capture that read them before its upsert.
+    recapture_notices: tuple[Notice, ...] = ()
     """Per-artefact evidence advisories raised during capture, each keeping its own reason."""
 
     @property
@@ -1669,6 +1683,7 @@ async def pull_filed_history(
         notificaciones_row_count=notificaciones_rows,
         stage_failures=tuple(stage_failures),
         evidence_notices=capture.evidence_notices,
+        recapture_notices=capture.recapture_notices,
     )
 
 

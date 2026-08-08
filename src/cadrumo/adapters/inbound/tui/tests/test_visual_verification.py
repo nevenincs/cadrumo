@@ -436,28 +436,42 @@ async def test_every_surface_actually_renders_under_both_appearances(build, them
 _CONDITIONAL_REGION_SURFACES = [
     pytest.param(
         _status_populated,
-        ("panel-notices", "panel-profile", "panel-profiles", "panel-auth", "panel-recovery"),
+        "panel-notices",
+        ("panel-profile", "panel-profiles", "panel-auth", "panel-recovery"),
         id="status-populated",
     ),
     pytest.param(
         _manager_populated,
+        "section-activities",
         ("section-identity", "section-preferences", "section-activities"),
         id="manager-populated",
     ),
 ]
 """Every surface audited for a REGION a populated state could evict, paired
-with every region id that must survive populating it.
+with the id of the region that GROWS when populated and every region id
+that must survive it growing.
 
-This is the property that would have caught the shipped defect directly:
-``NoticeBand`` inherited Textual's ``Vertical`` default ``height: 1fr``, so
-a populated notices region silently claimed the whole scroll column and
-every sibling panel beneath it stopped painting -- at every terminal size,
-including 100x50. No existing gate in this module could have seen it,
-because every one of them builds its surfaces in their EMPTIEST reachable
-state (:func:`_status` carries no notices, :func:`_manager` carries no
-extra rows) -- a widget that eliminates its siblings passes edge, scroll,
-theme, tab and masking checks identically whether the siblings are still
-there or not.
+This is the property that would have caught the shipped defect: ``NoticeBand``
+inherited Textual's ``Vertical`` default ``height: 1fr``, so a populated
+notices region silently claimed the whole scroll column. No existing gate in
+this module could have seen it, because every one of them builds its surfaces
+in their EMPTIEST reachable state (:func:`_status` carries no notices,
+:func:`_manager` carries no extra rows).
+
+Reproducing the exact original symptom -- the sibling panels' OWN
+``region.height`` going to zero -- turned out not to be what actually
+happens under a forced ``height: 1fr``, proven by driving it directly rather
+than assumed: the siblings keep a nonzero region and ``display=True``, they
+are simply pushed far down the SCROLLABLE column's virtual space (measured:
+``panel-notices`` ballooned from 10 rows to 86, and ``panel-profile`` moved
+from y=13 to y=89 on a 50-row viewport). A sibling-presence check alone is
+therefore not sound here -- a widget that grows a hundredfold and one that
+stays reasonable both leave every sibling ``display=True`` with a positive
+height. The property that actually catches it is bounding the GROWING
+region's own height against a fraction of the viewport: a region a couple of
+notice lines or one added row justify never needs more than half the
+terminal, so exceeding that is the growth this test exists to catch,
+independent of exactly how far it then pushes anything below it.
 
 Audited but NOT enrolled, with the reason stated rather than left silent:
 
@@ -482,27 +496,44 @@ Audited but NOT enrolled, with the reason stated rather than left silent:
 """
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize(("build", "region_ids"), _CONDITIONAL_REGION_SURFACES)
-async def test_populating_a_conditional_region_does_not_evict_its_siblings(build, region_ids, tmp_path: Path) -> None:
-    """Every declared region stays painted once one of them holds real content.
+_VIEWPORT = (100, 50)
 
-    Read directly off the widget's own laid-out ``region`` rather than off
-    an exported screenshot. A border-title substring search was tried
-    first and rejected: this file's OWN earlier mutation-proof against the
-    modal-secret gate already established that Rich's SVG export can split
-    or truncate a string across multiple runs, so a substring absent from
-    the export text is not evidence of anything -- it would have made this
-    gate exactly as unsound as the one that lesson was learned from.
-    ``display`` and ``region.height`` are the compositor's own layout
-    verdict, not a rendering of it, which is what the shipped defect
-    actually broke: the panels stayed mounted (``display=True``) while
-    ``NoticeBand``'s inherited ``height: 1fr`` left them zero paintable
-    space.
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(("build", "growing_region_id", "region_ids"), _CONDITIONAL_REGION_SURFACES)
+async def test_populating_a_conditional_region_does_not_evict_its_siblings(
+    build,
+    growing_region_id: str,
+    region_ids: tuple[str, ...],
+    tmp_path: Path,
+) -> None:
+    """A populated region stays proportionate, and every sibling stays painted.
+
+    Two assertions, because the mutation-proof for this gate showed either
+    ALONE is unsound. Bare presence (``display`` and a positive
+    ``region.height``) is not enough: driving the shipped defect directly
+    showed every sibling KEEPS a positive height and ``display=True`` even
+    when the notices region balloons to 86 rows on a 50-row screen -- they
+    are pushed far down the scrollable column's virtual space rather than
+    zeroed out, so presence alone would have passed the broken code. What
+    actually catches it is bounding the region that GROWS: content
+    justifying a couple of lines or one added row never needs more than
+    half the viewport, so a region claiming more than that is exactly the
+    unconstrained-``fr``-in-an-``auto``-container shape that shipped.
     """
     with build(tmp_path) as app:
-        async with app.run_test(size=(100, 50)) as pilot:
+        async with app.run_test(size=_VIEWPORT) as pilot:
             await pilot.pause()
+            _, height = _VIEWPORT
+            try:
+                growing = app.query_one(f"#{growing_region_id}", Static)
+            except NoMatches:
+                pytest.fail(f"#{growing_region_id} was never mounted -- the fixture must populate it")
+            assert growing.region.height <= height // 2, (
+                f"#{growing_region_id} claimed {growing.region.height} rows of a {height}-row viewport -- "
+                f"a populated region must stay proportionate to its content, not consume everything below it"
+            )
+
             starved = []
             for region_id in region_ids:
                 try:
