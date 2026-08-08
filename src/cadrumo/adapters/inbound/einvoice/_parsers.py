@@ -102,7 +102,9 @@ class ParsedEInvoice:
         "recargo_amount",
         "record_text",
         "regime_legend",
+        "retencion_amount",
         "shape",
+        "suplidos_amount",
         "supplier_country_code",
         "supplier_name",
         "supplier_postal_code",
@@ -142,6 +144,14 @@ class ParsedEInvoice:
         self.iva_amount: Decimal | None = None
         self.grand_total: Decimal | None = None
         self.recargo_amount: Decimal | None = None
+        # The two terms of the invoice identity that are neither base nor cuota,
+        # and that Facturae states in its own dedicated elements. Retencion is a
+        # settlement-side deduction and the suplido is a third position on the
+        # total, so a reader that recovers neither cannot reconstruct what the
+        # document says the operation cost -- see the totals walk below for why
+        # that is not merely a missing field but a wrong total.
+        self.retencion_amount: Decimal | None = None
+        self.suplidos_amount: Decimal | None = None
         self.iva_category: str | None = None
         # The statutory mention the document itself prints, copied verbatim.
         # Transcriptive evidence, never a classification: the category code
@@ -563,6 +573,44 @@ def _parse_ubl(root: Element) -> ParsedEInvoice:
     return parsed
 
 
+def _facturae_suplidos(totals: Element) -> Decimal | None:
+    """Return the suplidos the invoice totals state, aggregate preferred.
+
+    Facturae states them twice and both statements are optional: the itemised
+    ``ReimbursableExpenses`` block (`Suplidos incorporados en la factura`) and
+    the ``TotalReimbursableExpenses`` aggregate (`Total de suplidos`). The
+    aggregate is the format's own sum, so it is taken where present; the block
+    is summed only when it is not, which keeps this from disagreeing with the
+    document about its own arithmetic.
+    """
+    aggregate = _decimal(_first_text(totals, "TotalReimbursableExpenses"))
+    if aggregate is not None:
+        return aggregate
+    amounts = [
+        amount
+        for expense in _find_all(totals, "ReimbursableExpense")
+        if (amount := _decimal(_first_text(expense, "ReimbursableExpenseAmount"))) is not None
+    ]
+    return sum(amounts, Decimal("0")) if amounts else None
+
+
+def _facturae_invoice_total(
+    *,
+    base: Decimal | None,
+    output_tax: Decimal | None,
+    suplidos: Decimal | None,
+) -> Decimal | None:
+    """Return the contraprestacion, derived from the elements that carry it.
+
+    ``None`` when the document states no base: a total assembled from nothing is
+    a figure this reader invented, and the closure check treats an absent total
+    as nothing verified rather than as a zero.
+    """
+    if base is None:
+        return None
+    return base + (output_tax or Decimal("0")) + (suplidos or Decimal("0"))
+
+
 def _parse_facturae(root: Element) -> ParsedEInvoice:
     """Parse a Facturae 3.2.x invoice (the Spanish national format)."""
     parsed = ParsedEInvoice(shape=DocumentShape.XML_FACTURAE)
@@ -597,7 +645,32 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
     for totals in _find_all(invoice, "InvoiceTotals"):
         parsed.taxable_base = _decimal(_first_text(totals, "TotalGrossAmountBeforeTaxes"))
         total_output_tax = _decimal(_first_text(totals, "TotalTaxOutputs"))
-        parsed.grand_total = _decimal(_first_text(totals, "InvoiceTotal"))
+        # `Total impuestos retenidos` -- the schema's own words. Read because the
+        # total below is stated NET of it, so a reader that skips it cannot tell
+        # a withheld invoice from one whose components do not add up.
+        parsed.retencion_amount = _decimal(_first_text(totals, "TotalTaxesWithheld"))
+        # `Total de suplidos`, with the block `Suplidos incorporados en la
+        # factura` as the fallback: both are optional and a document may state
+        # the itemised block without the aggregate, so the aggregate is
+        # preferred and the block summed only when it is absent.
+        parsed.suplidos_amount = _facturae_suplidos(totals)
+        # DERIVED, never read. There is no Facturae element equal to the invoice
+        # total this codebase means: `InvoiceTotal` is documented as
+        # `TotalGrossAmountBeforeTaxes + TotalTaxOutputs - TotalTaxesWithheld`,
+        # so it is already net of retencion, and reimbursable expenses join only
+        # at `TotalExecutableAmount`. Reading it as the total therefore
+        # understated a withheld invoice by exactly its retencion, and the
+        # arithmetic-closure check refused correct professional invoices for it.
+        #
+        # `TotalTaxOutputs` is `Sumatorio de todas Cuotas y Recargos de
+        # Equivalencia`, so it already carries both tax terms of the identity
+        # `total = base + cuota + recargo + suplido`, and the sum below is that
+        # identity read straight off the document's own documented parts.
+        parsed.grand_total = _facturae_invoice_total(
+            base=parsed.taxable_base,
+            output_tax=total_output_tax,
+            suplidos=parsed.suplidos_amount,
+        )
     # Facturae states taxes TWICE: once at invoice level under TaxesOutputs and
     # again per line under Items/InvoiceLine/TaxesOutputs. A descendant walk
     # collects both and double-counts every rate -- the invoice-level breakdown

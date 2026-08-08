@@ -1,0 +1,188 @@
+{
+  "artefact": "facturae_invoice_totals_composition",
+  "purpose": "The element sequence of Facturae's InvoiceTotals block and each element's own computation annotation, bundled because no Facturae element equals this codebase's invoice total: InvoiceTotal is stated net of withheld tax and excludes reimbursable expenses, so the total has to be derived from documented parts rather than read.",
+  "provenance": {
+    "source_url": "https://www.facturae.gob.es/content/dam/facturae/formato/versiones/Facturaev3_2_2.xml",
+    "schema_version": "Facturae 3.2.2",
+    "retrieved": "2026-08-08",
+    "payload_bytes": 190062,
+    "payload_sha256": "b4bbcd587f5fb0a8a906336cca09b0a40d06ffaa78c6a62f6e438c4e6ea86e07",
+    "payload_encoding": "utf-8 with BOM, as declared by the payload and verified by codepoint",
+    "extracted": "The InvoiceTotalsType element sequence and its xs:documentation annotations, verbatim in both published languages. The schema itself is not redistributed."
+  },
+  "element_sequence": [
+    "TotalGrossAmount",
+    "GeneralDiscounts",
+    "GeneralSurcharges",
+    "TotalGeneralDiscounts",
+    "TotalGeneralSurcharges",
+    "TotalGrossAmountBeforeTaxes",
+    "TotalTaxOutputs",
+    "TotalTaxesWithheld",
+    "InvoiceTotal",
+    "Subsidies",
+    "PaymentsOnAccount",
+    "ReimbursableExpenses",
+    "TotalFinancialExpenses",
+    "TotalOutstandingAmount",
+    "TotalPaymentsOnAccount",
+    "AmountsWithheld",
+    "TotalExecutableAmount",
+    "TotalReimbursableExpenses",
+    "PaymentInKind"
+  ],
+  "elements": [
+    {
+      "name": "TotalGrossAmount",
+      "optional": false,
+      "documentation": [
+        "(TGA) Total sum of the gross amounts of the invoice items. Up to eight decimal points.",
+        "Total Importe Bruto. Suma total de importes brutos de los detalles de la factura. Hasta ocho decimales."
+      ]
+    },
+    {
+      "name": "GeneralDiscounts",
+      "optional": true,
+      "documentation": [
+        "Discounts on the Total Gross Amount. There will be as many blocks of fields GeneralDiscounts as there are different discount types applied to the same invoice.",
+        "Descuentos sobre el Total Importe Bruto. Habrá tantos bloques de campos GeneralDiscounts como clases de descuentos diferentes se apliquen a nivel de factura."
+      ]
+    },
+    {
+      "name": "GeneralSurcharges",
+      "optional": true,
+      "documentation": [
+        "Charges on the Total Gross Amount. There will be as many blocks of fields GeneralSurcharges as types of charges/surcharges are applied to the invoice.",
+        "Cargos sobre el Total Importe Bruto. Habrá tantos bloques de campos GeneralSurcharges como clases de cargos/recargos se apliquen, a nivel de factura."
+      ]
+    },
+    {
+      "name": "TotalGeneralDiscounts",
+      "optional": true,
+      "documentation": [
+        "Sum of different fields GeneralDiscounts. Up to eight decimal points.",
+        "Total general de descuentos. Sumatorio de los importes de los diferentes campos GeneralDiscounts. Hasta ocho decimales."
+      ]
+    },
+    {
+      "name": "TotalGeneralSurcharges",
+      "optional": true,
+      "documentation": [
+        "Sum of different fields GeneralSurcharges. Up to eight decimal points.",
+        "Total general de cargos. Sumatorio de los importes de los diferentes campos GeneralSurcharges. Hasta ocho decimales"
+      ]
+    },
+    {
+      "name": "TotalGrossAmountBeforeTaxes",
+      "optional": false,
+      "documentation": [
+        "Result: TotalGrossAmount - TotalGeneralDiscounts + TotalGeneralSurcharges. Up to eight decimal points.",
+        "Total importe bruto antes de impuestos. Resultado de: TotalGrossAmount - TotalGeneralDiscounts + TotalGeneralSurcharges. Hasta ocho decimales."
+      ]
+    },
+    {
+      "name": "TotalTaxOutputs",
+      "optional": false,
+      "documentation": [
+        "Sum of different fields Tax Amounts + Total Equivalence Surcharges. Up to eight decimal points.",
+        "Total impuestos repercutidos. Sumatorio de todas Cuotas y Recargos de Equivalencia. Hasta ocho decimales."
+      ]
+    },
+    {
+      "name": "TotalTaxesWithheld",
+      "optional": false,
+      "documentation": [
+        "Sum of different fields TaxAmount. Up to eight decimal points.",
+        "Total impuestos retenidos. Hasta ocho decimales."
+      ]
+    },
+    {
+      "name": "InvoiceTotal",
+      "optional": false,
+      "documentation": [
+        "Result: TotalGrossAmountBeforeTaxes + TotalTaxOutputs - TotalTaxesWithheld. Up to eight decimal points.",
+        "Total factura. Resultado de: TotalGrossAmountBeforeTaxes + TotalTaxOutputs - TotalTaxesWithheld. Hasta ocho decimales."
+      ]
+    },
+    {
+      "name": "Subsidies",
+      "optional": true,
+      "documentation": [
+        "Subsidies, grants or aids for acquisition of certain goods granted by General government.",
+        "Subvenciones por adquisición de determinados bienes. Habrá tantos bloques de campos Subsidies como subvenciones se apliquen. En el caso de que la subvención se aplique solo a parte de las operaciones facturadas, en el subelemento SubsidyDescription se especificará también a qué operación corresponde."
+      ]
+    },
+    {
+      "name": "PaymentsOnAccount",
+      "optional": true,
+      "documentation": [
+        "Payments made on account of the Invoices Total. There will be as many blocks PaymentsOnAccount as types of payments on account applied to the invoice.",
+        "Anticipos. Pagos anticipados sobre el Total Facturas. Habrá tantos bloques PaymentsOnAccount como clases de anticipos se apliquen a nivel factura."
+      ]
+    },
+    {
+      "name": "ReimbursableExpenses",
+      "optional": true,
+      "documentation": [
+        "Those included in the invoice.",
+        "Suplidos incorporados en la factura."
+      ]
+    },
+    {
+      "name": "TotalFinancialExpenses",
+      "optional": true,
+      "documentation": [
+        "Always to two decimal points.",
+        "Total de gastos financieros. Siempre con dos decimales."
+      ]
+    },
+    {
+      "name": "TotalOutstandingAmount",
+      "optional": false,
+      "documentation": [
+        "Result: InvoiceTotal - (SubsidyAmount + TotalPaymentsOnAccount). Up to eight decimal points.",
+        "Total a pagar. Resultado de: InvoiceTotal - (Total subvenciones + TotalPaymentsOnAccount). En Total subvenciones se suman las cantidades especificadas en los bloques Subsidies. Hasta ocho decimales."
+      ]
+    },
+    {
+      "name": "TotalPaymentsOnAccount",
+      "optional": true,
+      "documentation": [
+        "Sum of the fields PaymentOnAccountAmount. Up to eight decimal points.",
+        "Total de anticipos. Sumatorio de los campos PaymentOnAccountAmount. Hasta ocho decimales."
+      ]
+    },
+    {
+      "name": "AmountsWithheld",
+      "optional": true,
+      "documentation": [
+        "Amounts withheld by the payer subject to the normal fulfilment of the transaction.",
+        "Cantidades que retiene el pagador hasta el buen fin de la operación."
+      ]
+    },
+    {
+      "name": "TotalExecutableAmount",
+      "optional": false,
+      "documentation": [
+        "Result: TotalOutstandingAmount - WithholdingAmount - PaymentInKindAmount + Reimbursable expenses + Financial expenses. Up to eight points",
+        "Total a ejecutar. Resultado de: TotalOutstandingAmount - WithholdingAmount - PaymentInKindAmount + TotalReimbursableExpenses + TotalFinancialExpenses. En Total de Cantidades retenidas se sumaran las cantidades especificadas en los bloques AmountsWithheld. Hasta ocho decimales."
+      ]
+    },
+    {
+      "name": "TotalReimbursableExpenses",
+      "optional": true,
+      "documentation": [
+        "Up to eight decimal points.",
+        "Total de suplidos. Hasta ocho decimales."
+      ]
+    },
+    {
+      "name": "PaymentInKind",
+      "optional": true,
+      "documentation": [
+        "Payment in kind.",
+        "Pagos en especie."
+      ]
+    }
+  ]
+}
