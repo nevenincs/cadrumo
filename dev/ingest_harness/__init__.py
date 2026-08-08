@@ -96,6 +96,15 @@ from ._scoring import (
     FieldVerdict,
     score_emission,
 )
+from ._tabular_truth import (
+    TABULAR_COLUMN_ROLE_TRUTH,
+    ColumnExpectation,
+    TabularTruthError,
+    column_role_truth_document,
+    defensible_alternate_fields,
+    emission_from_roles,
+    slot_name,
+)
 
 __all__ = [
     "ABSTENTION_SENTINELS",
@@ -109,6 +118,7 @@ __all__ = [
     "CeilingOutcome",
     "CeilingReport",
     "CeilingRow",
+    "ColumnExpectation",
     "ColumnSegmentationSize",
     "CorpusDocument",
     "CorpusKey",
@@ -127,13 +137,18 @@ __all__ = [
     "ReferencePoint",
     "ResultRow",
     "Scored",
+    "TABULAR_COLUMN_ROLE_TRUTH",
+    "TabularTruthError",
     "TwinPair",
     "amounts_match",
     "build_result_row",
     "caveats_for_document",
     "colocation_ceiling",
     "column_aware_rendering_partitions",
+    "column_role_truth_document",
+    "defensible_alternate_fields",
     "documents_with_authored_transcription",
+    "emission_from_roles",
     "emitted_or_scored",
     "format_report",
     "geometry_payload_ratio",
@@ -143,6 +158,7 @@ __all__ = [
     "render_page_text",
     "require_model_tier",
     "score_emission",
+    "slot_name",
     "sorted_rows_by_document",
     "verify_decimal_comparison_path",
 ]
