@@ -2047,6 +2047,13 @@ reviewed_by = "operator"
 required_text = [
     "Artículo 89. Rectificación de las cuotas impositivas repercutidas.",
     "deberán efectuar la rectificación de las cuotas impositivas repercutidas",
+    # Apartado Cinco closing rule (concurso impugnation: rectify in the
+    # period the cuotas were declared), the last operative provision, at 99%
+    # of the operative text and above the amendment block. Both phrases
+    # above sit in the first 300 characters -- one is the article heading
+    # verbatim. Verified against live BOE: apartados Uno-Cinco on both sides,
+    # Seis on neither.
+    "deberá proceder a la rectificación de las cuotas inicialmente repercutidas en la declaración-liquidación",
 ]
 
 [legal."ley-37-1992:art-154"]
