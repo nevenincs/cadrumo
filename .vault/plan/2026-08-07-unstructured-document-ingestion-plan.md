@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:5c75c9272fd5c635418ad68007d84edcb9c70fc153c8193c60c599f3ebbd8e6f'
+body_hash: 'sha256:27f85cdc63c14e997ccacc1cae682b37642d688834afa69aa67f3c108f0fb37d'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -341,6 +341,7 @@ Lands the review surface, the blocking-findings gate, assertion-shaped correctio
 - [ ] `W09.P17.S190` - Add the VAT identification fact to the counterparty-level declared-facts home beside establishment, since identification is a stable entity fact on the same terms and they share the persistence row the fourth amendment conditioned on, so one operator answer serves every later document AND every manual entry for that counterparty rather than a question per transaction; `src/cadrumo/application/ledger`.
 - [ ] `W09.P17.S191` - Give the manual-transaction surface an operator-supplied identification input with its refusal path, since a document-less path has no printed prefix to settle it and absent identification on a decision that needs it must refuse with a resolvable review item rather than derive or default; `src/cadrumo/entrypoints/cli, src/cadrumo/application/ledger`.
 - [ ] `W09.P17.S192` - Roundtrip the widened persisted models per the standing persistence-boundary discipline: the new identification field populated non-default, strict equality across the real encrypted cycle, and an anti-tautology proof mutating the stored payload to prove the load refuses rather than re-defaulting; `src/cadrumo/domain/invoices, src/cadrumo/domain/transactions`.
+- [ ] `W09.P17.S193` - Decide whether the party-attribution advisory should also reach the review queue surface rather than only the per-document show, since an operator who never opens a document never sees the warning, and while the ladder has no production caller the show verb is the ONLY place the exposure is visible at all. Kept off the queue deliberately to avoid training operators to ignore it, which is the alert-fatigue reasoning the IVA advisory rule already carries, so this is a visibility-versus-fatigue judgement rather than an omission; `src/cadrumo/entrypoints/cli`.
 
 ## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
 
