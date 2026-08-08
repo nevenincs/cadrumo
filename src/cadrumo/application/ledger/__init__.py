@@ -275,7 +275,7 @@ if TYPE_CHECKING:
         read_extraction_draft,
         write_extraction_draft,
     )
-    from ._filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
+    from ._filer_establishment import FILER_TAX_ID_FACT_PATH, resolve_filer_tax_id
     from ._grounded_reading import (
         GROUNDABLE_ORIGINS,
         ground_draft_against_transcription,
@@ -466,6 +466,8 @@ _LAZY_EXPORTS: dict[str, str] = {
     "resolve_counterparty_establishment_scope": "._establishment_ladder",
     "resolve_draft_counterparty_establishment": "._establishment_ladder",
     "scope_printed_evidence_would_establish": "._establishment_ladder",
+    "FILER_TAX_ID_FACT_PATH": "._filer_establishment",
+    "resolve_filer_tax_id": "._filer_establishment",
     "DIRECTION_BY_FILER_ROLE": "._document_direction",
     "DirectionDerivationOutcome": "._document_direction",
     "InvoiceKindDerivation": "._document_direction",
@@ -723,6 +725,7 @@ __all__ = [
     "DETERMINISTIC_CHECKS",
     "DIRECTION_BY_FILER_ROLE",
     "FILER_POSTCODE_FACT_PATH",
+    "FILER_TAX_ID_FACT_PATH",
     "GROUNDABLE_ORIGINS",
     "IDENTITY_FIELDS",
     "MINIMUM_DISPLAY_ID_WIDTH",
@@ -941,6 +944,7 @@ __all__ = [
     "resolve_counterparty_establishment_scope",
     "resolve_counterparty_identity",
     "resolve_draft_counterparty_establishment",
+    "resolve_filer_tax_id",
     "resolve_filer_territorial_scope",
     "resolve_ingestion_iva_category",
     "resolve_invoice_extraction_authority_values",

@@ -13,6 +13,12 @@ returns what the profile declares. It is deliberately a test of the SEAM rather
 than of either consumer: the consumers have their own gates, and what neither of
 them can prove is that anything connects them to a profile.
 
+Everything is reached through the package facade. The reading path's own thin
+wrapper over this -- workflow-state load, then this call -- is deliberately NOT
+reached here: a leading-underscore symbol pulled into a test across a package
+boundary is a seam that should not exist, and the wrapper's remaining behaviour
+is covered where it belongs, by an end-to-end read.
+
 The negative case is the load-bearing half. A profile declaring no identifier
 must yield ``None`` rather than a placeholder, because a placeholder compares
 unequal to every real identifier and would look exactly like a working lookup
@@ -31,8 +37,7 @@ from typing import Final
 
 import pytest
 
-from ....application.ledger._evidence_draft import _active_filer_tax_id
-from ....application.ledger._filer_establishment import FILER_TAX_ID_FACT_PATH, resolve_filer_tax_id
+from ....application.ledger import FILER_TAX_ID_FACT_PATH, resolve_filer_tax_id
 from ....application.user_profile import set_active_fields
 from ....application.workflow import workflow_state_repository
 from ....domain.user_profile import UserProfileFact
@@ -59,11 +64,14 @@ def test_the_reading_path_reads_the_identifier_the_profile_declares() -> None:
     other profile, or a hardcoded constant, so the test writes a value of its own
     and requires the lookup to have followed it.
     """
-    workflow_state_repository().update(
+    repository = workflow_state_repository()
+    repository.update(
         lambda state: set_active_fields(state, (UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value=_DECLARED_NIF),)),
     )
 
-    assert _active_filer_tax_id() == _DECLARED_NIF
+    declared = resolve_filer_tax_id(profile_record=repository.load().active_profile_record())
+
+    assert declared == _DECLARED_NIF
 
 
 def test_no_resolvable_profile_yields_nothing_rather_than_a_placeholder() -> None:
