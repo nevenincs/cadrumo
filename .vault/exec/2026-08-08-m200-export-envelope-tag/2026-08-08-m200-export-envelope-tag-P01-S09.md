@@ -105,16 +105,41 @@ papered over.
      exits zero and reads as green, so a paraphrase such as "the tests pass"
      discards exactly the part a reader needs. Quote, do not summarise. -->
 
-Both guards, both anti-vacuity controls, and the cross-site agreement assertion,
-alongside every other test in the two modules they landed in:
+Both guards, both anti-vacuity controls, the fixture anchor and the cross-site
+agreement assertion, alongside every other test in the two modules they landed in:
 
     uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_export.py src/cadrumo/application/filing/tests/test_export.py -n0 -q
-    80 passed in 19.22s
+    81 passed in 20.67s
 
-The controls are what make the guards load bearing: each detector is exercised on
-input that must trip it and on input that must not.
+The controls are what make the detectors load bearing: each is exercised on input
+that must trip it and on input that must not.
+
+The fixture anchor is what makes the GUARD load bearing, which is a separate claim.
+The scan is green today because its subject does not exist, so it was demonstrated
+firing at the real site: a regime member was injected into the live binding
+source-kind enum from a pytest plugin loaded outside the repository, and the real
+guard went red on it.
+
+    uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_export.py -k "accounts_regime" -n0 -q -s -p regime_plugin
+    PLUGIN: injected ESTADO_CUENTAS into BindingSourceKind; live members now 28
+    FAILED ...::test_no_typed_declaration_channel_names_an_accounts_regime_concept
+    1 failed, 2 passed, 31 deselected in 0.72s
+
+Nothing under the source tree changed for that proof, so there was no window in
+which a peer sweep could commit the injected member. The permanent anchor test
+carries the same coverage without the plugin, by scanning each real set with one
+regime token added -- the shape a future addition actually takes.
 
 ## Notes
+
+The Step's guidance pointed at the draft-attribute canonical-width table's
+totality convention as the shape to reuse. That convention does not transfer: it
+makes a RULING MAPPING total over a closed set, so adding a member without a ruling
+fails. This guard asserts an ABSENCE, and there is no mapping to be total over. What
+does carry across is its actual principle -- key the check on the property rather
+than on the declarations that happen to exist now -- and the scan does that by
+deriving both sets from the schema rather than listing today's tokens. Reusing the
+convention's letter would have meant inventing a ruling table with no rulings in it.
 
 The narrowing described above is a deliberate substitution of gate shape, not a
 reduction of scope, and it is the one judgement in this Step a reviewer should
