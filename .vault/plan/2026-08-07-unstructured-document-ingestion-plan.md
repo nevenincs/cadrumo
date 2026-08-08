@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:27f85cdc63c14e997ccacc1cae682b37642d688834afa69aa67f3c108f0fb37d'
+body_hash: 'sha256:99937d70a2e4adbc8aeb4d9b77cef378488677b6265eee53ba2c21f452b37456'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -342,6 +342,7 @@ Lands the review surface, the blocking-findings gate, assertion-shaped correctio
 - [ ] `W09.P17.S191` - Give the manual-transaction surface an operator-supplied identification input with its refusal path, since a document-less path has no printed prefix to settle it and absent identification on a decision that needs it must refuse with a resolvable review item rather than derive or default; `src/cadrumo/entrypoints/cli, src/cadrumo/application/ledger`.
 - [ ] `W09.P17.S192` - Roundtrip the widened persisted models per the standing persistence-boundary discipline: the new identification field populated non-default, strict equality across the real encrypted cycle, and an anti-tautology proof mutating the stored payload to prove the load refuses rather than re-defaulting; `src/cadrumo/domain/invoices, src/cadrumo/domain/transactions`.
 - [ ] `W09.P17.S193` - Decide whether the party-attribution advisory should also reach the review queue surface rather than only the per-document show, since an operator who never opens a document never sees the warning, and while the ladder has no production caller the show verb is the ONLY place the exposure is visible at all. Kept off the queue deliberately to avoid training operators to ignore it, which is the alert-fatigue reasoning the IVA advisory rule already carries, so this is a visibility-versus-fatigue judgement rather than an omission; `src/cadrumo/entrypoints/cli`.
+- [ ] `W09.P17.S194` - Call the establishment ladder from the confirm path so the whole apparatus is reachable, since it has ZERO production callers at HEAD: the four rungs, the identification and establishment split, the printed country vocabulary, the alpha-3 correspondence, the Spanish postal derivation and the attribution stamp are all built, gated and unreached. The earlier wiring row landed the routing function and the direction selector without ever calling them from a live path, so the built-and-unreached shape this campaign has found five times now covers the campaign own largest deliverable. Route the confirmed draft parties through the ladder, carry the resolved scopes into the classification criteria, and gate it end to end from a real document through a real confirm to a resolved territory, because a green suite over the ladder proves only that the ladder works and not that anything reaches it; `src/cadrumo/application/ledger`.
 
 ## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
 
