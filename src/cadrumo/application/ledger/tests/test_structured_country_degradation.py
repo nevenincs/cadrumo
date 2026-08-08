@@ -8,25 +8,38 @@ envelope, and the country advisory reading the empty field and returning nothing
 Every channel silent, on the reading path that handles the most reliable country
 evidence in the system.
 
-**A real third country was being erased quietly, and that is not a curiosity.**
-The measured instance was Thailand: ``TH`` was not a third country this codebase
-declined to place for a stated reason -- the vocabulary simply omitted it -- so a
-genuine Thai export arrived with no country at all, its territory unresolved, and
-nothing anywhere told the operator the document had stated one. "Unresolved" is
-not the complement of "third country".
+**A real third country is being erased quietly, and that is not a curiosity.**
+A code the vocabulary does not carry is not a country this codebase declined to
+place for a stated reason -- it is one nobody has enrolled yet. So a genuine
+export to such a jurisdiction arrives with no country at all, its territory
+unresolved, and nothing anywhere tells the operator the document stated one.
+"Unresolved" is not the complement of "third country".
 
-Thailand has since been enrolled, which fixes that one document and none of the
-defect: the vocabulary is a bounded subset of the world's jurisdictions and the
-next omission behaves identically. So these cases select their probe from the
-vocabulary at run time rather than naming a country, and the anchor case proves
-the selection still holds.
+**Which country that is today is an accident, and the file no longer names one.**
+The vocabulary is a bounded subset of the world's jurisdictions and it grows: any
+particular omission is a row somebody has not written, and enrolling it fixes
+that one document and none of the defect, because the next omission behaves
+identically. The property under test is therefore "the vocabulary cannot place
+this token", never the identity of whichever country satisfies that today -- so
+the specimens are selected from the
+vocabulary itself, and the anchor cases below assert the selection still carries
+the property it was chosen for. A derived specimen with no anchor can quietly
+come to name a country the vocabulary has since admitted, at which point these
+cases would still pass and would be testing nothing.
+
+**The reserved codes are the exception and ARE named.** The ISO 3166-1
+user-assigned ranges are fixed by the standard, so no enrolment can turn one into
+a country and pinning them costs nothing -- which is the whole difference between
+a code that names no country by construction and one our data has not reached.
 
 **Both spellings, because only one route reaches both.** Facturae -- the Spanish
 national format, and so the format most of this corpus arrives in -- states the
 country in alpha-3, and :func:`~domain.iva.stated_country_code_status` answers
-only about alpha-2. A fix carried solely by that authority closes ``XX`` and
-leaves ``THA`` exactly as silent as before, which is why the cases below run the
-two separately rather than parametrising them into one.
+only about alpha-2. A fix carried solely by that authority closes the alpha-2
+half and leaves the alpha-3 half exactly as silent as before, which is why the
+cases below run the two separately rather than parametrising them into one. The
+same split runs through the reserved ranges, where the alpha-3 half was the one
+left ungated.
 
 **And the opposite direction, or the fix only moves the confusion.** A document
 that genuinely states no country must still produce no stated value, no country
@@ -100,25 +113,39 @@ _WITHOUT_ADDRESSES: Final = "facturae_32_recargo_invoice.xml"
 
 _CATALOGUED_ALPHA3: Final = "ESP"
 
-#: An ISO user-assigned alpha-2 pair: reserved to name no country at all, so the
-#: document is wrong and the operator fixes it off the page. Safe to pin, unlike
-#: the probes below: the reserved ranges are fixed by the standard and no
-#: registry commit can turn one into a country.
+#: ISO 3166-1 user-assigned codes, one per spelling: reserved to name no country
+#: at all, so the document is wrong and the operator fixes it off the page.
+#:
+#: **Pinned, unlike the specimens below, and the asymmetry is the point.** The
+#: reserved ranges are fixed by the standard, so no enrolment can turn one into a
+#: country and a literal here can never go stale. That is exactly what
+#: distinguishes the two kinds this file keeps apart: a code that names nothing
+#: by construction, against one our data has simply not reached.
+#:
+#: Both spellings are carried because both are reachable. The alpha-3 ranges were
+#: the half nothing gated, and on the relief path that is the direction that
+#: costs: a reserved alpha-3 misread as a catalogue gap is FORGIVEN, honouring a
+#: declared export relief on a code with no referent.
 _UNASSIGNED_ALPHA2: Final = "XX"
+_UNASSIGNED_ALPHA3: Final = "ZZZ"
 
 #: One jurisdiction the bundled vocabulary carries in NEITHER spelling, drawn at
 #: import time from the shared specimen helper.
 #:
 #: **Derived rather than pinned, because a pinned country is a hostage.** This
-#: suite was first written against Thailand, measured uncatalogued -- and a peer
-#: enrolled it while the row was in flight, at which point every case here failed
-#: for a reason that had nothing to do with the behaviour under test. The
-#: property is "the vocabulary lacks this token", not "the token is Thai".
+#: suite was first written against a country measured uncatalogued, and the
+#: vocabulary moved under it mid-session: every case failed for a reason that had
+#: nothing to do with the behaviour under test. The property is "the vocabulary
+#: cannot place this token", never the identity of the country that happens to
+#: satisfy it today.
 #:
 #: The helper is shared rather than local for the same reason: it draws the
 #: candidates from AEAT's own SII enumeration and from Facturae's, so a specimen
 #: is a code a real submitted document can actually state, and every suite with
-#: this problem follows one boundary instead of each keeping its own list.
+#: this problem follows one boundary instead of each keeping its own list. The
+#: two spellings are derived independently and need not name one country --
+#: deriving either from the other would need a correspondence that, for a code
+#: outside the vocabulary, is precisely what this tree does not have.
 _UNCATALOGUED_ALPHA2: Final = an_uncatalogued_alpha2()
 _UNCATALOGUED_ALPHA3: Final = an_uncatalogued_alpha3()
 
@@ -178,10 +205,17 @@ class TestTheProbeStillMeansWhatItSays:
     """
 
     def test_the_selected_probe_is_uncatalogued_in_both_spellings(self) -> None:
-        """The selection was made through the resolver; this asserts the status axis.
+        """The specimen still carries the property it was selected for.
 
-        Two different functions, deliberately: a probe selected and asserted by
-        one function would be that function agreeing with itself.
+        **What this adds, stated precisely, because it is narrower than it
+        looks.** The helper selects on the resolver returning nothing, and the
+        status axis asks that same resolver as its first branch -- so this cannot
+        claim to be an independent second opinion, and the first half of the
+        assertion is close to guaranteed by the selection. What it genuinely
+        discriminates is the rest of the ladder: that the specimen is not in the
+        reserved ranges, and that the alpha-3 branch fires rather than falling
+        through to ``None``. Both are real ways the selection could stop meaning
+        what the cases below read it as, and neither follows from the resolver.
         """
         assert record_country_code_status(_UNCATALOGUED_ALPHA2) is StatedCountryCodeStatus.UNCATALOGUED
         assert record_country_code_status(_UNCATALOGUED_ALPHA3) is StatedCountryCodeStatus.UNCATALOGUED
@@ -195,9 +229,12 @@ class TestTheProbeStillMeansWhatItSays:
         recognised, a reserved code would report as our catalogue gap and this
         suite would happily use it as a stand-in for a real country.
         """
-        assert record_country_code_status("ZZ") is StatedCountryCodeStatus.UNASSIGNED
-        assert record_country_code_status("ZZZ") is StatedCountryCodeStatus.UNASSIGNED
         assert record_country_code_status(_UNASSIGNED_ALPHA2) is StatedCountryCodeStatus.UNASSIGNED
+        assert record_country_code_status(_UNASSIGNED_ALPHA3) is StatedCountryCodeStatus.UNASSIGNED
+        # Range interiors as well as the pinned probes, so a set that had lost
+        # its ranges and kept only the two literals this file names would fail.
+        assert record_country_code_status("QMA") is StatedCountryCodeStatus.UNASSIGNED
+        assert record_country_code_status("XZZ") is StatedCountryCodeStatus.UNASSIGNED
 
     def test_the_catalogued_control_is_still_catalogued(self) -> None:
         """The other side of the same hostage problem, on the negative control.
@@ -439,6 +476,40 @@ class TestTheOperatorIsTold:
 
         assert advisory is not None
         assert advisory.parties[0].status is StatedCountryCodeStatus.UNASSIGNED
+        assert advisory.by_status(StatedCountryCodeStatus.UNCATALOGUED) == ()
+
+    def test_an_unassigned_alpha3_raises_the_typo_advisory_too(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The reserved ranges reach the operator in BOTH spellings, as one kind.
+
+        The empty cell in the spelling-by-kind matrix until now: uncatalogued
+        alpha-2, uncatalogued alpha-3 and unassigned alpha-2 each had a case, and
+        this one did not. It is the cell that was the defect -- a reserved
+        alpha-3 was classified as a catalogue gap, so the operator was told the
+        country may be real and our vocabulary incomplete, about a code ISO
+        reserved so that no country will ever be allocated to it. That sentence
+        is an instruction to enrol a code no registry may honestly carry.
+
+        Facturae states the country in alpha-3 and is the format most of this
+        corpus arrives in, so this is not the rare spelling.
+        """
+        draft = _draft(
+            _stating(_UNASSIGNED_ALPHA3),
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="facturae_unassigned_alpha3_advisory.xml",
+        )
+
+        advisory = country_vocabulary_advisory(draft)
+
+        assert advisory is not None
+        assert advisory.parties[0].status is StatedCountryCodeStatus.UNASSIGNED
+        assert advisory.parties[0].stated_code == _UNASSIGNED_ALPHA3
         assert advisory.by_status(StatedCountryCodeStatus.UNCATALOGUED) == ()
 
     def test_a_document_stating_no_country_raises_no_advisory(
@@ -768,6 +839,37 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
             objects=secure_objects,
             tmp_path=tmp_path,
             name="ubl_export_unassigned.xml",
+        )
+
+        assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
+        assert "customer_residency" in confirmed.category.note
+
+    def test_an_unassigned_alpha3_is_not_forgiven_either(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The reserved-code refusal in the spelling that had no case, on the path that pays.
+
+        The alpha-2 sibling above gated one half of this and the other half was
+        open, which mattered here more than on the advisory: misclassifying a
+        reserved alpha-3 as a catalogue gap does not merely word a notice wrongly,
+        it FORGIVES the counterparty's slot -- moving a declared zero-rated export
+        claimed on a code with no referent towards being honoured. Facturae states
+        alpha-3, so that is reachable from the commonest structured document in
+        this corpus.
+
+        Asserted through the same real reader as its sibling, so it measures the
+        classification a document actually receives rather than one handed to the
+        guard directly.
+        """
+        confirmed = self._confirmed(
+            _UNASSIGNED_ALPHA3,
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="ubl_export_unassigned_alpha3.xml",
         )
 
         assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
