@@ -3491,6 +3491,11 @@ reviewed_by = "agent-authored from bundled ley-35-2006.html#daundecima; operator
 notes = "LIRPF disposición adicional 11ª: mutualidad de previsión social de deportistas profesionales y de alto nivel — aportaciones reducibles de la base imponible general con su propio límite (la menor de 24.250 € o la suma de rendimientos netos de trabajo y actividades económicas). Base legal de las casillas de reducción/exceso por mutualidad de deportistas en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#daundecima; operator to confirm and re-stamp."
 required_text = [
     "Mutualidad de previsión social de deportistas profesionales",
+    # Apartado Dos closing rule (prestaciones follow art. 51.8 and 51.9),
+    # the last operative provision, at 99%. The title alone previously
+    # grounded it. Verified against live BOE: apartados Uno and Dos on both
+    # sides, Tres on neither; 4,890 live against 4,854 bundled.
+    "a los efectos de la percepción de las prestaciones se aplicará lo dispuesto en los apartados 8 y 9",
 ]
 
 [legal."ley-35-2006:da-6"]
