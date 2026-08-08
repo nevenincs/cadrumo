@@ -80,7 +80,7 @@ from ._classification_assembly import (
     resolve_ingestion_iva_category,
 )
 from ._classifier_inputs import collect_classifier_inputs
-from ._confirmation_gate import ConfirmationBlocker, _blocker_id
+from ._confirmation_gate import ConfirmationBlocker, blocker_id
 from ._counterparty_establishment import ConfirmedCounterpartyFactsRepository
 from ._establishment_ladder import CounterpartyEstablishment, resolve_draft_counterparty_establishment
 from ._filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
@@ -146,7 +146,7 @@ def _review_item(*, field: str | None, detail: str) -> ConfirmationBlocker:
     """
     reason = ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT
     return ConfirmationBlocker(
-        blocker_id=_blocker_id(reason=reason, field=field, detail=detail),
+        blocker_id=blocker_id(reason=reason, field=field, detail=detail),
         reason=reason,
         field=field,
         detail=detail,
@@ -287,7 +287,7 @@ def _contradiction_item(resolution: IvaCategoryResolution) -> tuple[Confirmation
     reason = ConfirmationBlockReason.CONTRADICTED_REGIME
     return (
         ConfirmationBlocker(
-            blocker_id=_blocker_id(reason=reason, field="iva_category", detail=resolution.note),
+            blocker_id=blocker_id(reason=reason, field="iva_category", detail=resolution.note),
             reason=reason,
             field="iva_category",
             detail=resolution.note,

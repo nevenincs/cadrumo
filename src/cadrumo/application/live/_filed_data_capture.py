@@ -33,7 +33,7 @@ See Also:
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Awaitable, Mapping, Sequence
+from collections.abc import AsyncGenerator, Awaitable, Mapping, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from decimal import InvalidOperation
@@ -210,7 +210,7 @@ async def _resolved_declarations_register(
     register: DeclaracionesRegisterSession | None,
     *,
     operation: str,
-) -> AsyncIterator[tuple[DeclaracionesRegisterSession, int]]:
+) -> AsyncGenerator[tuple[DeclaracionesRegisterSession, int]]:
     """Yield an open register plus its walk timeout, resolving a session only when needed.
 
     Shared by :func:`list_filed_data_bulk` and :func:`capture_filed_data_bulk`.

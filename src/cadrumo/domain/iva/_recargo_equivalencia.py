@@ -36,7 +36,7 @@ from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
-from typing import Final
+from typing import Final, TypeGuard
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -251,10 +251,25 @@ def _hydrate_row(row: Mapping[str, object]) -> dict[str, object]:
         raw = hydrated.get(field)
         if isinstance(raw, str):
             hydrated[field] = Decimal(raw)
-    refs = hydrated.get("legal_refs")
-    if isinstance(refs, list):
-        hydrated["legal_refs"] = tuple(refs)
+    raw_refs = hydrated.get("legal_refs")
+    if _is_object_list(raw_refs):
+        hydrated["legal_refs"] = _coerce_legal_refs(raw_refs)
     return hydrated
+
+
+def _is_object_list(value: object) -> TypeGuard[list[object]]:
+    """Narrow an unparameterized runtime list to untrusted object entries."""
+    return isinstance(value, list)
+
+
+def _coerce_legal_refs(refs: list[object]) -> tuple[str, ...]:
+    """Validate and widen a raw TOML ``legal_refs`` array to ``tuple[str, ...]``."""
+    coerced: list[str] = []
+    for ref in refs:
+        if not isinstance(ref, str):
+            raise IvaValidationError(f"legal_refs entries must be strings, got {type(ref)!r}")
+        coerced.append(ref)
+    return tuple(coerced)
 
 
 def _reject_overlapping_windows(records: tuple[RecargoRateRecord, ...]) -> None:

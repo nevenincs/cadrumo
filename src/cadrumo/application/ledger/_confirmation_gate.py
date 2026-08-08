@@ -192,7 +192,7 @@ class FindingResolution(BaseModel):
         return self
 
 
-def _blocker_id(*, reason: ConfirmationBlockReason, field: str | None, detail: str) -> str:
+def blocker_id(*, reason: ConfirmationBlockReason, field: str | None, detail: str) -> str:
     """Return the clock-free derived address for one blocker.
 
     Folds only what the blocker IS. A timestamp would make a re-read of the same
@@ -233,7 +233,7 @@ def confirmation_blockers(draft: InvoiceDraft) -> tuple[ConfirmationBlocker, ...
         reason = BLOCKING_REASON_BY_DISCREPANCY_KIND[finding.kind]
         _append(
             ConfirmationBlocker(
-                blocker_id=_blocker_id(reason=reason, field=finding.field, detail=finding.detail),
+                blocker_id=blocker_id(reason=reason, field=finding.field, detail=finding.detail),
                 reason=reason,
                 field=finding.field,
                 detail=finding.detail,
@@ -252,7 +252,7 @@ def confirmation_blockers(draft: InvoiceDraft) -> tuple[ConfirmationBlocker, ...
         reason = ConfirmationBlockReason.AMBIGUOUS_IDENTITY
         _append(
             ConfirmationBlocker(
-                blocker_id=_blocker_id(reason=reason, field=envelope.field, detail=detail),
+                blocker_id=blocker_id(reason=reason, field=envelope.field, detail=detail),
                 reason=reason,
                 field=envelope.field,
                 detail=detail,

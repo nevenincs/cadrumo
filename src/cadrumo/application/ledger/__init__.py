@@ -251,6 +251,7 @@ if TYPE_CHECKING:
         PurchaseInvoiceEvidenceService,
     )
     from ._evidence_draft import (
+        CounterpartyDraftSide,
         DraftDiscrepancyFinding,
         FieldAmbiguityCandidate,
         FieldProvenance,
@@ -260,6 +261,7 @@ if TYPE_CHECKING:
         InvoiceDraftRateBreakdown,
         PrintedTotalDiscrepancy,
         confirm_invoice_draft_from_evidence,
+        counterparty_draft_side,
         extract_invoice_draft_from_evidence,
         printed_total_discrepancy,
     )
@@ -275,7 +277,12 @@ if TYPE_CHECKING:
         read_extraction_draft,
         write_extraction_draft,
     )
-    from ._filer_establishment import FILER_TAX_ID_FACT_PATH, resolve_filer_tax_id
+    from ._filer_establishment import (
+        FILER_POSTCODE_FACT_PATH,
+        FILER_TAX_ID_FACT_PATH,
+        resolve_filer_tax_id,
+        resolve_filer_territorial_scope,
+    )
     from ._grounded_reading import (
         GROUNDABLE_ORIGINS,
         ground_draft_against_transcription,

@@ -230,7 +230,7 @@ def derive_invoice_kind_from_filer_role(
             basis="this document names the filer as both parties, so it places them on neither side in particular",
         )
 
-    role = roles[0]
+    role = next(iter(roles))
     regions = party_regions(draft=draft, transcription=transcription)
     if len(regions) < 2:
         return InvoiceKindDerivation(
