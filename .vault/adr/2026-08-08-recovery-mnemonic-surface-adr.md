@@ -7,6 +7,7 @@ modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:8ce7207bf0ccc1b717a0c3780e78968c24a6e20b59200d5bd4457ac0b5a34f57'
 related:
+  - '[[2026-08-08-recovery-mnemonic-surface-reference]]'
   - '[[2026-07-25-auth-cert-recovery-custody-adr]]'
 ---
 

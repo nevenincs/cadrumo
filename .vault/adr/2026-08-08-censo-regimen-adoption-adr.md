@@ -7,6 +7,7 @@ modified: '2026-08-08'
 body_schema: 'body-v1'
 body_hash: 'sha256:678b1185f47ada6508b16626fea8749533a188cb1b07a67440ef70dbaa5ecb6a'
 related:
+  - '[[2026-08-08-censo-regimen-adoption-reference]]'
   - '[[2026-07-23-profile-setup-flow-adr]]'
   - '[[2026-06-05-live-censo-calendar-reconciliation-adr]]'
   - '[[2026-06-13-first-filer-attestation-adr]]'
