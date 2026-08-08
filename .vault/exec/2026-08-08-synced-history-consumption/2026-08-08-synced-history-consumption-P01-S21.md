@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:5ee44bc179cbef436474d90d49a80b6572d008aec9f1bc7a24abccc6c51028eb'
+body_hash: 'sha256:16af00a1dcf03b510763fe35329020e5d8770f3641e1d0bf102d6befa1722efc'
 step_id: 'S21'
 related:
   - "[[2026-08-08-synced-history-consumption-plan]]"
@@ -115,6 +115,52 @@ Modelo 303 and Modelo 131 surfaces.
     dev.quality.types                 ->  zero occurrences of any of the four files
 
 ## Notes
+
+THE EMISSION LANDED AHEAD OF ITS AUTHORITY, and that is the first thing a reader
+should know. The decision record ruled the nine Sociedades carries CONDITIONALLY,
+on one authenticated register-discovery run as the stated trigger, with an outcome
+written for each branch. Those nine include the three Modelo 200 self-carries this
+row advises. The trigger has not fired — a live run refused on an expired local
+profile session before reaching AEAT — so the branch is open, and this emission is
+in the tree while the authority for reversing the documented cold-start rationale
+is still conditional.
+
+The rationale being reversed, recorded verbatim so a later reader argues with what
+was actually decided rather than with a paraphrase: a non-formula relation whose
+target binding is declared "still materialises an (absent/zero) slot the engine
+threads, which is the intended cold-start behaviour for the cross-modelo carries
+(M200/M202/M100), so it is deliberately NOT flagged here".
+
+Why the branch matters rather than the ruling generally: if AEAT does offer Modelo
+200 at the consulta surface then the registry is missing a declaration, the carries
+become fetchable, and cold start stops being the only explanation for an absent
+prior — which is precisely when the rationale fails. If AEAT does not offer it, the
+carries are genuinely unfetchable and a different remedy applies. The disposition
+of this emission is opened as `P01.S23` against that branch.
+
+A LIVE FALSE FIRE SHIPPED AND WAS THEN FIXED, in this same row. The first
+implementation advised on any surviving taxpayer-filed carry, and a non-calendar
+instalment clave has no date span and is documented as never suppressed by the
+activity-start scoping. Measured: a sociedad declaring an activity start of
+2025-05-01 — after the first instalment window — still had the Modelo 202
+`self-pagos-2p` requirement survive, so it would have been told a 1P filing it
+never owed was missing. `_requirement_periods_are_datable` now keeps the advisory
+silent for any requirement whose periods cannot be positioned against a date.
+
+Silence is the fail-closed direction there and was chosen deliberately: where the
+scoping cannot establish that the obligation existed, the advisory must not claim
+it did, and staying silent preserves the prior behaviour for exactly those periods
+rather than guessing.
+
+THE UNSOLVED REMAINDER, recorded rather than papered over. For non-calendar
+instalment claves the available signal cannot separate cold start from
+unreachable history, so those carries are now silent by construction. That is not
+a fix, it is a refusal to guess. A later row MUST NOT quietly extend the predicate
+over them: firing there would hit every genuine first-ejercicio company, which is
+the alert-fatigue failure this campaign has now refused twice. Separating those
+cases needs a signal that does not exist today — an obligation calendar for
+non-date-spanned claves, or a declared incorporation date positioned against each
+clave's own filing window.
 
 CHARACTERISATION TESTS AMENDED, and each remains valid for the population it
 named. `test_m200_self_carries_resolve_zero_with_no_prior_filing_on_live_calculate`
