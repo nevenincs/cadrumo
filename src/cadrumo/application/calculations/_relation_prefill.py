@@ -744,6 +744,15 @@ def _absent_bound_carry_diagnostics(
     The advisory is non-blocking, and it does not fire for a filer who genuinely
     had no obligation: those source periods are scoped out upstream against the
     declared activity start before any requirement reaches here.
+
+    The message states the FACT and the remedy names only what the operator can
+    always do. It deliberately does not tell them to capture or file the source
+    period, because whether that is possible depends on the source modelo: the
+    declarations register does not serve every modelo, and Sociedades in
+    particular. An instruction an agent-operator will follow and cannot satisfy is
+    worse than no instruction, so the capture route is omitted here rather than
+    asserted, and stating what AEAT does or does not offer is left to whoever
+    measures it rather than inferred from this registry's own silence.
     """
     diagnostics: list[CalculationSourceDiagnostic] = []
     for relation_id in sorted(unresolved_relation_ids):
@@ -762,6 +771,10 @@ def _absent_bound_carry_diagnostics(
                         "declares zero; a carry that reduces the amount owed is missing, which "
                         "over-declares"
                     ),
+                    remedy=(
+                        "Supply the value for this casilla directly, through a binding override on "
+                        "calculate, if you hold the prior return."
+                    ),
                 ),
             )
             continue
@@ -777,7 +790,11 @@ def _absent_bound_carry_diagnostics(
                     f"{requirement.filing_year} {','.join(requirement.periods)} filing in the local "
                     f"store, so its bound casilla declares zero rather than the carried "
                     f"{requirement.source_casilla_ids[0]}. That reduces no liability and therefore "
-                    "over-declares. Capture or file the source period, or enter the value by hand."
+                    "over-declares."
+                ),
+                remedy=(
+                    "Supply the value for this casilla directly, through a binding override on "
+                    "calculate, if you hold the prior return."
                 ),
             ),
         )
