@@ -18,13 +18,13 @@ and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 from __future__ import annotations
 
 import re as _re
+from typing import TYPE_CHECKING
 
 from ...application.modelo import (
     ModeloWorkDeadlinePosture,
     calculation_result_summary,
     modelo_work_deadline_posture,
 )
-from ...application.aggregation import CalculationSourceDiagnostic
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import BooleanBindingEncodedValue
@@ -43,6 +43,12 @@ from ._modelo_payloads import (
     WorkUnitPayload,
 )
 from ._modelo_revision_payload_parts import DetailRowPayload
+
+if TYPE_CHECKING:
+    # Annotation-only: `from __future__ import annotations` keeps this lazy so the
+    # state-free CLI surface pays no runtime aggregation-import cost, matching the
+    # calculate module's own deferral of the same type.
+    from ...application.aggregation import CalculationSourceDiagnostic
 
 _EXTEMPORANEOUS_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
 _M349_ROW_FIELD_TEMPLATE_PREFIXES = ("op.", "rect.")

@@ -80,7 +80,6 @@ from ...domain.user_profile import ProfileNotFoundError
 from ._errors import CliOutboundPayloadBoundaryError
 from ._modelo_cli_support import MISSING_INPUT_TRANSLATED_MESSAGES, work_calculate_input_bundle_from_cli
 from ._modelo_rendering import (
-    advisory_notice,
     calculation_revision_lines,
     calculation_revision_payload,
     source_diagnostic_notice,

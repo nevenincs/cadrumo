@@ -80,6 +80,7 @@ from ...domain.calculations.registry import (
     RelationId,
     SourceRefId,
     expression_relation_refs,
+    is_iva_wallet_owned_relation_target,
     materialize_relation_binding_values,
     relation_source_requirements,
     resolve_observed_requirement_value,
@@ -980,6 +981,13 @@ class RelationPrefillSourceResolver:
             for classification in snapshot.revision.dependency_classifications
             if classification.taxpayer_files_source
         )
+        #
+        # The third narrowing is ownership. The Modelo 303 compensación slot is the
+        # IVA wallet decision's under the one-mechanism-per-calculation-type
+        # taxonomy, so this resolver advising on it would be a second mechanism
+        # speaking about a value it does not own. The coordinate set is already
+        # modelled, so the check is the registry's own predicate rather than a
+        # binding-id comparison invented here.
         unresolved_bound_relation_ids = frozenset(
             item.relation
             for item in relation_values.values
@@ -989,6 +997,12 @@ class RelationPrefillSourceResolver:
             and requirements_by_relation[item.relation].source_modelo in taxpayer_filed_source_modelos
             and _requirement_periods_are_datable(requirements_by_relation[item.relation])
             and relation_target_binding.get(item.relation) in declared_binding_ids
+            and not is_iva_wallet_owned_relation_target(
+                modelo_id=str(context.modelo),
+                revision_id=str(snapshot.revision.id),
+                relation_id=str(item.relation),
+                target_binding=str(relation_target_binding.get(item.relation)),
+            )
         )
         resolved_relation_values = {item.relation: item.value for item in resolved if item.value is not None}
         # Materialise the resolved relation values into their declared
