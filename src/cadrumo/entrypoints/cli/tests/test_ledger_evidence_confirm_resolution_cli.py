@@ -31,6 +31,7 @@ See Also:
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Iterator
 from pathlib import Path
@@ -149,6 +150,17 @@ def _confirmed(tmp_path: Path, document: str, *, name: str) -> dict[str, object]
     return payload
 
 
+def _redacted(tax_id: str) -> str:
+    """Return the form an operator-facing envelope carries a tax identity in.
+
+    Composed here from the documented rule -- ``sha256:`` plus the first eight
+    hex characters of the digest -- rather than by calling the redaction funnel,
+    which would assert the code against its own output and pass however the
+    funnel behaved.
+    """
+    return f"sha256:{hashlib.sha256(tax_id.encode('utf-8')).hexdigest()[:8]}"
+
+
 def _notices(envelope: dict[str, object], code: str) -> list[dict[str, object]]:
     notices = envelope["notices"]
     assert isinstance(notices, list)
@@ -259,7 +271,14 @@ def test_the_unread_establishment_question_reaches_the_operator_naming_the_party
     context = notice["context"]
     assert isinstance(context, dict)
     assert context["reason"] == "undetermined_establishment"
-    assert _SUPPLIER_VAT in str(context["detail"])
+    # The identity reaches the operator through the redaction funnel, so the item
+    # names the party by the digest of its identifier rather than verbatim. That
+    # still answers "which party" -- the digest is derived from the identifier and
+    # is stable per counterparty -- while keeping a trading partner's tax identity
+    # off an output surface. Expected value derived from the documented rule (the
+    # first eight hex characters of the SHA-256 digest), never read back from the
+    # funnel, which would assert the code against itself.
+    assert _redacted(_SUPPLIER_VAT) in str(context["detail"])
     # The id is the review gate's own derivation, so an item raised here
     # addresses identically to one a deterministic check raised.
     assert str(context["finding_id"]).strip()
