@@ -59,6 +59,7 @@ from ...domain.calculations.registry import (
     CasillaObservation,
     RegistryModeloObservation,
 )
+from ...domain.iva_compensation import derive_m303_compensation_available_from_casillas
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ..calculations import (
     M303_DISPONIBLE_CASILLA,
@@ -114,16 +115,52 @@ def _refunded_303_observations(
     remaining observations and provenance unchanged so the saved
     :class:`~cadrumo.domain.calculations.registry.RegistryModeloObservation` still
     represents the local filing.
+
+    Both figures come from
+    :func:`~cadrumo.domain.iva_compensation.derive_m303_compensation_available_from_casillas`
+    rather than being re-derived here. The rule is one regulatory rule, and a
+    second copy of it in this module is how the local path and the AEAT-capture
+    path would answer a refunded period differently after the next change to the
+    conversion.
+
+    The rewritten rows drop their formula lineage. A refunded period's available
+    carry is NOT the registry formula's ``posterior + generada`` projection --
+    the generated credit is excluded by disposition, so that formula never ran
+    for this value, and its ``operand_refs`` would assert arithmetic the figure
+    contradicts. The sibling AEAT-capture path refuses outright when supplied
+    refs disagree with the formula's projection, so leaving them here would ship
+    a provenance claim that path treats as an error.
     """
-    by_id = {item.casilla_id: item for item in observations}
-    posterior = by_id.get(_M303_POSTERIOR_CASILLA)
-    posterior_value = posterior.value if posterior is not None else _ZERO
+    values = {item.casilla_id: item.value for item in observations}
+    derivation = derive_m303_compensation_available_from_casillas(
+        {
+            # Both selectors the derivation reads are supplied, defaulting to
+            # zero when the filed revision declared no such row: an undeclared
+            # box 87 means there is no posterior credit to survive the refund.
+            _M303_POSTERIOR_CASILLA: values.get(_M303_POSTERIOR_CASILLA, _ZERO),
+            _M303_GENERADA_CASILLA: values.get(_M303_GENERADA_CASILLA, _ZERO),
+        },
+        refunded=True,
+    )
+    if derivation is None:
+        raise ModeloLocalObservationError(
+            "Modelo 303 refunded carry derivation returned no result for a complete input, "
+            "so the generated credit cannot be excluded from the persisted carry",
+            context={"casilla_ids": sorted(str(item) for item in values)},
+        )
+    dropped_lineage: dict[str, object] = {
+        "formula_id": None,
+        "op": None,
+        "operand_refs": (),
+        "operand_casilla_refs": (),
+        "operand_values": (),
+    }
     rewritten: list[CasillaObservation] = []
     for item in observations:
         if item.casilla_id == _M303_DISPONIBLE_CASILLA:
-            rewritten.append(item.model_copy(update={"value": posterior_value}))
+            rewritten.append(item.model_copy(update={**dropped_lineage, "value": derivation.available}))
         elif item.casilla_id == _M303_GENERADA_CASILLA:
-            rewritten.append(item.model_copy(update={"value": _ZERO}))
+            rewritten.append(item.model_copy(update={**dropped_lineage, "value": derivation.generated}))
         else:
             rewritten.append(item)
     return tuple(rewritten)
