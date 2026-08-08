@@ -199,16 +199,23 @@ class CounterpartyEstablishmentFact(BaseModel):
         states its provenance explicitly, and it is constrained rather than free
         so the store cannot quietly become a cache of document readings.
 
-        This binds the identification axis at least as tightly as the territory.
-        Ingestion reads identification TERMINALLY from a printed VAT prefix, per
-        document, so a document-read identification is exactly the value that
-        must not be remembered here: cached, it would answer a later document as
-        though an operator had confirmed the registration, which is the claim
-        art. 25 turns on. A
-        document-sourced territory is rung one or two of the ladder, re-read
+        A document-sourced territory is rung one or two of the ladder, re-read
         from each document's own page; remembering one here would answer later
         documents as though an operator had confirmed it, and would take the
         contradiction channel offline for exactly the population it protects.
+
+        The identification axis inherits that rule, and inherits it MORE
+        strongly rather than merely by symmetry. Ingestion reads identification
+        TERMINALLY from a printed VAT prefix -- read once and treated as
+        settled, with no later rung to revise it -- so a document-read
+        identification cached here would answer every subsequent document as
+        though an operator had confirmed the registration. That registration is
+        the claim Ley 37/1992 art. 25 exempts on, so the value this store must
+        refuse is precisely the one an exemption turns on.
+
+        Do not relax this to "any source" for the identification axis. A second
+        axis with weaker provenance rules than the one beside it would let the
+        store answer as an assertion something no operator ever asserted.
         """
         if self.source is not ClassifierInputSource.OPERATOR_ASSERTION:
             raise ValueError(
