@@ -178,7 +178,15 @@ class TestTheThreeGeometries:
     """
 
     def test_containment_takes_every_nursery_month(self) -> None:
-        """Mother January to December contains nursery January to June: six months."""
+        """Mother January to December contains nursery January to June: six months.
+
+        A must-not-move CONTROL, not a detector. Containment is the one geometry
+        a count reading already gets right — ``min(12, 6)`` is also six — so this
+        row cannot fail under the count defect and passing it confirms nothing
+        about the intersection. It earns its place by pinning the common case
+        against a "fix" that chases the rare geometries and moves this one. Two
+        of the three rows below discriminate; this one anchors.
+        """
         child = _child(date(2022, 3, 1), mensual="1-6:500", meses_madre="1-12")
 
         assert _total(child) == Decimal("500.00")
@@ -186,8 +194,9 @@ class TestTheThreeGeometries:
     def test_partial_overlap_takes_only_the_shared_months(self) -> None:
         """Mother June to December against nursery January to August shares June to August.
 
-        Three months, not the six a ``min`` over the counts would take. Sizes
-        seven and eight; the answer is neither.
+        Three months. Sizes seven and eight, so a ``min`` over the counts takes
+        SEVEN and returns 583,33 — measured, not inferred. The answer is neither
+        size, which is the point: only the months can say which three coincide.
         """
         child = _child(date(2022, 3, 1), mensual="1-8:500", meses_madre="6-12")
 

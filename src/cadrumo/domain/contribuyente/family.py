@@ -536,6 +536,15 @@ class DescendantInfo(BaseModel):
         record the ROUTE. Requiring the two to agree keeps that from becoming a
         second source of truth for one fact -- a divergence refuses instead of
         letting the pair disagree silently.
+
+        This rule runs on construction and on every reload, because the fact
+        readers rebuild the record through ``DescendantInfo(...)``; assignment is
+        closed by ``frozen=True``. It does NOT run on ``model_copy(update=...)``,
+        which skips validators by design and will happily produce a record whose
+        alta month is not the first of its set. Nothing reaches that today -- no
+        production caller copies a ``DescendantInfo`` -- so a future
+        descendant-editing path must reconstruct rather than copy, or re-validate
+        after copying.
         """
         if self.alta_posterior_nacimiento_mes is None:
             return self
@@ -1044,7 +1053,7 @@ class DescendantInfo(BaseModel):
             return 0
         return len(frozenset(self.meses_madre_trabajo) & self._maternidad_eligible_months(filing_year))
 
-    def guarderia_simultaneity_meses(
+    def guarderia_art_81_1_meses(
         self,
         filing_year: int,
         *,
@@ -1058,6 +1067,12 @@ class DescendantInfo(BaseModel):
         this answers the 81.1 half FOR THE INCREMENT — which is not the same
         question as :meth:`maternidad_contributing_meses`, even though every
         gate below is shared with it.
+
+        Named for the ARTICLE HALF it answers, not for simultaneity, because it
+        is only one side of the pair: :meth:`guarderia_simultaneous_meses` is
+        where the two sides actually meet. The plain "simultaneity" name once sat
+        here, one word away from that method, and the two were mistaken for each
+        other by a reader holding the source open.
 
         The difference is the child's AGE, and it is the whole reason this
         method exists. The deducción itself runs only while the child is under
@@ -1090,9 +1105,9 @@ class DescendantInfo(BaseModel):
             dependencia_assimilation_available=dependencia_assimilation_available,
         ):
             return 0
-        return len(self._guarderia_simultaneity_months(filing_year))
+        return len(self._guarderia_art_81_1_months(filing_year))
 
-    def _guarderia_simultaneity_months(self, filing_year: int) -> frozenset[int]:
+    def _guarderia_art_81_1_months(self, filing_year: int) -> frozenset[int]:
         """The Art. 81.1 months, clipped to the increment's own requirement window."""
         return frozenset(self.meses_madre_trabajo) & self._guarderia_requirement_months(filing_year)
 
@@ -1124,7 +1139,7 @@ class DescendantInfo(BaseModel):
         answer rather than a discarded one, and it is disclosed to the operator
         by the monthly-detail advisory rather than presented as measured.
         """
-        mother = self.guarderia_simultaneity_meses(
+        mother = self.guarderia_art_81_1_meses(
             filing_year,
             thresholds=thresholds,
             dependencia_assimilation_available=dependencia_assimilation_available,
@@ -1134,7 +1149,7 @@ class DescendantInfo(BaseModel):
         nursery = self.guarderia_qualifying_months(filing_year)
         if nursery is None:
             return min(mother, self.guarderia_qualifying_meses(filing_year))
-        return len(self._guarderia_simultaneity_months(filing_year) & nursery)
+        return len(self._guarderia_art_81_1_months(filing_year) & nursery)
 
     def _guarderia_requirement_months(self, filing_year: int) -> frozenset[int]:
         """The Art. 81.1 requirement months for the increment: the deducción window without its age ceiling."""
@@ -1775,7 +1790,7 @@ class RentaFamilyProfile(BaseModel):
 
         *meses* is the SIMULTANEITY intersection the manual describes, taken as
         the smaller of the two sides. The Art. 81.1 side is
-        :meth:`DescendantInfo.guarderia_simultaneity_meses` rather than the
+        :meth:`DescendantInfo.guarderia_art_81_1_meses` rather than the
         deducción's own :meth:`DescendantInfo.maternidad_contributing_meses`,
         and the distinction is load-bearing: the deducción stops at the child's
         third birthday while the increment does not, so reusing it forced this
