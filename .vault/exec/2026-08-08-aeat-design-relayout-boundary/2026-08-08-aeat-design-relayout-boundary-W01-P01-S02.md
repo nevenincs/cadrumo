@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:b384392cdc8458b70dc13dd2ac2000106aa5ecb8927752a6d90f33e64ff57969'
+body_hash: 'sha256:b0f686dc80a4b40f722dd7677cc8eed55bcd208b87f6045d911d5a6a46af6dee'
 step_id: 'S02'
 related:
   - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
@@ -25,7 +25,7 @@ related:
 
 ## Outcome
 
-The window is **filing year 2022 onward for Modelo 303 and Modelo 390, and 2024 onward for Modelo 200**, measured at 2026-08-08. That confirms the working assumption the plan carried for Modelo 303 and **contradicts it for Modelo 390**, where the plan assumed 2021.
+The window is **filing year 2022 onward for Modelo 303, Modelo 390 and Modelo 200**, measured at 2026-08-08. (This record first stated 2024 for Modelo 200; corrected by `W01.P01.S01`, which grounded that modelo's deadline on the bundled Ley 27/2014 art. 124.1 - 25 natural days after the 6 months following the period close - giving prescription on 2026-07-25 for ejercicio 2021 and 2027-07-25 for 2022. The 2024 figure came from reading this modelo's registry deadline windows, which exist only from 2024, which is the absence-is-not-an-answer error this record flags for the other two modelos.) That confirms the working assumption the plan carried for Modelo 303 and **contradicts it for Modelo 390**, where the plan assumed 2021.
 
 Grounding is split and the split matters. The four-year period itself is **not verifiable against the bundled corpus**: the bundled Ley 58-2003 set is articles 5, 26, 27, 93, 98, 99, 119, 120, 122 and 213 plus disposicion adicional 18, and **articles 66 and 67 are absent**. No corpus excerpt was authored and no legal-catalogue entry was created. The figure instead has an existing canonical home in the tree, `TAX_RECORD_RETENTION_FLOOR_YEARS` in `src/cadrumo/domain/retention/_floor.py`, which declares its binding provision as Ley 58-2003 article 66 for the four years and article 67 for the day-after-the-deadline start, with BOE-A-2003-23186 as the locator. This Step reuses that constant and its date helper `add_prescription_years` rather than minting a second figure. The grounding gap is inherited, not introduced, and is recorded here as an open item.
 
@@ -37,7 +37,7 @@ Per modelo, as of 2026-08-08:
 
 - **Modelo 303.** Filing year 2021 is fully prescribed, its last period 4T closing 2022-01-30 and prescribing 2026-01-30. Filing year 2022 is **partially** open: quarterly 1T prescribed 2026-04-20 and 2T prescribed 2026-07-20, while 3T prescribes 2026-10-20 and 4T prescribes 2027-01-30. Filing years 2023 onward are fully open. The partial openness of 2022 needs **no period-token partition**, because AEAT bundles a single design for the whole of 2022 and the gate's own mid-course assertion names only 2018, 2021 and 2024 as split ejercicios, so one revision at valid_from 2022 serves every open period of that year at its correct offsets.
 - **Modelo 390.** Ejercicio 2021 prescribed 2026-01-30 and 2022 prescribes 2027-01-30, so the earliest in-window filing year is 2022, not the 2021 the plan assumed.
-- **Modelo 200.** Filing years 2024 and 2025 both remain open, prescribing 2029-07-25 and 2030-07-27, so both boundaries the campaign acts on sit inside the window.
+- **Modelo 200.** The floor is 2022: ejercicio 2021 prescribed 2026-07-25 and 2022 prescribes 2027-07-25, per the bundled Ley 27/2014 art. 124.1. Filing years 2024 and 2025 are open well beyond that. Filing years 2022 and 2023 are inside the window but claimed by no revision, so they refuse today as a coverage gap rather than a mis-write, recorded as `W05.P11.S70`.
 
 Weekend and holiday displacement of a deadline moves a prescription date by at most a few days and changes no year-level verdict here: the nearest call is Modelo 303 monthly period 06 of 2022, which prescribed 2026-07-30, nine days before the execution date, and period 07 of 2022, which prescribes 2026-08-30.
 

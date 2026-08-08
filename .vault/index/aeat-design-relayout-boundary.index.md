@@ -6,11 +6,12 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:5c007afffb2167866358a6cf99a3de90c8816dce896c8ce743191f0a05eeb152'
+body_hash: 'sha256:97979ea9778b3cc68ae74fa6d107493be20536a582bcb4927080a16d4796f00d'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-sub-year-epoch-adr]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P01-S01]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P01-S02]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P01-S03]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P01-S04]]'
@@ -32,6 +33,7 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 
 ### exec
 
+- `2026-08-08-aeat-design-relayout-boundary-W01-P01-S01` - Re-derive the full boundary set as the UNION of four passes over the bundled designs
 - `2026-08-08-aeat-design-relayout-boundary-W01-P01-S02` - Compute the prescripcion-reachable filing window per modelo at the execution date
 - `2026-08-08-aeat-design-relayout-boundary-W01-P01-S03` - Reconcile this plan's per-revision row set against the boundary set and the reachable window
 - `2026-08-08-aeat-design-relayout-boundary-W01-P01-S04` - Settle whether the 2023 and 2024-early Modelo 303 designs are layout-identical
