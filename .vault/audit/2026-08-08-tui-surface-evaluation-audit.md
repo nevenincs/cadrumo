@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:b2fba4a54c1911d573a3cc50f303336b18b1bb7ebd5f7ec97d1fe827ac35c0e1'
+body_hash: 'sha256:7e8073f2ba6a86b1257f476dcce9e0c864f216440f2d382b6d8b7d05f0a031f3'
 related: []
 ---
 
@@ -172,10 +172,17 @@ looks safe because the fast tests are green.
 So the honest statement is that the anonymity is load-bearing under the current
 destroy-and-remount rendering strategy, and naming the stops requires either
 reusing table instances across renders or an identity scheme that survives the
-asynchronous-removal race — a scoped design task, not a one-line fix. Also
-still unconfirmed: whether the focused table's cursor row is legible against
-the unfocused state in a real styled frame, which was reasoned from framework
-defaults rather than seen.
+asynchronous-removal race — a scoped design task, not a one-line fix.
+
+**Focus legibility was subsequently settled, and it does not compound.** The
+coordinator speculated that unnameable stops plus an invisible focus state
+would together make the surface unnavigable. Measured against real styled
+frames rather than plain-text captures, that is refuted: the focused row paints
+the theme's own primary accent in both appearances — warm orange on near-black
+in dark, rust on cream in light — with no low-contrast state in either. An
+operator can always SEE which table holds focus; what they cannot get is a
+machine-readable name for it. The accessibility half of the finding stands, the
+compounding hypothesis does not.
 
 ### hungarian-carried-an-english-stem | medium | "census" appeared inside Hungarian compounds on a live surface
 
@@ -289,7 +296,7 @@ dead-code finding, not an operator-facing defect, but it is load-bearing for
 anyone evaluating "the setup wizard": the real interactive setup experience is
 the registration screen followed by the profile manager.
 
-### hungarian-footer-overflows-at-eighty-columns | medium | a live wizard footer paints past the screen edge and cuts mid-word
+### hungarian-footer-overflows-at-eighty-columns | medium | a live wizard footer clips its last key hint mid-word, legibility not reachability
 
 Driven at eighty columns under Hungarian, the question screen's footer region
 paints beyond the right edge and the binding text truncates mid-word. Spanish
@@ -297,10 +304,18 @@ and Catalan clip cleanly inside the footer box at the same width; the Hungarian
 binding labels are long enough to push the widget past the edge entirely. The
 footer is shared by every screen of the paged flow application, which includes
 the modelo amend and modelo work wizards — both genuinely operator-facing — so
-this is not confined to the retired setup surface. Not fixed: the two remedies
-are shortening the Hungarian labels, which is a translation-quality judgement,
-or changing how the footer degrades under width pressure, which is a design
-decision.
+this is not confined to the retired setup surface.
+
+Severity, split deliberately: the control is **clipped, not unreachable**. The
+save-and-exit chord still fires regardless of what the footer paints, because
+the footer renders key hints and does not gate the binding on its own visible
+width. So an operator loses the ability to READ that the affordance exists,
+not the affordance. That is a real defect on a live surface and a materially
+lesser one than a control that cannot be reached. Not fixed: the remedies are
+shortening the Hungarian labels, a translation-quality judgement, or changing
+how the footer degrades under width pressure, a design decision. A semantic
+sweep found no existing in-repo pattern for narrow-width footer degradation to
+follow.
 
 ### sync-controls-absent-everywhere | medium | scope, dry-run, divergence, progress and cancellation exist for neither sync surface
 
