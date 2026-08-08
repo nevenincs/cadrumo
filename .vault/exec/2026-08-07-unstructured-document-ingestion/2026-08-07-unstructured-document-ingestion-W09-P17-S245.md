@@ -223,13 +223,48 @@ The enumerator refuses to report at all if it emitted nothing, so a comparison c
 never be drawn against an empty denominator -- the control the harvesting instrument
 lacked, in the form the dead hook taught.
 
+## Relief axis: a measured zero, and the instrument defect that nearly wasn't
+
+Instrumented the way the category axis ENDED rather than the way it began: the
+denominator is enumerated from the producers, composing the assembly enumerator
+rather than restating it, and never harvested from whichever suite ran.
+
+**Its first run reported five findings, and all five were the instrument.** Every
+one carried ``direction=None`` -- a value the guard's own signature admits and my
+enumerated axis never produced, because I ranged over the enum members and not
+over the declared type. A homogeneous finding set, suspected rather than reported,
+and reading the members found the shared characteristic in one pass. Widening the
+axis to the type the guard actually declares took the count to zero.
+
+**Zero unreachable, against a denominator of 3120 reachable inputs**, with the
+guard shown capable of answering both ways so the comparison is against a gate
+rather than a constant.
+
+A control the reachable-side assertions did not give me was added after an earlier
+run: a collection failure had left the ASSERTED population empty, and "0
+unreachable" over an empty numerator reads exactly like a clean axis. Both sides of
+a set difference need a non-emptiness proof, not only the denominator.
+
+The asserted population is 14 distinct inputs from three modules, which bounds the
+claim: no test in those modules exercises the relief guard with an input production
+cannot assemble. It does not say the whole tree is clean.
+
+## Verification, relief axis
+
+    reachable guard inputs : 3120
+    guard verdicts observed: {'honoured': 3589344, 'refused': 189216}
+    asserted inputs   : 14 distinct, 37 calls
+    UNREACHABLE       : 0 distinct
+    3 failed, 62 passed        [the three are a peer's in-flight reverse-charge work]
+
 ## Notes
 
 **This Step is NOT complete and the row stays open.** The anchor axis is finished,
 exhaustively and with controls. The category axis has its
 suite-independent denominator and roughly fifteen surviving candidates, which stay
-candidates until the enumerator's collapsed axes are proven lossless. The relief axis is not started, and the export
-axis produced a retracted claim rather than an audit.
+candidates until the enumerator's collapsed axes are proven lossless. The relief axis is measured clean with
+controls both ways. The export axis produced a retracted claim rather than an audit,
+and remains the one axis with no instrument.
 
 The instrument generalises only where a producer invariant can be written down. The
 anchor axis had two, because the grounding stage states them. Category resolution
