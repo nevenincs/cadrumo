@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:c9b8a3b1a988dc7b01884b7017c2228981d96ebbf242681207c07bf122bc49b4'
+body_hash: 'sha256:cef3959279b630d514bba53bfa48240b9af5ea3d6703db9b5ff5273f4941b150'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -422,11 +422,30 @@ rate-derived domestic_exempt, so the self-assessed devengada entry is never
 produced. Net-zero for a taxpayer deducting in full, a real underpayment under
 prorrata, and wrong on its face in either case.
 
-Two halves, and only one is contained. Preserving the declared category rather
-than overwriting it is a small change on the projection this sweep now owns.
-Producing the self-assessed cuota is not: the invoice line as recorded carries an
-exempt slot, so the underlying rate the self-assessment needs is not on the
-record at all, and deriving it would mean asserting which rate the supply bore.
+SPLIT BY SIDE, after a re-measurement that corrected a near-miss of this
+audit's own. The supplier side is now CLOSED: a peer extended the projection with
+a declared-category flow map, and an issued reverse-charge invoice routes its
+base to casilla 122 at 2.000,00, verified against the live code. The recipient
+side is still open and produces no binding at all.
+
+The near-miss is worth recording because it nearly became a finding. Measuring
+the recipient side and observing casilla 122 stay at zero, this audit almost
+reported that casilla as unreachable from either feed. It is not. Casilla 122
+declares the SUPPLIER's base, and the flow member that reaches it exists
+precisely to keep the two sides apart; the zero was the correct answer to a
+question asked from the wrong side. The same discipline this sweep recommends --
+ask which side a gate is green from -- applies to a finding as much as to a gate.
+
+What remains is the recipient half, and it is contained differently than first
+written. Preserving the declared category rather than overwriting it is a small
+change on the projection this sweep owns.
+Producing the self-assessed cuota is not, and a binding-level check now says why
+no partial win is available there either: the only two bindings that select the
+recipient side are cuota bindings requiring the general, reduced or
+super-reduced rate kinds. There is no recipient-side BASE binding to route to,
+unlike the supplier side. So the exempt-slot invoice line cannot reach either of
+them, the underlying rate the self-assessment needs is not on the record, and
+deriving it would mean asserting which rate the supply bore.
 The bank row in the measurement above carried its own rate and cuota because the
 operator stated them; the invoice did not. Whether an invoice line may carry a
 real rate slot with a zero cuota, which would make the cuota derivable rather
