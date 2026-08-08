@@ -110,6 +110,26 @@ class MappingKind(StrEnum):
     COMPOSITE = "composite"
     """A dict in the key; separate flat draft fields, each scored as its own slot."""
 
+    SUPERSEDED = "superseded"
+    """Maps to a draft field, but yields to a more specific key field when that
+    field carries truth.
+
+    Exists for the two totals, which are OPPOSITE in the two systems. The corpus
+    key's ``grand_total`` is the COMPUTED identity (base plus tax) and its
+    ``printed_total`` is WHAT THE PAGE STATES. The draft's ``grand_total`` is the
+    PRINTED figure -- it is what ``printed_total_discrepancy`` reads as
+    ``printed``. So the draft field holds the page's number, and only one corpus
+    key may occupy it per document: ``printed_total`` where the corpus states one,
+    ``grand_total`` everywhere else, where the two coincide.
+
+    Measured over the pinned corpus: 213 documents author ``grand_total``, 29 of
+    them also author ``printed_total``, and 2 of those DIVERGE -- a page printing
+    890.00 against a base of 766.30 plus tax of 160.92 that sums to 927.22. Those
+    two are the entire reason the corpus carries the field, and mapping the
+    computed total onto the printed one scores a correct read as wrong on exactly
+    them while staying invisible on the other 211.
+    """
+
     OUT_OF_SCOPE = "out_of_scope"
     """A corpus assertion ABOUT the document, not a field printed on it.
 
@@ -134,6 +154,9 @@ class MappingKind(StrEnum):
 #: as a miss.
 _NON_SCORED_KINDS: Final = frozenset({MappingKind.OUT_OF_SCOPE, MappingKind.PRODUCT_GAP})
 
+#: Kinds that name a single draft field directly.
+_DRAFT_FIELD_KINDS: Final = frozenset({MappingKind.DIRECT, MappingKind.SUPERSEDED})
+
 
 class FieldMapping(BaseModel):
     """One key field's route to the draft, or its declared absence.
@@ -151,6 +174,7 @@ class FieldMapping(BaseModel):
     supplier_field: str | None = None
     customer_field: str | None = None
     leaves: Mapping[str, str] = Field(default_factory=dict)
+    superseded_by: str | None = None
     rationale: str = ""
 
     @model_validator(mode="after")
@@ -166,10 +190,14 @@ class FieldMapping(BaseModel):
             raise ValueError("a role-dependent mapping must name both supplier_field and customer_field")
         if self.kind is MappingKind.COMPOSITE and not self.leaves:
             raise ValueError("a composite mapping must name its leaves")
+        if self.kind is MappingKind.SUPERSEDED and not (self.draft_field and self.superseded_by):
+            raise ValueError("a superseded mapping must name both draft_field and superseded_by")
         if self.kind in _NON_SCORED_KINDS and not self.rationale.strip():
             raise ValueError("an unscored field must state why it is not scored")
-        if self.kind is not MappingKind.DIRECT and self.draft_field:
-            raise ValueError(f"draft_field is only read for a direct mapping, not {self.kind.value}")
+        if self.kind not in _DRAFT_FIELD_KINDS and self.draft_field:
+            raise ValueError(f"draft_field is not read for a {self.kind.value} mapping")
+        if self.kind is not MappingKind.SUPERSEDED and self.superseded_by:
+            raise ValueError(f"superseded_by is not read for a {self.kind.value} mapping")
         return self
 
     def target_fields(self) -> tuple[str, ...]:
@@ -199,7 +227,17 @@ KEY_FIELD_MAPPINGS: Final[Mapping[str, FieldMapping]] = MappingProxyType(
     {
         # ── Identical spellings. Listed rather than inferred, so the table is a
         # complete statement about the key's vocabulary instead of a diff of it.
-        "grand_total": _direct("grand_total"),
+        # The two totals are opposite in the two systems; see MappingKind.SUPERSEDED.
+        # The key's grand_total is the COMPUTED identity, the draft's is the PRINTED
+        # figure, and they coincide except where the corpus states a printed total
+        # of its own -- so this one scores the draft field only while that is absent.
+        "grand_total": FieldMapping(
+            kind=MappingKind.SUPERSEDED,
+            draft_field="grand_total",
+            superseded_by="printed_total",
+        ),
+        # What the page states, which is exactly what the draft's grand_total holds.
+        "printed_total": _direct("grand_total"),
         "invoice_number": _direct("invoice_number"),
         "currency": _direct("currency"),
         "iva_rate": _direct("iva_rate"),
@@ -269,11 +307,6 @@ KEY_FIELD_MAPPINGS: Final[Mapping[str, FieldMapping]] = MappingProxyType(
         # Real fields of the document with nowhere on the draft to hold them.
         "issuer_address": _product_gap("issuer postal address; the draft carries only postal_code and country"),
         "amount_due": _product_gap("amount outstanding after prior payment; no draft counterpart"),
-        "printed_total": _product_gap(
-            "the total as PRINTED, which the corpus checks against the computed grand_total to catch a "
-            "document whose printed total does not match its own arithmetic. The draft has nowhere to put "
-            "the printed figure, so that disagreement cannot be surfaced at all",
-        ),
         "reverse_charge": _product_gap("reverse-charge flag; the draft carries regime_legend, not a boolean"),
         "document_type": _product_gap(
             "factura / simplificada / rectificativa / nota_de_adeudo -- a different axis from suggested_kind, "
@@ -327,6 +360,36 @@ def validate_mapping_targets(*, draft_fields: frozenset[str], key: CorpusKey) ->
         )
 
 
+#: Key fields that displace another key field from its draft slot when they carry
+#: truth. Derived from the table rather than hand-listed, so a second superseding
+#: pair cannot be added on one side only.
+_SUPERSEDING_FIELDS: Final = frozenset(
+    mapping.superseded_by
+    for mapping in KEY_FIELD_MAPPINGS.values()
+    if mapping.kind is MappingKind.SUPERSEDED and mapping.superseded_by
+)
+
+
+def _claims_draft_slot(key_field: str, document: CorpusDocument) -> bool:
+    """Whether this key field occupies its draft slot for THIS document.
+
+    Exactly one member of a superseding pair may occupy one draft field, or the
+    two would contradict each other: the superseding field's ``null`` truth would
+    declare a fabrication trap on the very field its partner is being scored on.
+
+    The superseding field wins wherever it carries truth. Where it carries
+    ``null`` -- 96 corpus documents state no separate printed total -- it yields
+    entirely, trap included, because its ``null`` means "no figure distinct from
+    the computed one" rather than "this document has no total".
+    """
+    mapping = KEY_FIELD_MAPPINGS[key_field]
+    if mapping.kind is MappingKind.SUPERSEDED and mapping.superseded_by:
+        return document.ground_truth.get(mapping.superseded_by) is None
+    if key_field in _SUPERSEDING_FIELDS:
+        return document.ground_truth.get(key_field) is not None
+    return True
+
+
 def _resolved_role_target(mapping: FieldMapping, document: CorpusDocument) -> str | None:
     """Resolve a role-dependent mapping against the document's own role fact."""
     role = document.ground_truth.get("counterparty_role")
@@ -353,6 +416,8 @@ def expand_document_slots(document: CorpusDocument) -> CorpusDocument:
         mapping = KEY_FIELD_MAPPINGS.get(key_field)
         if mapping is None or mapping.kind in _NON_SCORED_KINDS:
             continue
+        if not _claims_draft_slot(key_field, document):
+            continue
         if mapping.kind is MappingKind.COMPOSITE:
             if not isinstance(truth, Mapping):
                 continue
@@ -375,9 +440,9 @@ def project_emission(document: CorpusDocument, draft_payload: Mapping[str, Any])
     """
     projected: dict[str, Any] = {}
     for key_field, mapping in KEY_FIELD_MAPPINGS.items():
-        if mapping.kind in _NON_SCORED_KINDS:
+        if mapping.kind in _NON_SCORED_KINDS or not _claims_draft_slot(key_field, document):
             continue
-        if mapping.kind is MappingKind.DIRECT:
+        if mapping.kind in _DRAFT_FIELD_KINDS:
             direct = mapping.draft_field
             if direct is not None and direct in draft_payload:
                 projected[key_field] = draft_payload[direct]

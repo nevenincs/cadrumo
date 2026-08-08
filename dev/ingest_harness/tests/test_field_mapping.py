@@ -8,6 +8,8 @@ is the failure it exists to remove.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from cadrumo.application.ledger import InvoiceDraft
@@ -22,7 +24,7 @@ from .._field_mapping import (
     unmapped_slot_census,
     validate_mapping_targets,
 )
-from .._key import CorpusKey, load_corpus_key
+from .._key import CorpusDocument, CorpusKey, load_corpus_key
 from .._scoring import score_emission
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -200,12 +202,97 @@ def test_one_wrong_leaf_does_not_destroy_the_others(key: CorpusKey) -> None:
 
 def test_an_unmapped_field_never_becomes_a_miss(key: CorpusKey) -> None:
     """A product that cannot hold a field is not a model that failed to read it."""
-    document = next(d for d in key.documents if d.ground_truth.get("printed_total") is not None)
+    document = next(d for d in key.documents if d.ground_truth.get("known_defects") is not None)
 
     slots = expand_document_slots(document).ground_truth
 
-    assert "printed_total" not in slots
     assert "known_defects" not in slots
+    assert "line_count_exact" not in slots
+
+
+# ----------------------------------------------------------------------------
+# The two totals are opposite in the two systems
+# ----------------------------------------------------------------------------
+
+
+def _divergent_total_documents(key: CorpusKey) -> tuple[CorpusDocument, ...]:
+    """Documents whose printed total disagrees with the computed identity."""
+    return tuple(
+        d
+        for d in key.documents
+        if d.ground_truth.get("printed_total") is not None
+        and d.ground_truth.get("grand_total") is not None
+        and Decimal(str(d.ground_truth["printed_total"])) != Decimal(str(d.ground_truth["grand_total"]))
+    )
+
+
+def test_the_divergent_total_documents_still_exist(key: CorpusKey) -> None:
+    """The anti-vacuity guard for every assertion below.
+
+    A test over the 27 agreeing documents passes under BOTH mappings and proves
+    nothing. Only the divergent pair can tell the printed figure from the computed
+    one, so their existence is pinned before they are relied on.
+    """
+    divergent = _divergent_total_documents(key)
+
+    assert len(divergent) == 2
+    for document in divergent:
+        printed = Decimal(str(document.ground_truth["printed_total"]))
+        computed = Decimal(str(document.ground_truth["grand_total"]))
+        base = Decimal(str(document.ground_truth["base_total"]))
+        iva = Decimal(str(document.ground_truth["iva_total"]))
+        assert printed == Decimal("890.00")
+        assert computed == base + iva == Decimal("927.22")
+
+
+def test_a_divergent_document_scores_the_printed_figure_not_the_computed_one(key: CorpusKey) -> None:
+    """PROOF: a reader that copied the page is scored correct, not wrong.
+
+    The draft's ``grand_total`` is the PRINTED figure. Emitting what the page
+    stated is exactly right, and the previous mapping scored it wrong on the only
+    two documents that can tell the difference.
+    """
+    document = _divergent_total_documents(key)[0]
+    expanded = expand_document_slots(document)
+
+    scoring = score_emission(document=expanded, emitted=project_emission(document, {"grand_total": "890.00"}))
+    verdicts = {outcome.field_name: outcome.verdict for outcome in scoring.outcomes}
+
+    assert verdicts["printed_total"].value == "matched"
+    assert "grand_total" not in verdicts, "the computed identity must not also claim the draft's printed slot"
+
+
+def test_a_divergent_document_scores_the_computed_figure_wrong(key: CorpusKey) -> None:
+    """The other side of the same proof: recomputing is not reading.
+
+    Without this, a mapping that credited both figures would pass the case above
+    while still being unable to tell them apart.
+    """
+    document = _divergent_total_documents(key)[0]
+    expanded = expand_document_slots(document)
+
+    scoring = score_emission(document=expanded, emitted=project_emission(document, {"grand_total": "927.22"}))
+    verdicts = {outcome.field_name: outcome.verdict for outcome in scoring.outcomes}
+
+    assert verdicts["printed_total"].value == "wrong"
+
+
+def test_a_document_stating_no_printed_total_still_scores_its_total(key: CorpusKey) -> None:
+    """The 184 documents that declare only the one total keep their slot.
+
+    A plain swap of the two names would have dropped every one of them from the
+    denominator, trading a fix on 2 documents for a loss of measurement on 184.
+    """
+    document = next(
+        d
+        for d in key.documents
+        if d.ground_truth.get("grand_total") is not None and d.ground_truth.get("printed_total") is None
+    )
+
+    slots = expand_document_slots(document).ground_truth
+
+    assert "grand_total" in slots
+    assert "printed_total" not in slots
 
 
 def test_the_unmapped_census_reports_both_groups_separately(key: CorpusKey) -> None:
@@ -233,7 +320,7 @@ def test_a_product_gap_is_never_reported_as_out_of_scope(key: CorpusKey) -> None
     """
     kinds = {name: kind for kind, name, _, _ in unmapped_slot_census(key)}
 
-    assert kinds["printed_total"] is MappingKind.PRODUCT_GAP
+    assert kinds["issuer_address"] is MappingKind.PRODUCT_GAP
     assert kinds["known_defects"] is MappingKind.OUT_OF_SCOPE
 
 
@@ -294,5 +381,17 @@ def test_an_unscored_entry_without_a_reason_is_refused(kind: MappingKind) -> Non
 
 def test_a_non_direct_mapping_naming_draft_field_is_refused() -> None:
     """``draft_field`` on a composite would be read by nothing and mislead a reader."""
-    with pytest.raises(ValueError, match=r"only read for a direct"):
+    with pytest.raises(ValueError, match=r"draft_field is not read for a composite"):
         FieldMapping(kind=MappingKind.COMPOSITE, leaves={"a": "b"}, draft_field="x")
+
+
+def test_a_superseded_mapping_missing_either_half_is_refused() -> None:
+    """Both halves are load-bearing: the slot it claims and the field that displaces it."""
+    with pytest.raises(ValueError, match=r"both draft_field and superseded_by"):
+        FieldMapping(kind=MappingKind.SUPERSEDED, draft_field="grand_total")
+
+
+def test_superseded_by_on_a_direct_mapping_is_refused() -> None:
+    """A field nothing reads would mislead the next reader into trusting it."""
+    with pytest.raises(ValueError, match=r"superseded_by is not read for a direct"):
+        FieldMapping(kind=MappingKind.DIRECT, draft_field="grand_total", superseded_by="printed_total")
