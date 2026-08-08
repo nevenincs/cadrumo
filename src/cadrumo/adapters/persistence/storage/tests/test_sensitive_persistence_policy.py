@@ -202,26 +202,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "output.write_text",
     ): "registry verification report export through the registry service",
     (
-        "src/cadrumo/locales/manager.py",
-        "scaffold",
-        "open",
-    ): "translation scaffold generation",
-    (
-        "src/cadrumo/locales/manager.py",
-        "_replace_existing_yaml_leaf",
-        "path.write_text",
-    ): "locale CLI translation-catalogue update; non-financial YAML message text",
-    (
-        "src/cadrumo/locales/manager.py",
-        "_append_yaml_leaf",
-        "path.write_text",
-    ): "locale CLI translation-catalogue append; non-financial YAML message text",
-    (
-        "src/cadrumo/locales/manager.py",
-        "_remove_existing_yaml_leaf",
-        "path.write_text",
-    ): "locale CLI translation-catalogue removal; non-financial YAML message text",
-    (
         "src/cadrumo/adapters/persistence/storage/bucket/_lockfile.py",
         "_try_create_lock",
         "os.open",
