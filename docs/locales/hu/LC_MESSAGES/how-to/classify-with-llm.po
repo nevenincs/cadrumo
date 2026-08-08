@@ -565,7 +565,6 @@ msgid "Limits and batch alternatives"
 msgstr "Korlátok és kötegelt alternatívák"
 
 #: Y:/code/aeat-worktrees/main/docs/how-to/classify-with-llm.md:258
-#, fuzzy
 msgid ""
 "The LLM path is single-transaction only; it cannot be combined with "
 "`--file` or manual `--classification` flags. For bulk work use the CSV-"
@@ -573,14 +572,7 @@ msgid ""
 "./classifications.csv`) or deterministic stored rules (`aeat app ledger "
 "rule add` then `rule apply --dry-run` then `rule apply`); both are "
 "covered in [Classify transactions](classify-transactions.md)."
-msgstr ""
-"Az LLM-út csak egyetlen tranzakcióra vonatkozik; nem kombinálható a "
-"`--from-csv` vagy a kézi `--classification` kapcsolókkal. Tömeges "
-"munkához használja a CSV-alapú kézi utat (`aeat app ledger classify "
-"--from-csv ./classifications.csv`) vagy a determinisztikus tárolt "
-"szabályokat (`aeat app ledger rule add`, majd `rule apply --dry-run`, "
-"majd `rule apply`); mindkettőt a [Tranzakciók osztályozása](classify-"
-"transactions.md) tárgyalja."
+msgstr "Az LLM-útvonal csak egyetlen tranzakcióra működik; nem kombinálható a `--file` kapcsolóval vagy kézi `--classification` jelzőkkel. Kötegelt munkához használja a CSV-alapú kézi útvonalat (`aeat app ledger classify --file ./classifications.csv`) vagy a determinisztikus tárolt szabályokat (`aeat app ledger rule add`, majd `rule apply --dry-run`, majd `rule apply`); mindkettőt ismerteti a [Tranzakciók osztályozása](classify-transactions.md)."
 
 #: Y:/code/aeat-worktrees/main/docs/how-to/classify-with-llm.md:266
 msgid "Privacy boundary"
