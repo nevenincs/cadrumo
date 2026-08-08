@@ -4,7 +4,7 @@ tags:
   - '#justificante-identity-matching'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:100b3434daaa58a03ea7cb334eaca35b7a411bf13c63f567134df9e7ed83ddaf'
+body_hash: 'sha256:bb6f106ed92797023c77d1a102fd392f8480eefde07c8d6cfea87e46a2f5faec'
 tier: L2
 related:
   - '[[2026-08-07-justificante-identity-matching-adr]]'
@@ -61,6 +61,7 @@ Surface a Notice distinguishing all six swallowed outcomes at the register-recon
 - [x] `P02.S08` - Distinguish all six swallowed outcomes (unreadable artefact, manifest mismatch, unparsable PDF, CSV-resolution failure, CSV mismatch, filing-target mismatch) and return a typed reason instead of returning None uniformly; `src/cadrumo/application/live/_filed_observation_persistence.py (_parse_matching_filed_justificante)`.
 - [x] `P02.S09` - Emit a Notice through the shared envelope spine naming the unreached-evidence reason when an enrollment call finds an artefact but saves nothing; `src/cadrumo/application/live/_filed_observation_persistence.py (persist_filed_justificante_metadata and enroll_filed_justificante_evidence)`.
 - [x] `P02.S10` - Add a mutation-proof test confirming the reason-distinguishing branch fires per swallowed case and confirm the CLI report surfaces the Notice; `src/cadrumo/application/live/tests and src/cadrumo/entrypoints/cli/tests`.
+- [ ] `P02.S14` - Narrow the application-layer relay test's name and docstring to what its assertions actually prove. It constructs the advisories onto the run model and reads them back off the same object, so it is a pydantic storage roundtrip that cannot fail when the CLI forwarding is deleted, while its name and docstring both claim to cover the relay. The fold itself is now covered at the transport boundary, so this is a truthfulness repair rather than a coverage gap. Gate: the renamed test still derives its expected set from the enum, and a reader can tell from the name alone that it proves the taxonomy has members and the model stores one advisory per member, not that anything reaches an operator; `src/cadrumo/application/live/tests/test_filed_history_onboarding.py`.
 
 ## Parallelization
 
