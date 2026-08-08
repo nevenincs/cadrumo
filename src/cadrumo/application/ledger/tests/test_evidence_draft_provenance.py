@@ -53,6 +53,20 @@ def _fully_populated_draft() -> InvoiceDraft:
         # a value comparison the customer's silently failed.
         supplier_postal_code="35001",
         customer_postal_code="28013",
+        # Off-default and party-DISTINCT for the same reason the codes are, and
+        # deliberately naming two different countries: a projection carrying only
+        # the supplier's country would satisfy a comparison the customer's had
+        # silently failed, and two parties sharing one name could not fail it at
+        # all.
+        supplier_country="España",
+        customer_country="Alemania",
+        # The structured spelling of the same rung, party-distinct for the same
+        # reason. Deliberately NOT the codes the two names above resolve to: a
+        # projection that dropped a code field and rebuilt it from the name
+        # would satisfy a comparison against matching values, and these do not
+        # match, so only a genuine carry survives.
+        supplier_country_code="PT",
+        customer_country_code="FR",
         invoice_number="0042",
         invoice_series="FA",
         invoice_date="2026-03-14",

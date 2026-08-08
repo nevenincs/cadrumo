@@ -224,9 +224,7 @@ def test_the_declared_screen_reaches_the_resolver_envelope(
     """Each family's screen runs on its live calculate path, not just in isolation."""
     resolution = enrolled.resolve(repository)
 
-    advisories = [
-        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == enrolled.reason
-    ]
+    advisories = [diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == enrolled.reason]
     assert advisories, (
         f"{enrolled.family} declares a quantity screen but its resolver raised no {enrolled.reason!r} "
         f"advisory for a revision drawing no {enrolled.dropped_fact!r} -- the screen is dead capacity"

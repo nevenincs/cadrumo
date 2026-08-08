@@ -1398,9 +1398,22 @@ def _select_authoritative_declaration(
 
 
 def _row_locator_for_expediente(page: Page, *, expediente_id: str):
-    """Return a Playwright locator pointing at the listitem whose ``Expediente`` cell text equals ``expediente_id``."""
+    """Return a Playwright locator pointing at the listitem whose ``Expediente`` cell text equals ``expediente_id``.
+
+    The match is anchored rather than a substring. This locator scopes every
+    per-row artefact fetch to one register row, so it is the mechanism that binds
+    a fetched justificante to the declaration it is recorded against; a
+    substring filter would let a row whose expediente id merely contains the
+    target satisfy it. AEAT expediente ids are long tracking numbers with no
+    known reachable collision, so this closes a latent hazard rather than an
+    observed one, which is the right time to close it for a sole mechanism.
+
+    Surrounding whitespace is tolerated because the cell text comes from
+    rendered markup, but nothing else is.
+    """
+    exact_cell_text = re.compile(rf"^\s*{re.escape(expediente_id)}\s*$")
     return page.locator(".z-listitem").filter(
-        has=page.locator(".z-listcell").filter(has_text=expediente_id),
+        has=page.locator(".z-listcell").filter(has_text=exact_cell_text),
     )
 
 

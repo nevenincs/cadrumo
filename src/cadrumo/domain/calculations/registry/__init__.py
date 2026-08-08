@@ -550,6 +550,7 @@ if TYPE_CHECKING:
     from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle, AeatNifIvaObservation
     from ._external_grounding import (
         ExternalGroundingFinding,
+        DeclaredScenarioInputs,
         ExternalGroundingFindingKind,
         ExternalOracleEvidence,
         ExternalOracleInventory,
@@ -631,6 +632,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "AeatNifIvaCheckerOracle": "._aeat_nif_iva_oracle",
     "AeatNifIvaObservation": "._aeat_nif_iva_oracle",
     "ExternalGroundingFinding": "._external_grounding",
+    "DeclaredScenarioInputs": "._external_grounding",
     "ExternalGroundingFindingKind": "._external_grounding",
     "ExternalOracleEvidence": "._external_grounding",
     "ExternalOracleInventory": "._external_grounding",
@@ -780,6 +782,7 @@ __all__ = [
     "DeclaredAxis",
     "DeclaredAxisStatus",
     "DeclaredAxisUsage",
+    "DeclaredScenarioInputs",
     "DependencyClassificationDefinition",
     "DependencyClassificationId",
     "DerivedDisenoCasilla",

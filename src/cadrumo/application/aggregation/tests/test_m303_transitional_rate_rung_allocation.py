@@ -237,9 +237,7 @@ def test_every_rung_cuota_carrier_reaches_total_cuota_devengada() -> None:
         for c in revision.casillas
         if c.binding is not None and str(c.binding).startswith("modelo-303-iva-repercutido-")
     }
-    rung_carriers = {
-        casilla_id for binding_id, casilla_id in carriers.items() if binding_id.endswith("-cuota")
-    }
+    rung_carriers = {casilla_id for binding_id, casilla_id in carriers.items() if binding_id.endswith("-cuota")}
     assert rung_carriers, "no rung cuota carrier found -- the probe proves nothing"
 
     total = next(f for f in revision.formulas if f.target_casilla_id == "iva.cuota-devengada-total")
@@ -291,9 +289,7 @@ def test_the_narrowed_rate_sets_are_exhaustive_against_the_rate_table() -> None:
         for on_date in probe_dates:
             for pct in candidates:
                 if tier in rate_kinds_for_declared_rate(EUMemberState.ES, pct, on_date):
-                    assert pct in covered, (
-                        f"{tier.value} admits {pct} on {on_date} but no Modelo 303 rung accepts it"
-                    )
+                    assert pct in covered, f"{tier.value} admits {pct} on {on_date} but no Modelo 303 rung accepts it"
 
 
 def test_a_domestic_row_always_carries_the_rate_the_rungs_key_on() -> None:
@@ -407,8 +403,7 @@ def test_total_cuota_devengada_enumerates_every_recargo_rung_aeat_sums() -> None
 
     recargo_rungs_aeat_sums = {"18", "21", "24", "158", "170", "26"}
     assert recargo_rungs_aeat_sums <= summed, (
-        f"recargo rungs AEAT sums into [27] but this total omits: "
-        f"{sorted(recargo_rungs_aeat_sums - summed)}"
+        f"recargo rungs AEAT sums into [27] but this total omits: {sorted(recargo_rungs_aeat_sums - summed)}"
     )
 
 
@@ -450,8 +445,6 @@ def test_total_cuota_devengada_covers_every_term_aeat_prints() -> None:
     uncovered = [
         term
         for term in _AEAT_TOTAL_TERMS
-        if term not in _DELIBERATELY_EXCLUDED
-        and term not in summed
-        and projects.get(term) not in summed
+        if term not in _DELIBERATELY_EXCLUDED and term not in summed and projects.get(term) not in summed
     ]
     assert not uncovered, f"terms AEAT prints in [27] that this total cannot reach: {uncovered}"

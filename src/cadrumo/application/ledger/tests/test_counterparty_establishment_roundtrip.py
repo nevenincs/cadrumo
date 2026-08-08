@@ -1,0 +1,199 @@
+"""Encrypted-boundary roundtrip for the counterparty establishment store.
+
+A :class:`~application.ledger.CounterpartyEstablishmentFact` is the answer to a
+question the operator was asked once and will never be asked again for that
+counterparty, so the record has to come back exactly as it went in. A dropped
+``territorial_scope`` would not read as corruption downstream -- it would read as
+"nothing is confirmed about this party", which sends the pipeline back to asking
+and is indistinguishable from the honest empty case.
+
+The two gates ``aeat-quality-gates`` requires of a persistence boundary: a real
+save -> load -> strict-equality cycle with every defaultable field carrying a
+NON-default value, and an anti-tautology proof that rewrites the stored payload
+and asserts the real load path refuses it. Real key provider, real SQLite
+engine, real serializer throughout.
+"""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Iterator
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+from pydantic import ValidationError
+
+from ....adapters.persistence.storage import (
+    LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE,
+    SensitivityClass,
+)
+from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....core import ClassifierInputSource
+from ....domain.iva import IvaTerritorialScope
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from .._counterparty_establishment import (
+    CounterpartyEstablishmentFact,
+    CounterpartyEstablishmentRepository,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_BUCKET_ID = "35353535-3535-4535-8535-353535353535"
+_ASSERTED_AT = datetime(2026, 4, 17, 11, 5, tzinfo=UTC)
+
+
+@pytest.fixture
+def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        yield profile
+
+
+@pytest.fixture
+def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepository:
+    return runtime_profile.repository
+
+
+def _fully_populated_fact() -> CounterpartyEstablishmentFact:
+    """Build a fact whose one defaultable field carries a non-default value.
+
+    ``note`` defaults to the empty string, and it is the field a
+    save-drops / load-re-defaults regression would hide behind: an operator's
+    stated reason for the confirmation would vanish while the territory still
+    round-tripped, so the record would keep answering without keeping why.
+
+    ``source`` is deliberately not defaultable on the model, so there is no
+    default here to leave in place -- the fixture states it, and the persisted
+    payload carries it.
+    """
+    return CounterpartyEstablishmentFact.create(
+        tax_identifier="B12345674",
+        territorial_scope=IvaTerritorialScope.ES_CANARIAS,
+        asserted_by="operator@example.test",
+        note="supplier confirmed established in Las Palmas by telephone on 2026-04-17",
+        asserted_at=_ASSERTED_AT,
+    )
+
+
+def test_establishment_fact_roundtrips_through_encrypted_storage(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Save, load through a FRESH handle, assert strict model equality."""
+    original = _fully_populated_fact()
+    CounterpartyEstablishmentRepository(objects=secure_objects).save(original)
+
+    # A fresh repository handle: the record is genuinely re-read from storage
+    # rather than returned from state the writing handle still held.
+    loaded = CounterpartyEstablishmentRepository(objects=secure_objects).load(original.counterparty_key)
+
+    assert loaded == original
+    assert loaded is not None
+    assert loaded.territorial_scope is IvaTerritorialScope.ES_CANARIAS
+    assert loaded.source is ClassifierInputSource.OPERATOR_ASSERTION
+    assert loaded.note == "supplier confirmed established in Las Palmas by telephone on 2026-04-17"
+    assert loaded.asserted_at == _ASSERTED_AT
+    assert loaded.canonical_tax_identifier == "B12345674"
+
+
+def test_persisted_fact_stripped_of_its_territory_is_refused_at_load(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Anti-tautology proof: delete the territory from the stored payload and reload.
+
+    ``territorial_scope`` is the whole content of the record, so a persisted fact
+    without it must not load. If this ever passed with the field absent, the
+    required-field contract would be unenforced at the encrypted boundary and the
+    roundtrip above would prove nothing.
+    """
+    original = _fully_populated_fact()
+    repository = CounterpartyEstablishmentRepository(objects=secure_objects)
+    repository.save(original)
+
+    record = secure_objects.load(
+        LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.namespace,
+        original.counterparty_key,
+        expected_class=SensitivityClass.FINANCIAL,
+        max_supported_version=LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.schema_version,
+    )
+    assert record is not None
+    envelope = json.loads(record.payload.decode("utf-8"))
+    stored = envelope["payload"]
+    assert stored["territorial_scope"] == IvaTerritorialScope.ES_CANARIAS.value, (
+        "fixture must serialise territorial_scope for this proof to mean anything"
+    )
+
+    def _rewrite(payload: dict[str, object]) -> None:
+        secure_objects.save(
+            namespace=LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.namespace,
+            object_key=original.counterparty_key,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=json.dumps(payload).encode("utf-8"),
+        )
+
+    # Control: re-saving the UNMODIFIED envelope through the same decode/encode
+    # surgery must still load, or a refusal below could come from the surgery
+    # rather than from the missing field.
+    _rewrite(envelope)
+    assert CounterpartyEstablishmentRepository(objects=secure_objects).load(original.counterparty_key) is not None
+
+    del stored["territorial_scope"]
+    _rewrite(envelope)
+
+    with pytest.raises(ValidationError):
+        CounterpartyEstablishmentRepository(objects=secure_objects).load(original.counterparty_key)
+
+
+def test_persisted_fact_relabelled_as_document_evidence_is_refused_at_load(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A stored fact claiming a document said so must not load.
+
+    The store's whole warrant is that it holds what an OPERATOR confirmed. A
+    record carrying ``document_evidence`` would be a cached page reading
+    answering later documents as an assertion -- the shape that silently
+    disables the contradiction channel -- so the refusal is enforced at the
+    boundary rather than only at the constructor a caller may bypass.
+    """
+    original = _fully_populated_fact()
+    CounterpartyEstablishmentRepository(objects=secure_objects).save(original)
+
+    record = secure_objects.load(
+        LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.namespace,
+        original.counterparty_key,
+        expected_class=SensitivityClass.FINANCIAL,
+        max_supported_version=LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.schema_version,
+    )
+    assert record is not None
+    envelope = json.loads(record.payload.decode("utf-8"))
+    envelope["payload"]["source"] = ClassifierInputSource.DOCUMENT_EVIDENCE.value
+
+    secure_objects.save(
+        namespace=LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE.namespace,
+        object_key=original.counterparty_key,
+        classification=record.classification,
+        schema_version=record.schema_version,
+        written_at=record.written_at,
+        payload=json.dumps(envelope).encode("utf-8"),
+    )
+
+    with pytest.raises(ValidationError):
+        CounterpartyEstablishmentRepository(objects=secure_objects).load(original.counterparty_key)
+
+
+def test_object_key_carries_no_tax_identifier(secure_objects: SecureObjectRepository) -> None:
+    """The addressing key is a digest, and the identifier lives inside the envelope.
+
+    An object key is metadata outside the encrypted payload. Addressing the
+    record by the counterparty's NIF would place a real tax identifier of one of
+    the taxpayer's trading partners in the clear, which the secure-storage rule
+    forbids regardless of how convenient the lookup would be.
+    """
+    original = _fully_populated_fact()
+    CounterpartyEstablishmentRepository(objects=secure_objects).save(original)
+
+    assert original.counterparty_key != original.canonical_tax_identifier
+    assert original.canonical_tax_identifier not in original.counterparty_key
+    assert len(original.counterparty_key) == 64
+    assert set(original.counterparty_key) <= set("0123456789abcdef")

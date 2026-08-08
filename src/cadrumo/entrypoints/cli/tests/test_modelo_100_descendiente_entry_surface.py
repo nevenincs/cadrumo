@@ -379,17 +379,25 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
     read only the annual figure. This drives the real CLI end to end so the
     claim being made is the one an operator can check.
 
-    The child turns three in April, so Art. 81.2 admits only the months after
-    the birthday: May, June and July. Art. 81.3 then prorates the annual ceiling
-    across exactly those three months, and the mother qualified in all twelve so
-    the overlap is the guardería side outright.
+    The child turns three in April, and ALL SEVEN declared months count. The
+    birthday is not a boundary for the Art. 81.2 increment: Capítulo 18's
+    "gastos incurridos con posterioridad al cumplimiento de dicha edad" GRANTS
+    the months after it, which the under-three limb could not otherwise reach,
+    and does not withdraw the ones before. The manual's own caso b settles it —
+    a child who "en septiembre cumple 3 años" is granted "6 meses completos (de
+    enero a junio)", every one of them BEFORE the birthday. Reading that
+    sentence as a restriction returns zero on the manual's own facts.
 
-    The expected figure is three twelfths of the registry's own annual ceiling,
-    read from the parameter rather than restated. It is BELOW the 600 those
-    three months cost, and that is the whole point: the ceiling is prorated, not
-    flat. Before this formula consumed the prorated value the answer here was
-    the full 600 — the declared spend passed through untouched because the only
-    ceiling in its way was ``1 x 1.000``, which no month rule ever reduced.
+    The declared months are January to July, all inside the window, which closes
+    at the month before the second infant-education cycle may begin. The mother
+    qualified in all twelve, so the simultaneity intersection is the guardería
+    side outright: seven months.
+
+    The expected figure is seven twelfths of the registry's own annual ceiling,
+    read from the parameter rather than restated, and derived from the fixture
+    by hand: seven declared months intersected with twelve mother-months. It is
+    BELOW the 1.000 those seven months cost, which is the whole point — the
+    ceiling is prorated, not flat.
     """
     _seed_natural_person_profile(runtime_profile)
 
@@ -397,7 +405,7 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA_MENSUAL=1-4:150;5-7:200,MESES_TRABAJO=12",
+            "--descendiente", "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA_MENSUAL=1-4:150;5-7:200,MESES_TRABAJO=1-12",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -438,7 +446,7 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
     # Only May, June and July fall after the April birthday, so Art. 81.3
     # prorates the annual ceiling to three twelfths of it. The 600 those months
     # actually cost is above that ceiling and is therefore NOT what is granted.
-    assert Decimal(str(calc_payload["casilla_values"]["0613"])) == (_registry_guarderia_cap_anual() / 12 * 3).quantize(
+    assert Decimal(str(calc_payload["casilla_values"]["0613"])) == (_registry_guarderia_cap_anual() / 12 * 7).quantize(
         Decimal("0.01"),
     )
 
@@ -501,9 +509,18 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
     prorated wrongly cannot drag the expectation along with it
     (`aeat-quality-gates`).
 
-    The mother qualified in four months and the guardería was paid in two, so
-    Art. 81.3's simultaneity intersection is two months and the annual ceiling
-    is prorated to two twelfths.
+    The manual's REAL facts, which are a PARTIAL overlap: the mother does not
+    work before May and is entitled "de mayo a agosto ambos incluidos", while
+    the nursery's complete months are January to June. The two sets share
+    exactly May and June, so Art. 81.3's simultaneity intersection is two months
+    and the annual ceiling is prorated to two twelfths.
+
+    The facts are the point and must not be substituted for convenient ones.
+    This case previously declared four mother-months against two nursery months
+    and reached 166,67 as the smaller of two COUNTS, never intersecting
+    anything — so it passed both before and after the count-based defect while
+    testing none of it. On the manual's actual facts that same code returned
+    333,33, twice what AEAT prints.
 
     This is the assertion the whole change exists for. The previous formula
     capped at a flat ``hijos x 1.000`` with no month rule anywhere in it, so
@@ -517,7 +534,7 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=5:1145;6:1145,MESES_TRABAJO=4",
+            "--descendiente", "NACIMIENTO=2021-09-02,GASTOS_GUARDERIA_MENSUAL=1-6:500,MESES_TRABAJO=5-8",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -544,7 +561,7 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
     assert (_registry_guarderia_cap_anual() / 12 * 2).quantize(Decimal("0.01")) == Decimal("166.67")
     # The spend on record is far above it, so the ceiling is what bound — not
     # the spend happening to be small.
-    assert Decimal("2290") > Decimal("166.67")
+    assert Decimal("3000") > Decimal("166.67")
 
 
 def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
@@ -599,19 +616,27 @@ def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
     assert "MESES_TRABAJO" in (fired[0]["suggestion"] or "")
 
 
-def test_a_partial_overlap_discloses_that_the_simultaneity_is_approximated(
+def test_a_partial_overlap_takes_only_the_months_shared_end_to_end(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
-    """The Art. 81.3 intersection is an upper bound, and the operator is told where.
+    """Art. 81.3 prorates by the months that hold AT ONCE, and here there are none.
 
-    The guardería side is a month map; the mother's side is only a count. So the
-    engine takes the smaller of the two, which is the largest overlap those
-    facts admit rather than the overlap itself. Exact whenever either side
-    covers the year — and an over-statement when both are partial and the spans
-    do not coincide, which is this profile.
+    The mother qualifies January to April; the nursery is paid September and
+    October. The two sets are disjoint, so no month satisfies both limbs and the
+    increase is zero.
 
-    Pinned end to end because the disclosure is the only thing standing between
-    an approximated figure and a taxpayer who believes it was measured.
+    This case used to assert 166,67 and a "the overlap was approximated"
+    advisory, because the record stored how MANY months the mother qualified and
+    not WHICH, so the engine took ``min(4, 2)`` and disclosed the guess. Both the
+    figure and the advisory are now gone: the months are carried, the
+    intersection is real, and an empty intersection grants nothing. The old
+    reading over-granted the deduccion on facts that entitle the filer to none,
+    which under-declares tax.
+
+    Driven end to end through the CLI rather than at the domain boundary,
+    because the declared months have to survive the flag parser, the fact
+    round-trip and the binding injection to reach the casilla; the domain-level
+    geometries prove the arithmetic, this proves the wiring.
     """
     _seed_natural_person_profile(runtime_profile)
 
@@ -619,9 +644,7 @@ def test_a_partial_overlap_discloses_that_the_simultaneity_is_approximated(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            # Four qualifying months for the mother, two months of nursery, and
-            # nothing on record saying WHICH four.
-            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=4",
+            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=1-4",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -639,26 +662,21 @@ def test_a_partial_overlap_discloses_that_the_simultaneity_is_approximated(
         ],
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
-    # Two months of overlap assumed, so two twelfths of the ceiling.
-    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("166.67")
-
-    fired = [
-        n
-        for n in unwrap_envelope_notices(calc_result.output)
-        if n.get("context", {}).get("source_kind") == "guarderia_simultaneity_approximated"
-    ]
-    assert len(fired) == 1, f"the approximation must be disclosed; notices were {fired}"
+    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("0")
 
 
-def test_a_full_year_mother_is_not_told_the_overlap_was_approximated(
+def test_an_overlapping_declaration_still_reaches_its_shared_months(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
-    """Positive control for the advisory above: it must be able to STAY SILENT.
+    """Positive control for the zero above: the same shape, moved to overlap, pays.
 
-    Where the mother qualified in every month the intersection is the guardería
-    side outright, so nothing is approximated and there is nothing to disclose.
-    Without this, an advisory that fired unconditionally would satisfy the test
-    above while training the operator to ignore it.
+    Identical facts except that the mother's months now span the year, so they
+    contain the nursery's September and October. Two shared months prorate to
+    ``1.000 / 12 * 2 = 166,67``.
+
+    Without this, a calculate path that returned zero unconditionally — or one
+    that had simply stopped reading the declared months at all — would satisfy
+    the disjoint case above while computing nothing.
     """
     _seed_natural_person_profile(runtime_profile)
 
@@ -666,7 +684,7 @@ def test_a_full_year_mother_is_not_told_the_overlap_was_approximated(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=12",
+            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=1-12",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -685,13 +703,6 @@ def test_a_full_year_mother_is_not_told_the_overlap_was_approximated(
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
     assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("166.67")
-
-    fired = [
-        n
-        for n in unwrap_envelope_notices(calc_result.output)
-        if n.get("context", {}).get("source_kind") == "guarderia_simultaneity_approximated"
-    ]
-    assert fired == [], f"nothing is approximated for a full-year mother; got {fired}"
 
 
 def test_the_flag_refuses_both_spend_shapes_for_one_child(
@@ -745,7 +756,7 @@ def test_the_cotizaciones_term_binds_the_0613_cap(
             # Spend of 2.400 across a child under three all year, against a
             # mother qualifying all year, so the prorated increase is the full
             # 1.000 annual ceiling and the cotizaciones below is smaller.
-            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400,MESES_TRABAJO=12",
+            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400,MESES_TRABAJO=1-12",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -792,7 +803,7 @@ def test_the_population_term_binds_the_0613_cap(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400,MESES_TRABAJO=12",
+            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400,MESES_TRABAJO=1-12",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output

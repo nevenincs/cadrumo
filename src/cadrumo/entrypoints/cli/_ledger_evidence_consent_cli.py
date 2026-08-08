@@ -41,6 +41,7 @@ from ._ledger_business_payloads import (
 )
 
 _UNRECALLABLE_LOCALE_KEY = "cli.app.ledger.evidence.consent.bytes_unrecallable"
+_NO_HISTORY_LOCALE_KEY = "cli.app.ledger.evidence.consent.no_history"
 _LIST_HELP_LOCALE_KEY = "cli.app.ledger.evidence.consent.list_help"
 _REDERIVE_HELP_LOCALE_KEY = "cli.app.ledger.evidence.consent.rederive_help"
 _REDERIVED_LOCALE_KEY = "cli.app.ledger.evidence.consent.rederived"
@@ -64,6 +65,26 @@ def _unrecallable_notice() -> Notice:
     )
 
 
+def _no_history_notice() -> Notice:
+    """Build the affirmative "nothing has left this host" notice.
+
+    An empty survey has to SAY it is empty. Rows absent from a listing is not a
+    statement -- an operator who sees none cannot tell "nothing was ever sent
+    off-host" from "this verb did not report", and that indistinguishability is
+    how a crash on this exact surface went unnoticed until a lane probing a real
+    instance found it.
+
+    INFO rather than WARNING: an empty history is the desired posture, not a
+    problem. It rides the shared notice channel rather than a bespoke result
+    field, per the envelope contract, so the text and JSON surfaces cannot drift.
+    """
+    return Notice(
+        code="evidence_consent_no_history",
+        severity=NoticeSeverity.INFO,
+        message=tr(_NO_HISTORY_LOCALE_KEY),
+    )
+
+
 def register_evidence_consent_commands(evidence_app: typer.Typer) -> None:
     """Mount the consent verbs under the evidence group."""
     evidence_app.add_typer(
@@ -80,7 +101,11 @@ def _register_consent_list_command() -> None:
     def consent_list(ctx: typer.Context) -> None:
         """List off-host dispatches and the artefacts derived from them."""
         bucket_id = _tx_repo(_state()).bucket_id
-        survey = survey_cloud_consent(bucket_id=bucket_id, settings=load_settings())
+        survey = survey_cloud_consent(
+            bucket_id=bucket_id,
+            settings=load_settings(),
+            consent_entries=_recorded_dispatches(bucket_id),
+        )
         payload = {
             "bucket_id": bucket_id,
             "transmitted_bytes_are_unrecallable": survey.transmitted_bytes_are_unrecallable,
@@ -102,13 +127,55 @@ def _register_consent_list_command() -> None:
             f"{'-' if row.rederivable_on_host is None else row.rederivable_on_host}\t{row.provenance_stamp}"
             for row in survey.cloud_derived_artefacts
         )
+        # The caveat is unconditional; the empty statement is conditional on
+        # there genuinely being nothing, so it reports a fact rather than always
+        # firing over a listing that just showed something.
+        notices = [_unrecallable_notice()]
+        if not survey.consented_dispatches and not survey.cloud_derived_artefacts:
+            notices.append(_no_history_notice())
         _emit_envelope(
             ctx,
             command="ledger.evidence.consent.list",
             result=EvidenceConsentListResult.model_validate(payload),
             lines=lines,
-            notices=[_unrecallable_notice()],
+            notices=notices,
         )
+
+
+def _recorded_dispatches(bucket_id: str) -> tuple[ConsentedDispatch, ...]:
+    """Project the profile's consent ledger onto the shape the survey enumerates.
+
+    This composition is the CLI's job and nowhere else's. The application layer
+    that owns the survey deliberately does not import the ledger -- it lives on
+    the adapter side and the dependency direction forbids the reach -- so the
+    entries arrive as an injected projection, and this is the one production
+    site that performs it. Absent it the survey enumerates an empty history
+    forever while the ledger fills up beside it, which is not a missing feature
+    but an affirmative false statement: the verb tells an operator nothing left
+    their machine.
+
+    Filtered on the entry's own recorded bucket rather than trusted from the
+    ambient session, because the survey is scoped to ``bucket_id`` and a row
+    belonging to another profile must never appear under this one. The ledger
+    stamps every entry with the bucket it ran under precisely so this
+    comparison is possible.
+
+    Deferred import, matching the on-host reader below: this module must stay
+    loadable on an install without the inference extra.
+    """
+    from ...adapters.outbound.llm import EvidenceConsentLedger
+
+    return tuple(
+        ConsentedDispatch(
+            evidence_content_address=entry.evidence_content_address,
+            provider=entry.provider,
+            model=entry.model,
+            surface=entry.surface,
+            recorded_at=entry.recorded_at,
+        )
+        for entry in EvidenceConsentLedger().load_entries()
+        if entry.profile_bucket_id == bucket_id
+    )
 
 
 def _dispatch_payload(dispatch: ConsentedDispatch) -> dict[str, str]:
@@ -153,8 +220,14 @@ def _register_consent_rederive_command() -> None:
                 read_on_host=_on_host_reader(),
             )
         except ValueError as exc:
-            _bad(tr(_REDERIVE_REFUSED_LOCALE_KEY, detail=str(exc)))
-            return
+            # RAISED, not merely constructed. `_bad` returns the exception rather
+            # than raising it, so calling it bare built an instructive refusal and
+            # threw it away: every re-derivation failure -- unknown artefact,
+            # absent cached transcription, a reader stamping a cloud transport --
+            # exited zero with nothing printed. Silence is the worst possible
+            # answer here, because the operator's next move is to trust that the
+            # artefact came back on-host when it never did.
+            raise _bad(tr(_REDERIVE_REFUSED_LOCALE_KEY, detail=str(exc))) from exc
         _emit_envelope(
             ctx,
             command="ledger.evidence.consent.rederive",

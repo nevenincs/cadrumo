@@ -266,7 +266,7 @@ def test_the_profile_anualidades_figure_survives_a_strict_roundtrip() -> None:
                 discapacidad_grado=33,
                 presenta_declaracion_propia=True,
                 prorrata_minimo=True,
-                meses_madre_trabajo_2024=5,
+                meses_madre_trabajo=(1, 2, 3, 4, 5),
                 gastos_guarderia_euros=800,
                 nif="00000000T",
             ),

@@ -48,6 +48,7 @@ _M184_INVALID_CASES = (
     ),
 )
 
+
 def _vinculada_from_operator_input(**overrides: str) -> Modelo232VinculadaRow:
     """Build a vinculada row the way the CLI does — untyped key=value text.
 

@@ -20,9 +20,11 @@ from ...application.ledger import (
     ConfirmationBlocker,
     FindingResolution,
     InvoiceDraft,
+    PartyAttributionAdvisory,
     StoredExtractionDraft,
     confirmation_blockers,
     load_extraction_drafts,
+    party_attribution_advisory,
 )
 from ...core import ConfirmationBlockReason, DraftDiscrepancyKind, FindingResolutionAction
 from ...core.config import load_settings
@@ -122,6 +124,60 @@ def _suggested_kind_basis(draft: InvoiceDraft) -> str:
         if envelope.field == "suggested_kind":
             return envelope.note or (envelope.anchor or "")
     return ""
+
+
+def _party_attribution_notice(advisory: PartyAttributionAdvisory) -> Notice:
+    """Project the attribution advisory into the envelope's one diagnostic channel.
+
+    A Notice rather than a field on the review payload, and the distinction is
+    substantive. That payload carries each party's printed postal code and
+    country verbatim and deliberately never the territory read off them, because
+    the reading is the domain's and a second copy of a regulatory boundary on the
+    review surface is what that exclusion exists to prevent. An advisory ABOUT a
+    territory therefore has no place to attach there. It attaches here instead,
+    where the territory is quoted from the domain rather than recomputed -- which
+    lets the operator contest a concrete claim ("these values would place the
+    customer in Canarias, and nothing checked that they are the customer's")
+    without the boundary acquiring a second home.
+    """
+    context: dict[str, str] = {"fields": ",".join(advisory.fields)}
+    for party in advisory.parties:
+        context[f"{party.role}_fields"] = ",".join(party.fields)
+        context[f"{party.role}_territory_if_attributed"] = (
+            party.scope_if_attributed.value if party.scope_if_attributed is not None else "undetermined"
+        )
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="ledger.evidence.review.party_attribution_unverified",
+        message=tr(
+            "cli.app.ledger.evidence.review.party_attribution_unverified_message",
+            default=(
+                "Nothing verifies which party these address values belong to. Were two address "
+                "blocks read the wrong way round, both parties would be placed in an IVA territory "
+                "neither is established in and no check would catch it. Confirm each value against "
+                "the document before confirming this draft."
+            ),
+        ),
+        context=context,
+    )
+
+
+def _party_attribution_lines(notice: Notice) -> list[str]:
+    """Rebuild the advisory's text-mode lines from the notice itself.
+
+    Read off the notice rather than the advisory so the two renderings cannot
+    drift: a JSON consumer and a terminal operator are told the same thing
+    because the same object produced both.
+    """
+    context = notice.context or {}
+    lines = [f"advisory\t{notice.code}\t{notice.message}"]
+    lines.extend(
+        f"attribution_unverified\t{key.removesuffix('_fields')}\t{value}\t"
+        f"{context.get(key.removesuffix('_fields') + '_territory_if_attributed', '-')}"
+        for key, value in context.items()
+        if key.endswith("_fields") and key != "fields"
+    )
+    return lines
 
 
 def _register_review_list_command() -> None:
@@ -292,6 +348,11 @@ def _register_review_show_command() -> None:
             f"blocker\t{blocker.blocker_id}\t{blocker.reason.value}\t{blocker.field or '-'}" for blocker in blockers
         )
         notices: list[Notice] = []
+        advisory = party_attribution_advisory(draft)
+        if advisory is not None:
+            attribution_notice = _party_attribution_notice(advisory)
+            notices.append(attribution_notice)
+            lines.extend(_party_attribution_lines(attribution_notice))
         if blockers:
             notices.append(
                 Notice(

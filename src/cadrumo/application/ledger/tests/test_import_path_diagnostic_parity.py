@@ -68,9 +68,7 @@ def _parsed(raw: RawTransaction) -> ParsedLedgerRow:
 def _both_paths(raws: tuple[RawTransaction, ...]) -> tuple[int, int, int, int]:
     """Return ``(verify_imported, verify_skipped, persist_imported, persist_skipped)``."""
     parsed_rows = tuple(_parsed(raw) for raw in raws)
-    fingerprints = tuple(
-        derive_import_fingerprint(parsed.raw, direction=parsed.direction) for parsed in parsed_rows
-    )
+    fingerprints = tuple(derive_import_fingerprint(parsed.raw, direction=parsed.direction) for parsed in parsed_rows)
     verify = import_ledger_with_diagnostics(
         source_path=_SOURCE_PATH,
         raw_transactions=raws,

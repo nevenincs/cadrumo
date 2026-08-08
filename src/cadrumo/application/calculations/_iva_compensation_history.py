@@ -59,6 +59,7 @@ from ...domain.iva_compensation import (
     IvaCompensationPeriodState,
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
+    derive_303_compensation_available,
     derive_iva_compensation_year_end_carry_partition,
     derive_m303_compensation_available_from_casillas,
     iva_compensation_period_sort_key,
@@ -562,6 +563,22 @@ def _iva_compensation_state_from_values(
     if derivation is not None:
         generated = derivation.generated
         available = derivation.available
+    elif result is not None:
+        # The canonical derivation declines a filing that declares no posterior
+        # casilla, because its two fetched callers read that None as "do not
+        # stamp the casilla at all". This projection has no such choice: both
+        # amount fields of the state below are non-optional, and a period that
+        # declared a negative result generated that credit whether or not it
+        # also declared a posterior balance. Dropping it here would silently
+        # under-state the carry -- the direction that over-taxes the taxpayer a
+        # quarter later. The same pure policy answers it, with the absent
+        # posterior read as the zero it means.
+        available = derive_303_compensation_available(
+            posterior=posterior or _ZERO,
+            resultado=result,
+            refunded=refunded,
+        )
+        generated = available - (posterior or _ZERO)
     else:
         generated = _ZERO
         available = posterior or _ZERO

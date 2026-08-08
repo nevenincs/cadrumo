@@ -108,22 +108,23 @@ class Justificante(BaseModel):
         filing_year: int,
         period: Period,
         tax_id: str | None = None,
-        presentation_id: str | None = None,
     ) -> bool:
         """Return whether this receipt belongs to one filing target.
 
-        ``tax_id`` and ``presentation_id`` are optional refinements for
-        receipt sources that do not expose the corresponding axis. A receipt
-        that does expose a presentation identifier must agree whenever the
-        caller supplies the corresponding expediente identity.
+        ``tax_id`` is an optional refinement for receipt sources that do not
+        expose that axis.
+
+        Verifying that the receipt is the one AEAT issued for a filing is the
+        caller's job, and it is a :attr:`csv` comparison against a csv the
+        caller obtained from somewhere other than this PDF. This predicate
+        deliberately offers no parameter for that axis: the only receipt
+        identifier printed beside the csv is
+        :attr:`presentation_id`, AEAT's *Número de justificante*, and the
+        values callers actually hold are register-issued expediente ids from
+        *Consultar declaraciones presentadas* — a different AEAT namespace that
+        never appears on a receipt body, so no caller could populate such a
+        parameter correctly.
         """
-        receipt_presentation_id = (self.presentation_id or "").strip()
-        if (
-            presentation_id is not None
-            and receipt_presentation_id
-            and receipt_presentation_id.casefold() != presentation_id.strip().casefold()
-        ):
-            return False
         return (
             self.modelo.strip() == modelo.strip()
             and str(self.ejercicio or "").strip() == str(filing_year)

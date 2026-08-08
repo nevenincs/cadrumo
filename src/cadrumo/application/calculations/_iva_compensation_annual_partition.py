@@ -26,7 +26,6 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistryValidationError,
     undeclared_casilla_ids,
-    validated_casilla_id,
 )
 from ...domain.iva_compensation import (
     IvaCompensationPeriodState,
@@ -40,6 +39,12 @@ from ..aggregation import (
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
+from ._iva_compensation_casillas import (
+    M303_COMPENSACION_APLICADA_CASILLA,
+    M303_DISPONIBLE_CASILLA,
+    M303_GENERADA_CASILLA,
+    M303_POSTERIOR_CASILLA,
+)
 from ._observations_repository import CalculationObservationRepository
 from ._revision_carry_gate import revision_carry_outcome
 
@@ -52,17 +57,10 @@ _LAST_PERIOD_OUTPUT: Final = "last_period_amount"
 _GENERATED_NOT_IN_LAST_OUTPUT: Final = "generated_not_in_last_amount"
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="iva annual partition casilla constant")
-    except ValueError as exc:
-        raise RuntimeError(f"iva annual partition casilla constant {value!r} is not a CasillaId") from exc
-
-
-_303_GENERADA_ID: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
-_303_APLICADA_ID: Final[CasillaId] = _casilla_id("iva.compensacion-aplicada-periodo")
-_303_DISPONIBLE_ID: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
-_303_POSTERIOR_ID: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
+_303_GENERADA_ID: Final[CasillaId] = M303_GENERADA_CASILLA
+_303_APLICADA_ID: Final[CasillaId] = M303_COMPENSACION_APLICADA_CASILLA
+_303_DISPONIBLE_ID: Final[CasillaId] = M303_DISPONIBLE_CASILLA
+_303_POSTERIOR_ID: Final[CasillaId] = M303_POSTERIOR_CASILLA
 
 
 def _partition_selector(binding: object) -> object:

@@ -10,6 +10,17 @@ declared :class:`~cadrumo.domain.calculations.registry.CasillaId` or
 :class:`~cadrumo.domain.calculations.registry.BindingId` values and carry
 layout-authority evidence.
 
+Two of the field checks here are about a slot's SHAPE rather than its references,
+and belong to the same family as the byte-range overlap check in
+:mod:`cadrumo.domain.calculations.registry._export`: a literal may not be longer
+than the slot declared for it, and a draft attribute drawn from a typed
+fixed-width source must be bound to a slot of exactly that width
+(:func:`cadrumo.domain.calculations.registry._validate_export_field_widths.validate_draft_field_slot_width`,
+extracted to its own module). Both run at registry build over every
+revision, where the overlap check runs at layout resolution -- so a width
+contradiction is refused when the registry is validated, not when a taxpayer's
+export happens to resolve that one layout.
+
 See Also:
     :func:`cadrumo.domain.calculations.registry._validate_revision_sections.validate_revision_definition`
         Per-revision dispatcher that invokes this export validator.
@@ -42,6 +53,7 @@ from ._schema import (
     SourceReference,
 )
 from ._validate_evidence import EvidenceValidator
+from ._validate_export_field_widths import validate_draft_field_slot_width
 from ._validate_helpers import missing_refs as _missing_refs
 
 
@@ -223,6 +235,7 @@ def _validate_export_field(
                 f"{prefix}: export field {field.id!r} literal length {literal_length} exceeds "
                 f"declared length {field.length}",
             )
+    validate_draft_field_slot_width(failures, prefix=prefix, field=field)
 
 
 def _is_binding_record_template_field(record: ExportRecordDefinition, field: ExportFieldDefinition) -> bool:

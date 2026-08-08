@@ -156,11 +156,17 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaId, ValidatedRegistryAuthority, validated_casilla_id
+from .. import (
+    CasillaId,
+    ManualWorkedExamplePayload,
+    ValidatedRegistryAuthority,
+    validated_casilla_id,
+)
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -206,26 +212,39 @@ _BASE_BINDINGS_2024 = {
     "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
 }
 
-# Raw ingresos/gastos inputs quoted from the manual (fiscal column); see the
-# module docstring for the per-box mapping and its cross-validation against
-# the manual's own "Total ingresos" / "Total gastos" subtotals.
-_ACTIVIDAD_INPUTS: dict[CasillaId, Decimal] = {
-    validated_casilla_id("0171", surface="0171"): Decimal("134800.00"),
-    validated_casilla_id("0175", surface="0175"): Decimal("600.00"),
-    validated_casilla_id("0177", surface="0177"): Decimal("3000.00"),
-    validated_casilla_id("0181", surface="0181"): Decimal("19000.00"),
-    validated_casilla_id("0184", surface="0184"): Decimal("17700.00"),
-    validated_casilla_id("0185", surface="0185"): Decimal("5900.00"),
-    validated_casilla_id("0186", surface="0186"): Decimal("3300.00"),
-    validated_casilla_id("0193", surface="0193"): Decimal("3800.00"),
-    validated_casilla_id("0194", surface="0194"): Decimal("7800.00"),
-    validated_casilla_id("0202", surface="0202"): Decimal("6200.00"),
-    validated_casilla_id("0203", surface="0203"): Decimal("1100.00"),
-    validated_casilla_id("0205", surface="0205"): Decimal("1600.00"),
-    validated_casilla_id("0206", surface="0206"): Decimal("1700.00"),
-    validated_casilla_id("0208", surface="0208"): Decimal("7900.00"),
-    validated_casilla_id("0217", surface="0217"): Decimal("2300.00"),
-}
+_ORACLE_PAYLOAD_NAME = "modelo-100-2024-estimacion-directa-simplificada.json"
+
+
+def _oracle_payload() -> ManualWorkedExamplePayload:
+    """Read the bundled oracle through the registry's own strict payload model."""
+    path = Path(bundled_path("corpus", "manual_oracles")) / _ORACLE_PAYLOAD_NAME
+    return ManualWorkedExamplePayload.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+def _declared_actividad_inputs() -> dict[CasillaId, Decimal]:
+    """The manual's raw ingresos/gastos, read FROM the oracle rather than retyped here.
+
+    These were a hand-written literal block until the payload learned to declare its
+    own inputs. Building them from the declaration is the point: a fixture and a
+    payload that state the scenario separately can drift, and a fixture that drifts
+    into reaching the printed figure by another route is precisely the failure this
+    corpus exists to prevent. Sourced from one place, they cannot disagree.
+
+    The declaration is not self-certifying — it does not prove these are the manual's
+    numbers, only that one reviewable place claims they are, with a per-input line
+    reference (``locator_by_casilla_id``) pointing at the page to check it against.
+    The per-box mapping and its cross-validation against the manual's own "Total
+    ingresos" / "Total gastos" subtotals are in the module docstring.
+    """
+    declared = _oracle_payload().declared_inputs
+    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
+    return {
+        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
+        for casilla_id, value in declared.by_casilla_id.items()
+    }
+
+
+_ACTIVIDAD_INPUTS: dict[CasillaId, Decimal] = _declared_actividad_inputs()
 
 
 # Nine of the inputs above are casillas the registry declares

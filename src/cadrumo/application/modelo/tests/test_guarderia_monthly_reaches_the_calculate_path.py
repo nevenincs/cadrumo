@@ -99,14 +99,17 @@ def test_the_annual_figure_still_reaches_the_spend_binding() -> None:
     assert resolved[_SPEND_BINDING] == Decimal("900")
 
 
-def test_only_post_birthday_months_reach_the_binding_in_the_turning_three_period() -> None:
-    """Art. 81.2 admits only spend "con posterioridad al cumplimiento de dicha edad".
+def test_every_declared_month_reaches_the_binding_in_the_turning_three_period() -> None:
+    """The third birthday is not a boundary for the Art. 81.2 increment.
 
-    The child turns three in April, so the January-to-April months are outside
-    the extension and the May-to-August ones inside it. Nothing here derives the
-    upper bound: every declared month after the birthday counts, because the
-    months a taxpayer can evidence are the months their childcare centre
-    determined and reported.
+    "los gastos incurridos con posterioridad al cumplimiento de dicha edad"
+    GRANTS the months after the birthday, which the under-three limb cannot
+    reach; it does not withdraw the ones before. Capítulo 18's worked case
+    settles it — a child turning three in September is granted January to June.
+
+    The child here turns three in April, and all eight declared months reach the
+    binding. Nothing derives the upper bound: the months a taxpayer can evidence
+    are the months their childcare centre determined and reported.
     """
     child = DescendantInfo(
         birth_date=date(2021, 4, 15),
@@ -115,16 +118,19 @@ def test_only_post_birthday_months_reach_the_binding_in_the_turning_three_period
 
     resolved = _resolved(child)
 
-    assert resolved[_SPEND_BINDING] == Decimal("840")
+    assert resolved[_SPEND_BINDING] == Decimal("1560")  # 4x180 + 4x210
 
 
 def test_an_annual_only_figure_contributes_nothing_in_the_turning_three_period() -> None:
-    """An annual total spans the birthday and cannot be apportioned across it.
+    """An annual total cannot be apportioned to a window whose upper edge is not derived.
 
-    Zero here is the honest answer rather than a withheld window: the figure on
-    record cannot be split, so granting any part of it would be inventing the
-    split. The operator is told separately, by the calculate-path advisory, that
-    the fix is the monthly detail their centre already certified.
+    The reason is the closing month, not the birthday, which draws no line: the
+    region determines when the second infant-education cycle may begin, and this
+    application declines to compute that. Zero here is the honest answer rather
+    than a withheld window — the figure on record cannot be split, so granting
+    any part of it would be inventing the split. The operator is told separately,
+    by the calculate-path advisory, that the fix is the monthly detail their
+    centre already certified.
     """
     child = DescendantInfo(birth_date=date(2021, 4, 15), gastos_guarderia_euros=2400)
 
@@ -196,7 +202,7 @@ def test_mixed_households_sum_each_child_under_its_own_rule() -> None:
 
     resolved = _resolved(under_three_monthly, under_three_annual, turning_three)
 
-    assert resolved[_SPEND_BINDING] == Decimal("2160")  # 720 + 600 + 840
+    assert resolved[_SPEND_BINDING] == Decimal("2880")  # 720 + 600 + 1560
     assert resolved[_COUNT_BINDING] == Decimal("3")
 
 

@@ -1,7 +1,7 @@
 """Parity gate: the descendant CLI payload is a lossless projection of ``DescendantInfo``.
 
 The transport previously re-declared the canonical record with free strings and
-arbitrary integers, and omitted ``meses_madre_trabajo_2024`` and
+arbitrary integers, and omitted ``meses_madre_trabajo`` and
 ``gastos_guarderia_euros`` entirely. Those two are tax-driving inputs (Art. 81 and
 81 bis LIRPF), so a projection that drops them removes a taxpayer's deduction from
 every machine-readable surface without any refusal.
@@ -37,7 +37,7 @@ def _payload_from(canonical: DescendantInfo, *, index: int = 0) -> ProfileDescen
         convive_con_contribuyente=canonical.convive_con_contribuyente,
         dependencia_economica=canonical.dependencia_economica,
         custodia_compartida=canonical.custodia_compartida,
-        meses_madre_trabajo_2024=canonical.meses_madre_trabajo_2024,
+        meses_madre_trabajo=canonical.meses_madre_trabajo,
         gastos_guarderia_euros=canonical.gastos_guarderia_euros,
         nif=canonical.nif,
     )
@@ -53,7 +53,7 @@ def test_payload_carries_every_canonical_descendant_field() -> None:
         discapacidad_grado=33,
         convive_con_contribuyente=True,
         custodia_compartida=True,
-        meses_madre_trabajo_2024=6,
+        meses_madre_trabajo=(1, 2, 3, 4, 5, 6),
         gastos_guarderia_euros=1500,
         nif="12345678Z",
     )
@@ -67,13 +67,13 @@ def test_tax_bearing_values_survive_the_projection() -> None:
     """The deducción-maternidad and guardería inputs reach the wire unchanged."""
     canonical = DescendantInfo(
         birth_date=date(2022, 5, 1),
-        meses_madre_trabajo_2024=6,
+        meses_madre_trabajo=(1, 2, 3, 4, 5, 6),
         gastos_guarderia_euros=1500,
     )
 
     wire = _payload_from(canonical).model_dump(mode="json")
 
-    assert wire["meses_madre_trabajo_2024"] == 6
+    assert wire["meses_madre_trabajo"] == [1, 2, 3, 4, 5, 6]
     assert wire["gastos_guarderia_euros"] == 1500
 
 
@@ -119,13 +119,15 @@ def test_relacion_reaches_the_wire_as_its_token() -> None:
         ({"birth_date": "not-date"}, "unparseable birth date"),
         ({"discapacidad_grado": 50}, "grado outside the closed 0/33/65 set"),
         ({"nif": "bad"}, "NIF that is not 9 characters"),
-        ({"meses_madre_trabajo_2024": 13}, "more mother-work months than exist in a year"),
-        ({"meses_madre_trabajo_2024": -1}, "negative mother-work months"),
+        ({"meses_madre_trabajo": (13,)}, "a month outside the calendar"),
+        ({"meses_madre_trabajo": (0,)}, "a zero month"),
+        ({"meses_madre_trabajo": (3, 3)}, "a repeated month"),
+        ({"meses_madre_trabajo": (6, 3)}, "an unsorted month set"),
         ({"gastos_guarderia_euros": -1}, "negative guardería expenses"),
         ({"alta_posterior_nacimiento_mes": 0}, "alta-posterior month outside 1-12"),
         ({"alta_posterior_nacimiento_mes": 13}, "alta-posterior month outside 1-12"),
         (
-            {"alta_posterior_nacimiento_mes": 5, "meses_madre_trabajo_2024": 0},
+            {"alta_posterior_nacimiento_mes": 5, "meses_madre_trabajo": ()},
             "alta-posterior month declared with zero worked months",
         ),
     ],

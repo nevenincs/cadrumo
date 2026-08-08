@@ -683,6 +683,13 @@ def _cross_period_clean_state_next_action(
         "aeat app modelo filing-record import WORK_UNIT_ID "
         "--evidence-kind aeat_justificante_pdf --evidence-id CSV --set CASILLA=VALUE"
     )
+    # Offered only on the fallback branch. The targeted pull-sources verb stays the
+    # action for a KNOWN upstream gap; a whole-history sweep is the right answer
+    # only when the profile has no AEAT-sourced evidence at all, and suggesting it
+    # for a single missing period would send the operator on a far longer run than
+    # the gap requires.
+    history_discover = "aeat app live filed discover"
+    history_pull_all = "aeat app live filed pull-all"
     if CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE in blockers:
         # The prior filing's stamped revision no longer re-confirms against the
         # law-determined revision for its source context. Re-file and re-stamp
@@ -745,7 +752,8 @@ def _cross_period_clean_state_next_action(
         )
     return (
         "Import or capture the upstream justificante/CSV/live evidence, reconcile it with the local calculation, "
-        "and rerun verification."
+        f"and rerun verification. On a profile with no AEAT history yet, `{history_discover}` reports what AEAT "
+        f"holds and `{history_pull_all}` fetches it in one sweep."
     )
 
 

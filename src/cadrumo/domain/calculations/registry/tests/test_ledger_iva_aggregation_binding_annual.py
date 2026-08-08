@@ -46,8 +46,11 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
     """
     quarterly_observations = {
         "1T": (
-            _observation(applied_rate=Decimal("0.21"), ledger_id="q1-output", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),
-            _observation(applied_rate=Decimal("0.21"), 
+            _observation(
+                applied_rate=Decimal("0.21"), ledger_id="q1-output", txn_date=date(2025, 2, 15), iva=Decimal("21.00")
+            ),
+            _observation(
+                applied_rate=Decimal("0.21"),
                 ledger_id="q1-input",
                 txn_date=date(2025, 3, 1),
                 flow=IvaFlowDirection.SOPORTADO,
@@ -55,8 +58,11 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
             ),
         ),
         "2T": (
-            _observation(applied_rate=Decimal("0.21"), ledger_id="q2-output", txn_date=date(2025, 5, 10), iva=Decimal("10.00")),
-            _observation(applied_rate=Decimal("0.21"), 
+            _observation(
+                applied_rate=Decimal("0.21"), ledger_id="q2-output", txn_date=date(2025, 5, 10), iva=Decimal("10.00")
+            ),
+            _observation(
+                applied_rate=Decimal("0.21"),
                 ledger_id="q2-input",
                 txn_date=date(2025, 6, 20),
                 flow=IvaFlowDirection.SOPORTADO,
@@ -64,7 +70,8 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
             ),
         ),
         "3T": (
-            _observation(applied_rate=Decimal("0.10"), 
+            _observation(
+                applied_rate=Decimal("0.10"),
                 ledger_id="q3-output-reduced",
                 txn_date=date(2025, 8, 12),
                 category=IvaCategory.DOMESTIC_REDUCED,
@@ -73,12 +80,14 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
             ),
         ),
         "4T": (
-            _observation(applied_rate=Decimal("0.21"), 
+            _observation(
+                applied_rate=Decimal("0.21"),
                 ledger_id="q4-output",
                 txn_date=date(2025, 11, 4),
                 iva=Decimal("15.00"),
             ),
-            _observation(applied_rate=Decimal("0.21"), 
+            _observation(
+                applied_rate=Decimal("0.21"),
                 ledger_id="q4-input",
                 txn_date=date(2025, 12, 12),
                 flow=IvaFlowDirection.SOPORTADO,
@@ -149,8 +158,11 @@ def test_m390_annual_intracom_matches_303_quarters_for_an_eu_services_acquisitio
     goods_cuota = Decimal("63.00")
     quarterly_observations = {
         "1T": (
-            _observation(applied_rate=Decimal("0.21"), ledger_id="sale-1t", txn_date=date(2025, 2, 15), iva=Decimal("210.00")),
-            _observation(applied_rate=Decimal("0.21"), 
+            _observation(
+                applied_rate=Decimal("0.21"), ledger_id="sale-1t", txn_date=date(2025, 2, 15), iva=Decimal("210.00")
+            ),
+            _observation(
+                applied_rate=Decimal("0.21"),
                 ledger_id="eu-goods",
                 txn_date=date(2025, 3, 1),
                 category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
@@ -160,8 +172,11 @@ def test_m390_annual_intracom_matches_303_quarters_for_an_eu_services_acquisitio
             ),
         ),
         "2T": (
-            _observation(applied_rate=Decimal("0.21"), ledger_id="sale-2t", txn_date=date(2025, 5, 15), iva=Decimal("105.00")),
-            _observation(applied_rate=Decimal("0.21"), 
+            _observation(
+                applied_rate=Decimal("0.21"), ledger_id="sale-2t", txn_date=date(2025, 5, 15), iva=Decimal("105.00")
+            ),
+            _observation(
+                applied_rate=Decimal("0.21"),
                 ledger_id="eu-service",
                 txn_date=date(2025, 6, 1),
                 category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
@@ -170,8 +185,16 @@ def test_m390_annual_intracom_matches_303_quarters_for_an_eu_services_acquisitio
                 iva=services_cuota,
             ),
         ),
-        "3T": (_observation(applied_rate=Decimal("0.21"), ledger_id="sale-3t", txn_date=date(2025, 8, 15), iva=Decimal("105.00")),),
-        "4T": (_observation(applied_rate=Decimal("0.21"), ledger_id="sale-4t", txn_date=date(2025, 11, 15), iva=Decimal("105.00")),),
+        "3T": (
+            _observation(
+                applied_rate=Decimal("0.21"), ledger_id="sale-3t", txn_date=date(2025, 8, 15), iva=Decimal("105.00")
+            ),
+        ),
+        "4T": (
+            _observation(
+                applied_rate=Decimal("0.21"), ledger_id="sale-4t", txn_date=date(2025, 11, 15), iva=Decimal("105.00")
+            ),
+        ),
     }
     quarterly_results = {
         period: _calculate_303_from_observations(filing_year=2025, period=period, observations=observations)

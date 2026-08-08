@@ -45,11 +45,7 @@ def _invoice_facts_by_modelo() -> dict[str, set[str]]:
             for binding in revision.bindings:
                 if str(binding.source) not in _INVOICE_SOURCES:
                     continue
-                selector = (
-                    binding.selector
-                    if isinstance(binding.selector, dict)
-                    else binding.selector.model_dump()
-                )
+                selector = binding.selector if isinstance(binding.selector, dict) else binding.selector.model_dump()
                 fact = selector.get("fact")
                 if fact is not None:
                     drawn[modelo.id].add(str(fact))
@@ -66,9 +62,7 @@ def test_no_modelo_draws_both_magnitude_measures() -> None:
     """
     both = {"base_sum", "invoice_total_sum"}
     offenders = {
-        modelo: sorted(facts & both)
-        for modelo, facts in _invoice_facts_by_modelo().items()
-        if len(facts & both) > 1
+        modelo: sorted(facts & both) for modelo, facts in _invoice_facts_by_modelo().items() if len(facts & both) > 1
     }
     assert offenders == {}, (
         "a modelo draws BOTH invoice magnitude measures, which refutes their "
@@ -99,9 +93,13 @@ def test_the_classified_set_holds_only_scalar_money_measures() -> None:
 
 def test_the_independent_set_is_the_complement() -> None:
     """The screened set is derived, so the two halves cannot drift apart."""
-    assert _INVOICE_SCALAR_MEASURE_FACTS - set(
-        _INVOICE_ALTERNATIVE_MEASURE_FACTS,
-    ) == _INVOICE_INDEPENDENT_QUANTITY_FACTS
+    assert (
+        _INVOICE_SCALAR_MEASURE_FACTS
+        - set(
+            _INVOICE_ALTERNATIVE_MEASURE_FACTS,
+        )
+        == _INVOICE_INDEPENDENT_QUANTITY_FACTS
+    )
     assert {"rectified_base_delta_sum"} == _INVOICE_INDEPENDENT_QUANTITY_FACTS
 
 

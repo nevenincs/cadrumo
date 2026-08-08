@@ -277,7 +277,7 @@ def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_eve
     )
     child = DescendantInfo(
         birth_date=date(_MATERNIDAD_CEILINGED_FILING_YEAR - 1, 6, 1),
-        meses_madre_trabajo_2024=12,
+        meses_madre_trabajo=tuple(range(1, 13)),
     )
     descendant_overrides = dict(descendant_facts_from_list((child,)))
 

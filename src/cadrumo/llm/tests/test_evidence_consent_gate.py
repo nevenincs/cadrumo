@@ -30,7 +30,7 @@ from queue import Queue
 from typing import override
 
 import pytest
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, SecretStr, ValidationError
 from pydantic_core import PydanticSerializationError
 
 from ...adapters.outbound.llm import LLMCache, UsageRecorder
@@ -65,7 +65,9 @@ def _transcription() -> DocumentTranscription:
         text="Factura 2026-001 Base imponible 100,00 EUR",
         page_count=1,
         source_content_sha256="d" * 64,
-        transcriber=TranscriberIdentity(transport=LOCAL_TRANSPORT_LABEL, origin=FieldOrigin.TEXT_LAYER, name="pdfplumber", revision="gate"),
+        transcriber=TranscriberIdentity(
+            transport=LOCAL_TRANSPORT_LABEL, origin=FieldOrigin.TEXT_LAYER, name="pdfplumber", revision="gate"
+        ),
     )
 
 
@@ -494,3 +496,181 @@ def test_the_gate_runs_before_the_cache_read_and_before_adapter_construction() -
     )
     assert positions["_require_evidence_consent"] < positions["read"]
     assert positions["_require_evidence_consent"] < positions["_build_adapter"]
+
+
+# ── The audit trail the gate writes, and whether it can be read as complete ──
+#
+# Every case above watches ONE direction: transmission without consent. The
+# ledger the gate writes is consulted in the other direction -- an operator
+# asking what left their machine -- and an omission there produces no visible
+# symptom at all, which is why the survey commits to failing open toward
+# surfacing. These cases constrain that direction.
+#
+# "Complete over a period" is currently satisfiable as "complete over all
+# time": the ledger read applies no period filter and returns every entry for
+# the profile. So completeness here is the conjunction of four properties --
+# every crossing dispatch appends before it transmits, a cache hit appends too,
+# a failed append refuses rather than transmitting unrecorded, and nothing
+# prunes or silently drops an entry afterwards. Should a period filter ever be
+# added to the read, this set needs a boundary case; today there is no boundary
+# to test.
+
+
+def _consent_entries() -> tuple[str, ...]:
+    """Return the recorded content addresses for the active profile, oldest first."""
+    from ...adapters.outbound.llm import EvidenceConsentLedger
+
+    return tuple(entry.evidence_content_address for entry in EvidenceConsentLedger().load_entries())
+
+
+def test_every_consented_dispatch_is_recorded_exactly_once(tmp_path: Path) -> None:
+    """Set equality between what was transmitted and what was recorded, not merely non-empty.
+
+    Three distinct consented reads, three distinct documents. A ledger that
+    recorded the first and dropped the rest satisfies every "an entry exists"
+    assertion, and that is precisely the shape an operator cannot detect: the
+    survey shows rows, so it looks like it worked.
+
+    Both sides are counted. The endpoint's queue is what transmitted; the
+    ledger is what was recorded. Asserting their equality is the completeness
+    statement -- either alone is satisfied by a boundary that stopped
+    dispatching or by one that logs unconditionally.
+    """
+    settings = _settings(tmp_path, cloud_upload_permitted=True)
+    addresses = tuple(char * 64 for char in ("1", "2", "3"))
+    with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+        client = _client(settings)
+        for index, address in enumerate(addresses):
+            token = EvidenceConsentToken(surface="aeat app ledger evidence extract", evidence_content_address=address)
+            request = _evidence_request(token=token).model_copy(update={"prompt": f"Read invoice {index}."})
+            asyncio.run(client.complete(request))
+
+    assert bodies.qsize() == len(addresses), "every consented read must reach the provider"
+    assert _consent_entries() == addresses, (
+        "the consent ledger must hold exactly one entry per transmitted document, in order; a survey "
+        "built on a ledger that drops rows tells an operator they are clean when they are not"
+    )
+
+
+def test_a_dispatch_served_from_the_cache_is_recorded_too(tmp_path: Path) -> None:
+    """A cache hit is still a cloud-derived answer, so it still owes an entry.
+
+    The case most likely to be "optimised" later by someone reading a cache hit
+    as not a transmission. It is not a transmission -- and that is exactly why
+    the entry matters: the response still derives from the earlier off-host
+    read, so a withdrawal must list it as a re-derivation candidate.
+
+    The single body at the endpoint is what proves the second call really was
+    served from the cache; without it, two entries would only show that two
+    dispatches happened.
+    """
+    settings = _settings(tmp_path, cloud_upload_permitted=True)
+    with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+        client = _client(settings)
+        first = asyncio.run(client.complete(_evidence_request(token=_CONSENTED)))
+        second = asyncio.run(client.complete(_evidence_request(token=_CONSENTED)))
+
+    assert first.cache_hit is False
+    assert second.cache_hit is True, "the second identical request must be served from the cache"
+    assert bodies.qsize() == 1, "a cache hit must not re-transmit"
+    assert _consent_entries() == (_CONSENTED.evidence_content_address,) * 2, (
+        "a consented dispatch served from the cache must still be recorded; the answer is cloud-derived "
+        "either way and a withdrawal has to be able to find it"
+    )
+
+
+def test_a_dispatch_whose_record_cannot_be_written_is_refused_not_degraded(tmp_path: Path) -> None:
+    """The load-bearing precondition for every completeness claim above.
+
+    If a dispatch could succeed while its record quietly failed, no property of
+    the ledger would constrain what actually left the host. So the append is
+    allowed to raise, and the refusal is the only outcome.
+
+    Reached through the production primitive for an unbound session rather than
+    by breaking the store: a CLI invocation with no bucket open is a real
+    condition, and suspending is reversible where closing would strand the
+    fixture's own session.
+
+    The queue is the load-bearing assertion. An exception alone proves the call
+    ended; only the endpoint's silence proves the document did not leave the
+    host before the record failed.
+    """
+    from ...adapters.persistence.storage import suspend_active_session
+
+    settings = _settings(tmp_path, cloud_upload_permitted=True)
+    with _serve_openai() as (endpoint, bodies), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+        client = _client(settings)
+        with suspend_active_session(), pytest.raises(LLMConsentError):
+            asyncio.run(client.complete(_evidence_request(token=_CONSENTED)))
+        transmitted_while_unrecordable = bodies.qsize()
+
+        # Positive control: the SAME client and the SAME request transmit once
+        # the session is back, so the refusal above is the unwritable record and
+        # not a client that had stopped dispatching.
+        asyncio.run(client.complete(_evidence_request(token=_CONSENTED)))
+
+    assert transmitted_while_unrecordable == 0, "the unrecordable dispatch must not have transmitted"
+    assert bodies.qsize() == 1
+    assert _consent_entries() == (_CONSENTED.evidence_content_address,)
+
+
+def test_the_consent_ledger_survives_the_retention_sweep(tmp_path: Path) -> None:
+    """Nothing ages an entry out, which is what makes the history readable over a period.
+
+    The three sibling LLM stores are pruned on every client construction
+    because they are diagnostic and regenerable. This one is neither: an entry
+    aged out would make a withdrawal silently incomplete, and silently is the
+    whole problem.
+
+    Constructing further clients is what runs the sweep, so this exercises the
+    real lifecycle rather than asserting that no prune method is called.
+    """
+    settings = _settings(tmp_path, cloud_upload_permitted=True)
+    with _serve_openai() as (endpoint, _), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+        asyncio.run(_client(settings).complete(_evidence_request(token=_CONSENTED)))
+        recorded = _consent_entries()
+        _client(settings)
+        _client(settings)
+
+    assert recorded == (_CONSENTED.evidence_content_address,)
+    assert _consent_entries() == recorded, "the retention sweep must not touch the consent audit trail"
+
+
+def test_the_ledger_read_refuses_an_unreadable_row_rather_than_skipping_it(tmp_path: Path) -> None:
+    """Completeness on the READ side: a row that cannot be parsed must not vanish.
+
+    The anti-tautology proof for every count asserted above. A read that
+    silently skipped an unparsable record would return a SHORTER history that
+    still looks like a complete one, and no assertion on the returned rows
+    could tell the difference -- the missing row is missing from the evidence
+    too.
+
+    The corrupt record is written through the real repository at the ledger's
+    own namespace, so it is reached by exactly the read path production uses.
+    """
+    from ...adapters.outbound.llm import EvidenceConsentLedger
+    from ...adapters.persistence.storage import (
+        LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE,
+        secure_object_repository_for_active_bucket,
+    )
+    from ...core.hashing import canonical_json_bytes
+    from ...core.time import now
+
+    settings = _settings(tmp_path, cloud_upload_permitted=True)
+    with _serve_openai() as (endpoint, _), override_settings(cadrumo_llm_openai_chat_completions_url=endpoint):
+        asyncio.run(_client(settings).complete(_evidence_request(token=_CONSENTED)))
+
+    assert len(EvidenceConsentLedger().load_entries()) == 1, "the readable row must be there to be lost"
+
+    written_at = now()
+    secure_object_repository_for_active_bucket().save(
+        namespace=LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE.namespace,
+        object_key=f"{written_at.isoformat()}|corrupt|corrupt",
+        classification=LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE.sensitivity,
+        schema_version=LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE.schema_version,
+        written_at=written_at,
+        payload=canonical_json_bytes({"entry": {"entry_id": "only-this-field"}}),
+    )
+
+    with pytest.raises(ValidationError):
+        EvidenceConsentLedger().load_entries()

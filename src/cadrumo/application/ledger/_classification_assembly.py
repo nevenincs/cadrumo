@@ -31,8 +31,39 @@ by the same means and under the same fail-toward-asking rule.
 
 **Spanish territorial scope needs sub-national evidence.** A country code names
 the State while the IVA territory inside it stays undetermined, and Spain holds
-three that the law treats differently. So a domestic pair contributes nothing
-here, and nothing may paper over that with a mainland default.
+three that the law treats differently. The printed postal code is that
+sub-national evidence — its first two digits are the province — so a Spanish
+party is now resolved from the country and postal codes together.
+
+Two limits on that join, both deliberate. It is gated on Spain having been
+NAMED, never on the country resolver merely returning nothing, because
+five-digit postal codes are not unique to Spain. And an absent or unreadable
+postal code refuses rather than resolving to the mainland: the peninsula is the
+majority population, so that default would be invisible in testing while placing
+Canarian and Ceutan parties inside a territory their operations are not subject
+to.
+
+**What still does not resolve is an ordinary domestic invoice**, and the reason
+is upstream of this module. Establishment evidence reaches it as a printed
+country code, and a domestic Spanish invoice frequently prints no country at all
+while its bare tax identifier carries no country prefix. A valid Spanish tax
+identifier cannot stand in for one: the non-resident CIF leader, the K/L/M
+identifiers issued to Spaniards abroad and to non-residents, and the NIE series
+all belong to parties who are not established in Spain — and establishment for
+IVA is the sede de actividad, not tax registration. So that population refuses
+here, correctly, until the evidence question is settled.
+
+**A party's VAT identification is a THIRD thing, asked separately and demanded
+rarely.** Where a party is established and which Member State identifies it are
+two facts (:class:`~domain.iva.PartyFact`), and this module resolves them from
+different evidence on purpose: the identification from the party's own printed
+VAT number, which settles it decisively because registration is precisely what
+it asserts; the establishment from the country and postal evidence, which no
+registration can supply on either side. The identification is then demanded only
+where the branch the operation reaches declares it consumed — the
+intra-community families, whose treatment is reported against a NIF-IVA — so the
+foreign goods population resolves with no operator question while a domestic
+invoice is never asked for a number its treatment does not turn on.
 
 Both are settleable by an explicit operator assertion, which is the sanctioned
 path until those authorities exist. An assertion is the operator's claim, made
@@ -55,21 +86,28 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ...domain.iva import (
+    SPAIN_COUNTRY_CODE,
     CustomerTaxStatus,
     EUMemberState,
+    InvoiceKind,
     IvaCategory,
     IvaInvoiceClassificationCriteria,
     IvaTerritorialScope,
+    PartyFact,
+    StatedCountryCodeStatus,
     SupplyNature,
     TransactionKind,
     classify_iva,
+    stated_country_code_status,
     territorial_scope_for_country,
+    territorial_scope_for_spanish_postal_code,
+    vat_identification_state_for_printed_tax_identifier,
 )
 
 if TYPE_CHECKING:
     from datetime import date
 
-    from ...domain.iva import InvoiceKind, IvaClassificationResult, IvaRateKind
+    from ...domain.iva import IvaClassificationResult, IvaRateKind
     from ._classifier_inputs import ClassifierInputs
 
 __all__ = [
@@ -177,60 +215,192 @@ def _customer_tax_status_gap(inputs: ClassifierInputs) -> MissingClassifierInput
     )
 
 
+def names_spain(country_code: str | None) -> bool:
+    """Whether the printed country evidence POSITIVELY names Spain.
+
+    Asked instead of reading the country resolver's ``None`` as "Spanish",
+    because that return collapses three different situations: an absent code, a
+    code too malformed to be one, and Spain. Measured against the live resolver,
+    every one of ``None``, ``''``, ``'ESP'``, ``'E1'`` and ``'ES'`` yields
+    ``None``, so a caller branching on it cannot tell "the operator must supply a
+    country" from "the operator must supply a postal code".
+
+    That distinction is load-bearing here rather than cosmetic: a postal code is
+    consulted only when Spain was named, so reading absence as Spain would feed
+    a foreign five-digit code to the Spanish province lookup.
+
+    Compares against the shipped ``SPAIN_COUNTRY_CODE`` after the same trim and
+    case fold the resolver applies, and deliberately re-derives no shape check —
+    only ``ES`` can equal the constant, so the well-formedness question never
+    arises and there is no second copy of it to drift.
+    """
+    return (country_code or "").strip().upper() == SPAIN_COUNTRY_CODE
+
+
+def _unresolved_country_reason(country_code: str | None) -> str:
+    """Say why a stated country code established nothing, in the operator's terms.
+
+    Three outcomes, and they need different things done to them. A code in an
+    ISO user-assigned range names no country by construction, so the document is
+    wrong and the operator corrects it. A well-formed code the bundled
+    vocabulary does not carry may name a real jurisdiction, so the gap is ours
+    and re-reading the document settles nothing. Anything that is not a
+    two-letter code at all is a reading failure.
+
+    Which one applies is asked of
+    :func:`~domain.iva.stated_country_code_status` rather than re-derived, so
+    the boundary that narrowed the rung and the sentence explaining the refusal
+    cannot drift apart.
+    """
+    status = stated_country_code_status(country_code)
+    if status is StatedCountryCodeStatus.UNASSIGNED:
+        return (
+            f"the printed country code {country_code!r} is reserved by ISO 3166-1 to name no country, "
+            "so it established nothing about where this party is"
+        )
+    if status is StatedCountryCodeStatus.UNCATALOGUED:
+        return (
+            f"the printed country code {country_code!r} is not carried by this system's country "
+            "vocabulary, so nothing can yet be said about where this party is established"
+        )
+    return (
+        f"the printed country code {country_code!r} is not a well-formed two-letter country code, "
+        "so it established nothing about where this party is"
+    )
+
+
 def _scope(
     country_code: str | None,
+    postal_code: str | None,
     *,
     field: str,
     asserted: IvaTerritorialScope | None,
 ) -> tuple[IvaTerritorialScope | None, MissingClassifierInput | None]:
-    """Resolve one party's territorial scope from its printed country code."""
+    """Resolve one party's territorial scope from its printed establishment evidence.
+
+    Two halves, asked in order. The country code answers for a foreign party and
+    stops at the border for a Spanish one, because Spain holds three IVA
+    territories the law treats differently and a country code cannot separate
+    them. The postal code answers the sub-national half: its first two digits are
+    the province.
+
+    **The postal half is gated on Spain having been NAMED**, never on the country
+    half merely having returned nothing. Five-digit postal codes are not unique to
+    Spain, so consulting the Spanish province lookup without country evidence
+    would read a French or German code as a Spanish province — the restrictive
+    default one level below the country axis that already refuses it.
+
+    **An unreadable postal code refuses rather than resolving to the mainland.**
+    The peninsula is the majority population, so that default would be invisible
+    in testing while placing Canarian and Ceutan parties inside a territory their
+    operations are not subject to. The resolver already refuses it; the refusal is
+    repeated here because a caller is free to substitute its own default for the
+    resolver's ``None``, and this is the caller.
+    """
     if asserted is not None:
         return asserted, None
     resolved = territorial_scope_for_country(country_code)
     if resolved is not None:
         return resolved, None
-    reason = (
-        f"the printed country code {country_code!r} names Spain, whose three IVA territories are "
-        "treated differently by law and cannot be told apart from a country code"
-        if country_code
-        else "no country code was established for this party"
-    )
-    return None, MissingClassifierInput(
-        field=field,
-        reason=reason,
-        settled_by="sub-national establishment evidence, or an explicit operator assertion of the territory",
-    )
 
-
-def _member_state(
-    country_code: str | None,
-    *,
-    scope: IvaTerritorialScope | None,
-    field: str,
-) -> tuple[EUMemberState | None, MissingClassifierInput | None]:
-    """Resolve which Member State a party is in, when the table requires it.
-
-    Only asked when the scope is EU_MEMBER: the criteria model requires the
-    State there and forbids inventing one anywhere else. A scope that arrived by
-    operator assertion carries no country code with it, so the State it implies
-    has to be established too rather than assumed from the assertion.
-    """
-    if scope is not IvaTerritorialScope.EU_MEMBER:
-        return None, None
-    # The enum's tokens are lower-case while a document prints the code however
-    # it likes, so the case is folded here rather than assumed either way.
-    normalised = (country_code or "").strip().lower()
-    try:
-        return EUMemberState(normalised), None
-    except ValueError:
-        return None, MissingClassifierInput(
-            field=field,
-            reason=(
-                f"the party is established in the EU but the printed country code {country_code!r} "
-                "does not name a Member State the rate schedule carries"
-            ),
-            settled_by="a printed country code naming the Member State, or an explicit operator assertion",
+    if names_spain(country_code):
+        territory = territorial_scope_for_spanish_postal_code(postal_code)
+        if territory is not None:
+            return territory, None
+        reason = (
+            "the printed country code names Spain, whose three IVA territories are treated "
+            "differently by law, and no readable postal code established which one"
         )
+        settled_by = "a printed postal code for this party, or an explicit operator assertion of the territory"
+    elif (country_code or "").strip():
+        # Two different failures reach here and the operator's next move differs
+        # between them, so the reason must not flatten them. A code the closed
+        # vocabulary does not carry IS well-formed -- saying it is malformed
+        # would send the operator to re-read a field that reads perfectly. The
+        # status axis owns the distinction; nothing about it is re-derived here.
+        reason = _unresolved_country_reason(country_code)
+        settled_by = "a printed two-letter country code for this party, or an explicit operator assertion"
+    else:
+        reason = "no country code was established for this party"
+        settled_by = "a printed country code for this party, or an explicit operator assertion of the territory"
+
+    return None, MissingClassifierInput(field=field, reason=reason, settled_by=settled_by)
+
+
+def _identification_state(
+    printed_identifier: str | None,
+    *,
+    asserted: EUMemberState | None,
+) -> EUMemberState | None:
+    """Resolve which Member State VAT-identifies a party, from registration evidence.
+
+    **The printed VAT number is decisive here and is not corroborated**, which
+    inverts how the same evidence is treated one axis over. The identification
+    state asks which State registered the party, and a number the party printed
+    under that State's own VIES structure is exactly that answer — there is no
+    further inference between the evidence and the fact for a second rung to
+    confirm. The establishment axis refuses the identical evidence for the
+    opposite reason: there the inference is the whole distance, and every Member
+    State registers non-residents on the same terms Spain does.
+
+    **The printed address country is deliberately NOT consulted.** It was, and
+    that was the conflation reappearing on the axis that names it: an address is
+    a statement about where a party IS, and reading a registration off it
+    manufactured a German identification from a German address for a party that
+    might be identified anywhere. A party's own printed number, or an explicit
+    assertion, are the two things that can settle this.
+
+    Returns:
+        The Member State, or ``None`` when nothing established it. ``None`` is
+        not a refusal: whether it must be settled is the consuming branch's
+        question, asked in :func:`assemble_classification_criteria` against the
+        table's own declaration.
+    """
+    if asserted is not None:
+        return asserted
+    return vat_identification_state_for_printed_tax_identifier(printed_identifier)
+
+
+def _counterparty_identification_field(direction: InvoiceKind) -> str:
+    """Return whose identification a reporting branch actually needs settling.
+
+    **The counterparty's, and never the filer's.** The declaración recapitulativa
+    reports the OTHER party's NIF-IVA against the operation; the filer's own
+    registration is a profile and censo fact, system-authoritative and declared
+    once, exactly as its own establishment is. Demanding both would put a
+    per-document question on a fact the profile already carries — the shape the
+    territorial ruling rejected one axis over — and it would fall on the
+    commonest intra-community document there is.
+
+    Which role the counterparty occupies is the direction: on an issued invoice
+    the filer is the issuer, on a received one the customer.
+    """
+    return "customer_identification_state" if direction is InvoiceKind.ISSUED else "issuer_identification_state"
+
+
+def _state_for_field(
+    field: str,
+    *,
+    issuer: EUMemberState | None,
+    customer: EUMemberState | None,
+) -> EUMemberState | None:
+    """Return whichever party's identification the named criteria field carries."""
+    return issuer if field == "issuer_identification_state" else customer
+
+
+def _identification_gap(field: str) -> MissingClassifierInput:
+    """Say why the evidence could not settle a party's VAT identification state."""
+    return MissingClassifierInput(
+        field=field,
+        reason=(
+            "this operation's treatment is reported against the party's NIF-IVA, and no printed "
+            "VAT number established which Member State identifies it"
+        ),
+        settled_by=(
+            "a printed intra-community VAT number for this party, or an explicit operator assertion "
+            "of the Member State that identifies it"
+        ),
+    )
 
 
 #: The kind supplied on a branch the law does not fork on, where the document
@@ -298,6 +468,62 @@ def _axis_forks_the_law(
     return False
 
 
+def _facts_consumed(
+    probe: Callable[[CustomerTaxStatus, TransactionKind], frozenset[PartyFact]],
+    *,
+    status_candidates: tuple[CustomerTaxStatus, ...],
+    kind_candidates: tuple[TransactionKind, ...],
+) -> frozenset[PartyFact]:
+    """Which party facts any branch this operation could reach actually turns on.
+
+    The same extension of the same idea as :func:`_axis_forks_the_law`, and
+    deliberately routed through the same authority rather than beside it: which
+    branches need a party's VAT identification is a fact about the law, so it is
+    ASKED of the rule table instead of restated here as a branch on the
+    territorial scopes. A hand-written "EU parties need a Member State" was
+    exactly that restatement, and it was wrong in a specific way — it made an
+    establishment demand an identification, which is the conflation the split
+    exists to end.
+
+    The two probes differ only in what they read off the same verdict. That one
+    reads the CATEGORY, because indifference is a claim about outcomes; this one
+    reads the branch's own declaration, because a value can be operative
+    downstream (a NIF-IVA reported on the declaración recapitulativa) without
+    changing the category at all — an indifference probe would certify it
+    unnecessary and drop it silently.
+
+    Fails toward asking on both shapes of not-knowing, matching its sibling:
+
+    * A probe that cannot classify demands everything, because an operation that
+      could not be placed may still land on a branch needing the answer.
+    * An unplaced operation demands everything too, and that is enforced at the
+      table: the fallthrough sentinel declares both facts consumed. Without it
+      an operation no rule places would report a uniform, undemanding set and be
+      certified as needing nothing on the strength of nothing having been
+      decided — identical-because-unplaced read as identical-because-indifferent,
+      the same misreading the category probe guards against.
+
+    Args:
+        probe: Classifies this operation under candidate axis values and returns
+            the matched branch's declaration.
+        status_candidates: What the customer's status could still be.
+        kind_candidates: What the supply kind could still be.
+
+    Returns:
+        The union over every reachable branch. A union rather than an
+        intersection: an operation that might land on a reporting branch must be
+        asked, and only an operation that could reach NO such branch is spared.
+    """
+    consumed: set[PartyFact] = set()
+    for status in status_candidates:
+        for kind in kind_candidates:
+            try:
+                consumed |= probe(status, kind)
+            except Exception:  # reason: an unclassifiable probe establishes no branch's needs.
+                return frozenset(PartyFact)
+    return frozenset(consumed)
+
+
 class DeclaredFact[T](BaseModel):
     """One fact supplied to the criteria, beside who established it.
 
@@ -341,9 +567,16 @@ class DeclaredFacts(BaseModel):
         supply_nature: What the operation supplies, where established.
         customer_tax_status: The customer's IVA status -- the sanctioned way to
             supply what a VIES consultation would otherwise settle.
-        issuer_scope: The issuer's territory, where a country code cannot
-            settle it.
-        customer_scope: The customer's territory, on the same terms.
+        issuer_scope: Where the issuer is ESTABLISHED, where a country code
+            cannot settle it. Never supplies the identification state: they are
+            two facts (:class:`~domain.iva.PartyFact`), and an operator
+            asserting where a party operates from has not thereby said which
+            State registered it.
+        customer_scope: The customer's establishment, on the same terms.
+        issuer_identification_state: Which Member State VAT-identifies the
+            issuer, where no VAT number was printed to establish it. Never
+            supplies the establishment, symmetrically.
+        customer_identification_state: The same for the customer.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -352,6 +585,8 @@ class DeclaredFacts(BaseModel):
     customer_tax_status: DeclaredFact[CustomerTaxStatus] | None = None
     issuer_scope: DeclaredFact[IvaTerritorialScope] | None = None
     customer_scope: DeclaredFact[IvaTerritorialScope] | None = None
+    issuer_identification_state: DeclaredFact[EUMemberState] | None = None
+    customer_identification_state: DeclaredFact[EUMemberState] | None = None
 
 
 def _value_of[T](fact: DeclaredFact[T] | None) -> T | None:
@@ -367,6 +602,10 @@ def assemble_classification_criteria(
     declared: DeclaredFacts,
     issuer_country_code: str | None = None,
     customer_country_code: str | None = None,
+    issuer_postal_code: str | None = None,
+    customer_postal_code: str | None = None,
+    issuer_identifier: str | None = None,
+    customer_identifier: str | None = None,
     rate_tier: IvaRateKind | None = None,
 ) -> ClassificationAssembly:
     """Assemble the rule table's criteria, or return every input that stopped it.
@@ -383,6 +622,17 @@ def assemble_classification_criteria(
             could carry a value but not its attribution.
         issuer_country_code: The issuer's printed country code, if any.
         customer_country_code: The customer's printed country code, if any.
+        issuer_postal_code: The issuer's printed postal code, if any. Consulted
+            only when the country evidence names Spain, to separate the three
+            Spanish IVA territories a country code cannot tell apart.
+        customer_postal_code: The same for the customer. Asked of each party
+            independently, because an issuer in Las Palmas invoicing a customer
+            in Madrid crosses a territorial boundary one shared code could not
+            express.
+        issuer_identifier: The issuer's printed tax identifier, if any. Read
+            for the VAT IDENTIFICATION state only — a separate axis from the
+            postal and country evidence above, which answer where the party is.
+        customer_identifier: The same for the customer.
         rate_tier: The rate tier, required by the criteria model for ES-to-ES
             domestic operations.
 
@@ -396,6 +646,7 @@ def assemble_classification_criteria(
 
     issuer_scope, issuer_gap = _scope(
         issuer_country_code,
+        issuer_postal_code,
         field="issuer_residency",
         asserted=_value_of(declared.issuer_scope),
     )
@@ -404,27 +655,26 @@ def assemble_classification_criteria(
 
     customer_scope, customer_gap = _scope(
         customer_country_code,
+        customer_postal_code,
         field="customer_residency",
         asserted=_value_of(declared.customer_scope),
     )
     if customer_gap is not None:
         missing.append(customer_gap)
 
-    issuer_state, issuer_state_gap = _member_state(
-        issuer_country_code,
-        scope=issuer_scope,
-        field="issuer_member_state",
+    # Resolved unconditionally and demanded conditionally. Which branches need
+    # an identification is the table's to say, and the table cannot be asked
+    # before the rest of the criteria exist -- so the fact is established here if
+    # the evidence carries it, and its ABSENCE is judged further down against the
+    # branch the operation actually reaches.
+    issuer_state = _identification_state(
+        issuer_identifier,
+        asserted=_value_of(declared.issuer_identification_state),
     )
-    if issuer_state_gap is not None:
-        missing.append(issuer_state_gap)
-
-    customer_state, customer_state_gap = _member_state(
-        customer_country_code,
-        scope=customer_scope,
-        field="customer_member_state",
+    customer_state = _identification_state(
+        customer_identifier,
+        asserted=_value_of(declared.customer_identification_state),
     )
-    if customer_state_gap is not None:
-        missing.append(customer_state_gap)
 
     if transaction_date is None:
         missing.append(
@@ -458,6 +708,16 @@ def assemble_classification_criteria(
                     ),
                 ),
             )
+        # The identification is deliberately NOT reported here, and it is the one
+        # place this function does not accumulate. The status and the nature are
+        # reported because the table can be asked about them the moment the
+        # scopes resolve, so naming them early costs nothing. Whether an
+        # identification is needed is decided by the BRANCH, and no branch is
+        # known yet -- so reporting it would put a NIF-IVA question on every
+        # domestic invoice that merely lacks a country code, which is the exact
+        # noise the per-branch demand exists to remove. The cost is one extra
+        # round for the intra-community population, whose paper carries the
+        # printed number that settles it anyway.
         return ClassificationAssembly(missing=tuple(missing))
 
     assert issuer_scope is not None  # narrowed: a gap would have been recorded
@@ -473,11 +733,29 @@ def assemble_classification_criteria(
                 customer_tax_status=status_candidate,
                 kind=kind,
                 direction=direction,
-                issuer_member_state=issuer_state,
-                customer_member_state=customer_state,
+                issuer_identification_state=issuer_state,
+                customer_identification_state=customer_state,
                 rate_tier=rate_tier,
             ),
         ).category
+
+    def _consumption_probe(
+        status_candidate: CustomerTaxStatus,
+        kind: TransactionKind,
+    ) -> frozenset[PartyFact]:
+        return classify_iva(
+            IvaInvoiceClassificationCriteria(
+                transaction_date=transaction_date,
+                issuer_residency=issuer_scope,
+                customer_residency=customer_scope,
+                customer_tax_status=status_candidate,
+                kind=kind,
+                direction=direction,
+                issuer_identification_state=issuer_state,
+                customer_identification_state=customer_state,
+                rate_tier=rate_tier,
+            ),
+        ).consumes_party_facts
 
     # What each axis could still be. An established axis contributes its one
     # value, so it holds genuinely fixed while the other is judged.
@@ -486,7 +764,9 @@ def assemble_classification_criteria(
         (_NATURE_TO_KIND[supply_nature],) if supply_nature is not None else tuple(_NATURE_TO_KIND.values())
     )
 
-    if status is None and _axis_forks_the_law(_probe, slices=[(_STATUS_CANDIDATES, (kind,)) for kind in kind_candidates]):
+    if status is None and _axis_forks_the_law(
+        _probe, slices=[(_STATUS_CANDIDATES, (kind,)) for kind in kind_candidates]
+    ):
         missing.append(_customer_tax_status_gap(inputs))
 
     if supply_nature is None and _axis_forks_the_law(
@@ -504,6 +784,18 @@ def assemble_classification_criteria(
             ),
         )
 
+    counterparty_field = _counterparty_identification_field(direction)
+    if _state_for_field(
+        counterparty_field,
+        issuer=issuer_state,
+        customer=customer_state,
+    ) is None and PartyFact.VAT_IDENTIFICATION_STATE in _facts_consumed(
+        _consumption_probe,
+        status_candidates=status_candidates,
+        kind_candidates=kind_candidates,
+    ):
+        missing.append(_identification_gap(counterparty_field))
+
     if missing:
         return ClassificationAssembly(missing=tuple(missing))
 
@@ -515,8 +807,8 @@ def assemble_classification_criteria(
             customer_tax_status=status if status is not None else _UNDETERMINED_STATUS,
             kind=_NATURE_TO_KIND[supply_nature] if supply_nature is not None else _NATURE_INDIFFERENT_KIND,
             direction=direction,
-            issuer_member_state=issuer_state,
-            customer_member_state=customer_state,
+            issuer_identification_state=issuer_state,
+            customer_identification_state=customer_state,
             rate_tier=rate_tier,
         ),
     )

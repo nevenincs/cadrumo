@@ -61,6 +61,9 @@ from ...domain.deadlines import shift_deadline as _shift_deadline
 from ...domain.modelos import WorkUnit as _WorkUnit
 from ...domain.modelos import WorkUnitState as _WorkUnitState
 from ._calendar_evidence import (
+    NO_AEAT_HISTORY_NOTICE_CODE as NO_AEAT_HISTORY_NOTICE_CODE,
+)
+from ._calendar_evidence import (
     authenticated_identity_matches_expected as _authenticated_identity_matches_expected,
 )
 from ._calendar_evidence import (
@@ -86,6 +89,9 @@ from ._calendar_evidence import (
 )
 from ._calendar_evidence import (
     justificantes_by_csv as _justificantes_by_csv,
+)
+from ._calendar_evidence import (
+    no_aeat_history_notice as no_aeat_history_notice,
 )
 from ._calendar_models import (
     CalendarCompleteness,

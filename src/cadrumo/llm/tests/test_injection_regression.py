@@ -129,7 +129,9 @@ def _transcription() -> DocumentTranscription:
         text="\n".join(page for page in pages if page),
         page_count=len(pages),
         source_content_sha256=sha256(data).hexdigest(),
-        transcriber=TranscriberIdentity(transport=LOCAL_TRANSPORT_LABEL, origin=FieldOrigin.TEXT_LAYER, name="pdfplumber", revision="gate"),
+        transcriber=TranscriberIdentity(
+            transport=LOCAL_TRANSPORT_LABEL, origin=FieldOrigin.TEXT_LAYER, name="pdfplumber", revision="gate"
+        ),
     )
 
 

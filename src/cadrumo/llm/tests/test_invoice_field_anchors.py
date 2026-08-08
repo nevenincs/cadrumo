@@ -86,13 +86,23 @@ _SPANISH_CUSTOMER_NIF = "12345678Z"
 #: an anchor equal to its value makes the downstream parse check vacuous.
 _SPANISH_INVOICE: dict[str, str | None] = {
     "supplier_tax_id": _SPANISH_CIF,
+    # The name the identifier belongs to, printed as the document prints it --
+    # accented and with its legal-form suffix, because a fixture spelled in
+    # ASCII cannot fail when a reader silently folds diacritics.
+    "supplier_name": "Ferretería Insular S.L.",
     # Las Palmas: a Canarian prefix, deliberately not a peninsular one. A
     # fixture whose two parties both sit on the mainland cannot fail when the
     # territorial reading is dropped, because the mainland is what a lost code
     # degrades to everywhere it is read carelessly.
     "supplier_postal_code": "35001",
+    # Printed as a NAME in the document's language, never as "ES". A code here
+    # would mean the reader translated, which is the one thing the country field
+    # exists to avoid asking of it.
+    "supplier_country": "España",
     "customer_tax_id": _SPANISH_CUSTOMER_NIF,
+    "customer_name": "Talleres Mayor S.A.",
     "customer_postal_code": "28013",
+    "customer_country": "España",
     "invoice_number": "2026-0142",
     "invoice_date": "10/03/2026",
     "taxable_base": "1.200,00",
@@ -106,9 +116,18 @@ _SPANISH_INVOICE: dict[str, str | None] = {
 }
 _SPANISH_ANCHORS: dict[str, str | None] = {
     "supplier_tax_id": f"CIF: {_SPANISH_CIF}",
+    # The printed heading carries the role, so the anchor is not byte-identical
+    # to the name and a value-versus-anchor comparison stays meaningful.
+    "supplier_name": "Emisor: Ferretería Insular S.L.",
     "supplier_postal_code": "35001 Las Palmas de Gran Canaria",
+    # Deliberately not byte-identical to the value, for the reason every anchor
+    # here is not: an anchor equal to its value makes the downstream parse check
+    # compare a value to itself.
+    "supplier_country": "35001 Las Palmas de Gran Canaria, España",
     "customer_tax_id": f"NIF cliente: {_SPANISH_CUSTOMER_NIF}",
+    "customer_name": "Cliente: Talleres Mayor S.A.",
     "customer_postal_code": "Calle Mayor 3, 28013 Madrid",
+    "customer_country": "Calle Mayor 3, 28013 Madrid, España",
     "invoice_number": "Factura n.º 2026-0142",
     "invoice_date": "10/03/2026",
     "taxable_base": "1.200,00 €",
@@ -302,13 +321,26 @@ class TestTheAnchorKeepsThePrintedFormTheValueDropped:
         assert draft.iva_rate == Decimal("21")
         assert _envelope(draft, "iva_rate").anchor == "IVA (21%)"
 
-    def test_no_monetary_envelope_is_byte_identical_to_its_value(self) -> None:
-        """A vacuous pair makes the downstream parse check compare a value to itself."""
+    def test_no_envelope_is_byte_identical_to_its_value(self) -> None:
+        """A vacuous pair makes the downstream parse check compare a value to itself.
+
+        Driven from the contract declaration rather than a hardcoded name tuple,
+        like the sibling gates above it. The tuple named the four monetary
+        fields, so the property held for those by gate and for every other
+        declared field by author convention only -- and a convention is exactly
+        what a gate is for. Collapsing a postal, country, legend or identifier
+        anchor to equal its value reddened nothing, while the anchor evaluator
+        downstream reports precisely that shape as a vacuous parse.
+
+        Every declared field is in scope because the property is about the
+        FIXTURE, not about the form: whatever a field's declared form, an anchor
+        authored equal to its value tests nothing.
+        """
         draft = _spanish_draft()
 
-        for field_name in ("taxable_base", "iva_amount", "grand_total", "iva_rate"):
-            envelope = _envelope(draft, field_name)
-            assert envelope.anchor != str(getattr(draft, field_name)), field_name
+        for contract in INVOICE_FIELD_CONTRACTS:
+            envelope = _envelope(draft, contract.field_name)
+            assert envelope.anchor != str(getattr(draft, contract.field_name)), contract.field_name
 
 
 class TestNothingHereClaimsAVerificationItDidNotRun:

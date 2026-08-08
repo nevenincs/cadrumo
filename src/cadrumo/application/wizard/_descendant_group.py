@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING
 
 from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.decimal import try_parse_canonical_decimal
+from ...core.errors import ProfileAnswerTypeError
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR, CopyRefKind, FlowWidgetKind
 from ...core.identity import IdentityError, validate_identity
 from ...core.parsing import parse_iso8601_date
@@ -140,7 +141,13 @@ DESCENDANT_RENTAS_VALIDATOR_ID = "descendant-rentas-nonneg"
 #: leave each half checking a condition the other half owns.
 DESCENDANT_ENTRY_EVENT_VALIDATOR_ID = "descendant-entry-event-dates"
 
-_MESES_MIN = 0
+#: Bounds of a calendar MONTH, quoted back in the refusal so the operator is
+#: told the range that actually binds. One, not zero: the answer names which
+#: months the mother qualified, and there is no month zero. Zero was the count
+#: era's floor, when "she qualified in no month" was itself a value; that state
+#: is now the empty answer, which the validator passes as optional before it
+#: reaches any range check.
+_MESES_MIN = 1
 _MESES_MAX = 12
 
 #: Relación tokens that may carry a Registro Civil inscription date.
@@ -319,18 +326,26 @@ register_answer_validator(DESCENDANT_NIF_VALIDATOR_ID, _validate_descendant_nif)
 
 
 def _validate_meses_range(page: FlowPage, canonical: str) -> ValidationVerdict:
-    """Refuse a months-worked answer outside the Art. 81 LIRPF 0-12 range.
+    """Refuse a months-worked answer that is not a well-formed month set.
 
-    The value has already passed INTEGER shape validation, so a non-blank
-    token parses; blank (optional) passes. Surfacing the range as a verdict
-    keeps a value like ``15`` out of the answer map entirely, so it never
-    reaches the persistence-boundary construction of
-    :class:`~cadrumo.domain.contribuyente.DescendantInfo` (whose ``le=12``
-    field constraint stays as defence-in-depth).
+    The answer names WHICH months the mother met the Art. 81.1 requirements,
+    because Art. 81.2 prorates by an intersection with the declared nursery
+    months and a count cannot express one. Blank (optional) passes.
+
+    Delegates to the one shared grammar rather than restating it, so this door
+    accepts exactly what the ``--descendiente`` flag and the fact index do.
+    Surfacing the refusal as a verdict keeps a malformed value out of the answer
+    map entirely, so it never reaches the persistence-boundary construction of
+    :class:`~cadrumo.domain.contribuyente.DescendantInfo` (whose own month
+    validator stays as defence-in-depth).
     """
     if not canonical:
         return ValidationVerdict.passed()
-    if not (_MESES_MIN <= int(canonical) <= _MESES_MAX):
+    from ...domain.contribuyente import parse_meses_trabajo
+
+    try:
+        parse_meses_trabajo(canonical, field=page.id)
+    except ProfileAnswerTypeError:
         return ValidationVerdict.failed(
             _MESES_INVALID_RANGE_LOCALE_KEY,
             page_id=page.id,
@@ -780,12 +795,13 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
     ),
     FlowPage(
         id=_MESES_MADRE_TRABAJO_PAGE_ID,
-        widget=FlowWidgetKind.INTEGER,
+        # TEXT rather than INTEGER: the answer names WHICH months qualified, so
+        # the same month grammar the guarderia map below uses carries it.
+        widget=FlowWidgetKind.TEXT,
         prompt=_locale_ref(_MESES_MADRE_TRABAJO_PROMPT_LOCALE_KEY),
         help=_locale_ref(_MESES_MADRE_TRABAJO_HELP_LOCALE_KEY),
-        format_hint=_locale_ref(_FORMAT_UNITS_LOCALE_KEY),
         required=False,
-        answer_type=int,
+        answer_type=str,
         answer_validator_ids=(DESCENDANT_MESES_VALIDATOR_ID,),
     ),
     FlowPage(

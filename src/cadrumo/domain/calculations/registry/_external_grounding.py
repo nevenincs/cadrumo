@@ -71,7 +71,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Annotated, Final, Literal
 
-from pydantic import BaseModel, BeforeValidator, Field, ValidationError
+from pydantic import BaseModel, BeforeValidator, Field, ValidationError, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, ElidedProse, ExternalOracleCorpus
 from ....core.external_constants import UTF_8_ENCODING
@@ -212,6 +212,72 @@ class BundledOraclePayload(ExternalGroundingModel):
     expected_by_casilla_id: Mapping[CasillaId, str]
 
 
+class DeclaredScenarioInputs(ExternalGroundingModel):
+    """The taxpayer facts a worked example is built FROM, declared beside its figures.
+
+    A worked-example payload used to pin only the OUTPUT — the locator and
+    ``expected_by_casilla_id``. The facts that make the example *that* example
+    lived solely in hand-written test fixtures, so a fixture could reach the
+    manual's printed number from a scenario the manual never states, and pass
+    while looking AEAT-grounded. Three tests did exactly that: a proration that
+    bound on the wrong term, an oracle built on a child two years younger than
+    the manual's, and a death-in-period suite whose birth dates made the case it
+    named unreachable. Each passed before and after the defect it guarded.
+
+    What declaring inputs BUYS, precisely:
+
+    * The facts become ONE reviewable declaration sitting beside a corpus
+      locator, instead of scattered across a fixture nobody diffs against the
+      manual.
+    * The fixture-matches-declaration link becomes MECHANICAL: a consuming test
+      builds its inputs from this block, so the two cannot drift apart.
+
+    What it does NOT buy, and must not be read as: **this does not prove the
+    declared inputs are the manual's inputs.** A wrong transcription declared
+    here is still a wrong transcription, and it will now be wrong in one place
+    rather than two. The locators exist so a reviewer can check that claim
+    against the printed page; nothing mechanical checks it for them.
+
+    ``corpus_locator`` addresses where the case's INPUTS are printed, which is
+    not the same question as :attr:`BundledOraclePayload.raw_evidence_locator`
+    — that one addresses the FIGURE. ``locator_by_casilla_id`` refines it per
+    input, because a reviewer verifying one box against the manual needs the
+    line that box came from, and an input assembled from several printed line
+    items (two income rows folded into one registry box) has no single line the
+    block locator could imply.
+
+    Attributes:
+        corpus_locator: Where the worked example states the facts below.
+        by_casilla_id: The input value per casilla, as printed.
+        locator_by_casilla_id: The line reference each input was read from.
+            Must cover exactly the same casillas as ``by_casilla_id`` — an
+            input with no locator is unreviewable, and a locator with no input
+            names a fact the scenario does not use.
+    """
+
+    corpus_locator: str = Field(
+        min_length=BUNDLED_ORACLE_EVIDENCE_LOCATOR_MIN_LENGTH,
+        max_length=BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
+    )
+    by_casilla_id: Mapping[CasillaId, str] = Field(min_length=1)
+    locator_by_casilla_id: Mapping[CasillaId, str] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _every_declared_input_carries_its_own_locator(self) -> DeclaredScenarioInputs:
+        """Refuse a declaration a reviewer could not check against the page."""
+        inputs = set(self.by_casilla_id)
+        locators = set(self.locator_by_casilla_id)
+        if inputs != locators:
+            missing = sorted(inputs - locators)
+            orphaned = sorted(locators - inputs)
+            raise ValueError(
+                "declared_inputs: by_casilla_id and locator_by_casilla_id must cover the "
+                f"same casillas (inputs without a locator: {missing}; "
+                f"locators without an input: {orphaned})",
+            )
+        return self
+
+
 class ManualWorkedExamplePayload(BundledOraclePayload):
     """An AEAT Manual practico worked-example oracle payload.
 
@@ -220,6 +286,14 @@ class ManualWorkedExamplePayload(BundledOraclePayload):
     :class:`~cadrumo.core.ExternalOracleCorpus` member, so an unknown token
     fails enum hydration and a known-but-wrong token fails the directory
     cross-check in :func:`_parse_oracle_payload`.
+
+    ``declared_inputs`` is optional at the MODEL boundary and not optional in
+    practice: a payload that omits it must be enrolled, with a stated reason, in
+    the un-migrated registry that
+    :mod:`~domain.calculations.registry.tests.test_manual_oracle_declared_inputs`
+    reads. Optional-and-unenumerated would be the worse outcome — the contract
+    would appear to cover inputs while most payloads quietly did not, which is
+    harder to see than today's uniform absence.
     """
 
     modelo: ModeloId
@@ -227,6 +301,7 @@ class ManualWorkedExamplePayload(BundledOraclePayload):
     source_kind: ExternalOracleCorpusValue
     scenario_id: str = Field(min_length=1, max_length=255)
     notes: str = Field(min_length=1, max_length=16384)
+    declared_inputs: DeclaredScenarioInputs | None = None
 
 
 class RentaWebOpenReplayPayload(BundledOraclePayload):

@@ -56,6 +56,7 @@ from ._classification import (
     IvaClassificationResult,
     IvaInvoiceClassificationCriteria,
     IvaTerritorialScope,
+    PartyFact,
     TransactionKind,
     classify_iva,
     domestic_categories_by_rate_kind,
@@ -90,7 +91,14 @@ from ._errors import (
 )
 from ._establishment import (
     SPAIN_COUNTRY_CODE,
+    StatedCountryCodeStatus,
+    country_code_for_printed_country_name,
+    country_code_for_printed_tax_identifier,
+    country_code_for_stated_country_code,
+    stated_country_code_status,
     territorial_scope_for_country,
+    territorial_scope_for_printed_country_name,
+    territorial_scope_for_printed_tax_identifier,
     territorial_scope_for_spanish_postal_code,
 )
 from ._flow import (
@@ -114,7 +122,7 @@ from ._legend_derivation import (
     derive_category_from_regime_legend,
     match_regime_legend,
 )
-from ._lookup import cite, lookup_rate, rate_kinds_for_declared_rate
+from ._lookup import cite, lookup_rate, rate_kinds_for_declared_rate, rate_table_covers
 from ._m303_settlement import (
     is_m303_annual_settlement_period,
     m303_annual_settlement_order_key,
@@ -215,6 +223,7 @@ from ._supply_nature import (
     match_statutory_citations,
     supply_nature_is_required,
 )
+from ._vat_identification import vat_identification_state_for_printed_tax_identifier
 from ._verify import verify_catalogue
 
 __all__ = [
@@ -277,6 +286,7 @@ __all__ = [
     "LegendDerivationOutcome",
     "LivaArt161RecargoRates",
     "OssIossRegime",
+    "PartyFact",
     "ProrrataError",
     "ProrrataInputDeduction",
     "ProrrataInputError",
@@ -295,6 +305,7 @@ __all__ = [
     "RegularizacionProrrataDireccion",
     "RegularizacionProrrataResult",
     "SepaMarca",
+    "StatedCountryCodeStatus",
     "StatutoryCitation",
     "SupplyNature",
     "SupplyNatureDerivation",
@@ -310,6 +321,9 @@ __all__ = [
     "compute_prorrata_general",
     "compute_regularizacion_prorrata_anual",
     "compute_sectoral_prorrata",
+    "country_code_for_printed_country_name",
+    "country_code_for_printed_tax_identifier",
+    "country_code_for_stated_country_code",
     "cuota_less_m303_categories_from_table",
     "deductible_percentage_for",
     "derive_category_from_regime_legend",
@@ -340,6 +354,7 @@ __all__ = [
     "place_of_supply_rule",
     "rate_kind_for_domestic_category",
     "rate_kinds_for_declared_rate",
+    "rate_table_covers",
     "recargo_rate_for_applied_rate",
     "refund_disposition_available",
     "refund_eligibility_reason",
@@ -351,10 +366,14 @@ __all__ = [
     "resolve_category_rate",
     "settlement_sides_for_flow",
     "split_gross_at_rate",
+    "stated_country_code_status",
     "sum_deductible_amounts",
     "supply_nature_is_required",
     "territorial_scope_for_country",
+    "territorial_scope_for_printed_country_name",
+    "territorial_scope_for_printed_tax_identifier",
     "territorial_scope_for_spanish_postal_code",
     "validate_prorrata_reference",
+    "vat_identification_state_for_printed_tax_identifier",
     "verify_catalogue",
 ]

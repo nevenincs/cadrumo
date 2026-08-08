@@ -33,8 +33,9 @@ See Also:
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Sequence
+from collections.abc import Awaitable, Mapping, Sequence
 from dataclasses import dataclass, field
+from decimal import InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
@@ -52,9 +53,17 @@ from ...adapters.outbound.aeat.sede import (
     shared_playwright,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import FiledHistoryDiscoverySignal, Period, RegisterScopingSignal, require_active_bucket_id
+from ...core import (
+    CasillaValueKind,
+    FiledHistoryDiscoverySignal,
+    Period,
+    RegisterScopingSignal,
+    require_active_bucket_id,
+)
+from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import bundled_path, resources
-from ...domain.calculations.registry import ValidatedRegistryAuthority
+from ...domain.calculations.registry import RegistryModeloObservation, ValidatedRegistryAuthority
 from ._errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from ._filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from ._filed_data import (
@@ -81,6 +90,7 @@ if TYPE_CHECKING:
     from datetime import date
 
     from ...domain.deadlines import TaxpayerProfile
+    from ..calculations import CalculationObservationRepository
 
 
 def filed_data_capture_failure_row(
@@ -265,6 +275,7 @@ class _CaptureAccumulator:
     filing_record_ids: list[str] = field(default_factory=list)
     conflicting_filing_record_ids: list[str] = field(default_factory=list)
     observations_for_calculation: list[FiledDeclaracionObservation] = field(default_factory=list)
+    evidence_notices: list[Notice] = field(default_factory=list)
     justificante_csvs_by_observation: dict[tuple[str, int, str, str], tuple[str, ...]] = field(default_factory=dict)
     casilla_count: int = 0
 
@@ -292,6 +303,13 @@ class _CaptureAccumulator:
         )
         self.filing_record_ids.extend(enrollment.filing_record_ids)
         self.conflicting_filing_record_ids.extend(enrollment.conflicting_filing_record_ids)
+        # The enrolment already produced one typed WARNING per artefact that
+        # yielded no evidence, each naming its own reason. They were being
+        # discarded here, which is what let a capture extract casillas and report
+        # zero justificante evidence with no visible cause. Collected verbatim --
+        # never merged -- because two distinguishable dead ends folded into one
+        # notice recreates the collapse the reasons exist to undo.
+        self.evidence_notices.extend(enrollment.notices)
         self.casilla_count += len(observation.casillas)
         self.observations_for_calculation.append(observation)
 
@@ -595,6 +613,7 @@ async def capture_filed_data_bulk(
         calculation_observation_keys=tuple(calculation_observation_keys),
         failures=tuple(failures),
         skipped_casillas=finalization.skipped_casillas,
+        evidence_notices=tuple(accumulator.evidence_notices),
     )
 
 
@@ -700,7 +719,7 @@ async def discover_filed_history(
     which is the flag a caller must check before making any coverage claim.
 
     Args:
-        profile: The taxpayer's declared profile, supplying the load-bearing
+        profile: The taxpayer's declared :class:`TaxpayerProfile`, supplying the load-bearing
             :attr:`~core.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY`
             signal. ``None`` yields a register-options-only report.
         today: Reference date for applicability and the year span's upper bound.
@@ -906,7 +925,7 @@ def expected_filed_declaration_grid(
     which side a candidate falls out of.
 
     Args:
-        profile: The taxpayer's declared three-axis profile.
+        profile: The taxpayer's declared three-axis :class:`TaxpayerProfile`.
         today: Reference date for applicability evaluation and the year span's
             upper bound.
 
@@ -942,6 +961,165 @@ def expected_filed_declaration_grid(
     )
 
 
+class FiledPeriodSelectionRow(BaseModel):
+    """How many register rows one period offered, versus the one that was kept.
+
+    The register can carry several filings for a single period -- an original and
+    its later amendments -- and exactly one is promoted to calculation history by
+    the shared selection authority. That collapse is correct and is not reported
+    anywhere today, so an operator seeing one persisted observation cannot tell
+    whether AEAT held one filing or four.
+
+    Computed from the tuples the sweep already holds before finalisation, so it
+    touches no persistence boundary and adds no read.
+
+    Attributes:
+        modelo: Modelo code.
+        ejercicio: Filing year.
+        period: Registry period token.
+        raw_row_count: Rows the register returned for the period.
+        selected_count: Observations actually captured from them.
+        winning_expediente_id: The expediente whose filing was kept, when known.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    modelo: str = Field(min_length=1, max_length=8)
+    ejercicio: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=8)
+    raw_row_count: int = Field(ge=0)
+    selected_count: int = Field(ge=0)
+    winning_expediente_id: str | None = Field(default=None, min_length=1, max_length=32)
+
+    @property
+    def held_more_than_one_filing(self) -> bool:
+        """Whether the register itself offered more than one filing for this period.
+
+        Keyed on the RAW count alone, deliberately. Deriving it from
+        ``raw_row_count - selected_count`` conflates two different facts: a period
+        AEAT held several filings for, and a period whose single filing was not
+        captured (a per-row failure, or a ``limit`` cut). The second is not
+        supersession, and reporting it as such would tell the operator their
+        filing was superseded by one that never existed.
+        """
+        return self.raw_row_count > 1
+
+    @property
+    def superseded_count(self) -> int:
+        """Return how many of the period's filings the kept one displaced.
+
+        Zero when nothing was captured: with no winner, no filing was superseded
+        — the rows are simply unaccounted for, which the count mismatch between
+        :attr:`raw_row_count` and :attr:`selected_count` already shows.
+        """
+        if self.selected_count == 0:
+            return 0
+        return max(self.raw_row_count - self.selected_count, 0)
+
+    @property
+    def rows_not_accounted_for(self) -> int:
+        """Return rows the register returned that produced no observation at all.
+
+        Distinct from :attr:`superseded_count`: this is the count that needs
+        explaining, not the count the selection authority deliberately collapsed.
+        """
+        return max(self.raw_row_count - self.selected_count, 0) if self.selected_count == 0 else 0
+
+
+def filed_period_selection_rows(
+    declarations_by_pair: Mapping[tuple[str, int], tuple[Declaracion, ...]],
+    selected: tuple[FiledDeclaracionObservation, ...],
+) -> tuple[FiledPeriodSelectionRow, ...]:
+    """Project raw register rows against the observations actually captured.
+
+    Keyed on ``(modelo, ejercicio, period)`` because the collapse the sweep
+    performs is per PERIOD, not per pair: one ``(modelo, ejercicio)`` query can
+    return several periods, each with its own duplicate count.
+
+    Args:
+        declarations_by_pair: The register rows each walked pair returned.
+        selected: The observations captured from them.
+
+    Returns:
+        One row per period the register returned rows for, in modelo then
+        descending-ejercicio then period order.
+    """
+    raw: dict[tuple[str, int, str], int] = {}
+    for (modelo, ejercicio), declarations in declarations_by_pair.items():
+        for declaration in declarations:
+            raw[(modelo, ejercicio, declaration.period.registry_token)] = (
+                raw.get((modelo, ejercicio, declaration.period.registry_token), 0) + 1
+            )
+    kept: dict[tuple[str, int, str], list[FiledDeclaracionObservation]] = {}
+    for observation in selected:
+        kept.setdefault(
+            (observation.modelo, observation.ejercicio, observation.period.registry_token),
+            [],
+        ).append(observation)
+
+    return tuple(
+        FiledPeriodSelectionRow(
+            modelo=modelo,
+            ejercicio=ejercicio,
+            period=period,
+            raw_row_count=count,
+            selected_count=len(kept.get((modelo, ejercicio, period), ())),
+            winning_expediente_id=(
+                kept[(modelo, ejercicio, period)][0].expediente_id if (modelo, ejercicio, period) in kept else None
+            ),
+        )
+        for (modelo, ejercicio, period), count in sorted(
+            raw.items(), key=lambda item: (item[0][0], -item[0][1], item[0][2])
+        )
+    )
+
+
+def casillas_a_recapture_would_change(
+    fresh: FiledDeclaracionObservation,
+    stored: RegistryModeloObservation,
+) -> tuple[str, ...]:
+    """Return every casilla whose freshly captured value disagrees with the stored one.
+
+    Derived from the observed casilla set rather than from a hand-listed field
+    list, for the same reason the invoice reconfirm diff is: the failure this
+    exists to catch is a comparison that OMITS a casilla, and a hand-listed set is
+    precisely how that omission arrives. A newly-extracted casilla is compared the
+    moment it is captured.
+
+    Only casillas present on BOTH sides are compared. A casilla the fresh capture
+    read and the stored revision never held is not a changed value -- it is a
+    wider extraction -- and reporting it as a divergence would fire the advisory
+    on every extraction improvement.
+
+    Args:
+        fresh: The newly captured observation.
+        stored: The prior stamped registry observation for the same key.
+
+    Returns:
+        The changed casilla ids, sorted, so the notice text is deterministic.
+    """
+    stored_values = {str(observation.casilla_id): observation.value for observation in stored.observations}
+    changed: set[str] = set()
+    for observed in fresh.casillas:
+        casilla_id = str(observed.casilla_id)
+        if casilla_id not in stored_values:
+            continue
+        if observed.value_kind is not CasillaValueKind.NUMERIC:
+            continue
+        try:
+            fresh_value = observed.decimal_value()
+        except InvalidOperation:
+            # An unreadable fresh token is not evidence of a CHANGED value, and
+            # claiming one would put a false amendment in front of the operator.
+            # The kind check above is what makes InvalidOperation the only
+            # reachable failure here: a non-numeric casilla never reaches the
+            # conversion, so its own refusal cannot arrive.
+            continue
+        if fresh_value != stored_values[casilla_id]:
+            changed.add(casilla_id)
+    return tuple(sorted(changed))
+
+
 def classify_register_scoping_signal(
     profile: TaxpayerProfile,
     availability: FiledDeclarationAvailabilityReport,
@@ -974,7 +1152,7 @@ def classify_register_scoping_signal(
     ``LIKELY_NIF_SCOPED``, never confirmation.
 
     Args:
-        profile: The taxpayer's declared profile, supplying the
+        profile: The taxpayer's declared :class:`TaxpayerProfile`, supplying the
             positively-excluded modelo set.
         availability: The register's offered option set.
         today: Reference date for applicability evaluation.
@@ -1038,6 +1216,383 @@ def filed_history_discovery_report(
     )
 
 
+class FiledHistoryPairOutcome(BaseModel):
+    """What one walked pair produced, keeping a refusal distinct from a zero.
+
+    ``refused`` is not derivable from ``row_count``. The register walker refuses a
+    page whose grid declares more records than it rendered, and that refusal is
+    absorbed into a failure row upstream — so a refused pair also reports zero
+    rows. Reading the zero as "nothing filed" is precisely the silent
+    under-report this feature exists to remove, which is why the refusal is its
+    own field and why the notices below branch on it.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    modelo: str = Field(min_length=1, max_length=8)
+    ejercicio: int = Field(ge=2000, le=2099)
+    signals: tuple[FiledHistoryDiscoverySignal, ...] = Field(min_length=1)
+    row_count: int = Field(default=0, ge=0)
+    captured_count: int = Field(default=0, ge=0)
+    refused: bool = False
+    failure_type: str | None = Field(default=None, min_length=1, max_length=128)
+    failure_message: str | None = Field(default=None, min_length=1, max_length=2048)
+
+    @property
+    def expected_by_profile(self) -> bool:
+        """Whether the taxpayer's own declared facts expected a filing here."""
+        return FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY in self.signals
+
+    @property
+    def is_a_genuine_empty(self) -> bool:
+        """Whether this pair answered, and the answer was no filings.
+
+        False for a refused pair however few rows it reported: a refusal is not
+        an answer, so it is not an empty one either.
+        """
+        return not self.refused and self.row_count == 0
+
+
+class FiledHistoryOnboardingRun(BaseModel):
+    """One history-onboarding sweep: what was walked, captured and reconciled.
+
+    Carries no completeness ratio, deliberately. Part of the walked grid comes
+    from AEAT's offered option list, whose scoping to this NIF is unconfirmed, so
+    any fraction over the grid would look like coverage while resting on a
+    denominator that may have nothing to do with this taxpayer.
+    :attr:`denominator_note` states in prose what the denominator was — the
+    honest form of the same information.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    pairs: tuple[FiledHistoryPairOutcome, ...] = ()
+    selection_rows: tuple[FiledPeriodSelectionRow, ...] = ()
+    captured_count: int = Field(default=0, ge=0)
+    scoping_signal: RegisterScopingSignal = RegisterScopingSignal.INCONCLUSIVE
+    carries_a_taxpayer_specific_denominator: bool = False
+    iva_wallet_status: str = Field(default="not_attempted", min_length=1, max_length=64)
+    iva_wallet_divergence: str | None = Field(default=None, min_length=1, max_length=64)
+    iva_wallet_blocked: bool = False
+    notificaciones_status: str = Field(default="not_attempted", min_length=1, max_length=64)
+    notificaciones_row_count: int = Field(default=0, ge=0)
+    stage_failures: tuple[str, ...] = ()
+    evidence_notices: tuple[Notice, ...] = ()
+    """Per-artefact evidence advisories raised during capture, each keeping its own reason."""
+
+    @property
+    def refused_pairs(self) -> tuple[FiledHistoryPairOutcome, ...]:
+        """Return pairs that produced a failure row instead of an answer."""
+        return tuple(pair for pair in self.pairs if pair.refused)
+
+    @property
+    def genuinely_empty_pairs(self) -> tuple[FiledHistoryPairOutcome, ...]:
+        """Return pairs that answered with no filings."""
+        return tuple(pair for pair in self.pairs if pair.is_a_genuine_empty)
+
+    @property
+    def denominator_note(self) -> str:
+        """State what the coverage denominator was, and what it does not establish."""
+        expected = sum(1 for pair in self.pairs if pair.expected_by_profile)
+        offered_only = len(self.pairs) - expected
+        if not expected:
+            return tr(
+                "live.filed.pull_all.denominator_note_register_only",
+                default=(
+                    "No taxpayer-specific denominator: all {offered_only} walked pair(s) came from AEAT's "
+                    "offered option list, whose scoping to this NIF is unconfirmed. This run measures nothing."
+                ),
+                offered_only=offered_only,
+            )
+        return tr(
+            "live.filed.pull_all.denominator_note_profile",
+            default=(
+                "Measured against {expected} pair(s) the taxpayer's own declared facts expect. A further "
+                "{offered_only} pair(s) came only from AEAT's offered option list and support no coverage claim."
+            ),
+            expected=expected,
+            offered_only=offered_only,
+        )
+
+
+def expected_but_not_found_notice(run: FiledHistoryOnboardingRun) -> Notice | None:
+    """Warn for every pair the profile expected that produced no declaración.
+
+    Fires ONLY for pairs carrying
+    :attr:`~core.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY`. A pair
+    nominated only by the register's option list is never named here however
+    empty it came back, because that list's informativeness for this taxpayer is
+    unconfirmed — an alert raised from it could be pure noise, and an advisory
+    only earns trust if every firing is a real finding.
+
+    A REFUSED pair is also never named. It did not answer, so "the profile
+    expected a filing that was not found" is not what happened; the refusal
+    travels as its own failure row and its own reporting.
+
+    Returns ``None`` when nothing qualifies, so a clean run stays quiet.
+    """
+    missing = tuple(pair for pair in run.pairs if pair.expected_by_profile and pair.is_a_genuine_empty)
+    if not missing:
+        return None
+    named = ", ".join(f"{pair.modelo}/{pair.ejercicio}" for pair in missing)
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="live.filed.pull_all.expected_but_not_found",
+        message=tr(
+            "live.filed.pull_all.expected_but_not_found",
+            default=(
+                "Your declared profile expects a filing for {count} modelo/ejercicio pair(s) where AEAT's "
+                "register returned none: {pairs}. Check whether these were filed."
+            ),
+            count=len(missing),
+            pairs=named,
+        ),
+        context={
+            "missing_count": str(len(missing)),
+            "pairs": named,
+            "signal": FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY.value,
+        },
+    )
+
+
+def found_more_than_expected_notices(run: FiledHistoryOnboardingRun) -> tuple[Notice, ...]:
+    """Inform for every period the register held more than one filing for.
+
+    INFO rather than WARNING, and that is the whole judgement. Several filings
+    for one period is the NORMAL shape of a corrected return: AEAT itself permits
+    a complementaria, so the operator is being told what their own history looks
+    like, not that something is wrong. Raising it as a warning would put a red
+    flag on lawful behaviour.
+
+    This composes with the re-capture divergence diff rather than duplicating it.
+    They answer different questions: this one says the register held more filings
+    than were kept for a period, the diff says a kept value CHANGED between two
+    captures of the same filing. A period can trigger either, both, or neither.
+    """
+    return tuple(
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="live.filed.pull_all.found_more_than_expected",
+            message=tr(
+                "live.filed.pull_all.found_more_than_expected",
+                default=(
+                    "AEAT's register holds {raw_count} filings for modelo {modelo} {period} {ejercicio}; "
+                    "the most recent registration ({expediente}) was kept and {superseded} earlier one(s) "
+                    "were superseded."
+                ),
+                raw_count=row.raw_row_count,
+                modelo=row.modelo,
+                period=row.period,
+                ejercicio=row.ejercicio,
+                expediente=row.winning_expediente_id or "unknown",
+                superseded=row.superseded_count,
+            ),
+            context={
+                "modelo": row.modelo,
+                "ejercicio": str(row.ejercicio),
+                "period": row.period,
+                "raw_row_count": str(row.raw_row_count),
+                "selected_count": str(row.selected_count),
+                "superseded_count": str(row.superseded_count),
+                "winning_expediente_id": row.winning_expediente_id or "",
+            },
+        )
+        for row in run.selection_rows
+        if row.held_more_than_one_filing
+    )
+
+
+def recapture_divergence_notices(
+    captured: tuple[FiledDeclaracionObservation, ...],
+    *,
+    repository: CalculationObservationRepository | None = None,
+) -> tuple[Notice, ...]:
+    """Warn for every re-captured filing whose casilla values changed.
+
+    A re-capture is an unconditional upsert, so without this a corrected filing
+    silently overwrites the previously observed values and the operator never
+    learns their history changed. Refusing the write outright would be wrong —
+    AEAT legitimately permits a complementaria — so this mirrors the shipped
+    censo-divergence shape: a standing advisory, never a silent auto-resolve.
+
+    Read BEFORE the capture is persisted; afterwards the prior values are gone.
+    """
+    from ..calculations import CalculationObservationRepository as _Repository
+
+    repo = repository if repository is not None else _Repository()
+    notices: list[Notice] = []
+    for observation in captured:
+        stored = repo.load_observation(observation.modelo, observation.period)
+        if stored is None:
+            continue
+        changed = casillas_a_recapture_would_change(observation, stored.observation)
+        if not changed:
+            continue
+        named = ", ".join(changed)
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="live.filed.pull_all.recapture_divergence",
+                message=tr(
+                    "live.filed.pull_all.recapture_divergence",
+                    default=(
+                        "Re-capturing modelo {modelo} {period} {ejercicio} changed {count} previously "
+                        "observed casilla value(s): {casillas}. AEAT may hold a corrected filing."
+                    ),
+                    modelo=observation.modelo,
+                    period=observation.period.registry_token,
+                    ejercicio=observation.ejercicio,
+                    count=len(changed),
+                    casillas=named,
+                ),
+                context={
+                    "modelo": observation.modelo,
+                    "ejercicio": str(observation.ejercicio),
+                    "period": observation.period.registry_token,
+                    "changed_casillas": named,
+                    "expediente_id": observation.expediente_id,
+                },
+            ),
+        )
+    return tuple(notices)
+
+
+async def pull_filed_history(
+    *,
+    output_root: Path,
+    profile: TaxpayerProfile | None = None,
+    today: date | None = None,
+    limit: int | None = None,
+) -> FiledHistoryOnboardingRun:
+    """Sequence discovery, bulk filed capture, IVA wallet and notificaciones.
+
+    Composes existing primitives and adds no capture mechanism of its own. In
+    particular it does NOT wrap the register walk in its own error handling: the
+    bulk sweep already absorbs any walk failure — including the truncated-page
+    refusal — into a typed failure row and continues to the next pair. Wrapping it
+    again would duplicate that authority and could swallow the very failure row
+    the taxonomy exists to produce.
+
+    Each later stage is guarded separately so a partial run reports which stage
+    failed rather than collapsing into one error. That matters because these
+    stages are independent: a notificaciones timeout says nothing about whether
+    the filed capture succeeded, and losing the capture report to an unrelated
+    failure would waste a long authenticated sweep.
+
+    Args:
+        output_root: Root the capture writes its encrypted stores under.
+        profile: The taxpayer's declared :class:`TaxpayerProfile`, supplying the load-bearing
+            discovery signal. ``None`` yields a run with no taxpayer-specific
+            denominator, reported as such.
+        today: Reference date for applicability and the year span.
+        limit: Optional cap on captured declaraciones, forwarded unchanged.
+
+    Returns:
+        The composed :class:`FiledHistoryOnboardingRun`.
+    """
+    from ...core.time import today_madrid
+
+    resolved_today = today or today_madrid()
+    discovery = await discover_filed_history(profile=profile, today=resolved_today)
+    scoping = RegisterScopingSignal.INCONCLUSIVE
+    stage_failures: list[str] = []
+
+    walk_pairs = discovery.walk_pairs
+    if not walk_pairs:
+        return FiledHistoryOnboardingRun(
+            pairs=(),
+            carries_a_taxpayer_specific_denominator=discovery.carries_a_taxpayer_specific_denominator,
+            scoping_signal=scoping,
+            stage_failures=("discovery: no modelo/ejercicio pair to walk",),
+        )
+
+    modelos = tuple(dict.fromkeys(modelo for modelo, _year in walk_pairs))
+    years = tuple(year for _modelo, year in walk_pairs)
+    capture = await capture_filed_data_bulk(
+        year_from=min(years),
+        year_to=max(years),
+        output_root=output_root,
+        modelos=modelos,
+        limit=limit,
+    )
+
+    failures_by_pair: dict[tuple[str, int], FiledDataCaptureFailureRow] = {}
+    for failure in capture.failures:
+        failures_by_pair.setdefault((failure.modelo, failure.year), failure)
+    captured_by_pair: dict[tuple[str, int], int] = {}
+    for key in capture.calculation_observation_keys:
+        modelo, year_text, _period = key.split(":", 2)
+        captured_by_pair[(modelo, int(year_text))] = captured_by_pair.get((modelo, int(year_text)), 0) + 1
+
+    pairs = tuple(
+        FiledHistoryPairOutcome(
+            modelo=pair.modelo,
+            ejercicio=pair.ejercicio,
+            signals=pair.signals,
+            row_count=captured_by_pair.get((pair.modelo, pair.ejercicio), 0),
+            captured_count=captured_by_pair.get((pair.modelo, pair.ejercicio), 0),
+            refused=(pair.modelo, pair.ejercicio) in failures_by_pair,
+            failure_type=(
+                failures_by_pair[(pair.modelo, pair.ejercicio)].error_type
+                if (pair.modelo, pair.ejercicio) in failures_by_pair
+                else None
+            ),
+            failure_message=(
+                failures_by_pair[(pair.modelo, pair.ejercicio)].message
+                if (pair.modelo, pair.ejercicio) in failures_by_pair
+                else None
+            ),
+        )
+        for pair in discovery.pairs
+    )
+
+    iva_status = "not_attempted"
+    iva_divergence: str | None = None
+    iva_blocked = False
+    notificaciones_status = "not_attempted"
+    notificaciones_rows = 0
+
+    if profile is not None:
+        try:
+            from ._iva_remote_state import capture_iva_compensation_wallet
+
+            wallet = await capture_iva_compensation_wallet(
+                target_year=resolved_today.year,
+                target_period=Period.from_year_and_code(resolved_today.year, "1T"),
+                output_root=output_root,
+            )
+            iva_status = "reconciled"
+            iva_divergence = wallet.divergence
+            iva_blocked = wallet.blocked
+        except Exception as exc:
+            iva_status = "failed"
+            stage_failures.append(f"iva_wallet: {bounded_context_text(exc)}")
+
+    try:
+        from . import capture_notifications
+
+        snapshot = await capture_notifications(bucket_id=require_active_bucket_id())
+        notificaciones_status = "captured"
+        notificaciones_rows = getattr(snapshot, "row_count", 0) or 0
+    except Exception as exc:
+        notificaciones_status = "failed"
+        stage_failures.append(f"notificaciones: {bounded_context_text(exc)}")
+
+    return FiledHistoryOnboardingRun(
+        pairs=pairs,
+        captured_count=capture.captured_count,
+        scoping_signal=scoping,
+        carries_a_taxpayer_specific_denominator=discovery.carries_a_taxpayer_specific_denominator,
+        iva_wallet_status=iva_status,
+        iva_wallet_divergence=iva_divergence,
+        iva_wallet_blocked=iva_blocked,
+        notificaciones_status=notificaciones_status,
+        notificaciones_row_count=notificaciones_rows,
+        stage_failures=tuple(stage_failures),
+        evidence_notices=capture.evidence_notices,
+    )
+
+
 def capture_report_path(path: Path, *, output_root: Path) -> str:
     """Return a stable report path relative to the configured output root when possible."""
     try:
@@ -1050,15 +1605,24 @@ __all__ = [
     "ExpectedFiledDeclarationGrid",
     "FiledHistoryDiscoveryPair",
     "FiledHistoryDiscoveryReport",
+    "FiledHistoryOnboardingRun",
+    "FiledHistoryPairOutcome",
+    "FiledPeriodSelectionRow",
     "capture_filed_data",
     "capture_filed_data_bulk",
     "capture_report_path",
     "capture_source_filed_data",
+    "casillas_a_recapture_would_change",
     "classify_register_scoping_signal",
     "discover_filed_history",
+    "expected_but_not_found_notice",
     "expected_filed_declaration_grid",
     "filed_data_capture_failure_row",
     "filed_history_discovery_report",
+    "filed_period_selection_rows",
+    "found_more_than_expected_notices",
     "list_filed_data",
     "list_filed_data_bulk",
+    "pull_filed_history",
+    "recapture_divergence_notices",
 ]

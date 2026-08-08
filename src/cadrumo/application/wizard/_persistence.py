@@ -360,7 +360,7 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     entry date is dropped (see :func:`_safe_relacion_and_entry_dates`) so a
     checkpoint save never raw-raises.
     """
-    from ...domain.contribuyente import DescendantInfo, relacion_kwarg
+    from ...domain.contribuyente import DescendantInfo, parse_meses_trabajo, relacion_kwarg
 
     meses = row.get("meses-madre-trabajo") or ""
     birth_date = parse_iso8601_date(row["birth-date"])
@@ -434,7 +434,7 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
         # non-claiming direction, as convivencia and custodia above do.
         presenta_declaracion_propia=parse_bool(row.get("declaracion-propia", "")) is True,
         prorrata_minimo=parse_bool(prorrata) if prorrata else None,
-        meses_madre_trabajo_2024=int(meses) if meses else 0,
+        meses_madre_trabajo=parse_meses_trabajo(meses, field="meses-madre-trabajo") if meses else (),
         gastos_guarderia_euros=guarderia["gastos_guarderia_euros"],
         gastos_guarderia_mensuales=guarderia["gastos_guarderia_mensuales"],
         nif=row.get("nif") or None,
@@ -567,7 +567,7 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
     which is what keeps a save-then-resume round-trip reconstructing an
     identical fact set on both legs.
     """
-    from ...domain.contribuyente import serialise_guarderia_mensual
+    from ...domain.contribuyente import serialise_guarderia_mensual, serialise_meses_trabajo
 
     answers = {
         f"{prefix}.birth-date": descendant.birth_date.isoformat(),
@@ -596,11 +596,13 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
             else None,
         ),
         ("discapacidad", descendant.discapacidad_grado),
-        # Both are counts whose zero means "none recorded", so zero emits no
-        # answer at all rather than a literal "0" the resume walk would commit.
+        # An empty set means "none recorded", so it emits no answer at all
+        # rather than a literal empty string the resume walk would commit.
+        # Re-emitted in the CANONICAL expanded form for the same reason the
+        # guarderia map below is: a set typed as a range was stored expanded.
         (
             "meses-madre-trabajo",
-            descendant.meses_madre_trabajo_2024 if descendant.meses_madre_trabajo_2024 > 0 else None,
+            serialise_meses_trabajo(descendant.meses_madre_trabajo) if descendant.meses_madre_trabajo else None,
         ),
         ("gastos-guarderia", descendant.gastos_guarderia_euros if descendant.gastos_guarderia_euros > 0 else None),
         # Re-emitted in the CANONICAL expanded form, which is what the resume

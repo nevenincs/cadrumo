@@ -58,6 +58,7 @@ from ...domain.deadlines import (
     evaluate_multiple_pagadores_obligation as _evaluate_multiple_pagadores_obligation,
 )
 from ._calendar import (
+    NO_AEAT_HISTORY_NOTICE_CODE,
     CalendarCompleteness,
     CalendarWarning,
     OverviewAeatSubmissionState,
@@ -83,6 +84,7 @@ from ._calendar import (
     calendar_events_from_notification_snapshots,
     calendar_filing_evidence_from_sources,
     derive_modelo_applicability,
+    no_aeat_history_notice,
     user_state_for,
 )
 from ._coverage import (
@@ -284,6 +286,7 @@ def build_overview_status_report(
 
 
 __all__ = [
+    "NO_AEAT_HISTORY_NOTICE_CODE",
     "AdvisedObligation",
     "CalendarCompleteness",
     "CalendarWarning",
@@ -333,6 +336,7 @@ __all__ = [
     "calendar_events_from_notification_snapshots",
     "calendar_filing_evidence_from_sources",
     "derive_modelo_applicability",
+    "no_aeat_history_notice",
     "overview_status_report_from_projection",
     "user_state_for",
 ]

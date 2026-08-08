@@ -66,6 +66,19 @@ class ConfirmationBlockReason(StrEnum):
     resolution to mean anything.
     """
 
+    UNDETERMINED_ESTABLISHMENT = "undetermined_establishment"
+    """Where a party is established was left undecided by the document as read.
+
+    Its own reason rather than an ambiguous identity, because nothing here is
+    ambiguous: no candidates competed and no identifier is in doubt. The
+    evidence that would have answered simply did not survive reading, and an
+    operator sent to choose between readings of an identifier would find no
+    such choice to make.
+
+    Territory decides the IVA treatment, so the resolution is to supply the
+    value rather than to attest that a disagreement is acceptable.
+    """
+
 
 class FindingResolutionAction(StrEnum):
     """How the operator settled one named blocking finding.

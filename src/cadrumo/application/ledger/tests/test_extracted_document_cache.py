@@ -215,7 +215,9 @@ def test_a_revision_change_is_a_miss_rather_than_a_stale_hit(profile: TestRuntim
         transcription=_transcription(transcriber=_VISION),
         settings=profile.settings,
     )
-    newer = TranscriberIdentity(transport=LOCAL_TRANSPORT_LABEL, origin=FieldOrigin.VISION, name=_VISION.name, revision="q4_k_m/prompt-r4")
+    newer = TranscriberIdentity(
+        transport=LOCAL_TRANSPORT_LABEL, origin=FieldOrigin.VISION, name=_VISION.name, revision="q4_k_m/prompt-r4"
+    )
 
     assert (
         read_cached_transcription(

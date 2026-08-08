@@ -70,8 +70,7 @@ def test_each_code_set_is_declared_exactly_once_in_the_tree() -> None:
         codes = frozenset(str(member) for member in code_set if str(member))
         declaring = _modules_declaring_the_literal_set(codes)
         assert declaring == {"core/_modelo_232_codigos.py"}, (
-            f"{code_set.__name__} is declared in {sorted(declaring)}; "
-            f"the single home is core/_modelo_232_codigos.py"
+            f"{code_set.__name__} is declared in {sorted(declaring)}; the single home is core/_modelo_232_codigos.py"
         )
 
 
@@ -150,8 +149,7 @@ def test_the_not_declared_sentinel_does_not_hide_the_canonical_home(tmp_path: Pa
             "canonical.py": (
                 "from enum import StrEnum\n\n\n"
                 "class TipoVinculacion(StrEnum):\n"
-                '    NO_DECLARADO = ""\n'
-                + "".join(f'    L{code} = "{code}"\n' for code in sorted(_VINCULACION_CODES))
+                '    NO_DECLARADO = ""\n' + "".join(f'    L{code} = "{code}"\n' for code in sorted(_VINCULACION_CODES))
             ),
         },
         _VINCULACION_CODES,

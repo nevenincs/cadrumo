@@ -72,6 +72,32 @@ TARGET_LANGUAGES: Final[tuple[str, ...]] = tuple(
     member.value for member in OutputLanguage if member is not OutputLanguage.EN
 )
 
+#: Every language published as its own site root, English included.
+#:
+#: Distinct from :data:`TARGET_LANGUAGES`, which is a *translation* concept:
+#: English is the msgid source and needs no catalogue, so it is absent there.
+#: It is still a published root, and the two were conflated while English was
+#: served from ``/``. This project's readers are Spanish taxpayers; English has
+#: no claim to the apex path, so every language sits at its own ``/<lang>/`` and
+#: ``/`` resolves to a reader's language rather than to one privileged build.
+SITE_ROOT_LANGUAGES: Final[tuple[str, ...]] = tuple(member.value for member in OutputLanguage)
+
+#: The root a reader lands on when nothing is known about them.
+#:
+#: Spanish, because the documentation covers Spanish tax filing and its
+#: authoritative source language is Spanish. Not a fallback for a missing
+#: translation -- that stays a hard refusal -- only the entry point.
+DEFAULT_SITE_LANGUAGE: Final[str] = OutputLanguage.ES.value
+
+#: The language the documentation's own prose is authored in.
+#:
+#: Kept separate from :data:`DEFAULT_SITE_LANGUAGE` because they answer
+#: different questions and no longer share an answer: this one is the msgid
+#: source every catalogue translates FROM, while the other is where a reader
+#: with no stated preference is sent. Conflating them is what put English at
+#: the apex path.
+DEFAULT_SOURCE_LANGUAGE: Final[str] = OutputLanguage.EN.value
+
 
 def _repo_root() -> Path:
     """Return the repository root for this module."""

@@ -128,24 +128,29 @@ class TestAgeEligibleMonthsIsTotalNotJustCorrectWhereItIsCalled:
 class TestTurningThreePeriod:
     """The Art. 81.2 extension, month-scoped, and the one asymmetric case."""
 
-    def test_only_months_after_the_birthday_month_count(self) -> None:
-        """Turning three in June: only the post-birthday declared months qualify.
+    def test_every_declared_month_counts_including_before_the_birthday(self) -> None:
+        """Turning three in June: all four declared months qualify, not just the later two.
 
-        Mirrors the spend method, which drops months up to and including the
-        birthday month in this period.
+        The birthday is not a boundary for the increment. Capítulo 18's
+        post-birthday sentence grants months the under-three limb could not
+        reach; read as a restriction it would drop the pre-birthday months and
+        return zero on the manual's own worked case, which counts January to
+        June for a child turning three in September.
         """
         child = _child(date(2021, 6, 10), mensual="4:200;5:200;7:200;8:200")
 
         assert child.age_at_year_end(_YEAR) == 3
-        assert child.guarderia_qualifying_meses(_YEAR) == 2
+        assert child.guarderia_qualifying_meses(_YEAR) == 4
 
     def test_an_annual_total_in_the_turning_three_period_counts_nothing(self) -> None:
-        """No fallback here, deliberately: the total spans the birthday.
+        """No fallback here, deliberately — and the reason is the UPPER edge.
 
-        An annual figure cannot be apportioned across the birthday, so there is
-        no honest month count to infer. The spend method already returns zero
-        for this shape and raises the monthly-detail advisory; the count agrees
-        rather than inventing a basis the euros do not have.
+        Not the birthday, which draws no line: a single yearly figure cannot be
+        apportioned to a window whose closing month this application declines to
+        derive, because the region determines when the second infant-education
+        cycle may begin. The spend method returns zero for this shape and raises
+        the monthly-detail advisory; the count agrees rather than inventing a
+        basis the euros do not have.
         """
         child = _child(date(2021, 6, 10), annual=3000)
 
@@ -184,13 +189,17 @@ class TestMonthSelectionAgreesWithTheSpendMethod:
 
         assert (child.guarderia_qualifying_meses(_YEAR) == 0) == (child.guarderia_contributing_spend(_YEAR) == 0)
 
-    def test_the_turning_three_month_sets_are_the_same_months(self) -> None:
-        """Not merely the same size: the same months, checked by construction.
+    def test_the_turning_three_methods_select_the_same_declared_entries(self) -> None:
+        """Both methods read the SAME declared entries, checked by construction.
 
-        Declares spend only in months the extension excludes, so a method that
-        counted the right NUMBER of wrong months would still fail here.
+        Distinct per-month amounts and months on both sides of the birthday, so
+        if either method reintroduced a birthday filter the other did not, the
+        euro sum and the month count would diverge here. That divergence is the
+        regression this pins: it is how a declared spend month and a prorated
+        month come to disagree, and re-adding the filter to one method alone
+        makes exactly one of these two assertions fail.
         """
-        child = _child(date(2021, 6, 10), mensual="1:200;2:200;3:200")
+        child = _child(date(2021, 6, 10), mensual="1:100;2:200;3:300;7:400;8:500")
 
-        assert child.guarderia_contributing_spend(_YEAR) == 0
-        assert child.guarderia_qualifying_meses(_YEAR) == 0
+        assert child.guarderia_contributing_spend(_YEAR) == 1_500
+        assert child.guarderia_qualifying_meses(_YEAR) == 5

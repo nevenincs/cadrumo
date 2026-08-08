@@ -181,9 +181,7 @@ def _aggregation():
 
 def _resolved() -> dict[str, Decimal]:
     aggregation = _aggregation()
-    return dict(
-        resolve_ledger_iva_aggregation_binding_values(_m390_revision(), aggregation.observations)
-    )
+    return dict(resolve_ledger_iva_aggregation_binding_values(_m390_revision(), aggregation.observations))
 
 
 @pytest.mark.parametrize(
@@ -212,9 +210,7 @@ def test_the_aggregator_derives_the_tier_and_carries_the_rate(suffix: str, rate:
     binding at all and leave every box while staying in the rate-blind total.
     """
     observations = {
-        obs.applied_rate: obs
-        for obs in _aggregation().observations
-        if obs.flow_direction.value == "repercutido"
+        obs.applied_rate: obs for obs in _aggregation().observations if obs.flow_direction.value == "repercutido"
     }
     observation = observations[Decimal(rate)]
     assert observation.rate_kind is _EXPECTED_TIER[suffix]

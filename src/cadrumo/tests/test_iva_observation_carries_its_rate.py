@@ -53,11 +53,7 @@ _RATE_BLIND_CONSTRUCTORS = ("IvaLedgerCandidate",)
 
 
 def _production_files() -> list[Path]:
-    return [
-        path
-        for path in _PRODUCTION_ROOT.rglob("*.py")
-        if "tests" not in path.parts and "_data" not in path.parts
-    ]
+    return [path for path in _PRODUCTION_ROOT.rglob("*.py") if "tests" not in path.parts and "_data" not in path.parts]
 
 
 def _enclosing_function(tree: ast.Module, target: ast.AST) -> str:

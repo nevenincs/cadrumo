@@ -27,7 +27,6 @@ from pydantic import ValidationError
 
 from ....core.resources import bundled_path
 from .. import (
-    IvaRateKind,
     LivaArt161RecargoRates,
     load_recargo_rates,
 )

@@ -107,11 +107,18 @@ class TestTheResolverAnswersWhereTheEvidenceIsDecisive:
             assert territorial_scope_for_country(code) is expected, code
 
     def test_the_eu_branch_is_not_reachable_by_accident(self) -> None:
-        """A code outside the catalogue must not fall into the member scope.
+        """A country outside the Member State catalogue must not fall into the member scope.
 
         The discriminating control for the class above: without it, a resolver
-        returning EU_MEMBER for everything well-formed would pass every member
+        returning EU_MEMBER for everything it recognised would pass every member
         assertion here.
+
+        The probes are CATALOGUED non-members, and that is the substantive half.
+        This control was once written over ``ZZ`` and ``QQ``, which worked only
+        while the resolver answered on SHAPE -- so the control and the defect
+        shared a premise, and a code naming no country was standing in for a
+        country outside the EU. A real third country is what the branch has to
+        be discriminated against.
         """
-        assert territorial_scope_for_country("ZZ") is IvaTerritorialScope.THIRD_COUNTRY
-        assert territorial_scope_for_country("QQ") is IvaTerritorialScope.THIRD_COUNTRY
+        assert territorial_scope_for_country("NO") is IvaTerritorialScope.THIRD_COUNTRY
+        assert territorial_scope_for_country("BR") is IvaTerritorialScope.THIRD_COUNTRY

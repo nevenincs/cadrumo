@@ -868,7 +868,8 @@ application:
     deudas:
       errors:
         bucket_id_blank: El identificador del bucket de deudas no puede estar vacío.
-        snapshot_id_blank: application.live.deudas.errors.snapshot_id_blank
+        snapshot_id_blank: El identificador de la instantánea de deudas no puede estar
+          vacío.
         snapshot_not_found: No hay ninguna instantánea de deudas que coincida con
           el identificador solicitado.
         snapshot_prefix_ambiguous: El prefijo de la instantánea de deudas coincide
@@ -2104,6 +2105,11 @@ cli:
           group_help: Revise los borradores de extraccion pendientes antes de confirmarlos
             como facturas.
           list_help: Liste los borradores de extraccion pendientes de revision humana.
+          party_attribution_unverified_message: Nada verifica a qué parte pertenecen
+            estos datos de dirección. Si se leyeran dos bloques de dirección al revés,
+            ambas partes quedarían situadas en un territorio de IVA en el que ninguna
+            está establecida y ninguna comprobación lo detectaría. Contraste cada
+            valor con el documento antes de confirmar este borrador.
           reason_help: Muestre solo los borradores bloqueados por este motivo.
           reference_help: Referencia de evidencia o adjunto de la que se leyo el borrador
             pendiente.
@@ -2310,6 +2316,13 @@ cli:
           solo amplía el recorrido: un par ausente de ella no prueba que no se presentara
           nada.'
         list_help: Listar declaraciones presentadas sin descargar artefactos
+        pull_all_help: Descargar en una sola pasada el historial que AEAT tiene de
+          este contribuyente.
+        pull_all_limit_help: Limita cuántas declaraciones se capturan en esta pasada.
+        pull_all_pairs_refused: '{count} par(es) de modelo/ejercicio no se pudieron
+          leer y NO se han contado como vacíos: {pairs}. Vuelva a ejecutar la orden
+          para reintentarlo; una lectura rechazada no prueba que no se presentara
+          nada.'
         pull_help: Descarga datos de declaraciones presentadas del registro autenticado
           de AEAT.
         pull_modelo_help: Limita esta descarga a este modelo.
@@ -3864,7 +3877,7 @@ cli:
         config profile delete %{name} --yes' para confirmar.
       delete_yes_help: Confirma explícitamente la eliminación
       descendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Repetible. Ejecute `aeat config profile descendiente` sin subcomando para
           introducirlos de forma guiada.
         add_help: Añadir uno o varios descendientes al perfil activo.
@@ -5091,7 +5104,11 @@ cli:
         ledger_view: Ver el detalle de una entrada del libro.
         live_filed_capture: Descargar declaraciones presentadas en vivo desde la AEAT.
         live_filed_capture_sources: Mostrar las fuentes disponibles para la descarga.
+        live_filed_discover: Mostrar qué historial recorrería una descarga completa,
+          sin capturar nada.
         live_filed_list: Listar declaraciones presentadas capturadas desde la AEAT.
+        live_filed_pull_all: Descargar el historial de AEAT y conciliar la cartera
+          de IVA y las notificaciones.
         modelo_audit_check: Comprueba las evidencias incluidas de una revisión de
           declaración.
         modelo_audit_export: Exporta la auditoría de evidencias de una revisión de
@@ -5713,6 +5730,117 @@ docs:
       between: Entre {min} y {max}
       non_negative: Cero o más
       non_positive: Cero o menos
+  cli:
+    automation:
+      exit_auth: Se requiere autenticación o las credenciales han caducado.
+      exit_codes_heading: Códigos de salida
+      exit_conflict: Conflicto o fallo de condición previa.
+      exit_forbidden: Operación no permitida por la política.
+      exit_general: Error general u operación rechazada.
+      exit_internal: Error interno inesperado.
+      exit_not_found: Recurso no encontrado.
+      exit_partial: Éxito parcial (algunos elementos han funcionado y otros no).
+      exit_success: Correcto.
+      exit_unavailable: Servicio externo no disponible.
+      exit_usage: Uso incorrecto de la CLI (indicador erróneo, argumento ausente).
+      exit_validation: Error de validación en los datos proporcionados por el usuario.
+      intro: 'Use esta página cuando programe invocaciones de ``aeat``: documenta
+        los códigos de salida del proceso y el comportamiento de salida TTY/JSON que
+        comparten todos los comandos.'
+      output_contract_body: Cuando la salida va a un TTY, la CLI emite texto enriquecido
+        legible por personas. Cuando se pasa ``--format json`` (o cuando la salida
+        se redirige), la CLI emite un único documento JSON por invocación. Los comandos
+        que han adoptado el ``SchemaEnvelope`` envuelven su resultado como ``{envelope}``.
+        Los comandos aún no migrados emiten su carga directamente.
+      output_contract_heading: Contrato de salida TTY y JSON
+      title: Códigos de salida y contrato de salida
+    command:
+      bare_payload_note: Este comando emite una carga simple (todavía sin envoltorio).
+        La estructura de la salida es propia de cada comando; consulte ``--help``
+        para más detalles.
+      group_fallback: Grupo de comandos.
+      no_description: Sin descripción.
+      no_description_available: No hay descripción disponible.
+      output_schema_heading: Esquema de salida
+      parameters_heading: Parámetros
+      path_label: Ruta del comando
+      registry_key_label: Clave del registro
+      schema_envelope_note: Este comando emite un ``SchemaEnvelope`` cuyo campo ``result``
+        se valida contra ``{schema}``.
+    env:
+      default_empty: vacío
+      default_unset: sin definir
+      secrets_note: La aplicación nunca imprime los secretos y aparecen marcados como
+        `(secret)` más arriba. Los valores predeterminados marcados como `(derived)`
+        se calculan en tiempo de ejecución a partir de la raíz de almacenamiento o
+        de la ubicación del proyecto.
+    family:
+      choose_group_heading: Elija un grupo de comandos
+      direct_commands_heading: Comandos directos
+      direct_commands_intro: Estos comandos están montados directamente en ``aeat
+        {family}``, sin grupo de verbos intermedio.
+      group_link_line: Abrir :doc:`{target}` para ``aeat {family} {group}``.
+      index_link_line: Abrir :doc:`/cli/index` para la página principal de la referencia
+        de la CLI.
+      intro: '``aeat {family}`` está organizado por grupo de verbos principal. La
+        página de cada grupo empieza con su salida real de ``--help``, seguida de
+        todos los comandos finales que contiene.'
+      open_group_link: Abrir la referencia de ``aeat {family} {group}``
+      title: '{command}: referencia de comandos'
+    index:
+      app_card: 'Comandos del flujo de trabajo operativo: libro de movimientos, modelos,
+        calendarios de presentación, comprobaciones del registro, capturas en vivo
+        y colas de revisión.'
+      choose_family_heading: Elija una familia de comandos
+      config_card: 'Comandos locales de configuración y mantenimiento: perfiles, autenticación,
+        integración con Google, comprobaciones de reparación y superficies de reinicio.'
+      english_help_note: Las cadenas de ayuda se muestran en inglés. En tiempo de
+        ejecución la CLI respeta el idioma de salida activo (``--language`` / ``CADRUMO_OUTPUT_LANGUAGE``).
+      flag_debug: Activa el registro de nivel de depuración.
+      flag_detail: Muestra información de versión ampliada, incluido el resumen del
+        registro.
+      flag_format: Formato de salida (``text`` o ``json``).
+      flag_help: Muestra el documento de ayuda curado y termina.
+      flag_language: Sobrescribe el idioma de salida (``es``, ``en``, ``ca``, ``hu``).
+      flag_profile: Activa un perfil con nombre para esta invocación.
+      flag_quiet: Suprime la salida informativa.
+      flag_verbose: Activa la salida detallada.
+      flag_version: Muestra la versión del paquete y termina.
+      global_flags_heading: Indicadores globales
+      global_flags_intro: El comando raíz ``aeat`` acepta estos indicadores y se aplican
+        a todas las invocaciones.
+      intro: 'La CLI ``aeat`` expone dos familias de comandos de primer nivel: ``config``
+        (configuración local, ciclo de vida del perfil, diagnósticos) y ``app`` (flujo
+        de trabajo fiscal operativo). Esta referencia documenta los {count} comandos
+        finales.'
+      next_app: Abrir :doc:`app` para los comandos del flujo de trabajo operativo.
+      next_automation: Abrir :doc:`automation` para los códigos de salida y el contrato
+        de salida TTY/JSON.
+      next_config: Abrir :doc:`config` para los comandos locales de configuración
+        y mantenimiento.
+      next_howto: Abrir :doc:`/how-to/index` para las guías de inicio y las guías
+        de tareas.
+      next_schemas: Abrir :doc:`schemas` para el registro de esquemas de salida JSON.
+      open_family_link: Abrir la referencia de ``aeat {family}``
+      start_here: Empiece por los enlaces de familia que aparecen abajo. Use las páginas
+        generadas de cada familia de comandos para conocer los indicadores, argumentos,
+        claves de registro y esquemas de salida exactos; use esta página para el comportamiento
+        de nivel raíz que se aplica a todos los comandos.
+      title: Referencia de la CLI
+      where_next_heading: Por dónde seguir
+    param:
+      argument_optional: Argumento, opcional.
+      argument_required: Argumento, obligatorio.
+      option_optional: Opción, opcional.
+      option_required: Opción, obligatoria.
+    schemas:
+      summary: Las siguientes {count} rutas de comando tienen un ``OutputSchema``
+        registrado. Las superficies de retrollamada de grupo ({groups}) se listan
+        aparte.
+      title: Registro de esquemas de salida
+      tooling_note: Esta página está pensada sobre todo para quienes crean herramientas.
+        Si ejecuta los comandos a mano, las :doc:`páginas de familia <index>` suelen
+        ser un mejor punto de entrada.
   glossary:
     entry:
       broader: Término genérico
@@ -6821,6 +6949,10 @@ errors:
       de antigüedad de la cartera y vuelva a intentarlo.
     refused_ledger_confirmation_blocked: Este documento tiene hallazgos que una persona
       debe resolver antes de poder confirmarlo.
+    refused_ledger_counterparty_establishment_conflict: Esta contraparte ya está confirmada
+      como establecida en otro territorio; retire el hecho confirmado antes de sustituirlo.
+    refused_ledger_counterparty_establishment_input: No se puede confirmar un hecho
+      de establecimiento con un identificador de contraparte que no valida.
     refused_ledger_evidence_input: Un dato de evidencia indicado infringe el contrato
       de la factura de compra. Corrige la entrada y vuelve a intentarlo.
     refused_ledger_evidence_not_found: No existe ninguna evidencia de factura de compra
@@ -7300,6 +7432,25 @@ live:
     target_period_year_mismatch: El año objetivo no coincide con el ejercicio del
       periodo objetivo.
     year_range_invalid: El rango de ejercicios indicado no es válido.
+  filed:
+    pull_all:
+      denominator_note_profile: Medido frente a {expected} par(es) que los datos declarados
+        por el contribuyente esperan. Otros {offered_only} par(es) proceden solo de
+        la lista de opciones que ofrece AEAT y no sustentan ninguna afirmación de
+        cobertura.
+      denominator_note_register_only: 'Sin denominador específico del contribuyente:
+        los {offered_only} par(es) recorridos proceden de la lista de opciones que
+        ofrece AEAT, cuyo alcance para este NIF no está confirmado. Esta pasada no
+        mide nada.'
+      expected_but_not_found: 'Su perfil declarado espera una presentación en {count}
+        par(es) de modelo/ejercicio donde el registro de AEAT no devolvió ninguna:
+        {pairs}. Compruebe si llegaron a presentarse.'
+      found_more_than_expected: El registro de AEAT contiene {raw_count} presentaciones
+        del modelo {modelo} {period} {ejercicio}; se conservó el registro más reciente
+        ({expediente}) y {superseded} anterior(es) quedaron sustituidas.
+      recapture_divergence: 'Volver a capturar el modelo {modelo} {period} {ejercicio}
+        cambió {count} valor(es) de casilla observados anteriormente: {casillas}.
+        AEAT puede tener una declaración rectificada.'
 llm:
   evidence:
     consent:
@@ -67491,7 +67642,8 @@ modelo:
             label: Ejercicio al que se refiere la autoliquidacion
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.help
-            label: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.label
+            label: Base imponible autorepercutida devengada en adquisiciones intracomunitarias
+              (LIVA art 13 + art 15 + art 84.Uno.2; oficial casillas 10/11)
           iva-compensacion-aplicada-periodo:
             help: null
             label: Cuotas a compensar de periodos anteriores aplicadas en este periodo
@@ -69034,118 +69186,154 @@ modelo:
               label: Tipo de declaracion (originaria / sustitutiva / complementaria)
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo general, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo reducido, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo superreducido, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.label
+              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
+                del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.label
+              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
+                del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.label
+              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
+                del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.label
+              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
+                del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.label
+              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
+                del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.label
+              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
+                del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.label
+              label: Cuota IVA de adquisiciones intracomunitarias de bienes al tipo
+                del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.label
+              label: Base imponible de adquisiciones intracomunitarias de bienes al
+                tipo cero, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.label
+              label: Base imponible de adquisiciones intracomunitarias de servicios
+                al tipo general, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.label
+              label: Base imponible de adquisiciones intracomunitarias de servicios
+                al tipo reducido, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig.label
+              label: Base imponible de adquisiciones intracomunitarias de servicios
+                al tipo superreducido, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5.label
+              label: Base imponible de adquisiciones intracomunitarias de servicios
+                al tipo del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4.label
+              label: Cuota IVA de adquisiciones intracomunitarias de servicios al
+                tipo del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck.label
+              label: Base imponible de adquisiciones intracomunitarias de servicios
+                al tipo del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg.label
+              label: Cuota IVA de adquisiciones intracomunitarias de servicios al
+                tipo del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5.label
+              label: Base imponible de adquisiciones intracomunitarias de servicios
+                al tipo del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4.label
+              label: Cuota IVA de adquisiciones intracomunitarias de servicios al
+                tipo del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck.label
+              label: Base imponible de adquisiciones intracomunitarias de servicios
+                al tipo del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg.label
+              label: Cuota IVA de adquisiciones intracomunitarias de servicios al
+                tipo del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5.label
+              label: Base imponible de adquisiciones intracomunitarias de servicios
+                al tipo del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4.label
+              label: Cuota IVA de adquisiciones intracomunitarias de servicios al
+                tipo del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5.label
+              label: Base imponible de adquisiciones intracomunitarias de servicios
+                al tipo del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4.label
+              label: Cuota IVA de adquisiciones intracomunitarias de servicios al
+                tipo del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig.label
+              label: Base imponible de adquisiciones intracomunitarias de servicios
+                al tipo del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62.label
+              label: Cuota IVA de adquisiciones intracomunitarias de servicios al
+                tipo del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma.label
+              label: Base imponible de adquisiciones intracomunitarias de servicios
+                al tipo cero, sin desglose por tipo - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8.label
+              label: Base imponible autorepercutida en operaciones interiores - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31.label
+              label: Cuota IVA autorepercutida en operaciones interiores - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: null
               label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
@@ -69674,6 +69862,10 @@ modelo:
                 title: Modelo 848 comunicación del importe neto de la cifra de negocios
           field:
             label: Modelo 848 (orden-hac-85-2003), ejercicios 2003 y siguientes
+overview:
+  no_aeat_history: Este perfil no contiene ninguna prueba de presentación confirmada
+    por AEAT. Ejecute `aeat app live filed pull-all` para descargar el historial que
+    AEAT tiene de él.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 % (Art. 61 LIRPF)
@@ -70439,15 +70631,18 @@ wizard:
           Desde esa fecha se cuenta el aumento por menor de tres años.
         prompt: Fecha de inscripción en el Registro Civil
       meses-madre-trabajo:
-        help: 'Para la deducción por maternidad (art. 81 LIRPF): meses (0-12) en que
-          la madre cotizó a la Seguridad Social mientras el hijo cumplía los requisitos
-          -- menor de 3 años, o (con independencia de la edad) dentro de la ventana
-          de fecha de entrada de la adopción/acogimiento registrada con INSCRIPCION/ACOGIMIENTO.'
-        invalid_range: Introduzca un número entero de meses entre %{minimum} y %{maximum}
-          (art. 81 LIRPF).
-        prompt: Meses que la madre trabajó con derecho a la deducción -- hijo menor
+        help: 'Para la deducción por maternidad (art. 81 LIRPF): QUÉ meses cotizó
+          la madre a la Seguridad Social mientras este hijo daba derecho -- menor
+          de 3 años, o (con independencia de la edad) dentro de la ventana de fecha
+          de entrada de adopción/acogimiento registrada en INSCRIPCION/ACOGIMIENTO.
+          Escriba MM o MM-MM, separados por '';'' (por ejemplo 5-8 o 1;2;11;12). Los
+          meses y no su número, porque el incremento por guardería se prorratea por
+          los meses que estos y los de guardería comparten.'
+        invalid_range: Indique los meses como MM o MM-MM, separados por ';' (por ejemplo
+          5-8 o 1;2;11;12), cada uno entre %{minimum} y %{maximum}.
+        prompt: Qué meses trabajó la madre con derecho a la deducción -- hijo menor
           de 3 años, o adopción/acogimiento dentro de su ventana de fecha de entrada
-          (año de declaración)
+          (ejercicio)
       nif:
         prompt: NIF/NIE del descendiente (deje en blanco si no tiene)
       prorrata-minimo:
@@ -70522,7 +70717,7 @@ wizard:
         help: Código ISO 3166-1 alfa-2 del país de residencia fiscal (p.ej. GB, DE,
           FR). Obligatorio cuando fiscal-residency es non_resident_irnr.
       descendiente:
-        help: 'Formato: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
+        help: 'Formato: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Realiza operaciones intracomunitarias
       enrollment-large-company:

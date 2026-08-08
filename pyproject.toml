@@ -930,6 +930,21 @@ addopts = "-n auto --dist=loadfile --tb=short -m 'unit and not external_tool and
 # signal method where available (Linux) and falls back to thread elsewhere.
 # 300 s is a ceiling, not a target; no legitimate unit test approaches it.
 timeout = 300
+# Drop a test's `tmp_path` as soon as that test PASSES; keep it when it fails.
+# Measured on this box: `pytest-of-hello` reached 39.1 GB across 101 retained
+# session directories, 85% of it a dozen packaging-lane runs at up to 4.4 GB and
+# 100k files each -- the real-wheel smoke tests build wheels and pip venvs into
+# `tmp_path`, which is inherent to what they verify, not waste to remove.
+# `tmp_path_retention_count` does NOT bound this: pytest gates the numbered-dir
+# rotation behind `_pytest.pathlib.LOCK_TIMEOUT`, which is 72 HOURS and is a
+# module constant with no ini setting, so the retained population is bounded by
+# three days of accrual rather than by the count. An isolated A/B on
+# `test_three_wheel_cohort_installs_only_aeat_human_script` measured 1200.4 MB
+# retained under the default `all` against 0.0 MB under `failed`.
+# Failing tests keep their directories, which is where triage actually looks;
+# module- and session-scoped `tmp_path_factory.mktemp` directories are NOT
+# covered by this and still clear only at a green session's end.
+tmp_path_retention_policy = "failed"
 asyncio_mode = "strict"
 markers = [
   "unit: deterministic offline tests scoped to one owner; owned local processes are allowed, external networks and services are not",

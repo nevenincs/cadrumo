@@ -285,9 +285,7 @@ def test_a_rate_unrecorded_row_stays_in_the_total_and_refuses_the_export(tmp_pat
     values = _casilla_values(_m390_revision(), (*_rated_rows(), _unrated_row()))
     output = tmp_path / "modelo-390.txt"
 
-    boxes = sum(
-        values[f"iva.anual.repercutido.tipo-{suffix}.cuota"] for suffix in ("10", "7-5", "5")
-    )
+    boxes = sum(values[f"iva.anual.repercutido.tipo-{suffix}.cuota"] for suffix in ("10", "7-5", "5"))
     assert values[_REDUCIDO_TOTAL_CASILLA] - boxes == _UNRATED_CUOTA
 
     with pytest.raises(FilingExportError) as excinfo:

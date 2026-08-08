@@ -26,6 +26,12 @@ from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_valid
 
 from ....core import STRICT_FROZEN_CONFIG, Period
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind
+from ...iva_compensation import (
+    M303_COMPENSATION_APLICADA_CASILLA,
+    M303_COMPENSATION_AVAILABLE_CASILLA,
+    M303_COMPENSATION_GENERADA_CASILLA,
+    M303_COMPENSATION_POSTERIOR_CASILLA,
+)
 from ._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from ._binding_selector_utils import selector_against_model, selector_as_dict
 from ._bindings_previous_filing import (
@@ -620,10 +626,10 @@ def _relation_prefill_source_ids(selector: _RelationPrefillSelector) -> tuple[Ca
 
 
 _IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE_IDS: tuple[CasillaId, ...] = (
-    "iva.compensacion-generada-periodo",
-    "iva.compensacion-aplicada-periodo",
-    "iva.compensacion-disponible-fin-periodo",
-    "iva.compensacion-pendiente-periodos-posteriores",
+    M303_COMPENSATION_GENERADA_CASILLA,
+    M303_COMPENSATION_APLICADA_CASILLA,
+    M303_COMPENSATION_AVAILABLE_CASILLA,
+    M303_COMPENSATION_POSTERIOR_CASILLA,
 )
 _IVA_COMPENSATION_ANNUAL_PARTITION_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
 _PRORRATA_REGULARIZACION_SOURCE_IDS: tuple[CasillaId, ...] = (

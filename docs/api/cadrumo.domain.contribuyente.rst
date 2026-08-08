@@ -30,6 +30,7 @@ Submodules
    cadrumo.domain.contribuyente._guarderia_mensual
    cadrumo.domain.contribuyente._keys
    cadrumo.domain.contribuyente._marriage_facts
+   cadrumo.domain.contribuyente._meses_trabajo
    cadrumo.domain.contribuyente._normalise
    cadrumo.domain.contribuyente._renta_codes
    cadrumo.domain.contribuyente.family

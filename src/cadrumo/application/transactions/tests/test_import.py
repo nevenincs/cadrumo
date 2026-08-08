@@ -72,6 +72,7 @@ def _diagnose(**kwargs: object):
         **kwargs,  # type: ignore[arg-type]
     )
 
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 

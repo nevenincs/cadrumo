@@ -26,6 +26,22 @@ from ._documents import (
 )
 from ._nif_iva import normalise_nif_iva
 
+SPANISH_TAX_ID_WIDTH = 9
+"""Character width of every canonical Spanish NIF, NIE, and CIF.
+
+The width is fixed by the identifier grammar rather than chosen here: a NIF is 8
+digits plus a checksum letter, a ``K``/``L``/``M`` NIF and a NIE are a leader
+plus 7 digits plus a checksum, and a CIF is a leader plus 7 digits plus a
+control. Every branch of :func:`validate_spanish_tax_id` therefore operates on
+exactly this many characters, and the function refuses anything else outright.
+
+Exposed as a constant because consumers outside this module need to assert a
+slot can hold a tax identifier at all -- a fixed-width AEAT record field bound
+to a taxpayer identifier but declared at some other width is holding something
+other than that identifier. Those consumers must read the width the validator
+actually enforces; a second literal elsewhere can drift from this one silently.
+"""
+
 _NIE_LEADERS = {"X": "0", "Y": "1", "Z": "2"}
 _PREFIXED_NIF_LEADERS = {"K", "L", "M"}
 _CIF_LEADERS = _CIF_KIND_LETTERS
@@ -131,9 +147,9 @@ def validate_spanish_tax_id(value: str) -> str:
         )
     if len(normalized) == 11 and normalized.startswith("ES"):
         normalized = normalized[2:]
-    if len(normalized) != 9:
+    if len(normalized) != SPANISH_TAX_ID_WIDTH:
         raise IdentityError(
-            f"tax identifier {normalized!r} must be exactly 9 characters, got {len(normalized)}",
+            f"tax identifier {normalized!r} must be exactly {SPANISH_TAX_ID_WIDTH} characters, got {len(normalized)}",
             translated_message="errors.identity.tax_id_invalid_length",
             context={"candidate": normalized, "length": len(normalized)},
         )

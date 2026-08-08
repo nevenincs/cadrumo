@@ -19,7 +19,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from defusedxml import ElementTree
-from dev.docs.i18n import TARGET_LANGUAGES
+from dev.docs.i18n import DEFAULT_SITE_LANGUAGE, DEFAULT_SOURCE_LANGUAGE, SITE_ROOT_LANGUAGES
 
 CANONICAL_DOCS_BASE_URL = "https://cadrumo.neve.md/docs"
 CANONICAL_SITE_DOMAIN = "cadrumo.neve.md"
@@ -308,13 +308,14 @@ def _require_search_index(site_root: Path, *, root_label: str) -> None:
 
 
 def _localized_languages() -> tuple[str, ...]:
-    """Return the per-language deploy roots (the docs translation targets).
+    """Return the per-language deploy roots, English included.
 
-    Derived from the shared ``TARGET_LANGUAGES`` (OutputLanguage minus English),
-    so the deploy matrix never re-lists the language set. English is the default
-    site root (``/``) and is not a localized subdirectory.
+    Derived from the shared :data:`SITE_ROOT_LANGUAGES` so the deploy matrix
+    never re-lists the language set. English is a root like any other: the
+    readers here file Spanish tax, so no language holds the apex path and ``/``
+    resolves to the reader's own instead (see :func:`_write_language_entry`).
     """
-    return TARGET_LANGUAGES
+    return SITE_ROOT_LANGUAGES
 
 
 def _language_site_url(language: str) -> str:
@@ -323,24 +324,21 @@ def _language_site_url(language: str) -> str:
 
 
 def _language_build_command(language: str, out_dir: Path) -> list[str]:
-    """Return the build-driver command for one localized user-scope site root.
+    """Return the build-driver command for one site root.
 
-    Reuses the ``dev.docs.build`` driver's ``--language`` and ``--out-dir`` flags
-    (no duplicated build logic): a strict user-scope build of the operator surface
-    in ``language``, written into ``out_dir`` instead of the English root.
+    Reuses the ``dev.docs.build`` driver's flags rather than duplicating build
+    logic. English is built WITHOUT ``--language``: it is the msgid source, so
+    it has no catalogue to select, and passing the flag would force the user
+    scope and drop the API autodoc tree. It therefore keeps the full scope and
+    carries ``api/`` inside its own root, while every translated root is a
+    strict user-scope build of the operator surface.
     """
-    return [
-        sys.executable,
-        "-m",
-        "dev.docs.build",
-        "--strict",
-        "--scope",
-        "user",
-        "--language",
-        language,
-        "--out-dir",
-        str(out_dir),
-    ]
+    command = [sys.executable, "-m", "dev.docs.build", "--strict"]
+    if language == DEFAULT_SOURCE_LANGUAGE:
+        command += ["--out-dir", str(out_dir)]
+        return command
+    command += ["--scope", "user", "--language", language, "--out-dir", str(out_dir)]
+    return command
 
 
 def _language_build_environment(language: str) -> dict[str, str]:
@@ -356,11 +354,12 @@ def _language_build_environment(language: str) -> dict[str, str]:
 
 
 def _build_language_roots(repo_root: Path, html_root: Path) -> None:
-    """Build each localized site root into its subdirectory under the English root.
+    """Build every site root into its own subdirectory.
 
-    ``/es/``, ``/ca/``, ``/hu/`` are user-scope builds written beside the English
-    root at ``html_root/<language>``; each carries its own Pagefind index. The full
-    English autodoc site at ``html_root`` is untouched.
+    ``/en/``, ``/es/``, ``/ca/`` and ``/hu/`` are peers, each carrying its own
+    Pagefind index. English holds no privileged position: the readers here file
+    Spanish tax, so it sits at ``/en/`` like the rest and ``/`` resolves to the
+    reader's own language instead (:func:`_write_language_entry`).
     """
     for language in _localized_languages():
         out_dir = html_root / language
@@ -375,6 +374,95 @@ def _build_language_roots(repo_root: Path, html_root: Path) -> None:
             raise SystemExit(
                 f"Localized docs build for {language!r} failed; refusing to publish ({exc.code}).",
             ) from exc
+
+
+def _write_language_entry(html_root: Path) -> Path:
+    """Write the language-agnostic entry served at ``/``.
+
+    No language owns the apex path. The entry resolves a reader to a root in a
+    fixed order -- a previously chosen language remembered in the ``cadrumo_docs_lang``
+    cookie, then the browser's declared preferences, then Spanish -- and sends
+    them there. Spanish is the floor because this documentation is about filing
+    Spanish tax; a reader who has expressed nothing is far likelier to want it
+    than English.
+
+    The redirect is client-side because the site is static objects behind a CDN:
+    there is no request-time hook to read a cookie in. That has one consequence
+    worth stating plainly -- a reader with JavaScript disabled sees the links
+    rather than being moved -- so the page is a usable language index in its own
+    right, not a bare redirect stub, and it carries a ``noscript`` list.
+
+    Returns:
+        The path written, so the caller can assert on it.
+    """
+    languages = ", ".join(f'"{language}"' for language in _localized_languages())
+    entry = html_root / "index.html"
+    entry.write_text(
+        "<!doctype html>\n"
+        '<html lang="es">\n<head>\n<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        "<title>Cadrumo</title>\n"
+        # A language selector must never be the canonical result for a query;
+        # every localized root carries its own canonical URLs.
+        '<meta name="robots" content="noindex,follow">\n'
+        "<script>\n"
+        "(function () {\n"
+        f"  var roots = [{languages}];\n"
+        f'  var fallback = "{DEFAULT_SITE_LANGUAGE}";\n'
+        '  var cookie = document.cookie.match(/(?:^|;\\s*)cadrumo_docs_lang=([a-zA-Z-]+)/);\n'
+        "  var wanted = [];\n"
+        "  if (cookie) { wanted.push(cookie[1]); }\n"
+        "  var declared = navigator.languages || [navigator.language];\n"
+        "  for (var i = 0; i < declared.length; i++) {\n"
+        "    if (declared[i]) { wanted.push(declared[i]); }\n"
+        "  }\n"
+        "  wanted.push(fallback);\n"
+        "  for (var j = 0; j < wanted.length; j++) {\n"
+        '    var tag = String(wanted[j]).toLowerCase().split("-")[0];\n'
+        "    if (roots.indexOf(tag) >= 0) {\n"
+        '      window.location.replace(tag + "/");\n'
+        "      return;\n"
+        "    }\n"
+        "  }\n"
+        '  window.location.replace(fallback + "/");\n'
+        "})();\n"
+        "</script>\n"
+        "</head>\n<body>\n"
+        "<noscript>\n<ul>\n"
+        + "".join(f'<li><a href="{language}/">{language}</a></li>\n' for language in _localized_languages())
+        + "</ul>\n</noscript>\n</body>\n</html>\n",
+        encoding="utf-8",
+    )
+    print(f"Wrote language entry: {entry}", flush=True)
+    return entry
+
+
+def _validate_language_entry(html_root: Path) -> None:
+    """Require the apex entry to exist and to reach every published root.
+
+    This replaces the artifact check the apex used to get as the English site.
+    It cannot be the same check: the sitemap, the 404 page and the Pagefind
+    bundle now live inside each language root, so asserting them here would
+    demand files that correctly moved. What the apex owes instead is that it
+    exists and that no root is unreachable from it -- a language built, uploaded
+    and then absent from the entry is invisible to every reader who does not
+    already know its URL, and nothing else in the pipeline would notice.
+    """
+    entry = html_root / "index.html"
+    if not entry.is_file():
+        raise SystemExit(f"Language entry missing at {entry}; refusing to publish.")
+    body = entry.read_text(encoding="utf-8")
+    unreachable = [language for language in _localized_languages() if f'"{language}"' not in body]
+    if unreachable:
+        raise SystemExit(
+            f"Language entry does not route to {', '.join(unreachable)}; refusing to publish "
+            "a root that cannot reach every built language.",
+        )
+    if DEFAULT_SITE_LANGUAGE not in body:
+        raise SystemExit(
+            f"Language entry declares no {DEFAULT_SITE_LANGUAGE!r} fallback; a reader with no "
+            "stated preference would reach nothing.",
+        )
 
 
 def _validate_language_roots(html_root: Path) -> None:
@@ -836,7 +924,8 @@ def _publish(aws: str, repo_root: Path, *, environment: Mapping[str, str] | None
     _refresh_download_latest(repo_root)
     html_root = _build_site(repo_root)
     _build_language_roots(repo_root, html_root)
-    _validate_site_artifacts(html_root)
+    _write_language_entry(html_root)
+    _validate_language_entry(html_root)
     _validate_language_roots(html_root)
     _sync_site(aws, repo_root, html_root, target.bucket)
     _invalidate_distribution_paths(aws, repo_root, target.distribution_id, _DOCS_INVALIDATION_PATHS)

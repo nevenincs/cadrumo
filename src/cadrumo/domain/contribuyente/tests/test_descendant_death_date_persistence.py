@@ -52,7 +52,7 @@ def _fully_populated() -> DescendantInfo:
         rentas_anuales_euros=Decimal("1234.56"),
         presenta_declaracion_propia=True,
         prorrata_minimo=True,
-        meses_madre_trabajo_2024=7,
+        meses_madre_trabajo=(4, 5, 6, 7, 8, 9, 10),
         alta_posterior_nacimiento_mes=4,
         gastos_guarderia_euros=900,
         nif="12345678Z",

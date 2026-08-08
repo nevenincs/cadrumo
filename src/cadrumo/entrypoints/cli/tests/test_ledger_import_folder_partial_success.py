@@ -46,6 +46,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         )
         yield
 
+
 _GOOD_STATEMENT = (
     "Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda\n"
     "08/04/2026;08/04/2026;Transferencia recibida CLIENTE UNO;1500,25;4300,75;EUR\n"

@@ -417,13 +417,13 @@ def test_m390_box_34_excludes_recargo_while_box_47_includes_it() -> None:
 
     assert with_recargo.values[_CASILLA_TOTAL_BASES_CUOTAS_IVA] == Decimal("84672.00")
     assert with_recargo.values[_CASILLA_DEVENGADA] == Decimal("88416.00")
-    assert with_recargo.values[_CASILLA_DEVENGADA] - with_recargo.values[
-        _CASILLA_TOTAL_BASES_CUOTAS_IVA
-    ] == Decimal("3744.00")
+    assert with_recargo.values[_CASILLA_DEVENGADA] - with_recargo.values[_CASILLA_TOTAL_BASES_CUOTAS_IVA] == Decimal(
+        "3744.00"
+    )
 
-    assert without_recargo.values[_CASILLA_TOTAL_BASES_CUOTAS_IVA] == with_recargo.values[
-        _CASILLA_TOTAL_BASES_CUOTAS_IVA
-    ]
+    assert (
+        without_recargo.values[_CASILLA_TOTAL_BASES_CUOTAS_IVA] == with_recargo.values[_CASILLA_TOTAL_BASES_CUOTAS_IVA]
+    )
     assert with_recargo.values[_CASILLA_DEVENGADA] - without_recargo.values[_CASILLA_DEVENGADA] == Decimal("3744.00")
 
 

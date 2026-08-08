@@ -39,7 +39,15 @@ def test_2025_full_period_monthly_spend_is_retained_by_family_aggregation() -> N
     assert profile.gastos_guarderia_reales(_FILING_YEAR) == 1_800
 
 
-def test_2025_turning_three_child_counts_only_months_after_birthday_month() -> None:
+def test_2025_turning_three_child_counts_every_declared_month() -> None:
+    """The birthday draws no line in the turning-three period.
+
+    Capítulo 18's post-birthday sentence GRANTS the months after the third
+    birthday; it does not withdraw the ones before it. The manual's own worked
+    case settles it — a child who turns three in September is granted the
+    increment over January to June. So every declared month aggregates, and the
+    900 in the birthday month is retained rather than dropped.
+    """
     child = DescendantInfo(
         birth_date=date(_FILING_YEAR - 3, 4, 15),
         gastos_guarderia_mensuales=_monthly_spend((100, 100, 100, 900, 200, 200, 200, 200, 200, 200, 200, 200)),
@@ -47,7 +55,7 @@ def test_2025_turning_three_child_counts_only_months_after_birthday_month() -> N
 
     profile = RentaFamilyProfile(descendientes=(child,))
 
-    assert profile.gastos_guarderia_reales(_FILING_YEAR) == 1_600
+    assert profile.gastos_guarderia_reales(_FILING_YEAR) == 2_800
 
 
 def test_2025_spend_outside_the_qualifying_period_yields_zero() -> None:

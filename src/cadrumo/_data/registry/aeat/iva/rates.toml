@@ -47,6 +47,20 @@ legal_refs = ["ley-37-1992:art-91"]
 # que el tipo cero fuera ilegal ese dia. El mecanismo si sabe rechazar -- RATE_2
 # fuera de su ventana lanza IvaRateNotFoundError -- de modo que la exencion es
 # especifica del cero y no una comprobacion ausente.
+# Ventana anterior de la misma medida sobre alimentos, RDL 20/2022 art. 72, con
+# efectos desde el 1 de enero de 2023 y hasta el 30 de junio de 2024. Esa fecha
+# de fin es ya la CONSOLIDADA: la vigencia original se prorrogo en tres pasos
+# (RDL 1/2023 DA 16, RDL 5/2023 art. 171, RDL 8/2023 art. 20) y el texto
+# consolidado recoge el resultado. Abuta con la ventana de RDL 4/2024 que sigue,
+# sin solape: 2024-06-30 / 2024-07-01.
+[[rates]]
+member_state = "es"
+kind = "zero"
+pct = "0"
+effective_from = 2023-01-01
+effective_until = 2024-06-30
+legal_refs = ["real-decreto-ley-20-2022:art-72"]
+
 [[rates]]
 member_state = "es"
 kind = "zero"
@@ -519,6 +533,20 @@ source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07
 # it -- it made an August 2024 zero-rated sale resolve to super_reducido
 # instead of zero, changing which category the row declares under.
 # --------------------------------------------------------------------------
+
+# Ventana anterior de la misma medida, RDL 20/2022 art. 72: 5 % sobre aceites de
+# semilla y pastas alimenticias del 1 de enero de 2023 al 30 de junio de 2024,
+# coexistiendo con el 10 % ordinario del resto del tramo reducido. Igual que la
+# ventana de 2024 que sigue, es un tipo que la ley aplico a PARTE de los
+# suministros del tramo, de modo que lleva supersedes_tier_default.
+[[rates]]
+member_state = "es"
+kind = "reduced"
+pct = "5"
+effective_from = 2023-01-01
+effective_until = 2024-06-30
+legal_refs = ["real-decreto-ley-20-2022:art-72"]
+supersedes_tier_default = true
 
 [[rates]]
 member_state = "es"

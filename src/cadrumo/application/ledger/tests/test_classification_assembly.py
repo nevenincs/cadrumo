@@ -35,6 +35,11 @@ from .._evidence_draft import InvoiceDraft
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CUSTOMER_NIF = "12345678Z"
+#: A structurally valid French VAT number. A document whose customer is
+#: VAT-identified in France prints one, and it is what establishes the
+#: identification: the printed country code beside it says where the party
+#: IS, which is a different fact and settles nothing here.
+_FRENCH_VAT_NUMBER = "FR40303265045"
 _DATE = date(2026, 4, 2)
 
 
@@ -51,6 +56,7 @@ def _assemble_with_declared(
     asserted_customer_tax_status=None,
     asserted_issuer_scope=None,
     asserted_customer_scope=None,
+    asserted_customer_identification_state=None,
     **kwargs,
 ):
     """Call the real assembly, building the declared-facts channel from flat facts.
@@ -75,6 +81,7 @@ def _assemble_with_declared(
             customer_tax_status=wrap(asserted_customer_tax_status),
             issuer_scope=wrap(asserted_issuer_scope),
             customer_scope=wrap(asserted_customer_scope),
+            customer_identification_state=wrap(asserted_customer_identification_state),
         ),
         **kwargs,
     )
@@ -87,10 +94,14 @@ def _complete(**overrides: object):
         "direction": InvoiceKind.ISSUED,
         "inputs": _inputs(),
         "supply_nature": SupplyNature.GOODS,
-        # The customer's country code carries BOTH the EU scope and the Member
-        # State; the issuer's Spanish territory has no country-code answer and
-        # is asserted, which is the only sanctioned way to supply it.
+        # The country code establishes WHERE the customer is; the printed VAT
+        # number establishes WHICH State identifies it. They are two facts and
+        # neither supplies the other, so a case meaning a French taxable
+        # customer carries both. The issuer's Spanish territory has no
+        # country-code answer and is asserted, which is the only sanctioned way
+        # to supply it.
         "customer_country_code": "FR",
+        "customer_identifier": _FRENCH_VAT_NUMBER,
         "asserted_customer_tax_status": CustomerTaxStatus.B2B_IVA_REGISTERED,
         "asserted_issuer_scope": IvaTerritorialScope.ES_MAINLAND,
     }
@@ -163,6 +174,12 @@ def test_a_foreign_country_code_does_settle_the_territory() -> None:
         supply_nature=SupplyNature.GOODS,
         issuer_country_code="DE",
         customer_country_code="FR",
+        # This pair reaches no rule, so the fallthrough declares both party
+        # facts consumed and the counterparty's identification is demanded --
+        # an unplaced operation is asked rather than certified indifferent. The
+        # printed number settles it, leaving the country resolver as the only
+        # thing this case is testing.
+        customer_identifier=_FRENCH_VAT_NUMBER,
         asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
     )
 
@@ -391,6 +408,7 @@ def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
         declared=DeclaredFacts(supply_nature=goods),
         issuer_country_code="DE",
         customer_country_code="FR",
+        customer_identifier=_FRENCH_VAT_NUMBER,
     )
     with_assertion = assemble_classification_criteria(
         transaction_date=_DATE,
@@ -405,6 +423,7 @@ def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
         ),
         issuer_country_code="DE",
         customer_country_code="FR",
+        customer_identifier=_FRENCH_VAT_NUMBER,
     )
 
     assert not without.assembled
@@ -426,6 +445,264 @@ def test_the_domestic_rate_tier_axis_is_carried_through() -> None:
     assert assembly.assembled, [m.field for m in assembly.missing]
     assert assembly.criteria is not None
     assert assembly.criteria.rate_tier is IvaRateKind.GENERAL
+
+
+def test_a_spanish_postal_code_settles_the_territory_the_country_code_cannot() -> None:
+    """The join this Step exists to make: the sub-national half of establishment.
+
+    A country code names Spain and stops there, because the three Spanish IVA
+    territories are treated differently by law. The postal code's first two
+    digits are the province, so it is the deterministic evidence that separates
+    them — and until it was joined, the resolver existed and nothing consulted
+    it.
+    """
+    assembly = _assemble_with_declared(
+        transaction_date=_DATE,
+        direction=InvoiceKind.ISSUED,
+        inputs=_inputs(),
+        supply_nature=SupplyNature.GOODS,
+        issuer_country_code="ES",
+        issuer_postal_code="35001",
+        customer_country_code="ES",
+        customer_postal_code="28013",
+        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+        rate_tier=IvaRateKind.GENERAL,
+    )
+
+    assert assembly.assembled, [m.field for m in assembly.missing]
+    assert assembly.criteria is not None
+    assert assembly.criteria.issuer_residency is IvaTerritorialScope.ES_CANARIAS
+    assert assembly.criteria.customer_residency is IvaTerritorialScope.ES_MAINLAND
+
+
+def test_a_spanish_party_with_no_postal_code_refuses_rather_than_assuming_mainland() -> None:
+    """The safety asymmetry carried through the join, and the whole point of the row.
+
+    The peninsula is the majority population, so defaulting to it would be
+    invisible in testing while silently placing Canarian and Ceutan parties
+    inside a territory their operations are not subject to. The refusal must
+    survive at the JOIN and not only inside the resolver: a caller is free to
+    substitute its own default for the resolver's ``None``, which is exactly the
+    failure this asserts against.
+    """
+    assembly = _assemble_with_declared(
+        transaction_date=_DATE,
+        direction=InvoiceKind.ISSUED,
+        inputs=_inputs(),
+        supply_nature=SupplyNature.GOODS,
+        issuer_country_code="ES",
+        issuer_postal_code=None,
+        customer_country_code="ES",
+        customer_postal_code="   ",
+        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+    )
+
+    assert not assembly.assembled
+    assert {m.field for m in assembly.missing} == {"issuer_residency", "customer_residency"}
+    assert all(m.settled_by.strip() for m in assembly.missing)
+
+
+def test_a_postal_code_alone_never_establishes_a_spanish_territory() -> None:
+    """A bare postal code is not evidence of Spain, and reading it as such is the trap.
+
+    Five-digit postal codes are not unique to Spain, so consulting the Spanish
+    resolver without country evidence would map a French or German code onto a
+    Spanish province — the restrictive default one level below the country axis
+    that already refuses it. The join is gated on the country evidence
+    POSITIVELY naming Spain, never on the country resolver merely returning
+    nothing.
+    """
+    assembly = _assemble_with_declared(
+        transaction_date=_DATE,
+        direction=InvoiceKind.ISSUED,
+        inputs=_inputs(),
+        supply_nature=SupplyNature.GOODS,
+        issuer_country_code=None,
+        issuer_postal_code="35001",
+        customer_country_code=None,
+        customer_postal_code="28013",
+        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+    )
+
+    assert not assembly.assembled
+    assert {m.field for m in assembly.missing} == {"issuer_residency", "customer_residency"}
+    assert all("no country code" in m.reason for m in assembly.missing)
+
+
+#: A checksum-valid Spanish company identifier, as an ordinary domestic invoice prints it.
+#:
+#: Real rather than a placeholder because the whole point of the fixture below is
+#: that this identifier is genuinely, verifiably Spanish and still establishes
+#: nothing about establishment. A malformed value would be refused for the wrong
+#: reason and would prove nothing.
+_DOMESTIC_B_CIF = "B84333723"
+
+
+def test_a_bare_spanish_company_identifier_never_reaches_the_peninsula() -> None:
+    """The ordinary domestic invoice: valid Spanish CIF, no country, no postal code.
+
+    This is the document the whole read path is aimed at, and it must refuse
+    rather than resolve. The identifier passes the AEAT checksum, so the tempting
+    reading is that a Spanish CIF makes a Spanish party -- and it is false. The
+    non-resident company leader, the K/L/M identifiers issued to Spaniards abroad
+    and to non-residents, and the whole NIE series are all checksum-valid Spanish
+    identifiers belonging to parties not established in Spain. Establishment for
+    IVA is the sede de actividad, not tax registration.
+
+    **It would have tested green**, which is why this is a gate rather than a
+    comment: most Spanish identifiers do belong to resident parties, so the
+    inference is right often enough to survive casual testing and wrong exactly
+    where a wrong domestic placement drops a reverse charge.
+
+    Asserts the absence of the mainland specifically, not merely that something
+    was missing. A refusal for some unrelated reason would satisfy a bare
+    "not assembled" check while the peninsula default sat live underneath it.
+    """
+    draft = InvoiceDraft(supplier_tax_id=_DOMESTIC_B_CIF, customer_tax_id=_DOMESTIC_B_CIF)
+    assembly = _assemble_with_declared(
+        transaction_date=_DATE,
+        direction=InvoiceKind.ISSUED,
+        inputs=collect_classifier_inputs(draft),
+        supply_nature=SupplyNature.GOODS,
+        issuer_country_code=None,
+        issuer_postal_code=None,
+        customer_country_code=None,
+        customer_postal_code=None,
+        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+    )
+
+    assert not assembly.assembled
+    assert assembly.criteria is None
+    assert {m.field for m in assembly.missing} == {"issuer_residency", "customer_residency"}
+    assert all("no country code" in m.reason for m in assembly.missing)
+
+
+def test_no_reachable_evidence_shape_ever_defaults_a_residency_to_the_peninsula() -> None:
+    """Sweep the shapes a domestic document can present, and require none to default.
+
+    One fixture proves one document. The peninsula default is dangerous because
+    it is invisible, so the claim worth gating is over the whole space of
+    evidence a domestic invoice can carry: identifier present or absent, postal
+    code present or absent, and neither carrying country evidence. Every one must
+    refuse.
+
+    The postal-bearing rows are the sharp ones. A Spanish-looking code with no
+    country evidence must NOT resolve, because the five-digit shape is shared
+    with France, Germany and Italy and so establishes nothing on its own.
+    """
+    for tax_id in (None, _DOMESTIC_B_CIF):
+        for postal in (None, "", "   ", "28013", "35001"):
+            assembly = _assemble_with_declared(
+                transaction_date=_DATE,
+                direction=InvoiceKind.ISSUED,
+                inputs=collect_classifier_inputs(InvoiceDraft(supplier_tax_id=tax_id)),
+                supply_nature=SupplyNature.GOODS,
+                issuer_country_code=None,
+                issuer_postal_code=postal,
+                customer_country_code="FR",
+                asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+            )
+
+            assert assembly.criteria is None, (tax_id, postal)
+            assert "issuer_residency" in {m.field for m in assembly.missing}, (tax_id, postal)
+
+
+@pytest.mark.parametrize(
+    ("postal_code", "city"),
+    [("75001", "Paris"), ("10115", "Berlin"), ("00170", "Rome"), ("51001", "Reims")],
+)
+def test_a_foreign_postal_code_never_resolves_to_a_spanish_territory(postal_code: str, city: str) -> None:
+    """The five-digit shape discriminates NOTHING, so only the country gate does.
+
+    Spain, France, Germany and Italy all use five-digit postal codes, and the
+    Spanish resolver is named for its precondition rather than checking it:
+    measured directly, ``75001`` yields the peninsula and ``51001`` yields Ceuta
+    and Melilla. So a consumer that reaches the postal half without having
+    established Spain places a Paris party on the peninsula and a Reims party in
+    Ceuta -- on exactly the countries most likely to appear on an
+    intra-community invoice, where a wrong domestic placement silently drops the
+    reverse charge.
+
+    The composition is the trap: the country half and the postal half are each
+    fail-closed, and they compose fail-OPEN. The country resolver returns
+    nothing for a Spanish code BY DESIGN and also for an absent or malformed
+    one, so the obvious "country first, else postal" fallback treats a French
+    party whose country was unreadable exactly like a Spanish one. Gating on the
+    country evidence POSITIVELY naming Spain is what closes it, which is why
+    telling those three outcomes apart is load-bearing rather than cosmetic.
+    """
+    assembly = _assemble_with_declared(
+        transaction_date=_DATE,
+        direction=InvoiceKind.ISSUED,
+        inputs=_inputs(),
+        supply_nature=SupplyNature.GOODS,
+        issuer_country_code=None,
+        issuer_postal_code=postal_code,
+        customer_country_code="FR",
+        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+    )
+
+    assert not assembly.assembled, f"a {city} postal code was accepted as Spanish establishment evidence"
+    gap = next(m for m in assembly.missing if m.field == "issuer_residency")
+    assert "no country code" in gap.reason
+
+
+def test_a_malformed_country_code_is_not_reported_as_naming_spain() -> None:
+    """The collapsed-outcome defect: three different situations wore one answer.
+
+    The country resolver returns nothing for an absent code, a malformed one AND
+    a Spanish one alike, so a refusal that branched on the code merely being
+    present told the operator that a malformed code named Spain. It becomes
+    load-bearing the moment anything gates the postal join on whether the
+    country evidence named Spain, which is what this Step does.
+
+    ``ESP`` rather than ``XX``: a well-formed but unlisted alpha-2 code resolves
+    to THIRD_COUNTRY and never reaches this branch, so it would prove nothing.
+    """
+    assembly = _assemble_with_declared(
+        transaction_date=_DATE,
+        direction=InvoiceKind.ISSUED,
+        inputs=_inputs(),
+        supply_nature=SupplyNature.GOODS,
+        issuer_country_code="ESP",
+        issuer_postal_code="28013",
+        customer_country_code="FR",
+        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+    )
+
+    assert not assembly.assembled
+    gap = next(m for m in assembly.missing if m.field == "issuer_residency")
+    assert "names Spain" not in gap.reason, gap.reason
+    assert "ESP" in gap.reason
+
+
+def test_each_refusal_distinguishes_why_the_country_evidence_failed() -> None:
+    """Absent, malformed and Spanish must read as three different refusals.
+
+    An operator fixes what the refusal names. One shared message for three
+    causes sends them to correct a country code that was already correct, or to
+    supply a postal code for a party whose country was never established.
+    """
+    reasons = {}
+    for label, country, postal in (
+        ("absent", None, "28013"),
+        ("malformed", "ESP", "28013"),
+        ("spanish", "ES", None),
+    ):
+        assembly = _assemble_with_declared(
+            transaction_date=_DATE,
+            direction=InvoiceKind.ISSUED,
+            inputs=_inputs(),
+            supply_nature=SupplyNature.GOODS,
+            issuer_country_code=country,
+            issuer_postal_code=postal,
+            customer_country_code="FR",
+            asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+        )
+        reasons[label] = next(m for m in assembly.missing if m.field == "issuer_residency").reason
+
+    assert len(set(reasons.values())) == 3, reasons
+    assert "three IVA territories" in reasons["spanish"]
 
 
 def _domestic(**overrides: object):
@@ -543,12 +820,28 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules() -> None:
     Stronger than the indifference probe, which certifies one operation at a
     time. This reds if anyone ever admits ``UNKNOWN`` into a substantive rule's
     accepted set, whether or not the assembly happens to reach that rule today.
+
+    **The closing assertion is on what the sweep VERIFIED, never on what it
+    visited.** It previously counted shapes and compared the count to the loop
+    bounds, incrementing before the fallthrough ``continue`` — so it equalled the
+    product of the iterables unconditionally and could not fail. Emptying the rule
+    table, which sends every shape to the fallthrough and skips the inner check
+    entirely, still left it passing: a sweep that verified nothing reported
+    success.
+
+    A tally of shapes visited is structurally incapable of detecting that,
+    because the shapes it counts are exactly the ones the check skips. So the
+    property replaces it: at least one rule must have been ridden by ``UNKNOWN``
+    without reading the status, which is false precisely when the inner assertion
+    never ran. The set is deliberately not compared against a fixed size — a rule
+    entering or leaving the table is a legitimate change, while verifying nothing
+    never is.
     """
     from ....domain.iva import EUMemberState, IvaInvoiceClassificationCriteria, classify_iva
 
     fallthrough = "R99_fallthrough"
     reachable_kinds = (TransactionKind.GOODS, TransactionKind.SERVICES_GENERAL)
-    checked = 0
+    ridden_without_reading_the_status: set[str] = set()
 
     def _rule(status: CustomerTaxStatus, issuer, customer, kind, direction) -> str:
         return classify_iva(
@@ -559,8 +852,8 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules() -> None:
                 customer_tax_status=status,
                 kind=kind,
                 direction=direction,
-                issuer_member_state=EUMemberState.DE if issuer is IvaTerritorialScope.EU_MEMBER else None,
-                customer_member_state=EUMemberState.FR if customer is IvaTerritorialScope.EU_MEMBER else None,
+                issuer_identification_state=EUMemberState.DE if issuer is IvaTerritorialScope.EU_MEMBER else None,
+                customer_identification_state=EUMemberState.FR if customer is IvaTerritorialScope.EU_MEMBER else None,
                 rate_tier=IvaRateKind.GENERAL,
             ),
         ).matched_rule_id
@@ -571,13 +864,16 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules() -> None:
                 for direction in InvoiceKind:
                     shape = (issuer, customer, kind, direction)
                     matched = _rule(CustomerTaxStatus.UNKNOWN, *shape)
-                    checked += 1
                     if matched == fallthrough:
                         continue
+                    ridden_without_reading_the_status.add(matched)
                     for status in CustomerTaxStatus:
                         assert _rule(status, *shape) == matched, (
                             f"UNKNOWN matched {matched} on {shape} but {status} does not: "
                             "the rule reads the customer status, so UNKNOWN triggered it"
                         )
 
-    assert checked == len(IvaTerritorialScope) ** 2 * len(reachable_kinds) * len(InvoiceKind)
+    assert ridden_without_reading_the_status, (
+        "the sweep verified nothing: UNKNOWN reached the no-rule-matched fallthrough on every "
+        "shape, so the status-blindness assertion never executed once"
+    )

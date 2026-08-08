@@ -87,7 +87,9 @@ class ParsedEInvoice:
 
     __slots__ = (
         "currency",
+        "customer_country_code",
         "customer_name",
+        "customer_postal_code",
         "customer_tax_id",
         "grand_total",
         "invoice_date",
@@ -98,9 +100,12 @@ class ParsedEInvoice:
         "iva_category",
         "lines",
         "recargo_amount",
+        "record_text",
         "regime_legend",
         "shape",
+        "supplier_country_code",
         "supplier_name",
+        "supplier_postal_code",
         "supplier_tax_id",
         "taxable_base",
     )
@@ -111,6 +116,24 @@ class ParsedEInvoice:
         self.customer_tax_id: str | None = None
         self.supplier_name: str | None = None
         self.customer_name: str | None = None
+        # The sub-national half of the establishment question. A country code
+        # cannot separate Spain's three IVA territories, so a Spanish party's
+        # territory is settled by its postal code or not at all. Read from the
+        # format's own dedicated element in every case -- never split out of a
+        # composite address string, which would be an inference rather than a
+        # read. Absent stays None: the mainland is the majority population, so
+        # defaulting to it would be invisible in testing while silently placing
+        # Canarian and Ceutan parties outside the territory they belong to.
+        self.supplier_postal_code: str | None = None
+        self.customer_postal_code: str | None = None
+        # The country half, carried VERBATIM in whichever code system the format
+        # states it -- Facturae in ISO alpha-3, UBL in alpha-2. Left untranslated
+        # here on purpose: the correspondence between the two systems is registry
+        # data, and resolving it inside a syntax parser would make this module a
+        # second country authority. Absent stays None for the same reason the
+        # postal code does.
+        self.supplier_country_code: str | None = None
+        self.customer_country_code: str | None = None
         self.invoice_number: str | None = None
         self.invoice_series: str | None = None
         self.invoice_date: str | None = None
@@ -126,8 +149,49 @@ class ParsedEInvoice:
         # WROTE. The two are read from different elements precisely so a
         # disagreement between them stays visible to the operator.
         self.regime_legend: str | None = None
+        # Every TEXT NODE the record carries, and no markup. This is what the
+        # anchor check must search: passing the whole decoded file lets a
+        # two-character value match a TAG name -- "ID" occurs in `<cbc:ID>` --
+        # so a document carrying no country element at all grounds one, and the
+        # check certifies markup while claiming to catch a reader that pointed
+        # at an element the document does not have. Every field read here comes
+        # from a text node, so narrowing the haystack weakens no case that was
+        # legitimately grounded before.
+        self.record_text: str = ""
         self.lines: list[ParsedEInvoiceLine] = []
         self.iva_breakdown: list[tuple[Decimal | None, Decimal | None, Decimal | None]] = []
+
+
+#: Separator between adjacent text nodes in a record's extracted text.
+#:
+#: A NUL rather than a newline, and that is load-bearing rather than exotic. The
+#: anchor search normalises whitespace runs to single spaces before matching, so
+#: joining on ANY whitespace makes two adjacent element values contiguous: a
+#: Facturae party name split across ``Name``, ``FirstSurname`` and
+#: ``SecondSurname`` reassembles into exactly the string the parser composes from
+#: them, and an ASSEMBLED value then anchors as though the document printed it
+#: verbatim. It does not -- the document prints three separate values -- and
+#: refusing that is a property the raw-file haystack had and a naive text-node
+#: haystack silently dropped. A NUL survives normalisation, so the boundary
+#: between two nodes stays a boundary.
+_TEXT_NODE_SEPARATOR = "\x00"
+
+
+def _record_text(root: Element) -> str:
+    """Return every text node in *root*, separated so no two of them merge.
+
+    The haystack the anchor check searches. Markup is excluded because a tag name
+    is not something the document states -- a two-character value would otherwise
+    match one, and a record carrying no such element at all would ground a value.
+    Adjacent nodes are kept apart by :data:`_TEXT_NODE_SEPARATOR`, because an
+    anchor spanning two of them is an assembled value rather than a printed one.
+    """
+    fragments: list[str] = []
+    for node in root.iter():
+        for raw in (node.text, node.tail):
+            if raw and raw.strip():
+                fragments.append(raw.strip())
+    return _TEXT_NODE_SEPARATOR.join(fragments)
 
 
 def _local(tag: str) -> str:
@@ -199,6 +263,96 @@ def _facturae_party_name(party: Element) -> str | None:
         joined = " ".join(part for part in parts if part)
         if joined:
             return joined
+    return None
+
+
+def _facturae_postal_code(party: Element) -> str | None:
+    """Return a Facturae party's Spanish postal code, or nothing.
+
+    Scoped to ``AddressInSpain/PostCode``, the element Facturae dedicates to the
+    code. The sibling ``OverseasAddress`` block is deliberately not read: a party
+    established abroad has no Spanish IVA territory to resolve, so recovering
+    anything from it would produce a value the resolver must then discard, and
+    that block states its code jointly with the town rather than on its own.
+    """
+    for address in _find_all(party, "AddressInSpain"):
+        found = _direct_child_text(address, "PostCode")
+        if found:
+            return found
+    return None
+
+
+def _facturae_country_code(party: Element) -> str | None:
+    """Return a Facturae party's stated country code, VERBATIM and in ISO alpha-3.
+
+    Scoped to ``AddressInSpain/CountryCode``, the sibling of the ``PostCode``
+    element beside it, and read for the country half of the establishment
+    question the postal code answers only the sub-national half of.
+
+    **The value is carried exactly as stated, in the code system Facturae uses.**
+    That system is ISO 3166-1 alpha-3 -- ``ESP``, not ``ES`` -- and translating it
+    here would put a country authority inside a syntax parser. The
+    correspondence is registry data and the lookup belongs downstream; this is a
+    read.
+
+    ``OverseasAddress`` is deliberately not consulted, matching
+    :func:`_facturae_postal_code`: that block is how a foreign-established party
+    states its address, and its country is reached through the same element name
+    there, so widening this walk would silently change WHICH address a party's
+    country is read from.
+    """
+    for address in _find_all(party, "AddressInSpain"):
+        found = _direct_child_text(address, "CountryCode")
+        if found:
+            return found
+    return None
+
+
+def _ubl_country_code(party: Element) -> str | None:
+    """Return a UBL party's stated country code (EN16931 BT-40 / BT-55).
+
+    UBL carries it in ``cac:PostalAddress/cac:Country/cbc:IdentificationCode``,
+    beside the ``PostalZone`` :func:`_ubl_postal_code` already reads, and states
+    it in ISO 3166-1 alpha-2. Carried verbatim for the same reason the Facturae
+    code is: what a document states is a read, what a code MEANS is not the
+    parser's question.
+
+    Scoped to the ``Country`` element rather than taken from the first
+    ``IdentificationCode`` in the address subtree: UBL uses that local name for
+    other coded values, and a descendant walk would pick whichever the schema
+    happened to order first.
+    """
+    for address in _find_all(party, "PostalAddress"):
+        for country in _find_all(address, "Country"):
+            found = _direct_child_text(country, "IdentificationCode")
+            if found:
+                return found
+    return None
+
+
+def _ubl_postal_code(party: Element) -> str | None:
+    """Return a UBL party's post code (EN16931 BT-38 / BT-53).
+
+    UBL carries it in ``cac:PostalAddress/cbc:PostalZone``, its own element, so
+    this is a lookup rather than a parse of the address's free-text lines.
+    """
+    for address in _find_all(party, "PostalAddress"):
+        found = _direct_child_text(address, "PostalZone")
+        if found:
+            return found
+    return None
+
+
+def _cii_postal_code(party: Element) -> str | None:
+    """Return a CII party's post code (EN16931 BT-38 / BT-53).
+
+    CII carries it in ``ram:PostalTradeAddress/ram:PostcodeCode``, again its own
+    element beside the free-text address lines rather than inside them.
+    """
+    for address in _find_all(party, "PostalTradeAddress"):
+        found = _direct_child_text(address, "PostcodeCode")
+        if found:
+            return found
     return None
 
 
@@ -281,6 +435,7 @@ def _parse_cii(root: Element) -> ParsedEInvoice:
             # PersonName and may carry a SpecifiedLegalOrganization trading
             # name, neither of which is the party's own stated name.
             setattr(parsed, f"{target}_name", _direct_child_text(found[0], "Name"))
+            setattr(parsed, f"{target}_postal_code", _cii_postal_code(found[0]))
     for settlement in _find_all(root, "ApplicableHeaderTradeSettlement"):
         parsed.currency = _first_text(settlement, "InvoiceCurrencyCode")
         for total in _find_all(settlement, "SpecifiedTradeSettlementHeaderMonetarySummation"):
@@ -344,6 +499,8 @@ def _parse_ubl(root: Element) -> ParsedEInvoice:
         if found:
             setattr(parsed, f"{target}_tax_id", _vat_id(found[0]))
             setattr(parsed, f"{target}_name", _ubl_party_name(found[0]))
+            setattr(parsed, f"{target}_postal_code", _ubl_postal_code(found[0]))
+            setattr(parsed, f"{target}_country_code", _ubl_country_code(found[0]))
     for total in _find_all(root, "LegalMonetaryTotal"):
         parsed.taxable_base = _decimal(_first_text(total, "TaxExclusiveAmount"))
         parsed.grand_total = _decimal(_first_text(total, "TaxInclusiveAmount"))
@@ -392,6 +549,8 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
             # which IS the VAT number; no SIRET/Steuernummer ambiguity here.
             setattr(parsed, f"{target}_tax_id", _first_text(found[0], "TaxIdentificationNumber"))
             setattr(parsed, f"{target}_name", _facturae_party_name(found[0]))
+            setattr(parsed, f"{target}_postal_code", _facturae_postal_code(found[0]))
+            setattr(parsed, f"{target}_country_code", _facturae_country_code(found[0]))
     invoices = _find_all(root, "Invoice")
     if not invoices:
         return parsed
@@ -512,8 +671,13 @@ def parse_einvoice_document(data: bytes) -> ParsedEInvoice:
                 continue
             inner_shape = probe_document_shape(candidate)
             if inner_shape in _PARSERS:
-                return _PARSERS[inner_shape](inner)
+                embedded = _PARSERS[inner_shape](inner)
+                embedded.record_text = _record_text(inner)
+                return embedded
         raise EInvoiceXmlParseError("PDF carries an embedded file but no readable e-invoice record")
     if shape not in _PARSERS:
         raise EInvoiceXmlParseError(f"document shape {shape.value!r} carries no structured invoice record")
-    return _PARSERS[shape](parse_hardened_xml(payload))
+    root = parse_hardened_xml(payload)
+    parsed = _PARSERS[shape](root)
+    parsed.record_text = _record_text(root)
+    return parsed

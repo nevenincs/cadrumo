@@ -16,7 +16,9 @@ data the taxpayer themselves declared.
 from __future__ import annotations
 
 import json
+import re
 from datetime import UTC, date, datetime
+from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
@@ -25,15 +27,17 @@ from ....adapters.outbound.aeat.sede import (
     FiledDeclarationAvailability,
     FiledDeclarationAvailabilityReport,
 )
-from ....core import FiledHistoryDiscoverySignal, RegisterScopingSignal
+from ....core import FiledHistoryDiscoverySignal, Period, RegisterScopingSignal
 from ....domain.deadlines import TaxpayerProfile
 from .._filed_data_capture import (
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryPair,
     FiledHistoryDiscoveryReport,
+    casillas_a_recapture_would_change,
     classify_register_scoping_signal,
     expected_filed_declaration_grid,
     filed_history_discovery_report,
+    filed_period_selection_rows,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -474,3 +478,255 @@ def test_the_reading_does_not_change_the_walked_grid() -> None:
         report = filed_history_discovery_report(expected=expected, availability=availability)
         assert set(expected.pairs) <= set(report.walk_pairs)
         assert set(availability.offered_pairs) <= set(report.walk_pairs)
+
+
+# ------------------------------------------- raw register rows versus selection
+
+
+def _declaration_row(*, modelo: str, year: int, period: str, expediente_id: str, presented_at: datetime):
+    from ....adapters.outbound.aeat.sede import Declaracion
+
+    return Declaracion(
+        modelo=modelo,
+        ejercicio=year,
+        period=Period.from_year_and_code(year, period),
+        expediente_id=expediente_id,
+        estado="ALTA",
+        tipo_solicitud=None,
+        observaciones=None,
+        presented_at=presented_at,
+        justificante_link_text="Ver",
+        archive_link_text="Ver",
+        declaration_copy_link_text=None,
+    )
+
+
+def _filed_130_observation_for_tests():
+    import hashlib
+
+    from pydantic import AnyHttpUrl
+
+    from ....adapters.outbound.aeat.sede import (
+        FiledDeclaracionArtefact,
+        FiledDeclaracionObservation,
+        ObservedCasillaValue,
+    )
+    from ....core import CasillaValueKind
+    from ....core.config import Settings
+    from ....domain.calculations.registry import validated_casilla_id
+
+    body = b"130-2026-1T-submitted-file"
+    external = Settings.external_constants().aeat
+    url = f"{external.domains.www6}{external.sede_paths.declarations_listing}"
+    presented_at = datetime(2026, 4, 20, 10, 0, tzinfo=UTC)
+    return FiledDeclaracionObservation(
+        modelo="130",
+        ejercicio=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        expediente_id="13020260420WXYZ9999QRST8888",
+        status="ALTA",
+        presented_at=presented_at,
+        authenticated_identity="12345678Z",
+        artefacts=(
+            FiledDeclaracionArtefact(
+                kind="submitted_file",
+                source_url=AnyHttpUrl(url),
+                content_type="application/octet-stream",
+                byte_count=len(body),
+                sha256=hashlib.sha256(body).hexdigest(),
+                captured_at=presented_at,
+            ),
+        ),
+        casillas=(
+            ObservedCasillaValue(
+                casilla_id=validated_casilla_id("03"),
+                value="1500.00",
+                value_kind=CasillaValueKind.NUMERIC,
+                source_artefact_kind="submitted_file",
+                source_locator="submitted-file:03",
+                confidence=1.0,
+            ),
+        ),
+        extraction_coverage={"submitted_file": 1.0},
+    )
+
+
+def test_a_period_with_two_register_rows_reports_two_raw_and_one_selected() -> None:
+    """The collapse the sweep performs becomes visible instead of silent.
+
+    Two filings for one period -- an original and its amendment -- collapse to one
+    persisted observation. That is correct, but unreported it means an operator
+    seeing one observation cannot tell whether AEAT held one filing or four.
+    """
+    rows = filed_period_selection_rows(
+        {
+            ("130", 2026): (
+                _declaration_row(
+                    modelo="130",
+                    year=2026,
+                    period="1T",
+                    expediente_id="13020260410ABCD1234EFGH5678",
+                    presented_at=datetime(2026, 4, 10, tzinfo=UTC),
+                ),
+                _declaration_row(
+                    modelo="130",
+                    year=2026,
+                    period="1T",
+                    expediente_id="13020260420WXYZ9999QRST8888",
+                    presented_at=datetime(2026, 4, 20, tzinfo=UTC),
+                ),
+            ),
+        },
+        (_filed_130_observation_for_tests(),),
+    )
+    (row,) = rows
+    assert row.modelo == "130"
+    assert row.ejercicio == 2026
+    assert row.period == "1T"
+    assert row.raw_row_count == 2
+    assert row.selected_count == 1
+    assert row.superseded_count == 1
+    assert row.held_more_than_one_filing is True
+
+
+def test_a_single_filing_period_reports_no_supersession() -> None:
+    rows = filed_period_selection_rows(
+        {
+            ("130", 2026): (
+                _declaration_row(
+                    modelo="130",
+                    year=2026,
+                    period="1T",
+                    expediente_id="13020260420WXYZ9999QRST8888",
+                    presented_at=datetime(2026, 4, 20, tzinfo=UTC),
+                ),
+            ),
+        },
+        (_filed_130_observation_for_tests(),),
+    )
+    (row,) = rows
+    assert row.raw_row_count == 1
+    assert row.selected_count == 1
+    assert row.superseded_count == 0
+    assert row.held_more_than_one_filing is False
+
+
+def test_the_breakdown_keys_on_period_not_on_the_query_pair() -> None:
+    """One query pair returns several periods, each with its own duplicate count.
+
+    Keying on the pair would sum a duplicated 1T together with a clean 2T and
+    report the pair as duplicated, hiding which period actually held two filings.
+    """
+    rows = filed_period_selection_rows(
+        {
+            ("130", 2026): (
+                _declaration_row(
+                    modelo="130",
+                    year=2026,
+                    period="1T",
+                    expediente_id="13020260410ABCD1234EFGH5678",
+                    presented_at=datetime(2026, 4, 10, tzinfo=UTC),
+                ),
+                _declaration_row(
+                    modelo="130",
+                    year=2026,
+                    period="1T",
+                    expediente_id="13020260420WXYZ9999QRST8888",
+                    presented_at=datetime(2026, 4, 20, tzinfo=UTC),
+                ),
+                _declaration_row(
+                    modelo="130",
+                    year=2026,
+                    period="2T",
+                    expediente_id="13020260710MNOP5555IJKL4444",
+                    presented_at=datetime(2026, 7, 10, tzinfo=UTC),
+                ),
+            ),
+        },
+        (_filed_130_observation_for_tests(),),
+    )
+    by_period = {row.period: row for row in rows}
+    assert by_period["1T"].raw_row_count == 2
+    assert by_period["1T"].held_more_than_one_filing is True
+    assert by_period["1T"].superseded_count == 1
+    assert by_period["2T"].raw_row_count == 1
+    assert by_period["2T"].held_more_than_one_filing is False
+    # 2T returned one row and captured none, which is NOT supersession: with no
+    # winner nothing was displaced. It is an unaccounted row, reported as such so
+    # the operator is never told a filing was superseded by one that never existed.
+    assert by_period["2T"].superseded_count == 0
+    assert by_period["2T"].rows_not_accounted_for == 1
+
+
+# --------------------------------------------------- the re-capture divergence
+
+
+def _stored_130_registry_observation(*, casilla_03: str):
+    from ....domain.calculations.registry import RegistryModeloObservation, validated_casilla_id
+    from ....tests.registry_observations import registry_grounded_observations
+
+    return RegistryModeloObservation(
+        modelo="130",
+        filing_year=2026,
+        period="1T",
+        observations=registry_grounded_observations(
+            modelo="130",
+            filing_year=2026,
+            period="1T",
+            casilla_values={validated_casilla_id("03"): Decimal(casilla_03)},
+        ),
+    )
+
+
+def test_a_changed_casilla_value_is_reported_as_a_divergence() -> None:
+    changed = casillas_a_recapture_would_change(
+        _filed_130_observation_for_tests(),
+        _stored_130_registry_observation(casilla_03="1200.00"),
+    )
+    assert changed == ("03",)
+
+
+def test_an_unchanged_casilla_value_is_not_a_divergence() -> None:
+    changed = casillas_a_recapture_would_change(
+        _filed_130_observation_for_tests(),
+        _stored_130_registry_observation(casilla_03="1500.00"),
+    )
+    assert changed == ()
+
+
+def test_a_casilla_the_stored_revision_never_held_is_not_a_divergence() -> None:
+    """A wider extraction is not a changed value.
+
+    Comparing only the intersection is what stops the advisory firing on every
+    extraction improvement -- a casilla newly READ is not a casilla AMENDED, and
+    reporting it as one would train the operator to ignore the alert.
+    """
+    from ....domain.calculations.registry import RegistryModeloObservation, validated_casilla_id
+    from ....tests.registry_observations import registry_grounded_observations
+
+    stored_without_03 = RegistryModeloObservation(
+        modelo="130",
+        filing_year=2026,
+        period="1T",
+        observations=registry_grounded_observations(
+            modelo="130",
+            filing_year=2026,
+            period="1T",
+            casilla_values={validated_casilla_id("07"): Decimal("10.00")},
+        ),
+    )
+    assert casillas_a_recapture_would_change(_filed_130_observation_for_tests(), stored_without_03) == ()
+
+
+def test_the_divergence_set_is_derived_from_the_captured_casillas_not_a_fixed_list() -> None:
+    """A newly captured casilla is compared the moment it is captured.
+
+    Pinned because the failure this function exists to prevent is a comparison
+    that OMITS a casilla, and a hand-listed field set is exactly how that
+    omission arrives.
+    """
+    import inspect
+
+    source = inspect.getsource(casillas_a_recapture_would_change)
+    assert "fresh.casillas" in source
+    assert not re.search(r"[\"'](?:0\d|1\d{2})[\"']", source), "a literal casilla id appeared; the set must be derived"

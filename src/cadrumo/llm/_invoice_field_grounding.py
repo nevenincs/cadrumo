@@ -93,9 +93,13 @@ class ExtractedInvoiceFields(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     supplier_tax_id: str | None = Field(default=None)
+    supplier_name: str | None = Field(default=None)
     supplier_postal_code: str | None = Field(default=None)
+    supplier_country: str | None = Field(default=None)
     customer_tax_id: str | None = Field(default=None)
+    customer_name: str | None = Field(default=None)
     customer_postal_code: str | None = Field(default=None)
+    customer_country: str | None = Field(default=None)
     invoice_number: str | None = Field(default=None)
     invoice_date: str | None = Field(default=None)
     taxable_base: str | None = Field(default=None)
@@ -128,9 +132,13 @@ class ExtractedFieldAnchors(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     supplier_tax_id: str | None = Field(default=None)
+    supplier_name: str | None = Field(default=None)
     supplier_postal_code: str | None = Field(default=None)
+    supplier_country: str | None = Field(default=None)
     customer_tax_id: str | None = Field(default=None)
+    customer_name: str | None = Field(default=None)
     customer_postal_code: str | None = Field(default=None)
+    customer_country: str | None = Field(default=None)
     invoice_number: str | None = Field(default=None)
     invoice_date: str | None = Field(default=None)
     taxable_base: str | None = Field(default=None)
@@ -334,7 +342,23 @@ def _grounded_tax_id(raw: str | None) -> str | None:
         return _grounded_intra_community_tax_id(normalise_nif_iva(raw))
 
 
-def _grounded_invoice_number(raw: str | None) -> str | None:
+def _grounded_free_text(raw: str | None) -> str | None:
+    """Return an opaque printed token trimmed of surrounding whitespace, or ``None``.
+
+    Named for the FORM it validates rather than for a field, like every other
+    validator in the two dispatch tables. It was named for the invoice number
+    when that was the only free-text field declared; it now serves six -- both
+    postal codes, both printed countries, the invoice number and the regime
+    legend -- and a validator named after one of the six reads as a rule about
+    invoice numbers that the other five are borrowing. The tables dispatch on
+    :class:`~llm._invoice_field_contract.InvoiceFieldForm`, so the form is what
+    the name must say.
+
+    Deliberately the weakest validator of the set, and that is the declared
+    contract rather than an omission: a free-text field is an opaque token the
+    document printed, so there is no independent authority to check it against.
+    A field needing one declares a different form.
+    """
     if raw is None:
         return None
     trimmed = raw.strip()
@@ -454,7 +478,7 @@ def _grounded_currency(raw: str | None) -> str | None:
 
 _TEXT_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None], str | None]] = {
     InvoiceFieldForm.TAX_IDENTIFIER: _grounded_tax_id,
-    InvoiceFieldForm.FREE_TEXT: _grounded_invoice_number,
+    InvoiceFieldForm.FREE_TEXT: _grounded_free_text,
     InvoiceFieldForm.CALENDAR_DATE: _grounded_date,
     InvoiceFieldForm.CURRENCY_CODE: _grounded_currency,
 }
@@ -586,9 +610,13 @@ def ground_extracted_fields(
     """
     fields = response.fields
     supplier_tax_id = _ground_text(fields.supplier_tax_id, "supplier_tax_id")
+    supplier_name = _ground_text(fields.supplier_name, "supplier_name")
     supplier_postal_code = _ground_text(fields.supplier_postal_code, "supplier_postal_code")
+    supplier_country = _ground_text(fields.supplier_country, "supplier_country")
     customer_tax_id = _ground_text(fields.customer_tax_id, "customer_tax_id")
+    customer_name = _ground_text(fields.customer_name, "customer_name")
     customer_postal_code = _ground_text(fields.customer_postal_code, "customer_postal_code")
+    customer_country = _ground_text(fields.customer_country, "customer_country")
     invoice_number = _ground_text(fields.invoice_number, "invoice_number")
     invoice_date = _ground_text(fields.invoice_date, "invoice_date")
     taxable_base = _ground_numeric(fields.taxable_base, "taxable_base")
@@ -604,9 +632,13 @@ def ground_extracted_fields(
     # grounded value here raises rather than travelling with no provenance.
     grounded: Mapping[str, str | Decimal | None] = {
         "supplier_tax_id": supplier_tax_id,
+        "supplier_name": supplier_name,
         "supplier_postal_code": supplier_postal_code,
+        "supplier_country": supplier_country,
         "customer_tax_id": customer_tax_id,
+        "customer_name": customer_name,
         "customer_postal_code": customer_postal_code,
+        "customer_country": customer_country,
         "invoice_number": invoice_number,
         "invoice_date": invoice_date,
         "taxable_base": taxable_base,
@@ -642,9 +674,13 @@ def ground_extracted_fields(
 
     return InvoiceDraft(
         supplier_tax_id=supplier_tax_id,
+        supplier_name=supplier_name,
         supplier_postal_code=supplier_postal_code,
+        supplier_country=supplier_country,
         customer_tax_id=customer_tax_id,
+        customer_name=customer_name,
         customer_postal_code=customer_postal_code,
+        customer_country=customer_country,
         invoice_number=invoice_number,
         invoice_date=invoice_date,
         taxable_base=taxable_base,

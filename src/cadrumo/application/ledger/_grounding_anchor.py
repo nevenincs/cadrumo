@@ -79,6 +79,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from collections.abc import Callable
 from decimal import Decimal
 
 from pydantic import BaseModel
@@ -94,6 +95,7 @@ __all__ = [
     "ground_ambiguous_candidates",
     "ground_anchored_value",
     "ground_self_reported_anchor",
+    "ground_structured_value",
     "normalise_for_anchor_search",
     "printed_excerpt_occurs",
     "strip_printed_unit",
@@ -298,6 +300,37 @@ def evaluate_anchor(
         to a different value is ``CONTRADICTED``, which is a stronger and more
         actionable statement than merely failing to ground.
     """
+    return _evaluate_anchor_against(value=value, anchor=anchor, source_text=transcription.text, source="transcription")
+
+
+def _evaluate_anchor_against(
+    *,
+    value: Decimal | str,
+    anchor: str,
+    source_text: str,
+    source: str,
+    derive: Callable[[str], str | None] | None = None,
+) -> AnchorEvaluation:
+    """Run the anchor check against any source text, naming it in the detail.
+
+    The check itself is the same two-part test wherever the text came from: the
+    anchor must OCCUR in the source, and the value must equal the deterministic
+    parse of the anchor. What differs between reading lanes is only which text is
+    authoritative -- a transcription for a rendered page, the record's own bytes
+    for a machine-readable document -- so that is the parameter, and the lanes
+    share one implementation rather than growing two that can drift.
+
+    Args:
+        value: The typed value the reader proposes.
+        anchor: The verbatim form claimed as its source.
+        source_text: The authoritative text to look for the anchor in.
+        source: What that text is, for the operator-facing detail line.
+        derive: For a TEXTUAL value that differs from its anchor, the
+            deterministic function re-deriving the value from the anchor. The
+            textual counterpart of the decimal coercion this function already
+            applies, and required for the same reason: without it "the anchor
+            occurs" is a fact about the anchor and says nothing about the value.
+    """
     if not anchor.strip():
         return AnchorEvaluation(
             outcome=FieldGroundingOutcome.UNANCHORED,
@@ -305,7 +338,7 @@ def evaluate_anchor(
             detail="the candidate carries no anchor, so nothing in the document can be pointed at",
         )
 
-    haystack = normalise_for_anchor_search(transcription.text)
+    haystack = normalise_for_anchor_search(source_text)
     needle = normalise_for_anchor_search(anchor)
     anchor_found = _occurs_as_a_whole_printed_token(needle, haystack)
 
@@ -313,13 +346,37 @@ def evaluate_anchor(
         return AnchorEvaluation(
             outcome=FieldGroundingOutcome.UNANCHORED,
             anchor_found=False,
-            detail=f"the anchor {anchor!r} does not occur in the document's transcription",
+            detail=f"the anchor {anchor!r} does not occur in the document's {source}",
         )
 
     if isinstance(value, str):
-        # A textual field grounds on the anchor alone: there is no deterministic
-        # parse to re-derive it from, and inventing one here would put this
-        # module's idea of normalisation in place of the document's own text.
+        if derive is not None:
+            # The textual counterpart of the decimal re-derivation below, and it
+            # exists for exactly the same reason. A value that does not equal its
+            # own anchor is a DERIVED value, and "the anchor occurs" then says
+            # nothing about it: the anchor could be real and the value arbitrary.
+            # Re-deriving from the anchor is what ties the two back together.
+            rederived = derive(anchor)
+            if rederived != value:
+                return AnchorEvaluation(
+                    outcome=FieldGroundingOutcome.CONTRADICTED,
+                    anchor_found=True,
+                    detail=(
+                        f"the anchor {anchor!r} derives to {rederived!r}, which is not the proposed value {value!r}"
+                    ),
+                )
+            return AnchorEvaluation(
+                outcome=FieldGroundingOutcome.ANCHORED,
+                anchor_found=True,
+                parse_was_vacuous=normalise_for_anchor_search(value) == needle,
+                detail=f"anchored to {anchor!r}, which derives to {value!r}",
+            )
+
+        # A value that IS its own anchor grounds on the anchor alone: there is no
+        # deterministic parse to re-derive it from, and inventing one here would
+        # put this module's idea of normalisation in place of the document's own
+        # text. Sound only because anchor-found then implies value-present, which
+        # is why a derived value may not take this branch.
         rendered = normalise_for_anchor_search(value)
         return AnchorEvaluation(
             outcome=FieldGroundingOutcome.ANCHORED,
@@ -353,6 +410,100 @@ def evaluate_anchor(
         parsed_anchor=parsed,
         parse_was_vacuous=normalise_for_anchor_search(str(value)) == needle,
         detail=f"anchored to {anchor!r}, which parses to {parsed}",
+    )
+
+
+def ground_structured_value(
+    *,
+    field: str,
+    value: Decimal | str,
+    element_path: str,
+    source_text: str,
+    anchor: str | None = None,
+    derive: Callable[[str], str | None] | None = None,
+) -> FieldProvenance:
+    """Return the envelope for one value read from a document's own record.
+
+    The structured sibling of :func:`ground_anchored_value`, and here for the same
+    reason: a path that constructs a :class:`FieldProvenance` itself and hand-sets
+    ``ANCHORED`` is asserting the check instead of running it. It is a separate
+    entry point rather than a parameter on that one because the transcription this
+    module normally checks against does not exist for a machine-readable document
+    -- there are no pages, no reading order and no transcriber -- and a
+    :class:`~application.ledger.DocumentTranscription` synthesised to satisfy the
+    signature would have to state a page count and a reader that never existed.
+    Both routes run the same two-part check underneath.
+
+    **The anchor is the record's own verbatim text, never the element path.** The
+    anchor field means the form the value was read from, and a downstream consumer
+    reads it as evidence about what the document states. A schema path is a
+    location: true, useful, and not evidence. It rides in the note instead, where
+    an operator can still use it to find the value and nothing can mistake it for
+    a printed form.
+
+    **The check is real, not ceremonial.** The parser produced the value; this
+    looks for its verbatim form in the source bytes independently, and re-derives
+    a numeric value from the anchor. A projection that mangled a figure on the way
+    through, or a reader that pointed at an element the document does not carry,
+    fails it. What it cannot do is prove the reader chose the RIGHT element -- the
+    same limit the transcription lane has, where an anchor found somewhere in the
+    page does not prove it was found in the right place.
+
+    Args:
+        field: Name of the :class:`~application.ledger.InvoiceDraft` field.
+        value: The typed value the parser produced.
+        element_path: Where in the record it came from, for the operator's note.
+        source_text: The record's own text, decoded from the source bytes.
+        anchor: The record's verbatim form of the value, where that DIFFERS from
+            the value itself. Defaults to the value's own rendering, which is
+            correct for every field copied straight out of the record and was the
+            only case until a value arrived normalised: a party's country is
+            stated ``ESP`` by Facturae and carried ``ES``, so grounding the
+            carried form would look for a string the document never states.
+
+            This is the same relation :attr:`FieldProvenance.anchor` already
+            documents for the printed lanes -- ``"1.234,56 €"`` anchoring the
+            value ``1234.56``. **The shape is the same and the guarantee is not
+            inherited**: that relation is checked by a parse that resolves
+            CONTRADICTED on disagreement, so an explicit anchor here must supply
+            its own equivalent through *derive*. Requiring it is not ceremony --
+            without it the anchor could be real while the value was arbitrary,
+            and the envelope would assert the document evidences a value it
+            never mentions.
+        derive: How to re-derive *value* from *anchor*, REQUIRED whenever an
+            explicit anchor is given for a textual value. Refused rather than
+            defaulted, because a silent default would be this module choosing a
+            normalisation on the caller's behalf, which is the thing the anchor
+            check exists to avoid.
+
+    Returns:
+        The envelope, stamped :attr:`~core.FieldOrigin.EXACT_STRUCTURED`.
+    """
+    if anchor is None:
+        anchor = value if isinstance(value, str) else str(value)
+    elif isinstance(value, str) and derive is None:
+        # A caller contract, not a document condition, so it raises rather than
+        # resolving to an outcome: an envelope is about what the document says,
+        # and "the caller passed an unverifiable pair" is not one of the things
+        # it can say.
+        raise ValueError(
+            f"{field}: an explicit anchor for a textual value needs a derivation to check it against; "
+            f"without one the envelope would assert the record evidences {value!r} on the strength of "
+            f"a different string occurring in it",
+        )
+    evaluation = _evaluate_anchor_against(
+        value=value,
+        anchor=anchor,
+        source_text=source_text,
+        source="record",
+        derive=derive,
+    )
+    return FieldProvenance(
+        field=field,
+        origin=FieldOrigin.EXACT_STRUCTURED,
+        grounding=evaluation.outcome,
+        anchor=anchor if evaluation.anchor_found else None,
+        note=f"read from {element_path}; {evaluation.detail}",
     )
 
 

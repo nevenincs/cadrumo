@@ -250,6 +250,12 @@ class BucketEventType(StrEnum):
     PURCHASE_INVOICE_EVIDENCE_ATTACHED = "purchase_invoice_evidence.attached"
     PURCHASE_INVOICE_EVIDENCE_REPLACED = "purchase_invoice_evidence.replaced"
     PURCHASE_INVOICE_EVIDENCE_DETACHED = "purchase_invoice_evidence.detached"
+    # An operator declined a read draft. Its own member rather than a reuse of
+    # the three above, because a decline changes no stored evidence at all: it
+    # records that a human looked and said no, which is the only trace the
+    # decision leaves. Without it a declined read and a read never reviewed are
+    # the same absence.
+    PURCHASE_INVOICE_EVIDENCE_DRAFT_DECLINED = "purchase_invoice_evidence.draft.declined"
     # business-operation invoice noun-groups (invoice-domain-decoupling)
     PAYABLE_INVOICE_CREATED = "payable_invoice.created"
     PAYABLE_INVOICE_UPDATED = "payable_invoice.updated"

@@ -226,6 +226,25 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
             "exactly as it appears; null if the document shows nothing that does"
         ),
     ),
+    # The party's NAME, asked beside its identifier for the same pairing reason
+    # the postal code is. It carries no role-evidence key and that is a ruling
+    # rather than an omission: the evidence keys stay at two because the
+    # design-target model's context budget is a hard constraint and a key with no
+    # consumer is review theatre. The name does not need one -- it is not a value
+    # whose PARTY is in doubt separately from the identifier it sits beside, it is
+    # the thing a reader would quote to evidence that identifier's role. Asking
+    # for evidence OF the name would be asking what assigns the name to the party
+    # whose name it is.
+    InvoiceFieldContract(
+        field_name="supplier_name",
+        form=InvoiceFieldForm.FREE_TEXT,
+        concept="the registered or trading name of the party who ISSUED the invoice and is owed the money",
+        form_instruction=(
+            "copy the name alone exactly as printed, without the address, the tax identifier "
+            "or any legal-form suffix the document does not print; "
+            "this is the issuer's own name, not the name of the party being billed"
+        ),
+    ),
     # Kept adjacent to the identifier it belongs to, for the reason the anchor
     # key sits beside its field in the JSON skeleton: a small model pairs two
     # facts about ONE party most reliably when they are asked for together.
@@ -235,6 +254,24 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
         concept="the postal code printed in the postal address of the party who ISSUED the invoice",
         form_instruction=(
             "copy the postal code alone as printed, without the town, province or country; "
+            "this is the issuer's own address, not the address of the party being billed"
+        ),
+    ),
+    # Asked as the NAME the document prints, never as an alpha-2 code. A country
+    # prints in the issuer's own language -- "Alemania", "Deutschland",
+    # "Allemagne" -- so asking a reader for `DE` would be asking it to translate,
+    # and translation is inference in the same sentence that forbids it. The
+    # bounded registry vocabulary does the lookup downstream
+    # (:func:`~domain.iva.country_code_for_printed_country_name`), which is a
+    # deterministic match rather than a judgement, so the reader's whole job here
+    # is transcription.
+    InvoiceFieldContract(
+        field_name="supplier_country",
+        form=InvoiceFieldForm.FREE_TEXT,
+        concept="the country printed in the postal address of the party who ISSUED the invoice",
+        form_instruction=(
+            "copy the country name alone exactly as printed, in the document's own language, "
+            "without translating it and without abbreviating it to a code; "
             "this is the issuer's own address, not the address of the party being billed"
         ),
     ),
@@ -252,11 +289,31 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
         ),
     ),
     InvoiceFieldContract(
+        field_name="customer_name",
+        form=InvoiceFieldForm.FREE_TEXT,
+        concept="the registered or trading name of the party BILLED by the invoice, who owes the money",
+        form_instruction=(
+            "copy the name alone exactly as printed, without the address, the tax identifier "
+            "or any legal-form suffix the document does not print; "
+            "leave empty unless the document prints a name for the party being billed"
+        ),
+    ),
+    InvoiceFieldContract(
         field_name="customer_postal_code",
         form=InvoiceFieldForm.FREE_TEXT,
         concept="the postal code printed in the postal address of the party BILLED by the invoice",
         form_instruction=(
             "copy the postal code alone as printed, without the town, province or country; "
+            "leave empty unless the document prints an address for the party being billed"
+        ),
+    ),
+    InvoiceFieldContract(
+        field_name="customer_country",
+        form=InvoiceFieldForm.FREE_TEXT,
+        concept="the country printed in the postal address of the party BILLED by the invoice",
+        form_instruction=(
+            "copy the country name alone exactly as printed, in the document's own language, "
+            "without translating it and without abbreviating it to a code; "
             "leave empty unless the document prints an address for the party being billed"
         ),
     ),

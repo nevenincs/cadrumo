@@ -368,7 +368,7 @@ def _maximal_descendants() -> tuple[DescendantInfo, ...]:
             custodia_compartida=True,
             presenta_declaracion_propia=True,
             prorrata_minimo=True,
-            meses_madre_trabajo_2024=7,
+            meses_madre_trabajo=(1, 2, 3, 4, 5, 6, 7),
             gastos_guarderia_euros=1200,
             nif="00000000T",
         )

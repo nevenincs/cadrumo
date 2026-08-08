@@ -112,9 +112,7 @@ def _measurable_headroom() -> HardwareProfile:
         memory=SystemMemoryReading(total_bytes=64 * _GIB, free_bytes=48 * _GIB),
         accelerator=AcceleratorReading(
             kind=AcceleratorKind.NVIDIA_CUDA,
-            devices=(
-                AcceleratorDevice(index=0, name="card-0", total_vram_bytes=24 * _GIB, free_vram_bytes=12 * _GIB),
-            ),
+            devices=(AcceleratorDevice(index=0, name="card-0", total_vram_bytes=24 * _GIB, free_vram_bytes=12 * _GIB),),
         ),
     )
 
@@ -202,7 +200,7 @@ def test_an_all_local_batch_ingest_surveys_as_on_host(
     stored = load_extraction_drafts(_BUCKET_ID, runtime_profile.settings).drafts
     assert stored, "the batch must have written a draft for this gate to mean anything"
 
-    survey = survey_cloud_consent(bucket_id=_BUCKET_ID, settings=runtime_profile.settings)
+    survey = survey_cloud_consent(bucket_id=_BUCKET_ID, settings=runtime_profile.settings, consent_entries=())
 
     assert survey.cloud_derived_artefacts == (), (
         "an all-local batch ingest was reported as cloud-derived; the survey is classifying by "
@@ -458,9 +456,7 @@ class TestInferencePacing:
             memory=SystemMemoryReading(total_bytes=64 * _GIB, free_bytes=48 * _GIB),
             accelerator=AcceleratorReading(
                 kind=AcceleratorKind.NVIDIA_CUDA,
-                devices=(
-                    AcceleratorDevice(index=0, name="card-0", total_vram_bytes=24 * _GIB, free_vram_bytes=None),
-                ),
+                devices=(AcceleratorDevice(index=0, name="card-0", total_vram_bytes=24 * _GIB, free_vram_bytes=None),),
             ),
         )
 
@@ -557,6 +553,7 @@ class TestInferencePacing:
         folder = tmp_path / "retry"
         folder.mkdir()
         (folder / _SCAN).write_bytes((_CORPUS / _SCAN).read_bytes())
+
         def _over_the_folder(profile: HardwareProfile) -> BatchRunResult:
             """Run the same folder twice, varying only the hardware it sees.
 

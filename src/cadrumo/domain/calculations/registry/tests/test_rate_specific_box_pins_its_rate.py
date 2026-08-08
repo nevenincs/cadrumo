@@ -142,9 +142,7 @@ def _guarded_casillas() -> list[str]:
         if not rate_boxes:
             continue
         for revision in modelo.revisions.values():
-            seen.extend(
-                casilla.id for casilla in revision.casillas if (casilla.number or "").strip() in rate_boxes
-            )
+            seen.extend(casilla.id for casilla in revision.casillas if (casilla.number or "").strip() in rate_boxes)
     return seen
 
 

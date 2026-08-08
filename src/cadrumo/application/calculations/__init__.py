@@ -104,6 +104,12 @@ from ._iva_compensation_annual_partition import (
     IvaCompensationAnnualPartitionSourceResolver,
     resolve_iva_compensation_annual_partition_binding_values,
 )
+from ._iva_compensation_casillas import (
+    M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+    M303_DISPONIBLE_CASILLA,
+    M303_GENERADA_CASILLA,
+    M303_POSTERIOR_CASILLA,
+)
 from ._iva_compensation_history import (
     IvaCompensationAnnualCrossCheck,
     IvaCompensationAnnualSummary,
@@ -186,6 +192,10 @@ __all__ = [
     "CASILLA_REGULARIZACION_BIENES_INVERSION",
     "CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA",
     "M111_NO_RETENCIONES_PROFILE_PATH",
+    "M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA",
+    "M303_DISPONIBLE_CASILLA",
+    "M303_GENERADA_CASILLA",
+    "M303_POSTERIOR_CASILLA",
     "AssembledObservations",
     "BienesInversionRegularizacionSourceResolver",
     "BindingPrefillReport",

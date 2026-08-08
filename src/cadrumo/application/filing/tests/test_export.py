@@ -93,6 +93,7 @@ from ._export_support import (
     _approved_modelo_131_registry_draft_without_direct_debit,
     _approved_modelo_131_year_scoped_registry_draft,
     _approved_modelo_131_zero_payable_direct_debit_draft,
+    _approved_modelo_200_registry_draft,
     _approved_registry_draft,
     _assert_missing_export_layout_refusal,
     _ExportVerifyMatchCase,
@@ -104,7 +105,9 @@ from ._export_support import (
     _modelo_123_export_headers,
     _modelo_130_export_headers,
     _modelo_130_export_payload,
+    _modelo_200_export_headers,
     _narrative,
+    _provider_with_export_layouts,
     _provider_without_export_layout,
     _schema_provider,
 )
@@ -850,6 +853,135 @@ def test_export_writes_modelo_200_negative_cuota_diferencial_as_signed_money(tmp
     assert exported_values[_M200_CUOTA_DIFERENCIAL_CASILLA] == Decimal("-404.00")
     assert rendered == "N" + "40400".zfill(16)
     assert verify_export(approved, file_path=output, schema_provider=provider).verdict is DeclaracionVerifyVerdict.MATCH
+
+
+def test_export_leaves_modelo_200_grupo_mercantil_parent_tin_slot_blank(tmp_path: Path) -> None:
+    """M200 page 001B position 141 must not carry the declarant's own NIF.
+
+    The 2025 Diseño de Registro publishes page 001B position 141, length 15 as
+    "Grupo mercantil - Identificación fiscal del país de residencia - NIF en el
+    país de residencia (TIN)": the foreign tax identification number of the
+    mercantile group's ultimate parent company, in the parent's country of
+    residence. That is a different entity, under a different jurisdiction, from
+    the declarant whose own 9-character Spanish NIF page 001 position 14 carries.
+
+    The record renders on every M200 export -- only the refund page carries a
+    suppression predicate -- so a value bound here reaches every filing, group
+    member or not. Writing the declarant's NIF into the slot asserts that the
+    filer is its own group's foreign parent, which is affirmatively wrong data
+    rather than an omission. The slot stays blank until the grupo mercantil block
+    is modelled as its own domain concept.
+    """
+    provider = _schema_provider(filing_year=2024, period="0A", modelos=("200",))
+    draft = _approved_modelo_200_registry_draft()
+    output = tmp_path / "modelo-200.txt"
+
+    export_draft(
+        draft,
+        output_path=output,
+        headers=_modelo_200_export_headers(),
+        schema_provider=provider,
+    )
+
+    payload = output.read_bytes()
+    layout = provider.get_subview(draft.modelo).export_layouts[0]
+    filer_nif = draft.profile_tax_id.encode("latin-1")
+    own_nif_slot = payload[
+        _field_slice(layout, "modelo-200-page-001", "modelo-200-page-001-draft-profile_tax_id-pos-14")
+    ]
+    parent_tin_slot = payload[
+        _field_slice(layout, "modelo-200-page-001b", "modelo-200-page-001b-draft-profile_tax_id-pos-141")
+    ]
+
+    # Positive control first: the declarant's own page-001 NIF slot proves this
+    # export ran and that a written identifier is visible through this slice, so
+    # the blank assertion below reads as a real absence rather than as a
+    # mis-addressed slice or a payload that never carried a NIF anywhere.
+    assert own_nif_slot == filer_nif
+    assert len(parent_tin_slot) == 15
+    assert parent_tin_slot == b" " * 15
+    assert filer_nif not in parent_tin_slot
+
+
+def test_export_writes_the_modelo_200_envelope_tags_aeat_publishes(tmp_path: Path) -> None:
+    """Every M200 fichero must open and close with AEAT's constant envelope tags.
+
+    Sheet ``DP200000`` of the 2024 Diseño de Registro declares four ``Constante``
+    fields around the page content: position 1 length 17 is
+    ``<T`` + modelo + discriminante + ejercicio + periodo + tipo + ``>``, position
+    18 length 5 is ``<AUX>``, position 323 length 6 is ``</AUX>``, and a final
+    18-character field carries the matching ``</T...>`` close tag after all pages.
+    The sheet prints its example content literally, and this fixture files exactly
+    the ejercicio and periodo that example uses (2024, ``0A``), so the expected
+    bytes below are AEAT's own printed strings rather than a value re-derived from
+    the registry declaration under test.
+
+    The discriminante is ``"0"`` (Normal, Abreviado y PYMES per the sheet's
+    ``(*)`` note) because that is the only estado de cuentas this application can
+    produce a draft for; the four other regimes have no domain representation.
+
+    A file missing these tags is structurally malformed against the published
+    design while still carrying a valid digest and a plausible byte count, so no
+    signal reaches the operator -- the omission is only visible at the bytes.
+    """
+    provider = _schema_provider(filing_year=2024, period="0A", modelos=("200",))
+    draft = _approved_modelo_200_registry_draft()
+    output = tmp_path / "modelo-200.txt"
+
+    export_draft(draft, output_path=output, headers=_modelo_200_export_headers(), schema_provider=provider)
+
+    payload = output.read_bytes()
+
+    assert payload[:17] == b"<T200020240A0000>"
+    assert payload[17:22] == b"<AUX>"
+    assert payload[322:328] == b"</AUX>"
+    assert payload[-18:] == b"</T200020240A0000>"
+    # The two EEDD fields the sheet marks optional ride the same record, so a
+    # promotion that reached the tags while leaving these as reserved blanks would
+    # otherwise pass. Both values come from the export headers.
+    assert payload[92:96] == b"A001"
+    assert payload[100:109] == b"B12345674"
+
+
+def test_a_modelo_200_layout_without_its_footer_record_writes_no_closing_tag(tmp_path: Path) -> None:
+    """The closing tag must come from the footer record, not from anywhere else.
+
+    The load-bearing proof for the close-tag assertion above. The open tag fails
+    visibly when its composite is wrong -- the year renders where ``<T`` belongs --
+    but a close-tag assertion could pass for the wrong reason if some other record
+    happened to end the fichero with those bytes. Dropping the ``envelope_footer``
+    record from the layout and rendering through the real export path shows the tag
+    disappears with it, so its presence in the assertion above is caused by that
+    record's declaration.
+
+    The record is removed by rebuilding the layout through the registry's own
+    model, which is the same shape the loader produces, rather than by editing the
+    committed TOML.
+    """
+    provider = _schema_provider(filing_year=2024, period="0A", modelos=("200",))
+    layout = provider.get_subview("200").export_layouts[0]
+    footers = tuple(record for record in layout.records if record.record_type == "envelope_footer")
+
+    assert len(footers) == 1, "the committed layout must declare exactly one envelope footer to remove"
+
+    without_footer = layout.model_copy(
+        update={"records": tuple(record for record in layout.records if record.record_type != "envelope_footer")},
+    )
+    stripped = _provider_with_export_layouts(provider, "200", (without_footer,))
+    output = tmp_path / "modelo-200.txt"
+
+    export_draft(
+        _approved_modelo_200_registry_draft(),
+        output_path=output,
+        headers=_modelo_200_export_headers(),
+        schema_provider=stripped,
+    )
+
+    payload = output.read_bytes()
+
+    assert payload[:17] == b"<T200020240A0000>", "the open tag is unaffected, so the loss below is the footer's"
+    assert payload[-18:] != b"</T200020240A0000>"
+    assert b"</T200" not in payload
 
 
 def test_export_writes_modelo_111_registry_layout(tmp_path: Path) -> None:

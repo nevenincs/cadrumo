@@ -813,10 +813,11 @@ application:
   live:
     deudas:
       errors:
-        bucket_id_blank: application.live.deudas.errors.bucket_id_blank
-        snapshot_id_blank: application.live.deudas.errors.snapshot_id_blank
-        snapshot_not_found: application.live.deudas.errors.snapshot_not_found
-        snapshot_prefix_ambiguous: application.live.deudas.errors.snapshot_prefix_ambiguous
+        bucket_id_blank: A deudas bucket azonosítója nem lehet üres.
+        snapshot_id_blank: A deudas pillanatkép azonosítója nem lehet üres.
+        snapshot_not_found: Nem található deudas-pillanatkép a kért azonosítóhoz.
+        snapshot_prefix_ambiguous: A deudas pillanatkép előtag több pillanatképre
+          illeszkedik.
     expedientes:
       errors:
         bucket_id_blank: Az expedientes bucket azonosítója nem lehet üres.
@@ -1982,7 +1983,9 @@ cli:
           az adatokat ki kell nyerni.
         extract_help: A számla PDF mezőinek helyi (on-host) beolvasása áttekinthető
           piszkozatba.
-        extract_off_host_needs_content_address: cli.app.ledger.evidence.extract_off_host_needs_content_address
+        extract_off_host_needs_content_address: Ennek a bizonylatnak nincs tartalmi
+          lenyomata, ezért a gépen kívüli beolvasás nem rögzíthető az elküldendő bájtokhoz
+          kötve.
         extract_off_host_needs_evidence_id: 'A gépen kívüli beolvasáshoz meg kell
           adni az --evidence-id értéket: a hozzájárulás a dokumentum tartalmi lenyomatához
           kötődik, amelyet a melléklet azonosítója nem hordoz.'
@@ -1991,7 +1994,9 @@ cli:
         extract_off_host_provider_is_local: Az --off-host-provider local az alapértelmezés,
           és semmit nem küld el a gépről. Hagyja el a kapcsolót, vagy adjon meg távoli
           szolgáltatót.
-        extract_provider_without_acknowledge: cli.app.ledger.evidence.extract_provider_without_acknowledge
+        extract_provider_without_acknowledge: A dokumentum gépen kívüli beolvasása
+          a tartalmát harmadik félnek küldi el. Adja hozzá az --acknowledge-off-host
+          kapcsolót ennek az egy beolvasásnak a megerősítéséhez.
         extract_reference_required: 'Adja meg pontosan az egyiket: --evidence-id vagy
           --attachment-id.'
         extract_review_hint_message: Ez egy hozzávetőleges piszkozat; minden mezőt
@@ -2033,6 +2038,11 @@ cli:
           group_help: Tekintse at a fuggoben levo kivonatolasi piszkozatokat, mielott
             szamlava erositi oket.
           list_help: Listazza az emberi ellenorzesre varo kivonatolasi piszkozatokat.
+          party_attribution_unverified_message: Semmi sem ellenőrzi, hogy ezek a címadatok
+            melyik félhez tartoznak. Ha két címblokkot fordítva olvasnának be, mindkét
+            fél olyan áfaterületre kerülne, ahol egyikük sem telepedett le, és ezt
+            egyetlen ellenőrzés sem szűrné ki. Vesse össze minden értéket a dokumentummal,
+            mielőtt jóváhagyja ezt a piszkozatot.
           reason_help: Csak az ezen okbol blokkolt piszkozatokat jelenitse meg.
           reference_help: A fuggo piszkozat forrasakent szolgalo bizonyitek- vagy
             mellekletazonosito.
@@ -2241,6 +2251,11 @@ cli:
           szélesíti a bejárást: egy hiányzó pár nem bizonyítja, hogy semmit sem nyújtottak
           be.'
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
+        pull_all_help: Egy menetben letölti az adózó AEAT-nál tárolt előzményeit.
+        pull_all_limit_help: Korlátozza, hány bevallást rögzít ez a menet.
+        pull_all_pairs_refused: '{count} modelo/ejercicio pár nem volt olvasható,
+          és NEM üresként jelentettük őket: {pairs}. Futtassa újra az újrapróbálkozáshoz;
+          az elutasítás nem bizonyítja, hogy semmit sem nyújtottak be.'
         pull_help: Letölti a benyújtott nyilatkozatok adatait a hitelesített AEAT
           nyilvántartásból.
         pull_modelo_help: Korlátozza ezt a letöltést erre a modellre.
@@ -3791,7 +3806,7 @@ cli:
         profile delete %{name} --yes` a megerősítéshez.'
       delete_yes_help: Törlési művelet explicit megerősítése.
       descendiente:
-        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Ismételhető. Futtassa az `aeat config profile descendiente` parancsot alparancs
           nélkül a vezetett bevitelhez.
         add_help: Egy vagy több leszármazott hozzáadása az aktív profilhoz.
@@ -5022,7 +5037,11 @@ cli:
         ledger_view: Egyetlen tranzakció megtekintése.
         live_filed_capture: Csak olvasható megfigyelés letöltése az AEAT-ből.
         live_filed_capture_sources: Letöltési forráslehetőségek listázása.
+        live_filed_discover: Megjeleníti, mely előzményeket járná be egy teljes letöltés,
+          rögzítés nélkül.
         live_filed_list: Helyileg rögzített benyújtott bevallás-megfigyelések listázása.
+        live_filed_pull_all: Letölti az AEAT-nál tárolt előzményeket, és egyezteti
+          az áfa-tárcát és az értesítéseket.
         modelo_audit_check: Ellenőrzi egy bevallásrevízió csomagolt bizonyítékait.
         modelo_audit_export: Exportálja egy bevallásrevízió bizonyíték-auditját.
         modelo_audit_show: Megjeleníti egy bevallásrevízió bizonyíték-auditját.
@@ -5620,6 +5639,111 @@ docs:
       between: '{min} és {max} között'
       non_negative: Nulla vagy több
       non_positive: Nulla vagy kevesebb
+  cli:
+    automation:
+      exit_auth: Hitelesítés szükséges, vagy a hitelesítő adatok lejártak.
+      exit_codes_heading: Kilépési kódok
+      exit_conflict: Ütközés vagy előfeltétel meghiúsulása.
+      exit_forbidden: A szabályzat nem engedélyezi a műveletet.
+      exit_general: Általános hiba vagy elutasított művelet.
+      exit_internal: Váratlan belső hiba.
+      exit_not_found: Az erőforrás nem található.
+      exit_partial: Részleges siker (egyes elemek sikerültek, mások nem).
+      exit_success: Sikeres.
+      exit_unavailable: A külső szolgáltatás nem érhető el.
+      exit_usage: Érvénytelen CLI-használat (hibás kapcsoló, hiányzó argumentum).
+      exit_validation: Érvényesítési hiba a felhasználó által megadott adatokban.
+      intro: 'Ezt az oldalt akkor használja, ha ``aeat`` hívásokat szkriptel: a folyamat
+        kilépési kódjait és a minden parancsra érvényes TTY/JSON kimeneti viselkedést
+        írja le.'
+      output_contract_body: Ha a kimenet TTY-ra megy, a CLI ember által olvasható,
+        formázott szöveget ad. Ha a ``--format json`` kapcsolót megadják (vagy a kimenetet
+        átirányítják), a CLI hívásonként egyetlen JSON-dokumentumot ad. A ``SchemaEnvelope``
+        szerkezetet már használó parancsok az eredményüket ``{envelope}`` alakban
+        csomagolják. A még át nem állított parancsok közvetlenül adják vissza az adataikat.
+      output_contract_heading: TTY és JSON kimeneti szerződés
+      title: Kilépési kódok és kimeneti szerződés
+    command:
+      bare_payload_note: Ez a parancs csupasz adatot ad vissza (még nincs burkolatba
+        csomagolva). A kimenet szerkezete parancsonként eltér; a részletekért lásd
+        a ``--help`` kimenetét.
+      group_fallback: Parancscsoport.
+      no_description: Nincs leírás.
+      no_description_available: Nem érhető el leírás.
+      output_schema_heading: Kimeneti séma
+      parameters_heading: Paraméterek
+      path_label: Parancs útvonala
+      registry_key_label: Registry-kulcs
+      schema_envelope_note: Ez a parancs ``SchemaEnvelope`` szerkezetet ad vissza,
+        amelynek ``result`` mezőjét a ``{schema}`` séma ellenőrzi.
+    env:
+      default_empty: üres
+      default_unset: nincs beállítva
+      secrets_note: Az alkalmazás soha nem írja ki a titkos értékeket, ezek fent `(secret)`
+        jelöléssel szerepelnek. A `(derived)` jelölésű alapértelmezések futásidőben,
+        a tárolási gyökérből vagy a projekt helyéből számítódnak.
+    family:
+      choose_group_heading: Válasszon parancscsoportot
+      direct_commands_heading: Közvetlen parancsok
+      direct_commands_intro: Ezek a parancsok közvetlenül az ``aeat {family}`` alá
+        tartoznak, közbeiktatott igecsoport nélkül.
+      group_link_line: Nyissa meg a :doc:`{target}` oldalt az ``aeat {family} {group}``
+        parancshoz.
+      index_link_line: Nyissa meg a :doc:`/cli/index` oldalt a CLI-referencia nyitóoldalához.
+      intro: Az ``aeat {family}`` fő igecsoportok szerint rendeződik. Minden csoport
+        saját oldala a csoport valódi ``--help`` kimenetével kezdődik, majd az összes
+        hozzá tartozó végponti parancs következik.
+      open_group_link: Az ``aeat {family} {group}`` referenciájának megnyitása
+      title: '{command}: parancsreferencia'
+    index:
+      app_card: 'Operatív munkafolyamat-parancsok: főkönyvi munka, modelók, bevallási
+        határidőnaptárak, registry-ellenőrzések, élő lekérések és felülvizsgálati
+        sorok.'
+      choose_family_heading: Válasszon parancscsaládot
+      config_card: 'Helyi beállítási és karbantartási parancsok: profilok, hitelesítés,
+        Google-integráció, javító ellenőrzések és visszaállítási felületek.'
+      english_help_note: A súgószövegek angolul jelennek meg. Futásidőben a CLI a
+        beállított kimeneti nyelvet használja (``--language`` / ``CADRUMO_OUTPUT_LANGUAGE``).
+      flag_debug: Bekapcsolja a hibakeresési szintű naplózást.
+      flag_detail: Bővített verzióinformációt ír ki, a registry összegzésével együtt.
+      flag_format: Kimeneti formátum (``text`` vagy ``json``).
+      flag_help: Kiírja a szerkesztett súgódokumentumot, majd kilép.
+      flag_language: Felülírja a kimeneti nyelvet (``es``, ``en``, ``ca``, ``hu``).
+      flag_profile: Megadott nevű profilt aktivál erre a hívásra.
+      flag_quiet: Elnyomja a tájékoztató kimenetet.
+      flag_verbose: Bekapcsolja a részletes kimenetet.
+      flag_version: Kiírja a csomag verzióját, majd kilép.
+      global_flags_heading: Globális kapcsolók
+      global_flags_intro: Ezeket a kapcsolókat az ``aeat`` gyökérparancs fogadja el,
+        és minden hívásra érvényesek.
+      intro: 'Az ``aeat`` CLI két felső szintű parancscsaládot tesz elérhetővé: ``config``
+        (helyi beállítás, profil-életciklus, diagnosztika) és ``app`` (operatív adózási
+        munkafolyamat). Ez a referencia mind a(z) {count} végponti parancsot dokumentálja.'
+      next_app: Nyissa meg a :doc:`app` oldalt az operatív munkafolyamat-parancsokhoz.
+      next_automation: Nyissa meg a :doc:`automation` oldalt a kilépési kódokhoz és
+        a TTY/JSON kimeneti szerződéshez.
+      next_config: Nyissa meg a :doc:`config` oldalt a helyi beállítási és karbantartási
+        parancsokhoz.
+      next_howto: Nyissa meg a :doc:`/how-to/index` oldalt a bevezető végigjátszásokhoz
+        és a feladatútmutatókhoz.
+      next_schemas: Nyissa meg a :doc:`schemas` oldalt a JSON kimeneti sémák nyilvántartásához.
+      open_family_link: Az ``aeat {family}`` referenciájának megnyitása
+      start_here: Kezdje az alábbi család-hivatkozásokkal. A pontos kapcsolók, argumentumok,
+        registry-kulcsok és kimeneti sémák a generált parancscsalád-oldalakon találhatók;
+        ez az oldal a minden parancsra érvényes gyökérszintű viselkedést írja le.
+      title: CLI-referencia
+      where_next_heading: Hogyan tovább
+    param:
+      argument_optional: Argumentum, opcionális.
+      argument_required: Argumentum, kötelező.
+      option_optional: Kapcsoló, opcionális.
+      option_required: Kapcsoló, kötelező.
+    schemas:
+      summary: Az alábbi {count} parancsútvonalhoz tartozik bejegyzett ``OutputSchema``.
+        A csoportszintű visszahívási felületek ({groups}) külön szerepelnek.
+      title: Kimeneti sémák nyilvántartása
+      tooling_note: Ez az oldal elsősorban eszközfejlesztőknek szól. Ha kézzel futtatja
+        a parancsokat, általában a :doc:`családoldalak <index>` a jobb kiindulópont.
   glossary:
     entry:
       broader: Tágabb fogalom
@@ -6680,13 +6804,18 @@ errors:
       újra.
     refused_ledger_confirmation_blocked: Ezen a dokumentumon olyan észrevételek vannak,
       amelyeket embernek kell megválaszolnia a megerősítés előtt.
+    refused_ledger_counterparty_establishment_conflict: Ez a partner már megerősítetten
+      más területen letelepedett; a csere előtt vonja vissza a megerősített tényt.
+    refused_ledger_counterparty_establishment_input: A letelepedési tény nem erősíthető
+      meg olyan partnerazonosítóval, amely nem érvényes.
     refused_ledger_evidence_input: Egy megadott igazolás-bemenet sérti a vásárlási
       számla szerződést. Javítsa a bemenetet, és próbálja újra.
     refused_ledger_evidence_not_found: Nem létezik vásárlási számla igazolás a megadott
       azonosítóval.
     refused_live_borrador_snapshot_not_found: Nem létezik Modelo 100 tervezet-pillanatkép
       a megadott azonosítóval.
-    refused_live_deudas_snapshot_not_found: errors.refused.refused_live_deudas_snapshot_not_found
+    refused_live_deudas_snapshot_not_found: Nem létezik deudas-pillanatkép a megadott
+      azonosítóval.
     refused_live_expedientes_snapshot_not_found: Nem létezik expediente-pillanatkép
       a megadott azonosítóval.
     refused_live_justificante_capture_snapshot_not_found: Nem létezik rögzített igazolás-pillanatkép
@@ -7148,6 +7277,23 @@ live:
     target_period_year_mismatch: A célidőszak éve nem egyezik.
     year_range_invalid: A kezdő évnek kisebbnek vagy egyenlőnek kell lennie a záró
       évvel.
+  filed:
+    pull_all:
+      denominator_note_profile: '{expected} pár alapján mérve, amelyeket az adózó
+        saját bejelentett adatai várnak. További {offered_only} pár kizárólag az AEAT
+        által felajánlott listából származik, és nem támaszt alá lefedettségi állítást.'
+      denominator_note_register_only: 'Nincs adózóspecifikus nevező: mind a {offered_only}
+        bejárt pár az AEAT által felajánlott listából származik, amelynek e NIF-re
+        való szűkítése nincs megerősítve. Ez a menet semmit sem mér.'
+      expected_but_not_found: 'A bejelentett profilja {count} modelo/ejercicio pár
+        esetén vár benyújtást, ahol az AEAT nyilvántartása egyet sem adott vissza:
+        {pairs}. Ellenőrizze, benyújtották-e ezeket.'
+      found_more_than_expected: Az AEAT nyilvántartása {raw_count} benyújtást tartalmaz
+        a {modelo} modelo {period} {ejercicio} időszakára; a legutóbbi bejegyzés ({expediente})
+        maradt meg, és {superseded} korábbi felülíródott.
+      recapture_divergence: 'A {modelo} modelo {period} {ejercicio} újbóli rögzítése
+        {count} korábban megfigyelt casilla-értéket változtatott meg: {casillas}.
+        Az AEAT-nál javított bevallás lehet.'
 llm:
   evidence:
     consent:
@@ -65267,7 +65413,7 @@ modelo:
             label: Az önbevallás adóéve
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.help
-            label: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.label
+            label: Keletkezett fordított adózású ÁFA adóalapja Közösségen belüli beszerzéseknél
           iva-compensacion-aplicada-periodo:
             help: null
             label: Ebben az időszakban alkalmazott korábbi időszaki beszámítások
@@ -66863,118 +67009,154 @@ modelo:
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.label
+              label: Közösségen belüli termékbeszerzések adóalapja általános kulcson,
+                kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.label
+              label: Közösségen belüli termékbeszerzések adóalapja kedvezményes kulcson,
+                kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.label
+              label: Közösségen belüli termékbeszerzések adóalapja szupercsökkentett
+                kulcson, kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.label
+              label: Közösségen belüli termékbeszerzések adóalapja 0%-os kulcson -
+                éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.label
+              label: Közösségen belüli termékbeszerzések ÁFA összege 0%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.label
+              label: Közösségen belüli termékbeszerzések adóalapja 10%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.label
+              label: Közösségen belüli termékbeszerzések ÁFA összege 10%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.label
+              label: Közösségen belüli termékbeszerzések adóalapja 2%-os kulcson -
+                éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.label
+              label: Közösségen belüli termékbeszerzések ÁFA összege 2%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.label
+              label: Közösségen belüli termékbeszerzések adóalapja 21%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.label
+              label: Közösségen belüli termékbeszerzések ÁFA összege 21%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.label
+              label: Közösségen belüli termékbeszerzések adóalapja 4%-os kulcson -
+                éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.label
+              label: Közösségen belüli termékbeszerzések ÁFA összege 4%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.label
+              label: Közösségen belüli termékbeszerzések adóalapja 5%-os kulcson -
+                éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.label
+              label: Közösségen belüli termékbeszerzések ÁFA összege 5%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.label
+              label: Közösségen belüli termékbeszerzések adóalapja 7,5%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.label
+              label: Közösségen belüli termékbeszerzések ÁFA összege 7,5%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.label
+              label: Közösségen belüli termékbeszerzések adóalapja nulla kulcson,
+                kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.label
+              label: Közösségen belüli szolgáltatásbeszerzések adóalapja általános
+                kulcson, kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.label
+              label: Közösségen belüli szolgáltatásbeszerzések adóalapja kedvezményes
+                kulcson, kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig.label
+              label: Közösségen belüli szolgáltatásbeszerzések adóalapja szupercsökkentett
+                kulcson, kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5.label
+              label: Közösségen belüli szolgáltatásbeszerzések adóalapja 0%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4.label
+              label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 0%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck.label
+              label: Közösségen belüli szolgáltatásbeszerzések adóalapja 10%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg.label
+              label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 10%-os
+                kulcson - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5.label
+              label: Közösségen belüli szolgáltatásbeszerzések adóalapja 2%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4.label
+              label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 2%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck.label
+              label: Közösségen belüli szolgáltatásbeszerzések adóalapja 21%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg.label
+              label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 21%-os
+                kulcson - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5.label
+              label: Közösségen belüli szolgáltatásbeszerzések adóalapja 4%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4.label
+              label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 4%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5.label
+              label: Közösségen belüli szolgáltatásbeszerzések adóalapja 5%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4.label
+              label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 5%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig.label
+              label: Közösségen belüli szolgáltatásbeszerzések adóalapja 7,5%-os kulcson
+                - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62.label
+              label: Közösségen belüli szolgáltatásbeszerzések ÁFA összege 7,5%-os
+                kulcson - éves
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma.label
+              label: Közösségen belüli szolgáltatásbeszerzések adóalapja nulla kulcson,
+                kulcsbontás nélkül - éves
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8.label
+              label: Belföldi fordított adózású ügyletek adóalapja - éves
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31.label
+              label: Belföldi fordított adózású ügyletek ÁFA összege - éves
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: null
               label: Közösségen belüli beszerzések után önmagára terhelt ÁFA - éves
@@ -67481,6 +67663,10 @@ modelo:
                 title: null
           field:
             label: null
+overview:
+  no_aeat_history: Ez a profil nem tartalmaz az AEAT által megerősített benyújtási
+    bizonyítékot. Futtassa az `aeat app live filed pull-all` parancsot az AEAT-nál
+    tárolt előzmények letöltéséhez.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50%-os arányosítás alkalmazva (LIRPF 61.
@@ -68261,14 +68447,18 @@ wizard:
           dátumát. A hároméves kor alatti növekmény ettől a dátumtól számít.
         prompt: Anyakönyvi bejegyzés dátuma
       meses-madre-trabajo:
-        help: 'Az anyasági levonáshoz (LIRPF 81. cikk): hónapok (0-12), amikor az
-          anya tb-járulékot fizetett, amíg a gyermek jogosult volt -- 3 év alatti,
-          vagy (kortól függetlenül) az INSCRIPCION/ACOGIMIENTO dátummal rögzített
-          örökbefogadási/nevelésbe vételi belépési ablakon belül.'
-        invalid_range: Adjon meg egész számú hónapot %{minimum} és %{maximum} között
-          (LIRPF 81. cikk).
-        prompt: Hónapok, amíg az anya jogosultan dolgozott -- 3 év alatti gyermek,
-          vagy örökbefogadás/nevelésbe vétel a belépési dátum ablakán belül (adóév)
+        help: 'Az anyasági levonáshoz (LIRPF 81. cikk): MELY hónapokban fizetett az
+          anya tb-járulékot, amíg ez a gyermek jogosultságot adott -- 3 év alatt,
+          vagy (kortól függetlenül) az INSCRIPCION/ACOGIMIENTO alatt rögzített örökbefogadási/nevelésbe
+          vételi belépési ablakon belül. Írja MM vagy MM-MM formában, '';'' jellel
+          elválasztva (például 5-8 vagy 1;2;11;12). A hónapokat, nem a számukat, mert
+          a bölcsődei növekmény azon hónapok alapján arányosul, amelyeket ezek és
+          a bölcsődei hónapok megosztanak.'
+        invalid_range: Adja meg a hónapokat MM vagy MM-MM formában, ';' jellel elválasztva
+          (például 5-8 vagy 1;2;11;12), mindegyik %{minimum} és %{maximum} között.
+        prompt: Mely hónapokban dolgozott az anya jogosultan -- 3 év alatti gyermek,
+          vagy örökbefogadás/nevelésbe vétel a belépési dátum ablakán belül (bevallási
+          év)
       nif:
         prompt: A leszármazó adószáma (NIF/NIE) (hagyja üresen, ha nincs)
       prorrata-minimo:
@@ -68346,7 +68536,7 @@ wizard:
         help: Az adóügyi lakóhely szerinti ország ISO 3166-1 alfa-2 kódja (pl. GB,
           DE, FR). Kötelező, ha a fiscal-residency értéke non_resident_irnr.
       descendiente:
-        help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
+        help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Végez intraközösségi ügyleteket
       enrollment-large-company:

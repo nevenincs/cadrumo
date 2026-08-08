@@ -117,8 +117,7 @@ def test_the_derived_sets_are_populated() -> None:
         asserting = _rate_asserting_casilla_ids(revision)
         assert operands, f"{revision_id}: no formula operands were extracted at all"
         assert asserting, (
-            f"{revision_id}: no rate-asserting casilla was found, so the invariant "
-            f"below would hold vacuously"
+            f"{revision_id}: no rate-asserting casilla was found, so the invariant below would hold vacuously"
         )
     assert seen, "modelo 390 declared no revisions; the gate iterated nothing"
 

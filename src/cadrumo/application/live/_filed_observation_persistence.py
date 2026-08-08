@@ -24,6 +24,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
+from enum import StrEnum
 
 from ...adapters.inbound.justificante import parse_justificante_bytes
 from ...adapters.outbound.aeat.sede import (
@@ -33,6 +34,7 @@ from ...adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore,
     ObservedCasillaValue,
     SedeParseError,
+    extract_csv_from_url,
     registry_observation_from_filed_declaration,
 )
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -47,6 +49,7 @@ from ...application.calculations import (
 )
 from ...core import Modelo, Period, PeriodKind
 from ...core.hashing import sha256_hex
+from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...core.resources import resources
 from ...domain.buckets import (
@@ -81,6 +84,56 @@ from ._errors import LiveApplicationError, LiveApplicationInputError
 logger = get_logger(__name__)
 
 
+class FiledJustificanteUnreachedReason(StrEnum):
+    """Why one stored justificante artefact produced no evidence.
+
+    Every member is a distinct dead end that used to share one shape: a log
+    line plus ``None``. A capture that extracted casillas while enrolling no
+    justificante therefore reported an unexplained zero, which reads the same
+    as a period with no receipt to enroll.
+
+    Attributes:
+        UNREADABLE_ARTEFACT: Secure storage could not return the bytes.
+        MANIFEST_MISMATCH: The bytes disagree with the recorded length or digest.
+        UNPARSABLE_PDF: The bytes are not a receipt this parser can read.
+        CSV_UNRESOLVABLE: The artefact's source URL carries no recoverable csv,
+            so the receipt cannot be checked against the csv its bytes were
+            fetched under.
+        CSV_MISMATCH: The receipt's own csv is not the csv its bytes were
+            fetched under, so these bytes belong to a different filing.
+        FILING_TARGET_MISMATCH: The receipt parsed and its csv agrees, but it
+            does not describe this observation's modelo, ejercicio, period or
+            taxpayer.
+    """
+
+    UNREADABLE_ARTEFACT = "unreadable_artefact"
+    MANIFEST_MISMATCH = "manifest_mismatch"
+    UNPARSABLE_PDF = "unparsable_pdf"
+    CSV_UNRESOLVABLE = "csv_unresolvable"
+    CSV_MISMATCH = "csv_mismatch"
+    FILING_TARGET_MISMATCH = "filing_target_mismatch"
+
+
+#: Notice code for an artefact that was present but yielded no evidence.
+FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE = "live.filed.justificante_unreached"
+
+
+@dataclass(frozen=True)
+class _FiledJustificanteParse:
+    """One artefact's parse outcome: a receipt, or the reason there is none."""
+
+    justificante: Justificante | None = None
+    reason: FiledJustificanteUnreachedReason | None = None
+
+
+@dataclass(frozen=True)
+class FiledJustificanteMetadataResult:
+    """Justificante metadata persisted from one filed observation."""
+
+    justificante_csvs: tuple[str, ...] = ()
+    notices: tuple[Notice, ...] = ()
+
+
 @dataclass(frozen=True)
 class FiledJustificanteEnrollmentResult:
     """Justificante metadata and current filing records enrolled from filed history."""
@@ -88,6 +141,7 @@ class FiledJustificanteEnrollmentResult:
     justificante_csvs: tuple[str, ...] = ()
     filing_record_ids: tuple[str, ...] = ()
     conflicting_filing_record_ids: tuple[str, ...] = ()
+    notices: tuple[Notice, ...] = ()
 
 
 def persist_filed_calculation_observation(
@@ -164,28 +218,35 @@ def persist_filed_justificante_metadata(
     *,
     store: FiledDeclaracionObservationStore,
     repository: JustificanteRepository | None = None,
-) -> tuple[str, ...]:
+) -> FiledJustificanteMetadataResult:
     """Persist parsed justificante metadata from a filed-declaration observation.
 
     The observation store owns encrypted artefact bytes. This function reads
     those bytes into memory, verifies the artefact manifest, parses the PDF
-    without creating a plaintext temp file, and saves only justificantes that
-    match the observation's modelo, ejercicio, typed period, and authenticated
-    taxpayer identity.
+    without creating a plaintext temp file, and saves only justificantes whose
+    csv agrees with the csv their bytes were fetched under and that match the
+    observation's modelo, ejercicio, typed period, and authenticated taxpayer
+    identity.
     """
     if not _is_active_filed_observation(observation):
-        return ()
+        return FiledJustificanteMetadataResult()
     repo = repository or JustificanteRepository()
     saved_csvs: list[str] = []
+    notices: list[Notice] = []
     for artefact in observation.artefacts:
         if artefact.kind != "justificante_pdf" or artefact.storage_ref is None:
             continue
-        justificante = _parse_matching_filed_justificante(observation, artefact, store)
-        if justificante is None:
+        parsed = _parse_matching_filed_justificante(observation, artefact, store)
+        if parsed.justificante is None:
+            if parsed.reason is not None:
+                notices.append(_unreached_justificante_notice(observation, parsed.reason))
             continue
-        repo.save(justificante)
-        saved_csvs.append(justificante.csv)
-    return tuple(dict.fromkeys(saved_csvs))
+        repo.save(parsed.justificante)
+        saved_csvs.append(parsed.justificante.csv)
+    return FiledJustificanteMetadataResult(
+        justificante_csvs=tuple(dict.fromkeys(saved_csvs)),
+        notices=tuple(notices),
+    )
 
 
 def enroll_filed_justificante_evidence(
@@ -216,12 +277,16 @@ def enroll_filed_justificante_evidence(
     saved_csvs: list[str] = []
     stamped_record_ids: list[str] = []
     conflicting_record_ids: list[str] = []
+    notices: list[Notice] = []
     for artefact in observation.artefacts:
         if artefact.kind != "justificante_pdf" or artefact.storage_ref is None:
             continue
-        justificante = _parse_matching_filed_justificante(observation, artefact, store)
-        if justificante is None:
+        parsed = _parse_matching_filed_justificante(observation, artefact, store)
+        if parsed.justificante is None:
+            if parsed.reason is not None:
+                notices.append(_unreached_justificante_notice(observation, parsed.reason))
             continue
+        justificante = parsed.justificante
         justificante_repo.save(justificante)
         saved_csvs.append(justificante.csv)
 
@@ -275,6 +340,7 @@ def enroll_filed_justificante_evidence(
         justificante_csvs=tuple(dict.fromkeys(saved_csvs)),
         filing_record_ids=tuple(dict.fromkeys(stamped_record_ids)),
         conflicting_filing_record_ids=tuple(dict.fromkeys(conflicting_record_ids)),
+        notices=tuple(notices),
     )
 
 
@@ -401,10 +467,23 @@ def _parse_matching_filed_justificante(
     observation: FiledDeclaracionObservation,
     artefact: FiledDeclaracionArtefact,
     store: FiledDeclaracionObservationStore,
-) -> Justificante | None:
+) -> _FiledJustificanteParse:
+    """Parse one stored justificante artefact, or name the reason there is no receipt.
+
+    The csv equality check compares two independently-sourced values, which is
+    the only reason it means anything: ``artefact.source_url`` is the cotejo
+    document URL the capture built around the csv AEAT's own cotejo redirect
+    supplied, while ``justificante.csv`` is read from the PDF body. Recovering
+    the first from that URL keeps the two channels distinct at no
+    persistence cost.
+
+    Building ``source_url`` from the receipt's own csv, or from a period-level
+    template, would collapse the comparison into a value checked against itself
+    and it would pass unconditionally while still reading as a real check.
+    """
     storage_ref = artefact.storage_ref
     if storage_ref is None:
-        return None
+        return _FiledJustificanteParse(reason=FiledJustificanteUnreachedReason.UNREADABLE_ARTEFACT)
     try:
         body = store.load_artefact(storage_ref)
     except Exception:
@@ -413,13 +492,13 @@ def _parse_matching_filed_justificante(
             storage_ref,
             exc_info=True,
         )
-        return None
+        return _FiledJustificanteParse(reason=FiledJustificanteUnreachedReason.UNREADABLE_ARTEFACT)
     if len(body) != artefact.byte_count or sha256_hex(body) != artefact.sha256:
         logger.warning(
             "filed observation: ignored justificante artefact %s with mismatched manifest",
             storage_ref,
         )
-        return None
+        return _FiledJustificanteParse(reason=FiledJustificanteUnreachedReason.MANIFEST_MISMATCH)
     try:
         justificante = parse_justificante_bytes(body)
     except Exception:
@@ -428,7 +507,25 @@ def _parse_matching_filed_justificante(
             storage_ref,
             exc_info=True,
         )
-        return None
+        return _FiledJustificanteParse(reason=FiledJustificanteUnreachedReason.UNPARSABLE_PDF)
+    try:
+        captured_csv = extract_csv_from_url(str(artefact.source_url))
+    except SedeParseError:
+        logger.warning(
+            "filed observation: ignored justificante artefact %s whose source URL carries no recoverable csv",
+            storage_ref,
+            exc_info=True,
+        )
+        return _FiledJustificanteParse(reason=FiledJustificanteUnreachedReason.CSV_UNRESOLVABLE)
+    if captured_csv.strip().upper() != justificante.csv.strip().upper():
+        logger.warning(
+            "filed observation: ignored justificante artefact %s whose receipt csv %s "
+            "disagrees with the csv %s its bytes were fetched under",
+            storage_ref,
+            justificante.csv,
+            captured_csv,
+        )
+        return _FiledJustificanteParse(reason=FiledJustificanteUnreachedReason.CSV_MISMATCH)
     if not _justificante_matches_filed_observation(justificante, observation):
         logger.warning(
             "filed observation: ignored justificante artefact %s that does not match %s/%s/%s",
@@ -437,8 +534,31 @@ def _parse_matching_filed_justificante(
             observation.ejercicio,
             observation.period.registry_token,
         )
-        return None
-    return justificante
+        return _FiledJustificanteParse(reason=FiledJustificanteUnreachedReason.FILING_TARGET_MISMATCH)
+    return _FiledJustificanteParse(justificante=justificante)
+
+
+def _unreached_justificante_notice(
+    observation: FiledDeclaracionObservation,
+    reason: FiledJustificanteUnreachedReason,
+) -> Notice:
+    """Project one unreached-evidence reason onto the shared notice channel."""
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code=FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
+        message=(
+            f"AEAT filed {observation.modelo} {observation.ejercicio} "
+            f"{observation.period.registry_token} carries a justificante artefact that produced no "
+            f"evidence ({reason.value})"
+        ),
+        context={
+            "modelo": observation.modelo,
+            "filing_year": str(observation.ejercicio),
+            "period": observation.period.registry_token,
+            "expediente_id": observation.expediente_id,
+            "reason": reason.value,
+        },
+    )
 
 
 def _justificante_matches_filed_observation(
@@ -450,7 +570,6 @@ def _justificante_matches_filed_observation(
         filing_year=observation.ejercicio,
         period=observation.period,
         tax_id=observation.authenticated_identity,
-        presentation_id=observation.expediente_id,
     )
 
 
@@ -637,7 +756,10 @@ def _with_derived_303_compensation_available(
 
 
 __all__ = [
+    "FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE",
     "FiledJustificanteEnrollmentResult",
+    "FiledJustificanteMetadataResult",
+    "FiledJustificanteUnreachedReason",
     "enroll_filed_justificante_evidence",
     "latest_declarations_by_period",
     "persist_filed_calculation_observation",

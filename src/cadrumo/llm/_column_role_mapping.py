@@ -546,6 +546,17 @@ class SemanticColumnRoleMapper:
 
         Temperature is pinned to zero because role assignment has one right
         answer per column.
+
+        **The evidence marker is stated, and it is stated False.** What crosses
+        this seam is the file's schema -- the header labels a bank or a billing
+        tool printed to name its own columns -- and never a cell value: the
+        prompt compiler accepts headers and nothing else, and the instruction it
+        writes forbids the model to reproduce data. That is a judgement about
+        the content, so it is written here rather than inherited from the
+        model's default, where it would be indistinguishable from a builder that
+        forgot. Marking it would put a schema-shaped request behind a
+        taxpayer-evidence consent token and close the gated hosted lane the
+        tabular measurement runs through.
         """
         return LLMRequest(
             prompt=build_column_role_mapping_prompt(headers),
@@ -553,6 +564,7 @@ class SemanticColumnRoleMapper:
             temperature=_MAPPING_TEMPERATURE,
             provider_override=self._provider,
             model_override=self._model,
+            evidence_derived=False,
         )
 
 

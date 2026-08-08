@@ -864,7 +864,7 @@ application:
   live:
     deudas:
       errors:
-        bucket_id_blank: application.live.deudas.errors.bucket_id_blank
+        bucket_id_blank: L'identificador del bucket de deudas no pot estar buit.
         snapshot_id_blank: L'identificador de la instantània de deutes no pot estar
           buit.
         snapshot_not_found: No hi ha cap instantània de deutes que coincideixi amb
@@ -2096,6 +2096,11 @@ cli:
           group_help: Reviseu els esborranys d'extraccio pendents abans de confirmar-los
             com a factures.
           list_help: Llisteu els esborranys d'extraccio pendents de revisio humana.
+          party_attribution_unverified_message: Res no verifica a quina part pertanyen
+            aquestes dades d'adreça. Si es llegissin dos blocs d'adreça a l'inrevés,
+            ambdues parts quedarien situades en un territori d'IVA on cap no està
+            establerta i cap comprovació no ho detectaria. Contrasteu cada valor amb
+            el document abans de confirmar aquest esborrany.
           reason_help: Mostreu nomes els esborranys blocats per aquest motiu.
           reference_help: Referencia d'evidencia o adjunt de la qual s'ha llegit l'esborrany
             pendent.
@@ -2302,6 +2307,12 @@ cli:
           qual cosa només amplia el recorregut: un parell absent no prova que no es
           presentés res.'
         list_help: Llistar declaracions presentades sense descarregar artefactes
+        pull_all_help: Descarregar en una sola passada l'historial que AEAT té d'aquest
+          contribuent.
+        pull_all_limit_help: Limita quantes declaracions es capturen en aquesta passada.
+        pull_all_pairs_refused: '{count} parell(s) de model/exercici no s''han pogut
+          llegir i NO s''han comptat com a buits: {pairs}. Torneu a executar l''ordre
+          per reintentar-ho; una lectura rebutjada no prova que no es presentés res.'
         pull_help: Descàrrega dades de declaracions presentades del registre autenticat
           d'AEAT.
         pull_modelo_help: Limita aquesta descàrrega a aquest model.
@@ -3841,7 +3852,7 @@ cli:
         profile delete %{name} --yes' per confirmar.
       delete_yes_help: Confirma explícitament l'eliminació
       descendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Repetible. Executeu `aeat config profile descendiente` sense subcomandament
           per introduir-los de manera guiada.
         add_help: Afegeix un o més descendents al perfil actiu.
@@ -5058,7 +5069,11 @@ cli:
         ledger_view: Veure el detall d'una entrada del llibre.
         live_filed_capture: Descarregar declaracions presentades en viu des de l'AEAT.
         live_filed_capture_sources: Mostrar les fonts disponibles per a la descàrrega.
+        live_filed_discover: Mostrar quin historial recorreria una descàrrega completa,
+          sense capturar res.
         live_filed_list: Llistar declaracions presentades capturades de l'AEAT.
+        live_filed_pull_all: Descarregar l'historial d'AEAT i conciliar la cartera
+          d'IVA i les notificacions.
         modelo_audit_check: Comprova les evidències incloses d'una revisió de declaració.
         modelo_audit_export: Exporta l'auditoria d'evidències d'una revisió de declaració.
         modelo_audit_show: Mostra l'auditoria d'evidències d'una revisió de declaració.
@@ -5669,6 +5684,114 @@ docs:
       between: Entre {min} i {max}
       non_negative: Zero o més
       non_positive: Zero o menys
+  cli:
+    automation:
+      exit_auth: Cal autenticació o les credencials han caducat.
+      exit_codes_heading: Codis de sortida
+      exit_conflict: Conflicte o fallada de condició prèvia.
+      exit_forbidden: Operació no permesa per la política.
+      exit_general: Error general o operació rebutjada.
+      exit_internal: Error intern inesperat.
+      exit_not_found: Recurs no trobat.
+      exit_partial: Èxit parcial (alguns elements han funcionat i d'altres no).
+      exit_success: Correcte.
+      exit_unavailable: Servei extern no disponible.
+      exit_usage: Ús incorrecte de la CLI (indicador erroni, argument absent).
+      exit_validation: Error de validació en les dades proporcionades per l'usuari.
+      intro: 'Feu servir aquesta pàgina quan programeu invocacions d''``aeat``: documenta
+        els codis de sortida del procés i el comportament de sortida TTY/JSON que
+        comparteixen totes les ordres.'
+      output_contract_body: Quan la sortida va a un TTY, la CLI emet text enriquit
+        llegible per persones. Quan es passa ``--format json`` (o quan la sortida
+        es redirigeix), la CLI emet un únic document JSON per invocació. Les ordres
+        que han adoptat el ``SchemaEnvelope`` embolcallen el seu resultat com a ``{envelope}``.
+        Les ordres encara no migrades emeten la seva càrrega directament.
+      output_contract_heading: Contracte de sortida TTY i JSON
+      title: Codis de sortida i contracte de sortida
+    command:
+      bare_payload_note: Aquesta ordre emet una càrrega simple (encara sense embolcall).
+        L'estructura de la sortida és pròpia de cada ordre; consulteu ``--help`` per
+        a més detalls.
+      group_fallback: Grup d'ordres.
+      no_description: Sense descripció.
+      no_description_available: No hi ha cap descripció disponible.
+      output_schema_heading: Esquema de sortida
+      parameters_heading: Paràmetres
+      path_label: Ruta de l'ordre
+      registry_key_label: Clau del registre
+      schema_envelope_note: Aquesta ordre emet un ``SchemaEnvelope`` el camp ``result``
+        del qual es valida contra ``{schema}``.
+    env:
+      default_empty: buit
+      default_unset: sense definir
+      secrets_note: L'aplicació no imprimeix mai els secrets i apareixen marcats com
+        a `(secret)` més amunt. Els valors predeterminats marcats com a `(derived)`
+        es calculen en temps d'execució a partir de l'arrel d'emmagatzematge o de
+        la ubicació del projecte.
+    family:
+      choose_group_heading: Trieu un grup d'ordres
+      direct_commands_heading: Ordres directes
+      direct_commands_intro: Aquestes ordres estan muntades directament a ``aeat {family}``,
+        sense cap grup de verbs intermedi.
+      group_link_line: Obrir :doc:`{target}` per a ``aeat {family} {group}``.
+      index_link_line: Obrir :doc:`/cli/index` per a la pàgina principal de la referència
+        de la CLI.
+      intro: '``aeat {family}`` s''organitza per grup de verbs principal. La pàgina
+        de cada grup comença amb la seva sortida real de ``--help``, seguida de totes
+        les ordres finals que conté.'
+      open_group_link: Obrir la referència d'``aeat {family} {group}``
+      title: '{command}: referència d''ordres'
+    index:
+      app_card: 'Ordres del flux de treball operatiu: llibre de moviments, models,
+        calendaris de presentació, comprovacions del registre, captures en directe
+        i cues de revisió.'
+      choose_family_heading: Trieu una família d'ordres
+      config_card: 'Ordres locals de configuració i manteniment: perfils, autenticació,
+        integració amb Google, comprovacions de reparació i superfícies de reinici.'
+      english_help_note: Les cadenes d'ajuda es mostren en anglès. En temps d'execució
+        la CLI respecta l'idioma de sortida actiu (``--language`` / ``CADRUMO_OUTPUT_LANGUAGE``).
+      flag_debug: Activa el registre de nivell de depuració.
+      flag_detail: Mostra informació de versió ampliada, inclòs el resum del registre.
+      flag_format: Format de sortida (``text`` o ``json``).
+      flag_help: Mostra el document d'ajuda curat i acaba.
+      flag_language: Sobreescriu l'idioma de sortida (``es``, ``en``, ``ca``, ``hu``).
+      flag_profile: Activa un perfil amb nom per a aquesta invocació.
+      flag_quiet: Suprimeix la sortida informativa.
+      flag_verbose: Activa la sortida detallada.
+      flag_version: Mostra la versió del paquet i acaba.
+      global_flags_heading: Indicadors globals
+      global_flags_intro: L'ordre arrel ``aeat`` accepta aquests indicadors i s'apliquen
+        a totes les invocacions.
+      intro: 'La CLI ``aeat`` exposa dues famílies d''ordres de primer nivell: ``config``
+        (configuració local, cicle de vida del perfil, diagnòstics) i ``app`` (flux
+        de treball fiscal operatiu). Aquesta referència documenta les {count} ordres
+        finals.'
+      next_app: Obrir :doc:`app` per a les ordres del flux de treball operatiu.
+      next_automation: Obrir :doc:`automation` per als codis de sortida i el contracte
+        de sortida TTY/JSON.
+      next_config: Obrir :doc:`config` per a les ordres locals de configuració i manteniment.
+      next_howto: Obrir :doc:`/how-to/index` per a les guies d'inici i les guies de
+        tasques.
+      next_schemas: Obrir :doc:`schemas` per al registre d'esquemes de sortida JSON.
+      open_family_link: Obrir la referència d'``aeat {family}``
+      start_here: Comenceu pels enllaços de família de sota. Feu servir les pàgines
+        generades de cada família d'ordres per conèixer els indicadors, arguments,
+        claus de registre i esquemes de sortida exactes; feu servir aquesta pàgina
+        per al comportament de nivell arrel que s'aplica a totes les ordres.
+      title: Referència de la CLI
+      where_next_heading: Per on continuar
+    param:
+      argument_optional: Argument, opcional.
+      argument_required: Argument, obligatori.
+      option_optional: Opció, opcional.
+      option_required: Opció, obligatòria.
+    schemas:
+      summary: Les {count} rutes d'ordre següents tenen un ``OutputSchema`` registrat.
+        Les superfícies de crida de retorn de grup ({groups}) es llisten a part.
+      title: Registre d'esquemes de sortida
+      tooling_note: Aquesta pàgina està pensada sobretot per a qui crea eines. Si
+        executeu les ordres a mà, les :doc:`pàgines de família <index>` acostumen
+        a ser un punt d'entrada millor.
   glossary:
     entry:
       broader: Terme genèric
@@ -6782,13 +6905,19 @@ errors:
       d'antiguitat de la cartera i torneu-ho a intentar.
     refused_ledger_confirmation_blocked: Aquest document té troballes que una persona
       ha de resoldre abans de poder-lo confirmar.
+    refused_ledger_counterparty_establishment_conflict: Aquesta contrapart ja està
+      confirmada com a establerta en un altre territori; retireu el fet confirmat
+      abans de substituir-lo.
+    refused_ledger_counterparty_establishment_input: No es pot confirmar un fet d'establiment
+      amb un identificador de contrapart que no valida.
     refused_ledger_evidence_input: Una dada d'evidència indicada infringeix el contracte
       de la factura de compra. Corregeix l'entrada i torna-ho a provar.
     refused_ledger_evidence_not_found: No existeix cap evidència de factura de compra
       amb l'identificador indicat.
     refused_live_borrador_snapshot_not_found: No existeix cap instantània de l'esborrany
       del Model 100 amb l'identificador indicat.
-    refused_live_deudas_snapshot_not_found: errors.refused.refused_live_deudas_snapshot_not_found
+    refused_live_deudas_snapshot_not_found: No existeix cap instantània de deudas
+      amb l'identificador indicat.
     refused_live_expedientes_snapshot_not_found: No existeix cap instantània d'expedients
       amb l'identificador indicat.
     refused_live_justificante_capture_snapshot_not_found: No existeix cap captura
@@ -7258,6 +7387,25 @@ live:
     target_period_year_mismatch: L'any objectiu no coincideix amb l'exercici del període
       objectiu.
     year_range_invalid: El rang d'exercicis indicat no és vàlid.
+  filed:
+    pull_all:
+      denominator_note_profile: Mesurat davant {expected} parell(s) que les dades
+        declarades pel contribuent esperen. Uns altres {offered_only} parell(s) provenen
+        només de la llista d'opcions que ofereix AEAT i no sustenten cap afirmació
+        de cobertura.
+      denominator_note_register_only: 'Sense denominador específic del contribuent:
+        els {offered_only} parell(s) recorreguts provenen de la llista d''opcions
+        que ofereix AEAT, l''abast de la qual per a aquest NIF no està confirmat.
+        Aquesta passada no mesura res.'
+      expected_but_not_found: 'El vostre perfil declarat espera una presentació en
+        {count} parell(s) de model/exercici on el registre d''AEAT no en va retornar
+        cap: {pairs}. Comproveu si es van arribar a presentar.'
+      found_more_than_expected: El registre d'AEAT conté {raw_count} presentacions
+        del model {modelo} {period} {ejercicio}; s'ha conservat el registre més recent
+        ({expediente}) i {superseded} anterior(s) han quedat substituïdes.
+      recapture_divergence: 'Tornar a capturar el model {modelo} {period} {ejercicio}
+        ha canviat {count} valor(s) de casella observats anteriorment: {casillas}.
+        AEAT pot tenir una declaració rectificada.'
 llm:
   evidence:
     consent:
@@ -65162,7 +65310,7 @@ modelo:
             label: Exercici fiscal de l'autoliquidació
           iva-base-autorepercutida-intracomunitaria-devengado:
             help: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.help
-            label: modelo.schema.303.casilla.continuidad.iva-base-autorepercutida-intracomunitaria-devengado.label
+            label: Base imposable autorepercutida meritada en adquisicions intracomunitàries
           iva-compensacion-aplicada-periodo:
             help: null
             label: Compensacions de períodes anteriors aplicades en aquest període
@@ -66743,118 +66891,154 @@ modelo:
               label: Tipus de declaració (original / substitutiva / complementària)
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pjmarj5e9gmobj2c5pma.label
+              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
+                general, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pp6ap3lcdim8bj2c5pma.label
+              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
+                reduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5ppnas35e9fn4pb4elhmap1ec9gn6p8.label
+              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
+                superreduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2soj1edig.label
+              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
+                del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62.label
+              label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
+                del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma.label
+              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
+                del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8.label
+              label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
+                del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig.label
+              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
+                del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62.label
+              label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
+                del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma.label
+              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
+                del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8.label
+              label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
+                del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig.label
+              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
+                del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62.label
+              label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
+                del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig.label
+              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
+                del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62.label
+              label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
+                del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8.label
+              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
+                del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31.label
+              label: Quota d'IVA d'adquisicions intracomunitàries de béns al tipus
+                del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5.label
+              label: Base imposable d'adquisicions intracomunitàries de béns al tipus
+                zero, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bj7cln6asj1dgn64objck.label
+              label: Base imposable d'adquisicions intracomunitàries de serveis al
+                tipus general, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjicli7aor5cgn64objck.label
+              label: Base imposable d'adquisicions intracomunitàries de serveis al
+                tipus reduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjjelo6asive9im8tb3cli2soj1edig.label
+              label: Base imposable d'adquisicions intracomunitàries de serveis al
+                tipus superreduït, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5ph62sr5.label
+              label: Base imposable d'adquisicions intracomunitàries de serveis al
+                tipus del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4.label
+              label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
+                del 0% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck.label
+              label: Base imposable d'adquisicions intracomunitàries de serveis al
+                tipus del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg.label
+              label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
+                del 10% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5.label
+              label: Base imposable d'adquisicions intracomunitàries de serveis al
+                tipus del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4.label
+              label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
+                del 2% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck.label
+              label: Base imposable d'adquisicions intracomunitàries de serveis al
+                tipus del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg.label
+              label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
+                del 21% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5.label
+              label: Base imposable d'adquisicions intracomunitàries de serveis al
+                tipus del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4.label
+              label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
+                del 4% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5.label
+              label: Base imposable d'adquisicions intracomunitàries de serveis al
+                tipus del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4.label
+              label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
+                del 5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig.label
+              label: Base imposable d'adquisicions intracomunitàries de serveis al
+                tipus del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62.label
+              label: Quota d'IVA d'adquisicions intracomunitàries de serveis al tipus
+                del 7,5% - anual
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma.label
+              label: Base imposable d'adquisicions intracomunitàries de serveis al
+                tipus zero, sense desglossament per tipus - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8.label
+              label: Base imposable autorepercutida en operacions interiors - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
               help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31.label
+              label: Quota d'IVA autorepercutida en operacions interiors - anual
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: null
               label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
@@ -67349,6 +67533,10 @@ modelo:
                 title: null
           field:
             label: null
+overview:
+  no_aeat_history: Aquest perfil no conté cap prova de presentació confirmada per
+    AEAT. Executeu `aeat app live filed pull-all` per descarregar l'historial que
+    AEAT en té.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 61 LIRPF)
@@ -68115,15 +68303,18 @@ wizard:
           d'aquesta data es compta l'augment per menor de tres anys.
         prompt: Data d'inscripció al Registre Civil
       meses-madre-trabajo:
-        help: 'Per a la deducció per maternitat (art. 81 LIRPF): mesos (0-12) en què
-          la mare va cotitzar a la Seguretat Social mentre el fill complia els requisits
-          -- menor de 3 anys, o (amb independència de l''edat) dins de la finestra
-          de data d''entrada de l''adopció/acolliment registrada amb INSCRIPCION/ACOGIMIENTO.'
-        invalid_range: Introduïu un nombre enter de mesos entre %{minimum} i %{maximum}
-          (art. 81 LIRPF).
-        prompt: Mesos que la mare va treballar amb dret a la deducció -- fill menor
-          de 3 anys, o adopció/acolliment dins de la seva finestra de data d'entrada
-          (any de declaració)
+        help: 'Per a la deducció per maternitat (art. 81 LIRPF): QUINS mesos va cotitzar
+          la mare a la Seguretat Social mentre aquest fill donava dret -- menor de
+          3 anys, o (amb independència de l''edat) dins la finestra de data d''entrada
+          d''adopció/acolliment registrada a INSCRIPCION/ACOGIMIENTO. Escriviu MM
+          o MM-MM, separats per '';'' (per exemple 5-8 o 1;2;11;12). Els mesos i no
+          el seu nombre, perquè l''increment per llar d''infants es prorrateja pels
+          mesos que aquests i els de la llar d''infants comparteixen.'
+        invalid_range: Indiqueu els mesos com a MM o MM-MM, separats per ';' (per
+          exemple 5-8 o 1;2;11;12), cadascun entre %{minimum} i %{maximum}.
+        prompt: Quins mesos va treballar la mare amb dret a la deducció -- fill menor
+          de 3 anys, o adopció/acolliment dins la seva finestra de data d'entrada
+          (exercici)
       nif:
         prompt: NIF/NIE del descendent (deixi en blanc si no en té)
       prorrata-minimo:
@@ -68197,7 +68388,7 @@ wizard:
         help: Codi ISO 3166-1 alfa-2 del país de residència fiscal (p.ex. GB, DE,
           FR). Obligatori quan fiscal-residency és non_resident_irnr.
       descendiente:
-        help: 'Format: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
+        help: 'Format: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Realitza operacions intracomunitàries
       enrollment-large-company:

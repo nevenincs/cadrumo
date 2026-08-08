@@ -43,7 +43,7 @@ def _eu_inbound_b2b(*, kind: TransactionKind) -> IvaInvoiceClassificationCriteri
         {
             "transaction_date": date(2026, 3, 1),
             "issuer_residency": IvaTerritorialScope.EU_MEMBER,
-            "issuer_member_state": EUMemberState.DE,
+            "issuer_identification_state": EUMemberState.DE,
             "customer_residency": IvaTerritorialScope.ES_MAINLAND,
             "customer_tax_status": CustomerTaxStatus.B2B_IVA_REGISTERED,
             "kind": kind,

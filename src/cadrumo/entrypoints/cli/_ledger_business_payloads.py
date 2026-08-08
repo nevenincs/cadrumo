@@ -354,6 +354,18 @@ class EvidenceFieldProvenancePayload(OutputSchema):
     # identifiers on one invoice have the same printed shape, so knowing WHERE a
     # number was printed says nothing about WHOSE it is.
     role_evidence: str | None = None
+    # Mirrors FieldProvenance.attribution_unverified. Whether anything checked
+    # WHICH PARTY this value belongs to -- a different question from whether it
+    # was read correctly, and one every anchor check is silent on. Per field
+    # rather than per party because two values of one party can differ: a postal
+    # code may be attributed while the country beside it is not.
+    #
+    # The territory such a value would establish is deliberately NOT here. This
+    # surface prints what the paper said and leaves the regulatory reading to the
+    # domain; the territory reaches the operator through the review envelope's
+    # notice channel, which quotes the domain rather than giving the boundary a
+    # second home on a payload.
+    attribution_unverified: bool = False
     note: str = ""
 
 
@@ -398,6 +410,23 @@ class EvidenceExtractResult(OutputSchema):
     # boundary on the review surface.
     supplier_postal_code: str | None = None
     customer_postal_code: str | None = None
+    # The country name each party's address prints, verbatim and in the
+    # document's own language. Surfaced beside the postal code because the two
+    # answer the same question at different resolutions: the country separates
+    # Member States, the Spanish code separates Canarias and Ceuta y Melilla
+    # from the peninsula. Neither reading is done here -- the operator sees what
+    # the paper said, and the territory stays the domain's to resolve.
+    supplier_country: str | None = None
+    customer_country: str | None = None
+    # The country CODE each party's record states, for the structured readers,
+    # which state a code where a printed document prints a name. Carried beside
+    # the name rather than folded into it: a document states one or the other,
+    # and collapsing them would leave the operator unable to tell what the paper
+    # actually carried. Always the ISO alpha-2 form even where the record stated
+    # alpha-3 -- Facturae states `ESP` -- with the form the document itself
+    # states recoverable from the field's provenance anchor.
+    supplier_country_code: str | None = None
+    customer_country_code: str | None = None
     invoice_number: str | None = None
     invoice_series: str | None = None
     invoice_date: str | None = None

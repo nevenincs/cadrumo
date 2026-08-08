@@ -238,11 +238,21 @@ class DescendantInfo(BaseModel):
         (the default) leaves the question unanswered so the caller may derive
         it from profile signals. An explicit value ALWAYS wins over both
         ``custodia_compartida`` and any derivation.
-    meses_madre_trabajo_2024
-        Months the mother worked while this child was under 3 years old during
-        the 2024 filing year.  Used by Art. 81 LIRPF deducción maternidad:
-        ``min(meses × 100, 1_200)`` per eligible child.  Valid range: 0–12.
-        Default ``0`` (no deducción contribution from this child).
+    meses_madre_trabajo
+        WHICH calendar months (1-12, ascending, no repeats) the mother met the
+        Art. 81.1 requirements for this child. Used by the deducción maternidad
+        as a count — ``min(meses × 100, 1_200)`` per eligible child — and by the
+        Art. 81.2 guardería increment as a SET.
+
+        The months rather than their number, because Art. 81.2 prorates by "el
+        número de meses en que se cumplan de forma simultánea los requisitos
+        exigidos en el artículo 81.1 y 2": an INTERSECTION with the declared
+        nursery months, which a count cannot express. A mother entitled May to
+        August against nursery paid January to June shares two months and the
+        manual works ``1.000 ÷ 12 × 2 = 166,67``, where a count-based
+        ``min(4, 6)`` yields four and 333,33 — an over-grant of the deducción,
+        which under-declares tax. Default ``()`` (no deducción contribution
+        from this child).
     alta_posterior_nacimiento_mes
         The calendar month (1-12) in which the mother — not registered with the
         Seguridad Social or a mutualidad at this child's birth — completed the
@@ -252,7 +262,7 @@ class DescendantInfo(BaseModel):
         caso, de 30 días cotizados"). ``None`` (the default) means the ordinary
         case: no post-birth alta increment applies, whether because the mother
         was already registered at the birth or because none is declared. This is
-        the mother's employment history, exactly as ``meses_madre_trabajo_2024``
+        the mother's employment history, exactly as ``meses_madre_trabajo``
         is, and this application does not hold it and must not infer it.
 
         The route itself is filing-year gated: LIRPF art. 81.1 reached only a
@@ -322,7 +332,7 @@ class DescendantInfo(BaseModel):
     rentas_anuales_euros: Decimal | None = Field(default=None, ge=Decimal("0"))
     presenta_declaracion_propia: bool = False
     prorrata_minimo: bool | None = None
-    meses_madre_trabajo_2024: int = Field(default=0, ge=0, le=12)
+    meses_madre_trabajo: tuple[int, ...] = ()
     alta_posterior_nacimiento_mes: int | None = Field(default=None, ge=1, le=12)
     gastos_guarderia_euros: int = Field(default=0, ge=0)
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpend, ...] = ()
@@ -477,26 +487,81 @@ class DescendantInfo(BaseModel):
         self._refuse_incoherent_entry_dates()
         return self
 
+    @field_validator("meses_madre_trabajo")
+    @classmethod
+    def _validate_meses_madre_trabajo(cls, value: tuple[int, ...]) -> tuple[int, ...]:
+        """Refuse a month outside 1-12, a repeat, or an unsorted set.
+
+        Canonical ascending order is enforced rather than applied, so the record
+        has exactly one representation of a given set and a save-then-reload
+        round-trip cannot reorder it. A repeat is refused rather than collapsed:
+        a month either qualified or it did not, so a second mention is a
+        transcription slip, and silently collapsing it would hide the slip while
+        changing nothing the operator could see.
+        """
+        for month in value:
+            if not (1 <= month <= 12):
+                raise ProfileValidationError(
+                    f"meses_madre_trabajo names month {month}, outside 1-12.",
+                )
+        if len(set(value)) != len(value):
+            repeated = sorted({month for month in value if value.count(month) > 1})
+            raise ProfileValidationError(
+                f"meses_madre_trabajo declares month(s) {repeated} more than once.",
+            )
+        if list(value) != sorted(value):
+            raise ProfileValidationError(
+                f"meses_madre_trabajo must be ascending; got {list(value)}.",
+            )
+        return value
+
     @model_validator(mode="after")
     def _validate_alta_posterior_coherence(self) -> DescendantInfo:
-        """Refuse an alta-posterior month declared against zero worked months.
+        """Refuse an alta-posterior month incoherent with the declared working months.
 
-        ``meses_madre_trabajo_2024`` already counts the completion month as one
-        of its declared months (the manual's own worked example counts May
-        among the mellizos' eight months, not separately from them), so a month
-        naming a completion event while the mother is declared to have worked
-        zero months is not a state Art. 81.1 describes -- it is either a
-        forgotten MESES_TRABAJO figure or a month named for the wrong child.
-        Refusing here is the same call every other coherence rule on this
-        record makes: a silent zero-effect acceptance would leave the operator
-        believing the increment applies when nothing downstream can grant it.
+        Two rules, both about the same single source of truth.
+
+        The completion month is one OF the declared months (the manual's own
+        worked example counts May among the mellizos' eight, not separately from
+        them), so naming it against an empty set is not a state Art. 81.1
+        describes -- it is either a forgotten month set or a month named for the
+        wrong child.
+
+        And it must be the FIRST of them. The post-birth alta route exists for a
+        mother NOT registered at the birth, so her entitlement opens exactly when
+        she completes the 30 days: AEAT's caso a has her start work in May,
+        complete the period in May, and be entitled "de mayo a agosto ambos
+        incluidos". Now that the months are carried rather than counted, the
+        month is derivable from the set, and this field's remaining job is to
+        record the ROUTE. Requiring the two to agree keeps that from becoming a
+        second source of truth for one fact -- a divergence refuses instead of
+        letting the pair disagree silently.
+
+        This rule runs on construction and on every reload, because the fact
+        readers rebuild the record through ``DescendantInfo(...)``; assignment is
+        closed by ``frozen=True``. It does NOT run on ``model_copy(update=...)``,
+        which skips validators by design and will happily produce a record whose
+        alta month is not the first of its set. Nothing reaches that today -- no
+        production caller copies a ``DescendantInfo`` -- so a future
+        descendant-editing path must reconstruct rather than copy, or re-validate
+        after copying.
         """
-        if self.alta_posterior_nacimiento_mes is not None and self.meses_madre_trabajo_2024 <= 0:
+        if self.alta_posterior_nacimiento_mes is None:
+            return self
+        if not self.meses_madre_trabajo:
             raise ProfileValidationError(
-                "alta_posterior_nacimiento_mes is declared but meses_madre_trabajo_2024 is 0; the "
+                "alta_posterior_nacimiento_mes is declared but meses_madre_trabajo is empty; the "
                 "completion month is one of the declared working months, not separate from them. "
-                "Declare meses_madre_trabajo_2024 as well, or drop alta_posterior_nacimiento_mes if "
+                "Declare meses_madre_trabajo as well, or drop alta_posterior_nacimiento_mes if "
                 "this child's mother was already registered at the birth.",
+            )
+        first = self.meses_madre_trabajo[0]
+        if self.alta_posterior_nacimiento_mes != first:
+            raise ProfileValidationError(
+                f"alta_posterior_nacimiento_mes is {self.alta_posterior_nacimiento_mes} but the "
+                f"declared working months open at {first}. The post-birth alta route entitles the "
+                "mother from the month she completes the 30 days, so the two name one event and "
+                "must agree.",
             )
         return self
 
@@ -928,7 +993,7 @@ class DescendantInfo(BaseModel):
         must not re-derive each other.
 
         The EMPLOYMENT months are the operator's and stay so:
-        ``meses_madre_trabajo_2024`` records whether the mother held contributory
+        ``meses_madre_trabajo`` records whether the mother held contributory
         or assistance unemployment benefit at the birth, or Social Security /
         mutualidad registration with the contributed period the article requires.
         That is her employment history, which this application does not hold and
@@ -951,13 +1016,19 @@ class DescendantInfo(BaseModel):
         silently skipping the two income conditions, which inflates the
         deducción.
 
-        The declared months are CAPPED by the eligible window rather than
-        trusted outright. An operator who counted correctly is unaffected,
-        because their figure already lies inside the window; one who declared raw
-        employment months has the over-claim removed. The cap can only ever
-        reduce, so it cannot invent an entitlement.
+        The declared months are INTERSECTED with the eligible window rather than
+        trusted outright. An operator who declared correctly is unaffected,
+        because their months already lie inside the window; one who declared raw
+        employment months has the out-of-window ones removed. The intersection
+        can only ever reduce, so it cannot invent an entitlement.
 
-        That window is :meth:`maternidad_eligible_meses`, which carries both of
+        A real intersection rather than a cap on a count, and the difference is
+        not cosmetic: a count clipped by the window's SIZE keeps months the
+        window does not contain, so a mother declaring months outside it kept an
+        entitlement for months she did not qualify in. Months in, months
+        compared, months out.
+
+        That window is :meth:`_maternidad_eligible_months`, which carries both of
         the article's limbs and the clip that keeps a month from preceding the
         entry event. It is asked for rather than recomposed here: the window is
         one rule with one owner, and a second assembly of it at a call site
@@ -980,7 +1051,117 @@ class DescendantInfo(BaseModel):
             dependencia_assimilation_available=dependencia_assimilation_available,
         ):
             return 0
-        return min(self.meses_madre_trabajo_2024, self.maternidad_eligible_meses(filing_year))
+        return len(frozenset(self.meses_madre_trabajo) & self._maternidad_eligible_months(filing_year))
+
+    def guarderia_art_81_1_meses(
+        self,
+        filing_year: int,
+        *,
+        thresholds: MinimoDescendientesThresholds,
+        dependencia_assimilation_available: bool = False,
+    ) -> int:
+        """Art. 81.1 months the guardería increment prorates by in *filing_year*.
+
+        The increment is prorated by "el número de meses en que se cumplan de
+        forma simultánea los requisitos exigidos en el artículo 81.1 y 2", and
+        this answers the 81.1 half FOR THE INCREMENT — which is not the same
+        question as :meth:`maternidad_contributing_meses`, even though every
+        gate below is shared with it.
+
+        Named for the ARTICLE HALF it answers, not for simultaneity, because it
+        is only one side of the pair: :meth:`guarderia_simultaneous_meses` is
+        where the two sides actually meet. The plain "simultaneity" name once sat
+        here, one word away from that method, and the two were mistaken for each
+        other by a reader holding the source open.
+
+        The difference is the child's AGE, and it is the whole reason this
+        method exists. The deducción itself runs only while the child is under
+        three, so that method clips to :meth:`maternidad_eligible_meses`. The
+        increment does not: Capítulo 18 states that where "el descendiente
+        cumpla los tres años en el mes de enero" or "la madre comience a
+        trabajar en el año en el que el hijo cumple esa edad, pero después de
+        haberla cumplido", then "no se podrá aplicar la deducción por
+        maternidad, si bien ello no impedirá aplicar el incremento". Reusing the
+        deducción's own month count therefore forces the increment to zero in
+        exactly the two cases the authority names as still qualifying.
+
+        So the age CEILING is dropped and everything else is kept. The relación
+        gate, the ordinary-mínimo test and the mother's own declared months all
+        still bind, because the article's remaining requirements are hers and the
+        child's entitlement to the mínimo — neither of which the birthday ends.
+        The FLOOR is kept too: no month may precede the child being this
+        taxpayer's, which is the entitling event rather than the age limb.
+
+        Dropping only the ceiling cannot over-grant on its own, because the
+        Art. 81.2 side bounds the pair and already returns ``0`` for every child
+        past the period they turn three
+        (:meth:`guarderia_qualifying_meses`).
+        """
+        if self.relacion not in ART_81_1_MATERNIDAD_RELACIONES:
+            return 0
+        if not self.is_eligible_ordinary(
+            filing_year,
+            thresholds=thresholds,
+            dependencia_assimilation_available=dependencia_assimilation_available,
+        ):
+            return 0
+        return len(self._guarderia_art_81_1_months(filing_year))
+
+    def _guarderia_art_81_1_months(self, filing_year: int) -> frozenset[int]:
+        """The Art. 81.1 months, clipped to the increment's own requirement window."""
+        return frozenset(self.meses_madre_trabajo) & self._guarderia_requirement_months(filing_year)
+
+    def guarderia_simultaneous_meses(
+        self,
+        filing_year: int,
+        *,
+        thresholds: MinimoDescendientesThresholds,
+        dependencia_assimilation_available: bool = False,
+    ) -> int:
+        """Months in which the Art. 81.1 AND Art. 81.2 requirements BOTH held.
+
+        The proration basis the manual describes — "el número de meses en que se
+        cumplan de forma simultánea los requisitos exigidos en el artículo 81.1
+        y 2" — computed as what it says: an intersection of two month sets.
+
+        The geometry is the whole point. Two sets of the same SIZES may share
+        every month, some, or none, and the three have different correct
+        answers; a ``min`` over their counts returns the same number for all
+        three. AEAT's caso a is the partial case — mother May to August, nursery
+        January to June, two shared months, ``1.000 ÷ 12 × 2 = 166,67`` — where
+        the count reading yields four and 333,33, over-granting the deducción
+        and so under-declaring tax.
+
+        Falls back to the count ONLY where the Art. 81.2 months are genuinely
+        unknown, which is the annual-total shape
+        (:meth:`guarderia_qualifying_months` returning ``None``). There the
+        record holds no month information to intersect, so a bound is the honest
+        answer rather than a discarded one, and it is disclosed to the operator
+        by the monthly-detail advisory rather than presented as measured.
+        """
+        mother = self.guarderia_art_81_1_meses(
+            filing_year,
+            thresholds=thresholds,
+            dependencia_assimilation_available=dependencia_assimilation_available,
+        )
+        if mother <= 0:
+            return 0
+        nursery = self.guarderia_qualifying_months(filing_year)
+        if nursery is None:
+            return min(mother, self.guarderia_qualifying_meses(filing_year))
+        return len(self._guarderia_art_81_1_months(filing_year) & nursery)
+
+    def _guarderia_requirement_months(self, filing_year: int) -> frozenset[int]:
+        """The Art. 81.1 requirement months for the increment: the deducción window without its age ceiling."""
+        entitling = _months_of_year_between(
+            (self.birth_date.year, self.birth_date.month),
+            (filing_year + 1, 1),
+            filing_year,
+        ) | self._maternidad_entry_window_months(filing_year)
+        anchor = self.art_58_2_entry_date()
+        if anchor is None:
+            return entitling
+        return frozenset(month for month in entitling if (filing_year, month) >= (anchor.year, anchor.month))
 
     def maternidad_alta_posterior_increment_applies(self, filing_year: int) -> bool:
         """Whether Art. 81.1's post-birth alta increment applies to this child in *filing_year*.
@@ -1005,56 +1186,60 @@ class DescendantInfo(BaseModel):
     def guarderia_contributing_spend(self, filing_year: int) -> int:
         """Art. 81.2 guardería spend this descendant contributes in *filing_year*.
 
-        Applies the LOWER bound and deliberately not the upper one.
+        The THIRD BIRTHDAY IS NOT A BOUNDARY HERE, and that is the whole subtlety
+        of this method. Capítulo 18 says "En el período impositivo en que el hijo
+        menor cumpla tres años, el incremento podrá resultar de aplicación
+        respecto de los gastos incurridos con posterioridad al cumplimiento de
+        dicha edad hasta el mes anterior a aquel en el que pueda comenzar el
+        segundo ciclo de educación infantil." That sentence GRANTS the months
+        after the birthday, which the under-three limb could not otherwise
+        reach; it does not withdraw the months before it. Read as a restriction
+        instead, it drops every pre-birthday month and hands a taxpayer zero on
+        facts the authority works to a positive figure.
 
-        The lower bound is computable from data held: in the period the child
-        turns three, only spend "incurridos con posterioridad al cumplimiento de
-        dicha edad" counts, so months up to and including the birthday month are
-        dropped. Before that period the child is under three throughout and every
-        month counts; after it, nothing does.
+        The manual settles it with its own worked case rather than by wording:
+        an elder child who "en septiembre cumple 3 años" is granted the
+        increment over "6 meses completos (de enero a junio)", every one of them
+        BEFORE the September birthday, for ``1.000 ÷ 12 × 6 = 500``. A
+        post-birthday-only reading returns zero on exactly those facts, so the
+        oracle decides the question the prose leaves open.
 
-        That wording is the Renta manual's own, Capítulo 18: "En el período
-        impositivo en que el hijo menor cumpla tres años, el incremento podrá
-        resultar de aplicación respecto de los gastos incurridos con
-        posterioridad al cumplimiento de dicha edad hasta el mes anterior a
-        aquel en el que pueda comenzar el segundo ciclo de educación infantil."
-        The extension therefore opens AFTER the birthday, not at the start of
-        the period — a reading of it as "the whole turning-three year counts"
-        over-declares the months before the birthday, and is why the boundary is
-        quoted here rather than paraphrased.
-
-        The UPPER bound is not derived, and that is a decision rather than a gap.
-        The statute ends the extension at the month before the second cycle of
-        infant education may begin, which each region determines. The informative
-        return reporting childcare custody is filed EXCLUSIVELY by the centre,
-        never by the taxpayer, and the centre is required to report exactly those
-        months. Re-deriving the boundary here would compute, from a calendar this
+        So the whole period counts, and the declared months are taken as
+        declared. The UPPER bound is still not derived, and that remains a
+        deliberate non-derivation rather than an oversight. The statute ends the
+        extension at the month before the second cycle of infant education may
+        begin, which each region determines. The informative return reporting
+        childcare custody is filed EXCLUSIVELY by the centre, never by the
+        taxpayer, and the centre is required to report exactly those months.
+        Re-deriving the boundary here would compute, from a calendar this
         application does not hold, a determination the law assigns to a party who
         does — and risk contradicting the return the authority already holds from
         that party. So the months a taxpayer can evidence are taken as the months
-        the centre determined.
+        the centre determined, and that evidence is the monthly detail.
 
         Returns ``0`` for a non-cohabiting descendant, and for the turning-three
-        period when only an ANNUAL total is on record: that total spans the
-        birthday and cannot be apportioned across it. That is not the withheld
-        window — it is an unanswerable question about a figure the operator can
-        replace with the monthly detail their centre already certified.
+        period when only an ANNUAL total is on record. The reason for that zero
+        is the UPPER edge, not the birthday: a single yearly figure cannot be
+        apportioned to a window whose closing month this application declines to
+        derive. It is an unanswerable question about a figure the operator can
+        replace with the monthly detail their centre already certified, and
+        :meth:`guarderia_needs_monthly_detail` reports it so they are asked.
         """
         if not self.convive_con_contribuyente:
             return 0
         age_at_year_end = self.age_at_year_end(filing_year)
-        if age_at_year_end < _MAX_AGE_MENOR_TRES:
-            # Under three for the whole period: every declared month counts, and
-            # an annual total needs no apportioning.
-            if self.gastos_guarderia_mensuales:
-                return sum(entry.amount_euros for entry in self.gastos_guarderia_mensuales)
-            return self.gastos_guarderia_euros
         if age_at_year_end > _MAX_AGE_MENOR_TRES:
             return 0
-        # The turning-three period: the Art. 81.2 extension, month-scoped.
-        return sum(
-            entry.amount_euros for entry in self.gastos_guarderia_mensuales if entry.month > self.birth_date.month
-        )
+        if self.gastos_guarderia_mensuales:
+            # Every declared month counts in both periods: under three the child
+            # qualifies throughout, and in the turning-three period the birthday
+            # draws no line.
+            return sum(entry.amount_euros for entry in self.gastos_guarderia_mensuales)
+        if age_at_year_end < _MAX_AGE_MENOR_TRES:
+            # An annual total needs no apportioning while the child is under
+            # three for the whole period.
+            return self.gastos_guarderia_euros
+        return 0
 
     def guarderia_qualifying_meses(self, filing_year: int) -> int:
         """Art. 81.2 qualifying MONTH count for this descendant in *filing_year*.
@@ -1079,24 +1264,61 @@ class DescendantInfo(BaseModel):
         reinstates the flat cap this proration exists to remove, and refusing
         outright drops the increment entirely for what is likely the commonest
         declaration shape. The approximation is disclosed to the operator rather
-        than presented as a measured result. It stops being an approximation
-        once the Art. 81.1 side stores WHICH months the mother qualified rather
-        than how many, which is a persisted-shape change this method cannot make
-        on its own.
+        than presented as a measured result.
+
+        It is the ANNUAL TOTAL that keeps it an approximation, and nothing else.
+        The Art. 81.1 side now stores which months the mother qualified, so the
+        simultaneity intersection is real wherever the nursery months are known;
+        against an annual total there is nothing on THIS side to intersect with,
+        and the caller falls back to a bound that cannot see the geometry at all.
+        A mother qualifying January to June and one qualifying July to December
+        produce the same figure against the same annual total, which is exactly
+        the blindness the month sets removed everywhere the months are declared.
+        Only the operator can close it, by declaring the monthly detail their
+        centre already certified; :meth:`guarderia_needs_monthly_detail` exists
+        to ask them for it.
 
         Returns ``0`` for a non-cohabiting descendant and for a child past the
-        period they turn three, matching the spend method's own zeroes.
+        period they turn three, matching the spend method's own zeroes — and,
+        in the turning-three period with only an annual total, the same zero the
+        spend method returns, for the same upper-edge reason. The age-eligible
+        fallback is NOT reached there: it counts months under three, which in
+        that period is a strictly narrower window than the increment's own, so
+        using it would prorate by a basis the spend it pairs with does not use.
         """
         if not self.convive_con_contribuyente:
             return 0
         age_at_year_end = self.age_at_year_end(filing_year)
-        if age_at_year_end < _MAX_AGE_MENOR_TRES:
-            if self.gastos_guarderia_mensuales:
-                return len(self.gastos_guarderia_mensuales)
-            return self.age_eligible_guarderia_meses(filing_year)
         if age_at_year_end > _MAX_AGE_MENOR_TRES:
             return 0
-        return sum(1 for entry in self.gastos_guarderia_mensuales if entry.month > self.birth_date.month)
+        if self.gastos_guarderia_mensuales:
+            return len(self.gastos_guarderia_mensuales)
+        if age_at_year_end < _MAX_AGE_MENOR_TRES:
+            return self.age_eligible_guarderia_meses(filing_year)
+        return 0
+
+    def guarderia_qualifying_months(self, filing_year: int) -> frozenset[int] | None:
+        """WHICH months this descendant's declared nursery spend covers, or ``None``.
+
+        The Art. 81.2 half of the simultaneity intersection, as months rather
+        than as their number. ``None`` means the months are genuinely unknown —
+        an ANNUAL total carries no month information at all — and is distinct
+        from an empty set, which means no month qualifies.
+
+        Callers that receive ``None`` cannot intersect and must fall back to the
+        count, which is a bound rather than an answer. That bound is honest
+        there precisely because nothing in the record says which months the
+        yearly figure covered; it is not the count-based reading this method
+        exists to replace, which discarded month information the record DID
+        hold.
+        """
+        if not self.convive_con_contribuyente:
+            return frozenset()
+        if self.age_at_year_end(filing_year) > _MAX_AGE_MENOR_TRES:
+            return frozenset()
+        if self.gastos_guarderia_mensuales:
+            return frozenset(entry.month for entry in self.gastos_guarderia_mensuales)
+        return None
 
     def age_eligible_guarderia_meses(self, filing_year: int) -> int:
         """Months of *filing_year* in which this descendant was alive and under three.
@@ -1124,16 +1346,15 @@ class DescendantInfo(BaseModel):
         rests on, so it is separately addressable and separately tested rather
         than observable only through that one branch.
 
-        The month the child turns three is EXCLUDED — but that is NOT the
-        boundary :meth:`guarderia_contributing_spend` draws, and the two month
-        sets are DISJOINT. This one counts the months BEFORE the birthday month,
-        while the child is still under three; the spend method counts the months
-        AFTER it, the Art. 81.2 extension the Renta manual (Capítulo 18) opens
-        at "los gastos incurridos con posterioridad al cumplimiento de dicha
-        edad". They agree only on excluding the birthday month itself, and they
-        never both apply to one descendant-year: this method is consulted only
-        where the child is under three for the whole period, where no extension
-        window exists.
+        The month the child turns three is EXCLUDED, because this counts
+        UNDER-THREE months and that month is not one. That makes this window
+        strictly NARROWER than the one :meth:`guarderia_contributing_spend`
+        applies in the turning-three period, where the birthday draws no line at
+        all and every declared month counts. The two coincide only where this
+        method is actually consulted — a child under three for the whole period
+        — which is precisely why the fallback is confined to that branch. Using
+        it in the turning-three period would prorate by an under-three basis
+        while the spend it pairs with was measured on a wider window.
         """
         if self.birth_date.year > filing_year:
             return 0
@@ -1142,9 +1363,9 @@ class DescendantInfo(BaseModel):
         if third_birthday_year < filing_year:
             return 0
         # In the year the child turns three they are under three only until the
-        # birthday month, which is itself excluded. Same cut point as
-        # ``guarderia_contributing_spend``, opposite side of it: that method
-        # keeps the months after the birthday month, this one the months before.
+        # birthday month, which is itself excluded. This is an AGE boundary, not
+        # the increment's: ``guarderia_contributing_spend`` draws no line at the
+        # birthday in that period.
         last_month = self.birth_date.month - 1 if third_birthday_year == filing_year else 12
         return max(0, last_month - first_month + 1)
 
@@ -1568,19 +1789,30 @@ class RentaFamilyProfile(BaseModel):
         reads as completing the month rules.
 
         *meses* is the SIMULTANEITY intersection the manual describes, taken as
-        the smaller of the two sides. The Art. 81.2 side is a real month set
-        (:meth:`DescendantInfo.guarderia_qualifying_meses`); the Art. 81.1 side
-        is only a COUNT, because the record stores how many months the mother
-        qualified and never which ones. So this is a genuine intersection on one
-        side and an upper bound on the other, and it over-states only when the
-        two spans do not overlap — a mother qualifying January to April against
-        nursery paid September to October. That residual is disclosed to the
-        operator rather than presented as measured. It stops being an
-        approximation once the Art. 81.1 side stores WHICH months the mother
-        qualified rather than how many, which is a persisted-shape change beyond
-        this method. The bound is preferred to a flat per-child cap, which
-        over-grants every mid-year birth and every partial-year enrolment
-        outright.
+        the smaller of the two sides. The Art. 81.1 side is
+        :meth:`DescendantInfo.guarderia_art_81_1_meses` rather than the
+        deducción's own :meth:`DescendantInfo.maternidad_contributing_meses`,
+        and the distinction is load-bearing: the deducción stops at the child's
+        third birthday while the increment does not, so reusing it forced this
+        total to zero for a child turning three in January and for a mother who
+        began work after the birthday — two cases Capítulo 18 names explicitly
+        as still qualifying.
+
+        BOTH sides are real month sets, so *meses* is a true intersection rather
+        than a bound. That is what the article asks for — "el número de meses en
+        que se cumplan de forma simultánea los requisitos" is a question about
+        WHICH months, and only months can answer it.
+
+        The manual's caso a is the case that forced it: a mother entitled May to
+        August against nursery paid January to June shares exactly two months,
+        and AEAT prints ``1.000 ÷ 12 × 2 = 166,67``. Taking ``min`` over the two
+        COUNTS yields four and 333,33 — an over-grant of the deducción, which
+        under-declares tax. Counts cannot distinguish that case from a
+        containment or a disjoint one, because the sizes are the same in all
+        three; the geometry only survives if the months do.
+
+        Preferred to a flat per-child cap, which over-grants every mid-year
+        birth and every partial-year enrolment outright.
 
         *cap_anual* is a registry ``money`` parameter the caller resolves per
         filing year; this method performs no euro-figure lookup of its own
@@ -1594,13 +1826,10 @@ class RentaFamilyProfile(BaseModel):
         available = self.dependencia_assimilation_available
         total = Decimal("0")
         for descendant in self.descendientes:
-            meses = min(
-                descendant.guarderia_qualifying_meses(filing_year),
-                descendant.maternidad_contributing_meses(
-                    filing_year,
-                    thresholds=thresholds,
-                    dependencia_assimilation_available=available,
-                ),
+            meses = descendant.guarderia_simultaneous_meses(
+                filing_year,
+                thresholds=thresholds,
+                dependencia_assimilation_available=available,
             )
             if meses <= 0:
                 continue

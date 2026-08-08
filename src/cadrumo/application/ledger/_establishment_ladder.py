@@ -1,0 +1,754 @@
+"""Ask the strongest available evidence where a counterparty is established, in order.
+
+Four rungs, each already an authority in its own right, composed here into the
+ordered ladder the classification criteria need. The composition is the whole
+deliverable: every rung answers honestly on its own, and the DAMAGE comes from
+consulting them in the wrong order.
+
+**First decisive rung wins, and the order is not a preference.** Spain, France,
+Germany and Italy all print five-digit postal codes, so a French ``75001`` handed
+to the Spanish province lookup returns the peninsula and a ``51001`` returns
+Ceuta -- placing a French party inside a Spanish territory, or outside LIVA
+entirely. Neither is caught by a check further down, because both are perfectly
+well-formed answers to the wrong question. What prevents it is that the country
+rung is consulted first and, having answered, stops the ladder.
+
+**A printed VAT number is NOT a rung here, and that is the correction this
+ladder exists in its current form to carry.** It once was the first and
+strongest one: a ``DE`` prefix resolved decisively to ``EU_MEMBER`` and stopped
+the walk. Every Member State registers non-residents on exactly the terms Spain
+does, so that read the party's REGISTRATION as its PLACE — and it did so on one
+side only, because a Spanish registration was already, correctly, refused. The
+foreign direction was the dangerous one: a German-registered entity actually
+established in Spain resolved silently and confidently, where its Spanish mirror
+failed loud to the operator.
+
+The prefix is now terminal for the OTHER fact, the party's VAT identification
+state, which it settles decisively because registration is exactly what that
+fact asserts. What it never settles alone is where the party IS.
+
+The rungs, strongest first:
+
+1. **The printed address country**, as a name matched against the bounded
+   registry vocabulary or as an already-printed alpha-2 code. It is now first,
+   and it needs no help from the registration: an address stating France places
+   a French-established party whatever State registered it.
+2. **The Spanish postal code**, consulted ONLY where the country evidence
+   positively named Spain. A postal pattern alone presupposes exactly what it
+   would have to prove.
+3. **A foreign registration CONCORDANT with an independent rung**, where the
+   address rungs settled nothing. The registration alone is never enough; what
+   makes it usable is a second, independent signal agreeing with it — a printed
+   treatment consistent with the party not being established here, such as a
+   reverse-charge mention with no Spanish IVA charged. Concordant papers resolve
+   silently, which is what keeps the foreign population from being asked.
+4. **A previously confirmed counterparty-level fact**, because establishment is
+   a property of the entity and the operator should be asked at most once.
+
+**And any Spain-indicating rung beside a foreign registration is a CONTRADICTION,
+never a resolution either way.** A Spanish address, country-gated Spanish postal
+evidence, or Spanish IVA charged at a registry rate, printed on a document whose
+counterparty carries another State's VAT number, is the characteristic face of a
+foreign-registered entity operating through an establecimiento permanente in
+Spain. It fails loud, and it is checked BEFORE the ordinary rungs so the postal
+rung cannot quietly answer it.
+
+**Spain is a trigger, not an exhausted rung.** The country rung deliberately
+returns no SCOPE for Spain -- ``ES`` names the Member State while the territory
+inside it stays undetermined between the TAI, Canarias and Ceuta y Melilla -- so
+the ladder reads the country CODE rather than the scope to decide whether the
+postal rung applies. Treating that ``None`` as "no evidence" would skip the one
+rung that can answer, and would do so for the majority population.
+
+**An exhausted ladder yields nothing, and nothing never becomes a territory.**
+There is no branch here that produces a scope from the absence of evidence. The
+peninsula is the commonest answer, so a default there would pass every test
+written from mainland fixtures while silently placing Canarian and Ceutan
+parties inside a territory their operations are not subject to.
+
+**A corrupt registry is not an unestablished party.** The country vocabulary and
+the territory table REFUSE a malformed or fold-colliding table rather than
+degrading, and that refusal travels out of here untouched. No rung is wrapped in
+a bare ``except``: converting it to a quiet "not established" would send an
+operator to confirm a counterparty's territory in answer to a broken bundled
+data file, which is a defect with no operator remedy.
+
+**The taxpayer's own side never enters this ladder.** One party on every ingested
+invoice is the operator, whose territory is a profile fact resolved by
+:func:`~application.ledger.resolve_filer_territorial_scope`. Only the
+counterparty's scope is ever sought on the paper.
+
+See Also:
+    :func:`~application.ledger.resolve_counterparty_establishment`
+        The fourth rung, and the store an operator's answer persists into.
+    :class:`~application.ledger.DeclaredFacts`
+        The one channel a resolved scope reaches the criteria assembly through.
+    :class:`~domain.iva.IvaTerritorialScope`
+        The closed target every rung resolves into.
+"""
+
+from __future__ import annotations
+
+from decimal import Decimal
+from enum import StrEnum
+from typing import TYPE_CHECKING, Final
+
+from pydantic import BaseModel, Field
+
+from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource
+from ...domain.iva import (
+    EUMemberState,
+    IvaTerritorialScope,
+    country_code_for_printed_country_name,
+    match_regime_legend,
+    rate_kinds_for_declared_rate,
+    territorial_scope_for_country,
+    territorial_scope_for_spanish_postal_code,
+    vat_identification_state_for_printed_tax_identifier,
+)
+
+# `names_spain` is the sibling module's authority on what positively names
+# Spain, and is imported rather than restated: a second copy of that test is
+# exactly the drift that would let one surface open the postal rung while the
+# other does not. The import direction also keeps the pair acyclic, since the
+# declared-fact channel below is owned there too.
+from ._classification_assembly import DeclaredFact, names_spain
+from ._counterparty_establishment import (
+    CounterpartyEstablishmentContradiction,
+    CounterpartyEstablishmentRepository,
+    resolve_counterparty_establishment,
+)
+
+if TYPE_CHECKING:
+    from datetime import date
+
+    from ...domain.iva import InvoiceKind
+    from ._evidence_draft import InvoiceDraft
+
+__all__ = [
+    "CounterpartyEstablishment",
+    "EstablishmentRung",
+    "RegistrationEstablishmentConflict",
+    "resolve_counterparty_establishment_scope",
+    "resolve_draft_counterparty_establishment",
+    "scope_printed_evidence_would_establish",
+]
+
+
+class EstablishmentRung(StrEnum):
+    """Which rung of the ladder settled a counterparty's territory.
+
+    Recorded rather than discarded because the rungs differ in what an auditor
+    can be shown. The first three are anchorable to a printed form on the page;
+    the fourth is a person's assertion, and pointing an auditor at a page for it
+    would be a claim the document never made.
+
+    **There is no tax-identifier rung, and its absence is the point.** One was
+    here, first and strongest, until a printed foreign prefix was recognised as
+    evidence of REGISTRATION rather than of place. The member is not retained
+    unused: an unreachable rung in a closed set is a value every consumer would
+    still have to handle, and the honest record of what settled such a document
+    is that nothing did.
+
+    Attributes:
+        CONCORDANT_REGISTRATION: A foreign registration corroborated by an
+            independent signal agreeing with it, where the address rungs settled
+            nothing and no rung indicated Spain. Weaker than the printed rungs
+            above it, which is why it is consulted after them.
+        ADDRESS_COUNTRY: The country stated in the party's address block named
+            a country whose territory is settled by the country alone.
+
+            Named for WHERE the evidence sits, not for how it was rendered.
+            It was ``PRINTED_COUNTRY`` while a printed document was the only
+            thing that could feed it; a structured record states the same
+            country in an element, and an operator reading "printed" against
+            a machine-readable invoice is told the value came from somewhere
+            it did not. The rung is one rung either way -- the same
+            authority decides what a country establishes -- so the label
+            names the address rather than the medium.
+        SPANISH_POSTAL_CODE: The country evidence named Spain and the postal
+            code in the address separated the three Spanish IVA territories.
+        CONFIRMED_COUNTERPARTY_FACT: An operator had already confirmed this
+            counterparty's establishment, and the paper settled nothing that
+            disagreed.
+    """
+
+    CONCORDANT_REGISTRATION = "concordant_registration"
+    ADDRESS_COUNTRY = "address_country"
+    SPANISH_POSTAL_CODE = "spanish_postal_code"
+    CONFIRMED_COUNTERPARTY_FACT = "confirmed_counterparty_fact"
+
+
+class RegistrationEstablishmentConflict(BaseModel):
+    """A foreign registration printed beside evidence placing the party in Spain.
+
+    Carried rather than resolved, on the same terms as the confirmed-fact
+    disagreement and for a sharper reason. **This is the shape the dangerous
+    population characteristically presents.** An entity registered in another
+    Member State but operating through an establecimiento permanente in Spain
+    charges Spanish IVA on its domestic supplies and prints a Spanish address to
+    do it — so a foreign VAT number beside a Spanish address, Spanish postal
+    evidence or a Spanish registry rate is not noise, it is the signature of the
+    exact case the split exists to catch.
+
+    Preferring either side would be a guess with a filing behind it. Preferring
+    the registration reinstates the silent ``EU_MEMBER`` this whole change
+    removes; preferring the Spanish evidence would assert an establishment the
+    document does not state. So no scope is returned and a human decides.
+
+    Attributes:
+        identification_state: The Member State whose VAT number was printed.
+        spain_indicating: What placed the party in Spain, in operator-facing
+            words. Never empty — a conflict nobody can see the other half of is
+            not actionable.
+        detail: The disagreement in words, for the operator-facing finding.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    identification_state: EUMemberState
+    spain_indicating: tuple[str, ...] = Field(min_length=1)
+    detail: str = Field(min_length=1)
+
+
+class CounterpartyEstablishment(BaseModel):
+    """What the ladder settled about one counterparty on one document.
+
+    Attributes:
+        scope: The territory, or ``None`` when the ladder exhausted without a
+            decisive rung. ``None`` is this codebase's spelling of the ruling's
+            UNKNOWN: a missing scope is not a kind of scope, and adding an
+            unknown member to the closed set would put a value into it that
+            every rule table downstream would then have to special-case.
+        rung: Which rung answered. ``None`` exactly when ``scope`` is.
+        source: How the answer is backed -- a printed form for the evidence
+            rungs, a person for the remembered assertion. ``None`` exactly when
+            ``scope`` is, because an unsettled question has nobody vouching for
+            it.
+        contradiction: A confirmed fact the document's printed evidence
+            disputes. Carried WITH no scope: the stored value is an operator's
+            claim about an entity and the printed value is an issuer's claim
+            about one document, and neither may be preferred without a decision.
+        identification_state: The Member State whose VAT number the counterparty
+            printed. Settled TERMINALLY by the prefix and carried independently
+            of ``scope``, because they are two facts: this one is decided by
+            registration evidence, and the other is decided by no registration at
+            all. It is populated on a conflict and on an unestablished result
+            alike -- the paper can name the registering State perfectly well
+            while saying nothing about where the party operates.
+        registration_conflict: A foreign registration printed beside evidence
+            placing the party in Spain. Carried WITH no scope, on the same
+            reasoning as ``contradiction``.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    scope: IvaTerritorialScope | None = None
+    rung: EstablishmentRung | None = None
+    source: ClassifierInputSource | None = None
+    contradiction: CounterpartyEstablishmentContradiction | None = None
+    identification_state: EUMemberState | None = None
+    registration_conflict: RegistrationEstablishmentConflict | None = None
+
+    @property
+    def established(self) -> bool:
+        """Return whether the ladder settled a territory."""
+        return self.scope is not None
+
+    @property
+    def contradicted(self) -> bool:
+        """Return whether the evidence disputes a confirmed fact.
+
+        Reports the stored-fact disagreement only. The registration conflict is
+        a different disagreement between different parties -- an issuer's own
+        two statements rather than an issuer against an operator -- and folding
+        them into one flag would leave a caller unable to say which it is
+        looking at, or to route them to the finding each deserves.
+        """
+        return self.contradiction is not None
+
+    @property
+    def conflicted(self) -> bool:
+        """Return whether a foreign registration sits beside Spain-indicating evidence."""
+        return self.registration_conflict is not None
+
+    @property
+    def declared_fact(self) -> DeclaredFact[IvaTerritorialScope] | None:
+        """Return this scope in the form the criteria assembly consumes.
+
+        The one channel a resolved scope reaches the assembly through, so the
+        value and who established it travel together. ``None`` where the ladder
+        settled nothing, which the assembly then reports as a missing input.
+        """
+        if self.scope is None or self.source is None:
+            return None
+        return DeclaredFact[IvaTerritorialScope](value=self.scope, source=self.source)
+
+
+def _printed_country_code(
+    *,
+    printed_country_name: str | None,
+    printed_country_code: str | None,
+) -> str | None:
+    """Return the country code the document's address block states, if any.
+
+    Both spellings are the same rung. The NAME is asked first because it is the
+    form an address block actually prints -- in the document's own language, so
+    asking a reading stage for the code would be asking it to translate, and
+    translation is inference. The already-printed code is the fallback for the
+    surfaces that carry one.
+
+    A name outside the vocabulary does not fall through to the raw code as a
+    country: an unrecognised name establishes nothing, and the code is consulted
+    only where no name was recognised at all.
+    """
+    from_name = country_code_for_printed_country_name(printed_country_name)
+    if from_name is not None:
+        return from_name
+    return printed_country_code
+
+
+_PERCENT: Final[Decimal] = Decimal("100")
+"""What a printed IVA rate is divided by to reach the fraction the registry keys on."""
+
+
+def _spanish_iva_was_charged(
+    charged_iva_rates: tuple[Decimal, ...],
+    *,
+    on_date: date | None,
+) -> bool:
+    """Whether the document charges IVA at a rate the SPANISH registry carries.
+
+    A repercutido line is only Spain-indicating if the rate is a Spanish one: a
+    German supplier invoicing a German customer charges German VAT, and reading
+    any charged tax as Spanish tax would place half of Europe inside the TAI.
+    The registry is asked rather than a literal compared, so a rate the schedule
+    stops carrying stops indicating.
+
+    **Without a date the check is inconclusive, and inconclusive contributes
+    nothing in either direction.** It raises no conflict, because a false
+    conflict blocks a legitimate filing; and it supplies no concordance, because
+    a rate nobody could verify is not a second signal. The operation then falls
+    to the ordinary rungs and, failing those, to a question -- safe both ways.
+
+    Args:
+        charged_iva_rates: The rates as a document PRINTS them, whole-number
+            percentages. The registry's inverse lookup takes a fraction, so the
+            conversion happens here rather than at every caller -- the same
+            hundredth the discrepancy check in the draft module applies, and the
+            unit is named in both places because a percentage handed to that
+            lookup silently matches nothing and reads as "no Spanish rate".
+        on_date: The date the rate must have been in force.
+    """
+    if on_date is None:
+        return False
+    return any(
+        rate_kinds_for_declared_rate(EUMemberState.ES, rate / _PERCENT, on_date)
+        for rate in charged_iva_rates
+        # Zero is excluded before the lookup and not by it. The registry answers
+        # that 0 % is always a legitimate Spanish ZERO-tier rate, which is true
+        # and is the wrong question here: a zero-rated line charges no tax, so
+        # it places the party nowhere.
+        if rate > 0
+    )
+
+
+def _spain_indicating(
+    *,
+    country_code: str | None,
+    postal_code: str | None,
+    spanish_iva_charged: bool,
+) -> tuple[str, ...]:
+    """Return every signal placing this party in Spain, in operator-facing words.
+
+    Collected rather than short-circuited, because this feeds a finding a human
+    has to act on: a Spanish address AND Spanish IVA at a registry rate is a far
+    stronger prompt than whichever single signal happened to be tested first.
+    """
+    signals: list[str] = []
+    if names_spain(country_code):
+        signals.append("the printed address country names Spain")
+        if territorial_scope_for_spanish_postal_code(postal_code) is not None:
+            signals.append("the printed postal code resolves to a Spanish IVA territory")
+    if spanish_iva_charged:
+        signals.append("the document charges IVA at a Spanish registry rate")
+    return tuple(signals)
+
+
+def _treatment_concurs_with_non_establishment(
+    *,
+    regime_legend: str | None,
+    spanish_iva_charged: bool,
+) -> bool:
+    """Whether the printed treatment independently agrees the party is not here.
+
+    The one non-address signal that can corroborate a foreign registration. A
+    reverse-charge mention shifts the tax to the recipient, and LIVA art.
+    84.Uno.2 makes the recipient the sujeto pasivo precisely when the supplier is
+    NOT established in the territory -- so an issuer printing it has stated, in a
+    mention the regulation fixes the wording of, that it did not have to charge
+    here.
+
+    **Both halves are required.** The mention with Spanish IVA charged beside it
+    is a document disagreeing with itself, not a corroboration, and the shipped
+    legend record says so directly: this is the one mention declaring it expects
+    no repercutido line. Accepting the phrase while ignoring the charged tax
+    would read the issuer's words and discard the issuer's arithmetic.
+    """
+    legend = match_regime_legend(regime_legend)
+    if legend is None or legend.expects_repercutido_line:
+        return False
+    return not spanish_iva_charged
+
+
+def _printed_evidence(
+    *,
+    tax_identifier: str | None,
+    country_code: str | None,
+    postal_code: str | None,
+    regime_legend: str | None = None,
+    charged_iva_rates: tuple[Decimal, ...] = (),
+    on_date: date | None = None,
+) -> tuple[IvaTerritorialScope | None, EstablishmentRung | None, RegistrationEstablishmentConflict | None]:
+    """Walk the document rungs and stop at the first decisive one, or conflict.
+
+    Ordering is the safety property, not an optimisation, and it now carries two
+    of them. The country rung is consulted before the postal rung so a foreign
+    five-digit code is never offered to the Spanish province lookup, which would
+    answer it. And the registration-versus-Spain check is consulted before BOTH,
+    so a foreign-registered party printing a Spanish address surfaces instead of
+    being quietly resolved to a Spanish territory by the rung below.
+
+    The printed VAT number appears here only as the thing that must be
+    CORROBORATED. It settles no territory by itself at any point in this walk.
+    """
+    identification = vat_identification_state_for_printed_tax_identifier(tax_identifier)
+    spanish_iva_charged = _spanish_iva_was_charged(charged_iva_rates, on_date=on_date)
+
+    if identification is not None:
+        indicating = _spain_indicating(
+            country_code=country_code,
+            postal_code=postal_code,
+            spanish_iva_charged=spanish_iva_charged,
+        )
+        if indicating:
+            return (
+                None,
+                None,
+                RegistrationEstablishmentConflict(
+                    identification_state=identification,
+                    spain_indicating=indicating,
+                    detail=(
+                        f"the counterparty prints a {identification.value.upper()} VAT identification while "
+                        f"{'; '.join(indicating)}. A party registered in another Member State may still be "
+                        f"established in Spain through a sede or establecimiento permanente, and this "
+                        f"document states both -- which of the two governs its IVA treatment is not settled "
+                        f"by the paper"
+                    ),
+                ),
+            )
+
+    from_country = territorial_scope_for_country(country_code)
+    if from_country is not None:
+        return from_country, EstablishmentRung.ADDRESS_COUNTRY, None
+
+    # Spain reaches here rather than above BY DESIGN: the country rung refuses to
+    # resolve `ES` because it names the State while the IVA territory inside it
+    # stays undetermined. That refusal is the postal rung's trigger, so the CODE
+    # is tested rather than the scope the code produced.
+    if names_spain(country_code):
+        from_postal = territorial_scope_for_spanish_postal_code(postal_code)
+        if from_postal is not None:
+            return from_postal, EstablishmentRung.SPANISH_POSTAL_CODE, None
+
+    if identification is not None and _treatment_concurs_with_non_establishment(
+        regime_legend=regime_legend,
+        spanish_iva_charged=spanish_iva_charged,
+    ):
+        # The registration's OWN State, and only because something else agreed.
+        # `None` here is not a failure to look up a country: Northern Ireland
+        # carries a VAT prefix without being an ISO jurisdiction the catalogue
+        # resolves, and a registration whose territory cannot be named is one
+        # this walk cannot corroborate into a scope.
+        concordant = territorial_scope_for_country(identification.value.upper())
+        if concordant is not None:
+            return concordant, EstablishmentRung.CONCORDANT_REGISTRATION, None
+
+    return None, None, None
+
+
+def scope_printed_evidence_would_establish(
+    *,
+    tax_identifier: str | None = None,
+    printed_country_name: str | None = None,
+    printed_country_code: str | None = None,
+    postal_code: str | None = None,
+) -> IvaTerritorialScope | None:
+    """Return the territory this printed evidence alone would settle, or ``None``.
+
+    The document rungs only, with no store consulted and nothing persisted. It
+    exists so a DIAGNOSTIC can name a territory without re-deriving the boundary
+    that produces it: an advisory warning that a party's address values are of
+    unverified attribution is far more actionable when it also says where those
+    values would place the party, and the operator is then contesting a concrete
+    claim rather than an abstraction.
+
+    Quoting rather than copying is the whole point. A second walk of the rungs
+    written for the advisory would be a second copy of a regulatory boundary,
+    free to drift from this one -- and the ordering it would have to reproduce
+    is precisely the safety property this module exists to hold.
+
+    **Not a resolution, and never a substitute for one.** No confirmed
+    counterparty fact is consulted, so a contradiction cannot surface here and
+    an answer from this function must never reach the criteria. Callers wanting
+    the settled territory call
+    :func:`resolve_counterparty_establishment_scope`.
+
+    **A registration conflict reads here as no territory**, which is the honest
+    projection for a diagnostic: the advisory this feeds says where the printed
+    values would place the party, and a document whose registration and address
+    disagree has no single such place to name. The conflict itself is an
+    operator-facing finding rather than a hint, and it surfaces through the
+    resolution path that can carry it.
+
+    Args:
+        tax_identifier: The party's identifier as printed, if any.
+        printed_country_name: The country as printed in the address block.
+        printed_country_code: An already-printed alpha-2 country code.
+        postal_code: The party's printed postal code.
+
+    Returns:
+        The territory the printed rungs settle, or ``None`` where they exhaust.
+    """
+    scope, _rung, _conflict = _printed_evidence(
+        tax_identifier=tax_identifier,
+        country_code=_printed_country_code(
+            printed_country_name=printed_country_name,
+            printed_country_code=printed_country_code,
+        ),
+        postal_code=postal_code,
+    )
+    return scope
+
+
+def resolve_counterparty_establishment_scope(
+    *,
+    bucket_id: str,
+    tax_identifier: str | None = None,
+    printed_country_name: str | None = None,
+    printed_country_code: str | None = None,
+    postal_code: str | None = None,
+    regime_legend: str | None = None,
+    charged_iva_rates: tuple[Decimal, ...] = (),
+    on_date: date | None = None,
+    repository: CounterpartyEstablishmentRepository | None = None,
+) -> CounterpartyEstablishment:
+    """Resolve where a counterparty is established, or settle nothing and say so.
+
+    The confirmed-fact rung is consulted even when the paper was decisive, and
+    that is not a departure from first-decisive-rung: the store is asked to
+    COMPARE, not to answer. A confirmed-Canarian counterparty printing a French
+    country code is a real signal -- a different entity behind a reused
+    identifier, an establishment that moved, or an assertion made in error --
+    and none of the three is settled by preferring a side, so the disagreement
+    is carried and NO scope is returned. Skipping the store on a decisive page
+    would take that channel offline for exactly the population it protects.
+
+    Args:
+        bucket_id: Active profile bucket, for the confirmed-fact rung.
+        tax_identifier: The counterparty's identifier as printed, if any.
+        printed_country_name: The country as printed in the address block, in
+            whatever language the issuer set it.
+        printed_country_code: An already-printed alpha-2 country code, for
+            surfaces that carry one instead of a name.
+        postal_code: The counterparty's printed postal code. Consulted only
+            where the country evidence positively named Spain.
+        regime_legend: The statutory mention the document prints, if any. Read
+            for one thing only: whether the treatment independently agrees the
+            counterparty is not established here.
+        charged_iva_rates: Every IVA percentage the document charges. Spanish
+            registry rates among them place the party here; foreign ones say
+            nothing, which is why the rates are passed rather than a flag.
+        on_date: The invoice date, for asking the rate schedule what a rate
+            meant when it was charged. ``None`` makes the rate check
+            inconclusive rather than negative.
+        repository: Injected store.
+
+    Returns:
+        :class:`CounterpartyEstablishment`: the territory and the rung that
+        settled it, a conflict, a contradiction, or none of them.
+
+    Raises:
+        IvaCatalogueError: When the bundled country vocabulary or territory
+            registry cannot be read, is malformed, or carries a name two
+            countries claim. Deliberately propagated: a broken bundled data file
+            is a defect, and quietly reporting it as an unestablished party
+            would send an operator to answer a question that is not theirs.
+        Exception: Whatever the confirmed-fact store raises, on the same terms
+            and for a sharper reason. A store that cannot be read is not a
+            counterparty nobody has confirmed -- and the operator may have
+            confirmed this one already, so swallowing the failure would retract
+            their own earlier answer and ask them for it again, against a store
+            that would refuse to record it. The secure repository takes the same
+            position on the tier below, raising rather than returning ``None``
+            when a row exists but is inconsistent, precisely so an inconsistency
+            cannot hide behind an ordinary miss. No error type is named here
+            because none is caught: the store owns its own vocabulary and this
+            function is transparent to it.
+    """
+    country_code = _printed_country_code(
+        printed_country_name=printed_country_name,
+        printed_country_code=printed_country_code,
+    )
+    identification = vat_identification_state_for_printed_tax_identifier(tax_identifier)
+    evidenced, rung, conflict = _printed_evidence(
+        tax_identifier=tax_identifier,
+        country_code=country_code,
+        postal_code=postal_code,
+        regime_legend=regime_legend,
+        charged_iva_rates=charged_iva_rates,
+        on_date=on_date,
+    )
+
+    # Returned before the store is asked, and deliberately. A conflict means the
+    # PAPER disagrees with itself, so there is no evidenced scope to compare a
+    # remembered fact against -- asking would either compare against nothing or
+    # invite the stored value to settle a question the document just raised.
+    if conflict is not None:
+        return CounterpartyEstablishment(
+            identification_state=identification,
+            registration_conflict=conflict,
+        )
+
+    remembered = resolve_counterparty_establishment(
+        bucket_id=bucket_id,
+        tax_identifier=tax_identifier,
+        country_code=country_code,
+        evidenced_scope=evidenced,
+        repository=repository,
+    )
+    if remembered.contradiction is not None:
+        return CounterpartyEstablishment(
+            identification_state=identification,
+            contradiction=remembered.contradiction,
+        )
+
+    if evidenced is not None:
+        return CounterpartyEstablishment(
+            scope=evidenced,
+            rung=rung,
+            source=ClassifierInputSource.DOCUMENT_EVIDENCE,
+            identification_state=identification,
+        )
+
+    if remembered.fact is not None:
+        return CounterpartyEstablishment(
+            scope=remembered.fact.value,
+            rung=EstablishmentRung.CONFIRMED_COUNTERPARTY_FACT,
+            source=remembered.fact.source,
+            identification_state=identification,
+        )
+
+    return CounterpartyEstablishment(identification_state=identification)
+
+
+def _charged_iva_rates(draft: InvoiceDraft) -> tuple[Decimal, ...]:
+    """Return every IVA percentage the document charges, from lines and subtotals.
+
+    Both carriers are read because a document uses either: some print a rate per
+    line and some only a per-rate subtotal block, and a walk of one would report
+    no charged tax for every document using the other -- silently turning a
+    Spain-indicating signal off for a whole population of layouts.
+
+    A rate is what is collected, never a cuota amount. Whether the rate is a
+    SPANISH one is the question this feeds, and only the percentage can answer
+    it; an amount says tax was charged without saying whose.
+    """
+    rates = [line.iva_rate for line in draft.lines if line.iva_rate is not None]
+    rates.extend(subtotal.iva_rate for subtotal in draft.iva_breakdown if subtotal.iva_rate is not None)
+    return tuple(rates)
+
+
+def _draft_date(draft: InvoiceDraft) -> date | None:
+    """Return the invoice date the rate schedule should be asked about.
+
+    Parsed through the shipped date authority rather than re-read here, and an
+    unparseable value yields ``None`` rather than raising: a date the reader
+    could not recover is an ordinary outcome of reading, and it makes the rate
+    check inconclusive rather than making the whole resolution fail.
+    """
+    from ...core.parsing import parse_iso8601_date
+
+    return parse_iso8601_date(draft.invoice_date)
+
+
+def resolve_draft_counterparty_establishment(
+    *,
+    bucket_id: str,
+    draft: InvoiceDraft,
+    kind: InvoiceKind,
+    repository: CounterpartyEstablishmentRepository | None = None,
+) -> CounterpartyEstablishment:
+    """Route a read document's COUNTERPARTY into the ladder, by direction.
+
+    A draft is pre-direction data: it records what each party's block said
+    without deciding which of them the filer is. This is where that decision
+    reaches the establishment question, and it makes it through the one authority
+    that already makes it for the confirm path, so a document cannot be read as
+    having one counterparty when its identity is resolved and another when its
+    territory is.
+
+    **The filer's own side is never asked here.** One party on every ingested
+    invoice is the operator, whose territory is a profile fact; feeding their
+    printed block to a ladder built for the counterparty would answer a question
+    the profile already answers, and would answer it from weaker evidence.
+
+    **The document's TREATMENT is read here, not just its address block.** The
+    concordance rung and the Spain-indicating check both need what the invoice
+    did about tax, so the regime mention and every charged IVA rate travel in
+    beside the address values. They are drawn from the whole document rather
+    than from the counterparty's side of it, and that is correct rather than
+    sloppy: an invoice states one treatment for the operation, not one per
+    party, and the charged rate is the issuer's claim about the supply.
+
+    **Every rung is reachable from a read document, and only from a read one.**
+    The reading path recovers each party's printed country name, so the country
+    rung has a source and the postal rung -- gated on country evidence positively
+    naming Spain -- can be triggered by it. The STRUCTURED path is the remaining
+    gap and it is upstream of this function: the e-invoice parsers read a postal
+    element and no country element, so a Facturae, UBL or CII document reaches
+    only the concordance and confirmed-fact rungs. A Spanish counterparty on one
+    of those exhausts to nothing and is asked once, which is the honest outcome
+    rather than a defective one; what would be defective is reading this
+    function's correct answers as evidence that every path reaches every rung.
+
+    Args:
+        bucket_id: Active profile bucket, for the confirmed-fact rung.
+        draft: The pre-direction reading of the document.
+        kind: Which side of the invoice the filer is on, as the operator settled
+            it at confirm. Never the reader's suggestion.
+        repository: Injected store.
+
+    Returns:
+        :class:`CounterpartyEstablishment`: the territory and the rung that
+        settled it, a conflict, a contradiction, or none of them.
+    """
+    # Deferred to call time: the draft module reaches the parsers, the reading
+    # package and the catalogue, so importing it at module scope would make this
+    # lean module pay for all of it. The sanctioned cycle-break shape, and it
+    # changes only WHEN the owning module executes -- the selection keeps its one
+    # home and one import path.
+    from ._evidence_draft import counterparty_draft_side
+
+    side = counterparty_draft_side(draft, kind=kind)
+    return resolve_counterparty_establishment_scope(
+        bucket_id=bucket_id,
+        tax_identifier=side.tax_id,
+        printed_country_code=side.country_code,
+        printed_country_name=side.country,
+        postal_code=side.postal_code,
+        regime_legend=draft.regime_legend,
+        charged_iva_rates=_charged_iva_rates(draft),
+        on_date=_draft_date(draft),
+        repository=repository,
+    )

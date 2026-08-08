@@ -6,7 +6,7 @@ import base64
 import re
 from typing import Final, Literal
 
-from ....core.i18n import MissingTranslationError, lookup_translation_entry
+from ....core.i18n import MissingTranslationError, lookup_translation
 
 ModeloLocalizationField = Literal["label", "help", "title", "official_name"]
 
@@ -105,14 +105,34 @@ def resolve_modelo_localization(
     locale is exhausted before the same identity chain is resolved through the
     mandatory Spanish source.  No non-Spanish locale can become another
     non-Spanish locale's fallback.
+
+    Resolution advances on the absence of a VALUE, never on the absence of a
+    key.  That distinction is the whole reason the less-specific tiers can
+    fire: the locale scaffold emits an occurrence key for every casilla in
+    every revision, null until translated, and exempts those nulls from the
+    untranslated-string honesty ratchet.  So the first key in the chain always
+    exists.  A chain that stopped at key EXISTENCE therefore stopped at index
+    zero every time, for every casilla in every revision, and the continuity
+    tier below it was written, scaffolded and never once consulted.
+
+    The stop it used to perform was meant to let a revision deliberately blank
+    an inherited label, but the catalogue cannot express that intent: an
+    explicit null and a scaffolded-but-untranslated null are the same bytes, so
+    the stop could only ever suppress translations nobody chose to suppress.
+    Restoring the override needs a way to say "blanked on purpose" in the data,
+    not a stop that fires on every untranslated key.
+
+    This is invisible in Spanish, which is why it survived: the Spanish
+    backstop lives in the OUTER loop, so every casilla carrying Spanish text
+    resolved correctly no matter what the inner loop did.  Only a casilla
+    lacking a value in the requested locale ever reached the tier that was
+    broken.
     """
     for candidate_locale in (locale, _SOURCE_LOCALE) if locale != _SOURCE_LOCALE else (_SOURCE_LOCALE,):
         for key in keys:
-            present, value = lookup_translation_entry(key, locale=candidate_locale)
+            value = lookup_translation(key, locale=candidate_locale)
             if value is not None:
                 return value.format(year=year) if year is not None and "{year}" in value else value
-            if present:
-                break
     if required:
         raise MissingTranslationError(key=keys[0], locale=_SOURCE_LOCALE)
     return None

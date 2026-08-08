@@ -156,6 +156,7 @@ def test_a_stamp_built_here_is_readable_by_the_parser_that_classifies_it() -> No
     assert provenance_stamp_transport(cloud) == "openai"
     assert provenance_stamp_transport(local) != provenance_stamp_transport(cloud)
 
+
 def test_no_transcriber_identity_folds_its_transport_into_a_name() -> None:
     """The identity records transport as data, never inside another field.
 

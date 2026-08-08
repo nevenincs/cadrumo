@@ -97,6 +97,7 @@ def _amount(key: str) -> Decimal:
     assert isinstance(value, Decimal), f"{key} is {type(value).__name__}, not an amount"
     return value
 
+
 #: The tax-id form the invoice boundary stores. The document states the VAT form
 #: with its country prefix; the catalogue stores the bare Spanish NIF. This is a
 #: normalisation, not a loss, and hop 5 asserts it AS a transformation so a

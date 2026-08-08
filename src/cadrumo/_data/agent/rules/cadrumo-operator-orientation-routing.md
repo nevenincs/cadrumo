@@ -62,6 +62,20 @@ authority this table paraphrases, and it grows as command families are added.
   pull`, `filed pull`, `notifications pull`, `expedientes pull`, `iva-wallet
   pull-history`. Every verb here reads; none of them submits — see the safety
   rule for why `aeat app live` can never write to AEAT.
+- "What history does AEAT hold for this taxpayer, and did we get all of it?" →
+  `filed discover` first, then `filed pull-all`. `discover` reports which
+  modelo/ejercicio pairs a history sweep would walk and persists nothing;
+  `pull-all` runs the sweep and reconciles the IVA wallet and notificaciones
+  alongside it.
+- Read `pull-all`'s report before treating it as complete. It carries no
+  completeness percentage on purpose: part of the walked grid comes from AEAT's
+  own offered option list, whose scoping to the authenticated NIF is
+  unconfirmed, so a percentage would look like coverage while resting on a
+  denominator that may say nothing about this taxpayer. The prose denominator
+  note states what was actually measured.
+- A pair the report marks REFUSED is not a pair with no filings. A refusal means
+  the read failed — most often a register page that declared more records than it
+  rendered — so re-run rather than concluding nothing was filed.
 
 ## Legal and registry questions
 

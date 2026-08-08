@@ -47,6 +47,7 @@ from ._nif_iva import (
     NIF_IVA_FORMATS,
     NifIvaFormatSpec,
     NifIvaPrefix,
+    iso_country_for_nif_iva_prefix,
     nif_iva_format_for_country,
     nif_iva_prefix_for_country,
     normalise_nif_iva,
@@ -54,6 +55,7 @@ from ._nif_iva import (
 from ._profile import ProfileId
 from ._profile_label import ProfileLabel
 from ._tax_id import (
+    SPANISH_TAX_ID_WIDTH,
     nif_check_letter,
     same_tax_identifier,
     tax_id_identity_token,
@@ -120,6 +122,7 @@ malformed identifier fails fast at the model boundary with an
 
 __all__ = [
     "NIF_IVA_FORMATS",
+    "SPANISH_TAX_ID_WIDTH",
     "BucketId",
     "ContentDigest",
     "ContentDigestOrAbsent",
@@ -133,6 +136,7 @@ __all__ = [
     "SubjectTaxId",
     "TaxIdIdentityToken",
     "TransactionId",
+    "iso_country_for_nif_iva_prefix",
     "nif_check_letter",
     "nif_iva_format_for_country",
     "nif_iva_prefix_for_country",
