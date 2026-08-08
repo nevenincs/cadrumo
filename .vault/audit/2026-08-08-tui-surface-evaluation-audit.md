@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:c9d844aa4068f539908e1ef941133cc9701e6fe29f78e7a5d8c3d9412672052d'
+body_hash: 'sha256:bce8a6f954bf60fa5c1061a5785b442362c8450e0a2223efd8cbea0a4760ec51'
 related: []
 ---
 
@@ -492,6 +492,46 @@ eighty-column floor under Hungarian. A reviewer re-checked and found it clean �
 the longest Hungarian label fits comfortably in a full-width row, and the
 structurally different case is the question screen's footer, which packs its
 bindings horizontally with no wrap.
+
+### notice-band-hid-every-panel-beneath-it | critical | a fix landed by this campaign made four status panels vanish
+
+The notices band added during this campaign shipped with two defects that
+together removed most of the status page. Its stylesheet constant was defined,
+exported, and consumed by nothing — the status surface imported the band and
+not its styles — so no notice styling applied at all, including the severity
+colour whose stated purpose is carrying meaning alongside the glyph. And the
+band never set its own height, inheriting the framework container default of
+one fraction, so it claimed the entire scroll column. With any notice present,
+the profile, profiles, authentication and recovery panels did not paint: not
+below the fold, not reachable by scrolling, absent, at every size tested up to
+one hundred by fifty.
+
+**Why nothing caught it is the finding.** Three independent layers of coverage
+existed and none could see it. The band's own wiring tests asserted that a
+notice paints, and it did. The appearance gates construct the status surface
+with no notices at all. The evaluation harness drove status with a profile but
+no session, so the producer returned nothing and the band never mounted. Every
+layer built the surface in its emptiest reachable state, and a widget that
+eliminates its siblings passes all of them. A regression sweep run in the same
+window reported no campaign-caused failures, correctly within what it measured
+and blind for exactly this reason.
+
+Fixed. The durable remedy is not the height rule but the gate shape: a
+surface's declared regions must all remain present when any one of them is
+populated, and conditional regions must be exercised in both states.
+
+### guard-classifier-matches-a-comment | medium | a gate reclassified real code because a comment contained a token
+
+The classifier deciding whether a refusal is operator-guarded matches a literal
+substring anywhere in the enclosing function body. A comment containing that
+token flipped four unrelated raises into unguarded, moving a refusal in and out
+of a gate's reviewed set across two runs of the same test with no code change.
+The gate governs which refusals can reach an operator with no next step, so the
+failure mode runs both ways: a false positive hides a genuinely suggestionless
+refusal, and a false negative manufactures one — which is what happened. A
+source-text match over a body that legitimately contains prose cannot
+distinguish code from commentary; the scanner already walks the syntax tree and
+the classification belongs there.
 
 ## Recommendations
 
