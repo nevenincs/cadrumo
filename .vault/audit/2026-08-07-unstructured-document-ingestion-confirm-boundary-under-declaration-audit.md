@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:56c84e2527fdfb8b9863c89502c2fb5ae5ba64675235c25c09f863821724234e'
+body_hash: 'sha256:a0e143713bf3e8e005de60d9eb8c3a17682484686c615404be38d23cdb1458fa'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -569,6 +569,17 @@ annotation two, returns two, consistent. After: returns three, annotation
 untouched. This sweep introduced the drift and did not notice, in the same change
 whose message argued that positional returns of same-typed channels are fragile.
 
+The peer then sharpened it further, and the sharper version separates two faults
+this audit had merged. The widening-tuple DESIGN was theirs, and it was
+CONSISTENT when they landed it -- verified here: the screen function carried a
+four-slot annotation and four returns before this sweep touched anything. The
+annotation DRIFT was this sweep's, an hour later, on the caller rather than the
+screen. So the design is the defect the refactor fixes, and the drift is a
+different fault that the design made invisible. Neither party's account alone was
+right: theirs asserted a history it had not checked, this audit's took blame for
+a shape it did not create. Both being true an hour apart is more useful than
+either alone.
+
 That is the finding. Not that the shape is dangerous in the abstract -- it was
 demonstrated on the author who had just written the argument, one commit later,
 against the exact hazard being described. Nothing caught it because every slot
@@ -628,6 +639,15 @@ one feed and never from the other, and the gate could not have failed. Where two
 sources populate one destination, a per-source test proves each source consistent
 with itself and nothing about the pair. The gate has to be a comparison between
 them.
+
+Scrutinise the checking instrument at least as hard as the thing checked. Three
+instances landed in this work, all in the same direction. A gate here was green
+from one side only and could not have failed. A whole-tree run elsewhere was
+reported clean by grepping for a summary line the runner only emits at the end,
+so the check could not have detected a failure at any point. And a positional
+return of same-typed channels hid an arity drift from both the type checker and a
+fully green suite. In each case the instrument was trusted precisely because
+attention was on its subject.
 
 A test that passes the day it is written proves nothing until it has been made to
 fail. Every gate this sweep added was mutation-checked against the exact
