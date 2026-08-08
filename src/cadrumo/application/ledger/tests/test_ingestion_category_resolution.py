@@ -720,4 +720,3 @@ def test_the_catalogue_gap_is_forgiven_whichever_spelling_the_record_states() ->
         "the same catalogue gap reached a different outcome under a different spelling, "
         "so the carve-out depends on the code system rather than on our data"
     )
-
