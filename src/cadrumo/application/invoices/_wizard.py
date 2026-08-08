@@ -347,6 +347,12 @@ def create_invoice_via_wizard(
             one or more fields are malformed.
     """
     field_errors: list[InvoiceWizardFieldError] = []
+    # A pre-validation placeholder, never an output. It is read below by the NIF
+    # check, so a malformed country makes that check run under Spanish rules and
+    # report a second, misleading error -- but the function raises whenever any
+    # field error accumulated, so this value cannot escape. Do not "fix" it to
+    # None: the NIF check needs a country, and the accumulate-then-refuse shape
+    # is what lets one call name every failing field instead of the first.
     resolved_country = "ES"
     try:
         resolved_country = _validate_country_code(country_code)
