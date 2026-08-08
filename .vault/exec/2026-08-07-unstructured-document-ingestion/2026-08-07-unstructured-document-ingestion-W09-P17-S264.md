@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:702b3346d254f863af3315f17f108c043d8b6d2e2422fbb7b866247af3be8bad'
+body_hash: 'sha256:2744b416c72ef47fd478205b9ac4ffc8935fd52913fea9811066abd249c606ed'
 step_id: 'S264'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -48,11 +48,16 @@ requirement would never have reached a row. The module's own
 `"ES"` as the example a caller must not supply — while four call sites in the same
 file did it anyway.
 
-The second-representation premise in the Step is confirmed and worth stating
-precisely: the operator-supplied CLI row and this registry-side observation are two
-independent constructions of one M232 operation, the CLI row reaching the fichero via
-operator key-value pairs and this one via the Sheets Detalle round-trip. Only the
-first had been made required, so the modelo read as covered from either surface alone.
+The second-representation premise in the Step is confirmed, and it is stronger than
+"two representations exist". The two constructions are on **disjoint paths that never
+meet**: `Modelo232VinculadaRow` — the already-required one — does not appear in
+`src/cadrumo/application/calculations/_row_set_assembly.py` at all, reaching the
+fichero instead through the CLI row materialiser and the revision replay inputs, while
+the observation this Step owns is constructed only in the assembler from the Sheets
+Detalle round-trip. They are not alternatives that might both be exercised for one
+operation. So the hardened row model could never have compensated for the defaulting
+one no matter what the data did: an absent country on the pull path never reaches the
+model that would refuse it.
 
 The equivalent consequence the Step asked for is narrower than the M349 one and
 should not be overstated: no tax-haven classification rule reads this field anywhere
@@ -91,6 +96,33 @@ must validate, and the assembler case carrying a stated country — stayed green
 the mutation, which is what separates "the gate refused" from "the call was broken
 for any input".
 
+That mutation restored both halves of the default at once, which proves the pair was
+load-bearing but not which half was. Because the construction site was
+double-defaulted — the assembler supplied a country AND the model declared one —
+removing either half alone could have been a no-op, and a green suite would look
+identical. So the halves were then measured separately, each scenario in its own
+process so no model rebuild bled between them, driving the real assembler on a real
+row-set carrying no country cell:
+
+    both-fixed      direct_construction=REFUSED (ValidationError)  assembler_no_country=REFUSED    control_KY=KY
+    model-only      direct_construction=ES                         assembler_no_country=ES         control_KY=KY
+    assembler-only  direct_construction=REFUSED (ValidationError)  assembler_no_country=ES         control_KY=KY
+    both-restored   direct_construction=ES                         assembler_no_country=ES         control_KY=KY
+
+The finding is that **neither half was load-bearing alone; they are jointly
+load-bearing**. Restoring only the model default and restoring only the assembler
+fallback both return the row to Spain, and only the fixed pair refuses. Had this
+Step's declared scope been honoured literally — the model file alone — the change
+would have been observable only under direct construction and would never have
+reached a row, because the assembler is the sole production producer and it supplied
+the country unconditionally.
+
+`control_KY=KY` in every row is the positive control: the same row with a country
+stated assembles successfully under all four scenarios, so `REFUSED` in the first row
+is a refusal on the absent country and not a call that was broken for any input. The
+`direct_construction` column isolates the model half, which does flip on its own —
+just not on any path a filing travels.
+
 ## Notes
 
 **No commit of its own, and not by choice.** All four file edits were swept into a
@@ -114,12 +146,16 @@ defeated by its only producer, and the value substituted was the one a declarati
 bienes situados en el extranjero cannot carry. Landed separately as
 `fix(modelo-720): stop the row-set assembler declaring a foreign asset as Spanish`.
 
-**Four sibling observation models were deliberately left defaulting.** Modelos 182,
-184, 190 and 193 each carry a `country_code` field defaulting to Spain, and none is
-tightened. The reason is structural rather than a judgement call: only modelos 232
-and 720 declare a country row_field binding anywhere in the registry authoring tree,
-so for the other four no producer can populate the field and requiring it would
-refuse every row while naming a fact no surface records. Modelo 182 is the extreme
-case — its row-field literal does not admit a country at all, so the field is
-unreachable by construction and permanently carries Spain. The upstream fix for the
-modelo 184 arm is already rowed independently.
+**The sibling observation models were deliberately left defaulting, and nothing here
+rules on their declarable populations.** The donativo and withholding country
+defaults are gated on a tax review under a separate row, and that review is not a
+code reading; no ruling is made or implied here. What this Step can contribute is
+purely structural evidence for it, stated as measurement rather than conclusion: only
+modelos 232 and 720 declare a country row_field binding anywhere in the registry
+authoring tree, so for the other families no producer can populate the field. The
+donativo case is the extreme one — its row-field literal does not admit a country at
+all, so the field is unreachable by construction and permanently carries Spain. The
+withholding observation's country is consumed by modelos 190 and 193 only; modelo 216
+carries no `bindings/` directory in any revision and so declares no bindings at all,
+which means it does not reach this defaulting field on any path. The attribution
+family's arm stays optional with its upstream fix rowed independently.
