@@ -55,6 +55,7 @@ from ...core import STRICT_FROZEN_CONFIG, read_toml
 from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError
+from ._grounding import verify_table_legal_refs
 from ._supply_nature import SupplyNature
 
 __all__ = [
@@ -201,6 +202,18 @@ def _load_cached(
         years[year] = rules
     if not years:
         raise IvaCatalogueError(f"{root_path}: no place-of-supply TOML files found")
+    # Only ``legal_references`` is verified. ``establishing_reference`` is
+    # required by the model to be a member of it, so verifying both would
+    # re-resolve the same provision under a second label and report one broken
+    # citation twice.
+    verify_table_legal_refs(
+        str(root_path),
+        [
+            (f"{year}/{rule.rule_id}", rule.legal_references)
+            for year, rules in sorted(years.items())
+            for rule in rules.values()
+        ],
+    )
     return dict(MappingProxyType(years))
 
 

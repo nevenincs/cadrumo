@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:100a39b17ec9337a9d8cdbbba0683362d3036d8efe1cb439c8e22379dc205bfa'
+body_hash: 'sha256:87c5c586a04531423dacbc9bab222db890b9ebcbdc728aae63b773619357fa11'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -828,6 +828,53 @@ parties. The ruling, four parts:
   evidence: an invoice charging a mainland registry rate to a
   confirmed-Canarian counterparty feeds the contradiction channel of the
   third amendment; it never establishes territory.
+
+**Ruling (fifth amendment): the ladder's registration asymmetry is
+corrected by splitting the fact it conflated.** A review escalated a
+finding that is accepted in full: every Member State registers
+non-residents on the same terms Spain does, so rung 1's treatment of a
+foreign VAT prefix as *decisive establishment* applied the
+registration-is-not-establishment principle to the Spanish population and
+not to the foreign one — and the foreign failure direction is the bad
+one, a confident silent `EU_MEMBER` for a German-registered entity
+actually established in Spain, where the Spanish side fails loud to the
+review gate. The correction is not to demand corroboration for one rung;
+it is to recognise the ladder was answering two legally distinct
+questions with one output:
+
+- **The party facts split in the criteria.** (a) *VAT identification
+  state* — the Member State under whose identification the party
+  operates. A printed foreign prefix IS decisive for this fact; it is
+  registration evidence and that is exactly what the fact is. The
+  branches that key on identification — the intra-Community goods
+  family, the 349 population — consume it directly, which keeps the
+  foreign goods population resolving with no operator question. (b)
+  *Territorial establishment* — sede or establecimiento permanente,
+  arts. 69–70. NO registration evidences this, foreign or Spanish,
+  symmetrically. The lazy requirement of the second amendment applies
+  per branch: each derivation branch declares which of the two facts it
+  consumes, and demands nothing it does not.
+- **Establishment on the foreign side resolves by concordance, never by
+  the prefix alone.** It resolves to the registration state only when at
+  least one independent rung concurs (a printed address country matching
+  the prefix's state, or a printed treatment consistent with
+  non-establishment such as a reverse-charge legend with no Spanish IVA
+  line) AND no rung indicates Spain. Any Spain-indicating rung beside a
+  foreign registration — a Spanish address, country-gated Spanish postal
+  evidence, Spanish IVA charged at a registry rate — is a CONTRADICTION
+  through the third amendment's channel: the case the finding names, a
+  foreign-registered entity operating establishedly in Spain,
+  characteristically presents exactly that conflicting face, and it now
+  fails loud to the review gate and persists once per counterparty.
+  Concordant papers resolve silently; conflicted papers surface; bare
+  registration alone, either side, decides establishment never — the
+  symmetry is restored at the principle, not patched at the rung.
+- **The gates that hold it:** a mutation-proven assertion that a foreign
+  prefix alone never terminates the establishment ladder; a concordance
+  fixture (DE prefix, DE address, reverse-charge legend) resolving
+  silently; and a conflict fixture (DE prefix, Spanish IVA charged at a
+  registry rate) yielding the contradiction finding and never a silent
+  `EU_MEMBER`.
 
 ### D9 — Stage-by-stage measurement: the map from stage to oracle
 

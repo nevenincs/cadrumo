@@ -244,10 +244,12 @@ def _excluded_territories_by_prefix() -> dict[str, IvaTerritorialScope]:
         Each excluded prefix mapped to its scope.
 
     Raises:
-        IvaCatalogueError: When the bundled table cannot be read or names a
-            scope outside the closed set.
+        IvaCatalogueError: When the bundled table cannot be read, names a scope
+            outside the closed set, or cites a provision that does not resolve
+            to the bundled legal text it claims.
     """
     from ._errors import IvaCatalogueError
+    from ._grounding import verify_table_legal_refs
 
     target = bundled_path("registry", "aeat", "iva", "territories.toml")
     try:
@@ -258,15 +260,25 @@ def _excluded_territories_by_prefix() -> dict[str, IvaTerritorialScope]:
         raise IvaCatalogueError(f"{target}: malformed territory registry: {exc}") from exc
 
     resolved: dict[str, IvaTerritorialScope] = {}
+    citations: list[tuple[str, tuple[str, ...]]] = []
     for record in payload.get("territory", ()):
         try:
             scope = IvaTerritorialScope(record["scope"])
         except (KeyError, ValueError) as exc:
             raise IvaCatalogueError(f"{target}: territory record names no known scope: {record!r}") from exc
+        references = record.get("legal_refs", ())
+        if not isinstance(references, list) or not all(isinstance(item, str) for item in references):
+            raise IvaCatalogueError(f"{target}: territory {scope.value} legal_refs must be an array of strings")
+        # A territorial exclusion IS a regulatory value, so an uncited row is
+        # ungrounded rather than merely undocumented and must not load.
+        if not references:
+            raise IvaCatalogueError(f"{target}: territory {scope.value} cites no provision establishing its exclusion")
+        citations.append((scope.value, tuple(references)))
         for prefix in record.get("postal_prefixes", ()):
             resolved[str(prefix)] = scope
     if not resolved:
         raise IvaCatalogueError(f"{target}: the territory registry names no excluded territory")
+    verify_table_legal_refs(str(target), citations)
     return resolved
 
 

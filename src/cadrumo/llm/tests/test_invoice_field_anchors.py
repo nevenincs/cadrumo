@@ -91,8 +91,13 @@ _SPANISH_INVOICE: dict[str, str | None] = {
     # territorial reading is dropped, because the mainland is what a lost code
     # degrades to everywhere it is read carelessly.
     "supplier_postal_code": "35001",
+    # Printed as a NAME in the document's language, never as "ES". A code here
+    # would mean the reader translated, which is the one thing the country field
+    # exists to avoid asking of it.
+    "supplier_country": "España",
     "customer_tax_id": _SPANISH_CUSTOMER_NIF,
     "customer_postal_code": "28013",
+    "customer_country": "España",
     "invoice_number": "2026-0142",
     "invoice_date": "10/03/2026",
     "taxable_base": "1.200,00",
@@ -107,8 +112,13 @@ _SPANISH_INVOICE: dict[str, str | None] = {
 _SPANISH_ANCHORS: dict[str, str | None] = {
     "supplier_tax_id": f"CIF: {_SPANISH_CIF}",
     "supplier_postal_code": "35001 Las Palmas de Gran Canaria",
+    # Deliberately not byte-identical to the value, for the reason every anchor
+    # here is not: an anchor equal to its value makes the downstream parse check
+    # compare a value to itself.
+    "supplier_country": "35001 Las Palmas de Gran Canaria, España",
     "customer_tax_id": f"NIF cliente: {_SPANISH_CUSTOMER_NIF}",
     "customer_postal_code": "Calle Mayor 3, 28013 Madrid",
+    "customer_country": "Calle Mayor 3, 28013 Madrid, España",
     "invoice_number": "Factura n.º 2026-0142",
     "invoice_date": "10/03/2026",
     "taxable_base": "1.200,00 €",

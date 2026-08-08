@@ -22,8 +22,8 @@ import pytest
 from ....core.resources import bundled_path
 from ...calculations.registry import LegalReference, SourceReference
 from .._errors import IvaCatalogueError
+from .._grounding import legal_ref_failures
 from .._rates import (
-    _legal_ref_failures,
     _source_ref_failures,
     _source_window_covers,
     _source_window_failure,
@@ -216,14 +216,16 @@ def test_a_source_verified_on_an_earlier_row_still_grounds_a_later_row() -> None
 
 def test_unknown_legal_ref_is_refused() -> None:
     rate = _rate(legal_refs=("no-such-legal-id",))
-    failures = _legal_ref_failures(rate, "row", {}, bundled_path(), set())
+    failures = legal_ref_failures("row", rate.legal_refs, {}, bundled_path(), set())
     assert failures == ["row: unknown legal_ref 'no-such-legal-id'"]
 
 
 def test_invalid_legal_ref_is_refused() -> None:
     """A resolvable legal row whose corpus file is absent must be refused."""
     rate = _rate(legal_refs=("broken-legal",))
-    failures = _legal_ref_failures(rate, "row", {"broken-legal": _legal("broken-legal")}, bundled_path(), set())
+    failures = legal_ref_failures(
+        "row", rate.legal_refs, {"broken-legal": _legal("broken-legal")}, bundled_path(), set()
+    )
     assert len(failures) == 1
     assert failures[0].startswith("row: invalid legal_ref 'broken-legal':")
 
@@ -250,7 +252,7 @@ def test_invalid_source_ref_is_refused() -> None:
 def test_a_verified_legal_ref_is_not_reverified() -> None:
     """The legal memo short-circuits, so a known-good id costs nothing on later rows."""
     rate = _rate(legal_refs=("already-verified",))
-    assert _legal_ref_failures(rate, "row", {}, bundled_path(), {"already-verified"}) == []
+    assert legal_ref_failures("row", rate.legal_refs, {}, bundled_path(), {"already-verified"}) == []
 
 
 # --------------------------------------------------------------------------

@@ -238,6 +238,24 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
             "this is the issuer's own address, not the address of the party being billed"
         ),
     ),
+    # Asked as the NAME the document prints, never as an alpha-2 code. A country
+    # prints in the issuer's own language -- "Alemania", "Deutschland",
+    # "Allemagne" -- so asking a reader for `DE` would be asking it to translate,
+    # and translation is inference in the same sentence that forbids it. The
+    # bounded registry vocabulary does the lookup downstream
+    # (:func:`~domain.iva.country_code_for_printed_country_name`), which is a
+    # deterministic match rather than a judgement, so the reader's whole job here
+    # is transcription.
+    InvoiceFieldContract(
+        field_name="supplier_country",
+        form=InvoiceFieldForm.FREE_TEXT,
+        concept="the country printed in the postal address of the party who ISSUED the invoice",
+        form_instruction=(
+            "copy the country name alone exactly as printed, in the document's own language, "
+            "without translating it and without abbreviating it to a code; "
+            "this is the issuer's own address, not the address of the party being billed"
+        ),
+    ),
     InvoiceFieldContract(
         field_name="customer_tax_id",
         form=InvoiceFieldForm.TAX_IDENTIFIER,
@@ -257,6 +275,16 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
         concept="the postal code printed in the postal address of the party BILLED by the invoice",
         form_instruction=(
             "copy the postal code alone as printed, without the town, province or country; "
+            "leave empty unless the document prints an address for the party being billed"
+        ),
+    ),
+    InvoiceFieldContract(
+        field_name="customer_country",
+        form=InvoiceFieldForm.FREE_TEXT,
+        concept="the country printed in the postal address of the party BILLED by the invoice",
+        form_instruction=(
+            "copy the country name alone exactly as printed, in the document's own language, "
+            "without translating it and without abbreviating it to a code; "
             "leave empty unless the document prints an address for the party being billed"
         ),
     ),

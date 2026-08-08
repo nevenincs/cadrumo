@@ -398,6 +398,14 @@ class EvidenceExtractResult(OutputSchema):
     # boundary on the review surface.
     supplier_postal_code: str | None = None
     customer_postal_code: str | None = None
+    # The country name each party's address prints, verbatim and in the
+    # document's own language. Surfaced beside the postal code because the two
+    # answer the same question at different resolutions: the country separates
+    # Member States, the Spanish code separates Canarias and Ceuta y Melilla
+    # from the peninsula. Neither reading is done here -- the operator sees what
+    # the paper said, and the territory stays the domain's to resolve.
+    supplier_country: str | None = None
+    customer_country: str | None = None
     invoice_number: str | None = None
     invoice_series: str | None = None
     invoice_date: str | None = None

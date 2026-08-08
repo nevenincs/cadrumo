@@ -22,12 +22,13 @@ from ...core.decimal import coerce_decimal
 from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
+from ._grounding import legal_ref_failures, registry_catalogues
 from ._schema import EUMemberState, IvaRateKind, IvaRateRecord
 
 if TYPE_CHECKING:
     # Type-only: importing these at runtime would close the cycle the local
     # imports in the grounding helpers below exist to avoid.
-    from ..calculations.registry import LegalReference, SourceReference
+    from ..calculations.registry import SourceReference
 
 _OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
 _STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
@@ -174,35 +175,6 @@ def _source_window_failure(
     return f"{row}: no source_ref applicability window covers {rate.effective_from}/{rate.effective_until}"
 
 
-def _legal_ref_failures(
-    rate: IvaRateRecord,
-    row: str,
-    legal: Mapping[str, LegalReference],
-    source_root: Path,
-    verified_legal: set[str],
-) -> list[str]:
-    """Resolve and verify one row's legal refs, memoising the ids that pass."""
-    # Keep this import local: registry binding modules consume the public IVA
-    # facade, while the rate loader is also part of that facade.
-    from ..calculations.registry import RegistryValidationError, verify_legal_reference
-
-    failures: list[str] = []
-    for ref_id in rate.legal_refs:
-        if ref_id in verified_legal:
-            continue
-        reference = legal.get(ref_id)
-        if reference is None:
-            failures.append(f"{row}: unknown legal_ref {ref_id!r}")
-            continue
-        try:
-            verify_legal_reference(reference, source_root=source_root)
-        except RegistryValidationError as exc:
-            failures.append(f"{row}: invalid legal_ref {ref_id!r}: {exc}")
-            continue
-        verified_legal.add(ref_id)
-    return failures
-
-
 def _source_ref_failures(
     rate: IvaRateRecord,
     row: str,
@@ -243,15 +215,14 @@ def _source_ref_failures(
 def _verify_rate_grounding(
     table: Mapping[EUMemberState, tuple[IvaRateRecord, ...]],
 ) -> None:
-    """Resolve and verify every legal/source identity carried by rate rows."""
-    # Keep this import local: registry binding modules consume the public IVA
-    # facade, while the rate loader is also part of that facade.
-    from ..calculations.registry import load_registry_tree
+    """Resolve and verify every legal/source identity carried by rate rows.
 
-    source_root = bundled_path()
-    _, catalogues = load_registry_tree(source_root / "registry" / "aeat")
-    legal = catalogues.legal
-    sources = catalogues.sources
+    The legal half delegates to the shared IVA grounding verifier, which every
+    other registry table under ``registry/aeat/iva/`` also routes through; the
+    source-reference and applicability-window halves stay here because they are
+    properties of a rate row rather than of a citation.
+    """
+    legal, sources, source_root = registry_catalogues()
     verified_legal: set[str] = set()
     verified_sources: set[str] = set()
     failures: list[str] = []
@@ -259,7 +230,7 @@ def _verify_rate_grounding(
     for rates in table.values():
         for rate in rates:
             row = f"{rate.member_state.value}/{rate.kind.value}/{rate.effective_from.isoformat()}"
-            failures.extend(_legal_ref_failures(rate, row, legal, source_root, verified_legal))
+            failures.extend(legal_ref_failures(row, rate.legal_refs, legal, source_root, verified_legal))
             source_failures, row_sources = _source_ref_failures(rate, row, sources, source_root, verified_sources)
             failures.extend(source_failures)
             window_failure = _source_window_failure(rate, row, row_sources)

@@ -44,6 +44,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError, IvaValidationError
+from ._grounding import verify_table_legal_refs
 
 
 class LivaArt161RecargoRates(BaseModel):
@@ -231,6 +232,10 @@ def _load_recargo_rate_table_cached(path: str, byte_count: int, modified_ns: int
     except (ValueError, TypeError) as exc:
         raise IvaValidationError(f"{target}: invalid recargo rate record: {exc}") from exc
     _reject_overlapping_windows(records)
+    verify_table_legal_refs(
+        str(target),
+        [(f"{record.iva_rate}/{record.effective_from.isoformat()}", record.legal_refs) for record in records],
+    )
     return records
 
 

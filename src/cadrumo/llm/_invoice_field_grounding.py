@@ -94,8 +94,10 @@ class ExtractedInvoiceFields(BaseModel):
 
     supplier_tax_id: str | None = Field(default=None)
     supplier_postal_code: str | None = Field(default=None)
+    supplier_country: str | None = Field(default=None)
     customer_tax_id: str | None = Field(default=None)
     customer_postal_code: str | None = Field(default=None)
+    customer_country: str | None = Field(default=None)
     invoice_number: str | None = Field(default=None)
     invoice_date: str | None = Field(default=None)
     taxable_base: str | None = Field(default=None)
@@ -129,8 +131,10 @@ class ExtractedFieldAnchors(BaseModel):
 
     supplier_tax_id: str | None = Field(default=None)
     supplier_postal_code: str | None = Field(default=None)
+    supplier_country: str | None = Field(default=None)
     customer_tax_id: str | None = Field(default=None)
     customer_postal_code: str | None = Field(default=None)
+    customer_country: str | None = Field(default=None)
     invoice_number: str | None = Field(default=None)
     invoice_date: str | None = Field(default=None)
     taxable_base: str | None = Field(default=None)
@@ -587,8 +591,10 @@ def ground_extracted_fields(
     fields = response.fields
     supplier_tax_id = _ground_text(fields.supplier_tax_id, "supplier_tax_id")
     supplier_postal_code = _ground_text(fields.supplier_postal_code, "supplier_postal_code")
+    supplier_country = _ground_text(fields.supplier_country, "supplier_country")
     customer_tax_id = _ground_text(fields.customer_tax_id, "customer_tax_id")
     customer_postal_code = _ground_text(fields.customer_postal_code, "customer_postal_code")
+    customer_country = _ground_text(fields.customer_country, "customer_country")
     invoice_number = _ground_text(fields.invoice_number, "invoice_number")
     invoice_date = _ground_text(fields.invoice_date, "invoice_date")
     taxable_base = _ground_numeric(fields.taxable_base, "taxable_base")
@@ -605,8 +611,10 @@ def ground_extracted_fields(
     grounded: Mapping[str, str | Decimal | None] = {
         "supplier_tax_id": supplier_tax_id,
         "supplier_postal_code": supplier_postal_code,
+        "supplier_country": supplier_country,
         "customer_tax_id": customer_tax_id,
         "customer_postal_code": customer_postal_code,
+        "customer_country": customer_country,
         "invoice_number": invoice_number,
         "invoice_date": invoice_date,
         "taxable_base": taxable_base,
@@ -643,8 +651,10 @@ def ground_extracted_fields(
     return InvoiceDraft(
         supplier_tax_id=supplier_tax_id,
         supplier_postal_code=supplier_postal_code,
+        supplier_country=supplier_country,
         customer_tax_id=customer_tax_id,
         customer_postal_code=customer_postal_code,
+        customer_country=customer_country,
         invoice_number=invoice_number,
         invoice_date=invoice_date,
         taxable_base=taxable_base,
