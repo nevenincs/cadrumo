@@ -494,6 +494,116 @@ def test_non_numeric_neighbours_do_not_block_a_genuine_anchor(text: str) -> None
     assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
 
 
+class TestAShortCodeIsNotAFragmentOfAnIdentifier:
+    """A word-shaped anchor must not match inside a longer alphanumeric token.
+
+    The boundary rule keyed on NUMBER characters only, on the reasoning that a
+    word-shaped anchor is distinctive enough for substring matching to be safe.
+    That holds for an invoice number or a party name and collapses for a SHORT
+    CODE. ``ES`` is the worst case this domain has: it prefixes every Spanish VAT
+    identifier, so a record stating no country at all anchored a country against
+    the supplier's own NIF, and the envelope reported the document as evidence
+    for a value it never states.
+
+    The entry-point docstring already claimed this check catches "a reader that
+    pointed at an element the document does not carry". For a two-letter code it
+    did not, and the only thing standing between that and a wrong filing was a
+    guard in a different module -- every structured country reader returning its
+    own element or ``None``. A documented property enforced somewhere else is a
+    property that silently stops holding when the other module changes.
+    """
+
+    @staticmethod
+    def test_a_country_code_does_not_anchor_inside_a_vat_identifier() -> None:
+        """The measured case, on the value that makes it worst."""
+        evaluation = evaluate_anchor(
+            value="ES",
+            anchor="ES",
+            transcription=_transcription("INV-001 ESB12345674 Reformas Delta SL\n"),
+        )
+
+        assert evaluation.outcome is FieldGroundingOutcome.UNANCHORED
+        assert not evaluation.anchor_found
+
+    @staticmethod
+    def test_a_country_code_the_document_really_states_still_anchors() -> None:
+        """The bound, and the reason the rule is not simply "refuse short anchors".
+
+        Without this the change would be indistinguishable from disabling country
+        grounding, and every genuinely stated country would silently stop being
+        evidence.
+        """
+        evaluation = evaluate_anchor(
+            value="ES",
+            anchor="ES",
+            transcription=_transcription("Pais: ES\nNIF: B12345674\n"),
+        )
+
+        assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
+
+    @staticmethod
+    def test_the_alpha_two_form_does_not_anchor_against_the_alpha_three_form() -> None:
+        """``ES`` inside ``ESP`` was an accidental hit the Facturae pairing routes around.
+
+        That path anchors on the form the record STATES and re-derives the value
+        from it, precisely because searching for the carried ``ES`` would have
+        found it inside ``ESP`` without the document stating it. The pairing
+        stays correct and no longer depends on the matcher declining to help.
+        """
+        evaluation = evaluate_anchor(
+            value="ES",
+            anchor="ES",
+            transcription=_transcription("CountryCode ESP\n"),
+        )
+
+        assert evaluation.outcome is FieldGroundingOutcome.UNANCHORED
+
+
+class TestTheBoundaryRuleIsAsymmetricBetweenNumbersAndWords:
+    """What continues a printed NUMBER is not what continues a printed WORD.
+
+    A symmetric alphanumeric rule was written first and refused ``100,00``
+    against ``Total EUR100,00 pagado`` -- a currency code abutting a figure is a
+    unit, not more of the figure. The asymmetry was found by the suite rather
+    than reasoned, and these cases pin both halves so a later simplification to
+    one rule reds instead of silently losing one of them.
+    """
+
+    @staticmethod
+    @pytest.mark.parametrize("text", ["Total EUR100,00 pagado", "Total 100,00EUR pagado"])
+    def test_a_letter_beside_a_digit_edge_is_a_unit_and_does_not_block(text: str) -> None:
+        evaluation = evaluate_anchor(
+            value=Decimal("100.00"),
+            anchor="100,00",
+            transcription=_transcription(text),
+        )
+
+        assert evaluation.outcome is FieldGroundingOutcome.ANCHORED
+
+    @staticmethod
+    def test_a_digit_beside_a_letter_edge_does_block() -> None:
+        """The other direction: a word running into a digit is how ids are built."""
+        evaluation = evaluate_anchor(
+            value="SL",
+            anchor="SL",
+            transcription=_transcription("Referencia SL2026 emitida\n"),
+        )
+
+        assert evaluation.outcome is FieldGroundingOutcome.UNANCHORED
+
+    @staticmethod
+    def test_the_numeric_fragment_rule_is_unchanged() -> None:
+        """The rule this widening had to leave exactly as it was."""
+        doc = _transcription("Total factura 1.234,56 EUR\n")
+
+        assert evaluate_anchor(value=Decimal("234.56"), anchor="234,56", transcription=doc).outcome is (
+            FieldGroundingOutcome.UNANCHORED
+        )
+        assert evaluate_anchor(value=Decimal("1234.56"), anchor="1.234,56", transcription=doc).outcome is (
+            FieldGroundingOutcome.ANCHORED
+        )
+
+
 def test_one_clean_occurrence_is_enough_even_beside_a_fragment_occurrence() -> None:
     """A figure printed both as a fragment and standing alone still anchors."""
     evaluation = evaluate_anchor(

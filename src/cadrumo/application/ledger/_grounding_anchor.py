@@ -168,18 +168,28 @@ def _is_numeric_edge(character: str) -> bool:
 def _continues_the_token(edge: str, neighbour: str) -> bool:
     """Return whether *neighbour* makes *edge* a fragment rather than a token.
 
-    Asked per EDGE, and both rules are applied because an edge can satisfy both.
-    A digit continues into ``.`` and ``,`` as well as into another digit, so the
-    number rule stays broader there than the word rule; a letter continues only
-    into another alphanumeric.
+    Asked per EDGE, and **deliberately asymmetric between the two kinds of
+    edge**, because what continues a printed NUMBER is not what continues a
+    printed WORD.
+
+    A numeric edge continues only into another number character. A letter beside
+    a digit is a UNIT, not more of the figure: documents print ``EUR100,00`` and
+    ``100,00EUR``, and treating the currency code as a continuation would refuse
+    an anchor the document plainly carries. That is the pre-existing rule and it
+    is right.
+
+    A letter edge continues into any alphanumeric, digits included, because a
+    word running into a digit is exactly how identifiers are built: ``ES``
+    against ``ESB12345674`` is a fragment of a VAT identifier, not an occurrence
+    of the country code. The symmetric rule was tried first and refused
+    ``EUR100,00``, which is how the asymmetry was found rather than reasoned.
 
     An edge that is neither -- a currency symbol, a percent sign, a parenthesis,
-    a hyphen -- continues into nothing, which is what keeps ``21%`` matching
-    inside ``IVA (21%)`` and ``1.234,56 EUR`` matching where the document prints
-    the symbol.
+    a hyphen -- continues into nothing, which keeps ``21%`` matching inside
+    ``IVA (21%)``.
     """
-    if _is_numeric_edge(edge) and _is_numeric_edge(neighbour):
-        return True
+    if _is_numeric_edge(edge):
+        return _is_numeric_edge(neighbour)
     return edge.isalnum() and neighbour.isalnum()
 
 
@@ -529,12 +539,24 @@ def ground_structured_value(
     a printed form.
 
     **The check is real, not ceremonial.** The parser produced the value; this
-    looks for its verbatim form in the source bytes independently, and re-derives
-    a numeric value from the anchor. A projection that mangled a figure on the way
-    through, or a reader that pointed at an element the document does not carry,
-    fails it. What it cannot do is prove the reader chose the RIGHT element -- the
+    looks for its verbatim form in the record's own text independently, and
+    re-derives a numeric value from the anchor. A projection that mangled a figure
+    on the way through, or a reader that pointed at an element the document does
+    not carry, fails it.
+
+    **That second claim is enforced HERE and no longer only upstream.** It was
+    once true only because every structured country reader returns its own
+    element's text or ``None`` -- a guard in a different module entirely -- while
+    this check would happily locate a two-letter code inside a longer token, so a
+    record stating no country at all anchored ``ES`` against ``ESB12345674``. The
+    search is boundary-aware for word-shaped anchors as well as numeric ones, so
+    the property this paragraph asserts is now a property of this function.
+
+    What it still cannot do is prove the reader chose the RIGHT element -- the
     same limit the transcription lane has, where an anchor found somewhere in the
-    page does not prove it was found in the right place.
+    page does not prove it was found in the right place. A short code occurring
+    as a genuine standalone token somewhere unrelated matches, and only the
+    element path in the note distinguishes that.
 
     Args:
         field: Name of the :class:`~application.ledger.InvoiceDraft` field.
