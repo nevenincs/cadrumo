@@ -264,6 +264,27 @@ def settlement_sides_for_flow(
 ) -> frozenset[IvaSettlementSide]:
     """Return the settlement side(s) ``flow`` contributes to.
 
+    This is the CUOTA axis: which side of the settlement a line's cuota is
+    reckoned on. It is not the axis of which half of the return a line's
+    amounts appear in, and the two come apart on every zero-cuota operation.
+    An exempt sale is an output operation whose base belongs on the devengada
+    half of the return while settling no cuota at all, so reading a
+    ``{DEVENGADA}`` here as "this line owes output IVA" is wrong for it.
+
+    That distinction is easy to lose, because the Axis-A component table's
+    ``cuota_settlement`` column and this function look like two statements of
+    one fact and are not. Compare the two directly and roughly half the
+    arising pairs appear to disagree; every one of those apparent conflicts is
+    a zero-cuota operation where the table says "no cuota arises" and this
+    function says "output side", both of which are true. The check worth making
+    is per consumer, not per pair.
+
+    Both production consumers screen on a positive cuota before asking, so the
+    zero-cuota rows never reach the question. A future consumer that does not
+    screen first is the one that would be misled, and it is the reason this
+    paragraph exists rather than a coherence gate over two axes that do not
+    answer the same question.
+
     Args:
         flow: The :class:`IvaFlowDirection` to classify.
 
@@ -271,7 +292,9 @@ def settlement_sides_for_flow(
         Frozenset of :class:`IvaSettlementSide` values: ``{DEVENGADA}`` for
         :attr:`IvaFlowDirection.REPERCUTIDO`, ``{DEDUCIBLE}`` for
         :attr:`IvaFlowDirection.SOPORTADO`, ``{DEVENGADA, DEDUCIBLE}`` for
-        :attr:`IvaFlowDirection.INVERSION_SUJETO_PASIVO`.
+        :attr:`IvaFlowDirection.INVERSION_SUJETO_PASIVO`, and the empty set for
+        :attr:`IvaFlowDirection.OPERACION_CON_INVERSION`, whose supplier
+        repercutes no cuota and bears none.
     """
     return _FLOW_TO_SETTLEMENT_SIDES[flow]
 
