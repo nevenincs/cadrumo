@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#invoice-canonical-structure'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:eed6d08726ef2fd3862796ef528ff6f7ebc11433fdb5c1f3815e819802fce8ab'
+body_hash: 'sha256:a6ce59feb885487429e9cac1a6b6daeeb7f515bb41e1ec2aad6686567cc32349'
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-lane-discovery-sweep-research]]'
@@ -113,18 +113,26 @@ settled before any resolution is written.
 
 ## Implementation
 
-The confirm boundary keeps its refusal-first shape and narrows one of its three decline
-cases. Where the document states several rates and every one of them resolves to a
-registered Spanish domestic tier on the invoice's issue date, the record resolves to the
-ordinary domestic supply treatment rather than to no treatment at all. Where any rate
-fails to resolve, where a recargo is present, or where a rate is ambiguous between tiers,
-the existing decline stands unchanged.
+Written against the confirm boundary as it now stands, which was rebuilt after this record
+was first drafted; the research of the same stem carries the audit. The boundary no longer
+resolves a category from a rate. It resolves a rate TIER at the reading stage and hands it
+to a classification authority whose criteria assembly feeds a rule table, and the category
+comes from that authority and from nowhere else on the path. A declared document code and
+the rate-tier axis are both INPUTS to the table rather than rival deciders, and a
+contradiction between them resolves to no category as a review item.
 
-The resolution stays composed from the two shipped authorities the single-rate path
-already uses - the dated rate-to-tier lookup and the single tier-to-category mapping - so
-no fourth copy of either table appears. Because the invoice-level category is now used as
-a treatment marker on a document whose tiers differ, the operator-facing surfaces that
-display the category state that the tiers are carried per line.
+The multi-rate decline survived that refactor unchanged: the tier resolver still returns no
+tier for a document whose breakdown carries more than one entry, the criteria then carry no
+tier, and the rule table refuses the domestic branch that needs one. So this decision is
+unaffected in substance and changes only where it lands.
+
+What follows from it is that the domestic branch must be reachable for a document that
+charged several registered domestic tiers. The tier axis is the wrong place to express
+that - a multi-tier document has no single tier and inventing one is the guess this record
+rejects - so the signal belongs beside the tier as a distinct input stating that every rate
+resolved to a registered domestic tier without settling which. The rule table then decides
+the ordinary domestic treatment on the same evidence it already uses, and the recargo,
+unregistered-rate and ambiguous-rate declines stay exactly as they are.
 
 Nothing changes on the Modelo 303 path, which already reads tiers per line, or in the
 Axis-A table, whose rated rows are already tier-indifferent.

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:994e011f0e2963a0a02900d27b19f7366aa85b1e5e0b374bd6857ab4cc73cc83'
+body_hash: 'sha256:41334f8b56c4a2f7132460beb105182874430a61c1940eec924062a30e0c7e9c'
 related:
   - "[[2026-08-07-invoice-canonical-structure-iva-treatment-axis-adr]]"
 ---
@@ -440,6 +440,49 @@ recipient's base belongs on the form is not settled here.
 **The blocker is unchanged and is the same one this whole document is about.** The rate
 slot is not the operation's treatment, so the record arrives at the binding layer carrying
 the wrong category and, for a cuota-less document, a tier the Modelo 303 recipient-side bindings do not admit.
+
+### CENSUS: four invoice-side writers, and the confirm boundary has been rebuilt since this research began
+
+Closing this document's own floor caveat. The two paths recorded earlier bounded the
+population from below; enumerating every writer of the invoice-level category gives four,
+and the audit changed two things this research had stated.
+
+**The LLM and manual-edit paths are NOT invoice-side, so the caveat pointed at the wrong
+modules.** `_llm_classification.py` and `_actions_manual.py` both operate on
+`Transaction.iva_category`; the manual module takes an invoice repository only to LINK, and
+builds transaction records. Neither can set an invoice's category. The floor was honest but
+its named unknowns were irrelevant to the invoice surface.
+
+**The four invoice-side writers are:** the catalogue CLI option (unrestricted over the full
+enum); the evidence-confirm boundary; the invoice wizard; and the review edit path, which
+carries an `IVA_CATEGORY` edit key and so lets an operator set the category after the fact.
+
+**The confirm boundary has been rebuilt, and both resolvers this research described are
+gone.** `_domestic_category_from_the_declared_rate` and `_category_stated_by_the_document`
+no longer exist. The boundary now resolves a rate TIER at the reading stage
+(`domestic_rate_tier_from_the_document`) and hands it to a classification authority
+(`resolve_confirmed_establishment`) whose criteria assembly feeds a rule table; the
+category comes from `establishment.category.category` and, per the code's own comment, from
+nowhere else on that path. The two rival surfaces were deliberately collapsed into inputs -
+a declared FACT and a rate-tier axis - with the DECIDING moved to the table, and a
+contradiction between them resolving to no category as a review item.
+
+**The multi-rate decline SURVIVED the refactor, verbatim.** `domestic_rate_tier_from_the_document`
+still opens `if len(draft.iva_breakdown) != 1: return None`, and still declines on a
+recargo and on an unregistered or ambiguous rate. What changed is how the decline expresses
+itself: the criteria carry no tier, and the rule table refuses the domestic branch that
+needs one. So the problem the sibling ADR addresses is still live; only the mechanism it
+must work through has moved.
+
+**The wizard is now the remaining rival surface.** `_derived_domestic_category` in the
+invoice wizard still decides a domestic category locally, from the rate, after establishing
+domesticity on `counterparty_country` first. It is well-guarded and its docstring is
+explicit that deriving from the rate alone "would stamp a domestic category on an export or
+an intra-community supply". But it is a second surface deciding what the confirm path just
+consolidated onto a classification authority - which is the same fragmentation the confirm
+refactor closed, still open on the sibling writer. Whether the wizard should adopt that
+authority is a question this research raises and does not answer; it was not the subject
+here, and the wizard's guard is currently stricter than the one the old confirm path had.
 
 ## Sources
 
