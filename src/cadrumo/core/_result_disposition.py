@@ -212,6 +212,51 @@ def result_disposition_is_refund(disposition: ResultDisposition) -> bool:
     return disposition in _REFUND_DISPOSITIONS
 
 
+#: The codes for which the fichero must carry the taxpayer's bank account.
+#: A SEPARATE axis from refund-ness, and keeping them separate is the whole
+#: point of this second frozenset. Refund-ness answers "does this period carry
+#: compensación forward"; this answers "does AEAT need an account number". They
+#: coincide for the three refund codes and diverge at ``U``.
+#:
+#: ``U`` (domiciliación del ingreso en cuenta de cargo) is an INGRESO settled by
+#: direct debit, so AEAT needs an account to CHARGE. The bundled Diseño de
+#: Registro names the field ``Domiciliación/Devolución - IBAN`` -- one field
+#: serving both directions -- and lists ``U`` among the payment forms, so the
+#: account is required there by AEAT's own record design. Folding ``U`` into
+#: :data:`_REFUND_DISPOSITIONS` instead would be a real defect rather than a
+#: shortcut: that set drives the compensación carry decision, so a domiciliación
+#: filing would generate zero carry-forward while remaining a positive-result
+#: ingreso that carries nothing in the first place only by coincidence.
+#:
+#: ``G`` (cuenta corriente tributaria — ingreso) is deliberately EXCLUDED and the
+#: exclusion is an open question rather than a ruling: settlement through the
+#: tributary current account may legitimately need no debit account, and no
+#: bundled AEAT text has been read that settles it. Excluded because asserting
+#: the account is required there would be a guess with a filing consequence.
+_BANK_ACCOUNT_DISPOSITIONS: frozenset[ResultDisposition] = _REFUND_DISPOSITIONS | {
+    ResultDisposition.DOMICILIACION,
+}
+
+
+def result_disposition_requires_bank_account(disposition: ResultDisposition) -> bool:
+    """Return whether ``disposition``'s fichero must carry a bank account.
+
+    True for the three refund codes (AEAT pays into the account) and for ``U``,
+    domiciliación del ingreso (AEAT charges the account). Read by BOTH the
+    header composer that emits the account block and the record guard that
+    decides whether the account page reaches disk, because those two answering
+    differently is how a filing acquires an account page with no account in it,
+    or an account block with no page to carry it.
+
+    See Also:
+        :func:`result_disposition_is_refund`
+            The adjacent axis. Do not substitute one for the other: that one
+            governs compensación carry-forward, this one governs whether the
+            account is on the wire.
+    """
+    return disposition in _BANK_ACCOUNT_DISPOSITIONS
+
+
 def modelo_has_codified_disposition(modelo: str) -> bool:
     """Return whether ``modelo`` has a codified, diseño-grounded disposition spec.
 
@@ -294,4 +339,5 @@ __all__ = [
     "modelo_has_codified_disposition",
     "result_disposition_casilla_ids",
     "result_disposition_is_refund",
+    "result_disposition_requires_bank_account",
 ]

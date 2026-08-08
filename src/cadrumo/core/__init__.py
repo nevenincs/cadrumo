@@ -254,6 +254,7 @@ from ._result_disposition import (
     modelo_has_codified_disposition,
     result_disposition_casilla_ids,
     result_disposition_is_refund,
+    result_disposition_requires_bank_account,
 )
 from ._revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from ._storage_taxonomy import (
@@ -582,6 +583,7 @@ __all__: list[str] = [
     "restore_pointer",
     "result_disposition_casilla_ids",
     "result_disposition_is_refund",
+    "result_disposition_requires_bank_account",
     "stale_persisted_format_declarations",
     "storage_location",
     "storage_path",
