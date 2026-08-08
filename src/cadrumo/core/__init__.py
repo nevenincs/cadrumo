@@ -151,7 +151,7 @@ from ._hardware import (
     hardware_tier_for_free_bytes,
 )
 from ._hex import HEX_PATTERN_16, HEX_PATTERN_64, HEX_PATTERN_128, Hex16Str, Hex64Str
-from ._iban import IBAN_SHAPE_RE, iban_mod_97
+from ._iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ._image_media_type import ImageMediaType, detect_image_media_type
 from ._invoice_link import LinkInconsistencyDirection
 from ._irnr import (
@@ -554,6 +554,7 @@ __all__: list[str] = [
     "modelo_has_codified_amendment_regime",
     "modelo_has_codified_disposition",
     "normalise_corpus_text",
+    "normalise_iban",
     "normalise_product_identity_references",
     "optional_extra_available",
     "optional_extra_for_module",

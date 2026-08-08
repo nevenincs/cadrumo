@@ -66,6 +66,7 @@ from urllib.parse import urlparse
 
 from .._iban import IBAN_SHAPE_RE as _IBAN_SHAPE_RE
 from .._iban import iban_mod_97 as _iban_mod_97
+from .._iban import normalise_iban as _normalise_iban
 from ..classification import (
     ClassificationPolicy as _ClassificationPolicy,
 )
@@ -226,9 +227,18 @@ _NIF_IVA_PATTERN = (
 #
 # Scanning form of the anchored :data:`IBAN_SHAPE_RE` in ``core._iban``, which
 # stays the authority on what an IBAN looks like. Two country letters, two
-# check digits, then an 11-30 character BBAN. Uppercase and separator-free is
-# the canonical form the app itself validates and stores; a grouped
-# ``ES79 2100 ...`` rendering is not matched, and no surface here emits one.
+# check digits, then an 11-30 character BBAN.
+#
+# **The separators are the arm, not a widening of it.** An IBAN is essentially
+# always PRINTED in groups of four -- that is how it leaves a bank statement and
+# an invoice footer, which is exactly where this app reads one from -- so the
+# separator-free spelling the arm used to require is the one that does not
+# arrive. The gate does not move: the span is folded onto canonical form with
+# ``normalise_iban``, the same function the registry and refund-account
+# validators use, and the mod-97 checksum still decides. Admitting a space is
+# safe here only because :func:`_gated_sub` re-reads a span the checksum
+# refuses; a scan this wide would otherwise carry a neighbouring uppercase word
+# into the match and lose the account with it.
 #
 # Every country, not just ES: foreign accounts are declarable (Modelo 720
 # exists for assets held abroad) and refund accounts may be non-SEPA, so an
@@ -237,7 +247,8 @@ _NIF_IVA_PATTERN = (
 # match — a long alphanumeric run otherwise collides with hashes and opaque
 # ids, and a real 32-character hex digest in the bundled corpus is rejected
 # by the checksum exactly as intended.
-_IBAN_PATTERN = r"\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b"
+_IBAN_SEPARATOR = r"[ \-]?"
+_IBAN_PATTERN = rf"\b[A-Z]{{2}}{_IBAN_SEPARATOR}\d{_IBAN_SEPARATOR}\d(?:{_IBAN_SEPARATOR}[A-Z0-9]){{11,30}}\b"
 
 # Bearer / OAuth tokens commonly start with ``ey`` (JWT).
 _BEARER_PATTERN = r"(?i)\b(?:bearer\s+)?(eyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,})"
@@ -636,7 +647,8 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IBAN:
 
         def _hash_if_iban(span: str) -> str | None:
-            if _IBAN_SHAPE_RE.match(span) and _iban_mod_97(span) == 1:
+            canonical = _normalise_iban(span)
+            if _IBAN_SHAPE_RE.match(canonical) and _iban_mod_97(canonical) == 1:
                 return _sha256_prefix(span)
             return None
 
