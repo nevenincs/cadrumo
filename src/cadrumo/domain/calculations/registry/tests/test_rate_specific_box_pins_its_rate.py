@@ -69,12 +69,21 @@ import pytest
 
 from .....core.resources import bundled_path
 from .._authority import ValidatedRegistryAuthority
+from .._record_design_coverage import _CASILLA_TAG_RE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 # "... - Tipo 7,5% - Cuota [670]" -- AEAT's own label declares the rate.
-_RATE_KEYED_ROW = re.compile(r"Tipo\s+[\d,]+\s*%.*?\[(\d{1,4})\]")
+#
+# The bracketed box shape is COMPOSED from the registry's canonical marker rather than
+# re-declared here. This module held its own copy capped at four digits while production
+# used five, and Modelo 200 numbers its boxes with five -- so a rate-labelled box on that
+# modelo would have been invisible to a gate that iterates every modelo in the authority.
+# Measured, widening changes no verdict today: Modelo 200 declares no rate-keyed row at
+# either width and Modelo 390's 210 are identical. The value is removing a second
+# definition of one concept before it silently under-reads, not a boundary recovered.
+_RATE_KEYED_ROW = re.compile(r"Tipo\s+[\d,]+\s*%.*?" + _CASILLA_TAG_RE.pattern)
 
 
 def _authority() -> ValidatedRegistryAuthority:
