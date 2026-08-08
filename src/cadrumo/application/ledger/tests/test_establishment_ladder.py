@@ -30,6 +30,7 @@ been given a question that is not theirs and a remedy that cannot work.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -64,6 +65,18 @@ from .._establishment_ladder import (
 from .._evidence_draft import InvoiceDraft, counterparty_draft_side
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@contextmanager
+def _replacing(target: object, name: str, value: object):
+    """Replace ``target.name`` for the scope, restoring the original on exit."""
+    original = getattr(target, name)
+    setattr(target, name, value)
+    try:
+        yield
+    finally:
+        setattr(target, name, original)
+
 
 _BUCKET_ID = "37373737-3737-4737-8737-373737373737"
 _SPANISH_CIF = "B12345674"
@@ -431,7 +444,6 @@ def _refusing_rung(*_args: object, **_kwargs: object) -> str | None:
 
 def test_a_corrupt_vocabulary_refuses_rather_than_reporting_an_unestablished_party(
     repository: ConfirmedCounterpartyFactsRepository,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A broken data file raises out of the ladder, and is not a counterparty question.
 
@@ -440,15 +452,15 @@ def test_a_corrupt_vocabulary_refuses_rather_than_reporting_an_unestablished_par
     told nothing while the registry is broken is handed a wrong answer with no
     remedy, since confirming the counterparty would paper over a defect.
     """
-    monkeypatch.setattr(ladder_module, "country_code_for_printed_country_name", _refusing_rung)
-
-    with pytest.raises(IvaCatalogueError):
+    with (
+        _replacing(ladder_module, "country_code_for_printed_country_name", _refusing_rung),
+        pytest.raises(IvaCatalogueError),
+    ):
         _resolve(repository, country_name="España", postal_code=_MADRID)
 
 
 def test_a_corrupt_territory_registry_refuses_from_inside_the_rung_walk(
     repository: ConfirmedCounterpartyFactsRepository,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The postal rung's refusal survives the walk too, not only the lookup before it.
 
@@ -458,15 +470,15 @@ def test_a_corrupt_territory_registry_refuses_from_inside_the_rung_walk(
     would leave the first test green and swallow this one, which is precisely the
     shape that turns a broken data file into a counterparty question.
     """
-    monkeypatch.setattr(ladder_module, "territorial_scope_for_spanish_postal_code", _refusing_rung)
-
-    with pytest.raises(IvaCatalogueError):
+    with (
+        _replacing(ladder_module, "territorial_scope_for_spanish_postal_code", _refusing_rung),
+        pytest.raises(IvaCatalogueError),
+    ):
         _resolve(repository, country_name="España", postal_code=_MADRID)
 
 
 def test_a_corrupt_identifier_rung_refuses_from_the_top_of_the_walk(
     repository: ConfirmedCounterpartyFactsRepository,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The first lookup of the walk is covered on the same terms as the last.
 
@@ -476,15 +488,15 @@ def test_a_corrupt_identifier_rung_refuses_from_the_top_of_the_walk(
     symbol would leave this case passing against a lookup the walk never makes —
     a gate green because it patched nothing.
     """
-    monkeypatch.setattr(ladder_module, "vat_identification_state_for_printed_tax_identifier", _refusing_rung)
-
-    with pytest.raises(IvaCatalogueError):
+    with (
+        _replacing(ladder_module, "vat_identification_state_for_printed_tax_identifier", _refusing_rung),
+        pytest.raises(IvaCatalogueError),
+    ):
         _resolve(repository, tax_identifier=_GERMAN_VAT)
 
 
 def test_a_corrupt_country_rung_refuses_from_between_the_covered_depths(
     repository: ConfirmedCounterpartyFactsRepository,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The rung BETWEEN the other three, which bracketing them left uncovered.
 
@@ -499,15 +511,15 @@ def test_a_corrupt_country_rung_refuses_from_between_the_covered_depths(
     wrapped" is a claim about every rung individually and a gate that proves it
     for three of four proves the wrong statement.
     """
-    monkeypatch.setattr(ladder_module, "territorial_scope_for_country", _refusing_rung)
-
-    with pytest.raises(IvaCatalogueError):
+    with (
+        _replacing(ladder_module, "territorial_scope_for_country", _refusing_rung),
+        pytest.raises(IvaCatalogueError),
+    ):
         _resolve(repository, country_name="France")
 
 
 def test_a_store_that_cannot_be_read_refuses_rather_than_reporting_no_confirmed_fact(
     repository: ConfirmedCounterpartyFactsRepository,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The confirmed-fact rung propagates on the same terms as the document rungs.
 
@@ -532,9 +544,10 @@ def test_a_store_that_cannot_be_read_refuses_rather_than_reporting_no_confirmed_
             payload_identifier="1" * 64,
         )
 
-    monkeypatch.setattr(ladder_module, "resolve_confirmed_counterparty_facts", _unreadable_store)
-
-    with pytest.raises(SecureObjectRowIdentityError):
+    with (
+        _replacing(ladder_module, "resolve_confirmed_counterparty_facts", _unreadable_store),
+        pytest.raises(SecureObjectRowIdentityError),
+    ):
         _resolve(repository, tax_identifier=_SPANISH_CIF)
 
 

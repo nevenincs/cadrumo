@@ -18,6 +18,7 @@ from __future__ import annotations
 import hashlib
 import inspect
 import json
+from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
 
@@ -41,6 +42,18 @@ from .._grounded_reading import (
 from .._identity_roles import IdentityCandidate, resolve_counterparty_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@contextmanager
+def _replacing(target: object, name: str, value: object):
+    """Replace ``target.name`` for the scope, restoring the original on exit."""
+    original = getattr(target, name)
+    setattr(target, name, value)
+    try:
+        yield
+    finally:
+        setattr(target, name, original)
+
 
 _DOCUMENT_TEXT = (
     "FACTURA 2026-0142\n"
@@ -343,9 +356,7 @@ def test_an_absent_reader_refuses_and_names_the_provisioning_verb() -> None:
     assert "no value was guessed" in message
 
 
-def test_a_missing_reader_does_not_fall_through_to_the_vision_engine(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:
     """The decision, EXERCISED rather than inspected.
 
     A missing reader is a statement about the ENVIRONMENT, not the document.
@@ -370,9 +381,10 @@ def test_a_missing_reader_does_not_fall_through_to_the_vision_engine(
     def unavailable(*args: object, **kwargs: object) -> object:
         raise LLMProviderError("Ollama is not reachable")
 
-    monkeypatch.setattr(llm_module, "extract_invoice_fields_from_text", unavailable)
-
-    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+    with (
+        _replacing(llm_module, "extract_invoice_fields_from_text", unavailable),
+        pytest.raises(PurchaseInvoiceEvidenceInputError) as raised,
+    ):
         _read_transcription_semantically(
             _control_evidence(),
             _control_transcription(),

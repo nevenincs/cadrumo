@@ -28,8 +28,11 @@ See Also:
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+
 import pytest
 
+from .. import _deterministic_findings
 from .._deterministic_findings import (
     DETERMINISTIC_CHECKS,
     DeterministicCheck,
@@ -38,6 +41,17 @@ from .._deterministic_findings import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@contextmanager
+def _replacing(target: object, name: str, value: object):
+    """Replace ``target.name`` for the scope, restoring the original on exit."""
+    original = getattr(target, name)
+    setattr(target, name, value)
+    try:
+        yield
+    finally:
+        setattr(target, name, original)
 
 
 def test_the_stamp_names_every_declared_check() -> None:
@@ -50,9 +64,7 @@ def test_the_stamp_names_every_declared_check() -> None:
     )
 
 
-def test_a_check_added_to_the_declaration_moves_the_stamp_by_itself(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_a_check_added_to_the_declaration_moves_the_stamp_by_itself() -> None:
     """The anti-drift proof, and the reason the stamp is derived rather than written.
 
     A hand-written name list passes every other case in this module while
@@ -63,18 +75,14 @@ def test_a_check_added_to_the_declaration_moves_the_stamp_by_itself(
     before = deterministic_check_names()
 
     added = DeterministicCheck("a_check_that_did_not_exist", lambda draft: ())
-    monkeypatch.setattr(
-        "cadrumo.application.ledger._deterministic_findings.DETERMINISTIC_CHECKS",
-        (*DETERMINISTIC_CHECKS, added),
-    )
-
-    after = deterministic_check_names()
+    with _replacing(_deterministic_findings, "DETERMINISTIC_CHECKS", (*DETERMINISTIC_CHECKS, added)):
+        after = deterministic_check_names()
 
     assert after == (*before, "a_check_that_did_not_exist")
     assert len(after) == len(before) + 1
 
 
-def test_a_check_added_to_the_declaration_also_runs(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_check_added_to_the_declaration_also_runs() -> None:
     """The other half: the declaration is what executes, not merely what is named.
 
     Without this, the stamp could be derived from a list nothing runs -- a record
@@ -85,12 +93,12 @@ def test_a_check_added_to_the_declaration_also_runs(monkeypatch: pytest.MonkeyPa
     from .._evidence_draft import DraftDiscrepancyFinding, InvoiceDraft
 
     sentinel = DraftDiscrepancyFinding(kind=DraftDiscrepancyKind.ROLE_UNRESOLVED, detail="sentinel")
-    monkeypatch.setattr(
-        "cadrumo.application.ledger._deterministic_findings.DETERMINISTIC_CHECKS",
+    with _replacing(
+        _deterministic_findings,
+        "DETERMINISTIC_CHECKS",
         (*DETERMINISTIC_CHECKS, DeterministicCheck("sentinel_check", lambda draft: (sentinel,))),
-    )
-
-    findings = deterministic_findings(InvoiceDraft())
+    ):
+        findings = deterministic_findings(InvoiceDraft())
 
     assert sentinel in findings
 
@@ -162,11 +170,11 @@ def test_the_stamp_is_not_folded_into_the_derived_identity() -> None:
         )
 
     before = _mint()
-    with pytest.MonkeyPatch.context() as patched:
-        patched.setattr(
-            "cadrumo.application.ledger._deterministic_findings.DETERMINISTIC_CHECKS",
-            (*DETERMINISTIC_CHECKS, DeterministicCheck("late_arrival", lambda draft: ())),
-        )
+    with _replacing(
+        _deterministic_findings,
+        "DETERMINISTIC_CHECKS",
+        (*DETERMINISTIC_CHECKS, DeterministicCheck("late_arrival", lambda draft: ())),
+    ):
         after = _mint()
 
     assert after.checks_run != before.checks_run  # type: ignore[attr-defined]

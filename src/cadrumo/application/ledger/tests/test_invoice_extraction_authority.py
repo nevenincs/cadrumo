@@ -23,11 +23,13 @@ cannot tell a wired call from an inert one -- together they cover both.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from decimal import Decimal
 
 import pytest
 
 from ....core import Period
+from ....domain import iva as _iva_module
 from ....domain.iva import EUMemberState, IvaCategory, load_iva_rate_table
 from .._invoice_extraction_authority import (
     InvoiceExtractionAuthorityValues,
@@ -36,6 +38,18 @@ from .._invoice_extraction_authority import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@contextmanager
+def _replacing(target: object, name: str, value: object):
+    """Replace ``target.name`` for the scope, restoring the original on exit."""
+    original = getattr(target, name)
+    setattr(target, name, value)
+    try:
+        yield
+    finally:
+        setattr(target, name, original)
+
 
 _ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
 
@@ -59,10 +73,7 @@ def _fabricated_values() -> InvoiceExtractionAuthorityValues:
 class TestTheResolverFollowsTheRateAuthority:
     """Direction one: move the authority, and the resolved values move."""
 
-    def test_a_planted_rate_reaches_the_resolved_values(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_a_planted_rate_reaches_the_resolved_values(self) -> None:
         """The mutation is applied at RUNTIME, so no tracked file changes.
 
         A concurrent sweep therefore cannot commit it, and a crashed run leaves
@@ -82,12 +93,12 @@ class TestTheResolverFollowsTheRateAuthority:
                 "effective_until": None,
             },
         )
-        monkeypatch.setattr(
-            "cadrumo.domain.iva.load_iva_rate_table",
+        with _replacing(
+            _iva_module,
+            "load_iva_rate_table",
             lambda: dict(real_table) | {EUMemberState.ES: (*spain, planted)},
-        )
-
-        after = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026)
+        ):
+            after = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026)
 
         assert _FABRICATED_PCT in after.iva_rate_pcts, (
             "the resolver read a snapshot instead of the authority; a registry change would not reach a reader"
