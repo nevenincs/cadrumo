@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:837d0b68ddfc26a50b8f4a03f62d8c948bfa2015937e85b28176f78b15d6652b'
+body_hash: 'sha256:873604c837e245adc913e38014b8f53ae77a622f57ade95b2aa301b2a1e5aee4'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -300,6 +300,7 @@ Lands the review surface, the blocking-findings gate, assertion-shaped correctio
 - [ ] `W09.P17.S149` - Correct the campaign note asserting that no production site constructs an exact-structured field origin, since the core origin enum already declares that member and the grounded-reading accepted-origin set already references it, so the gap was a missing PRODUCER rather than a missing member. Read as a missing member the note sends a lane to the taxonomy owner for a change nobody needs, and one lane nearly took that route before measuring; `src/cadrumo/application/ledger`.
 - [ ] `W09.P17.S150` - Coordinator probe result recorded for the ladder assembly, measured against HEAD rather than reasoned: the three landed rungs compose correctly under the first-decisive-rung reading. A printed Espana yields no scope but the code ES, which triggers the postal rung and resolves Las Palmas to Canarias and Madrid to the mainland. A printed France with a Paris postal code resolves through the name rung to EU member and never consults the postal rung at all, so the five-digit collision cannot fire. Espana with no readable postal exhausts to nothing rather than the mainland, and an absent country name with a Spanish-looking postal also exhausts. The assembly row therefore starts from a proven composition rather than a design, and any implementation that fails these six cases has departed from it; `src/cadrumo/application/ledger`.
 - [ ] `W09.P17.S151` - Promote the classification criteria assembly onto the package facade before the ladder consumes it, since it is defined in a private module with no facade export and its only consumers today are two test modules inside the same package, so the first cross-package consumer would have to reach into a private module which the import hygiene gate forbids. Promotion is a precondition of the consuming change rather than a follow-up, so it lands with or before the ladder assembly and not after it; `src/cadrumo/application/ledger`.
+- [ ] `W09.P17.S152` - Route a document parties to the establishment ladder by direction, since nothing decides which printed party is the counterparty in production and the criteria assembly country parameters remain test-supplied only, so the ladder is built and gated and unreached. An issued invoice takes the billed party and a received one takes the issuing party, which is the same selection the counterparty side already makes elsewhere and must not be re-derived here. Until this lands the whole establishment apparatus is the built-and-unreached shape this campaign has found four times; `src/cadrumo/application/ledger`.
 
 ## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
 
