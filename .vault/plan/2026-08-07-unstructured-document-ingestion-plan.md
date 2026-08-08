@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:35525fa319719f8f9261e6360a58c82fb4bad280b32c370319304937de2e5a70'
+body_hash: 'sha256:a2eb113529bce16e149fd0871f082a652a158eacd47381eb1d8ddab7c6e95b12'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -335,6 +335,8 @@ Lands the review surface, the blocking-findings gate, assertion-shaped correctio
 - [ ] `W09.P17.S184` - Gate the unassigned-country ruling with the three fixtures the amendment names: the three measured user-assigned codes each yielding no scope from ANY consumer and mutation-proven at the resolver, an issued-side fixture whose unassigned code must reach the review gate and never a zero-rated category, and an assigned-but-uncatalogued code emitting the catalogue-gap advisory rather than the typo advisory; `src/cadrumo/domain/iva, src/cadrumo/application/ledger`.
 - [ ] `W09.P17.S185` - Sweep the callers of the country resolver confirming none depended on the shape-based third-country default, which the amendment supersedes for all of them, so this is verification rather than discovery. A caller that read the default as decisive evidence inherits the same silent zero-rating the ladder had; `src/cadrumo/domain/iva`.
 - [ ] `W09.P17.S186` - Decide whether the ladder internal signature names carrying machine-readable evidence should follow the operator-facing rung rename, since the resolver takes printed-country-name and printed-country-code parameters while the structured path passes a machine-read country code into the printed one, which is the same mislabel the rung rename just corrected one layer up. Scoped out of that row deliberately because it names the operator-facing axis while these are internal signatures, and because a signature sweep across the ladder API is a different-sized change that would have ridden in on a label commit. Wants a ruling or an explicit wontfix rather than silence; `src/cadrumo/application/ledger`.
+- [ ] `W09.P17.S187` - Delete the resolver that turns a registration into an establishment scope, since the ladder re-runging removed its only production caller and it remains exported from the domain facade, so it is a public function whose entire semantic is the inference the fifth amendment forbids, sitting where the next person looks for exactly this. More than tidiness: a later lane finding an exported function that answers the establishment question from a tax identifier has no signal that answering it that way is the defect the amendment exists to close. Atomic across the module, the facade, its tests and the generated stubs, so it needs room to finish rather than a partial start; `src/cadrumo/domain/iva`.
+- [ ] `W09.P17.S188` - Widen the concordance signal beyond its single source, since foreign establishment resolves by concordance and the only corroborating treatment currently recognised is a reverse-charge mention with no Spanish rate charged. Other printed treatments consistent with non-establishment exist and none are claimed. The gap is SAFE rather than wrong, because a document carrying one of those and no address country reaches a question rather than a wrong value, but it is a gap and not completeness, and it was stated as such by the lane rather than left to be discovered; `src/cadrumo/application/ledger`.
 
 ## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
 
