@@ -423,17 +423,15 @@ ignore_imports =
     # per origin rather than by widening the contract, so a NEW production
     # edge that is not a DTO consumer still fails loudly.
     cadrumo.application.ledger._llm_review_workflow -> cadrumo.llm
-    # A SEAM test: it asserts the ledger router consumes the llm grounding
-    # correctly, so it belongs to neither side and cannot be relocated into
+    # SEAM tests: they assert the ledger router consumes llm-owned surfaces
+    # correctly, so they belong to neither side and cannot be relocated into
     # either without looking like a unit test of something that package does
-    # not own. Its mirror image is already enrolled above --
+    # not own. The mirror image is already enrolled above --
     # llm.tests.test_llm_vision_classifier -> application.ledger._llm_classification --
     # and sanctioning one direction of a seam while refusing the other would be
-    # arbitrary. Promotion to the llm facade was considered and rejected: no
-    # module outside cadrumo.llm imports ground_extracted_fields or
-    # parse_invoice_extraction_response, so promoting would export a symbol
-    # nobody consumes purely to satisfy a linter.
-    cadrumo.application.ledger.tests.test_grounded_reading_wiring -> cadrumo.llm._invoice_field_grounding
+    # arbitrary. Both reach the PUBLIC facade, so what is pinned here is only
+    # the layer direction, not a private reach.
+    cadrumo.application.ledger.tests.test_grounded_reading_wiring -> cadrumo.llm
     # Same seam, through the PUBLIC facade: the terminal-state test builds the
     # llm-owned suggestion DTOs the ledger consumes, so it exercises the same
     # boundary the production edges above are pinned for.
