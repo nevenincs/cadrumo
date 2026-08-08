@@ -186,6 +186,10 @@ from ._model_catalogue import (
 from ._modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
 from ._modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ._models import STRICT_FROZEN_CONFIG
+from ._notificacion_estado_servicio import (
+    NotificacionEstadoServicio,
+    resolve_notificacion_estado_servicio,
+)
 from ._objeto_tributario import ObjetoTributario
 from ._optional_extras import (
     ANTHROPIC_EXTRA,
@@ -214,10 +218,6 @@ from ._period import (
     accepted_period_patterns,
     is_administrative_period_token,
     registry_period_kind,
-)
-from ._notificacion_estado_servicio import (
-    NotificacionEstadoServicio,
-    resolve_notificacion_estado_servicio,
 )
 from ._post_filing_event import (
     ACTIONABLE_POST_FILING_EVENT_KINDS,
