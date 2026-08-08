@@ -37,6 +37,7 @@ import pytest
 
 from ....core import ClassifierInputSource
 from ....domain.iva import (
+    InvoiceKind,
     IvaCatalogueError,
     IvaTerritorialScope,
     country_code_for_printed_tax_identifier,
@@ -54,7 +55,9 @@ from .._establishment_ladder import (
     CounterpartyEstablishment,
     EstablishmentRung,
     resolve_counterparty_establishment_scope,
+    resolve_draft_counterparty_establishment,
 )
+from .._evidence_draft import InvoiceDraft, counterparty_draft_side
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -452,3 +455,149 @@ def test_the_same_call_reports_an_unestablished_party_against_the_real_registry(
 
     assert resolved.scope is None
     assert resolved.contradiction is None
+
+
+class TestDraftRouting:
+    """The counterparty side is chosen by direction, through the one authority.
+
+    A draft is pre-direction data, so this is where the operator's ``--kind``
+    reaches the establishment question. The selection is shared with the confirm
+    path rather than restated, because a document read as having one counterparty
+    when its identity is resolved and another when its territory is would produce
+    two coherent, disagreeing records of the same invoice.
+    """
+
+    def test_an_issued_document_takes_the_billed_party(
+        self,
+        repository: CounterpartyEstablishmentRepository,
+    ) -> None:
+        """On an invoice the filer issued, the counterparty is the customer.
+
+        Discriminating rather than agreeing: the supplier side of this draft
+        carries a German number, so a selection that fell through to it would
+        resolve a territory instead of exhausting.
+        """
+        draft = InvoiceDraft(
+            supplier_tax_id=_GERMAN_VAT,
+            customer_tax_id=_SPANISH_CIF,
+        )
+
+        resolved = resolve_draft_counterparty_establishment(
+            bucket_id=_BUCKET_ID,
+            draft=draft,
+            kind=InvoiceKind.ISSUED,
+            repository=repository,
+        )
+
+        assert resolved.scope is None
+        assert territorial_scope_for_printed_tax_identifier(draft.supplier_tax_id) is IvaTerritorialScope.EU_MEMBER
+
+    def test_a_received_document_takes_the_issuing_party(
+        self,
+        repository: CounterpartyEstablishmentRepository,
+    ) -> None:
+        """On an invoice the filer received, the counterparty is the supplier."""
+        draft = InvoiceDraft(
+            supplier_tax_id=_GERMAN_VAT,
+            customer_tax_id=_SPANISH_CIF,
+        )
+
+        resolved = resolve_draft_counterparty_establishment(
+            bucket_id=_BUCKET_ID,
+            draft=draft,
+            kind=InvoiceKind.RECEIVED,
+            repository=repository,
+        )
+
+        assert resolved.scope is IvaTerritorialScope.EU_MEMBER
+        assert resolved.rung is EstablishmentRung.TAX_IDENTIFIER_PREFIX
+
+    def test_the_selection_never_falls_back_to_the_other_side(
+        self,
+        repository: CounterpartyEstablishmentRepository,
+    ) -> None:
+        """An unread counterparty stays unread rather than becoming the filer.
+
+        The fall-back this refuses is not hypothetical. The text and vision
+        readers cannot populate a customer at all, so a selection reading "the
+        customer if set, otherwise the supplier" resolved every issued document
+        to the supplier -- who, on a document the filer issued, IS the filer.
+        """
+        draft = InvoiceDraft(supplier_tax_id=_SPANISH_CIF)
+
+        side = counterparty_draft_side(draft, kind=InvoiceKind.ISSUED)
+
+        assert side.tax_id is None
+        assert side.tax_id_field == "customer_tax_id"
+
+    def test_both_directions_carry_their_own_postal_code(
+        self,
+        repository: CounterpartyEstablishmentRepository,
+    ) -> None:
+        """Establishment is asked of each party independently, so the codes do not share.
+
+        An issuer in Las Palmas invoicing a customer in Madrid crosses a
+        territorial boundary one shared code could not express.
+        """
+        draft = InvoiceDraft(
+            supplier_postal_code=_LAS_PALMAS,
+            customer_postal_code=_MADRID,
+        )
+
+        assert counterparty_draft_side(draft, kind=InvoiceKind.ISSUED).postal_code == _MADRID
+        assert counterparty_draft_side(draft, kind=InvoiceKind.RECEIVED).postal_code == _LAS_PALMAS
+
+
+class TestRungsUnreachableFromADraft:
+    """The two rungs a draft cannot reach today, asserted so the gap stays visible.
+
+    **These tests exist to keep a known gap from being certified away.** The
+    routing above is correct and its gates are green, which is exactly the danger:
+    a wired ladder returning right answers reads as a reachable ladder. It is not
+    one. Nothing in the reading path recovers a party's printed country -- the
+    field contract asks for both postal codes and neither country, and the
+    structured parsers read a postal element and no country element -- so the
+    country rung has no source and the postal rung, gated on country evidence
+    positively naming Spain, cannot be reached even though the draft carries the
+    postal code it would consult.
+
+    **Delete these when that changes, not before.** They are expected to fail the
+    day a country reaches the draft, and that failure is the notification: it
+    means the postal rung became reachable and the territory table stopped being
+    dead weight. A lane that finds them failing should replace them with gates
+    asserting the rungs now DO fire, never relax them.
+    """
+
+    def test_a_spanish_counterparty_exhausts_despite_a_readable_postal_code(
+        self,
+        repository: CounterpartyEstablishmentRepository,
+    ) -> None:
+        """The postal rung stays shut because no country evidence can name Spain.
+
+        The code itself is perfectly readable, and the rung would answer it -- the
+        second assertion proves that, so this is a statement about the missing
+        country evidence rather than about the postal code.
+        """
+        draft = InvoiceDraft(supplier_tax_id=_SPANISH_CIF, supplier_postal_code=_LAS_PALMAS)
+
+        resolved = resolve_draft_counterparty_establishment(
+            bucket_id=_BUCKET_ID,
+            draft=draft,
+            kind=InvoiceKind.RECEIVED,
+            repository=repository,
+        )
+
+        assert resolved.scope is None
+        assert resolved.rung is None
+        assert territorial_scope_for_spanish_postal_code(_LAS_PALMAS) is IvaTerritorialScope.ES_CANARIAS
+
+    def test_the_draft_carries_no_party_country_for_the_country_rung(self) -> None:
+        """No draft field can supply the country rung, which is why it cannot fire.
+
+        Asserted against the model's own fields rather than against a resolved
+        value, so it stays true for a draft populated by any reader.
+        """
+        draft_fields = set(InvoiceDraft.model_fields)
+
+        assert not {field for field in draft_fields if "country" in field}
+        assert {"supplier_postal_code", "customer_postal_code"} <= draft_fields

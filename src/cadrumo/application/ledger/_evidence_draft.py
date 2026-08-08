@@ -174,6 +174,7 @@ if TYPE_CHECKING:
     from ._confirmation_gate import FindingResolution
 
 __all__ = [
+    "CounterpartyDraftSide",
     "DraftDiscrepancyFinding",
     "FieldAmbiguityCandidate",
     "FieldProvenance",
@@ -183,6 +184,7 @@ __all__ = [
     "InvoiceDraftRateBreakdown",
     "PrintedTotalDiscrepancy",
     "confirm_invoice_draft_from_evidence",
+    "counterparty_draft_side",
     "extract_invoice_draft_from_evidence",
     "printed_total_discrepancy",
 ]
@@ -483,6 +485,18 @@ class InvoiceDraft(BaseModel):
             independently: an issuer in Las Palmas invoicing a customer in
             Madrid crosses a territorial boundary that one shared code could
             not express.
+        supplier_country: The country NAME printed in the issuing party's
+            address, copied verbatim in whatever language the document set it,
+            or ``None``. Never an alpha-2 code: a country prints as
+            "Alemania", "Deutschland" or "Allemagne", so recording a code would
+            mean the reading stage translated, and translation is inference.
+            The match against the bounded vocabulary belongs to
+            :func:`~domain.iva.country_code_for_printed_country_name`, which is
+            a deterministic lookup rather than a judgement.
+        customer_country: The same for the party billed by the invoice, carried
+            separately for the reason the postal codes are: an issuer in Las
+            Palmas billing a customer in Berlin cannot be expressed by one
+            shared field.
         invoice_number: Invoice number recovered from a labelled line, or
             ``None``.
         invoice_series: The series half of the invoice's identity, stated
@@ -553,6 +567,8 @@ class InvoiceDraft(BaseModel):
     customer_name: str | None = None
     supplier_postal_code: str | None = None
     customer_postal_code: str | None = None
+    supplier_country: str | None = None
+    customer_country: str | None = None
     invoice_number: str | None = None
     invoice_series: str | None = None
     invoice_date: str | None = None
@@ -1174,6 +1190,84 @@ def _extract_invoice_fields_via_vision(
     )
 
 
+class CounterpartyDraftSide(BaseModel):
+    """The side of a read document that is the COUNTERPARTY, once direction is known.
+
+    A draft is pre-direction by construction: it records what each party's block
+    said without deciding which of them the filer is. Direction settles that, and
+    settles it the same way for every consumer -- which is why this is a record
+    produced once rather than a pair of field lookups each caller repeats.
+
+    Attributes:
+        tax_id: The counterparty's identifier as the document printed it, or
+            ``None`` when the reader recovered none.
+        name: The counterparty's stated name, or ``None``.
+        postal_code: The postal code printed in the counterparty's address, or
+            ``None``.
+        tax_id_field: Which draft field ``tax_id`` was taken from. Carried so an
+            operator override is recorded against the reading it displaced
+            rather than against whichever field shares the option's name.
+        name_field: The same for ``name``.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    tax_id: str | None = None
+    name: str | None = None
+    postal_code: str | None = None
+    tax_id_field: str = Field(min_length=1)
+    name_field: str = Field(min_length=1)
+
+
+def counterparty_draft_side(draft: InvoiceDraft, *, kind: InvoiceKind) -> CounterpartyDraftSide:
+    """Select the counterparty's side of a draft from the document's direction.
+
+    On an invoice the filer ISSUED, the counterparty is the customer; on one
+    they RECEIVED, it is the supplier.
+
+    **The selection is total, with no fall-back to the other side, and that is
+    the load-bearing part.** This once read the customer side "if it is set,
+    otherwise the supplier", and because the text and vision readers cannot
+    populate a customer at all, every issued document silently resolved to the
+    supplier -- who, on a document the filer issued, IS the filer. The value is
+    checksum-valid, so every identity check downstream passes it, and it is
+    bound for the Modelo 347 / 349 totals AEAT reconciles against the other
+    party's own declaration.
+
+    Two guards elsewhere do catch that today, but both load the taxpayer profile
+    and both return without refusing when it carries no tax id, so the
+    protection was only ever as present as the profile. Selecting one side and
+    stopping makes the property structural instead: an unread counterparty stays
+    ``None`` and is refused as a missing field, naming the override that supplies
+    it, which is the same outcome an operator already gets for any other field
+    the reader could not recover.
+
+    Args:
+        draft: The pre-direction reading of the document.
+        kind: Which side of the invoice the filer is on, as the operator settled
+            it at confirm. Never the reader's suggestion.
+
+    Returns:
+        :class:`CounterpartyDraftSide`: the selected side, and which draft
+        fields it came from.
+    """
+    if kind is InvoiceKind.ISSUED:
+        return CounterpartyDraftSide(
+            tax_id=draft.customer_tax_id,
+            name=draft.customer_name,
+            postal_code=draft.customer_postal_code,
+            tax_id_field="customer_tax_id",
+            name_field="customer_name",
+        )
+    return CounterpartyDraftSide(
+        tax_id=draft.supplier_tax_id,
+        name=draft.supplier_name,
+        postal_code=draft.supplier_postal_code,
+        tax_id_field="supplier_tax_id",
+        name_field="supplier_name",
+    )
+
+
 class PrintedTotalDiscrepancy(BaseModel):
     """The document's printed total disagreeing with the total actually recorded.
 
@@ -1741,35 +1835,14 @@ def confirm_invoice_draft_from_evidence(
     )
 
     # WHICH party is the counterparty depends on the direction of the document,
-    # so the side is selected by `kind`. On an invoice the filer ISSUED the
-    # counterparty is the customer; on one they RECEIVED it is the supplier.
-    #
-    # The selection is total, with no fall-back to the other side. That is the
-    # load-bearing part. This previously read the customer side "if it is set,
-    # otherwise the supplier", and because the text and vision readers could not
-    # populate a customer at all, every issued document silently resolved to the
-    # supplier -- who, on a document the filer issued, IS the filer. The value is
-    # checksum-valid, so every identity check downstream passes it, and it is
-    # bound for the Modelo 347 / 349 totals AEAT reconciles against the other
-    # party's own declaration.
-    #
-    # Two guards below do catch that today, but both load the taxpayer profile
-    # and both return without refusing when it carries no tax id, so the
-    # protection was only ever as present as the profile. Selecting one side and
-    # stopping makes the property structural instead: an unread counterparty
-    # stays None and is refused as a missing field, naming the override that
-    # supplies it, which is the same outcome an operator already gets for any
-    # other field the reader could not recover.
-    if kind is InvoiceKind.ISSUED:
-        extracted_counterparty_tax_id = draft.customer_tax_id
-        extracted_counterparty_name = draft.customer_name
-        counterparty_tax_id_field = "customer_tax_id"
-        counterparty_name_field = "customer_name"
-    else:
-        extracted_counterparty_tax_id = draft.supplier_tax_id
-        extracted_counterparty_name = draft.supplier_name
-        counterparty_tax_id_field = "supplier_tax_id"
-        counterparty_name_field = "supplier_name"
+    # so the side is selected by `kind` through the one authority that makes that
+    # selection -- the same one the establishment ladder is routed through, so a
+    # document cannot be read as having one counterparty here and another there.
+    counterparty_side = counterparty_draft_side(draft, kind=kind)
+    extracted_counterparty_tax_id = counterparty_side.tax_id
+    extracted_counterparty_name = counterparty_side.name
+    counterparty_tax_id_field = counterparty_side.tax_id_field
+    counterparty_name_field = counterparty_side.name_field
     # Keyed by the DRAFT field each option overrides, so the assertion record
     # pairs the operator's value with the reading it displaced rather than with
     # whichever field happens to share the option's name.

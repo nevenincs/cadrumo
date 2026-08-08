@@ -63,6 +63,7 @@ See Also:
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -87,10 +88,15 @@ from ._counterparty_establishment import (
     resolve_counterparty_establishment,
 )
 
+if TYPE_CHECKING:
+    from ...domain.iva import InvoiceKind
+    from ._evidence_draft import InvoiceDraft
+
 __all__ = [
     "CounterpartyEstablishment",
     "EstablishmentRung",
     "resolve_counterparty_establishment_scope",
+    "resolve_draft_counterparty_establishment",
 ]
 
 
@@ -302,3 +308,62 @@ def resolve_counterparty_establishment_scope(
         )
 
     return CounterpartyEstablishment()
+
+
+def resolve_draft_counterparty_establishment(
+    *,
+    bucket_id: str,
+    draft: InvoiceDraft,
+    kind: InvoiceKind,
+    repository: CounterpartyEstablishmentRepository | None = None,
+) -> CounterpartyEstablishment:
+    """Route a read document's COUNTERPARTY into the ladder, by direction.
+
+    A draft is pre-direction data: it records what each party's block said
+    without deciding which of them the filer is. This is where that decision
+    reaches the establishment question, and it makes it through the one authority
+    that already makes it for the confirm path, so a document cannot be read as
+    having one counterparty when its identity is resolved and another when its
+    territory is.
+
+    **The filer's own side is never asked here.** One party on every ingested
+    invoice is the operator, whose territory is a profile fact; feeding their
+    printed block to a ladder built for the counterparty would answer a question
+    the profile already answers, and would answer it from weaker evidence.
+
+    **Two rungs cannot fire from a draft today, and the gap is upstream of this
+    function.** Nothing in the reading path recovers a party's printed country:
+    the field contract asks for both postal codes and neither country, and the
+    structured parsers read a postal element and no country element. So the
+    country rung has no source, and the postal rung -- gated on country evidence
+    positively naming Spain -- cannot be reached even though the draft carries
+    the postal code it would consult. A Spanish counterparty therefore exhausts
+    to nothing and is asked once, which is the honest outcome rather than a
+    defective one; what would be defective is reading this function's correct
+    answers as evidence that the whole ladder is reachable.
+
+    Args:
+        bucket_id: Active profile bucket, for the confirmed-fact rung.
+        draft: The pre-direction reading of the document.
+        kind: Which side of the invoice the filer is on, as the operator settled
+            it at confirm. Never the reader's suggestion.
+        repository: Injected store.
+
+    Returns:
+        :class:`CounterpartyEstablishment`: the territory and the rung that
+        settled it, a contradiction, or neither.
+    """
+    # Deferred to call time: the draft module reaches the parsers, the reading
+    # package and the catalogue, so importing it at module scope would make this
+    # lean module pay for all of it. The sanctioned cycle-break shape, and it
+    # changes only WHEN the owning module executes -- the selection keeps its one
+    # home and one import path.
+    from ._evidence_draft import counterparty_draft_side
+
+    side = counterparty_draft_side(draft, kind=kind)
+    return resolve_counterparty_establishment_scope(
+        bucket_id=bucket_id,
+        tax_identifier=side.tax_id,
+        postal_code=side.postal_code,
+        repository=repository,
+    )
