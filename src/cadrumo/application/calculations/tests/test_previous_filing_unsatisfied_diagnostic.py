@@ -63,8 +63,7 @@ _M130_SALDO_NEGATIVO: CasillaId = validated_casilla_id(
 )
 #: The four Modelo 100 casillas the cross-modelo prior-year net-income carry sums.
 _M100_NET_INCOME_CASILLAS: tuple[CasillaId, ...] = tuple(
-    validated_casilla_id(token, surface="_M100_NET_INCOME_CASILLAS")
-    for token in ("0224", "1479", "1553", "1577")
+    validated_casilla_id(token, surface="_M100_NET_INCOME_CASILLAS") for token in ("0224", "1479", "1553", "1577")
 )
 
 
@@ -195,9 +194,7 @@ def test_a_satisfiable_previous_filing_binding_stays_silent(tmp_path: Path) -> N
         resolution = _resolve(profile.repository)
 
     named = {
-        diagnostic.binding_id
-        for diagnostic in resolution.diagnostics
-        if diagnostic.source_kind == "previous_filing"
+        diagnostic.binding_id for diagnostic in resolution.diagnostics if diagnostic.source_kind == "previous_filing"
     }
     assert _M130_PRIOR_PAGOS_BINDING in resolution.binding_values, (
         "the seeded prior trimestre must satisfy the pagos carry, or this control proves nothing"
