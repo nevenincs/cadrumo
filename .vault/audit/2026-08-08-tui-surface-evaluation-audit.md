@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:82c9c74f2b1393cd25c27c4ee308ce2bd9a11434cf00dc7dcb15b5ca358cf3ca'
+body_hash: 'sha256:ae9d90f6ee5d535d8ee570164cd1dbe7b06052beee86f617ca141926b10b8809'
 related: []
 ---
 
@@ -107,10 +107,28 @@ edit action, so the cycle is not broken. What is missing is identity: no stop
 could be named. Nothing — not the harness, not an accessibility tool, not a
 screen reader — could report which of the twenty-five held focus without
 cross-referencing scroll position. This is an observability and accessibility
-gap rather than a navigation break. Fixed by giving each table a stable
-section-derived identifier. Unconfirmed and left open: whether the focused
-table's cursor row is legible enough against the unfocused state in a real
-styled frame, which was reasoned from framework defaults rather than seen.
+gap rather than a navigation break. Initial focus lands on the first real
+action button, the cycle closes, and auto-scroll tracks focus into view through
+all twenty-five, so what is wrong is naming, not movement.
+
+**Left unfixed, and the reason is the finding's real content.** Giving each
+table a stable section-derived identifier was tried and reverted. Textual
+mounts these widgets dynamically, and a same-id remount before the framework
+finishes the previous widget's asynchronous removal is a registry collision —
+a constraint already documented in a sibling screen, where dynamic widgets are
+mounted anonymously on purpose for exactly this reason. The manager re-renders
+on any shape-changing write, so a language switch or an action press crashed on
+the second render. Notably the unit lane did not catch it; the
+language-switch integration test did, which is worth remembering when a change
+looks safe because the fast tests are green.
+
+So the honest statement is that the anonymity is load-bearing under the current
+destroy-and-remount rendering strategy, and naming the stops requires either
+reusing table instances across renders or an identity scheme that survives the
+asynchronous-removal race — a scoped design task, not a one-line fix. Also
+still unconfirmed: whether the focused table's cursor row is legible against
+the unfocused state in a real styled frame, which was reasoned from framework
+defaults rather than seen.
 
 ### hungarian-carried-an-english-stem | medium | "census" appeared inside Hungarian compounds on a live surface
 
