@@ -150,7 +150,7 @@ def test_enumerate_vocabulary_covers_prorrata_terms_translations_and_hidden_form
     assert "prorrateo" in by_text  # es admitted
     assert "pro rata" in by_text  # en preferred
     assert "deductible proportion" in by_text  # en admitted
-    assert "aranyositas" in by_text  # hu admitted
+    assert "arányosítás" in by_text  # hu admitted; arány is ratio, arany is gold
     # The hidden search form is enumerated and flagged.
     assert "prorateo" in by_text
     assert by_text["prorateo"].is_hidden_form is True
@@ -159,7 +159,7 @@ def test_enumerate_vocabulary_covers_prorrata_terms_translations_and_hidden_form
     assert all(q.concept_id == "prorrata" for q in queries)
     # Language tagging is correct.
     assert by_text["pro rata"].language is OutputLanguage.EN
-    assert by_text["aranyositas"].language is OutputLanguage.HU
+    assert by_text["arányosítás"].language is OutputLanguage.HU
 
 
 def test_enumerate_vocabulary_dedupes_identical_query_strings() -> None:
