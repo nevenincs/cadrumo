@@ -261,7 +261,16 @@ def test_review_show_carries_value_origin_anchor_grounding_and_candidates(seeded
     identity = fields["supplier_tax_id"]
     assert identity["origin"] == "text_layer"
     assert identity["grounding"] == "ambiguous"
-    assert [candidate["value"] for candidate in _objects(identity, "candidates")] == ["ESB12345674", "ESX1234567L"]
+    # A candidate value is a tax identity, so it reaches the operator as a
+    # digest and not as itself. What must survive is the ability to ADJUDICATE:
+    # the two readings have to stay distinguishable, and once both values are
+    # hashed the note describing where each was printed is what distinguishes
+    # them. Asserting the raw identifiers here would be asserting a leak.
+    candidates = _objects(identity, "candidates")
+    values = [candidate["value"] for candidate in candidates]
+    assert all(str(value).startswith("sha256:") for value in values), values
+    assert len(set(values)) == len(values), f"two distinct bearers collapsed onto one digest: {values}"
+    assert [candidate["note"] for candidate in candidates] == ["header block", "footer block"]
     # A field with no envelope is still surfaced, with its axes null rather than
     # dropped: an absent reading is the field an operator most needs to see.
     assert "grand_total" in fields
