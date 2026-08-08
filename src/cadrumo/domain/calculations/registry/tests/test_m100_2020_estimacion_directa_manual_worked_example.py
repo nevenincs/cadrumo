@@ -166,11 +166,17 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaId, ValidatedRegistryAuthority, validated_casilla_id
+from .. import (
+    CasillaId,
+    ManualWorkedExamplePayload,
+    ValidatedRegistryAuthority,
+    validated_casilla_id,
+)
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -205,6 +211,31 @@ _REL_2020 = {
 }
 
 
+_ORACLE_PAYLOAD_NAME = "modelo-100-2020-estimacion-directa-simplificada.json"
+
+
+def _oracle_payload() -> ManualWorkedExamplePayload:
+    """Read the bundled oracle through the registry's own strict payload model."""
+    path = Path(bundled_path("corpus", "manual_oracles")) / _ORACLE_PAYLOAD_NAME
+    return ManualWorkedExamplePayload.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+def _declared_actividad_inputs() -> dict[CasillaId, Decimal]:
+    """The manual's raw ingresos/gastos, read FROM the oracle rather than retyped here.
+
+    The test and the payload were two independent transcriptions of one printed page,
+    neither reading the other. Sourced from one place they cannot disagree; the
+    declaration carries a per-input line reference so a reviewer can check it against
+    the page, which is the claim it makes and the only one it makes.
+    """
+    declared = _oracle_payload().declared_inputs
+    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
+    return {
+        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
+        for casilla_id, value in declared.by_casilla_id.items()
+    }
+
+
 def _scenario(*, es_normal: Decimal, expected_0226: Decimal, scenario_id: str) -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
         id=scenario_id,
@@ -212,23 +243,7 @@ def _scenario(*, es_normal: Decimal, expected_0226: Decimal, scenario_id: str) -
         revision="2020",
         filing_year=2020,
         period="0A",
-        inputs={
-            validated_casilla_id("0171", surface="0171"): Decimal("134800.00"),
-            validated_casilla_id("0175", surface="0175"): Decimal("600.00"),
-            validated_casilla_id("0177", surface="0177"): Decimal("3000.00"),
-            validated_casilla_id("0181", surface="0181"): Decimal("19000.00"),
-            validated_casilla_id("0184", surface="0184"): Decimal("17700.00"),
-            validated_casilla_id("0185", surface="0185"): Decimal("5900.00"),
-            validated_casilla_id("0186", surface="0186"): Decimal("3300.00"),
-            validated_casilla_id("0193", surface="0193"): Decimal("3800.00"),
-            validated_casilla_id("0194", surface="0194"): Decimal("7800.00"),
-            validated_casilla_id("0202", surface="0202"): Decimal("6200.00"),
-            validated_casilla_id("0203", surface="0203"): Decimal("1100.00"),
-            validated_casilla_id("0205", surface="0205"): Decimal("1600.00"),
-            validated_casilla_id("0206", surface="0206"): Decimal("1700.00"),
-            validated_casilla_id("0208", surface="0208"): Decimal("7900.00"),
-            validated_casilla_id("0217", surface="0217"): Decimal("2300.00"),
-        },
+        inputs=_declared_actividad_inputs(),
         binding_values={
             "renta-2020-modelo-100-estimacion-directa-es-normal": es_normal,
         },
