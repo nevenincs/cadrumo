@@ -338,7 +338,23 @@ def _grounded_tax_id(raw: str | None) -> str | None:
         return _grounded_intra_community_tax_id(normalise_nif_iva(raw))
 
 
-def _grounded_invoice_number(raw: str | None) -> str | None:
+def _grounded_free_text(raw: str | None) -> str | None:
+    """Return an opaque printed token trimmed of surrounding whitespace, or ``None``.
+
+    Named for the FORM it validates rather than for a field, like every other
+    validator in the two dispatch tables. It was named for the invoice number
+    when that was the only free-text field declared; it now serves six -- both
+    postal codes, both printed countries, the invoice number and the regime
+    legend -- and a validator named after one of the six reads as a rule about
+    invoice numbers that the other five are borrowing. The tables dispatch on
+    :class:`~llm._invoice_field_contract.InvoiceFieldForm`, so the form is what
+    the name must say.
+
+    Deliberately the weakest validator of the set, and that is the declared
+    contract rather than an omission: a free-text field is an opaque token the
+    document printed, so there is no independent authority to check it against.
+    A field needing one declares a different form.
+    """
     if raw is None:
         return None
     trimmed = raw.strip()
@@ -458,7 +474,7 @@ def _grounded_currency(raw: str | None) -> str | None:
 
 _TEXT_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None], str | None]] = {
     InvoiceFieldForm.TAX_IDENTIFIER: _grounded_tax_id,
-    InvoiceFieldForm.FREE_TEXT: _grounded_invoice_number,
+    InvoiceFieldForm.FREE_TEXT: _grounded_free_text,
     InvoiceFieldForm.CALENDAR_DATE: _grounded_date,
     InvoiceFieldForm.CURRENCY_CODE: _grounded_currency,
 }

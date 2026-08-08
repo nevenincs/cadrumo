@@ -312,13 +312,26 @@ class TestTheAnchorKeepsThePrintedFormTheValueDropped:
         assert draft.iva_rate == Decimal("21")
         assert _envelope(draft, "iva_rate").anchor == "IVA (21%)"
 
-    def test_no_monetary_envelope_is_byte_identical_to_its_value(self) -> None:
-        """A vacuous pair makes the downstream parse check compare a value to itself."""
+    def test_no_envelope_is_byte_identical_to_its_value(self) -> None:
+        """A vacuous pair makes the downstream parse check compare a value to itself.
+
+        Driven from the contract declaration rather than a hardcoded name tuple,
+        like the sibling gates above it. The tuple named the four monetary
+        fields, so the property held for those by gate and for every other
+        declared field by author convention only -- and a convention is exactly
+        what a gate is for. Collapsing a postal, country, legend or identifier
+        anchor to equal its value reddened nothing, while the anchor evaluator
+        downstream reports precisely that shape as a vacuous parse.
+
+        Every declared field is in scope because the property is about the
+        FIXTURE, not about the form: whatever a field's declared form, an anchor
+        authored equal to its value tests nothing.
+        """
         draft = _spanish_draft()
 
-        for field_name in ("taxable_base", "iva_amount", "grand_total", "iva_rate"):
-            envelope = _envelope(draft, field_name)
-            assert envelope.anchor != str(getattr(draft, field_name)), field_name
+        for contract in INVOICE_FIELD_CONTRACTS:
+            envelope = _envelope(draft, contract.field_name)
+            assert envelope.anchor != str(getattr(draft, contract.field_name)), contract.field_name
 
 
 class TestNothingHereClaimsAVerificationItDidNotRun:
