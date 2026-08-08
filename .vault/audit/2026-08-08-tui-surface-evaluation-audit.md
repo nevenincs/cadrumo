@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:771cb0350c4e60c276c72d48a4225bc3983e3f8531cad1b7fa536f10f590d403'
+body_hash: 'sha256:ebfd3cbfc48fdea7ba33f070da3453342824c865b181b53ce6cf1722d83d951b'
 related: []
 ---
 
@@ -33,7 +33,8 @@ turned out to be sound, the instrument was not trustworthy for part of the
 window. Third, some axes were not reached: conditional-page gating on the paged
 flow, submit-gating visibility on an unanswered required page, a deep walk of
 the real multi-page wizard content, and vertical behaviour at heights below
-twenty-four rows. Absence of a finding on those is absence of evidence. Note
+twenty-four rows. Absence of a finding on those is absence of evidence.
+
 The shared question and review screens were initially driven through the
 retired paged surface, which made every finding about them an inference. That
 inference has since been discharged: a harness surface for the live
