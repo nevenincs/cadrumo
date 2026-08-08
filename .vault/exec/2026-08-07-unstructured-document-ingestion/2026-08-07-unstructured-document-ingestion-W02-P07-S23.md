@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:8f6dff89d979d5aed2a13a3f1b0ff11171650f4b90f6a413a848959c03f0de26'
+body_hash: 'sha256:ad3271737dd6dbdd795a2233cd3ef77529fe67722e33267726f5eebc2914d70f'
 step_id: 'S23'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -115,6 +115,12 @@ runtime and failed identically, so they belong to the concurrent country-advisor
 work visible as uncommitted peer files in the same package. The remainder are
 operator-surface, calendar, registry and help-shape cases outside this surface.
 
-The verification lane readings above are of the working tree at the time of the
-run; the focused re-run is of the tree after the sweeper had landed this lane's
-source edits, which is byte-identical to HEAD for every file this Step touches.
+The two lane readings above are of the working tree at the time of the run. The
+focused re-run is also a working-tree reading, and the confirm module is not
+byte-identical to HEAD -- it carries uncommitted peer work -- so HEAD was
+measured separately rather than inferred, by materialising it into a scratch
+tree and running the same suites there:
+
+    git archive HEAD | tar -x -C <scratch>
+    python -m pytest src/cadrumo/application/ledger/tests/test_absent_identity_is_not_a_failed_role.py src/cadrumo/application/ledger/tests/test_direction_cross_check_at_the_confirm_boundary.py src/cadrumo/application/ledger/tests/test_direction_reaches_the_confirm_boundary.py src/cadrumo/application/ledger/tests/test_identity_roles.py -n0 -q -m "unit or integration"
+    39 passed in 21.94s
