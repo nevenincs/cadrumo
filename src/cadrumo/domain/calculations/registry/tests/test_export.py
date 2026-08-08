@@ -15,7 +15,7 @@ calculation tautologies.
 from __future__ import annotations
 
 import tomllib
-from typing import Any
+from typing import Any, get_args
 
 import pytest
 from pydantic import ValidationError
@@ -37,9 +37,36 @@ from .._export import (
     _padding_for_binding_data_type,
     export_fields_overlap,
 )
-from .._schema import DataBindingDefinition, ExportFieldDefinition
+from .._schema import CasillaFieldKind, DataBindingDefinition, ExportFieldDefinition
+from ._loader_directory_mode_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+#: Names the estado-de-cuentas axis would be declared under if it were ever
+#: modelled: the axis itself, and the four non-Normal regimes AEAT's Modelo 200
+#: page-000 sheet enumerates for the envelope discriminante.
+#:
+#: Scanned ONLY against closed typed declaration sets (see the guard below), never
+#: against registry prose or ids. A substring sweep of the registry tree matches 61
+#: files -- casilla labels quoting AEAT's own vocabulary, and unrelated bindings
+#: whose names contain "creditos" for deterioro de créditos -- so it would need a
+#: large exception allowlist and would detect nothing through the noise. The typed
+#: sets carry none of these words today, so scanning them needs no allowlist at
+#: all and stays keyed on the property rather than on a tally.
+_ACCOUNTS_REGIME_DECLARATION_TOKENS = frozenset(
+    {
+        "accounts_regime",
+        "aseguradora",
+        "credito",
+        "discriminante",
+        "entidad_credito",
+        "entity_regime",
+        "estado_cuentas",
+        "garantia_reciproca",
+        "inversion_colectiva",
+        "regimen_cuentas",
+    },
+)
 
 
 #: Minimum byte width of fixed-width header values that have a known length, so a
@@ -353,3 +380,148 @@ def test_justification_for_binding_data_type(
     justification: _ExportJustification,
 ) -> None:
     assert _justification_for_binding_data_type(data_type) == justification
+
+
+# ---------------------------------------------------------------------------
+# The Modelo 200 envelope discriminante — one value, two hardcoded authorities
+# ---------------------------------------------------------------------------
+
+
+def _modelo_200_envelope_discriminante_field() -> ExportFieldDefinition:
+    """Return the M200 page-000 field holding the envelope-tag discriminante byte.
+
+    Located by BYTE POSITION -- the single character at offset 6 of the page-000
+    record -- because that position is fixed by AEAT's published sheet while the
+    field's id and kind are exactly what the guards below exist to watch. Finding
+    it by id or by kind would make a rename or a re-kind pass vacuously.
+    """
+    revision = _committed_modelo("200").revisions["2024-y-siguientes"]
+    return next(
+        field
+        for layout in revision.export_layouts
+        for record in layout.records
+        if record.record_type == "page_000"
+        for field in record.fields
+        if field.offset == 6 and field.length == 1
+    )
+
+
+def _accounts_regime_declarations(declared: set[str]) -> list[str]:
+    """Return the tokens in ``declared`` that name the estado-de-cuentas axis.
+
+    Factored out of the scan so the matcher can be exercised on a token set that
+    does name the axis. A scan run only over a clean vocabulary cannot tell a
+    working matcher from one that never fires.
+    """
+    return sorted(
+        token
+        for token in declared
+        if any(candidate in token.lower().replace("-", "_") for candidate in _ACCOUNTS_REGIME_DECLARATION_TOKENS)
+    )
+
+
+def _discriminante_divergence_risks(field: ExportFieldDefinition) -> list[str]:
+    """Return the reasons ``field`` would put the two discriminante sites out of step.
+
+    Factored out of the guard so the detector can be exercised on a non-conforming
+    field as well as on the committed one. A guard that only ever reads data
+    satisfying it cannot distinguish a working detector from a no-op.
+    """
+    risks: list[str] = []
+    if field.kind is not CasillaFieldKind.LITERAL:
+        risks.append(
+            "the envelope discriminante became registry-driven data; the closing tag's computed "
+            "template still hardcodes its own discriminante character, so both sites must be moved "
+            "onto the new source together or the two tags will disagree",
+        )
+    elif field.literal != "0":
+        risks.append(
+            "the opening tag's discriminante literal changed; the closing tag's computed template "
+            "hardcodes the same character independently, so it must change with it",
+        )
+    return risks
+
+
+def test_the_discriminante_detector_reports_both_ways_the_sites_can_diverge() -> None:
+    """The detector must fire on a re-kinded field and on a changed literal.
+
+    The anti-vacuity control for the guard below. Both divergence shapes are
+    exercised because they are different failures: re-kinding moves the opening tag
+    onto a source the closing tag cannot see, while changing the literal leaves both
+    tags literal but disagreeing. A detector catching only one would leave the other
+    live while reading as covered.
+    """
+    conforming = _modelo_200_envelope_discriminante_field()
+    re_kinded = conforming.model_copy(update={"kind": CasillaFieldKind.DRAFT, "draft_attribute": "period_code"})
+    other_regime = conforming.model_copy(update={"literal": "A"})
+
+    assert _discriminante_divergence_risks(conforming) == []
+    assert _discriminante_divergence_risks(re_kinded), "a registry-driven discriminante must be reported"
+    assert _discriminante_divergence_risks(other_regime), "a non-Normal discriminante literal must be reported"
+
+
+def test_the_modelo_200_envelope_discriminante_stays_an_unmodelled_literal() -> None:
+    """The discriminante must stay a literal ``0`` until its regime axis is modelled.
+
+    AEAT's Modelo 200 page-000 sheet fixes offset 6 of both envelope tags as the
+    discriminante: ``0`` for Normal, Abreviado y PYMES, and ``A``, ``E``, ``I`` or
+    ``G`` for Aseguradoras, Entidades de crédito, Inversión colectiva and Garantía
+    recíproca respectively, "en función del estado de cuentas que se cumplimenta".
+
+    This application models no estado de cuentas at all, so it can only produce a
+    draft under the Normal regime and ``0`` is correct for every filer it serves --
+    not an arbitrary default. What makes that fragile is that the value is spelled
+    twice: here as a registry literal for the opening tag, and again as a hardcoded
+    character inside the closing tag's computed template. They are one value with
+    two authorities.
+
+    So this guard fails the moment either one changes shape, and its message names
+    both, because fixing one alone ships a fichero whose opening and closing tags
+    disagree about the filer's regime -- a divergence no completeness or parity gate
+    reads, since both tags would still be structurally well-formed.
+    """
+    assert _discriminante_divergence_risks(_modelo_200_envelope_discriminante_field()) == []
+
+
+def test_no_typed_declaration_channel_names_an_accounts_regime_concept() -> None:
+    """No closed typed set may declare the estado-de-cuentas axis while it is unmodelled.
+
+    The companion to the literal guard above, watching the other direction: that
+    guard fires when the discriminante field stops being a literal, and this one
+    fires when a typed channel capable of feeding it appears anywhere in the export
+    or binding schema -- a new ``draft_attribute`` token or a new binding source
+    kind -- even before any registry field binds it.
+
+    Both are scanned rather than one, because a modeller would plausibly land the
+    channel and the field binding in separate changes, and the window between them
+    is exactly when the two hardcoded discriminante sites would silently diverge.
+
+    The scan covers closed sets small enough to enumerate, so it needs no exception
+    allowlist and cannot rot into one.
+    """
+    declarable_draft_attributes = {
+        token
+        for member in get_args(ExportFieldDefinition.model_fields["draft_attribute"].annotation)
+        for token in get_args(member)
+    }
+    binding_source_kinds = {member.value for member in BindingSourceKind}
+
+    assert declarable_draft_attributes, "the draft-attribute set must be readable for this scan to mean anything"
+    assert binding_source_kinds, "the binding-source set must be readable for this scan to mean anything"
+
+    assert _accounts_regime_declarations(declarable_draft_attributes) == []
+    assert _accounts_regime_declarations(binding_source_kinds) == []
+
+
+def test_the_accounts_regime_scan_flags_a_channel_that_names_the_axis() -> None:
+    """The scan must flag a regime-named token and leave the real vocabulary alone.
+
+    The anti-vacuity control for the scan above. Without it, a matcher that never
+    fires -- a mis-normalised token, or a token set that silently became empty --
+    would read as a clean tree. The negative half matters equally: the real
+    ``draft_attribute`` and binding-source vocabulary must not be flagged, or the
+    scan would be permanently red and get deleted.
+    """
+    assert _accounts_regime_declarations({"estado_cuentas"}) == ["estado_cuentas"]
+    assert _accounts_regime_declarations({"profile-accounts-regime"}) == ["profile-accounts-regime"]
+    assert _accounts_regime_declarations({"filing_year", "period_code", "ledger_iva_aggregation"}) == []

@@ -105,6 +105,11 @@ def _as_bank_transaction(*, category: IvaCategory, member_state: EUMemberState |
             "iva_amount": Decimal("0"),
             "iva_category": category,
             "counterparty_eu_member_state": member_state,
+            # Where the acquirer is established and where it is VAT-identified
+            # agree in this scenario. They are still supplied separately: the
+            # art. 25 gate reads only the second, and the parity this module
+            # asserts is that BOTH feeds read the same one.
+            "counterparty_identification_state": member_state,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
         },
     )
@@ -121,6 +126,7 @@ def _as_invoice(*, category: IvaCategory, country: str, tax_id: str) -> Invoice:
             "counterparty_name": "GmbH Berlin",
             "counterparty_tax_id": tax_id,
             "counterparty_country": country,
+            "counterparty_identification_state": country.lower() if country != "US" else None,
             "base_total": format(_BASE, "f"),
             "iva_total": "0.00",
             "grand_total": format(_BASE, "f"),

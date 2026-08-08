@@ -2307,12 +2307,6 @@ cli:
           qual cosa només amplia el recorregut: un parell absent no prova que no es
           presentés res.'
         list_help: Llistar declaracions presentades sense descarregar artefactes
-        pull_all_help: Descarregar en una sola passada l'historial que AEAT té d'aquest
-          contribuent.
-        pull_all_limit_help: Limita quantes declaracions es capturen en aquesta passada.
-        pull_all_pairs_refused: '{count} parell(s) de model/exercici no s''han pogut
-          llegir i NO s''han comptat com a buits: {pairs}. Torneu a executar l''ordre
-          per reintentar-ho; una lectura rebutjada no prova que no es presentés res.'
         pull_help: Descàrrega dades de declaracions presentades del registre autenticat
           d'AEAT.
         pull_modelo_help: Limita aquesta descàrrega a aquest model.
@@ -5069,11 +5063,7 @@ cli:
         ledger_view: Veure el detall d'una entrada del llibre.
         live_filed_capture: Descarregar declaracions presentades en viu des de l'AEAT.
         live_filed_capture_sources: Mostrar les fonts disponibles per a la descàrrega.
-        live_filed_discover: Mostrar quin historial recorreria una descàrrega completa,
-          sense capturar res.
         live_filed_list: Llistar declaracions presentades capturades de l'AEAT.
-        live_filed_pull_all: Descarregar l'historial d'AEAT i conciliar la cartera
-          d'IVA i les notificacions.
         modelo_audit_check: Comprova les evidències incloses d'una revisió de declaració.
         modelo_audit_export: Exporta l'auditoria d'evidències d'una revisió de declaració.
         modelo_audit_show: Mostra l'auditoria d'evidències d'una revisió de declaració.
@@ -5707,6 +5697,8 @@ docs:
         que han adoptat el ``SchemaEnvelope`` embolcallen el seu resultat com a ``{envelope}``.
         Les ordres encara no migrades emeten la seva càrrega directament.
       output_contract_heading: Contracte de sortida TTY i JSON
+      table_code_header: Codi
+      table_meaning_header: Significat
       title: Codis de sortida i contracte de sortida
     command:
       bare_payload_note: Aquesta ordre emet una càrrega simple (encara sense embolcall).
@@ -5786,6 +5778,7 @@ docs:
       option_optional: Opció, opcional.
       option_required: Opció, obligatòria.
     schemas:
+      group_entries: '{count} entrades: {keys}'
       summary: Les {count} rutes d'ordre següents tenen un ``OutputSchema`` registrat.
         Les superfícies de crida de retorn de grup ({groups}) es llisten a part.
       title: Registre d'esquemes de sortida
@@ -7387,25 +7380,6 @@ live:
     target_period_year_mismatch: L'any objectiu no coincideix amb l'exercici del període
       objectiu.
     year_range_invalid: El rang d'exercicis indicat no és vàlid.
-  filed:
-    pull_all:
-      denominator_note_profile: Mesurat davant {expected} parell(s) que les dades
-        declarades pel contribuent esperen. Uns altres {offered_only} parell(s) provenen
-        només de la llista d'opcions que ofereix AEAT i no sustenten cap afirmació
-        de cobertura.
-      denominator_note_register_only: 'Sense denominador específic del contribuent:
-        els {offered_only} parell(s) recorreguts provenen de la llista d''opcions
-        que ofereix AEAT, l''abast de la qual per a aquest NIF no està confirmat.
-        Aquesta passada no mesura res.'
-      expected_but_not_found: 'El vostre perfil declarat espera una presentació en
-        {count} parell(s) de model/exercici on el registre d''AEAT no en va retornar
-        cap: {pairs}. Comproveu si es van arribar a presentar.'
-      found_more_than_expected: El registre d'AEAT conté {raw_count} presentacions
-        del model {modelo} {period} {ejercicio}; s'ha conservat el registre més recent
-        ({expediente}) i {superseded} anterior(s) han quedat substituïdes.
-      recapture_divergence: 'Tornar a capturar el model {modelo} {period} {ejercicio}
-        ha canviat {count} valor(s) de casella observats anteriorment: {casillas}.
-        AEAT pot tenir una declaració rectificada.'
 llm:
   evidence:
     consent:
@@ -67533,10 +67507,6 @@ modelo:
                 title: null
           field:
             label: null
-overview:
-  no_aeat_history: Aquest perfil no conté cap prova de presentació confirmada per
-    AEAT. Executeu `aeat app live filed pull-all` per descarregar l'historial que
-    AEAT en té.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 61 LIRPF)

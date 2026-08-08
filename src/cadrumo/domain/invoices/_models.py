@@ -39,6 +39,7 @@ from ..iva import (
     IvaRateNotFoundError,
     OssIossRegime,
     TransactionKind,
+    vat_identification_state_for_printed_tax_identifier,
 )
 from ._enums import (
     InvoiceClass,
@@ -204,6 +205,19 @@ def _normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, obje
                 raise InvoiceValidationError("operation_date_role must be an InvoiceOperationDateRole") from exc
         else:
             payload["operation_date_role"] = None
+    if "counterparty_identification_state" in payload and isinstance(payload["counterparty_identification_state"], str):
+        stripped = payload["counterparty_identification_state"].strip()
+        if stripped:
+            try:
+                payload["counterparty_identification_state"] = EUMemberState(stripped.lower())
+            except ValueError as exc:
+                raise InvoiceValidationError(
+                    "counterparty_identification_state must be an EUMemberState",
+                ) from exc
+        else:
+            # An empty string is not a Member State and must not become one. It
+            # is the same absence a missing key is, and absence stays absence.
+            payload["counterparty_identification_state"] = None
     if "iva_category" in payload and isinstance(payload["iva_category"], str):
         stripped = payload["iva_category"].strip()
         if stripped:
@@ -315,6 +329,22 @@ def _normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obj
             payload["counterparty_tax_id"] = validate_iva_number(tax_id_raw, country)
         else:
             payload["counterparty_tax_id"] = tax_id_raw
+    # Every structured creation path -- bulk import, the wizard, the CLI, the
+    # ingestion mapper -- reaches this one normaliser, so reading the
+    # identification off the identifier HERE is what makes the fact present on
+    # all of them rather than on whichever remembered to set it.
+    #
+    # The source is the printed VAT number's own prefix and nothing else. The
+    # country sitting beside it in this same function is an address and is
+    # deliberately not consulted: that substitution is the defect this field
+    # exists to close. A caller that supplies the fact explicitly wins, because
+    # an operator answering for a counterparty knows things a document does not
+    # print.
+    if payload.get("counterparty_identification_state") is None:
+        printed = payload.get("counterparty_tax_id")
+        payload["counterparty_identification_state"] = (
+            vat_identification_state_for_printed_tax_identifier(printed) if isinstance(printed, str) else None
+        )
     return payload
 
 
@@ -567,6 +597,17 @@ class Invoice(BaseModel):
     counterparty_name: str = Field(min_length=1)
     counterparty_tax_id: str | None = Field(default=None, min_length=1)
     counterparty_country: str = Field(min_length=2, max_length=2)
+    # Which Member State VAT-IDENTIFIES the counterparty, read from the prefix
+    # of the VAT number the document printed. A DIFFERENT fact from
+    # `counterparty_country` above, which is an address -- establishment -- and
+    # never a source for this one: a Spanish-established acquirer can hold a
+    # German VAT number, and a German-established one can purchase under a
+    # Spanish NIF-IVA. Ley 37/1992 art. 25 exempts on this fact, not on the
+    # address, so deriving one from the other lands in money in both
+    # directions. `None` means the identification was not established -- never
+    # that the party is identified nowhere, and above all never that it is
+    # identified in Spain.
+    counterparty_identification_state: EUMemberState | None = None
     # RD 1619/2012 art. 6.1.e: "Domicilio, tanto del obligado a expedir
     # factura como del destinatario de las operaciones." Named by legal role,
     # not by party-relative-to-us like `counterparty_*` above, because the

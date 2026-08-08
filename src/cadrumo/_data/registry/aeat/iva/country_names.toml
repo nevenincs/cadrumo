@@ -125,6 +125,49 @@
 #     the country resolver's input already; accepting it here too would put two
 #     authorities on the same string.
 #
+# WHAT THIS TABLE NOW ALSO DOES, AND WHY THAT RAISES THE STAKES ON THE LIST
+# ABOVE. This file began as a printed-NAME vocabulary, and the paragraph above
+# argues its boundaries on that basis: a country absent from it simply did not
+# match a printed name, and the country a document stated as a CODE resolved
+# regardless, because the country resolver checked the code's SHAPE. That is no
+# longer true. The resolver was narrowed to match the closed vocabulary instead,
+# because a shape check resolved any well-formed pair to a third country -- so
+# "XX", "ZZ" and "QQ", which ISO reserves to name no country at all, settled a
+# party outside the EU and, on the issued side, zero-rated the operation
+# silently.
+#
+# The alpha-2 column of this table is therefore now part of the vocabulary the
+# COUNTRY RESOLVER matches against, not only the target of a name lookup. The
+# consequence is direct and it is a cost: a real jurisdiction absent from this
+# table no longer resolves to a third country from its printed or stated code
+# either. It still degrades to "not established" rather than to a wrong answer,
+# which is the safe direction and was the point -- but the population paying
+# that cost grew from "documents printing an unlisted NAME" to "documents naming
+# an unlisted country at all", and this table's own inclusion argument was
+# written before that was so.
+#
+# WHICH AXIS SHOULD ACTUALLY BOUND WHICH. The two questions have different
+# authorities and different costs, and the right resolution is to stop answering
+# them from one list:
+#   * WHICH PRINTED NAMES RESOLVE is a judgement about issuer typography. Every
+#     entry costs reviewer attention and carries two real failure modes -- two
+#     names folding together, and one name sitting inside another -- and the
+#     loader refuses the whole table on a single collision. Curated and narrow is
+#     correct here, and the argument above stands unchanged.
+#   * WHICH CODES DENOTE A COUNTRY is not a judgement at all. ISO 3166-1 is a
+#     closed external register, so membership is a lookup, and an entry costs
+#     nothing but the row: no folding, no containment, no collision the code
+#     itself does not already resolve. Curating this axis buys no safety and
+#     refuses real jurisdictions.
+# So the code axis wants a complete assigned-code register of its own -- alpha-2
+# beside alpha-3, no names -- with this table left to answer the name question it
+# was built for. Both columns must move together whenever that lands: a widened
+# alpha-2 axis without the matching alpha-3 correspondence would let a document
+# stating "TH" establish what one stating "THA" does not, which is exactly the
+# leg asymmetry the narrowing closed. Until it lands, this list bounds both, and
+# a country missing from it is a catalogue gap the reader is told about by name
+# rather than a silent blank.
+#
 # GROUNDING NOTE, HONEST. The code axis is ISO 3166-1 alpha-2, and the English
 # and endonym names follow its short-name register; the Spanish names follow the
 # same register's Spanish forms and ordinary Spanish usage. None of this is tax

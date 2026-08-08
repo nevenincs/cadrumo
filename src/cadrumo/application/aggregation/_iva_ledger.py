@@ -170,8 +170,16 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     MISSING_EUR_TAX_SUBSTRATE = "missing_eur_tax_substrate"
     INVALID_PRORRATA_REFERENCE = "invalid_prorrata_reference"
     UNSUPPORTED_IVA_CATEGORY = "unsupported_iva_category"
-    MISSING_COUNTERPARTY_EU_MEMBER_STATE = "missing_counterparty_eu_member_state"
-    DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION = "domestic_counterparty_on_intra_community_transaction"
+    # Ley 37/1992 art. 25 exempts on the acquirer's VAT IDENTIFICATION in
+    # another Member State, not on where it is established, so these two read
+    # `counterparty_identification_state`. Keyed on establishment they landed in
+    # money in BOTH directions: a Spanish-established acquirer holding a German
+    # VAT number was refused an exemption art. 25 grants, and a
+    # German-established acquirer purchasing under a Spanish NIF-IVA had a
+    # domestic supply zero-rated. Absent identification refuses here rather than
+    # falling back to the country -- that fallback IS the defect.
+    MISSING_COUNTERPARTY_IDENTIFICATION_STATE = "missing_counterparty_identification_state"
+    DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION = "domestic_identification_on_intra_community_transaction"
     EU_MEMBER_STATE_ON_EXPORT_TRANSACTION = "eu_member_state_on_export_transaction"
     CASH_ACCOUNTING_EXCLUDED_CATEGORY = "cash_accounting_excluded_category"
 
@@ -1312,6 +1320,7 @@ def _classify_iva_transaction(
             transaction_id=transaction_id,
             category=explicit_category,
             eu_member_state=transaction.counterparty_eu_member_state,
+            identification_state=transaction.counterparty_identification_state,
         )
         if d5_issue is not None:
             return _IvaTransactionOutcome(gate_issue=d5_issue)
@@ -1621,27 +1630,52 @@ def _validate_intracom_export_counterparty(
     transaction_id: str,
     category: IvaCategory,
     eu_member_state: EUMemberState | None,
+    identification_state: EUMemberState | None,
 ) -> IvaLedgerAggregationIssue | None:
     """Return a gate issue when the counterparty/category coupling is violated.
 
     Rules:
-    - ``INTRA_COMMUNITY_SUPPLY`` requires a non-ES ``EUMemberState``.
+    - ``INTRA_COMMUNITY_SUPPLY`` requires a non-ES ``identification_state``.
     - Export and export-assimilated categories must carry no ``EUMemberState``.
+
+    The two rules read DIFFERENT facts, deliberately. Ley 37/1992 art. 25
+    exempts on the acquirer holding a VAT identification assigned by another
+    Member State and says nothing about where it has its sede, so the
+    intra-community rule reads identification and establishment does not enter
+    it at all. The export rule is the one genuinely about place -- an export
+    leaves the Union -- so it keeps reading establishment.
+
+    Absent identification refuses rather than falling back to
+    ``eu_member_state``. That fallback is precisely the defect this shape
+    replaced: it read an address fact as a registration fact, over-declaring a
+    Spanish-established acquirer holding a German VAT number and silently
+    under-declaring a German-established acquirer purchasing under a Spanish
+    NIF-IVA.
     """
     if category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
-        if eu_member_state is None:
+        if identification_state is None:
             return IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
-                reason=IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_EU_MEMBER_STATE,
-                detail="intra-community supply requires a non-ES counterparty EU member state",
-            )
-        if eu_member_state is EUMemberState.ES:
-            return IvaLedgerAggregationIssue(
-                transaction_id=transaction_id,
-                reason=IvaLedgerAggregationIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION,
+                reason=IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE,
                 detail=tr(
-                    "aggregation.iva_ledger.errors.domestic_counterparty_on_intra_community_transaction",
-                    default="Spanish counterparties are not valid for intra-community transactions.",
+                    "aggregation.iva_ledger.errors.missing_counterparty_identification_state",
+                    default=(
+                        "An intra-community supply is exempt on the acquirer's VAT identification in "
+                        "another Member State. Record which Member State VAT-identifies this "
+                        "counterparty; its country of establishment cannot answer this."
+                    ),
+                ),
+            )
+        if identification_state is EUMemberState.ES:
+            return IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION,
+                detail=tr(
+                    "aggregation.iva_ledger.errors.domestic_identification_on_intra_community_transaction",
+                    default=(
+                        "A counterparty purchasing under a Spanish VAT identification is not an "
+                        "intra-community acquirer, whatever its country of establishment."
+                    ),
                 ),
             )
     if (
@@ -1675,6 +1709,7 @@ def validate_iva_ledger_counterparty_category(transaction: Transaction) -> IvaLe
         transaction_id=transaction.transaction_id,
         category=category,
         eu_member_state=transaction.counterparty_eu_member_state,
+        identification_state=transaction.counterparty_identification_state,
     )
 
 

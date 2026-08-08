@@ -2143,11 +2143,6 @@ cli:
           scoped to the authenticated NIF is unconfirmed, so it only widens the walk:
           a pair absent from it is no proof that nothing was filed.'
         list_help: List filed declaration rows without downloading artefacts
-        pull_all_help: Pull this taxpayer's AEAT-held history in one sweep.
-        pull_all_limit_help: Limit how many declaraciones this sweep captures.
-        pull_all_pairs_refused: '{count} modelo/ejercicio pair(s) could not be read
-          and were NOT reported as empty: {pairs}. Re-run to retry; a refusal is not
-          evidence that nothing was filed.'
         pull_help: Pull filed-declaration data from the authenticated AEAT register.
         pull_modelo_help: Limit this pull to this modelo.
         pull_sources_help: Pull the filed observations required by a target filing's
@@ -4737,11 +4732,7 @@ cli:
         ledger_view: Inspect one transaction.
         live_filed_capture: Pull a read-only observation from AEAT.
         live_filed_capture_sources: List the sources a filed pull can read.
-        live_filed_discover: Show which history a full pull would walk, capturing
-          nothing.
         live_filed_list: List locally captured filed-return observations.
-        live_filed_pull_all: Pull the AEAT-held history and reconcile the IVA wallet
-          and notificaciones.
         modelo_audit_check: Check bundled evidence for a filing revision.
         modelo_audit_export: Export the evidence audit for a filing revision.
         modelo_audit_show: Show the evidence audit for a filing revision.
@@ -5351,6 +5342,8 @@ docs:
         the ``SchemaEnvelope`` wrap their result as ``{envelope}``. Commands not yet
         migrated emit their payload directly.
       output_contract_heading: TTY and JSON output contract
+      table_code_header: Code
+      table_meaning_header: Meaning
       title: Exit codes and output contract
     command:
       bare_payload_note: This command emits a bare payload (not yet envelope-wrapped).
@@ -5424,6 +5417,7 @@ docs:
       option_optional: Option, optional.
       option_required: Option, required.
     schemas:
+      group_entries: '{count} entries: {keys}'
       summary: The following {count} command paths have a registered ``OutputSchema``.
         Group-callback surfaces ({groups}) are listed separately.
       title: Output schema registry
@@ -6930,23 +6924,6 @@ live:
     target_period_year_mismatch: The target year does not match the target period's
       filing year.
     year_range_invalid: From-year must be less than or equal to to-year.
-  filed:
-    pull_all:
-      denominator_note_profile: Measured against {expected} pair(s) the taxpayer's
-        own declared facts expect. A further {offered_only} pair(s) came only from
-        AEAT's offered option list and support no coverage claim.
-      denominator_note_register_only: 'No taxpayer-specific denominator: all {offered_only}
-        walked pair(s) came from AEAT''s offered option list, whose scoping to this
-        NIF is unconfirmed. This run measures nothing.'
-      expected_but_not_found: 'Your declared profile expects a filing for {count}
-        modelo/ejercicio pair(s) where AEAT''s register returned none: {pairs}. Check
-        whether these were filed.'
-      found_more_than_expected: AEAT's register holds {raw_count} filings for modelo
-        {modelo} {period} {ejercicio}; the most recent registration ({expediente})
-        was kept and {superseded} earlier one(s) were superseded.
-      recapture_divergence: 'Re-capturing modelo {modelo} {period} {ejercicio} changed
-        {count} previously observed casilla value(s): {casillas}. AEAT may hold a
-        corrected filing.'
 llm:
   evidence:
     consent:
@@ -67081,9 +67058,6 @@ modelo:
                 title: null
           field:
             label: null
-overview:
-  no_aeat_history: This profile holds no filing evidence AEAT confirmed. Run `aeat
-    app live filed pull-all` to fetch the history AEAT holds for it.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50 % prorrata (Art. 61 LIRPF) applied for

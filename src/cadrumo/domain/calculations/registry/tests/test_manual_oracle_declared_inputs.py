@@ -73,9 +73,11 @@ def _payload(name: str) -> ManualWorkedExamplePayload:
 #: Payloads that have not yet declared their scenario inputs, each with its reason.
 #:
 #: A reason states WHERE the scenario facts currently live, because that is what a
-#: migration has to move. Five payloads are named by no test's source at all — they
-#: are reached through a constructed filename — and locating the consuming fixture
-#: is itself the first step of migrating them.
+#: migration has to move. Some payloads are named by no test's source at all — they
+#: are reached through a constructed filename — and for those, locating the consuming
+#: fixture is itself the first step of migrating them; their reasons say so. No count
+#: is stated here for the same reason none is asserted: it would be wrong the moment a
+#: payload migrates, and the entries themselves are the inventory.
 _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
     "modelo-100-2020-estimacion-directa-simplificada.json": (
         "scenario facts still hand-written in test_m100_2020_estimacion_directa_manual_worked_example.py"

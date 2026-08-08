@@ -2251,11 +2251,6 @@ cli:
           szélesíti a bejárást: egy hiányzó pár nem bizonyítja, hogy semmit sem nyújtottak
           be.'
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
-        pull_all_help: Egy menetben letölti az adózó AEAT-nál tárolt előzményeit.
-        pull_all_limit_help: Korlátozza, hány bevallást rögzít ez a menet.
-        pull_all_pairs_refused: '{count} modelo/ejercicio pár nem volt olvasható,
-          és NEM üresként jelentettük őket: {pairs}. Futtassa újra az újrapróbálkozáshoz;
-          az elutasítás nem bizonyítja, hogy semmit sem nyújtottak be.'
         pull_help: Letölti a benyújtott nyilatkozatok adatait a hitelesített AEAT
           nyilvántartásból.
         pull_modelo_help: Korlátozza ezt a letöltést erre a modellre.
@@ -5037,11 +5032,7 @@ cli:
         ledger_view: Egyetlen tranzakció megtekintése.
         live_filed_capture: Csak olvasható megfigyelés letöltése az AEAT-ből.
         live_filed_capture_sources: Letöltési forráslehetőségek listázása.
-        live_filed_discover: Megjeleníti, mely előzményeket járná be egy teljes letöltés,
-          rögzítés nélkül.
         live_filed_list: Helyileg rögzített benyújtott bevallás-megfigyelések listázása.
-        live_filed_pull_all: Letölti az AEAT-nál tárolt előzményeket, és egyezteti
-          az áfa-tárcát és az értesítéseket.
         modelo_audit_check: Ellenőrzi egy bevallásrevízió csomagolt bizonyítékait.
         modelo_audit_export: Exportálja egy bevallásrevízió bizonyíték-auditját.
         modelo_audit_show: Megjeleníti egy bevallásrevízió bizonyíték-auditját.
@@ -5662,6 +5653,8 @@ docs:
         szerkezetet már használó parancsok az eredményüket ``{envelope}`` alakban
         csomagolják. A még át nem állított parancsok közvetlenül adják vissza az adataikat.
       output_contract_heading: TTY és JSON kimeneti szerződés
+      table_code_header: Kód
+      table_meaning_header: Jelentés
       title: Kilépési kódok és kimeneti szerződés
     command:
       bare_payload_note: Ez a parancs csupasz adatot ad vissza (még nincs burkolatba
@@ -5739,6 +5732,7 @@ docs:
       option_optional: Kapcsoló, opcionális.
       option_required: Kapcsoló, kötelező.
     schemas:
+      group_entries: '{count} bejegyzés: {keys}'
       summary: Az alábbi {count} parancsútvonalhoz tartozik bejegyzett ``OutputSchema``.
         A csoportszintű visszahívási felületek ({groups}) külön szerepelnek.
       title: Kimeneti sémák nyilvántartása
@@ -7277,23 +7271,6 @@ live:
     target_period_year_mismatch: A célidőszak éve nem egyezik.
     year_range_invalid: A kezdő évnek kisebbnek vagy egyenlőnek kell lennie a záró
       évvel.
-  filed:
-    pull_all:
-      denominator_note_profile: '{expected} pár alapján mérve, amelyeket az adózó
-        saját bejelentett adatai várnak. További {offered_only} pár kizárólag az AEAT
-        által felajánlott listából származik, és nem támaszt alá lefedettségi állítást.'
-      denominator_note_register_only: 'Nincs adózóspecifikus nevező: mind a {offered_only}
-        bejárt pár az AEAT által felajánlott listából származik, amelynek e NIF-re
-        való szűkítése nincs megerősítve. Ez a menet semmit sem mér.'
-      expected_but_not_found: 'A bejelentett profilja {count} modelo/ejercicio pár
-        esetén vár benyújtást, ahol az AEAT nyilvántartása egyet sem adott vissza:
-        {pairs}. Ellenőrizze, benyújtották-e ezeket.'
-      found_more_than_expected: Az AEAT nyilvántartása {raw_count} benyújtást tartalmaz
-        a {modelo} modelo {period} {ejercicio} időszakára; a legutóbbi bejegyzés ({expediente})
-        maradt meg, és {superseded} korábbi felülíródott.
-      recapture_divergence: 'A {modelo} modelo {period} {ejercicio} újbóli rögzítése
-        {count} korábban megfigyelt casilla-értéket változtatott meg: {casillas}.
-        Az AEAT-nál javított bevallás lehet.'
 llm:
   evidence:
     consent:
@@ -67663,10 +67640,6 @@ modelo:
                 title: null
           field:
             label: null
-overview:
-  no_aeat_history: Ez a profil nem tartalmaz az AEAT által megerősített benyújtási
-    bizonyítékot. Futtassa az `aeat app live filed pull-all` parancsot az AEAT-nál
-    tárolt előzmények letöltéséhez.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50%-os arányosítás alkalmazva (LIRPF 61.

@@ -48,7 +48,13 @@ def _revision():
     return resources().modelos.authority.snapshot("303", filing_year=2024, period="1T").revision
 
 
-def _invoice(*, category: IvaCategory, country: str, tax_id: str = "DE811907980") -> Invoice:
+def _invoice(
+    *,
+    category: IvaCategory,
+    country: str,
+    tax_id: str = "DE811907980",
+    identification: str | None = "de",
+) -> Invoice:
     """One issued invoice carrying a single exempt line and a declared category.
 
     A real aggregate rather than a stand-in: the model re-checks its own totals
@@ -64,6 +70,11 @@ def _invoice(*, category: IvaCategory, country: str, tax_id: str = "DE811907980"
             "counterparty_name": "Cliente Exterior",
             "counterparty_tax_id": tax_id,
             "counterparty_country": country,
+            # Ley 37/1992 art. 25 exempts on the acquirer's VAT IDENTIFICATION,
+            # so the screen reads this rather than the address above. A US
+            # counterparty prints no Member State VAT number, and absent stays
+            # absent -- it is never resolved from the country.
+            "counterparty_identification_state": identification,
             "base_total": format(_BASE, "f"),
             "iva_total": "0.00",
             "grand_total": format(_BASE, "f"),
@@ -121,7 +132,12 @@ def test_an_export_base_reaches_casilla_60() -> None:
     and fail the pair.
     """
     resolved = _resolved_for(
-        _invoice(category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country="US", tax_id="US987654321")
+        _invoice(
+            category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+            country="US",
+            tax_id="US987654321",
+            identification=None,
+        )
     )
 
     assert resolved.get(_CASILLA_60) == _BASE, (
@@ -139,7 +155,7 @@ def test_a_domestic_exemption_is_not_routed_to_either_base_casilla() -> None:
     routing keyed on "the cuota is zero" rather than on the declared category
     would put this base in casilla 59 and over-declare intra-community volume.
     """
-    resolved = _resolved_for(_invoice(category=IvaCategory.DOMESTIC_EXEMPT, country="ES", tax_id="ESB12345674"))
+    resolved = _resolved_for(_invoice(category=IvaCategory.DOMESTIC_EXEMPT, country="ES", tax_id="ESB12345674", identification="es"))
 
     assert not resolved.get(_CASILLA_59)
     assert not resolved.get(_CASILLA_60)
@@ -156,7 +172,12 @@ def test_an_intra_community_supply_to_a_third_country_is_not_routed() -> None:
     received it.
     """
     resolved = _resolved_for(
-        _invoice(category=IvaCategory.INTRA_COMMUNITY_SUPPLY, country="US", tax_id="US987654321"),
+        _invoice(
+            category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            country="US",
+            tax_id="US987654321",
+            identification=None,
+        ),
     )
 
     assert not resolved.get(_CASILLA_59), "a third-country destination was routed as an intra-community supply"
@@ -172,13 +193,23 @@ def test_the_aggregate_already_refuses_an_intra_community_supply_to_spain() -> N
     return.
     """
     with pytest.raises(ValidationError):
-        _invoice(category=IvaCategory.INTRA_COMMUNITY_SUPPLY, country="ES", tax_id="ESB12345674")
+        _invoice(
+            category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            country="ES",
+            tax_id="ESB12345674",
+            identification="es",
+        )
 
 
 def test_an_export_claimed_to_a_member_state_is_not_routed() -> None:
     """The mirror coupling: an export leaves the Union, so an EU counterparty contradicts it."""
     resolved = _resolved_for(
-        _invoice(category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country="FR", tax_id="FR12345678901")
+        _invoice(
+            category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+            country="FR",
+            tax_id="FR12345678901",
+            identification="fr",
+        )
     )
 
     assert not resolved.get(_CASILLA_60), "an EU counterparty was routed as a third-country export"

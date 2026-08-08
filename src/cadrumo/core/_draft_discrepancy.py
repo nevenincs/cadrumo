@@ -140,3 +140,26 @@ class DraftDiscrepancyKind(StrEnum):
     is established in decides the IVA treatment of the operation, and confirming
     past an undetermined one picks the majority answer by omission.
     """
+
+    PARTY_ATTRIBUTION_CONTRADICTED = "party_attribution_contradicted"
+    """A party's address value is printed inside the OTHER party's block.
+
+    The transposition case, caught by the document's own layout: the value was
+    read correctly and anchors perfectly, and it sits under the heading that
+    assigns the other side. Nothing else in the reading path can see this,
+    because every other check asks whether a value is on the page and this asks
+    whose it is.
+
+    Reported rather than corrected. Moving the value to the block containing it
+    would replace the reader's unverified assignment with the resolver's, and
+    both rest on one reading of one document; which of the two is wrong is not
+    decidable here, because the blocks may have been swapped or the value may
+    have been printed in the wrong place.
+
+    Blocking on the sibling terms, and this is the case where blocking earns its
+    cost most clearly: a transposition places both parties in territories
+    neither is established in while every figure closes and every anchor holds,
+    so the draft is clean on its face. It fires only on positive evidence of a
+    swap -- a value found in the other block and not its own -- never on a
+    document the layout simply cannot separate, which stays an advisory.
+    """
