@@ -5,45 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:ac1d963653be860e3f770e31e08bc360b959e43054a2ba8c5b5eb854af5d39fd'
+body_hash: 'sha256:f4706c2778dbb602a2a62b4a33a50ef38193bce97cea6f9c0fa08c860c653278'
 step_id: 'S11'
 related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace aeat-liabilities-sanciones with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S11 and 2026-08-07-aeat-liabilities-sanciones-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Wire aeat app live deudas list, view and latest into the app live command group, matching the expedientes latest, list, view verb shape exactly and ## Scope
-
-- `src/cadrumo/entrypoints/cli` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Wire aeat app live deudas list, view and latest into the app live command group, matching the expedientes latest, list, view verb shape exactly
 
 ## Scope
@@ -52,23 +18,43 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Verify rather than author: the wiring for this row was already on disk.
+- Confirm the command family is mounted on the live app group and that its verb
+  shape matches the sibling expedientes family exactly, which is the row's
+  stated acceptance criterion.
 
 ## Outcome
 
+`register_deudas_commands` is imported in
+`src/cadrumo/entrypoints/cli/_app_live.py` and invoked there with the
+active-bucket resolver, mounting the family under `deudas`.
+
+The verb shape matches the expedientes family on the three read verbs, and
+diverges from it deliberately in one respect: expedientes carries a `pull`
+verb and deudas does not. That is not an incomplete match. Fetching the debts
+consulta needs an operator-authorised specimen of that AEAT page, and the
+adapter's read-landing guard refuses every landing until one exists, so a
+`pull` verb here would be a surface that cannot legally execute. The row asks
+for the list, view and latest shapes to match, and they do.
+
+The registration takes no auth preflight, which is correct rather than an
+omission: every verb in the family reads persisted bucket storage and none
+crosses a wire, so there is no live session to preflight.
+
 ## Verification
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+    rg -n "deudas" src/cadrumo/entrypoints/cli/_app_live.py
+    61:from ._app_live_deudas_cli import register_deudas_commands
+    1631:register_deudas_commands(app, active_bucket_id=active_bucket_id_or_refuse)
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+    uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_live_deudas_verbs.py -m integration -n0 -q
+    8 passed in 6.97s
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+One of those eight, asserting the family exposes exactly list, view and latest,
+is the direct gate on this row's verb shape.
 
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The content predates this record and landed in commit `ed09a6dd4b`
+("feat(cadrumo): land the in-flight source work"), a bare whole-index commit
+whose subject names neither deudas nor this row.

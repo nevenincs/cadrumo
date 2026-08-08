@@ -5,45 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:ccab628298a689de4c5a3953f474fce8d82bd226e2bd38ec2dd8bcd34b3be232'
+body_hash: 'sha256:e32e69f690b598f4fc686ceb46b0753c0231b8abb9322266a39c18a47091b325'
 step_id: 'S23'
 related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace aeat-liabilities-sanciones with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S23 and 2026-08-07-aeat-liabilities-sanciones-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Author real es, en, ca and hu values for the new deudas CLI help and label keys via python -m dev.locales set, then scaffold and scaffold --check clean. Lands as ONE unit with P04.S10 through S12 because the codebase-to-locale parity gate is tree-wide and immediate, so no ordering exists in which the CLI rows are green before these values exist in all four catalogues. The original en.yml and hu.yml peer-WIP blocker is discharged and ## Scope
-
-- `src/cadrumo/locales` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Author real es, en, ca and hu values for the new deudas CLI help and label keys via python -m dev.locales set, then scaffold and scaffold --check clean. Lands as ONE unit with P04.S10 through S12 because the codebase-to-locale parity gate is tree-wide and immediate, so no ordering exists in which the CLI rows are green before these values exist in all four catalogues. The original en.yml and hu.yml peer-WIP blocker is discharged
 
 ## Scope
@@ -52,23 +18,77 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Establish that this row was NOT complete, against a prior reading that it
+  was. All five keys carried the locales scaffold's self-referencing
+  placeholder, value byte-identical to the dotted key, in all four catalogues.
+- Author real values for all five keys in all four catalogues through the
+  locales CLI, never by editing a catalogue file.
+- Refuse any cross-locale collision before writing, since a value equal to
+  another locale's value for the same key is counted untranslated by the
+  honesty ratchet.
+- Stage the result through the apply-cached drive, because the catalogues
+  acquired a peer's Catalan content while the writes were running.
 
 ## Outcome
 
+All twenty values are authored and no key carries a placeholder. Spanish is the
+source; Catalan translates the domain noun as the shipped Catalan catalogue
+already does for its sibling family; Hungarian follows its sibling block's
+shape. No two locales share a value for any key.
+
+The prior reading that this row was complete came from
+`python -m dev.locales scaffold --check` reporting the catalogues ok. That
+command measures PARITY, which held: all five keys existed in all four files.
+It does not measure whether a value is real, and all twenty were the
+placeholder. The gate that measures that is the translation-honesty ratchet,
+and it was red naming these keys.
+
+So the tree was carrying the exact state this row exists to prevent: five `tr`
+keys live in source with no real value behind them in any language, and the
+one command consulted reported ok.
+
 ## Verification
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+Before, per key and catalogue:
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+    cli.app.live.deudas.app_help  en=SELF-REFERENCING-PLACEHOLDER es=SELF-REFERENCING-PLACEHOLDER ca=SELF-REFERENCING-PLACEHOLDER hu=SELF-REFERENCING-PLACEHOLDER
+    (and the same for latest_help, list_help, snapshot_id_help, view_help)
+    failures: 25 across 5 keys x 4 catalogues
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+After:
+
+    cli.app.live.deudas.app_help en=ok(31c) es=ok(40c) ca=ok(41c) hu=ok(43c)
+    cli.app.live.deudas.latest_help en=ok(36c) es=ok(42c) ca=ok(39c) hu=ok(49c)
+    cli.app.live.deudas.list_help en=ok(27c) es=ok(39c) ca=ok(37c) hu=ok(41c)
+    cli.app.live.deudas.snapshot_id_help en=ok(35c) es=ok(38c) ca=ok(36c) hu=ok(47c)
+    cli.app.live.deudas.view_help en=ok(65c) es=ok(65c) ca=ok(59c) hu=ok(75c)
+    failures: 0 across 5 keys x 4 catalogues
+
+The honesty ratchet's en-identical populations fell from 17 to 10 for Catalan,
+17 to 10 for Hungarian, and 18 to 11 for Spanish. Those deltas are larger than
+the five keys this row owns, so they are NOT claimed as this row's effect alone
+— peers were writing the same catalogues concurrently. What IS this row's
+measured effect is that no deudas key appears anywhere in the gate's output
+afterwards, where five did before.
+
+    uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_live_deudas_verbs.py -m integration -n0 -q
+    8 passed in 6.97s
 
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+One of the twenty writes failed on a Windows sharing violation during the
+locales CLI's atomic replace of the Spanish catalogue, leaving that one key at
+its placeholder while the run reported nineteen successes. It was caught by
+re-running the per-key verification rather than by trusting the write log, and
+retried. A write log is a record of calls attempted, not of state reached.
+
+The catalogues were clean when checked immediately before the writes and
+carried roughly 276 lines of a peer's Catalan ledger-counterparty content
+afterwards, against 28 of this row's. Committing the files as they stood would
+have taken that peer's in-flight work. The staged change was therefore built
+from HEAD bytes with only the twenty placeholder lines replaced, verified
+own-only by asserting every removal is a deudas placeholder line and every
+addition sits on a deudas key line, staged with `git apply --cached`, and
+committed from the index rather than by pathspec, which would have taken the
+working tree back. The commit is exactly five changed lines in each of four
+files.
