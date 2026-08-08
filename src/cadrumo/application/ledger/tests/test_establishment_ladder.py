@@ -444,6 +444,29 @@ def test_a_corrupt_identifier_rung_refuses_from_the_top_of_the_walk(
         _resolve(repository, tax_identifier=_GERMAN_VAT)
 
 
+def test_a_corrupt_country_rung_refuses_from_between_the_covered_depths(
+    repository: CounterpartyEstablishmentRepository,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The rung BETWEEN the other three, which bracketing them left uncovered.
+
+    The three cases above sit before the walk, at its first rung and at its last,
+    and that arrangement reads as complete without being so: an ``except`` around
+    the country rung alone falls in the space between two correct depths. It was
+    measured rather than reasoned about -- swallowing this rung and no other left
+    the entire suite green, so the coverage this file claimed was one rung wider
+    than the coverage it had.
+
+    Depth-by-depth rather than one case standing for the walk, because "no rung is
+    wrapped" is a claim about every rung individually and a gate that proves it
+    for three of four proves the wrong statement.
+    """
+    monkeypatch.setattr(ladder_module, "territorial_scope_for_country", _refusing_rung)
+
+    with pytest.raises(IvaCatalogueError):
+        _resolve(repository, country_name="France")
+
+
 def test_the_same_call_reports_an_unestablished_party_against_the_real_registry(
     repository: CounterpartyEstablishmentRepository,
 ) -> None:
