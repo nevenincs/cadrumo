@@ -5,8 +5,8 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:43ed9e5e096164ce7e40a266337c25f04ba87112aa0f2d8d8d893e29fa865ff2'
-step_id: 'S02'
+body_hash: 'sha256:591b809b4c086fd456807ab1074170d0a982edd4d90dc8ca4a10c85492849350'
+step_id: 'S03'
 related:
   - "[[2026-08-08-m200-export-envelope-tag-plan]]"
 ---
@@ -20,7 +20,7 @@ related:
      refreshed by mutating CLI verbs and vault check fix; never hand-edit.
 
      step_id is the originating Step's canonical identifier, e.g. S01.
-     The S02 and 2026-08-08-m200-export-envelope-tag-plan placeholders are machine-filled by
+     The S03 and 2026-08-08-m200-export-envelope-tag-plan placeholders are machine-filled by
      `vaultspec-core vault add exec`; do not fill them by hand.
 
      Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
@@ -38,13 +38,13 @@ related:
 <!-- STEP RECORD:
      This file represents one Step from the originating plan. Identified
      by its canonical leaf identifier (S##) and ancestor display path.
-     The replace the offset-1 filing_year draft field with the six-component open-tag composite and ## Scope
+     The promote the AUX and header filler fields to literal and header kind and ## Scope
 
 - `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/export/0001-modelo-200-page-000.toml` placeholders below are machine-filled
      by `vaultspec-core vault add exec` from the originating Step row;
      do not fill them by hand. -->
 
-# replace the offset-1 filing_year draft field with the six-component open-tag composite
+# promote the AUX and header filler fields to literal and header kind
 
 ## Scope
 
@@ -52,25 +52,24 @@ related:
 
 ## Description
 
-- Replace the single offset-1 length-17 `filing_year` draft field with the six
-  components sheet `DP200000` row 1 spells out: literal `<T` at 1, literal `200`
-  at 3, literal `0` at 6 (the discriminante), draft `filing_year` at 7 length 4,
-  draft `period_code` at 11 length 2, and literal `0000>` at 13 length 5.
-- Follow Modelo 111's already-shipping envelope-header composition rather than
-  authoring a second idiom: the byte geometry is identical apart from the one
-  character M200 reads as a regime discriminante where M111 reads a page marker,
-  and every field kind used is already declared and build-validated.
-- Preserve each field's `legal_refs` and `source_refs` verbatim, so every
-  sub-component keeps the grounding the collapsed field carried.
+- Promote the offset-18 filler to a literal `<AUX>` and the offset-323 filler to a
+  literal `</AUX>`. Both are `Constante` fields on sheet `DP200000` rows 2 and 8,
+  not reserved space, so a filler there emits blanks where AEAT requires markers.
+- Promote the offset-93 filler to a `program_version` header field and the
+  offset-101 filler to a `presenter_nif` header field, matching the sheet's rows 4
+  and 6 ("Versión del programa" and "NIF Empresa Desarrollo"). Both stay
+  `required = false`, because the sheet marks them for entidades desarrolladoras
+  to fill.
+- Leave offsets 23, 97 and 110 as fillers: those three are the rows the sheet
+  really does reserve for the Administración and instructs to fill with blanks.
 
 ## Outcome
 
-The open tag now renders as six declared fields whose widths sum to the 17 bytes
-AEAT publishes, and the year field carries the year's own width rather than the
-whole tag's. The discriminante ships as a literal `0` (Normal, Abreviado y PYMES
-per the sheet's own note), which is the only estado de cuentas this application
-can produce a draft for; the four other regimes have no domain representation and
-are not closed by this Step.
+The four promoted slots render their declared content and the three genuinely
+reserved slots stay blank, so the record now distinguishes AEAT's constants from
+AEAT's reserved space instead of treating both as filler. The header field names
+match the keys the export already supplies for the sibling modelos, so no header
+plumbing changed.
 
 ## Verification
 
@@ -85,8 +84,11 @@ are not closed by this Step.
      exits zero and reads as green, so a paraphrase such as "the tests pass"
      discards exactly the part a reader needs. Quote, do not summarise. -->
 
-    uv run --no-sync pytest src/cadrumo/application/filing/tests/test_export.py::test_export_writes_the_modelo_200_envelope_tags_aeat_publishes -n0 -q
-    1 passed in 12.91s
+The same byte-level assertion covers this Step: its marker and EEDD assertions at
+bytes 17-21, 92-95, 100-108 and 322-327 are what prove the four promotions render.
+
+    uv run --no-sync pytest src/cadrumo/application/filing/tests/test_export.py -k "modelo_200" -n0 -q
+    4 passed, 42 deselected in 18.08s
 
 ## Notes
 

@@ -4,7 +4,7 @@ tags:
   - '#history-onboarding'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:2c0b5a86d0fa25df250c6328488b24b2add15cb27f12c3f71781f5ff98ec2695'
+body_hash: 'sha256:345d982d352066cee6296e91bf4881d1bc1a2e6a040b95dc3e07cc265205e1dc'
 tier: L2
 related:
   - '[[2026-08-07-history-onboarding-adr]]'
@@ -135,6 +135,7 @@ Sequence discovery, bulk filed capture, IVA wallet reconciliation and notificaci
 - [x] `P03.S19` - add the expected-but-not-found advisory comparing captured rows against every PROFILE_APPLICABILITY-tagged pair, emitting a WARNING Notice naming each modelo and ejercicio the profile expects but no declaracion was captured for, verified by a test asserting the Notice fires only for PROFILE_APPLICABILITY pairs and never for pairs carrying only the AEAT_REGISTER_OPTIONS tag; `src/cadrumo/application/live/_filed_data_capture.py`.
 - [x] `P03.S21` - extend FiledDataCaptureReport and BulkFiledDataCaptureReport with a per modelo ejercicio period breakdown of raw register row count versus the one persisted calculation observation, computed from the declarations and selected tuples already held before finalize_filed_capture runs, touching no persistence-boundary file, verified by a synthetic-fixture test asserting a two-row period reports raw count two and selected count one; `src/cadrumo/application/live/_filed_data_capture.py`.
 - [x] `P03.S22` - add the found-more-than-expected advisory emitting an INFO Notice for every period whose raw register count exceeds one, naming the modelo, period, winning expediente_id and superseded filing count, degrading gracefully to count-only wording when tipo_solicitud is absent from source metadata, verified by a test asserting INFO severity, never WARNING, and asserting the notice composes with rather than duplicates the re-capture divergence diff; `src/cadrumo/application/live/_filed_data_capture.py`.
+- [ ] `P03.S32` - relay the justificante unreached-evidence reasons onto the same envelope notices channel this plan's own advisories use, absorbing the sibling justificante-identity plan's deliberately-unlanded forwarding row rather than growing a second advisory channel, declaring the evidence_notices field on BulkFiledDataCaptureReport that the sweep was already passing and whose absence made the orchestration read raise AttributeError on a session-only path, verified by a test driving the full reason enum and asserting one notice per member with its reason readable in context, with the expected set derived from the enum rather than hand-listed; `src/cadrumo/application/live/_remote_state_models.py, src/cadrumo/application/live/_filed_data_capture.py, src/cadrumo/entrypoints/cli/_app_live.py`.
 
 ### Phase `P04` - Operator-surface integration and hand-swept sweep
 

@@ -52,9 +52,31 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Author one byte-level assertion over the rendered Modelo 200 fichero, covering
+  both envelope ends and the markers between them: bytes 0-16 (the 17-character
+  open tag), 17-21 (`<AUX>`), 322-327 (`</AUX>`), the two EEDD header slots at
+  92-95 and 100-108, and the final 18 bytes (the close tag).
+- Ground every expected string on sheet `DP200000` of the bundled 2024 diseño de
+  registro rather than on the registry declaration under test. That sheet prints
+  its row-1 and row-13 example content literally, and the existing export fixture
+  files the same ejercicio and periodo the example uses, so the expected bytes are
+  AEAT's own printed strings.
+- Run the assertion against the unmodified declaration and confirm the red.
 
 ## Outcome
+
+The assertion reds on the defect itself, at the first byte of the file:
+
+    assert b'2024             ' == b'<T200020240A0000>'
+    At index 0 diff: b'2' != b'<'
+
+That is the collapsed composite emitting the four-character year and padding the
+remaining thirteen bytes of AEAT's required constant to blanks. The red confirms
+the defect independently of the reference document that reported it.
+
+The red was observed before any declaration changed and is recorded here rather
+than committed: a committed red gate would break every concurrent run in this
+shared tree, so the proof is the observation, not a published failing state.
 
 ## Verification
 
@@ -68,6 +90,15 @@ related:
      summary line shows what that selection produced. A run that selected nothing
      exits zero and reads as green, so a paraphrase such as "the tests pass"
      discards exactly the part a reader needs. Quote, do not summarise. -->
+
+Pre-fix run, against the unmodified registry declaration:
+
+    uv run --no-sync pytest src/cadrumo/application/filing/tests/test_export.py::test_export_writes_the_modelo_200_envelope_tags_aeat_publishes -n0 -q
+    1 failed in 13.28s
+
+`-n0` is passed explicitly because the project's pytest configuration injects
+`-n auto`, and a proof read from the controlling session must not be scattered
+across worker processes.
 
 ## Notes
 
