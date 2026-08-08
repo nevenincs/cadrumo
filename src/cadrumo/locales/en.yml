@@ -1843,6 +1843,7 @@ cli:
           document.
         note_help: What the answer rests on, in your own words. Recorded, never consulted.
         scope_help: The IVA territory the counterparty is established in.
+        show_help: Show the establishment confirmed for a counterparty, if any.
         tax_identifier_help: The counterparty's tax identifier as printed on the document.
         withdraw_help: Withdraw a confirmed establishment, stating the earlier answer
           was wrong.
@@ -4329,6 +4330,8 @@ cli:
         of the counterparty (ISO 3166-1 alpha-2 lowercase, e.g. de or xi); required
         with --iva-category intra_community_supply, prohibited with export_third_country_zero_rated
         or export_assimilated_zero_rated
+      counterparty_identification_state_help: Member State whose VAT number the counterparty
+        trades under (Ley 37/1992 art. 25 exempts on this, not on where it is established)
       file_exclusive: --file cannot be combined with a transaction id or --classification.
       file_help: Path to a CSV file with columns transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
@@ -4420,6 +4423,9 @@ cli:
         already_confirmed: '''{identifier}'' was already confirmed as established
           in ''{scope}'' by ''{asserted_by}''; this call created no new confirmation
           and the original provenance stands.'
+        not_confirmed: No establishment is confirmed for '{identifier}', so the ladder
+          settles nothing from this rung and a document whose paper is non-decisive
+          will raise the question.
         nothing_to_withdraw: No confirmed establishment was held for '{identifier}',
           so nothing was withdrawn and the store is already in the state you asked
           for.
@@ -4520,6 +4526,7 @@ cli:
       classified_by: Classified by
       counterparty: Counterparty
       counterparty_eu_member_state: EU counterparty
+      counterparty_identification_state: VAT identified in
       created_event_id: Created bucket event
       currency: Currency
       date: Date

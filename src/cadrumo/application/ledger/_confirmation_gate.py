@@ -72,6 +72,7 @@ BLOCKING_REASON_BY_DISCREPANCY_KIND: Mapping[DraftDiscrepancyKind, ConfirmationB
     DraftDiscrepancyKind.IDENTITY_UNVERIFIED: ConfirmationBlockReason.AMBIGUOUS_IDENTITY,
     DraftDiscrepancyKind.ROLE_UNRESOLVED: ConfirmationBlockReason.UNRESOLVED_DIRECTION,
     DraftDiscrepancyKind.REGIME_CONTRADICTED: ConfirmationBlockReason.CONTRADICTED_REGIME,
+    DraftDiscrepancyKind.DIRECTION_CONTRADICTED: ConfirmationBlockReason.UNRESOLVED_DIRECTION,
     DraftDiscrepancyKind.POSTAL_CODE_UNREADABLE: ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT,
     DraftDiscrepancyKind.PARTY_ATTRIBUTION_CONTRADICTED: ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT,
 }

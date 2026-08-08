@@ -221,6 +221,84 @@ def _design_years(name: str) -> tuple[int, ...]:
     return tuple(range(int(first), int(second) + 1))
 
 
+#: AEAT's declared period bound for a design that covers only part of an ejercicio.
+#: ``hasta-periodo(s)-06`` covers the year UP TO that period, so its coverage STARTS at
+#: 01; ``desde-periodo-07`` and ``a-partir-de-periodos-09`` cover FROM that period on, so
+#: their coverage starts there. Ordering on the declared coverage start is what puts the
+#: two halves of a mid-split ejercicio in publication order.
+_COVERAGE_BOUND = re.compile(r"(hasta|a-partir-de|desde)-periodos?-(\d{2})", re.IGNORECASE)
+
+
+def _coverage_start_period(name: str) -> int | None:
+    """The first period a design's own AEAT designation claims, or ``None``.
+
+    WHY THIS IS NOT READ FROM THE FILE BODY, stated because the honest answer is that
+    it cannot be. The design workbooks carry NO assertion of the periods they govern:
+    measured across Modelo 303's two 2024 halves, both declare the identical sheet set
+    and the identical ``Ejercicio de devengo (EEEE)`` and ``Período. (PP)`` header
+    fields, because those are slots the FILER fills in, not metadata about the design's
+    own coverage. Zero coverage assertions exist inside either file. AEAT's published
+    designation is therefore the only place the boundary is stated at all, which is why
+    this reads the designation rather than the document.
+
+    WHAT THIS IS NOT. It is not the numeric filename prefix. AEAT numbers its published
+    listing NEWEST FIRST -- Modelo 303's ``01`` is the 2026 design and its ``06`` is
+    2025 -- so a filename sort is not merely arbitrary, it is close to REVERSED, and
+    within one year it silently pairs the LATE half before the EARLY one. Nothing here
+    depends on that numbering, so a change to AEAT's listing convention cannot move it.
+
+    Returns ``None`` when the designation declares no period bound, which is a real
+    case rather than a defect: Modelo 303's two 2018 designs are ``ejercicio-2018`` and
+    ``ejercicio-2018-salvo-ultimo-periodo-12m-4t``, and "except the last period" fixes
+    no start while the unqualified sibling asserts nothing at all. Ordering those two
+    would be inference by elimination dressed as a measurement, so the caller is told
+    the year is unorderable instead.
+    """
+    matched = _COVERAGE_BOUND.search(name)
+    if matched is None:
+        return None
+    kind, period = matched.group(1).lower(), int(matched.group(2))
+    return 1 if kind == "hasta" else period
+
+
+def _designs_in_publication_order(modelo_id: str) -> tuple[tuple[Path, ...], tuple[int, ...]]:
+    """``(designs oldest-first, years whose designs could not be ordered)``.
+
+    Deduplicated by CONTENT, because the corpus bundles several designs twice under
+    names differing only by a truncated extension, and a path-keyed pass reports the
+    duplicate as a second design.
+
+    A year holding two designs where at least one declares no coverage bound is
+    reported in the second element and its members are left in a stable but
+    UNASSERTED order, so a consumer can refuse rather than trust it.
+    """
+    by_year: dict[int, list[Path]] = {}
+    seen: set[bytes] = set()
+    for path in _design_sources(modelo_id):
+        if not _design_sheets(path):
+            continue
+        years = _design_years(path.name)
+        if not years:
+            continue
+        payload = path.read_bytes()
+        if payload in seen:
+            continue
+        seen.add(payload)
+        by_year.setdefault(min(years), []).append(path)
+
+    ordered: list[Path] = []
+    unorderable: list[int] = []
+    for year in sorted(by_year):
+        members = by_year[year]
+        starts = [_coverage_start_period(path.name) for path in members]
+        if len(members) > 1 and any(start is None for start in starts):
+            unorderable.append(year)
+            ordered.extend(sorted(members, key=lambda path: path.name))
+            continue
+        ordered.extend(sorted(members, key=lambda path: (_coverage_start_period(path.name) or 1, path.name)))
+    return tuple(ordered), tuple(unorderable)
+
+
 def _designs_by_year(modelo_id: str) -> dict[int, tuple[Path, ...]]:
     """``{year: every readable design source claiming it}`` -- one to MANY.
 
@@ -725,6 +803,100 @@ def test_a_year_aeat_split_mid_course_keeps_both_of_its_designs() -> None:
             f"{year} should carry two distinct Modelo 303 designs (AEAT split it mid-course) "
             f"but {len(distinct)} distinct payload(s) survived enumeration"
         )
+
+
+def test_a_mid_split_ejercicio_orders_its_halves_by_declared_coverage_not_by_filename() -> None:
+    """The two halves of a mid-split year order on what AEAT declares, never on the filename.
+
+    GATED ON THE ORDERING PROPERTY, not on today's filename-to-year mapping. It asserts
+    that a design bounded ABOVE (``hasta``) precedes one bounded BELOW (``desde`` /
+    ``a-partir-de``) for the same ejercicio, which is what "covers the earlier periods"
+    means. It pins no prefix, no year and no count, so AEAT renumbering its published
+    listing cannot break it and no author is trained to bump a table.
+
+    A year whose designs do not all declare a bound must be REPORTED as unorderable
+    rather than ordered on a guess. Modelo 303's 2018 pair is the live case.
+    """
+    ordered, unorderable = _designs_in_publication_order("303")
+    assert ordered, "no Modelo 303 design was enumerated at all; the assertions below would be vacuous"
+
+    grouped: dict[int, list[Path]] = {}
+    for path in ordered:
+        grouped.setdefault(min(_design_years(path.name)), []).append(path)
+    multi = {year: paths for year, paths in grouped.items() if len(paths) > 1}
+    assert multi, "no ejercicio carries two designs, so this ordering assertion would be vacuous"
+
+    for year, paths in sorted(multi.items()):
+        if year in unorderable:
+            continue
+        starts = [_coverage_start_period(path.name) for path in paths]
+        assert starts == sorted(starts), (
+            f"ejercicio {year} designs are not in declared-coverage order: {starts}"
+        )
+        assert len(set(starts)) == len(starts), (
+            f"ejercicio {year} has two designs declaring the same coverage start {starts}, "
+            "so their order is not determined by what AEAT published"
+        )
+        # The bounded-above half must come first, which is the direction the whole
+        # ordering exists to get right.
+        assert "hasta" in paths[0].name.lower(), (
+            f"ejercicio {year} sorts {paths[0].name!r} first, but the half covering the "
+            "earlier periods is the one AEAT bounds with 'hasta'"
+        )
+
+    assert 2018 in unorderable, (
+        "Modelo 303's 2018 pair declares no period bound on either half ('ejercicio-2018' "
+        "and 'ejercicio-2018-salvo-ultimo-periodo-12m-4t'), so it must be reported as "
+        "unorderable rather than silently ordered by filename"
+    )
+
+
+def test_the_added_boxes_attach_to_the_epoch_that_introduced_them() -> None:
+    """The eight boxes AEAT added mid-2024 belong to the mid-year boundary, not to 2023/2024.
+
+    THIS IS THE ASSERTION THAT CATCHES THE ORDERING DEFECT, and it exists because a
+    count-based one structurally cannot. Three consecutive designs yield two boundaries
+    in ANY order, so the boundary COUNT is identical whether the two 2024 halves are
+    paired early-then-late or late-then-early. Measured: under filename order the eight
+    added boxes attributed to the 2023-to-2024 boundary and the mid-year boundary showed
+    only occupancy movement; corrected, the eight attach to the mid-year boundary where
+    AEAT introduced them and the 2023 transition shows no box-set change at all.
+
+    A split authored against the wrong attribution puts those boxes in the wrong
+    revision, and no offset check, length check or digest would detect it.
+
+    Asserts the DIRECTION, never the tally: "no box-set change" against "some box-set
+    change". The eight could become nine at the next publication without touching this.
+    """
+    ordered, _unorderable = _designs_in_publication_order("303")
+    by_start: dict[tuple[int, int], Path] = {}
+    for path in ordered:
+        year = min(_design_years(path.name))
+        by_start[(year, _coverage_start_period(path.name) or 1)] = path
+    for key in ((2023, 1), (2024, 1), (2024, 9)):
+        assert key in by_start, f"the Modelo 303 design for {key} is absent, so this assertion would be vacuous"
+
+    def numbered(path: Path) -> set[str]:
+        found: set[str] = set()
+        for sheet in _design_sheets(path):
+            for field in sheet.fields:
+                boxes = _BOX_MARKER.findall(field.description)
+                if boxes:
+                    found.add(boxes[-1])
+        return found
+
+    across_years = numbered(by_start[(2024, 1)]) - numbered(by_start[(2023, 1)])
+    within_2024 = numbered(by_start[(2024, 9)]) - numbered(by_start[(2024, 1)])
+
+    assert not across_years, (
+        "the 2023-to-early-2024 transition must introduce NO new numbered box -- boxes "
+        f"{sorted(across_years, key=int)} attributed there instead, which is the signature "
+        "of the two 2024 halves being paired in the wrong order"
+    )
+    assert within_2024, (
+        "the mid-2024 transition must introduce the numbered boxes AEAT added at periods "
+        "09 and 3T, but none attributed there, so the halves are paired in the wrong order"
+    )
 
 
 def test_the_orden_year_in_a_filename_is_not_read_as_a_coverage_year() -> None:

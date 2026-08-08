@@ -79,6 +79,7 @@ Submodules
    cadrumo.core._image_media_type
    cadrumo.core._invoice_link
    cadrumo.core._irnr
+   cadrumo.core._iva_category_resolution
    cadrumo.core._ledger_sort
    cadrumo.core._model_catalogue
    cadrumo.core._modelo

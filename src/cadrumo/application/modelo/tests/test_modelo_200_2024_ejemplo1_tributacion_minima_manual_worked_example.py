@@ -137,6 +137,7 @@ from ....core import Period
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import (
     CasillaId,
+    ManualWorkedExamplePayload,
     RegistryModeloObservation,
     ValidatedRegistryAuthority,
     validated_casilla_id,
@@ -163,6 +164,34 @@ _M202 = "202"
 _FILING_YEAR = 2024
 
 # Manual casilla inputs (Ejemplo 1, quoted verbatim in the module docstring).
+
+_ORACLE_PAYLOAD_NAME = "modelo-200-2024-ejemplo1-tributacion-minima-empresa-grande.json"
+
+
+def _oracle_payload() -> ManualWorkedExamplePayload:
+    """Read the bundled oracle through the registry's own strict payload model."""
+    path = Path(bundled_path("corpus", "manual_oracles")) / _ORACLE_PAYLOAD_NAME
+    return ManualWorkedExamplePayload.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+def _declared_liquidacion_inputs() -> dict[CasillaId, Decimal]:
+    """The manual's Ejemplo 1 figures, read FROM the oracle rather than retyped here.
+
+    One mapping is worth a reader's attention. The example's liquidación table labels
+    the resultado row ``[00500]`` while the scenario feeds ``00501``; the registry
+    records why on the casilla itself -- 00501 is the Liquidación I result-before-IS
+    row the official manual uses as the base-determination starting point. The FIGURE
+    is the same 2.000.000 the example states twice, and its locator cites both
+    statements. That box choice predates this declaration and is unchanged by it.
+    """
+    declared = _oracle_payload().declared_inputs
+    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
+    return {
+        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
+        for casilla_id, value in declared.by_casilla_id.items()
+    }
+
+
 _CASILLA_RESULTADO_CTA_PYG: CasillaId = validated_casilla_id("00501", surface="_CASILLA_RESULTADO_CTA_PYG")
 _CASILLA_DEDUCCION_DI_INTERNACIONAL: CasillaId = validated_casilla_id(
     "00573",
@@ -292,9 +321,10 @@ def _calculate_m200(
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs={
-            _CASILLA_RESULTADO_CTA_PYG: Decimal("2000000.00"),
-            _CASILLA_DEDUCCION_DI_INTERNACIONAL: Decimal("150000.00"),
-            _CASILLA_DEDUCCION_INCENTIVAR_ACTIVIDADES: Decimal("80000.00"),
+            **_declared_liquidacion_inputs(),
+            # Not declared: the cuota líquida mínima is what this scenario ASSERTS
+            # (casillas 00592 and 00611), so supplying it as a declared input would
+            # have the oracle check the figure it was handed.
             _CASILLA_CUOTA_LIQUIDA_MINIMA: cuota_liquida_minima,
         },
         work_unit_repository=wu_repo,

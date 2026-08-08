@@ -480,6 +480,11 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
             if transaction.counterparty_eu_member_state is not None
             else None
         ),
+        counterparty_identification_state=(
+            transaction.counterparty_identification_state.value
+            if transaction.counterparty_identification_state is not None
+            else None
+        ),
         irpf_category=transaction.irpf_category,
         m210_income_classification=transaction.m210_income_classification,
         usage_ratio_id=transaction.usage_ratio_id,
@@ -994,6 +999,12 @@ def _command_from_patch(
         "counterparty_eu_member_state",
         current.counterparty_eu_member_state,
     )
+    counterparty_identification_state = _optional_patched(
+        patch,
+        patch_fields,
+        "counterparty_identification_state",
+        current.counterparty_identification_state,
+    )
     group_label = _optional_patched(patch, patch_fields, "group_label", current.group_label)
     return ManualLedgerTransactionCommand(
         bucket_id=bucket_id,
@@ -1024,6 +1035,7 @@ def _command_from_patch(
         notes=notes,
         iva_category=iva_category,
         counterparty_eu_member_state=counterparty_eu_member_state,
+        counterparty_identification_state=counterparty_identification_state,
         source_jurisdiction=(
             patch.source_jurisdiction if "source_jurisdiction" in patch_fields else current.source_jurisdiction
         ),
@@ -1290,6 +1302,7 @@ def _transaction_from_command(
         "notes": command.notes,
         "iva_category": command.iva_category,
         "counterparty_eu_member_state": command.counterparty_eu_member_state,
+        "counterparty_identification_state": command.counterparty_identification_state,
         "source_jurisdiction": command.source_jurisdiction,
         "group_label": command.group_label,
         # D6: created_at is stamped once (defaults to occurred_at on first

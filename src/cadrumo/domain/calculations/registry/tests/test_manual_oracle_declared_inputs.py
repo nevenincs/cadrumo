@@ -81,6 +81,12 @@ rather than the framework article, one layer down:
   match the declaration.
 * An input stated only in a nota cites the nota, not the block a faster read
   reaches for.
+* Sometimes NOTHING on the page displays the figure as a figure. The amortizaciones
+  deducted from an acquisition value appear only inside the arithmetic of a total —
+  ``(90.000+8.000-1.620)`` — so 1.620 never stands on its own anywhere. Cite the
+  arithmetic line AND the nota establishing how it arose. The pull here is toward
+  declaring the TOTAL instead, because the total is printed cleanly and the
+  component is not; resist it, because the total is not what the scenario consumes.
 * A component set spanning a page break in the extraction carries the ranges its
   components actually fall in, never one span that quietly includes the lines
   between them.
@@ -149,9 +155,6 @@ _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
     "modelo-100-2024-minimo-descendientes-prorrateo-asturias.json": (
         "scenario facts still hand-written in test_minimo_descendientes_manual_oracles.py; same "
         "mid-verification hold as the Rioja payload"
-    ),
-    "modelo-200-2024-ejemplo1-tributacion-minima-empresa-grande.json": (
-        "scenario facts still hand-written in test_modelo_200_2024_ejemplo1_tributacion_minima_manual_worked_example.py"
     ),
     "modelo-202-2025-primer-pago-modalidad-40-2.json": (
         "scenario facts still hand-written in test_modelo_202_2025_pago_fraccionado_manual_worked_example.py"

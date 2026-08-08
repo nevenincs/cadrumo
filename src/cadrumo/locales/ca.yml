@@ -1981,6 +1981,7 @@ cli:
         note_help: En què es basa la resposta, amb les vostres paraules. Es registra,
           mai no es consulta.
         scope_help: El territori a efectes d'IVA on està establerta la contrapart.
+        show_help: Mostra l'establiment confirmat per a una contrapart, si n'hi ha.
         tax_identifier_help: L'identificador fiscal de la contrapart tal com apareix
           imprès al document.
         withdraw_help: Retira un establiment confirmat, declarant que la resposta
@@ -4647,6 +4648,9 @@ cli:
         del Nord de la contrapart (ISO 3166-1 alfa-2 minúscules, p. ex. de o xi);
         obligatori amb --iva-category intra_community_supply, prohibit amb export_third_country_zero_rated
         o export_assimilated_zero_rated
+      counterparty_identification_state_help: Estat membre el NIF-IVA del qual utilitza
+        la contrapart (la Llei 37/1992 art. 25 exempta per aquesta dada, no per on
+        estigui establerta)
       file_exclusive: --file no pot combinar-se amb un id de transacció ni --classification.
       file_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
@@ -4743,6 +4747,9 @@ cli:
         already_confirmed: '''{identifier}'' ja estava confirmada com a establerta
           a ''{scope}'' per ''{asserted_by}''; aquesta crida no ha creat cap confirmació
           nova i es manté la procedència original.'
+        not_confirmed: No hi ha cap establiment confirmat per a '{identifier}', de
+          manera que aquest esglaó no resol res i un document el paper del qual no
+          sigui concloent plantejarà la pregunta.
         nothing_to_withdraw: No hi havia cap establiment confirmat per a '{identifier}',
           de manera que no s'ha retirat res i el magatzem ja es troba en l'estat sol·licitat.
     doclink:
@@ -4850,6 +4857,7 @@ cli:
       classified_by: Classificat per
       counterparty: Contrapart
       counterparty_eu_member_state: Contrapart UE
+      counterparty_identification_state: Identificada a efectes d'IVA a
       created_event_id: Esdeveniment bucket de creació
       currency: Moneda
       date: Data

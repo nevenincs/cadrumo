@@ -564,8 +564,15 @@ data_type = "money"
 semantic_role = "dr303_122"
 continuidad_id = "dr303-122"
 required = false
-input_kind = "manual"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+input_kind = "bound"
+binding = "modelo-303-casilla-122-inversion-sujeto-pasivo-base"
+# Casilla 122 reports the base imponible of the SUPPLIER's side of a domestic
+# reverse charge. The substantive ground is LIVA art. 84.Uno.2.º (the recipient
+# is the sujeto pasivo), not the repercusión/deducción articles 88/92 that stood
+# here as a generic default — this supplier repercutes nothing and deducts
+# nothing, which is the entire point of the box. Same correction, and for the
+# same reason, as the one already applied to casilla 59.
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-122"]
 

@@ -55,6 +55,7 @@ from ._common import active_bucket_id_or_refuse as _counterparty_bucket_id
 from ._ledger_counterparty_payloads import (
     CounterpartyConfirmResult,
     CounterpartyEstablishmentPayload,
+    CounterpartyShowResult,
     CounterpartyWithdrawResult,
 )
 
@@ -303,5 +304,78 @@ def counterparty_withdraw(
             withdrawn=withdrawn,
         ),
         lines=[f"{tax_identifier}: {'withdrawn' if withdrawn else 'nothing to withdraw'}"],
+        notices=notices,
+    )
+
+
+@counterparty_app.command(
+    "show",
+    help=tr(
+        "cli.app.ledger.counterparty.show_help",
+        default="Show the establishment confirmed for a counterparty, if any.",
+    ),
+)
+def counterparty_show(
+    ctx: typer.Context,
+    tax_identifier: str = typer.Argument(
+        ...,
+        help=tr(
+            "cli.app.ledger.counterparty.tax_identifier_help",
+            default="The counterparty's tax identifier as printed on the document.",
+        ),
+    ),
+    country_code: str | None = typer.Option(
+        None,
+        "--country-code",
+        help=tr(
+            "cli.app.ledger.counterparty.country_code_help",
+            default="Country the identifier is stated under, when it is not Spanish.",
+        ),
+    ),
+) -> None:
+    """Report what the ladder's last rung will answer for this counterparty.
+
+    Deliberately asks the same resolver the ladder asks rather than reading the
+    repository directly, so what an operator is shown and what a later document
+    resolves to cannot drift apart.
+    """
+    from ...application.ledger import resolve_counterparty_establishment
+
+    resolution = resolve_counterparty_establishment(
+        bucket_id=_counterparty_bucket_id(),
+        tax_identifier=tax_identifier,
+        country_code=country_code,
+    )
+    fact = resolution.fact
+    notices: list[Notice] = []
+    if fact is None:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.counterparty.not_confirmed",
+                message=tr(
+                    "cli.ledger.counterparty.notices.not_confirmed",
+                    identifier=tax_identifier,
+                    default=(
+                        f"No establishment is confirmed for '{tax_identifier}', so the ladder settles "
+                        f"nothing from this rung and a document whose paper is non-decisive will raise "
+                        f"the question."
+                    ),
+                ),
+                context={"tax_identifier": tax_identifier},
+            ),
+        )
+    _emit_envelope(
+        ctx,
+        command="ledger.counterparty.show",
+        result=CounterpartyShowResult(
+            tax_identifier=tax_identifier,
+            confirmed=fact is not None,
+            territorial_scope=fact.value if fact is not None else None,
+            source=fact.source if fact is not None else None,
+        ),
+        lines=[
+            f"{tax_identifier}: {fact.value.value if fact is not None else 'not confirmed'}",
+        ],
         notices=notices,
     )

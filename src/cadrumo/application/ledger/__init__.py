@@ -225,6 +225,12 @@ if TYPE_CHECKING:
         deterministic_check_names,
         deterministic_findings,
     )
+    from ._document_direction import (
+        DIRECTION_BY_FILER_ROLE,
+        DirectionDerivationOutcome,
+        InvoiceKindDerivation,
+        derive_invoice_kind_from_filer_role,
+    )
     from ._document_transcription import DocumentTranscription, TranscriberIdentity
     from ._establishment_ladder import (
         CounterpartyEstablishment,
@@ -460,6 +466,10 @@ _LAZY_EXPORTS: dict[str, str] = {
     "resolve_counterparty_establishment_scope": "._establishment_ladder",
     "resolve_draft_counterparty_establishment": "._establishment_ladder",
     "scope_printed_evidence_would_establish": "._establishment_ladder",
+    "DIRECTION_BY_FILER_ROLE": "._document_direction",
+    "DirectionDerivationOutcome": "._document_direction",
+    "InvoiceKindDerivation": "._document_direction",
+    "derive_invoice_kind_from_filer_role": "._document_direction",
     "COUNTRY_VOCABULARY_ADVISED_STATUSES": "._country_vocabulary_advisory",
     "CountryVocabularyAdvisory": "._country_vocabulary_advisory",
     "CountryVocabularyWarning": "._country_vocabulary_advisory",
@@ -711,6 +721,7 @@ __all__ = [
     "COUNTRY_VOCABULARY_ADVISED_STATUSES",
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD",
     "DETERMINISTIC_CHECKS",
+    "DIRECTION_BY_FILER_ROLE",
     "FILER_POSTCODE_FACT_PATH",
     "GROUNDABLE_ORIGINS",
     "IDENTITY_FIELDS",
@@ -749,6 +760,7 @@ __all__ = [
     "DeclaredFact",
     "DeclaredFacts",
     "DeterministicCheck",
+    "DirectionDerivationOutcome",
     "DocumentTranscription",
     "DraftDiscrepancyFinding",
     "EligibleCategoryRow",
@@ -771,6 +783,7 @@ __all__ = [
     "InvoiceDraftLine",
     "InvoiceDraftRateBreakdown",
     "InvoiceExtractionAuthorityValues",
+    "InvoiceKindDerivation",
     "IvaCategoryResolution",
     "LedgerCatalogueResetReport",
     "LedgerClassificationRuleRepository",
@@ -867,6 +880,7 @@ __all__ = [
     "declared_category_from_document_record",
     "default_invoice_extraction_period",
     "derive_confirmation_id",
+    "derive_invoice_kind_from_filer_role",
     "derive_operator_iva_substrate",
     "describe_aeat_party_identifier",
     "deterministic_check_names",

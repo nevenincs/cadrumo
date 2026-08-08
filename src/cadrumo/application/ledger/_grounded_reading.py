@@ -44,6 +44,11 @@ from decimal import Decimal
 
 from ...core import FieldGroundingOutcome, FieldOrigin
 from ._deterministic_findings import deterministic_findings
+from ._document_direction import (
+    DirectionDerivationOutcome,
+    InvoiceKindDerivation,
+    derive_invoice_kind_from_filer_role,
+)
 from ._document_transcription import DocumentTranscription
 from ._evidence_draft import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
 from ._grounding_anchor import evaluate_anchor, printed_excerpt_occurs
@@ -209,11 +214,55 @@ def ground_draft_against_transcription(
         findings.extend(resolution.findings)
         envelopes = _with_replaced_envelope(envelopes, resolution.provenance)
 
+    # Derived LAST, from the draft the reader proposed rather than from the
+    # envelopes above, because it asks a question about the document's layout and
+    # not about any one value's grounding. It raises no finding here: which side
+    # the document places the filer on is a suggestion until the operator states
+    # a direction, and the two are compared at the confirm boundary where both
+    # are in hand.
+    derivation = derive_invoice_kind_from_filer_role(
+        draft=draft,
+        transcription=transcription,
+        taxpayer_tax_id=taxpayer_tax_id,
+    )
+    envelopes = _with_replaced_envelope(envelopes, _suggested_kind_envelope(derivation))
+
     return draft.model_copy(
         update={
             "provenance": envelopes,
             "discrepancies": tuple(findings),
+            "suggested_kind": derivation.kind,
         },
+    )
+
+
+def _suggested_kind_envelope(derivation: InvoiceKindDerivation) -> FieldProvenance:
+    """Return the provenance envelope recording how direction was derived.
+
+    Stamped whatever the outcome, including the ones that settled nothing. An
+    envelope only for the settled case would leave the review surface printing an
+    empty basis beside an empty suggestion, which reads as "the question was
+    never asked" -- and the commonest reason it settles nothing (the document
+    states no usable pair of party headings) is a fact about the document the
+    operator benefits from seeing.
+
+    ``DERIVED`` origin carries two obligations the envelope contract enforces: it
+    may not claim ``ANCHORED``, because no printed form of "issued" exists on the
+    page to anchor, and it must name the inputs it was concluded from. Both are
+    honoured rather than worked around. The settled case claims ``RECONCILED``
+    because the corroborating check -- containment inside a party's own block --
+    does not consult the value it corroborates.
+    """
+    return FieldProvenance(
+        field="suggested_kind",
+        origin=FieldOrigin.DERIVED,
+        grounding=(
+            FieldGroundingOutcome.RECONCILED
+            if derivation.outcome is DirectionDerivationOutcome.DERIVED
+            else FieldGroundingOutcome.UNANCHORED
+        ),
+        derived_from=("supplier_tax_id", "customer_tax_id"),
+        note=derivation.basis,
     )
 
 

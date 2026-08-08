@@ -40,6 +40,30 @@ class IvaCategoryOutcome(StrEnum):
     nothing to corroborate against and nothing missing.
     """
 
+    RATE_INFERRED = "rate_inferred"
+    """The rule table could not place the operation and the tier charged settled it.
+
+    **The weakest state that still yields a category, and it is named so it can
+    be told apart from the others rather than blending in.** The table refuses
+    whenever a party's IVA territory is unestablished, and an ordinary domestic
+    Spanish invoice frequently prints no country at all -- so that refusal falls
+    on the commonest document there is. Leaving those records with no declared
+    treatment is not neutral: the invoice decomposition contract refuses an
+    undeclared record, and the renta income path then contributes the row's bank
+    cash instead of its ingresos íntegros, dropping the base, the cuota and the
+    retención from the figure that reaches the declaration.
+
+    What carries the inference is the charged tax itself, not a default: Spanish
+    repercutido IVA at a registered Spanish tier is charged on operations inside
+    the Spanish IVA territory, and Canarias and Ceuta y Melilla levy IGIC and
+    IPSI rather than IVA. A document that charged a registered Spanish rate has
+    therefore said something about itself that a blank country field did not
+    retract.
+
+    It remains an inference and is recorded as one, so a later reader asking
+    which records rest on it can enumerate them.
+    """
+
     DECLARED = "declared"
     """The document's own code established it and the rule table could not.
 

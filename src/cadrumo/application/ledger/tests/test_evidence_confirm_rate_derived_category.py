@@ -39,12 +39,12 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....domain.invoices import decompose_invoice
-from ....domain.iva import InvoiceKind, IvaCategory
+from ....domain.iva import InvoiceKind, IvaCategory, IvaRateKind
 from .._evidence_draft import (
     InvoiceDraft,
     InvoiceDraftRateBreakdown,
-    _domestic_category_from_the_declared_rate,
     confirm_invoice_draft_from_evidence,
+    domestic_rate_tier_from_the_document,
 )
 from ._evidence_test_support import _BUCKET_ID, _make_svc
 from ._evidence_test_support import isolated_settings as isolated_settings
@@ -169,10 +169,22 @@ def test_a_recargo_document_leaves_the_category_undeclared(
 def test_a_rate_unregistered_on_the_issue_date_resolves_to_nothing() -> None:
     """The refusal branch, observed refusing rather than assumed to.
 
-    The registered Spanish rate records begin in 2024, so a 21% document issued
-    in 2023 states a rate that cannot be grounded to a tier on its own issue
-    date. The resolution must decline rather than fall back to today's meaning of
-    21%, which is the whole reason the lookup takes a date.
+    Spain's general tier stood at 16 % until mid-2010 and reached 21 % only on
+    1 September 2012, so a 21 % document issued in 2010 states a rate that was
+    not a registered Spanish tier on its own issue date. The resolution must
+    decline rather than fall back to today's meaning of 21 %, which is the whole
+    reason the lookup takes a date.
+
+    The dates are keyed to the statute rather than to how far the shipped rate
+    records happen to reach. An earlier revision of this test asserted the
+    refusal at 2023 on the belief that the records began in 2024; they were
+    since extended backwards and the assertion became a claim about the fixture
+    instead of about the law.
+
+    Asserted on the TIER rather than on a category, because the resolution now
+    stops at the tier: it hands that axis to the rule table's criteria, where
+    ``R05`` applies the tier-to-category mapping this resolution used to copy.
+    The declines are unchanged; only what they decline to produce is.
 
     Exercised here rather than through a confirm because no document in the
     bundled corpus predates the rate records, so the end-to-end route cannot
@@ -181,9 +193,7 @@ def test_a_rate_unregistered_on_the_issue_date_resolves_to_nothing() -> None:
     """
     draft = InvoiceDraft(iva_breakdown=(InvoiceDraftRateBreakdown(iva_rate=Decimal("21")),))
 
-    assert _domestic_category_from_the_declared_rate(draft, invoice_date=date(2023, 11, 20)) is None
+    assert domestic_rate_tier_from_the_document(draft, invoice_date=date(2010, 11, 20)) is None
     # The same draft on a date the rate WAS registered resolves, so the refusal
     # above is attributable to the date and not to the draft being unusable.
-    assert _domestic_category_from_the_declared_rate(draft, invoice_date=date(2024, 11, 20)) is (
-        IvaCategory.DOMESTIC_GENERAL
-    )
+    assert domestic_rate_tier_from_the_document(draft, invoice_date=date(2015, 11, 20)) is IvaRateKind.GENERAL

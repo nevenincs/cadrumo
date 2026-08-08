@@ -3,8 +3,14 @@
 # intracomunitarias de bienes y servicios", which reads as an invitation to add
 # a services category; it is not one. A plain B2B service supplied to an
 # EU-established taxable person is located outside the TAI by LIVA art.
-# 69.Uno.1, so it is not subject in Spain and belongs in casilla 61
-# (operaciones no sujetas), never here. Only a service with a Spanish fiscal
+# 69.Uno.1, so it is not subject in Spain and belongs in casilla 120
+# (operaciones no sujetas por reglas de localización), never here. That box was
+# cited here as "casilla 61" until it was checked against the diseño: no box 61
+# exists in this revision, and the number appears nowhere in the 2025 design.
+# The misdirection is worth naming because it is the kind that survives — the
+# concept is real and the label is familiar, so the wrong number reads as
+# knowledge and sends the next author to a box that is not there.
+# Only a service with a Spanish fiscal
 # adjustment point under art. 25 belongs in casilla 59, and the operator
 # declares that by tagging intra_community_supply explicitly. Adding a
 # not-subject services category to this selector would over-declare.

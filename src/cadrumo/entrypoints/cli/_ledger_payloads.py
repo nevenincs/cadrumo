@@ -161,6 +161,7 @@ class TransactionPayload(OutputSchema):
     iva_amount: str | None = None
     iva_category: str | None = None
     counterparty_eu_member_state: str | None = None
+    counterparty_identification_state: str | None = None
     irpf_category: str | None = None
     m210_income_classification: M210IncomeClassificationPayload | None = None
     usage_ratio_id: str | None = None
@@ -631,6 +632,7 @@ class LedgerListRowPayload(OutputSchema):
     iva_amount: str | None = None
     iva_category: str | None = None
     counterparty_eu_member_state: str | None = None
+    counterparty_identification_state: str | None = None
     irpf_category: str | None = None
     m210_income_classification: M210IncomeClassificationPayload | None = None
     usage_ratio_id: str | None = None
@@ -794,6 +796,7 @@ class LedgerExportRowPayload(OutputSchema):
     iva_amount: str = ""
     iva_category: str = ""
     counterparty_eu_member_state: str = ""
+    counterparty_identification_state: str = ""
     irpf_category: str = ""
     usage_ratio_id: str = ""
     prorrata_reference: str = ""
