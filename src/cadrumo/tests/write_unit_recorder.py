@@ -9,7 +9,8 @@ difference observable by attaching to the live
 sequence is the production statement stream -- no connection is wrapped,
 replaced, or stubbed.
 
-``before_cursor_execute`` sees every statement, and the DBAPI ``commit`` event
+``before_cursor_execute`` sees every statement -- expanded to one marker per ROW,
+because the write funnel is set-based -- and the DBAPI ``commit`` event
 marks each transaction boundary; a commit falling between two secure-object
 writes is exactly the seam a crash exploits, because whichever catalogue
 committed first keeps its half of the change.
@@ -27,7 +28,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sized
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
@@ -51,10 +52,31 @@ class WriteUnitRecorder:
         self._engine = engine
         self.events: list[str] = []
 
-    def _on_statement(self, _conn: object, _cursor: object, statement: str, *_args: object) -> None:
+    def _on_statement(
+        self,
+        _conn: object,
+        _cursor: object,
+        statement: str,
+        parameters: object = None,
+        _context: object = None,
+        executemany: bool = False,
+    ) -> None:
+        """Record one marker per secure-object ROW written, not per statement.
+
+        The storage layer writes set-based SQL: a batch of N rows is one
+        ``INSERT`` executemany rather than N separate statements. Counting
+        statements therefore stopped answering the question this recorder
+        exists to answer -- it reported a five-row atomic batch as a single
+        write, which reads identically to five rows written one at a time and
+        makes a "these rows shared a transaction" assertion unsatisfiable
+        however correct the code is. The rows are what a crash can tear apart,
+        so the rows are what is counted.
+        """
         collapsed = " ".join(statement.split()).upper()
-        if "SECURE_OBJECTS" in collapsed and collapsed.startswith(("INSERT", "UPDATE")):
-            self.events.append(_WRITE_MARKER)
+        if "SECURE_OBJECTS" not in collapsed or not collapsed.startswith(("INSERT", "UPDATE")):
+            return
+        rows = len(parameters) if executemany and isinstance(parameters, Sized) else 1
+        self.events.extend([_WRITE_MARKER] * rows)
 
     def _on_commit(self, _conn: object) -> None:
         self.events.append(_COMMIT_MARKER)
