@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#justificante-identity-matching'
 date: '2026-08-07'
-modified: '2026-08-07'
-body_hash: 'sha256:4c3935b9667a1a70670a13ea1d4279c392eec7f8f4b4a28a65ffbe05390f4495'
+modified: '2026-08-08'
+body_hash: 'sha256:67fe093a9bf4a4d586ee5d78d6233677ee7d3ac1fa55a70cf8e01685f5144c2e'
 tier: L2
 related:
   - '[[2026-08-07-justificante-identity-matching-adr]]'
@@ -49,7 +49,7 @@ Promote the shared CSV-extraction helper, harden the row-scoped locator to an ex
 - [x] `P01.S02` - Drop the now-signature-invalid expediente_id argument now that register_capture_justificante_metadata's existing csv equality check already covers identity; `src/cadrumo/application/live/_justificante.py (_justificante_matches_capture_axis)`.
 - [x] `P01.S03` - Drop the now-signature-invalid expediente_id argument now that register_capture_as_filing_evidence's existing csv equality check already covers identity; `src/cadrumo/application/live/_justificante.py (register_capture_as_filing_evidence)`.
 - [x] `P01.S04` - Remove the presentation_id parameter entirely from matches_filing_target and its three now-dead pass-through wrapper parameters; `src/cadrumo/domain/justificante/_schema.py, src/cadrumo/application/live/_justificante.py, and src/cadrumo/application/live/_filed_observation_persistence.py`.
-- [x] `P01.S05` - Update the pinning test to the corrected signature and matching behavior, and remove the fixture's false expediente-as-presentation_id equivalence; `src/cadrumo/domain/justificante/tests/test_filing_target.py`.
+- [x] `P01.S05` - Update the pinning test to the corrected signature and matching behavior and remove the fixture's false expediente-as-presentation_id equivalence, landing in the SAME commit as S04 because a parameter removal published without its consumer sweep is a TypeError on a clean checkout; `src/cadrumo/domain/justificante/tests/test_filing_target.py`.
 - [x] `P01.S06` - Add a real-fixture regression proving the register-reconciliation path enrolls a committed M303 justificante via the new csv-equality check; `src/cadrumo/application/live/tests/_filed_capture_history_support.py and a new or existing test in src/cadrumo/application/live/tests`.
 - [x] `P01.S12` - Add a mutation-proof test proving the new csv defense-in-depth check discriminates two same-period filings sharing modelo, ejercicio, period and tax_id, confirming a wrong-artefact-selection bug would be caught even though the row-scoped fetch is the primary binding; `src/cadrumo/application/live/tests`.
 - [x] `P01.S07` - Run the domain and application justificante test suites and confirm green; `src/cadrumo/domain/justificante/tests and src/cadrumo/application/live/tests`.
