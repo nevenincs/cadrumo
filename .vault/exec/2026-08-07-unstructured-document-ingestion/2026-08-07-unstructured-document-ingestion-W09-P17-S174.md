@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:02a32e708d43799a607108fcadfff841f87b9bf74834e09f1e141abdb580d2a2'
+body_hash: 'sha256:824ea32e0ed133333d7970cf7ae2c6137880e8d64682cd6f3feda16dc0fe3a2b'
 step_id: 'S174'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -19,7 +19,7 @@ related:
 ## Description
 
 - Re-measure the row's stated precondition before writing the gate: an honest structurally-derived comparison over all nineteen rows finds zero mismatches in either direction, so the intra-community migration has in fact cleared it.
-- Extract each row's actual fact set from its predicate's own AST, following the module-local helpers a predicate hands the criteria or a criteria attribute to, because that is where the identification reads live.
+- Extract each row's actual fact set from its predicate's own AST, including a branch following module-local helpers a predicate hands the criteria to. That branch turned out to be inert on every live row and the rationale recorded for it here was wrong; see the correction below.
 - Map criteria attribute to party fact through one table keyed by the criteria model's field names, and assert that mapping exhaustive against the model, so a field added to the model forces a decision instead of defaulting to carrying no fact.
 - Assert declared equals actual per row, reporting the two directions as separate diagnostics because they are different defects: a fact read but not declared stops the producer demanding evidence the branch decides on, and a fact declared but not read asks an operator for evidence that changes no outcome.
 - Carry the non-vacuity trio: the table floored as a bound rather than pinned as a count, a per-row assertion that some attribute was extracted, and a refusal rather than an empty set when a predicate cannot be read.
