@@ -1577,6 +1577,7 @@ def _invoice_line_iva_observation(
             transaction_date=devengo_date,
             category=category,
             rate_kind=_rate_kind_for_slot(line.iva_rate),
+            applied_rate=None,
             flow_direction=derive_flow_for_classification(category=category, invoice_direction=invoice.kind),
             base_amount=line.subtotal,
             iva_amount=line.iva_amount,
