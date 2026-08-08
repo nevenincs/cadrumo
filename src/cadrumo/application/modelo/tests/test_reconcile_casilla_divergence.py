@@ -154,7 +154,7 @@ class TestExportExemptCasillasAreOutOfPdfScope:
 
     @staticmethod
     def _m303_revision() -> object:
-        from ....domain.calculations.registry._authority import bundled_authority
+        from ....domain.calculations.registry import bundled_authority
 
         return next(m for m in bundled_authority().modelos if m.id == "303").revisions["2023-y-siguientes"]
 
