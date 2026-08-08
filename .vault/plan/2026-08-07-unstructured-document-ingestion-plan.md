@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:cf49cc4618c49823aa6efcd41a3f24263fcb24b50d63e5fc69ac617c371298a9'
+body_hash: 'sha256:68b45c89b4ffc07784a2d77c101a348c0587086169aee400dd2acf71c24b232f'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -180,6 +180,7 @@ Lands the consent gate, its CLI token, the re-scoped deletion gate and the corpu
 - [ ] `W05.P11.S43` - Narrow the minting-side provenance assertion to transports mintable without a consent token, keeping consented cloud stamps honest, with both directions red-green proven; `src/cadrumo/tests/test_cloud_transport_fully_deleted.py`.
 - [ ] `W05.P11.S44` - Amend the llm-package-split ADR status note to record the partial supersession of its D5 in the same change that lands the gate, gated by a clean vault check and a curate cross-check for corpus self-contradiction; `.vault/adr/2026-08-06-llm-package-split-adr.md`.
 - [x] `W05.P11.S145` - Give the evidence consent CLI module its own tests, since it has none at all and that absence hid two live operator-facing crashes until a lane building on top of it happened to probe a real instance: the survey and the withdrawal verbs both raised on a workflow-state attribute that does not exist, and a re-derivation reader called a signature changed out from under it while being annotated loosely enough that the type checker saw nothing. Drive the real command tree rather than constructing state, since constructing it is what let both defects sit unnoticed; `src/cadrumo/entrypoints/cli`.
+- [ ] `W05.P11.S159` - Make the column-role mapping request declare its evidence posture, since it is the only production request builder that does not set the evidence-derived flag while still accepting a provider override, so it can be pointed off-host with no consent gate and, because the gate returns before the ledger append, no record either, leaving it invisible to the withdrawal survey. Safe today only because both call sites pass headers rather than rows, but that is call-site discipline rather than a type: the parameter accepts a row of values as readily as a header row and a third caller would transmit taxpayer data with a diff that does not look like a confidentiality change. A bank export header can also carry an account fragment or a holder name. Record in the ADR why column headers are or are not taxpayer evidence and add a gate asserting this is the ONLY unmarked production builder, so a fifth one is a deliberate decision rather than an omission; `src/cadrumo/llm`.
 
 ## Wave `W06` - Model provisioning and adaptive selection
 
