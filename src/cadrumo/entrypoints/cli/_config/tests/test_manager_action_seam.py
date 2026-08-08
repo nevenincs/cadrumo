@@ -67,6 +67,7 @@ _EXPECTED_KEY = {
     "certificate": "flows.manager.action.abandoned",
     "export": "flows.manager.action.abandoned",
     "filed-history-pull-all": "flows.manager.action.censal_pull_no_provider",
+    "google-export": "flows.manager.action.abandoned",
     "passphrase": "flows.manager.action.abandoned",
 }
 """What each action concludes on a freshly registered profile.
@@ -76,8 +77,15 @@ yet; the two form doors are abandoned because the test closes their page.
 The filed-history sweep shares the censal pull's own refusal wording
 because it reuses that exact gate function rather than a second opinion
 on auth-readiness (see ``_censal_pull_unavailable()`` in
-``_manager_actions.py``). Stated per action rather than as a shape, so a
-door that silently stops reaching its own conclusion fails here.
+``_manager_actions.py``). The Google export is a third form door rather
+than a capability refusal here: ``ServiceCapability.GOOGLE_EXPORT``
+resolves ENABLED by default on a freshly registered profile, so the
+action opens its modelo/period/year page and this test's own shared
+cancel-and-abandon path reaches it -- pinned by running this test rather
+than assumed from the capability's docstring, which reads as though the
+opposite default were the safer one. Stated per action rather than as a
+shape, so a door that silently stops reaching its own conclusion fails
+here.
 
 Held as catalogue KEYS and resolved beside the assertion, inside the
 profile context that produced the message: the page resolves its wording
