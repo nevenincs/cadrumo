@@ -16,8 +16,6 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.core.external_constants import DEFAULT_OUTPUT_LANGUAGE
-
 _STRICT = ConfigDict(frozen=True, extra="forbid")
 
 
@@ -76,7 +74,19 @@ class Session(BaseModel):
     width: int = 100
     height: int = 30
     theme: str = "dark"
-    locale: str = DEFAULT_OUTPUT_LANGUAGE.value
+    locale: str | None = None
+    """An explicit output-language override, or ``None`` for ambient resolution.
+
+    ``None`` leaves ``CADRUMO_OUTPUT_LANGUAGE`` untouched, so the render path
+    resolves language the way an operator's real session would: from the
+    active profile's stored preference, falling back to the settings
+    default. Forcing this to a language on every walk would make an explicit
+    Settings override permanently shadow a profile-level language change —
+    exactly the axis the ``manager`` surface's language chooser needs to be
+    read live, since an explicit override always outranks the profile's
+    preference in :func:`~cadrumo.core.i18n.output_language`'s resolution
+    order.
+    """
     gestures: list[Gesture] = Field(default_factory=list)
 
     @property

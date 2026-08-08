@@ -34,11 +34,19 @@ always "gesture, look".
 | `size WxH` / `theme ...` / `locale ...` | re-render the same walk elsewhere |
 | `shot [--out PATH]` | write the frame as SVG, for colour review |
 
-`locale` drives the same `OUTPUT_LANGUAGE_ENV_VAR` axis the CLI's
+`--locale`/`locale` drives the same `OUTPUT_LANGUAGE_ENV_VAR` axis the CLI's
 `--output-language` uses, so a surface can be read under `es`, `en`, `ca` or
 `hu` — the walk's gestures are untouched, only the active output language
 changes before the app is rebuilt. The frame header prints the active
-locale next to the theme.
+locale (or `auto`) next to the theme.
+
+Omit `--locale`, or set it back with `locale auto`, to leave
+`CADRUMO_OUTPUT_LANGUAGE` untouched and let the render path resolve
+language ambiently — from the active profile's stored preference, falling
+back to the settings default. This matters for `manager`: an explicit
+override always outranks the profile's preference, so forcing a locale on
+that surface would permanently shadow its own language-chooser field and
+make a genuine live-switch defect look identical to a working one.
 
 ## Concurrent reviewers
 

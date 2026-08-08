@@ -36,8 +36,16 @@ def _theme_name(appearance: str) -> str:
     return resolve_theme_name(TuiAppearance(appearance))
 
 
-def _activate_locale(locale: str) -> None:
+def _activate_locale(locale: str | None) -> None:
     """Make the process-wide output language match ``locale`` before build.
+
+    ``locale is None`` deliberately does nothing: an explicit
+    ``cadrumo_output_language`` (env var, ``override_settings``, or ``.env``)
+    always outranks the active profile's stored preference in
+    :func:`~cadrumo.core.i18n.output_language`'s resolution order, so forcing
+    one on every walk would permanently shadow a profile-level language
+    change — exactly the axis the ``manager`` surface's live language
+    chooser needs read without interference.
 
     ``load_settings()`` holds a process-wide ``Settings`` singleton cached
     by the active-profile pointer, not by env var, so a raw ``os.environ``
@@ -48,6 +56,9 @@ def _activate_locale(locale: str) -> None:
     Textual pilot's message pump runs on (see
     ``test_flow_tui_app.py::test_rebuild_for_locale_reassembles_copy_under_the_new_language``).
     """
+    if locale is None:
+        return
+
     import os
 
     from cadrumo.core.config import reset_settings_cache
@@ -131,7 +142,7 @@ def replay(session: Session) -> Frame:
             width=width,
             height=height,
             theme=session.theme,
-            locale=session.locale,
+            locale=session.locale or "auto",
             elapsed_ms=elapsed_ms,
         ),
     )

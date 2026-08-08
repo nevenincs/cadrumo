@@ -50,7 +50,12 @@ def main(argv: list[str] | None = None) -> int:
     p_open.add_argument("surface", choices=sorted(SURFACES))
     p_open.add_argument("--size", default="100x30", help="terminal size, WxH")
     p_open.add_argument("--theme", default="dark", choices=["dark", "light"])
-    p_open.add_argument("--locale", default="es", choices=sorted(SUPPORTED_OUTPUT_LANGUAGES))
+    p_open.add_argument(
+        "--locale",
+        default=None,
+        choices=sorted(SUPPORTED_OUTPUT_LANGUAGES),
+        help="force the output language; omit to resolve ambiently (profile preference, then default)",
+    )
 
     p_press = sub.add_parser("press", help="send key chords")
     p_press.add_argument("keys", nargs="+")
@@ -80,7 +85,11 @@ def main(argv: list[str] | None = None) -> int:
     p_theme.add_argument("theme", choices=["dark", "light"])
 
     p_locale = sub.add_parser("locale", help="re-render the same walk under another output language")
-    p_locale.add_argument("locale", choices=sorted(SUPPORTED_OUTPUT_LANGUAGES))
+    p_locale.add_argument(
+        "locale",
+        choices=(*sorted(SUPPORTED_OUTPUT_LANGUAGES), "auto"),
+        help="a forced language, or 'auto' to drop back to ambient resolution",
+    )
 
     args = parser.parse_args(argv)
 
@@ -133,12 +142,15 @@ def main(argv: list[str] | None = None) -> int:
             session.theme = args.theme
             _advance(session)
         case "locale":
-            session.locale = args.locale
+            session.locale = None if args.locale == "auto" else args.locale
             _advance(session)
         case "show":
             _show(session)
         case "journal":
-            _emit(f"{session.surface} · {session.width}x{session.height} · {session.theme} · {session.locale}")
+            _emit(
+                f"{session.surface} · {session.width}x{session.height} · "
+                f"{session.theme} · {session.locale or 'auto'}",
+            )
             for index, gesture in enumerate(session.gestures, start=1):
                 _emit(f"{index:>3}. {describe(gesture)}")
         case "shot":
