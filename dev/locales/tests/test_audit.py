@@ -353,6 +353,37 @@ def test_committed_catalogues_follow_contextual_product_identity_contract() -> N
     assert audit.ok, audit
 
 
+_EM_DASH = chr(0x2014)
+# No key is exempted today. An exemption is added here, keyed by its exact
+# ``(locale, dotted_key)`` pair with a stated reason, only for an em dash inside a
+# verbatim official AEAT designation or legal citation -- never a blanket pattern
+# or a line-number exemption.
+_EM_DASH_EXEMPT_KEYS: frozenset[tuple[str, str]] = frozenset()
+
+
+def test_committed_catalogues_carry_no_em_dash() -> None:
+    """No shipped locale value may contain U+2014; a spaced hyphen reads naturally.
+
+    A rendered page must never show an em dash (operator directive). Every prior
+    occurrence in the four catalogues was the same label/qualifier or
+    parenthetical-aside pattern, none a verbatim official AEAT designation or
+    legal citation, so ``_EM_DASH_EXEMPT_KEYS`` starts empty -- a future
+    genuinely-official exemption is added there by exact key, not by loosening
+    this assertion.
+    """
+    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR)
+    violations: list[str] = []
+    for locale in _LOCALES:
+        leaves = manager.load_locale(LOCALES_DIR / f"{locale}.yml")
+        for key, value in _flatten_leaf_values(leaves).items():
+            if value is None or _EM_DASH not in value:
+                continue
+            if (locale, key) in _EM_DASH_EXEMPT_KEYS:
+                continue
+            violations.append(f"{locale}.yml:{key}")
+    assert violations == [], "em dash (U+2014) found in locale value(s): " + ", ".join(violations)
+
+
 def test_real_audit_cli_rejects_placeholder_drift(tmp_path: Path) -> None:
     """The Typer command renders manager findings and exits unsuccessfully."""
     manager = _manager_for(

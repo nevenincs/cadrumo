@@ -405,6 +405,10 @@ def resolve_confirmed_establishment(
         # carries the alpha-3 spelling Facturae states, which the printed-value
         # status axis declines to judge at all.
         counterparty_country_status=record_country_code_status(side.stated_country_token),
+        # Which party the counterparty IS, so the catalogue-gap exemption
+        # forgives that party's residency and no other. The operator settled
+        # this direction; it is never the reader's suggestion.
+        direction=kind,
     )
     items = _counterparty_review_items(counterparty, tax_identifier=side.tax_id, field=side.tax_id_field)
     if filer_item is not None:

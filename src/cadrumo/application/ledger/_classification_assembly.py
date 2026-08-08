@@ -389,6 +389,21 @@ def _counterparty_identification_field(direction: InvoiceKind) -> str:
     return "customer_identification_state" if direction is InvoiceKind.ISSUED else "issuer_identification_state"
 
 
+def _counterparty_residency_field(direction: InvoiceKind) -> str:
+    """Return which residency slot the COUNTERPARTY occupies, for this direction.
+
+    The establishment counterpart of :func:`_counterparty_identification_field`,
+    and it resolves the same way: on an issued invoice the filer is the issuer,
+    so the counterparty is the customer; on a received one the filer is the
+    customer, so the counterparty is the issuer.
+
+    Separate from its sibling rather than one shared mapping because the two
+    axes name different criteria fields, and a caller that needed the residency
+    while holding the identification name would have to translate.
+    """
+    return "customer_residency" if direction is InvoiceKind.ISSUED else "issuer_residency"
+
+
 def _state_for_field(
     field: str,
     *,
@@ -996,6 +1011,7 @@ def _unsupported_relief_claim(
     assembly: ClassificationAssembly,
     *,
     counterparty_country_status: StatedCountryCodeStatus | None,
+    direction: InvoiceKind | None,
 ) -> str:
     """Say why a declared relief cannot be honoured on this evidence, if it cannot.
 
@@ -1011,6 +1027,15 @@ def _unsupported_relief_claim(
     the evidence does not reach, which is a different thing and takes a different
     remedy: the category is withheld and the establishment is named as the fact
     that would settle it.
+
+    **The exemption forgives ONE slot, not the whole set.** It is scoped to the
+    counterparty's own residency because that is the only gap it has a warrant
+    for; a filer whose territory the profile never established is an unfinished
+    setup, and the document under review cannot fix it. Unscoped, a
+    counterparty our vocabulary happened to miss suppressed the refusal for the
+    filer's gap too, so the relief was honoured with neither party established.
+    That direction under-declares, and it was unreachable until the
+    counterparty's stated token started reaching this function at all.
 
     **A country our own vocabulary does not carry is exempted, and that
     exemption is the difference between a guard and a trap.** The scope resolver
@@ -1028,17 +1053,34 @@ def _unsupported_relief_claim(
         assembly: The criteria, or the inputs that stopped them.
         counterparty_country_status: What the counterparty's printed country
             code turned out to be, or ``None`` when no code was printed.
+        direction: Which side of the invoice the filer is on, which is what
+            says WHICH residency slot the exemption may forgive. ``None``
+            forgives nothing: a caller that cannot say which party is the
+            counterparty cannot claim our vocabulary is what failed, and the
+            safe answer for a relief claim is to withhold rather than to
+            honour it.
 
     Returns:
         The operator-facing reason, or ``""`` when the claim stands.
     """
     if declared not in _RELIEF_ON_AN_ESTABLISHMENT_PREMISE:
         return ""
-    unestablished = sorted({gap.field for gap in assembly.missing} & _RESIDENCY_FIELDS)
-    if not unestablished:
+    outstanding = {gap.field for gap in assembly.missing} & _RESIDENCY_FIELDS
+    if not outstanding:
         return ""
-    if counterparty_country_status is StatedCountryCodeStatus.UNCATALOGUED:
+    if counterparty_country_status is StatedCountryCodeStatus.UNCATALOGUED and direction is not None:
+        # Only the COUNTERPARTY's own slot is forgiven, and only when the
+        # direction says which slot that is. The exemption's whole warrant is
+        # that OUR vocabulary failed to place the other party; it says nothing
+        # about the filer, whose territory is a profile fact this document
+        # cannot supply and whose absence is an unfinished setup rather than a
+        # gap in our data. Forgiving the whole set on the counterparty's excuse
+        # honoured a zero-rated export claim while the filer's own establishment
+        # was unknown -- a relief granted on evidence nobody had.
+        outstanding -= {_counterparty_residency_field(direction)}
+    if not outstanding:
         return ""
+    unestablished = sorted(outstanding)
     return (
         f"the document's record declares the IVA treatment {declared.value!r}, which relieves the "
         f"supply of Spanish IVA only because of where the counterparty is established, and "
@@ -1052,6 +1094,7 @@ def resolve_ingestion_iva_category(
     declared: DeclaredFacts,
     rate_tier: IvaRateKind | None = None,
     counterparty_country_status: StatedCountryCodeStatus | None = None,
+    direction: InvoiceKind | None = None,
 ) -> IvaCategoryResolution:
     """Resolve the IVA category of one document being ingested.
 
@@ -1102,6 +1145,10 @@ def resolve_ingestion_iva_category(
         rate_tier: The tier the document's lines charged, for corroboration.
             The SAME value handed to :func:`assemble_classification_criteria`,
             so the two cannot read the document differently.
+        direction: Which side of the invoice the filer is on. Reaches the
+            relief guard, where it says which residency slot the counterparty
+            occupies and therefore which one the catalogue-gap exemption may
+            forgive. Omitted, the exemption forgives nothing.
         counterparty_country_status: What the counterparty's printed country
             code turned out to be, or ``None`` when none was printed. Consulted
             only to spare a relief claim whose establishment failed on OUR
@@ -1135,6 +1182,7 @@ def resolve_ingestion_iva_category(
         stated,
         assembly,
         counterparty_country_status=counterparty_country_status,
+        direction=direction,
     )
     if unsupported:
         return IvaCategoryResolution(

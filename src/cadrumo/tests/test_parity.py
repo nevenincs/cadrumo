@@ -487,6 +487,33 @@ def test_set_locale_value_appends_missing_leaf_under_existing_parent(tmp_path: P
     assert _leaf(data, "cli", "locales", "set_locale_help") == "Código de locale."
 
 
+def test_set_locale_value_appends_missing_leaf_after_unterminated_final_line(tmp_path: Path):
+    """Appending below a parent whose last child ends the file with no trailing
+    newline must not run the new leaf onto that line.
+
+    A hand-recovered file or an editor that strips the final newline leaves the
+    catalogue in exactly this shape, and the append is the mandated authoring
+    path for a missing key.
+    """
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    locale_path = locales_dir / "es.yml"
+    locale_path.write_bytes(b"cli:\n  locales:\n    app_help: Auditar y generar catalogos")
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    temp_manager.set_locale_value("es", "cli.locales.set_locale_help", "Codigo de locale.")
+
+    written = locale_path.read_bytes()
+    assert b"catalogos\n    set_locale_help:" in written, (
+        "the appended leaf ran onto the parent's unterminated final line: " f"{written!r}"
+    )
+    data = temp_manager.load_locale(locale_path)
+    assert _leaf(data, "cli", "locales", "app_help") == "Auditar y generar catalogos"
+    assert _leaf(data, "cli", "locales", "set_locale_help") == "Codigo de locale."
+
+
 def test_remove_locale_value_deletes_existing_leaf(tmp_path: Path):
     """The locale remover deletes a stale leaf and leaves siblings intact."""
 

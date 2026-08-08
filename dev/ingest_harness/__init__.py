@@ -47,6 +47,12 @@ from ._colocation_ceiling import (
     colocation_ceiling,
     documents_with_authored_transcription,
 )
+from ._colocation_geometry_size import (
+    ColumnSegmentationSize,
+    column_aware_rendering_partitions,
+    geometry_payload_ratio,
+    render_page_text,
+)
 from ._key import (
     CORPUS_ROOT,
     EXPECTED_KEY_BYTES,
@@ -95,6 +101,7 @@ __all__ = [
     "CeilingOutcome",
     "CeilingReport",
     "CeilingRow",
+    "ColumnSegmentationSize",
     "CorpusDocument",
     "CorpusKey",
     "CorpusKeyError",
@@ -114,12 +121,15 @@ __all__ = [
     "build_result_row",
     "caveats_for_document",
     "colocation_ceiling",
+    "column_aware_rendering_partitions",
     "documents_with_authored_transcription",
     "emitted_or_scored",
     "format_report",
+    "geometry_payload_ratio",
     "load_corpus_key",
     "normalise_whitespace",
     "reference_points_with_key_context",
+    "render_page_text",
     "require_model_tier",
     "sorted_rows_by_document",
     "verify_decimal_comparison_path",

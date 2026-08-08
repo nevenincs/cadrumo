@@ -51,22 +51,32 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 from typing import Final
 
 import pytest
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import FieldGroundingOutcome, FieldOrigin, IvaCategoryOutcome
+from ....core import ClassifierInputSource, FieldGroundingOutcome, FieldOrigin, IvaCategoryOutcome
 from ....core.config import Settings
 from ....domain.iva import (
+    CustomerTaxStatus,
     InvoiceKind,
     IvaCategory,
     IvaTerritorialScope,
     StatedCountryCodeStatus,
-    country_code_for_stated_country_code,
+    SupplyNature,
     record_country_code_status,
 )
+from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2, an_uncatalogued_alpha3
+from .._classification_assembly import (
+    DeclaredFact,
+    DeclaredFacts,
+    assemble_classification_criteria,
+    resolve_ingestion_iva_category,
+)
+from .._classifier_inputs import collect_classifier_inputs
 from .._confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
 from .._country_vocabulary_advisory import country_vocabulary_advisory
 from .._establishment_ladder import resolve_draft_counterparty_establishment
@@ -96,56 +106,21 @@ _CATALOGUED_ALPHA3: Final = "ESP"
 #: registry commit can turn one into a country.
 _UNASSIGNED_ALPHA2: Final = "XX"
 
-#: Real jurisdictions in both ISO spellings, as candidate probes for "a country
-#: the bundled vocabulary does not carry".
+#: One jurisdiction the bundled vocabulary carries in NEITHER spelling, drawn at
+#: import time from the shared specimen helper.
 #:
-#: **Chosen at run time rather than pinned, because a pinned one is a hostage.**
-#: This suite was first written against ``TH``/``THA``, which was measured
-#: uncatalogued -- and a peer enrolled Thailand while the row was in flight, at
-#: which point every case here failed for a reason that had nothing to do with
-#: the behaviour under test. The property is "the vocabulary lacks this token",
-#: not "the token is Thai", so the probe is selected by that property and the
-#: anchor case below proves the selection still means what it says.
-_UNCATALOGUED_CANDIDATES: Final[tuple[tuple[str, str], ...]] = (
-    ("KH", "KHM"),
-    ("LA", "LAO"),
-    ("MM", "MMR"),
-    ("BD", "BGD"),
-    ("LK", "LKA"),
-    ("NP", "NPL"),
-    ("PK", "PAK"),
-    ("KE", "KEN"),
-    ("NG", "NGA"),
-    ("GH", "GHA"),
-    ("ET", "ETH"),
-    ("TZ", "TZA"),
-    ("UG", "UGA"),
-)
-
-
-def _uncatalogued_pair() -> tuple[str, str]:
-    """Return one jurisdiction the vocabulary carries in NEITHER spelling.
-
-    Selected through the RESOLUTION authority rather than through the status
-    axis the cases then assert on, so the selection and the assertion are not
-    the same function answering itself.
-    """
-    for alpha2, alpha3 in _UNCATALOGUED_CANDIDATES:
-        if (
-            country_code_for_stated_country_code(alpha2) is None
-            and country_code_for_stated_country_code(alpha3) is None
-        ):
-            return alpha2, alpha3
-    pytest.fail(
-        "the bundled country vocabulary now carries every candidate probe. That is good news and "
-        "it makes this suite unable to construct its own subject: add a jurisdiction the vocabulary "
-        "still omits to _UNCATALOGUED_CANDIDATES. Do NOT delete these cases -- the behaviour they "
-        "gate is that an unplaceable token stays visible, and the vocabulary being large today is "
-        "no guarantee it covers the next document.",
-    )
-
-
-_UNCATALOGUED_ALPHA2, _UNCATALOGUED_ALPHA3 = _uncatalogued_pair()
+#: **Derived rather than pinned, because a pinned country is a hostage.** This
+#: suite was first written against Thailand, measured uncatalogued -- and a peer
+#: enrolled it while the row was in flight, at which point every case here failed
+#: for a reason that had nothing to do with the behaviour under test. The
+#: property is "the vocabulary lacks this token", not "the token is Thai".
+#:
+#: The helper is shared rather than local for the same reason: it draws the
+#: candidates from AEAT's own SII enumeration and from Facturae's, so a specimen
+#: is a code a real submitted document can actually state, and every suite with
+#: this problem follows one boundary instead of each keeping its own list.
+_UNCATALOGUED_ALPHA2: Final = an_uncatalogued_alpha2()
+_UNCATALOGUED_ALPHA3: Final = an_uncatalogued_alpha3()
 
 
 def _corpus(name: str) -> str:
@@ -686,37 +661,41 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         """Return whether the assembly is short the COUNTERPARTY's own residency."""
         return "customer_residency" in {gap.field for gap in confirmed.assembly.missing}
 
-    def test_an_uncatalogued_export_declaring_the_relief_is_spared(
+    def test_an_uncatalogued_export_declaring_the_relief_has_its_slot_forgiven(
         self,
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
     ) -> None:
-        """The assertion nobody had: an unplaceable country stated, and the claim stands.
+        """The exemption reaches the guard from a document, and forgives ONE slot.
 
-        This is the over-refusal direction, which nothing else in this apparatus
-        watches. The document states its counterparty's country clearly and
-        correctly; only our vocabulary is short. Withholding the category here
-        tells the operator the residency was not established by a document that
-        established it.
+        This is the wiring assertion. The counterparty's residency is
+        unresolved -- our vocabulary does not carry the jurisdiction -- and the
+        refusal that comes back no longer names it, which it can only do if the
+        record's own token travelled from the document through the reader into
+        the guard's exemption. Before this row the token never arrived and the
+        refusal named both slots.
+
+        The claim is still withheld here, and correctly: this fixture carries no
+        taxpayer profile, so the FILER's territory is unestablished too, and
+        that gap is an unfinished setup rather than a hole in our data. The
+        exemption has no warrant for it. That the reason narrowed to exactly the
+        filer's slot is the whole measurement.
         """
         confirmed = self._confirmed(
-            "TH",
+            _UNCATALOGUED_ALPHA2,
             settings=isolated_settings,
             objects=secure_objects,
             tmp_path=tmp_path,
-            name="ubl_export_th.xml",
+            name="ubl_export_uncatalogued.xml",
         )
 
-        # The gap being spared is the counterparty's own, named so this reads as
-        # a statement about the exemption rather than about the guard going
-        # quiet: the residency really is unresolved, and the claim stands anyway
-        # because the vocabulary is what failed.
         assert self._counterparty_unestablished(confirmed)
-        assert confirmed.category.outcome is not IvaCategoryOutcome.UNSUPPORTED_RELIEF
-        assert confirmed.category.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+        assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
+        assert "issuer_residency" in confirmed.category.note
+        assert "customer_residency" not in confirmed.category.note
 
-    def test_the_alpha3_spelling_of_the_same_country_is_spared_too(
+    def test_the_alpha3_spelling_of_the_same_country_is_forgiven_too(
         self,
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
@@ -731,18 +710,18 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
         landed.
         """
         confirmed = self._confirmed(
-            "THA",
+            _UNCATALOGUED_ALPHA3,
             settings=isolated_settings,
             objects=secure_objects,
             tmp_path=tmp_path,
-            name="ubl_export_tha.xml",
+            name="ubl_export_uncatalogued_alpha3.xml",
         )
 
-        assert self._counterparty_unestablished(confirmed)
-        assert confirmed.category.outcome is not IvaCategoryOutcome.UNSUPPORTED_RELIEF
-        assert confirmed.category.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+        assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
+        assert "issuer_residency" in confirmed.category.note
+        assert "customer_residency" not in confirmed.category.note
 
-    def test_a_document_stating_no_country_still_has_the_relief_withheld(
+    def test_a_document_stating_no_country_has_both_slots_named(
         self,
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
@@ -750,10 +729,11 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
     ) -> None:
         """The positive control, and it is the specimen exactly as authored.
 
-        Without it a guard that had stopped withholding anything would pass both
-        cases above vacuously -- the shape of a green run measuring the harness
-        rather than the code. Here nothing was stated, so nothing is our gap, and
-        the claim genuinely is not reached by the evidence.
+        Nothing was stated, so nothing is our gap and nothing is forgiven: the
+        refusal names both residencies. Without this the cases above would pass
+        against a guard that had simply stopped naming the counterparty at all,
+        which is the shape of a green run measuring the harness rather than the
+        code.
         """
         confirmed = self._confirmed(
             None,
@@ -763,10 +743,11 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
             name="ubl_export_silent.xml",
         )
 
-        assert self._counterparty_unestablished(confirmed)
         assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
+        assert "issuer_residency" in confirmed.category.note
+        assert "customer_residency" in confirmed.category.note
 
-    def test_an_iso_unassigned_code_is_not_spared(
+    def test_an_iso_unassigned_code_is_not_forgiven(
         self,
         isolated_settings: Settings,
         secure_objects: SecureObjectRepository,
@@ -774,23 +755,142 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
     ) -> None:
         """The other control, on the direction that costs money.
 
-        XX is reserved by ISO to name no country at all, so it is not a gap in
-        our data, and sparing it would honour a zero-rated export claimed on a
-        string with no referent. The exemption has to distinguish the two kinds:
-        a fix that simply spared every unresolved code would pass the sparing cases
-        above while opening exactly the hole the country rung was narrowed to
-        close.
+        The user-assigned ranges are reserved to name no country at all, so they
+        are not a gap in our data and forgiving one would move a zero-rated
+        export claim closer to being honoured on a string with no referent. The
+        exemption has to distinguish the two kinds: a fix that forgave every
+        unresolved code would pass the cases above while opening exactly the
+        hole the country rung was narrowed to close.
         """
         confirmed = self._confirmed(
-            "XX",
+            _UNASSIGNED_ALPHA2,
             settings=isolated_settings,
             objects=secure_objects,
             tmp_path=tmp_path,
-            name="ubl_export_xx.xml",
+            name="ubl_export_unassigned.xml",
         )
 
-        assert self._counterparty_unestablished(confirmed)
         assert confirmed.category.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
+        assert "customer_residency" in confirmed.category.note
+
+    def test_the_relief_stands_once_the_filer_is_the_only_thing_established(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """And with no other residency outstanding, the claim is honoured.
+
+        The cases above prove the exemption forgives the right slot; this proves
+        forgiving it is sufficient, which no assertion about a narrowed refusal
+        can show. The country still comes from the document through the real
+        reader -- that is the half this row is about. The filer's own territory
+        is supplied, because it is a PROFILE fact by design: the confirm path
+        reads it from the profile and never from the paper, so a document can
+        never carry it and a fixture that withheld it would be testing an
+        unfinished setup rather than the country axis.
+        """
+        draft = _draft(
+            _export_billed_to(_UNCATALOGUED_ALPHA2),
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="ubl_export_established_filer.xml",
+        )
+        declared = DeclaredFacts(
+            stated_category=DeclaredFact(
+                value=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+                source=ClassifierInputSource.DOCUMENT_EVIDENCE,
+            ),
+            issuer_scope=DeclaredFact(
+                value=IvaTerritorialScope.ES_MAINLAND,
+                source=ClassifierInputSource.PROFILE_AUTHORITY,
+            ),
+            customer_tax_status=DeclaredFact(
+                value=CustomerTaxStatus.B2B_IVA_REGISTERED,
+                source=ClassifierInputSource.OPERATOR_ASSERTION,
+            ),
+            supply_nature=DeclaredFact(
+                value=SupplyNature.GOODS,
+                source=ClassifierInputSource.OPERATOR_ASSERTION,
+            ),
+        )
+        assembly = assemble_classification_criteria(
+            transaction_date=date(2026, 4, 2),
+            direction=InvoiceKind.ISSUED,
+            inputs=collect_classifier_inputs(draft),
+            declared=declared,
+        )
+        # The counterparty's residency is the ONE thing still open, which is the
+        # precondition the exemption exists for. Asserted rather than assumed:
+        # were another input to go missing, the case below would be measuring
+        # that instead.
+        assert {gap.field for gap in assembly.missing} == {"customer_residency"}
+
+        resolution = resolve_ingestion_iva_category(
+            assembly,
+            declared=declared,
+            direction=InvoiceKind.ISSUED,
+            counterparty_country_status=record_country_code_status(draft.customer_stated_country_code),
+        )
+
+        assert resolution.outcome is not IvaCategoryOutcome.UNSUPPORTED_RELIEF
+        assert resolution.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+
+    def test_the_filers_own_gap_is_never_forgiven_by_the_counterpartys_excuse(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The under-declaration direction this scoping closes, stated on its own.
+
+        An unscoped exemption suppressed the refusal for EVERY outstanding
+        residency once the counterparty's code happened to be uncatalogued, so a
+        zero-rated export was honoured with neither party established. That was
+        unreachable until the counterparty's stated token started arriving here
+        at all, which is to say this row opened it -- so it is gated beside the
+        row rather than left for a later reader to find.
+        """
+        draft = _draft(
+            _export_billed_to(_UNCATALOGUED_ALPHA2),
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="ubl_export_no_filer.xml",
+        )
+        declared = DeclaredFacts(
+            stated_category=DeclaredFact(
+                value=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+                source=ClassifierInputSource.DOCUMENT_EVIDENCE,
+            ),
+            customer_tax_status=DeclaredFact(
+                value=CustomerTaxStatus.B2B_IVA_REGISTERED,
+                source=ClassifierInputSource.OPERATOR_ASSERTION,
+            ),
+            supply_nature=DeclaredFact(
+                value=SupplyNature.GOODS,
+                source=ClassifierInputSource.OPERATOR_ASSERTION,
+            ),
+        )
+        assembly = assemble_classification_criteria(
+            transaction_date=date(2026, 4, 2),
+            direction=InvoiceKind.ISSUED,
+            inputs=collect_classifier_inputs(draft),
+            declared=declared,
+        )
+        assert {gap.field for gap in assembly.missing} == {"customer_residency", "issuer_residency"}
+
+        resolution = resolve_ingestion_iva_category(
+            assembly,
+            declared=declared,
+            direction=InvoiceKind.ISSUED,
+            counterparty_country_status=record_country_code_status(draft.customer_stated_country_code),
+        )
+
+        assert resolution.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
+        assert "issuer_residency" in resolution.note
+        assert "customer_residency" not in resolution.note
 
     def test_a_catalogued_third_country_needs_no_exemption_at_all(
         self,
@@ -802,15 +902,8 @@ class TestTheDeclaredReliefGuardSparesACatalogueGap:
 
         ``US`` RESOLVES a third country, so the counterparty residency is
         established and the exemption is never consulted for this document.
-        Asserted so the sparing cases read as a bounded hole in our data rather
+        Asserted so the cases above read as a bounded hole in our data rather
         than as the normal path -- US, GB, CH, JP, CN and the rest all resolve.
-
-        **Asserted on the residency, not on the category outcome, and the
-        difference is deliberate.** Under this fixture there is no taxpayer
-        profile, so the FILER's residency is unestablished too and the guard
-        still withholds on that separate gap. Asserting "not withheld" here
-        would therefore be asserting something about the fixture's profile
-        setup, not about the country axis this file is testing.
         """
         confirmed = self._confirmed(
             "US",

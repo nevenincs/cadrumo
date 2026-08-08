@@ -165,18 +165,52 @@ def _is_numeric_edge(character: str) -> bool:
     return character in _NUMBER_CONTINUATION
 
 
+def _continues_the_token(edge: str, neighbour: str) -> bool:
+    """Return whether *neighbour* makes *edge* a fragment rather than a token.
+
+    Asked per EDGE, and both rules are applied because an edge can satisfy both.
+    A digit continues into ``.`` and ``,`` as well as into another digit, so the
+    number rule stays broader there than the word rule; a letter continues only
+    into another alphanumeric.
+
+    An edge that is neither -- a currency symbol, a percent sign, a parenthesis,
+    a hyphen -- continues into nothing, which is what keeps ``21%`` matching
+    inside ``IVA (21%)`` and ``1.234,56 EUR`` matching where the document prints
+    the symbol.
+    """
+    if _is_numeric_edge(edge) and _is_numeric_edge(neighbour):
+        return True
+    return edge.isalnum() and neighbour.isalnum()
+
+
 def _occurs_as_a_whole_printed_token(needle: str, haystack: str) -> bool:
     """Return whether *needle* occurs in *haystack* as a complete printed token.
 
     Boundary-aware rather than substring: an occurrence counts only when the
-    anchor is not a fragment of a longer number. The rule is applied per EDGE
-    and only where that edge is numeric, so non-numeric anchors (an invoice
-    number, a party name) keep ordinary substring behaviour and a figure carrying
-    a currency symbol or a trailing percent still matches.
+    anchor is not a fragment of a longer printed token. The rule is applied per
+    EDGE, so an anchor abutting punctuation, a currency symbol or a percent sign
+    still matches, and only an edge that runs on into more of the same kind of
+    character is refused.
+
+    **Alphanumeric, not merely numeric, and the widening is the point.** The rule
+    was numeric-only, on the reasoning that a word-shaped anchor is distinctive
+    enough for substring matching to be safe. That holds for an invoice number or
+    a party name and fails completely for a SHORT CODE: a two-letter country code
+    is a fragment of half the strings on an invoice, and ``ES`` is the worst case
+    in this domain because it prefixes every Spanish VAT identifier. A record
+    stating no country at all had ``ES`` anchor against ``ESB12345674`` and the
+    envelope reported the document as evidence for a value the document never
+    states -- which is precisely the fabrication this check exists to refuse, and
+    precisely the property its own contract claims to enforce.
 
     Every occurrence is examined, and one clean occurrence is enough: a document
     may print the same figure as a fragment in one place and as a whole token in
     another, and the second is a genuine anchor.
+
+    What this still cannot do is prove the reader chose the RIGHT occurrence. A
+    two-letter code appearing as a genuine standalone token somewhere unrelated
+    matches, and that limit is stated on the entry points rather than papered
+    over here.
 
     Args:
         needle: The normalised anchor.
@@ -188,14 +222,13 @@ def _occurs_as_a_whole_printed_token(needle: str, haystack: str) -> bool:
     if not needle:
         return False
 
-    leading_is_numeric = _is_numeric_edge(needle[0])
-    trailing_is_numeric = _is_numeric_edge(needle[-1])
+    leading, trailing = needle[0], needle[-1]
 
     start = haystack.find(needle)
     while start != -1:
         end = start + len(needle)
-        before_ok = not (leading_is_numeric and start > 0 and _is_numeric_edge(haystack[start - 1]))
-        after_ok = not (trailing_is_numeric and end < len(haystack) and _is_numeric_edge(haystack[end]))
+        before_ok = start == 0 or not _continues_the_token(leading, haystack[start - 1])
+        after_ok = end >= len(haystack) or not _continues_the_token(trailing, haystack[end])
         if before_ok and after_ok:
             return True
         start = haystack.find(needle, start + 1)

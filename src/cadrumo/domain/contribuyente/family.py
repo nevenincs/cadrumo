@@ -334,6 +334,7 @@ class DescendantInfo(BaseModel):
     prorrata_minimo: bool | None = None
     meses_madre_trabajo: tuple[int, ...] = ()
     alta_posterior_nacimiento_mes: int | None = Field(default=None, ge=1, le=12)
+    segundo_ciclo_infantil_inicio_mes: int | None = Field(default=None, ge=1, le=12)
     gastos_guarderia_euros: int = Field(default=0, ge=0)
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpend, ...] = ()
     nif: str | None = None
@@ -1317,8 +1318,40 @@ class DescendantInfo(BaseModel):
         if self.age_at_year_end(filing_year) > _MAX_AGE_MENOR_TRES:
             return frozenset()
         if self.gastos_guarderia_mensuales:
-            return frozenset(entry.month for entry in self.gastos_guarderia_mensuales)
+            declared = frozenset(entry.month for entry in self.gastos_guarderia_mensuales)
+            return declared & self._segundo_ciclo_window(filing_year)
         return None
+
+    def _segundo_ciclo_window(self, filing_year: int) -> frozenset[int]:
+        """Months the Art. 81.2 gastos may fall in, bounded by the second-cycle ceiling.
+
+        Art. 81.2 admits the gastos "hasta el mes anterior a aquel en el que PUEDA
+        comenzar el segundo ciclo de educación infantil", and that ceiling applies
+        ONLY in the período impositivo in which the child turns three. Outside that
+        period every month is open: the AEAT 2020 caso works a two-year-old's
+        NON-CONTIGUOUS nursery months — January to June plus OCTOBER and NOVEMBER —
+        to eight months, so a ceiling applied generally would drop two months the
+        authority counts.
+
+        The month is the OPERATOR's to declare and is never inferred. AEAT writes
+        "pueda comenzar" in the subjunctive in every year of the manual: the
+        authority itself declines to fix it, because when the cycle may begin
+        depends on the child's own región and centre. September is the month its
+        worked examples happen to use, and defaulting to it would be exactly the
+        confident month-selection rule this box has already been wrong with once.
+
+        Undeclared, this returns EMPTY rather than open: the turning-three window
+        cannot be computed, so the increment declines to grant it and the operator
+        is told what to supply
+        (:meth:`guarderia_needs_segundo_ciclo_month`). Refusing under-grants, which
+        over-taxes; opening would over-grant, which under-declares. Between two
+        wrong answers the recoverable one is the one the operator can see and fix.
+        """
+        if self.age_at_year_end(filing_year) != _MAX_AGE_MENOR_TRES:
+            return frozenset(range(1, 13))
+        if self.segundo_ciclo_infantil_inicio_mes is None:
+            return frozenset()
+        return frozenset(range(1, self.segundo_ciclo_infantil_inicio_mes))
 
     def age_eligible_guarderia_meses(self, filing_year: int) -> int:
         """Months of *filing_year* in which this descendant was alive and under three.
@@ -1382,6 +1415,30 @@ class DescendantInfo(BaseModel):
         if self.age_at_year_end(filing_year) != _MAX_AGE_MENOR_TRES:
             return False
         return self.gastos_guarderia_euros > 0 and not self.gastos_guarderia_mensuales
+
+    def guarderia_needs_segundo_ciclo_month(self, filing_year: int) -> bool:
+        """True when declared spend is withheld only for want of the second-cycle month.
+
+        Fires on exactly the population the ceiling governs: a cohabiting child
+        turning three in this período impositivo, with monthly nursery spend on
+        record and no declared month for when the second cycle may begin. There
+        the window is unknowable and the increment declines to grant it, so the
+        operator must be told which fact unlocks it — their centre files the
+        modelo 233 informative return, so the month is documented for them.
+
+        Deliberately silent for a child not turning three (no ceiling applies at
+        all) and for the annual-total shape, which
+        :meth:`guarderia_needs_monthly_detail` already reports for a different
+        reason. Two advisories on one filing for one cause is noise, and noise is
+        what teaches operators to stop reading the channel.
+        """
+        if not self.convive_con_contribuyente:
+            return False
+        if self.age_at_year_end(filing_year) != _MAX_AGE_MENOR_TRES:
+            return False
+        if not self.gastos_guarderia_mensuales:
+            return False
+        return self.segundo_ciclo_infantil_inicio_mes is None
 
     def is_eligible_guarderia(self, filing_year: int) -> bool:
         """True when this descendant may carry an Art. 81.2 guardería increase at all.
@@ -1890,6 +1947,51 @@ class RentaFamilyProfile(BaseModel):
             index
             for index, descendant in enumerate(self.descendientes)
             if descendant.guarderia_needs_monthly_detail(filing_year)
+        )
+
+    def guarderia_needs_segundo_ciclo_month_indices(self, filing_year: int) -> tuple[int, ...]:
+        """Indices whose turning-three window is withheld for want of a declared month."""
+        return tuple(
+            index
+            for index, descendant in enumerate(self.descendientes)
+            if descendant.guarderia_needs_segundo_ciclo_month(filing_year)
+        )
+
+    def guarderia_cotizaciones_ceiling_is_unbounded(self, filing_year: int) -> bool:
+        """True when the cotizaciones ceiling is NOT limited to the second-cycle window.
+
+        The SECOND consumer of the second-cycle month, and the one this application
+        does not compute. Art. 81 bounds it in the same período: "las cotizaciones a
+        la Seguridad Social a computar serán las devengadas hasta el mes anterior a
+        aquel en el que el hijo pueda iniciar el segundo ciclo".
+
+        DELIBERATELY DISCLOSED RATHER THAN COMPUTED, for two reasons that survive
+        each other. First, :attr:`cotizaciones_ss_madre_2024` is an ANNUAL scalar
+        with no month axis, so limiting it would mean apportioning a yearly figure
+        the operator supplied whole — inventing a number in the population this rule
+        governs. Second and decisively, that figure is a HOUSEHOLD term while the
+        ceiling is PER CHILD: a household with one child turning three and one
+        younger has no single bounding month, and AEAT states no apportionment rule
+        for that case. The second reason survives giving the field a month axis,
+        which is why the axis is not the fix.
+
+        So the operator is told the figure they supply must already be the bounded
+        one. Do not wire this to the declared month without first settling the
+        household-versus-per-child question; the registry formula's own comment
+        records the same boundary being met and left alone on purpose.
+
+        Fires only where it can change an outcome: a child turning three, spend on
+        record, and a cotizaciones figure actually declared — with none declared the
+        ceiling binds at zero and the increment is already nil for a reason the
+        operator can see.
+        """
+        if self.cotizaciones_ss_madre_2024 <= 0:
+            return False
+        return any(
+            descendant.convive_con_contribuyente
+            and descendant.age_at_year_end(filing_year) == _MAX_AGE_MENOR_TRES
+            and bool(descendant.gastos_guarderia_mensuales)
+            for descendant in self.descendientes
         )
 
     def descendientes_eligible_minimum(

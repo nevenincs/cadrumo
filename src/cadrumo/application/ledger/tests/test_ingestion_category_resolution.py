@@ -37,9 +37,10 @@ from ....domain.iva import (
     IvaRateKind,
     IvaTerritorialScope,
     SupplyNature,
+    record_country_code_status,
     stated_country_code_status,
 )
-from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
+from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2, an_uncatalogued_alpha3
 from .._classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
@@ -357,6 +358,11 @@ def _relief(
     return resolve_ingestion_iva_category(
         assembly,
         declared=declared,
+        # Which party the counterparty IS, which is what says which residency
+        # slot the catalogue-gap exemption may forgive. Without it the exemption
+        # forgives nothing: a caller that cannot name the counterparty cannot
+        # claim our vocabulary is what failed.
+        direction=direction,
         counterparty_country_status=stated_country_code_status(country_code),
     )
 
@@ -426,30 +432,48 @@ def test_a_resolved_export_to_a_genuine_third_country_is_honoured() -> None:
     assert resolution.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
 
 
-def test_a_country_our_vocabulary_does_not_carry_is_spared() -> None:
-    """Our data gap must not be charged to the taxpayer.
+def test_a_country_our_vocabulary_does_not_carry_forgives_that_partys_slot() -> None:
+    """Our data gap must not be charged to the taxpayer -- and ONLY our gap is forgiven.
 
     The specimen is measured, not hypothetical, and it is DERIVED rather than
     named: the shipped country vocabulary classifies it UNCATALOGUED, so the
     scope resolver answers nothing and the establishment is recorded as a gap --
     while the document printed a well-formed code naming a real third country.
-    Refusing there would reject a legitimate export over a row we have not
-    written. Deriving it means this case follows the vocabulary's boundary
-    instead of reddening the day the country it named is admitted.
+    Refusing on THAT rejects a legitimate export over a row we have not written.
 
-    The control below is what makes this attributable to the STATUS rather than
-    to the guard being inert: the identical claim with no country printed at all
-    is refused.
+    **The exemption is scoped to that one slot, and this fixture is why the
+    scoping matters.** It establishes neither party, so the filer's own residency
+    is outstanding too -- an unfinished profile rather than a hole in our data,
+    which the document under review cannot fix and which the counterparty's
+    excuse does not cover. So the claim is still withheld and the REASON narrows
+    to the filer alone. Forgiving the whole set honoured a zero-rated export with
+    NEITHER party established, which is the under-declaration direction, and it
+    became reachable the moment the counterparty's stated token started arriving
+    here at all.
+
+    Asserting the narrowed reason rather than an honoured claim is deliberate: it
+    shows the exemption fired without requiring it to prove more than it should.
+    That the claim STANDS once no other residency is outstanding is gated where a
+    document can supply the country and a profile can supply the filer.
+
+    The control below makes this attributable to the STATUS rather than to a
+    guard that had simply stopped naming the counterparty: with no country
+    printed, both slots are named.
     """
-    spared = _relief(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country_code=an_uncatalogued_alpha2())
+    forgiven = _relief(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country_code=an_uncatalogued_alpha2())
 
-    assert spared.outcome is IvaCategoryOutcome.DECLARED
-    assert spared.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+    assert forgiven.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF
+    assert "issuer_residency" in forgiven.note
+    assert "customer_residency" not in forgiven.note
 
     refused = _relief(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country_code=None)
     assert refused.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF, (
         "positive control: with no country printed the same claim must still be refused, "
-        "or the sparing above proves nothing about the status axis"
+        "or the narrowing above proves nothing about the status axis"
+    )
+    assert "customer_residency" in refused.note, (
+        "and the counterparty's slot must be NAMED when nothing excused it, or the narrowing "
+        "above is a guard that stopped mentioning it rather than an exemption that fired"
     )
 
 
@@ -484,3 +508,118 @@ def test_a_declared_code_that_rests_on_no_establishment_is_untouched(stated: Iva
 
     assert resolution.outcome is IvaCategoryOutcome.DECLARED
     assert resolution.category is stated
+
+
+def _record_relief(
+    stated: IvaCategory,
+    *,
+    country_token: str | None = None,
+    direction: InvoiceKind = InvoiceKind.ISSUED,
+):
+    """Resolve a relief claim the way a STRUCTURED record reaches the guard.
+
+    The sibling of :func:`_relief`, and it exists because the two axes admit
+    different spellings. ``stated_country_code_status`` answers only about
+    alpha-2, which is right for a value transcribed off a printed page, so a
+    helper built on it cannot present an alpha-3 token to the guard at all --
+    every case below would arrive as ``None`` and prove nothing about the
+    spelling it names.
+
+    The confirm path classifies the record's own token with
+    ``record_country_code_status``, so this does too. A helper that reached the
+    guard by a route production does not use can be green while the production
+    wiring is dead.
+    """
+    declared = _facts(established=False, stated=stated)
+    assembly = assemble_classification_criteria(
+        transaction_date=_WHEN,
+        direction=direction,
+        inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
+        declared=declared,
+    )
+    return resolve_ingestion_iva_category(
+        assembly,
+        declared=declared,
+        counterparty_country_status=record_country_code_status(country_token),
+        # Which party the counterparty IS. Without it the catalogue-gap
+        # exemption forgives no slot at all, so every case below would refuse
+        # and the reserved-code assertions would pass while proving nothing
+        # about reserved-ness. The positive control is what surfaced that.
+        direction=direction,
+    )
+
+
+@pytest.mark.parametrize("reserved", ["ZZZ", "QMA", "XAA"])
+@pytest.mark.parametrize(
+    "stated",
+    [IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, IvaCategory.INTRA_COMMUNITY_SUPPLY],
+)
+def test_a_reserved_alpha3_does_not_spare_a_declared_relief(stated: IvaCategory, reserved: str) -> None:
+    """The alpha-2 half of this rule was gated; the alpha-3 half was not.
+
+    Facturae states the alpha-3 spelling, so a reserved three-letter token is a
+    shape a real Spanish document can present -- and the failure direction is
+    the bad one. A reserved code classified as a catalogue gap would be SPARED,
+    honouring a relief claimed on a token with no referent, which is the
+    sparing-a-relief direction rather than the refusing-a-real-export one.
+
+    These codes are NAMED rather than derived, which is the opposite of the
+    catalogue-gap specimen's treatment and correct for the opposite reason. ISO
+    reserves ``QMA``-``QZZ``, ``XAA``-``XZZ`` and ``ZZA``-``ZZZ`` for private
+    use, so no vocabulary will ever admit them; a derived specimen would be
+    tracking a boundary that cannot move. The uncatalogued code below is
+    derived, because that boundary moves every time a country is enrolled.
+    """
+    resolution = _record_relief(stated, country_token=reserved)
+
+    assert resolution.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF, (
+        f"{reserved} names no country by construction, yet it spared a declared {stated.value}"
+    )
+    assert resolution.category is None, "a relief was honoured on a code with no referent"
+
+
+def test_the_alpha3_sparing_boundary_runs_where_the_vocabulary_does() -> None:
+    """The positive control, without which the refusals above prove nothing.
+
+    If the guard refused every alpha-3 token, the reserved cases would pass
+    while saying nothing about reserved-ness. This is the same claim through the
+    same helper, differing only in that the token names a real jurisdiction the
+    bundled vocabulary has not enrolled -- our gap, so it is spared.
+    """
+    spared = _record_relief(
+        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        country_token=an_uncatalogued_alpha3(),
+    )
+
+    assert spared.outcome is IvaCategoryOutcome.DECLARED
+    assert spared.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+
+
+def test_a_catalogued_alpha3_export_is_honoured_outright() -> None:
+    """The legitimate population, stated the way Facturae states it.
+
+    ``USA`` places the counterparty in a third country, so no residency gap is
+    recorded and the claim never reaches the guard. A fix that refused this
+    would trade an under-declaration for an over-payment, which nothing in this
+    apparatus watches.
+    """
+    declared = DeclaredFacts(
+        issuer_scope=_fact(_ES),
+        customer_scope=_fact(IvaTerritorialScope.THIRD_COUNTRY),
+        stated_category=_fact(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED),
+    )
+    assembly = assemble_classification_criteria(
+        transaction_date=_WHEN,
+        direction=InvoiceKind.ISSUED,
+        inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
+        declared=declared,
+    )
+    resolution = resolve_ingestion_iva_category(
+        assembly,
+        declared=declared,
+        counterparty_country_status=record_country_code_status("USA"),
+        direction=InvoiceKind.ISSUED,
+    )
+
+    assert resolution.outcome is IvaCategoryOutcome.DECLARED
+    assert resolution.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
