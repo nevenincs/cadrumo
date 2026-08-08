@@ -16,6 +16,10 @@ legal_refs = [
     "ley-37-1992:art-88",
     "ley-37-1992:art-90",
     "ley-37-1992:art-91",
+    # RDL 20/2022 art. 72 opens the 2023 window for the [154]/[166] transitional
+    # rungs; RDL 4/2024 art. 1 carries the 10/4T-2024 flip. Both rate formulas
+    # cite the pair, so the construct must cover both.
+    "real-decreto-ley-20-2022:art-72",
     "real-decreto-ley-4-2024:art-1",
     "ley-37-1992:art-92",
     "ley-37-1992:art-94",
@@ -123,6 +127,11 @@ formulas = [
     "modelo-303-dr303-09-projection",
     "modelo-303-dr303-06-projection",
     "modelo-303-dr303-03-projection",
+    # The two RD-ley 4/2024 transitional Tipo % rungs, beside the cuota
+    # projections they feed: [154] is the rate [155] multiplies, [166] the rate
+    # [167] multiplies. Both rate formulas shipped without construct ownership.
+    "modelo-303-dr303-154-rate",
+    "modelo-303-dr303-166-rate",
     "modelo-303-dr303-155-projection",
     "modelo-303-dr303-167-projection",
     "modelo-303-dr303-10-projection",
