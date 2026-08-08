@@ -371,9 +371,15 @@ def test_the_governed_surface_is_not_empty() -> None:
     # performs that check for it — ``_secure_enveloped_document.py`` — takes its
     # place here, so the sede observation reads stay represented in the scope
     # anchor rather than dropping out of it unnoticed.
+    # ``_snapshot_base.py`` was in this set until ``SecureSnapshotRepository``
+    # (the class carrying the ``Envelope`` / ``EnvelopeVersionError`` reads)
+    # relocated to the persistence adapter as
+    # ``adapters.persistence.profile.snapshots.SecureSnapshotRepository``;
+    # ``snapshots.py`` takes its place here so the live-snapshot envelope
+    # reads stay represented in the scope anchor.
     assert {
         "usage_ratios.py",
         "transactions.py",
         "_secure_enveloped_document.py",
-        "_snapshot_base.py",
+        "snapshots.py",
     } <= names, f"gate scope lost real read paths; governed modules found: {sorted(names)}"
