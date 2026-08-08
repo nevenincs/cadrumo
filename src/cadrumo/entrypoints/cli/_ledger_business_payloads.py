@@ -427,6 +427,15 @@ class EvidenceExtractResult(OutputSchema):
     # states recoverable from the field's provenance anchor.
     supplier_country_code: str | None = None
     customer_country_code: str | None = None
+    # The token each party's record actually states, before the correspondence
+    # above places it. Surfaced rather than left to the provenance anchor,
+    # because the anchor exists only where a value was produced: a token the
+    # bundled vocabulary does not carry -- `THA` for a Thai supplier -- leaves
+    # the resolved field empty, and empty is what a document with no address
+    # block leaves too. Carrying the stated form is what keeps those two
+    # documents distinguishable on the operator's own surface.
+    supplier_stated_country_code: str | None = None
+    customer_stated_country_code: str | None = None
     invoice_number: str | None = None
     invoice_series: str | None = None
     invoice_date: str | None = None

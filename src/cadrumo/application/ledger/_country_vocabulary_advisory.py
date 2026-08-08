@@ -33,6 +33,17 @@ exactly the population where the fix is a registry commit. The distinction
 survives the move to the advisory channel: each kind carries its own notice code
 and its own sentence, so a JSON consumer can route them apart.
 
+**The token is read from the field that keeps it, not from the resolved one.** A
+draft's ``*_country_code`` is contracted alpha-2 and is populated only where the
+bundled vocabulary placed the record's token, so it is empty for precisely the
+codes this module exists to report -- and reading it made every firing above
+unreachable from a real document while the module's own tests, which set that
+field by hand, stayed green. The verbatim token lives on
+:attr:`~application.ledger.InvoiceDraft.supplier_stated_country_code` and its
+sibling, and that is what is asked. A structured record stating ``THA`` for a
+Thai supplier was otherwise byte-identical, all the way to the operator, to one
+carrying no address block at all.
+
 **The judgement is borrowed, not restated.** Which bucket a code falls in is
 asked of :func:`~domain.iva.stated_country_code_status`, and whether the country
 already settled the territory is asked of
@@ -72,6 +83,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...domain.iva import (
     StatedCountryCodeStatus,
     country_code_for_printed_country_name,
+    country_code_for_stated_country_code,
     stated_country_code_status,
     territorial_scope_for_country,
 )
@@ -90,14 +102,15 @@ __all__ = [
 class _Party(NamedTuple):
     """One side of the document, named by the fields that state its country."""
 
+    stated_field: str
     code_field: str
     name_field: str
     role: str
 
 
 _PARTIES: Final[tuple[_Party, ...]] = (
-    _Party("supplier_country_code", "supplier_country", "issuing"),
-    _Party("customer_country_code", "customer_country", "billed"),
+    _Party("supplier_stated_country_code", "supplier_country_code", "supplier_country", "issuing"),
+    _Party("customer_stated_country_code", "customer_country_code", "customer_country", "billed"),
 )
 """Both sides, because establishment is asked of each party independently.
 
@@ -141,8 +154,11 @@ class CountryVocabularyWarning(BaseModel):
     Attributes:
         role: The side of the document the code was stated for, in the terms the
             operator reads the invoice in -- issuing or billed.
-        field: The draft field carrying the code, so the operator can go straight
-            to the row the review surface prints it on.
+        field: The draft field carrying the code -- the verbatim ``*_stated_``
+            one, never the resolved sibling, because the resolved sibling is
+            empty exactly when this warning exists. The review surface emits a
+            row per draft field, so the operator goes straight to the row that
+            shows the token rather than to the blank one beside it.
         stated_code: The code as the status axis matched it: stripped and
             upper-cased. Quoted rather than described, because an operator shown
             ``XX`` sees the placeholder at a glance while one told "the country
@@ -197,6 +213,59 @@ class CountryVocabularyAdvisory(BaseModel):
         return tuple(party for party in self.parties if party.status is status)
 
 
+_ALPHA3_LENGTH: Final = 3
+"""The other length an ISO 3166-1 country code is stated in.
+
+Facturae -- the Spanish national e-invoice format, and so the format most of
+this corpus arrives in -- states the country in alpha-3. Nothing else in this
+module cares which spelling was used; this constant exists only so a three-letter
+token is recognised as a COUNTRY CODE claim rather than as a stray string.
+"""
+
+
+def _stated_code_status(stated: str | None) -> StatedCountryCodeStatus | None:
+    """Return which kind of country-code failure a record's stated token is, if any.
+
+    :func:`~domain.iva.stated_country_code_status` is the authority and is asked
+    first, but it answers only about alpha-2 and returns ``None`` for everything
+    else -- correctly, because it is handed printed values and must not call an
+    address line that landed in a country slot a bad country code. This function
+    is asked about a STRUCTURED record's country ELEMENT, where the schema has
+    already said the token is a country code, so it can answer for the alpha-3
+    spelling that authority declines to judge.
+
+    Three answers, in the order the evidence narrows:
+
+    * a token the bundled correspondence places -- ``ES``, ``ESP``, ``DEU`` --
+      is ``CATALOGUED`` and raises nothing;
+    * a token the alpha-2 authority classifies keeps that classification, so the
+      ISO user-assigned ranges stay the operator's typo and a real jurisdiction
+      we do not carry stays our catalogue gap;
+    * a three-letter alphabetic token nothing placed is ``UNCATALOGUED``. This is
+      the case that was silent end to end: ``THA`` names Thailand, the vocabulary
+      omits it, and the alpha-2 authority cannot classify a three-letter string
+      at all.
+
+    Anything else -- a blank, an address line, a truncated fragment -- returns
+    ``None`` and stays unreported, on exactly the terms the alpha-2 authority
+    states: a string nobody claimed was a country is not a country the issuer got
+    wrong.
+    """
+    if stated is None:
+        return None
+    candidate = stated.strip().upper()
+    if not candidate:
+        return None
+    if country_code_for_stated_country_code(candidate) is not None:
+        return StatedCountryCodeStatus.CATALOGUED
+    alpha2_status = stated_country_code_status(candidate)
+    if alpha2_status is not None:
+        return alpha2_status
+    if len(candidate) == _ALPHA3_LENGTH and candidate.isalpha():
+        return StatedCountryCodeStatus.UNCATALOGUED
+    return None
+
+
 def _territory_already_settled(draft: InvoiceDraft, party: _Party) -> bool:
     """Return whether this party's country evidence settled its territory anyway.
 
@@ -243,19 +312,19 @@ def country_vocabulary_advisory(draft: InvoiceDraft) -> CountryVocabularyAdvisor
     """
     warnings: list[CountryVocabularyWarning] = []
     for party in _PARTIES:
-        stated: str | None = getattr(draft, party.code_field, None)
-        status = stated_country_code_status(stated)
+        stated: str | None = getattr(draft, party.stated_field, None)
+        status = _stated_code_status(stated)
         if status is None or status not in COUNTRY_VOCABULARY_ADVISED_STATUSES:
             continue
         if _territory_already_settled(draft, party):
             continue
-        # The status is non-``None``, so the field holds a well-formed alpha-2
-        # code and the normalisation is total.
+        # The status is non-``None``, so the field holds a token the record
+        # stated as a country code and the normalisation is total.
         code = str(stated).strip().upper()
         warnings.append(
             CountryVocabularyWarning(
                 role=party.role,
-                field=party.code_field,
+                field=party.stated_field,
                 stated_code=code,
                 status=status,
                 detail=f"the {party.role} party's country code {code!r} {_DETAIL_BY_STATUS[status]}",

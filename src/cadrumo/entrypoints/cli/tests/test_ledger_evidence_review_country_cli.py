@@ -17,6 +17,11 @@ country yields no residency, the classification criteria do not assemble, and
 the zero-rated export category stays unreachable. That is proven at the
 application layer beside the advisory itself.
 
+The two codes are seeded on the STATED country fields, which are the ones a
+reading path populates: the resolved siblings are contracted alpha-2 and stay
+empty for precisely these tokens, so seeding them would describe a draft no
+document produces.
+
 Assertions are on CODES and STRUCTURE -- the notice codes, the context keys and
 the stated codes they carry -- never on prose, which is localised.
 
@@ -57,8 +62,8 @@ def seeded_draft(tmp_path: Path) -> Iterator[None]:
     """
     read = InvoiceDraft(
         supplier_tax_id="B12345674",
-        supplier_country_code="TH",
-        customer_country_code="XX",
+        supplier_stated_country_code="TH",
+        customer_stated_country_code="XX",
         taxable_base=Decimal("100.00"),
     )
     # Stamped through the real check list, exactly as a reading path hands a
@@ -136,9 +141,9 @@ def test_each_notice_names_the_code_the_document_stated_and_the_party() -> None:
     assert isinstance(unassigned, dict)
     assert isinstance(uncatalogued, dict)
     assert unassigned["billed_country_code"] == "XX"
-    assert unassigned["fields"] == "customer_country_code"
+    assert unassigned["fields"] == "customer_stated_country_code"
     assert uncatalogued["issuing_country_code"] == "TH"
-    assert uncatalogued["fields"] == "supplier_country_code"
+    assert uncatalogued["fields"] == "supplier_stated_country_code"
 
 
 @pytest.mark.usefixtures("seeded_draft")
