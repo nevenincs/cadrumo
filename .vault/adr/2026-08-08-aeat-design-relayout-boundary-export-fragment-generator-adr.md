@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:349e869684738b12c19b608e9f9b9f26bdfa9c5559e96064f506d7c01fca66c0'
+body_hash: 'sha256:1558801fd1ea4cad7f5abd2a4a3066a0334dc8c2c8c1d6b633bbf1e68be25ead'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
@@ -76,11 +76,26 @@ nothing itself.
   3,440 boxes there; a flattened PDF parse collapses a document to one synthetic
   sheet, so `(sheet, offset, length)` stops identifying a slot; and the same file
   bundled as `.xls` and `.xlsx` is byte-different while being one design.
-- Reproducing an existing tree is available as a control and is the only one that
-  does not require trusting the thing under test. Modelo 200's 149-file tree
-  predates this campaign, is believed correct, declares
-  `source_refs = ["aeat-dr-200-2025"]`, and carries 78 distinct record ids
-  consistent with the 2025 design's 77-record decomposition.
+- **AMENDED: the fixture is NOT hand-verified, and this record twice said it was.**
+  Modelo 200's 149-file tree is **of unrecorded provenance, believed correct because
+  nothing has contradicted it.** Traced through history: its export layout appears in
+  `cdcd5b11d5` (2026-05-06), a **171-file, 158,013-insertion** commit whose subject is
+  "Implement secure persistence and registry slices" and whose **body is empty**, with
+  the 6,610 lines of layout arriving alongside secure persistence, locale files and
+  unrelated tests. The four vault index files it touches belong to OTHER features. **No
+  ADR, plan or exec record accompanies the layout.** Every commit after it is
+  restructuring rather than authoring: `200.toml` moved into a revision directory, a
+  132,896-line monolith fragmented into 149 files, oversized fragments split, and a
+  package-root rename.
+- **No joining tool ever existed, at any point in this repository's history.** Searched
+  all history for a `dev/` module named for design, diseno, export layout or fichero:
+  one file, `sync_aeat_record_design_corpus.py`, which DOWNLOADS the design corpus and
+  emits zero registry TOML. So nothing was built and later removed — the step from
+  design to fragment has never been mechanised or recorded.
+- **Therefore the authorising record's "parsed from the bundled corpus, never
+  hand-transcribed" requirement was never met for this tree.** It is the artefact the
+  split is meant to divide and the fixture a reproduction gate would compare against,
+  and its derivation is unestablished.
 - **Byte-for-byte reproduction is the wrong proof target, and this record's first
   pass named it.** There is no TOML serializer anywhere in the tree: registry TOML
   is hand-rendered text, and the existing fragments carry human partitioning
@@ -150,11 +165,15 @@ nothing itself.
   declaring its own. Three test modules independently re-declared that pattern at
   four digits while production used five; a fourth copy inside this mechanism would
   reproduce that defect in SHIPPED REGISTRY DATA rather than in a gate.
-- **Proof is LOADER-SEMANTIC EQUIVALENCE, not byte equality.** The export layout
-  loaded from re-coordinated fragments must equal the layout loaded from the
-  existing tree when re-coordinated against that tree's own design. The loader is
-  what consumes fragments, so the loader's view is the contract; formatting and
-  file partitioning are not.
+- **Proof is LOADER-SEMANTIC EQUIVALENCE, not byte equality** — the loader is what
+  consumes fragments, so the loader's view is the contract while formatting and file
+  partitioning are not.
+- **AMENDED: and that proof is bounded. Reproducing the existing tree demonstrates
+  AGREEMENT WITH AN UNVERIFIED BASELINE, not correctness against AEAT.** The fixture's
+  derivation is unrecorded, so a gate built on it detects divergence from shipped
+  behaviour — a real and useful property — and **cannot discharge a correctness
+  obligation.** This record's earlier passes implied it could. An ADR that overstates
+  its own proof is a shape this campaign has corrected twice, and this is the third.
 - Emitted fragments are REGENERABLE ARTEFACTS, not authored ones. A correction to
   a design, a parser or the mechanism is fixed at the source and re-run; nobody
   hand-edits emitted fragments. Output is deterministic and carries its provenance.
@@ -185,9 +204,11 @@ the matching key rather than a real change — which makes it the sharpest avail
 control, and it needs no second artefact to compare against.
 
 Where a divergence is adjudicated in the existing tree's favour, that is a parser
-or design-reading gap and it is recorded with its reason. The existing tree is
-hand-authored and may itself be wrong, so it is not treated as an oracle: a
-divergence resolved either way is a finding, never a tolerance.
+or design-reading gap and it is recorded with its reason. The existing tree is of
+unrecorded provenance and may itself be wrong, so it is explicitly not an oracle: a
+divergence resolved either way is a finding, never a tolerance. That at least one
+shipped layout IS wrong is established — Modelo 390 exported a total cuota at byte
+1628 against a record its own design declares ending at 1526.
 
 ## Rationale
 
@@ -199,11 +220,12 @@ it cannot be trusted — so full generation's required input is the thing alread
 known to be unreliable, while re-coordination needs no mapping to be authored at
 all because it preserves one already believed correct.
 
-The identity-operation gate is the strongest control available. Re-coordinating a
-tree against its own design must change nothing, so the expected output is known
-exactly and needs no second artefact — unlike reproducing one tree from a different
-design, where a divergence is genuinely ambiguous between mechanism error and real
-layout change.
+The identity-operation gate is the strongest control available against the shipped
+tree, and that is a weaker claim than it first appears. Re-coordinating a tree
+against its own design must change nothing, so the expected output is known exactly
+and needs no second artefact. But the baseline it compares against has no
+established derivation, so the gate bounds regression rather than establishing
+correctness.
 
 Refusing the whole tree on a single unmatched field follows the shape corrected
 repeatedly today: a mechanism returning a confident answer where the honest output
