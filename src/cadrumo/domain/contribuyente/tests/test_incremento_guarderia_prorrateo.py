@@ -107,8 +107,17 @@ class TestManualWorkedOracles:
         the right number was reproduced through a branch the real case never
         takes, and the real case returned 0,00 against the manual's 500. Do not
         re-substitute convenient facts here — the birth date is the point.
+
+        The mother's months are the manual's too, and are declared rather than
+        left to the fixture default. She is entitled "hasta el mes de agosto
+        incluido", so January to August. The figure is 500 either way, because
+        the six complete nursery months are the binding term — which is exactly
+        why it is worth pinning: a default of all twelve reproduces the right
+        number while leaving the Art. 81.1 side of the intersection untested,
+        the same shape as the substitution this docstring warns about, one
+        field over.
         """
-        child = _child(date(2021, 9, 15), mensual="1-6:500")
+        child = _child(date(2021, 9, 15), mensual="1-6:500", meses_madre="1-8")
 
         assert child.age_at_year_end(_YEAR) == 3
         assert _total(child) == Decimal("500.00")
