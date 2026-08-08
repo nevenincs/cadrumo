@@ -225,6 +225,42 @@ class CliStoredDataValidationBoundaryError(CadrumoError):
 _INTERNAL_FAULT_VIOLATION_LIMIT: Final[int] = 5
 
 
+#: Pydantic error types whose ``msg`` is prose authored by the validator that
+#: raised, rather than a sentence pydantic composed from the declared constraint.
+#: Their text is not under this module's control and routinely quotes the value
+#: that failed -- ``ValueError(f"tax identifier {value!r} must be ...")`` is the
+#: ordinary way to write a domain validator, so the leak is the NORM on this
+#: shape rather than an unlucky case.
+_VALIDATOR_AUTHORED_MESSAGE_TYPES: Final[frozenset[str]] = frozenset({"value_error", "assertion_error"})
+
+
+def _violation_rule(item: object) -> str:
+    """Return the rule an error broke, with no text the validator authored.
+
+    Pydantic's own messages are composed from the DECLARED constraint -- "String
+    should have at most 9 characters", "Input should be a valid integer" -- and
+    name the rule without the value, which is exactly the projection this module
+    promises. A ``value_error`` or ``assertion_error`` message is different in
+    kind: it is whatever a domain validator chose to write, and this module
+    cannot constrain it.
+
+    For those, the rule is reported as the pydantic error type plus the class of
+    the exception that raised. Both are identifiers from the source tree, so
+    neither can carry taxpayer data, and together they say which contract failed
+    -- which is what makes the fault reportable. The prose is dropped rather than
+    trimmed or pattern-scrubbed: a redactor over free text is a guess about what
+    is sensitive, and the whole point of this projection is that it never has to
+    make one.
+    """
+    assert isinstance(item, dict)
+    kind = str(item.get("type", "validation_error"))
+    if kind not in _VALIDATOR_AUTHORED_MESSAGE_TYPES:
+        return str(item.get("msg", "validation error"))
+    raised = (item.get("ctx") or {}).get("error")
+    named = type(raised).__name__ if raised is not None else None
+    return f"{kind} ({named})" if named else kind
+
+
 def internal_record_fault_context(error: ValidationError) -> dict[str, object]:
     """Summarise ``error`` as operator-safe context naming the failing contract.
 
@@ -235,21 +271,45 @@ def internal_record_fault_context(error: ValidationError) -> dict[str, object]:
     which both the JSON and text renderers already emit.
 
     Carries the failing model's name and, per violation, the field path and the
-    constraint message -- never ``input``. A validated record on this path holds
-    taxpayer data, and the value that breached a constraint is exactly the value
-    that must not cross an output boundary; the field and the rule it broke are
-    what make the defect reportable, and neither is sensitive.
+    rule that was broken -- never ``input``, and never a message a domain
+    validator authored. A validated record on this path holds taxpayer data, and
+    the value that breached a constraint is exactly the value that must not
+    cross an output boundary.
+
+    **Withholding ``input`` alone did not achieve that**, and the docstring
+    asserted it for as long as it did not. A ``value_error`` carries the value
+    inside its own message text, because formatting the offending value into the
+    refusal is how domain validators are normally written -- so the guarantee was
+    defeated by the commonest validator shape rather than by an exotic one. The
+    message is now withheld for exactly those types and the rule reported as the
+    error type plus the raising exception's class.
+
+    A withheld message is COUNTED in ``violation_messages_withheld`` rather than
+    dropped silently, so an engineer reading a thin report can tell the detail
+    was suppressed on purpose and go to the error log, which still holds the
+    unredacted ``errors()`` payload.
+
+    **Known gap, deliberately not papered over here:** a violation's ``loc``
+    reproduces mapping KEYS as well as field names, so a record holding a
+    mapping keyed by a tax identifier puts that identifier in the path. Telling
+    a key from a field name needs the model class, which a
+    :exc:`~pydantic.ValidationError` does not carry, so the fix is a design
+    change rather than a filter and a pattern-matching redactor here would be
+    the guess this projection exists to avoid.
     """
     violations = error.errors()
+    reported = violations[:_INTERNAL_FAULT_VIOLATION_LIMIT]
     named = tuple(
-        f"{'.'.join(str(part) for part in item['loc']) or '<root>'}: {item['msg']}"
-        for item in violations[:_INTERNAL_FAULT_VIOLATION_LIMIT]
+        f"{'.'.join(str(part) for part in item['loc']) or '<root>'}: {_violation_rule(item)}" for item in reported
     )
+    withheld = sum(1 for item in reported if str(item.get("type", "")) in _VALIDATOR_AUTHORED_MESSAGE_TYPES)
     context: dict[str, object] = {
         "failing_record": error.title,
         "violation_count": len(violations),
         "violations": "; ".join(named),
     }
+    if withheld:
+        context["violation_messages_withheld"] = withheld
     if len(violations) > _INTERNAL_FAULT_VIOLATION_LIMIT:
         context["violations_omitted"] = len(violations) - _INTERNAL_FAULT_VIOLATION_LIMIT
     return context
