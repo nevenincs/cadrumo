@@ -267,8 +267,8 @@ def test_an_off_host_provider_does_not_occupy_an_on_host_slot(tmp_path: Path) ->
     client = _client(tmp_path, concurrency=1)
     arena = _on_host_inference_arena(client.settings)
 
-    with client._on_host_admission(LLMProvider.LOCAL):  # noqa: SLF001 - the boundary under test
+    with client._on_host_admission(LLMProvider.LOCAL):
         assert arena.held == 1
-        with client._on_host_admission(LLMProvider.OPENAI):  # noqa: SLF001 - the boundary under test
+        with client._on_host_admission(LLMProvider.OPENAI):
             assert arena.held == 1
     assert arena.held == 0
