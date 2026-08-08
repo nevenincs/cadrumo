@@ -44,10 +44,12 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Protocol
+from enum import StrEnum
+from typing import Protocol, TypedDict
 
 from pydantic import ValidationError
 
+from ...core import MetodoValoracion, TipoOperacionVinculada
 from ...core.aggregation import RetencionClave, RowSetGroupingKind
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -271,6 +273,67 @@ def _optional_text_kwarg(
     return {key: text}
 
 
+class _OperationKindCodeKwarg(TypedDict, total=False):
+    operation_kind_code: TipoOperacionVinculada
+
+
+class _TransferPricingMethodCodeKwarg(TypedDict, total=False):
+    transfer_pricing_method_code: MetodoValoracion
+
+
+def _hydrate_coded_field[EnumT: StrEnum](*, field_name: str, text: str, code_set: type[EnumT]) -> EnumT:
+    """Widen a raw registry token into its typed DR23200-style code, or raise.
+
+    Mirrors the case-folding the observation model's own ``BeforeValidator``
+    applies, so a token outside the accepted set raises the identical
+    accepted-set message the model would have raised from inside its own
+    validator.
+    """
+    try:
+        return code_set(text.upper())
+    except ValueError:
+        accepted = ", ".join(repr(str(member)) for member in code_set)
+        raise ValueError(f"{field_name} must be one of {accepted}; got {text!r}") from None
+
+
+def _optional_operation_kind_code_kwarg(fields: Mapping[str, Decimal | str]) -> _OperationKindCodeKwarg:
+    """Pass ``operation_kind_code`` only when the row supplies a non-empty value.
+
+    The coded counterpart of :func:`_optional_text_kwarg`: the target field is
+    typed as the closed ``TipoOperacionVinculada`` enum rather than plain
+    text, so it cannot be forwarded as a bare ``str``.
+    """
+    raw = fields.get("operation_kind_code")
+    if raw is None:
+        return {}
+    text = _coerce_text(raw)
+    if not text:
+        return {}
+    return {"operation_kind_code": _hydrate_coded_field(field_name="operation_kind_code", text=text, code_set=TipoOperacionVinculada)}
+
+
+def _optional_transfer_pricing_method_code_kwarg(fields: Mapping[str, Decimal | str]) -> _TransferPricingMethodCodeKwarg:
+    """Pass ``transfer_pricing_method_code`` only when the row supplies a non-empty value.
+
+    The coded counterpart of :func:`_optional_text_kwarg`: the target field is
+    typed as the closed ``MetodoValoracion`` enum rather than plain text, so
+    it cannot be forwarded as a bare ``str``.
+    """
+    raw = fields.get("transfer_pricing_method_code")
+    if raw is None:
+        return {}
+    text = _coerce_text(raw)
+    if not text:
+        return {}
+    return {
+        "transfer_pricing_method_code": _hydrate_coded_field(
+            field_name="transfer_pricing_method_code",
+            text=text,
+            code_set=MetodoValoracion,
+        ),
+    }
+
+
 def _coerce_flag(value: Decimal | str | None) -> bool:
     """Parse a row-set boolean-flag cell (``"1"``/``"0"``) into a real bool.
 
@@ -410,21 +473,29 @@ def assemble_related_party_observations(
                     source_id=f"detalle:per_related_party_operation:row-{row_index}",
                     counterparty_tax_id=_coerce_text(fields.get("counterparty_tax_id")),
                     counterparty_legal_name=_coerce_text(fields.get("counterparty_legal_name")),
+                    # No invented default: "01" is a real clave (bienes
+                    # tangibles), so substituting it for an absent value
+                    # would declare an operation kind the row never carried.
+                    # The coded-kwarg helpers (rather than the plain-text one)
+                    # because the field is the typed
+                    # TipoOperacionVinculada/MetodoValoracion enum, not text.
+                    # Spread before the generic ``dict[str, str]`` kwargs below:
+                    # a type checker that cannot see a plain dict's key set
+                    # must assume it might supply any parameter, so ordering
+                    # the precisely-keyed ``TypedDict`` spreads first lets it
+                    # narrow the remaining parameter set before that.
+                    **_optional_operation_kind_code_kwarg(fields),
+                    **_optional_transfer_pricing_method_code_kwarg(fields),
                     # No invented default: modelo 232 declares paraíso-fiscal
                     # operations, so substituting Spain for an absent country
                     # marks a tax-haven counterparty as domestic on the exact
                     # axis the declaration exists to surface.
                     **_optional_text_kwarg(fields, "country_code"),
                     transaction_date=default_date,
-                    # No invented default: "01" is a real clave (bienes
-                    # tangibles), so substituting it for an absent value
-                    # would declare an operation kind the row never carried.
-                    operation_kind_code=_coerce_text(fields.get("operation_kind_code")),
-                    transfer_pricing_method_code=_coerce_text(fields.get("transfer_pricing_method_code")),
                     amount=coerce_decimal(fields.get("amount"), default=Decimal("0")),
                 ),
             )
-        except ValidationError as exc:
+        except (ValidationError, ValueError) as exc:
             raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
     return tuple(observations)
 

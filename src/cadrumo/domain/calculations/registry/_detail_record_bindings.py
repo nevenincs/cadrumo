@@ -76,13 +76,32 @@ _RelatedPartyRowField = Literal[
 ]
 
 
-_M232_CODE_SETS: Mapping[str, type[TipoOperacionVinculada] | type[MetodoValoracion]] = MappingProxyType(
-    {
-        "operation_kind_code": TipoOperacionVinculada,
-        "transfer_pricing_method_code": MetodoValoracion,
-    },
-)
-"""Field name to its DR23200 code set, read by the hydrating validator."""
+def _hydrate_operation_kind_code(value: object) -> object:
+    """Hydrate a resolved binding value into its typed ``TipoOperacionVinculada`` member.
+
+    Binding values arrive from the registry as free-form text, so this is the
+    boundary that turns a token into a member. It is the same code set the
+    operator-supplied CLI row carries, which is why both read it from ``core``
+    rather than either side re-spelling the table.
+    """
+    if not isinstance(value, str):
+        return value
+    try:
+        return TipoOperacionVinculada(value.upper())
+    except ValueError:
+        accepted = ", ".join(repr(str(member)) for member in TipoOperacionVinculada)
+        raise ValueError(f"operation_kind_code must be one of {accepted}; got {value!r}") from None
+
+
+def _hydrate_transfer_pricing_method_code(value: object) -> object:
+    """Hydrate a resolved binding value into its typed ``MetodoValoracion`` member."""
+    if not isinstance(value, str):
+        return value
+    try:
+        return MetodoValoracion(value.upper())
+    except ValueError:
+        accepted = ", ".join(repr(str(member)) for member in MetodoValoracion)
+        raise ValueError(f"transfer_pricing_method_code must be one of {accepted}; got {value!r}") from None
 
 
 class RelatedPartyOperationObservation(BaseModel):
@@ -102,30 +121,14 @@ class RelatedPartyOperationObservation(BaseModel):
     # representation of it, and the two must agree.
     country_code: str = Field(min_length=2, max_length=2)
     transaction_date: date
-    operation_kind_code: TipoOperacionVinculada
-    transfer_pricing_method_code: MetodoValoracion = MetodoValoracion.NO_DECLARADO
+    operation_kind_code: Annotated[TipoOperacionVinculada, BeforeValidator(_hydrate_operation_kind_code)]
+    transfer_pricing_method_code: Annotated[
+        MetodoValoracion,
+        BeforeValidator(_hydrate_transfer_pricing_method_code),
+    ] = MetodoValoracion.NO_DECLARADO
     amount: Decimal
 
     _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
-
-    @field_validator("operation_kind_code", "transfer_pricing_method_code", mode="before")
-    @classmethod
-    def _hydrate_m232_codigo(cls, value: object, info: ValidationInfo) -> object:
-        """Hydrate a resolved binding value into its typed DR23200 code set.
-
-        Binding values arrive from the registry as free-form text, so this is
-        the boundary that turns a token into a member. It is the same pair of
-        sets the operator-supplied CLI row carries, which is why both read them
-        from ``core`` rather than either side re-spelling the tables.
-        """
-        if not isinstance(value, str):
-            return value
-        code_set = _M232_CODE_SETS[info.field_name]
-        try:
-            return code_set(value.upper())
-        except ValueError:
-            accepted = ", ".join(repr(str(member)) for member in code_set)
-            raise ValueError(f"{info.field_name} must be one of {accepted}; got {value!r}") from None
 
     @field_validator("amount")
     @classmethod
