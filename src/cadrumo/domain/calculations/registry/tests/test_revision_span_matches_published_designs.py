@@ -70,10 +70,14 @@ the largest designs belong to modelos that do export. The cost buys the offsets
 and the field occupancy the derivatives do not carry, which is what the box and
 retirement signals are made of.
 
-THREE INDEPENDENT SIGNALS, ONE VERDICT -- and the third reports two directions.
-The count in this heading read TWO for as long as the occupancy signal existed,
-which is worth stating rather than quietly correcting: a module that miscounts its
-own instruments invites a reader to act on the ones it names and miss the rest.
+FOUR INDEPENDENT SIGNALS, ONE VERDICT -- and the occupancy one reports two directions.
+This heading has now been wrong twice in the same direction, reading TWO for as long as
+the occupancy signal existed and THREE for as long as the box-SET signal has, which is
+worth stating rather than quietly correcting: a module that miscounts its own
+instruments invites a reader to act on the ones it names and miss the rest. The fourth
+is box-SET membership -- a box added or removed with nothing displaced, which the
+movement check structurally cannot see because it iterates only the boxes both designs
+share.
 
 The box-offset diff sees which boxes moved
 but needs bracketed box markers. The page-length diff sees only that a page

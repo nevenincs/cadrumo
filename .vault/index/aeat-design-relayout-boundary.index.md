@@ -6,7 +6,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:fcb549d96c2a75a13d65f6575e1ca5d8ca8281e6beff6813f10d7adc4c55ee4e'
+body_hash: 'sha256:e5219865e83b2ed83bce9357a29ee6091657abe07a247bdd0eab1a0062707bd4'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -21,6 +21,7 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S08]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S65]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S68]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S71]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
 ---
 
@@ -47,6 +48,7 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S08` - Re-key the slot-occupancy inventory on the design file rather than the parsed year
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S65` - Assert the reserved-to-real occupancy transition alongside the retirement direction
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S68` - Order the design inventories chronologically rather than by filename
+- `2026-08-08-aeat-design-relayout-boundary-W01-P02-S71` - Add a box-set MEMBERSHIP signal alongside the movement signal
 
 ### plan
 
