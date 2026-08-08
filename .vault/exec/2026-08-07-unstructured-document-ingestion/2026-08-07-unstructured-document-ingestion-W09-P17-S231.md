@@ -5,44 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:e1d4be7e184f536edcfbba17470bbd7053a615304c12a2207724bb59a0794866'
+body_hash: 'sha256:093c945e80aacf46842db0b2bc03fb62d82699e19a98a38a6f0fbd4781baee0a'
 step_id: 'S231'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S231 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Carry refused_anchor to the review surface, the one surface it exists for. Measured: FieldProvenance.refused_anchor reaches the extract envelope and is mirrored on the business payload, and appears zero times in the review CLI, whose per-field row builder passes anchor and anchor_self_reported and nothing for the refused form. Its own docstring says the point is that the operator surface can say which of the two happened, a reader that offered nothing versus one that offered something the document does not carry, and the per-field review rows are where an operator reads a field's grounding. There the two remain indistinguishable, which is the exact state the field was added to end. Same shape as anchor_self_reported beside it and ## Scope
-
-- `src/cadrumo/entrypoints/cli` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Carry refused_anchor to the review surface, the one surface it exists for. Measured: FieldProvenance.refused_anchor reaches the extract envelope and is mirrored on the business payload, and appears zero times in the review CLI, whose per-field row builder passes anchor and anchor_self_reported and nothing for the refused form. Its own docstring says the point is that the operator surface can say which of the two happened, a reader that offered nothing versus one that offered something the document does not carry, and the per-field review rows are where an operator reads a field's grounding. There the two remain indistinguishable, which is the exact state the field was added to end. Same shape as anchor_self_reported beside it
 

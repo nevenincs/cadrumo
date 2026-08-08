@@ -5,44 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:f052cada713a73f57fb4ae5c619da9c9d1982b91d96f6b910361d2313bd7810d'
+body_hash: 'sha256:ae2bef2644e11bdcf4b9804cb0fcd3878f69131c243a5f65c397b37d15e9da2c'
 step_id: 'S236'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S236 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Decide the anchor search's matching rule for short codes, since closing the markup route narrowed the class rather than eliminating it. Measured against the same country-less UBL document through the same entry point: ID is now unanchored, and ES ANCHORS by matching inside the VAT identifier ESB12345674, while SL anchors against a company suffix. ES is the worst possible value for this to hit since it prefixes every Spanish VAT identifier. Measured as unreachable today rather than assumed, because every country reader returns its own element's text or None and the provenance builder skips a field the record did not state, so no structured reader can emit a country the document lacks. But THE GUARD IS THE PARSER, NOT THE ANCHOR CHECK, while the anchor check's own docstring claims it catches a reader that pointed at an element the document does not carry, which for a two-letter code it demonstrably does not. That is a live gap between a documented property and the behaviour, masked by a guard in a different module. Closing it changes the matching rule to be boundary-aware beyond numeric edges, which is a decision rather than a patch, and it interacts with the deliberate ES-inside-ESP acceptance on the Facturae path and ## Scope
-
-- `src/cadrumo/application/ledger` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Decide the anchor search's matching rule for short codes, since closing the markup route narrowed the class rather than eliminating it. Measured against the same country-less UBL document through the same entry point: ID is now unanchored, and ES ANCHORS by matching inside the VAT identifier ESB12345674, while SL anchors against a company suffix. ES is the worst possible value for this to hit since it prefixes every Spanish VAT identifier. Measured as unreachable today rather than assumed, because every country reader returns its own element's text or None and the provenance builder skips a field the record did not state, so no structured reader can emit a country the document lacks. But THE GUARD IS THE PARSER, NOT THE ANCHOR CHECK, while the anchor check's own docstring claims it catches a reader that pointed at an element the document does not carry, which for a two-letter code it demonstrably does not. That is a live gap between a documented property and the behaviour, masked by a guard in a different module. Closing it changes the matching rule to be boundary-aware beyond numeric edges, which is a decision rather than a patch, and it interacts with the deliberate ES-inside-ESP acceptance on the Facturae path
 

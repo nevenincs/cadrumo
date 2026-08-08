@@ -5,44 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:178c644ac7c75b3f25c5b67693ba22fc60c70d35499c959fe6862e6b31fe1426'
+body_hash: 'sha256:ceb1005afcdebc5bca05f89a642b24acca00dc85f1539fcf9bd89a5fb84def6b'
 step_id: 'S233'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S233 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Distinguish an offered-but-unroled anchor from an anchor the document does not carry, the third state the notice surface lacks. The single-competitor branch in the identity-roles module emits an UNANCHORED envelope carrying an anchor the document DOES print, since the candidate verified and only role evidence is missing. That envelope reaches the anchor-not-found notice, which tells the operator the form does not occur in the document's transcription, and that is false. Same class as the refused-anchor work but a different defect: there a refusal was reported as an absence, here an anchored-but-unroled value is reported as anchor-not-found. Three states now share two notices, so the honest shape is probably a fifth notice for offered, not refuted, not corroborated. Note the envelope staying UNANCHORED is deliberate and documented as load-bearing at that site, so the fix belongs in the notice selection rather than the grounding outcome and ## Scope
-
-- `src/cadrumo/entrypoints/cli` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Distinguish an offered-but-unroled anchor from an anchor the document does not carry, the third state the notice surface lacks. The single-competitor branch in the identity-roles module emits an UNANCHORED envelope carrying an anchor the document DOES print, since the candidate verified and only role evidence is missing. That envelope reaches the anchor-not-found notice, which tells the operator the form does not occur in the document's transcription, and that is false. Same class as the refused-anchor work but a different defect: there a refusal was reported as an absence, here an anchored-but-unroled value is reported as anchor-not-found. Three states now share two notices, so the honest shape is probably a fifth notice for offered, not refuted, not corroborated. Note the envelope staying UNANCHORED is deliberate and documented as load-bearing at that site, so the fix belongs in the notice selection rather than the grounding outcome
 
