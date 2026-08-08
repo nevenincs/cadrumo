@@ -518,19 +518,22 @@ def _record_relief(
 ):
     """Resolve a relief claim the way a STRUCTURED record reaches the guard.
 
-    The sibling of :func:`_relief`, and it exists because the two axes admit
-    different spellings. ``stated_country_code_status`` answers only about
-    alpha-2, which is right for a value transcribed off a printed page, so a
-    helper built on it cannot present an alpha-3 token to the guard at all --
-    every case below would arrive as ``None`` and prove nothing about the
-    spelling it names.
+    Two things differ from :func:`_relief`, and both are needed for a case that
+    can spare at all.
 
-    The confirm path classifies the record's own token with
-    ``record_country_code_status``, so this does too. A helper that reached the
-    guard by a route production does not use can be green while the production
-    wiring is dead.
+    The status axis. ``stated_country_code_status`` answers only about alpha-2,
+    which is right for a value transcribed off a printed page, so a helper built
+    on it cannot present an alpha-3 token to the guard: every case would arrive
+    as ``None``. The confirm path classifies the record's own token with
+    ``record_country_code_status``, so this does too.
+
+    The filer's own territory is supplied. It is a PROFILE fact in production,
+    known independently of the document, so leaving it out models a state a
+    confirm does not reach -- and the catalogue-gap exemption forgives only the
+    counterparty's slot, so with the filer also unplaced nothing can ever be
+    spared and every assertion below would hold for any status whatsoever.
     """
-    declared = _facts(established=False, stated=stated)
+    declared = DeclaredFacts(issuer_scope=_fact(_ES), stated_category=_fact(stated))
     assembly = assemble_classification_criteria(
         transaction_date=_WHEN,
         direction=direction,
@@ -541,10 +544,8 @@ def _record_relief(
         assembly,
         declared=declared,
         counterparty_country_status=record_country_code_status(country_token),
-        # Which party the counterparty IS. Without it the catalogue-gap
-        # exemption forgives no slot at all, so every case below would refuse
-        # and the reserved-code assertions would pass while proving nothing
-        # about reserved-ness. The positive control is what surfaced that.
+        # Which party the counterparty IS, which is what says which residency
+        # slot the catalogue-gap exemption may forgive.
         direction=direction,
     )
 
@@ -559,16 +560,16 @@ def test_a_reserved_alpha3_does_not_spare_a_declared_relief(stated: IvaCategory,
 
     Facturae states the alpha-3 spelling, so a reserved three-letter token is a
     shape a real Spanish document can present -- and the failure direction is
-    the bad one. A reserved code classified as a catalogue gap would be SPARED,
+    the bad one. A reserved code mistaken for a catalogue gap would be SPARED,
     honouring a relief claimed on a token with no referent, which is the
     sparing-a-relief direction rather than the refusing-a-real-export one.
 
-    These codes are NAMED rather than derived, which is the opposite of the
+    These codes are NAMED rather than derived, the opposite of the
     catalogue-gap specimen's treatment and correct for the opposite reason. ISO
     reserves ``QMA``-``QZZ``, ``XAA``-``XZZ`` and ``ZZA``-``ZZZ`` for private
-    use, so no vocabulary will ever admit them; a derived specimen would be
-    tracking a boundary that cannot move. The uncatalogued code below is
-    derived, because that boundary moves every time a country is enrolled.
+    use, so no vocabulary will ever admit them and there is no boundary here to
+    track. The spared case below is derived, because THAT boundary moves every
+    time a country is enrolled.
     """
     resolution = _record_relief(stated, country_token=reserved)
 
@@ -581,17 +582,21 @@ def test_a_reserved_alpha3_does_not_spare_a_declared_relief(stated: IvaCategory,
 def test_the_alpha3_sparing_boundary_runs_where_the_vocabulary_does() -> None:
     """The positive control, without which the refusals above prove nothing.
 
-    If the guard refused every alpha-3 token, the reserved cases would pass
-    while saying nothing about reserved-ness. This is the same claim through the
-    same helper, differing only in that the token names a real jurisdiction the
-    bundled vocabulary has not enrolled -- our gap, so it is spared.
+    A helper that could never spare would pass every reserved case while saying
+    nothing about reserved-ness -- which is exactly what this control caught
+    when the filer's own territory was left unsupplied. This is the same claim
+    through the same helper, differing only in that the token names a real
+    jurisdiction the bundled vocabulary has not enrolled.
     """
     spared = _record_relief(
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
         country_token=an_uncatalogued_alpha3(),
     )
 
-    assert spared.outcome is IvaCategoryOutcome.DECLARED
+    assert spared.outcome is IvaCategoryOutcome.DECLARED, (
+        "an alpha-3 naming a country our vocabulary omits is OUR gap and must be spared; "
+        "if this refuses, the reserved-code assertions above are vacuous"
+    )
     assert spared.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
 
 
