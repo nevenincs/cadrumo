@@ -39,7 +39,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import suppress
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Literal, override
+from typing import TYPE_CHECKING, Final, Literal, get_args, override
 
 from pydantic import BaseModel, Field
 
@@ -86,7 +86,7 @@ run shares one cause; that cause is stated once on the run.
 #: Typed as the alias rather than as bare ``str`` so iterating it yields the
 #: literal the consumers expect; the wider annotation is what forced a
 #: suppression onto the summary comprehension.
-BATCH_ITEM_STATUSES: frozenset[BatchItemStatus] = frozenset(BatchItemStatus.__args__)
+BATCH_ITEM_STATUSES: frozenset[BatchItemStatus] = frozenset(get_args(BatchItemStatus))
 
 #: The statuses that make a run "any item failed". Deliberately narrow: an item
 #: awaiting review has not failed, and a no-op is the idempotent success.
