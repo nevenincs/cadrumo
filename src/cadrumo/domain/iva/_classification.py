@@ -957,6 +957,40 @@ _R99_FALLTHROUGH_ID = "R99_fallthrough"
 # -- Public resolver ------------------------------------------------------
 
 
+def classifiable_categories(*, consuming: PartyFact | None = None) -> frozenset[IvaCategory]:
+    """Return the categories the decision table can mint, optionally narrowed by fact.
+
+    Answers what the closed rule table declares, without publishing the table
+    itself: the rows are an implementation detail whose shape is free to
+    change, while "which categories can this table produce, and which of them
+    turn on a given :class:`PartyFact`" is a stable question a consumer outside
+    the domain legitimately asks.
+
+    The narrowed form exists for the reporting-parity direction: a category
+    cannot enter a Modelo 349 reported population without its minting branch
+    declaring that it consumes the counterparty's identifying State, or the
+    producer silently stops demanding an identification for an operation that
+    files one.
+
+    Excludes the ``R05`` domestic-by-rate-tier row, whose category is derived
+    from the criteria rather than declared, and the ``R99`` fallthrough, which
+    is not a rule row at all.
+
+    Args:
+        consuming: When given, restrict the answer to the categories whose
+            minting branch declares it reads this fact. ``None`` returns every
+            declared category.
+
+    Returns:
+        The matching :class:`cadrumo.domain.iva.IvaCategory` members.
+    """
+    return frozenset(
+        rule.category
+        for rule in _CLASSIFICATION_RULES
+        if rule.category is not None and (consuming is None or consuming in rule.consumes)
+    )
+
+
 def classify_iva(criteria: IvaInvoiceClassificationCriteria) -> IvaClassificationResult:
     """Apply the closed decision table; first match wins.
 
@@ -1102,5 +1136,6 @@ __all__ = [
     "IvaTerritorialScope",
     "PartyFact",
     "TransactionKind",
+    "classifiable_categories",
     "classify_iva",
 ]

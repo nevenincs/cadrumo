@@ -372,12 +372,15 @@ aggregation:
         bucket de agregación solicitado.
       candidate_outside_period: 'Error interno: el candidato IVA cae fuera del periodo
         de agregación.'
+      domestic_identification_on_intra_community_transaction: Una identificación a
+        efectos del IVA española no es válida para una operación intracomunitaria.
       eu_member_state_on_export_transaction: Las operaciones de exportación o asimiladas
         no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
+      missing_counterparty_identification_state: Una operación intracomunitaria requiere
+        el Estado miembro en el que la contraparte está identificada a efectos del
+        IVA.
       unsupported_iva_category: 'Error interno: categoría IVA no admitida para la
         agregación.'
-      missing_counterparty_identification_state: 'Una operación intracomunitaria requiere el Estado miembro en el que la contraparte está identificada a efectos del IVA.'
-      domestic_identification_on_intra_community_transaction: 'Una identificación a efectos del IVA española no es válida para una operación intracomunitaria.'
   modelo_bindings:
     errors:
       unsupported_period: Periodo de modelo no soportado para la agregación del libro.
@@ -1979,6 +1982,18 @@ cli:
           (0-100).
         unknown_disposal_regime: 'Régimen de transmisión desconocido {regime!r}; aceptados:
           {accepted}'
+      counterparty:
+        actor_help: cli.app.ledger.counterparty.actor_help
+        confirm_help: Confirma el territorio en el que está establecida una contraparte.
+        country_code_help: cli.app.ledger.counterparty.country_code_help
+        group_help: Confirma dónde está establecida una contraparte, una sola vez,
+          para todos los documentos posteriores.
+        note_help: cli.app.ledger.counterparty.note_help
+        scope_help: cli.app.ledger.counterparty.scope_help
+        tax_identifier_help: El identificador fiscal de la contraparte tal y como
+          aparece impreso en el documento.
+        withdraw_help: Retira un establecimiento confirmado, declarando que la respuesta
+          anterior era incorrecta.
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
         batch_directory_help: Directorio cuyos ficheros se ingresan. Combínalo con
@@ -2034,6 +2049,7 @@ cli:
           group_help: Revise qué se envió a un modelo externo y recupere los artefactos
             en este equipo.
           list_help: Muestre cada envío externo y los artefactos derivados de él.
+          no_history: cli.app.ledger.evidence.consent.no_history
           rederive_help: Vuelva a leer un artefacto en este equipo desde su transcripción
             almacenada.
           rederive_refused: 'Nueva derivación rechazada: {detail}'
@@ -2100,6 +2116,18 @@ cli:
             show`.
           blocking_help: Muestre solo los borradores que no pueden confirmarse hasta
             responder un hallazgo.
+          country_code_unassigned_message: El código de país de una de las partes
+            pertenece a los rangos que la norma ISO 3166-1 reserva para que nunca
+            se asigne ningún país, así que el documento indica una cadena y no un
+            país, y nada sitúa a esa parte. Corrija el código contrastándolo con el
+            documento. Este borrador se puede confirmar igualmente; la parte simplemente
+            queda sin establecer hasta entonces.
+          country_code_uncatalogued_message: 'El código de país de una de las partes
+            puede designar un país real que el vocabulario incorporado de este sistema
+            todavía no recoge, así que no se puede decir nada sobre dónde está establecida
+            esa parte. Volver a leer el documento no lo resolverá: hay que añadir
+            el país. Este borrador se puede confirmar igualmente; la parte simplemente
+            queda sin establecer hasta entonces.'
           finding_help: Muestre solo los borradores cuyo documento no supero esta
             comprobacion determinista.
           group_help: Revise los borradores de extraccion pendientes antes de confirmarlos
@@ -2118,8 +2146,6 @@ cli:
           show_help: Muestre un borrador pendiente campo por campo, con sus hallazgos
             y bloqueos.
           unknown_reference: No hay ningun borrador pendiente para esa referencia.
-          country_code_unassigned_message: 'El código de país de una de las partes pertenece a los rangos que la norma ISO 3166-1 reserva para que nunca se asigne ningún país, así que el documento indica una cadena y no un país, y nada sitúa a esa parte. Corrija el código contrastándolo con el documento. Este borrador se puede confirmar igualmente; la parte simplemente queda sin establecer hasta entonces.'
-          country_code_uncatalogued_message: 'El código de país de una de las partes puede designar un país real que el vocabulario incorporado de este sistema todavía no recoge, así que no se puede decir nada sobre dónde está establecida esa parte. Volver a leer el documento no lo resolverá: hay que añadir el país. Este borrador se puede confirmar igualmente; la parte simplemente queda sin establecer hasta entonces.'
         source_path_help: Ruta al PDF o imagen de la factura
         supplier_help: Nombre del proveedor
         taxable_base_help: Base imponible de la factura
@@ -2290,6 +2316,12 @@ cli:
         state_help: 'Filtro de estado del snapshot: active, superseded, discarded
           o all'
         view_help: Mostrar un snapshot del borrador del modelo 100
+      deudas:
+        app_help: cli.app.live.deudas.app_help
+        latest_help: cli.app.live.deudas.latest_help
+        list_help: cli.app.live.deudas.list_help
+        snapshot_id_help: cli.app.live.deudas.snapshot_id_help
+        view_help: cli.app.live.deudas.view_help
       expediente_help: Identificador de expediente AEAT
       expedientes:
         app_help: Snapshots de expedientes AEAT de solo lectura
@@ -2318,6 +2350,9 @@ cli:
           solo amplía el recorrido: un par ausente de ella no prueba que no se presentara
           nada.'
         list_help: Listar declaraciones presentadas sin descargar artefactos
+        pull_all_help: cli.app.live.filed.pull_all_help
+        pull_all_limit_help: cli.app.live.filed.pull_all_limit_help
+        pull_all_pairs_refused: cli.app.live.filed.pull_all_pairs_refused
         pull_help: Descarga datos de declaraciones presentadas del registro autenticado
           de AEAT.
         pull_modelo_help: Limita esta descarga a este modelo.
@@ -4731,6 +4766,13 @@ cli:
       vision_model_help: Sustituye el modelo de visión local de Ollama para leer una
         factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo
         configurado.
+    counterparty:
+      errors:
+        scope_conflict: cli.ledger.counterparty.errors.scope_conflict
+        unverifiable_identifier: cli.ledger.counterparty.errors.unverifiable_identifier
+      notices:
+        already_confirmed: cli.ledger.counterparty.notices.already_confirmed
+        nothing_to_withdraw: cli.ledger.counterparty.notices.nothing_to_withdraw
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia
@@ -5099,7 +5141,9 @@ cli:
         ledger_view: Ver el detalle de una entrada del libro.
         live_filed_capture: Descargar declaraciones presentadas en vivo desde la AEAT.
         live_filed_capture_sources: Mostrar las fuentes disponibles para la descarga.
+        live_filed_discover: cli.operator_surface.help.app.live_filed_discover
         live_filed_list: Listar declaraciones presentadas capturadas desde la AEAT.
+        live_filed_pull_all: cli.operator_surface.help.app.live_filed_pull_all
         modelo_audit_check: Comprueba las evidencias incluidas de una revisión de
           declaración.
         modelo_audit_export: Exporta la auditoría de evidencias de una revisión de
@@ -5659,7 +5703,7 @@ docs:
       casilla_count: '{casillas} casillas en {sections} secciones'
       casilla_id: Identificador de casilla
       casilla_index: Todas las casillas
-      casilla_index_hint: Seleccione un número para ir a esa casilla.
+      casilla_index_hint: Seleccione una casilla para ir a ella.
       derived_from: a partir de
       established_by: Establecido por
       formula: Fórmula
@@ -7429,6 +7473,13 @@ live:
     target_period_year_mismatch: El año objetivo no coincide con el ejercicio del
       periodo objetivo.
     year_range_invalid: El rango de ejercicios indicado no es válido.
+  filed:
+    pull_all:
+      denominator_note_profile: live.filed.pull_all.denominator_note_profile
+      denominator_note_register_only: live.filed.pull_all.denominator_note_register_only
+      expected_but_not_found: live.filed.pull_all.expected_but_not_found
+      found_more_than_expected: live.filed.pull_all.found_more_than_expected
+      recapture_divergence: live.filed.pull_all.recapture_divergence
 llm:
   evidence:
     consent:
@@ -69840,6 +69891,8 @@ modelo:
                 title: Modelo 848 comunicación del importe neto de la cifra de negocios
           field:
             label: Modelo 848 (orden-hac-85-2003), ejercicios 2003 y siguientes
+overview:
+  no_aeat_history: overview.no_aeat_history
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 % (Art. 61 LIRPF)

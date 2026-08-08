@@ -33,8 +33,11 @@ import pytest
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import Period
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import ModeloRevision, structurally_unroutable_iva_base_categories
-from ....domain.calculations.registry._loader import load_registry_tree
+from ....domain.calculations.registry import (
+    ModeloRevision,
+    load_registry_tree,
+    structurally_unroutable_iva_base_categories,
+)
 from ....domain.iva import CUOTA_LESS_M303_IVA_CATEGORIES, IvaCategory
 from ....domain.transactions import (
     BusinessClassification,

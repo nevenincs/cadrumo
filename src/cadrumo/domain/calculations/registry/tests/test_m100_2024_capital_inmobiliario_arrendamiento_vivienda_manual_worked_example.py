@@ -102,11 +102,17 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaId, ValidatedRegistryAuthority, validated_casilla_id
+from .. import (
+    CasillaId,
+    ManualWorkedExamplePayload,
+    ValidatedRegistryAuthority,
+    validated_casilla_id,
+)
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -161,18 +167,39 @@ _BASE_BINDINGS_2024 = {
     "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
 }
 
-# Raw ingreso/gasto inputs quoted from the manual; see the module docstring
-# for the per-box mapping and its cross-validation against the manual's own
-# stated subtotals.
-_INMOBILIARIO_INPUTS: dict[CasillaId, Decimal] = {
+_ORACLE_PAYLOAD_NAME = "modelo-100-2024-capital-inmobiliario-arrendamiento-vivienda-tensionada.json"
+
+#: The reducción flag, kept local because the manual never prints its value.
+#:
+#: Casilla 0100 is "marque con una X si el arrendamiento tiene derecho a reducción".
+#: The example establishes the entitlement in prose; the ``1`` is this application's
+#: encoding of the mark, not a figure the corpus carries. Declaring it would attach a
+#: locator to a number the page does not state.
+_REDUCCION_FLAG_INPUT: dict[CasillaId, Decimal] = {
     validated_casilla_id("0100", surface="0100"): Decimal("1"),
-    validated_casilla_id("0102", surface="0102"): Decimal("5850.00"),
-    validated_casilla_id("0107", surface="0107"): Decimal("307.50"),
-    validated_casilla_id("0109", surface="0109"): Decimal("637.50"),
-    validated_casilla_id("0115", surface="0115"): Decimal("195.00"),
-    validated_casilla_id("0117", surface="0117"): Decimal("388.13"),
-    validated_casilla_id("0131", surface="0131"): Decimal("1034.78"),
 }
+
+
+def _oracle_payload() -> ManualWorkedExamplePayload:
+    """Read the bundled oracle through the registry's own strict payload model."""
+    path = Path(bundled_path("corpus", "manual_oracles")) / _ORACLE_PAYLOAD_NAME
+    return ManualWorkedExamplePayload.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+def _declared_inmobiliario_inputs() -> dict[CasillaId, Decimal]:
+    """The manual's own ingreso/gasto figures, read FROM the oracle rather than retyped.
+
+    Casilla 0107 is the one that needs a reader's attention: the registry lumps two
+    separately printed line items into it -- intereses 150 and reparación y
+    conservación 157,50 -- so its locator spans both rather than citing whichever
+    happens to appear first.
+    """
+    declared = _oracle_payload().declared_inputs
+    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
+    return {
+        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
+        for casilla_id, value in declared.by_casilla_id.items()
+    } | _REDUCCION_FLAG_INPUT
 
 
 def _scenario(
@@ -184,7 +211,7 @@ def _scenario(
         revision="2024",
         filing_year=2024,
         period="0A",
-        inputs=_INMOBILIARIO_INPUTS,
+        inputs=_declared_inmobiliario_inputs(),
         binding_values=dict(_BASE_BINDINGS_2024),
         enum_binding_values={
             "renta-2024-profile-tax-residence-ccaa": "madrid",

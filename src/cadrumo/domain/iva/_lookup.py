@@ -124,6 +124,34 @@ def rate_table_covers(
     )
 
 
+def rate_table_covers_any_positive_tier(member_state: EUMemberState, on_date: date) -> bool:
+    """Return whether any POSITIVE ordinary tier is priced for ``member_state`` on ``on_date``.
+
+    The question a caller resolving a positive declared rate must ask. A
+    declared zero always classifies through the zero-tier exemption, so the
+    zero tier's own coverage says nothing about whether a positive rate could
+    have been priced. Counting it made a 2023 date look covered the moment the
+    RDL 20/2022 food rows landed -- restoring the "unsupported rate" message
+    on exactly the dates the coverage wording was written for.
+
+    Lives beside the table it reads so both the ledger aggregation and the
+    invoice path ask one authority rather than two predicates that can drift
+    into disagreeing about the same date.
+
+    Args:
+        member_state: The member state whose table is queried.
+        on_date: The date to test for coverage.
+
+    Returns:
+        ``True`` when a tier-defining rate for the general, reducido or
+        super-reducido tier covers ``on_date``.
+    """
+    return any(
+        rate_table_covers(member_state, on_date, kind)
+        for kind in (IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED)
+    )
+
+
 def cite(
     category: IvaCategory,
     *,

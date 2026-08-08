@@ -12,17 +12,18 @@ from collections.abc import Hashable, Iterator
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, cast, override
+from typing import IO, Any, cast, override
 
 import yaml
 
 from cadrumo.core import normalise_product_identity_references
-from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 from cadrumo.core.i18n import extract_placeholders
 from cadrumo.core.logging import get_logger
 
+from ._errors import LocaleError
 from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
+from ._write_guard import CatalogueWriteGuard, catalogue_write_guard
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
 type LocaleNode = str | dict[str, "LocaleNode"] | None
@@ -61,15 +62,6 @@ def _load_intentional_identical(path: Path) -> dict[str, dict[str, object]]:
     # mapping. Each entry is checked again below before being copied.
     decoded = cast("dict[str, object]", loaded)
     return {locale: dict(entries) for locale, entries in decoded.items() if isinstance(entries, dict)}
-
-
-class LocaleError(Exception):
-    """Raised on locale management and parsing errors.
-
-    A contributor-tool exception, never operator-facing: it carries no
-    registered :class:`~cadrumo.core.errors.ErrorCode` and is not part of the
-    translated-error-message machinery.
-    """
 
 
 @dataclass(frozen=True)
@@ -151,6 +143,22 @@ class StrictUniqueKeyLoader(yaml.SafeLoader):
             value = self.construct_object(value_node, deep=deep)
             mapping[key] = value
         return mapping
+
+
+def _parse_locale(source: IO[str] | str) -> dict[str, LocaleNode]:
+    """Parse catalogue YAML strictly from an open handle or an in-memory string.
+
+    The string form is what a guarded read produces: the bytes are read and
+    fingerprinted once by :class:`CatalogueWriteGuard`, then parsed from memory,
+    so the parse cannot see a different file than the one the write is checked
+    against.
+    """
+    loader = StrictUniqueKeyLoader(source)
+    try:
+        data = loader.get_single_data()
+    finally:
+        loader.dispose()
+    return data if data is not None else {}
 
 
 class LocaleManager:
@@ -305,14 +313,15 @@ class LocaleManager:
         return keys
 
     def load_locale(self, path: Path) -> dict[str, LocaleNode]:
-        """Load a locale YAML file strictly, failing on duplicates."""
+        """Load a locale YAML file strictly, failing on duplicates.
+
+        For read-only callers. A read that precedes a write must instead go
+        through :meth:`CatalogueWriteGuard.read_text` and
+        :func:`_parse_locale_text`, so the write can be refused if the file
+        moves underneath it.
+        """
         with open(path, encoding=UTF_8_ENCODING) as f:
-            loader = StrictUniqueKeyLoader(f)
-            try:
-                data = loader.get_single_data()
-            finally:
-                loader.dispose()
-            return data if data is not None else {}
+            return _parse_locale(f)
 
     def _build_nested_dict(
         self,
@@ -346,20 +355,22 @@ class LocaleManager:
             if marker.rstrip("*").rstrip(".")
         )
 
-        for f in self.locales_dir.glob("*.yml"):
-            try:
-                data = self.load_locale(f)
-            except (OSError, yaml.YAMLError, LocaleError) as exc:
-                _log.warning(
-                    "locale scaffold: failed to parse %s; starting from empty mapping (%s)",
-                    f,
-                    exc,
-                )
-                data = {}
+        with catalogue_write_guard(self.locales_dir) as guard:
+            for f in self.locales_dir.glob("*.yml"):
+                try:
+                    data = _parse_locale(guard.read_text(f))
+                except (OSError, yaml.YAMLError, LocaleError) as exc:
+                    _log.warning(
+                        "locale scaffold: failed to parse %s; starting from empty mapping (%s)",
+                        f,
+                        exc,
+                    )
+                    data = {}
+                    guard.observe(f)
 
-            new_data = self._build_nested_dict(codebase_keys, data, namespace_prefixes)
+                new_data = self._build_nested_dict(codebase_keys, data, namespace_prefixes)
 
-            _rewrite_locale_mapping(f, new_data)
+                _rewrite_locale_mapping(guard, f, new_data)
 
     def canonicalize_product_identity_references(
         self,
@@ -379,13 +390,14 @@ class LocaleManager:
             (self._locale_path(locale.value),) if locale is not None else tuple(sorted(self.locales_dir.glob("*.yml")))
         )
         updated_paths: list[Path] = []
-        for locale_path in locale_paths:
-            data = self.load_locale(locale_path)
-            normalized = _normalise_product_identity_mapping(data)
-            if normalized == data:
-                continue
-            _rewrite_locale_mapping(locale_path, normalized)
-            updated_paths.append(locale_path)
+        with catalogue_write_guard(self.locales_dir) as guard:
+            for locale_path in locale_paths:
+                data = _parse_locale(guard.read_text(locale_path))
+                normalized = _normalise_product_identity_mapping(data)
+                if normalized == data:
+                    continue
+                _rewrite_locale_mapping(guard, locale_path, normalized)
+                updated_paths.append(locale_path)
         return tuple(updated_paths)
 
     def _locale_path(self, locale: str) -> Path:
@@ -421,19 +433,20 @@ class LocaleManager:
         if not dotted_key or any(not part for part in parts):
             raise LocaleError(f"Invalid locale key: {dotted_key!r}")
 
-        data = self.load_locale(locale_path)
-        cursor = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
-        leaf_exists = parts[-1] in cursor
+        with catalogue_write_guard(self.locales_dir) as guard:
+            data = _parse_locale(guard.read_text(locale_path))
+            cursor = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
+            leaf_exists = parts[-1] in cursor
 
-        if leaf_exists:
-            # The mapping was strictly parsed and the leaf resolved above.
-            # Rewriting that mapping is safe across multiline scalars; a
-            # line-oriented replacement can mistake a scalar continuation for
-            # a nested YAML key and corrupt the catalogue.
-            cursor[parts[-1]] = value
-            _rewrite_locale_mapping(locale_path, data)
-        else:
-            _append_yaml_leaf(locale_path, parts, value)
+            if leaf_exists:
+                # The mapping was strictly parsed and the leaf resolved above.
+                # Rewriting that mapping is safe across multiline scalars; a
+                # line-oriented replacement can mistake a scalar continuation for
+                # a nested YAML key and corrupt the catalogue.
+                cursor[parts[-1]] = value
+                _rewrite_locale_mapping(guard, locale_path, data)
+            else:
+                _append_yaml_leaf(guard, locale_path, parts, value)
         return locale_path
 
     def set_locale_values(self, locale: str, values: dict[str, str | None]) -> Path:
@@ -444,21 +457,22 @@ class LocaleManager:
         the Modelo resolver then applies its Spanish-source fallback policy.
         """
         locale_path = self._locale_path(locale)
-        data = self.load_locale(locale_path)
-        for dotted_key, raw_value in sorted(values.items()):
-            parts = dotted_key.split(".")
-            if not dotted_key or any(not part for part in parts):
-                raise LocaleError(f"Invalid locale key: {dotted_key!r}")
-            if raw_value is None:
-                if not dotted_key.startswith("modelo.schema."):
-                    raise LocaleError(f"Only Modelo schema keys may carry an absent locale value: {dotted_key!r}")
-                value: LocaleNode = None
-            else:
-                if not raw_value.strip():
-                    raise LocaleError(f"Cannot set {dotted_key!r}: a locale value must not be blank")
-                value = normalise_product_identity_references(raw_value)
-            _set_nested_leaf(data, dotted_key, value)
-        _rewrite_locale_mapping(locale_path, data)
+        with catalogue_write_guard(self.locales_dir) as guard:
+            data = _parse_locale(guard.read_text(locale_path))
+            for dotted_key, raw_value in sorted(values.items()):
+                parts = dotted_key.split(".")
+                if not dotted_key or any(not part for part in parts):
+                    raise LocaleError(f"Invalid locale key: {dotted_key!r}")
+                if raw_value is None:
+                    if not dotted_key.startswith("modelo.schema."):
+                        raise LocaleError(f"Only Modelo schema keys may carry an absent locale value: {dotted_key!r}")
+                    value: LocaleNode = None
+                else:
+                    if not raw_value.strip():
+                        raise LocaleError(f"Cannot set {dotted_key!r}: a locale value must not be blank")
+                    value = normalise_product_identity_references(raw_value)
+                _set_nested_leaf(data, dotted_key, value)
+            _rewrite_locale_mapping(guard, locale_path, data)
         return locale_path
 
     def allow_identical(self, locale: str, dotted_key: str, reason: str) -> Path:
@@ -490,17 +504,20 @@ class LocaleManager:
             raise LocaleError(f"Cannot allow {dotted_key!r}: keys prefixed with '_' are allowlist metadata")
 
         locale_path = self._locale_path(locale)
-        if dotted_key not in self.get_yaml_keys(self.load_locale(locale_path)):
-            raise LocaleError(f"Locale key not found in {locale_path.name}: {dotted_key!r}; run locale scaffold first")
-
         allowlist_path = self.locales_dir / _INTENTIONAL_IDENTICAL_FILENAME
-        allowlist = _load_intentional_identical(allowlist_path)
-        allowlist.setdefault(locale, {})[dotted_key] = reason.strip()
-        atomic_write_text(
-            allowlist_path,
-            json.dumps(allowlist, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
-            encoding=UTF_8_ENCODING,
-        )
+        with catalogue_write_guard(self.locales_dir) as guard:
+            if dotted_key not in self.get_yaml_keys(_parse_locale(guard.read_text(locale_path))):
+                raise LocaleError(
+                    f"Locale key not found in {locale_path.name}: {dotted_key!r}; run locale scaffold first"
+                )
+
+            guard.observe(allowlist_path)
+            allowlist = _load_intentional_identical(allowlist_path)
+            allowlist.setdefault(locale, {})[dotted_key] = reason.strip()
+            guard.write_text(
+                allowlist_path,
+                json.dumps(allowlist, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
+            )
         return allowlist_path
 
     def remove_locale_value(self, locale: str, dotted_key: str) -> Path:
@@ -510,15 +527,16 @@ class LocaleManager:
         if not dotted_key or any(not part for part in parts):
             raise LocaleError(f"Invalid locale key: {dotted_key!r}")
 
-        cursor: LocaleNode = self.load_locale(locale_path)
-        for part in parts:
-            if not isinstance(cursor, dict) or part not in cursor:
-                raise LocaleError(f"Locale key not found: {dotted_key!r}")
-            cursor = cursor[part]
-        if isinstance(cursor, dict):
-            raise LocaleError(f"Cannot remove {dotted_key!r}: it resolves to a namespace")
+        with catalogue_write_guard(self.locales_dir) as guard:
+            cursor: LocaleNode = _parse_locale(guard.read_text(locale_path))
+            for part in parts:
+                if not isinstance(cursor, dict) or part not in cursor:
+                    raise LocaleError(f"Locale key not found: {dotted_key!r}")
+                cursor = cursor[part]
+            if isinstance(cursor, dict):
+                raise LocaleError(f"Cannot remove {dotted_key!r}: it resolves to a namespace")
 
-        _remove_existing_yaml_leaf(locale_path, parts, allow_empty_leaf=cursor is None)
+            _remove_existing_yaml_leaf(guard, locale_path, parts, allow_empty_leaf=cursor is None)
         return locale_path
 
 
@@ -618,7 +636,7 @@ def _yaml_quoted_scalar(value: str) -> str:
     line (the parser folds raw breaks into spaces), so values containing
     control characters are rendered double-quoted with escape sequences.
     Either form occupies exactly one line, which the line-based leaf
-    writers (:func:`_replace_existing_yaml_leaf`, :func:`_append_yaml_leaf`)
+    writers (:func:`_append_yaml_leaf`, :func:`_remove_existing_yaml_leaf`)
     rely on.
     """
     if any(ch in value for ch in ("\n", "\r", "\t")):
@@ -704,30 +722,14 @@ def _iter_yaml_key_matches(lines: list[str]) -> Iterator[tuple[int, re.Match[str
             stack.append((indent, key))
 
 
-def _replace_existing_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
-    """Replace a single existing leaf line without rebuilding the whole YAML file."""
-    lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
-
-    for index, match, indent, key, _rest, current_parts in _iter_yaml_key_matches(lines):
-        if current_parts == parts:
-            line = lines[index]
-            newline = "\r\n" if line.endswith("\r\n") else "\n"
-            replacement = match.group("indent") + key + ": " + _yaml_quoted_scalar(value) + newline
-            lines[index : _yaml_leaf_end(lines, index, indent)] = [replacement]
-            atomic_write_text(path, "".join(lines), encoding=UTF_8_ENCODING)
-            return
-
-    raise LocaleError(f"Locale key not found in YAML text: {'.'.join(parts)!r}")
-
-
-def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
+def _append_yaml_leaf(guard: CatalogueWriteGuard, path: Path, parts: list[str], value: str) -> None:
     """Append a missing leaf below an existing mapping parent."""
     if len(parts) < 2:
         raise LocaleError(f"Cannot append top-level locale leaf: {'.'.join(parts)!r}")
 
     parent_parts = parts[:-1]
     leaf = parts[-1]
-    lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
+    lines = guard.read_text(path).splitlines(keepends=True)
 
     for index, _match, indent, _key, rest, current_parts in _iter_yaml_key_matches(lines):
         if current_parts == parent_parts:
@@ -739,29 +741,34 @@ def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
                 insertion_index,
                 " " * (indent + 2) + leaf + ": " + _yaml_quoted_scalar(value) + newline,
             )
-            atomic_write_text(path, "".join(lines), encoding=UTF_8_ENCODING)
+            guard.write_text(path, "".join(lines))
             return
 
     raise LocaleError(f"Locale parent key not found in YAML text: {'.'.join(parent_parts)!r}")
 
 
-def _rewrite_locale_mapping(path: Path, data: dict[str, LocaleNode]) -> None:
-    """Atomically replace a locale mapping after strict parsing.
+def _rewrite_locale_mapping(guard: CatalogueWriteGuard, path: Path, data: dict[str, LocaleNode]) -> None:
+    """Replace a locale mapping after strict parsing, through the write guard.
 
     The locale CLI may be interrupted by an operator or orchestration timeout.
     Writing directly to the catalogue would expose a truncated YAML file between
     ``open(..., "w")`` and the final flush, so serialize in memory and persist
-    through :func:`~cadrumo.core.atomic_write.atomic_write_text` (standard
-    tier), which also adds a parent-directory fsync this dialect previously
-    lacked.
+    through the guard, which performs the atomic replace and first refuses the
+    write if the catalogue moved since this edit read it.
     """
     serialised = yaml.dump(data, allow_unicode=True, sort_keys=True, default_flow_style=False)
-    atomic_write_text(path, serialised, encoding=UTF_8_ENCODING)
+    guard.write_text(path, serialised)
 
 
-def _remove_existing_yaml_leaf(path: Path, parts: list[str], *, allow_empty_leaf: bool = False) -> None:
+def _remove_existing_yaml_leaf(
+    guard: CatalogueWriteGuard,
+    path: Path,
+    parts: list[str],
+    *,
+    allow_empty_leaf: bool = False,
+) -> None:
     """Remove a single existing leaf line without rebuilding the whole YAML file."""
-    lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
+    lines = guard.read_text(path).splitlines(keepends=True)
 
     for index, _match, indent, _key, rest, current_parts in _iter_yaml_key_matches(lines):
         if current_parts == parts:
@@ -769,7 +776,7 @@ def _remove_existing_yaml_leaf(path: Path, parts: list[str], *, allow_empty_leaf
                 raise LocaleError(f"Cannot remove {'.'.join(parts)!r}: it resolves to a namespace")
             del lines[index : _yaml_leaf_end(lines, index, indent)]
             _prune_empty_yaml_namespaces(lines, parts[:-1])
-            atomic_write_text(path, "".join(lines), encoding=UTF_8_ENCODING)
+            guard.write_text(path, "".join(lines))
             return
 
     raise LocaleError(f"Locale key not found in YAML text: {'.'.join(parts)!r}")

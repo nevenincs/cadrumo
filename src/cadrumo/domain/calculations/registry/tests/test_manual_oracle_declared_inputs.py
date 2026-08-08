@@ -32,6 +32,48 @@ reviewable place, beside a per-input line reference, instead of scattered throug
 fixture nobody diffs against the page. What it does buy mechanically is that a
 consuming test which BUILDS its fixture from the declaration cannot drift away from
 it, which is the specific failure that produced today's three instances.
+
+Migrating a payload: what to declare
+-------------------------------------
+
+**A declared input is a fact the scenario CONSUMES, not a figure that happens to
+appear on the page.** Three cases have come up, and they look alike from a
+distance:
+
+* The corpus does not print it. Scenario scaffolding the engine needs and the
+  manual never states — component boxes under a stated total, neutral zeros.
+  Keep it local and labelled. Declaring it would attach a locator to a figure the
+  corpus does not carry.
+* The corpus prints it, as an ANSWER. A stated total that is an expected OUTPUT of
+  this same scenario. Declaring it as an input makes the oracle assert what it was
+  handed, which :func:`test_no_declared_input_is_also_an_expected_output` refuses.
+* The corpus prints its ANTECEDENT, not it. The example opens with raw facts — a
+  retention certificate, a book of ingresos and gastos — and its solución works
+  them into the figures the casillas actually take. Declare the worked figure and
+  cite the solución line, not the more prominent raw one.
+
+Migrating a payload: where the locator points
+----------------------------------------------
+
+**At what ESTABLISHES the figure, which is not always where the figure is
+printed.** Same rule as grounding a casilla on the provision that fixes its value
+rather than the framework article, one layer down:
+
+* Where a nota adjusts a line item so the scenario's figure differs from the
+  printed one — 18.900 on the line, 1.200 removed by the nota, 17.700 supplied —
+  cite BOTH. Citing only the line item sends a reviewer to a number that does not
+  match the declaration.
+* An input stated only in a nota cites the nota, not the block a faster read
+  reaches for.
+* A component set spanning a page break in the extraction carries the ranges its
+  components actually fall in, never one span that quietly includes the lines
+  between them.
+
+Read every locator off the year's OWN manual. Sibling years state the same caso
+práctico at different lines, so copying a sibling's references is the mistake this
+is most likely to invite — and none of the three cases above would fail a test if
+got wrong. That is what the declaration is for: not catching a wrong locator, but
+putting it in one reviewable place beside the figure it claims.
 """
 
 from __future__ import annotations
@@ -79,10 +121,6 @@ def _payload(name: str) -> ManualWorkedExamplePayload:
 #: is stated here for the same reason none is asserted: it would be wrong the moment a
 #: payload migrates, and the entries themselves are the inventory.
 _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
-    "modelo-100-2024-capital-inmobiliario-arrendamiento-vivienda-tensionada.json": (
-        "scenario facts still hand-written in "
-        "test_m100_2024_capital_inmobiliario_arrendamiento_vivienda_manual_worked_example.py"
-    ),
     "modelo-100-2024-ganancias-patrimoniales-transmision-inmueble.json": (
         "scenario facts still hand-written in "
         "test_m100_2024_ganancias_patrimoniales_transmision_inmueble_manual_worked_example.py"

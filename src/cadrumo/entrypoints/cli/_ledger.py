@@ -60,6 +60,7 @@ from ._ledger_business_invoice_cli import (
     register_business_invoice_commands,
 )
 from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
+from ._ledger_counterparty_cli import register_counterparty_commands
 from ._ledger_evidence_cli import register_evidence_commands
 from ._ledger_import_cli import register_import_commands
 from ._ledger_inventory_cli import inventory_app, register_inventory_commands
@@ -968,6 +969,7 @@ register_evidence_commands(app)
 
 
 register_rule_commands(app)
+register_counterparty_commands(app)
 
 
 register_import_commands(app)

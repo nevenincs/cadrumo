@@ -23,7 +23,7 @@ mechanism that actually fits it:
 - **Writers that never took the lock** -- a hand edit, an editor save, a bulk
   sweep. No lock can exclude those, so :class:`CatalogueWriteGuard` digests each
   file as it is read and refuses the write if the bytes moved underneath. The
-  refusal is a :class:`~dev.locales._errors.LocaleWriteConflict`, telling the
+  refusal is a :class:`~dev.locales._errors.LocaleWriteConflictError`, telling the
   operator to retry rather than silently clobbering.
 
 The lock alone would leave the second class unguarded; the digest check alone
@@ -38,7 +38,7 @@ from __future__ import annotations
 import hashlib
 import os
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -47,7 +47,7 @@ from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.logging import get_logger
 
-from ._errors import LocaleError, LocaleWriteConflict
+from ._errors import LocaleError, LocaleWriteConflictError
 
 _log = get_logger(__name__)
 
@@ -73,7 +73,7 @@ def _digest_path(path: Path) -> str:
 
 
 def _decode_universal_newlines(raw: bytes) -> str:
-    """Decode ``raw`` exactly as :meth:`Path.read_text` would.
+    r"""Decode ``raw`` exactly as :meth:`Path.read_text` would.
 
     The line-oriented leaf writers rebuild a catalogue from
     ``splitlines(keepends=True)``, so their output depends on whether the
@@ -121,7 +121,7 @@ class CatalogueWriteGuard:
         """Atomically write ``text`` unless ``path`` changed since it was read.
 
         Raises:
-            LocaleWriteConflict: When ``path`` no longer carries the bytes this
+            LocaleWriteConflictError: When ``path`` no longer carries the bytes this
                 guard read, meaning another writer landed a change that this
                 write would silently discard.
             LocaleError: When ``path`` was never read through this guard.
@@ -134,7 +134,7 @@ class CatalogueWriteGuard:
                 "Every catalogue write must be paired with the read it is based on."
             )
         if _digest_path(path) != expected:
-            raise LocaleWriteConflict(
+            raise LocaleWriteConflictError(
                 f"{path.name} changed while this edit was in flight; the edit was not written. "
                 "Another writer or a hand edit landed first. Re-run the command to apply it on top."
             )
@@ -147,7 +147,7 @@ def catalogue_write_guard(
     locales_dir: Path,
     *,
     wait_seconds: float = _DEFAULT_WAIT_SECONDS,
-) -> Iterator[CatalogueWriteGuard]:
+) -> Generator[CatalogueWriteGuard]:
     """Hold the catalogue write lock for one read-modify-write cycle.
 
     Args:

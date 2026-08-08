@@ -188,6 +188,12 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     # ``pull-evidence`` leaf. It persists an acquisition manifest into the
     # encrypted live-IVA namespace and needs its own entry.
     "app live iva-wallet pull-evidence",
+    # Persists nothing of the register it reads, which is why the verb is
+    # ``discover`` rather than ``pull`` -- but it resolves its session through
+    # the central live-session writer, which opens an active-profile storage
+    # span and an auth mutation span, so the bucket is written either way. A
+    # read-shaped name is not a read-shaped write path.
+    "app live filed discover",
     "app live filed pull",
     "app live filed pull-all",
     "app live filed pull-sources",

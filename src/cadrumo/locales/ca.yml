@@ -370,11 +370,13 @@ aggregation:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
         bucket d'agregació sol·licitat.
       candidate_outside_period: La candidatura queda fora del període.
+      domestic_identification_on_intra_community_transaction: Una identificació a
+        efectes de l'IVA espanyola no és vàlida per a una operació intracomunitària.
       eu_member_state_on_export_transaction: Les operacions d'exportació o assimilades
         no poden portar un Estat membre de la UE; rebut %{member_state}.
+      missing_counterparty_identification_state: Una operació intracomunitària requereix
+        l'Estat membre en què la contrapart està identificada a efectes de l'IVA.
       unsupported_iva_category: 'Error intern: categoria d''IVA no admesa per a l''agregació.'
-      missing_counterparty_identification_state: 'Una operació intracomunitària requereix l''Estat membre en què la contrapart està identificada a efectes de l''IVA.'
-      domestic_identification_on_intra_community_transaction: 'Una identificació a efectes de l''IVA espanyola no és vàlida per a una operació intracomunitària.'
   modelo_bindings:
     errors:
       unsupported_period: Període de model no admès per a l'agregació del llibre.
@@ -1969,6 +1971,18 @@ cli:
           (0-100).
         unknown_disposal_regime: 'Règim de transmissió desconegut {regime!r}; acceptats:
           {accepted}'
+      counterparty:
+        actor_help: cli.app.ledger.counterparty.actor_help
+        confirm_help: Confirma el territori on està establerta una contrapart.
+        country_code_help: cli.app.ledger.counterparty.country_code_help
+        group_help: Confirma on està establerta una contrapart, una sola vegada, per
+          a tots els documents posteriors.
+        note_help: cli.app.ledger.counterparty.note_help
+        scope_help: cli.app.ledger.counterparty.scope_help
+        tax_identifier_help: L'identificador fiscal de la contrapart tal com apareix
+          imprès al document.
+        withdraw_help: Retira un establiment confirmat, declarant que la resposta
+          anterior era incorrecta.
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
         batch_directory_help: Directori els fitxers del qual s'ingressen. Combina'l
@@ -2024,6 +2038,7 @@ cli:
           group_help: Reviseu què s'ha enviat a un model extern i recupereu els artefactes
             en aquest equip.
           list_help: Mostreu cada enviament extern i els artefactes que se'n deriven.
+          no_history: cli.app.ledger.evidence.consent.no_history
           rederive_help: Torneu a llegir un artefacte en aquest equip des de la seva
             transcripció desada.
           rederive_refused: 'Nova derivació rebutjada: {detail}'
@@ -2091,6 +2106,18 @@ cli:
             respondre abans de confirmar-los. Inspeccioneu-ne un amb `review show`.
           blocking_help: Mostreu nomes els esborranys que no es poden confirmar fins
             que es respongui una troballa.
+          country_code_unassigned_message: El codi de país d'una de les parts pertany
+            als rangs que la norma ISO 3166-1 reserva perquè mai no s'hi assigni cap
+            país, de manera que el document indica una cadena i no un país, i res
+            no situa aquesta part. Corregiu el codi contrastant-lo amb el document.
+            Aquest esborrany es pot confirmar igualment; la part simplement queda
+            sense establir fins llavors.
+          country_code_uncatalogued_message: 'El codi de país d''una de les parts
+            pot designar un país real que el vocabulari incorporat d''aquest sistema
+            encara no recull, de manera que no es pot dir res sobre on està establerta
+            aquesta part. Tornar a llegir el document no ho resoldrà: cal afegir el
+            país. Aquest esborrany es pot confirmar igualment; la part simplement
+            queda sense establir fins llavors.'
           finding_help: Mostreu nomes els esborranys el document dels quals no ha
             superat aquesta comprovacio determinista.
           group_help: Reviseu els esborranys d'extraccio pendents abans de confirmar-los
@@ -2109,8 +2136,6 @@ cli:
           show_help: Mostreu un esborrany pendent camp per camp, amb les seves troballes
             i blocatges.
           unknown_reference: No hi ha cap esborrany pendent per a aquesta referencia.
-          country_code_unassigned_message: 'El codi de país d''una de les parts pertany als rangs que la norma ISO 3166-1 reserva perquè mai no s''hi assigni cap país, de manera que el document indica una cadena i no un país, i res no situa aquesta part. Corregiu el codi contrastant-lo amb el document. Aquest esborrany es pot confirmar igualment; la part simplement queda sense establir fins llavors.'
-          country_code_uncatalogued_message: 'El codi de país d''una de les parts pot designar un país real que el vocabulari incorporat d''aquest sistema encara no recull, de manera que no es pot dir res sobre on està establerta aquesta part. Tornar a llegir el document no ho resoldrà: cal afegir el país. Aquest esborrany es pot confirmar igualment; la part simplement queda sense establir fins llavors.'
         source_path_help: Ruta al PDF o imatge de la factura
         supplier_help: Nom del proveïdor
         taxable_base_help: Base imposable de la factura
@@ -2281,6 +2306,12 @@ cli:
         state_help: 'Filtre d''estat del snapshot: active, superseded, discarded o
           all'
         view_help: Mostrar un snapshot del borrador del model 100
+      deudas:
+        app_help: cli.app.live.deudas.app_help
+        latest_help: cli.app.live.deudas.latest_help
+        list_help: cli.app.live.deudas.list_help
+        snapshot_id_help: cli.app.live.deudas.snapshot_id_help
+        view_help: cli.app.live.deudas.view_help
       expediente_help: Identificador d'expedient AEAT
       expedientes:
         app_help: Snapshots d'expedients AEAT de només lectura
@@ -2309,6 +2340,9 @@ cli:
           qual cosa només amplia el recorregut: un parell absent no prova que no es
           presentés res.'
         list_help: Llistar declaracions presentades sense descarregar artefactes
+        pull_all_help: cli.app.live.filed.pull_all_help
+        pull_all_limit_help: cli.app.live.filed.pull_all_limit_help
+        pull_all_pairs_refused: cli.app.live.filed.pull_all_pairs_refused
         pull_help: Descàrrega dades de declaracions presentades del registre autenticat
           d'AEAT.
         pull_modelo_help: Limita aquesta descàrrega a aquest model.
@@ -4696,6 +4730,13 @@ cli:
       vision_model_help: Substitueix el model de visió local d'Ollama per llegir una
         factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir
         el model configurat.
+    counterparty:
+      errors:
+        scope_conflict: cli.ledger.counterparty.errors.scope_conflict
+        unverifiable_identifier: cli.ledger.counterparty.errors.unverifiable_identifier
+      notices:
+        already_confirmed: cli.ledger.counterparty.notices.already_confirmed
+        nothing_to_withdraw: cli.ledger.counterparty.notices.nothing_to_withdraw
     doclink:
       actor_help: Etiqueta de l'operador.
       help: Descàrrega un enllaç de document de Drive i desa'n els bytes com a evidència
@@ -5065,7 +5106,9 @@ cli:
         ledger_view: Veure el detall d'una entrada del llibre.
         live_filed_capture: Descarregar declaracions presentades en viu des de l'AEAT.
         live_filed_capture_sources: Mostrar les fonts disponibles per a la descàrrega.
+        live_filed_discover: cli.operator_surface.help.app.live_filed_discover
         live_filed_list: Llistar declaracions presentades capturades de l'AEAT.
+        live_filed_pull_all: cli.operator_surface.help.app.live_filed_pull_all
         modelo_audit_check: Comprova les evidències incloses d'una revisió de declaració.
         modelo_audit_export: Exporta l'auditoria d'evidències d'una revisió de declaració.
         modelo_audit_show: Mostra l'auditoria d'evidències d'una revisió de declaració.
@@ -5614,7 +5657,7 @@ docs:
       casilla_count: '{casillas} caselles en {sections} seccions'
       casilla_id: Identificador de casella
       casilla_index: Totes les caselles
-      casilla_index_hint: Trieu un número per anar a aquella casella.
+      casilla_index_hint: Trieu una casella per anar-hi.
       derived_from: a partir de
       established_by: Establert per
       formula: Fórmula
@@ -7385,6 +7428,13 @@ live:
     target_period_year_mismatch: L'any objectiu no coincideix amb l'exercici del període
       objectiu.
     year_range_invalid: El rang d'exercicis indicat no és vàlid.
+  filed:
+    pull_all:
+      denominator_note_profile: live.filed.pull_all.denominator_note_profile
+      denominator_note_register_only: live.filed.pull_all.denominator_note_register_only
+      expected_but_not_found: live.filed.pull_all.expected_but_not_found
+      found_more_than_expected: live.filed.pull_all.found_more_than_expected
+      recapture_divergence: live.filed.pull_all.recapture_divergence
 llm:
   evidence:
     consent:
@@ -67512,6 +67562,8 @@ modelo:
                 title: null
           field:
             label: null
+overview:
+  no_aeat_history: overview.no_aeat_history
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 61 LIRPF)
