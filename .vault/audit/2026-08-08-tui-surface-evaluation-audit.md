@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:ebfd3cbfc48fdea7ba33f070da3453342824c865b181b53ce6cf1722d83d951b'
+body_hash: 'sha256:c9d844aa4068f539908e1ef941133cc9701e6fe29f78e7a5d8c3d9412672052d'
 related: []
 ---
 
@@ -82,10 +82,30 @@ roughly two weeks an operator exporting a profile typed the passphrase
 protecting that bundle and watched it painted back in clear on the terminal —
 exposed to anyone overlooking the screen, to a screen capture, and to a
 recorded session. Nothing stored it in clear; this is a display-surface
-confidentiality defect, not a storage one. Fixed during this campaign by adding
-a secret flag to the field model, wiring it to the input widget, and applying
-it to the export passphrase as well as the newly-added passphrase-change
-fields. Note the repository already gates exactly this property — a shipped
+confidentiality defect, not a storage one. The first fix — a secret flag on the field model, wired to the input widget and
+applied to the export passphrase — was necessary and NOT sufficient, and the
+gap it left is the more interesting half. A property-based gate written
+afterwards, driving every action that opens a form and checking every masked
+field it finds, caught two further live leaks on the same surface:
+
+- the row-selected handler REBUILT the field for the edit dialog and dropped
+  the secret flag, so masking was lost while the operator typed — upstream of,
+  and worse than, the original symptom
+- the summary table wrote the raw value into its value column regardless of the
+  flag, so a committed secret sat in clear on the form itself with no
+  navigation required. **This is where the export passphrase actually lived.**
+
+So the original account of this defect was incomplete: masking the input alone
+left the secret painted one row below it. Both are now fixed and the gate is a
+property over every secret-bearing field reachable from any manager action,
+naming no dialog. Worth recording how the gate was proven: an early version
+asserted the secret's absence from an exported screenshot and gave a false
+negative, because an eighteen-character sentinel came back truncated to five in
+the export — a width accident reading as a pass. Reading the stored cell
+directly fixed it. An absence assertion that can pass because the value was
+merely clipped is not an absence assertion.
+
+Note the repository already gates exactly this property — a shipped
 appearance test asserts a typed secret never appears in the rendered cells —
 but only for the registration screen. The form substrate was outside that
 gate's reach, which is the same gate-hole shape as the profile manager sitting
