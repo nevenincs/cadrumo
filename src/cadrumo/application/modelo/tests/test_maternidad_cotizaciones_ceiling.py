@@ -52,7 +52,7 @@ _FIRST_UNCEILINGED_YEAR = 2023
 
 def _record_declaring_months(filing_year: int) -> UserProfileRecord:
     """A profile with one clearly-eligible descendant declaring a full year of months."""
-    child = DescendantInfo(birth_date=date(filing_year - 1, 6, 1), meses_madre_trabajo_2024=12)
+    child = DescendantInfo(birth_date=date(filing_year - 1, 6, 1), meses_madre_trabajo=tuple(range(1, 13)))
     return UserProfileRecord(
         profile_id=_BUCKET,
         display_name="cotizaciones ceiling probe",

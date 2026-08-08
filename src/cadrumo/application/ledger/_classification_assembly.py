@@ -94,9 +94,11 @@ from ...domain.iva import (
     IvaInvoiceClassificationCriteria,
     IvaTerritorialScope,
     PartyFact,
+    StatedCountryCodeStatus,
     SupplyNature,
     TransactionKind,
     classify_iva,
+    stated_country_code_status,
     territorial_scope_for_country,
     territorial_scope_for_spanish_postal_code,
     vat_identification_state_for_printed_tax_identifier,
@@ -235,6 +237,38 @@ def names_spain(country_code: str | None) -> bool:
     return (country_code or "").strip().upper() == SPAIN_COUNTRY_CODE
 
 
+def _unresolved_country_reason(country_code: str | None) -> str:
+    """Say why a stated country code established nothing, in the operator's terms.
+
+    Three outcomes, and they need different things done to them. A code in an
+    ISO user-assigned range names no country by construction, so the document is
+    wrong and the operator corrects it. A well-formed code the bundled
+    vocabulary does not carry may name a real jurisdiction, so the gap is ours
+    and re-reading the document settles nothing. Anything that is not a
+    two-letter code at all is a reading failure.
+
+    Which one applies is asked of
+    :func:`~domain.iva.stated_country_code_status` rather than re-derived, so
+    the boundary that narrowed the rung and the sentence explaining the refusal
+    cannot drift apart.
+    """
+    status = stated_country_code_status(country_code)
+    if status is StatedCountryCodeStatus.UNASSIGNED:
+        return (
+            f"the printed country code {country_code!r} is reserved by ISO 3166-1 to name no country, "
+            "so it established nothing about where this party is"
+        )
+    if status is StatedCountryCodeStatus.UNCATALOGUED:
+        return (
+            f"the printed country code {country_code!r} is not carried by this system's country "
+            "vocabulary, so nothing can yet be said about where this party is established"
+        )
+    return (
+        f"the printed country code {country_code!r} is not a well-formed two-letter country code, "
+        "so it established nothing about where this party is"
+    )
+
+
 def _scope(
     country_code: str | None,
     postal_code: str | None,
@@ -279,10 +313,12 @@ def _scope(
         )
         settled_by = "a printed postal code for this party, or an explicit operator assertion of the territory"
     elif (country_code or "").strip():
-        reason = (
-            f"the printed country code {country_code!r} is not a well-formed two-letter country code, "
-            "so it established nothing about where this party is"
-        )
+        # Two different failures reach here and the operator's next move differs
+        # between them, so the reason must not flatten them. A code the closed
+        # vocabulary does not carry IS well-formed -- saying it is malformed
+        # would send the operator to re-read a field that reads perfectly. The
+        # status axis owns the distinction; nothing about it is re-derived here.
+        reason = _unresolved_country_reason(country_code)
         settled_by = "a printed two-letter country code for this party, or an explicit operator assertion"
     else:
         reason = "no country code was established for this party"

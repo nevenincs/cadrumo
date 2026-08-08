@@ -43,11 +43,20 @@ def _facts(child: DescendantInfo) -> dict[str, Any]:
 
 
 def _manual_worked_child() -> DescendantInfo:
-    """The manual's hijo mayor: four Art. 81.1 months, two complete spend months."""
+    """The manual's hijo mayor, on its REAL facts.
+
+    Born 2 September 2021 and turning three within the period; the mother is
+    entitled May to August; the nursery's complete months are January to June.
+    The two month sets share May and June, so the basis is two months.
+
+    The birth date and both month sets are the point. An earlier version used a
+    child who was two all year with the nursery moved to May and June, which
+    reached the same figure without ever intersecting anything.
+    """
     return DescendantInfo(
-        birth_date=date(2022, 3, 1),
-        meses_madre_trabajo_2024=4,
-        gastos_guarderia_mensuales=parse_guarderia_mensual("5:1145;6:1145", field="test"),
+        birth_date=date(2021, 9, 2),
+        meses_madre_trabajo=(5, 6, 7, 8),
+        gastos_guarderia_mensuales=parse_guarderia_mensual("1-6:1145", field="test"),
     )
 
 

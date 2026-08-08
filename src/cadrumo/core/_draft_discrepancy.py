@@ -80,6 +80,44 @@ class DraftDiscrepancyKind(StrEnum):
     about one figure, and confirming past it silently picks a side.
     """
 
+    COUNTRY_CODE_UNASSIGNED = "country_code_unassigned"
+    """A party's country field states a code reserved to denote no country.
+
+    The ISO 3166-1 user-assigned ranges -- ``AA``, ``QM``-``QZ``, ``XA``-``XZ``
+    and ``ZZ`` -- exist so that no country is ever allocated there, so a
+    document stating one has stated a string. It is the shape a placeholder, a
+    truncated field or a slipped keystroke actually takes.
+
+    Its own member rather than a variant of the sibling below because the
+    OWNER differs, and that is the whole reason the axis splits: this one the
+    operator can correct off the page, while a catalogue gap is ours to close
+    and no amount of re-reading the document will settle it.
+
+    Raised only where the code cost a territorial answer -- a party the ladder
+    settled through some other rung raises nothing however its country field
+    is printed, on the sibling terms every check here holds to.
+
+    Blocking on those same terms: where a party is established decides the IVA
+    treatment, and on the issued side the reading this replaces was export
+    treatment, zero-rated. Confirming past an undetermined territory picks an
+    answer by omission, and this is the direction where the omission exempts.
+    """
+
+    COUNTRY_CODE_UNCATALOGUED = "country_code_uncatalogued"
+    """A party's country field states a code the bundled vocabulary does not carry.
+
+    Distinct from the member above because the claim is weaker and honestly so:
+    the reserved ranges are the only codes this codebase can say denote nothing,
+    and a code outside them is reported as unknown to US rather than asserted to
+    be meaningless. It may well name a real jurisdiction, and the resolution is
+    to add the country to the vocabulary rather than to re-read the document.
+
+    It fires no rung until that happens, which is the deliberate half: an
+    uncatalogued code establishing a territory on shape alone is the defect this
+    axis was narrowed to close, and treating a gap in our data as evidence would
+    reopen it under a friendlier name.
+    """
+
     POSTAL_CODE_UNREADABLE = "postal_code_unreadable"
     """A party's postal code field holds something that is not a postal code.
 

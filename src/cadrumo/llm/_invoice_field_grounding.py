@@ -93,9 +93,11 @@ class ExtractedInvoiceFields(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     supplier_tax_id: str | None = Field(default=None)
+    supplier_name: str | None = Field(default=None)
     supplier_postal_code: str | None = Field(default=None)
     supplier_country: str | None = Field(default=None)
     customer_tax_id: str | None = Field(default=None)
+    customer_name: str | None = Field(default=None)
     customer_postal_code: str | None = Field(default=None)
     customer_country: str | None = Field(default=None)
     invoice_number: str | None = Field(default=None)
@@ -130,9 +132,11 @@ class ExtractedFieldAnchors(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     supplier_tax_id: str | None = Field(default=None)
+    supplier_name: str | None = Field(default=None)
     supplier_postal_code: str | None = Field(default=None)
     supplier_country: str | None = Field(default=None)
     customer_tax_id: str | None = Field(default=None)
+    customer_name: str | None = Field(default=None)
     customer_postal_code: str | None = Field(default=None)
     customer_country: str | None = Field(default=None)
     invoice_number: str | None = Field(default=None)
@@ -606,9 +610,11 @@ def ground_extracted_fields(
     """
     fields = response.fields
     supplier_tax_id = _ground_text(fields.supplier_tax_id, "supplier_tax_id")
+    supplier_name = _ground_text(fields.supplier_name, "supplier_name")
     supplier_postal_code = _ground_text(fields.supplier_postal_code, "supplier_postal_code")
     supplier_country = _ground_text(fields.supplier_country, "supplier_country")
     customer_tax_id = _ground_text(fields.customer_tax_id, "customer_tax_id")
+    customer_name = _ground_text(fields.customer_name, "customer_name")
     customer_postal_code = _ground_text(fields.customer_postal_code, "customer_postal_code")
     customer_country = _ground_text(fields.customer_country, "customer_country")
     invoice_number = _ground_text(fields.invoice_number, "invoice_number")
@@ -626,9 +632,11 @@ def ground_extracted_fields(
     # grounded value here raises rather than travelling with no provenance.
     grounded: Mapping[str, str | Decimal | None] = {
         "supplier_tax_id": supplier_tax_id,
+        "supplier_name": supplier_name,
         "supplier_postal_code": supplier_postal_code,
         "supplier_country": supplier_country,
         "customer_tax_id": customer_tax_id,
+        "customer_name": customer_name,
         "customer_postal_code": customer_postal_code,
         "customer_country": customer_country,
         "invoice_number": invoice_number,
@@ -666,9 +674,11 @@ def ground_extracted_fields(
 
     return InvoiceDraft(
         supplier_tax_id=supplier_tax_id,
+        supplier_name=supplier_name,
         supplier_postal_code=supplier_postal_code,
         supplier_country=supplier_country,
         customer_tax_id=customer_tax_id,
+        customer_name=customer_name,
         customer_postal_code=customer_postal_code,
         customer_country=customer_country,
         invoice_number=invoice_number,

@@ -91,9 +91,11 @@ from ._errors import (
 )
 from ._establishment import (
     SPAIN_COUNTRY_CODE,
+    StatedCountryCodeStatus,
     country_code_for_printed_country_name,
     country_code_for_printed_tax_identifier,
     country_code_for_stated_country_code,
+    stated_country_code_status,
     territorial_scope_for_country,
     territorial_scope_for_printed_country_name,
     territorial_scope_for_printed_tax_identifier,
@@ -303,6 +305,7 @@ __all__ = [
     "RegularizacionProrrataDireccion",
     "RegularizacionProrrataResult",
     "SepaMarca",
+    "StatedCountryCodeStatus",
     "StatutoryCitation",
     "SupplyNature",
     "SupplyNatureDerivation",
@@ -363,6 +366,7 @@ __all__ = [
     "resolve_category_rate",
     "settlement_sides_for_flow",
     "split_gross_at_rate",
+    "stated_country_code_status",
     "sum_deductible_amounts",
     "supply_nature_is_required",
     "territorial_scope_for_country",

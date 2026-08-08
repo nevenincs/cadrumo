@@ -47,7 +47,6 @@ from ._semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casill
 __all__ = [
     "collect_descendientes_count_desync_diagnostics",
     "collect_guarderia_madre_meses_undeclared_diagnostics",
-    "collect_guarderia_simultaneity_approximation_diagnostics",
     "collect_guarderia_spend_shape_diagnostics",
     "collect_minimo_descendientes_dependencia_diagnostics",
     "collect_minimo_descendientes_entry_date_missing_diagnostics",
@@ -72,14 +71,9 @@ _DEPENDENCIA_ASSIMILATED_SOURCE_KIND = "minimo_descendientes_dependencia_assimil
 _DEPENDENCIA_SUPPRESSED_SOURCE_KIND = "minimo_descendientes_dependencia_suppressed"
 _GUARDERIA_SHAPE_SOURCE_KIND = "guarderia_spend_needs_monthly_detail"
 _GUARDERIA_MADRE_MESES_SOURCE_KIND = "guarderia_madre_meses_undeclared"
-_GUARDERIA_SIMULTANEITY_SOURCE_KIND = "guarderia_simultaneity_approximated"
 
 #: The Art. 81.2 guardería increase (Modelo 100 casilla 0613).
 _INCREMENTO_GUARDERIA_SEMANTIC_ROLE = "irpf_incremento_maternidad_guarderia"
-
-#: A full devengo period. A month span reaching this covers the year, so an
-#: intersection against it is the OTHER span exactly and nothing is approximated.
-_MONTHS_IN_YEAR = 12
 
 
 class _GuarderiaContext(NamedTuple):
@@ -386,25 +380,9 @@ def _guarderia_madre_meses_advisory(indices: list[int], casilla_id: CasillaId) -
             "needs the months the mother met the Art. 81.1 requirement, and none are on record"
         ),
         remedy=(
-            "Declare them with `descendiente add --descendiente MESES_TRABAJO=N`, or leave the "
-            "zero if she met it in no month of this period."
+            "Declare them with `descendiente add --descendiente MESES_TRABAJO=MM-MM`, or leave "
+            "the zero if she met it in no month of this period."
         ),
-        casilla_id=casilla_id,
-    )
-
-
-def _guarderia_simultaneity_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
-    return CalculationSourceDiagnostic(
-        reason="source_issue",
-        source_kind=_GUARDERIA_SIMULTANEITY_SOURCE_KIND,
-        message=(
-            f"casilla {casilla_id!r} assumes the best case for {_name_indices(indices)}: Art. "
-            "81.3 LIRPF prorates by the months the mother's requirement and the guardería spend "
-            "hold at once, and this record stores how MANY months she qualified but not WHICH, so "
-            "the overlap is taken as the largest it could be. Where the two spans do not coincide, "
-            "the real figure is lower"
-        ),
-        remedy="Check it against her records before filing.",
         casilla_id=casilla_id,
     )
 
@@ -749,64 +727,6 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
     if not affected:
         return ()
     return (_guarderia_madre_meses_advisory(affected, context.casilla_id),)
-
-
-def collect_guarderia_simultaneity_approximation_diagnostics(
-    revision: ModeloRevision,
-    casilla_values: Mapping[CasillaId, Decimal],
-    *,
-    modelo: str,
-    bucket_id: str,
-) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Disclose that the Art. 81.3 simultaneity test is approximated, not measured.
-
-    Art. 81.3 prorates the increase by the months in which the Art. 81.1 and
-    81.2 requirements hold "de forma simultánea" — an intersection of two month
-    SETS. This application holds only one of them as a set. The guardería side
-    is a real month map, but the mother's side is stored as a COUNT, so the
-    engine takes the smaller of the two, which is the largest overlap those two
-    facts admit rather than the overlap itself.
-
-    That upper bound is exact whenever either side spans the whole period, since
-    the intersection is then the other side outright. It can over-state only
-    where both are partial and the two spans do not fully coincide — a mother
-    qualifying January to April against nursery paid September to October. This
-    fires on exactly that state, so the operator is told where the figure rests
-    on an assumption instead of being told so on every filing, which would train
-    them to ignore it.
-
-    Non-blocking and deliberately not a refusal. The alternative to the
-    approximation is the flat per-child ceiling this formula replaced, which
-    over-granted every partial-year enrolment outright; carrying the residual
-    and disclosing it is the smaller error. Closing it needs month identity on
-    the Art. 81.1 side, which is tracked as its own work.
-
-    Args:
-        revision: The :class:`ModeloRevision` being calculated; its ``valid_to``
-            supplies the devengo year.
-        casilla_values: Computed engine values keyed by :class:`CasillaId`. A
-            zero increase rests on no assumption, so the advisory is scoped to a
-            positive figure.
-        modelo: The modelo identifier of the filing being calculated.
-        bucket_id: Bucket whose profile carries the descendant facts.
-
-    Returns:
-        A one-element tuple carrying the advisory, or an empty tuple.
-    """
-    context = _guarderia_descendants(revision, modelo=modelo, bucket_id=bucket_id)
-    if context is None:
-        return ()
-    if casilla_values.get(context.casilla_id, Decimal("0")) <= 0:
-        return ()
-    affected = [
-        index
-        for index, descendant in enumerate(context.descendants)
-        if 0 < len(descendant.meses_madre_trabajo) < _MONTHS_IN_YEAR
-        and 0 < descendant.guarderia_qualifying_meses(context.filing_year) < _MONTHS_IN_YEAR
-    ]
-    if not affected:
-        return ()
-    return (_guarderia_simultaneity_advisory(affected, context.casilla_id),)
 
 
 def collect_minimo_descendientes_dependencia_diagnostics(

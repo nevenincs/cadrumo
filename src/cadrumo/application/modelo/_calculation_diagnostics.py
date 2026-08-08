@@ -44,7 +44,6 @@ from ._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_
 from ._minimo_descendientes_advisory import (
     collect_descendientes_count_desync_diagnostics,
     collect_guarderia_madre_meses_undeclared_diagnostics,
-    collect_guarderia_simultaneity_approximation_diagnostics,
     collect_guarderia_spend_shape_diagnostics,
     collect_minimo_descendientes_dependencia_diagnostics,
     collect_minimo_descendientes_entry_date_missing_diagnostics,
@@ -180,12 +179,6 @@ def collect_bucket_aggregation_advisory_diagnostics(
             bucket_id=bucket_id,
         )
         + collect_guarderia_madre_meses_undeclared_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            bucket_id=bucket_id,
-        )
-        + collect_guarderia_simultaneity_approximation_diagnostics(
             revision,
             casilla_values,
             modelo=modelo,

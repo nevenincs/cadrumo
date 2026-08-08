@@ -47,6 +47,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, NamedTuple
 
 from ._closure_findings import closure_findings
+from ._country_vocabulary_finding import country_vocabulary_findings
 from ._postal_shape_finding import postal_shape_findings
 from ._regime_contradiction import regime_contradiction_finding
 
@@ -90,10 +91,15 @@ def _postal_code_shape(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ..
     return postal_shape_findings(draft)
 
 
+def _country_vocabulary(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ...]:
+    return country_vocabulary_findings(draft)
+
+
 DETERMINISTIC_CHECKS: tuple[DeterministicCheck, ...] = (
     DeterministicCheck("closure_identities", _closure_identities),
     DeterministicCheck("regime_contradiction", _regime_contradiction),
     DeterministicCheck("postal_code_shape", _postal_code_shape),
+    DeterministicCheck("country_vocabulary", _country_vocabulary),
 )
 """Every draft-only check, as data rather than as a sequence of calls.
 

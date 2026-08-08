@@ -179,8 +179,8 @@ def test_declared_meses_reach_casilla_0611(runtime_profile: TestRuntimeProfile) 
     """
     _seed_natural_person_profile(runtime_profile)
     _declare(
-        f"{_MELLIZO_BIRTH},MESES_TRABAJO=12",
-        f"{_MELLIZO_BIRTH},MESES_TRABAJO=12",
+        f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12",
+        f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12",
     )
 
     exit_code, output = _calculate()
@@ -194,7 +194,7 @@ def test_one_hijo_twelve_months_reaches_the_manual_per_hijo_figure(
 ) -> None:
     """The same example's per-hijo line, isolated: one child, twelve months, 1.200."""
     _seed_natural_person_profile(runtime_profile)
-    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=12")
+    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 
@@ -210,7 +210,7 @@ def test_declaring_fewer_months_moves_the_casilla(runtime_profile: TestRuntimePr
     and a path indifferent to the declared figure cannot produce it.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=6")
+    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-6")
 
     exit_code, output = _calculate()
 
@@ -233,7 +233,7 @@ def test_months_declared_for_a_child_over_three_are_withheld_and_disclosed(
     and why, or the entry surface is lying again in the opposite direction.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare("NACIMIENTO=2015-04-01,MESES_TRABAJO=12")
+    _declare("NACIMIENTO=2015-04-01,MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 
@@ -262,7 +262,7 @@ def test_an_eligible_child_does_not_raise_the_withheld_advisory(
 ) -> None:
     """The advisory must fire on the state it names and not on the healthy one."""
     _seed_natural_person_profile(runtime_profile)
-    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=12")
+    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 
@@ -282,7 +282,7 @@ def test_a_child_turning_three_mid_year_contributes_its_months_before_the_birthd
     month does not: three months at the authority's 100 euros is 300.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare("NACIMIENTO=2021-04-15,MESES_TRABAJO=12")
+    _declare("NACIMIENTO=2021-04-15,MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 
@@ -306,7 +306,7 @@ def test_the_art_81_1_entry_window_reaches_the_casilla_for_a_child_over_three(
     already closed on 2023 -- which is the divergence this case exists to show.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare("NACIMIENTO=2016-03-02,RELACION=adoptado,INSCRIPCION=2021-11-15,MESES_TRABAJO=12")
+    _declare("NACIMIENTO=2016-03-02,RELACION=adoptado,INSCRIPCION=2021-11-15,MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 
@@ -325,7 +325,7 @@ def test_no_month_before_the_adoption_reaches_the_casilla(
     1.200 where 300 is due. Three eligible months at the authority's 100 euros.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare("NACIMIENTO=2024-01-10,RELACION=adoptado,INSCRIPCION=2024-10-05,MESES_TRABAJO=12")
+    _declare("NACIMIENTO=2024-01-10,RELACION=adoptado,INSCRIPCION=2024-10-05,MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 
@@ -345,7 +345,7 @@ def test_a_child_over_the_rentas_ceiling_contributes_nothing(
     distinguishes the mininmo predicate from a bespoke one.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=12,RENTAS=99999")
+    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12,RENTAS=99999")
 
     exit_code, output = _calculate()
 
@@ -374,7 +374,7 @@ def test_the_calculate_time_flag_no_longer_exists(runtime_profile: TestRuntimePr
     once Click has rejected the invocation.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=12")
+    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate("--meses-trabajo-con-hijo-menor-3", "0=12")
 
@@ -385,7 +385,7 @@ def test_the_calculate_time_flag_no_longer_exists(runtime_profile: TestRuntimePr
 def test_the_profile_declaration_alone_is_now_the_only_route(runtime_profile: TestRuntimeProfile) -> None:
     """With the flag gone, the descendiente-declared figure reaches 0611 unaided."""
     _seed_natural_person_profile(runtime_profile)
-    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=12")
+    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 
@@ -414,7 +414,7 @@ def test_a_contributing_descendant_under_the_default_relacion_is_disclosed(
     the difference from the fact alone, which is the whole point.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=12")
+    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 
@@ -435,8 +435,8 @@ def test_the_advisory_names_every_contributing_descendant_under_the_default(
     """Both mellizos are under the default relación and both are named."""
     _seed_natural_person_profile(runtime_profile)
     _declare(
-        f"{_MELLIZO_BIRTH},MESES_TRABAJO=12",
-        f"{_MELLIZO_BIRTH},MESES_TRABAJO=12",
+        f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12",
+        f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12",
     )
 
     exit_code, output = _calculate()
@@ -457,7 +457,7 @@ def test_an_adopted_contributing_descendant_is_not_disclosed(runtime_profile: Te
     be noise for an operator who already resolved the ambiguity.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare(f"{_MELLIZO_BIRTH},RELACION=adoptado,MESES_TRABAJO=12")
+    _declare(f"{_MELLIZO_BIRTH},RELACION=adoptado,MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 
@@ -468,7 +468,7 @@ def test_an_adopted_contributing_descendant_is_not_disclosed(runtime_profile: Te
 def test_a_tutela_contributing_descendant_is_not_disclosed(runtime_profile: TestRuntimeProfile) -> None:
     """Tutela is likewise explicitly stated, so it is unambiguous even though entitled."""
     _seed_natural_person_profile(runtime_profile)
-    _declare(f"{_MELLIZO_BIRTH},RELACION=tutela,MESES_TRABAJO=12")
+    _declare(f"{_MELLIZO_BIRTH},RELACION=tutela,MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 
@@ -486,7 +486,7 @@ def test_a_withheld_descendant_under_the_default_relacion_is_not_disclosed(
     be noise on top of the withheld advisory this case already raises.
     """
     _seed_natural_person_profile(runtime_profile)
-    _declare("NACIMIENTO=2015-04-01,MESES_TRABAJO=12")
+    _declare("NACIMIENTO=2015-04-01,MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 
@@ -500,7 +500,7 @@ def test_a_temporal_acogimiento_contributing_nothing_is_not_disclosed(
 ) -> None:
     """A stated, non-entitling relación is unambiguous even though it also contributes nothing."""
     _seed_natural_person_profile(runtime_profile)
-    _declare(f"{_MELLIZO_BIRTH},RELACION=acogimiento_temporal,MESES_TRABAJO=12")
+    _declare(f"{_MELLIZO_BIRTH},RELACION=acogimiento_temporal,MESES_TRABAJO=1-12")
 
     exit_code, output = _calculate()
 
@@ -528,7 +528,7 @@ def test_declaring_working_months_under_the_default_relacion_is_disclosed_immedi
     """An operator actively declaring the row is told at that moment, not only on the next calculate."""
     _seed_natural_person_profile(runtime_profile)
 
-    result = _descendiente_add_result(f"{_MELLIZO_BIRTH},MESES_TRABAJO=12")
+    result = _descendiente_add_result(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
 
     assert result.exit_code == 0, result.output
     notices = unwrap_envelope_notices(result.output)
@@ -544,7 +544,7 @@ def test_declaring_working_months_with_an_explicit_relacion_is_not_disclosed(
     """A stated relación resolves the ambiguity at declaration, same as at calculate time."""
     _seed_natural_person_profile(runtime_profile)
 
-    result = _descendiente_add_result(f"{_MELLIZO_BIRTH},RELACION=tutela,MESES_TRABAJO=12")
+    result = _descendiente_add_result(f"{_MELLIZO_BIRTH},RELACION=tutela,MESES_TRABAJO=1-12")
 
     assert result.exit_code == 0, result.output
     notices = unwrap_envelope_notices(result.output)
@@ -565,9 +565,9 @@ def test_declaring_no_working_months_is_not_disclosed(runtime_profile: TestRunti
 def test_only_the_newly_added_ambiguous_rows_are_named(runtime_profile: TestRuntimeProfile) -> None:
     """A later `add` call does not re-disclose an earlier row it did not touch."""
     _seed_natural_person_profile(runtime_profile)
-    _declare(f"{_MELLIZO_BIRTH},RELACION=tutela,MESES_TRABAJO=12")
+    _declare(f"{_MELLIZO_BIRTH},RELACION=tutela,MESES_TRABAJO=1-12")
 
-    result = _descendiente_add_result(f"{_MELLIZO_BIRTH},MESES_TRABAJO=12")
+    result = _descendiente_add_result(f"{_MELLIZO_BIRTH},MESES_TRABAJO=1-12")
 
     assert result.exit_code == 0, result.output
     notices = unwrap_envelope_notices(result.output)

@@ -538,7 +538,7 @@ def descendiente_add(
                 "[,DISCAPACIDAD=0|33|65]"
                 "[,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N]"
                 "[,DECLARACION_PROPIA=true|false][,PRORRATA=true|false]"
-                "[,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N]"
+                "[,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N]"
                 "[,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]. "
                 "Repeatable. Run `aeat config profile descendiente` with no "
                 "subcommand to enter these guided."

@@ -8,6 +8,18 @@ party's address. This module turns that printed evidence into the closed
 :class:`IvaTerritorialScope` the classifier consumes -- or into ``None``, which is
 the answer far more often than it looks.
 
+**A code establishes a territory only through the closed vocabulary.** Every rung
+on this axis is a deterministic lookup against bounded registry data, and the
+country rung is no exception: a code the catalogues do not carry is an unmatched
+token that fires nothing. It was once a shape check instead, so any well-formed
+pair resolved to :attr:`IvaTerritorialScope.THIRD_COUNTRY` -- and third country
+on the issued side is export treatment, zero-rated, so ``XX``, ``ZZ`` and ``QQ``
+exempted an operation silently from a value with no referent. The ISO
+user-assigned ranges denote nothing by construction; shape-validity is not
+reference. An unmatched token is reported rather than dropped, through
+:func:`stated_country_code_status`, which separates the operator's typo from
+this codebase's own catalogue gap.
+
 **Absence is modelled as ``None``, never as an enum member.** A missing scope is
 not a kind of scope, and adding an ``UNKNOWN`` member would put a value into a
 closed set that every consumer's rule table would then have to special-case. The
@@ -66,6 +78,7 @@ See Also:
 from __future__ import annotations
 
 import tomllib
+from enum import StrEnum
 from functools import lru_cache
 from typing import Final
 
@@ -83,9 +96,11 @@ from ._schema import EUMemberState
 
 __all__ = [
     "SPAIN_COUNTRY_CODE",
+    "StatedCountryCodeStatus",
     "country_code_for_printed_country_name",
     "country_code_for_printed_tax_identifier",
     "country_code_for_stated_country_code",
+    "stated_country_code_status",
     "territorial_scope_for_country",
     "territorial_scope_for_printed_country_name",
     "territorial_scope_for_printed_tax_identifier",
@@ -117,15 +132,164 @@ would be a second opinion with no provision behind it.
 """
 
 
-def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialScope | None:
-    """Return the territorial scope a printed country code establishes.
+_USER_ASSIGNED_ALPHA2: Final[frozenset[str]] = frozenset(
+    {"AA", "ZZ"}
+    | {f"Q{letter}" for letter in "MNOPQRSTUVWXYZ"}
+    | {f"X{letter}" for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"},
+)
+"""The alpha-2 pairs ISO 3166-1 reserves for private use: ``AA``, ``QM``-``QZ``,
+``XA``-``XZ`` and ``ZZ``.
+
+Written as ranges rather than a list because that is what the standard reserves,
+and a hand-expanded copy would be a second statement of one rule. These pairs
+denote no country BY CONSTRUCTION -- not "no country yet", the way an unallocated
+code does, but "reserved so that no country will ever be allocated here". That is
+what makes them the sharp end of the axis: a document stating one has stated a
+string, and the honest report is a typo rather than a data gap.
+
+``XI`` falls inside the reserved ``XA``-``XZ`` block and is nevertheless a member
+of :class:`EUMemberState` for goods under the Protocol, which is exactly why
+membership is asked BEFORE this set is consulted. A reader that checked the
+ranges first would drop Northern Ireland out of the intra-community branch as a
+placeholder.
+"""
+
+
+class StatedCountryCodeStatus(StrEnum):
+    """What a well-formed alpha-2 code IS, once the closed vocabulary is asked.
+
+    The axis exists because the two ways a code can fail to name a country are
+    different problems with different owners, and collapsing them would leave an
+    operator unable to tell which they are looking at. It says nothing about
+    what a country ESTABLISHES -- :func:`territorial_scope_for_country` stays
+    the single authority on that -- and nothing about codes that are not
+    well-formed alpha-2 pairs at all, which get no status.
+    """
+
+    CATALOGUED = "catalogued"
+    """A bounded catalogue in this codebase names the code.
+
+    The one status a rung can fire from. Spain is catalogued and still
+    establishes no scope, which is a different refusal entirely: ``ES`` names
+    the Member State while the IVA territory inside it stays undetermined.
+    """
+
+    UNASSIGNED = "unassigned"
+    """The code is in an ISO user-assigned range, so it denotes nothing.
+
+    The operator's typo signal. ``XX``, ``ZZ`` and ``QQ`` are the forms a
+    placeholder, a truncated field or a slipped keystroke actually takes, and
+    no catalogue anywhere will ever resolve them.
+    """
+
+    UNCATALOGUED = "uncatalogued"
+    """The code may name a real jurisdiction the bundled vocabulary omits.
+
+    A data gap somebody can close by adding the country, rather than a document
+    defect. Reported as the weaker claim it is: the ranges above are the only
+    codes this codebase can say denote nothing, so anything outside them that
+    the vocabulary does not carry is reported as unknown to US rather than
+    asserted to be meaningless. It fires no rung until the catalogue carries it.
+    """
+
+
+@lru_cache(maxsize=1)
+def _catalogued_country_codes() -> frozenset[str]:
+    """Return every alpha-2 code a bounded catalogue in this codebase names.
+
+    The union of the two catalogues that already exist, and deliberately not a
+    third one: the printed-name vocabulary carries the countries a document's
+    address block names, and :class:`EUMemberState` carries the Member States
+    the intra-community branch turns on. Neither is a subset of the other --
+    Northern Ireland is a Member State for goods with no address-block name --
+    so asking only one would silently drop a real jurisdiction out of the axis.
+
+    Spain is added explicitly rather than left to fall out of either, because
+    the resolver's refusal for ``ES`` must stay a deliberate territorial
+    refusal and never become an unmatched-token one; the two are reported to the
+    operator as different things.
+
+    Returns:
+        The catalogued codes.
+
+    Raises:
+        IvaCatalogueError: When the bundled vocabulary cannot be read or breaks
+            its one-name-one-country invariant.
+    """
+    return frozenset(_country_codes_by_printed_name().values()) | _EU_MEMBER_CODES | {SPAIN_COUNTRY_CODE}
+
+
+def stated_country_code_status(stated_code: str | None) -> StatedCountryCodeStatus | None:
+    """Return what a stated alpha-2 code is, or ``None`` when it is not one.
+
+    The diagnostic half of the country axis. :func:`territorial_scope_for_country`
+    answers "what does this establish" and returns ``None`` for every code
+    outside the vocabulary; this answers "and why", so an unmatched token reaches
+    the operator as a string they can correct rather than as a blank.
 
     Args:
-        country_code: An ISO 3166-1 alpha-2 code as printed -- a NIF-IVA prefix or
-            an address country. Surrounding whitespace and letter case are
-            normalised here, because a document prints what it prints; anything
-            that is not then a well-formed alpha-2 code is treated as ABSENT
-            rather than coerced or refused.
+        stated_code: The code as printed or as a structured record states it, or
+            ``None``. Surrounding whitespace and letter case are normalised, the
+            same way every other reader of this axis normalises them.
+
+    Returns:
+        The status, or ``None`` when nothing that could be an alpha-2 code was
+        stated. A status is a statement ABOUT a code, so an absent field, a
+        blank one and an address line that landed in the country slot get none:
+        reporting those as unassigned countries would spend the operator's
+        attention naming a string nobody claimed was a country.
+
+    Raises:
+        IvaCatalogueError: When the bundled vocabulary cannot be read.
+    """
+    if stated_code is None:
+        return None
+    candidate = stated_code.strip().upper()
+    if len(candidate) != _ALPHA2_LENGTH or not candidate.isalpha():
+        return None
+    if candidate in _catalogued_country_codes():
+        return StatedCountryCodeStatus.CATALOGUED
+    if candidate in _USER_ASSIGNED_ALPHA2:
+        return StatedCountryCodeStatus.UNASSIGNED
+    return StatedCountryCodeStatus.UNCATALOGUED
+
+
+def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialScope | None:
+    """Return the territorial scope a country code establishes, via the closed vocabulary.
+
+    **The rung is a match against a bounded vocabulary, never a shape check.** A
+    code this codebase's catalogues do not carry is an UNMATCHED TOKEN: it fires
+    nothing, and the caller walks on or exhausts to an unknown scope. That is
+    the substantive rule of this function, and it is stated here rather than at
+    any one caller because every caller inherits it -- a resolver that answered
+    on shape would hand the same wrong establishment to each of them.
+
+    **Why shape is not enough, in the direction that costs money.** Any
+    well-formed pair once resolved to
+    :attr:`IvaTerritorialScope.THIRD_COUNTRY`, so ``XX``, ``ZZ`` and ``QQ``
+    settled a party outside the EU -- and on the issued side third country is
+    export treatment, zero-rated. An issuer typo, a placeholder or a truncated
+    field therefore exempted an operation silently, from evidence the ladder
+    treated as decisive. The ISO user-assigned ranges denote nothing by
+    construction, so deriving a tax treatment from one derives it from a value
+    with no referent: shape-validity is not reference, which is the same lesson
+    a checksum-valid tax identifier of the wrong entity teaches one axis over.
+
+    **Decisiveness does not depend on the outcome.** A code outside the
+    vocabulary fires no rung whichever way the resulting treatment would fall.
+    Making evidence count only when its consequence is unfavourable would invert
+    the fact-to-derivation direction -- the caller would need the tax
+    consequence before deciding whether the evidence exists -- and would leave a
+    wrong third-country answer standing wherever the outcome happened to be the
+    over-payment one, which nothing else in this codebase watches.
+
+    Args:
+        country_code: An ISO 3166-1 alpha-2 code as printed or as a structured
+            record states it -- a NIF-IVA prefix or an address country.
+            Surrounding whitespace and letter case are normalised here, because
+            a document prints what it prints; anything that is not then a
+            well-formed alpha-2 code is treated as ABSENT rather than coerced or
+            refused.
 
             Absent rather than refused is the deliberate half. The core
             jurisdiction validator raises on malformed input, which is right for
@@ -137,14 +301,25 @@ def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialSco
             without an exception being used for ordinary control flow.
 
     Returns:
-        :attr:`IvaTerritorialScope.EU_MEMBER` for a Member State other than Spain,
-        :attr:`IvaTerritorialScope.THIRD_COUNTRY` for a well-formed code outside
-        the catalogue, or ``None`` when the code is absent, malformed, or Spanish.
+        :attr:`IvaTerritorialScope.EU_MEMBER` for a Member State other than
+        Spain, :attr:`IvaTerritorialScope.THIRD_COUNTRY` for a CATALOGUED
+        country outside that catalogue, or ``None`` when the code is absent,
+        malformed, Spanish, or names no country the vocabulary carries.
 
-        ``None`` is returned for Spain BY DESIGN, not as a gap: the code names the
-        State while the IVA territory inside it stays undetermined, and the three
-        Spanish territories are treated differently by law. A caller needing the
-        Spanish scope must resolve it from sub-national evidence.
+        ``None`` is returned for Spain BY DESIGN, not as a gap: the code names
+        the State while the IVA territory inside it stays undetermined, and the
+        three Spanish territories are treated differently by law. A caller
+        needing the Spanish scope must resolve it from sub-national evidence.
+
+        ``None`` for an unmatched token is not silence either. A caller that
+        must tell an operator WHY nothing resolved asks
+        :func:`stated_country_code_status`, which separates a code that denotes
+        nothing from one this codebase simply does not carry yet.
+
+    Raises:
+        IvaCatalogueError: When the bundled vocabulary cannot be read or breaks
+            its one-name-one-country invariant. Propagated rather than softened:
+            a corrupt bundled table is a defect, not an unestablished party.
     """
     if country_code is None:
         return None
@@ -153,6 +328,8 @@ def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialSco
         return None
     normalised = normalise_iso_3166_alpha2_jurisdiction(candidate)
     if normalised is None:
+        return None
+    if normalised not in _catalogued_country_codes():
         return None
     if normalised == SPAIN_COUNTRY_CODE:
         return None
@@ -561,15 +738,18 @@ def country_code_for_stated_country_code(stated_code: str | None) -> str | None:
 
     Returns:
         The upper-case ISO 3166-1 alpha-2 code, or ``None`` when the element is
-        absent, malformed, or states an alpha-3 code the vocabulary does not
-        carry.
+        absent, malformed, or states a code in either system that the closed
+        vocabulary does not carry.
 
-        The two legs are deliberately not equally bounded, and the asymmetry is
-        inherited rather than chosen: an alpha-3 code resolves only through this
-        bounded table, while a stated alpha-2 code is passed to the same
-        normaliser a printed one goes to, which checks shape and not membership.
-        Narrowing the alpha-2 leg to this table would make a structured document
-        establish less than a printed one stating the same country.
+        **Both legs are equally bounded**, and that symmetry is the point rather
+        than an implementation detail. A stated alpha-2 code is matched against
+        the same closed vocabulary a printed one is, so a machine-readable
+        document establishes exactly what the identical string printed in an
+        address block establishes -- neither more nor less. A looser alpha-2 leg
+        would let a UBL ``CountryCode`` of ``XX`` settle a party outside the EU
+        while the printed form settled nothing, and the structured reader is
+        precisely the surface that puts machine-stated strings in front of the
+        rung.
 
         ``None`` NEVER degrades to a country and above all never to Spain, for
         the reason every other rung refuses to: the peninsula is the majority
@@ -587,16 +767,17 @@ def country_code_for_stated_country_code(stated_code: str | None) -> str | None:
     if not candidate.isalpha():
         return None
     if len(candidate) == _ALPHA2_LENGTH:
-        # Already the target system, so this leg normalises and defers rather
-        # than deciding anything. It goes through the core jurisdiction
-        # normaliser -- the same one `territorial_scope_for_country` consults --
-        # so a stated alpha-2 code is treated exactly as a printed one is, and
-        # this function adds no second opinion about which alpha-2 strings are
-        # countries. That normaliser is a shape authority rather than a
-        # membership one, so an unassigned pair such as `XX` passes here and is
-        # classified downstream as a third country, which is what a printed `XX`
-        # already does today.
-        return normalise_iso_3166_alpha2_jurisdiction(candidate)
+        # Already the target system, so this leg normalises and then asks the
+        # same closed vocabulary the printed legs ask. The core jurisdiction
+        # normaliser is a SHAPE authority rather than a membership one, so it
+        # cannot be the last word here: on its own it passes `XX` through, and a
+        # code with no referent then settles a territory downstream. Membership
+        # is asked separately so the two questions stay separable and neither
+        # authority is asked for the other's answer.
+        normalised = normalise_iso_3166_alpha2_jurisdiction(candidate)
+        if normalised is None or normalised not in _catalogued_country_codes():
+            return None
+        return normalised
     if len(candidate) == _ALPHA3_LENGTH:
         return _country_codes_by_alpha3().get(candidate)
     return None

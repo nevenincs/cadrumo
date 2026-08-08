@@ -87,7 +87,7 @@ _MAXIMAL_DESCENDANT_ANSWERS = {
     "descendientes#0.discapacidad": "33",
     "descendientes#0.convivencia": "true",
     "descendientes#0.custodia-compartida": "true",
-    "descendientes#0.meses-madre-trabajo": "6",
+    "descendientes#0.meses-madre-trabajo": "1-6",
     "descendientes#0.gastos-guarderia": "1200",
     "descendientes#0.nif": "00000000T",
     "descendientes#1.birth-date": "2010-06-06",
@@ -284,7 +284,7 @@ def test_resume_seeding_round_trips_a_maximal_descendant_fixture(_backend: Path)
     assert seeded["descendientes#0.discapacidad"] == "33"
     assert seeded["descendientes#0.convivencia"] == "true"
     assert seeded["descendientes#0.custodia-compartida"] == "true"
-    assert seeded["descendientes#0.meses-madre-trabajo"] == "6"
+    assert seeded["descendientes#0.meses-madre-trabajo"] == "01;02;03;04;05;06"
     assert seeded["descendientes#0.gastos-guarderia"] == "1200"
     assert seeded["descendientes#0.nif"] == "00000000T"
     # Instance 1: the disabled (grade-65, non-cohabiting) branch round-trips.

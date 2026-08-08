@@ -1249,10 +1249,19 @@ class DescendantInfo(BaseModel):
         reinstates the flat cap this proration exists to remove, and refusing
         outright drops the increment entirely for what is likely the commonest
         declaration shape. The approximation is disclosed to the operator rather
-        than presented as a measured result. It stops being an approximation
-        once the Art. 81.1 side stores WHICH months the mother qualified rather
-        than how many, which is a persisted-shape change this method cannot make
-        on its own.
+        than presented as a measured result.
+
+        It is the ANNUAL TOTAL that keeps it an approximation, and nothing else.
+        The Art. 81.1 side now stores which months the mother qualified, so the
+        simultaneity intersection is real wherever the nursery months are known;
+        against an annual total there is nothing on THIS side to intersect with,
+        and the caller falls back to a bound that cannot see the geometry at all.
+        A mother qualifying January to June and one qualifying July to December
+        produce the same figure against the same annual total, which is exactly
+        the blindness the month sets removed everywhere the months are declared.
+        Only the operator can close it, by declaring the monthly detail their
+        centre already certified; :meth:`guarderia_needs_monthly_detail` exists
+        to ask them for it.
 
         Returns ``0`` for a non-cohabiting descendant and for a child past the
         period they turn three, matching the spend method's own zeroes — and,

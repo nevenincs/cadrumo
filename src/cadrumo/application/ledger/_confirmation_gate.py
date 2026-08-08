@@ -73,6 +73,8 @@ BLOCKING_REASON_BY_DISCREPANCY_KIND: Mapping[DraftDiscrepancyKind, ConfirmationB
     DraftDiscrepancyKind.ROLE_UNRESOLVED: ConfirmationBlockReason.UNRESOLVED_DIRECTION,
     DraftDiscrepancyKind.REGIME_CONTRADICTED: ConfirmationBlockReason.CONTRADICTED_REGIME,
     DraftDiscrepancyKind.POSTAL_CODE_UNREADABLE: ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT,
+    DraftDiscrepancyKind.COUNTRY_CODE_UNASSIGNED: ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT,
+    DraftDiscrepancyKind.COUNTRY_CODE_UNCATALOGUED: ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT,
 }
 """Which review-gate reason each deterministic check's failure raises.
 

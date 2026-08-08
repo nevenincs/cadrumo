@@ -2038,6 +2038,11 @@ cli:
           group_help: Tekintse at a fuggoben levo kivonatolasi piszkozatokat, mielott
             szamlava erositi oket.
           list_help: Listazza az emberi ellenorzesre varo kivonatolasi piszkozatokat.
+          party_attribution_unverified_message: Semmi sem ellenőrzi, hogy ezek a címadatok
+            melyik félhez tartoznak. Ha két címblokkot fordítva olvasnának be, mindkét
+            fél olyan áfaterületre kerülne, ahol egyikük sem telepedett le, és ezt
+            egyetlen ellenőrzés sem szűrné ki. Vesse össze minden értéket a dokumentummal,
+            mielőtt jóváhagyja ezt a piszkozatot.
           reason_help: Csak az ezen okbol blokkolt piszkozatokat jelenitse meg.
           reference_help: A fuggo piszkozat forrasakent szolgalo bizonyitek- vagy
             mellekletazonosito.
@@ -2046,7 +2051,6 @@ cli:
           show_help: Jelenitsen meg egy fuggo piszkozatot mezonkent, eszrevetelekkel
             es akadalyokkal.
           unknown_reference: Nincs fuggo piszkozat ehhez az azonositohoz.
-          party_attribution_unverified_message: 'Semmi sem ellenőrzi, hogy ezek a címadatok melyik félhez tartoznak. Ha két címblokkot fordítva olvasnának be, mindkét fél olyan áfaterületre kerülne, ahol egyikük sem telepedett le, és ezt egyetlen ellenőrzés sem szűrné ki. Vesse össze minden értéket a dokumentummal, mielőtt jóváhagyja ezt a piszkozatot.'
         source_path_help: A számla PDF- vagy képfájljának elérési útja.
         supplier_help: Szállító neve.
         taxable_base_help: Számla adóköteles alapja.
@@ -3797,7 +3801,7 @@ cli:
         profile delete %{name} --yes` a megerősítéshez.'
       delete_yes_help: Törlési művelet explicit megerősítése.
       descendiente:
-        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Ismételhető. Futtassa az `aeat config profile descendiente` parancsot alparancs
           nélkül a vezetett bevitelhez.
         add_help: Egy vagy több leszármazott hozzáadása az aktív profilhoz.
@@ -5626,6 +5630,111 @@ docs:
       between: '{min} és {max} között'
       non_negative: Nulla vagy több
       non_positive: Nulla vagy kevesebb
+  cli:
+    automation:
+      exit_auth: Hitelesítés szükséges, vagy a hitelesítő adatok lejártak.
+      exit_codes_heading: Kilépési kódok
+      exit_conflict: Ütközés vagy előfeltétel meghiúsulása.
+      exit_forbidden: A szabályzat nem engedélyezi a műveletet.
+      exit_general: Általános hiba vagy elutasított művelet.
+      exit_internal: Váratlan belső hiba.
+      exit_not_found: Az erőforrás nem található.
+      exit_partial: Részleges siker (egyes elemek sikerültek, mások nem).
+      exit_success: Sikeres.
+      exit_unavailable: A külső szolgáltatás nem érhető el.
+      exit_usage: Érvénytelen CLI-használat (hibás kapcsoló, hiányzó argumentum).
+      exit_validation: Érvényesítési hiba a felhasználó által megadott adatokban.
+      intro: 'Ezt az oldalt akkor használja, ha ``aeat`` hívásokat szkriptel: a folyamat
+        kilépési kódjait és a minden parancsra érvényes TTY/JSON kimeneti viselkedést
+        írja le.'
+      output_contract_body: Ha a kimenet TTY-ra megy, a CLI ember által olvasható,
+        formázott szöveget ad. Ha a ``--format json`` kapcsolót megadják (vagy a kimenetet
+        átirányítják), a CLI hívásonként egyetlen JSON-dokumentumot ad. A ``SchemaEnvelope``
+        szerkezetet már használó parancsok az eredményüket ``{envelope}`` alakban
+        csomagolják. A még át nem állított parancsok közvetlenül adják vissza az adataikat.
+      output_contract_heading: TTY és JSON kimeneti szerződés
+      title: Kilépési kódok és kimeneti szerződés
+    command:
+      bare_payload_note: Ez a parancs csupasz adatot ad vissza (még nincs burkolatba
+        csomagolva). A kimenet szerkezete parancsonként eltér; a részletekért lásd
+        a ``--help`` kimenetét.
+      group_fallback: Parancscsoport.
+      no_description: Nincs leírás.
+      no_description_available: Nem érhető el leírás.
+      output_schema_heading: Kimeneti séma
+      parameters_heading: Paraméterek
+      path_label: Parancs útvonala
+      registry_key_label: Registry-kulcs
+      schema_envelope_note: Ez a parancs ``SchemaEnvelope`` szerkezetet ad vissza,
+        amelynek ``result`` mezőjét a ``{schema}`` séma ellenőrzi.
+    env:
+      default_empty: üres
+      default_unset: nincs beállítva
+      secrets_note: Az alkalmazás soha nem írja ki a titkos értékeket, ezek fent `(secret)`
+        jelöléssel szerepelnek. A `(derived)` jelölésű alapértelmezések futásidőben,
+        a tárolási gyökérből vagy a projekt helyéből számítódnak.
+    family:
+      choose_group_heading: Válasszon parancscsoportot
+      direct_commands_heading: Közvetlen parancsok
+      direct_commands_intro: Ezek a parancsok közvetlenül az ``aeat {family}`` alá
+        tartoznak, közbeiktatott igecsoport nélkül.
+      group_link_line: Nyissa meg a :doc:`{target}` oldalt az ``aeat {family} {group}``
+        parancshoz.
+      index_link_line: Nyissa meg a :doc:`/cli/index` oldalt a CLI-referencia nyitóoldalához.
+      intro: Az ``aeat {family}`` fő igecsoportok szerint rendeződik. Minden csoport
+        saját oldala a csoport valódi ``--help`` kimenetével kezdődik, majd az összes
+        hozzá tartozó végponti parancs következik.
+      open_group_link: Az ``aeat {family} {group}`` referenciájának megnyitása
+      title: '{command}: parancsreferencia'
+    index:
+      app_card: 'Operatív munkafolyamat-parancsok: főkönyvi munka, modelók, bevallási
+        határidőnaptárak, registry-ellenőrzések, élő lekérések és felülvizsgálati
+        sorok.'
+      choose_family_heading: Válasszon parancscsaládot
+      config_card: 'Helyi beállítási és karbantartási parancsok: profilok, hitelesítés,
+        Google-integráció, javító ellenőrzések és visszaállítási felületek.'
+      english_help_note: A súgószövegek angolul jelennek meg. Futásidőben a CLI a
+        beállított kimeneti nyelvet használja (``--language`` / ``CADRUMO_OUTPUT_LANGUAGE``).
+      flag_debug: Bekapcsolja a hibakeresési szintű naplózást.
+      flag_detail: Bővített verzióinformációt ír ki, a registry összegzésével együtt.
+      flag_format: Kimeneti formátum (``text`` vagy ``json``).
+      flag_help: Kiírja a szerkesztett súgódokumentumot, majd kilép.
+      flag_language: Felülírja a kimeneti nyelvet (``es``, ``en``, ``ca``, ``hu``).
+      flag_profile: Megadott nevű profilt aktivál erre a hívásra.
+      flag_quiet: Elnyomja a tájékoztató kimenetet.
+      flag_verbose: Bekapcsolja a részletes kimenetet.
+      flag_version: Kiírja a csomag verzióját, majd kilép.
+      global_flags_heading: Globális kapcsolók
+      global_flags_intro: Ezeket a kapcsolókat az ``aeat`` gyökérparancs fogadja el,
+        és minden hívásra érvényesek.
+      intro: 'Az ``aeat`` CLI két felső szintű parancscsaládot tesz elérhetővé: ``config``
+        (helyi beállítás, profil-életciklus, diagnosztika) és ``app`` (operatív adózási
+        munkafolyamat). Ez a referencia mind a(z) {count} végponti parancsot dokumentálja.'
+      next_app: Nyissa meg a :doc:`app` oldalt az operatív munkafolyamat-parancsokhoz.
+      next_automation: Nyissa meg a :doc:`automation` oldalt a kilépési kódokhoz és
+        a TTY/JSON kimeneti szerződéshez.
+      next_config: Nyissa meg a :doc:`config` oldalt a helyi beállítási és karbantartási
+        parancsokhoz.
+      next_howto: Nyissa meg a :doc:`/how-to/index` oldalt a bevezető végigjátszásokhoz
+        és a feladatútmutatókhoz.
+      next_schemas: Nyissa meg a :doc:`schemas` oldalt a JSON kimeneti sémák nyilvántartásához.
+      open_family_link: Az ``aeat {family}`` referenciájának megnyitása
+      start_here: Kezdje az alábbi család-hivatkozásokkal. A pontos kapcsolók, argumentumok,
+        registry-kulcsok és kimeneti sémák a generált parancscsalád-oldalakon találhatók;
+        ez az oldal a minden parancsra érvényes gyökérszintű viselkedést írja le.
+      title: CLI-referencia
+      where_next_heading: Hogyan tovább
+    param:
+      argument_optional: Argumentum, opcionális.
+      argument_required: Argumentum, kötelező.
+      option_optional: Kapcsoló, opcionális.
+      option_required: Kapcsoló, kötelező.
+    schemas:
+      summary: Az alábbi {count} parancsútvonalhoz tartozik bejegyzett ``OutputSchema``.
+        A csoportszintű visszahívási felületek ({groups}) külön szerepelnek.
+      title: Kimeneti sémák nyilvántartása
+      tooling_note: Ez az oldal elsősorban eszközfejlesztőknek szól. Ha kézzel futtatja
+        a parancsokat, általában a :doc:`családoldalak <index>` a jobb kiindulópont.
   glossary:
     entry:
       broader: Tágabb fogalom
@@ -68308,14 +68417,18 @@ wizard:
           dátumát. A hároméves kor alatti növekmény ettől a dátumtól számít.
         prompt: Anyakönyvi bejegyzés dátuma
       meses-madre-trabajo:
-        help: 'Az anyasági levonáshoz (LIRPF 81. cikk): hónapok (0-12), amikor az
-          anya tb-járulékot fizetett, amíg a gyermek jogosult volt -- 3 év alatti,
-          vagy (kortól függetlenül) az INSCRIPCION/ACOGIMIENTO dátummal rögzített
-          örökbefogadási/nevelésbe vételi belépési ablakon belül.'
-        invalid_range: Adjon meg egész számú hónapot %{minimum} és %{maximum} között
-          (LIRPF 81. cikk).
-        prompt: Hónapok, amíg az anya jogosultan dolgozott -- 3 év alatti gyermek,
-          vagy örökbefogadás/nevelésbe vétel a belépési dátum ablakán belül (adóév)
+        help: 'Az anyasági levonáshoz (LIRPF 81. cikk): MELY hónapokban fizetett az
+          anya tb-járulékot, amíg ez a gyermek jogosultságot adott -- 3 év alatt,
+          vagy (kortól függetlenül) az INSCRIPCION/ACOGIMIENTO alatt rögzített örökbefogadási/nevelésbe
+          vételi belépési ablakon belül. Írja MM vagy MM-MM formában, '';'' jellel
+          elválasztva (például 5-8 vagy 1;2;11;12). A hónapokat, nem a számukat, mert
+          a bölcsődei növekmény azon hónapok alapján arányosul, amelyeket ezek és
+          a bölcsődei hónapok megosztanak.'
+        invalid_range: Adja meg a hónapokat MM vagy MM-MM formában, ';' jellel elválasztva
+          (például 5-8 vagy 1;2;11;12), mindegyik %{minimum} és %{maximum} között.
+        prompt: Mely hónapokban dolgozott az anya jogosultan -- 3 év alatti gyermek,
+          vagy örökbefogadás/nevelésbe vétel a belépési dátum ablakán belül (bevallási
+          év)
       nif:
         prompt: A leszármazó adószáma (NIF/NIE) (hagyja üresen, ha nincs)
       prorrata-minimo:
@@ -68393,7 +68506,7 @@ wizard:
         help: Az adóügyi lakóhely szerinti ország ISO 3166-1 alfa-2 kódja (pl. GB,
           DE, FR). Kötelező, ha a fiscal-residency értéke non_resident_irnr.
       descendiente:
-        help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
+        help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Végez intraközösségi ügyleteket
       enrollment-large-company:

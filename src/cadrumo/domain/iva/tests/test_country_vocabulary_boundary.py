@@ -35,13 +35,13 @@ from __future__ import annotations
 
 import pytest
 
+from .._classification import IvaTerritorialScope
 from .._establishment import (
     StatedCountryCodeStatus,
     country_code_for_stated_country_code,
     stated_country_code_status,
     territorial_scope_for_country,
 )
-from .._classification import IvaTerritorialScope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

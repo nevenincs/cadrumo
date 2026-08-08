@@ -397,7 +397,7 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA_MENSUAL=1-4:150;5-7:200,MESES_TRABAJO=12",
+            "--descendiente", "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA_MENSUAL=1-4:150;5-7:200,MESES_TRABAJO=1-12",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -517,7 +517,7 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=5:1145;6:1145,MESES_TRABAJO=4",
+            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=5:1145;6:1145,MESES_TRABAJO=1-4",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -599,19 +599,27 @@ def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
     assert "MESES_TRABAJO" in (fired[0]["suggestion"] or "")
 
 
-def test_a_partial_overlap_discloses_that_the_simultaneity_is_approximated(
+def test_a_partial_overlap_takes_only_the_months_shared_end_to_end(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
-    """The Art. 81.3 intersection is an upper bound, and the operator is told where.
+    """Art. 81.3 prorates by the months that hold AT ONCE, and here there are none.
 
-    The guardería side is a month map; the mother's side is only a count. So the
-    engine takes the smaller of the two, which is the largest overlap those
-    facts admit rather than the overlap itself. Exact whenever either side
-    covers the year — and an over-statement when both are partial and the spans
-    do not coincide, which is this profile.
+    The mother qualifies January to April; the nursery is paid September and
+    October. The two sets are disjoint, so no month satisfies both limbs and the
+    increase is zero.
 
-    Pinned end to end because the disclosure is the only thing standing between
-    an approximated figure and a taxpayer who believes it was measured.
+    This case used to assert 166,67 and a "the overlap was approximated"
+    advisory, because the record stored how MANY months the mother qualified and
+    not WHICH, so the engine took ``min(4, 2)`` and disclosed the guess. Both the
+    figure and the advisory are now gone: the months are carried, the
+    intersection is real, and an empty intersection grants nothing. The old
+    reading over-granted the deduccion on facts that entitle the filer to none,
+    which under-declares tax.
+
+    Driven end to end through the CLI rather than at the domain boundary,
+    because the declared months have to survive the flag parser, the fact
+    round-trip and the binding injection to reach the casilla; the domain-level
+    geometries prove the arithmetic, this proves the wiring.
     """
     _seed_natural_person_profile(runtime_profile)
 
@@ -619,9 +627,7 @@ def test_a_partial_overlap_discloses_that_the_simultaneity_is_approximated(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            # Four qualifying months for the mother, two months of nursery, and
-            # nothing on record saying WHICH four.
-            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=4",
+            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=1-4",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -639,26 +645,21 @@ def test_a_partial_overlap_discloses_that_the_simultaneity_is_approximated(
         ],
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
-    # Two months of overlap assumed, so two twelfths of the ceiling.
-    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("166.67")
-
-    fired = [
-        n
-        for n in unwrap_envelope_notices(calc_result.output)
-        if n.get("context", {}).get("source_kind") == "guarderia_simultaneity_approximated"
-    ]
-    assert len(fired) == 1, f"the approximation must be disclosed; notices were {fired}"
+    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("0")
 
 
-def test_a_full_year_mother_is_not_told_the_overlap_was_approximated(
+def test_an_overlapping_declaration_still_reaches_its_shared_months(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
-    """Positive control for the advisory above: it must be able to STAY SILENT.
+    """Positive control for the zero above: the same shape, moved to overlap, pays.
 
-    Where the mother qualified in every month the intersection is the guardería
-    side outright, so nothing is approximated and there is nothing to disclose.
-    Without this, an advisory that fired unconditionally would satisfy the test
-    above while training the operator to ignore it.
+    Identical facts except that the mother's months now span the year, so they
+    contain the nursery's September and October. Two shared months prorate to
+    ``1.000 / 12 * 2 = 166,67``.
+
+    Without this, a calculate path that returned zero unconditionally — or one
+    that had simply stopped reading the declared months at all — would satisfy
+    the disjoint case above while computing nothing.
     """
     _seed_natural_person_profile(runtime_profile)
 
@@ -666,7 +667,7 @@ def test_a_full_year_mother_is_not_told_the_overlap_was_approximated(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=12",
+            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=1-12",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -685,13 +686,6 @@ def test_a_full_year_mother_is_not_told_the_overlap_was_approximated(
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
     assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("166.67")
-
-    fired = [
-        n
-        for n in unwrap_envelope_notices(calc_result.output)
-        if n.get("context", {}).get("source_kind") == "guarderia_simultaneity_approximated"
-    ]
-    assert fired == [], f"nothing is approximated for a full-year mother; got {fired}"
 
 
 def test_the_flag_refuses_both_spend_shapes_for_one_child(
@@ -745,7 +739,7 @@ def test_the_cotizaciones_term_binds_the_0613_cap(
             # Spend of 2.400 across a child under three all year, against a
             # mother qualifying all year, so the prorated increase is the full
             # 1.000 annual ceiling and the cotizaciones below is smaller.
-            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400,MESES_TRABAJO=12",
+            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400,MESES_TRABAJO=1-12",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -792,7 +786,7 @@ def test_the_population_term_binds_the_0613_cap(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400,MESES_TRABAJO=12",
+            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400,MESES_TRABAJO=1-12",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output

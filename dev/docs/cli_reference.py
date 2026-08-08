@@ -61,11 +61,13 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
-from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 from cadrumo.entrypoints.schema_surface import (
     GROUP_CALLBACK_SCHEMA_KEYS,
     normalise_cli_path_to_schema_key,
 )
+
+from ._locale_chrome import docs_chrome
 
 if TYPE_CHECKING:
     import click
@@ -394,7 +396,7 @@ def _is_click_argument(param: click.Parameter) -> bool:  # type: ignore[name-def
 
 # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
 # Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
-def _render_param_table(params: list[click.Parameter]) -> str:  # type: ignore[name-defined]
+def _render_param_table(language: OutputLanguage, params: list[click.Parameter]) -> str:  # type: ignore[name-defined]
     """Render a RST definition-list for command parameters.
 
     Args:
@@ -474,6 +476,7 @@ def _rst_help_block(help_text: str) -> str:
 # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
 # Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
 def _render_command_section(
+    language: OutputLanguage,
     path: tuple[str, ...],
     # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click param annotation same as above
     cmd: click.Command,  # type: ignore[name-defined]
@@ -495,34 +498,29 @@ def _render_command_section(
     """
     full_path = " ".join(path)
     registry_key = _normalise_command_path(path)
-    help_text = (cmd.help or "").strip() or "No description available."
+    help_text = (cmd.help or "").strip() or docs_chrome("docs.cli.command.no_description_available", language)
     schema_cls = schema_registry.get(registry_key)
 
     parts: list[str] = []
     parts.append(_rst_heading(f"``{full_path}``", heading_char))
     parts.append(f"{help_text}\n\n")
-    parts.append(f"**Command path:** ``{full_path}``\n\n")
-    parts.append(f"**Registry key:** ``{registry_key}``\n\n")
+    parts.append(f"**{docs_chrome('docs.cli.command.path_label', language)}:** ``{full_path}``\n\n")
+    parts.append(f"**{docs_chrome('docs.cli.command.registry_key_label', language)}:** ``{registry_key}``\n\n")
 
-    param_table = _render_param_table(cmd.params)
+    param_table = _render_param_table(language, cmd.params)
     if param_table:
-        parts.append("**Parameters**\n\n")
+        parts.append(f"**{docs_chrome('docs.cli.command.parameters_heading', language)}**\n\n")
         parts.append(param_table)
         parts.append("\n")
 
+    schema_heading = docs_chrome("docs.cli.command.output_schema_heading", language)
     if schema_cls is not None:
         schema_name = f"{schema_cls.__module__}.{schema_cls.__name__}"
-        parts.append("**Output schema**\n\n")
-        parts.append(
-            f"This command emits a ``SchemaEnvelope`` whose ``result`` field is"
-            f" validated against ``{schema_name}``.\n\n",
-        )
+        parts.append(f"**{schema_heading}**\n\n")
+        parts.append(docs_chrome("docs.cli.command.schema_envelope_note", language, schema=schema_name) + "\n\n")
     else:
-        parts.append("**Output schema**\n\n")
-        parts.append(
-            "This command emits a bare payload (not yet envelope-wrapped)."
-            " Output structure is command-specific; consult ``--help`` for details.\n\n",
-        )
+        parts.append(f"**{schema_heading}**\n\n")
+        parts.append(docs_chrome("docs.cli.command.bare_payload_note", language) + "\n\n")
 
     return "".join(parts)
 
@@ -535,6 +533,7 @@ def _render_command_section(
 # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
 # Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
 def _render_group_children(
+    language: OutputLanguage,
     path: tuple[str, ...],
     cmd: click.Command,  # type: ignore[name-defined]
     schema_registry: dict[str, object],
@@ -572,10 +571,11 @@ def _render_group_children(
                 parts.append(_rst_heading(f"``{' '.join(child_path)}``", _heading_char_for_depth(depth)))
                 parts.append("\n")
                 parts.append(_rst_help_block(_captured_help_text(child_path, child)))
-                parts.append(_render_group_children(child_path, child, schema_registry, depth + 1))
+                parts.append(_render_group_children(language, child_path, child, schema_registry, depth + 1))
             else:
                 parts.append(
                     _render_command_section(
+                        language,
                         child_path,
                         child,
                         schema_registry,
@@ -588,6 +588,7 @@ def _render_group_children(
 # TYPE-IGNORE-RATIONALE-THIRD-PARTY-STUB-MISSING: click stubs do not expose
 # Command/Parameter at this annotation site under the TYPE_CHECKING import guard.
 def _render_verb_group_page(
+    language: OutputLanguage,
     group_path: tuple[str, ...],
     group_cmd: click.Command,  # type: ignore[name-defined]
     schema_registry: dict[str, object],
@@ -611,14 +612,15 @@ def _render_verb_group_page(
     """
     full_path = " ".join(group_path)
     parts: list[str] = []
-    parts.append(_rst_heading(f"``{full_path}`` — command reference", "="))
+    parts.append(_rst_heading(docs_chrome("docs.cli.family.title", language, command=f"``{full_path}``"), "="))
     parts.append("\n")
     parts.append(_rst_help_block(_captured_help_text(group_path, group_cmd)))
-    parts.append(_render_group_children(group_path, group_cmd, schema_registry, depth=1))
+    parts.append(_render_group_children(language, group_path, group_cmd, schema_registry, depth=1))
     return "".join(parts)
 
 
 def _render_family_index_page(
+    language: OutputLanguage,
     family_name: str,
     group_names: list[str],
     direct_leaf_paths: list[tuple[str, ...]],
@@ -647,51 +649,58 @@ def _render_family_index_page(
     Returns:
         The complete RST page content.
     """
-    title = f"``aeat {family_name}`` — command reference"
+    title = docs_chrome("docs.cli.family.title", language, command=f"``aeat {family_name}``")
     parts: list[str] = []
     parts.append(_rst_heading(title, "="))
     parts.append("\n")
-    parts.append(
-        f"``aeat {family_name}`` is organised by major verb group. Each group's own"
-        f" page leads with that group's real ``--help`` output, followed by every"
-        f" leaf command it carries. Help strings are rendered in English; the CLI"
-        f" respects the active output-language setting at runtime.\n\n",
-    )
+    parts.append(docs_chrome("docs.cli.family.intro", language, family=family_name) + "\n\n")
+    parts.append(docs_chrome("docs.cli.index.english_help_note", language) + "\n\n")
 
     if group_names:
-        parts.append(_rst_heading("Choose a command group", "-"))
+        parts.append(_rst_heading(docs_chrome("docs.cli.family.choose_group_heading", language), "-"))
         parts.append("\n")
         parts.append(".. grid:: 1 1 2 2\n")
         parts.append("   :gutter: 2\n")
         parts.append("   :class-container: cadrumo-route-grid\n\n")
         for group_name in group_names:
             group_cmd = all_commands.get(("aeat", family_name, group_name))
-            summary = (getattr(group_cmd, "help", None) or "").strip() or "Command group."
+            summary = (getattr(group_cmd, "help", None) or "").strip() or docs_chrome("docs.cli.command.group_fallback", language)
             parts.append(f"   .. grid-item-card:: ``aeat {family_name} {group_name}``\n")
             parts.append(f"      :link: {family_name}/{group_name}\n")
             parts.append("      :link-type: doc\n")
             parts.append("      :class-card: cadrumo-route-card\n\n")
             parts.append(f"      {summary}\n\n")
             parts.append("      +++\n")
-            parts.append(f"      Open ``aeat {family_name} {group_name}`` reference\n\n")
+            open_link = docs_chrome(
+                "docs.cli.family.open_group_link",
+                language,
+                family=family_name,
+                group=group_name,
+            )
+            parts.append(f"      {open_link}\n\n")
 
     if direct_leaf_paths:
-        parts.append(_rst_heading("Direct commands", "-"))
+        parts.append(_rst_heading(docs_chrome("docs.cli.family.direct_commands_heading", language), "-"))
         parts.append("\n")
-        parts.append(
-            f"These commands are mounted directly on ``aeat {family_name}``, with no intervening verb group.\n\n",
-        )
+        parts.append(docs_chrome("docs.cli.family.direct_commands_intro", language, family=family_name) + "\n\n")
         for path in direct_leaf_paths:
             cmd = all_commands.get(path)
             if cmd is None:
                 continue
-            parts.append(_render_command_section(path, cmd, schema_registry, heading_char="^"))
+            parts.append(_render_command_section(language, path, cmd, schema_registry, heading_char="^"))
 
-    parts.append(_rst_heading("Where to go next", "-"))
+    parts.append(_rst_heading(docs_chrome("docs.cli.index.where_next_heading", language), "-"))
     parts.append("\n")
     for group_name in group_names:
-        parts.append(f"* Open :doc:`{family_name}/{group_name}` for ``aeat {family_name} {group_name}``.\n")
-    parts.append("* Open :doc:`/cli/index` for the full CLI reference landing page.\n\n")
+        group_line = docs_chrome(
+            "docs.cli.family.group_link_line",
+            language,
+            target=f"{family_name}/{group_name}",
+            family=family_name,
+            group=group_name,
+        )
+        parts.append(f"* {group_line}\n")
+    parts.append("* " + docs_chrome("docs.cli.family.index_link_line", language) + "\n\n")
 
     parts.append(".. toctree::\n")
     parts.append("   :maxdepth: 1\n")
@@ -704,6 +713,7 @@ def _render_family_index_page(
 
 
 def _render_index_page(
+    language: OutputLanguage,
     family_names: list[str],
     total_leaf_count: int,
 ) -> str:
@@ -722,25 +732,14 @@ def _render_index_page(
         The complete RST index content.
     """
     parts: list[str] = []
-    parts.append(_rst_heading("CLI reference", "="))
+    parts.append(_rst_heading(docs_chrome("docs.cli.index.title", language), "="))
     parts.append("\n")
     parts.append(".. _cli-reference-start:\n\n")
-    parts.append(
-        "The ``aeat`` CLI exposes two top-level command families: ``config`` (local"
-        " configuration, profile lifecycle, diagnostics) and ``app`` (operational tax"
-        f" workflow). This reference documents all {total_leaf_count} leaf commands.\n\n",
-    )
-    parts.append(
-        "Help strings are rendered in English. At runtime the CLI respects the active"
-        " output-language setting (``--language`` / ``CADRUMO_OUTPUT_LANGUAGE``).\n\n",
-    )
-    parts.append(
-        "Start with the family links below. Use the generated command-family pages"
-        " for exact flags, arguments, registry keys, and output schemas; use this"
-        " page for root-level behavior that applies across commands.\n\n",
-    )
+    parts.append(docs_chrome("docs.cli.index.intro", language, count=total_leaf_count) + "\n\n")
+    parts.append(docs_chrome("docs.cli.index.english_help_note", language) + "\n\n")
+    parts.append(docs_chrome("docs.cli.index.start_here", language) + "\n\n")
 
-    parts.append(_rst_heading("Choose a command family", "-"))
+    parts.append(_rst_heading(docs_chrome("docs.cli.index.choose_family_heading", language), "-"))
     parts.append("\n")
     parts.append(".. grid:: 1 1 2 2\n")
     parts.append("   :gutter: 2\n")
@@ -766,19 +765,19 @@ def _render_index_page(
 
     # Global flags
     parts.append(".. _cli-reference-global-flags:\n\n")
-    parts.append(_rst_heading("Global flags", "-"))
+    parts.append(_rst_heading(docs_chrome("docs.cli.index.global_flags_heading", language), "-"))
     parts.append("\n")
     parts.append("These flags are accepted by the ``aeat`` root command and apply to every invocation.\n\n")
     global_flags = [
-        ("``--language`` / ``--lang``", "Override the output language (``es``, ``en``, ``ca``, ``hu``)."),
-        ("``--profile``", "Activate a named profile for this invocation."),
-        ("``--version`` / ``-V``", "Print the package version and exit."),
-        ("``--detail``", "Print extended version information including registry summary."),
-        ("``--help`` / ``-h``", "Print the curated help document and exit."),
-        ("``--format``", "Output format (``text`` or ``json``)."),
-        ("``--quiet``", "Suppress informational output."),
-        ("``--verbose``", "Enable verbose output."),
-        ("``--debug``", "Enable debug-level logging."),
+        ("``--language`` / ``--lang``", docs_chrome("docs.cli.index.flag_language", language)),
+        ("``--profile``", docs_chrome("docs.cli.index.flag_profile", language)),
+        ("``--version`` / ``-V``", docs_chrome("docs.cli.index.flag_version", language)),
+        ("``--detail``", docs_chrome("docs.cli.index.flag_detail", language)),
+        ("``--help`` / ``-h``", docs_chrome("docs.cli.index.flag_help", language)),
+        ("``--format``", docs_chrome("docs.cli.index.flag_format", language)),
+        ("``--quiet``", docs_chrome("docs.cli.index.flag_quiet", language)),
+        ("``--verbose``", docs_chrome("docs.cli.index.flag_verbose", language)),
+        ("``--debug``", docs_chrome("docs.cli.index.flag_debug", language)),
     ]
     for flag, desc in global_flags:
         parts.append(f"{flag}\n   {desc}\n\n")
@@ -805,7 +804,7 @@ def _render_index_page(
     return "".join(parts)
 
 
-def _render_automation_page() -> str:
+def _render_automation_page(language: OutputLanguage) -> str:
     """Render the ``docs/cli/automation.rst`` page.
 
     Carries the exit-code table and the TTY/JSON output contract under the
@@ -816,7 +815,7 @@ def _render_automation_page() -> str:
         The complete RST page content.
     """
     parts: list[str] = []
-    parts.append(_rst_heading("Exit codes and output contract", "="))
+    parts.append(_rst_heading(docs_chrome("docs.cli.automation.title", language), "="))
     parts.append("\n")
     parts.append(
         "Use this page when scripting ``aeat`` invocations: it documents the"
@@ -826,20 +825,20 @@ def _render_automation_page() -> str:
 
     # Exit codes
     parts.append(".. _cli-reference-exit-codes:\n\n")
-    parts.append(_rst_heading("Exit codes", "-"))
+    parts.append(_rst_heading(docs_chrome("docs.cli.automation.exit_codes_heading", language), "-"))
     parts.append("\n")
     exit_code_table = [
-        ("0", "Success."),
-        ("1", "General error or refused operation."),
-        ("2", "Invalid CLI usage (bad flag, missing argument)."),
-        ("3", "Authentication required or credentials expired."),
-        ("4", "Resource not found."),
-        ("5", "Conflict or precondition failure."),
-        ("6", "Validation error in user-supplied data."),
-        ("7", "External service unavailable."),
-        ("8", "Operation not permitted by policy."),
-        ("9", "Unexpected internal error."),
-        ("10", "Partial success (some items succeeded, some failed)."),
+        ("0", docs_chrome("docs.cli.automation.exit_success", language)),
+        ("1", docs_chrome("docs.cli.automation.exit_general", language)),
+        ("2", docs_chrome("docs.cli.automation.exit_usage", language)),
+        ("3", docs_chrome("docs.cli.automation.exit_auth", language)),
+        ("4", docs_chrome("docs.cli.automation.exit_not_found", language)),
+        ("5", docs_chrome("docs.cli.automation.exit_conflict", language)),
+        ("6", docs_chrome("docs.cli.automation.exit_validation", language)),
+        ("7", docs_chrome("docs.cli.automation.exit_unavailable", language)),
+        ("8", docs_chrome("docs.cli.automation.exit_forbidden", language)),
+        ("9", docs_chrome("docs.cli.automation.exit_internal", language)),
+        ("10", docs_chrome("docs.cli.automation.exit_partial", language)),
     ]
     parts.append(".. list-table::\n")
     parts.append("   :header-rows: 1\n")
@@ -853,7 +852,7 @@ def _render_automation_page() -> str:
 
     # TTY contract
     parts.append(".. _cli-reference-output-contract:\n\n")
-    parts.append(_rst_heading("TTY and JSON output contract", "-"))
+    parts.append(_rst_heading(docs_chrome("docs.cli.automation.output_contract_heading", language), "-"))
     parts.append("\n")
     parts.append(
         "When output is to a TTY the CLI emits human-readable rich text."
@@ -867,7 +866,7 @@ def _render_automation_page() -> str:
     return "".join(parts)
 
 
-def _render_schemas_page(schema_registry: Mapping[str, object]) -> str:
+def _render_schemas_page(language: OutputLanguage, schema_registry: Mapping[str, object]) -> str:
     """Render the ``docs/cli/schemas.rst`` page.
 
     Carries the output-schema registry listing under the
@@ -882,7 +881,7 @@ def _render_schemas_page(schema_registry: Mapping[str, object]) -> str:
     """
     parts: list[str] = []
     parts.append(".. _cli-reference-output-schemas:\n\n")
-    parts.append(_rst_heading("Output schema registry", "="))
+    parts.append(_rst_heading(docs_chrome("docs.cli.schemas.title", language), "="))
     parts.append("\n")
     envelope_keys = sorted(k for k in schema_registry if k not in _GROUP_CALLBACK_EMIT_KEYS)
     group_keys = sorted(_GROUP_CALLBACK_EMIT_KEYS & set(schema_registry))

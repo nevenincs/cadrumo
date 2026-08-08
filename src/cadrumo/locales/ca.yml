@@ -3846,7 +3846,7 @@ cli:
         profile delete %{name} --yes' per confirmar.
       delete_yes_help: Confirma explícitament l'eliminació
       descendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Repetible. Executeu `aeat config profile descendiente` sense subcomandament
           per introduir-los de manera guiada.
         add_help: Afegeix un o més descendents al perfil actiu.
@@ -5674,6 +5674,114 @@ docs:
       between: Entre {min} i {max}
       non_negative: Zero o més
       non_positive: Zero o menys
+  cli:
+    automation:
+      exit_auth: Cal autenticació o les credencials han caducat.
+      exit_codes_heading: Codis de sortida
+      exit_conflict: Conflicte o fallada de condició prèvia.
+      exit_forbidden: Operació no permesa per la política.
+      exit_general: Error general o operació rebutjada.
+      exit_internal: Error intern inesperat.
+      exit_not_found: Recurs no trobat.
+      exit_partial: Èxit parcial (alguns elements han funcionat i d'altres no).
+      exit_success: Correcte.
+      exit_unavailable: Servei extern no disponible.
+      exit_usage: Ús incorrecte de la CLI (indicador erroni, argument absent).
+      exit_validation: Error de validació en les dades proporcionades per l'usuari.
+      intro: 'Feu servir aquesta pàgina quan programeu invocacions d''``aeat``: documenta
+        els codis de sortida del procés i el comportament de sortida TTY/JSON que
+        comparteixen totes les ordres.'
+      output_contract_body: Quan la sortida va a un TTY, la CLI emet text enriquit
+        llegible per persones. Quan es passa ``--format json`` (o quan la sortida
+        es redirigeix), la CLI emet un únic document JSON per invocació. Les ordres
+        que han adoptat el ``SchemaEnvelope`` embolcallen el seu resultat com a ``{envelope}``.
+        Les ordres encara no migrades emeten la seva càrrega directament.
+      output_contract_heading: Contracte de sortida TTY i JSON
+      title: Codis de sortida i contracte de sortida
+    command:
+      bare_payload_note: Aquesta ordre emet una càrrega simple (encara sense embolcall).
+        L'estructura de la sortida és pròpia de cada ordre; consulteu ``--help`` per
+        a més detalls.
+      group_fallback: Grup d'ordres.
+      no_description: Sense descripció.
+      no_description_available: No hi ha cap descripció disponible.
+      output_schema_heading: Esquema de sortida
+      parameters_heading: Paràmetres
+      path_label: Ruta de l'ordre
+      registry_key_label: Clau del registre
+      schema_envelope_note: Aquesta ordre emet un ``SchemaEnvelope`` el camp ``result``
+        del qual es valida contra ``{schema}``.
+    env:
+      default_empty: buit
+      default_unset: sense definir
+      secrets_note: L'aplicació no imprimeix mai els secrets i apareixen marcats com
+        a `(secret)` més amunt. Els valors predeterminats marcats com a `(derived)`
+        es calculen en temps d'execució a partir de l'arrel d'emmagatzematge o de
+        la ubicació del projecte.
+    family:
+      choose_group_heading: Trieu un grup d'ordres
+      direct_commands_heading: Ordres directes
+      direct_commands_intro: Aquestes ordres estan muntades directament a ``aeat {family}``,
+        sense cap grup de verbs intermedi.
+      group_link_line: Obrir :doc:`{target}` per a ``aeat {family} {group}``.
+      index_link_line: Obrir :doc:`/cli/index` per a la pàgina principal de la referència
+        de la CLI.
+      intro: '``aeat {family}`` s''organitza per grup de verbs principal. La pàgina
+        de cada grup comença amb la seva sortida real de ``--help``, seguida de totes
+        les ordres finals que conté.'
+      open_group_link: Obrir la referència d'``aeat {family} {group}``
+      title: '{command}: referència d''ordres'
+    index:
+      app_card: 'Ordres del flux de treball operatiu: llibre de moviments, models,
+        calendaris de presentació, comprovacions del registre, captures en directe
+        i cues de revisió.'
+      choose_family_heading: Trieu una família d'ordres
+      config_card: 'Ordres locals de configuració i manteniment: perfils, autenticació,
+        integració amb Google, comprovacions de reparació i superfícies de reinici.'
+      english_help_note: Les cadenes d'ajuda es mostren en anglès. En temps d'execució
+        la CLI respecta l'idioma de sortida actiu (``--language`` / ``CADRUMO_OUTPUT_LANGUAGE``).
+      flag_debug: Activa el registre de nivell de depuració.
+      flag_detail: Mostra informació de versió ampliada, inclòs el resum del registre.
+      flag_format: Format de sortida (``text`` o ``json``).
+      flag_help: Mostra el document d'ajuda curat i acaba.
+      flag_language: Sobreescriu l'idioma de sortida (``es``, ``en``, ``ca``, ``hu``).
+      flag_profile: Activa un perfil amb nom per a aquesta invocació.
+      flag_quiet: Suprimeix la sortida informativa.
+      flag_verbose: Activa la sortida detallada.
+      flag_version: Mostra la versió del paquet i acaba.
+      global_flags_heading: Indicadors globals
+      global_flags_intro: L'ordre arrel ``aeat`` accepta aquests indicadors i s'apliquen
+        a totes les invocacions.
+      intro: 'La CLI ``aeat`` exposa dues famílies d''ordres de primer nivell: ``config``
+        (configuració local, cicle de vida del perfil, diagnòstics) i ``app`` (flux
+        de treball fiscal operatiu). Aquesta referència documenta les {count} ordres
+        finals.'
+      next_app: Obrir :doc:`app` per a les ordres del flux de treball operatiu.
+      next_automation: Obrir :doc:`automation` per als codis de sortida i el contracte
+        de sortida TTY/JSON.
+      next_config: Obrir :doc:`config` per a les ordres locals de configuració i manteniment.
+      next_howto: Obrir :doc:`/how-to/index` per a les guies d'inici i les guies de
+        tasques.
+      next_schemas: Obrir :doc:`schemas` per al registre d'esquemes de sortida JSON.
+      open_family_link: Obrir la referència d'``aeat {family}``
+      start_here: Comenceu pels enllaços de família de sota. Feu servir les pàgines
+        generades de cada família d'ordres per conèixer els indicadors, arguments,
+        claus de registre i esquemes de sortida exactes; feu servir aquesta pàgina
+        per al comportament de nivell arrel que s'aplica a totes les ordres.
+      title: Referència de la CLI
+      where_next_heading: Per on continuar
+    param:
+      argument_optional: Argument, opcional.
+      argument_required: Argument, obligatori.
+      option_optional: Opció, opcional.
+      option_required: Opció, obligatòria.
+    schemas:
+      summary: Les {count} rutes d'ordre següents tenen un ``OutputSchema`` registrat.
+        Les superfícies de crida de retorn de grup ({groups}) es llisten a part.
+      title: Registre d'esquemes de sortida
+      tooling_note: Aquesta pàgina està pensada sobretot per a qui crea eines. Si
+        executeu les ordres a mà, les :doc:`pàgines de família <index>` acostumen
+        a ser un punt d'entrada millor.
   glossary:
     entry:
       broader: Terme genèric
@@ -68162,15 +68270,18 @@ wizard:
           d'aquesta data es compta l'augment per menor de tres anys.
         prompt: Data d'inscripció al Registre Civil
       meses-madre-trabajo:
-        help: 'Per a la deducció per maternitat (art. 81 LIRPF): mesos (0-12) en què
-          la mare va cotitzar a la Seguretat Social mentre el fill complia els requisits
-          -- menor de 3 anys, o (amb independència de l''edat) dins de la finestra
-          de data d''entrada de l''adopció/acolliment registrada amb INSCRIPCION/ACOGIMIENTO.'
-        invalid_range: Introduïu un nombre enter de mesos entre %{minimum} i %{maximum}
-          (art. 81 LIRPF).
-        prompt: Mesos que la mare va treballar amb dret a la deducció -- fill menor
-          de 3 anys, o adopció/acolliment dins de la seva finestra de data d'entrada
-          (any de declaració)
+        help: 'Per a la deducció per maternitat (art. 81 LIRPF): QUINS mesos va cotitzar
+          la mare a la Seguretat Social mentre aquest fill donava dret -- menor de
+          3 anys, o (amb independència de l''edat) dins la finestra de data d''entrada
+          d''adopció/acolliment registrada a INSCRIPCION/ACOGIMIENTO. Escriviu MM
+          o MM-MM, separats per '';'' (per exemple 5-8 o 1;2;11;12). Els mesos i no
+          el seu nombre, perquè l''increment per llar d''infants es prorrateja pels
+          mesos que aquests i els de la llar d''infants comparteixen.'
+        invalid_range: Indiqueu els mesos com a MM o MM-MM, separats per ';' (per
+          exemple 5-8 o 1;2;11;12), cadascun entre %{minimum} i %{maximum}.
+        prompt: Quins mesos va treballar la mare amb dret a la deducció -- fill menor
+          de 3 anys, o adopció/acolliment dins la seva finestra de data d'entrada
+          (exercici)
       nif:
         prompt: NIF/NIE del descendent (deixi en blanc si no en té)
       prorrata-minimo:
@@ -68244,7 +68355,7 @@ wizard:
         help: Codi ISO 3166-1 alfa-2 del país de residència fiscal (p.ex. GB, DE,
           FR). Obligatori quan fiscal-residency és non_resident_irnr.
       descendiente:
-        help: 'Format: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
+        help: 'Format: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Realitza operacions intracomunitàries
       enrollment-large-company:

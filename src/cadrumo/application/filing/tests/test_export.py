@@ -107,6 +107,7 @@ from ._export_support import (
     _modelo_130_export_payload,
     _modelo_200_export_headers,
     _narrative,
+    _provider_with_export_layouts,
     _provider_without_export_layout,
     _schema_provider,
 )
@@ -940,6 +941,47 @@ def test_export_writes_the_modelo_200_envelope_tags_aeat_publishes(tmp_path: Pat
     # otherwise pass. Both values come from the export headers.
     assert payload[92:96] == b"A001"
     assert payload[100:109] == b"B12345674"
+
+
+def test_a_modelo_200_layout_without_its_footer_record_writes_no_closing_tag(tmp_path: Path) -> None:
+    """The closing tag must come from the footer record, not from anywhere else.
+
+    The load-bearing proof for the close-tag assertion above. The open tag fails
+    visibly when its composite is wrong -- the year renders where ``<T`` belongs --
+    but a close-tag assertion could pass for the wrong reason if some other record
+    happened to end the fichero with those bytes. Dropping the ``envelope_footer``
+    record from the layout and rendering through the real export path shows the tag
+    disappears with it, so its presence in the assertion above is caused by that
+    record's declaration.
+
+    The record is removed by rebuilding the layout through the registry's own
+    model, which is the same shape the loader produces, rather than by editing the
+    committed TOML.
+    """
+    provider = _schema_provider(filing_year=2024, period="0A", modelos=("200",))
+    layout = provider.get_subview("200").export_layouts[0]
+    footers = tuple(record for record in layout.records if record.record_type == "envelope_footer")
+
+    assert len(footers) == 1, "the committed layout must declare exactly one envelope footer to remove"
+
+    without_footer = layout.model_copy(
+        update={"records": tuple(record for record in layout.records if record.record_type != "envelope_footer")},
+    )
+    stripped = _provider_with_export_layouts(provider, "200", (without_footer,))
+    output = tmp_path / "modelo-200.txt"
+
+    export_draft(
+        _approved_modelo_200_registry_draft(),
+        output_path=output,
+        headers=_modelo_200_export_headers(),
+        schema_provider=stripped,
+    )
+
+    payload = output.read_bytes()
+
+    assert payload[:17] == b"<T200020240A0000>", "the open tag is unaffected, so the loss below is the footer's"
+    assert payload[-18:] != b"</T200020240A0000>"
+    assert b"</T200" not in payload
 
 
 def test_export_writes_modelo_111_registry_layout(tmp_path: Path) -> None:

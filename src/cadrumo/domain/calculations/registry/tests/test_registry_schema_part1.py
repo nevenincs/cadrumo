@@ -799,6 +799,40 @@ def test_validator_accepts_declarant_nif_draft_field_at_the_identifier_width() -
     _validate_revision(modelo, catalogues, mutated)
 
 
+def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_draft_field() -> None:
+    """Collapsing M200's envelope-open composite back onto the year field must be refused.
+
+    The real-site proof for the ``filing_year`` width ruling, and the standing
+    regression against re-authoring the defect it replaced. Modelo 200's page-000
+    record once declared the whole 17-character envelope-open constant as a single
+    ``filing_year`` draft field: the year rendered into the first four bytes and the
+    remaining thirteen padded to blanks, so every export omitted the ``<T``, the
+    modelo code, the discriminante, the period token and the ``0000>`` marker
+    AEAT's ``DP200000`` sheet requires there.
+
+    The composite is declared field-by-field now, and restoring the collapsed width
+    on the committed revision drives the real registry validator over the real
+    loaded declaration. The field is located by property rather than by a pinned
+    id, so a rename cannot make this pass vacuously.
+    """
+    modelo, catalogues = _committed_modelo("200")
+    revision = modelo.revisions["2024-y-siguientes"]
+    field, record_id, layout_id = next(
+        (item, record.id, layout.id)
+        for layout in revision.export_layouts
+        for record in layout.records
+        if record.record_type == "page_000"
+        for item in record.fields
+        if item.kind == CasillaFieldKind.DRAFT and item.draft_attribute == "filing_year"
+    )
+    assert field.length == 4, "the committed year field must carry the year's own width, not the whole tag's"
+    collapsed = field.model_copy(update={"length": 17})
+    mutated = _with_replaced_export_field(revision, layout_id=layout_id, record_id=record_id, field=collapsed)
+
+    with pytest.raises(RegistryValidationError, match=r"to a slot of length 17"):
+        _validate_revision(modelo, catalogues, mutated)
+
+
 def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_declarant() -> None:
     """Re-binding M200's foreign-parent-TIN slot to the declarant must be refused.
 

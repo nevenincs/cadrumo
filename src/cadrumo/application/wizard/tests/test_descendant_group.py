@@ -124,7 +124,7 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
     state = answer(definition, state, "descendientes#0.discapacidad", "33")
     state = answer(definition, state, "descendientes#0.convivencia", "true")
     state = answer(definition, state, "descendientes#0.custodia-compartida", "false")
-    state = answer(definition, state, "descendientes#0.meses-madre-trabajo", "6")
+    state = answer(definition, state, "descendientes#0.meses-madre-trabajo", "1-6")
     state = answer(definition, state, "descendientes#0.gastos-guarderia", "900")
 
     # Instance 1: older adopted child under shared custody, carrying a NIF.
@@ -164,7 +164,7 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
         "renta_family.descendiente.0.birth_date": "2023-05-10",
         "renta_family.descendiente.0.discapacidad": "33",
         "renta_family.descendiente.0.convivencia": "true",
-        "renta_family.descendiente.0.meses_madre_trabajo": "6",
+        "renta_family.descendiente.0.meses_madre_trabajo": "01;02;03;04;05;06",
         "renta_family.descendiente.0.gastos_guarderia": "900",
         "renta_family.descendiente.1.birth_date": "2015-03-01",
         "renta_family.descendiente.1.relacion": "adoptado",
@@ -374,8 +374,8 @@ def test_meses_out_of_range_refuses_as_a_verdict_and_valid_commits() -> None:
     ]
     assert "descendientes#0.meses-madre-trabajo" not in rejected.answers
 
-    committed = answer(definition, state, "descendientes#0.meses-madre-trabajo", "6")
-    assert committed.answers["descendientes#0.meses-madre-trabajo"] == "6"
+    committed = answer(definition, state, "descendientes#0.meses-madre-trabajo", "1-6")
+    assert committed.answers["descendientes#0.meses-madre-trabajo"] == "1-6"
 
 
 def test_negative_gastos_refuses_as_a_verdict() -> None:

@@ -2105,6 +2105,11 @@ cli:
           group_help: Revise los borradores de extraccion pendientes antes de confirmarlos
             como facturas.
           list_help: Liste los borradores de extraccion pendientes de revision humana.
+          party_attribution_unverified_message: Nada verifica a qué parte pertenecen
+            estos datos de dirección. Si se leyeran dos bloques de dirección al revés,
+            ambas partes quedarían situadas en un territorio de IVA en el que ninguna
+            está establecida y ninguna comprobación lo detectaría. Contraste cada
+            valor con el documento antes de confirmar este borrador.
           reason_help: Muestre solo los borradores bloqueados por este motivo.
           reference_help: Referencia de evidencia o adjunto de la que se leyo el borrador
             pendiente.
@@ -2113,7 +2118,6 @@ cli:
           show_help: Muestre un borrador pendiente campo por campo, con sus hallazgos
             y bloqueos.
           unknown_reference: No hay ningun borrador pendiente para esa referencia.
-          party_attribution_unverified_message: 'Nada verifica a qué parte pertenecen estos datos de dirección. Si se leyeran dos bloques de dirección al revés, ambas partes quedarían situadas en un territorio de IVA en el que ninguna está establecida y ninguna comprobación lo detectaría. Contraste cada valor con el documento antes de confirmar este borrador.'
         source_path_help: Ruta al PDF o imagen de la factura
         supplier_help: Nombre del proveedor
         taxable_base_help: Base imponible de la factura
@@ -3866,7 +3870,7 @@ cli:
         config profile delete %{name} --yes' para confirmar.
       delete_yes_help: Confirma explícitamente la eliminación
       descendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Repetible. Ejecute `aeat config profile descendiente` sin subcomando para
           introducirlos de forma guiada.
         add_help: Añadir uno o varios descendientes al perfil activo.
@@ -5715,6 +5719,117 @@ docs:
       between: Entre {min} y {max}
       non_negative: Cero o más
       non_positive: Cero o menos
+  cli:
+    automation:
+      exit_auth: Se requiere autenticación o las credenciales han caducado.
+      exit_codes_heading: Códigos de salida
+      exit_conflict: Conflicto o fallo de condición previa.
+      exit_forbidden: Operación no permitida por la política.
+      exit_general: Error general u operación rechazada.
+      exit_internal: Error interno inesperado.
+      exit_not_found: Recurso no encontrado.
+      exit_partial: Éxito parcial (algunos elementos han funcionado y otros no).
+      exit_success: Correcto.
+      exit_unavailable: Servicio externo no disponible.
+      exit_usage: Uso incorrecto de la CLI (indicador erróneo, argumento ausente).
+      exit_validation: Error de validación en los datos proporcionados por el usuario.
+      intro: 'Use esta página cuando programe invocaciones de ``aeat``: documenta
+        los códigos de salida del proceso y el comportamiento de salida TTY/JSON que
+        comparten todos los comandos.'
+      output_contract_body: Cuando la salida va a un TTY, la CLI emite texto enriquecido
+        legible por personas. Cuando se pasa ``--format json`` (o cuando la salida
+        se redirige), la CLI emite un único documento JSON por invocación. Los comandos
+        que han adoptado el ``SchemaEnvelope`` envuelven su resultado como ``{envelope}``.
+        Los comandos aún no migrados emiten su carga directamente.
+      output_contract_heading: Contrato de salida TTY y JSON
+      title: Códigos de salida y contrato de salida
+    command:
+      bare_payload_note: Este comando emite una carga simple (todavía sin envoltorio).
+        La estructura de la salida es propia de cada comando; consulte ``--help``
+        para más detalles.
+      group_fallback: Grupo de comandos.
+      no_description: Sin descripción.
+      no_description_available: No hay descripción disponible.
+      output_schema_heading: Esquema de salida
+      parameters_heading: Parámetros
+      path_label: Ruta del comando
+      registry_key_label: Clave del registro
+      schema_envelope_note: Este comando emite un ``SchemaEnvelope`` cuyo campo ``result``
+        se valida contra ``{schema}``.
+    env:
+      default_empty: vacío
+      default_unset: sin definir
+      secrets_note: La aplicación nunca imprime los secretos y aparecen marcados como
+        `(secret)` más arriba. Los valores predeterminados marcados como `(derived)`
+        se calculan en tiempo de ejecución a partir de la raíz de almacenamiento o
+        de la ubicación del proyecto.
+    family:
+      choose_group_heading: Elija un grupo de comandos
+      direct_commands_heading: Comandos directos
+      direct_commands_intro: Estos comandos están montados directamente en ``aeat
+        {family}``, sin grupo de verbos intermedio.
+      group_link_line: Abrir :doc:`{target}` para ``aeat {family} {group}``.
+      index_link_line: Abrir :doc:`/cli/index` para la página principal de la referencia
+        de la CLI.
+      intro: '``aeat {family}`` está organizado por grupo de verbos principal. La
+        página de cada grupo empieza con su salida real de ``--help``, seguida de
+        todos los comandos finales que contiene.'
+      open_group_link: Abrir la referencia de ``aeat {family} {group}``
+      title: '{command}: referencia de comandos'
+    index:
+      app_card: 'Comandos del flujo de trabajo operativo: libro de movimientos, modelos,
+        calendarios de presentación, comprobaciones del registro, capturas en vivo
+        y colas de revisión.'
+      choose_family_heading: Elija una familia de comandos
+      config_card: 'Comandos locales de configuración y mantenimiento: perfiles, autenticación,
+        integración con Google, comprobaciones de reparación y superficies de reinicio.'
+      english_help_note: Las cadenas de ayuda se muestran en inglés. En tiempo de
+        ejecución la CLI respeta el idioma de salida activo (``--language`` / ``CADRUMO_OUTPUT_LANGUAGE``).
+      flag_debug: Activa el registro de nivel de depuración.
+      flag_detail: Muestra información de versión ampliada, incluido el resumen del
+        registro.
+      flag_format: Formato de salida (``text`` o ``json``).
+      flag_help: Muestra el documento de ayuda curado y termina.
+      flag_language: Sobrescribe el idioma de salida (``es``, ``en``, ``ca``, ``hu``).
+      flag_profile: Activa un perfil con nombre para esta invocación.
+      flag_quiet: Suprime la salida informativa.
+      flag_verbose: Activa la salida detallada.
+      flag_version: Muestra la versión del paquete y termina.
+      global_flags_heading: Indicadores globales
+      global_flags_intro: El comando raíz ``aeat`` acepta estos indicadores y se aplican
+        a todas las invocaciones.
+      intro: 'La CLI ``aeat`` expone dos familias de comandos de primer nivel: ``config``
+        (configuración local, ciclo de vida del perfil, diagnósticos) y ``app`` (flujo
+        de trabajo fiscal operativo). Esta referencia documenta los {count} comandos
+        finales.'
+      next_app: Abrir :doc:`app` para los comandos del flujo de trabajo operativo.
+      next_automation: Abrir :doc:`automation` para los códigos de salida y el contrato
+        de salida TTY/JSON.
+      next_config: Abrir :doc:`config` para los comandos locales de configuración
+        y mantenimiento.
+      next_howto: Abrir :doc:`/how-to/index` para las guías de inicio y las guías
+        de tareas.
+      next_schemas: Abrir :doc:`schemas` para el registro de esquemas de salida JSON.
+      open_family_link: Abrir la referencia de ``aeat {family}``
+      start_here: Empiece por los enlaces de familia que aparecen abajo. Use las páginas
+        generadas de cada familia de comandos para conocer los indicadores, argumentos,
+        claves de registro y esquemas de salida exactos; use esta página para el comportamiento
+        de nivel raíz que se aplica a todos los comandos.
+      title: Referencia de la CLI
+      where_next_heading: Por dónde seguir
+    param:
+      argument_optional: Argumento, opcional.
+      argument_required: Argumento, obligatorio.
+      option_optional: Opción, opcional.
+      option_required: Opción, obligatoria.
+    schemas:
+      summary: Las siguientes {count} rutas de comando tienen un ``OutputSchema``
+        registrado. Las superficies de retrollamada de grupo ({groups}) se listan
+        aparte.
+      title: Registro de esquemas de salida
+      tooling_note: Esta página está pensada sobre todo para quienes crean herramientas.
+        Si ejecuta los comandos a mano, las :doc:`páginas de familia <index>` suelen
+        ser un mejor punto de entrada.
   glossary:
     entry:
       broader: Término genérico
@@ -70482,15 +70597,18 @@ wizard:
           Desde esa fecha se cuenta el aumento por menor de tres años.
         prompt: Fecha de inscripción en el Registro Civil
       meses-madre-trabajo:
-        help: 'Para la deducción por maternidad (art. 81 LIRPF): meses (0-12) en que
-          la madre cotizó a la Seguridad Social mientras el hijo cumplía los requisitos
-          -- menor de 3 años, o (con independencia de la edad) dentro de la ventana
-          de fecha de entrada de la adopción/acogimiento registrada con INSCRIPCION/ACOGIMIENTO.'
-        invalid_range: Introduzca un número entero de meses entre %{minimum} y %{maximum}
-          (art. 81 LIRPF).
-        prompt: Meses que la madre trabajó con derecho a la deducción -- hijo menor
+        help: 'Para la deducción por maternidad (art. 81 LIRPF): QUÉ meses cotizó
+          la madre a la Seguridad Social mientras este hijo daba derecho -- menor
+          de 3 años, o (con independencia de la edad) dentro de la ventana de fecha
+          de entrada de adopción/acogimiento registrada en INSCRIPCION/ACOGIMIENTO.
+          Escriba MM o MM-MM, separados por '';'' (por ejemplo 5-8 o 1;2;11;12). Los
+          meses y no su número, porque el incremento por guardería se prorratea por
+          los meses que estos y los de guardería comparten.'
+        invalid_range: Indique los meses como MM o MM-MM, separados por ';' (por ejemplo
+          5-8 o 1;2;11;12), cada uno entre %{minimum} y %{maximum}.
+        prompt: Qué meses trabajó la madre con derecho a la deducción -- hijo menor
           de 3 años, o adopción/acogimiento dentro de su ventana de fecha de entrada
-          (año de declaración)
+          (ejercicio)
       nif:
         prompt: NIF/NIE del descendiente (deje en blanco si no tiene)
       prorrata-minimo:
@@ -70565,7 +70683,7 @@ wizard:
         help: Código ISO 3166-1 alfa-2 del país de residencia fiscal (p.ej. GB, DE,
           FR). Obligatorio cuando fiscal-residency es non_resident_irnr.
       descendiente:
-        help: 'Formato: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
+        help: 'Formato: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Realiza operaciones intracomunitarias
       enrollment-large-company:

@@ -37,7 +37,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import Field, StringConstraints, model_validator
+from pydantic import Field, StringConstraints, field_validator, model_validator
 
 from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.json_contract import OutputSchema, register_schema
@@ -91,6 +91,25 @@ class ProfileDescendientePayload(OutputSchema):
     gastos_guarderia_euros: int = Field(default=0, ge=0)
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpendPayload, ...] = ()
     nif: DescendantNif | None = None
+
+    @field_validator("meses_madre_trabajo")
+    @classmethod
+    def _validate_meses_madre_trabajo(cls, value: tuple[int, ...]) -> tuple[int, ...]:
+        """Mirror the canonical month-set rules on the wire.
+
+        Mirrored for the same reason the coherence rules below are: this
+        transport is a lossless projection, so a payload a consumer could
+        construct but the canonical record would refuse is a shape that exists
+        only on the wire.
+        """
+        for month in value:
+            if not (1 <= month <= 12):
+                raise ValueError(f"meses_madre_trabajo names month {month}, outside 1-12")
+        if len(set(value)) != len(value):
+            raise ValueError("meses_madre_trabajo declares a month more than once")
+        if list(value) != sorted(value):
+            raise ValueError("meses_madre_trabajo must be ascending")
+        return value
 
     @model_validator(mode="after")
     def _validate_guarderia_spend(self) -> ProfileDescendientePayload:
