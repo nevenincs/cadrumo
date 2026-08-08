@@ -98,6 +98,16 @@ def test_no_recorded_operator_line_is_rewritten_unless_it_carries_an_identity() 
     A violation is reported with the line and the span, because the useful
     output of this gate is not the count -- it is which operator-facing token
     the funnel started eating.
+
+    **Mutate this at RULE level, never at the authority.** The check deliberately
+    composes the same ``validate_identity`` the funnel consults, so a mutation
+    that patches the authority moves the funnel and this gate's own admitting
+    predicate together: the gate stays green and the proof proves nothing. Both
+    controls have been discharged at rule level -- widening the pattern back to
+    the shape-only form reds this case and the named-regression case below,
+    while silencing the funnel entirely reds only the redaction floor. That
+    difference is the point: "nothing was over-redacted" and "the funnel never
+    ran" produce the same output here and are opposite facts.
     """
     violations: list[str] = []
     redacted_tokens: set[str] = set()
@@ -132,6 +142,12 @@ def test_the_work_unit_naming_the_corpus_carries_reaches_the_operator_intact() -
     shape exactly -- across every modelo family and both period shapes, so a
     shape-only rule hashes all of them. An operator handed a digest in place of
     an export filename has a path they cannot use.
+
+    The registry rule id is the same collision reached by a different route: it
+    is not a work-unit name at all, and it still presents a long digit run
+    broken by hyphens. Two independent naming conventions landing on one shape
+    is why the fix had to be the arm's admission rule rather than an exclusion
+    for the names anyone had thought of.
     """
     names = [
         "modelo-130-2026-1T.boe",
@@ -140,6 +156,7 @@ def test_the_work_unit_naming_the_corpus_carries_reaches_the_operator_intact() -
         "100-2026-0A",
         "184-2026-0A",
         "349-2026-4T",
+        "modelo-202-2025-y-siguientes-rel-cuota-base-1p",
     ]
 
     for name in names:
