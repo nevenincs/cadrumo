@@ -19,6 +19,7 @@ same failure mode for any applicable obligation omitted from the surfaced set.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from contextlib import contextmanager
 from datetime import date
 
 import pytest
@@ -46,6 +47,18 @@ from .._calendar_models import OverviewCalendarRange
 from .._coverage import CoverageAdviceReason, ObligationCoverageReport, build_obligation_coverage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@contextmanager
+def _replacing(target: object, name: str, value: object):
+    """Replace ``target.name`` for the scope, restoring the original on exit."""
+    original = getattr(target, name)
+    setattr(target, name, value)
+    try:
+        yield
+    finally:
+        setattr(target, name, original)
+
 
 _TODAY = date(2026, 7, 1)
 
@@ -201,7 +214,7 @@ def test_every_declared_unmodeled_obligation_surfaces_as_advised() -> None:
     assert registry_unmodeled_advised == {str(modelo) for modelo in UNMODELED_OBLIGATIONS}
 
 
-def test_a_recognized_unmodeled_obligation_is_advised_not_invisible(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_recognized_unmodeled_obligation_is_advised_not_invisible() -> None:
     """A universe member the registry cannot model lands in advised, never nowhere.
 
     This is the property the registry-unmodeled disposition exists to guarantee,
@@ -227,14 +240,15 @@ def test_a_recognized_unmodeled_obligation_is_advised_not_invisible(monkeypatch:
     assert _coverage._UNMODELED_OBLIGATIONS is UNMODELED_OBLIGATIONS, (
         "the builder no longer reads the module-level declaration this test rebinds"
     )
-    monkeypatch.setattr(_coverage, "_UNMODELED_OBLIGATIONS", declared)
+    with _replacing(_coverage, "_UNMODELED_OBLIGATIONS", declared):
+        report = build_obligation_coverage(_paying_autonomo(), surfaced_input, today=_TODAY)
+        _assert_total_partition(report, unmodeled=declared)
 
-    report = build_obligation_coverage(_paying_autonomo(), surfaced_input, today=_TODAY)
-    _assert_total_partition(report, unmodeled=declared)
-
-    advised = {item.modelo: item.reason for item in report.advised}
-    assert advised[unmodelled_code] is CoverageAdviceReason.REGISTRY_UNMODELED
-    assert unmodelled_code not in set(report.surfaced) | set(report.confidently_excluded) | set(report.out_of_scope)
+        advised = {item.modelo: item.reason for item in report.advised}
+        assert advised[unmodelled_code] is CoverageAdviceReason.REGISTRY_UNMODELED
+        assert unmodelled_code not in set(report.surfaced) | set(report.confidently_excluded) | set(
+            report.out_of_scope,
+        )
 
 
 def _dispositions(report: ObligationCoverageReport) -> set[str]:
