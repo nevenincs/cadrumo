@@ -52,11 +52,17 @@ __all__ = ["isolated_settings", "runtime_profile", "secure_objects"]
 _CORPUS = Path(__file__).parent / "_evidence_corpus"
 _STRUCTURED_INVOICE = "facturae_32_series_and_parties_invoice.xml"
 
-# The document states 200.00 + 42.00 = 242.00. Breaking the printed total alone
-# leaves an exactly-read document whose own arithmetic does not close -- which is
-# the case the structured path could not previously notice.
-_COHERENT_TOTAL = "<InvoiceTotal>242.00</InvoiceTotal>"
-_BROKEN_TOTAL = "<InvoiceTotal>999.00</InvoiceTotal>"
+# The document states 200.00 + 42.00 = 242.00, and the reader DERIVES
+# grand_total from TotalGrossAmountBeforeTaxes + TotalTaxOutputs (the printed
+# InvoiceTotal element is display-only and never read, because it is stated
+# net of retencion and would understate a withheld invoice -- see
+# adapters.inbound.einvoice._parsers). Breaking TotalTaxOutputs alone moves the
+# DERIVED total away from the header TaxesOutputs/Tax/TaxAmount the closure
+# check's iva_amount comes from, leaving an exactly-read document whose own
+# arithmetic does not close -- which is the case the structured path could not
+# previously notice.
+_COHERENT_TOTAL = "<TotalTaxOutputs>42.00</TotalTaxOutputs>"
+_BROKEN_TOTAL = "<TotalTaxOutputs>999.00</TotalTaxOutputs>"
 
 # Facturae carries the statutory mention in LegalLiterals, and the parser reads
 # it into the draft, so a reverse-charge declaration beside the document's real
