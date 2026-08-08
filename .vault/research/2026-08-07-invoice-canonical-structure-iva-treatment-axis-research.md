@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:3754f426986833472ee5ab77fd3b767902f2f36262cd7a31c4ee7f279932cd19'
+body_hash: 'sha256:0699fa378d138be8b9db87b92d55c9491919b76b26f9eb8fdfb6e588a0ed6044'
 related:
   - "[[2026-08-07-invoice-canonical-structure-iva-treatment-axis-adr]]"
 ---
@@ -330,6 +330,55 @@ case, which is exactly the case the defect above is about. The correct construct
 one the bank path already uses: call `derive_flow_for_classification` with the effective
 category and the invoice direction, which routes both families correctly, rather than
 testing membership of the frozenset.
+
+### UPDATE: the supplier half of the reverse-charge gap is closed; the recipient half is not
+
+The tree moved while the finding above was being written. Re-verified at HEAD.
+
+**A fourth flow member now exists.** `IvaFlowDirection` carries `operacion_con_inversion`
+alongside `repercutido`, `soportado` and `inversion_sujeto_pasivo`, and
+`derive_flow_for_classification` now splits the domestic reverse-charge category by
+direction into two different members:
+
+```
+DOMESTIC_REVERSE_CHARGE issued   -> operacion_con_inversion
+DOMESTIC_REVERSE_CHARGE received -> inversion_sujeto_pasivo
+```
+
+The received-side value is unchanged, so the measurement recorded above stands; it was
+incomplete rather than wrong. A peer landed a declared-category flow map on the projection,
+which routes the SUPPLIER side to `modelo-303-casilla-122-inversion-sujeto-pasivo-base`.
+That half of the gap is closed.
+
+**Why the supplier half could be closed and the recipient half cannot, structurally.** The
+supplier-side base binding selects `rate_kinds = ["general", "reduced", "super_reduced",
+"zero", "exempt"]` - it ADMITS the zero and exempt tiers, which is exactly why routing a
+base into it works for a document carrying no cuota. Every recipient-side binding selects
+only the three rated tiers.
+
+**A refinement to the "no recipient-side base binding" reading, because it differs by
+family.** Enumerating every binding whose `flow_direction` is `inversion_sujeto_pasivo`:
+
+```
+modelo-303-iva-autorepercutido-interior-devengado-cuota          domestic
+modelo-303-iva-autorepercutido-interior-deducible-cuota          domestic
+modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota  intracom
+modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota  intracom
+modelo-303-iva-autorepercutido-intracomunitaria-devengado-base   intracom
+```
+
+The DOMESTIC recipient side has cuota bindings only and no base binding at all. The
+INTRA-COMMUNITY recipient side does have a base binding - but it is gated on the three
+rated tiers, so an exempt-slot or zero-slot line misses it anyway. The conclusion that such
+a line reaches nothing holds for both families; the reason differs, and so would any fix.
+
+Whether the domestic recipient side SHOULD have a base binding is a registry and AEAT
+question this research does not rule on: casilla 122 is the supplier's base, and where the
+recipient's base belongs on the form is not settled here.
+
+**The blocker is unchanged and is the same one this whole document is about.** The rate
+slot is not the operation's treatment, so the record arrives at the binding layer carrying
+the wrong category and, for a cuota-less document, a tier no recipient-side binding admits.
 
 ## Sources
 
