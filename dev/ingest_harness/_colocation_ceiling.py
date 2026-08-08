@@ -41,6 +41,7 @@ large.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from typing import Final
 
@@ -90,6 +91,12 @@ class CeilingOutcome(StrEnum):
             header case, and the commonest one measured.
         ANCHOR_NOT_PRINTED: At least one side of every authored pair does not
             occur in the transcription at all.
+        UNPARTITIONED_FOR_ANOTHER_REASON: Both anchors were located on DIFFERENT
+            lines and the partition was still empty. No measured cause explains
+            that, so it is reported as its own population rather than folded
+            into the shared-line one. Its whole purpose is to stay at zero: a
+            member here means the shared-line reading has stopped being the
+            explanation and the measurement needs re-deriving.
         NO_AUTHORED_ANCHORS: The key carries no authored identity for one of the
             parties, so there is nothing to test with. Distinct from a failure:
             this document has no denominator rather than a low score.
@@ -98,6 +105,7 @@ class CeilingOutcome(StrEnum):
     PARTITIONED = "partitioned"
     ANCHORS_SHARE_A_LINE = "anchors_share_a_line"
     ANCHOR_NOT_PRINTED = "anchor_not_printed"
+    UNPARTITIONED_FOR_ANOTHER_REASON = "unpartitioned_for_another_reason"
     NO_AUTHORED_ANCHORS = "no_authored_anchors"
 
 
@@ -192,7 +200,7 @@ def _line_of(excerpt: str, lines: list[str]) -> int | None:
     return None
 
 
-def _authored_pairs(ground_truth: dict[str, object]) -> tuple[tuple[str, str], ...]:
+def _authored_pairs(ground_truth: Mapping[str, object]) -> tuple[tuple[str, str], ...]:
     """Return every authored anchor pair worth trying for one document.
 
     The key's own ``issuer`` and ``counterparty_name`` first -- those are the
@@ -208,11 +216,12 @@ def _authored_pairs(ground_truth: dict[str, object]) -> tuple[tuple[str, str], .
     return tuple(pairs)
 
 
-def _row_for(doc_id: str, text: str, ground_truth: dict[str, object]) -> CeilingRow:
+def _row_for(doc_id: str, text: str, ground_truth: Mapping[str, object]) -> CeilingRow:
     """Return one document's ceiling verdict, reason included."""
     lines = text.split("\n")
     pairs = _authored_pairs(ground_truth)
-    located: tuple[str, str] | None = None
+    shared: tuple[str, str] | None = None
+    unexplained: tuple[str, str] | None = None
     for supplier, customer in pairs:
         if party_regions(draft=_draft(supplier, customer), transcription=_transcription(text)):
             return CeilingRow(
@@ -221,24 +230,45 @@ def _row_for(doc_id: str, text: str, ground_truth: dict[str, object]) -> Ceiling
                 supplier_anchor=supplier,
                 customer_anchor=customer,
             )
-        if located is None and _line_of(supplier, lines) is not None and _line_of(customer, lines) is not None:
-            located = (supplier, customer)
+        # The reason is MEASURED, never inferred from the partition being empty.
+        # Reading "both located, so they must share a line" off a failed
+        # partition would relabel every future cause as this one, and a
+        # homogeneous finding set produced that way is a fact about the
+        # instrument rather than about the corpus.
+        supplier_line, customer_line = _line_of(supplier, lines), _line_of(customer, lines)
+        if supplier_line is None or customer_line is None:
+            continue
+        if supplier_line == customer_line:
+            shared = shared or (supplier, customer)
+        else:
+            unexplained = unexplained or (supplier, customer)
 
-    if located is not None:
-        # Both sides were found and the partition still came back empty, which
-        # can only mean the spans collapsed -- the shared-line case.
+    if unexplained is not None:
+        # Both anchors were found on DIFFERENT lines and the partition still
+        # came back empty. Nothing in the measured causes explains that, so it
+        # gets its own outcome rather than being folded into the shared-line
+        # population it would otherwise inflate.
+        return CeilingRow(
+            doc_id=doc_id,
+            outcome=CeilingOutcome.UNPARTITIONED_FOR_ANOTHER_REASON,
+            supplier_anchor=unexplained[0],
+            customer_anchor=unexplained[1],
+        )
+    if shared is not None:
         return CeilingRow(
             doc_id=doc_id,
             outcome=CeilingOutcome.ANCHORS_SHARE_A_LINE,
-            supplier_anchor=located[0],
-            customer_anchor=located[1],
+            supplier_anchor=shared[0],
+            customer_anchor=shared[1],
         )
     if len(pairs) == len(AUTHORED_LABEL_PAIRS):
         return CeilingRow(doc_id=doc_id, outcome=CeilingOutcome.NO_AUTHORED_ANCHORS)
     return CeilingRow(doc_id=doc_id, outcome=CeilingOutcome.ANCHOR_NOT_PRINTED)
 
 
-def documents_with_authored_transcription(key_documents: list[dict[str, object]]) -> list[dict[str, object]]:
+def documents_with_authored_transcription(
+    key_documents: Sequence[Mapping[str, object]],
+) -> list[Mapping[str, object]]:
     """Return the key entries carrying a non-empty authored reference text.
 
     The measurable population. A document with no authored transcription cannot
@@ -253,7 +283,7 @@ def documents_with_authored_transcription(key_documents: list[dict[str, object]]
     ]
 
 
-def colocation_ceiling(key_documents: list[dict[str, object]]) -> CeilingReport:
+def colocation_ceiling(key_documents: Sequence[Mapping[str, object]]) -> CeilingReport:
     """Return the co-location ceiling over every authored-transcription document.
 
     Args:
@@ -264,14 +294,14 @@ def colocation_ceiling(key_documents: list[dict[str, object]]) -> CeilingReport:
     Returns:
         One row per document carrying an authored transcription.
     """
-    rows = []
+    rows: list[CeilingRow] = []
     for entry in documents_with_authored_transcription(key_documents):
         ground_truth = entry.get("ground_truth")
         rows.append(
             _row_for(
                 str(entry["doc_id"]),
                 str(entry["stage1_reference_text"]),
-                ground_truth if isinstance(ground_truth, dict) else {},
+                ground_truth if isinstance(ground_truth, Mapping) else {},
             ),
         )
     return CeilingReport(rows=tuple(rows))
