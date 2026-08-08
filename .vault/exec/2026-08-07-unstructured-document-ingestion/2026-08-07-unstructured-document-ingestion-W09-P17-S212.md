@@ -5,12 +5,12 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:85f12f0b0b257549fd4df0422556a0d536d97226c8b967b9256f34d416d6b8a7'
+body_hash: 'sha256:391e32183b09ec90b931fd5d3a1cbab424b9d619a6596942d08f658126ef297f'
 step_id: 'S212'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-# Let the counterparty show verb ask the question its own justification cites, since it calls resolve_counterparty_establishment with bucket_id, tax_identifier and country_code and omits evidenced_scope, while the contradiction branch fires only when evidenced_scope is not None. So show structurally cannot reach the path the record justifies it by. Operator consequence measured: someone who confirmed ES_CANARIAS and then holds a document printing mainland evidence is shown confirmed es_canarias, while the ladder mid-confirm returns a contradiction and no scope and the review items raise a blocker naming it, so the two surfaces diverge in exactly the case the verb exists for and the divergence is invisible from show. Add an optional evidenced-scope option threaded to the resolver so an operator holding a document can see the contradiction before confirming, or narrow the record and docstring to the architectural claim that one authority answers both surfaces and drop the contradiction sentence, which describes a sibling call site
+# Let the counterparty show verb ask the question its own justification cites, since it calls resolve_confirmed_counterparty_facts with bucket_id, tax_identifier and country_code and omits evidenced_scope, while the contradiction branch fires only when evidenced_scope is not None. So show structurally cannot reach the path the record justifies it by. Operator consequence measured: someone who confirmed ES_CANARIAS and then holds a document printing mainland evidence is shown confirmed es_canarias, while the ladder mid-confirm returns a contradiction and no scope and the review items raise a blocker naming it, so the two surfaces diverge in exactly the case the verb exists for and the divergence is invisible from show. Add an optional evidenced-scope option threaded to the resolver so an operator holding a document can see the contradiction before confirming, or narrow the record and docstring to the architectural claim that one authority answers both surfaces and drop the contradiction sentence, which describes a sibling call site
 
 ## Scope
 

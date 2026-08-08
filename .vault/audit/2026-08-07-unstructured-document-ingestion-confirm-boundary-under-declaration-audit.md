@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:edac880f80c5a96b35cc0163872ad58019996bcdfadc5febed7a5b0abb34831c'
+body_hash: 'sha256:56c84e2527fdfb8b9863c89502c2fb5ae5ba64675235c25c09f863821724234e'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -547,6 +547,34 @@ constraint. Recorded so a later reader does not re-derive it, believe it
 universal because it holds everywhere they happen to look, and gate it -- and so
 the two exception classes are already named when someone asks whether it could be
 gated with them declared as roles rather than discovered as failures.
+
+### positional-return-drift-introduced-by-this-sweep | medium | Closed: and the defect was this sweep's own, not a pre-existing one
+
+Recorded with the attribution corrected, because the correction runs against this
+audit's interest and the generous version was offered rather than claimed.
+
+The invoice screen and its caller returned widening positional tuples of
+same-typed channels. This sweep added a fifth channel to one and a third to the
+other, broke three unpack sites in a sibling test, repaired them, and noted that
+the shape wanted a named record -- recording the follow-up rather than smuggling
+the refactor into a behavioural change. A peer took the refactor and both
+boundaries now return frozen dataclasses with defaulted fields, which also
+removes the early-return paths' obligation to emit the right NUMBER of empty
+tuples in the right ORDER.
+
+The peer found that one boundary's annotation declared two slots while its body
+returned three, and offered it as a pre-existing drift that nothing had caught.
+It was not pre-existing. Checked against the commit before this sweep's change:
+annotation two, returns two, consistent. After: returns three, annotation
+untouched. This sweep introduced the drift and did not notice, in the same change
+whose message argued that positional returns of same-typed channels are fragile.
+
+That is the finding. Not that the shape is dangerous in the abstract -- it was
+demonstrated on the author who had just written the argument, one commit later,
+against the exact hazard being described. Nothing caught it because every slot
+has the same type, so neither the checker nor a passing suite can see the count
+disagree. Writing the argument is not the same as being protected by it, and an
+author who has just reasoned about a failure mode is not thereby immune to it.
 
 ## Recommendations
 

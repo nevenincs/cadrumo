@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:1ea4af3346c907755befa8de4f030c7d9d69ba87fa7c0a4d58d9d4d085a04424'
+body_hash: 'sha256:3f02f12b8f57194b7651ad657bad7e969727547c151f1913568aa95d7099d334'
 step_id: 'S199'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -41,9 +41,9 @@ The retry signal is derived without a check-then-act window. The verb supplies i
 
 The unreached surface measured before any change, by grepping every caller of each function outside its defining module:
 
-    record_counterparty_establishment   -> facade re-export and tests only, zero production callers
-    forget_counterparty_establishment   -> facade re-export and tests only, zero production callers
-    resolve_counterparty_establishment  -> wired, at the ladder's last rung
+    record_confirmed_counterparty_facts   -> facade re-export and tests only, zero production callers
+    forget_confirmed_counterparty_facts   -> facade re-export and tests only, zero production callers
+    resolve_confirmed_counterparty_facts  -> wired, at the ladder's last rung
 
 The loop, end to end, through the real CLI against the real encrypted profile store:
 
