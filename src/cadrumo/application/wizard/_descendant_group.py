@@ -141,7 +141,13 @@ DESCENDANT_RENTAS_VALIDATOR_ID = "descendant-rentas-nonneg"
 #: leave each half checking a condition the other half owns.
 DESCENDANT_ENTRY_EVENT_VALIDATOR_ID = "descendant-entry-event-dates"
 
-_MESES_MIN = 0
+#: Bounds of a calendar MONTH, quoted back in the refusal so the operator is
+#: told the range that actually binds. One, not zero: the answer names which
+#: months the mother qualified, and there is no month zero. Zero was the count
+#: era's floor, when "she qualified in no month" was itself a value; that state
+#: is now the empty answer, which the validator passes as optional before it
+#: reaches any range check.
+_MESES_MIN = 1
 _MESES_MAX = 12
 
 #: Relación tokens that may carry a Registro Civil inscription date.
