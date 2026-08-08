@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:17451d6b1a03f984d00c56d3c54723d020f181a217c1e5727a9bafc2fd618da6'
+body_hash: 'sha256:31830889ee88038171cb2d07742481f88a7ce8efd59717bc5cc08c5bdd0eb799'
 related:
   - "[[2026-08-07-invoice-canonical-structure-iva-treatment-axis-adr]]"
 ---
@@ -376,7 +376,41 @@ modelo-303-iva-autorepercutido-intracomunitaria-devengado-base   intracom
 The DOMESTIC recipient side has cuota bindings only and no base binding at all. The
 INTRA-COMMUNITY recipient side does have a base binding - but it is gated on the three
 rated tiers, so an exempt-slot or zero-slot line misses it anyway. The conclusion that such
-a line reaches nothing holds for both families; the reason differs, and so would any fix.
+a line reaches nothing holds for both families; the reason differs, but - see below - the
+remedy does not.
+
+**The rate-kind asymmetry is deliberate, and it mirrors the component table per side.**
+Reading the Axis-A rows by (category, KIND) rather than by category settles it:
+
+```
+domestic_reverse_charge                            issued   base=required cuota=zero_by_law
+domestic_reverse_charge                            received base=required cuota=required
+intra_community_acquisition_reverse_charge         issued   does_not_arise
+intra_community_acquisition_reverse_charge         received base=required cuota=required
+intra_community_service_acquisition_reverse_charge issued   does_not_arise
+intra_community_service_acquisition_reverse_charge received base=required cuota=required
+```
+
+Every RECIPIENT-side row requires a cuota. The single cuota-less row is the domestic
+SUPPLIER side - and that is precisely the side casilla 122's binding serves, which is
+precisely the binding that admits `zero` and `exempt`. The registry's admitted rate kinds
+track the component table's cuota column exactly: cuota-zero-by-law admits the cuota-less
+tiers, cuota-required refuses them. The asymmetry noted above is not an accident to be
+patched.
+
+**So widening the intra-community recipient base binding to admit the cuota-less tiers is
+NOT a candidate remedy, and this research withdraws it as one.** No recipient-side pair is
+ever legitimately cuota-less, so a cuota-less line in any of the three is an INCOMPLETE
+RECORD, not a zero-rated operation. Admitting those tiers would declare a base with no
+matching cuota for an operation the law says always bears one - an internally inconsistent
+return in which the incomplete record hides behind a partially populated one. That is worse
+than the current silence, because a half-populated return reads as answered while a blank
+one does not.
+
+That collapses the two families back together. The remedy is the same for both and it is
+not a registry change: complete the record - state the rate the supply bore and keep the
+cuota at zero where none was charged - which is what the operator advisory on this path
+already asks for. The advisory is the remedy, not a placeholder for one.
 
 Whether the domestic recipient side SHOULD have a base binding is a registry and AEAT
 question this research does not rule on: casilla 122 is the supplier's base, and where the
