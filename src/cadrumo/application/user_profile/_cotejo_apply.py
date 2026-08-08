@@ -233,8 +233,8 @@ def censo_divergence_notice(record: UserProfileRecord | None) -> Notice | None:
         message=tr(
             _CENSO_DIVERGENCE_NOTICE_LOCALE_KEY,
             default=(
-                "{count} profile field(s) still diverge from the Certificado de Situación Censal "
-                "and remain unresolved: {axes}."
+                "{count} profile or certificate field(s) still diverge from the Certificado "
+                "de Situación Censal and remain unresolved: {axes}."
             ),
             count=len(divergences),
             axes=", ".join(axes),
