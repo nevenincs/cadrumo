@@ -138,6 +138,39 @@ prior — which is precisely when the rationale fails. If AEAT does not offer it
 carries are genuinely unfetchable and a different remedy applies. The disposition
 of this emission is opened as `P01.S23` against that branch.
 
+THE ADVISORY TEXT WAS MADE BRANCH-SAFE, which removes the only objection that
+actually bit. The first text told the operator to "capture or file the source
+period". For the Modelo 200 and Modelo 202 carries that instruction may be
+impossible to follow, and an instruction an agent-operator will act on and cannot
+satisfy is worse than none — the same defect class as a notice recommending a verb
+that cannot serve the population it is shown to.
+
+The message now states only the FACT, which is true on both branches of the
+open conditional ruling: the prior return for that year is absent, the bound
+casilla declares zero instead of the carried figure, and that reduces no liability
+so it over-declares. The remedy moved onto the diagnostic's own `remedy` field —
+its documented purpose, projected as the notice `suggestion` — and names only what
+the operator can always do: supply the value through a binding override. The
+capture route is omitted rather than asserted, and whether AEAT offers a given
+modelo is left to whoever measures it rather than inferred from this registry's
+silence, which is the error a sibling refusal already made.
+
+Making the text correct on both branches was preferred over gating the emission to
+a no-op: a guarded no-op deletes a signal for a reason one command will resolve,
+and re-enabling it later would mean re-proving what is already mutation-proved.
+
+VERIFICATION OF THAT TEXT CHANGE WAS PARTIALLY BLOCKED, and the limit is stated
+rather than papered over. A peer's uncommitted `legal/iva.toml` cites
+`ley-41-1994:art-78-segundo` whose extracted corpus sidecar is absent, which fails
+registry validation tree-wide, so the behavioural suites could not run at that
+moment. What WAS verified: a diff proving no predicate, condition or control-flow
+line changed — the only non-comment additions are the two `remedy=` keywords, so
+the emission SET is provably identical — and a direct construction proving the
+remedy validates at 114 characters against a 512 cap, which matters because
+`remedy` is documented to REFUSE rather than elide on overrun. The same three
+modules ran green minutes earlier on the immediately-preceding revision of this
+function, whose only delta is this text.
+
 A LIVE FALSE FIRE SHIPPED AND WAS THEN FIXED, in this same row. The first
 implementation advised on any surviving taxpayer-filed carry, and a non-calendar
 instalment clave has no date span and is documented as never suppressed by the
