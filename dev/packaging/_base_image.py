@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Final
 
 _ARG_PATTERN: Final = re.compile(r"^\s*ARG\s+PYTHON_BASE_IMAGE=(?P<image>\S+)\s*$", re.MULTILINE)
+_UTF_8: Final[str] = "utf-8"
 
 
 def dockerfile_path() -> Path:
@@ -39,7 +40,7 @@ def linux_base_image() -> str:
     """
     path = dockerfile_path()
     try:
-        text = path.read_text(encoding="utf-8")
+        text = path.read_text(encoding=_UTF_8)
     except OSError as error:  # pragma: no cover - filesystem-level failure
         raise RuntimeError(f"cannot read the base-image declaration at {path}: {error}") from error
 

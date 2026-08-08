@@ -33,16 +33,35 @@ from __future__ import annotations
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Final
 
 from ..sanitizer.tests._residual_identity_scan import _VALIDATORS, ResidualKind
+
+_UTF_8: Final[str] = "utf-8"
 
 #: Suffixes read as text. A binary carrying an identifier is a different problem with a
 #: different detector: the sanitiser owns PDFs, and a spreadsheet or archive needs
 #: extraction before a pattern means anything.
 TEXT_SUFFIXES = frozenset(
     {
-        ".py", ".toml", ".md", ".yml", ".yaml", ".json", ".txt", ".cfg", ".ini",
-        ".html", ".csv", ".xml", ".sql", ".sh", ".ps1", ".j2", ".rst", ".env",
+        ".py",
+        ".toml",
+        ".md",
+        ".yml",
+        ".yaml",
+        ".json",
+        ".txt",
+        ".cfg",
+        ".ini",
+        ".html",
+        ".csv",
+        ".xml",
+        ".sql",
+        ".sh",
+        ".ps1",
+        ".j2",
+        ".rst",
+        ".env",
     }
 )
 
@@ -128,7 +147,7 @@ def scan_tree(repo_root: Path, *, kinds: frozenset[ResidualKind] | None = None) 
         if excluded(relative) is not None:
             continue
         try:
-            text = path.read_text(encoding="utf-8", errors="replace")
+            text = path.read_text(encoding=_UTF_8, errors="replace")
         except OSError:
             # An unreadable file is reported by neither a pass nor a finding; a scanner
             # that silently skips is the failure this repository keeps correcting, so the

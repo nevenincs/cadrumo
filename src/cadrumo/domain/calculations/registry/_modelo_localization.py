@@ -6,6 +6,7 @@ import base64
 import re
 from typing import Final, Literal
 
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import MissingTranslationError, lookup_translation
 
 ModeloLocalizationField = Literal["label", "help", "title", "official_name"]
@@ -19,7 +20,7 @@ def encode_modelo_locale_segment(value: str) -> str:
     """Encode one dynamic identity as an injective dotted-key segment."""
     if _PLAIN_SEGMENT.fullmatch(value) and not value.startswith(_ENCODED_PREFIX):
         return value
-    encoded = base64.b32hexencode(value.encode("utf-8")).decode("ascii").rstrip("=").lower()
+    encoded = base64.b32hexencode(value.encode(UTF_8_ENCODING)).decode("ascii").rstrip("=").lower()
     return f"{_ENCODED_PREFIX}{encoded}"
 
 

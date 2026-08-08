@@ -16,6 +16,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
+from typing import Final
 from urllib.parse import urlsplit
 
 from defusedxml import ElementTree
@@ -29,6 +30,7 @@ STACK_REGION = "us-east-1"
 _BUCKET_NAME_RE = re.compile(r"[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?")
 _DISTRIBUTION_ID_RE = re.compile(r"[A-Z0-9]+")
 _CACHE_CONTROL = "public, max-age=300, must-revalidate"
+_UTF_8: Final[str] = "utf-8"
 _REQUIRED_ARTIFACTS = (
     "index.html",
     "404.html",
@@ -465,7 +467,7 @@ def _write_language_entry(html_root: Path) -> Path:
         "<noscript>\n<ul>\n"
         + "".join(f'<li><a href="{language}/">{language}</a></li>\n' for language in _localized_languages())
         + "</ul>\n</noscript>\n</body>\n</html>\n",
-        encoding="utf-8",
+        encoding=_UTF_8,
     )
     print(f"Wrote language entry: {entry}", flush=True)
     return entry
@@ -485,7 +487,7 @@ def _validate_language_entry(html_root: Path) -> None:
     entry = html_root / "index.html"
     if not entry.is_file():
         raise SystemExit(f"Language entry missing at {entry}; refusing to publish.")
-    body = entry.read_text(encoding="utf-8")
+    body = entry.read_text(encoding=_UTF_8)
     unreachable = [language for language in _localized_languages() if f'"{language}"' not in body]
     if unreachable:
         raise SystemExit(

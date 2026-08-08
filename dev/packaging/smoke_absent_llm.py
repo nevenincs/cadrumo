@@ -61,6 +61,7 @@ from .python_cohort import (
     load_python_cohort,
 )
 
+_UTF_8: Final[str] = "utf-8"
 _EXTRA: Final[str] = "llm"
 _EXPECTED_HINT: Final[str] = "pip install cadrumo[llm]"
 
@@ -174,7 +175,7 @@ def _guarded_surfaces_from_production_guards(repo_root: Path, symbol: str) -> tu
     for path in sorted(package.rglob("*.py")):
         if "tests" in path.relative_to(package).parts:
             continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
         derived |= _guarded_definition_names(tree, symbol)
     if not derived:
         raise SystemExit(
@@ -187,7 +188,7 @@ def _guarded_surfaces_from_production_guards(repo_root: Path, symbol: str) -> tu
 
 def _exported_names(init_path: Path) -> frozenset[str]:
     """Return the string members of the module's ``__all__``, read structurally."""
-    tree = ast.parse(init_path.read_text(encoding="utf-8"), filename=str(init_path))
+    tree = ast.parse(init_path.read_text(encoding=_UTF_8), filename=str(init_path))
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
             targets: list[ast.expr] = list(node.targets)

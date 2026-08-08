@@ -42,6 +42,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.decimal import coerce_decimal_strict
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError, IvaValidationError
@@ -221,7 +222,7 @@ def _load_recargo_rate_table_cached(path: str, byte_count: int, modified_ns: int
     del byte_count, modified_ns
     target = Path(path)
     try:
-        payload = tomllib.loads(target.read_text(encoding="utf-8"))
+        payload = tomllib.loads(target.read_text(encoding=UTF_8_ENCODING))
     except OSError as exc:
         raise IvaCatalogueError(f"{target}: cannot read recargo rate registry: {exc}") from exc
     except tomllib.TOMLDecodeError as exc:

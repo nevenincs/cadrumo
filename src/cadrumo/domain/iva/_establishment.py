@@ -83,6 +83,7 @@ from enum import StrEnum
 from functools import lru_cache
 from typing import Any, Final, NamedTuple, TypeGuard
 
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import (
     NifIvaPrefix,
     iso_country_for_nif_iva_prefix,
@@ -272,7 +273,7 @@ def _vat_territory_carve_outs() -> dict[str, _CarveOut]:
 
     target = bundled_path("registry", "aeat", "iva", "vat_territory_carve_outs.toml")
     try:
-        payload = tomllib.loads(target.read_text(encoding="utf-8"))
+        payload = tomllib.loads(target.read_text(encoding=UTF_8_ENCODING))
     except OSError as exc:
         raise IvaCatalogueError(f"{target}: cannot read the carve-out table: {exc}") from exc
     except tomllib.TOMLDecodeError as exc:
@@ -705,7 +706,7 @@ def _excluded_territories_by_prefix() -> dict[str, IvaTerritorialScope]:
 
     target = bundled_path("registry", "aeat", "iva", "territories.toml")
     try:
-        payload = tomllib.loads(target.read_text(encoding="utf-8"))
+        payload = tomllib.loads(target.read_text(encoding=UTF_8_ENCODING))
     except OSError as exc:
         raise IvaCatalogueError(f"{target}: cannot read the territory registry: {exc}") from exc
     except tomllib.TOMLDecodeError as exc:
@@ -828,7 +829,7 @@ def _country_vocabulary_payload() -> object:
 
     target = bundled_path("registry", "aeat", "iva", "country_names.toml")
     try:
-        return tomllib.loads(target.read_text(encoding="utf-8"))
+        return tomllib.loads(target.read_text(encoding=UTF_8_ENCODING))
     except OSError as exc:
         raise IvaCatalogueError(f"{target}: cannot read the country-name vocabulary: {exc}") from exc
     except tomllib.TOMLDecodeError as exc:

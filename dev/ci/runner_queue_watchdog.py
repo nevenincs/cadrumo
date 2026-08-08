@@ -94,6 +94,7 @@ from typing import Any, Final
 
 _API_HOST: Final = "api.github.com"
 _API_VERSION: Final = "2022-11-28"
+_UTF_8: Final[str] = "utf-8"
 _TERMINAL_RUN_STATUS: Final = frozenset({"completed"})
 
 # How many in-progress runs to read when building repository-wide occupancy.
@@ -250,7 +251,7 @@ def _request(path: str, token: str, *, method: str = "GET") -> Any:
                 "User-Agent": "cadrumo-runner-queue-watchdog",
             },
         )
-        body = connection.getresponse().read().decode("utf-8")
+        body = connection.getresponse().read().decode(_UTF_8)
     finally:
         connection.close()
     return json.loads(body) if body.strip() else None
@@ -298,7 +299,7 @@ def _announce(verdicts: Sequence[Verdict], threshold_seconds: float) -> None:
             print(f"note: skipping '{verdict.job_name}' [{labels}] - {verdict.reason}")
     summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary_path:
-        with open(summary_path, "a", encoding="utf-8") as handle:
+        with open(summary_path, "a", encoding=_UTF_8) as handle:
             handle.write("\n".join(lines) + "\n")
 
 
