@@ -75,8 +75,22 @@ def _criteria_attributes_read(
     predicate: Callable[..., Any],
     *,
     seen: frozenset[str] = frozenset(),
+    module: ModuleType = _classification,
 ) -> set[str]:
     """Return the criteria attributes ``predicate`` reads, following its helpers.
+
+    Args:
+        predicate: The row's predicate, or a helper reached from one.
+        seen: Names already walked, which stops a helper cycle.
+        module: Where a called name is looked up to decide whether it is a
+            module-local helper. Defaults to the classification module, which is
+            the production answer. It is a parameter rather than a constant so
+            the helper-following branch can be exercised against a predicate
+            declared in this test module -- the branch is inert on every live
+            row (each spells the attribute out in its call arguments, which the
+            plain walk already finds), so without this seam the only way to
+            cover it would be to make the production table adopt a shape it has
+            no reason to.
 
     Raises:
         _PredicateUnreadableError: When the source cannot be retrieved or
@@ -108,7 +122,7 @@ def _criteria_attributes_read(
         if isinstance(node, ast.Attribute) and _is_subject(node.value):
             found.add(node.attr)
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-            helper = getattr(_classification, node.func.id, None)
+            helper = getattr(module, node.func.id, None)
             if not inspect.isfunction(helper):
                 continue
             # Only a helper handed the criteria, or one of its attributes, can
@@ -118,7 +132,7 @@ def _criteria_attributes_read(
                 for argument in node.args
             )
             if handed_criteria:
-                found |= _criteria_attributes_read(helper, seen=seen | {name})
+                found |= _criteria_attributes_read(helper, seen=seen | {name}, module=module)
     return found
 
 

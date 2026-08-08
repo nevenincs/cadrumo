@@ -263,7 +263,11 @@ def acquire_auth_acquisition_lock(
     for _attempt in range(2):
         try:
             fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        except FileExistsError:
+        except (FileExistsError, PermissionError):
+            # Windows refuses this open with ``ERROR_ACCESS_DENIED`` while a
+            # peer's removal of the same lock file is in flight. That is the
+            # lock being contended, not a fault, so it routes to the same
+            # inspect-and-maybe-reclaim branch as an outright collision.
             status, observed = _inspect_with_observed_text(settings, kind)
             if status.recoverable:
                 # Compare-and-delete: when the stale record was replaced by a

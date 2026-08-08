@@ -138,6 +138,11 @@ def _fully_populated_draft() -> InvoiceDraft:
                 field="currency",
                 origin=FieldOrigin.OPERATOR,
                 grounding=FieldGroundingOutcome.UNANCHORED,
+                # Populated non-default for the same reason role_evidence above
+                # is: a refusal dropped on save and re-defaulted to ``None`` on
+                # load compares equal to a fixture that never carried one, and
+                # the round trip would agree that two absences match.
+                refused_anchor="EUROS",
                 note="supplied at review; the document prints no code",
             ),
         ),

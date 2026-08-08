@@ -28,9 +28,10 @@ the caller, not of the error:
 Both are :func:`unlink_lockfile` with different retry budgets, so the two lock
 subsystems and the locale catalogue guard cannot drift apart on the handling.
 
-Only the sharing violation is tolerated. A denying ACL or a read-only volume
-raises the same :class:`PermissionError` and never clears, so absorbing it
-would turn a broken lockfile into an unexplained retry loop.
+A blocked removal is never reported as a success. Windows cannot distinguish
+contention from a denying ACL at the unlink boundary, so the retry budget is
+what separates them: a transient block clears inside the window, and anything
+that outlasts it comes back as ``False`` for the caller to refuse on.
 """
 
 from __future__ import annotations
@@ -49,13 +50,20 @@ LOCKFILE_UNLINK_RETRY_SECONDS = 10.0
 """Default budget for retrying a blocked release; a reader's handle lives microseconds."""
 
 _UNLINK_POLL_SECONDS = 0.02
-_WINDOWS_SHARING_VIOLATION = 32
-"""``ERROR_SHARING_VIOLATION``: the file is open in another process.
+_WINDOWS_CONTENDED_REMOVAL_ERRORS = frozenset({5, 32})
+"""``ERROR_ACCESS_DENIED`` and ``ERROR_SHARING_VIOLATION``.
 
-The tolerance is keyed on this code alone. A ``PermissionError`` carrying any
-other code -- a denying ACL, a read-only volume, a directory standing where the
-lockfile should be -- describes a condition no amount of waiting resolves, and
-absorbing it would report a lockfile as merely contended when it is broken.
+The two codes Windows raises for a removal another handle is blocking: 32 while
+a peer holds the file open for reading, 5 once a delete against it is already
+pending. Both have been observed on this project's locks under cross-process
+contention, and both clear when the last handle closes.
+
+Windows does not distinguish these from a denying ACL or a read-only attribute
+at the unlink boundary, so the retry budget is the discriminator rather than the
+code: a transient block clears inside the window, a permanent one outlasts it
+and is reported as a removal that did not happen. Nothing is absorbed off
+Windows -- ``winerror`` is absent there, and POSIX has no sharing-violation
+class, so an ``EACCES`` is genuine and propagates.
 """
 
 
@@ -80,16 +88,16 @@ def unlink_lockfile(
         caller decides whether that is a refusal or one more poll.
 
     Raises:
-        OSError: For any removal failure other than a sharing violation. Those
-            do not clear on their own, so reporting them as contention would
-            hide a broken lockfile behind a retry loop.
+        OSError: For any removal failure Windows does not report as contention,
+            and for every ``PermissionError`` off Windows, where no
+            sharing-violation class exists to confuse it with.
     """
     deadline = time.monotonic() + max(retry_seconds, 0.0)
     while True:
         try:
             path.unlink(missing_ok=True)
         except PermissionError as exc:
-            if getattr(exc, "winerror", None) != _WINDOWS_SHARING_VIOLATION:
+            if getattr(exc, "winerror", None) not in _WINDOWS_CONTENDED_REMOVAL_ERRORS:
                 raise
             if time.monotonic() >= deadline:
                 _log.debug(

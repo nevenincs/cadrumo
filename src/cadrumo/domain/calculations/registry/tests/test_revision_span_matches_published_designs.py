@@ -629,6 +629,47 @@ def _designs_claimed_by(modelo_id: str, revision: object) -> tuple[Path, ...]:
     return tuple(path for path in ordered if set(_design_years(path.name)) & claimed)
 
 
+def _box_set_evidence(before_boxes: dict[str, int], after_boxes: dict[str, int]) -> str | None:
+    """Evidence that the box SET changed, whether or not anything moved.
+
+    A SEPARATE SIGNAL from displacement, not a refinement of it. The displacement check
+    iterates the boxes two designs SHARE, so a box present in one and absent in the
+    other falls outside its loop entirely. That is not a lesser event: a box the later
+    design declares and the earlier one does not cannot be declared at all under the
+    earlier layout, and a box the earlier one declares and the later one drops is a
+    value written into space the later design puts to another use.
+
+    Measured on Modelo 390, where the whole class was invisible: 2015 to 2016 adds six
+    boxes and 2016 to 2017 removes twenty, both with ZERO movement, no readable
+    page-length difference and no occupancy transition, so no signal in this module
+    reported either boundary. Adding this one took that revision's verdict from six
+    re-layouts to eight.
+
+    The blindness survived because it is MASKED wherever membership changes alongside
+    movement: the 2017 to 2018 boundary drops seventy-two boxes, and the displacement
+    check reports that boundary anyway on its ninety-seven moved boxes, so a reader
+    spot-checking the signal against that pair sees a membership change duly reported
+    and concludes the set is compared.
+
+    Extracted as a named helper rather than inlined so the signal has a seam a mutation
+    can suppress on its own, leaving every other signal running. A mutation that has to
+    break the whole comparison proves the module can fail, not that this signal works.
+    """
+    added = sorted(set(after_boxes) - set(before_boxes), key=int)
+    removed = sorted(set(before_boxes) - set(after_boxes), key=int)
+    if not added and not removed:
+        return None
+    parts = []
+    if added:
+        parts.append(f"{len(added)} added (e.g. {', '.join(f'[{box}]' for box in added[:3])})")
+    if removed:
+        parts.append(f"{len(removed)} removed (e.g. {', '.join(f'[{box}]' for box in removed[:3])})")
+    return (
+        f"box SET changed: {' and '.join(parts)} -- a box only one side declares cannot be carried "
+        "by the other layout at all, which no displacement, length or digest check sees"
+    )
+
+
 def _boundary_label(earlier: Path, later: Path) -> tuple[int, int]:
     """``(left year, right year)``; the two are EQUAL for a mid-course split."""
     return max(_design_years(earlier.name)), min(_design_years(later.name))
@@ -673,6 +714,29 @@ def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]
             if _record_count_delta():
                 note += " -- NOT a clean in-record displacement: the record set also changed"
             boundaries.setdefault(key, []).append(note)
+
+        # FOURTH SIGNAL: the box SET changed, whether or not anything moved.
+        #
+        # The comparison above reads only DISPLACEMENT -- it iterates the boxes the two
+        # designs SHARE -- so a box present in one design and absent in the other is
+        # outside its loop entirely. That is not a lesser event: a box the later design
+        # declares and the earlier one does not cannot be declared at all under the
+        # earlier layout, and a box the earlier one declares and the later one drops is
+        # a value written into space the later design puts to another use.
+        #
+        # Measured on Modelo 390, where the whole class was invisible: 2015 to 2016 adds
+        # six boxes and 2016 to 2017 removes twenty, both with ZERO movement, identical
+        # or unreadable page lengths and no occupancy transition, so no signal in this
+        # module reported either boundary.
+        #
+        # The blindness survived because it is MASKED wherever membership changes
+        # alongside movement: the 2017 to 2018 boundary drops seventy-two boxes, and the
+        # displacement check reports that boundary anyway on its ninety-seven moved
+        # boxes, so a reader spot-checking the signal against that pair sees a
+        # membership change duly reported and concludes the set is compared.
+        membership = _box_set_evidence(before_boxes, after_boxes)
+        if membership:
+            boundaries.setdefault(key, []).append(membership)
 
         if before_lengths and after_lengths and before_lengths != after_lengths:
             delta = _record_count_delta()
@@ -874,6 +938,64 @@ def test_a_year_aeat_split_mid_course_keeps_both_of_its_designs() -> None:
         assert len(distinct) >= 2, (
             f"{year} should carry two distinct Modelo 303 designs (AEAT split it mid-course) "
             f"but {len(distinct)} distinct payload(s) survived enumeration"
+        )
+
+
+def test_a_box_added_or_removed_without_movement_reaches_the_verdict() -> None:
+    """A boundary only the box-SET comparison can see must reach the failure text.
+
+    The displacement check iterates the boxes two designs SHARE, so a box present in one
+    and absent in the other falls outside its loop. Measured on Modelo 390, that left a
+    whole class unreported: 2015 to 2016 adds six boxes and 2016 to 2017 removes twenty,
+    both with zero movement, no readable page-length difference and no occupancy
+    transition, so no signal in this module named either boundary.
+
+    GATED ON THE MEMBERSHIP PROPERTY, never on the numbers. It does not assert six added
+    or twenty removed -- those are today's corpus, and pinning them would train the next
+    author to bump two constants and would then detect nothing. The durable property is
+    that a pair whose ONLY difference is which boxes exist still produces a boundary.
+
+    THE TWO SIDES ARE DERIVED INDEPENDENTLY, and that is deliberate rather than
+    incidental. Availability is measured straight from the parsed designs; the reported
+    side comes from the verdict builder. Deriving both from the verdict builder is the
+    shape that has already caught this module's author twice: under mutation such a test
+    reds on its own vacuity guard, which proves the function changed and nothing about
+    whether the signal works.
+    """
+    membership_only: list[tuple[str, str, tuple[int, int]]] = []
+    for modelo, revision_id, revision in _exporting_revisions():
+        for earlier, later in pairwise(_designs_claimed_by(modelo.id, revision)):
+            before_boxes, after_boxes = _parse_design(earlier), _parse_design(later)
+            shared = set(before_boxes) & set(after_boxes)
+            if any(before_boxes[box] != after_boxes[box] for box in shared):
+                continue
+            if set(before_boxes) == set(after_boxes):
+                continue
+            before_lengths, after_lengths = _page_lengths(earlier), _page_lengths(later)
+            if before_lengths and after_lengths and before_lengths != after_lengths:
+                continue
+            before_occupancy, after_occupancy = _occupancy(earlier), _occupancy(later)
+            if any(
+                before_occupancy[slot] != after_occupancy[slot] for slot in set(before_occupancy) & set(after_occupancy)
+            ):
+                continue
+            membership_only.append((modelo.id, revision_id, _boundary_label(earlier, later)))
+
+    assert membership_only, (
+        "no bundled design pair differs ONLY in which boxes it declares, so this assertion would be "
+        "vacuous -- the corpus that made the membership signal necessary has changed"
+    )
+    for modelo_id, revision_id, key in membership_only:
+        modelo, revision = next(
+            (candidate, current)
+            for candidate, current_id, current in _exporting_revisions()
+            if candidate.id == modelo_id and current_id == revision_id
+        )
+        assert key in _boundaries_for(modelo.id, revision), (
+            f"modelo {modelo_id} revision {revision_id!r} boundary {key} differs only in which boxes "
+            "the two designs declare -- no box moved, no page length changed, no slot changed "
+            "occupancy -- and the verdict does not name it, so the box comparison is reading "
+            "displacement only and a box added or removed is invisible to every signal"
         )
 
 

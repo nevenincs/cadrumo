@@ -9,12 +9,20 @@ verbatim match are never flattened into one.
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ....application.ledger import FieldAmbiguityCandidate, FieldProvenance
-from ....core import FieldGroundingOutcome, FieldOrigin
+from ....application.ledger import (
+    DocumentTranscription,
+    FieldAmbiguityCandidate,
+    FieldProvenance,
+    InvoiceDraft,
+    TranscriberIdentity,
+    verified_provenance,
+)
+from ....core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
 from ....core.json_contract import Notice, NoticeSeverity, derive_status
 from .._evidence_field_notices import DEGRADED_GROUNDING_OUTCOMES, field_degradation_notices
 
@@ -168,6 +176,104 @@ def test_a_missing_anchor_is_distinct_from_an_anchor_that_was_not_found() -> Non
     assert offered_nothing.code == "ledger.evidence.field.no_anchor"
     assert offered_nothing.code != offered_something.code
     assert "anchor" not in _context(offered_nothing)
+
+
+def _grounded_against(text: str, *, envelopes: tuple[FieldProvenance, ...], **values: object) -> tuple[
+    FieldProvenance,
+    ...,
+]:
+    """Return *envelopes* as the REAL grounding stage leaves them.
+
+    Hand-built envelopes prove which branch a selector takes; they cannot prove
+    the producer ever emits that shape. The defect these cases pin lived exactly
+    there -- the branch was correct and the producer emitted a shape that could
+    not reach it -- so the envelopes below are put through the same function the
+    reading path calls, against a real transcription.
+    """
+    draft = InvoiceDraft(provenance=envelopes, **values)
+    transcription = DocumentTranscription(
+        text=text,
+        page_count=1,
+        source_content_sha256="c" * 64,
+        transcriber=TranscriberIdentity(
+            origin=FieldOrigin.TEXT_LAYER,
+            name="test-text-layer",
+            transport=LOCAL_TRANSPORT_LABEL,
+            revision="1",
+        ),
+    )
+    return verified_provenance(draft=draft, transcription=transcription)
+
+
+def test_a_refused_anchor_is_not_reported_as_an_absent_one() -> None:
+    """The two shapes the grounding stage produces must not arrive identical.
+
+    A reader that pointed at a printed form the document does not carry and a
+    reader that pointed at nothing reach the operator through the same cleared
+    anchor, so without the refusal recorded beside it the first is told to the
+    operator as the second -- affirmatively false, and the message it lands in
+    ("nothing to point at") closes exactly the investigation the misread case
+    deserves.
+
+    Driven through the real grounding stage rather than hand-built envelopes,
+    because that is where the two shapes became indistinguishable.
+    """
+    grounded = _grounded_against(
+        "FACTURA 2026-0142\nTOTAL 121,00 EUR\n",
+        envelopes=(
+            FieldProvenance(
+                field="grand_total",
+                origin=FieldOrigin.TEXT_LAYER,
+                grounding=FieldGroundingOutcome.UNANCHORED,
+                anchor="4.528,32",
+            ),
+            FieldProvenance(
+                field="currency",
+                origin=FieldOrigin.TEXT_LAYER,
+                grounding=FieldGroundingOutcome.UNANCHORED,
+            ),
+        ),
+        grand_total=Decimal("4528.32"),
+        currency="EUR",
+    )
+
+    notices = field_degradation_notices(grounded)
+    by_field = {_context(notice)["field"]: notice for notice in notices}
+
+    refused = by_field["grand_total"]
+    assert refused.code == "ledger.evidence.field.anchor_not_found"
+    assert "4.528,32" in refused.message, "the operator needs the form that was rejected"
+
+    absent = by_field["currency"]
+    assert absent.code == "ledger.evidence.field.no_anchor"
+    assert refused.code != absent.code
+
+
+def test_the_refusal_reaches_the_operator_with_the_reason_the_check_computed() -> None:
+    """The detail is computed and carried; dropping it wastes the only explanation.
+
+    A cleared anchor tells the operator that something failed. WHY it failed is
+    already written onto the envelope by the check, and it is the sentence that
+    separates a normalised value failing a verbatim search from a figure that is
+    not on the page at all.
+    """
+    grounded = _grounded_against(
+        "FACTURA 2026-0142\nTOTAL 121,00 EUR\n",
+        envelopes=(
+            FieldProvenance(
+                field="grand_total",
+                origin=FieldOrigin.TEXT_LAYER,
+                grounding=FieldGroundingOutcome.UNANCHORED,
+                anchor="4.528,32",
+            ),
+        ),
+        grand_total=Decimal("4528.32"),
+    )
+    notice = field_degradation_notices(grounded)[0]
+
+    assert grounded[0].note, "the check must have computed a reason to carry"
+    assert _context(notice)["detail"] == grounded[0].note
+    assert grounded[0].note in notice.message
 
 
 def test_each_notice_names_what_was_seen() -> None:

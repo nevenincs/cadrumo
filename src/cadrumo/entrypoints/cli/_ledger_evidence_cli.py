@@ -7,6 +7,7 @@ import typer
 from ...application.ledger import (
     ConfirmationBlockedError,
     FindingResolution,
+    InvoiceConfirmationResult,
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidenceInputError,
     PurchaseInvoiceEvidenceNotFoundError,
@@ -36,6 +37,7 @@ from ._common import (
 from ._evidence_field_notices import field_degradation_notices
 from ._ledger_business_invoice_cli import _catalogue_invoice_shared_fields
 from ._ledger_evidence_batch_cli import register_evidence_batch_command
+from ._ledger_evidence_confirm_notices import confirm_resolution_lines, confirm_resolution_notices
 from ._ledger_evidence_consent_cli import register_evidence_consent_commands
 from ._ledger_evidence_review_cli import parse_finding_resolution, register_evidence_review_commands
 from ._ledger_payloads import (
@@ -835,6 +837,12 @@ def _run_evidence_confirm(
         # document said, which is the pairing the confirmation record persists.
         "confirmed_provenance": [envelope.model_dump(mode="json") for envelope in result.confirmed_provenance],
         "confirmation_id": result.confirmation_id,
+        # Which IVA treatment this record got and which rung established it.
+        # Result data rather than a diagnostic: a consumer enumerating the
+        # weakly-placed records is asking about what was written, and before
+        # this it could only find them by re-running the resolution.
+        "iva_category": _resolved_category(result),
+        "iva_category_outcome": _resolved_outcome(result),
     }
     lines = [
         f"bucket_id\t{bucket_id}",
@@ -910,6 +918,11 @@ def _run_evidence_confirm(
     # The confirm surface describes the SAME pre-override draft, so the operator
     # sees why a field they are about to accept was not corroborated.
     notices.extend(field_degradation_notices(result.draft.provenance))
+    # What the confirm path resolved about the operation's IVA treatment and
+    # what it left open. Every one of these was computed on this call and read
+    # by nobody before this line.
+    notices.extend(confirm_resolution_notices(result.establishment))
+    lines.extend(confirm_resolution_lines(result.establishment))
     _emit_envelope(
         ctx,
         command="ledger.evidence.confirm",
@@ -917,6 +930,30 @@ def _run_evidence_confirm(
         lines=lines,
         notices=notices,
     )
+
+
+def _resolved_category(result: InvoiceConfirmationResult) -> str | None:
+    """Return the IVA treatment this confirm recorded, or ``None`` where none was.
+
+    ``None`` is a real answer here and not an absence of information: it is what
+    a withheld relief claim, a self-contradicting document and an unplaceable
+    operation all leave behind, and the accompanying outcome says which.
+    """
+    if result.establishment is None or result.establishment.category.category is None:
+        return None
+    return result.establishment.category.category.value
+
+
+def _resolved_outcome(result: InvoiceConfirmationResult) -> str | None:
+    """Return which rung established the treatment, or why none did.
+
+    Emitted beside the category rather than folded into it, because the pair is
+    the whole point: a category on the weakest rung and one the rule table placed
+    outright are the same string, and only this field tells them apart.
+    """
+    if result.establishment is None:
+        return None
+    return result.establishment.category.outcome.value
 
 
 def _evidence_service() -> PurchaseInvoiceEvidenceService:

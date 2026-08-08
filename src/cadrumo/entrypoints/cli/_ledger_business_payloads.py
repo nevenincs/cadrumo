@@ -336,6 +336,13 @@ class EvidenceFieldProvenancePayload(OutputSchema):
     origin: str
     grounding: str
     anchor: str | None = None
+    # Mirrors FieldProvenance.refused_anchor. The printed form the reader DID
+    # offer, on a field whose anchor the check looked for and did not find. It
+    # rides beside the cleared anchor rather than in it, because the operator
+    # needs to tell "the reader offered nothing" from "the reader offered
+    # something this document does not carry" -- a reader limitation against a
+    # possible misread or the wrong document, which are different next steps.
+    refused_anchor: str | None = None
     candidates: list[EvidenceFieldAmbiguityCandidatePayload] = []
     # Whether the anchor was asserted by the reader that produced the value. The
     # operator MUST be able to tell the two apart: an anchor matched against an
@@ -523,6 +530,14 @@ class EvidenceConfirmResult(OutputSchema):
     payment_status: str
     linked_transaction_ids: list[str] = []
     notes: str = ""
+    # The IVA treatment this confirm recorded and the rung that established it.
+    # Both ``None`` where no resolution was attempted; ``iva_category`` alone is
+    # ``None`` where the resolution ran and withheld a treatment, which the
+    # outcome then names. Carried as a pair deliberately: a category placed by
+    # the rule table and one settled by the rate the lines charged are the same
+    # string, and only the outcome distinguishes them at rest.
+    iva_category: str | None = None
+    iva_category_outcome: str | None = None
     # The euro conversion stamp and the euro projection of the totals, at
     # parity with the catalogue surface through the shared field tuple. Every
     # one is ``None`` on a euro invoice, and the eur trio is ``None`` on a
@@ -604,6 +619,13 @@ class EvidenceReviewRowPayload(OutputSchema):
     drafted_at: str
     blocking_count: int = 0
     reasons: list[str] = []
+    # The queue's non-blocking half. A row carrying no blocker and two advisories
+    # is a document nothing stops and something is wrong with, which the blocking
+    # columns alone render identical to a clean one. Primary queue data rather
+    # than a diagnostic: it is what the verb exists to report, per row, and the
+    # channel carrying the operator's instruction about it is still `notices`.
+    advisory_count: int = 0
+    advisories: list[str] = []
 
 
 @register_schema("ledger.evidence.review.list")

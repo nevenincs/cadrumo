@@ -14,15 +14,21 @@ This lives in the application layer for the same reason
 TAXPAYER, not about the invoice, and :class:`~domain.invoices.Invoice` is a pure
 domain record that does not reach into profile state.
 
-The failure this guards is not hypothetical or operator-typo-shaped. The
-evidence reader identifies a counterparty by scanning the document for the
-first checksum-valid Spanish tax id, and the on-host vision prompt asks for
-"the supplier's NIF/NIE/CIF". On a RECEIVED invoice that lands on the supplier,
-because the supplier's identifier sits in the letterhead. On an ISSUED invoice
-the issuer IS the filer, so the same scan lands on the filer's own identifier
-and nothing downstream objects: it is a checksum-valid Spanish tax id, so the
-identity validator passes it. The value is wrong, valid-looking, and bound for
-an informativa.
+The failure this guards is not hypothetical or operator-typo-shaped, and the
+mechanism has changed while the exposure has not. The reader no longer scans for
+the first checksum-valid Spanish tax id, and the field contract
+(:data:`~llm.INVOICE_FIELD_CONTRACTS`) no longer asks only for "the supplier's
+NIF/NIE/CIF": both parties are asked for separately, by role, precisely because
+one identifier plus a caller's assumption made the two indistinguishable.
+
+What survives that fix is the ISSUED case, and it survives by construction
+rather than by defect. On an invoice the filer issued, the supplier slot
+legitimately holds the filer's OWN identifier -- the document is correct and the
+reading is correct -- so any path that takes the supplier side as the
+counterparty records the taxpayer against themselves. The value is real,
+checksum-valid, and bound for an informativa AEAT reconciles against the
+counterparty's own return. A probabilistic reader transposing the two roles on
+an ambiguous layout reaches the same place by a different route.
 
 Scope note, stated rather than assumed: this treats a self-naming counterparty
 as always wrong, which holds for every operation this codebase can currently

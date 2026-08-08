@@ -180,11 +180,20 @@ def _try_create_lock(target: Path, pid: int) -> bool:
 
     Returns ``True`` when the lockfile was created and the PID written,
     ``False`` when another process already holds the lockfile.
+
+    A ``PermissionError`` reads as held rather than propagating. Under
+    cross-process contention Windows refuses this open with
+    ``ERROR_ACCESS_DENIED`` while a peer's removal of the same lockfile is in
+    flight -- a transient state that clears on its own, so the right response is
+    the next poll, not a crash out of ``acquire_lock``. The cost is that a
+    genuinely undeletable lockfile is reported as a busy bucket after the wait
+    window rather than as a permission fault; the directory's writability is
+    already checked by :func:`_ensure_bucket_dir_lockable` before this runs.
     """
     flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY
     try:
         fd = os.open(target, flags, _LOCKFILE_MODE)
-    except FileExistsError:
+    except (FileExistsError, PermissionError):
         return False
     write_failed = False
     try:

@@ -375,16 +375,18 @@ def test_release_survives_a_peer_holding_the_lock_file_open(tmp_path: Path) -> N
     settings = _settings(tmp_path)
     path = auth_acquisition_lock_path(settings, AuthProviderKind.CERTIFICATE)
 
-    with ExitStack() as stack:
-        with acquire_auth_acquisition_lock(
+    with (
+        ExitStack() as stack,
+        acquire_auth_acquisition_lock(
             settings,
             AuthProviderKind.CERTIFICATE,
             ttl_seconds=60,
             operation="test-release-under-inspection",
-        ):
-            handle = stack.enter_context(path.open("r", encoding=UTF_8_ENCODING))
-            releaser = threading.Timer(0.3, handle.close)
-            stack.callback(releaser.cancel)
-            releaser.start()
+        ),
+    ):
+        handle = stack.enter_context(path.open("r", encoding=UTF_8_ENCODING))
+        releaser = threading.Timer(0.3, handle.close)
+        stack.callback(releaser.cancel)
+        releaser.start()
 
     assert not path.exists(), "the lock file survived the release and would block acquisition"

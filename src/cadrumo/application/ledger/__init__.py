@@ -289,6 +289,7 @@ if TYPE_CHECKING:
         ground_self_reported_anchor,
         normalise_for_anchor_search,
         printed_excerpt_occurs,
+        printed_excerpt_occurs_in_text,
         strip_printed_unit,
     )
     from ._id_resolution import (
@@ -381,6 +382,7 @@ if TYPE_CHECKING:
         party_attribution_advisory,
         stamp_unverified_party_attribution,
     )
+    from ._review_advisories import review_advisory_kinds
     from ._party_colocation import (
         PartyAttributionOutcome,
         PartyColocationResolution,
@@ -489,6 +491,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "PartyAttributionWarning": "._party_attribution",
     "party_attribution_advisory": "._party_attribution",
     "stamp_unverified_party_attribution": "._party_attribution",
+    "review_advisory_kinds": "._review_advisories",
     "CounterpartyDraftSide": "._evidence_draft",
     "counterparty_draft_side": "._evidence_draft",
     "CounterpartyEstablishmentConflictError": "._counterparty_establishment",
@@ -530,6 +533,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ground_self_reported_anchor": "._grounding_anchor",
     "normalise_for_anchor_search": "._grounding_anchor",
     "printed_excerpt_occurs": "._grounding_anchor",
+    "printed_excerpt_occurs_in_text": "._grounding_anchor",
     "strip_printed_unit": "._grounding_anchor",
     "IdentityCandidate": "._identity_roles",
     "IdentityRoleResolution": "._identity_roles",
@@ -927,12 +931,14 @@ __all__ = [
     "preflight_ledger_tax_readiness",
     "preflight_transaction_catalogue",
     "printed_excerpt_occurs",
+    "printed_excerpt_occurs_in_text",
     "printed_total_discrepancy",
     "project_aeat_record_counterparty",
     "query_ledger_review_rows",
     "re_stamped_provenance",
     "read_confirmation_record",
     "read_extraction_draft",
+    "review_advisory_kinds",
     "record_counterparty_establishment",
     "rederive_artefact_on_host",
     "regime_contradiction_finding",

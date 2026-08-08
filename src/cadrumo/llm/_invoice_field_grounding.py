@@ -42,11 +42,12 @@ from typing import cast
 from pydantic import BaseModel, Field
 
 from ..application.ledger import (
+    DraftDiscrepancyFinding,
     FieldProvenance,
     InvoiceDraft,
     PurchaseInvoiceEvidenceInputError,
 )
-from ..core import STRICT_FROZEN_CONFIG, FieldGroundingOutcome, FieldOrigin
+from ..core import STRICT_FROZEN_CONFIG, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from ..core.decimal import coerce_finite_european_decimal, european_thousands_reading_is_ambiguous
 from ..core.errors import CoreValidationError
 from ..core.identity import (
@@ -571,6 +572,59 @@ def _read_provenance(
     )
 
 
+def _unverified_identity_findings(
+    response: ExtractedInvoiceResponse,
+    grounded: Mapping[str, str | Decimal | None],
+) -> tuple[DraftDiscrepancyFinding, ...]:
+    """Record every identity field the document printed and the checks rejected.
+
+    Dropping a value to ``None`` is the right handling and stays; what must not
+    also be dropped is the FACT that something was there. An identifier failing
+    its control character is precisely what hides the true counterparty from a
+    validating read, so an operator needs "we could not verify this" rather than
+    a slot that looks like the document said nothing.
+
+    Without this the two collapse before anything can tell them apart. The
+    counterparty role resolution reads the DRAFT, so a rejected identifier
+    reaches it as an absence -- and
+    :func:`~application.ledger.resolve_counterparty_identity` deliberately
+    raises no unresolved-role finding on an absence, because a factura
+    simplificada legitimately has one. The distinction has to be preserved at
+    the stage that performs the rejection; nothing downstream can reconstruct
+    it.
+
+    Args:
+        response: The parsed reply, whose ``fields`` half still carries the
+            verbatim transcribed strings.
+        grounded: The re-validated values, keyed by field name.
+
+    Returns:
+        One finding per identity field transcribed non-blank and rejected.
+    """
+    findings: list[DraftDiscrepancyFinding] = []
+    for contract in INVOICE_FIELD_CONTRACTS:
+        # Keyed on the DECLARED form, like every other identity-scoped decision
+        # in this module, so a fourth identity field is covered by construction.
+        if not contract.carries_role_evidence:
+            continue
+        transcribed = getattr(response.fields, contract.field_name, None)
+        if not isinstance(transcribed, str) or not transcribed.strip():
+            continue
+        if grounded[contract.field_name] is not None:
+            continue
+        findings.append(
+            DraftDiscrepancyFinding(
+                kind=DraftDiscrepancyKind.IDENTITY_UNVERIFIED,
+                field=contract.field_name,
+                detail=(
+                    f"the document prints {transcribed.strip()!r} as this party's tax identifier, but it "
+                    f"fails its control-character check, so it was not accepted as a verified identity"
+                ),
+            ),
+        )
+    return tuple(findings)
+
+
 def ground_extracted_fields(
     response: ExtractedInvoiceResponse,
     *,
@@ -588,7 +642,11 @@ def ground_extracted_fields(
     A field the model transcribed but that fails grounded validation (an invalid
     tax-id checksum, an unparsable date, a non-numeric amount) is dropped to
     ``None`` rather than trusted -- the same "never fabricate" discipline the
-    text-layer heuristics apply.
+    text-layer heuristics apply. For an IDENTITY field the rejection is also
+    RECORDED, as an
+    :attr:`~core.DraftDiscrepancyKind.IDENTITY_UNVERIFIED` finding: dropping the
+    value is right, dropping the fact that the document printed one is not, and
+    only this stage still holds that fact.
 
     Every field that survives grounding also gets a
     :class:`~application.ledger.FieldProvenance` envelope carrying the verbatim
@@ -692,5 +750,6 @@ def ground_extracted_fields(
         regime_legend=regime_legend,
         currency=currency,
         provenance=envelopes,
+        discrepancies=_unverified_identity_findings(response, grounded),
         raw_text_length=raw_text_length,
     )

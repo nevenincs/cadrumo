@@ -38,6 +38,21 @@ true supplier invisible to a validating scan -- so it surfaces as an
 vanishing. That is the difference between "we could not verify the supplier" and
 "we found a supplier", and the operator needs the first when the first is true.
 
+**An ABSENT counterparty identifier is not a failed role.** A document that
+prints no counterparty identifier at all, or prints only the filer's own, states
+no role for this resolver to get wrong: a factura simplificada may legitimately
+omit the recipient's NIF, and an ordinary domestic ticket identifies no customer.
+Those raise no :attr:`~core.DraftDiscrepancyKind.ROLE_UNRESOLVED`. An
+UNVERIFIABLE one still does, because that is the measured defect above. The
+distinction is not cosmetic: every discrepancy kind blocks confirmation by
+construction, so a blocker firing across the legitimate population is one an
+operator learns to clear unread -- and then clears on the checksum case too.
+
+Withholding the finding never asserts that the role is fine. The resolution
+carries ``resolved=None`` under an
+:attr:`~core.FieldGroundingOutcome.UNANCHORED` envelope whose note says the
+document stated nothing, so the absence reads as "not asked" at every consumer.
+
 **EU identifiers count.** A Spanish-only check silently discards every intra-EU
 counterparty, which is precisely the Modelo 349 population -- the filing that
 exists to report them. Validation therefore routes through the repository's
@@ -241,16 +256,41 @@ def resolve_counterparty_identity(
         verified.append((candidate, token))
 
     if not verified:
+        # ABSENT is not UNVERIFIABLE, and the two are separated on whether any
+        # candidate was PRINTED AND REJECTED -- which is exactly what `findings`
+        # already records. Nothing rejected means the document simply carries no
+        # counterparty identifier: a factura simplificada may legitimately omit
+        # it, an ordinary domestic ticket names no customer at all, and raising
+        # an unresolved ROLE over a role nobody could have stated fires a blocker
+        # across a large correct population. An operator taught to clear it
+        # unread clears it on the one document where it is genuinely right.
+        #
+        # The envelope stays UNANCHORED either way, and that is the load-bearing
+        # half: withholding the finding says the question was NOT ASKED, never
+        # that the role is fine. A caller reading "no ROLE_UNRESOLVED" as a
+        # resolved counterparty would be reading an absence as a verdict; the
+        # resolution reports `resolved=None` and an unanchored envelope so no
+        # such reading is available.
+        if not findings:
+            return IdentityRoleResolution(
+                provenance=FieldProvenance(
+                    field=field,
+                    origin=origin,
+                    grounding=FieldGroundingOutcome.UNANCHORED,
+                    note=(
+                        "the document states no tax identifier for the counterparty; nothing was "
+                        "resolved because there was nothing to resolve"
+                        if candidates
+                        else "the document states no tax identifier"
+                    ),
+                ),
+            )
         return IdentityRoleResolution(
             provenance=FieldProvenance(
                 field=field,
                 origin=origin,
                 grounding=FieldGroundingOutcome.UNANCHORED,
-                note=(
-                    "no identifier on the document verified as a counterparty identity"
-                    if candidates
-                    else "the document states no tax identifier"
-                ),
+                note="no identifier on the document verified as a counterparty identity",
             ),
             findings=(
                 *findings,
@@ -258,11 +298,12 @@ def resolve_counterparty_identity(
                     kind=DraftDiscrepancyKind.ROLE_UNRESOLVED,
                     field=field,
                     detail=(
-                        "no verified identifier remained after excluding the filer's own identity"
-                        if own_excludable
-                        else (
-                            "no verified identifier remained, and the filer's own identifier was "
-                            "not available to exclude"
+                        "every identifier the document prints for the counterparty failed verification, "
+                        "so the true counterparty is invisible to a validating read"
+                        + (
+                            ", and the filer's own identifier was not available to exclude"
+                            if not own_excludable
+                            else ""
                         )
                     ),
                 ),

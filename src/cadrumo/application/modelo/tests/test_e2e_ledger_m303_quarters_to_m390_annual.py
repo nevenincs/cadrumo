@@ -61,7 +61,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
 from ....domain.invoices import InvoiceCatalogue
-from ....domain.iva import EUMemberState, InvoiceKind, IvaCategory
+from ....domain.iva import InvoiceKind, IvaCategory
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import (
     CalculationRevision,
@@ -219,7 +219,7 @@ def _iva_transaction(
     iva_rate: Decimal = _IVA_RATE,
     amount: Decimal | None = None,
     iva_category: IvaCategory | None = None,
-    counterparty_eu_member_state: EUMemberState | None = None,
+    counterparty_country: str | None = None,
     purchase_invoice_evidence_id: str | None = None,
 ) -> Transaction:
     booked = date(filing_year, _QUARTER_MONTH[period], 10)
@@ -255,8 +255,8 @@ def _iva_transaction(
     }
     if iva_category is not None:
         payload["iva_category"] = iva_category
-    if counterparty_eu_member_state is not None:
-        payload["counterparty_country"] = counterparty_eu_member_state.value.upper()
+    if counterparty_country is not None:
+        payload["counterparty_country"] = counterparty_country
     if purchase_invoice_evidence_id is not None:
         payload["purchase_invoice_evidence_id"] = purchase_invoice_evidence_id
     return Transaction.model_validate(payload)

@@ -86,14 +86,21 @@ def test_a_zero_budget_does_not_wait(tmp_path: Path) -> None:
     assert elapsed < 1.0
 
 
-def test_a_genuine_permission_problem_is_reported_not_raised(tmp_path: Path) -> None:
-    """A directory in the lockfile's place fails as an OSError, never silently.
+def test_an_unremovable_target_never_reports_a_clean_removal(tmp_path: Path) -> None:
+    """A directory standing where the lockfile belongs must not read as removed.
 
-    Only the sharing violation is absorbed; a structurally wrong target must
-    still reach the caller rather than being reported as a clean removal.
+    Windows reports this with the same ``ERROR_ACCESS_DENIED`` a contended
+    removal raises, so it is absorbed and reported as "not removed"; POSIX
+    raises. Both are honest. Returning ``True`` would not be, and is the one
+    outcome this pins shut on every platform.
     """
     lock = tmp_path / "not-a-file.lock"
     lock.mkdir()
 
-    with pytest.raises(OSError):
-        unlink_lockfile(lock, reason="test")
+    try:
+        removed = unlink_lockfile(lock, reason="test")
+    except OSError:
+        return
+
+    assert removed is False
+    assert lock.exists()

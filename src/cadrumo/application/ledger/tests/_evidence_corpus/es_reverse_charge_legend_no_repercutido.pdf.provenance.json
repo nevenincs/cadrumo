@@ -1,0 +1,8 @@
+{
+  "provenance": "synthetic_generated",
+  "kind": "es_reverse_charge",
+  "source": "aeat-test-generator",
+  "notes": "Spanish reverse-charge invoice: prints the art. 84.Uno.2 mention and charges no output IVA, which is the lawful presentation.",
+  "sha256": "762c8d5873e1a2e18972edccd98046ed06b2aa8118b740e0d2039da54e505145",
+  "bytes": 1850
+}
