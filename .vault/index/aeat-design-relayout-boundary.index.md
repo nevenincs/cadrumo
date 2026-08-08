@@ -6,7 +6,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:4105390261c44c82bdb00fa13825c2b6f022802be789239920902f3779f72283'
+body_hash: 'sha256:5ea925f0a4cd2af6d72af8e5461226ce30a6728826d53f758e962c8e89d44ad4'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -20,6 +20,7 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S07]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S08]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S09]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S10]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S65]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S68]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S69]]'
@@ -54,6 +55,7 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S07` - Re-key the per-sheet page-length inventory on the design file rather than the parsed year
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S08` - Re-key the slot-occupancy inventory on the design file rather than the parsed year
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S09` - Add the description-keyed companion check for unnumbered slot meaning flips
+- `2026-08-08-aeat-design-relayout-boundary-W01-P02-S10` - Prove the hardened gate by mutation from outside the repository
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S65` - Assert the reserved-to-real occupancy transition alongside the retirement direction
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S68` - Order the design inventories chronologically rather than by filename
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S69` - Reconcile the hardened gate's verdict against the re-derived boundary union
