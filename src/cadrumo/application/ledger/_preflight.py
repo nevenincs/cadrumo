@@ -71,8 +71,18 @@ class LedgerPreflightIssueReason(StrEnum):
     MISSING_IVA_AMOUNT = "missing_iva_amount"
     MISSING_IVA_RATE = "missing_iva_rate"
     MISSING_EUR_TAX_SUBSTRATE = "missing_eur_tax_substrate"
-    MISSING_COUNTERPARTY_EU_MEMBER_STATE = "missing_counterparty_eu_member_state"
-    DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION = "domestic_counterparty_on_intra_community_transaction"
+    # Ley 37/1992 art. 25 exempts an intra-community supply on the acquirer's VAT
+    # IDENTIFICATION in another Member State, not on where it is established, so
+    # these two name identification. An operator-facing reason has to name what
+    # actually determines the outcome: keyed on establishment it sent the
+    # operator to check the wrong field, and it moved money in BOTH directions --
+    # a Spanish-established acquirer holding a German VAT number, and a
+    # German-established acquirer purchasing under a Spanish NIF-IVA.
+    MISSING_COUNTERPARTY_IDENTIFICATION_STATE = "missing_counterparty_identification_state"
+    DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION = "domestic_identification_on_intra_community_transaction"
+    # Establishment, deliberately, and NOT identification: an export leaves the
+    # Union, so the question is where the counterparty IS, not who VAT-identifies
+    # it. The narrowing above is one concept, not a global substitution.
     EU_MEMBER_STATE_ON_EXPORT_TRANSACTION = "eu_member_state_on_export_transaction"
     MISSING_PROPORTIONALITY_REFERENCE = "missing_proportionality_reference"
     UNSUPPORTED_CURRENCY = "unsupported_currency"
@@ -527,11 +537,11 @@ def _preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> 
         IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE: (
             LedgerPreflightIssueReason.MISSING_EUR_TAX_SUBSTRATE
         ),
-        IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_EU_MEMBER_STATE: (
-            LedgerPreflightIssueReason.MISSING_COUNTERPARTY_EU_MEMBER_STATE
+        IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE: (
+            LedgerPreflightIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE
         ),
-        IvaLedgerAggregationIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION: (
-            LedgerPreflightIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION
+        IvaLedgerAggregationIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION: (
+            LedgerPreflightIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION
         ),
         IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION: (
             LedgerPreflightIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION

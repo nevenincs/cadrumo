@@ -205,7 +205,7 @@ def test_preflight_blocks_intracom_sale_with_domestic_counterparty_before_aggreg
 
     assert report.ready is False
     assert [issue.reason for issue in report.issues] == [
-        LedgerPreflightIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION,
+        LedgerPreflightIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION,
     ]
     assert not report.issues[0].detail.startswith("aggregation.")
 
@@ -232,7 +232,7 @@ def test_preflight_renders_intracom_domestic_counterparty_detail_in_hungarian() 
     clear_output_language_cache()
 
     assert [issue.reason for issue in report.issues] == [
-        LedgerPreflightIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION,
+        LedgerPreflightIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION,
     ]
     assert "Spanyol partner" in report.issues[0].detail
     assert not report.issues[0].detail.startswith("aggregation.")
