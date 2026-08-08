@@ -161,7 +161,7 @@ def _witness_guarderia_prorated_cap() -> tuple[object, object]:
     """Spend far above the prorated cap, so ``min`` must take the cap."""
     child = DescendantInfo(
         birth_date=date(2022, 5, 1),
-        meses_madre_trabajo=12,
+        meses_madre_trabajo=tuple(range(1, 13)),
         gastos_guarderia_mensuales=(),
         gastos_guarderia_euros=99_000,
     )
@@ -232,7 +232,7 @@ def _witness_amortizacion_remaining_cap() -> tuple[object, object]:
             finca,
             income,
             cumulative_through_prior_year=consumed,
-        ).amount
+        ).capped_amortization
 
     # Almost the whole cap consumed leaves less headroom than one year's gross accrual,
     # so the remaining-cap term wins; an unconsumed cap leaves the gross accrual intact.
@@ -245,7 +245,7 @@ def _witness_art_23_1_capped_subtotal() -> tuple[object, object]:
         FincaGasto(
             finca_id=1,
             period_year=2025,
-            category=ExpenseCategory.INTERESES_FINANCIACION,
+            category=ExpenseCategory.FINANCIACION_INTERESES,
             amount=Decimal("9000.00"),
         )
     ]
@@ -267,7 +267,7 @@ def _witness_art_23_1_carry_capacity() -> tuple[object, object]:
         FincaGasto(
             finca_id=1,
             period_year=2025,
-            category=ExpenseCategory.INTERESES_FINANCIACION,
+            category=ExpenseCategory.FINANCIACION_INTERESES,
             amount=Decimal("1000.00"),
         )
     ]
@@ -370,7 +370,9 @@ def test_every_discovered_cap_site_is_enrolled() -> None:
     enrolled = set(_REGULATORY_CAP_WITNESSES) | set(_NON_REGULATORY_EXEMPTIONS)
     unenrolled = sorted(key for key in discovered if key not in enrolled)
     if unenrolled:
-        listed = "\n  ".join(f"{path}::{function}  bound={sorted(discovered[(path, function)])}" for path, function in unenrolled)
+        listed = "\n  ".join(
+            f"{path}::{function}  bound={sorted(discovered[(path, function)])}" for path, function in unenrolled
+        )
         raise AssertionError(
             f"{len(unenrolled)} unenrolled min/max cap site(s):\n  {listed}\n\n"
             "If the bound is a regulatory cap, add it to _REGULATORY_CAP_WITNESSES with "
@@ -386,7 +388,9 @@ def test_no_enrolment_outlives_its_site() -> None:
     reader takes the entry as evidence the cap is still guarded.
     """
     discovered = set(_discovered_cap_sites())
-    stale = sorted(key for key in (set(_REGULATORY_CAP_WITNESSES) | set(_NON_REGULATORY_EXEMPTIONS)) if key not in discovered)
+    stale = sorted(
+        key for key in (set(_REGULATORY_CAP_WITNESSES) | set(_NON_REGULATORY_EXEMPTIONS)) if key not in discovered
+    )
     if stale:
         listed = "\n  ".join(f"{path}::{function}" for path, function in stale)
         raise AssertionError(
