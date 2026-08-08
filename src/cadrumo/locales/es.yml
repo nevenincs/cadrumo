@@ -2316,6 +2316,13 @@ cli:
           solo amplía el recorrido: un par ausente de ella no prueba que no se presentara
           nada.'
         list_help: Listar declaraciones presentadas sin descargar artefactos
+        pull_all_help: Descargar en una sola pasada el historial que AEAT tiene de
+          este contribuyente.
+        pull_all_limit_help: Limita cuántas declaraciones se capturan en esta pasada.
+        pull_all_pairs_refused: '{count} par(es) de modelo/ejercicio no se pudieron
+          leer y NO se han contado como vacíos: {pairs}. Vuelva a ejecutar la orden
+          para reintentarlo; una lectura rechazada no prueba que no se presentara
+          nada.'
         pull_help: Descarga datos de declaraciones presentadas del registro autenticado
           de AEAT.
         pull_modelo_help: Limita esta descarga a este modelo.
@@ -5097,7 +5104,11 @@ cli:
         ledger_view: Ver el detalle de una entrada del libro.
         live_filed_capture: Descargar declaraciones presentadas en vivo desde la AEAT.
         live_filed_capture_sources: Mostrar las fuentes disponibles para la descarga.
+        live_filed_discover: Mostrar qué historial recorrería una descarga completa,
+          sin capturar nada.
         live_filed_list: Listar declaraciones presentadas capturadas desde la AEAT.
+        live_filed_pull_all: Descargar el historial de AEAT y conciliar la cartera
+          de IVA y las notificaciones.
         modelo_audit_check: Comprueba las evidencias incluidas de una revisión de
           declaración.
         modelo_audit_export: Exporta la auditoría de evidencias de una revisión de
@@ -7421,6 +7432,25 @@ live:
     target_period_year_mismatch: El año objetivo no coincide con el ejercicio del
       periodo objetivo.
     year_range_invalid: El rango de ejercicios indicado no es válido.
+  filed:
+    pull_all:
+      denominator_note_profile: Medido frente a {expected} par(es) que los datos declarados
+        por el contribuyente esperan. Otros {offered_only} par(es) proceden solo de
+        la lista de opciones que ofrece AEAT y no sustentan ninguna afirmación de
+        cobertura.
+      denominator_note_register_only: 'Sin denominador específico del contribuyente:
+        los {offered_only} par(es) recorridos proceden de la lista de opciones que
+        ofrece AEAT, cuyo alcance para este NIF no está confirmado. Esta pasada no
+        mide nada.'
+      expected_but_not_found: 'Su perfil declarado espera una presentación en {count}
+        par(es) de modelo/ejercicio donde el registro de AEAT no devolvió ninguna:
+        {pairs}. Compruebe si llegaron a presentarse.'
+      found_more_than_expected: El registro de AEAT contiene {raw_count} presentaciones
+        del modelo {modelo} {period} {ejercicio}; se conservó el registro más reciente
+        ({expediente}) y {superseded} anterior(es) quedaron sustituidas.
+      recapture_divergence: 'Volver a capturar el modelo {modelo} {period} {ejercicio}
+        cambió {count} valor(es) de casilla observados anteriormente: {casillas}.
+        AEAT puede tener una declaración rectificada.'
 llm:
   evidence:
     consent:
@@ -69832,6 +69862,10 @@ modelo:
                 title: Modelo 848 comunicación del importe neto de la cifra de negocios
           field:
             label: Modelo 848 (orden-hac-85-2003), ejercicios 2003 y siguientes
+overview:
+  no_aeat_history: Este perfil no contiene ninguna prueba de presentación confirmada
+    por AEAT. Ejecute `aeat app live filed pull-all` para descargar el historial que
+    AEAT tiene de él.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 % (Art. 61 LIRPF)
