@@ -106,6 +106,26 @@ _INFERENCE_SURFACES: Final[tuple[tuple[str, str], ...]] = (
         "LocalTextLLMClassifier",
         "LocalTextLLMClassifier(spec=None)",
     ),
+    # The three constructors the convenience wrappers above build. Each is
+    # exported and carries the guard itself, so the derivation enrolls it and
+    # the completeness claim covers it. Driven with no arguments, which every
+    # one of them accepts: the guard is the first statement of ``__init__``, so
+    # a bare construction reaches it before any settings or model resolution
+    # could raise something else.
+    (
+        "LocalVisionDocumentTranscriber",
+        "LocalVisionDocumentTranscriber()",
+    ),
+    (
+        "TextInvoiceFieldExtractor",
+        "TextInvoiceFieldExtractor()",
+    ),
+    # The tabular lane's split point: a known fixed-layout file never reaches
+    # this call, an unknown header vocabulary does.
+    (
+        "SemanticColumnRoleMapper",
+        "SemanticColumnRoleMapper()",
+    ),
 )
 
 
@@ -327,8 +347,11 @@ from cadrumo.application.ledger import DocumentTranscription, TranscriberIdentit
 from cadrumo.core import FieldOrigin, ImageMediaType, MissingOptionalExtraError
 from cadrumo.llm import (
     LocalTextLLMClassifier,
+    LocalVisionDocumentTranscriber,
     LocalVisionLLMClassifier,
     MultimodalImageInput,
+    SemanticColumnRoleMapper,
+    TextInvoiceFieldExtractor,
     extract_invoice_fields_from_text,
     rasterise_pdf_pages_to_base64_png,
     transcribe_document_images,
@@ -528,8 +551,11 @@ from cadrumo.application.ledger import DocumentTranscription, TranscriberIdentit
 from cadrumo.core import FieldOrigin, ImageMediaType, MissingOptionalExtraError
 from cadrumo.llm import (
     LocalTextLLMClassifier,
+    LocalVisionDocumentTranscriber,
     LocalVisionLLMClassifier,
     MultimodalImageInput,
+    SemanticColumnRoleMapper,
+    TextInvoiceFieldExtractor,
     extract_invoice_fields_from_text,
     rasterise_pdf_pages_to_base64_png,
     transcribe_document_images,

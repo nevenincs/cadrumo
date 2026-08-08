@@ -1416,6 +1416,7 @@ def _declared_category_base_only_observation(
     line: InvoiceLine,
     devengo_date: date,
     recargo_amount: Decimal,
+    category: IvaCategory,
     flow_direction: IvaFlowDirection,
 ) -> IvaLedgerObservation:
     """Project a cuota-less line under the category the INVOICE declares.
@@ -1441,6 +1442,10 @@ def _declared_category_base_only_observation(
         line: The line being projected.
         devengo_date: The date the observation is declared on.
         recargo_amount: Recargo attributable to this line, already resolved.
+        category: The invoice's own declared category, already read and
+            confirmed non-``None`` by the caller -- it is what keyed the
+            ``_DECLARED_CATEGORY_BASE_ONLY_FLOWS`` lookup that selected
+            *flow_direction*.
         flow_direction: The flow this category implies, from the table above.
 
     Returns:
@@ -1461,7 +1466,7 @@ def _declared_category_base_only_observation(
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=devengo_date,
-        category=invoice.iva_category,
+        category=category,
         rate_kind=measured.rate_kind,
         applied_rate=measured.applied_rate,
         flow_direction=flow_direction,
@@ -1525,14 +1530,15 @@ def _invoice_line_iva_observation(
             recargo_amount=recargo_amount,
         )
     category = invoice.iva_category
-    declared_flow = _DECLARED_CATEGORY_BASE_ONLY_FLOWS.get(category)
-    if declared_flow is not None and invoice.kind is InvoiceKind.ISSUED:
+    declared_flow = _DECLARED_CATEGORY_BASE_ONLY_FLOWS.get(category) if category is not None else None
+    if category is not None and declared_flow is not None and invoice.kind is InvoiceKind.ISSUED:
         return _declared_category_base_only_observation(
             ledger_id=ledger_id,
             invoice=invoice,
             line=line,
             devengo_date=devengo_date,
             recargo_amount=recargo_amount,
+            category=category,
             flow_direction=declared_flow,
         )
     if category is not None and category not in _BASE_ONLY_ROUTED_CATEGORIES:
@@ -1566,9 +1572,14 @@ def _invoice_line_iva_observation(
             iva_amount=line.iva_amount,
             recargo_amount=recargo_amount,
         )
-    if category not in _BASE_ONLY_ROUTED_CATEGORIES:
+    if category is None or category not in _BASE_ONLY_ROUTED_CATEGORIES:
         # No declared treatment at all: the rate slot is the only signal there
         # is, and the standard-case classification is the right reading of it.
+        # ``category is None`` is folded into this membership test rather than
+        # left implicit -- ``None`` is never a member of
+        # ``_BASE_ONLY_ROUTED_CATEGORIES`` so the outcome is unchanged, but the
+        # explicit check is what lets every use of ``category`` from here on
+        # narrow to non-``None``.
         return invoice_line_to_iva_observation(
             invoice_id=ledger_id,
             issued_at=devengo_date,

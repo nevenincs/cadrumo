@@ -437,14 +437,20 @@ _CENSO_DIVERGENCIA_LEAF_LABEL_KEYS: Final[Mapping[str, str]] = {
 }
 
 
-def _resolve_schema_field_label(schema: ProfileSchemaDefinition, path: str) -> str | None:
+def resolve_profile_field_label_for_path(schema: ProfileSchemaDefinition, path: str) -> str | None:
     """Return the operator-facing label the schema declares for ``path``, or ``None``.
 
-    Scans every non-repeatable section's own (undexed) fields for one whose
+    Scans every non-repeatable section's own (unindexed) fields for one whose
     ``section.field`` dotted address matches ``path``. A repeatable section's
     row fields and a namespace field's own indexed leaves are deliberately
     not resolved here: a cotejo divergence axis names a plain schema path
     (``contact.fiscal_address``), never an indexed instance.
+
+    Public so both profile-facts surfaces reading a censal cotejo divergence
+    — the manager's :func:`build_profile_overview` and the read-only status
+    page's fact walk — resolve a divergence axis's raw schema path to the
+    SAME operator-facing label, rather than each surface answering "which
+    field is this" on its own and risking disagreement.
     """
     for section in schema.sections:
         if section.repeatable:
@@ -513,7 +519,7 @@ def _namespace_field_views(
                 # disagrees on (e.g. "contact.fiscal_address"), which no
                 # operator reads. Render the field's own label instead, so
                 # this row answers "which field" rather than "which path".
-                resolved = _resolve_schema_field_label(schema, view.value)
+                resolved = resolve_profile_field_label_for_path(schema, view.value)
                 if resolved is not None:
                     view = view.model_copy(update={"value": resolved})
             views.append(view)
@@ -644,4 +650,5 @@ __all__ = [
     "build_profile_overview",
     "mask_profile_field",
     "profile_field_choices",
+    "resolve_profile_field_label_for_path",
 ]

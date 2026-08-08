@@ -305,6 +305,7 @@ adapters:
         failed.
       session_expired_nav_failed: The AEAT declarations register did not load; your
         session has likely expired. Run 'aeat config auth test' and retry.
+      submitted_file_layout_parse_failed: 'The submitted file could not be read through the modelo''s official record layout, so no box value was recovered from it. The layout and the filed file disagree about which records the file carries.'
 aggregation:
   grouping:
     errors:
@@ -6731,6 +6732,7 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    refused_llm_busy: 'This machine is already running its configured maximum of on-host language-model requests.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'

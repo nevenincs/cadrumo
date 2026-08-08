@@ -520,6 +520,19 @@ applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/dr390e2024.xlsx"
 review_status = "reviewed"
 
+[sources."aeat-dr-390-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_390/files/14-390-ejercicio-2022-actualizado-04-01-23-491-kb-xlsx.xlsx"
+sha256 = "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe"
+bytes = 502078
+retrieved_at = 2026-05-03
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_22/dr390e2022.xlsx"
+review_status = "reviewed"
+
 [sources."aeat-modelo-390-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

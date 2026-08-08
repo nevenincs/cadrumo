@@ -324,6 +324,10 @@ adapters:
       session_expired_nav_failed: Az AEAT nyilatkozatnyilvántartó nem töltött be;
         a munkamenet valószínűleg lejárt. Futtassa a 'aeat config auth test' parancsot
         és próbálja újra.
+      submitted_file_layout_parse_failed: A benyújtott fájlt nem sikerült beolvasni
+        a modell hivatalos rekordszerkezete szerint, így egyetlen rovatérték sem került
+        ki belőle. A szerkezet és a benyújtott fájl nem ért egyet abban, hogy a fájl
+        mely rekordokat tartalmazza.
 aggregation:
   grouping:
     errors:
@@ -1914,13 +1918,14 @@ cli:
           {accepted}'
       counterparty:
         actor_help: A kijelentést tevő kezelő azonosítója, amelyet rögzítünk.
-        confirm_help: Erősítse meg, mely területen letelepedett az ügyfél.
+        confirm_help: Erősítse meg, hol letelepedett az ügyfél, és melyik tagállam
+          adja áfa-azonosítóját.
         country_code_help: Az ország, amely alatt az azonosítót megadták, ha nem spanyol.
         evidenced_scope_help: Az a terület, ahová a kezében lévő dokumentum ezt a
           felet helyezi. Adja meg, hogy megkérdezze, mit válaszol a létra erre a dokumentumra;
           csak így láthatja az eltérést attól, amit korábban megerősített, mielőtt
           egy megerősítés elutasítaná.
-        group_help: Erősítse meg, hol letelepedett az ügyfél – egyszer, minden későbbi
+        group_help: Erősítse meg, mit tudunk az ügyfélről – egyszer, minden későbbi
           bizonylathoz.
         identification_state_help: 'Az a tagállam, amely a partnert ÁFA szempontjából
           azonosítja. Ez más adat, mint a --scope: a 25. cikk ez alapján mentesít,
@@ -4758,7 +4763,7 @@ cli:
         not_confirmed: A(z) '{identifier}' esetében nincs megerősített letelepedés,
           ezért ez a fokozat semmit nem dönt el, és egy nem egyértelmű bizonylat felveti
           a kérdést.
-        nothing_to_withdraw: A(z) '{identifier}' esetében nem volt megerősített letelepedés,
+        nothing_to_withdraw: A(z) '{identifier}' esetében semmi nem volt megerősítve,
           ezért semmi nem került visszavonásra, és a tároló már a kért állapotban
           van.
     doclink:
@@ -7073,6 +7078,7 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
+    refused_llm_busy: 'Ez a gép már a beállított maximális számú helyi nyelvi modell kérést futtatja.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'

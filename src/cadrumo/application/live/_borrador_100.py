@@ -25,6 +25,7 @@ from typing import override
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage import (
     LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
 )
@@ -38,7 +39,6 @@ from ...core.identity import BucketId, SnapshotId
 from ...domain.calculations.registry import BindingId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
-    SecureSnapshotRepository,
     SnapshotLifecycleState,
     SnapshotNotFoundError,
     SnapshotService,
@@ -163,6 +163,7 @@ class Borrador100SnapshotRepository:
                 suggestion="provide a longer snapshot id",
             ),
             domain_label="borrador",
+            input_error_cls=LiveApplicationInputError,
             objects=objects,
         )
 

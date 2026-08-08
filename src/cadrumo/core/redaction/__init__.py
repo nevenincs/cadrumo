@@ -117,11 +117,62 @@ term silently missing from one composing site can leak a NIF the other site
 already knew to redact.
 """
 
+# Separators a document prints INSIDE a tax identity. Admitted between body
+# characters and never at an edge, so a run is joined only where real characters
+# stand on both sides of the separator and the scan can never consume a leading
+# or trailing hyphen belonging to the surrounding text.
+#
+# **This widens the SCAN, not the RULE.** Both admission gates below already
+# normalise the span they are handed -- ``validate_identity`` documents that it
+# tolerates dashes and spaces, and the NIF-IVA arm calls ``normalise_nif_iva``
+# before asking the per-State table -- so the separator-bearing spelling was
+# never rejected by a rule. It simply never reached one, because a scan anchored
+# on unbroken word characters cannot produce a span containing a hyphen. The
+# tolerant half and the intolerant half were on opposite sides of the same
+# funnel.
+#
+# The alternative shape, matching a wider bare pattern, was rejected on the
+# evidence: ``SE-2026-000412`` survives today precisely BECAUSE the hyphen
+# breaks the token, so a pattern that simply admits more characters starts
+# eating ordinary hyphenated operator output. Normalising and then asking the
+# existing gate keeps the shape as weak evidence and the checksum or per-State
+# structure as the decision, which is the arrangement this module already
+# documents for the CIF and IBAN arms.
+#
+# **Punctuation only, and the exclusion of the space is measured rather than
+# cautious.** A space is what separates TOKENS in prose, so admitting it lets the
+# scan join a word to the number beside it. Running the four shipped locale
+# catalogues through the funnel with the space admitted produced two real
+# false positives on operator text: a Hungarian date range ``A 2020-2024``
+# normalised to ``A20202024``, which is a checksum-VALID CIF and was therefore
+# admitted by the gate, and ``6 000 000-t`` matched the personal-identity arm.
+# Neither survives once the space is out, because no punctuation joins those
+# tokens.
+_IDENTITY_SEPARATOR = r"[.\-]?"
+
+# The prefixed arm alone admits the space, and only because two things constrain
+# it that constrain no other arm: a match must begin with two letters naming a
+# real Member State, and the per-State structural table then has to accept the
+# whole normalised number. ``SE 556677889901`` -- the printed rendering this row
+# exists for -- is caught here; the same string cannot be caught by the arms
+# above, since its body carries no leading letter for the CIF shape and no
+# trailing one for the personal shape.
+_PREFIXED_IDENTITY_SEPARATOR = r"[ .\-]?"
+
 # NIF / NIE — Spanish personal identity numbers. Eight digits + check letter
 # with optional leading X / Y / Z for foreigners. Matched on shape alone: a
 # digit-led run this long rarely collides with ordinary text, so the rule errs
 # wide and hashes a lookalike rather than risk missing a mistyped identity.
-_NIF_PATTERN = r"\b[XYZxyz]?\d{7,8}[A-Za-z]\b"
+# The separator after the optional X/Y/Z sits INSIDE the optional group, and
+# that placement is load-bearing rather than stylistic. Written outside it, the
+# group can match empty and the separator then stands at the START of the
+# pattern, so the scan consumes the space in front of the number: "for example
+# 12345678Z" was redacted to "for examplesha256:..." and the operator's sentence
+# lost a word boundary. Found by running the shipped locale catalogues through
+# the funnel, not by reading the regex.
+_NIF_PATTERN = (
+    rf"\b(?:[XYZxyz]{_IDENTITY_SEPARATOR})?\d(?:{_IDENTITY_SEPARATOR}\d){{6,7}}{_IDENTITY_SEPARATOR}[A-Za-z]\b"
+)
 
 # CIF — the tax identity of a legal entity: a kind letter (A-H, J, N, P-S,
 # U, V, W), seven digits, and a check character that is a digit or a letter
@@ -131,7 +182,10 @@ _NIF_PATTERN = r"\b[XYZxyz]?\d{7,8}[A-Za-z]\b"
 # is paired with ``SHA256_PREFIX_IF_IDENTITY``: the check character decides.
 # Widening the personal pattern's leading class instead would have admitted
 # every such reference.
-_CIF_PATTERN = r"\b[A-HJNPQRSUVWa-hjnpqrsuvw]\d{7}[0-9A-Ja-j]\b"
+_CIF_PATTERN = (
+    rf"\b[A-HJNPQRSUVWa-hjnpqrsuvw]{_IDENTITY_SEPARATOR}"
+    rf"\d(?:{_IDENTITY_SEPARATOR}\d){{6}}{_IDENTITY_SEPARATOR}[0-9A-Ja-j]\b"
+)
 
 # NIF-IVA — the PREFIXED form of a tax identity, which the two rules above
 # cannot see. Both anchor on `\b`, and a country prefix is a word character, so
@@ -149,7 +203,10 @@ _CIF_PATTERN = r"\b[A-HJNPQRSUVWa-hjnpqrsuvw]\d{7}[0-9A-Ja-j]\b"
 # collides with hashes, opaque ids and document references, so the shape cannot
 # be the evidence. `SHA256_PREFIX_IF_NIF_IVA` decides on the per-State
 # structure, and a prefix naming no State admits nothing at all.
-_NIF_IVA_PATTERN = r"\b[A-Za-z]{2}[0-9A-Za-z]{2,13}\b"
+_NIF_IVA_PATTERN = (
+    rf"\b[A-Za-z]{_PREFIXED_IDENTITY_SEPARATOR}[A-Za-z]{_PREFIXED_IDENTITY_SEPARATOR}"
+    rf"[0-9A-Za-z](?:{_PREFIXED_IDENTITY_SEPARATOR}[0-9A-Za-z]){{1,12}}\b"
+)
 
 # IBAN — a bank account number is sensitive financial data, so it is hashed
 # out of operator-facing output by operator decision. That decision is BROADER

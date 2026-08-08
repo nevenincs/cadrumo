@@ -1,0 +1,247 @@
+"""A submitted fichero the export layout cannot read is refused, never guessed.
+
+This projection used to absorb a layout parse failure for Modelo 303 and fall
+through to a positional page-03 reader: five result casillas lifted from
+hardcoded byte offsets, returned with the same shape and the same confidence as
+a layout read. Nothing in the result said which path produced it.
+
+That silence hid a real defect. The layout declared the refund-only DID record
+required while the exporter writes it only on a devolucion, so for the
+compensacion, ingreso and negativa dispositions NO field of a real fichero
+parsed at all -- and every casilla an operator saw was a positional guess. The
+record is now declared optional on both revisions and all four dispositions
+parse, which makes the absorbing branch more dangerous rather than less: its
+trigger is now rare, so the next time it fires it would be masking a genuine
+layout failure on a path that still produces plausible numbers.
+
+The refusal is therefore the behaviour under test, and the positive control
+below is what separates "refuses on failure" from "refuses always".
+
+See Also:
+    :func:`~adapters.outbound.aeat.sede.observed_casillas_from_submitted_file`
+        The projection whose failure mode these tests pin.
+"""
+
+from __future__ import annotations
+
+import datetime as dt
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from ......core import Modelo, Period
+from ......core.errors import get_error_suggestion
+from ......domain.calculations.registry import bundled_authority, validated_casilla_id
+from .._declarations_observations import _observed_casillas_from_submitted_file
+from .._declarations_schema import Declaracion
+from .._errors import SedeParseError
+from .._schema import FiledDeclaracionArtefact
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
+
+# The two revisions AEAT's published designs bind, exercised through the filing
+# year that selects each: a change that only works on the current revision is a
+# change that silently stops reading the older filings the carry depends on.
+_YEARS_BY_REVISION = {"2009-y-siguientes": 2022, "2023-y-siguientes": 2025}
+_RESULTADO_FINAL = validated_casilla_id("71", surface="layout refusal test")
+
+
+def _snapshot(filing_year: int):
+    return bundled_authority().snapshot(modelo_id=Modelo.M303.value, filing_year=filing_year, period="1T")
+
+
+def _exported_draft_and_payload(tmp_path: Path, *, filing_year: int, declaration_type: str):
+    """Produce a real M303 fichero plus the draft it was written from.
+
+    Returned together deliberately: the draft's own casilla values are the
+    authority the read-back is compared against, which makes this a
+    writer-to-reader roundtrip over the layout rather than a claim about what
+    the figures ought to be.
+    """
+    from ......application.filing import (
+        ModeloDraftStatus,
+        ModeloOperatorProfile,
+        build_draft,
+        build_runtime_schema_provider,
+        export_draft,
+    )
+
+    period = Period.from_year_and_code(filing_year, "1T")
+    provider = build_runtime_schema_provider(filing_year=filing_year, period=period, modelos=("303",))
+    draft = build_draft(
+        modelo="303",
+        period=period,
+        profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Layout refusal probe"),
+        inputs={
+            validated_casilla_id("07", surface="probe"): Decimal("10000.00"),
+            validated_casilla_id("iva.repercutido.general", surface="probe"): Decimal("2100.00"),
+            "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+        },
+        schema_provider=provider,
+    )
+    draft = draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
+    output = tmp_path / f"m303-{filing_year}-{declaration_type}.txt"
+    export_draft(
+        draft,
+        output_path=output,
+        headers={
+            "declaration_type": declaration_type,
+            "surnames": "GARCIA LOPEZ",
+            "full_name": "GARCIA LOPEZ JUAN",
+            "program_version": "A001",
+            "presenter_nif": "12345678Z",
+            "redeme": "N",
+        },
+        schema_provider=provider,
+    )
+    return draft, output.read_bytes()
+
+
+def _declaration(filing_year: int) -> Declaracion:
+    return Declaracion(
+        modelo="303",
+        ejercicio=filing_year,
+        period=Period.from_year_and_code(filing_year, "1T"),
+        expediente_id=f"{filing_year}303000000001",
+        estado="ALTA",
+        presented_at=dt.datetime(filing_year, 4, 10, 9, 0, tzinfo=dt.UTC),
+    )
+
+
+def _artefact(payload: bytes) -> FiledDeclaracionArtefact:
+    return FiledDeclaracionArtefact(
+        kind="submitted_file",
+        source_url="https://www6.aeat.es/probe",  # type: ignore[arg-type]
+        content_type="text/plain",
+        byte_count=len(payload),
+        sha256="0" * 64,
+        captured_at=dt.datetime(2026, 1, 1, tzinfo=dt.UTC),
+    )
+
+
+def _project(payload: bytes, *, filing_year: int):
+    return _observed_casillas_from_submitted_file(
+        snapshot=_snapshot(filing_year),
+        declaration=_declaration(filing_year),
+        body=payload,
+        artefact=_artefact(payload),
+    )
+
+
+@pytest.mark.parametrize(("revision_id", "filing_year"), sorted(_YEARS_BY_REVISION.items()))
+@pytest.mark.parametrize("declaration_type", ["D", "C", "I", "N"])
+def test_a_real_fichero_is_read_through_the_layout_on_every_disposition(
+    tmp_path: Path,
+    revision_id: str,
+    filing_year: int,
+    declaration_type: str,
+) -> None:
+    """The positive control: a parseable fichero still yields its fields.
+
+    Without this, "refuses on a layout failure" is indistinguishable from
+    "refuses always", and the deleted fallback would have been replaced by a
+    surface that reads nothing at all.
+
+    The locator assertion is the discriminating one. The positional fallback
+    also SUCCEEDED, so a value arriving proves nothing about which path
+    produced it -- but a locator naming the layout record and field can only
+    come from the layout parse, and the fallback's ``record:T30303:pos:``
+    locator can only come from the byte-offset guess.
+    """
+    draft, payload = _exported_draft_and_payload(
+        tmp_path,
+        filing_year=filing_year,
+        declaration_type=declaration_type,
+    )
+    assert _snapshot(filing_year).revision.id == revision_id, "the filing year no longer selects this revision"
+
+    observed = _project(payload, filing_year=filing_year)
+
+    assert observed, "the projection returned nothing, so the layout read the payload as empty"
+    assert not any(casilla.source_locator.startswith("record:T30303:pos:") for casilla in observed), (
+        "a positional byte-offset locator survived, so a guessed value reached the observation set"
+    )
+    assert all(casilla.source_locator.startswith("modelo-303-fichero-boe:") for casilla in observed), (
+        f"an observation carries a non-layout locator: {sorted({c.source_locator for c in observed})[:3]}"
+    )
+    # Writer-to-reader roundtrip: the draft that produced the bytes is the
+    # authority for what the bytes say, so this pins the layout read without
+    # asserting any figure the engine also computed.
+    observed_by_id = {casilla.casilla_id: casilla.value for casilla in observed}
+    assert _RESULTADO_FINAL in observed_by_id, "the result casilla did not survive the read-back"
+    drafted = draft.values[_RESULTADO_FINAL]
+    assert Decimal(observed_by_id[_RESULTADO_FINAL]) == Decimal(str(drafted.value))
+
+
+@pytest.mark.parametrize(("revision_id", "filing_year"), sorted(_YEARS_BY_REVISION.items()))
+def test_a_payload_the_layout_cannot_read_is_refused_rather_than_guessed(
+    tmp_path: Path,
+    revision_id: str,
+    filing_year: int,
+) -> None:
+    """A layout parse failure surfaces as a refusal naming what failed.
+
+    Truncation is the same failure class the DID defect produced -- the parser
+    runs out of payload before a record it was told to expect -- so this
+    reproduces the condition that used to degrade silently, on a payload that
+    is otherwise a genuine exporter product.
+    """
+    _, payload = _exported_draft_and_payload(tmp_path, filing_year=filing_year, declaration_type="C")
+    truncated = payload[: len(payload) // 2]
+
+    with pytest.raises(SedeParseError) as caught:
+        _project(truncated, filing_year=filing_year)
+
+    error = caught.value
+    context = error.context or {}
+    assert context["operation"] == "submitted_file_layout_parse"
+    assert context["modelo"] == Modelo.M303
+    assert context["revision"] == revision_id
+    assert context["period"] == "1T"
+    # The reason is the parser's own, and it identifies the export record the
+    # read stopped on. A refusal that says only "parse failed" hands the next
+    # reader nothing, which is the other shape of masking.
+    reason = str(context["reason"])
+    assert "export record" in reason, f"the refusal does not name the record it failed on: {reason!r}"
+    assert reason in str(error), "the message drops the reason the context carries"
+
+
+@pytest.mark.parametrize(("revision_id", "filing_year"), sorted(_YEARS_BY_REVISION.items()))
+def test_the_refusal_carries_an_actionable_next_step(
+    tmp_path: Path,
+    revision_id: str,
+    filing_year: int,
+) -> None:
+    """The refusal resolves to a suggestion rather than to ``None``.
+
+    A bare exception on an operator-reachable path is a different kind of
+    masking: the operator learns that something failed and nothing about what
+    to do, so the failure gets worked around instead of fixed.
+    """
+    del revision_id
+    _, payload = _exported_draft_and_payload(tmp_path, filing_year=filing_year, declaration_type="C")
+
+    with pytest.raises(SedeParseError) as caught:
+        _project(payload[: len(payload) // 2], filing_year=filing_year)
+
+    suggestion = get_error_suggestion(caught.value)
+    assert suggestion, "the refusal resolves to no next step at all"
+    assert "optional" in suggestion, f"the suggestion does not point at the fix: {suggestion!r}"
+
+
+def test_the_projection_holds_no_modelo_303_positional_reader() -> None:
+    """Anchors the removal itself.
+
+    The absorbing branch and its offset table are gone rather than disabled, so
+    a later change cannot re-enable a degradation path by flipping a condition.
+    If a positional reader is reintroduced, this fails at the moment it lands
+    rather than the moment it silently fires.
+    """
+    from .. import _declarations_observations as module
+
+    source = Path(module.__file__).read_text(encoding="utf-8")
+
+    assert "T30303" not in source, "a Modelo 303 page-03 offset reader is back in the projection module"
+    assert not hasattr(module, "_observed_modelo_303_casillas_from_submitted_file")
+    assert not hasattr(module, "_is_modelo_303_page_03_fallback")

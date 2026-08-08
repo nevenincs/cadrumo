@@ -5,10 +5,9 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from types import MappingProxyType
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG, MetodoValoracion, TipoOperacionVinculada
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
@@ -94,7 +93,14 @@ class RelatedPartyOperationObservation(BaseModel):
     source_id: str = Field(min_length=1, max_length=128)
     counterparty_tax_id: str = Field(min_length=1, max_length=64)
     counterparty_legal_name: str = Field(default="", max_length=200)
-    country_code: str = Field(default="ES", min_length=2, max_length=2)
+    # Required, and deliberately not defaulted to Spain. Modelo 232 declares
+    # operations with países o territorios calificados como paraísos fiscales
+    # alongside operaciones vinculadas, so the country is the axis the
+    # declaration exists to surface -- a default marks a tax-haven counterparty
+    # as domestic on exactly that axis. The operator-supplied row carrying the
+    # same operation is required for the same reason; this is the registry-side
+    # representation of it, and the two must agree.
+    country_code: str = Field(min_length=2, max_length=2)
     transaction_date: date
     operation_kind_code: TipoOperacionVinculada
     transfer_pricing_method_code: MetodoValoracion = MetodoValoracion.NO_DECLARADO

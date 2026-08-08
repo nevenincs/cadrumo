@@ -93,6 +93,7 @@ from ._consent import (
     mint_evidence_consent_token,
 )
 from ._errors import (
+    LLMBusyError,
     LLMCacheError,
     LLMConfigError,
     LLMConsentError,
@@ -131,6 +132,7 @@ __all__ = [
     "EvidenceConsentToken",
     "ExtractionPayload",
     "ExtractionProducer",
+    "LLMBusyError",
     "LLMCacheError",
     "LLMClassificationSuggestion",
     "LLMClient",

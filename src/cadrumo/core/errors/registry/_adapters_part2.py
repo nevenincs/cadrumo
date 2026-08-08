@@ -184,6 +184,20 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.llm._errors.LLMBusyError",
+        ErrorCode(
+            code="REFUSED_LLM_BUSY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_llm_busy",
+            default_suggestion=None,
+            # Not retryable by the transport: occupancy does not decay on a
+            # timer, it decays when the running read finishes, and an automatic
+            # retry would spin against a full arena inside its own budget.
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.llm._errors.LLMConsentError",
         ErrorCode(
             code="REFUSED_LLM_CONSENT",

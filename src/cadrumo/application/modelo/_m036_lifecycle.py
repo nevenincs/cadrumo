@@ -7,7 +7,7 @@ person, then records that fact locally through ``aeat app modelo m036
 that surface: it persists encrypted
 :data:`~cadrumo.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE` rows,
 emits the matching ``modelo.036.declaration.*`` bucket event, and exposes the
-same :class:`~cadrumo.application.live.SecureSnapshotRepository` path for list/view
+same :class:`~cadrumo.adapters.persistence.profile.snapshots.SecureSnapshotRepository` path for list/view
 read-back.
 
 The closed event-kind axis comes from
@@ -49,7 +49,7 @@ from ...domain.buckets import (
 from ...domain.calculations.registry import CensoModeloEventKind
 
 if TYPE_CHECKING:
-    from ..live import SecureSnapshotRepository
+    from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 
 
 def derive_m036_declaration_id(
@@ -126,7 +126,7 @@ class M036DeclarationResult(BaseModel):
     re-derivation) read these fields to decide what to recompute.
 
     The record is the payload model for
-    :class:`~cadrumo.application.live.SecureSnapshotRepository` rows stored under
+    :class:`~cadrumo.adapters.persistence.profile.snapshots.SecureSnapshotRepository` rows stored under
     :data:`~cadrumo.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE`.
     """
 
@@ -194,11 +194,12 @@ def _m036_declaration_repository(bucket_id: BucketId) -> SecureSnapshotRepositor
     :data:`LIVE_M036_DECLARATION_NAMESPACE` rows keyed by
     ``m036-declaration:<bucket_id>:<declaration_id>``.
     """
-    # Local import avoids the import cycle between this module (in
-    # application.modelo) and SecureSnapshotRepository (in application.live,
-    # which depends transitively on application.modelo for the work-unit
-    # aggregations).
-    from ..live import SecureSnapshotRepository
+    # The repository class itself is adapter-side and imports nothing from
+    # application, so it needs no deferral. The error class still does: it is
+    # owned by application.live, which depends transitively on this package for
+    # the work-unit aggregations.
+    from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
+    from ..live import LiveApplicationInputError
 
     return SecureSnapshotRepository(
         bucket_id=bucket_id,
@@ -208,6 +209,7 @@ def _m036_declaration_repository(bucket_id: BucketId) -> SecureSnapshotRepositor
         not_found_factory=_m036_declaration_not_found,
         ambiguous_prefix_factory=_m036_declaration_ambiguous_prefix,
         domain_label="m036_declaration",
+        input_error_cls=LiveApplicationInputError,
     )
 
 
@@ -242,7 +244,7 @@ def read_m036_declaration(declaration_id: str, *, bucket_id: BucketId) -> M036De
 
     See Also:
         :func:`list_m036_declarations`
-        :class:`~cadrumo.application.live.SecureSnapshotRepository`
+        :class:`~cadrumo.adapters.persistence.profile.snapshots.SecureSnapshotRepository`
     """
     return _m036_declaration_repository(bucket_id).resolve(declaration_id)
 

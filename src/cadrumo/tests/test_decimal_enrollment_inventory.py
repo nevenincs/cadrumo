@@ -136,7 +136,7 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "Reads a persisted casilla_values entry the calculate boundary already validated through the canonical grammar."
     ),
     # --- adapters + core, admitted to scope when rule 3 moved from a layer
-    # allowlist to a call-site scope. All five adapter entries read
+    # allowlist to a call-site scope. Every adapter entry below reads
     # machine-produced text, which is the extraction posture, not the strict one.
     ("adapters/inbound/financial/providers/_base.py", "parse_amount_value"): (
         "Bank-statement import: the amount comes from a downloaded provider file, not from an operator keystroke."
@@ -144,9 +144,6 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
     ("adapters/inbound/pdf/_label_regex.py", "parse_spanish_decimal"): (
         "PDF label scrape of a printed document; the extraction posture, and "
         "the function is named for the convention it reads."
-    ),
-    ("adapters/outbound/aeat/sede/_declarations_observations.py", "_parse_modelo_303_money"): (
-        "AEAT sede-rendered figure, machine-produced by the authority."
     ),
     ("adapters/outbound/aeat/sede/_iva_compensation_wallet_parsing.py", "_parse_spanish_decimal"): (
         "Same AEAT sede source as its sibling above."

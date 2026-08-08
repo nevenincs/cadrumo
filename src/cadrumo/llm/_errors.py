@@ -50,6 +50,23 @@ class LLMConfigError(LLMError):
     """Raised when :class:`~adapters.outbound.llm.LLMClient` configuration is invalid."""
 
 
+class LLMBusyError(LLMError):
+    """Raised when an on-host inference slot is not free and the request is refused.
+
+    The admission half of the local-resource boundary, and deliberately NOT a
+    subclass of :exc:`~adapters.outbound.llm.LLMProviderError`: nothing failed,
+    and no request reached a runtime. The machine is already running as much
+    inference as it was configured to run at once, and a second concurrent load
+    on consumer hardware is an out-of-memory kill that takes the FIRST read down
+    with it.
+
+    Distinct from a contention refusal, which reports measured headroom against
+    one model's requirement. This one reports occupancy: the arena is full
+    regardless of what the figures say, because two loads that each fit
+    individually still do not fit together.
+    """
+
+
 class LLMConsentError(LLMError):
     """Raised when an off-host read of taxpayer evidence is refused.
 

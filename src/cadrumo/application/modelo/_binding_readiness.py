@@ -30,6 +30,7 @@ from datetime import date
 from ...core import Period
 from ...core.logging import get_logger
 from ...domain.calculations.registry import (
+    AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
     RegistrySnapshotError,
     RegistryValidationError,
@@ -162,6 +163,28 @@ def _annual_period_for_year(
     try:
         revision = select_revision_for_year(definition, filing_year=filing_year, on=as_of)
     except NoRevisionForPeriodError:
+        return None
+    except AmbiguousRevisionSelectionError as exc:
+        # A filing year carrying a mid-year AEAT design boundary is covered by more
+        # than one revision, so the year-only selector refuses rather than picking.
+        # This is a read-only discovery helper whose contract is already "None means
+        # undetermined", so it answers the same way it does for a missing revision --
+        # but it must CATCH the refusal, because propagating it turns a discovery
+        # question into an operator-facing error from a surface that only reports
+        # readiness. That is not hypothetical: this helper caught only the
+        # missing-revision case, so the first split year would have raised here.
+        #
+        # The remedy is NOT restated locally. It rides on the raiser, so the log
+        # quotes the error rather than composing a second copy that could drift from
+        # the selector's own advice.
+        _log.debug(
+            "binding-readiness: filing_year=%s for modelo=%s is covered by revisions %s, so no "
+            "year-only period can be chosen; treating profile bindings as unresolved (%s)",
+            filing_year,
+            modelo,
+            ", ".join(exc.candidate_ids),
+            exc,
+        )
         return None
     periods = revision.period_selector.periods
     return periods[0] if periods else None

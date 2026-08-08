@@ -191,10 +191,38 @@ def test_related_party_observation_amount_must_be_decimal() -> None:
         RelatedPartyOperationObservation(
             source_id="op1",
             counterparty_tax_id="A12345674",
+            country_code="ES",
             transaction_date=date(2025, 3, 15),
             operation_kind_code="01",
             amount=cast(Decimal, True),
         )
+
+
+def test_related_party_observation_requires_a_stated_country() -> None:
+    """An omitted country must refuse, not resolve to Spain.
+
+    Modelo 232 declares operations with países calificados como paraísos
+    fiscales alongside operaciones vinculadas, so a default on this field
+    marks a tax-haven counterparty as domestic on the exact axis the
+    declaration exists to surface. The positive control is
+    ``test_related_party_observation_baseline_validates``: the same payload
+    with a country stated must construct.
+    """
+    with pytest.raises(ValidationError, match="country_code"):
+        RelatedPartyOperationObservation(
+            source_id="op1",
+            counterparty_tax_id="A12345674",
+            transaction_date=date(2025, 3, 15),
+            operation_kind_code="01",
+            amount=Decimal("100"),
+        )
+
+
+def test_related_party_observation_keeps_a_tax_haven_country() -> None:
+    """The declared country survives construction unaltered."""
+    obs = _related_party_observation(country_code="KY")
+
+    assert obs.country_code == "KY"
 
 
 def test_build_related_party_rows_groups_by_party_country_kind_method() -> None:

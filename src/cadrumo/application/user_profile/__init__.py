@@ -255,6 +255,7 @@ if TYPE_CHECKING:
         build_profile_overview,
         mask_profile_field,
         profile_field_choices,
+        resolve_profile_field_label_for_path,
     )
     from ._preflight import ProfilePreflightService
     from ._profile_pointer_transaction import active_profile_pointer_transaction
@@ -466,6 +467,7 @@ _LAZY_EXPORTS: dict[str, str] = {
                 "build_profile_overview",
                 "mask_profile_field",
                 "profile_field_choices",
+                "resolve_profile_field_label_for_path",
             ),
         ),
         (
@@ -694,6 +696,7 @@ __all__ = [
     "resolve_active_capability",
     "resolve_capability",
     "resolve_login_target",
+    "resolve_profile_field_label_for_path",
     "resolve_profile_output_language_hint",
     "restore_carried_objects",
     "resume_active_profile_session",

@@ -33,7 +33,7 @@ See Also:
     :mod:`cadrumo.application.overview`
         Calendar projection that reads :class:`JustificanteCaptureSnapshot`
         rows and matching domain justificante metadata as AEAT-side evidence.
-    :class:`cadrumo.application.live._snapshot_base.SecureSnapshotRepository`
+    :class:`cadrumo.adapters.persistence.profile.snapshots.SecureSnapshotRepository`
         Shared encrypted snapshot repository used by this bucket-scoped
         capture repository.
     :class:`~cadrumo.domain.modelos.ModeloRecord`
@@ -58,6 +58,7 @@ if TYPE_CHECKING:
     from ...domain.modelos import ModeloRecord
     from ..modelo import ModeloReconciliationReport
 
+from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ...adapters.persistence.storage import (
     LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE as JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE,
 )
@@ -74,7 +75,6 @@ from ...core.identity import BucketId
 from ..calculations import ObservationSourceKind
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
-    SecureSnapshotRepository,
     SnapshotLifecycleState,
     SnapshotNotFoundError,
     SnapshotService,
@@ -304,6 +304,7 @@ class JustificanteCaptureSnapshotRepository:
                 suggestion="provide a longer snapshot id",
             ),
             domain_label="justificante capture",
+            input_error_cls=LiveApplicationInputError,
             objects=self._objects,
         )
 

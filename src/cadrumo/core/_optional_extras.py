@@ -79,13 +79,23 @@ ANTHROPIC_EXTRA = OptionalExtra(extra="anthropic", import_name="anthropic", feat
 # dependency closure free of strong copyleft.
 OFX_EXTRA = OptionalExtra(extra="ofx", import_name="ofxtools", feature="OFX/QFX bank-statement import")
 # Local-inference document reading (the gated ``cadrumo.llm`` subpackage).
-# ``PIL`` is the inference path's one direct third-party reliance beyond the
-# core closure: the Ollama runtime is reached over HTTP on the declared
-# ``httpx``, page rendering runs on the declared ``pypdfium2``, and its
-# ``to_pil()`` hands off to Pillow. Registered here rather than hand-rolled
-# outside the classifier like the ``agent`` extra, so the doctor enumerates it
-# and one refusal shape covers every inference boundary.
-LLM_EXTRA = OptionalExtra(extra="llm", import_name="PIL", feature="local-inference document reading")
+# Registered here rather than hand-rolled outside the classifier like the
+# ``agent`` extra, so the doctor enumerates it and one refusal shape covers
+# every inference boundary.
+#
+# **The probe target must be EXCLUSIVE to the extra, and that is why it is
+# ``pynvml`` rather than ``PIL``.** A probe answers one question: is the extra
+# installed. Pillow cannot answer it, because Pillow is also an unconditional
+# base dependency (declared directly, since ``pypdfium2``'s ``to_pil()`` relies
+# on it) -- so ``find_spec("PIL")`` succeeds in every core install,
+# :func:`optional_extra_available` is permanently true, and every
+# :func:`require_optional_extra` call below it is a no-op that reports the
+# boundary healthy while it fails open. ``pynvml`` is supplied by
+# ``nvidia-ml-py``, which the ``llm`` extra declares and the core closure does
+# not, so its spec is present exactly when the extra is installed. This is a
+# spec-only probe, so it needs no NVIDIA hardware and no NVML runtime: the
+# accelerator reader handles an absent driver on its own terms.
+LLM_EXTRA = OptionalExtra(extra="llm", import_name="pynvml", feature="local-inference document reading")
 
 OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHROPIC_EXTRA, OFX_EXTRA, LLM_EXTRA)
 

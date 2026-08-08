@@ -9,7 +9,10 @@ Coordinates :class:`~adapters.outbound.llm.LLMRequest` inputs,
 
 from __future__ import annotations
 
+import threading
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import uuid4
@@ -22,7 +25,7 @@ from ..core.i18n import tr
 from ..core.logging import get_logger
 from ..core.time import now
 from ._consent import EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY, provider_reads_off_host
-from ._errors import LLMCacheError, LLMConfigError, LLMConsentError
+from ._errors import LLMBusyError, LLMCacheError, LLMConfigError, LLMConsentError
 
 if TYPE_CHECKING:
     # The three persistence-touching stores stay on the CORE side of the
@@ -59,6 +62,118 @@ _EVIDENCE_CONSENT_DISPATCH_REFUSAL_LOCALE_KEY = "llm.evidence.consent.dispatch_r
 def _elapsed_ms(monotonic_start: float) -> int:
     """Return the whole-millisecond elapsed duration since ``monotonic_start``."""
     return max(0, round((time.monotonic() - monotonic_start) * 1000))
+
+
+class _OnHostInferenceArena:
+    """The process-wide occupancy bound on concurrent on-host inference.
+
+    **Refusal, not queueing, and the choice is argued from the failure
+    direction rather than from ergonomics.** A queue does not help when the
+    bound is too permissive -- both designs admit whatever the bound says -- and
+    it actively hurts when the bound is right: a waiting request holds its
+    decoded pages in the very memory under pressure for as long as it waits, so
+    the queue itself becomes an allocation that grows with load, and it runs
+    against headroom that was measured *before* it waited, which is the one
+    reading the contention check exists to keep fresh. A refusal is synchronous,
+    typed, and observable at the caller; the caller retries after quiesce, which
+    is the same remediation a contention refusal already names.
+
+    Loop-agnostic on purpose. A :class:`asyncio.Semaphore` binds to the event
+    loop that created it, and this process runs LLM work under several
+    short-lived loops (each ``asyncio.run`` from a synchronous CLI path opens a
+    new one), so a loop-bound primitive would silently bound nothing across
+    them. The occupancy count is guarded by a plain
+    :class:`threading.Lock` instead, which holds across loops and threads
+    alike, and is only ever held for the duration of an integer comparison --
+    never across an await.
+    """
+
+    def __init__(self, limit: int) -> None:
+        self._limit = limit
+        self._held = 0
+        self._lock = threading.Lock()
+
+    @property
+    def limit(self) -> int:
+        """Return the configured number of simultaneous on-host inference slots."""
+        return self._limit
+
+    @property
+    def held(self) -> int:
+        """Return how many slots are occupied right now."""
+        with self._lock:
+            return self._held
+
+    def try_acquire(self) -> bool:
+        """Take a slot if one is free, without ever blocking.
+
+        Returns:
+            True when a slot was taken and the caller must release it; False
+            when the arena is full and the caller must refuse.
+        """
+        with self._lock:
+            if self._held >= self._limit:
+                return False
+            self._held += 1
+            return True
+
+    def release(self) -> None:
+        """Give a slot back.
+
+        Raises:
+            RuntimeError: When more releases than acquisitions have run. This is
+                a bug in the dispatch path rather than an operator condition,
+                and it must be loud: a release that silently underflows would
+                let the arena admit more than its limit forever after, which is
+                the failure this whole class exists to prevent.
+        """
+        with self._lock:
+            if self._held <= 0:
+                msg = "on-host inference arena released more slots than it holds"
+                raise RuntimeError(msg)
+            self._held -= 1
+
+
+_ON_HOST_ARENA: _OnHostInferenceArena | None = None
+_ON_HOST_ARENA_LOCK = threading.Lock()
+
+
+def _on_host_inference_arena(settings: Settings) -> _OnHostInferenceArena:
+    """Return the process-wide on-host inference arena, sized on first use.
+
+    A singleton for the reason the bound exists at all: the resource it protects
+    is the machine, not the client object, so two :class:`LLMClient` instances
+    -- which production builds freely, one per caller -- must contend for the
+    same slots. Sized from settings at first use rather than rebuilt per client,
+    because a rebuild would hand a fresh, empty arena to the second client and
+    the bound would hold for neither.
+    """
+    global _ON_HOST_ARENA
+    with _ON_HOST_ARENA_LOCK:
+        if _ON_HOST_ARENA is None:
+            _ON_HOST_ARENA = _OnHostInferenceArena(settings.cadrumo_llm_local_inference_concurrency)
+        return _ON_HOST_ARENA
+
+
+def reset_on_host_inference_arena() -> None:
+    """Drop the process-wide arena so the next dispatch rebuilds it from settings.
+
+    Exists because the arena is sized once per process while settings are
+    per-configuration: a test (or a genuine settings reload) that changes the
+    concurrency bound would otherwise keep the first size forever.
+
+    Raises:
+        RuntimeError: When a slot is currently held. Rebuilding under an
+            in-flight request would hand the next arrival an empty arena while
+            a real inference is still resident, which is precisely the double
+            load the bound prevents -- so this refuses rather than resetting.
+    """
+    global _ON_HOST_ARENA
+    with _ON_HOST_ARENA_LOCK:
+        if _ON_HOST_ARENA is not None and _ON_HOST_ARENA.held:
+            msg = "cannot reset the on-host inference arena while a slot is held"
+            raise RuntimeError(msg)
+        _ON_HOST_ARENA = None
 
 
 class LLMClient:
@@ -182,7 +297,8 @@ class LLMClient:
         run_started_at = now()
         run_clock_start = time.monotonic()
         try:
-            completion = await adapter.complete(provider_request)
+            with self._on_host_admission(provider):
+                completion = await adapter.complete(provider_request)
         except Exception as exc:  # LLM provider adapters surface heterogeneous exceptions; log+re-raise here
             _LOGGER.error(
                 "llm request failed provider=%s model=%s request_id=%s",
@@ -234,6 +350,54 @@ class LLMClient:
             completion.output_tokens,
         )
         return response
+
+    @contextmanager
+    def _on_host_admission(self, provider: LLMProvider) -> Iterator[None]:
+        """Hold one on-host inference slot for the duration of a dispatch.
+
+        Applied at the client's single dispatch point, like every other boundary
+        on this path, and scoped to on-host providers through
+        :func:`~adapters.outbound.llm.provider_reads_off_host` rather than a
+        hand-kept list of local transports -- so a provider added later is
+        off-host by construction, and correctly unbounded here, because an
+        off-host dispatch occupies none of this machine's device memory. The
+        resource this bound protects is local, so the bound is local too.
+
+        Wrapped around the adapter call ONLY, not around the whole method: a
+        cache hit runs no inference and returns before this point, and holding a
+        slot through a cache read would refuse a second request over work that
+        never touches the device.
+
+        Args:
+            provider: The resolved provider this dispatch runs at.
+
+        Yields:
+            Nothing; the slot is held for the body and released on any exit.
+
+        Raises:
+            LLMBusyError: When every on-host slot is already occupied.
+        """
+        if provider_reads_off_host(provider):
+            yield
+            return
+        arena = _on_host_inference_arena(self.settings)
+        if not arena.try_acquire():
+            msg = (
+                f"This process already runs {arena.limit} on-host inference request(s), "
+                f"its configured maximum, so this one was refused rather than queued."
+            )
+            raise LLMBusyError(
+                message=msg,
+                suggestion=(
+                    "Retry once the running read finishes. Raise "
+                    "CADRUMO_LLM_LOCAL_INFERENCE_CONCURRENCY only on a machine with "
+                    "headroom for a second simultaneous model load."
+                ),
+            )
+        try:
+            yield
+        finally:
+            arena.release()
 
     def _require_evidence_consent(self, provider: LLMProvider, model: str, request: LLMRequest) -> None:
         """Refuse an off-host dispatch of taxpayer evidence without consent.

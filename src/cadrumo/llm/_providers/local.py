@@ -75,13 +75,14 @@ def rasterise_pdf_pages_to_base64_png(pdf_bytes: bytes, *, scale: float = 2.0) -
         LLMPdfRasterisationError: If the PDF cannot be rendered.
     """
     # The feature-boundary guard sits ahead of the lazy import, per the
-    # established convention. It is load-bearing here for a specific reason:
-    # Pillow is never imported by name in this module -- ``to_pil()`` reaches
-    # it from inside pypdfium2 -- so an absent Pillow surfaces as a
-    # ``ModuleNotFoundError`` raised deep in the render loop, which the bare
-    # ``except Exception`` below then re-raises as "could not rasterise PDF
-    # pages". That misreports a missing dependency as a broken document. The
-    # guard converts it to one instructive refusal naming the install command.
+    # established convention. What it refuses is an operator who reached the
+    # rasteriser without opting into the inference closure at all; the refusal
+    # names the install command instead of letting the render proceed into a
+    # boundary the rest of the extra is absent from. It does NOT stand in for a
+    # missing Pillow -- Pillow is an unconditional base dependency, so its
+    # absence is a broken installation rather than a declined extra, and the
+    # bare ``except Exception`` below correctly owns the render failures that
+    # remain.
     require_optional_extra(LLM_EXTRA)
     import pypdfium2 as pdfium  # lazy: keep the adapter import light, mirror the declaración fast-path
 

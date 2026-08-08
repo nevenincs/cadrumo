@@ -21,7 +21,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable, Mapping
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING, Literal
 from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
@@ -62,7 +62,6 @@ from .....domain.iva_compensation import (
     derive_m303_compensation_available_from_casillas,
 )
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
-from ._browser_constants import SEDE_BODY_ENCODING as _SEDE_BODY_ENCODING
 from ._declarations_schema import Declaracion
 from ._errors import SedeParseError, SedeValidationError
 from ._schema import (
@@ -78,7 +77,6 @@ if TYPE_CHECKING:
 __all__ = [
     "FiledDeclaracionArtefactSink",
     "_declaration_pdf_extraction_profile_provisional",
-    "_is_modelo_303_page_03_fallback",
     "_observed_casillas_from_declaration_pdf",
     "_read_guard_policy_from_snapshot",
     "_register_row_artefact",
@@ -309,29 +307,19 @@ def _observed_casillas_from_submitted_file(
 ) -> tuple[ObservedCasillaValue, ...]:
     try:
         resolved = resolve_export_layout(snapshot)
-    except RegistryValidationError as exc:
-        if snapshot.modelo.id == Modelo.M303 and "has no exports" in str(exc):
-            return _observed_modelo_303_casillas_from_submitted_file(
-                snapshot=snapshot,
-                declaration=declaration,
-                body=body,
-            )
-        raise
-    try:
         parsed = parse_export_payload(
             resolved.layout,
             body,
             source_root=bundled_path(),
             sources=snapshot.sources,
         )
-    except RegistryValidationError:
-        if snapshot.modelo.id == Modelo.M303:
-            return _observed_modelo_303_casillas_from_submitted_file(
-                snapshot=snapshot,
-                declaration=declaration,
-                body=body,
-            )
-        raise
+    except RegistryValidationError as exc:
+        raise _submitted_file_layout_refusal(
+            snapshot=snapshot,
+            declaration=declaration,
+            artefact=artefact,
+            reason=str(exc),
+        ) from exc
     _verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)
     observations: list[ObservedCasillaValue] = []
     for casilla in parsed.casillas:
@@ -352,12 +340,54 @@ def _observed_casillas_from_submitted_file(
     return tuple(observations)
 
 
+def _submitted_file_layout_refusal(
+    *,
+    snapshot: RegistrySnapshot,
+    declaration: Declaracion,
+    artefact: FiledDeclaracionArtefact,
+    reason: str,
+) -> SedeParseError:
+    """Build the refusal for a submitted fichero the export layout cannot read.
+
+    This path used to degrade to a positional Modelo 303 page-03 reader, which
+    guessed five result casillas from hardcoded byte offsets and returned them
+    with no signal that the layout had refused the payload. That silence hid a
+    real defect for as long as it existed: the layout declared the refund-only
+    DID record required, so for the compensacion, ingreso and negativa
+    dispositions NO field of a real fichero parsed, and every casilla an
+    operator saw came from the positional guess. A reader cannot tell a guessed
+    value from a read one, so the failure is surfaced instead of absorbed.
+
+    The refusal names the modelo, the resolved revision and the parser's own
+    reason -- which identifies the record the parse stopped on -- so the next
+    reader can act on it rather than rediscover it.
+    """
+    return SedeParseError(
+        f"submitted-file artefact {artefact.sha256[:16]} for modelo {snapshot.modelo.id} "
+        f"revision {snapshot.revision.id} ({declaration.ejercicio} {declaration.period.registry_token}) "
+        f"could not be read through its export layout: {reason}",
+        context={
+            "operation": "submitted_file_layout_parse",
+            "modelo": snapshot.modelo.id,
+            "revision": snapshot.revision.id,
+            "ejercicio": str(declaration.ejercicio),
+            "period": declaration.period.registry_token,
+            "expediente_id": declaration.expediente_id,
+            "raw_sha256": artefact.sha256,
+            "reason": reason,
+        },
+        translated_message=tr("adapters.sede.errors.submitted_file_layout_parse_failed"),
+        suggestion=(
+            "The reason names the export record the parse stopped on. Compare that record's "
+            "declaration in the modelo's registry export layout against what the exporter writes "
+            "for this disposition; a record the writer omits must be declared optional, not "
+            "required. Do not read the payload by byte offset instead."
+        ),
+    )
+
+
 observed_casillas_from_submitted_file = _observed_casillas_from_submitted_file
 observed_headers_from_submitted_file = _observed_headers_from_submitted_file
-
-
-def _is_modelo_303_page_03_fallback(casillas: tuple[ObservedCasillaValue, ...]) -> bool:
-    return bool(casillas) and all(casilla.source_locator.startswith("record:T30303:pos:") for casilla in casillas)
 
 
 def _submitted_file_extraction_coverage(
@@ -384,20 +414,14 @@ def _submitted_file_coverage_for_casillas(
 
     Resolves the export layout for the snapshot and derives the fraction of
     registry-expected casillas that the parsed submitted file actually yielded.
-    Mirrors the inline derivation that previously lived in the live capture
-    routine: a Modelo 303 snapshot without exports, an ``xml_dictionary`` layout,
-    and a Modelo 303 page-03 fallback are each treated as fully covered (1.0);
+    An ``xml_dictionary`` layout is treated as fully covered (1.0), because it
+    omits an absent optional element rather than reserving a slot for it;
     otherwise the parsed export fields are scored against the resolved layout's
-    ``fields_by_casilla`` map. Raises :class:`RegistryValidationError` for any
-    layout-resolution failure other than the Modelo 303 "no exports" case.
+    ``fields_by_casilla`` map. A layout that will not resolve raises rather than
+    scoring, so a modelo whose layout is missing cannot report full coverage.
     """
-    try:
-        resolved_layout = resolve_export_layout(snapshot)
-    except RegistryValidationError as exc:
-        if snapshot.modelo.id == Modelo.M303 and "has no exports" in str(exc):
-            return 1.0
-        raise
-    if resolved_layout.layout.format is ExportLayoutFormat.XML_DICTIONARY or _is_modelo_303_page_03_fallback(casillas):
+    resolved_layout = resolve_export_layout(snapshot)
+    if resolved_layout.layout.format is ExportLayoutFormat.XML_DICTIONARY:
         return 1.0
     parsed = parse_export_payload(
         resolved_layout.layout,
@@ -410,97 +434,6 @@ def _submitted_file_coverage_for_casillas(
         observed_casillas=frozenset(casilla.casilla_id for casilla in casillas),
         fields_by_casilla=resolved_layout.fields_by_casilla,
     )
-
-
-_MODELO_303_PAGE_03_TAG = "<T30303000>"
-_MODELO_303_PAGE_03_END_TAG = "</T30303000>"
-_MODELO_303_PAGE_03_MONEY_FIELDS: Final[Mapping[str, tuple[int, int]]] = {
-    "modelo-303-page-03-casilla-110": (255, 17),
-    "modelo-303-page-03-casilla-78": (272, 17),
-    "modelo-303-page-03-casilla-87": (289, 17),
-    "modelo-303-page-03-casilla-69": (323, 17),
-    "modelo-303-page-03-casilla-71": (374, 17),
-}
-_MODELO_303_PAGE_03_MONEY_FIELDS_BY_YEAR: Final[Mapping[int, Mapping[str, tuple[int, int]]]] = {
-    2022: {
-        "modelo-303-page-03-casilla-110": (255, 17),
-        "modelo-303-page-03-casilla-78": (272, 17),
-        "modelo-303-page-03-casilla-87": (289, 17),
-        "modelo-303-page-03-casilla-69": (323, 17),
-        "modelo-303-page-03-casilla-71": (357, 17),
-    },
-}
-
-
-def _observed_modelo_303_casillas_from_submitted_file(
-    *,
-    snapshot: RegistrySnapshot,
-    declaration: Declaracion,
-    body: bytes,
-) -> tuple[ObservedCasillaValue, ...]:
-    """Parse official Modelo 303 page-03 fixed-width result fields."""
-    text = body.decode(_SEDE_BODY_ENCODING, errors="replace")
-    page_start = text.find(_MODELO_303_PAGE_03_TAG)
-    if page_start < 0:
-        raise SedeParseError(f"submitted Modelo 303 file for {declaration.expediente_id!r} has no page-03 record")
-    page_end = text.find(_MODELO_303_PAGE_03_END_TAG, page_start + len(_MODELO_303_PAGE_03_TAG))
-    if page_end < 0:
-        raise SedeParseError(f"submitted Modelo 303 file for {declaration.expediente_id!r} has invalid page-03 footer")
-    page = text[page_start : page_end + len(_MODELO_303_PAGE_03_END_TAG)]
-    if not page.startswith(_MODELO_303_PAGE_03_TAG):
-        raise SedeParseError(f"submitted Modelo 303 file for {declaration.expediente_id!r} has invalid page-03 header")
-    observations: list[ObservedCasillaValue] = []
-    money_fields = _MODELO_303_PAGE_03_MONEY_FIELDS_BY_YEAR.get(
-        declaration.ejercicio,
-        _MODELO_303_PAGE_03_MONEY_FIELDS,
-    )
-    canonical_ids_by_export_ref = _modelo_303_page_03_casilla_ids(snapshot, tuple(money_fields))
-    for export_ref, (position, width) in money_fields.items():
-        raw = page[position - 1 : position - 1 + width]
-        if len(raw) != width:
-            raise SedeParseError(
-                f"submitted Modelo 303 file for {declaration.expediente_id!r} has truncated field {export_ref}",
-            )
-        value = _parse_modelo_303_money(raw, field_ref=export_ref)
-        observations.append(
-            ObservedCasillaValue(
-                casilla_id=canonical_ids_by_export_ref[export_ref],
-                value=str(value),
-                value_kind=_observed_value_kind(value),
-                source_artefact_kind="submitted_file",
-                source_locator=f"record:T30303:pos:{position}:width:{width}",
-                confidence=1.0,
-            ),
-        )
-    return tuple(observations)
-
-
-def _modelo_303_page_03_casilla_ids(
-    snapshot: RegistrySnapshot,
-    export_refs: tuple[str, ...],
-) -> dict[str, CasillaId]:
-    casilla_ids_by_export_ref: dict[str, CasillaId] = {}
-    for export_ref in export_refs:
-        owners = tuple(casilla.id for casilla in snapshot.revision.casillas if export_ref in casilla.export_refs)
-        if len(owners) != 1:
-            raise SedeParseError(
-                f"Modelo 303 page-03 export reference {export_ref!r} resolves to {len(owners)} casillas "
-                f"for revision {snapshot.revision.id}; expected exactly one canonical casilla.id",
-            )
-        casilla_ids_by_export_ref[export_ref] = owners[0]
-    return casilla_ids_by_export_ref
-
-
-def _parse_modelo_303_money(raw: str, *, field_ref: str) -> Decimal:
-    """Parse AEAT fixed-width 15+2 money, with leading ``N`` for negatives."""
-    value = raw.strip()
-    if not value:
-        return Decimal("0.00")
-    sign = Decimal("-1") if value.startswith("N") else Decimal("1")
-    digits = value[1:] if value.startswith("N") else value
-    if not digits.isdigit():
-        raise SedeParseError(f"submitted Modelo 303 field {field_ref} is not numeric: {raw!r}")
-    return sign * (Decimal(digits) / Decimal("100"))
 
 
 def _declaration_pdf_extraction_profile_provisional(snapshot: RegistrySnapshot) -> bool:

@@ -344,6 +344,7 @@ adapters:
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
+      submitted_file_layout_parse_failed: 'No se pudo leer el fichero presentado con el diseño de registro oficial del modelo, así que no se recuperó ningún valor de casilla. El diseño y el fichero presentado no coinciden en qué registros contiene el fichero.'
 aggregation:
   grouping:
     errors:
@@ -1997,8 +1998,8 @@ cli:
           a esta parte. Indíquelo para preguntar qué responderá la escalera para ese
           documento, que es la única forma de ver una discrepancia con lo que usted
           confirmó antes de que una confirmación la rechace.
-        group_help: Confirma dónde está establecida una contraparte, una sola vez,
-          para todos los documentos posteriores.
+        group_help: Confirma lo que se sabe de una contraparte, una sola vez, para
+          todos los documentos posteriores.
         identification_state_help: 'Estado miembro que identifica a efectos de IVA
           a la contraparte. Es un dato distinto de --scope: el art. 25 exime por este,
           no por dónde esté establecida.'
@@ -2009,8 +2010,8 @@ cli:
           lo hay.
         tax_identifier_help: El identificador fiscal de la contraparte tal y como
           aparece impreso en el documento.
-        withdraw_help: Retira un establecimiento confirmado, declarando que la respuesta
-          anterior era incorrecta.
+        withdraw_help: Retira lo confirmado sobre una contraparte, declarando que
+          la respuesta anterior era incorrecta.
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
         batch_directory_help: Directorio cuyos ficheros se ingresan. Combínalo con
@@ -4842,9 +4843,9 @@ cli:
         unverifiable_identifier: '''{identifier}'' no es un identificador fiscal verificable,
           por lo que no hay ninguna contraparte sobre la que confirmar nada.'
       notices:
-        already_confirmed: '''{identifier}'' ya estaba confirmada como establecida
-          en ''{scope}'' por ''{asserted_by}''; esta llamada no ha creado ninguna
-          confirmación nueva y se mantiene la procedencia original.'
+        already_confirmed: '''{identifier}'' ya había sido confirmada por ''{asserted_by}'',
+          establecida en ''{scope}''; esta llamada no ha creado ninguna confirmación
+          nueva y se mantiene la procedencia original.'
         evidence_contradicts_confirmation: '''{identifier}'' se confirmó como establecido
           en {confirmed}, pero la evidencia que ha aportado sitúa a la misma parte
           en {evidenced}. La escalera no fijará ningún territorio para esta contraparte
@@ -7238,6 +7239,7 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    refused_llm_busy: 'Este equipo ya ejecuta el máximo configurado de peticiones al modelo de lenguaje en local.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'

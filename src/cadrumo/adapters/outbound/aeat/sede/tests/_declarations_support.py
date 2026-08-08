@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import pytest
-from openpyxl import load_workbook
 from pydantic import AnyHttpUrl
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
@@ -25,7 +24,7 @@ from ......application.filing import (
 )
 from ......core import CasillaValueKind, Period
 from ......core.config import Settings
-from ......core.resources import bundled_path, resources
+from ......core.resources import resources
 from ......domain.calculations.registry import (
     CasillaId,
     InputKind,
@@ -77,7 +76,6 @@ __all__ = [
     "_DECLARATIONS_LISTING_URL",
     "_FIXTURE_ROOT",
     "_MODELO_130_COMPUTED_CASILLAS",
-    "_MODELO_303_2022_RECORD_DESIGN",
     "_REGISTER_DOWNLOAD_URL",
     "_SUBMITTED_FILE_100_2023_0A",
     "_SUBMITTED_FILE_111_2025_1T",
@@ -103,8 +101,6 @@ __all__ = [
     "_extract_csv_from_url",
     "_filed_observation",
     "_modelo_130_snapshot",
-    "_modelo_303_design_position",
-    "_modelo_303_page_03_payload",
     "_modelo_snapshot",
     "_observed_casillas_from_declaration_pdf",
     "_observed_casillas_from_submitted_file",
@@ -168,15 +164,6 @@ _SUBMITTED_FILE_130_2026_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-130-20
 _SUBMITTED_FILE_111_2025_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-111-2025-1T-redacted.txt"
 
 _SUBMITTED_FILE_100_2023_0A = _FIXTURE_ROOT / "submitted-files" / "modelo-100-2023-0A-redacted.xml"
-
-_MODELO_303_2022_RECORD_DESIGN = bundled_path(
-    "corpus",
-    "aeat_official",
-    "disenos_registro",
-    "modelo_303",
-    "files",
-    "02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx",
-)
 
 _M111_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("28", surface="_M111_RETENCIONES_CASILLA")
 _M115_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("03", surface="_M115_RETENCIONES_CASILLA")
@@ -316,45 +303,6 @@ def _modelo_130_snapshot():
 
 def _submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:
     return path.read_bytes()
-
-
-def _modelo_303_design_position(workbook_path: Path, *, casilla_id: CasillaId) -> int:
-    workbook = load_workbook(workbook_path, read_only=True, data_only=True)
-    try:
-        worksheet = workbook["DP30303"]
-        marker = f"[{casilla_id}]"
-        for row in worksheet.iter_rows(values_only=True):
-            position, description = row[1], row[4]
-            if isinstance(position, int) and isinstance(description, str) and marker in description:
-                return position
-    finally:
-        workbook.close()
-    raise AssertionError(f"official Modelo 303 page-03 design does not define casilla {casilla_id}")
-
-
-def _modelo_303_page_03_payload(
-    *,
-    casilla_110: str,
-    casilla_78: str,
-    casilla_87: str,
-    casilla_69: str,
-    casilla_71: str,
-    casilla_71_position: int = 374,
-    filler_at_374: str | None = None,
-) -> bytes:
-    page = list("<T30303000>" + (" " * (1017 - len("<T30303000>"))))
-    for position, raw in (
-        (255, casilla_110),
-        (272, casilla_78),
-        (289, casilla_87),
-        (323, casilla_69),
-        (casilla_71_position, casilla_71),
-    ):
-        page[position - 1 : position - 1 + len(raw)] = raw
-    if filler_at_374 is not None:
-        page[373 : 373 + len(filler_at_374)] = filler_at_374
-    page[1005:1017] = list("</T30303000>")
-    return "".join(page).encode("latin-1")
 
 
 def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: str) -> bytes:

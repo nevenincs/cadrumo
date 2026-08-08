@@ -343,6 +343,7 @@ adapters:
       session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
         la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
         a intentar.
+      submitted_file_layout_parse_failed: 'No s''ha pogut llegir el fitxer presentat amb el disseny de registre oficial del model, de manera que no s''ha recuperat cap valor de casella. El disseny i el fitxer presentat no coincideixen en quins registres conté el fitxer.'
 aggregation:
   grouping:
     errors:
@@ -1977,14 +1978,15 @@ cli:
           {accepted}'
       counterparty:
         actor_help: Identificador de l'operador que es registra com a autor de l'afirmació.
-        confirm_help: Confirma el territori on està establerta una contrapart.
+        confirm_help: Confirma on està establerta una contrapart i quin Estat la identifica
+          a efectes d'IVA.
         country_code_help: País sota el qual es declara l'identificador, quan no és
           espanyol.
         evidenced_scope_help: Territori on un document que teniu situa aquesta part.
           Indiqueu-lo per preguntar què respondrà l'escala per a aquest document,
           que és l'única manera de veure una discrepància amb el que vau confirmar
           abans que una confirmació la rebutgi.
-        group_help: Confirma on està establerta una contrapart, una sola vegada, per
+        group_help: Confirma el que se sap d'una contrapart, una sola vegada, per
           a tots els documents posteriors.
         identification_state_help: 'Estat membre que identifica a efectes d''IVA la
           contrapart. És una dada diferent de --scope: l''art. 25 exempta per aquesta,
@@ -4799,7 +4801,7 @@ cli:
           de manera que confirmar '{asserted}' descartaria la resposta anterior. Retireu-la
           primer amb 'aeat app ledger counterparty withdraw'. {detail}
         unverifiable_identifier: '''{identifier}'' no és un identificador fiscal verificable,
-          per la qual cosa no hi ha cap contrapart de la qual es pugui confirmar l''establiment.'
+          per la qual cosa no hi ha cap contrapart sobre la qual confirmar res.'
       notices:
         already_confirmed: '''{identifier}'' ja havia estat confirmada per ''{asserted_by}'',
           establerta a ''{scope}''; aquesta crida no ha creat cap confirmació nova
@@ -7188,6 +7190,7 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    refused_llm_busy: 'Aquest equip ja executa el màxim configurat de peticions al model de llenguatge en local.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'

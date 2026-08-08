@@ -255,7 +255,12 @@ def _build_fact_rows(
             would be vacuous.
     """
     from ....adapters.inbound.tui import StatusFactRow
-    from ....application.user_profile import mask_profile_field, record_to_path_values
+    from ....application.user_profile import (
+        mask_profile_field,
+        record_to_path_values,
+        resolve_profile_field_label_for_path,
+    )
+    from ....core.i18n import tr
     from ....domain.user_profile import (
         UserProfileError,
         load_user_profile_schema,
@@ -287,8 +292,44 @@ def _build_fact_rows(
                 label=field_def.description or path,
                 sensitivity=field_def.sensitivity,
             )
+            leaf_label_key = _censo_divergencia_leaf_label_key(path)
+            if leaf_label_key is not None:
+                # Otherwise a cotejo divergence renders as
+                # "censo.divergencia.0.axis -> contact.fiscal_address": two
+                # raw internal identifiers naming which field AEAT disputes,
+                # legible only to whoever wrote this code. Restated as
+                # "Divergencias del cotejo censal (campo) -> Domicilio
+                # fiscal" through the SAME field-label authority the manager
+                # overview uses, so the two profile-facts surfaces agree on
+                # what a divergence axis is called.
+                field_label = profile_field_label(section_key, field_def) or declared_path
+                leaf_suffix = tr(leaf_label_key, default=leaf_label_key)
+                label = f"{field_label} ({leaf_suffix})"
+                if path.endswith(".axis"):
+                    resolved_axis = resolve_profile_field_label_for_path(resolved_schema, value)
+                    if resolved_axis is not None:
+                        value = resolved_axis
         rows.append(StatusFactRow(label=label, value=value, masked=masked))
     return tuple(rows)
+
+
+def _censo_divergencia_leaf_label_key(path: str) -> str | None:
+    """Return the locale key for one ``censo.divergencia.{n}.{leaf}`` row's leaf, or ``None``.
+
+    Scoped to this one namespace rather than a generic indexed-leaf
+    translator: the leaf name is chosen by whichever family writes a given
+    namespace field, and ``censo.divergencia`` is the only one whose leaves
+    (``axis`` / ``artefact_value`` / ``source``) name a concept an operator
+    needs read off this read-only page.
+    """
+    if not path.startswith("censo.divergencia."):
+        return None
+    leaf = path.rsplit(".", 1)[-1]
+    return {
+        "axis": "cli.config.profile.censo.divergencia_leaf_axis",
+        "artefact_value": "cli.config.profile.censo.divergencia_leaf_artefact_value",
+        "source": "cli.config.profile.censo.divergencia_leaf_source",
+    }.get(leaf)
 
 
 __all__ = ["build_status_page_data", "present_status_tui"]

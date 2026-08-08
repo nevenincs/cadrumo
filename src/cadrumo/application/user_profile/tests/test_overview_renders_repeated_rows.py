@@ -40,6 +40,7 @@ from ....domain.user_profile import (
     UserProfileRecord,
     UserProfileStatus,
     load_user_profile_schema,
+    profile_field_label,
 )
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -185,6 +186,48 @@ def test_an_object_field_renders_one_row_per_indexed_leaf() -> None:
     assert rows.get(f"{_DIVERGENCIA}.0.artefact_value") == "6910"
     assert rows.get(f"{_DIVERGENCIA}.1.axis") == "censo.epigrafe_secundario"
     assert _DIVERGENCIA not in rows, "the namespace path itself was offered as a row"
+
+
+def test_a_censo_divergencia_axis_row_shows_the_disputed_fields_label() -> None:
+    """The manager names WHICH field AEAT disputes, not its raw schema path.
+
+    Before this, the ``axis`` leaf rendered its stored value verbatim -- the
+    dotted schema path (``contact.fiscal_address``) no operator reads --
+    beside a leaf suffix of the raw stored key (``(axis)``). Both now
+    resolve through operator-facing prose: the value through
+    :func:`resolve_profile_field_label_for_path`, the leaf suffix through
+    the same locale catalogue every other row label reads.
+    """
+
+    _register_active()
+    _append_facts(
+        UserProfileFact(path=f"{_DIVERGENCIA}.0.axis", value="contact.fiscal_address"),
+        UserProfileFact(path=f"{_DIVERGENCIA}.0.artefact_value", value="CALLE REAL 2"),
+    )
+
+    rows = _rows_by_path("censo")
+    section = next(
+        view
+        for view in build_profile_overview(build_lifecycle_service(bucket_id=_BUCKET_ID).read(_BUCKET_ID)).sections
+        if view.key == "censo"
+    )
+    axis_view = next(field for field in section.fields if field.path == f"{_DIVERGENCIA}.0.axis")
+    expected_label = profile_field_label("contact", load_user_profile_schema().field("contact.fiscal_address"))
+
+    assert axis_view.value == expected_label
+    assert rows.get(f"{_DIVERGENCIA}.0.artefact_value") == "CALLE REAL 2", "the sibling leaf must render untouched"
+    assert "(axis)" not in axis_view.label, "the raw stored leaf key leaked into the row label"
+
+
+def test_a_censo_divergencia_axis_row_falls_back_when_the_path_is_unresolvable() -> None:
+    """Anti-tautology: an axis naming no real schema field is left as-is, not invented a label."""
+
+    _register_active()
+    _append_facts(UserProfileFact(path=f"{_DIVERGENCIA}.0.axis", value="no.such.schema.path"))
+
+    rows = _rows_by_path("censo")
+
+    assert rows.get(f"{_DIVERGENCIA}.0.axis") == "no.such.schema.path"
 
 
 def test_a_namespace_field_with_no_instances_contributes_no_row() -> None:

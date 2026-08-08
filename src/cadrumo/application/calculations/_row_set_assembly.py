@@ -410,7 +410,11 @@ def assemble_related_party_observations(
                     source_id=f"detalle:per_related_party_operation:row-{row_index}",
                     counterparty_tax_id=_coerce_text(fields.get("counterparty_tax_id")),
                     counterparty_legal_name=_coerce_text(fields.get("counterparty_legal_name")),
-                    country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
+                    # No invented default: modelo 232 declares paraíso-fiscal
+                    # operations, so substituting Spain for an absent country
+                    # marks a tax-haven counterparty as domestic on the exact
+                    # axis the declaration exists to surface.
+                    **_optional_text_kwarg(fields, "country_code"),
                     transaction_date=default_date,
                     # No invented default: "01" is a real clave (bienes
                     # tangibles), so substituting it for an absent value
