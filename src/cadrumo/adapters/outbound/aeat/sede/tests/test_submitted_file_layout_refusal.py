@@ -26,7 +26,9 @@ from __future__ import annotations
 
 import datetime as dt
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pytest
 
@@ -44,20 +46,24 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
 # year that selects each: a change that only works on the current revision is a
 # change that silently stops reading the older filings the carry depends on.
 _YEARS_BY_REVISION = {"2009-y-siguientes": 2022, "2023-y-siguientes": 2025}
-_RESULTADO_FINAL = validated_casilla_id("71", surface="layout refusal test")
 
 
 def _snapshot(filing_year: int):
     return bundled_authority().snapshot(modelo_id=Modelo.M303.value, filing_year=filing_year, period="1T")
 
 
-def _exported_draft_and_payload(tmp_path: Path, *, filing_year: int, declaration_type: str):
+@cache
+def _exported_draft_and_payload(*, filing_year: int, declaration_type: str):
     """Produce a real M303 fichero plus the draft it was written from.
 
     Returned together deliberately: the draft's own casilla values are the
     authority the read-back is compared against, which makes this a
     writer-to-reader roundtrip over the layout rather than a claim about what
     the figures ought to be.
+
+    Cached because the draft build plus export is the expensive half of every
+    case here and the result is a pure function of the two arguments; the
+    parametrisation would otherwise rebuild the same fichero repeatedly.
     """
     from ......application.filing import (
         ModeloDraftStatus,
@@ -81,21 +87,22 @@ def _exported_draft_and_payload(tmp_path: Path, *, filing_year: int, declaration
         schema_provider=provider,
     )
     draft = draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-    output = tmp_path / f"m303-{filing_year}-{declaration_type}.txt"
-    export_draft(
-        draft,
-        output_path=output,
-        headers={
-            "declaration_type": declaration_type,
-            "surnames": "GARCIA LOPEZ",
-            "full_name": "GARCIA LOPEZ JUAN",
-            "program_version": "A001",
-            "presenter_nif": "12345678Z",
-            "redeme": "N",
-        },
-        schema_provider=provider,
-    )
-    return draft, output.read_bytes()
+    with TemporaryDirectory() as scratch:
+        output = Path(scratch) / f"m303-{filing_year}-{declaration_type}.txt"
+        export_draft(
+            draft,
+            output_path=output,
+            headers={
+                "declaration_type": declaration_type,
+                "surnames": "GARCIA LOPEZ",
+                "full_name": "GARCIA LOPEZ JUAN",
+                "program_version": "A001",
+                "presenter_nif": "12345678Z",
+                "redeme": "N",
+            },
+            schema_provider=provider,
+        )
+        return draft, output.read_bytes()
 
 
 def _declaration(filing_year: int) -> Declaracion:
@@ -132,7 +139,6 @@ def _project(payload: bytes, *, filing_year: int):
 @pytest.mark.parametrize(("revision_id", "filing_year"), sorted(_YEARS_BY_REVISION.items()))
 @pytest.mark.parametrize("declaration_type", ["D", "C", "I", "N"])
 def test_a_real_fichero_is_read_through_the_layout_on_every_disposition(
-    tmp_path: Path,
     revision_id: str,
     filing_year: int,
     declaration_type: str,
@@ -149,11 +155,7 @@ def test_a_real_fichero_is_read_through_the_layout_on_every_disposition(
     come from the layout parse, and the fallback's ``record:T30303:pos:``
     locator can only come from the byte-offset guess.
     """
-    draft, payload = _exported_draft_and_payload(
-        tmp_path,
-        filing_year=filing_year,
-        declaration_type=declaration_type,
-    )
+    draft, payload = _exported_draft_and_payload(filing_year=filing_year, declaration_type=declaration_type)
     assert _snapshot(filing_year).revision.id == revision_id, "the filing year no longer selects this revision"
 
     observed = _project(payload, filing_year=filing_year)
@@ -167,16 +169,27 @@ def test_a_real_fichero_is_read_through_the_layout_on_every_disposition(
     )
     # Writer-to-reader roundtrip: the draft that produced the bytes is the
     # authority for what the bytes say, so this pins the layout read without
-    # asserting any figure the engine also computed.
+    # asserting any figure the engine also computed. Scored over every casilla
+    # the draft populated rather than one named box, because which boxes a
+    # revision derives from these inputs differs between the two revisions and
+    # a single-box assertion would encode one revision's shape as the contract.
     observed_by_id = {casilla.casilla_id: casilla.value for casilla in observed}
-    assert _RESULTADO_FINAL in observed_by_id, "the result casilla did not survive the read-back"
-    drafted = draft.values[_RESULTADO_FINAL]
-    assert Decimal(observed_by_id[_RESULTADO_FINAL]) == Decimal(str(drafted.value))
+    drafted_amounts = {
+        value.casilla_id: value.value
+        for value in draft.values
+        if isinstance(value.value, Decimal) and value.casilla_id in observed_by_id
+    }
+    assert drafted_amounts, "no drafted amount survived the read-back, so this comparison is vacuous"
+    mismatched = {
+        casilla_id: (amount, observed_by_id[casilla_id])
+        for casilla_id, amount in drafted_amounts.items()
+        if Decimal(observed_by_id[casilla_id]) != amount
+    }
+    assert not mismatched, f"the read-back disagrees with what the exporter was given: {mismatched}"
 
 
 @pytest.mark.parametrize(("revision_id", "filing_year"), sorted(_YEARS_BY_REVISION.items()))
 def test_a_payload_the_layout_cannot_read_is_refused_rather_than_guessed(
-    tmp_path: Path,
     revision_id: str,
     filing_year: int,
 ) -> None:
@@ -187,7 +200,7 @@ def test_a_payload_the_layout_cannot_read_is_refused_rather_than_guessed(
     reproduces the condition that used to degrade silently, on a payload that
     is otherwise a genuine exporter product.
     """
-    _, payload = _exported_draft_and_payload(tmp_path, filing_year=filing_year, declaration_type="C")
+    _, payload = _exported_draft_and_payload(filing_year=filing_year, declaration_type="C")
     truncated = payload[: len(payload) // 2]
 
     with pytest.raises(SedeParseError) as caught:
@@ -199,17 +212,20 @@ def test_a_payload_the_layout_cannot_read_is_refused_rather_than_guessed(
     assert context["modelo"] == Modelo.M303
     assert context["revision"] == revision_id
     assert context["period"] == "1T"
-    # The reason is the parser's own, and it identifies the export record the
-    # read stopped on. A refusal that says only "parse failed" hands the next
-    # reader nothing, which is the other shape of masking.
+    # The reason is the parser's own, and it names the concrete layout element
+    # the read stopped on -- which record ran out of payload, or which literal
+    # envelope field disagreed. A refusal that says only "parse failed" hands
+    # the next reader nothing, which is the other shape of masking, so the
+    # assertion is on the presence of a layout identifier rather than on one
+    # wording the parser happens to use for one truncation point.
     reason = str(context["reason"])
-    assert "export record" in reason, f"the refusal does not name the record it failed on: {reason!r}"
+    assert "modelo-303-" in reason, f"the refusal names no layout element it failed on: {reason!r}"
     assert reason in str(error), "the message drops the reason the context carries"
+    assert "could not be read through its export layout" in str(error)
 
 
 @pytest.mark.parametrize(("revision_id", "filing_year"), sorted(_YEARS_BY_REVISION.items()))
 def test_the_refusal_carries_an_actionable_next_step(
-    tmp_path: Path,
     revision_id: str,
     filing_year: int,
 ) -> None:
@@ -220,7 +236,7 @@ def test_the_refusal_carries_an_actionable_next_step(
     to do, so the failure gets worked around instead of fixed.
     """
     del revision_id
-    _, payload = _exported_draft_and_payload(tmp_path, filing_year=filing_year, declaration_type="C")
+    _, payload = _exported_draft_and_payload(filing_year=filing_year, declaration_type="C")
 
     with pytest.raises(SedeParseError) as caught:
         _project(payload[: len(payload) // 2], filing_year=filing_year)
