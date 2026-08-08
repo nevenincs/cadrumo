@@ -49,6 +49,7 @@ from ....application.storage.calc_sheets import (
     STYLED_RANGE_VERTICAL_ALIGN,
     WORKBOOK_FONT_FAMILY,
     SheetAutoFilter,
+    SheetCellAddress,
     SheetCellConstraint,
     SheetColumnWidth,
     SheetExportPlan,
@@ -70,6 +71,8 @@ from ._calc_sheets_apply_values import (
     _build_guide_value_data,
     _build_row_set_header_data,
     _build_value_data,
+    payload_written_addresses,
+    stale_addresses,
 )
 from ._calc_sheets_apply_values import (
     _coerce_cell_value as _coerce_cell_value,
@@ -1086,26 +1089,83 @@ def _ensure_plan_tabs_and_grid(
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
-def _clear_and_write_plan_values(
+#: Tab titles the exporter manages. A spreadsheet may carry operator-added
+#: tabs; those are never read for stale content and never cleared.
+_TAB_TITLES: frozenset[str] = frozenset(tab.value for tab in TabName)
+
+
+def _grid_by_tab(spreadsheet: Mapping[str, Any]) -> dict[str, tuple[int, int]]:
+    """Map each existing tab title to its ``(rowCount, columnCount)`` grid."""
+    grid: dict[str, tuple[int, int]] = {}
+    for sheet in spreadsheet.get("sheets", []):
+        props = sheet.get("properties") or {}
+        title = str(props.get("title", ""))
+        if title not in _TAB_TITLES:
+            continue
+        grid_props = props.get("gridProperties") or {}
+        grid[title] = (int(grid_props.get("rowCount", 0)), int(grid_props.get("columnCount", 0)))
+    return grid
+
+
+def _occupied_addresses(
+    *,
+    sheets: Any,
+    spreadsheet_id: str,
+    grid_by_tab: Mapping[str, tuple[int, int]],
+) -> frozenset[str]:
+    """Return every qualified address currently holding a value.
+
+    Each tab is read over an A1-anchored range built from its OWN grid, so
+    the response block's top-left is A1 by construction and no returned
+    range has to be parsed back into indices.
+
+    The grid read is the PRE-resize one, which is the correct bound rather
+    than a convenient one: the resize step only ever grows a tab, so no
+    surviving value can sit outside the grid as it stood before this run.
+    """
+    ranges = [
+        f"'{tab}'!A1:{SheetCellAddress.at(TabName(tab), rows, columns).a1}"
+        for tab, (rows, columns) in sorted(grid_by_tab.items())
+        if rows > 0 and columns > 0
+    ]
+    if not ranges:
+        return frozenset()
+    response = execute_request(
+        sheets.spreadsheets()
+        .values()
+        .batchGet(
+            spreadsheetId=spreadsheet_id,
+            ranges=ranges,
+            valueRenderOption="UNFORMATTED_VALUE",
+        ),
+        action="sheets.spreadsheets.values.batchGet",
+    )
+    occupied: set[str] = set()
+    tabs = [tab for tab, (rows, columns) in sorted(grid_by_tab.items()) if rows > 0 and columns > 0]
+    for cursor, value_range in enumerate(response.get("valueRanges", []) or []):
+        if cursor >= len(tabs):
+            break
+        tab = TabName(tabs[cursor])
+        for row_offset, row_values in enumerate(value_range.get("values", []) or []):
+            for column_offset, cell in enumerate(row_values):
+                if cell == "" or cell is None:
+                    continue
+                occupied.add(SheetCellAddress.at(tab, row_offset + 1, column_offset + 1).qualified())
+    return frozenset(occupied)
+
+
+def _write_plan_values(
     *,
     sheets: Any,
     spreadsheet_id: str,
     plan: SheetExportPlan,
-    tab_titles: tuple[str, ...],
-) -> None:
-    # Clear every tab the engine will (re)populate so a re-apply is
-    # not contaminated by leftover values from the previous run.
-    clear_ranges = [f"'{tab}'" for tab in tab_titles]
-    execute_request(
-        sheets.spreadsheets()
-        .values()
-        .batchClear(
-            spreadsheetId=spreadsheet_id,
-            body={"ranges": clear_ranges},
-        ),
-        action="sheets.spreadsheets.values.batchClear",
-    )
+) -> frozenset[str]:
+    """Write the plan's values and formulas, and return the addresses written.
 
+    Returning the written set is what makes the ordering structural rather
+    than a convention: :func:`_clear_stale_addresses` cannot run before this
+    function, because its input does not exist until this function returns.
+    """
     # Write values and formulas as USER_ENTERED so Sheets parses
     # formula strings starting with "=".
     value_data = (
@@ -1115,6 +1175,7 @@ def _clear_and_write_plan_values(
         + _build_evidence_value_data(plan)
     )
     formula_data = _build_formula_data(plan.formula_cells)
+    data = value_data + formula_data
     execute_request(
         sheets.spreadsheets()
         .values()
@@ -1122,10 +1183,33 @@ def _clear_and_write_plan_values(
             spreadsheetId=spreadsheet_id,
             body={
                 "valueInputOption": "USER_ENTERED",
-                "data": value_data + formula_data,
+                "data": data,
             },
         ),
         action="sheets.spreadsheets.values.batchUpdate",
+    )
+    return payload_written_addresses(data)
+
+
+def _clear_stale_addresses(
+    *,
+    sheets: Any,
+    spreadsheet_id: str,
+    occupied: frozenset[str],
+    written: frozenset[str],
+) -> None:
+    """Clear only the cells a previous run filled that this run did not rewrite."""
+    stale = stale_addresses(occupied=occupied, written=written)
+    if not stale:
+        return
+    execute_request(
+        sheets.spreadsheets()
+        .values()
+        .batchClear(
+            spreadsheetId=spreadsheet_id,
+            body={"ranges": list(stale)},
+        ),
+        action="sheets.spreadsheets.values.batchClear",
     )
 
 
@@ -1234,7 +1318,25 @@ def apply_export_plan(
         plan=plan,
         tab_titles=tab_titles,
     )
-    _clear_and_write_plan_values(sheets=sheets, spreadsheet_id=spreadsheet_id, plan=plan, tab_titles=tab_titles)
+    # Write first, then clear only what the write did not replace. The
+    # previous order -- clear every tab, then write -- left a window in
+    # which an interruption between two unprotected API calls emptied the
+    # operator's workbook outright. Sheets offers no transaction spanning
+    # values.batchClear and values.batchUpdate, so the fix is ordering: a
+    # run interrupted at any point now leaves the workbook holding either
+    # the old content or the new, never nothing.
+    occupied = _occupied_addresses(
+        sheets=sheets,
+        spreadsheet_id=spreadsheet_id,
+        grid_by_tab=_grid_by_tab(spreadsheet),
+    )
+    written = _write_plan_values(sheets=sheets, spreadsheet_id=spreadsheet_id, plan=plan)
+    _clear_stale_addresses(
+        sheets=sheets,
+        spreadsheet_id=spreadsheet_id,
+        occupied=occupied,
+        written=written,
+    )
     _apply_plan_structural_requests(
         sheets=sheets,
         spreadsheet_id=spreadsheet_id,

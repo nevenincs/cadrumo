@@ -16,19 +16,28 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+import re
+from collections.abc import Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import Any
 
 from ....application.storage.calc_sheets import (
+    SheetCellAddress,
     SheetExportPlan,
     SheetFormulaCell,
     SheetRowSet,
     SheetValueCell,
     TabName,
+    column_letters_to_index,
     evidence_table,
     guide_stamps,
 )
+
+#: Matches the single-cell anchor of a ``values.batchUpdate`` entry range:
+#: ``'Tab Name'!B4``. Every builder in this module emits an anchor plus a
+#: values block rather than a rectangle, so the written extent is the anchor
+#: offset by the block's own shape.
+_ANCHOR_PATTERN = re.compile(r"^'(?P<tab>(?:[^']|'')+)'!(?P<letters>[A-Z]{1,3})(?P<row>\d+)$")
 
 
 def _coerce_cell_value(value: Decimal | str | bool | None) -> object:
@@ -128,3 +137,60 @@ def _build_guide_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
             },
         )
     return data
+
+
+def payload_written_addresses(data: Sequence[Mapping[str, Any]]) -> frozenset[str]:
+    """Return every qualified A1 address a ``values.batchUpdate`` payload writes.
+
+    Each entry in ``data`` is an anchor range plus a values block, so the
+    written extent is the anchor offset by that block's own shape: row ``r``
+    of the block lands on ``anchor_row + r``, column ``c`` on
+    ``anchor_column + c``.
+
+    This is deliberately derived from the PAYLOAD rather than re-walked from
+    the plan. Re-deriving the extent from the plan would be a second
+    implementation of the layout the builders above already encode, and the
+    two would drift — the stale-cell set would then name cells the write
+    actually covered, and clearing them would blank live content.
+
+    Raises:
+        ValueError: When an entry's range is not a single-cell anchor. The
+            builders in this module only ever emit anchors, so a rectangle
+            here means a new builder changed shape without this function
+            being taught about it — and silently skipping it would
+            under-report the written set, which is the direction that
+            destroys data.
+    """
+    written: set[str] = set()
+    for entry in data:
+        raw_range = str(entry.get("range", ""))
+        match = _ANCHOR_PATTERN.match(raw_range)
+        if match is None:
+            message = f"values payload entry is not a single-cell anchor: {raw_range!r}"
+            raise ValueError(message)
+        tab = TabName(match.group("tab").replace("''", "'"))
+        anchor_row = int(match.group("row"))
+        anchor_column = column_letters_to_index(match.group("letters"))
+        for row_offset, row_values in enumerate(entry.get("values", []) or []):
+            for column_offset, _cell in enumerate(row_values):
+                address = SheetCellAddress.at(
+                    tab,
+                    anchor_row + row_offset,
+                    anchor_column + column_offset,
+                )
+                written.add(address.qualified())
+    return frozenset(written)
+
+
+def stale_addresses(*, occupied: frozenset[str], written: frozenset[str]) -> tuple[str, ...]:
+    """Return the addresses a previous run filled that this write does not replace.
+
+    The whole point of the clear step: a re-apply must not leave a longer
+    previous run's trailing cells standing beside the new content. Only
+    those cells are named — never a cell the write covers, and never a cell
+    that was already empty — so a clear can no longer blank content the
+    workbook is not about to receive.
+
+    Sorted so the emitted request is deterministic and diffable.
+    """
+    return tuple(sorted(occupied - written))

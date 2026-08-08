@@ -53,6 +53,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_api.py",  # contract: execute_request typed response + error-translation contract
         "test_apply_adapter_helpers.py",
         "test_calc_sheets_apply_evidence.py",  # online Evidencia render + offline/online evidence parity
+        "test_calc_sheets_apply_no_empty_window.py",  # apply never leaves the workbook empty (write-then-clear-stale ordering)
         "test_calc_sheets_export_integration.py",  # offline request-pipeline integration for live export
         "test_calc_sheets_offline_online_conformance.py",  # offline/online renderer conformance
         "test_calc_sheets_pull_typing.py",  # contract: _ValueRange / _GoogleResource type-narrowing contract

@@ -117,7 +117,7 @@ def _column_index_to_letters(column: int) -> str:
     return "".join(reversed(letters))
 
 
-def _column_letters_to_index(letters: str) -> int:
+def column_letters_to_index(letters: str) -> int:
     """Translate an A1 column letter string to a 1-based column index.
 
     Inverse of ``_column_index_to_letters``. Accepts one to three upper-case
@@ -878,6 +878,6 @@ __all__ = [
     "SheetValueCell",
     "TabName",
     "_column_index_to_letters",
-    "_column_letters_to_index",
     "_utc_now",
+    "column_letters_to_index",
 ]

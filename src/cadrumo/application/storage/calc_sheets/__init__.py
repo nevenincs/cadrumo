@@ -80,6 +80,7 @@ from ._records import (
     SheetTariffTableRow,
     SheetValueCell,
     TabName,
+    column_letters_to_index,
 )
 from ._theme import (
     ROLE_STYLES,
@@ -151,6 +152,7 @@ __all__ = [
     "build_export_plan",
     "build_offline_workbook",
     "collect_row_sets",
+    "column_letters_to_index",
     "evidence_table",
     "guide_stamps",
     "hex_to_rgb_floats",
