@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:39ebd59543ebb5ce3f43382511813e767da07dc88570d89d73e26105b546cf27'
+body_hash: 'sha256:36bea903630707ca18b4c0417a43466a48377cc8aa7216eaa1021b79198a88a5'
 step_id: 'S88'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -246,3 +246,115 @@ collection failed for the entire ledger test tree rather than for that module
 alone. Repaired in its own commit against the facade its sibling suite already
 reads from. The convergence of the two minting sites in the draft module is NOT
 part of this slice: that file carried another lane's uncommitted work throughout.
+
+## The convergence itself: the two live minting sites
+
+The slice the earlier entries deferred. Both rival deriving surfaces sat on the
+live confirm flow and neither consulted the rule table; the criteria assembly
+that feeds it had gained a production caller from the establishment lane by the
+time this ran, so only the deciding was left to move.
+
+- Move the structured tax-category reader into the classification authority as
+  `declared_category_from_document_record`, returning the declaration beside
+  who established it rather than a bare category. It is now the one place a
+  category is built from a document token.
+- Add a `stated_category` field to the declared-facts model. Extending by a
+  FIELD rather than a second supply route is the property that channel exists
+  to hold, so the assembly, the envelope and the stamp carry it without a new
+  path.
+- Stop the rate resolution at the RATE TIER instead of a category, renaming it
+  to say so. Every decline it already made is unchanged: a multi-rate document,
+  a recargo-bearing one, and a rate unregistered on the issue date. What
+  changed is that the tier now reaches the criteria as the axis rule R05
+  already consults, so the tier-to-category mapping is applied once, where the
+  law is, rather than copied beside it.
+- Add the resolution authority weighing the rule table's verdict against the
+  declared code and the tier charged, with a closed six-member outcome axis in
+  the core layer.
+- Take the confirmed record's category from that authority and from nowhere
+  else. The operator's explicit value still wins, as on every other field.
+- Carry the operator's date override into the classification, which it did not
+  reach before. A tier's rate changes by statute, so classifying against the
+  printed date while the record is dated otherwise answers about a rate the
+  supply was never charged at.
+- Surface a category contradiction as a review item under the shipped
+  contradicted-regime reason rather than declaring a second reason for it.
+
+## Outcome
+
+The declared code survives, which was the point of routing it rather than
+deleting it. A reverse charge, an exempt supply and a zero-rated supply all
+print a base and no cuota, so the code is the only thing separating them, and
+the self-assessed output IVA a reverse charge obliges is collected in its own
+Modelo 303 tier. The bundled reverse-charge corpus document still confirms to
+that category end to end, through the new route.
+
+The rate evidence keeps the dedup it represented and gains a check it could not
+perform before: a declared domestic treatment is now compared against the tier
+the lines actually charged, which is the document checked against ITSELF. The
+rule table cannot answer that, because the declared code never enters the
+criteria. A disagreement on either axis resolves to NO category and surfaces the
+conflict, on the same terms the legend axis withholds one: which half is wrong
+is not decidable from the page, and a caller holding a value would use it while
+ignoring the conflict.
+
+One judgement was made against the row's letter and is flagged rather than
+buried. Converging strictly would have left an unplaceable operation with no
+category at all, and the operations the rule table cannot place are not an edge:
+an ordinary domestic Spanish invoice frequently prints no country, and the
+establishment module's own docstring records that this population refuses. Those
+records then reach the invoice decomposition contract undeclared, and the renta
+income path contributes the row's bank cash instead of its ingresos integros,
+dropping the base, the cuota and the retencion. So the tier inference is
+retained as a LAST resort inside the authority, under its own named outcome, so
+singularity holds and the records resting on it can be enumerated. It never
+displaces a table verdict or a declared code, and a fixture asserts that.
+
+## Verification
+
+    uv run --no-sync pytest src/cadrumo/domain/iva/tests src/cadrumo/application/ledger/tests -n0 -q -m unit
+    1779 passed, 21 deselected, 16 warnings in 207.80s (0:03:27)
+
+    uv run --no-sync pytest src/cadrumo/application/ledger/tests/test_ingestion_category_resolution.py -n0 -q -m unit
+    15 passed in 3.49s
+
+    uv run --no-sync pytest src/cadrumo/tests/test_iva_category_singularity.py src/cadrumo/application/ledger/tests/test_ingestion_category_resolution.py src/cadrumo/application/ledger/tests/test_evidence_confirm_rate_derived_category.py src/cadrumo/application/ledger/tests/test_evidence_confirm_iva_category.py -n0 -q -m unit
+    31 passed in 38.37s
+
+The integration lane was run separately, since a bare path selects one marker
+lane only:
+
+    uv run --no-sync pytest src/cadrumo/domain/iva/tests src/cadrumo/application/ledger/tests src/cadrumo/tests/test_iva_category_singularity.py -n0 -q -m integration
+    1 failed, 20 passed, 1816 deselected in 98.11s (0:01:38)
+
+The single failure is the batch ingest runner's inference pacing, where a stub
+HTTP server answers the reader-reachability probe with 501. It is on a peer
+campaign's surface, touches no classification code, and is not owned here.
+
+## Notes
+
+The row's premise was measured stale before any code was written. It states the
+criteria assembly has no production caller at all; it had gained one that
+morning from the establishment lane. The remaining premise held, so the
+substance of the work was unchanged, and the correction was relayed rather than
+absorbed silently.
+
+A behavioural test carried a stale premise of its own, asserting a rate refusal
+at a date chosen because the registered rate records were believed to begin in
+2024. The records were since extended backwards and the assertion had become a
+claim about the fixture rather than about the law. Re-keyed to the statute: the
+general tier reached 21 per cent only in September 2012, so a 2010 document is
+refused for a reason that cannot rot. That failure pre-dated this work and was
+absorbed rather than deferred.
+
+The commit was split by a concurrent sweeper mid-flight. The facade edits and
+the new core module landed in a sweep while the assembly implementation did not,
+leaving HEAD briefly exporting symbols its module did not define. The remainder
+was then swept in as well before an explicit-pathspec commit could be taken, so
+the convergence is carried by sweep commits rather than by one authored commit.
+Verified present at HEAD by reading each symbol out of the committed blobs
+rather than the working copy.
+
+A pre-existing vault inconsistency is recorded rather than repaired: this record
+carries a heading from an earlier revision of the S88 row, which has since been
+rewritten. The heading is machine-filled at scaffold time and is not hand-edited.
