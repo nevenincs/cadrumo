@@ -10,7 +10,7 @@ exactly that in one evening. The sibling replay corpus had already closed this:
 ``profile_overrides`` while the manual corpus carried nothing.
 
 :class:`~domain.calculations.registry.DeclaredScenarioInputs` closes it here. The
-field is optional at the MODEL boundary because 22 payloads cannot migrate in one
+field is optional at the MODEL boundary because the corpus cannot migrate in one
 change — and optional-and-unenumerated would be the worse outcome, leaving the hole
 open while the contract *appeared* to cover inputs, which is harder to see than
 today's uniform absence. So the un-migrated payloads are named here, each with the
@@ -85,13 +85,8 @@ _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
     "modelo-100-2020-rendimientos-trabajo-despido-improcedente.json": (
         "scenario facts still hand-written in test_m100_2020_rendimientos_trabajo_despido_manual_worked_example.py"
     ),
-    "modelo-100-2021-cuotas-integras-escala-aragon.json": (
-        "no test names this payload in source; it is reached through a constructed filename, so the "
-        "consuming fixture must be located before the facts can be moved into the payload"
-    ),
     "modelo-100-2022-cuotas-integras-escala-aragon.json": (
-        "no test names this payload in source; it is reached through a constructed filename, so the "
-        "consuming fixture must be located before the facts can be moved into the payload"
+        "consumed by test_m100_2022_cuotas_integras_escala_aragon_manual_worked_example.py, which references the case by scenario id, hardcodes its own expected figures and never reads this payload -- so the two are independent transcriptions of one page and migrating means connecting them, not only adding a declared_inputs block"
     ),
     "modelo-100-2024-capital-inmobiliario-arrendamiento-vivienda-tensionada.json": (
         "scenario facts still hand-written in "
@@ -138,20 +133,16 @@ _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
         "test_prorrata_regularizacion_source_resolver.py; two consumers must move together"
     ),
     "modelo-322-2024-grupo-entidades-delta.json": (
-        "no test names this payload in source; it is reached through a constructed filename, so the "
-        "consuming fixture must be located before the facts can be moved into the payload"
+        "consumed by test_m322_2024_grupo_entidades_manual_worked_example.py, which references the case by scenario id, hardcodes its own expected figures and never reads this payload -- so the two are independent transcriptions of one page and migrating means connecting them, not only adding a declared_inputs block"
     ),
     "modelo-322-2024-grupo-entidades-omega.json": (
-        "no test names this payload in source; it is reached through a constructed filename, so the "
-        "consuming fixture must be located before the facts can be moved into the payload"
+        "consumed by test_m322_2024_grupo_entidades_manual_worked_example.py, which references the case by scenario id, hardcodes its own expected figures and never reads this payload -- so the two are independent transcriptions of one page and migrating means connecting them, not only adding a declared_inputs block"
     ),
     "modelo-353-2024-grupo-entidades-agregado.json": (
-        "no test names this payload in source; it is reached through a constructed filename, so the "
-        "consuming fixture must be located before the facts can be moved into the payload"
+        "consumed by test_m353_2024_grupo_entidades_manual_worked_example.py, which references the case by scenario id, hardcodes its own expected figures and never reads this payload -- so the two are independent transcriptions of one page and migrating means connecting them, not only adding a declared_inputs block"
     ),
     "modelo-390-2024-resumen-anual-cuatro-trimestres.json": (
-        "no test names this payload in source; it is reached through a constructed filename, so the "
-        "consuming fixture must be located before the facts can be moved into the payload"
+        "consumed by test_m390_2024_annual_manual_worked_example.py, which references the case by scenario id, hardcodes its own expected figures and never reads this payload -- so the two are independent transcriptions of one page and migrating means connecting them, not only adding a declared_inputs block"
     ),
 }
 
