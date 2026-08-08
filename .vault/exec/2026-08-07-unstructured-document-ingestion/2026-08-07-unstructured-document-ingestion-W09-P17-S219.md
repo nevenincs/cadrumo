@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:778370ca1578d8a1157278807f4100f256540f85c031d744c8637864fbc926d6'
+body_hash: 'sha256:850edbd1f9ffc53df26e597a8fcadc79e702eb4b2b431a701584478460379b83'
 step_id: 'S219'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -15,57 +15,64 @@ related:
 ## Scope
 
 - `src/cadrumo/application/ledger`
+- `src/cadrumo/entrypoints/cli`
 
 ## Description
 
 - Measure which surfaces hold both confirmed axes and which hold only the territorial one, by reading their fields rather than their names.
 - Rename the eight surfaces that span both, including the persisted namespace key and its stored namespace string.
-- Leave the two surfaces that are genuinely establishment-only, and record why.
+- Leave the surfaces that are genuinely establishment-only, and record why.
 - Rule the storage-key question, which is a migration decision rather than a rename.
-- Land it as one commit with a clean collect-only either side.
+- Correct the operator prose that still described one fact, and carry the six changed strings into all four catalogues.
 
 ## Outcome
 
-The record grew a second axis when the identification fact landed beside the territorial one, and every name around it still said establishment. Measured by fields rather than by name:
+The record grew a second axis when the identification fact landed beside the territorial one, and every name and sentence around it still said establishment. Measured by fields rather than by name:
 
-Holding BOTH axes, and therefore renamed: the record itself, its resolution, its repository, its input error, the record, resolve and forget functions, the key derivation, and the persisted namespace. `ConfirmedCounterpartyFacts` and its family now say what the record is — the facts an operator has confirmed about a counterparty — rather than naming one of the two.
+Holding BOTH axes, and therefore renamed: the record, its resolution, its repository, its input error, the record, resolve and forget functions, the key derivation, and the persisted namespace. Holding only the territorial axis, and therefore left: the contradiction model, whose fields are a confirmed and an evidenced scope; the conflict error, raised only when a second assertion names a different territory; and the ladder's scope-returning entry point. Renaming those for symmetry would have made three correct names wrong.
 
-Holding ONLY the territorial axis, and therefore left alone: the contradiction model, whose fields are a confirmed scope and an evidenced scope and nothing else, and the conflict error, which is raised only when a second assertion names a different territory. Renaming those for symmetry would have made two correct names wrong, which is the same test that kept `stated_country_name` and `stated_country_code_status` intact on the ladder an hour earlier. The ladder's own scope-returning entry point keeps its name for the same reason.
+The prose split the same way. Changed: the group and confirm helps, the withdraw help and its nothing-to-withdraw notice, the unverifiable-identifier refusal in both places, and the retry notice — each addresses the whole record. Unchanged, with reasons: the scope option's help describes that option; the not-confirmed notice explains the establishment rung specifically; and the show help is accurate because show reports what the ladder will answer rather than what the record holds. Widening show to display the identification would be a behaviour change and is named as a follow-up rather than smuggled in under a prose row.
 
-**The storage key moved, and that is a ruling rather than a rename.** An object key addresses persisted records, so changing it makes existing records unaddressable. The compatibility regime is `pre_release`, and the governing rule is explicit that a changed key derivation is deleted rather than bridged — no migration pass, no read-tolerance of what an earlier version wrote. Leaving it would have put the misleading name in the one place a reader most needs it right and the one place that outlives every symbol. So it moved, and the consequence is stated: any records written under the old key in a development bucket are no longer found. Under a released regime this would have required an upgrader instead, and the decision would have gone the other way.
+**The storage key moved, and that is a ruling.** An object key addresses persisted records, so changing it makes existing records unaddressable. The regime is pre-release and the governing rule is explicit that a changed key derivation is deleted rather than bridged. Leaving it would have put the misleading name in the one place that outlives every symbol. The consequence is that records written under the old key in a development bucket are no longer found; under a released regime the decision inverts and the rename waits for an upgrader.
 
 ## Verification
 
-Collection, immediately before and after, on the working tree:
+Collection, either side of the rename, on the working tree:
 
-    23242/27295 tests collected (4053 deselected)   [before]
-    23250/27308 tests collected (4058 deselected)   [after]
+    23242/27295 collected (4053 deselected)   [before]
+    23250/27308 collected (4058 deselected)   [after]
 
-The thirteen-test difference is peer work landing alongside, not this change: nothing here adds or removes a test.
+Residue at HEAD, after the commits landed:
 
-Surfaces exercised:
+    ConfirmedCounterpartyFacts                    12 files
+    LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE  5 files
+    CounterpartyEstablishmentFact / Repository     0 files
+    record_counterparty_establishment              0 files
+    LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE    0 files
 
-    uv run --no-sync pytest src/cadrumo/application/ledger/tests \
-      src/cadrumo/entrypoints/cli/tests/test_ledger_counterparty_cli.py \
-      src/cadrumo/entrypoints/cli/tests/test_ledger_counterparty_show_cli.py -n0 -q -m "unit or integration"
-    1287 passed of 1287 collected
+Catalogue writes, verified by reading each value back from the file rather than from an exit status:
 
-Residue at HEAD, after the commit landed:
+    attempted=24  confirmed_on_disk=16   -> 8 retried -> confirmed on disk: 24 of 24
 
-    ConfirmedCounterpartyFacts                     12 files
-    record_confirmed_counterparty_facts             6 files
-    LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE   5 files
-    ledger_confirmed_counterparty_facts             1 file
+All six keys present in all four catalogues at HEAD.
 
-    CounterpartyEstablishmentFact                   0 files
-    CounterpartyEstablishmentRepository             0 files
-    record_counterparty_establishment               0 files
-    LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE     0 files
+Gates:
+
+    ledger + counterparty CLI (unit or integration, -n0):   1287 passed of 1287 collected
+    both counterparty CLI files:                              15 passed of 15 collected
+    locale parity alone:                                      34 passed of 34 collected
+    the three together:                                       43 passed of 43 collected
 
 ## Notes
 
-Two error message keys were renamed by the sweep and put back. They address the locale catalogues rather than naming a symbol, so moving them would have cost four catalogue edits and bought a reader nothing; one of them belonged to the conflict error, whose name was deliberately kept, so the sweep had carried it further than the decision went. The keepers were masked during the sweep and restored after, because three of them contain a renamed name as a prefix.
+Eight of the twenty-four catalogue writes did not land, and the tool reported nothing wrong. Only reading each value back from the file caught it; a run trusting exit statuses would have reported twenty-four writes and shipped sixteen. The eight were retried and confirmed individually.
 
-The rewrite crashed partway, on a locale file that matched the search and needed no change. The half-landed state was measured immediately rather than assumed: no old name remained anywhere, the package imported, and the namespace and both facades carried the new names — so the crash fell after every file that needed rewriting. The four locale catalogues were checked for truncation, since a crashed write is how a tracked file gets destroyed, and all four parse at full size.
+A combined run of the CLI files with the parity gate failed once with thirteen failures and nine errors, reporting two codebase keys missing from all four catalogues. Re-measured: the counterparty CLI references seventeen keys and every one resolves, and the same combination re-run is green at forty-three. It was a race against concurrent catalogue writes rather than a defect, which is consistent with this host's behaviour and with several lanes editing the catalogues continuously.
 
-One mistake to record. Linting was run over the whole working diff rather than over the files this change touched, and the fix pass rewrote at least one file belonging to another lane; write times place `domain/modelos/_row_models.py` inside that window. The edits are mechanical auto-fixes rather than semantic changes and no attempt was made to undo them, but the correct scope was the eleven files of this rename and it should have been named explicitly.
+Two error message keys were renamed by the sweep and put back. A message key addresses the catalogues rather than naming a symbol, so moving one costs four catalogue edits and buys a reader nothing; one belonged to the conflict error whose name was deliberately kept, so the sweep had carried the rename further than the decision went.
+
+The rewrite crashed partway, on a locale file that matched the search and needed no change. The half-landed state was measured rather than assumed: no old name remained, the package imported, and the namespace and both facades carried the new names. All four catalogues were checked for truncation, since a crashed write is how a tracked file gets destroyed here.
+
+Two absorptions are reported rather than hidden. Linting was run over the whole working diff rather than this change's files, and write times place another lane's `domain/modelos/_row_models.py` inside that window; the edits are mechanical auto-fixes and no undo was attempted. And the catalogue commit carried eighteen lines of a peer's modelo casilla translations, which were filled placeholders rather than changed meanings — taken because the code referencing my keys was already in HEAD, and leaving the catalogues behind it was the worse state.
+
+The prose half of this row was found by a post-change semantic search rather than by a gate. The pre-change search could not have found it: the inconsistency did not exist until the rename created it.
