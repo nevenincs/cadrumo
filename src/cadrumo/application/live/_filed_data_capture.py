@@ -275,6 +275,7 @@ class _CaptureAccumulator:
     filing_record_ids: list[str] = field(default_factory=list)
     conflicting_filing_record_ids: list[str] = field(default_factory=list)
     observations_for_calculation: list[FiledDeclaracionObservation] = field(default_factory=list)
+    evidence_notices: list[Notice] = field(default_factory=list)
     justificante_csvs_by_observation: dict[tuple[str, int, str, str], tuple[str, ...]] = field(default_factory=dict)
     casilla_count: int = 0
 
@@ -302,6 +303,13 @@ class _CaptureAccumulator:
         )
         self.filing_record_ids.extend(enrollment.filing_record_ids)
         self.conflicting_filing_record_ids.extend(enrollment.conflicting_filing_record_ids)
+        # The enrolment already produced one typed WARNING per artefact that
+        # yielded no evidence, each naming its own reason. They were being
+        # discarded here, which is what let a capture extract casillas and report
+        # zero justificante evidence with no visible cause. Collected verbatim --
+        # never merged -- because two distinguishable dead ends folded into one
+        # notice recreates the collapse the reasons exist to undo.
+        self.evidence_notices.extend(enrollment.notices)
         self.casilla_count += len(observation.casillas)
         self.observations_for_calculation.append(observation)
 
@@ -605,6 +613,7 @@ async def capture_filed_data_bulk(
         calculation_observation_keys=tuple(calculation_observation_keys),
         failures=tuple(failures),
         skipped_casillas=finalization.skipped_casillas,
+        evidence_notices=tuple(accumulator.evidence_notices),
     )
 
 
@@ -710,7 +719,7 @@ async def discover_filed_history(
     which is the flag a caller must check before making any coverage claim.
 
     Args:
-        profile: The taxpayer's declared profile, supplying the load-bearing
+        profile: The taxpayer's declared :class:`TaxpayerProfile`, supplying the load-bearing
             :attr:`~core.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY`
             signal. ``None`` yields a register-options-only report.
         today: Reference date for applicability and the year span's upper bound.
@@ -916,7 +925,7 @@ def expected_filed_declaration_grid(
     which side a candidate falls out of.
 
     Args:
-        profile: The taxpayer's declared three-axis profile.
+        profile: The taxpayer's declared three-axis :class:`TaxpayerProfile`.
         today: Reference date for applicability evaluation and the year span's
             upper bound.
 
@@ -1143,7 +1152,7 @@ def classify_register_scoping_signal(
     ``LIKELY_NIF_SCOPED``, never confirmation.
 
     Args:
-        profile: The taxpayer's declared profile, supplying the
+        profile: The taxpayer's declared :class:`TaxpayerProfile`, supplying the
             positively-excluded modelo set.
         availability: The register's offered option set.
         today: Reference date for applicability evaluation.
@@ -1268,6 +1277,8 @@ class FiledHistoryOnboardingRun(BaseModel):
     notificaciones_status: str = Field(default="not_attempted", min_length=1, max_length=64)
     notificaciones_row_count: int = Field(default=0, ge=0)
     stage_failures: tuple[str, ...] = ()
+    evidence_notices: tuple[Notice, ...] = ()
+    """Per-artefact evidence advisories raised during capture, each keeping its own reason."""
 
     @property
     def refused_pairs(self) -> tuple[FiledHistoryPairOutcome, ...]:
@@ -1470,7 +1481,7 @@ async def pull_filed_history(
 
     Args:
         output_root: Root the capture writes its encrypted stores under.
-        profile: The taxpayer's declared profile, supplying the load-bearing
+        profile: The taxpayer's declared :class:`TaxpayerProfile`, supplying the load-bearing
             discovery signal. ``None`` yields a run with no taxpayer-specific
             denominator, reported as such.
         today: Reference date for applicability and the year span.
@@ -1578,6 +1589,7 @@ async def pull_filed_history(
         notificaciones_status=notificaciones_status,
         notificaciones_row_count=notificaciones_rows,
         stage_failures=tuple(stage_failures),
+        evidence_notices=capture.evidence_notices,
     )
 
 

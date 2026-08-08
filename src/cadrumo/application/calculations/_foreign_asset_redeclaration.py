@@ -1,5 +1,10 @@
 """Foreign-asset re-declaration advisory helpers for Modelo 720 and 721.
 
+Every projection here reads a persisted :class:`CalculationRevision` against the
+registry's :class:`ModeloRevision` for the same filing context, and emits its
+result as :class:`CasillaObservation` rows so the advisory carries the same
+per-casilla grounding the rest of the calculation chain does.
+
 See Also:
     :mod:`~application._foreign_asset_thresholds`
         Resolves the per-bloque declaration floors and re-declaration deltas
@@ -250,6 +255,14 @@ def modelo_720_declared_observation(
     Returns a :class:`RegistryModeloObservation` carrying only the valuation
     casillas present in the operator's input set.
 
+    Args:
+        revision: The persisted :class:`CalculationRevision` whose operator
+            inputs are read as the declaration.
+        modelo_revision: The :class:`ModeloRevision` supplying each valuation
+            casilla's legal and source grounding.
+        filing_year: Devengo year the observation is stamped with.
+        period: Registry period token the observation is stamped with.
+
     See Also:
         :func:`modelo_720_evidence_observation`
             The independent valuation counterpart this declaration is tested
@@ -305,6 +318,14 @@ def modelo_720_evidence_observation(
     silently empty the evidence side.
 
     Returns an empty observation when the revision carries no asset rows.
+
+    Args:
+        revision: The persisted :class:`CalculationRevision` whose
+            ``row_binding_values`` carry the per-asset rows.
+        modelo_revision: The :class:`ModeloRevision` the two ``foreign_asset``
+            row bindings are discovered from by selector.
+        filing_year: Devengo year the observation is stamped with.
+        period: Registry period token the observation is stamped with.
     """
     class_binding = _foreign_asset_row_binding_id(modelo_revision, row_field=_ASSET_CLASS_ROW_FIELD)
     valuation_binding = _foreign_asset_row_binding_id(modelo_revision, row_field=_VALUATION_ROW_FIELD)
@@ -365,6 +386,14 @@ def modelo_720_prior_baseline_observation(
     Returns an empty observation when no prior baseline resolved, which leaves
     the re-declaration advisory silent rather than comparing against a
     fabricated zero baseline.
+
+    Args:
+        binding_values: Resolved ``previous_filing`` binding values, already
+            revision-confirmed against their source context.
+        modelo_revision: The :class:`ModeloRevision` supplying each projected
+            casilla's legal and source grounding.
+        filing_year: Devengo year the observation is stamped with.
+        period: Registry period token the observation is stamped with.
     """
     refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
     observations: list[CasillaObservation] = []

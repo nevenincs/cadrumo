@@ -9,6 +9,10 @@ It emits registered payload schemas such as :class:`FiledListResult`,
 :func:`_emit_envelope`. The commands collect or render local evidence only; live
 submission, payment, acknowledgement, and representative write actions remain
 outside this CLI surface.
+
+The filed-declaration commands resolve the operator's :class:`TaxpayerProfile`
+and pass it to the application layer, because which modelos a filer is even
+asked about is a property of their declared profile rather than of the command.
 """
 
 from __future__ import annotations
@@ -1209,8 +1213,10 @@ def filed_pull_all_cmd(
     denominator that may have nothing to do with this taxpayer; the prose
     denominator note says what was actually measured.
     """
+    from ...core.config import load_settings
+
     profile = _active_taxpayer_profile_or_none()
-    resolved_root = resolve_optional_root(output_root)
+    resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
     _emit_live_auth_preflight()
     run = asyncio.run(pull_filed_history(output_root=resolved_root, profile=profile, limit=limit))
     result, lines = _filed_pull_all_result_and_lines(run)
@@ -1318,6 +1324,12 @@ def _filed_pull_all_notices(run: FiledHistoryOnboardingRun) -> list[Notice]:
                 },
             ),
         )
+    # Three advisory sources, ONE channel. The justificante enrolment's typed
+    # unreached-evidence reasons ride the same envelope notices list as this run's
+    # own two advisories, forwarded verbatim so each of the six reasons stays
+    # separately readable -- collapsing them into one "evidence not enrolled"
+    # notice would rebuild, one layer up, the uniform silence they exist to undo.
+    notices.extend(run.evidence_notices)
     if not run.carries_a_taxpayer_specific_denominator:
         notices.append(
             Notice(

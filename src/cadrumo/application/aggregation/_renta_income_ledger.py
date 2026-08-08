@@ -627,8 +627,9 @@ def aggregate_renta_m131_agrario_income_ledger(
     Modelo 131 carries no cross-quarter cumulative on this leg.
 
     Args:
-        transactions: The catalogue to project.
-        invoices: Consulted when classifying; an empty catalogue when omitted.
+        transactions: The :class:`TransactionCatalogue` to project.
+        invoices: The :class:`InvoiceCatalogue` consulted when classifying; an
+            empty catalogue when omitted.
         bucket_id: The active profile bucket.
         period: The quarter being filed.
 

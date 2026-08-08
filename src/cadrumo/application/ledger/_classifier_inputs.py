@@ -159,9 +159,10 @@ def collect_classifier_inputs(
 
     Args:
         draft: The read document. Only its printed identifiers are consulted.
-        profile: The filer's own profile, when one is resolvable. ``None``
-            records no regime fact rather than assuming a regime — guessing the
-            filer's regime would change the tax on every document they file.
+        profile: The filer's own :class:`TaxpayerProfile`, when one is
+            resolvable. ``None`` records no regime fact rather than assuming a
+            regime — guessing the filer's regime would change the tax on every
+            document they file.
 
     Returns:
         :class:`ClassifierInputs`: The facts, each with its source.

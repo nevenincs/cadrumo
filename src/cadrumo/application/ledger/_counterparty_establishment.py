@@ -247,8 +247,11 @@ class CounterpartyEstablishmentFact(BaseModel):
 class CounterpartyEstablishmentRepository(SecureBoundRepository[CounterpartyEstablishmentFact]):
     """Encrypted profile-local store of confirmed counterparty establishment facts.
 
-    The namespace, sensitivity, schema version and object-key contract come from
-    :data:`~adapters.persistence.storage.LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE`.
+    The namespace, its :class:`SensitivityClass`, schema version and object-key
+    contract all come from
+    :data:`~adapters.persistence.storage.LEDGER_COUNTERPARTY_ESTABLISHMENT_NAMESPACE`,
+    so the record's confidentiality tier is declared once beside the namespace
+    rather than restated here.
     Writes go through the shared single-writer envelope primitive rather than
     beside it, so a record here gets the same atomicity and encryption every
     other bucket-scoped record gets.

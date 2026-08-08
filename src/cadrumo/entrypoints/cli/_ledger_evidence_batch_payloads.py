@@ -1,5 +1,9 @@
 """Typed ``--json`` payload schemas for the ledger evidence batch run.
 
+Every model here is registered as an :class:`OutputSchema`, so the batch run's
+``--json`` surface is introspectable from the same registry every other command's
+payload is, rather than being an untyped dict assembled at the emit site.
+
 Split into its own module rather than added to
 :mod:`~entrypoints.cli._ledger_business_payloads`, following the same pattern
 that module's own docstring documents for

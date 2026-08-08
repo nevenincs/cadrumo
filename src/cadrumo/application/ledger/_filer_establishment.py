@@ -76,9 +76,10 @@ def resolve_filer_territorial_scope(
     """Return the IVA territory the taxpayer's own establishment sits in.
 
     Args:
-        profile_record: The taxpayer's profile record, or ``None`` when none was
-            resolvable. ``None`` refuses rather than defaulting: no profile is
-            not an empty profile, and neither of them is a territory.
+        profile_record: The taxpayer's :class:`UserProfileRecord`, or ``None``
+            when none was resolvable. ``None`` refuses rather than defaulting:
+            no profile is not an empty profile, and neither of them is a
+            territory.
 
     Returns:
         :class:`~domain.iva.IvaTerritorialScope`: The filer's own territory.

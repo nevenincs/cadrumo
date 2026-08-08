@@ -61,6 +61,13 @@ def modelo_720_redeclaration_findings(
     declaration against. Silence in those cases is the honest outcome: there is
     nothing independent to compare, and a fabricated zero baseline would
     manufacture advisories on first-year filings.
+
+    Args:
+        work_unit: The unit under verification; its modelo, filing year and
+            period drive the law-determined revision resolution.
+        revision: The persisted :class:`CalculationRevision` supplying both the
+            operator's declaration and the foreign-asset row evidence.
+        observation_repository: Source of the carried prior-year baseline.
     """
     if work_unit.modelo != Modelo.M720:
         return ()
