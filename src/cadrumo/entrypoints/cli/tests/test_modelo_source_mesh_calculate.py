@@ -838,6 +838,11 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
         iva_amount=Decimal("42.00"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
         counterparty_eu_member_state=EUMemberState.DE,
+        # Established AND VAT-identified in Germany, which is the ordinary case.
+        # Art. 25 exempts on the IDENTIFICATION, so the supply is refused at
+        # preflight without it however clear the establishment is; declaring
+        # only the establishment is what this fixture used to do.
+        counterparty_identification_state=EUMemberState.DE,
     )
     with profile_storage_session(bucket_id):
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
