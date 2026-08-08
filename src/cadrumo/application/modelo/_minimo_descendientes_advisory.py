@@ -32,7 +32,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import NamedTuple
 
@@ -70,6 +70,10 @@ _ENTRY_DATE_MISSING_SOURCE_KIND = "minimo_descendientes_entry_date_missing"
 _DEPENDENCIA_ASSIMILATED_SOURCE_KIND = "minimo_descendientes_dependencia_assimilated"
 _DEPENDENCIA_SUPPRESSED_SOURCE_KIND = "minimo_descendientes_dependencia_suppressed"
 _GUARDERIA_SHAPE_SOURCE_KIND = "guarderia_spend_needs_monthly_detail"
+_SEGUNDO_CICLO_SOURCE_KIND = "guarderia_segundo_ciclo_month_undeclared"
+_COTIZACIONES_FACT_KEY = "renta_family.cotizaciones_ss_madre_2024"
+_TURNING_THREE_AGE = 3
+_COTIZACIONES_CEILING_SOURCE_KIND = "guarderia_cotizaciones_ceiling_unbounded"
 _GUARDERIA_MADRE_MESES_SOURCE_KIND = "guarderia_madre_meses_undeclared"
 
 #: The Art. 81.2 guardería increase (Modelo 100 casilla 0613).
@@ -370,6 +374,85 @@ def _guarderia_shape_advisory(indices: list[int], casilla_id: CasillaId) -> Calc
     )
 
 
+def _cotizaciones_ceiling_is_unbounded(
+    descendants: Sequence[DescendantInfo],
+    facts: Mapping[str, str],
+    filing_year: int,
+) -> bool:
+    """Whether an unbounded cotizaciones ceiling can change this filing's outcome.
+
+    Reads the household cotizaciones fact directly rather than through a profile
+    object, because this collector already holds the fact strings and rebuilding a
+    profile to ask one question would be a second reader of the same data.
+
+    Silent unless a figure is actually declared: with none the ceiling binds at zero
+    and the increment is already nil for a reason the operator can see, so the
+    advisory would add nothing but noise.
+    """
+    raw = facts.get(_COTIZACIONES_FACT_KEY, "").strip()
+    if not raw:
+        return False
+    try:
+        declared = int(raw)
+    except ValueError:
+        return False
+    if declared <= 0:
+        return False
+    return any(
+        descendant.convive_con_contribuyente
+        and descendant.age_at_year_end(filing_year) == _TURNING_THREE_AGE
+        and bool(descendant.gastos_guarderia_mensuales)
+        for descendant in descendants
+    )
+
+
+def _segundo_ciclo_month_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+    """The turning-three window is withheld until the operator declares the month."""
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_SEGUNDO_CICLO_SOURCE_KIND,
+        message=(
+            f"casilla {casilla_id!r} counts no guardería spend for {_name_indices(indices)}: the "
+            "child turns three in this period, so Art. 81.2 LIRPF admits spend only up to the "
+            "month before the second cycle of educación infantil may begin, and that month is "
+            "not declared"
+        ),
+        remedy=(
+            "Declare it with `descendiente add --descendiente SEGUNDO_CICLO_INFANTIL_INICIO_MES=MM`. "
+            "The month is the one the second cycle may start for this child, which your región "
+            "and centre determine; your centre reports it on the modelo 233."
+        ),
+        casilla_id=casilla_id,
+    )
+
+
+def _cotizaciones_ceiling_advisory(casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+    """The cotizaciones limb is bounded by the same month, and is NOT applied here.
+
+    Disclosed rather than computed: the declared figure is a household annual total
+    while the ceiling is per child, and AEAT states no rule for apportioning one
+    across several. Computing one would invent the arithmetic this advisory exists
+    to keep out of the engine.
+    """
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_COTIZACIONES_CEILING_SOURCE_KIND,
+        message=(
+            f"casilla {casilla_id!r} caps the guardería increment with the declared cotizaciones "
+            "total as supplied. For a child turning three, Art. 81 counts only the cotizaciones "
+            "devengadas up to the month before the second cycle may begin, and this application "
+            "does not apply that bound: the figure is a household annual total while the ceiling "
+            "is per child"
+        ),
+        remedy=(
+            "Supply the already-bounded figure — the cotizaciones devengadas up to the month "
+            "before the second cycle may begin — rather than the full annual total, if the two "
+            "differ for this filing."
+        ),
+        casilla_id=casilla_id,
+    )
+
+
 def _guarderia_madre_meses_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
     return CalculationSourceDiagnostic(
         reason="source_issue",
@@ -643,9 +726,20 @@ def collect_guarderia_spend_shape_diagnostics(
         for index, descendant in enumerate(descendant_list_from_facts(descendant_facts))
         if descendant.guarderia_needs_monthly_detail(filing_year)
     ]
-    if not affected:
-        return ()
-    return (_guarderia_shape_advisory(affected, casilla_id),)
+    descendants = descendant_list_from_facts(descendant_facts)
+    needs_month = [
+        index
+        for index, descendant in enumerate(descendants)
+        if descendant.guarderia_needs_segundo_ciclo_month(filing_year)
+    ]
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    if affected:
+        diagnostics.append(_guarderia_shape_advisory(affected, casilla_id))
+    if needs_month:
+        diagnostics.append(_segundo_ciclo_month_advisory(needs_month, casilla_id))
+    if _cotizaciones_ceiling_is_unbounded(descendants, facts, filing_year):
+        diagnostics.append(_cotizaciones_ceiling_advisory(casilla_id))
+    return tuple(diagnostics)
 
 
 def _guarderia_descendants(revision: ModeloRevision, *, modelo: str, bucket_id: str) -> _GuarderiaContext | None:
