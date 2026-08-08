@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:26cb9658081c85940cefc27aee7edf0cfd492b35ff2239b1b2f2cdcd0adbee8c'
+body_hash: 'sha256:53d8f6dbc87a2ce33dba06b797c875b3e6da5ac85ab39d2e92dbdfb7ca89bbbf'
 related: []
 ---
 
@@ -207,25 +207,54 @@ so it opened with focus on the picker rather than the passphrase field. Both
 are the same shape: a constructor argument that defaults to empty, producing a
 screen that renders cleanly while showing less than the real one. Both are
 fixed by calling the production composition rather than reproducing its
-arguments. The cost was not hypothetical — one reviewer reported a geometry
-defect naming three buttons that were not on the screen, the coordinator
-relayed it as corroborated, a second reviewer was dispatched to chase it, and a
-four-locale clean verdict was recorded for six button labels that had not been
-rendered. The generalisable lesson: an evaluation instrument's fidelity to
+arguments. The generalisable lesson: an evaluation instrument's fidelity to
 production is itself a claim requiring proof, and a stand-in that renders
 cleanly is indistinguishable from the real surface until something is compared
 against the production entry point.
 
-### RETRACTED manager-action-row-overflow | retracted | not reproducible; read off a stand-in
+A correction belongs here, because this finding was initially over-credited.
+The coordinator attributed a fabricated geometry finding and a false
+four-locale clearance to these stand-ins. Both attributions were wrong: the
+harness had already been repaired when both readings were taken, and the two
+reviewers were right on the facts while the coordinator was wrong on the
+timeline. The stand-ins were real and worth fixing — the manager did render
+with no actions for a period, and the login screen did order rows by an opaque
+identifier and preselect nothing — but they did not corrupt the findings blamed
+on them. Damage attributed to a defect should be measured, not inferred from
+the defect's existence.
+
+### manager-action-row-overflow | medium | real when observed, fixed by concurrent peer work, and wrongly retracted in between
 
 Reported as three action buttons painted past the right edge at one hundred
-columns. Those buttons did not exist on the harness surface at the time of the
-reading, which preceded the harness repair by twenty-one minutes. Re-driven
-after repair with all six actions present: no overflow at that width. Recorded
-rather than deleted, because the retraction is the evidence for the
-harness-fidelity finding above. The narrower question — whether the six-button
-row overflows at the eighty-column floor, particularly under Hungarian — is
-open and unmeasured.
+columns. The coordinator retracted it as fabricated, reasoning that the harness
+had built the manager with no actions at the time of the reading. **That
+reasoning was wrong and the retraction is itself withdrawn.** The harness wired
+the real actions at 10:29:41; the reading is timestamped 10:30:58, seventy-seven
+seconds later, so the buttons were on screen. Separately, the manager screen's
+action panel used a horizontal container until 10:51:43, when unrelated
+concurrent work moved it to a vertical one — six buttons in a row became one
+button per row, and the overflow disappeared. The finding was real when
+observed, and had been fixed by a peer, independently, before the coordinator
+re-drove the surface and read `ok`.
+
+Two lessons, the second being the one worth keeping. First, a finding that fails
+to reproduce in a tree with many concurrent writers has two explanations — it
+was never real, or it was fixed underneath you — and the reviewer's timestamp
+checked against the commit log separates them cheaply. Reaching for the first
+explanation is how a valid finding gets destroyed. Second, the coordinator
+misattributed the harness repair to a later commit than the one that carried
+it, built a confident timeline on that single unverified premise, accused a
+reviewer of fabricating evidence, instructed a second reviewer to strike the
+finding, and then cited the supposed fabrication as supporting evidence for a
+separate finding. **A verification that produces an accusation deserves at
+least the scrutiny of the claim it examines**; this one received less, because
+it confirmed a story already forming.
+
+Still open: whether the now-vertical action column has any width problem at the
+eighty-column floor under Hungarian. A reviewer re-checked and found it clean —
+the longest Hungarian label fits comfortably in a full-width row, and the
+structurally different case is the question screen's footer, which packs its
+bindings horizontally with no wrap.
 
 ## Recommendations
 
