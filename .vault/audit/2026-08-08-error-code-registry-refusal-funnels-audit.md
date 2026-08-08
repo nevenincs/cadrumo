@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:0380a8adfbeec265f3d8a708251d700ec8bf9cc45af74a147f9d76e4a518407d'
+body_hash: 'sha256:36064ad16cbea8f7a3edd4632e1fefd6a7b680502985d9ef1bbe39efd76bebac'
 related: []
 ---
 
@@ -76,7 +76,13 @@ harsher than an unbounded free-text one despite lower cardinality, and ranking b
 cardinality alone sequences the work backwards.
 
 The worst confirmed funnel carried a sixteen-member enum through one key. Both enum-backed
-funnels found are now fixed; the twenty remaining are free-text or self-describing.
+funnels found are now fixed — the ledger preflight block in `37bcc4287c` and the workflow
+terminal-resume refusal in `d04c5a9057`. The twenty remaining are free-text or
+self-describing.
+
+Each fix passes both a `message` and the existing `translated_message` at the raise site.
+Verified rather than assumed on the second: constructing the same error with and without the
+message yields a byte-identical envelope and a different `str(exc)`.
 
 ### refusal-funnels | high | the test surface is not the exposed surface
 
@@ -151,7 +157,20 @@ structured context at all, given that it is the field the redaction rule singles
 outside the logging filter's cover. That is a decision about the boundary, not about the
 message format.
 
-Re-run the surveys before acting on any figure here. Four scripts were used and each is
-re-runnable; every count in this document is a measurement of a stated population at one
-point in a moving tree, and two of the three population choices made during this audit
-turned out to be the wrong one.
+Re-run the surveys before acting on any figure here. Every count is a measurement of a
+stated population at one point in a moving tree, and two of the three population choices
+made during this audit turned out to be the wrong one. Four scripts produced them, each
+re-runnable and each written to be read rather than trusted: `survey_wrapper_keys.py` (the
+retracted first pass, kept because its blind spot is the finding), `survey_v2.py` (the
+corrected count), `classify_77.py` (the anchored-pattern residue) and
+`redaction_exposure.py` (the flagged context entries). They live outside the repository, in
+the authoring agent's scratch directory, and will not survive it — anyone continuing this
+work should expect to rewrite them from the descriptions above rather than to find them.
+
+A closing note on where this document lives, because it is the reason it exists. This
+finding was tracked as a task row and the row is gone; the work survived only because it was
+also written here. Every finding from the surrounding effort that outlived its tracking did
+so the same way — by being written into the artefact its next reader would open anyway: a
+registry fragment, a code comment, an architecture decision record. The tracking layer holds
+the conclusion well and the reasoning badly, and the reasoning is what took the measurements
+to produce.
