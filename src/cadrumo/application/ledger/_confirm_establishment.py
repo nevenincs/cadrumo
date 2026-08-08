@@ -47,6 +47,11 @@ See Also:
         The ladder this module routes the counterparty into.
     :func:`~application.ledger.resolve_filer_territorial_scope`
         The profile authority for the filer's own side.
+    :class:`UserProfileRecord`
+        The record that authority reads the filer's territory out of, and the
+        reason the filer's side is never asked of the paper: it is a declared
+        system-authoritative fact, so an absent record is a setup gap rather
+        than an unreadable document.
     :func:`~application.ledger.assemble_classification_criteria`
         What the resolved scopes are carried into.
     :class:`~application.ledger.DeclaredFacts`
