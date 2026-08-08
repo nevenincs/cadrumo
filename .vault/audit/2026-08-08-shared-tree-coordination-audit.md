@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:7860b5db4e5df9670b9d57d5a57cb16099763e18e9f0b459c1f18dff7879b4a9'
+body_hash: 'sha256:0bc7e051df72dbd0c736be802b8cdf17e15f0f4c4b381bbca18b314b8c6a5225'
 related: []
 ---
 
@@ -34,6 +34,12 @@ The annotation-stripping fix verb was invoked with a feature named. It stripped 
 Leaving them uncommitted for their owners was the right call: committing another agent's records would have compounded a scope error into a false attribution.
 
 **What follows.** A `--fix` on a repair verb is a tree-wide claim unless proven otherwise, whatever scoping argument accompanies it. Preview first, and read the preview's file list rather than its summary count. The same caution applies to any tree-wide generator: a documentation-stub scaffold emits stubs for peers' modules too, and the correct response is to diff each regenerated file and stage only those whose added lines name your own module.
+
+A second, independently reported instance: the whole-vault `check all --fix` dirtied vault documents belonging to two other features across two runs. Same shape, same correct response — commit only your own paths by explicit pathspec and revert nothing. The reporting executor switched to the narrower `check placeholders`, which is the right mitigation.
+
+**One claim in this class was reported and then withdrawn by its own author, and the withdrawal is recorded rather than the claim quietly dropped.** A third verb, the modified-stamp check, was reported as writing even without `--fix`. Its author retested and found it reports only: their file stayed flagged after the run and needed a round-trip through the owning edit verb to re-attest. So whatever re-stamped two execution records in another feature earlier, it was not that verb, and the likeliest explanation is an ordinary peer edit. Recorded because a withdrawn finding left unrecorded gets re-derived by the next reader, and because the withdrawal itself is the useful part: the author distinguished "my file changed after I ran X" from "X changed my file", which are not the same observation.
+
+The `--feature` scoping advice survives the withdrawal on its own merits, since two verbs in this class do write tree-wide.
 
 ### Why this is recorded rather than codified
 
