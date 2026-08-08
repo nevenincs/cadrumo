@@ -260,7 +260,19 @@ SURFACES: dict[str, Surface] = {
             needs_profile=True,
             needs_session=True,
         ),
-        Surface("status", "Read-only status page", _status, needs_profile=True),
+        Surface(
+            "status",
+            "Read-only status page",
+            _status,
+            needs_profile=True,
+            # A session, not merely a profile. The notices band and the
+            # session-deadline rows both read through the ACTIVE bucket, and
+            # both render empty without one -- so a locked-profile reading
+            # showed a status page with no advisories and no deadlines and
+            # looked correct, which is the stand-in shape this harness has
+            # already been caught by twice.
+            needs_session=True,
+        ),
         Surface(
             "form",
             "SYNTHETIC — no single production caller; do not read findings off its field content",
