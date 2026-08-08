@@ -197,6 +197,39 @@ def test_no_generator_emits_an_em_dash(generator: str) -> None:
     )
 
 
+def test_every_docs_chrome_key_is_visible_to_the_locale_scanner() -> None:
+    """A catalogue key no call site spells out is deleted by the next scaffold.
+
+    The scanner recognises a key only when a call site carries the FULL dotted
+    string as a literal. A key composed from a variable, an f-string tail, or a
+    prefix concatenated inside a helper is invisible: ``scaffold`` prunes it as
+    unreferenced and the parity gate reports it as a key no code requests. The
+    surface then reverts to raising on every page, silently, while the catalogue
+    still looks complete.
+
+    Gated rather than remembered because it has recurred three times across
+    three surfaces, each time authored by someone who had already been told, and
+    each time caught only because a human measured before running scaffold.
+    Reaching zero here is what makes scaffold safe to run.
+    """
+    from dev.locales import DOCS_SRC_DIR, LOCALES_DIR, SRC_DIR, LocaleManager
+
+    manager = LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR,))
+    catalogue = manager.get_yaml_keys(manager.load_locale(LOCALES_DIR / "es.yml"))
+    declared = {key for key in catalogue if key.startswith("docs.")}
+    assert declared, "no docs.* chrome keys found; the namespace moved and this gate went vacuous"
+
+    invisible = sorted(declared - manager.get_codebase_keys())
+    detail = "".join(f"\n  {key}" for key in invisible)
+
+    assert invisible == [], (
+        f"{len(invisible)} docs.* key(s) are invisible to the locale scanner and would be "
+        "deleted by the next `python -m dev.locales scaffold`. Spell the full key out at its "
+        "call site, or build it as an f-string whose literal head ends in a dot so the "
+        f"namespace marker is emitted:{detail}"
+    )
+
+
 def test_the_casilla_exclusion_is_still_earned() -> None:
     """The one excluded generator is excluded for a reason that still holds.
 
