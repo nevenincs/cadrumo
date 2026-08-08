@@ -131,6 +131,12 @@ line_ending = "none"
 # WRITER had correctly omitted, so no field of a compensacion, ingreso or
 # negativa fichero could be read back through this layout at all.
 required = false
+# The DID page carries the account AEAT pays a refund into, so the Diseno
+# intends it only on a refund disposition and the renderer suppresses it on
+# every other one. Declaring it required made the READER demand a record the
+# WRITER had correctly omitted, so no field of a compensacion, ingreso or
+# negativa fichero could be read back through this layout at all.
+required = false
 
 [[revisions.2009-y-siguientes.export_layouts.records.fields]]
 id = "modelo-303-page-did-open"
