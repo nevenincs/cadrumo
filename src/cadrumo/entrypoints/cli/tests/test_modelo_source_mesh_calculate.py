@@ -141,6 +141,7 @@ def _transaction(
     iva_amount: Decimal,
     iva_category: IvaCategory | None = None,
     counterparty_eu_member_state: EUMemberState | None = None,
+    counterparty_identification_state: EUMemberState | None = None,
 ) -> Transaction:
     fields: dict[str, object] = {
         "raw": _raw_transaction(provider_id, amount=amount),
@@ -159,6 +160,8 @@ def _transaction(
         fields["iva_category"] = iva_category
     if counterparty_eu_member_state is not None:
         fields["counterparty_eu_member_state"] = counterparty_eu_member_state
+    if counterparty_identification_state is not None:
+        fields["counterparty_identification_state"] = counterparty_identification_state
     return Transaction.model_validate(fields)
 
 
