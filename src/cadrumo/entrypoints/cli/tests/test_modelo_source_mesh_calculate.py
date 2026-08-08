@@ -139,6 +139,14 @@ def _transaction(
     amount: Decimal,
     taxable_base: Decimal,
     iva_amount: Decimal,
+    # Defaults to the general tipo, which every rate-bearing row in this file
+    # declares. A category whose cuota is zero by law takes an explicit ZERO
+    # tipo rather than an absent one: the missing-fact screen refuses a row with
+    # no iva_rate at all, and the zero-cuota guard refuses any tipo that is not
+    # exactly 0, so Decimal("0") is the one value satisfying both. (That the
+    # other rows here rely on the default is a fact about the file today, not a
+    # contract.)
+    iva_rate: Decimal | None = Decimal("0.21"),
     iva_category: IvaCategory | None = None,
     counterparty_eu_member_state: EUMemberState | None = None,
     counterparty_identification_state: EUMemberState | None = None,
@@ -151,7 +159,7 @@ def _transaction(
         "group_label": None,
         "category_id": "test_iva_operation",
         "taxable_base": taxable_base,
-        "iva_rate": Decimal("0.21"),
+        "iva_rate": iva_rate,
         "iva_amount": iva_amount,
         "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
         "classified_by": "manual",
@@ -836,9 +844,16 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     cuota_less_supply = _transaction(
         "intra-community-supply",
         direction=TransactionDirection.INCOMING,
-        amount=Decimal("242.00"),
+        # Base-only, as an exempt supply is: LIVA art. 25 exempts the operation,
+        # so no cuota arises and the invoice total IS the base. The fixture
+        # previously declared 242,00 against a 200,00 base with 42,00 of cuota at
+        # the default 0,21 tipo -- a row the law does not admit, which the
+        # aggregation guard correctly refused. The advisory was right; the data
+        # was wrong.
+        amount=Decimal("200.00"),
         taxable_base=Decimal("200.00"),
-        iva_amount=Decimal("42.00"),
+        iva_rate=Decimal("0"),
+        iva_amount=Decimal("0"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
         counterparty_eu_member_state=EUMemberState.DE,
         # Established AND VAT-identified in Germany, which is the ordinary case.
