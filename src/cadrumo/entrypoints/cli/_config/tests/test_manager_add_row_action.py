@@ -131,6 +131,7 @@ def test_committing_writes_the_row_into_the_encrypted_profile() -> None:
         "name": "Socio Uno",
         "share_pct": "50",
         "base_imponible_assigned": "1000",
+        "participe_clave": "1",
     }
 
     outcome = _run({_ROW_SECTION_KEY: _SOCIOS, **answer})
