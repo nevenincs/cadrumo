@@ -157,6 +157,15 @@ _IDENTITY_SEPARATOR = r"[.\-]?"
 # exists for -- is caught here; the same string cannot be caught by the arms
 # above, since its body carries no leading letter for the CIF shape and no
 # trailing one for the personal shape.
+#
+# Both constraints are GATE-time, and a gate cannot defend against a SCAN that
+# swallowed the identity before it ran. A space separates tokens in prose, so
+# this arm's scan joins the neighbouring word to the number -- ``ESB12345674 is``
+# in one direction, ``de SE556677889901`` in the other -- and the joined span
+# normalises to nothing any authority recognises, so the gate correctly refuses
+# it and the identity inside is never asked about. The space survives here only
+# because :func:`_gated_sub` now re-reads a refused span instead of spending it;
+# without that mechanism this separator MUST come out.
 _PREFIXED_IDENTITY_SEPARATOR = r"[ .\-]?"
 
 # NIF / NIE — Spanish personal identity numbers. Eight digits + check letter
@@ -493,6 +502,80 @@ def _outside_timestamps(
     return _replace_outside
 
 
+def _is_word_character(character: str) -> bool:
+    return character.isalnum() or character == "_"
+
+
+def _gated_sub(
+    pattern: re.Pattern[str],
+    value: str,
+    protected: tuple[tuple[int, int], ...],
+    admit: Callable[[str], str | None],
+) -> str:
+    """Substitute every span ``admit`` accepts, RE-READING one it refuses.
+
+    Three arms here are deliberately built as a wide scan admitted by a strict
+    gate, so that the checksum or the per-State structure decides and the shape
+    is only weak evidence. :func:`re.sub` breaks that arrangement: it spends the
+    span it matched whether or not the strategy rewrote it. The scan is greedy
+    and its separator classes admit characters that also separate WORDS, so a
+    match can carry a neighbouring word into the span. The joined span then
+    normalises to something no authority recognises, the gate refuses it
+    **correctly**, and the identity inside it is already consumed -- no later
+    pass reaches it. The gate was never wrong; it was never asked about the
+    right string.
+
+    A refusal therefore does not end the span's life here. Candidates are tried
+    longest-first from the same start, each required to end where a real token
+    ends, and only once every one is refused does the scan advance a single
+    character instead of past the whole match -- which lets a start further in
+    (``de SE556677889901`` -> ``SE556677889901``) be reached in turn. The gate
+    still decides everything; what changed is that it is consulted on every
+    plausible reading of the span rather than only the greediest one.
+
+    A span overlapping an ISO-8601 instant keeps the behaviour
+    :func:`_outside_timestamps` documents: it is passed over whole, because
+    nothing inside a timestamp is an identity and a rewritten stamp no longer
+    parses.
+    """
+    out: list[str] = []
+    pos = 0
+    length = len(value)
+    while pos < length:
+        match = pattern.search(value, pos)
+        if match is None:
+            break
+        start, end = match.span()
+        if any(span_start < end and start < span_end for span_start, span_end in protected):
+            out.append(value[pos:end])
+            pos = max(end, start + 1)
+            continue
+        replacement: str | None = None
+        stop = end
+        while stop > start:
+            # A candidate must end where a token ends. ``endpos`` makes ``\b``
+            # see an end-of-string it does not have, so without this guard the
+            # scan could hash a PREFIX of a longer opaque token.
+            if stop < length and _is_word_character(value[stop]):
+                stop -= 1
+                continue
+            candidate = pattern.match(value, start, stop)
+            if candidate is not None and candidate.end() == stop:
+                replacement = admit(value[start:stop])
+                if replacement is not None:
+                    break
+            stop -= 1
+        if replacement is None:
+            out.append(value[pos : start + 1])
+            pos = start + 1
+            continue
+        out.append(value[pos:start])
+        out.append(replacement)
+        pos = stop
+    out.append(value[pos:])
+    return "".join(out)
+
+
 def _apply_one(rule: _RedactionRule, value: str) -> str:
     pattern = re.compile(rule.pattern, re.MULTILINE)
     protected = _timestamp_spans(value)
@@ -508,23 +591,30 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
         # Imported here, not at module scope: ``core.identity`` reaches
         # ``core.errors``, which reaches this module — the same cycle the
         # lazy ``..errors`` imports below step around.
-        from ..identity import IdentityError, validate_identity
+        from ..identity import IdentityError, normalise_nif_iva, validate_identity
 
-        def _hash_if_identity(match: re.Match[str]) -> str:
-            span = match.group(0)
+        def _hash_if_identity(span: str) -> str | None:
+            # Normalise through the SAME function the codebase's canonical
+            # same-bearer predicate uses (``same_tax_identifier``), so pattern
+            # and gate agree by construction rather than by coincidence. They
+            # did not: this scan admits a dot as an internal separator while
+            # ``validate_identity`` strips only spaces and dashes, so the
+            # printed ``B.1234567.4`` matched the scan, was refused by the gate
+            # and reached the operator raw -- while ``same_tax_identifier``
+            # answered that it is the very same bearer as the ``B12345674``
+            # this funnel hashes.
             try:
-                validate_identity(span)
+                validate_identity(normalise_nif_iva(span))
             except IdentityError:
-                return span
+                return None
             return _sha256_prefix(span)
 
-        return _sub(_hash_if_identity)
+        return _gated_sub(pattern, value, protected, _hash_if_identity)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_NIF_IVA:
         # Imported at call time for the reason the identity arm above states.
         from ..identity import IdentityError, nif_iva_format_for_country, normalise_nif_iva, validate_identity
 
-        def _hash_if_nif_iva(match: re.Match[str]) -> str:
-            span = match.group(0)
+        def _hash_if_nif_iva(span: str) -> str | None:
             normalised = normalise_nif_iva(span)
             prefix, body = normalised[:2], normalised[2:]
             if prefix == "ES":
@@ -535,23 +625,22 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
                 try:
                     validate_identity(body)
                 except IdentityError:
-                    return span
+                    return None
                 return _sha256_prefix(span)
             spec = nif_iva_format_for_country(prefix)
             if spec is None or not spec.pattern.match(normalised):
-                return span
+                return None
             return _sha256_prefix(span)
 
-        return _sub(_hash_if_nif_iva)
+        return _gated_sub(pattern, value, protected, _hash_if_nif_iva)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IBAN:
 
-        def _hash_if_iban(match: re.Match[str]) -> str:
-            span = match.group(0)
+        def _hash_if_iban(span: str) -> str | None:
             if _IBAN_SHAPE_RE.match(span) and _iban_mod_97(span) == 1:
                 return _sha256_prefix(span)
-            return span
+            return None
 
-        return _sub(_hash_if_iban)
+        return _gated_sub(pattern, value, protected, _hash_if_iban)
     if rule.strategy is _RedactionStrategy.HOST_ONLY:
         return _sub(lambda m: _host_only(m.group(0)))
     if rule.strategy is _RedactionStrategy.FINGERPRINT:
