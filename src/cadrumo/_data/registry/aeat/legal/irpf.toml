@@ -3599,7 +3599,11 @@ reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#da-4; operator to re-stamp"
 notes = "LIRPF disposición adicional 50ª: deducción por obras de mejora de la eficiencia energética de viviendas (20%/40%/60% según el tipo de obra y la reducción de demanda/consumo acreditada por certificado energético). Base legal de las casillas de deducción y exceso por mejoras energéticas de vivienda en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#da-4 (DA quincuagésima); operator to confirm and re-stamp."
 required_text = [
-    "Deducción por obras de mejora de la eficiencia energética de viviendas",
+    "Deducción por obras de mejora de la eficiencia energética de viviendas",    # Apartado 6 (orden de aplicación sobre la cuota íntegra estatal), the
+    # last operative provision, at 77% of the disposición. The title alone
+    # previously grounded this entry. Verified complete against live BOE:
+    # apartados 1-6 on both sides.
+    "se restará de la cuota íntegra estatal después de las deducciones previstas en los apartados",
 ]
 
 [legal."ley-35-2006:da-58"]
