@@ -129,11 +129,17 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaId, ValidatedRegistryAuthority, validated_casilla_id
+from .. import (
+    CasillaId,
+    ManualWorkedExamplePayload,
+    ValidatedRegistryAuthority,
+    validated_casilla_id,
+)
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -178,17 +184,36 @@ _REL_2020 = {
 # Raw ingresos/gastos/reducciones inputs quoted from the manual; see the
 # module docstring for the per-box mapping and its cross-validation against
 # the manual's own stated subtotals.
-_TRABAJO_INPUTS: dict[CasillaId, Decimal] = {
-    validated_casilla_id("0003", surface="0003"): Decimal("18300.00"),
-    validated_casilla_id("0011", surface="0011"): Decimal("3060.00"),
-    validated_casilla_id("0013", surface="0013"): Decimal("610.00"),
-    validated_casilla_id("0019", surface="0019"): Decimal("2000.00"),
-    validated_casilla_id("0021", surface="0021"): Decimal("3500.00"),
-}
+_ORACLE_PAYLOAD_NAME = "modelo-100-2020-rendimientos-trabajo-despido-improcedente.json"
+
+
+def _oracle_payload() -> ManualWorkedExamplePayload:
+    """Read the bundled oracle through the registry's own strict payload model."""
+    path = Path(bundled_path("corpus", "manual_oracles")) / _ORACLE_PAYLOAD_NAME
+    return ManualWorkedExamplePayload.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+def _declared_trabajo_inputs() -> dict[CasillaId, Decimal]:
+    """The manual's own figures for this case, read FROM the oracle rather than retyped.
+
+    These four are stated in the example's SOLUCION rather than in its opening facts:
+    the certificate prints retribuciones, indemnizacion and cotizaciones, and the
+    manual then works them into the rendimientos integros, the art. 18.2 reduccion,
+    the deducible Seguridad Social and the two art. 19.2.f) reducciones that the
+    scenario actually consumes. Each locator points at the line stating the figure the
+    scenario uses, not at the raw fact it was derived from -- a locator that points
+    at 10.100 for an input of 20.300 would assert a reviewability it does not have.
+    """
+    declared = _oracle_payload().declared_inputs
+    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
+    return {
+        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
+        for casilla_id, value in declared.by_casilla_id.items()
+    }
 
 
 def _scenario(*, reduccion_art_20: Decimal, expected_0025: Decimal, scenario_id: str) -> RegistryCalculationScenario:
-    inputs = dict(_TRABAJO_INPUTS)
+    inputs = _declared_trabajo_inputs()
     inputs[validated_casilla_id("0023", surface="0023")] = reduccion_art_20
     return RegistryCalculationScenario(
         id=scenario_id,
