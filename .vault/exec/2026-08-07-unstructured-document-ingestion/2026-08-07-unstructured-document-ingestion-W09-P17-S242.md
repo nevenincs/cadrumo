@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:7663afcc4c207aea6700f2d191b7dd8af7799ee244b698aaa563774fd6cc86ff'
+body_hash: 'sha256:d9c0b2953e48a516a46348fd67d905d523171080daa2c998645bd0d288f0c6a6'
 step_id: 'S242'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -49,3 +49,9 @@ An upstream gap was found rather than papered over: the attribution profile reco
 Two fixtures asserted the Spanish default as the contract. They were corrected rather than worked around; a fixture that encodes a defect is worse than no fixture.
 
 A wide combined run reported twenty-one failures across the modelo suites. None mentioned either field. Sampled files that failed there passed when run alone in the same tree and passed against HEAD, so the failures were cross-suite interference rather than this work. A later run of that directory alone collected almost nothing, and the log showed the cause: a concurrent lane's in-flight module was raising an ImportError during collection. The reading was repeated in three configurations before anything was attributed.
+
+**Coverage of Modelo 232 is PARTIAL, and reads as complete unless this is stated.** The vinculada fichero row's country was made required here; the registry binding observation for the SAME modelo and the same fact was not, and still defaults to Spain. The two are separate paths -- the fichero row does not appear in the row-set assembly at all -- and the assembly leg double-defaults its value, so absence never reaches the model that could refuse it.
+
+That asymmetry is arguably worse than the original state. A reader meeting the required field would reasonably conclude the axis is handled for this modelo, while the path that actually feeds the calculation still infers Spain from silence.
+
+The cause was a process one rather than a search one: the site appeared in this Step's own census output and was set aside on the plan row's framing that the registry defaults are plausibly correct by domain. That framing was carried forward labelled as unverified, and labelling an assumption does not discharge it. A sibling lane afterwards read the class rather than the framing and found it is the related-party observation for Modelo 232, whose declarable population includes foreign related parties and territories classified as paraisos fiscales.
