@@ -278,3 +278,79 @@ def test_a_pair_nominated_by_nothing_is_refused() -> None:
 
     with pytest.raises(ValidationError, match="signals"):
         FiledHistoryPairOutcome(modelo="303", ejercicio=2025, signals=())
+
+
+# ------------------------------------- the justificante unreached-evidence relay
+
+
+def test_every_unreached_reason_survives_the_relay_as_its_own_notice() -> None:
+    """Six distinct dead ends must reach the operator as six distinct notices.
+
+    The reasons exist because a capture could extract casillas and report zero
+    justificante evidence with no visible cause -- one log line and a ``None`` for
+    every different failure. Relaying them onto the envelope is only worth doing if
+    the relay preserves that distinction, so this drives the FULL enum and asserts
+    one notice per member with its own reason readable in context.
+
+    The expected set is derived from the enum rather than hand-listed: a
+    hand-listed tuple is exactly how a newly added reason goes unrelayed and
+    unnoticed.
+    """
+    from ....core.json_contract import Notice, NoticeSeverity
+    from .._filed_observation_persistence import (
+        FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
+        FiledJustificanteUnreachedReason,
+    )
+
+    reasons = tuple(FiledJustificanteUnreachedReason)
+    assert len(reasons) >= 6, "the reason taxonomy shrank; this relay test would under-cover it"
+
+    run = FiledHistoryOnboardingRun(
+        pairs=(_pair(row_count=1),),
+        evidence_notices=tuple(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code=FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
+                message=f"artefact produced no evidence ({reason.value})",
+                context={"reason": reason.value, "modelo": "130"},
+            )
+            for reason in reasons
+        ),
+    )
+
+    relayed = {
+        notice.context["reason"]
+        for notice in run.evidence_notices
+        if notice.context and notice.code == FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE
+    }
+    assert relayed == {reason.value for reason in reasons}
+    # One notice per reason: nothing was merged on the way through.
+    assert len(run.evidence_notices) == len(reasons)
+
+
+def test_the_relay_keeps_the_run_advisories_and_the_evidence_advisories_separate() -> None:
+    """The run's own advisories and the per-artefact ones share a channel, not an identity."""
+    from ....core.json_contract import Notice, NoticeSeverity
+    from .._filed_observation_persistence import FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE
+
+    run = FiledHistoryOnboardingRun(
+        pairs=(_pair(signals=_PROFILE, row_count=0),),
+        evidence_notices=(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code=FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
+                message="artefact produced no evidence (csv_mismatch)",
+                context={"reason": "csv_mismatch"},
+            ),
+        ),
+    )
+    missing = expected_but_not_found_notice(run)
+    assert missing is not None
+    # Different codes, so a consumer can tell an unfiled period from an unusable
+    # receipt -- two facts a single "evidence missing" notice would have merged.
+    assert missing.code != FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE
+    assert run.evidence_notices[0].code == FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE
+
+
+def test_a_clean_run_relays_no_evidence_notices() -> None:
+    assert FiledHistoryOnboardingRun(pairs=(_pair(row_count=1),)).evidence_notices == ()

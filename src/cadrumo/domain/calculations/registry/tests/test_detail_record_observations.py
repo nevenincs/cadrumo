@@ -27,7 +27,7 @@ from .._bindings import (
     RefundOperationObservation,
     RelatedPartyOperationObservation,
 )
-from .._detail_record_bindings import RelatedPartyOperationObservation, _build_related_party_rows
+from .._detail_record_bindings import _build_related_party_rows
 from .._donativo_bindings import _build_donativo_rows
 from .._withholding_bindings import (
     WithholdingObservation,
@@ -473,7 +473,7 @@ def test_related_party_observation_refuses_off_catalogue_codes() -> None:
     reach it as free-form registry text, so without the catalogue an operation
     kind or valuation method AEAT never published would resolve into a casilla.
     """
-    for case_id, overrides in (
+    for _case_id, overrides in (
         # DR23200 Tabla C stops at clave 11.
         ("operation-kind-above-catalogue", {"operation_kind_code": "99"}),
         ("operation-kind-unpadded", {"operation_kind_code": "1"}),

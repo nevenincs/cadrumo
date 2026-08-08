@@ -70,7 +70,10 @@ the largest designs belong to modelos that do export. The cost buys the offsets
 and the field occupancy the derivatives do not carry, which is what the box and
 retirement signals are made of.
 
-TWO INDEPENDENT SIGNALS, ONE VERDICT. The box-offset diff sees which boxes moved
+THREE INDEPENDENT SIGNALS, ONE VERDICT -- and the third reports two directions.
+The count in this heading was wrong for as long as the occupancy signal existed,
+which is worth stating rather than quietly correcting: a module that miscounts its
+own instruments invites a reader to act on the two it names. The box-offset diff sees which boxes moved
 but needs bracketed box markers. The page-length diff sees only that a page
 changed size, but reads designs the box table cannot -- several older PDF
 extractions publish their page totals while yielding no box markers -- so it
@@ -113,6 +116,7 @@ makes the coverage guard refuse instead of passing on an empty parse.
 from __future__ import annotations
 
 import re
+from itertools import pairwise
 from pathlib import Path
 
 import pytest
@@ -273,7 +277,7 @@ def _design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
         return ()
     try:
         return parser(path)
-    except Exception:  # noqa: BLE001 - an unparseable design is reported, never raised
+    except Exception:
         return ()
 
 
@@ -416,7 +420,7 @@ def _designs_for(modelo_id: str) -> tuple[dict[int, dict[str, int]], dict[int, s
     return parsed, unreadable
 
 
-def _span_years(revision) -> set[int]:  # noqa: ANN001 - registry model, typed at the boundary
+def _span_years(revision) -> set[int]:
     """Every filing year the revision's period selector claims."""
     selector = revision.period_selector
     if selector.years:
@@ -441,7 +445,7 @@ def _exporting_revisions() -> list[tuple[ModeloDefinition, str, object]]:
     ]
 
 
-def _claimed_years(revision, design_years: set[int]) -> set[int]:  # noqa: ANN001
+def _claimed_years(revision, design_years: set[int]) -> set[int]:
     """Design years the revision claims, honouring an open-ended upper bound."""
     selector = revision.period_selector
     explicit = _span_years(revision)
@@ -492,7 +496,7 @@ def test_the_design_parser_reads_every_markdown_design_it_claims() -> None:
     )
 
 
-def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]]:  # noqa: ANN001
+def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]]:
     """Every re-layout boundary inside one revision's span, keyed year-pair to evidence.
 
     Both signals contribute to ONE verdict rather than reporting separately,
@@ -512,7 +516,7 @@ def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]
 
     designs, _ = _designs_for(modelo_id)
     box_years = sorted(_claimed_years(revision, set(designs)))
-    for earlier, later in zip(box_years, box_years[1:]):
+    for earlier, later in pairwise(box_years):
         before_boxes, after_boxes = designs[earlier], designs[later]
         shared = set(before_boxes) & set(after_boxes)
         moved = sorted(box for box in shared if before_boxes[box] != after_boxes[box])
@@ -529,7 +533,7 @@ def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]
             boundaries.setdefault((earlier, later), []).append(note)
 
     page_years = sorted(_claimed_years(revision, set(lengths)))
-    for earlier, later in zip(page_years, page_years[1:]):
+    for earlier, later in pairwise(page_years):
         if lengths[earlier] == lengths[later]:
             continue
         delta = _record_count_delta(earlier, later)
@@ -555,24 +559,45 @@ def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]
     # aplicable` slots were retired between the 2024 and 2025 designs while both
     # signals above reported the years identical.
     #
-    # The REVERSE transition (reserved -> real) is deliberately NOT asserted.
-    # It measures zero across the whole bundled corpus, so an assertion for it
-    # would ship vacuous and pass silently forever. It is reported when seen,
-    # which is the honest shape for a signal with no positive case to prove it.
+    # BOTH DIRECTIONS are asserted, and the reverse one was withheld on a claim
+    # that was never checked against the corpus it described. This module used to
+    # record that reserved -> real "measures zero across the whole bundled corpus,
+    # so an assertion for it would ship vacuous and pass silently forever."
+    # Measured through these very helpers, it is 32 transitions across four
+    # modelos and twelve boundaries -- twice the 16 retirements the direction that
+    # WAS asserted finds. A rationale for withholding an assertion is itself a
+    # measurement, and this one was reasoned rather than run.
+    #
+    # Nor is it the lesser half. A slot revived OUT of reserved space is a field
+    # the later design declares and the earlier one does not, so a filing written
+    # under the earlier layout cannot declare that quantity at all while the
+    # later one can -- the same harm as a retirement with the two sides
+    # exchanged, and equally invisible to an offset check, a length check and a
+    # digest. On Modelo 303 it is the only signal in this module that names a
+    # boundary at 2017/2018.
     occupancy_years = sorted(_claimed_years(revision, {year for year, _ in _sources_by_year(modelo_id)}))
     sources = dict(_sources_by_year(modelo_id))
-    for earlier, later in zip(occupancy_years, occupancy_years[1:]):
+    for earlier, later in pairwise(occupancy_years):
         before, after = _occupancy(sources[earlier]), _occupancy(sources[later])
         shared = set(before) & set(after)
-        retired = sorted(slot for slot in shared if not before[slot] and after[slot])
-        if not retired:
-            continue
-        sample = ", ".join(f"{sheet} offset {offset}" for sheet, offset in retired[:3])
-        boundaries.setdefault((earlier, later), []).append(
-            f"{len(retired)} slot(s) RETIRED into reserved space (e.g. {sample}) -- "
-            "no box moved and no page length changed, so a filing written under the "
-            "older layout writes declared values into space now marked reserved"
-        )
+        for slots, headline in (
+            (
+                sorted(slot for slot in shared if not before[slot] and after[slot]),
+                "RETIRED into reserved space",
+            ),
+            (
+                sorted(slot for slot in shared if before[slot] and not after[slot]),
+                "REVIVED out of reserved space",
+            ),
+        ):
+            if not slots:
+                continue
+            sample = ", ".join(f"{sheet} offset {offset}" for sheet, offset in slots[:3])
+            boundaries.setdefault((earlier, later), []).append(
+                f"{len(slots)} slot(s) {headline} (e.g. {sample}) -- no box moved and no page "
+                "length changed, so one side of this boundary declares a quantity at a position "
+                "the other side marks reserved"
+            )
 
     return boundaries
 
@@ -608,6 +633,58 @@ def test_no_revision_spans_a_design_relayout() -> None:
         "a revision carries ONE export layout, so a span crossing a re-layout writes prior-year "
         "filings at the wrong byte offsets. Split each revision at every boundary listed; "
         "splitting at only the ones one signal saw leaves the rest live:\n  " + "\n  ".join(violations)
+    )
+
+
+def test_both_occupancy_directions_have_a_positive_case_in_the_corpus() -> None:
+    """Neither occupancy direction may be asserted over a corpus that cannot show it.
+
+    This is the companion guard to the reserved-space signal, and it exists
+    because the reverse direction was once withheld from the verdict on the
+    recorded ground that it "measures zero across the whole bundled corpus, so
+    an assertion for it would ship vacuous". That was a reasoned claim, not a
+    measured one, and it was wrong by a factor of two in the direction that
+    mattered. This test is what makes the same mistake impossible to repeat in
+    either direction: if a corpus change ever leaves one of them with no
+    instance, the signal becomes unfalsifiable and this fails LOUDLY rather than
+    the verdict silently passing over it.
+
+    GATED ON THE PROPERTY, NEVER ON A TALLY. It asserts each direction has AT
+    LEAST ONE instance, not how many. The counts move every time AEAT publishes,
+    so pinning today's 16 retirements and 32 revivals would encode this moment,
+    train the next author to bump two constants, and detect nothing. "The signal
+    can still be observed" is the durable property; "the signal is observed
+    exactly n times" is a snapshot wearing an assertion's clothes.
+
+    Deliberately spans the WHOLE corpus rather than one revision's claimed span.
+    A positive case anywhere proves the signal is live; requiring one inside
+    every span would fail on modelos that simply never re-layout, which is not a
+    defect.
+    """
+    retired_seen: list[str] = []
+    revived_seen: list[str] = []
+    for modelo, _revision_id, revision in _exporting_revisions():
+        sources = dict(_sources_by_year(modelo.id))
+        for earlier, later in pairwise(sorted(_claimed_years(revision, set(sources)))):
+            before, after = _occupancy(sources[earlier]), _occupancy(sources[later])
+            shared = set(before) & set(after)
+            retired_seen.extend(
+                f"modelo {modelo.id} {earlier}/{later} {slot[0]} offset {slot[1]}"
+                for slot in shared
+                if not before[slot] and after[slot]
+            )
+            revived_seen.extend(
+                f"modelo {modelo.id} {earlier}/{later} {slot[0]} offset {slot[1]}"
+                for slot in shared
+                if before[slot] and not after[slot]
+            )
+    assert retired_seen, (
+        "no slot anywhere in the bundled corpus is RETIRED into reserved space, so that half of the "
+        "occupancy signal can no longer fail and its contribution to the verdict is vacuous"
+    )
+    assert revived_seen, (
+        "no slot anywhere in the bundled corpus is REVIVED out of reserved space, so that half of the "
+        "occupancy signal can no longer fail and its contribution to the verdict is vacuous"
     )
 
 

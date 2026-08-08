@@ -80,7 +80,7 @@ from __future__ import annotations
 import tomllib
 from enum import StrEnum
 from functools import lru_cache
-from typing import Final
+from typing import Final, NamedTuple
 
 from ...core.identity import (
     NifIvaPrefix,
@@ -193,16 +193,147 @@ class StatedCountryCodeStatus(StrEnum):
     """
 
 
+class _CarveOut(NamedTuple):
+    """One territory whose treatment does not follow from its code alone.
+
+    Exactly one of the three fields carries the disposition, which the loader
+    enforces: a row that named two would be a territory the law treats two ways.
+
+    Attributes:
+        assimilated_to: The alpha-2 code this territory is treated AS, or
+            ``None``. A pointer rather than a scope, because LIVA art. 3.Tres
+            fixes what a territory is assimilated to and never what that parent
+            establishes -- the Isle of Man followed the United Kingdom out of the
+            Community without the article changing a word.
+        scope: The scope the territory establishes directly, or ``None``. Used
+            for the exclusions, where art. 3.Dos.1 puts the territory outside the
+            interior del país and art. 3.Dos.3 then makes anything outside it a
+            third territory.
+        establishes_nothing: Whether the territory is recognised and its scope
+            deliberately left to other evidence. The Spanish case: the code is
+            known, and which of the three Spanish territories a party sits in is
+            settled by the postal rung that owns the sub-national evidence.
+    """
+
+    assimilated_to: str | None
+    scope: IvaTerritorialScope | None
+    establishes_nothing: bool
+
+
+@lru_cache(maxsize=1)
+def _vat_territory_carve_outs() -> dict[str, _CarveOut]:
+    """Return every territory whose IVA treatment its country code does not give.
+
+    Read from ``registry/aeat/iva/vat_territory_carve_outs.toml`` and verified
+    against the bundled consolidated law at load, on the same terms the territory
+    table is: an ungrounded territorial rule must not be readable at all, because
+    a rule asserted by a test ships to every caller and fails afterwards in a lane
+    nobody is watching.
+
+    Returns:
+        Each alpha-2 code mapped to its disposition.
+
+    Raises:
+        IvaCatalogueError: When the bundled table cannot be read, names a code or
+            a scope outside the closed sets, cites no provision, or gives a row
+            anything other than exactly one disposition.
+    """
+    from ._errors import IvaCatalogueError
+    from ._grounding import verify_table_legal_refs
+
+    target = bundled_path("registry", "aeat", "iva", "vat_territory_carve_outs.toml")
+    try:
+        payload = tomllib.loads(target.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise IvaCatalogueError(f"{target}: cannot read the carve-out table: {exc}") from exc
+    except tomllib.TOMLDecodeError as exc:
+        raise IvaCatalogueError(f"{target}: malformed carve-out table: {exc}") from exc
+
+    resolved: dict[str, _CarveOut] = {}
+    citations: list[tuple[str, tuple[str, ...]]] = []
+    for record in payload.get("carve_out", ()):
+        code = str(record.get("code", "")).strip().upper()
+        if len(code) != _ALPHA2_LENGTH or not code.isalpha():
+            raise IvaCatalogueError(f"{target}: carve-out record names no alpha-2 code: {record!r}")
+        if code in resolved:
+            raise IvaCatalogueError(f"{target}: {code} is carved out twice; one territory cannot be treated two ways")
+
+        assimilated = record.get("assimilated_to")
+        raw_scope = record.get("scope")
+        nothing = bool(record.get("establishes_nothing", False))
+        declared = [field for field in (assimilated, raw_scope, nothing or None) if field is not None]
+        if len(declared) != 1:
+            raise IvaCatalogueError(
+                f"{target}: carve-out {code} must declare exactly one of assimilated_to, scope or "
+                f"establishes_nothing; a row naming none establishes nothing by accident and a row "
+                f"naming two states the law twice",
+            )
+
+        scope: IvaTerritorialScope | None = None
+        if raw_scope is not None:
+            try:
+                scope = IvaTerritorialScope(str(raw_scope))
+            except ValueError as exc:
+                raise IvaCatalogueError(f"{target}: carve-out {code} names no known scope: {raw_scope!r}") from exc
+
+        parent: str | None = None
+        if assimilated is not None:
+            parent = str(assimilated).strip().upper()
+            if len(parent) != _ALPHA2_LENGTH or not parent.isalpha():
+                raise IvaCatalogueError(
+                    f"{target}: carve-out {code} is assimilated to no alpha-2 code: {assimilated!r}"
+                )
+            if parent == code:
+                raise IvaCatalogueError(f"{target}: carve-out {code} is assimilated to itself")
+
+        references = record.get("legal_refs", ())
+        if not isinstance(references, list) or not all(isinstance(item, str) for item in references):
+            raise IvaCatalogueError(f"{target}: carve-out {code} legal_refs must be an array of strings")
+        # A territorial rule IS a regulatory value, so an uncited row is
+        # ungrounded rather than merely undocumented and must not load.
+        if not references:
+            raise IvaCatalogueError(f"{target}: carve-out {code} cites no provision establishing its treatment")
+        citations.append((code, tuple(references)))
+        resolved[code] = _CarveOut(assimilated_to=parent, scope=scope, establishes_nothing=nothing)
+
+    if not resolved:
+        raise IvaCatalogueError(f"{target}: the carve-out table names no territory")
+    unresolvable = {row.assimilated_to for row in resolved.values() if row.assimilated_to} - _resolvable_parents(
+        resolved
+    )
+    if unresolvable:
+        raise IvaCatalogueError(
+            f"{target}: assimilated to {', '.join(sorted(unresolvable))}, which no catalogue names; an "
+            f"assimilation whose parent cannot be resolved establishes nothing while reading as a rule",
+        )
+    verify_table_legal_refs(str(target), citations)
+    return resolved
+
+
+def _resolvable_parents(rows: dict[str, _CarveOut]) -> frozenset[str]:
+    """Return the codes an assimilation may point at.
+
+    Computed from the catalogues rather than from the carve-out table itself, so
+    a row pointing at a country nothing can resolve is refused at load instead of
+    silently establishing nothing at the call site. Carve-out codes are included
+    because one territory being assimilated to another is representable, though
+    nothing uses it today.
+    """
+    return frozenset(_country_codes_by_printed_name().values()) | _EU_MEMBER_CODES | {SPAIN_COUNTRY_CODE} | set(rows)
+
+
 @lru_cache(maxsize=1)
 def _catalogued_country_codes() -> frozenset[str]:
     """Return every alpha-2 code a bounded catalogue in this codebase names.
 
-    The union of the two catalogues that already exist, and deliberately not a
-    third one: the printed-name vocabulary carries the countries a document's
-    address block names, and :class:`EUMemberState` carries the Member States
-    the intra-community branch turns on. Neither is a subset of the other --
-    Northern Ireland is a Member State for goods with no address-block name --
-    so asking only one would silently drop a real jurisdiction out of the axis.
+    The union of the catalogues that already exist, and deliberately not a new
+    one: the printed-name vocabulary carries the countries a document's address
+    block names, :class:`EUMemberState` carries the Member States the
+    intra-community branch turns on, and the carve-out table carries the
+    territories LIVA art. 3 treats differently from the country they sit in or
+    beside. No two of them nest -- Northern Ireland is a Member State for goods
+    with no address-block name, and Monaco is a carve-out that is neither -- so
+    asking any one alone would silently drop a real jurisdiction out of the axis.
 
     Spain is added explicitly rather than left to fall out of either, because
     the resolver's refusal for ``ES`` must stay a deliberate territorial
@@ -216,7 +347,12 @@ def _catalogued_country_codes() -> frozenset[str]:
         IvaCatalogueError: When the bundled vocabulary cannot be read or breaks
             its one-name-one-country invariant.
     """
-    return frozenset(_country_codes_by_printed_name().values()) | _EU_MEMBER_CODES | {SPAIN_COUNTRY_CODE}
+    return (
+        frozenset(_country_codes_by_printed_name().values())
+        | _EU_MEMBER_CODES
+        | {SPAIN_COUNTRY_CODE}
+        | frozenset(_vat_territory_carve_outs())
+    )
 
 
 def stated_country_code_status(stated_code: str | None) -> StatedCountryCodeStatus | None:
@@ -331,6 +467,25 @@ def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialSco
         return None
     if normalised not in _catalogued_country_codes():
         return None
+    # The carve-outs are consulted BEFORE the Member State branch, because that
+    # is the only order that can be right: every one of them is a territory
+    # whose treatment disagrees with the country it sits in or beside, so a
+    # branch reading membership first would answer them all from the very
+    # catalogue LIVA art. 3 overrides.
+    carve_out = _vat_territory_carve_outs().get(normalised)
+    if carve_out is not None:
+        if carve_out.establishes_nothing:
+            return None
+        if carve_out.scope is not None:
+            return carve_out.scope
+        # Assimilation is resolved by RE-ASKING this function for the parent
+        # rather than by reading a scope off the row. The article fixes what a
+        # territory is treated as and never what that parent establishes, so
+        # following the pointer is what keeps the answer true as the parent's
+        # own status changes -- the Isle of Man left the Community without this
+        # row changing a word. The loader refuses a self-pointer and refuses a
+        # parent no catalogue names, so this cannot recurse without end.
+        return territorial_scope_for_country(carve_out.assimilated_to)
     if normalised == SPAIN_COUNTRY_CODE:
         return None
     if normalised in _EU_MEMBER_CODES:

@@ -98,6 +98,7 @@ __all__ = [
     "ground_structured_value",
     "normalise_for_anchor_search",
     "printed_excerpt_occurs",
+    "printed_excerpt_occurs_in_text",
     "strip_printed_unit",
 ]
 
@@ -244,11 +245,37 @@ def printed_excerpt_occurs(excerpt: str, *, transcription: DocumentTranscription
         evidences nothing, and the caller must treat that as absent evidence
         rather than as a permissive match.
     """
+    return printed_excerpt_occurs_in_text(excerpt, text=transcription.text)
+
+
+def printed_excerpt_occurs_in_text(excerpt: str, *, text: str) -> bool:
+    """Return whether ``excerpt`` occurs in ``text``, as a printed token.
+
+    The same search as :func:`printed_excerpt_occurs`, asked of a REGION of a
+    document rather than the whole of one. Party attribution by co-location has
+    to ask "does this value occur inside this party's block", which is the same
+    question about a smaller haystack -- and asking it through this module keeps
+    one authority over what counts as printed, so a value cannot be admitted to
+    a block under weaker matching than the anchor check applies to the document.
+
+    Takes plain text rather than a transcription deliberately. A region is a
+    slice of a transcription's text and not a transcription itself: it has no
+    page count, no content address and no transcriber, and manufacturing those
+    to satisfy a signature would fabricate provenance for a substring.
+
+    Args:
+        excerpt: The printed form to look for.
+        text: The text to look in, printed forms intact.
+
+    Returns:
+        ``True`` when the excerpt occurs. A blank excerpt is ``False``, on the
+        same terms as the whole-document search: it evidences nothing.
+    """
     if not excerpt.strip():
         return False
     return _occurs_as_a_whole_printed_token(
         normalise_for_anchor_search(excerpt),
-        normalise_for_anchor_search(transcription.text),
+        normalise_for_anchor_search(text),
     )
 
 

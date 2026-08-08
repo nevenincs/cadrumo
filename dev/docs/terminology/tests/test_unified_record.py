@@ -293,8 +293,8 @@ def test_per_kind_projection_agrees_with_the_derivation_authority() -> None:
     """
     from dev.docs.terminology._search_record import SearchRecordKind
     from dev.docs.terminology._unified_record import (
-        _display_class_for,
         _KIND_TO_DISPLAY_CLASS,
+        _display_class_for,
     )
 
     context_dependent = {SearchRecordKind.CONCEPT, SearchRecordKind.PAGE}

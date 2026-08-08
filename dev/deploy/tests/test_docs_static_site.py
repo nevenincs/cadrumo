@@ -12,8 +12,6 @@ from pathlib import Path
 
 import pytest
 from dev.deploy.docs_static_site import (
-    _validate_language_entry,
-    _write_language_entry,
     _DOWNLOAD_LATEST_SCHEMA,
     _DOWNLOAD_LATEST_STATIC_PATH,
     _REQUIRED_ARTIFACTS,
@@ -24,7 +22,9 @@ from dev.deploy.docs_static_site import (
     _localized_languages,
     _refresh_download_latest,
     _site_build_environment,
+    _validate_language_entry,
     _validate_language_roots,
+    _write_language_entry,
 )
 from dev.docs.build import pagefind_index_mode
 from dev.docs.i18n import DEFAULT_SITE_LANGUAGE, TARGET_LANGUAGES
@@ -98,7 +98,7 @@ def test_every_language_is_a_published_root_including_english() -> None:
 
 def test_default_site_language_is_spanish() -> None:
     """A reader who has expressed no preference is sent to Spanish, not English."""
-    assert DEFAULT_SITE_LANGUAGE == OutputLanguage.ES.value
+    assert OutputLanguage.ES.value == DEFAULT_SITE_LANGUAGE
 
 
 def test_language_entry_routes_to_every_root_and_declares_the_spanish_floor(tmp_path: Path) -> None:

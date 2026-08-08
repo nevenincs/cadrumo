@@ -208,6 +208,16 @@ env-rag-start:
 env-rag-stop:
     uv run --no-sync vaultspec-rag server stop
 
+# Report what the temp directory is holding, and which sessions still own it. Deletes nothing.
+[group('environment')]
+env-temp-report:
+    uv run --no-sync python -m dev.temp_reaper
+
+# Reclaim the session scratchpads the report judged abandoned. Read the report first.
+[group('environment')]
+env-temp-reap:
+    uv run --no-sync python -m dev.temp_reaper --apply
+
 # ── Static checks (Verify, Read-only) ────────────────────────────────────────
 
 # Verify code style using ruff check. Silent on success; lists violations on failure.

@@ -107,9 +107,7 @@ def test_scoop_workflow_runs_the_real_native_lifecycle_without_rebuilding() -> N
     smoke = next(
         step for step in steps if step["name"] == "Install and exercise Cadrumo in the lane user's Scoop profile"
     )
-    publish = next(
-        step for step in steps if step["name"] == "Stage the Scoop acquisition bundle"
-    )
+    publish = next(step for step in steps if step["name"] == "Stage the Scoop acquisition bundle")
     commands = "\n".join(str(step.get("run", "")) for step in steps)
 
     assert "packaging/scoop/generate.py" in generate["run"]

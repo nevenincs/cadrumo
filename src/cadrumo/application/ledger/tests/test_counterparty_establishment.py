@@ -30,7 +30,6 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import ClassifierInputSource
 from ....domain.iva import IvaTerritorialScope, classify_iva
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile

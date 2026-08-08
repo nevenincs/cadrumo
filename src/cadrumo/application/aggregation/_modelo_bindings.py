@@ -1332,18 +1332,23 @@ _EU_MEMBER_STATE_CODES: frozenset[str] = frozenset(member.value.upper() for memb
 
 
 def _counterparty_supports_the_declared_category(invoice: Invoice) -> bool:
-    """Whether the counterparty's country can bear the category the invoice claims.
+    """Whether the counterparty can bear the category the invoice claims.
 
-    The same coupling the bank-transaction path gates, adapted rather than
-    shared: that path holds a typed :class:`~domain.iva.EUMemberState` on the
-    transaction, while an invoice carries an ISO country code, so the rule is
-    re-expressed against the field that exists here.
+    The same coupling the bank-transaction path gates, and reading the same two
+    facts it reads -- which are NOT one fact. Ley 37/1992 art. 25 exempts an
+    intra-community supply on the acquirer holding a VAT IDENTIFICATION assigned
+    by another Member State, so that arm reads
+    ``counterparty_identification_state``. The export arm is the one genuinely
+    about place -- an export leaves the Union -- so it keeps reading the
+    counterparty's country of establishment.
 
-    An intra-community supply must go to another member state -- to Spain it is
-    a domestic operation, and outside the Union it is an export. An export must
-    leave the Union, so an EU counterparty contradicts it. Either mismatch means
-    the category and the counterparty disagree, and routing on the category
-    alone would declare volume the taxpayer never supplied that way.
+    Reading the country for BOTH was a defect that landed in money in both
+    directions: a Spanish-established acquirer holding a German VAT number had
+    its exempt supply withheld from casilla 59 (over-declaration), and a
+    German-established acquirer purchasing under a Spanish NIF-IVA had a
+    domestic supply routed there (silent under-declaration). Absent
+    identification is absent -- it withholds rather than falling back to the
+    address.
 
     Returns ``False`` rather than raising, which leaves the line unrouted. The
     withholding is REPORTED: the screen collects each mismatched invoice and the
@@ -1352,9 +1357,10 @@ def _counterparty_supports_the_declared_category(invoice: Invoice) -> bool:
     path returns a typed gate issue for the same shape; this projector returns
     observations, so it reports through the resolution's diagnostics instead.
     """
-    country = (invoice.counterparty_country or "").strip().upper()
     if invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
-        return country in _EU_MEMBER_STATE_CODES and country != "ES"
+        identification = invoice.counterparty_identification_state
+        return identification is not None and identification is not EUMemberState.ES
+    country = (invoice.counterparty_country or "").strip().upper()
     return country not in _EU_MEMBER_STATE_CODES
 
 

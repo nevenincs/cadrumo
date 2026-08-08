@@ -726,13 +726,26 @@ class Transaction(BaseModel):
             discriminator. Valid only when ``iva_category`` is
             :attr:`IvaCategory.DOMESTIC_EXEMPT`; ``None`` preserves
             the broad exempt category with no sub-article distinction.
-        counterparty_eu_member_state: ISO 3166-1 alpha-2 EU member
-            state of the counterparty.  Required by the aggregation
-            gate when ``iva_category`` is
-            :attr:`IvaCategory.INTRA_COMMUNITY_SUPPLY`; rejected
-            when the category is
-            :attr:`IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED`.
+        counterparty_eu_member_state: Where the counterparty is
+            ESTABLISHED -- an address fact, ISO 3166-1 alpha-2. It
+            answers establishment-flavoured questions only (the export
+            families must carry none, because an export leaves the
+            Union) and is barred from identification-keyed gates.
             ``None`` otherwise.
+        counterparty_identification_state: Which Member State
+            VAT-IDENTIFIES the counterparty, read from the prefix of
+            the VAT number it trades under. A different fact from
+            establishment and never derived from it: a Spanish-established
+            acquirer can hold a German VAT number, and a German-established
+            one can purchase under a Spanish NIF-IVA. This is the operative
+            fact for the Ley 37/1992 art. 25 exemption, so the aggregation
+            gate requires it non-ES when ``iva_category`` is
+            :attr:`IvaCategory.INTRA_COMMUNITY_SUPPLY`.
+
+            ``None`` means the identification was not established, never
+            that the party is identified nowhere and above all never that
+            it is identified in Spain -- a decision needing it refuses
+            with a review item rather than falling back to the country.
         cash_accounting_treatment: Independent criterio-de-caja axis.
             It never replaces ``iva_category``: the operation remains
             domestic/export/intracom/etc. and this field only records
@@ -831,6 +844,7 @@ class Transaction(BaseModel):
     iva_category: IvaCategory | None = None
     exemption_article: IvaExemptionArticle | None = None
     counterparty_eu_member_state: EUMemberState | None = None
+    counterparty_identification_state: EUMemberState | None = None
     cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE
     operation_date: date | None = None
     cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = ()
@@ -884,6 +898,7 @@ class Transaction(BaseModel):
         "iva_category",
         "exemption_article",
         "counterparty_eu_member_state",
+        "counterparty_identification_state",
         "cash_accounting_treatment",
         "art_104_tres_exclusion",
         "input_classification",
@@ -909,6 +924,7 @@ class Transaction(BaseModel):
             "iva_category": IvaCategory,
             "exemption_article": IvaExemptionArticle,
             "counterparty_eu_member_state": EUMemberState,
+            "counterparty_identification_state": EUMemberState,
             "cash_accounting_treatment": IvaCashAccountingTreatment,
             "art_104_tres_exclusion": Art104TresExclusion,
             "input_classification": InputClassification,

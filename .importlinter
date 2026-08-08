@@ -229,6 +229,17 @@ ignore_imports =
     cadrumo.llm.tests.test_evidence_draft_vision -> cadrumo.tests.secure_sql
     cadrumo.llm.tests.test_llm_vision_classifier -> cadrumo.tests.secure_sql
     cadrumo.llm.tests.test_redaction -> cadrumo.tests.secure_sql
+    # The consent-ledger gate drives the REAL consent ledger and the real
+    # active-bucket repository, because the property under test is that a
+    # refusal survives a genuine session suspension -- a stubbed store would
+    # assert the test's own bookkeeping rather than the boundary's. Direct
+    # rather than via cadrumo.tests: it names the ledger namespace and the
+    # session verb, not the shared file-walk helpers.
+    cadrumo.llm.tests.test_evidence_consent_gate -> cadrumo.adapters.persistence.storage
+    # Same shape as test_provenance_stamp_singularity above: a package-wide
+    # scan needing the shared file-walk helpers, whose package reaches storage
+    # for its own roundtrip fixtures. Pinned at the chain origin.
+    cadrumo.llm.tests.test_evidence_marker_declared_at_every_builder -> cadrumo.tests
     cadrumo.llm.tests.test_llm_vision_classifier -> cadrumo.application.ledger._llm_classification
     cadrumo.llm.tests.test_local_text_reader_wiring -> cadrumo.application.ledger._llm_classification
     cadrumo.llm.tests.test_evidence_draft_vision -> cadrumo.application.ledger

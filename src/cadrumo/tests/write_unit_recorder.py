@@ -9,7 +9,8 @@ difference observable by attaching to the live
 sequence is the production statement stream -- no connection is wrapped,
 replaced, or stubbed.
 
-``before_cursor_execute`` sees every statement, and the DBAPI ``commit`` event
+``before_cursor_execute`` sees every statement -- expanded to one marker per ROW,
+because the write funnel is set-based -- and the DBAPI ``commit`` event
 marks each transaction boundary; a commit falling between two secure-object
 writes is exactly the seam a crash exploits, because whichever catalogue
 committed first keeps its half of the change.
@@ -19,6 +20,35 @@ that persists the same catalogues through two independent saves and asserts the
 recorder reports a non-zero count. Without it, a recorder that could never
 report a seam would make the primary assertion vacuous.
 
+That pairing is necessary and NOT sufficient, and the gap has bitten once. An
+anti-tautology case proves the recorder can still FIRE; it says nothing about
+the granularity at which it fires. When the write funnel became set-based, a
+batch of N rows became one statement, and a statement-counting recorder went on
+reporting seams correctly while losing the ability to tell four rows from one --
+so the anti-tautology case kept passing while a group-size assertion became
+unsatisfiable. Resolution can narrow silently underneath a proof that only
+checks for a pulse. When something changes how many statements a write costs,
+re-ask what every count here MEANS, not merely whether it still moves.
+
+The cheap check, worth applying to any gate and not just this one: ask what
+would have to change in the system UNDERNEATH it for its number to keep being
+produced while meaning something else. Here that change is "the storage layer
+batches", and nothing about it is visible from inside the gate. Both failures
+of this kind found so far shared a shape -- the assertion was true of the world
+and false of its own NAME. Neither was lying; the name promised a property the
+measurement had quietly stopped delivering, which is why neither was findable
+by reading the gate and both surfaced only when something else broke nearby.
+
+Standing hazard, unguarded on purpose. This recorder and
+``test_secure_object_write_batching`` now encode OPPOSITE expectations of one
+funnel: that test asserts a batch collapses to a single ``INSERT``, while this
+counts the rows inside it. Both are correct today. If the funnel changes again --
+back to per-row, or chunked above some size -- that test fails LOUDLY while this
+recorder silently changes what every atomicity assertion in the suite means, and
+the silent one is the dangerous one. No guard is offered because any guard would
+be another tally with the same exposure; the note is here instead, where a
+reader meets it at the moment they would change the funnel.
+
 See Also:
     :func:`~cadrumo.tests.secure_sql.isolated_runtime_profile`:
         Yields the encrypted-SQLite profile whose ``repository.engine`` this
@@ -27,7 +57,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sized
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
@@ -51,10 +81,31 @@ class WriteUnitRecorder:
         self._engine = engine
         self.events: list[str] = []
 
-    def _on_statement(self, _conn: object, _cursor: object, statement: str, *_args: object) -> None:
+    def _on_statement(
+        self,
+        _conn: object,
+        _cursor: object,
+        statement: str,
+        parameters: object = None,
+        _context: object = None,
+        executemany: bool = False,
+    ) -> None:
+        """Record one marker per secure-object ROW written, not per statement.
+
+        The storage layer writes set-based SQL: a batch of N rows is one
+        ``INSERT`` executemany rather than N separate statements. Counting
+        statements therefore stopped answering the question this recorder
+        exists to answer -- it reported a five-row atomic batch as a single
+        write, which reads identically to five rows written one at a time and
+        makes a "these rows shared a transaction" assertion unsatisfiable
+        however correct the code is. The rows are what a crash can tear apart,
+        so the rows are what is counted.
+        """
         collapsed = " ".join(statement.split()).upper()
-        if "SECURE_OBJECTS" in collapsed and collapsed.startswith(("INSERT", "UPDATE")):
-            self.events.append(_WRITE_MARKER)
+        if "SECURE_OBJECTS" not in collapsed or not collapsed.startswith(("INSERT", "UPDATE")):
+            return
+        rows = len(parameters) if executemany and isinstance(parameters, Sized) else 1
+        self.events.extend([_WRITE_MARKER] * rows)
 
     def _on_commit(self, _conn: object) -> None:
         self.events.append(_COMMIT_MARKER)

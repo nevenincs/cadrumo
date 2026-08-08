@@ -10,7 +10,7 @@ exactly that in one evening. The sibling replay corpus had already closed this:
 ``profile_overrides`` while the manual corpus carried nothing.
 
 :class:`~domain.calculations.registry.DeclaredScenarioInputs` closes it here. The
-field is optional at the MODEL boundary because 22 payloads cannot migrate in one
+field is optional at the MODEL boundary because the corpus cannot migrate in one
 change — and optional-and-unenumerated would be the worse outcome, leaving the hole
 open while the contract *appeared* to cover inputs, which is harder to see than
 today's uniform absence. So the un-migrated payloads are named here, each with the
@@ -73,23 +73,17 @@ def _payload(name: str) -> ManualWorkedExamplePayload:
 #: Payloads that have not yet declared their scenario inputs, each with its reason.
 #:
 #: A reason states WHERE the scenario facts currently live, because that is what a
-#: migration has to move. Five payloads are named by no test's source at all — they
-#: are reached through a constructed filename — and locating the consuming fixture
-#: is itself the first step of migrating them.
+#: migration has to move. Some payloads are named by no test's source at all — they
+#: are reached through a constructed filename — and for those, locating the consuming
+#: fixture is itself the first step of migrating them; their reasons say so. No count
+#: is stated here for the same reason none is asserted: it would be wrong the moment a
+#: payload migrates, and the entries themselves are the inventory.
 _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
     "modelo-100-2020-estimacion-directa-simplificada.json": (
         "scenario facts still hand-written in test_m100_2020_estimacion_directa_manual_worked_example.py"
     ),
     "modelo-100-2020-rendimientos-trabajo-despido-improcedente.json": (
         "scenario facts still hand-written in test_m100_2020_rendimientos_trabajo_despido_manual_worked_example.py"
-    ),
-    "modelo-100-2021-cuotas-integras-escala-aragon.json": (
-        "no test names this payload in source; it is reached through a constructed filename, so the "
-        "consuming fixture must be located before the facts can be moved into the payload"
-    ),
-    "modelo-100-2022-cuotas-integras-escala-aragon.json": (
-        "no test names this payload in source; it is reached through a constructed filename, so the "
-        "consuming fixture must be located before the facts can be moved into the payload"
     ),
     "modelo-100-2024-capital-inmobiliario-arrendamiento-vivienda-tensionada.json": (
         "scenario facts still hand-written in "
@@ -129,27 +123,22 @@ _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
         "scenario facts still hand-written in test_modelo_202_2025_pago_fraccionado_manual_worked_example.py"
     ),
     "modelo-303-2024-regimen-general-recargo-intracomunitaria-importacion.json": (
-        "scenario facts still hand-written in test_m303_2024_regimen_general_manual_worked_example.py"
+        "the IVA manual ships as source.pdf with NO extracted text -- unlike the renta manuals, which carry source.pdf.extracted.md -- so a per-input line locator cannot be constructed at all, only the page reference this payload already holds as raw_evidence_locator. DeclaredScenarioInputs requires locator_by_casilla_id, and a locator that cannot point at the figure it claims would assert a reviewability that is not there. Blocked on extracting the IVA corpus, not on this contract's design. Separately, test_m303_2024_regimen_general_manual_worked_example.py drives the registry through constructed IvaLedgerObservation rows the manual does not print; it states only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare"
     ),
     "modelo-303-2025-prorrata-general-regularizacion.json": (
-        "scenario facts still hand-written across test_prorrata_regularizacion_oracle.py and "
-        "test_prorrata_regularizacion_source_resolver.py; two consumers must move together"
+        "the IVA manual ships as source.pdf with NO extracted text -- unlike the renta manuals, which carry source.pdf.extracted.md -- so a per-input line locator cannot be constructed at all, only the page reference this payload already holds as raw_evidence_locator. DeclaredScenarioInputs requires locator_by_casilla_id, and a locator that cannot point at the figure it claims would assert a reviewability that is not there. Blocked on extracting the IVA corpus, not on this contract's design. Its two consumers, test_prorrata_regularizacion_oracle.py and test_prorrata_regularizacion_source_resolver.py, are not ledger-driven and would migrate cleanly once the corpus is extracted; they must move together"
     ),
     "modelo-322-2024-grupo-entidades-delta.json": (
-        "no test names this payload in source; it is reached through a constructed filename, so the "
-        "consuming fixture must be located before the facts can be moved into the payload"
+        "the IVA manual ships as source.pdf with NO extracted text -- unlike the renta manuals, which carry source.pdf.extracted.md -- so a per-input line locator cannot be constructed at all, only the page reference this payload already holds as raw_evidence_locator. DeclaredScenarioInputs requires locator_by_casilla_id, and a locator that cannot point at the figure it claims would assert a reviewability that is not there. Blocked on extracting the IVA corpus, not on this contract's design. Separately, test_m322_2024_grupo_entidades_manual_worked_example.py drives the registry through constructed IvaLedgerObservation rows the manual does not print; it states only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare"
     ),
     "modelo-322-2024-grupo-entidades-omega.json": (
-        "no test names this payload in source; it is reached through a constructed filename, so the "
-        "consuming fixture must be located before the facts can be moved into the payload"
+        "the IVA manual ships as source.pdf with NO extracted text -- unlike the renta manuals, which carry source.pdf.extracted.md -- so a per-input line locator cannot be constructed at all, only the page reference this payload already holds as raw_evidence_locator. DeclaredScenarioInputs requires locator_by_casilla_id, and a locator that cannot point at the figure it claims would assert a reviewability that is not there. Blocked on extracting the IVA corpus, not on this contract's design. Separately, test_m322_2024_grupo_entidades_manual_worked_example.py drives the registry through constructed IvaLedgerObservation rows the manual does not print; it states only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare"
     ),
     "modelo-353-2024-grupo-entidades-agregado.json": (
-        "no test names this payload in source; it is reached through a constructed filename, so the "
-        "consuming fixture must be located before the facts can be moved into the payload"
+        "the IVA manual ships as source.pdf with NO extracted text -- unlike the renta manuals, which carry source.pdf.extracted.md -- so a per-input line locator cannot be constructed at all, only the page reference this payload already holds as raw_evidence_locator. DeclaredScenarioInputs requires locator_by_casilla_id, and a locator that cannot point at the figure it claims would assert a reviewability that is not there. Blocked on extracting the IVA corpus, not on this contract's design. Separately, test_m353_2024_grupo_entidades_manual_worked_example.py drives the registry through constructed IvaLedgerObservation rows the manual does not print; it states only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare"
     ),
     "modelo-390-2024-resumen-anual-cuatro-trimestres.json": (
-        "no test names this payload in source; it is reached through a constructed filename, so the "
-        "consuming fixture must be located before the facts can be moved into the payload"
+        "the IVA manual ships as source.pdf with NO extracted text -- unlike the renta manuals, which carry source.pdf.extracted.md -- so a per-input line locator cannot be constructed at all, only the page reference this payload already holds as raw_evidence_locator. DeclaredScenarioInputs requires locator_by_casilla_id, and a locator that cannot point at the figure it claims would assert a reviewability that is not there. Blocked on extracting the IVA corpus, not on this contract's design. Separately, test_m390_2024_annual_manual_worked_example.py drives the registry through constructed IvaLedgerObservation rows the manual does not print; it states only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare"
     ),
 }
 

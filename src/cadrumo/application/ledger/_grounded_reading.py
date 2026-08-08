@@ -49,6 +49,11 @@ from ._evidence_draft import DraftDiscrepancyFinding, FieldProvenance, InvoiceDr
 from ._grounding_anchor import evaluate_anchor, printed_excerpt_occurs
 from ._identity_roles import IdentityCandidate, resolve_counterparty_identity
 from ._party_attribution import stamp_unverified_party_attribution
+from ._party_colocation import (
+    PartyAttributionOutcome,
+    party_attribution_findings,
+    resolve_party_attribution_by_colocation,
+)
 
 __all__ = [
     "GROUNDABLE_ORIGINS",
@@ -103,7 +108,18 @@ def verified_provenance(
     # because the two answer different questions and the second must not read as
     # a consequence of the first: an anchor check that passed says the value is
     # on the page, and says nothing whatever about whose it is.
-    return stamp_unverified_party_attribution(tuple(upgraded))
+    #
+    # Co-location is asked BEFORE the stamp rather than after, so a value the
+    # document itself attributes is never stamped in the first place. Stamping
+    # and then clearing would leave a window in which the draft asserts an
+    # unverified attribution it can in fact verify.
+    resolution = resolve_party_attribution_by_colocation(draft=draft, transcription=transcription)
+    return stamp_unverified_party_attribution(
+        tuple(upgraded),
+        attributed_fields=frozenset(
+            field for field, outcome in resolution.outcomes.items() if outcome is PartyAttributionOutcome.ATTRIBUTED
+        ),
+    )
 
 
 def _verified_envelope(
@@ -172,6 +188,16 @@ def ground_draft_against_transcription(
     # Through the shared list rather than naming the checks here, so a check
     # added later cannot reach this path and miss the structured reader's.
     findings.extend(deterministic_findings(draft))
+    # Named here rather than in that shared list because it is the one check
+    # that needs the TRANSCRIPTION as well as the draft: co-location is a fact
+    # about where a value is printed, which a draft alone cannot answer. The
+    # structured reader does not reach it and does not need to -- its element
+    # paths already name the party.
+    findings.extend(
+        party_attribution_findings(
+            resolve_party_attribution_by_colocation(draft=draft, transcription=transcription),
+        ),
+    )
 
     if taxpayer_tax_id is not None:
         resolution = resolve_counterparty_identity(

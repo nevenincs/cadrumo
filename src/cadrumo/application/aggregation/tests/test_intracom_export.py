@@ -10,12 +10,16 @@ Scenario (cross-border contract):
     under Ley 37/1992 art. 69), iva_rate=0, iva_amount=0.  Expected: casilla 59
     remains 0; the R12 row flows through the pipeline as a zero-IVA observation
     with category=DOMESTIC_NOT_SUBJECT.
-  - D5 gate: an INTRA_COMMUNITY_SUPPLY row with counterparty_eu_member_state=es
-    is rejected as DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION.
+  - D5 gate: an INTRA_COMMUNITY_SUPPLY row whose counterparty is VAT-identified
+    in Spain is rejected as
+    DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION -- the acquirer's
+    identification is what Ley 37/1992 art. 25 exempts on, not its address.
   - D5 gate: export and export-assimilated rows with a non-None eu_member_state
-    are rejected as EU_MEMBER_STATE_ON_EXPORT_TRANSACTION.
-  - D5 gate: an INTRA_COMMUNITY_SUPPLY row with no eu_member_state is rejected
-    as MISSING_COUNTERPARTY_EU_MEMBER_STATE.
+    are rejected as EU_MEMBER_STATE_ON_EXPORT_TRANSACTION. The export families
+    genuinely turn on establishment: an export leaves the Union.
+  - D5 gate: an INTRA_COMMUNITY_SUPPLY row with no identification state is
+    rejected as MISSING_COUNTERPARTY_IDENTIFICATION_STATE, never resolved from
+    the counterparty's country.
 """
 
 from __future__ import annotations
@@ -115,6 +119,7 @@ def _inbound_tx(
     iva_amount: Decimal = Decimal("0"),
     iva_category: IvaCategory | None = None,
     counterparty_eu_member_state: EUMemberState | None = None,
+    counterparty_identification_state: EUMemberState | None = None,
 ) -> Transaction:
     return Transaction.model_validate(
         {
@@ -128,6 +133,7 @@ def _inbound_tx(
             "iva_amount": iva_amount,
             "iva_category": iva_category,
             "counterparty_eu_member_state": counterparty_eu_member_state,
+            "counterparty_identification_state": counterparty_identification_state,
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
         },
     )
@@ -141,6 +147,7 @@ def test_intracom_goods_supply_populates_casilla_59() -> None:
         taxable_base=Decimal("5000.00"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
         counterparty_eu_member_state=_DE,
+        counterparty_identification_state=_DE,
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
     aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
@@ -161,6 +168,7 @@ def test_northern_ireland_xi_goods_supply_populates_casilla_59() -> None:
         taxable_base=Decimal("3000.00"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
         counterparty_eu_member_state=_XI,
+        counterparty_identification_state=_XI,
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
     aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
@@ -229,14 +237,20 @@ def test_export_assimilated_operation_populates_casilla_60() -> None:
     assert _casilla_base(aggregation, "59") == Decimal("0")
 
 
-def test_d5_intracom_with_es_counterparty_is_rejected() -> None:
-    """INTRA_COMMUNITY_SUPPLY with Spain as counterparty is a gate failure (contract D5)."""
+def test_d5_intracom_with_es_identified_counterparty_is_rejected() -> None:
+    """INTRA_COMMUNITY_SUPPLY to a Spanish-IDENTIFIED counterparty is a gate failure.
+
+    The establishment is German here and deliberately so: the refusal must come
+    from the Spanish VAT identification the acquirer purchases under, which is
+    the fact art. 25 reads, not from where it happens to be established.
+    """
     tx = _inbound_tx(
         "intracom-es-01",
         amount=Decimal("1000.00"),
         taxable_base=Decimal("1000.00"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        counterparty_eu_member_state=_ES,
+        counterparty_eu_member_state=_DE,
+        counterparty_identification_state=_ES,
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
     aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
@@ -244,24 +258,25 @@ def test_d5_intracom_with_es_counterparty_is_rejected() -> None:
     assert len(aggregation.observations) == 0
     assert len(aggregation.issues) == 1
     issue = aggregation.issues[0]
-    assert issue.reason is IvaLedgerAggregationIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION
+    assert issue.reason is IvaLedgerAggregationIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION
 
 
-def test_d5_intracom_without_counterparty_is_rejected() -> None:
-    """INTRA_COMMUNITY_SUPPLY with no eu_member_state is a gate failure (contract D5)."""
+def test_d5_intracom_without_identification_is_rejected() -> None:
+    """INTRA_COMMUNITY_SUPPLY with no identification state is a gate failure."""
     tx = _inbound_tx(
         "intracom-no-state-01",
         amount=Decimal("1000.00"),
         taxable_base=Decimal("1000.00"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
         counterparty_eu_member_state=None,
+        counterparty_identification_state=None,
     )
     catalogue = TransactionCatalogue.from_transactions([tx])
     aggregation = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
 
     assert len(aggregation.observations) == 0
     assert len(aggregation.issues) == 1
-    assert aggregation.issues[0].reason is IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_EU_MEMBER_STATE
+    assert aggregation.issues[0].reason is IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE
 
 
 def test_d5_export_with_eu_member_state_is_rejected() -> None:
@@ -306,6 +321,7 @@ def test_marc_combined_scenario() -> None:
         taxable_base=Decimal("5000.00"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
         counterparty_eu_member_state=_DE,
+        counterparty_identification_state=_DE,
     )
     services_tx = _inbound_tx(
         "marc-services-r12",

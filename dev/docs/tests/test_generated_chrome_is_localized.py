@@ -134,6 +134,91 @@ def test_no_display_prose_is_hardcoded_in_the_generator(generator: str) -> None:
     )
 
 
+#: Generators whose emitted strings are held em-dash free: every one of them.
+#: ``casilla_reference.py`` joined once its two heading dashes went, which is
+#: what the exclusion that used to sit here was waiting for.
+_EM_DASH_FREE_GENERATORS: tuple[str, ...] = _GENERATORS
+
+_EM_DASH = "—"
+
+
+def _emitted_strings(path: Path) -> list[tuple[int, str]]:
+    """String constants that reach rendered output, excluding developer prose.
+
+    Docstrings and comments describe the code to a maintainer and never reach a
+    page, so the operator's rule is enforced where it bites: on the text the
+    generator actually writes.
+    """
+    return _emitted_strings_from_source(path.read_text(encoding="utf-8"))
+
+
+def _emitted_strings_from_source(source: str) -> list[tuple[int, str]]:
+    """The emitted-string scan over source text, wherever it was read from."""
+    tree = ast.parse(source)
+    docstrings = {
+        text
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Module | ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
+        and (text := ast.get_docstring(node, clean=False))
+    }
+    return [
+        (node.lineno, node.value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value not in docstrings
+    ]
+
+
+@pytest.mark.parametrize("generator", _EM_DASH_FREE_GENERATORS)
+def test_no_generator_emits_an_em_dash(generator: str) -> None:
+    """No generated page carries an em dash, by operator instruction.
+
+    Enforced on emitted strings rather than on the whole file: a maintainer's
+    comment reaches no reader, and gating source-wide would fail a peer over
+    prose about their own code instead of over what a taxpayer sees.
+    """
+    offenders = [
+        (line, text) for line, text in _emitted_strings(_REPO_ROOT / "dev" / "docs" / generator) if _EM_DASH in text
+    ]
+
+    assert offenders == [], (
+        f"{generator} emits an em dash; use a plain hyphen or restructure the sentence:\n"
+        + "\n".join(f"  line {line}: {text!r}" for line, text in offenders)
+    )
+
+
+def test_every_docs_chrome_key_is_visible_to_the_locale_scanner() -> None:
+    """A catalogue key no call site spells out is deleted by the next scaffold.
+
+    The scanner recognises a key only when a call site carries the FULL dotted
+    string as a literal. A key composed from a variable, an f-string tail, or a
+    prefix concatenated inside a helper is invisible: ``scaffold`` prunes it as
+    unreferenced and the parity gate reports it as a key no code requests. The
+    surface then reverts to raising on every page, silently, while the catalogue
+    still looks complete.
+
+    Gated rather than remembered because it has recurred three times across
+    three surfaces, each time authored by someone who had already been told, and
+    each time caught only because a human measured before running scaffold.
+    Reaching zero here is what makes scaffold safe to run.
+    """
+    from dev.locales import DOCS_SRC_DIR, LOCALES_DIR, SRC_DIR, LocaleManager
+
+    manager = LocaleManager(SRC_DIR, LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR,))
+    catalogue = manager.get_yaml_keys(manager.load_locale(LOCALES_DIR / "es.yml"))
+    declared = {key for key in catalogue if key.startswith("docs.")}
+    assert declared, "no docs.* chrome keys found; the namespace moved and this gate went vacuous"
+
+    invisible = sorted(declared - manager.get_codebase_keys())
+    detail = "".join(f"\n  {key}" for key in invisible)
+
+    assert invisible == [], (
+        f"{len(invisible)} docs.* key(s) are invisible to the locale scanner and would be "
+        "deleted by the next `python -m dev.locales scaffold`. Spell the full key out at its "
+        "call site, or build it as an f-string whose literal head ends in a dot so the "
+        f"namespace marker is emitted:{detail}"
+    )
+
+
 def test_the_detector_would_catch_a_reintroduced_literal() -> None:
     """The AST detector fires on a literal of exactly the shape it must catch.
 
@@ -266,7 +351,7 @@ def test_casilla_chrome_changes_language_while_the_official_names_do_not() -> No
 
     # The modelo's official name and the legal citation are AEAT's own Spanish
     # and must read identically whatever language the root was built for.
-    for fixed in ("Modelo 130. Pago fraccionado.", "Ley 37/1992, art. 92"):
+    for fixed in ("Modelo 130. Pago fraccionado.", "Ley 37/1992", "art. 92"):
         assert all(fixed in page for page in pages.values()), f"{fixed!r} moved with the build language"
 
 

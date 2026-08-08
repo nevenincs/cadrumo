@@ -60,14 +60,16 @@ if TYPE_CHECKING:
 __all__ = [
     "ATTRIBUTION_ESTABLISHING_ORIGINS",
     "PARTY_ATTRIBUTED_ADDRESS_FIELDS",
+    "PartyAddress",
     "PartyAttributionAdvisory",
     "PartyAttributionWarning",
+    "party_addresses",
     "party_attribution_advisory",
     "stamp_unverified_party_attribution",
 ]
 
 
-class _PartyAddress(NamedTuple):
+class PartyAddress(NamedTuple):
     """One side of the document, named by the address fields that describe it."""
 
     role: str
@@ -77,9 +79,9 @@ class _PartyAddress(NamedTuple):
     country_code_field: str
 
 
-_PARTY_ADDRESSES: Final[tuple[_PartyAddress, ...]] = (
-    _PartyAddress("supplier", "supplier_tax_id", "supplier_postal_code", "supplier_country", "supplier_country_code"),
-    _PartyAddress("customer", "customer_tax_id", "customer_postal_code", "customer_country", "customer_country_code"),
+_PARTY_ADDRESSES: Final[tuple[PartyAddress, ...]] = (
+    PartyAddress("supplier", "supplier_tax_id", "supplier_postal_code", "supplier_country", "supplier_country_code"),
+    PartyAddress("customer", "customer_tax_id", "customer_postal_code", "customer_country", "customer_country_code"),
 )
 """Both sides, because the transposition this guards against swaps exactly two.
 
@@ -161,8 +163,21 @@ class PartyAttributionAdvisory(BaseModel):
         return tuple(field for party in self.parties for field in party.fields)
 
 
+def party_addresses() -> tuple[PartyAddress, ...]:
+    """Return both parties and the address fields that describe each.
+
+    The one party table, exposed so the co-location resolver partitions the
+    document over exactly the sides this module stamps. Two tables would be the
+    drift that lets a resolver attribute a field nothing stamps, or stamp one
+    nothing attributes.
+    """
+    return _PARTY_ADDRESSES
+
+
 def stamp_unverified_party_attribution(
     envelopes: tuple[FieldProvenance, ...],
+    *,
+    attributed_fields: frozenset[str] = frozenset(),
 ) -> tuple[FieldProvenance, ...]:
     """Return *envelopes* with unverified address attribution stamped on each.
 
@@ -172,8 +187,21 @@ def stamp_unverified_party_attribution(
     Setting only the ``True`` side would make the stamp a latch, and a latch on
     a safety flag survives the fix that should clear it.
 
+    Two independent ways a value earns an unstamped envelope, and they compose
+    rather than override. Its ORIGIN can answer the attribution question -- a
+    structured record's element path names the party, an operator typed into a
+    named field. Or the DOCUMENT can answer it, by printing the value inside the
+    region a role-evidenced identity anchors to that party, which is what
+    ``attributed_fields`` carries. Either is sufficient; neither is required of
+    the other.
+
     Args:
         envelopes: The draft's provenance envelopes, in their original order.
+        attributed_fields: Fields the document's own layout attributed, from
+            :func:`~application.ledger.resolve_party_attribution_by_colocation`.
+            Empty by default, so a caller that cannot segment the document gets
+            the interim behaviour rather than a silent clean bill -- the default
+            has to be the direction that keeps the stamp.
 
     Returns:
         The envelopes, in order, each either restamped or passed through where
@@ -184,7 +212,9 @@ def stamp_unverified_party_attribution(
         if envelope.field not in PARTY_ATTRIBUTED_ADDRESS_FIELDS:
             stamped.append(envelope)
             continue
-        unverified = envelope.origin not in ATTRIBUTION_ESTABLISHING_ORIGINS
+        origin_answers = envelope.origin in ATTRIBUTION_ESTABLISHING_ORIGINS
+        document_answers = envelope.field in attributed_fields
+        unverified = not (origin_answers or document_answers)
         if unverified == envelope.attribution_unverified:
             stamped.append(envelope)
             continue

@@ -943,6 +943,39 @@ def test_export_writes_the_modelo_200_envelope_tags_aeat_publishes(tmp_path: Pat
     assert payload[100:109] == b"B12345674"
 
 
+def test_the_modelo_200_envelope_tags_agree_on_the_discriminante(tmp_path: Path) -> None:
+    """Both envelope tags must spell the same estado-de-cuentas discriminante.
+
+    Offset 6 of each tag is the discriminante, and the two are produced by
+    independent authorities: the opening tag reads a registry literal, the closing
+    tag a character hardcoded inside its computed template. Nothing ties them
+    together, so a change to either alone ships a fichero whose two tags disagree
+    about the filer's accounts regime -- and because both tags stay structurally
+    well-formed, no completeness or parity gate reads the divergence.
+
+    Both characters are taken from the rendered payload rather than restated, so
+    this compares the two authorities against each other rather than each against a
+    third copy of the expected value.
+    """
+    provider = _schema_provider(filing_year=2024, period="0A", modelos=("200",))
+    output = tmp_path / "modelo-200.txt"
+
+    export_draft(
+        _approved_modelo_200_registry_draft(),
+        output_path=output,
+        headers=_modelo_200_export_headers(),
+        schema_provider=provider,
+    )
+
+    payload = output.read_bytes()
+    # "<T" + "200" then the discriminante; the close tag prepends one more byte.
+    opening_discriminante = payload[5:6]
+    closing_discriminante = payload[-18:][6:7]
+
+    assert opening_discriminante == closing_discriminante
+    assert payload[2:5] == payload[-18:][3:6], "both tags must also name the same modelo"
+
+
 def test_a_modelo_200_layout_without_its_footer_record_writes_no_closing_tag(tmp_path: Path) -> None:
     """The closing tag must come from the footer record, not from anywhere else.
 

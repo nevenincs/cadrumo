@@ -37,8 +37,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Modelo, Period
-from ....domain.calculations.registry import ModeloRevision, bundled_authority, selector_as_dict
-from ....domain.calculations.registry import IvaLedgerObservation
+from ....domain.calculations.registry import IvaLedgerObservation, ModeloRevision, bundled_authority, selector_as_dict
 from ....domain.iva import (
     EUMemberState,
     IvaCategory,

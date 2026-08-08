@@ -38,6 +38,7 @@ from ....core.aggregation import (
 )
 from ...iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
+    M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES,
     EUMemberState,
     InputClassification,
     InvoiceKind,
@@ -46,7 +47,6 @@ from ...iva import (
     IvaExemptionArticle,
     IvaFlowDirection,
     IvaRateKind,
-    M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES,
     OssIossRegime,
     TransactionKind,
 )

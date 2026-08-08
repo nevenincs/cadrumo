@@ -1,9 +1,21 @@
 """The Art. 81.2 shape advisory: a declared figure that counts nothing, disclosed.
 
 There is one state in which a taxpayer declares real guardería spend, sees it
-stored, and receives nothing for it: the child turns three during the period, so
-the statute admits only the months after the birthday, and the figure on record
-is an annual total that spans it and cannot be apportioned.
+stored, and receives nothing for it: the child turns three during the period and
+the figure on record is a single annual total that cannot be apportioned.
+
+The zero comes from the UPPER edge of the window, not from the birthday. The
+birthday is not a boundary here — Capítulo 18's "gastos incurridos con
+posterioridad al cumplimiento de dicha edad" GRANTS the months after it and
+withdraws none of the months before, which the manual settles with a child who
+"en septiembre cumple 3 años" and is granted "6 meses completos (de enero a
+junio)", every one of them before the birthday. What the application cannot
+derive is where the window ENDS: the statute closes it at the month before the
+second cycle of infant education may begin, and each región determines that.
+So a yearly figure carries no month information the increment could use, and
+the only basis derivable from a birth date alone — the under-three months — is
+NARROWER than the increment's own window, so using it would prorate against a
+basis the spend it pairs with does not share.
 
 The zero is correct — splitting the total would be inventing the split. What
 would not be correct is silence. The whole reason zero is defensible here is that

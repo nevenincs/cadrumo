@@ -12,11 +12,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from .....core.resources import bundled_path
-from .. import CasillaId, ValidatedRegistryAuthority, validated_casilla_id
+from .. import (
+    CasillaId,
+    ManualWorkedExamplePayload,
+    ValidatedRegistryAuthority,
+    validated_casilla_id,
+)
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
@@ -29,31 +35,65 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _SOURCE_ROOT = bundled_path()
 
-_BASE_LIQUIDABLE_GENERAL_LEAF: CasillaId = validated_casilla_id("0102", surface="0102")
-_BASE_LIQUIDABLE_AHORRO_LEAF: CasillaId = validated_casilla_id("0429", surface="0429")
-
 _SOURCE_REFS_CUOTA = ("lirpf-cuota-chain-authority",)
 _SOURCE_REFS_0529 = ("aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form")
 
-_GROUNDED_OUTPUTS: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...]], ...] = (
-    ("0519", "5550.00", ("ley-35-2006:art-56",), _SOURCE_REFS_CUOTA),
-    ("0520", "5550.00", ("ley-35-2006:art-56", "ley-35-2006:art-73"), _SOURCE_REFS_CUOTA),
-    ("0528", "2667.75", ("ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-64"), _SOURCE_REFS_CUOTA),
-    ("0529", "2667.75", ("ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-75-2015"), _SOURCE_REFS_0529),
-    ("0532", "2140.50", ("ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-64"), _SOURCE_REFS_CUOTA),
-    ("0533", "2140.50", ("ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-75-2015"), _SOURCE_REFS_CUOTA),
-    ("0545", "2406.50", ("ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-66-2021"), _SOURCE_REFS_CUOTA),
-    ("0546", "2406.50", ("ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-76-2021"), _SOURCE_REFS_CUOTA),
+_GROUNDED_OUTPUT_REFS: tuple[tuple[str, tuple[str, ...], tuple[str, ...]], ...] = (
+    ("0519", ("ley-35-2006:art-56",), _SOURCE_REFS_CUOTA),
+    ("0520", ("ley-35-2006:art-56", "ley-35-2006:art-73"), _SOURCE_REFS_CUOTA),
+    ("0528", ("ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-64"), _SOURCE_REFS_CUOTA),
+    ("0529", ("ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-75-2015"), _SOURCE_REFS_0529),
+    ("0532", ("ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-64"), _SOURCE_REFS_CUOTA),
+    ("0533", ("ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-75-2015"), _SOURCE_REFS_CUOTA),
+    ("0545", ("ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-66-2021"), _SOURCE_REFS_CUOTA),
+    ("0546", ("ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-76-2021"), _SOURCE_REFS_CUOTA),
 )
+"""The grounded casillas and the provenance each carries.
 
-_MANUAL_MINIMO_INPUTS: dict[CasillaId, Decimal] = {
-    validated_casilla_id("0511", surface="0511"): Decimal("5550.00"),
-    validated_casilla_id("0512", surface="0512"): Decimal("5550.00"),
+The FIGURES are deliberately absent: they live in the oracle payload, which is the
+only place a manual-printed number belongs. Keeping them here too made this test and
+its payload two independent transcriptions of one page, agreeing by nothing.
+"""
+
+_ORACLE_PAYLOAD_NAME = "modelo-100-2022-cuotas-integras-escala-aragon.json"
+
+
+def _oracle_payload() -> ManualWorkedExamplePayload:
+    """Read the bundled oracle through the registry's own strict payload model."""
+    path = Path(bundled_path("corpus", "manual_oracles")) / _ORACLE_PAYLOAD_NAME
+    return ManualWorkedExamplePayload.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+def _declared_manual_inputs() -> dict[CasillaId, Decimal]:
+    """The facts the manual PRINTS for this case, read from the oracle's declaration.
+
+    This test and the payload used to be two independent transcriptions of one worked
+    example — the test hardcoding both the inputs and the expected figures, the payload
+    declaring the figures again for the grounding fold, and nothing anywhere checking
+    the two agreed. They did agree; nothing made them.
+    """
+    declared = _oracle_payload().declared_inputs
+    assert declared is not None, f"{_ORACLE_PAYLOAD_NAME} must declare its scenario inputs"
+    return {
+        validated_casilla_id(casilla_id, surface=casilla_id): Decimal(value)
+        for casilla_id, value in declared.by_casilla_id.items()
+    }
+
+
+#: Mínimo components the manual does NOT print, supplied as scenario scaffolding.
+#:
+#: Deliberately NOT in the payload's ``declared_inputs``. The manual states one total
+#: mínimo personal y familiar of 5.550 and never mentions these component boxes, so
+#: declaring them as manual facts would attach a corpus locator to a figure the corpus
+#: does not carry — the payload declares what the page prints, and the scenario supplies
+#: what the engine additionally needs to run.
+_STRUCTURAL_ZERO_INPUTS: dict[CasillaId, Decimal] = {
     validated_casilla_id("0515", surface="0515"): Decimal("0.00"),
     validated_casilla_id("0516", surface="0516"): Decimal("0.00"),
     validated_casilla_id("0517", surface="0517"): Decimal("0.00"),
     validated_casilla_id("0518", surface="0518"): Decimal("0.00"),
 }
+
 
 _BASE_BINDINGS_2022: dict[str, Decimal] = {
     "renta-2022-modelo-111-retenciones-periodicas": Decimal("0"),
@@ -74,15 +114,18 @@ _REL_2022: dict[str, Decimal] = {
 
 
 def _scenario(*, ccaa: str, scenario_id: str, grounded: bool) -> RegistryCalculationScenario:
+    expected_by_casilla_id = _oracle_payload().expected_by_casilla_id
     expected_outputs = (
         tuple(
             RegistryScenarioExpectedOutput(
                 target_casilla_id=validated_casilla_id(casilla_id, surface=casilla_id),
-                value=Decimal(value),
+                # The FIGURE comes from the oracle payload; only the provenance the
+                # scenario comparison checks against the calculation entry stays local.
+                value=Decimal(expected_by_casilla_id[casilla_id]),
                 legal_refs=legal_refs,
                 source_refs=source_refs,
             )
-            for casilla_id, value, legal_refs, source_refs in _GROUNDED_OUTPUTS
+            for casilla_id, legal_refs, source_refs in _GROUNDED_OUTPUT_REFS
         )
         if grounded
         else (
@@ -100,11 +143,7 @@ def _scenario(*, ccaa: str, scenario_id: str, grounded: bool) -> RegistryCalcula
         revision="2022",
         filing_year=2022,
         period="0A",
-        inputs={
-            _BASE_LIQUIDABLE_GENERAL_LEAF: Decimal("23900.00"),
-            _BASE_LIQUIDABLE_AHORRO_LEAF: Decimal("2800.00"),
-            **_MANUAL_MINIMO_INPUTS,
-        },
+        inputs={**_declared_manual_inputs(), **_STRUCTURAL_ZERO_INPUTS},
         binding_values=_BASE_BINDINGS_2022,
         enum_binding_values={"renta-2022-profile-tax-residence-ccaa": ccaa},
         relation_values=_REL_2022,
@@ -152,7 +191,7 @@ def test_cuota_chain_manual_grounding_is_enrolled(
     snapshot = registry_authority.snapshot("100", filing_year=2022, period="0A")
     policy = snapshot.verification_policy()
     grounded_casilla_ids = {
-        validated_casilla_id(casilla_id, surface=casilla_id) for casilla_id, *_ in _GROUNDED_OUTPUTS
+        validated_casilla_id(casilla_id, surface=casilla_id) for casilla_id, *_ in _GROUNDED_OUTPUT_REFS
     }
     reconciled_casilla_ids = policy.computed_casilla_ids | policy.reconcile_when_present_casilla_ids
 

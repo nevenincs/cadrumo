@@ -25,6 +25,7 @@ Submodules
    cadrumo.application.ledger._classification_assembly
    cadrumo.application.ledger._classifier_inputs
    cadrumo.application.ledger._closure_findings
+   cadrumo.application.ledger._confirm_establishment
    cadrumo.application.ledger._confirmation_gate
    cadrumo.application.ledger._confirmation_record
    cadrumo.application.ledger._consent_withdrawal
@@ -53,6 +54,7 @@ Submodules
    cadrumo.application.ledger._models
    cadrumo.application.ledger._participation_read
    cadrumo.application.ledger._party_attribution
+   cadrumo.application.ledger._party_colocation
    cadrumo.application.ledger._postal_shape_finding
    cadrumo.application.ledger._preflight
    cadrumo.application.ledger._protocols

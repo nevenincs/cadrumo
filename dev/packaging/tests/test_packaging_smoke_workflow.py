@@ -137,7 +137,6 @@ def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
         assert "actions/upload-artifact@" in leg_uses
 
 
-
 def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
     """One Ubuntu aggregate plus native Windows/macOS host-portable legs."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
