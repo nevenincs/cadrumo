@@ -7506,8 +7506,14 @@ live:
     year_range_invalid: El rang d'exercicis indicat no és vàlid.
   filed:
     pull_all:
-      denominator_note_profile: live.filed.pull_all.denominator_note_profile
-      denominator_note_register_only: live.filed.pull_all.denominator_note_register_only
+      denominator_note_profile: Mesurat sobre {expected} parell(s) que esperen les
+        dades declarades pel mateix contribuent. Uns altres {offered_only} parell(s)
+        provenen només de la llista d'opcions que ofereix l'AEAT i no sustenten cap
+        afirmació de cobertura.
+      denominator_note_register_only: 'Sense denominador propi del contribuent: els
+        {offered_only} parells recorreguts provenen de la llista d''opcions que ofereix
+        l''AEAT, la vinculació de la qual a aquest NIF no està confirmada. Aquesta
+        execució no mesura res.'
       expected_but_not_found: live.filed.pull_all.expected_but_not_found
       found_more_than_expected: live.filed.pull_all.found_more_than_expected
       recapture_divergence: live.filed.pull_all.recapture_divergence

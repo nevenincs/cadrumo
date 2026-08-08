@@ -7392,8 +7392,13 @@ live:
       évvel.
   filed:
     pull_all:
-      denominator_note_profile: live.filed.pull_all.denominator_note_profile
-      denominator_note_register_only: live.filed.pull_all.denominator_note_register_only
+      denominator_note_profile: A mérés alapja {expected} pár, amelyet az adózó saját
+        bevallott adatai várnak. További {offered_only} pár kizárólag az AEAT felkínált
+        választéklistájából származik, és nem támaszt alá lefedettségi állítást.
+      denominator_note_register_only: 'Nincs az adózóhoz kötött nevező: mind a(z)
+        {offered_only} bejárt pár az AEAT felkínált választéklistájából származik,
+        amelynek ehhez a NIF-hez való tartozása nem igazolt. Ez a futás semmit nem
+        mér.'
       expected_but_not_found: live.filed.pull_all.expected_but_not_found
       found_more_than_expected: live.filed.pull_all.found_more_than_expected
       recapture_divergence: live.filed.pull_all.recapture_divergence

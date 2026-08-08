@@ -148,6 +148,7 @@ class Frame:
     width: int
     height: int
     theme: str
+    locale: str
     elapsed_ms: float
     text: str
     focused: str
@@ -160,7 +161,7 @@ class Frame:
         rule = "─" * 8
         out = [
             f"{rule} frame {self.index} {rule} {self.surface} · "
-            f"{self.width}x{self.height} · {self.theme} · {self.elapsed_ms:.0f}ms {rule}",
+            f"{self.width}x{self.height} · {self.theme} · {self.locale} · {self.elapsed_ms:.0f}ms {rule}",
             self.text,
             f"── focus: {self.focused}",
             f"── chain: {' → '.join(self.chain) if self.chain else '(no focusable controls)'}",
@@ -175,7 +176,17 @@ class Frame:
         return "\n".join(out)
 
 
-def capture(app: App, *, index: int, surface: str, width: int, height: int, theme: str, elapsed_ms: float) -> Frame:
+def capture(
+    app: App,
+    *,
+    index: int,
+    surface: str,
+    width: int,
+    height: int,
+    theme: str,
+    locale: str,
+    elapsed_ms: float,
+) -> Frame:
     """Read every band off a live app."""
     focused, chain = focus_band(app)
     return Frame(
@@ -184,6 +195,7 @@ def capture(app: App, *, index: int, surface: str, width: int, height: int, them
         width=width,
         height=height,
         theme=theme,
+        locale=locale,
         elapsed_ms=elapsed_ms,
         text=screen_text(app, width, height),
         focused=focused,

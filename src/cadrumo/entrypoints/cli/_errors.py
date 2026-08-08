@@ -109,6 +109,22 @@ class CliValidationBoundaryError(CadrumoError):
     diagnoses local configuration state and cannot fix an application
     schema mismatch or an invalid CLI argument.
 
+    **The message stays generic and the detail rides ``context``.** The
+    per-field list is genuinely too noisy to read as a refusal sentence, which
+    is why it was once withheld entirely --- but withholding it from the
+    ENVELOPE too left "check the command's arguments" as the whole of what an
+    operator was told, and that instruction is wrong precisely when the breached
+    constraint is on a field they never supplied. A tax identifier read off a
+    document is such a field: the operator's arguments are all correct and
+    re-reading them discovers nothing. Splitting the two channels keeps the
+    sentence readable and makes the failure diagnosable, which is the same split
+    :exc:`CliOutboundPayloadBoundaryError` and
+    :exc:`CliStoredDataValidationBoundaryError` already use.
+
+    The context names the failing record, the field path and the rule broken,
+    and never the value --- see :func:`internal_record_fault_context` for why
+    that exclusion is load-bearing rather than incidental.
+
     Attributes:
         original_exception: The underlying :exc:`~pydantic.ValidationError`.
     """
@@ -122,7 +138,7 @@ class CliValidationBoundaryError(CadrumoError):
         """
         super().__init__(
             translated_message="errors.refused.refused_cli_validation_boundary",
-            context={},
+            context=internal_record_fault_context(error),
             suggestion="aeat --help",
         )
         self.original_exception: ValidationError = error
@@ -765,10 +781,12 @@ def _project_cadrumo_error(error: Exception, callback: Callable[..., object]) ->
 def _project_validation_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
     """Log the pydantic detail, then wrap the input-time validation failure.
 
-    The wrapped :class:`CliValidationBoundaryError` surfaces an operator-friendly
-    refusal without the per-field error list, which is too noisy for an end-user
-    but is exactly the diagnostic engineers need to triage a failing CLI surface
-    or test fixture.
+    The wrapped :class:`CliValidationBoundaryError` keeps the refusal SENTENCE
+    free of the per-field error list, which is too noisy to read as prose, while
+    carrying the failing record, field path and broken rule on the envelope's
+    ``context``. The log line stays: it holds the raw ``errors()`` payload,
+    including the input values the envelope deliberately withholds, which is
+    what an engineer triaging a failing surface or fixture needs.
     """
     assert isinstance(error, ValidationError)
     _log.error(

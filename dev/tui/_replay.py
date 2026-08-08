@@ -36,6 +36,28 @@ def _theme_name(appearance: str) -> str:
     return resolve_theme_name(TuiAppearance(appearance))
 
 
+def _activate_locale(locale: str) -> None:
+    """Make the process-wide output language match ``locale`` before build.
+
+    ``load_settings()`` holds a process-wide ``Settings`` singleton cached
+    by the active-profile pointer, not by env var, so a raw ``os.environ``
+    mutation alone is invisible to it once that singleton exists.
+    ``reset_settings_cache`` is the sanctioned way to make a process
+    environment change observed, and — unlike ``override_settings``'s
+    contextvar — it stays valid across the asyncio Task boundary the
+    Textual pilot's message pump runs on (see
+    ``test_flow_tui_app.py::test_rebuild_for_locale_reassembles_copy_under_the_new_language``).
+    """
+    import os
+
+    from cadrumo.core.config import reset_settings_cache
+    from cadrumo.core.i18n import OUTPUT_LANGUAGE_ENV_VAR, clear_output_language_cache
+
+    os.environ[OUTPUT_LANGUAGE_ENV_VAR] = locale
+    reset_settings_cache()
+    clear_output_language_cache()
+
+
 async def _apply(pilot: Pilot, session: Session) -> None:
     """Deliver every recorded gesture, in order, through the real pipeline."""
     for gesture in session.gestures:
@@ -68,6 +90,13 @@ def _run[T](session: Session, read: Callable[[App, float], Awaitable[T] | T]) ->
     """
     surface = resolve(session.surface)
     width, height = session.size
+
+    # Must run before ``harness_storage()`` opens below: that helper enters
+    # an ``override_settings`` contextvar block that snapshots ``Settings``
+    # (including ``cadrumo_output_language``) at ENTRY time and holds it for
+    # the whole walk. Activating the locale after that point mutates the
+    # environment but never reaches the snapshot the render path reads.
+    _activate_locale(session.locale)
 
     async def _drive() -> T:
         started = time.perf_counter()
@@ -102,6 +131,7 @@ def replay(session: Session) -> Frame:
             width=width,
             height=height,
             theme=session.theme,
+            locale=session.locale,
             elapsed_ms=elapsed_ms,
         ),
     )

@@ -82,15 +82,24 @@ def _login() -> App:
 
 def _manager() -> App:
     from cadrumo.adapters.inbound.tui import ProfileManagerApp
+    from cadrumo.entrypoints.cli._config._manager_actions import manager_actions
     from cadrumo.entrypoints.cli._config._manager_frontend import (
         build_active_profile_overview,
         persist_active_profile_field,
         profile_field_value_refusal,
     )
 
+    # ``present_profile_manager`` is the real CLI entry point and always
+    # wires ``manager_actions()`` alongside the overview and the write door.
+    # Building the screen without them, as this used to, rendered a manager
+    # carrying zero buttons — a surface no operator ever sees, since every
+    # real launch offers the certificate, censal-pull, add-row and export
+    # actions. A reading over that stand-in was a reading about the
+    # stand-in, exactly what this harness exists to avoid.
     return ProfileManagerApp(
         build_active_profile_overview(),
         persist=persist_active_profile_field,
+        actions=manager_actions(),
         validate=profile_field_value_refusal,
     )
 

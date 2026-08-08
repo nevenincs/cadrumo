@@ -36,6 +36,7 @@ from ...adapters.persistence.storage import ClassificationError, DecryptionError
 from ...domain.calculations.registry import BindingId, RegistrySnapshot
 from ..aggregation import (
     CalculationSourceContext,
+    CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
     storage_degradation_resolution,
@@ -417,6 +418,26 @@ class PreviousFilingSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=report.binding_values,
+            unresolved_binding_ids=tuple(item.binding_id for item in report.unsatisfied),
+            diagnostics=tuple(
+                CalculationSourceDiagnostic(
+                    reason="unresolved_binding",
+                    source_kind="previous_filing",
+                    resolver_id=self.resolver_id,
+                    binding_id=item.binding_id,
+                    message=(
+                        f"Modelo {context.modelo} declares previous-filing binding "
+                        f"{item.binding_id!r}, but no observation for modelo "
+                        f"{item.source_modelo} {item.source_filing_year} "
+                        f"{'+'.join(item.source_periods) if item.source_periods else '(any period)'} "
+                        "is in the local store, so the carry contributes nothing. Every "
+                        "previous-filing carry reduces the amount owed, so an absent one "
+                        "over-declares. File or capture the prior filing, or enter the value "
+                        "by hand, before filing."
+                    ),
+                )
+                for item in report.unsatisfied
+            ),
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="previous_filing",

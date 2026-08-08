@@ -633,3 +633,91 @@ def test_a_catalogued_alpha3_export_is_honoured_outright() -> None:
 
     assert resolution.outcome is IvaCategoryOutcome.DECLARED
     assert resolution.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+
+
+def _counterparty_only_relief(
+    *,
+    country_code: str | None,
+    direction: InvoiceKind = InvoiceKind.ISSUED,
+):
+    """Resolve a declared export where ONLY the counterparty's slot is outstanding.
+
+    **The first fixture on this path that settles the filer.** Every other one
+    leaves both residencies unsupplied, which is the ordinary shape of a
+    domestic invoice printing no country -- and it is why a spelling
+    independence assertion had no home: with the filer's slot outstanding too,
+    the scoped exemption forgives one slot and the other still refuses, so every
+    spelling reaches the same refusal and an assertion over them holds WITHOUT
+    THE EXEMPTION EVER FIRING.
+
+    Settling the filer is what makes the exemption the only thing left deciding
+    the outcome. It should be useful past this one assertion: any question about
+    what the catalogue-gap carve-out does, rather than about what the filer's
+    unfinished profile does, needs exactly this shape.
+
+    The filer is the ISSUER on an issued invoice, so the issuer's scope is
+    supplied and the customer's is not -- the party whose country the record
+    states and our catalogue may fail to place.
+    """
+    declared = DeclaredFacts(
+        issuer_scope=_fact(_ES),
+        customer_tax_status=_fact(CustomerTaxStatus.B2B_IVA_REGISTERED),
+        supply_nature=_fact(SupplyNature.GOODS),
+        stated_category=_fact(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED),
+    )
+    assembly = assemble_classification_criteria(
+        transaction_date=_WHEN,
+        direction=direction,
+        inputs=collect_classifier_inputs(InvoiceDraft(), profile=None),
+        declared=declared,
+    )
+    return resolve_ingestion_iva_category(
+        assembly,
+        declared=declared,
+        direction=direction,
+        counterparty_country_status=record_country_code_status(country_code),
+    )
+
+
+def test_the_counterparty_only_fixture_actually_fires_the_exemption() -> None:
+    """The non-vacuity proof the spelling assertion below rests on.
+
+    Without this, the assertion beneath could hold because every spelling
+    refuses for the filer's sake, which is the vacuous shape this fixture was
+    built to escape. Two things must be true of the fixture: the exemption must
+    SPARE an uncatalogued counterparty, and it must still REFUSE where the
+    catalogue places the country, so the sparing is the carve-out doing work
+    rather than the guard being inert.
+    """
+    spared = _counterparty_only_relief(country_code=an_uncatalogued_alpha2())
+    refused = _counterparty_only_relief(country_code="US")
+
+    assert spared.outcome is IvaCategoryOutcome.DECLARED, (
+        "the counterparty-only fixture must let the catalogue-gap exemption fire, "
+        "or every assertion resting on it passes for the filer's reason instead"
+    )
+    assert refused.outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF, (
+        "a country the catalogue places must still refuse here, or the fixture spares "
+        "everything and proves nothing about the carve-out"
+    )
+
+
+def test_the_catalogue_gap_is_forgiven_whichever_spelling_the_record_states() -> None:
+    """A Spanish structured record states its country as alpha-3.
+
+    The exemption's warrant is that OUR catalogue failed to place the party, and
+    that is a fact about the country rather than about the code system it was
+    written in. If the alpha-3 spelling of an uncatalogued country refused where
+    its alpha-2 spelling is spared, the carve-out would depend on which format
+    the issuing system happens to emit -- and Facturae, the Spanish national
+    format, emits the one that would lose.
+    """
+    alpha2 = _counterparty_only_relief(country_code=an_uncatalogued_alpha2())
+    alpha3 = _counterparty_only_relief(country_code=an_uncatalogued_alpha3())
+
+    assert alpha2.outcome is IvaCategoryOutcome.DECLARED
+    assert alpha3.outcome is alpha2.outcome, (
+        "the same catalogue gap reached a different outcome under a different spelling, "
+        "so the carve-out depends on the code system rather than on our data"
+    )
+

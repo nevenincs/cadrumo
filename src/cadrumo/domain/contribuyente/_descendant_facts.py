@@ -171,6 +171,10 @@ def descendant_facts_from_list(
             facts.append((f"{prefix}.meses_madre_trabajo", serialise_meses_trabajo(d.meses_madre_trabajo)))
         if d.alta_posterior_nacimiento_mes is not None:
             facts.append((f"{prefix}.alta_posterior_nacimiento_mes", str(d.alta_posterior_nacimiento_mes)))
+        if d.segundo_ciclo_infantil_inicio_mes is not None:
+            facts.append(
+                (f"{prefix}.segundo_ciclo_infantil_inicio_mes", str(d.segundo_ciclo_infantil_inicio_mes)),
+            )
         if d.gastos_guarderia_euros > 0:
             facts.append((f"{prefix}.gastos_guarderia", str(d.gastos_guarderia_euros)))
         # Emitted in the canonical expanded form regardless of how it was typed,
@@ -199,7 +203,7 @@ _N_RE = re.compile(
     # `gastos_guarderia_mensuales` path would match the shorter branch, fail the
     # `$` anchor, and be DROPPED from the row -- a declared map silently absent
     # on every reload.
-    r"meses_madre_trabajo|alta_posterior_nacimiento_mes|"
+    r"meses_madre_trabajo|alta_posterior_nacimiento_mes|segundo_ciclo_infantil_inicio_mes|"
     r"gastos_guarderia_mensuales|gastos_guarderia|nif)$",
 )
 
@@ -339,6 +343,10 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
             else ()
         )
         alta_posterior_mes = _stored_alta_posterior_mes(row.get("alta_posterior_nacimiento_mes"), index=idx)
+        segundo_ciclo_mes = _stored_alta_posterior_mes(
+            row.get("segundo_ciclo_infantil_inicio_mes"),
+            index=idx,
+        )
         gastos = _stored_gastos_guarderia(row.get("gastos_guarderia"), index=idx)
         # A stored map that will not parse REFUSES rather than resolving to the
         # empty tuple, on this module's standing reading of which direction a
@@ -368,6 +376,7 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
                 prorrata_minimo=prorrata_minimo,
                 meses_madre_trabajo=meses,
                 alta_posterior_nacimiento_mes=alta_posterior_mes,
+                segundo_ciclo_infantil_inicio_mes=segundo_ciclo_mes,
                 gastos_guarderia_euros=gastos,
                 gastos_guarderia_mensuales=mensuales,
                 nif=nif,

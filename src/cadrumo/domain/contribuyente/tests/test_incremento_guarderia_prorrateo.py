@@ -43,12 +43,22 @@ def _child(
     mensual: str = "",
     annual: int = 0,
     meses_madre: str = "1-12",
+    segundo_ciclo_mes: int | None = None,
 ) -> DescendantInfo:
+    """A descendant for the increment tests.
+
+    ``segundo_ciclo_mes`` is the month the second cycle of educación infantil may
+    begin, which Art. 81.2 makes the ceiling on the gastos window in the período
+    the child turns three. It is the OPERATOR's declaration and this application
+    never infers it, so a turning-three fixture that omits it is exercising the
+    refusal path rather than an arithmetic result.
+    """
     return DescendantInfo(
         birth_date=birth,
         meses_madre_trabajo=parse_meses_trabajo(meses_madre, field="test"),
         gastos_guarderia_euros=annual,
         gastos_guarderia_mensuales=parse_guarderia_mensual(mensual, field="test"),
+        segundo_ciclo_infantil_inicio_mes=segundo_ciclo_mes,
     )
 
 
@@ -82,7 +92,7 @@ class TestManualWorkedOracles:
         returned 333,33 — a 2x over-grant, which under-declares tax. A test that
         reaches the right number through the wrong mechanism is why that survived.
         """
-        child = _child(date(2021, 9, 2), mensual="1-6:500", meses_madre="5-8")
+        child = _child(date(2021, 9, 2), mensual="1-6:500", meses_madre="5-8", segundo_ciclo_mes=9)
 
         assert _total(child) == Decimal("166.67")
 
@@ -117,7 +127,7 @@ class TestManualWorkedOracles:
         the same shape as the substitution this docstring warns about, one
         field over.
         """
-        child = _child(date(2021, 9, 15), mensual="1-6:500", meses_madre="1-8")
+        child = _child(date(2021, 9, 15), mensual="1-6:500", meses_madre="1-8", segundo_ciclo_mes=9)
 
         assert child.age_at_year_end(_YEAR) == 3
         assert _total(child) == Decimal("500.00")
@@ -131,7 +141,7 @@ class TestManualWorkedOracles:
         Asserting the delta pins what was removed, so a regression to a
         flat cap fails with the figure that motivated the fix.
         """
-        child = _child(date(2021, 9, 2), mensual="1-6:500", meses_madre="5-8")
+        child = _child(date(2021, 9, 2), mensual="1-6:500", meses_madre="5-8", segundo_ciclo_mes=9)
 
         assert _total(child) == Decimal("166.67")
         assert Decimal("1000") - _total(child) == Decimal("833.33")
@@ -270,7 +280,7 @@ class TestMaternidadLapsesWhileTheIncrementContinues:
         the Art. 81.1 deducción has zero months. Five declared nursery months
         from February still prorate: 1.000 ÷ 12 × 5 = 416,67.
         """
-        child = _child(date(2022, 1, 20), mensual="2-6:500")
+        child = _child(date(2022, 1, 20), mensual="2-6:500", segundo_ciclo_mes=9)
 
         assert child.maternidad_contributing_meses(_YEAR + 1, thresholds=registry_thresholds(_YEAR + 1)) == 0
         assert _total(child, year=_YEAR + 1) == Decimal("416.67")
@@ -282,7 +292,7 @@ class TestMaternidadLapsesWhileTheIncrementContinues:
         mother did not work; the increment prorates by her nine worked months
         bounded by the five declared nursery months: 1.000 ÷ 12 × 5 = 416,67.
         """
-        child = _child(date(2022, 3, 10), mensual="4-8:500", meses_madre="4-12")
+        child = _child(date(2022, 3, 10), mensual="4-8:500", meses_madre="4-12", segundo_ciclo_mes=9)
 
         assert _total(child, year=_YEAR + 1) == Decimal("416.67")
 
@@ -308,3 +318,98 @@ class TestZeroCases:
     def test_a_child_with_no_declared_spend_contributes_nothing(self) -> None:
         """Qualifying months alone grant nothing; the increment is of SPEND."""
         assert _total(_child(date(2022, 3, 1), annual=0)) == Decimal("0")
+
+
+class TestSegundoCicloCeiling:
+    """Art. 81.2's ceiling: gastos count only up to the month before the second cycle.
+
+    The rule is normative and stated in every year of the manual under its own
+    heading, but AEAT never works an example of it and writes the month in the
+    SUBJUNCTIVE throughout — "aquel en el que PUEDA comenzar". The authority
+    declines to fix the month, so this application declares or discloses and never
+    assumes one. September is what the worked examples happen to use; defaulting to
+    it would be the same confident month-selection rule this box was already wrong
+    with once.
+    """
+
+    def test_the_declared_month_bounds_the_turning_three_window(self) -> None:
+        """A January birthday with the cycle declared at September: eight months, not twelve.
+
+        The measured gap this class closes. Nursery is declared for all twelve
+        months and the mother qualifies throughout, so nothing but the ceiling can
+        reduce the window — the increment was granting 1.000,00 where 666,67 is due,
+        an over-grant that under-declares tax.
+        """
+        child = _child(date(2022, 1, 20), mensual="1-12:500", segundo_ciclo_mes=9)
+
+        assert _total(child, year=_YEAR + 1) == Decimal("666.67")
+
+    def test_an_undeclared_month_withholds_the_window_rather_than_opening_it(self) -> None:
+        """Undeclared, the turning-three window is refused and the operator is told.
+
+        Refusing under-grants, which over-taxes; opening would over-grant, which
+        under-declares. Between two wrong answers this takes the recoverable one:
+        the operator can see the advisory and supply the month their centre already
+        reports on the modelo 233.
+        """
+        child = _child(date(2022, 1, 20), mensual="1-12:500")
+
+        assert _total(child, year=_YEAR + 1) == Decimal("0")
+        assert child.guarderia_needs_segundo_ciclo_month(_YEAR + 1) is True
+
+    def test_a_child_who_never_turns_three_keeps_months_after_september(self) -> None:
+        """The boundary pin, on AEAT's own 2020 caso — the ceiling is scoped, not general.
+
+        Renta 2020 works a child who is two all year with NON-CONTIGUOUS nursery
+        months: January to June, plus OCTOBER and NOVEMBER, to eight months. Both of
+        those fall after September, and AEAT counts them. A ceiling applied outside
+        the turning-three período would silently drop two months the authority
+        grants, so this pins the scope rather than the arithmetic.
+
+        The manual prints 666,64 here, rounding the monthly quota first; the engine
+        rounds last and yields 666,67, which is what the 2024 and 2025 manuals do for
+        their own case. The discrepancy is AEAT's across editions and is deliberately
+        not chased — see the row's finding 5.
+        """
+        child = _child(date(2018, 1, 31), mensual="1-6:500;10:500;11:500")
+
+        assert child.guarderia_needs_segundo_ciclo_month(2020) is False
+        assert _total(child, year=2020) == Decimal("666.67")
+
+    def test_a_declared_month_is_not_needed_before_the_turning_three_period(self) -> None:
+        """No ceiling, no advisory: the question is only put where it can change an answer."""
+        child = _child(date(2022, 3, 1), mensual="1-12:500")
+
+        assert child.guarderia_needs_segundo_ciclo_month(_YEAR) is False
+
+
+class TestCotizacionesCeilingIsDisclosedNotComputed:
+    """The second consumer of the declared month, which this application does not compute.
+
+    Art. 81 bounds the cotizaciones limb in the same período — "las devengadas hasta
+    el mes anterior a aquel en el que el hijo pueda iniciar el segundo ciclo". It is
+    disclosed rather than applied because the figure is a HOUSEHOLD annual scalar
+    while the ceiling is PER CHILD: a household with one child turning three and one
+    younger has no single bounding month, and AEAT states no apportionment rule.
+    Computing one would invent the number this whole rule exists to stop us inventing.
+    """
+
+    def test_it_reports_where_the_unbounded_ceiling_can_change_an_outcome(self) -> None:
+        child = _child(date(2022, 1, 20), mensual="1-12:500", segundo_ciclo_mes=9)
+        profile = RentaFamilyProfile(descendientes=(child,), cotizaciones_ss_madre_2024=5000)
+
+        assert profile.guarderia_cotizaciones_ceiling_is_unbounded(_YEAR + 1) is True
+
+    def test_it_stays_silent_when_no_cotizaciones_figure_is_declared(self) -> None:
+        """With none declared the ceiling binds at zero, which the operator can already see."""
+        child = _child(date(2022, 1, 20), mensual="1-12:500", segundo_ciclo_mes=9)
+        profile = RentaFamilyProfile(descendientes=(child,), cotizaciones_ss_madre_2024=0)
+
+        assert profile.guarderia_cotizaciones_ceiling_is_unbounded(_YEAR + 1) is False
+
+    def test_it_stays_silent_without_a_turning_three_child(self) -> None:
+        """No ceiling applies, so the cotizaciones figure needs no bounding."""
+        child = _child(date(2022, 3, 1), mensual="1-12:500")
+        profile = RentaFamilyProfile(descendientes=(child,), cotizaciones_ss_madre_2024=5000)
+
+        assert profile.guarderia_cotizaciones_ceiling_is_unbounded(_YEAR) is False

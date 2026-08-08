@@ -122,6 +122,7 @@ makes the coverage guard refuse instead of passing on an empty parse.
 from __future__ import annotations
 
 import re
+import unicodedata
 from itertools import pairwise
 from pathlib import Path
 
@@ -694,6 +695,113 @@ def _box_set_evidence(before_boxes: dict[str, int], after_boxes: dict[str, int])
     )
 
 
+#: Marks a boundary whose ONLY evidence is the description-keyed pass, which is the
+#: least precise signal here. Used by the verdict text and by the review assertion.
+_DESCRIPTION_ONLY = "DESCRIPTION-KEYED PASS ONLY"
+
+#: AEAT joins the containing block to a field's own name with this separator, so the
+#: final segment is the slot's own label and everything before it is context.
+_LABEL_SEPARATOR = " - "
+
+
+def _unnumbered_labels(path: Path) -> dict[tuple[str, int, int], str]:
+    """``(sheet, offset, length) -> description`` for slots carrying NO box number.
+
+    ABSTAINS on a flattened PDF parse by returning nothing. The PDF backend collapses a
+    document to one synthetic sheet, so ``(sheet, offset, length)`` stops identifying a
+    slot and starts colliding across pages -- measured, a corpus-wide run without this
+    abstention returned 15366 "changes" that were overwhelmingly unrelated fields
+    compared against each other.
+    """
+    sheets = _design_sheets(path)
+    if len(sheets) == 1 and sheets[0].name == _PDF_FLATTENED_SHEET:
+        return {}
+    table: dict[tuple[str, int, int], str] = {}
+    for sheet in sheets:
+        for field in sheet.fields:
+            if _BOX_MARKER.findall(field.description):
+                continue
+            table.setdefault((sheet.name, field.offset, field.length), " ".join(field.description.split()))
+    return table
+
+
+def _description_flip_evidence(earlier: Path, later: Path) -> str | None:
+    """FOURTH SIGNAL: an UNNUMBERED slot whose declared meaning changes at a fixed position.
+
+    The box-number key is structurally blind to a slot carrying no bracketed number, and
+    two such slots on Modelo 303 do change meaning between the 2024 halves -- a one-byte
+    flag and the reference beside it go from declaring a complementaria and its prior
+    receipt to declaring an autoliquidacion rectificativa and its identifying receipt.
+    Byte-valid, length-valid, digest-valid, and declaring something else.
+
+    THE DISCRIMINATION, which is what makes this shippable. A text diff cannot tell a
+    changed meaning from a reworded label, and the accepted sub-year record says so.
+    AEAT writes these descriptions hierarchically, so this compares the FINAL segment: a
+    changed leaf is the slot's own meaning, while an unchanged leaf under a changed
+    prefix is the containing block being relabelled and is NOT reported. Validated
+    against three hand-judged cases -- Modelo 390's ``Lorca`` becoming
+    ``Reducciones (nota 2)`` at a fixed 17-byte slot is reported, Modelo 131 dropping La
+    Palma from a one-byte deduction flag is reported, and Modelo 111's
+    ``Identificacion. Ejercicio`` becoming ``Devengo. Ejercicio`` is correctly NOT, since
+    only the heading above the field moved.
+
+    WHERE IT CANNOT SEPARATE, IT REFUSES. A description with no separable leaf on both
+    sides is counted and printed for review rather than asserted, because a boundary
+    named by a signal that cannot justify it is worse than a gap reported honestly.
+
+    PRECISION, stated so the verdict is read correctly. On individual verdicts this pass
+    runs roughly one false positive in three, and a measured example survives in the
+    corpus: Modelo 303's 2014/2015 pair reports a leaf going from
+    ``regimen simplificado`` to ``Regimen Simplificado (RS)``, which is a rewording. That
+    costs nothing THERE because three other signals already name that boundary -- a false
+    positive on an already-named boundary adds noise to evidence, not a wrong split. The
+    case that matters is a boundary this pass names ALONE, which the verdict marks so a
+    reader knows it rests on the weakest instrument.
+
+    Reserved transitions are excluded: those belong to the occupancy signal, and counting
+    them here would double-report one event under two headings.
+    """
+    before, after = _unnumbered_labels(earlier), _unnumbered_labels(later)
+    flipped: list[tuple[tuple[str, int, int], str, str]] = []
+    unseparable = 0
+    for slot in sorted(set(before) & set(after)):
+        was, now = before[slot], after[slot]
+        if _normalised(was) == _normalised(now):
+            continue
+        if _RESERVED_FIELD.search(was) or _RESERVED_FIELD.search(now):
+            continue
+        if _LABEL_SEPARATOR in was and _LABEL_SEPARATOR in now:
+            leaf_was = was.rsplit(_LABEL_SEPARATOR, 1)[1]
+            leaf_now = now.rsplit(_LABEL_SEPARATOR, 1)[1]
+            if _normalised(leaf_was) == _normalised(leaf_now):
+                continue
+            flipped.append((slot, leaf_was, leaf_now))
+        else:
+            unseparable += 1
+    if not flipped:
+        return None
+    shown = "; ".join(
+        f"{sheet} offset {offset} len {length}: {was!r} -> {now!r}" for (sheet, offset, length), was, now in flipped[:3]
+    )
+    note = (
+        f"{len(flipped)} unnumbered slot(s) re-described at an unchanged position and width "
+        f"(e.g. {shown}) -- the box-number key cannot see these, and no offset, length or "
+        "digest check detects a slot that keeps its place while declaring something else"
+    )
+    if unseparable:
+        note += (
+            f" [plus {unseparable} slot(s) whose text changed but carries no separable leaf, "
+            "NOT asserted and listed for review]"
+        )
+    return note
+
+
+def _normalised(text: str) -> str:
+    """Case- and diacritic-insensitive form, so an accent or casing fix is not a flip."""
+    folded = unicodedata.normalize("NFKD", " ".join(text.split()).casefold())
+    return "".join(char for char in folded if not unicodedata.combining(char))
+
+
 def _boundary_label(earlier: Path, later: Path) -> tuple[int, int]:
     """``(left year, right year)``; the two are EQUAL for a mid-course split."""
     return max(_design_years(earlier.name)), min(_design_years(later.name))
@@ -778,6 +886,10 @@ def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]
 
         _append_occupancy_evidence(boundaries, key, earlier, later)
 
+        description = _description_flip_evidence(earlier, later)
+        if description:
+            boundaries.setdefault(key, []).append(description)
+
     return boundaries
 
 
@@ -860,7 +972,14 @@ def test_no_revision_spans_a_design_relayout() -> None:
             # A key whose years are EQUAL is a mid-course split. Rendering it as
             # "2024/2024" reads as a typo and hides the finding the design-file keying
             # exists to surface, so it is named for what it is.
-            f"{f'{earlier} mid-year' if earlier == later else f'{earlier}/{later}'} ({' + '.join(evidence)})"
+            f"{f'{earlier} mid-year' if earlier == later else f'{earlier}/{later}'}"
+            # A boundary resting solely on the description-keyed pass is marked, because
+            # that pass runs roughly one false positive in three on individual verdicts.
+            # A false positive on a boundary other signals already name costs nothing; one
+            # that NAMES a boundary alone is the case a reader must judge rather than act
+            # on, and it is invisible unless the verdict says so.
+            f"{' ' + _DESCRIPTION_ONLY if len(evidence) == 1 and 'unnumbered slot(s) re-described' in evidence[0] else ''}"
+            f" ({' + '.join(evidence)})"
             for (earlier, later), evidence in sorted(boundaries.items())
         )
         violations.append(

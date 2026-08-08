@@ -170,6 +170,13 @@ CalculationSourceDiagnosticReason = Literal[
     # bank-transaction path returns a typed gate issue for the same shape; the
     # invoice projector returns observations, so it reports through here.
     "invoice_category_counterparty_mismatch",
+    # A received reverse charge whose line carries no rated slot. The recipient
+    # owes the self-assessed cuota (LIVA art. 84.Uno.2), the supplier charges
+    # nothing, and the record states no rate to apply -- so the figure cannot be
+    # derived without asserting which rate the supply bore. Refusing to invent it
+    # is correct; refusing silently would file a quietly short return, which is
+    # what this reason prevents.
+    "invoice_reverse_charge_cuota_not_derivable",
     "official_box_unpopulated",
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",

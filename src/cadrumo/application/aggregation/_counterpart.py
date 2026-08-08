@@ -95,7 +95,21 @@ class CounterpartObservation(BaseModel):
     source_object_id: str = Field(min_length=1)
     counterparty_nif: str = Field(min_length=1, max_length=20)
     counterparty_name: str = Field(default="", max_length=200)
-    counterparty_country: str = Field(default="ES", min_length=2, max_length=2)
+    # Required, and deliberately not defaulted to Spain. This is an operator
+    # boundary, so a default is an INFERENCE about a fact the operator did not
+    # state -- and it was the one inference the Modelo 349 readiness rule turns
+    # on. That rule asks for a GROI check when the country is Spain and a
+    # NIF-IVA check when it is not, so a row omitting the country was read as
+    # domestic and the NIF-IVA verification an intra-community counterparty
+    # must pass was never required of it. The declaration is the recapitulativa
+    # de operaciones INTRACOMUNITARIAS, where a Spanish counterparty is the one
+    # thing the row cannot be.
+    #
+    # Refusing is right rather than admitting an absent value, because every
+    # consumer here has to branch on the country: an optional field would move
+    # the same guess into each of them, and the shape of the mistake would
+    # survive the fix.
+    counterparty_country: str = Field(min_length=2, max_length=2)
     operation_kind: str = Field(min_length=1)
     operation_period: FilingPeriodCode
     taxable_base: Decimal = Field(ge=Decimal("0"))

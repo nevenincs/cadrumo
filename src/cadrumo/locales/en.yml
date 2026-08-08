@@ -6883,6 +6883,8 @@ flows:
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
       working: Running {action}...
+      passphrase: 'Change passphrase'
+      passphrase_current: 'Current passphrase'
     actions:
       section: Actions
     column:
@@ -7042,8 +7044,12 @@ live:
     year_range_invalid: From-year must be less than or equal to to-year.
   filed:
     pull_all:
-      denominator_note_profile: live.filed.pull_all.denominator_note_profile
-      denominator_note_register_only: live.filed.pull_all.denominator_note_register_only
+      denominator_note_profile: Measured against {expected} pair(s) the taxpayer's
+        own declared facts expect. A further {offered_only} pair(s) came only from
+        AEAT's offered option list and support no coverage claim.
+      denominator_note_register_only: 'No taxpayer-specific denominator: all {offered_only}
+        walked pair(s) came from AEAT''s offered option list, whose scoping to this
+        NIF is unconfirmed. This run measures nothing.'
       expected_but_not_found: live.filed.pull_all.expected_but_not_found
       found_more_than_expected: live.filed.pull_all.found_more_than_expected
       recapture_divergence: live.filed.pull_all.recapture_divergence

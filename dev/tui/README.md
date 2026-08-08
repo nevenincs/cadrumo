@@ -23,7 +23,7 @@ always "gesture, look".
 
 | command | effect |
 | --- | --- |
-| `open SURFACE [--size WxH] [--theme dark\|light]` | start a fresh walk |
+| `open SURFACE [--size WxH] [--theme dark\|light] [--locale es\|en\|ca\|hu]` | start a fresh walk |
 | `press KEY...` | send key chords |
 | `type TEXT` | send text one keystroke at a time |
 | `fill SELECTOR VALUE` | set a value in one assignment, skipping the key pipeline |
@@ -31,8 +31,14 @@ always "gesture, look".
 | `show` | reprint, changing nothing |
 | `undo` | drop the last gesture |
 | `journal` | print the walk so far |
-| `size WxH` / `theme ...` | re-render the same walk elsewhere |
+| `size WxH` / `theme ...` / `locale ...` | re-render the same walk elsewhere |
 | `shot [--out PATH]` | write the frame as SVG, for colour review |
+
+`locale` drives the same `OUTPUT_LANGUAGE_ENV_VAR` axis the CLI's
+`--output-language` uses, so a surface can be read under `es`, `en`, `ca` or
+`hu` — the walk's gestures are untouched, only the active output language
+changes before the app is rebuilt. The frame header prints the active
+locale next to the theme.
 
 ## Concurrent reviewers
 

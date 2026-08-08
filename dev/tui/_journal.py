@@ -16,6 +16,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from cadrumo.core.external_constants import DEFAULT_OUTPUT_LANGUAGE
+
 _STRICT = ConfigDict(frozen=True, extra="forbid")
 
 
@@ -74,6 +76,7 @@ class Session(BaseModel):
     width: int = 100
     height: int = 30
     theme: str = "dark"
+    locale: str = DEFAULT_OUTPUT_LANGUAGE.value
     gestures: list[Gesture] = Field(default_factory=list)
 
     @property

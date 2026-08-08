@@ -13,6 +13,8 @@ import argparse
 import sys
 from pathlib import Path
 
+from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+
 from ._fixture import workspace
 from ._journal import Click, Fill, Press, Session, Type, describe, read_session, write_session
 from ._replay import replay, screenshot
@@ -48,6 +50,7 @@ def main(argv: list[str] | None = None) -> int:
     p_open.add_argument("surface", choices=sorted(SURFACES))
     p_open.add_argument("--size", default="100x30", help="terminal size, WxH")
     p_open.add_argument("--theme", default="dark", choices=["dark", "light"])
+    p_open.add_argument("--locale", default="es", choices=sorted(SUPPORTED_OUTPUT_LANGUAGES))
 
     p_press = sub.add_parser("press", help="send key chords")
     p_press.add_argument("keys", nargs="+")
@@ -76,6 +79,9 @@ def main(argv: list[str] | None = None) -> int:
     p_theme = sub.add_parser("theme", help="re-render the same walk under the other appearance")
     p_theme.add_argument("theme", choices=["dark", "light"])
 
+    p_locale = sub.add_parser("locale", help="re-render the same walk under another output language")
+    p_locale.add_argument("locale", choices=sorted(SUPPORTED_OUTPUT_LANGUAGES))
+
     args = parser.parse_args(argv)
 
     if args.command == "surfaces":
@@ -93,6 +99,7 @@ def main(argv: list[str] | None = None) -> int:
             width=int(width),
             height=int(height),
             theme=args.theme,
+            locale=args.locale,
         )
         _advance(session)
         return 0
@@ -125,10 +132,13 @@ def main(argv: list[str] | None = None) -> int:
         case "theme":
             session.theme = args.theme
             _advance(session)
+        case "locale":
+            session.locale = args.locale
+            _advance(session)
         case "show":
             _show(session)
         case "journal":
-            _emit(f"{session.surface} · {session.width}x{session.height} · {session.theme}")
+            _emit(f"{session.surface} · {session.width}x{session.height} · {session.theme} · {session.locale}")
             for index, gesture in enumerate(session.gestures, start=1):
                 _emit(f"{index:>3}. {describe(gesture)}")
         case "shot":
