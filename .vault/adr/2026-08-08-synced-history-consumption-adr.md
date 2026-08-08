@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:e010c1d08540ed087fea38e5503170d15892ba259eec30f7cd9b640c070e84a3'
+body_hash: 'sha256:1267ae750b235d4c48add01c4d61b3e24c4d7c7d401f37d7b599f44753899e8e'
 related:
   - "[[2026-08-08-synced-history-consumption-research]]"
 ---
@@ -13,6 +13,16 @@ related:
 # `synced-history-consumption` adr: `Which pulled AEAT facts are calculation inputs` | (**status:** `proposed`)
 
 ## Problem Statement
+
+A brand-new profile can pull its AEAT-stored filing history. Which of those pulled facts may feed a calculation, and which must stay reconciliation or display only?
+
+**This record was scaffolded against a premise the plan's own census falsified, and the corrected position is the one any ruling must address.** The scaffolding premise was that the pulled filing record reached only the Modelo 303 IVA wallet. Measured from the loaded registry authority: of 1253 bindings across 73 modelos and 90 revisions, **81 draw a value from a prior return, and 72 of those 81 have a pull-reachable source**. Every pulled modelo's active filed observation is written to the calculation observation repository under an official AEAT source kind, and the general carries read that store with no provenance filter.
+
+So the question is not whether pulled facts reach calculations. They do, broadly. The question is whether they SHOULD, per channel, and what the nine unreachable ones mean.
+
+Two consequences reshape the decision. First, the reachability is already live rather than prospective, so a ruling that some channel must not consume pulled evidence describes a change to shipped behaviour, not a feature to build. Second, the nine structurally excluded bindings are all Sociedades, because neither Modelo 200 nor Modelo 202 declares the authenticated read surface on any revision — a coverage gap in what the pull can fetch, categorically different from a wiring gap in what the engine consumes, and it must not be ruled on as though it were the same defect.
+
+The census also records what it could not measure: reachability is a join of a measured write against a measured unfiltered read, with no run observed end to end, and three runtime gates unexercised. A ruling resting on "reaches today" inherits that limit.
 
 ## Considerations
 

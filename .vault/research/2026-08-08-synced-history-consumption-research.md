@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:ed190159ddd0ab06052dcb9585cb6f3abf63b8898d7a6629cc10d67fa2605b88'
+body_hash: 'sha256:7a86b8e61d3135556b6c897a5c62242c066b1ed76da1a6534eed85b93c4e075e'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
@@ -18,21 +18,25 @@ A brand-new profile pulls its AEAT-stored filing history. Which of those pulled 
 
 ## Findings
 
-### The pulled filing record has exactly one consumer in the calculation engine
+**These findings were falsified by measurement and are retained as the campaign's starting premise, not as fact.** The plan's `P01.S01` census, derived from the loaded registry authority, established the corrected picture recorded in the census reference. Read that reference for the measured position. This section stays because the ADR and the plan's original row texts were written against it, and deleting it would leave those documents' reasoning unexplained.
 
-The AEAT-pulled filing observation is consumed by calculations through a single channel: the Modelo 303 IVA compensacion history, via `iva_compensation_state_from_filed_observation` and `iva_compensation_annual_summary_from_filed_observation` in `src/cadrumo/application/calculations/_iva_compensation_history.py`, declared as a port in `src/cadrumo/application/calculations/_ports.py`. Those two functions are the only calculation-layer readers of the pulled record.
+### What was claimed, and what is actually true
 
-### Every other previous-filing carry reads the LOCAL store
+The claim was that the pulled AEAT filing record has exactly one consumer in the calculation engine, the Modelo 303 IVA compensacion history, and that every other previous-filing carry resolves from a local app-filing store a freshly-onboarded profile has never written to.
 
-The general previous-filing prefill is `resolve_bindings_from_local_store` in `src/cadrumo/application/calculations/_binding_prefill.py`. Its gathered observations default to a local-filing provenance constant, and its merge path reconciles app-filing observations with secure IVA-history projections. It resolves from what this application persisted locally, not from what was pulled from AEAT.
+That is true of one repository and false of the engine. `persist_filed_calculation_observation` writes **every** pulled modelo's active filed observation into the calculation observation repository with an official AEAT source kind, reached by all three capture routes. The M303 branch inside it is an ADDITIONAL write, not the only one. The general carries then read that same store with **no provenance filter**: the local-filing provenance constant that reads like a gate is a model field DEFAULT, not a predicate, and the source kind is reported rather than enforced. Both resolvers are enrolled on the live mesh.
 
-Consequence: outside the IVA wallet, a synced history does not feed a previous-filing binding. Previous renta values, carried retenciones, prior pagos fraccionados and cross-modelo relation sources all resolve against a store that a freshly-onboarded profile has not written to.
+Measured result: **72 of the 81 carry bindings have a pull-reachable source.** The nine that do not are all Sociedades, because neither Modelo 200 nor Modelo 202 declares the authenticated read surface on any revision.
 
-### An empty ledger produces a legally valid zero, which is why this is silent
+### Why the wrong reading was reachable
 
-A first-period filer with an empty ledger files a valid zero Modelo 303, grounded in the art. 164.Uno.6.º LIVA obligation to present a declaration even with no activity. The behaviour is correct for a genuine no-activity filer. It is also indistinguishable, at every operator-facing surface, from a taxpayer whose history WAS synced and whose values were never wired in. There is no signal that separates the two.
+The strict IVA-compensacion persistence helper genuinely raises for any modelo but 303, which makes the single-consumer reading look confirmed by a real refusal. Searching for consumers of the pulled record finds that repository and its two functions; nothing in that search surfaces the unfiltered general read, because the general read does not mention the pulled record at all. It reads observations by key and reports whatever provenance they carry.
 
-This is the load-bearing observation. The gap does not present as an error, a refusal or a blank; it presents as a complete, plausible, legally-defensible zero.
+The lesson worth keeping: a constant named for a provenance, used as a field default, is indistinguishable at a glance from a provenance filter. Establishing that something is NOT consumed requires reading the consumer, not enumerating the producers.
+
+### The part that survived
+
+An empty ledger produces a legally valid zero, and the failure mode this lane was opened to examine has no error, no refusal and no blank. That remains true and remains the reason nothing in this lane may use a blank or a refusal as its signal. What changed is the scope: the silent-zero risk is real for ledger-derived casillas on a pulled work unit, and it is NOT the general picture for previous-filing carries.
 
 ## What this does not establish
 
