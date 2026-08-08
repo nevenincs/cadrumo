@@ -760,7 +760,7 @@ class TestRungReachabilityFromADraft:
         assert {"supplier_country_code", "customer_country_code"} <= parsed_fields
         assert {"supplier_postal_code", "customer_postal_code"} <= parsed_fields
 
-    def test_the_cross_industry_invoice_branch_still_states_no_country(self) -> None:
+    def test_asserted_gap_the_cross_industry_invoice_branch_states_no_country(self) -> None:
         """The one structured syntax whose country is still unread, kept visible.
 
         Facturae and UBL now state a country the ladder can use; CII does not,
@@ -775,6 +775,14 @@ class TestRungReachabilityFromADraft:
         CII country source lands, and that failure is the notification. A lane
         finding it red should replace it with a gate asserting the rung now
         fires, never relax it.
+
+        **The ``test_asserted_gap_`` prefix is the convention carrying that**,
+        and it is in the NAME rather than only here on purpose. An operator
+        triaging a red at speed reads the name and treats it as a contract, then
+        "fixes" the test to match the code -- which relaxes exactly the gate that
+        was doing its job. The prefix makes the whole population greppable and
+        says, at the only place a triager reliably looks, that a failure here
+        means a gap CLOSED and the test must be replaced rather than adjusted.
         """
         specimen = b"""<?xml version="1.0" encoding="UTF-8"?>
 <rsm:CrossIndustryInvoice

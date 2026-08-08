@@ -47,7 +47,12 @@ from ....adapters.inbound.einvoice import parse_einvoice_document
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import FieldGroundingOutcome, FieldOrigin
 from ....core.config import Settings
-from ....domain.iva import InvoiceKind, IvaTerritorialScope, country_code_for_stated_country_code
+from ....domain.iva import (
+    InvoiceKind,
+    IvaTerritorialScope,
+    country_code_for_stated_country_code,
+    territorial_scope_for_country,
+)
 from .._establishment_ladder import EstablishmentRung, resolve_draft_counterparty_establishment
 from .._evidence_draft import FieldProvenance, InvoiceDraft, extract_invoice_draft_from_evidence
 from .._grounding_anchor import ground_structured_value
@@ -381,6 +386,122 @@ class TestTheStructuredPathOpensThePostalRung:
 
         assert resolved.scope is None
         assert resolved.rung is None
+
+
+class TestTheOverseasAddressIsNotConsulted:
+    """The one Facturae address block this reader deliberately does not read.
+
+    Facturae states a party's address in one of two mutually exclusive blocks:
+    ``AddressInSpain`` for a party established here, ``OverseasAddress`` for one
+    established abroad. The reader consults only the first, and the reasoning is
+    sound -- a party established abroad has no Spanish IVA territory to resolve,
+    and the overseas block states its code jointly with the town
+    (``PostCodeAndTown``), which is a composite this reader is forbidden to split
+    because splitting it would be an inference rather than a read.
+
+    **The reasoning was sound and untested, which is the gap this closes.** It
+    lived in a docstring one line from the walk it justifies, and a reader who
+    does not open that file sees only a country element the parser ignores. The
+    consequence is live rather than theoretical: a foreign-established
+    counterparty states its country in that block, so the ladder exhausts on a
+    document that plainly names France.
+
+    **These assert a GAP, not a contract.** They are expected to fail the day the
+    overseas block is read, and that failure is the notification. Replace them
+    with gates asserting the rung now fires; never relax them.
+    """
+
+    @staticmethod
+    def _overseas(xml: str) -> str:
+        """Return the specimen with the seller established in France instead.
+
+        Built by replacing the seller's whole address block, so the document
+        stays a well-formed Facturae record stating one address in one place --
+        the shape a real foreign-issuer invoice has, rather than a document
+        carrying both blocks, which the schema does not permit.
+        """
+        spanish = (
+            "<AddressInSpain>\n"
+            "          <Address>Carrer de Girona 88</Address>\n"
+            "          <PostCode>08009</PostCode>\n"
+            "          <Town>Barcelona</Town>\n"
+            "          <Province>Barcelona</Province>\n"
+            "          <CountryCode>ESP</CountryCode>\n"
+            "        </AddressInSpain>"
+        )
+        overseas = (
+            "<OverseasAddress>\n"
+            "          <Address>12 Rue de Rivoli</Address>\n"
+            "          <PostCodeAndTown>75001 Paris</PostCodeAndTown>\n"
+            "          <Province>Ile-de-France</Province>\n"
+            "          <CountryCode>FRA</CountryCode>\n"
+            "        </OverseasAddress>"
+        )
+        assert xml.count(spanish) == 1, "the specimen's seller address block has drifted"
+        return xml.replace(spanish, overseas, 1)
+
+    def test_asserted_gap_the_overseas_block_states_a_country_the_reader_skips(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The document states France and the draft carries no country at all."""
+        document = self._overseas(_corpus(_FACTURAE_WITH_ADDRESSES))
+        assert "<CountryCode>FRA</CountryCode>" in document
+
+        evidence_id = _stored(
+            document,
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="facturae_overseas.xml",
+        )
+
+        draft = _draft(evidence_id, isolated_settings)
+
+        assert draft.supplier_country_code is None
+        # The postal side is skipped by the same scoping, asserted together so a
+        # future widening of one walk without the other is visible here.
+        assert draft.supplier_postal_code is None
+        # The customer keeps its Spanish block, so this is a statement about the
+        # BLOCK and not about the document having become unreadable.
+        assert draft.customer_country_code == "ES"
+
+    def test_asserted_gap_a_foreign_established_counterparty_exhausts_the_ladder(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        tmp_path: Path,
+    ) -> None:
+        """The live consequence: France is stated, and no territory is resolved.
+
+        The identifier rung cannot rescue it -- the specimen's seller carries a
+        Spanish fiscal identifier, which contributes nothing to establishment by
+        design -- so the country the document actually states is the only
+        evidence available, and it is in the block the reader does not open.
+        """
+        evidence_id = _stored(
+            self._overseas(_corpus(_FACTURAE_WITH_ADDRESSES)),
+            settings=isolated_settings,
+            objects=secure_objects,
+            tmp_path=tmp_path,
+            name="facturae_overseas_ladder.xml",
+        )
+
+        resolved = resolve_draft_counterparty_establishment(
+            bucket_id=_BUCKET_ID,
+            draft=_draft(evidence_id, isolated_settings),
+            kind=InvoiceKind.RECEIVED,
+            repository=None,
+        )
+
+        assert resolved.scope is None
+        assert resolved.rung is None
+        # And the answer the ladder WOULD give from that country, so this reads
+        # as a statement about unread evidence rather than about France being
+        # unresolvable.
+        assert territorial_scope_for_country("FR") is IvaTerritorialScope.EU_MEMBER
 
 
 class TestTheProvenanceTellsTheTwoApart:
