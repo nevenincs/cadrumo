@@ -23,6 +23,9 @@ from typing import TYPE_CHECKING
 from ._collection_storage_root import (
     apply_collection_storage_root,
     collection_storage_root,
+    process_is_live,
+    pytest_numbered_dir_root,
+    reap_abandoned_numbered_dirs,
     register_collection_storage_root_cleanup,
 )
 from ._env import temporary_env
@@ -114,9 +117,12 @@ __all__ = [
     "package_python_files",
     "parse_committed_justificante_fixture",
     "prime_ast_cache",
+    "process_is_live",
     "production_ast_items",
     "production_python_files",
+    "pytest_numbered_dir_root",
     "qualified_name",
+    "reap_abandoned_numbered_dirs",
     "register_collection_storage_root_cleanup",
     "repo_path",
     "repo_relative",

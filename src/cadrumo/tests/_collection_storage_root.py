@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import atexit
 import contextlib
+import getpass
 import logging
 import os
 import shutil
@@ -91,8 +92,17 @@ _ERROR_INVALID_PARAMETER = 87
 """Windows ``OpenProcess`` error meaning no process carries that identifier."""
 
 
-def _process_is_live(pid: int) -> bool:
+def process_is_live(pid: int) -> bool:
     """Report whether ``pid`` currently resolves to a running process.
+
+    The single home for the probe every abandoned-scratch reclaim in this
+    repository asks: the per-process storage roots swept below, the pytest
+    numbered directories reaped by :func:`reap_abandoned_numbered_dirs`, and
+    the operator-invoked temp reaper in ``dev/``. Public rather than private
+    because those consumers are real and the reasoning below must not be
+    re-derived per caller -- a second probe is a second chance to get the
+    Windows failure-mode handling wrong in the direction that deletes a live
+    session's store.
 
     Fail-safe in one direction on purpose: every uncertain answer -- an
     unparseable identifier, a permission refusal, an unavailable platform
@@ -188,7 +198,7 @@ def _is_reclaimable(sibling: Path, stem: str, reference: float) -> bool:
     if age <= _ABANDONED_AFTER_SECONDS:
         return False
     pid = _owning_pid(sibling, stem)
-    return pid is not None and not _process_is_live(pid)
+    return pid is not None and not process_is_live(pid)
 
 
 def sweep_stale_roots(parent: Path, *, now: float | None = None, exclude: Path | None = None) -> int:
@@ -242,6 +252,157 @@ def sweep_stale_roots(parent: Path, *, now: float | None = None, exclude: Path |
                 shutil.rmtree(sibling, ignore_errors=True)
                 removed += 1
     return removed
+
+
+_NUMBERED_STEMS = ("pytest-", "garbage-")
+"""Prefixes pytest's ``tmp_path`` factory leaves under its per-user root.
+
+``pytest-<n>`` is one session's numbered directory; ``garbage-<uuid>`` is the
+rename target pytest's own cleanup moves a directory to just before removing
+it, which survives whenever that removal is interrupted. Both carry the same
+``.lock`` file naming the same kind of owner, so both reclaim under one rule.
+"""
+
+_LOCK_NAME = ".lock"
+"""pytest's per-numbered-directory lock file (``_pytest.pathlib.get_lock_path``).
+
+Created once with ``O_EXCL`` at directory creation, holding the owning
+session's PID as its entire contents, and unlinked by an ``atexit`` hook on a
+clean exit. Its mtime is NOT a heartbeat -- nothing refreshes it for the life
+of the session -- so the file answers "who owns this" directly and answers
+"is that owner still running" not at all. That split is the whole design here:
+the PID is read from the file and the liveness question is put to the OS.
+"""
+
+
+def pytest_numbered_dir_root(temproot: Path | None = None) -> Path:
+    """Return pytest's per-user numbered-directory root.
+
+    Derived the way ``_pytest.tmpdir.TempPathFactory.getbasetemp`` derives it
+    -- ``<temproot>/pytest-of-<user>``, falling back to ``pytest-of-unknown``
+    when the user cannot be resolved -- rather than spelled as a literal, so a
+    box whose user differs from the one this leak was measured on is reaped
+    too.
+    """
+    try:
+        user: str | None = getpass.getuser()
+    except (OSError, ImportError, KeyError):
+        user = None
+    root = temproot if temproot is not None else Path(gettempdir())
+    return root / f"pytest-of-{user or 'unknown'}"
+
+
+def _numbered_dir_owner_pid(directory: Path) -> int | None:
+    """Return the PID recorded in ``directory``'s pytest lock file, if any.
+
+    ``None`` covers every shape that is not a readable PID: no lock file at
+    all, an unreadable one, and contents that do not parse. Each lands the
+    caller on the mtime ceiling rather than on a liveness answer, which is the
+    conservative direction -- a missing lock is genuinely ambiguous, because
+    pytest creates the numbered directory and writes the lock in two separate
+    steps and a directory observed between them has no lock yet.
+    """
+    lock = directory / _LOCK_NAME
+    try:
+        if not lock.is_file():
+            return None
+        contents = lock.read_text(encoding="utf-8", errors="strict").strip()
+    except (OSError, UnicodeDecodeError):
+        return None
+    if not contents.isdigit():
+        return None
+    try:
+        return int(contents)
+    except ValueError:
+        return None
+
+
+def _numbered_dir_is_reclaimable(directory: Path, reference: float) -> bool:
+    """Decide whether a pytest numbered directory may be removed.
+
+    The same two-ground rule :func:`_is_reclaimable` applies to the per-process
+    storage roots, reading the owner from the lock file's contents rather than
+    from the directory's own name:
+
+    * the mtime ceiling (:data:`_STALE_AFTER_SECONDS`), which is the only rule
+      available when the lock is absent or unreadable; and
+    * the owning process is confirmed gone and :data:`_ABANDONED_AFTER_SECONDS`
+      has elapsed.
+
+    The second ground is what pytest structurally cannot apply itself.
+    ``_pytest.pathlib.ensure_deletable`` compares the lock's mtime against
+    ``LOCK_TIMEOUT``, a module constant of three days with no ini override, and
+    since nothing ever refreshes that mtime the comparison is against the
+    directory's creation time. A session killed one minute in therefore holds
+    its whole tree for three days. pytest has to reason that way: it never
+    reads the PID back out of the lock, so age is the only thing it can ask.
+    Reading the PID and asking the OS answers the question pytest is
+    approximating, and answers it in minutes instead of days.
+    """
+    age = reference - directory.stat().st_mtime
+    if age > _STALE_AFTER_SECONDS:
+        return True
+    if age <= _ABANDONED_AFTER_SECONDS:
+        return False
+    pid = _numbered_dir_owner_pid(directory)
+    return pid is not None and not process_is_live(pid)
+
+
+def reap_abandoned_numbered_dirs(root: Path, *, now: float | None = None) -> tuple[int, int]:
+    """Remove pytest numbered directories under ``root`` that no live session owns.
+
+    Complements pytest's own garbage collection rather than competing with it.
+    pytest reclaims a numbered directory only once it falls outside the
+    retained-session count AND its lock has aged past the three-day
+    ``LOCK_TIMEOUT``; this reclaims the ones whose owner is provably gone,
+    which is the population that three-day hold accumulates. On this box a
+    numbered directory is minted roughly every twenty seconds, so a
+    three-day hold over crashed sessions is the accrual mechanism, not an
+    edge case.
+
+    Symbolic links are skipped outright and never followed. ``pytest-current``
+    is a link pytest maintains to the newest directory, and following it would
+    turn a link removal into a removal of a live session's tree.
+
+    Safe to run concurrently and repeatedly, for the same reason
+    :func:`sweep_stale_roots` is: nothing it removes belongs to a live session,
+    so two reapers reaching one directory at once cannot make any run observe a
+    difference, and every filesystem error is swallowed.
+
+    Args:
+        root: pytest's per-user numbered-directory root, normally
+            :func:`pytest_numbered_dir_root`.
+        now: Reference time, defaulting to the wall clock. Injectable so a test
+            can age a directory rather than wait out the grace.
+
+    Returns:
+        ``(removed, spared)`` -- how many directories were removed, and how
+        many candidates were examined and left alone. The spared count is the
+        reported safety evidence: a reaper that removed everything and a
+        reaper that removed only what it should both report a removal count.
+    """
+    reference = time.time() if now is None else now
+    removed = 0
+    spared = 0
+    for stem in _NUMBERED_STEMS:
+        try:
+            candidates = list(root.glob(f"{stem}*"))
+        except OSError:
+            continue
+        for candidate in candidates:
+            try:
+                if candidate.is_symlink() or not candidate.is_dir():
+                    continue
+                reclaimable = _numbered_dir_is_reclaimable(candidate, reference)
+            except OSError:
+                spared += 1
+                continue
+            if reclaimable:
+                shutil.rmtree(candidate, ignore_errors=True)
+                removed += 1
+            else:
+                spared += 1
+    return removed, spared
 
 
 def collection_storage_root() -> Path:
@@ -313,6 +474,16 @@ def register_collection_storage_root_cleanup(root: Path) -> None:
     SQLite database plus its write-ahead-log sidecar, accruing faster than the
     24h mtime ceiling released them, on the way to filling the system volume.
 
+    pytest's own numbered directories are reaped from here too. They leak by
+    the same mechanism and are reclaimed under the same rule, and this is the
+    only hook on the box guaranteed to run often enough to bound them -- the
+    reaper's whole cost is one directory listing of a dozen-odd entries plus a
+    liveness probe per entry, which is why putting it on the critical path of
+    every test session is affordable where a recursive walk would not be. It
+    is deliberately NOT excluded against this process's own numbered directory:
+    that directory may not exist yet at collection time, and when it does its
+    lock names this live process, so the liveness rule already spares it.
+
     The exit hook is retained unchanged: it correctly handles the clean path,
     where removing this process's own root the moment it finishes is better
     than leaving it for a successor to find.
@@ -325,6 +496,8 @@ def register_collection_storage_root_cleanup(root: Path) -> None:
     """
     with contextlib.suppress(OSError):
         sweep_stale_roots(root.parent, exclude=root)
+    with contextlib.suppress(OSError):
+        reap_abandoned_numbered_dirs(pytest_numbered_dir_root(root.parent))
 
     def _cleanup() -> None:
         _release_log_handlers_under(root)

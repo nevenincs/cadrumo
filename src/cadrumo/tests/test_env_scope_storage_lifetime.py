@@ -27,7 +27,7 @@ from ._collection_storage_root import (
     _STALE_AFTER_SECONDS,
     _STEM,
     SETTINGS_STEM,
-    _process_is_live,
+    process_is_live,
     sweep_stale_roots,
 )
 from .env_scope import (
@@ -179,8 +179,8 @@ def test_the_liveness_probe_separates_a_running_process_from_a_reaped_one() -> N
     the reclaim tests and a probe that answered "live" to everything would
     satisfy the sparing tests -- each half looks green on its own.
     """
-    assert _process_is_live(os.getpid()), "this very process must read as running"
-    assert not _process_is_live(_a_genuinely_dead_pid()), "a reaped process must read as gone"
+    assert process_is_live(os.getpid()), "this very process must read as running"
+    assert not process_is_live(_a_genuinely_dead_pid()), "a reaped process must read as gone"
 
 
 def test_the_sweep_reclaims_a_root_whose_owning_process_is_gone(tmp_path: Path) -> None:
