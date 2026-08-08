@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:5c3c9105736106cfadd3b56da8afbf455c6d53d11e7648fe8df6b71999868327'
+body_hash: 'sha256:af217431bc568b9e676ad830656fb189ffd3250237ae31a7fd79c4061da04b49'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -125,6 +125,7 @@ Lands deterministic direction derivation and closed-set class and category selec
 
 - [ ] `W02.P07.S23` - Derive direction deterministically from the taxpayer own NIF role on the document and cross-check the verb-supplied kind, surfacing divergence as a finding, gated by real tests in both directions; `src/cadrumo/application/ledger`.
 - [ ] `W02.P07.S24` - Integrate closed-set invoice class and category selection on the confirm suggestion path from registry-grounded allow-lists under the accepted suggest-review-apply contract, gated by an out-of-allow-list refusal test; `src/cadrumo/application/ledger`.
+- [ ] `W02.P07.S205` - Thread the filer's own tax id from the bucket down to the grounding entry point, since ground_draft_against_transcription accepts taxpayer_tax_id and skips resolve_counterparty_identity entirely when it is None, and the sole production call site at _evidence_draft.py:938 passes only draft and transcription. So the counterparty role resolution whose docstring documents the first-checksum-valid-id defect never runs on the live reading path at all. Crosses four to five signatures inside a contended file and un-deads resolve_counterparty_identity as a side effect, which is why it carries its own gate rather than riding the direction row. W02.P07.S23 depends on this: the direction derivation reads the same id, so without the threading it lands as another built-and-unreached surface; `src/cadrumo/application/ledger`.
 
 ## Wave `W03` - The tabular lane
 
