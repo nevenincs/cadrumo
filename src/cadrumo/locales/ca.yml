@@ -375,6 +375,8 @@ aggregation:
       eu_member_state_on_export_transaction: Les operacions d'exportació o assimilades
         no poden portar un Estat membre de la UE; rebut %{member_state}.
       unsupported_iva_category: 'Error intern: categoria d''IVA no admesa per a l''agregació.'
+      missing_counterparty_identification_state: 'Una operació intracomunitària requereix l''Estat membre en què la contrapart està identificada a efectes de l''IVA.'
+      domestic_identification_on_intra_community_transaction: 'Una identificació a efectes de l''IVA espanyola no és vàlida per a una operació intracomunitària.'
   modelo_bindings:
     errors:
       unsupported_period: Període de model no admès per a l'agregació del llibre.
@@ -5611,6 +5613,8 @@ docs:
       binding: Vincle de dades
       casilla_count: '{casillas} caselles en {sections} seccions'
       casilla_id: Identificador de casella
+      casilla_index: Totes les caselles
+      casilla_index_hint: Trieu un número per anar a aquella casella.
       derived_from: a partir de
       established_by: Establert per
       formula: Fórmula
@@ -5622,6 +5626,7 @@ docs:
       legal_basis: Base legal
       list_and: i
       not_on_official_form: No figura en el model oficial
+      page_heading: 'Model {modelo}: {title}'
       record_design_number: Número del disseny de registre
       registry_identifiers: Identificadors del registre
       registry_section: Secció del registre

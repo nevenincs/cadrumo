@@ -123,6 +123,8 @@ from ._invoice_retencion import (
     route_invoice_retenciones,
 )
 from ._iva_ledger import (
+    IVA_LEDGER_COUNTERPARTY_GATE_REASONS,
+    IVA_LEDGER_MISSING_FACT_REASONS,
     AnnualDeducibleTotalsByRegime,
     IvaLedgerAggregation,
     IvaLedgerAggregationIssue,
@@ -292,6 +294,8 @@ __all__ = [
     "InvoiceRetencionRouting",
     "IvaLedgerAggregation",
     "IvaLedgerAggregationIssue",
+    "IVA_LEDGER_COUNTERPARTY_GATE_REASONS",
+    "IVA_LEDGER_MISSING_FACT_REASONS",
     "IvaLedgerAggregationIssueReason",
     "IvaLedgerCandidate",
     "IvaLedgerInputKind",

@@ -37,12 +37,12 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Final
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
@@ -1743,20 +1743,50 @@ def _missing_tax_fact_reason(transaction: Transaction) -> IvaLedgerAggregationIs
     return reasons[0] if reasons else None
 
 
+#: The required IVA tax fact behind each missing-fact reason, in report order.
+#:
+#: Read as the single source of both the probe and the emission set, so
+#: :data:`IVA_LEDGER_MISSING_FACT_REASONS` cannot fall out of step with what
+#: :func:`iva_ledger_missing_fact_reasons` actually emits. A hand-listed
+#: companion set would drift the moment a fourth required fact is added, and
+#: the readiness layer downstream keys its operator-facing mapping on that set.
+_MISSING_FACT_REASON_BY_FIELD: Final[Mapping[str, IvaLedgerAggregationIssueReason]] = {
+    "taxable_base": IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE,
+    "iva_amount": IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT,
+    "iva_rate": IvaLedgerAggregationIssueReason.MISSING_IVA_RATE,
+}
+
+#: Every reason :func:`iva_ledger_missing_fact_reasons` can emit, derived.
+IVA_LEDGER_MISSING_FACT_REASONS: Final[frozenset[IvaLedgerAggregationIssueReason]] = frozenset(
+    _MISSING_FACT_REASON_BY_FIELD.values(),
+)
+
+#: Every reason :func:`validate_iva_ledger_counterparty_category` can emit.
+#:
+#: Declared rather than derived because the three branches read three different
+#: counterparty facts and collapsing them into one table would erase the legal
+#: distinction between identification and establishment the gate turns on. A
+#: behavioural gate exercises the real screen across the category matrix and
+#: asserts the observed emissions equal this set, so the declaration is pinned
+#: to behaviour rather than trusted.
+IVA_LEDGER_COUNTERPARTY_GATE_REASONS: Final[frozenset[IvaLedgerAggregationIssueReason]] = frozenset(
+    {
+        IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE,
+        IvaLedgerAggregationIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION,
+        IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
+    },
+)
+
+
 def iva_ledger_missing_fact_reasons(transaction: Transaction) -> tuple[IvaLedgerAggregationIssueReason, ...]:
     """Return missing IVA fact reasons for a transaction without projecting it.
 
     Each element is an :class:`IvaLedgerAggregationIssueReason` describing
     one absent required tax fact.
     """
-    reasons: list[IvaLedgerAggregationIssueReason] = []
-    if transaction.taxable_base is None:
-        reasons.append(IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE)
-    if transaction.iva_amount is None:
-        reasons.append(IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT)
-    if transaction.iva_rate is None:
-        reasons.append(IvaLedgerAggregationIssueReason.MISSING_IVA_RATE)
-    return tuple(reasons)
+    return tuple(
+        reason for field, reason in _MISSING_FACT_REASON_BY_FIELD.items() if getattr(transaction, field) is None
+    )
 
 
 def _missing_tax_fact_detail(reason: IvaLedgerAggregationIssueReason) -> str:

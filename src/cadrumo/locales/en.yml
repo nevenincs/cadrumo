@@ -337,6 +337,8 @@ aggregation:
       eu_member_state_on_export_transaction: Export or export-assimilated operations
         must not carry an EU member state; got %{member_state}.
       unsupported_iva_category: 'Internal error: unsupported IVA category for aggregation.'
+      missing_counterparty_identification_state: 'An intra-community transaction requires the Member State in which the counterparty is VAT-identified.'
+      domestic_identification_on_intra_community_transaction: 'A Spanish VAT identification is not valid for an intra-community transaction.'
   modelo_bindings:
     errors:
       unsupported_period: Unsupported modelo period for ledger aggregation.
@@ -5257,6 +5259,8 @@ docs:
       binding: Binding
       casilla_count: '{casillas} casillas in {sections} sections'
       casilla_id: Casilla id
+      casilla_index: Every casilla
+      casilla_index_hint: Pick a number to jump to that casilla.
       derived_from: from
       established_by: Established by
       formula: Formula
@@ -5268,6 +5272,7 @@ docs:
       legal_basis: Legal basis
       list_and: and
       not_on_official_form: Not on the official form
+      page_heading: 'Modelo {modelo}: {title}'
       record_design_number: Record-design number
       registry_identifiers: Registry identifiers
       registry_section: Registry section

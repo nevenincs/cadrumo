@@ -18,8 +18,6 @@ from __future__ import annotations
 
 import ast
 import re
-import shutil
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -136,19 +134,10 @@ def test_no_display_prose_is_hardcoded_in_the_generator(generator: str) -> None:
     )
 
 
-#: Generators whose emitted strings are held em-dash free.
-#:
-#: ``casilla_reference.py`` is absent DELIBERATELY and this is not a mute: it
-#: emits two em dashes today, in the ``Modelo {n} - {title}`` headings at lines
-#: 917 and 982, and its owner is mid-redesign on that file. Adding it here would
-#: red a peer's work rather than the author's own. It goes in the moment those
-#: two are fixed, and the entry below fails if this exclusion outlives them.
-_EM_DASH_FREE_GENERATORS: tuple[str, ...] = (
-    "legal_reference.py",
-    "glossary_reference.py",
-    "cli_reference.py",
-    "cli_tree.py",
-)
+#: Generators whose emitted strings are held em-dash free: every one of them.
+#: ``casilla_reference.py`` joined once its two heading dashes went, which is
+#: what the exclusion that used to sit here was waiting for.
+_EM_DASH_FREE_GENERATORS: tuple[str, ...] = _GENERATORS
 
 _EM_DASH = "—"
 
@@ -227,35 +216,6 @@ def test_every_docs_chrome_key_is_visible_to_the_locale_scanner() -> None:
         "deleted by the next `python -m dev.locales scaffold`. Spell the full key out at its "
         "call site, or build it as an f-string whose literal head ends in a dot so the "
         f"namespace marker is emitted:{detail}"
-    )
-
-
-def test_the_casilla_exclusion_is_still_earned() -> None:
-    """The one excluded generator is excluded for a reason that still holds.
-
-    A stale exclusion is how an allowlist rots into a permanent hole. When the
-    casilla generator stops emitting em dashes this fails, and the fix is to
-    move it into the tuple above rather than to weaken this.
-
-    Read from the COMMITTED file, not the working tree. Many agents hold
-    uncommitted work here at once, so a working-tree read measures whoever's
-    editor is open rather than the state of the project, and would flap between
-    green and red as a peer saves. The exclusion is earned or retired by what
-    has landed.
-    """
-    git = shutil.which("git")
-    assert git is not None, "git is required to read the committed state of the excluded generator"
-    committed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no shell
-        [git, "show", "HEAD:dev/docs/casilla_reference.py"],
-        capture_output=True,
-        check=True,
-        cwd=_REPO_ROOT,
-    ).stdout.decode("utf-8")
-    emitted = [(line, text) for line, text in _emitted_strings_from_source(committed) if _EM_DASH in text]
-
-    assert emitted, (
-        "casilla_reference.py no longer emits an em dash in HEAD, so its exclusion "
-        "from _EM_DASH_FREE_GENERATORS is stale; add it to the tuple and delete this test"
     )
 
 
@@ -391,7 +351,7 @@ def test_casilla_chrome_changes_language_while_the_official_names_do_not() -> No
 
     # The modelo's official name and the legal citation are AEAT's own Spanish
     # and must read identically whatever language the root was built for.
-    for fixed in ("Modelo 130. Pago fraccionado.", "Ley 37/1992, art. 92"):
+    for fixed in ("Modelo 130. Pago fraccionado.", "Ley 37/1992", "art. 92"):
         assert all(fixed in page for page in pages.values()), f"{fixed!r} moved with the build language"
 
 

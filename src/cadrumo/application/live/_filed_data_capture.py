@@ -37,7 +37,7 @@ from collections.abc import Awaitable, Mapping, Sequence
 from dataclasses import dataclass, field
 from decimal import InvalidOperation
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Protocol, TypedDict
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -1457,12 +1457,36 @@ def recapture_divergence_notices(
     return tuple(notices)
 
 
+class FiledHistoryDiscoveryPort(Protocol):
+    """The discovery step :func:`pull_filed_history` sequences, as a port.
+
+    Exists so the COMPOSITION can be exercised. :func:`discover_filed_history`
+    brings up a verified authenticated session, and it is the composition's first
+    stage, so reaching for it directly made the sequencing, the failure
+    propagation and the notice plumbing unreachable without a certificate. None of
+    those need AEAT — only the discovery step does — and a test whose safety
+    depends on the machine having no certificate configured is not a test: on a
+    box that HAS one it stops refusing and makes a real authenticated call.
+
+    Narrow on purpose. One boundary, shaped exactly like the function it defaults
+    to, rather than a general indirection layer over every stage.
+    """
+
+    async def __call__(
+        self,
+        *,
+        profile: TaxpayerProfile | None = None,
+        today: date | None = None,
+    ) -> FiledHistoryDiscoveryReport: ...
+
+
 async def pull_filed_history(
     *,
     output_root: Path,
     profile: TaxpayerProfile | None = None,
     today: date | None = None,
     limit: int | None = None,
+    discover: FiledHistoryDiscoveryPort = discover_filed_history,
 ) -> FiledHistoryOnboardingRun:
     """Sequence discovery, bulk filed capture, IVA wallet and notificaciones.
 
@@ -1486,6 +1510,9 @@ async def pull_filed_history(
             denominator, reported as such.
         today: Reference date for applicability and the year span.
         limit: Optional cap on captured declaraciones, forwarded unchanged.
+        discover: The discovery step to sequence, defaulting to
+            :func:`discover_filed_history`. Injected so the composition itself is
+            reachable without an authenticated session; production never passes it.
 
     Returns:
         The composed :class:`FiledHistoryOnboardingRun`.
@@ -1493,7 +1520,7 @@ async def pull_filed_history(
     from ...core.time import today_madrid
 
     resolved_today = today or today_madrid()
-    discovery = await discover_filed_history(profile=profile, today=resolved_today)
+    discovery = await discover(profile=profile, today=resolved_today)
     scoping = RegisterScopingSignal.INCONCLUSIVE
     stage_failures: list[str] = []
 

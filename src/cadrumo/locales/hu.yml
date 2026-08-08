@@ -355,6 +355,8 @@ aggregation:
       eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá
         eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
       unsupported_iva_category: 'Belső hiba: nem támogatott IVA-kategória az aggregáláshoz.'
+      domestic_identification_on_intra_community_transaction: 'A spanyol héa-azonosító nem érvényes Közösségen belüli ügylethez.'
+      missing_counterparty_identification_state: 'A Közösségen belüli ügylethez meg kell adni azt a tagállamot, amelyben a partner héa-azonosítóval rendelkezik.'
   modelo_bindings:
     errors:
       unsupported_period: Nem támogatott nyomtatvány-időszak a főkönyvi aggregáláshoz.
@@ -5566,6 +5568,8 @@ docs:
       binding: Adatkötés
       casilla_count: '{casillas} casilla {sections} szakaszban'
       casilla_id: Casilla-azonosító
+      casilla_index: Az összes casilla
+      casilla_index_hint: Válasszon egy számot az adott casillához ugráshoz.
       derived_from: 'ebből:'
       established_by: Jogszabályi alapja
       formula: Képlet
@@ -5578,6 +5582,7 @@ docs:
       legal_basis: Jogalap
       list_and: és
       not_on_official_form: Nem szerepel a hivatalos nyomtatványon
+      page_heading: '{modelo}. modelo: {title}'
       record_design_number: Rekordterv szerinti szám
       registry_identifiers: Nyilvántartási azonosítók
       registry_section: Nyilvántartási szakasz

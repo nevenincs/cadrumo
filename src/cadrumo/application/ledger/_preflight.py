@@ -22,10 +22,10 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Final
 
 from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
 
@@ -529,35 +529,104 @@ def _transaction_is_trabajo_income(transaction: Transaction) -> bool:
     return has_employment_irpf_category(transaction.irpf_category, direction=transaction.direction)
 
 
+#: The preflight counterpart of every aggregation reason that reaches preflight.
+#:
+#: Preflight consumes exactly two aggregation screens --
+#: :func:`~cadrumo.application.aggregation.iva_ledger_missing_fact_reasons` and
+#: :func:`~cadrumo.application.aggregation.validate_iva_ledger_counterparty_category`
+#: -- so this mapping's domain is their union, not the whole enum. The lookup is
+#: a bare subscript and therefore total by construction: an arriving reason that
+#: is absent here raises rather than resolving to a wrong operator message.
+#: What keeps that safe is the partition below, gated so a new enum member
+#: cannot ship without being classified into one side or the other.
+_PREFLIGHT_REASON_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, LedgerPreflightIssueReason]] = {
+    IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: LedgerPreflightIssueReason.MISSING_TAXABLE_BASE,
+    IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: LedgerPreflightIssueReason.MISSING_IVA_AMOUNT,
+    IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: LedgerPreflightIssueReason.MISSING_IVA_RATE,
+    IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE: (
+        LedgerPreflightIssueReason.MISSING_EUR_TAX_SUBSTRATE
+    ),
+    IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE: (
+        LedgerPreflightIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE
+    ),
+    IvaLedgerAggregationIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION: (
+        LedgerPreflightIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION
+    ),
+    IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION: (
+        LedgerPreflightIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION
+    ),
+}
+
+#: The detail sentence preflight writes for each missing-fact reason.
+#:
+#: A narrower domain than the mapping above, deliberately: the counterparty gate
+#: already composes its own localised detail, which preflight carries through
+#: verbatim rather than re-authoring. Only the missing-fact screen arrives here
+#: with no sentence of its own.
+_PREFLIGHT_DETAIL_BY_IVA_ISSUE: Final[Mapping[IvaLedgerAggregationIssueReason, str]] = {
+    IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: "transaction has no taxable_base fact",
+    IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: "transaction has no iva_amount fact",
+    IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: "transaction has no iva_rate fact",
+    IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE: (
+        "converted non-EUR transaction requires explicit EUR tax substrate"
+    ),
+}
+
+#: Aggregation reasons that cannot reach preflight, each with why it cannot.
+#:
+#: The counterpart half of the partition. Preflight runs the two screens named
+#: above and nothing else; every other member of the enum is raised inside
+#: ``_project_iva_transaction``, on the projection path preflight never enters.
+#: Recording them by hand is the point -- a member added to the enum belongs on
+#: exactly one side, and the gate refuses to let a new one ship on neither.
+#:
+#: Mapping one of these onto a preflight reason would be worse than leaving it
+#: out: it would ship an operator-facing message for a condition the readiness
+#: layer has no way to detect, and the nearest-looking counterpart is usually
+#: the wrong sentence. ``UNSUPPORTED_IVA_RATE`` onto ``MISSING_IVA_RATE`` is the
+#: worked example -- it would tell a filer their rate is absent when the rate is
+#: present and it is the tier lookup that found no match.
+_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT: Final[Mapping[IvaLedgerAggregationIssueReason, str]] = {
+    IvaLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION: "upstream candidate filter, before any preflight screen",
+    IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY: "upstream candidate filter; preflight screens currency itself",
+    IvaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE: (
+        "upstream candidate filter; preflight screens business classification itself"
+    ),
+    IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION: "upstream candidate filter, not a readiness gap",
+    IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD: "upstream candidate filter; preflight is already period-scoped",
+    IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE: (
+        "projection-path rate-tier lookup; preflight does not classify rates against the tier table"
+    ),
+    IvaLedgerAggregationIssueReason.IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE: (
+        "projection-path rate-tier lookup; preflight does not read the rate table's coverage window"
+    ),
+    IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW: (
+        "projection-path arithmetic contradiction screen between rate and cuota"
+    ),
+    IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY: (
+        "projection-path screen reading the Axis-A component table for the declared category"
+    ),
+    IvaLedgerAggregationIssueReason.NON_ARISING_CATEGORY_FOR_INVOICE_SIDE: (
+        "projection-path screen reading the Axis-A component table for the declared category"
+    ),
+    IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE: (
+        "projection-path prorrata attachment; preflight screens the usage-ratio reference instead"
+    ),
+    IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY: (
+        "projection-path category resolution; preflight screens non-declarable categories itself"
+    ),
+    IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EXCLUDED_CATEGORY: (
+        "projection-path regime screen requiring the bucket's cash-accounting treatment"
+    ),
+}
+
+
 def _preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> LedgerPreflightIssueReason:
-    return {
-        IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: LedgerPreflightIssueReason.MISSING_TAXABLE_BASE,
-        IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: LedgerPreflightIssueReason.MISSING_IVA_AMOUNT,
-        IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: LedgerPreflightIssueReason.MISSING_IVA_RATE,
-        IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE: (
-            LedgerPreflightIssueReason.MISSING_EUR_TAX_SUBSTRATE
-        ),
-        IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE: (
-            LedgerPreflightIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE
-        ),
-        IvaLedgerAggregationIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION: (
-            LedgerPreflightIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION
-        ),
-        IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION: (
-            LedgerPreflightIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION
-        ),
-    }[reason]
+    return _PREFLIGHT_REASON_BY_IVA_ISSUE[reason]
 
 
 def _preflight_detail_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> str:
-    return {
-        IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: "transaction has no taxable_base fact",
-        IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: "transaction has no iva_amount fact",
-        IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: "transaction has no iva_rate fact",
-        IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE: (
-            "converted non-EUR transaction requires explicit EUR tax substrate"
-        ),
-    }[reason]
+    return _PREFLIGHT_DETAIL_BY_IVA_ISSUE[reason]
 
 
 __all__ = [
