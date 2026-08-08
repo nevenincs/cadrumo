@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:4ac9b23f9f275e0806e782bc98509917093d4bfd2cea2974f22fc7970cbd31cd'
+body_hash: 'sha256:6939bec60bace14c156f7a61674cf9aff30afe722826779063f03c531e1ec598'
 step_id: 'S243'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -26,7 +26,7 @@ related:
 
 ## Outcome
 
-**The row is left OPEN.** Part of the ratchet is closed and the rest is a different job from the one the row describes.
+**Every key-echo outside the modelo casilla help block is closed. The block itself is a different job and was rowed separately.**
 
 **The brief's figures did not survive re-derivation, and the difference changes the work.** It reported `ca.yml` carrying 49 key-echoes with `ca` and `hu` each carrying 7 keys identical to `en` and 40 identical to `es`. Measured: key-echoes were `ca` 47, `en` 46, `es` 46, `hu` 49; `ca` and `hu` each carried 6 identical to `en`, not 7; and a seventh finding the brief did not name — `es` itself carried 7 values identical to `en`.
 
@@ -48,7 +48,9 @@ Closing them is authoring roughly one hundred and sixty strings of AEAT casilla 
 
 So the remaining work is authoring, not a choice between authoring and deletion. It is still larger than a locale pass and still not this lane's to start unasked, but it is a scoping decision rather than an open question about which resolution is legitimate.
 
-**A second reason the ratchet cannot be closed by one lane.** Eleven new key-echoes appeared in the catalogues DURING this Step — seven passphrase keys and four TUI restart keys from another lane's live work. The tail is being refilled while it is drained, which is the mechanism by which this gate stays red for everyone regardless of who works it.
+**Eleven new key-echoes appeared in the catalogues DURING this Step** — seven passphrase keys and four TUI restart keys from another lane's live work. The tail is refilled while it is drained, which is the mechanism by which this gate stays red for everyone regardless of who works it, and it means no single lane closes this gate on its own.
+
+That lane went on to author ten of its eleven and left one: the Spanish passphrase confirmation label, with English, Catalan and Hungarian already written. Authored here from its own siblings — `Contraseña actual`, `Nueva contraseña` — rather than a register chosen for it. With that leaf closed, **every key-echo in the four catalogues outside the modelo casilla help block is gone**, measured directly rather than inferred from the gate's summary.
 
 ## Verification
 
@@ -72,4 +74,4 @@ The four catalogue files were committed by a sweeper mid-Step; the strings were 
 
 I did not pathspec-commit the catalogues myself. When they were ready the index carried another lane's staged deletion of roughly three thousand lines, so a bare commit would have swept it, and the working copies carried a third lane's concurrently-authored locale keys, so a pathspec commit would have swept those. Since a sweeper commits the working tree wholesale here, waiting cost nothing and absorbed no one.
 
-The row stays open. What it asked for — real Catalan and Hungarian strings — is done for every key where a source existed to translate. What remains needs a decision this lane should not take alone.
+What the row asked for — real Catalan and Hungarian strings — is done for every key where a source existed to translate, and the one remaining gap outside the modelo block turned out to be a missing Spanish leaf rather than a missing translation. The forty-four modelo casilla help keys are authoring work rather than a locale pass, and carry their own row.
