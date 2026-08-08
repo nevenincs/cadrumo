@@ -35,6 +35,7 @@ from ._errors import (
     LLMConsentError,
     LLMContentionError,
     LLMError,
+    LLMRateLimitError,
 )
 
 if TYPE_CHECKING:
@@ -680,6 +681,27 @@ class LLMClient:
             f"(then 'aeat config provision pull --model {model}' if it is not installed)"
         )
 
+    @staticmethod
+    async def _await_shared_pacing(provider: LLMProvider, policy: LLMRetryPolicy) -> None:
+        """Wait out any rate-limit window another dispatch already discovered.
+
+        This is what makes the backoff apply ACROSS a run rather than within one
+        request: the second document of a batch waits on the window the first
+        one found, instead of issuing its own call into it and learning the same
+        thing again.
+
+        Bounded by the retry budget for the same reason every other wait here
+        is: a vendor may name a window measured in minutes, and a batch that
+        silently sleeps that long is indistinguishable from one that hung. The
+        remaining window stays armed and readable, so a surface that wants to
+        report "paced for another N seconds" can, rather than blocking on it.
+        """
+        remaining = min(_PROVIDER_PACING.remaining_s(provider), policy.budget_s)
+        if remaining <= 0:
+            return
+        _LOGGER.info("llm dispatch paced provider=%s waiting=%.2fs", provider.value, remaining)
+        await asyncio.sleep(remaining)
+
     async def _complete_with_retries(
         self,
         adapter: _ProviderAdapter,
@@ -716,13 +738,21 @@ class LLMClient:
         policy = self.retry_policy
         started = time.monotonic()
         attempt = 1
+        await self._await_shared_pacing(adapter.provider, policy)
         while True:
             try:
                 return await adapter.complete(provider_request)
             except Exception as exc:  # classification is the taxonomy's job, not this loop's
+                delay = policy.backoff_for(attempt, retry_after_s=getattr(exc, "retry_after_seconds", None))
+                if isinstance(exc, LLMRateLimitError):
+                    # Arm the run-wide window before deciding whether THIS
+                    # request may continue: a limit discovered on the last
+                    # permitted attempt still governs every dispatch after it,
+                    # and arming only on the retrying path would let the item
+                    # that gave up be the one that told nobody.
+                    _PROVIDER_PACING.arm(adapter.provider, min(delay, policy.budget_s))
                 if attempt >= policy.max_attempts or not transport_retry_permitted(exc):
                     raise
-                delay = policy.backoff_for(attempt, retry_after_s=getattr(exc, "retry_after_seconds", None))
                 if time.monotonic() - started + delay > policy.budget_s:
                     raise
                 _LOGGER.info(

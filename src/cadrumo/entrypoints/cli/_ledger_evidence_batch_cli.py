@@ -154,6 +154,8 @@ def _batch_payload(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKin
             "unresolved": [source.model_dump(mode="json") for source in run.unresolved],
             "inference_pause": (run.inference_pause.model_dump(mode="json") if run.inference_pause else None),
             "summary": run.summary,
+            "deterministic_completed": run.deterministic_completed,
+            "paced": run.paced,
             "any_failed": run.any_failed,
             "any_deferred": run.any_deferred,
         },

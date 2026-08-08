@@ -73,7 +73,13 @@ if TYPE_CHECKING:
     )
     from ._vision_classifier import LocalVisionLLMClassifier
 
-from ._client import LLMClient, LLMRetryPolicy, transport_retry_permitted
+from ._client import (
+    LLMClient,
+    LLMRetryPolicy,
+    provider_pacing_remaining_s,
+    reset_provider_pacing,
+    transport_retry_permitted,
+)
 from ._column_role_mapping import (
     COLUMN_ROLE_MAPPING_PROMPT_ID,
     ColumnRoleProposal,
@@ -181,8 +187,10 @@ __all__ = [
     "parse_column_role_mapping_response",
     "parse_invoice_extraction_response",
     "permitted_column_roles",
+    "provider_pacing_remaining_s",
     "rasterise_pdf_pages_to_base64_png",
     "render_invoice_extraction_prompt",
+    "reset_provider_pacing",
     "select_retention_removal_keys",
     "transcribe_document_images",
     "transport_retry_permitted",
