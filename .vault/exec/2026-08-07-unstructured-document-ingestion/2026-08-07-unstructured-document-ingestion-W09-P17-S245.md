@@ -5,44 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:142e0aaf1384144367335700162a63e131a394194ac926c9d87644bf18907761'
+body_hash: 'sha256:0e6498e116b0222acdcd385d969375569c4194383b678601763260d1ce9a9afa'
 step_id: 'S245'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S245 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Audit this campaign's fixtures for shapes no producer emits, the inverse of the drive-the-real-producer discipline. A notice fixture was found building a CARRIED anchor under an UNANCHORED outcome, which no producer at that surface emits, and because the gate asserted that shape was correct it DEFENDED the conflation of three states into two notices. So the fixture did not merely miss the defect, it certified it. The discriminating question per fixture is whether its shape was hand-built from what the code currently DOES or derived from what a producer actually EMITS, and the first is how a gate comes to protect the behaviour it was written to constrain. Four other instances landed this campaign already: three export fixtures asserting routing from rows recording no counterparty country, with a docstring saying so, and a feed-parity fixture placing one party in the US and the other nowhere on the very axis it existed to prove agreement about. Prioritise fixtures on the money paths, category resolution, relief and export routing, over presentation surfaces and ## Scope
-
-- `src/cadrumo` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Audit this campaign's fixtures for shapes no producer emits, the inverse of the drive-the-real-producer discipline. A notice fixture was found building a CARRIED anchor under an UNANCHORED outcome, which no producer at that surface emits, and because the gate asserted that shape was correct it DEFENDED the conflation of three states into two notices. So the fixture did not merely miss the defect, it certified it. The discriminating question per fixture is whether its shape was hand-built from what the code currently DOES or derived from what a producer actually EMITS, and the first is how a gate comes to protect the behaviour it was written to constrain. Four other instances landed this campaign already: three export fixtures asserting routing from rows recording no counterparty country, with a docstring saying so, and a feed-parity fixture placing one party in the US and the other nowhere on the very axis it existed to prove agreement about. Prioritise fixtures on the money paths, category resolution, relief and export routing, over presentation surfaces
 
@@ -89,20 +56,25 @@ grounding stage, one is a shape a producer-reachability test proves emittable, a
 one is a deliberately stale envelope fed into a re-stamping pass to prove the pass
 does not latch.
 
-**A money-path finding that is production rather than fixture.** The counterparty
-coupling gate has two arms. The intra-community arm withholds on an absent
-identification and its docstring states the principle: absent is absent, and it does
-not fall back to the address. The export arm reads the counterparty country and
-treats ABSENT as a non-EU country, so a base whose row records no country routes as
-an export exactly as a genuine third-country row does.
+**A money-path finding that I reported and have since RETRACTED.** The counterparty
+coupling gate has two arms, and the export one tests its country against the Member
+State set without first requiring a country to exist, while the intra-community arm
+two lines above demands a positive fact. I probed it, saw an absent country route as
+a third country would, and reported a live under-declaration.
 
-Measured, with controls in both directions so a gate that says yes to everything
-would be visible: a third country routes, a Member State withholds, and both an
-absent and a blank country route.
+It is not one. The probe used a duck-typed stub that allowed an absent country; the
+real invoice model requires the field and refuses an omitted, null, blank,
+ISO-unassigned or malformed value outright, so the empty string cannot reach that
+site. The two arms differ because their input contracts differ -- the bank path's
+country is genuinely nullable and guards accordingly -- not because a ruling was
+applied to one and not the other.
 
-This is the defect the three export fixtures cited in the row were certifying.
-Correcting only those fixtures would leave it live, which is why it is reported as
-its own finding rather than absorbed here.
+The error is the one this very row exists to catch. I asserted behaviour over an
+input shape no producer emits, which is the row's own discriminating question asked
+of fixtures and not of my own instrument. What remains is a latent coupling rather
+than a defect: the arm's correctness rests on a validator in another module, and it
+would fail open silently if that field ever became optional, with no test able to
+notice because no test can build the input today.
 
 ## Verification
 
@@ -125,7 +97,9 @@ The exempted population, measured rather than assumed:
 
     5 shapes exempted by the module-level producer test
 
-The export arm, probed with controls:
+The export arm, probed with controls -- a sound reading of an unreachable input,
+recorded because the probe's soundness is exactly what made the conclusion
+convincing:
 
     EXPORT arm
       third country US        -> routes=True
@@ -137,8 +111,19 @@ The export arm, probed with controls:
       identified ES           -> routes=False
       ABSENT identification   -> routes=False
 
+The real invoice model, asked whether that input can exist at all:
+
+    control: the factory produced country='CH'
+      omitted        -> REFUSED (('counterparty_country',): missing)
+      None           -> REFUSED (('counterparty_country',): string_type)
+      blank '  '     -> REFUSED (value_error)
+      unassigned XX  -> REFUSED (value_error)
+      malformed ZZZ  -> REFUSED (value_error)
+
 Every probe ran from outside the repository; nothing under source control was
-modified by this Step.
+modified by this Step. A production edit made on the retracted premise was reverted
+by hand, hunk by hand-written hunk, because the module carries eighteen peer hunks
+and writing HEAD bytes over it was not available.
 
 ## Notes
 
