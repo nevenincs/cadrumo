@@ -64,11 +64,18 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     ),
     (
         "cadrumo.application.live._errors.LiveApplicationError",
+        # Every direct raise of this class sits in the filed-observation
+        # persistence, filed-capture finalizer, or IVA remote-state modules --
+        # the three stages the history sweep sequences -- so the operator who
+        # reaches it is mid-way through building AEAT history and previously got
+        # no next step at all. Discovery comes first because it persists nothing
+        # and re-reads what AEAT holds without repeating the long authenticated
+        # sweep; the sweep follows once the grid is confirmed.
         ErrorCode(
             code="ERROR_APPLICATION_LIVE",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_application_live",
-            default_suggestion=None,
+            default_suggestion="aeat app live filed discover && aeat app live filed pull-all",
             retryable=False,
             runbook_id=None,
         ),
