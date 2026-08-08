@@ -13,6 +13,7 @@ import pytest
 from cadrumo.application.ledger import InvoiceDraft
 
 from .._field_mapping import (
+    COUNTRY_LEAF_IS_UNSCORED_FOR_NOW,
     KEY_FIELD_MAPPINGS,
     FieldMapping,
     MappingKind,
@@ -138,21 +139,48 @@ def test_a_composite_expands_to_one_slot_per_leaf(key: CorpusKey) -> None:
     slots = expand_document_slots(document).ground_truth
 
     assert "issuer" not in slots
-    assert {"issuer.name", "issuer.tax_id", "issuer.country"} <= set(slots)
+    assert {"issuer.name", "issuer.tax_id"} <= set(slots)
 
 
-def test_one_wrong_leaf_does_not_destroy_the_other_two(key: CorpusKey) -> None:
-    """PROOF: the whole reason composites expand.
+def test_the_country_leaf_is_excluded_and_says_why(key: CorpusKey) -> None:
+    """The interim exclusion is pinned, so it cannot quietly become permanent.
 
-    Scored as a single slot this emission would be one wrong answer and nothing
-    else; leaf by leaf it is two correct reads and one wrong one.
+    The reader reports the country CORRECTLY as a printed name while the corpus
+    states an ISO code, and the resolution between them exists on another path.
+    Scoring it today would dock a reading score for a capability this path lacks;
+    leaving the omission silent would make a decision with an expiry look like a
+    field nobody considered.
     """
     document = next(d for d in key.documents if isinstance(d.ground_truth.get("issuer"), dict))
+
+    slots = expand_document_slots(document).ground_truth
+
+    assert "issuer.country" not in slots
+    assert "recipient.country" not in slots
+    assert "INTERIM" in COUNTRY_LEAF_IS_UNSCORED_FOR_NOW
+    assert "delete this note" in COUNTRY_LEAF_IS_UNSCORED_FOR_NOW
+
+
+def test_one_wrong_leaf_does_not_destroy_the_others(key: CorpusKey) -> None:
+    """PROOF: the whole reason composites expand.
+
+    Spans BOTH composites so the independence is shown across three slots rather
+    than two. Scored a composite at a time, this emission would be one wrong
+    answer that also destroyed a correct read of the issuer's name and told a
+    reader nothing about which leaf failed.
+    """
+    document = next(
+        d
+        for d in key.documents
+        if isinstance(d.ground_truth.get("issuer"), dict) and isinstance(d.ground_truth.get("recipient"), dict)
+    )
     issuer = document.ground_truth["issuer"]
+    recipient = document.ground_truth["recipient"]
     payload = {
         "supplier_name": issuer["name"],
         "supplier_tax_id": "WRONG-TAX-ID",
-        "supplier_country_code": issuer["country"],
+        "customer_name": recipient["name"],
+        "customer_tax_id": recipient["tax_id"],
     }
 
     expanded = expand_document_slots(document)
@@ -160,8 +188,9 @@ def test_one_wrong_leaf_does_not_destroy_the_other_two(key: CorpusKey) -> None:
     verdicts = {outcome.field_name: outcome.verdict for outcome in scoring.outcomes}
 
     assert verdicts["issuer.name"].value == "matched"
-    assert verdicts["issuer.country"].value == "matched"
     assert verdicts["issuer.tax_id"].value == "wrong"
+    assert verdicts["recipient.name"].value == "matched"
+    assert verdicts["recipient.tax_id"].value == "matched"
 
 
 # ----------------------------------------------------------------------------

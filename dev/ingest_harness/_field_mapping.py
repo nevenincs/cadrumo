@@ -88,6 +88,25 @@ Slot names stay readable in a report and stay distinct from every flat field
 name, because no key field contains a dot.
 """
 
+COUNTRY_LEAF_IS_UNSCORED_FOR_NOW: Final = (
+    "The issuer/recipient COUNTRY leaf is excluded from scoring as an INTERIM measure, and the "
+    "exclusion is expected to be removed rather than kept. The corpus states the country as an "
+    "ISO alpha-2 code; the reader under measurement reports it as a printed name ('Espana'), and "
+    "reports it CORRECTLY -- the model is not failing to read it. The name-to-code resolution "
+    "already exists and is already used, but only on the structured e-invoice path, which "
+    "reconciles the alpha-2 and alpha-3 conventions those formats disagree about; the "
+    "model-reading path does not reach it. Scoring the leaf against the code today would dock a "
+    "reading score for a capability this path lacks, and classifying it as a permanent product "
+    "limitation would misfile a built-but-unreached resolver as a missing one. When the reading "
+    "path reaches that resolver, restore the leaf to both composites and delete this note."
+)
+"""Why the country leaf is absent from :data:`KEY_FIELD_MAPPINGS`, and when to restore it.
+
+Named and referenced from the table rather than left as a silent omission: an
+absent leaf is indistinguishable from one nobody considered, and this one is a
+decision with an expiry.
+"""
+
 #: The role token naming the counterparty as the document's supplier.
 _ROLE_SUPPLIER: Final = "supplier"
 #: The role token naming the counterparty as the document's customer.
@@ -228,17 +247,15 @@ KEY_FIELD_MAPPINGS: Final[Mapping[str, FieldMapping]] = MappingProxyType(
             customer_field="customer_tax_id",
         ),
         # ── Dicts in the key, flat fields on the draft. Scored leaf by leaf.
+        # The country leaf is deliberately absent from both composites: see
+        # COUNTRY_LEAF_IS_UNSCORED_FOR_NOW.
         "issuer": FieldMapping(
             kind=MappingKind.COMPOSITE,
-            leaves=MappingProxyType(
-                {"name": "supplier_name", "tax_id": "supplier_tax_id", "country": "supplier_country_code"},
-            ),
+            leaves=MappingProxyType({"name": "supplier_name", "tax_id": "supplier_tax_id"}),
         ),
         "recipient": FieldMapping(
             kind=MappingKind.COMPOSITE,
-            leaves=MappingProxyType(
-                {"name": "customer_name", "tax_id": "customer_tax_id", "country": "customer_country_code"},
-            ),
+            leaves=MappingProxyType({"name": "customer_name", "tax_id": "customer_tax_id"}),
         ),
         # ── No draft counterpart. Each states what its absence means; whether a
         # given one is a product gap or out of scope is a ruling recorded
