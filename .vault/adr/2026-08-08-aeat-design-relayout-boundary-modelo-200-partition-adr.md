@@ -5,90 +5,161 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:353924148eac7d6bb7803baa1f01ed84a91cebe3c7289f3b8fb7f25f80678d30'
+body_hash: 'sha256:09f8091338f40e66439e69edf6a8781ee3f863d468f2a08be6d70830317fd0fa'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
+  - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #adr) and one feature tag.
-     Replace aeat-design-relayout-boundary with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     Status convention: the H1 status value is one of proposed, accepted,
-     rejected, superseded, or deprecated. A new ADR starts as proposed; it
-     moves to accepted or rejected when the decision is made; it becomes
-     superseded when a later ADR replaces it (set by vault adr supersede,
-     which also records superseded_by); and deprecated when it is retired
-     without a direct successor.
-
-     Amend vs supersede: refinements and concretization rewrite the accepted
-     record's body in place (modified: carries the revision); a new ADR with
-     supersession is only for a major pivot. One accepted record per
-     decision.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-# `aeat-design-relayout-boundary` adr: `Modelo 200 partitions by inheritance, and 2024-y-siguientes narrows to 2024` | (**status:** `{proposed|accepted|rejected|superseded|deprecated}`)
-
-<!-- DOCUMENT BOUNDARY:
-     This record owns the decision and only the decision. Grounding evidence
-     lives in the related research/reference documents and is cited by stem
-     (e.g. `2026-02-04-editor-demo-research`), never restated - a restated
-     fact forks and goes stale. A fact this record needs but the grounding
-     lacks is added to the grounding first, then cited. -->
+# `aeat-design-relayout-boundary` adr: `Modelo 200 partitions by inheritance, and 2024-y-siguientes narrows to 2024` | (**status:** `accepted`)
 
 ## Problem Statement
 
-<!-- The problem and why a decision is needed now, in this record's own
-     terms. Do not re-narrate the research's evidence; cite it. -->
+The accepted boundary record authorises splitting revisions that span an AEAT
+design re-layout, and Modelo 200 is one of them: a single revision named
+`2024-y-siguientes` serves filing years 2024 onward while AEAT published
+materially different designs for 2024 and 2025. Its shipped content is the 2025
+design, evidenced by casilla fragments citing the 2025 record-design source, so
+a 2024 filing is currently computed against the wrong year's layout.
+
+The boundary record authorises the split but does not say how a partition of
+this size is authored. Modelo 200 is the largest form in the registry, and the
+naive reading of "split it" implies re-deriving several thousand casillas from
+the published design. That reading is what this record rejects.
+
+A decision is needed now because the partition is otherwise unauthorable
+without either guessing the derivation rules or hand-authoring at a volume
+nobody would review.
 
 ## Considerations
 
-<!-- Only the forces that bear on the choice, each a terse line citing its
-     grounding by stem or locator. Nothing the research already
-     establishes is re-argued here. -->
+- The revision's own fragments cite the 2025 design as their source while the
+  revision covers 2024 onward; the mismatch is declared in the data, not inferred.
+- A round-trip that re-derives the shipped 2025 casillas from the 2025 design
+  reproduces most of the export mapping but leaves a stable residue of
+  exceptions with three unrelated causes; derivation is therefore not a
+  mechanism that can be trusted unattended at this scale.
+- Several design records carry no registry coverage at all. Those blocks are
+  deliberately unmodelled, and a derivation pass cannot distinguish "unmodelled
+  on purpose" from "missing".
+- The fields that carry meaning rather than structure - section, semantic role,
+  legal grounding - vary too widely across casillas to be inferred from the
+  published design, but are identical between the two years for any box present
+  in both.
+- The revision identifier appears many thousands of times inside the modelo's
+  own tree and the same identifier string is used by other modelos, so renaming
+  it is a large and easily over-matched sweep.
+- Blanket working-tree commits run continuously in this repository and have been
+  observed splitting an atomic registry change, so a partition that is invalid
+  when half-landed carries real risk rather than theoretical risk.
 
 ## Considered options
 
-<!-- Name each alternative evaluated, compared at the same level of abstraction, with its
-key pros and cons and why it was kept or rejected. Naming the rejected options - not only
-the chosen one - is what lets a future reader reconstruct the decision. Keep each option
-to a terse claim-first line or two; the chosen option's full reasoning belongs under
-Rationale. -->
+**Re-derive every casilla from the published design.** Rejected. The
+regeneration residue has three distinct causes and clearing it requires
+adjudicating a set of exceptions against page semantics - tax-domain work, not
+mechanism. It also cannot see which design blocks are deliberately unmodelled,
+so it would invent coverage the registry has consciously declined.
+
+**Hand-author the 2024 revision.** Rejected on volume. Thousands of casillas
+authored by hand is unreviewable, and most of the work would reproduce content
+that already exists correctly one revision away.
+
+**Inherit from the sibling year, author only the difference.** Chosen. A box
+present in both years copies its sibling casilla wholesale; only boxes unique to
+2024 are authored.
+
+**Rename the revision so each identifier names its epoch.** Rejected as a
+separate, larger change. It touches every fragment in the modelo and risks
+over-matching other modelos that share the identifier string.
 
 ## Constraints
 
-<!-- Technical limitations, e.g.: depends on non-mature library, frontier feature, requires rigorous research. 'Frontier' risk, e.g. technology is new and falls outside the implementing model's training cutoff.
+The parent boundary record is accepted and stable, and the companion sub-year
+epoch record supplies the period-token partition mechanism. Neither is in
+flux, so this record depends on settled parents.
 
-List out the blocking constraints, and features, gaps needed for reliable implementation. Must explicitly evaluate how stable 'parent' features are if this adr
-relies on another feature. -->
+The partition must land as ONE commit. A revision carrying a partial casilla
+set fails registry validation, and narrowing the existing revision before the
+new one exists leaves a filing year unresolvable. Half-landed is not a degraded
+state here; it is a tree-wide refusal to load.
+
+That constraint collides with the observed blanket-commit behaviour, so the
+partition must be built outside the tree and validated against a temporary
+registry root before any file is written under the package. This is a
+sequencing constraint on the implementation, not a reason to reshape the
+decision.
+
+The exception residue from the rejected derivation approach is NOT a blocker
+for this record, because inheritance never consults the design for a box that
+exists in both years. It remains an open question for whoever owns Modelo 200
+export completeness, and it should not be folded into the partition.
 
 ## Implementation
 
-<!-- A high-level overview (not a plan!) of HOW and WHAT will be implemented. Focus on condensed but clear prose that describes functionality layering.
+The existing revision keeps its identifier and narrows to filing year 2024
+alone, with its content corrected to the 2024 design: boxes absent from that
+design are dropped, boxes unique to it are authored, and the record-design
+source reference is re-pointed at the 2024 entry. A new sibling revision
+receives today's content unchanged and serves 2025 onward.
 
-Do not add code; code references must be persisted in a separate `{reference}` document. Important `{reference}` snippets must be summarized and referenced explicitly. -->
+Keeping the identifier is what avoids the rename sweep. It is also honest: the
+name already says 2024, so narrowing it to mean 2024 alone makes the name true
+rather than stale.
+
+Inheritance copies the whole casilla, not a chosen subset of fields. Copying
+selectively would reintroduce the derivation problem one field at a time, and
+the fields most at risk - section, semantic role, legal grounding - are exactly
+the ones that cannot be inferred.
+
+Authoring is confined to boxes with no sibling in the later year, and to those
+only after excluding boxes that sit on design records the registry does not
+model. Both sets are enumerable mechanically before authoring starts, so the
+human volume is known in advance rather than discovered during the work.
+
+The split completes only when the progress control that pins the known
+spanning revisions is updated to drop this modelo. That control exists so a
+partition cannot silence the boundary detector instead of satisfying it, and
+its update is part of the same commit.
 
 ## Rationale
 
-<!-- Why this option wins against the drivers: a knockout criterion or a
-     clear edge over the alternatives. Cite `{research}` findings and
-     grounding `{reference}` by stem; do not restate them. A new fact
-     surfacing here first belongs in the grounding document. -->
+Inheritance wins on a knockout criterion rather than a balance of merits: the
+two years agree on the overwhelming majority of boxes, and for every one of
+those the correct content already exists and has been reviewed. Derivation
+would recompute that content and, on a measured residue, recompute it wrongly.
+Choosing derivation means accepting a known error rate in exchange for nothing.
+
+The residue also decomposes into causes with different owners - deliberately
+unmodelled blocks, a genuine open question about repeated placements, and an
+extraction artefact. Only the second is a registry question at all. A mechanism
+that forces all three to be adjudicated before a partition can proceed has
+coupled the split to unrelated work.
+
+Keeping the identifier is chosen for blast radius, but it survives the honesty
+test independently, which is why it is not merely expedient.
 
 ## Consequences
 
-<!-- Gains, but framed honestly. Difficulties. Pathways this feature opens. Pitfalls. -->
+The partition becomes reviewable. The inherited majority is a mechanical copy
+that a reviewer can verify by sampling, and attention concentrates on the small
+authored set where judgement was actually exercised.
+
+The human cost is now known before the work starts rather than discovered
+during it, which is the difference between a schedulable task and an open-ended
+one.
+
+Two things get harder. The revision identifiers no longer read as a clean
+sequence, since one names a single year and its sibling names a range; anyone
+reading the tree must consult the period selector rather than trusting the
+name. And the inherited casillas carry their grounding forward unexamined - if
+a legal reference was wrong in the later year, inheritance propagates it into
+the earlier one rather than catching it. Inheritance preserves correctness and
+errors equally.
+
+The rejected export-mapping residue stays open and now has a home: it is a
+Modelo 200 completeness question, not a partition question, and folding it in
+here would have hidden it inside a large mechanical change.
+
+This record establishes a pattern the remaining partitions can follow. Where
+two adjacent revisions of one form largely agree, inherit and author the
+difference; reach for derivation only where no sibling exists.
