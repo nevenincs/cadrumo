@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#dehu-notification-legal-effect'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:87104ec11ff7af50ad96691aa1a3ac6f341c0159f8cea3b3d6976d9610b515ec'
+body_hash: 'sha256:cf37531e4cc5d9e728bc499591bb3b2d82161257b9c85b2c22205e0ef8c941ba'
 related:
   - "[[2026-08-07-dehu-notification-legal-effect-reference]]"
 ---
-
 # `dehu-notification-legal-effect` adr: `DEHu notification legal-effect and service state` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -288,3 +287,55 @@ exists as an alternative.
   function are also the natural home for a future recaudación-side deadline
   (providencia de apremio response windows use a similar días-naturales
   shape) should that need arise.
+
+## Amendment (2026-08-08): the review gate blocks catalogue resolution, not every later Phase
+
+The executing plan's Phase P01 was formulated as "a hard blocking dependency
+for every later Phase". Read against what each later row's gate actually
+asserts, that is broader than this decision needs. Two rows resolve the
+legal-catalogue entry **id** and genuinely cannot exist before the operator
+commits it: the grounding test that asserts the constant's citation resolves
+against the reviewed entry, and the operator-facing `Notice` that carries the
+entry id in its context. The remaining rows - the constant itself, the
+`NotificacionEstadoServicio` enum and its pure function, the typed calendar
+field, and the widened actionability predicate - have gates that never touch
+the catalogue. They depend on the **corpus** committed in P01.S01, which is a
+separate artefact with a separate gate.
+
+This amendment therefore rules that the corpus half of P01 is the hard
+precondition for every later Step, while the catalogue-enrollment half blocks
+only the entry-id-resolving set. The original row bundling the constant with
+its catalogue-resolution grounding test is split: the constant lands on the
+corpus, and the grounding test stays behind the review.
+
+**The split's own constraint, which is load-bearing.** The constant's doc
+comment MUST cite the provision - Ley 39/2015 art. 43.2 and document id
+`BOE-A-2015-10565` - and MUST NOT name a legal-catalogue entry id. Citing an
+entry id before the catalogue file exists would ship a dangling reference
+into production source, which is the same hazard that keeps the `Notice` row
+blocked. Citing the provision alone is also exactly the shape every sibling
+leaf constant in `core/external_constants.py` already carries, so the
+constant lands at parity with its neighbours rather than at a novel bar. If
+the constant could not be written without naming the entry id, the split
+would not separate the two halves and this amendment would be wrong.
+
+**What the original formulation still asks for that this amendment
+excludes.** The retired "blocks every later Phase" rule guaranteed that no
+line of this feature's code existed until a human had personally adjudicated
+its legal basis, as a single ordering rule requiring no per-row judgement.
+This amendment accepts, in exchange for unblocking four rows, that a
+`Final[int] = 10` ships in `core/` before any human signs the provision
+behind it, and that the reviewer arrives to a constant already consumed by an
+enum, a calendar field and an actionability predicate - so a review finding
+the figure wrong now implies unwinding four rows rather than writing none.
+The figure was cross-checked against live BOE independently of the bundled
+corpus before the split was taken, which narrows that exposure without
+removing it. The human review remains required and remains unperformed; only
+its blast radius changed.
+
+**Implementing rows opened in the same change as this amendment**, per the
+standing rule that an amendment ruling on code is not self-executing: the
+constant row rewritten to the provision-citation-only contract, a new row
+carrying the catalogue-resolution grounding test behind the gate, and a new
+row scaffolding the human gate's own Step Record so a checked gate and an
+unrecorded one do not wear the same checkbox.
