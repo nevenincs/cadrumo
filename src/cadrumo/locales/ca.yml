@@ -805,6 +805,10 @@ application:
   invoices:
     bulk_import:
       errors:
+        country_unanswerable: 'El fitxer d''importació no té columna de país de la
+          contrapart i no s''ha indicat cap país per a la importació. Afegiu una columna
+          country_code o indiqueu un país per a tot el fitxer. Columnes no reconegudes:
+          {unmapped_columns}'
         file_read_failed: No s'ha pogut llegir el fitxer d'importació massiva de factures.
         formula_cell: El fitxer d'importació massiva de factures conté una cel·la
           amb fórmula a la fila {row}, columna {column}; no s'accepten els valors
@@ -1639,8 +1643,8 @@ application:
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
     notices:
-      censo_divergences_open: '{count} dada/es del perfil encara difereixen del Certificat
-        de Situació Censal i resten sense resoldre: {axes}.'
+      censo_divergences_open: '{count} dada/es del perfil o del certificat encara
+        difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'
   verification:
     errors:
       missing_binding_values: La verificació del registre requereix valors de vinculació
@@ -2234,6 +2238,9 @@ cli:
           van ser rebutjades; no es va crear cap factura'
         import_column_role_not_applied: 'no s''ha aplicat un rol de columna proposat:
           {detail}'
+        import_country_help: País de la contrapart (ISO 3166-1 alfa-2) per a tota
+          la importació. Només és obligatori quan el fitxer no té columna country_code;
+          s'ignora a les files que indiquen el seu.
         import_file_help: Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, i opcionalment
           iva_rate/currency/country_code/notes).
@@ -4802,6 +4809,10 @@ cli:
         el model configurat.
     counterparty:
       errors:
+        nothing_asserted: 'Per confirmar ''{identifier}'' cal almenys una resposta:
+          ''--scope'' per a on està establerta la contrapart, ''--identification-state''
+          per a quin Estat membre la identifica a efectes d''IVA, o totes dues. Són
+          fets independents i qualsevol d''ells es pot indicar per separat.'
         scope_conflict: Ja hi ha confirmat un territori diferent per a '{identifier}',
           de manera que confirmar '{asserted}' descartaria la resposta anterior. Retireu-la
           primer amb 'aeat app ledger counterparty withdraw'. {detail}
@@ -7060,6 +7071,8 @@ errors:
       o està incompleta.
     refused_llm_consent: S'ha rebutjat la lectura del document fora de l'equip perquè
       no s'ha atorgat el consentiment per a la transmissió externa.
+    refused_llm_contention: Aquest equip no té memòria lliure mesurada per carregar
+      el model de llenguatge ara mateix.
     refused_llm_validation: Un objecte del model de llenguatge no ha superat la validació.
     refused_modelo_100_borrador_binding: Els valors de l'esborrany del Model 100 no
       es poden fer servir per al càlcul.
@@ -7357,6 +7370,12 @@ flows:
         rebutjada(es); cartera d''IVA: {iva_wallet_status}; notificacions: {notificaciones_status}.'
       filed_history_pull_all_refused: 'No s''han pogut llegir aquests parells i NO
         s''han declarat buits: {pairs}. Torneu a executar per reintentar-ho.'
+      google_export: flows.manager.action.google_export
+      google_export_done: flows.manager.action.google_export_done
+      google_export_modelo: flows.manager.action.google_export_modelo
+      google_export_period: flows.manager.action.google_export_period
+      google_export_year: flows.manager.action.google_export_year
+      google_export_year_invalid: flows.manager.action.google_export_year_invalid
       passphrase: Canviar la contrasenya
       passphrase_confirm: Confirma la nova contrasenya
       passphrase_current: Contrasenya actual
@@ -67027,6 +67046,272 @@ modelo:
           field:
             label: null
     '390':
+      casilla:
+        continuidad:
+          filing-year:
+            help: modelo.schema.390.casilla.continuidad.filing-year.help
+            label: modelo.schema.390.casilla.continuidad.filing-year.label
+          iva-aic-bienes-tipo-0-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-base.label
+          iva-aic-bienes-tipo-0-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-0-cuota.label
+          iva-aic-bienes-tipo-10-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-base.label
+          iva-aic-bienes-tipo-10-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-10-cuota.label
+          iva-aic-bienes-tipo-2-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-base.label
+          iva-aic-bienes-tipo-2-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-2-cuota.label
+          iva-aic-bienes-tipo-21-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-base.label
+          iva-aic-bienes-tipo-21-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-21-cuota.label
+          iva-aic-bienes-tipo-4-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-base.label
+          iva-aic-bienes-tipo-4-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-4-cuota.label
+          iva-aic-bienes-tipo-5-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-base.label
+          iva-aic-bienes-tipo-5-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-5-cuota.label
+          iva-aic-bienes-tipo-7-5-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-base.label
+          iva-aic-bienes-tipo-7-5-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-bienes-tipo-7-5-cuota.label
+          iva-aic-servicios-tipo-0-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-base.label
+          iva-aic-servicios-tipo-0-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-0-cuota.label
+          iva-aic-servicios-tipo-10-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-base.label
+          iva-aic-servicios-tipo-10-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-10-cuota.label
+          iva-aic-servicios-tipo-2-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-base.label
+          iva-aic-servicios-tipo-2-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-2-cuota.label
+          iva-aic-servicios-tipo-21-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-base.label
+          iva-aic-servicios-tipo-21-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-21-cuota.label
+          iva-aic-servicios-tipo-4-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-base.label
+          iva-aic-servicios-tipo-4-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-4-cuota.label
+          iva-aic-servicios-tipo-5-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-base.label
+          iva-aic-servicios-tipo-5-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-5-cuota.label
+          iva-aic-servicios-tipo-7-5-base:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-base.label
+          iva-aic-servicios-tipo-7-5-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-aic-servicios-tipo-7-5-cuota.label
+          iva-anual-compensacion-generada-ejercicio:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-generada-ejercicio.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-generada-ejercicio.label
+          iva-anual-compensacion-ultimo-periodo:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-ultimo-periodo.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-compensacion-ultimo-periodo.label
+          iva-anual-cuota-deducible-total:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-cuota-deducible-total.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-cuota-deducible-total.label
+          iva-anual-cuota-devengada-total:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-cuota-devengada-total.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-cuota-devengada-total.label
+          iva-anual-reconciliacion-deducible-303:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-deducible-303.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-deducible-303.label
+          iva-anual-reconciliacion-devengada-303:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-303.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-303.label
+          iva-anual-reconciliacion-devengada-simplificado-303:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-simplificado-303.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-devengada-simplificado-303.label
+          iva-anual-reconciliacion-resultado-303:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-resultado-303.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-reconciliacion-resultado-303.label
+          iva-anual-regularizacion-bienes-inversion:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-bienes-inversion.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-bienes-inversion.label
+          iva-anual-regularizacion-prorrata-definitiva:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-prorrata-definitiva.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-regularizacion-prorrata-definitiva.label
+          iva-anual-resultado-regimen-general:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-resultado-regimen-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-resultado-regimen-general.label
+          iva-anual-total-bases-cuotas-iva:
+            help: modelo.schema.390.casilla.continuidad.iva-anual-total-bases-cuotas-iva.help
+            label: modelo.schema.390.casilla.continuidad.iva-anual-total-bases-cuotas-iva.label
+          iva-base-imponible-aic-bienes-general:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-general.label
+          iva-base-imponible-aic-bienes-reduced:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-reduced.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-reduced.label
+          iva-base-imponible-aic-bienes-super-reduced:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-super-reduced.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-super-reduced.label
+          iva-base-imponible-aic-bienes-zero:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-zero.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-bienes-zero.label
+          iva-base-imponible-aic-servicios-general:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-general.label
+          iva-base-imponible-aic-servicios-reduced:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-reduced.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-reduced.label
+          iva-base-imponible-aic-servicios-super-reduced:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-super-reduced.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-super-reduced.label
+          iva-base-imponible-aic-servicios-zero:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-zero.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-aic-servicios-zero.label
+          iva-base-imponible-repercutida-general:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-general.label
+          iva-base-imponible-repercutida-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-reducido.label
+          iva-base-imponible-repercutida-super-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-super-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-super-reducido.label
+          iva-base-imponible-repercutida-tipo-0:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-0.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-0.label
+          iva-base-imponible-repercutida-tipo-10:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-10.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-10.label
+          iva-base-imponible-repercutida-tipo-2:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-2.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-2.label
+          iva-base-imponible-repercutida-tipo-21:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-21.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-21.label
+          iva-base-imponible-repercutida-tipo-4:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-4.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-4.label
+          iva-base-imponible-repercutida-tipo-5:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-5.label
+          iva-base-imponible-repercutida-tipo-7-5:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-7-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-tipo-7-5.label
+          iva-base-imponible-repercutida-zero:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-zero.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-repercutida-zero.label
+          iva-base-imponible-soportada-interiores:
+            help: modelo.schema.390.casilla.continuidad.iva-base-imponible-soportada-interiores.help
+            label: modelo.schema.390.casilla.continuidad.iva-base-imponible-soportada-interiores.label
+          iva-cuota-autorepercutida-intracomunitaria:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-autorepercutida-intracomunitaria.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-autorepercutida-intracomunitaria.label
+          iva-cuota-recargo-equivalencia-general:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-general.label
+          iva-cuota-recargo-equivalencia-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-reducido.label
+          iva-cuota-recargo-equivalencia-super-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-super-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-super-reducido.label
+          iva-cuota-recargo-equivalencia-tipo-0-26:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-26.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-26.label
+          iva-cuota-recargo-equivalencia-tipo-0-5:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-5.label
+          iva-cuota-recargo-equivalencia-tipo-0-62:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-62.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-0-62.label
+          iva-cuota-recargo-equivalencia-tipo-1:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1.label
+          iva-cuota-recargo-equivalencia-tipo-1-4:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1-4.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-1-4.label
+          iva-cuota-recargo-equivalencia-tipo-5-2:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-5-2.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-recargo-equivalencia-tipo-5-2.label
+          iva-cuota-repercutida-general:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-general.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-general.label
+          iva-cuota-repercutida-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-reducido.label
+          iva-cuota-repercutida-super-reducido:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-super-reducido.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-super-reducido.label
+          iva-cuota-repercutida-tipo-0:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-0.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-0.label
+          iva-cuota-repercutida-tipo-10:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-10.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-10.label
+          iva-cuota-repercutida-tipo-2:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-2.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-2.label
+          iva-cuota-repercutida-tipo-21:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-21.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-21.label
+          iva-cuota-repercutida-tipo-4:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-4.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-4.label
+          iva-cuota-repercutida-tipo-5:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-5.label
+          iva-cuota-repercutida-tipo-7-5:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-7-5.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-repercutida-tipo-7-5.label
+          iva-cuota-soportada-importaciones:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-importaciones.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-importaciones.label
+          iva-cuota-soportada-interiores:
+            help: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-interiores.help
+            label: modelo.schema.390.casilla.continuidad.iva-cuota-soportada-interiores.label
+          iva-isp-interior-base:
+            help: modelo.schema.390.casilla.continuidad.iva-isp-interior-base.help
+            label: modelo.schema.390.casilla.continuidad.iva-isp-interior-base.label
+          iva-isp-interior-cuota:
+            help: modelo.schema.390.casilla.continuidad.iva-isp-interior-cuota.help
+            label: modelo.schema.390.casilla.continuidad.iva-isp-interior-cuota.label
+          iva-volumen-operaciones-entregas-intracomunitarias:
+            help: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-entregas-intracomunitarias.help
+            label: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-entregas-intracomunitarias.label
+          iva-volumen-operaciones-exportaciones-exentas:
+            help: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-exportaciones-exentas.help
+            label: modelo.schema.390.casilla.continuidad.iva-volumen-operaciones-exportaciones-exentas.label
+          tipo-declaracion:
+            help: modelo.schema.390.casilla.continuidad.tipo-declaracion.help
+            label: modelo.schema.390.casilla.continuidad.tipo-declaracion.label
       field:
         official_name: null
         title: null

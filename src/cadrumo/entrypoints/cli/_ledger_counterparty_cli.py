@@ -111,8 +111,8 @@ def counterparty_confirm(
     ),
     # Declared as the enum so click renders the accepted set on a parse failure,
     # rather than the operator meeting a late refusal that names no alternatives.
-    scope: IvaTerritorialScope = typer.Option(
-        ...,
+    scope: IvaTerritorialScope | None = typer.Option(
+        None,
         "--scope",
         help=tr(
             "cli.app.ledger.counterparty.scope_help",
@@ -167,6 +167,19 @@ def counterparty_confirm(
         record_confirmed_counterparty_facts,
     )
 
+    if scope is None and identification_state is None:
+        raise _bad(
+            tr(
+                "cli.ledger.counterparty.errors.nothing_asserted",
+                identifier=tax_identifier,
+                default=(
+                    f"Confirming '{tax_identifier}' needs at least one answer: '--scope' for where the "
+                    f"counterparty is established, '--identification-state' for which Member State "
+                    f"VAT-identifies it, or both. They are independent facts and either may be supplied "
+                    f"alone."
+                ),
+            ),
+        )
     bucket_id = _counterparty_bucket_id()
     asserted_by = actor or bucket_id or "operator"
     # The stamp is supplied rather than left to the writer's clock so this call
@@ -244,9 +257,19 @@ def counterparty_confirm(
         ctx,
         command="ledger.counterparty.confirm",
         result=CounterpartyConfirmResult(counterparty=_payload(fact), recorded=recorded),
+        # Both facts are optional and either may stand alone, so the line names
+        # what was answered rather than assuming a territory is present.
         lines=[
-            f"{fact.canonical_tax_identifier}: {fact.territorial_scope.value}"
-            f"{'' if recorded else ' (already confirmed)'}",
+            f"{fact.canonical_tax_identifier}: "
+            + ", ".join(
+                part
+                for part in (
+                    fact.territorial_scope.value if fact.territorial_scope is not None else None,
+                    fact.identification_state.value if fact.identification_state is not None else None,
+                )
+                if part is not None
+            )
+            + f"{'' if recorded else ' (already confirmed)'}",
         ],
         notices=notices,
     )

@@ -272,7 +272,7 @@ class NoticeBand(Vertical, can_focus=False):
     set mounts a new band rather than mutating this one.
     """
 
-    def __init__(self, notices: Sequence[Notice], *, id: str | None = None) -> None:  # noqa: A002 - Textual's own kwarg name
+    def __init__(self, notices: Sequence[Notice], *, id: str | None = None) -> None:
         super().__init__(id=id)
         self._notices = tuple(notices)
 

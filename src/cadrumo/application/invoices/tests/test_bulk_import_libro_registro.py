@@ -120,7 +120,16 @@ def test_the_libro_registro_imports_with_no_column_resolution_failure(tmp_path: 
     assert len(source.rows) == 8
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        result = import_invoices_from_rows(source, bucket_id=_BUCKET_ID, kind=InvoiceKind.ISSUED)
+        result = import_invoices_from_rows(
+            source,
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.ISSUED,
+            # The libro registro format carries no country column in either
+            # book, so the operator states one for the whole import. It
+            # applies to EVERY row, which is why a book carrying foreign
+            # counterparties needs the column rather than this flag.
+            declared_country="ES",
+        )
 
     assert result.rows == 8
     assert result.created == 4
@@ -153,7 +162,16 @@ def test_the_retencion_amount_reaches_the_catalogue_invoice(tmp_path: Path) -> N
     source = read_bulk_invoice_import_source(_LIBRO, mapper=_mapper)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        result = import_invoices_from_rows(source, bucket_id=_BUCKET_ID, kind=InvoiceKind.ISSUED)
+        result = import_invoices_from_rows(
+            source,
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.ISSUED,
+            # The libro registro format carries no country column in either
+            # book, so the operator states one for the whole import. It
+            # applies to EVERY row, which is why a book carrying foreign
+            # counterparties needs the column rather than this flag.
+            declared_country="ES",
+        )
         assert result.created == 4
         catalogue = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load()
 

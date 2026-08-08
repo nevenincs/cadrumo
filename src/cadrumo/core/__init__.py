@@ -193,6 +193,7 @@ from ._notificacion_estado_servicio import (
     resolve_notificacion_estado_servicio,
 )
 from ._objeto_tributario import ObjetoTributario
+from ._observed_header_fact import ObservedHeaderFact
 from ._optional_extras import (
     ANTHROPIC_EXTRA,
     BROWSER_EXTRA,
@@ -479,6 +480,7 @@ __all__: list[str] = [
     "Modelo",
     "NotificacionEstadoServicio",
     "ObjetoTributario",
+    "ObservedHeaderFact",
     "OfficialTipoRentaCode",
     "OptionalExtra",
     "PassphraseStrength",

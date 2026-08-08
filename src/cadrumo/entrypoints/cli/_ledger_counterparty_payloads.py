@@ -47,7 +47,7 @@ class CounterpartyEstablishmentPayload(OutputSchema):
 
     counterparty_key: str = Field(min_length=1)
     canonical_tax_identifier: str = Field(min_length=1)
-    territorial_scope: IvaTerritorialScope
+    territorial_scope: IvaTerritorialScope | None = None
     # Emitted always, `None` included: a caller has to be able to tell an
     # unanswered registration from one answered as Spain, and a field that
     # vanished when absent would make those read alike.

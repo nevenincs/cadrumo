@@ -75,7 +75,7 @@ from typing import Final, Literal
 from pydantic import AnyHttpUrl, BaseModel, Field, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core import CasillaValueKind, FiledHistoryDiscoverySignal, Modelo, Period
+from .....core import CasillaValueKind, FiledHistoryDiscoverySignal, Modelo, ObservedHeaderFact, Period
 from .....core.decimal import coerce_decimal_strict
 from .....core.identity import ContentDigest
 from .....core.time import UtcInstant

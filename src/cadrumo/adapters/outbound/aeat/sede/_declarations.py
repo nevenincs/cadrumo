@@ -32,7 +32,7 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from .....core import Period
+from .....core import ObservedHeaderFact, Period
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.hashing import sha256_hex
@@ -94,7 +94,7 @@ from ._declarations_observations import (
     _declaration_pdf_extraction_profile_provisional,
     _observed_casillas_from_declaration_pdf,
     _observed_casillas_from_submitted_file,
-    _observed_headers_from_submitted_file,
+    _observed_header_facts_from_submitted_file,
     _read_guard_policy_from_snapshot,
     _register_row_artefact,
     _registry_snapshot_for_declaration,
@@ -1162,6 +1162,7 @@ async def _capture_filed_declaration_observation_from_row(
         ),
     ]
     casillas: tuple[ObservedCasillaValue, ...] = ()
+    headers: tuple[ObservedHeaderFact, ...] = ()
     extraction_coverage: dict[str, float] = {}
     metadata = {
         "tipo_solicitud": declaration.tipo_solicitud or "",
@@ -1241,11 +1242,17 @@ async def _capture_filed_declaration_observation_from_row(
                 # carried, deliberately not elected on: which identifier a disposition-
                 # aware read should key on is a separate decision, and the point here is
                 # that the evidence survives instead of being parsed and dropped.
-                for header_key, header_value in _observed_headers_from_submitted_file(
+                #
+                # Collected as TYPED facts rather than folded into `metadata`. The
+                # metadata route reached storage through a projection built from a
+                # fixed key set, so an `aeat_<header_key>` entry was written here
+                # and discarded before persistence -- the evidence survived the
+                # parser and died one layer later, which is worse than never
+                # reading it because the capture looked complete.
+                headers = _observed_header_facts_from_submitted_file(
                     snapshot=snapshot,
                     body=submitted_body,
-                ).items():
-                    metadata[f"aeat_{header_key}"] = header_value
+                )
             except (RegistryValidationError, SedeParseError) as exc:
                 metadata["submitted_file_extraction_error"] = str(exc)
 
@@ -1273,6 +1280,7 @@ async def _capture_filed_declaration_observation_from_row(
         authenticated_identity=authenticated_identity,
         artefacts=tuple(artefacts),
         casillas=casillas,
+        headers=headers,
         metadata=metadata,
         extraction_coverage=extraction_coverage,
         # Year and period come from the DECLARATION, not the snapshot: stamping

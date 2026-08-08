@@ -51,7 +51,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import STRICT_FROZEN_CONFIG, Period, SecureObjectWrite
+from ...core import STRICT_FROZEN_CONFIG, ObservedHeaderFact, Period, SecureObjectWrite
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.resources import resources
@@ -156,6 +156,19 @@ class ObservationEnvelopePayload(BaseModel):
             "filed observations use this for register status, expediente id, and "
             "authenticated identity so downstream readers can audit what official "
             "register row produced the calculation history."
+        ),
+    )
+    source_headers: tuple[ObservedHeaderFact, ...] = Field(
+        default=(),
+        description=(
+            "Typed diseño header facts AEAT stated in the filed fichero -- the "
+            "tipo de declaración, the sin-actividad and REDEME markers -- each "
+            "carrying the export record position it was read from. Typed rather "
+            "than folded into source_metadata because that map is built from a "
+            "fixed key set, so anything not named there is dropped at "
+            "persistence, and because a flat string pair cannot carry the "
+            "record-design locator that makes a header fact auditable back to "
+            "the bytes. Nothing elects on these; they are evidence."
         ),
     )
 
@@ -385,6 +398,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         member_nif: str | None = None,
         stamped_revision_id: str | None = None,
         source_metadata: Mapping[str, str] | None = None,
+        source_headers: tuple[ObservedHeaderFact, ...] = (),
     ) -> None:
         """Persist ``observation`` keyed by its ``(modelo, filing_year, period)``.
 
@@ -408,6 +422,13 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         the AUDIT-class secure payload; live AEAT captures use it for register
         status, expediente identity, and authenticated taxpayer/member identity
         consumed by the cross-period clean-state proof.
+
+        ``source_headers`` carries the filed fichero's typed diseño header facts.
+        It is a SEPARATE parameter rather than more ``source_metadata`` keys
+        because that mapping is assembled from a fixed key set by its producer,
+        so a fact not named there never reaches storage -- which is exactly how
+        the header projection was landing at capture and vanishing before
+        persistence.
         """
         law_revision_id = _validate_observation_casilla_ids(observation)
         resolved_source_kind = ObservationSourceKind(source_kind)
@@ -419,6 +440,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
             member_nif=member_nif,
             stamped_revision_id=law_revision_id if stamped_revision_id is None else stamped_revision_id,
             source_metadata=dict(source_metadata or {}),
+            source_headers=source_headers,
         )
         self.save(payload)
 

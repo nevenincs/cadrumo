@@ -114,9 +114,10 @@ def _resolve_advisory_message_default(predicate_id: str) -> str | None:
         return (
             "Trabajo income is declared but no retención is credited on it. A retención the "
             "taxpayer suffered and does not credit is tax already paid and paid again. Enter it "
-            "from the payer's certificado de retenciones e ingresos a cuenta: the taxpayer never "
-            "filed the Modelo 111 that declares it, so no capture can fetch it. A zero is correct "
-            "only if the payer withheld nothing, which is lawful below the withholding thresholds."
+            "from the payer's certificado de retenciones e ingresos a cuenta. The taxpayer never "
+            "filed the Modelo 111 that declares it, so it cannot arrive from AEAT on this "
+            "taxpayer's behalf. A zero is correct only if the payer withheld nothing, which is "
+            "lawful below the withholding thresholds."
         )
     if predicate_id in {
         "modelo-100-2024-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013",

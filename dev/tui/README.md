@@ -19,7 +19,10 @@ uv run --no-sync python -m dev.tui undo
 ```
 
 Every command that changes the walk prints the resulting frame, so the loop is
-always "gesture, look".
+always "gesture, look". A mutating command replays before it writes: a
+gesture that raises (a bad selector, an unreachable surface) is refused and
+reported, and the journal on disk is left exactly as it was — it never
+records a gesture that did not actually work.
 
 | command | effect |
 | --- | --- |

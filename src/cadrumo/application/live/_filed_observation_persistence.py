@@ -170,6 +170,10 @@ def persist_filed_calculation_observation(
         source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
         captured_at=observation.presented_at,
         source_metadata=_filed_observation_source_metadata(observation, justificante_csvs=justificante_csvs),
+        # Passed separately from source_metadata, and that is the whole point:
+        # the metadata projection is built from a fixed key set, so a header
+        # fact routed through it would be dropped here exactly as it was before.
+        source_headers=observation.headers,
     )
     if observation.modelo == Modelo.M303:
         IvaCompensationHistoryRepository().save_period(

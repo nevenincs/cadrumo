@@ -66,14 +66,18 @@ _EXPECTED_KEY = {
     "censal-pull": "flows.manager.action.censal_pull_no_provider",
     "certificate": "flows.manager.action.abandoned",
     "export": "flows.manager.action.abandoned",
+    "filed-history-pull-all": "flows.manager.action.censal_pull_no_provider",
     "passphrase": "flows.manager.action.abandoned",
 }
 """What each action concludes on a freshly registered profile.
 
 The censal pull refuses before reading because nothing can authenticate
 yet; the two form doors are abandoned because the test closes their page.
-Stated per action rather than as a shape, so a door that silently stops
-reaching its own conclusion fails here.
+The filed-history sweep shares the censal pull's own refusal wording
+because it reuses that exact gate function rather than a second opinion
+on auth-readiness (see ``_censal_pull_unavailable()`` in
+``_manager_actions.py``). Stated per action rather than as a shape, so a
+door that silently stops reaching its own conclusion fails here.
 
 Held as catalogue KEYS and resolved beside the assertion, inside the
 profile context that produced the message: the page resolves its wording

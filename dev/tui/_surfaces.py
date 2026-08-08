@@ -28,6 +28,7 @@ you mean.
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import AbstractContextManager
 from dataclasses import dataclass
 
 from textual.app import App
@@ -48,6 +49,12 @@ class Surface:
 
     A profile that merely exists is not enough for these: they resolve the
     active bucket, so the harness must unlock one first."""
+    provision: Callable[[], AbstractContextManager[str]] | None = None
+    """Dedicated fixture provisioning, for a surface ``needs_profile`` alone
+    can't express -- a distinct storage root, extra profile facts, or a
+    persisted record beyond a bare profile. Entered instead of the shared
+    ``needs_profile``/``needs_session`` path; a surface sets one or the
+    other, never both."""
 
 
 def _setup(mode: FlowMode) -> Callable[[], App]:

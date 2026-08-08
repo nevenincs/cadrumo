@@ -193,7 +193,7 @@ class ConfirmedCounterpartyFacts(BaseModel):
 
     counterparty_key: str = Field(min_length=_COUNTERPARTY_KEY_LENGTH, max_length=_COUNTERPARTY_KEY_LENGTH)
     canonical_tax_identifier: str = Field(min_length=1)
-    territorial_scope: IvaTerritorialScope
+    territorial_scope: IvaTerritorialScope | None = None
     identification_state: EUMemberState | None = None
     source: ClassifierInputSource
     asserted_by: str = Field(min_length=1)
@@ -238,8 +238,8 @@ class ConfirmedCounterpartyFacts(BaseModel):
         cls,
         *,
         tax_identifier: str,
-        territorial_scope: IvaTerritorialScope,
         asserted_by: str,
+        territorial_scope: IvaTerritorialScope | None = None,
         identification_state: EUMemberState | None = None,
         country_code: str | None = None,
         note: str = "",
@@ -269,14 +269,42 @@ class ConfirmedCounterpartyFacts(BaseModel):
             note=note,
         )
 
+    @model_validator(mode="after")
+    def _answers_at_least_one_question(self) -> ConfirmedCounterpartyFacts:
+        """Refuse a record that confirms nothing.
+
+        Both axes are optional because they are independent -- an operator may
+        know which State VAT-identifies a counterparty without knowing where it
+        is established, and the reverse. Neither answered is not a narrower
+        assertion, it is an empty one, and an empty record is worse than no
+        record: it addresses a counterparty, occupies the key, and answers every
+        later question with silence that reads as a confirmed absence.
+        """
+        if self.territorial_scope is None and self.identification_state is None:
+            message = (
+                "a confirmed counterparty record must answer at least one of the "
+                "territorial scope or the identification state"
+            )
+            raise ValueError(message)
+        return self
+
     @property
-    def declared_fact(self) -> DeclaredFact[IvaTerritorialScope]:
-        """Return this fact in the form the criteria assembly consumes.
+    def declared_fact(self) -> DeclaredFact[IvaTerritorialScope] | None:
+        """Return this fact in the form the criteria assembly consumes, or ``None``.
 
         The value and its attribution travel together, so a classification
         standing on a remembered assertion records that an operator said so —
         not that a document did.
+
+        ``None`` when the operator answered the identification and left the
+        territory open. That is a question NOT ASKED, and it must reach the
+        assembly as a missing input rather than as any territory: the mainland is
+        the majority answer, so a default here would be invisible in testing
+        while placing Canarian and Ceutan counterparties inside a territory their
+        operations are not subject to.
         """
+        if self.territorial_scope is None:
+            return None
         return DeclaredFact[IvaTerritorialScope](value=self.territorial_scope, source=self.source)
 
     @property
@@ -387,8 +415,8 @@ def record_confirmed_counterparty_facts(
     *,
     bucket_id: str,
     tax_identifier: str,
-    territorial_scope: IvaTerritorialScope,
     asserted_by: str,
+    territorial_scope: IvaTerritorialScope | None = None,
     identification_state: EUMemberState | None = None,
     country_code: str | None = None,
     note: str = "",
@@ -451,7 +479,13 @@ def record_confirmed_counterparty_facts(
     repo = _repository(bucket_id=bucket_id, repository=repository)
     existing = repo.load(fact.counterparty_key)
     if existing is not None:
-        if existing.territorial_scope is not fact.territorial_scope:
+        # Compared only where BOTH answers exist. A stored territory the new
+        # assertion leaves open is not a disagreement -- it is a narrower
+        # assertion, and refusing it would make an operator answering the
+        # identification alone unable to do so for any counterparty already
+        # confirmed. An assertion that CHANGES a stored territory still refuses.
+        both_named = existing.territorial_scope is not None and fact.territorial_scope is not None
+        if both_named and existing.territorial_scope is not fact.territorial_scope:
             raise CounterpartyEstablishmentConflictError(
                 f"{existing.canonical_tax_identifier} is already confirmed as established in "
                 f"{existing.territorial_scope.value}, and this assertion says "
@@ -558,7 +592,11 @@ def resolve_confirmed_counterparty_facts(
     if stored is None:
         return ConfirmedCounterpartyResolution()
 
-    if evidenced_scope is not None and evidenced_scope is not stored.territorial_scope:
+    if (
+        evidenced_scope is not None
+        and stored.territorial_scope is not None
+        and evidenced_scope is not stored.territorial_scope
+    ):
         return ConfirmedCounterpartyResolution(
             contradiction=CounterpartyEstablishmentContradiction(
                 counterparty_key=stored.counterparty_key,

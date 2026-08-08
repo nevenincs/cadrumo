@@ -8,7 +8,7 @@ shared by the manager and parity tests.
 
 import json
 import re
-from collections.abc import Hashable, Iterator
+from collections.abc import Hashable
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
@@ -29,7 +29,6 @@ from ._write_guard import CatalogueWriteGuard, catalogue_write_guard
 type LocaleNode = str | dict[str, "LocaleNode"] | None
 
 _log = get_logger(__name__)
-_YAML_KEY_PATTERN = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
 _INTENTIONAL_IDENTICAL_FILENAME = "_intentional_identical.json"
 
 
@@ -434,19 +433,15 @@ class LocaleManager:
             raise LocaleError(f"Invalid locale key: {dotted_key!r}")
 
         with catalogue_write_guard(self.locales_dir) as guard:
+            # Both branches go through the parsed mapping. A line-oriented
+            # writer cannot address a key YAML quotes -- every casilla id is
+            # written ``'1076':`` -- so an append that scanned text refused any
+            # key under a quoted ancestor while this same call updated one that
+            # already existed. One authority, so the two cannot diverge again.
             data = _parse_locale(guard.read_text(locale_path))
             cursor = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
-            leaf_exists = parts[-1] in cursor
-
-            if leaf_exists:
-                # The mapping was strictly parsed and the leaf resolved above.
-                # Rewriting that mapping is safe across multiline scalars; a
-                # line-oriented replacement can mistake a scalar continuation for
-                # a nested YAML key and corrupt the catalogue.
-                cursor[parts[-1]] = value
-                _rewrite_locale_mapping(guard, locale_path, data)
-            else:
-                _append_yaml_leaf(guard, locale_path, parts, value)
+            cursor[parts[-1]] = value
+            _rewrite_locale_mapping(guard, locale_path, data)
         return locale_path
 
     def set_locale_values(self, locale: str, values: dict[str, str | None]) -> Path:
@@ -521,14 +516,24 @@ class LocaleManager:
         return allowlist_path
 
     def remove_locale_value(self, locale: str, dotted_key: str) -> Path:
-        """Remove one existing locale leaf while preserving the YAML layout."""
+        """Remove one existing locale leaf.
+
+        Resolved and deleted through the PARSED mapping, the same authority
+        the setters use. The previous implementation validated structurally and
+        then deleted by scanning YAML text, and the two disagreed on any key
+        YAML quotes: every casilla id is written ``'1076':``, so the scan never
+        matched it and the verb refused a leaf it had just resolved. There was
+        then no sanctioned way to return such a leaf to absent, because
+        hand-editing a catalogue is forbidden.
+        """
         locale_path = self._locale_path(locale)
         parts = dotted_key.split(".")
         if not dotted_key or any(not part for part in parts):
             raise LocaleError(f"Invalid locale key: {dotted_key!r}")
 
         with catalogue_write_guard(self.locales_dir) as guard:
-            cursor: LocaleNode = _parse_locale(guard.read_text(locale_path))
+            data = _parse_locale(guard.read_text(locale_path))
+            cursor: LocaleNode = data
             for part in parts:
                 if not isinstance(cursor, dict) or part not in cursor:
                     raise LocaleError(f"Locale key not found: {dotted_key!r}")
@@ -536,7 +541,10 @@ class LocaleManager:
             if isinstance(cursor, dict):
                 raise LocaleError(f"Cannot remove {dotted_key!r}: it resolves to a namespace")
 
-            _remove_existing_yaml_leaf(guard, locale_path, parts, allow_empty_leaf=cursor is None)
+            parent = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
+            del parent[parts[-1]]
+            _prune_empty_namespaces(data, parts[:-1])
+            _rewrite_locale_mapping(guard, locale_path, data)
         return locale_path
 
 
@@ -616,6 +624,28 @@ def _resolve_leaf(existing_data: dict[str, LocaleNode], parts: list[str]) -> Loc
     return _MISSING_LOCALE_LEAF if isinstance(curr, dict) else curr
 
 
+def _prune_empty_namespaces(root: dict[str, LocaleNode], parts: list[str]) -> None:
+    """Delete namespaces left empty by a removal, innermost first.
+
+    Walks the parsed mapping rather than the file's lines, so a namespace whose
+    key YAML quotes is pruned like any other. Stops at the first ancestor that
+    still holds something: an empty parent is a namespace nothing addresses,
+    while a populated one is still in use by its remaining children.
+    """
+    for depth in range(len(parts), 0, -1):
+        cursor: LocaleNode = root
+        for part in parts[: depth - 1]:
+            if not isinstance(cursor, dict):
+                return
+            cursor = cursor.get(part)
+        if not isinstance(cursor, dict):
+            return
+        child = cursor.get(parts[depth - 1])
+        if not isinstance(child, dict) or child:
+            return
+        del cursor[parts[depth - 1]]
+
+
 def _set_nested_leaf(root: dict[str, LocaleNode], dotted_key: str, value: LocaleNode) -> None:
     """Write ``value`` at ``dotted_key`` inside ``root``, creating sub-dicts as needed."""
     parts = dotted_key.split(".")
@@ -627,29 +657,6 @@ def _set_nested_leaf(root: dict[str, LocaleNode], dotted_key: str, value: Locale
         assert isinstance(child, dict)  # narrowed by the line above
         curr = child
     curr[parts[-1]] = value
-
-
-def _yaml_quoted_scalar(value: str) -> str:
-    """Render a scalar as a single-physical-line YAML quoted string.
-
-    Single-quoted style cannot carry a literal line break on one physical
-    line (the parser folds raw breaks into spaces), so values containing
-    control characters are rendered double-quoted with escape sequences.
-    Either form occupies exactly one line, which the line-based leaf
-    writers (:func:`_append_yaml_leaf`, :func:`_remove_existing_yaml_leaf`)
-    rely on.
-    """
-    if any(ch in value for ch in ("\n", "\r", "\t")):
-        escaped = (
-            value.replace("\\", "\\\\")
-            .replace('"', '\\"')
-            .replace("\n", "\\n")
-            .replace("\r", "\\r")
-            .replace("\t", "\\t")
-        )
-        return '"' + escaped + '"'
-    escaped = value.replace("'", "''")
-    return "'" + escaped + "'"
 
 
 def _resolve_leaf_parent(
@@ -690,69 +697,6 @@ def _normalise_product_identity_mapping(value: dict[str, LocaleNode]) -> dict[st
     return {key: _normalise_product_identity_node(child) for key, child in value.items()}
 
 
-def _yaml_leaf_end(lines: list[str], start: int, indent: int) -> int:
-    """Return the slice end for a scalar leaf and its indented continuation."""
-    end = start + 1
-    while end < len(lines):
-        match = _YAML_KEY_PATTERN.match(lines[end])
-        if match is not None and len(match.group("indent")) <= indent:
-            break
-        end += 1
-    return end
-
-
-def _iter_yaml_key_matches(lines: list[str]) -> Iterator[tuple[int, re.Match[str], int, str, str, list[str]]]:
-    """Yield YAML key lines with their active dotted path parts."""
-    stack: list[tuple[int, str]] = []
-
-    for index, line in enumerate(lines):
-        match = _YAML_KEY_PATTERN.match(line)
-        if match is None:
-            continue
-
-        indent = len(match.group("indent"))
-        key = match.group("key")
-        rest = match.group("rest")
-        while stack and stack[-1][0] >= indent:
-            stack.pop()
-
-        yield index, match, indent, key, rest, [item for _, item in stack] + [key]
-
-        if not rest.strip():
-            stack.append((indent, key))
-
-
-def _append_yaml_leaf(guard: CatalogueWriteGuard, path: Path, parts: list[str], value: str) -> None:
-    """Append a missing leaf below an existing mapping parent."""
-    if len(parts) < 2:
-        raise LocaleError(f"Cannot append top-level locale leaf: {'.'.join(parts)!r}")
-
-    parent_parts = parts[:-1]
-    leaf = parts[-1]
-    lines = guard.read_text(path).splitlines(keepends=True)
-
-    for index, _match, indent, _key, rest, current_parts in _iter_yaml_key_matches(lines):
-        if current_parts == parent_parts:
-            if rest.strip():
-                raise LocaleError(f"Cannot append {'.'.join(parts)!r}: parent resolves to a leaf")
-            insertion_index = _yaml_leaf_end(lines, index, indent)
-            newline = _preferred_newline(lines, index)
-            if insertion_index == len(lines) and lines and not lines[-1].endswith("\n"):
-                # The parent's last child is the file's final line, and that
-                # line carries no trailing newline. Inserting below it as-is
-                # would run the new leaf onto the same physical line as its
-                # predecessor, corrupting the YAML.
-                lines[-1] += newline
-            lines.insert(
-                insertion_index,
-                " " * (indent + 2) + leaf + ": " + _yaml_quoted_scalar(value) + newline,
-            )
-            guard.write_text(path, "".join(lines))
-            return
-
-    raise LocaleError(f"Locale parent key not found in YAML text: {'.'.join(parent_parts)!r}")
-
-
 def _rewrite_locale_mapping(guard: CatalogueWriteGuard, path: Path, data: dict[str, LocaleNode]) -> None:
     """Replace a locale mapping after strict parsing, through the write guard.
 
@@ -764,51 +708,6 @@ def _rewrite_locale_mapping(guard: CatalogueWriteGuard, path: Path, data: dict[s
     """
     serialised = yaml.dump(data, allow_unicode=True, sort_keys=True, default_flow_style=False)
     guard.write_text(path, serialised)
-
-
-def _remove_existing_yaml_leaf(
-    guard: CatalogueWriteGuard,
-    path: Path,
-    parts: list[str],
-    *,
-    allow_empty_leaf: bool = False,
-) -> None:
-    """Remove a single existing leaf line without rebuilding the whole YAML file."""
-    lines = guard.read_text(path).splitlines(keepends=True)
-
-    for index, _match, indent, _key, rest, current_parts in _iter_yaml_key_matches(lines):
-        if current_parts == parts:
-            if not rest.strip() and not allow_empty_leaf:
-                raise LocaleError(f"Cannot remove {'.'.join(parts)!r}: it resolves to a namespace")
-            del lines[index : _yaml_leaf_end(lines, index, indent)]
-            _prune_empty_yaml_namespaces(lines, parts[:-1])
-            guard.write_text(path, "".join(lines))
-            return
-
-    raise LocaleError(f"Locale key not found in YAML text: {'.'.join(parts)!r}")
-
-
-def _prune_empty_yaml_namespaces(lines: list[str], parts: list[str]) -> None:
-    """Delete now-empty namespace rows after removing a locale leaf."""
-    for depth in range(len(parts), 0, -1):
-        current_path = parts[:depth]
-        for index, _match, indent, _key, rest, current_parts in _iter_yaml_key_matches(lines):
-            if current_parts != current_path:
-                continue
-            if rest.strip():
-                break
-            if _yaml_leaf_end(lines, index, indent) == index + 1:
-                del lines[index : index + 1]
-            break
-
-
-def _preferred_newline(lines: list[str], fallback_index: int) -> str:
-    """Return the newline style used near ``fallback_index``."""
-    if lines:
-        sample = lines[min(fallback_index, len(lines) - 1)]
-        if sample.endswith("\r\n"):
-            return "\r\n"
-    return "\n"
 
 
 def _flatten_leaf_values(mapping: dict[str, LocaleNode], prefix: str = "") -> dict[str, str | None]:

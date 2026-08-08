@@ -27,15 +27,15 @@ from decimal import Decimal
 import pytest
 
 from ....core.resources import resources
-from ....domain.calculations.registry import CasillaId
+from ....domain.calculations.registry import validated_casilla_id
 from ....domain.deadlines import EntityType, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from .._verification_predicates import _evaluate_predicate_expression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PREDICATE_ID = "modelo-100-2024-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"
-_GROSS_TRABAJO_INCOME = CasillaId("0012")
-_RETENCION_TRABAJO = CasillaId("0596")
+_GROSS_TRABAJO_INCOME = validated_casilla_id("0012", surface="trabajo-retencion-advisory")
+_RETENCION_TRABAJO = validated_casilla_id("0596", surface="trabajo-retencion-advisory")
 
 
 def _profile() -> TaxpayerProfile:

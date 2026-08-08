@@ -66,29 +66,54 @@ if TYPE_CHECKING:
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_DELETED_CLOUD_SYMBOLS = (
-    # The transport and its provider builders.
-    "SubprocessLLMClassifier",
-    "build_claude_classifier",
-    "build_antigravity_classifier",
-    "build_codex_classifier",
-    "_PROVIDER_BUILDERS",
-    "resolve_classifier",
-    "resolve_split_proposer",
-    # The provider axis: its enum, its PATH probes, its availability records.
-    "SubprocessProvider",
-    "available_llm_providers",
-    "is_llm_provider_available",
-    "LLMProviderAvailability",
-    "probe_subprocess_providers",
-    # The operator-facing surfaces of the DELETED transport. Still deleted, and
-    # the reason changed: a CLI surface does now ask the operator for a consent
-    # token, but it asks through `--off-host-provider` and
-    # `--acknowledge-off-host`. These two names belonged to the subprocess
+_DELETED_CLOUD_SYMBOL_FAMILIES: dict[str, tuple[str, ...]] = {
+    "transport and provider builders": (
+        "SubprocessLLMClassifier",
+        "build_claude_classifier",
+        "build_antigravity_classifier",
+        "build_codex_classifier",
+        "_PROVIDER_BUILDERS",
+        "resolve_classifier",
+        "resolve_split_proposer",
+    ),
+    "provider axis: its enum, its PATH probes, its availability records": (
+        "SubprocessProvider",
+        "available_llm_providers",
+        "is_llm_provider_available",
+        "LLMProviderAvailability",
+        "probe_subprocess_providers",
+    ),
+    # Still deleted, and the reason changed: a CLI surface does now ask the
+    # operator for a consent token, but it asks through `--off-host-provider`
+    # and `--acknowledge-off-host`. These two names belonged to the subprocess
     # family and are not the reinstated spelling of anything.
-    "evidence_acknowledged",
-    "evidence-acknowledged",
+    "operator-facing surfaces of the deleted transport": (
+        "evidence_acknowledged",
+        "evidence-acknowledged",
+    ),
+}
+"""The deleted symbol set, grouped by the family each name belonged to.
+
+Grouped rather than flat because the non-vacuity floor below asserts a PROPERTY
+of this declaration -- that no family was silently gutted -- and a flat tuple can
+only be measured by its length. A length floor encodes the moment it was
+written: it is satisfied by twelve names from one family after the other two are
+deleted, and the first person to trip it is trained to raise the constant.
+"""
+
+_DELETED_CLOUD_SYMBOLS: tuple[str, ...] = tuple(
+    symbol for family in _DELETED_CLOUD_SYMBOL_FAMILIES.values() for symbol in family
 )
+
+_SCANNER_CONTROL_SYMBOL = "build_provenance_stamp"
+"""A symbol that IS present in production, swept by the same machinery.
+
+The sweep below reports clean when it finds nothing, and finding nothing is also
+exactly what a broken scanner reports: an empty file list, a changed helper, a
+read that silently yields no text. The MCP control proves the DELETION was
+scoped by meaning rather than by string; it says nothing about whether the
+scanner ran. This symbol is the control for the instrument itself.
+"""
 
 
 def _verify_settings_field(symbol: str) -> None:
@@ -167,22 +192,32 @@ if _ORPHANED_CONSENT_VERIFIERS:  # pragma: no cover - the failure is the collect
 _NEIGHBOURING_TRANSPORTS_THAT_MUST_SURVIVE = (SRC_CADRUMO / "entrypoints" / "mcp" / "_call_runtime.py",)
 
 
-def test_no_deleted_cloud_symbol_survives_in_production() -> None:
-    """Every symbol in the declared set is absent from production source.
+def _production_sites_naming(symbols: tuple[str, ...]) -> dict[str, list[str]]:
+    """Return, per symbol, every production file naming it.
+
+    Factored out so the sweep and its scanner control run the SAME machinery
+    over the SAME file set. A control that re-implements the walk proves its own
+    copy works and says nothing about the one that reports clean.
 
     Scans the whole non-test package rather than a chosen subtree, because a
     dormant reference is most dangerous exactly where nobody thought to look.
     Test modules are excluded deliberately: a test may legitimately name a
     deleted symbol to assert its absence, as this one does.
     """
-    offenders: dict[str, list[str]] = {}
+    sites: dict[str, list[str]] = {}
     for path in non_test_package_python_files(include_data=True):
         if path.name == "test_cloud_transport_fully_deleted.py":
             continue
         text = path.read_text(encoding="utf-8")
-        for symbol in _DELETED_CLOUD_SYMBOLS:
+        for symbol in symbols:
             if symbol in text:
-                offenders.setdefault(symbol, []).append(repo_relative(path))
+                sites.setdefault(symbol, []).append(repo_relative(path))
+    return sites
+
+
+def test_no_deleted_cloud_symbol_survives_in_production() -> None:
+    """Every symbol in the declared set is absent from production source."""
+    offenders = _production_sites_naming(_DELETED_CLOUD_SYMBOLS)
 
     assert offenders == {}, (
         "the cloud transport must be GONE, not dormant. These deleted symbols still appear in "
@@ -212,16 +247,58 @@ def test_the_neighbouring_mcp_subprocess_transport_survived_the_deletion() -> No
         )
 
 
-def test_the_declared_symbol_set_is_not_silently_emptied() -> None:
-    """The pattern itself must stay substantive.
+def test_the_scanner_finds_a_symbol_that_is_actually_present() -> None:
+    """The sweep's clean result must mean the tree is clean, not that nothing ran.
 
-    Guards the failure mode the module docstring names: a future edit that
-    empties or guts the symbol tuple would make the sweep pass over nothing
-    while looking exactly like a green run.
+    This is the non-vacuity floor, re-based onto a property. The shape it
+    replaces was ``len(_DELETED_CLOUD_SYMBOLS) >= 12``, which is a tally: it
+    encodes the moment it was written, it is satisfied by twelve names drawn
+    from one family after the other two are deleted, and the first person to
+    trip it is trained to raise the constant rather than to ask what it was
+    protecting. It also measured the wrong thing entirely -- a full symbol tuple
+    scanned over an empty file list still reports clean.
+
+    Driven through the same helper the sweep uses, over the same file set. A
+    control with its own copy of the walk proves that copy works.
     """
-    assert len(_DELETED_CLOUD_SYMBOLS) >= 12
-    assert "SubprocessLLMClassifier" in _DELETED_CLOUD_SYMBOLS
-    assert "CLOUD_EVIDENCE_UPLOAD" in _REINSTATED_CONSENT_SYMBOLS
+    found = _production_sites_naming((_SCANNER_CONTROL_SYMBOL,))
+
+    assert _SCANNER_CONTROL_SYMBOL in found, (
+        f"the scanner did not find {_SCANNER_CONTROL_SYMBOL!r}, which IS present in production. The "
+        "sweep's clean result is therefore evidence about the scanner and not about the tree: the "
+        "file walk, the read, or the match has stopped working."
+    )
+
+
+def test_no_declared_family_is_silently_gutted() -> None:
+    """Every declared deletion family still contributes names to the sweep.
+
+    The property the tally was reaching for, stated directly: what must not
+    happen is a family quietly emptied while the set still looks substantial.
+    Asserted per family, so deleting the provider-axis names reds even though
+    the remaining two families would satisfy any plausible length floor.
+
+    The reinstated set gets a non-emptiness assertion of its own because its two
+    totality checks pass VACUOUSLY when the declared set and its verifier
+    mapping are emptied together -- each only asserts the two agree.
+    """
+    empty = sorted(family for family, symbols in _DELETED_CLOUD_SYMBOL_FAMILIES.items() if not symbols)
+    assert empty == [], (
+        f"these deletion families declare no symbols: {empty}. An emptied family makes the sweep pass "
+        "over that family's names while the declaration still reads like a decision."
+    )
+    assert _DELETED_CLOUD_SYMBOL_FAMILIES, "every deletion family is gone; the sweep scans for nothing"
+
+    duplicated = sorted({symbol for symbol in _DELETED_CLOUD_SYMBOLS if _DELETED_CLOUD_SYMBOLS.count(symbol) > 1})
+    assert duplicated == [], (
+        f"these symbols are declared in more than one family: {duplicated}. A name in two families "
+        "makes a family look populated while its own membership is borrowed."
+    )
+
+    assert _REINSTATED_CONSENT_SYMBOLS, (
+        "the reinstated consent set is empty, so both totality checks above pass over nothing and no "
+        "consent symbol is asserted present or wired at the choke point"
+    )
 
 
 def test_the_reinstated_consent_apparatus_exists_and_is_wired_at_the_choke_point() -> None:

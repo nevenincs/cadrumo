@@ -27,15 +27,20 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 from textual.containers import ScrollableContainer
-from textual.widgets import Button, Input
+from textual.widgets import Button, DataTable, Input
 
 from .....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
+from .....application.user_profile import ProfileRepository, build_profile_overview, register_profile_with_credentials
+from .....core import require_active_bucket_id
 from .....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
+from .....tests.manager_pilot import wait_until_settled
+from .....tests.secure_sql import isolated_profile_storage_root
 from .. import (
     FlowTuiApp,
     FormApp,
     FormField,
     FormPage,
+    FormScreen,
     LoginApp,
     ProfileManagerApp,
     RegistrationApp,
@@ -471,13 +476,12 @@ async def test_a_masked_field_never_paints_its_secret(build, tmp_path: Path) -> 
     masked field on any FUTURE surface is covered on arrival rather than
     needing its own name added here.
 
-    Still cannot see a secret collected inside a MODAL the base screen
-    pushes only on a button press (the manager's certificate and passphrase
+    Cannot see a secret collected inside a MODAL the base screen pushes only
+    on a button press (the manager's certificate, passphrase and export
     forms) -- this renders the surface as built, once, and does not drive
-    navigation into a nested screen. That is a real boundary of what a
-    static per-surface render can prove, stated rather than silently
-    assumed: a modal FormScreen's own masked fields are exercised by
-    driving the specific action that opens it, not by this generic sweep.
+    navigation into a nested screen. That boundary is closed separately by
+    ``test_a_modal_secret_never_paints_its_value`` below, which drives every
+    manager action that opens one.
 
     Asserting ``password=True`` on the widget proves the flag, not the
     output. This reads the exported render and requires the secret to be
@@ -497,6 +501,119 @@ async def test_a_masked_field_never_paints_its_secret(build, tmp_path: Path) -> 
             ]
             assert not leaked, f"masked field(s) painted their secret in clear: {leaked}"
             app.exit(None)
+
+
+def _open_form(app: ProfileManagerApp) -> FormScreen | None:
+    """The topmost pushed :class:`FormScreen`, or ``None`` if none is open.
+
+    Duplicated from ``test_manager_action_seam.py`` rather than imported:
+    that module is a sibling test file, not a shared fixture home, and this
+    is the smallest of its handful of pilot-driving helpers.
+    """
+    return next((screen for screen in reversed(app.screen_stack) if isinstance(screen, FormScreen)), None)
+
+
+async def _wait_for_form(pilot, app: ProfileManagerApp) -> FormScreen | None:
+    """Wait for a pressed action to either open a page or conclude without one.
+
+    A race between two endings, not a settle-wait: an action mid-form is
+    blocked on its worker thread waiting for THIS test's own dismissal, so
+    waiting for quiescence here would deadlock against the very answer only
+    the pilot can give.
+    """
+    for _ in range(80):
+        await pilot.pause()
+        form = _open_form(app)
+        if form is not None:
+            return form
+        if app._pending_action is None:
+            return None
+    return _open_form(app)
+
+
+@pytest.mark.asyncio
+async def test_a_modal_secret_never_paints_its_value(tmp_path: Path) -> None:
+    """No form a manager action opens may paint a ``secret`` field's value.
+
+    Closes the boundary the surface-level sweep above states rather than
+    silently assumes. Expressed as a property over EVERY shipped manager
+    action and EVERY field its own ``FormPage`` declares ``secret=True`` --
+    never as a check against the two dialogs (export, passphrase) known to
+    carry one today, so a future action introducing its own secret field is
+    covered on arrival rather than needing its own name added here.
+
+    Checked two ways at once, because the second is the one that matters:
+    ``#edit-input`` is the small per-row dialog, already proven masked by
+    the surface-level sweep once a form is open on it, but a committed
+    value is not painted there -- it is painted in the FORM'S OWN SUMMARY
+    TABLE, which ``FormScreen._render_rows`` fills from
+    ``self._values.get(form_field.key, "")`` unconditionally, with no read
+    of ``form_field.secret`` at all. That is read directly off the table
+    cell rather than sniffed out of the exported screenshot: a screenshot
+    substring match is exactly as reliable as the column happens to be wide
+    relative to the sentinel, proven by hand against this very cell before
+    writing this assertion -- a longer sentinel came back truncated to 5
+    characters in the rendered SVG while the cell's own stored value still
+    held all 18, which would have been a false-negative width accident
+    dressed up as a passing gate. Reading ``table.get_cell`` is not subject
+    to viewport width at all.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label=_VISUAL_LABEL, passphrase=_VISUAL_PASSWORD)
+        aggregate = ProfileRepository().load(require_active_bucket_id())
+        from .....entrypoints.cli._config._manager_actions import manager_actions
+        from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
+
+        app = ProfileManagerApp(
+            build_profile_overview(aggregate.record, label=_VISUAL_LABEL),
+            persist=lambda path, value: persist_active_profile_field(path, value, label=_VISUAL_LABEL),
+            actions=manager_actions(),
+        )
+        secret_checks_run = 0
+        async with app.run_test(size=(160, 60)) as pilot:
+            await pilot.pause()
+            for action in manager_actions():
+                await pilot.click(f"#action-{action.key}")
+                form = await _wait_for_form(pilot, app)
+                if form is None:
+                    # No modal opened -- a refusal (censal-pull with no
+                    # provider configured) or an action with nothing to
+                    # collect. Nothing to check, and correctly so: this
+                    # loop must not require every action to open a form,
+                    # only that the ones that do are checked.
+                    continue
+                secret_fields = [field for field in form._page.fields if field.secret]
+                table = form.query_one("#form-table", DataTable)
+                for field in secret_fields:
+                    secret_checks_run += 1
+                    sentinel = f"LEAK-{action.key}-{field.key}"
+                    table.move_cursor(row=[str(row.value) for row in table.rows].index(field.key))
+                    table.action_select_cursor()
+                    await pilot.pause()
+                    edit_input = app.screen.query_one("#edit-input", Input)
+                    assert edit_input.password, (
+                        f"{action.key}.{field.key} is declared secret but its own edit dialog does not mask it"
+                    )
+                    edit_input.value = sentinel
+                    await pilot.click("#btn-edit-save")
+                    await pilot.pause()
+                    # The property under test: read the SUMMARY TABLE's own
+                    # cell, not the edit dialog that already closed and not
+                    # a screenshot substring search (see the docstring's
+                    # width-truncation proof for why the latter is unsound).
+                    cell = table.get_cell(field.key, list(table.columns)[1])
+                    rendered_cell = str(cell)
+                    assert sentinel not in rendered_cell, (
+                        f"{action.key}.{field.key} is declared secret but its committed value is painted in "
+                        f"clear in the form's own summary table: {rendered_cell!r}"
+                    )
+                await pilot.click("#btn-form-cancel")
+                await wait_until_settled(app, pilot)
+            app.exit(None)
+        assert secret_checks_run >= 2, (
+            "the fixture must exercise at least the export and passphrase dialogs' secret fields, or this test "
+            "proves nothing -- got 0 or 1, which means a shipped action lost its secret field or its own gate"
+        )
 
 
 @pytest.mark.asyncio
