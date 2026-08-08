@@ -117,7 +117,10 @@ _Q1_2024_INPUTS: dict[CasillaId, Decimal] = {
     _M131_DEDUCCION_CASILLA: Decimal("0"),  # deducción por discapacidad / familia numerosa
     _M131_RESULTADO_EJERCICIOS_ANTERIORES_CASILLA: Decimal("0"),  # resultado ejercicios anteriores
 }
-_Q1_2024_CARRY_BINDING = {_CARRY_BINDING: Decimal("0")}  # Q1 has no prior quarter
+_Q1_2024_CARRY_BINDING = {
+    _CARRY_BINDING: Decimal("0"),  # Q1 has no prior quarter
+    "modelo-131-volumen-ingresos-agrario": Decimal("0"),
+}
 
 _EXPECTED_Q1_2024_SALDO = Decimal("200.00")
 
@@ -139,7 +142,10 @@ _Q1_2025_INPUTS: dict[CasillaId, Decimal] = {
     _M131_DEDUCCION_CASILLA: Decimal("0"),
     _M131_RESULTADO_EJERCICIOS_ANTERIORES_CASILLA: Decimal("0"),
 }
-_Q1_2025_CARRY_BINDING = {_CARRY_BINDING_2025: Decimal("0")}  # Q1 has no prior quarter
+_Q1_2025_CARRY_BINDING = {
+    _CARRY_BINDING_2025: Decimal("0"),  # Q1 has no prior quarter
+    "modelo-131-volumen-ingresos-agrario": Decimal("0"),
+}
 
 
 def _calculate_131(

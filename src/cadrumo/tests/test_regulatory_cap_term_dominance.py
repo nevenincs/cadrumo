@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import ast
 from collections.abc import Callable, Mapping
+from contextlib import contextmanager
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -74,6 +75,18 @@ from ..domain.renta import (
 from ._inventory import aeat_relative, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@contextmanager
+def _replacing(target: object, name: str, value: object):
+    """Replace ``target.name`` for the scope, restoring the original on exit."""
+    original = getattr(target, name)
+    setattr(target, name, value)
+    try:
+        yield
+    finally:
+        setattr(target, name, original)
+
 
 _SiteKey = tuple[str, str]
 
@@ -173,18 +186,18 @@ def _witness_guarderia_prorated_cap() -> tuple[object, object]:
     return total(Decimal("1000")), total(Decimal("400"))
 
 
-def _witness_maternidad_anual_cap(monkeypatch: pytest.MonkeyPatch) -> tuple[object, object]:
+def _witness_maternidad_anual_cap() -> tuple[object, object]:
     """Twelve months of deducción, which the annual cap is there to bound."""
     from ..domain.contribuyente import _deduccion_maternidad as module
 
     def total(cap: int) -> int:
-        monkeypatch.setattr(module, "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR", cap)
-        return compute_deduccion_maternidad_0611([("hijo-1", 12)], filing_year=2024)
+        with _replacing(module, "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR", cap):
+            return compute_deduccion_maternidad_0611([("hijo-1", 12)], filing_year=2024)
 
     return total(1_200), total(300)
 
 
-def _witness_art_7p_exemption_cap(monkeypatch: pytest.MonkeyPatch) -> tuple[object, object]:
+def _witness_art_7p_exemption_cap() -> tuple[object, object]:
     """A salary whose pro-rata exceeds the Art. 7.p) ceiling."""
     from ..domain.renta import _maritime_exemption as module
 
@@ -195,12 +208,12 @@ def _witness_art_7p_exemption_cap(monkeypatch: pytest.MonkeyPatch) -> tuple[obje
     )
 
     def exempt(cap: Decimal) -> Decimal:
-        monkeypatch.setattr(module, "ART_7P_EXEMPTION_CAP_EUR", cap)
-        observation = calculate_art_7p_exemption(
-            annual_salary=Decimal("200000"),
-            qualifying_days=365,
-            facts=facts,
-        )
+        with _replacing(module, "ART_7P_EXEMPTION_CAP_EUR", cap):
+            observation = calculate_art_7p_exemption(
+                annual_salary=Decimal("200000"),
+                qualifying_days=365,
+                facts=facts,
+            )
         assert observation.value is not None
         return observation.value
 
@@ -339,6 +352,11 @@ _NON_REGULATORY_EXEMPTIONS: Mapping[_SiteKey, str] = {
         "Authentication backoff bounds (exponent and wait ceiling). A security control "
         "on retry rate with no regulatory figure behind it."
     ),
+    ("llm/_client.py", "backoff_for"): (
+        "Exponential retry-backoff delay clamped to a maximum wait between LLM transport "
+        "attempts. A transport-engineering ceiling with no regulatory figure behind it, "
+        "the same shape as the auth-throttle wait ceiling above."
+    ),
     ("application/flows/_engine.py", "set_instance_count"): (
         "Repeating-section instance count clamped to the flow's declared maximum — a "
         "form-authoring bound, not a tax cap."
@@ -404,7 +422,7 @@ def test_no_enrolment_outlives_its_site() -> None:
     sorted(_REGULATORY_CAP_WITNESSES),
     ids=lambda site: f"{site[0]}::{site[1]}",
 )
-def test_each_regulatory_cap_is_a_term_that_binds(site: _SiteKey, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_each_regulatory_cap_is_a_term_that_binds(site: _SiteKey) -> None:
     """Varying the cap must change the result, or the cap is not the binding term.
 
     This is the behavioural half. Enrolment alone would be bookkeeping: it would record
@@ -413,10 +431,7 @@ def test_each_regulatory_cap_is_a_term_that_binds(site: _SiteKey, monkeypatch: p
     precisely the shape that let a substituted fixture read as cap coverage.
     """
     witness = _REGULATORY_CAP_WITNESSES[site]
-    try:
-        wide, narrow = witness(monkeypatch)
-    except TypeError:
-        wide, narrow = witness()
+    wide, narrow = witness()
 
     assert wide != narrow, (
         f"{site[0]}::{site[1]}: the cap is not the binding term for this witness — "

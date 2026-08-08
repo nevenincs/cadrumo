@@ -362,7 +362,10 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
     InvoiceFieldContract(
         field_name="grand_total",
         form=InvoiceFieldForm.MONETARY_AMOUNT,
-        concept="the total payable amount",
+        concept=(
+            "the total payable amount exactly as printed on the document, copied even when it does "
+            "not equal the sum of the base and the tax; never recompute it and never correct it"
+        ),
         form_instruction="digits only, keeping the printed decimal separator; no currency sign",
     ),
     InvoiceFieldContract(

@@ -10,8 +10,7 @@ Every case here drives :func:`~application.ledger.ground_draft_against_transcrip
 the entry point the reading router actually calls, rather than the leaf alone.
 That is deliberate: a leaf asserted in isolation proves the function computes
 something, never that the value reaches the draft the operator reviews, and
-computed evidence nothing consumes is the failure this campaign keeps returning
-to.
+computed evidence nothing consumes is a recurring failure shape in this codebase.
 
 The pages are hand-built rather than drawn from the corpus because the property
 under test is the PARTITION, and a fixture is only useful here if the two party

@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 from datetime import timedelta
+from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -137,7 +138,12 @@ class LLMCache:
         return entry.response.model_copy(
             update={
                 "cache_hit": True,
-                "cost_estimate_usd": entry.response.cost_estimate_usd * 0,
+                # A cache hit costs nothing to serve, so a PRICED response
+                # becomes free. An UNPRICED one stays unpriced: multiplying by
+                # zero would turn "we cannot price this model" into "this was
+                # free", which is the confusion this field exists to prevent --
+                # and it would raise on None besides.
+                "cost_estimate_usd": None if entry.response.cost_estimate_usd is None else Decimal("0"),
             },
         )
 

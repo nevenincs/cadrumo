@@ -24,6 +24,7 @@ See Also:
 from __future__ import annotations
 
 import json
+import re
 import threading
 from collections.abc import Iterator
 from http import HTTPStatus
@@ -87,7 +88,7 @@ _RECARGO_INVOICE_LINES = (
 # stub and the mismatch assertion would be testing the fixture.
 
 
-class _ReaderStub(BaseHTTPRequestHandler):
+class _LoopbackRequestHandler(BaseHTTPRequestHandler):
     """A real local endpoint speaking the reading runtime's ``/api/chat`` shape."""
 
     def do_POST(self) -> None:
@@ -116,6 +117,7 @@ class _ReaderStub(BaseHTTPRequestHandler):
 _COHERENT_FIELDS = {
     "supplier_tax_id": _SUPPLIER_CIF,
     "supplier_tax_id_anchor": _SUPPLIER_CIF,
+    "supplier_tax_id_role_evidence": "Factura de Acme Suministros SL",
     "invoice_number": "2026-0142",
     "invoice_number_anchor": "2026-0142",
     "invoice_date": "2026-03-10",
@@ -144,7 +146,7 @@ _RECARGO_FIELDS = {
 @pytest.fixture(autouse=True)
 def _loopback_reader() -> Iterator[None]:
     """Serve a real reading endpoint on a loopback port for the duration of a test."""
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _ReaderStub)
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _LoopbackRequestHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     chat_url = f"http://127.0.0.1:{server.server_port}/api/chat"
@@ -185,16 +187,38 @@ def _add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str) -> s
     return json.loads(added.output)["result"]["evidence_id"]
 
 
+_UNRESOLVED_BLOCKER_ID = re.compile(r"Unresolved: ([0-9a-f]+) \(closure_discrepancy\)")
+
+
 def _confirm(evidence_id: str) -> dict[str, Any]:
-    confirmed = _invoke(
-        [
-            "--format", "json", "app", "ledger", "evidence", "confirm",
-            "--country-code", "ES",
-            "--evidence-id", evidence_id,
-            "--kind", "received",
-            "--counterparty-name", "Acme Suministros SL",
-        ],
-    )  # fmt: skip
+    """Confirm, attesting past the closure-discrepancy blocker the recargo case raises.
+
+    The printed-total mismatch this module tests is exactly the amount the
+    text-extraction contract cannot represent (recargo de equivalencia has no
+    field there), so the arithmetic-closure gate now blocks confirm on it as
+    well as the advisory notice this module was written to check. The blocker
+    is answered with an attestation naming the same gap the notice reports,
+    rather than widened away -- the coherent case raises no such blocker and
+    takes the same call unchanged.
+    """
+    args = [
+        "--format", "json", "app", "ledger", "evidence", "confirm",
+        "--country-code", "ES",
+        "--evidence-id", evidence_id,
+        "--kind", "received",
+        "--counterparty-name", "Acme Suministros SL",
+    ]  # fmt: skip
+    confirmed = _invoke(args)
+    if confirmed.exit_code != 0:
+        blocker_id = _UNRESOLVED_BLOCKER_ID.search(confirmed.output)
+        assert blocker_id, confirmed.output
+        confirmed = _invoke(
+            [
+                *args,
+                "--resolve",
+                f"{blocker_id.group(1)}=attest:recargo de equivalencia is not a text-extraction field",
+            ],
+        )
     assert confirmed.exit_code == 0, confirmed.output
     return json.loads(confirmed.output)
 

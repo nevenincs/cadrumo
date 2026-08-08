@@ -155,12 +155,13 @@ class LlmUsageProviderPayload(OutputSchema):
     provider: str = Field(min_length=1)
     calls: int = Field(ge=0)
     cache_hits: int = Field(ge=0)
+    unpriced_calls: int = Field(default=0, ge=0)
     input_tokens: int = Field(ge=0)
     output_tokens: int = Field(ge=0)
     total_tokens: int = Field(ge=0)
     # The canonical LlmUsageProviderMetrics declares this a plain Decimal with
     # no bound, so the transport asserts the decimal grammar only.
-    cost_estimate_usd: DecimalWireText
+    cost_estimate_usd: DecimalWireText | None
 
 
 class LlmConfidenceProviderPayload(OutputSchema):
@@ -208,7 +209,8 @@ class LedgerLlmDiagnosticsResult(OutputSchema):
     total_cache_hits: int = Field(ge=0)
     total_input_tokens: int = Field(ge=0)
     total_output_tokens: int = Field(ge=0)
-    total_cost_estimate_usd: DecimalWireText
+    total_cost_estimate_usd: DecimalWireText | None
+    total_unpriced_calls: int = Field(default=0, ge=0)
     confidence_providers: list[LlmConfidenceProviderPayload]
     total_classified: int = Field(ge=0)
     total_low_confidence: int = Field(ge=0)

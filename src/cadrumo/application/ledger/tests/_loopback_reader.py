@@ -47,7 +47,7 @@ __all__ = ["ReaderReply", "serving_a_loopback_reader"]
 ReaderReply = tuple[str, Mapping[str, str]]
 
 
-class _ReaderStub(BaseHTTPRequestHandler):
+class _LoopbackRequestHandler(BaseHTTPRequestHandler):
     """A real local endpoint speaking the reading runtime's ``/api/chat`` shape."""
 
     replies: ClassVar[Sequence[ReaderReply]] = ()
@@ -101,9 +101,9 @@ def serving_a_loopback_reader(
     Yields:
         The chat URL, with settings already pointed at it.
     """
-    _ReaderStub.replies = tuple(replies)
-    _ReaderStub.fallback = dict(fallback or {})
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _ReaderStub)
+    _LoopbackRequestHandler.replies = tuple(replies)
+    _LoopbackRequestHandler.fallback = dict(fallback or {})
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _LoopbackRequestHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     chat_url = f"http://127.0.0.1:{server.server_port}/api/chat"

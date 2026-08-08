@@ -27,6 +27,8 @@ import typer
 from .._common import _format_of
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ....adapters.inbound.tui import (
         StatusAuthView,
         StatusFactRow,
@@ -80,7 +82,7 @@ def build_status_page_data() -> StatusPageData:
         active_profile_label=active_label,
         facts=_build_fact_rows(_read_active_record(state)),
         profiles=_build_profile_rows(active_uuid),
-        auth=_build_auth_view(state),
+        auth=_build_auth_view(state, active_uuid=active_uuid),
         recovery=_build_recovery_view(),
         notices=_build_notices(active_uuid),
     )
@@ -164,19 +166,51 @@ def _build_profile_rows(active_uuid: str | None) -> tuple[StatusProfileRow, ...]
     )
 
 
-def _build_auth_view(state: WorkflowState | None) -> StatusAuthView:
-    """Project the workflow auth state, degrading to an empty view when absent."""
+def _build_auth_view(state: WorkflowState | None, *, active_uuid: str | None) -> StatusAuthView:
+    """Project the workflow auth state, degrading to an empty view when absent.
+
+    ``idle_deadline`` / ``absolute_deadline`` come from a second, unrelated
+    authority: the process's live :class:`~cadrumo.adapters.persistence.storage.BucketSession`
+    for the active bucket — the profile-unlock session ``aeat config
+    login`` opened — never the AEAT auth state above. Read only when that
+    live session actually serves ``active_uuid``, so a status query run
+    against one profile can never report another profile's session
+    lifetime.
+    """
     from ....adapters.inbound.tui import StatusAuthView
 
+    idle_deadline, absolute_deadline = _active_profile_session_deadlines(active_uuid)
     if state is None:
-        return StatusAuthView()
+        return StatusAuthView(idle_deadline=idle_deadline, absolute_deadline=absolute_deadline)
     auth = state.auth
     return StatusAuthView(
         provider=auth.provider,
         login_ready=auth.authenticated_at is not None,
         subject=auth.subject,
         certificate_source=auth.active_certificate_source,
+        idle_deadline=idle_deadline,
+        absolute_deadline=absolute_deadline,
     )
+
+
+def _active_profile_session_deadlines(active_uuid: str | None) -> tuple[datetime | None, datetime | None]:
+    """Return the live profile session's idle and absolute deadlines, or ``(None, None)``.
+
+    Reads the in-process :class:`~cadrumo.adapters.persistence.storage.BucketSession`
+    directly rather than resolving a session: this is a read-only status
+    projection and must never mint, resume, or persist anything. A session
+    that does not exist, or belongs to a different bucket, is exactly the
+    "not currently unlocked" state this page needs to render as absence,
+    never as a traceback.
+    """
+    from ....adapters.persistence.storage import active_bucket_session_serves, current_active_bucket_session
+
+    if active_uuid is None or not active_bucket_session_serves(active_uuid):
+        return None, None
+    session = current_active_bucket_session()
+    if session is None:
+        return None, None
+    return session.idle_deadline, session.absolute_deadline
 
 
 def _build_recovery_view() -> StatusRecoveryView:

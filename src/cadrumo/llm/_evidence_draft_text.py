@@ -62,6 +62,7 @@ See Also:
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Collection
 
 from ..application.ledger import (
     DocumentTranscription,
@@ -109,6 +110,7 @@ def build_text_field_extraction_prompt(
     evidence_text: str,
     *,
     values: InvoiceExtractionAuthorityValues | None = None,
+    fields: Collection[str] | None = None,
 ) -> str:
     """Build the extraction prompt for ``evidence_text``.
 
@@ -126,6 +128,11 @@ def build_text_field_extraction_prompt(
         values: Regulatory values to enumerate, resolved by the application
             layer. ``None`` resolves the current civil year's, which is the
             honest fallback for a document not yet bound to a filing period.
+        fields: The field names to ask for, or ``None`` for every declared
+            field. Passed to the shared compiler unchanged; the selection is
+            validated there against the declaration, so a name this reader does
+            not recognise refuses in the one place that knows the vocabulary
+            rather than being silently dropped on the way.
 
     Returns:
         The full prompt: instructions, then the document text under a delimiter
@@ -142,7 +149,7 @@ def build_text_field_extraction_prompt(
             suggestion="aeat app ledger evidence extract --evidence-id <id>",
         )
     resolved = values if values is not None else default_extraction_authority_values()
-    compiled = render_invoice_extraction_prompt(values=resolved)
+    compiled = render_invoice_extraction_prompt(values=resolved, fields=fields)
     return f"{compiled.text}\nINVOICE TEXT:\n{evidence_text}"
 
 
@@ -177,6 +184,12 @@ class TextInvoiceFieldExtractor:
             document. Defaults to ``False`` -- the fail-closed direction, so a
             caller that says nothing gets the gate. Naming the corpus is the
             deliberate act, not naming the evidence.
+        fields: The field names each read asks for, or ``None`` for every
+            declared field. Held for the reader's lifetime rather than passed
+            per read, because it describes the SHAPE of the call this reader
+            makes, and a shape that varied between two reads of one corpus would
+            make those reads incomparable. A measurement comparing call shapes
+            builds one reader per shape.
     """
 
     def __init__(
@@ -189,6 +202,7 @@ class TextInvoiceFieldExtractor:
         authority_values: InvoiceExtractionAuthorityValues | None = None,
         consent_token: EvidenceConsentToken | None = None,
         public_corpus: bool = False,
+        fields: Collection[str] | None = None,
     ) -> None:
         # Ahead of every other statement, so the refusal is what an operator
         # without the extra sees rather than a settings or model-resolution
@@ -198,6 +212,7 @@ class TextInvoiceFieldExtractor:
         self._provider = provider
         self._consent_token = consent_token
         self._public_corpus = public_corpus
+        self._fields = fields
         if provider is LLMProvider.LOCAL:
             self._model = model if model is not None else resolved_settings.cadrumo_llm_ollama_text_model
         elif model is None:
@@ -308,7 +323,11 @@ class TextInvoiceFieldExtractor:
         environment.
         """
         return LLMRequest(
-            prompt=build_text_field_extraction_prompt(evidence_text, values=self._authority_values),
+            prompt=build_text_field_extraction_prompt(
+                evidence_text,
+                values=self._authority_values,
+                fields=self._fields,
+            ),
             provider_override=self._provider,
             model_override=self._model,
             evidence_derived=not self._public_corpus,
@@ -320,8 +339,15 @@ class TextInvoiceFieldExtractor:
 
         Built without any document text, so the stamp can name the rates a read
         was performed under without a document in hand.
+
+        Carries this reader's own field selection. The stamp's whole purpose is
+        to identify the instruction a read was performed under, and a stamp that
+        described the full prompt while the read asked for three fields would
+        name an instruction that was never sent -- which is worse than no stamp,
+        because it is a confident wrong answer to the one question the stamp
+        exists to answer.
         """
-        return render_invoice_extraction_prompt(values=self._authority_values)
+        return render_invoice_extraction_prompt(values=self._authority_values, fields=self._fields)
 
 
 def extract_invoice_fields_from_text(

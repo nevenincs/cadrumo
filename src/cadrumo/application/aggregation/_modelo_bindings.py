@@ -42,6 +42,7 @@ from ...adapters.persistence.storage import (
     StorageValidationError,
 )
 from ...core import BindingSourceKind, M210GrossIncomeSourceMode, Modelo, Period, PeriodError, StandardPeriodCode
+from ...core.money import round_to_cents
 from ...domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
@@ -75,6 +76,7 @@ from ...domain.invoices import (
     IvaRate,
     invoice_line_to_iva_observation,
     iva_rate_kind,
+    iva_rate_slot_percentage,
 )
 from ...domain.iva import (
     EUMemberState,
@@ -83,6 +85,7 @@ from ...domain.iva import (
     IvaFlowDirection,
     IvaRateKind,
     derive_flow_for_classification,
+    recargo_rate_for_applied_rate,
 )
 from ...domain.modelos import Modelo210AgrupacionRentaRow
 from ...domain.renta import (
@@ -324,6 +327,10 @@ class LedgerIvaAggregationSourceResolver:
             )
             + _category_counterparty_mismatch_diagnostics(
                 silence_report.category_counterparty_mismatches,
+                resolver_id=self.resolver_id,
+            )
+            + _recargo_rate_mismatch_diagnostics(
+                silence_report.recargo_rate_divergences,
                 resolver_id=self.resolver_id,
             )
             + tuple(
@@ -1254,6 +1261,8 @@ def _raise_if_invoice_iva_would_be_silent(
         return _InvoiceIvaSilenceReport(
             category_counterparty_mismatches=screened.category_counterparty_mismatches,
             reverse_charge_underivable=screened.reverse_charge_underivable,
+            recargo_rate_divergences=screened.recargo_rate_divergences,
+            storage_degraded=screened.storage_degraded,
         )
     invoice_binding_values = resolve_iva_ledger_binding_values(
         context.revision,
@@ -1271,6 +1280,7 @@ def _raise_if_invoice_iva_would_be_silent(
             compared=screened.compared,
             category_counterparty_mismatches=screened.category_counterparty_mismatches,
             reverse_charge_underivable=screened.reverse_charge_underivable,
+            recargo_rate_divergences=screened.recargo_rate_divergences,
         )
     raise AggregationValidationError(
         t("errors.error.error_modelo_aggregation_binding"),
@@ -1567,6 +1577,7 @@ def _invoice_line_iva_observation(
             transaction_date=devengo_date,
             category=category,
             rate_kind=_rate_kind_for_slot(line.iva_rate),
+            applied_rate=None,
             flow_direction=derive_flow_for_classification(category=category, invoice_direction=invoice.kind),
             base_amount=line.subtotal,
             iva_amount=line.iva_amount,
@@ -1767,6 +1778,110 @@ def _reverse_charge_underivable_diagnostics(
 
 
 @dataclass(frozen=True, slots=True)
+class _RecargoRateDivergence:
+    """One invoice whose recorded recargo departs from the published rate.
+
+    Carries both figures and the rate that produced the expected one, because
+    an advisory that states only "these disagree" cannot be acted on: the
+    operator needs to see which of the two to go and check.
+    """
+
+    invoice: Invoice
+    recorded: Decimal
+    expected: Decimal
+    applied_rate: Decimal
+    recargo_rate: Decimal
+
+
+def _recargo_rate_divergence(invoice: Invoice, *, devengo_date: date) -> _RecargoRateDivergence | None:
+    """Compare the recorded recargo against the rate art. 161 publishes for that slot.
+
+    The invoice stays authoritative: this reads the recorded figure and never
+    replaces it. What it adds is the other half of that posture -- when the
+    supplier's figure departs from the published pairing, say so.
+
+    Silent in three cases, each for its own reason and none of them a pass:
+
+    * no recargo recorded at all, which is the ordinary invoice and not this
+      screen's business;
+    * no line identifiable as the one bearing it, so there is no base to
+      compare against and a guess would be worse than silence;
+    * the table resolving no rate for that (applied rate, date) pairing. An
+      unmodelled window must NOT read as a mismatch -- that would turn a gap in
+      our own data into an accusation about the supplier's invoice.
+    """
+    recorded = invoice.recargo_amount
+    if recorded is None or recorded == 0:
+        return None
+    line_index = _sole_recargo_bearing_line_index(invoice)
+    if line_index is None:
+        return None
+    line = invoice.lines[line_index]
+    # The line carries a rate SLOT, not a number, and the table is keyed on the
+    # number. Converted through the UNDATED derivation on purpose: the dated one
+    # re-asks whether the slot was in force, which the invoice validator has
+    # already established at construction, and asking it again here against a
+    # different date would refuse a line the record legitimately holds.
+    applied_rate = iva_rate_slot_percentage(line.iva_rate)
+    if applied_rate is None:
+        # Exempt and not-subject slots name no percentage, so there is no
+        # pairing to look up and nothing to disagree with.
+        return None
+    recargo_rate = recargo_rate_for_applied_rate(applied_rate, devengo_date)
+    if recargo_rate is None:
+        return None
+    expected = round_to_cents(line.subtotal * recargo_rate)
+    if round_to_cents(recorded) == expected:
+        return None
+    return _RecargoRateDivergence(
+        invoice=invoice,
+        recorded=round_to_cents(recorded),
+        expected=expected,
+        applied_rate=applied_rate,
+        recargo_rate=recargo_rate,
+    )
+
+
+def _recargo_rate_mismatch_diagnostics(
+    divergences: Sequence[_RecargoRateDivergence],
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return one advisory per invoice whose recargo departs from the published rate.
+
+    Advisory, never a refusal, and the filed figure is unchanged whether or not
+    this fires. A legitimate invoice can carry a figure the table does not
+    predict, so refusing here would block a correct filing on a correct
+    invoice.
+
+    The message names both figures and the provision. Without the provision the
+    advisory reads as the application second-guessing the supplier, and an
+    operator who cannot see what authority is being cited will learn to dismiss
+    it -- which costs more than never having emitted it.
+    """
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="invoice_recargo_departs_from_published_rate",
+            source_kind="ledger_iva_aggregation",
+            resolver_id=resolver_id,
+            source_ref=f"invoice:{divergence.invoice.invoice_id}",
+            message=(
+                f"invoice {divergence.invoice.invoice_number!r} records a recargo de equivalencia of "
+                f"{divergence.recorded}, while LIVA art. 161 pairs the {divergence.applied_rate} IVA rate "
+                f"with a recargo of {divergence.recargo_rate} on that date, which would give "
+                f"{divergence.expected}. The recorded figure is the one declared -- this does not change it"
+            ),
+            remedy=(
+                "Check the supplier invoice. Where the printed recargo is right, no action is needed and "
+                "the declared figure already matches it; where it was mistyped, correct the transaction "
+                "and recalculate"
+            ),
+        )
+        for divergence in divergences
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class _ScreenedInvoiceIva:
     """What the invoice IVA screen found, named rather than positional.
 
@@ -1787,6 +1902,10 @@ class _ScreenedInvoiceIva:
         reverse_charge_underivable: invoices declaring a reverse charge whose
             line carries no rate slot, so no cuota can be derived without
             inventing one.
+        recargo_rate_divergences: invoices whose recorded recargo departs from
+            the rate art. 161 publishes for that slot. Unlike the two above,
+            these are NOT withheld -- the figure is declared exactly as
+            recorded and the advisory is a cross-check beside it.
     """
 
     observations: tuple[IvaLedgerObservation, ...] = ()
@@ -1794,6 +1913,11 @@ class _ScreenedInvoiceIva:
     compared: tuple[Invoice, ...] = ()
     category_counterparty_mismatches: tuple[Invoice, ...] = ()
     reverse_charge_underivable: tuple[Invoice, ...] = ()
+    recargo_rate_divergences: tuple[_RecargoRateDivergence, ...] = ()
+    #: The catalogue could not be READ, as distinct from holding no invoices.
+    #: Without this the two are the same value downstream, and the silence guard
+    #: returns as though it had compared a catalogue it never saw.
+    storage_degraded: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -1810,6 +1934,15 @@ class _InvoiceIvaSilenceReport:
     compared: tuple[Invoice, ...] = ()
     category_counterparty_mismatches: tuple[Invoice, ...] = ()
     reverse_charge_underivable: tuple[Invoice, ...] = ()
+    #: Carried on every return path, including the two early ones. A divergence
+    #: is a fact about the recorded figure, not about whether the screen went on
+    #: to build an observation, so dropping it when the screen returns early
+    #: would silence the advisory exactly when the invoice is least examined.
+    recargo_rate_divergences: tuple[_RecargoRateDivergence, ...] = ()
+    #: The screen could not read the invoice catalogue, so it reached NO verdict
+    #: about whether invoice IVA is absent from the ledger totals. Distinct from
+    #: a clean pass, which is what a silent empty return looked like.
+    storage_degraded: bool = False
 
 
 def _screened_invoice_iva_observations(
@@ -1822,12 +1955,20 @@ def _screened_invoice_iva_observations(
         repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=context.bucket_id)
         catalogue = repository.load()
     except _STORAGE_DEGRADATION_ERRORS:
-        return _ScreenedInvoiceIva()
+        # Degrading is right: a bucket whose invoice catalogue is temporarily
+        # unreadable should not hard-fail every calculation, and the five
+        # sibling catches in this module degrade too. What they also do, and
+        # this one did not, is SAY SO -- they bind the error and return a
+        # resolution carrying a storage_degraded diagnostic. Returning an empty
+        # result here made an unreadable catalogue indistinguishable from an
+        # empty one, which switched the silence guard off without a signal.
+        return _ScreenedInvoiceIva(storage_degraded=True)
     observations: list[IvaLedgerObservation] = []
     invoice_ids: set[str] = set()
     compared_invoices: list[Invoice] = []
     category_counterparty_mismatches: list[Invoice] = []
     reverse_charge_underivable: list[Invoice] = []
+    recargo_rate_divergences: list[_RecargoRateDivergence] = []
     for invoice in catalogue.values():
         if not _screened_invoice_in_period(invoice, context=context, period=period):
             continue
@@ -1840,6 +1981,12 @@ def _screened_invoice_iva_observations(
         # The date the observation carries must be the date it was SELECTED on,
         # or the record would state one quarter while being declared in another.
         devengo = resolve_invoice_devengo(invoice)
+        # Read before the observation loop and independently of it: the
+        # comparison is about the figure the operator recorded, so it must not
+        # depend on whether a line went on to contribute an observation.
+        divergence = _recargo_rate_divergence(invoice, devengo_date=devengo.devengo_date)
+        if divergence is not None:
+            recargo_rate_divergences.append(divergence)
         recargo_line_index = _sole_recargo_bearing_line_index(invoice)
         contributed = False
         for line_index, line in enumerate(invoice.lines):
@@ -1873,6 +2020,7 @@ def _screened_invoice_iva_observations(
         compared=tuple(compared_invoices),
         category_counterparty_mismatches=tuple(category_counterparty_mismatches),
         reverse_charge_underivable=tuple(reverse_charge_underivable),
+        recargo_rate_divergences=tuple(recargo_rate_divergences),
     )
 
 

@@ -138,10 +138,21 @@ def _modelo_390_without_recargo_revision() -> ModeloRevision:
 
 _Q2_2023 = _period(2023, "2T")
 _Q2_2026 = _period(2026, "2T")
-# Before RDL 20/2012 art. 23 took effect on 1 September 2012, so genuinely
-# outside the rate table's coverage. 2T 2023 used to serve that purpose and no
-# longer does -- the table's earliest ES windows now start in 2012.
-_Q2_2012 = _period(2012, "2T")
+# Before Ley 41/1994 art. 78.Segundo took effect on 1 January 1995, so genuinely
+# outside the rate table's coverage: no ES window of any tier reaches back past
+# it.
+#
+# This probe has now moved TWICE, each time because the table gained real
+# coverage rather than because the distinction weakened. 2T 2023 served first,
+# until the general and reduced windows were corrected back to 2012; 2T 2012
+# served next, until the super-reducido window was corrected back to 1995 and
+# began covering the date the probe relied on being uncovered.
+#
+# The lesson is in the pattern, not the dates: a probe anchored to where the
+# data currently STOPS will be falsified every time the data is corrected, and
+# it fails by reporting the wrong reason rather than by looking wrong. Anchor it
+# to the earliest provision the table can ever cite, which is what this is.
+_Q2_1994 = _period(1994, "2T")
 _BUCKET_ID = "14141414-1414-4414-8414-141414141414"
 _OTHER_BUCKET_ID = "15151515-1515-4515-8515-151515151515"
 
@@ -827,14 +838,14 @@ def test_a_date_outside_the_rate_table_blames_the_year_not_the_rate() -> None:
     """
     transaction = _transaction(
         "row-pre-registry",
-        booked_date=date(2012, 4, 5),
-        value_date=date(2012, 4, 5),
+        booked_date=date(1994, 4, 5),
+        value_date=date(1994, 4, 5),
         iva_rate=Decimal("0.21"),
     )
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2_2012,
+        period=_Q2_1994,
     )
 
     assert result.observations == ()

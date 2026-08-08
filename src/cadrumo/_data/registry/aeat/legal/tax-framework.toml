@@ -180,7 +180,16 @@ review_status = "reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIRPF art. 96: obligación de declarar (M100)."
-required_text = ["Los contribuyentes estarán obligados a presentar y suscribir"]
+required_text = [
+    "Los contribuyentes estarán obligados a presentar y suscribir",
+    # Apartado 9 (the Ley de Presupuestos may alter the filing thresholds),
+    # the last operative provision, at 99%. The phrase above is the opening
+    # clause of apartado 1. This is the article fixing WHO must file, so a
+    # truncated excerpt would ground the filing obligation on its first line.
+    # Verified against live BOE: apartados 1-9 on both sides, 10 on neither;
+    # live operative text 5,374 characters against 5,140 bundled.
+    "la ley de presupuestos generales del estado podrá modificar lo previsto en los apartados anteriores",
+]
 
 [legal."ley-35-2006:art-98"]
 evidence_tier = "legal_authority"
@@ -267,8 +276,7 @@ required_text = [
     # apartado 1's first sentence, inside the heading window, so a truncation
     # of the twelve apartados passed silently. Verified complete against live
     # BOE: apartados 1-12 on both sides.
-    "el registro de otros operadores de plataforma obligados a comunicar información estará integrado",
-]
+    "el registro de otros operadores de plataforma obligados a comunicar información estará integrado",]
 
 [legal."rd-1065-2007:art-18"]
 evidence_tier = "legal_authority"

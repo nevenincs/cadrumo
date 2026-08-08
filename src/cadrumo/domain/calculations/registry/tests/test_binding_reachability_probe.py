@@ -94,7 +94,7 @@ def test_the_unmatched_selector_really_matches_every_treatment_never() -> None:
     matcher = _iva_build_matcher(_iva_selector(cash_accounting_treatments=()))
     verdicts = {
         treatment: matcher(
-            _StubIvaObservation(
+            _MinimalIvaObservation(
                 category=_CATEGORY,
                 rate_kind=_RATE_KIND,
                 flow_direction=IvaFlowDirection.REPERCUTIDO,
@@ -107,7 +107,7 @@ def test_the_unmatched_selector_really_matches_every_treatment_never() -> None:
     assert not any(verdicts.values()), f"expected no treatment to match, got {verdicts}"
 
 
-class _StubIvaObservation:
+class _MinimalIvaObservation:
     """Minimal stand-in carrying only the five axes the IVA matcher reads.
 
     Satisfies ``IvaSelectorAxesProtocol`` structurally, which is what makes it
@@ -184,7 +184,7 @@ def test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail() -> None
             fact="deductible_amount_sum",
         )
         matcher = _renta_gastos_pago_fraccionado_build_matcher(selector)
-        probe = _StubCasillaObservation(target_casilla_id=selector.target_casilla_id)
+        probe = _MinimalCasillaObservation(target_casilla_id=selector.target_casilla_id)
         assert matcher(probe), (
             f"the casilla-keyed matcher rejected a probe built from its own selector "
             f"({casilla_id!r}); if the match rule now tests something the probe does not "
@@ -193,7 +193,7 @@ def test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail() -> None
         )
 
 
-class _StubCasillaObservation:
+class _MinimalCasillaObservation:
     """Minimal stand-in for the attributes the casilla-keyed matcher reads.
 
     Carries ``deductible_amount`` as well as the casilla id: the matcher only

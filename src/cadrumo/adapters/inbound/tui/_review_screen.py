@@ -121,9 +121,21 @@ class ReviewScreen(Screen[None]):
         table = self.query_one("#review-table", DataTable)
         table.clear()
         section_titles = self._section_titles(app)
+        # A heading row exists to distinguish one section's rows from
+        # another's; with exactly one section there is nothing to
+        # distinguish, and the heading renders whatever copy that section
+        # happens to be titled with -- which, for a flow whose single
+        # section stands in for "every page this run has" rather than a
+        # real named group (both live wizard entrypoints build theirs this
+        # way), is the flow's own multi-sentence help text landing in the
+        # table as if it were a question row. Multi-section flows (the
+        # retired setup wizard's "Identidad" / "Actividad económica" etc.)
+        # are untouched: every one of their headings stays exactly as
+        # rendered today.
+        multi_section = len({row.section_id for row in projection.rows}) > 1
         current_section: str | None = None
         for row in projection.rows:
-            if row.section_id != current_section:
+            if multi_section and row.section_id != current_section:
                 # Group the summary by section: a heading row opens each
                 # section so review reads as a complete-profile summary, not a
                 # flat per-page status list. The heading key is sentinel-scoped

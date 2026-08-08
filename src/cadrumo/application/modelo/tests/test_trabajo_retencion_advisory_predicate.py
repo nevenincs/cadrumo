@@ -33,7 +33,16 @@ from .._verification_predicates import _evaluate_predicate_expression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PREDICATE_ID = "modelo-100-2024-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"
+#: Every M100 revision declaring casilla 0596. Each was resolved from that
+#: revision's OWN casilla set through semantic_role rather than copied, because
+#: ids renumber across filing years even when they happen to agree here.
+_REVISION_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
+
+
+def _predicate_id(year: int) -> str:
+    return f"modelo-100-{year}-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"
+
+
 _GROSS_TRABAJO_INCOME = validated_casilla_id("0012", surface="trabajo-retencion-advisory")
 _RETENCION_TRABAJO = validated_casilla_id("0596", surface="trabajo-retencion-advisory")
 
@@ -47,17 +56,17 @@ def _profile() -> TaxpayerProfile:
     )
 
 
-def _predicate():
+def _predicate(year: int):
     """Return the registry's own declared predicate, not a hand-written expression."""
-    revision = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A").revision
+    revision = resources().modelos.authority.snapshot("100", filing_year=year, period="0A").revision
     for predicate in revision.verification_predicates or ():
-        if predicate.predicate_id == _PREDICATE_ID:
+        if predicate.predicate_id == _predicate_id(year):
             return predicate
-    pytest.fail(f"{_PREDICATE_ID} is not declared on the M100/2024 revision")
+    pytest.fail(f"{_predicate_id(year)} is not declared on the M100/{year} revision")
 
 
-def _holds(gross: str, retencion: str) -> bool:
-    predicate = _predicate()
+def _holds(year: int, gross: str, retencion: str) -> bool:
+    predicate = _predicate(year)
     return _evaluate_predicate_expression(
         predicate.expression,
         {_GROSS_TRABAJO_INCOME: Decimal(gross), _RETENCION_TRABAJO: Decimal(retencion)},
@@ -65,38 +74,43 @@ def _holds(gross: str, retencion: str) -> bool:
     )
 
 
-def test_the_predicate_is_declared_advisory_and_grounded() -> None:
+@pytest.mark.parametrize("year", _REVISION_YEARS)
+def test_the_predicate_is_declared_advisory_and_grounded(year: int) -> None:
     """Advisory rather than blocking, because a lawful zero retención exists.
 
     A blocking form would refuse a legitimate filing by a taxpayer whose payer
     withheld nothing, which is lawful below the withholding thresholds.
     """
-    predicate = _predicate()
+    predicate = _predicate(year)
 
     assert predicate.finding_kind == "ADVISORY"
     assert predicate.expression == 'implies_nonzero(["0012", "0596"])'
     assert predicate.legal_refs, "an advisory over a regulated value must carry its provisions"
 
 
-def test_it_fires_when_trabajo_income_is_declared_and_no_retencion_is_credited() -> None:
+@pytest.mark.parametrize("year", _REVISION_YEARS)
+def test_it_fires_when_trabajo_income_is_declared_and_no_retencion_is_credited(year: int) -> None:
     """The defect case: gross income present, withholding absent."""
-    assert _holds("18000.00", "0") is False
+    assert _holds(year, "18000.00", "0") is False
 
 
-def test_it_holds_silently_when_there_is_no_trabajo_income() -> None:
+@pytest.mark.parametrize("year", _REVISION_YEARS)
+def test_it_holds_silently_when_there_is_no_trabajo_income(year: int) -> None:
     """The control, and the reason a category-keyed signal was refused.
 
     Without this, a predicate that simply always fired would pass the test above.
     """
-    assert _holds("0", "0") is True
+    assert _holds(year, "0", "0") is True
 
 
-def test_it_holds_when_the_retencion_is_credited() -> None:
+@pytest.mark.parametrize("year", _REVISION_YEARS)
+def test_it_holds_when_the_retencion_is_credited(year: int) -> None:
     """The ordinary case: income declared and withholding credited, so nothing fires."""
-    assert _holds("18000.00", "2400.00") is True
+    assert _holds(year, "18000.00", "2400.00") is True
 
 
-def test_the_advisory_names_the_income_certificate_and_never_a_capture() -> None:
+@pytest.mark.parametrize("year", _REVISION_YEARS)
+def test_the_advisory_names_the_income_certificate_and_never_a_capture(year: int) -> None:
     """The remedy must be a certificate value, not a filing to pull.
 
     The taxpayer never filed the Modelo 111 that declares this retención, so no
@@ -104,7 +118,7 @@ def test_the_advisory_names_the_income_certificate_and_never_a_capture() -> None
     """
     from .._verification_predicates import resolve_advisory_message_default
 
-    message = resolve_advisory_message_default(_PREDICATE_ID)
+    message = resolve_advisory_message_default(_predicate_id(year))
 
     assert message, "the advisory has no operator-facing text"
     assert "certificado de retenciones" in message

@@ -507,7 +507,7 @@ def test_set_locale_value_appends_missing_leaf_after_unterminated_final_line(tmp
 
     written = locale_path.read_bytes()
     assert b"catalogos\n    set_locale_help:" in written, (
-        "the appended leaf ran onto the parent's unterminated final line: " f"{written!r}"
+        f"the appended leaf ran onto the parent's unterminated final line: {written!r}"
     )
     data = temp_manager.load_locale(locale_path)
     assert _leaf(data, "cli", "locales", "app_help") == "Auditar y generar catalogos"
@@ -894,11 +894,17 @@ def test_fstring_registry_all_keys_present_in_all_locales(manager: LocaleManager
         )
 
 
-def test_scaffold_inserts_fstring_registry_keys(tmp_path: Path) -> None:
-    """Scaffold inserts placeholder entries for every f-string-registered key.
+def test_scaffold_surfaces_fstring_registry_keys_as_missing(tmp_path: Path) -> None:
+    """Scaffold never silently drops an f-string-registered key.
 
-    Simulates the SAL/SLL incident: an empty locale file receives scaffold and
-    must contain every registered key as a placeholder afterwards.
+    Simulates the SAL/SLL incident: an empty locale file receives scaffold,
+    and every registered key with no authored value must come back from
+    ``audit()`` as a reported ``codebase_missing`` entry. Scaffold no longer
+    writes a self-referencing key-echo placeholder for a key with no
+    authored value (the honesty ratchet in
+    ``test_locale_translation_honesty.py`` forbids exactly that), so the
+    guarantee this test pins is visibility through the missing-key report,
+    not placeholder presence in the YAML.
     """
     from dev.locales import get_registered_keys
 
@@ -910,11 +916,13 @@ def test_scaffold_inserts_fstring_registry_keys(tmp_path: Path) -> None:
     temp_manager = LocaleManager(src_dir=src_dir, locales_dir=locales_dir)
     temp_manager.scaffold()
 
-    data = temp_manager.load_locale(locales_dir / "es.yml")
-    yaml_keys = temp_manager.get_yaml_keys(data)
+    result = temp_manager.audit()
+    (file_result,) = result.files
+    codebase_missing = set(file_result.codebase_missing)
 
     registered_keys = get_registered_keys()
-    missing = registered_keys - yaml_keys
-    assert not missing, f"scaffold failed to insert {len(missing)} f-string-registered key(s): " + ", ".join(
-        sorted(missing)[:10],
+    unreported = registered_keys - codebase_missing
+    assert not unreported, (
+        f"scaffold silently dropped {len(unreported)} f-string-registered key(s) "
+        "with neither a value nor a missing-key report: " + ", ".join(sorted(unreported)[:10])
     )

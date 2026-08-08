@@ -217,6 +217,15 @@ class PrefilledBinding(BaseModel):
 
     binding_id: BindingId
     value: Decimal
+    #: The registry's declared dependency treatment for this carry, empty when the
+    #: revision declares none. A ``factual_evidence`` carry is a fact to reconcile
+    #: against rather than a figure that settles the return, and a consumer must be
+    #: able to tell it from a ``direct_annual_settlement`` one. Carried here rather
+    #: than gated here: the value is NOT withheld, because a taxpayer is entitled to
+    #: a suffered retención and dropping it silently is an over-declaration. Empty
+    #: means the revision declared no treatment, which is not the same as any
+    #: particular one and must never be read as one.
+    dependency_treatment: str = ""
     provenance: str = _LOCAL_FILING_PROVENANCE
     source_kind: str = _LOCAL_FILING_PROVENANCE
     source_modelo: str
@@ -778,6 +787,12 @@ def resolve_bindings_from_local_store(
 
     prefilled: list[PrefilledBinding] = []
     binding_index = {binding.id: binding for binding in snapshot.revision.bindings}
+    # The registry declares treatment per SOURCE modelo, which is the same key the
+    # relation resolver reads it under. Absent means the revision declared none.
+    treatment_by_source = {
+        str(classification.source_modelo): str(classification.treatment)
+        for classification in (snapshot.revision.dependency_classifications or ())
+    }
     requirement_index = _requirements_by_binding(snapshot)
     pre_activity_zero_binding_ids = _pre_activity_scoped_binding_ids(snapshot, activity_start_date)
     for binding_id, value in resolved_map.items():
@@ -813,6 +828,7 @@ def resolve_bindings_from_local_store(
                 source_modelo=source_modelo,
                 source_filing_year=source_filing_year,
                 source_periods=source_periods,
+                dependency_treatment=treatment_by_source.get(source_modelo, ""),
                 resolved_at=when,
             ),
         )

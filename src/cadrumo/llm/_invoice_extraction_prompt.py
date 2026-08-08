@@ -96,7 +96,7 @@ from ._invoice_field_contract import (
 from ._models import PromptDefinition, PromptRegistry
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Collection, Iterable
 
     from ..application.ledger import InvoiceExtractionAuthorityValues
     from ..domain.iva import IvaCategory
@@ -110,6 +110,7 @@ __all__ = [
     "default_extraction_period",
     "invoice_extraction_prompt_registry",
     "render_invoice_extraction_prompt",
+    "selected_invoice_field_contracts",
     "template_numeric_literals",
     "template_unsourced_legend_phrases",
 ]
@@ -383,14 +384,67 @@ def _zero_cuota_reasons(categories: Iterable[IvaCategory]) -> str:
     return ", ".join(sorted(category.value.replace("_", " ") for category in categories))
 
 
-def _field_lines() -> str:
+def selected_invoice_field_contracts(
+    fields: Collection[str] | None,
+) -> tuple[InvoiceFieldContract, ...]:
+    """Return the contracts a caller selected, in declaration order.
+
+    The one place a field selection becomes contracts, so the three prompt
+    blocks that enumerate fields cannot disagree about what the prompt is
+    asking for. A block emitting a different subset from its siblings would ask
+    the model for a key the skeleton never lists, or list a key the Fields block
+    never explains.
+
+    Declaration order is preserved rather than the caller's argument order,
+    because field ordering is part of what a measurement compares: two arms
+    passing the same set differently ordered must get the same prompt, or they
+    differ by argument order alone.
+
+    Args:
+        fields: The field names to emit, or ``None`` for every declared field.
+
+    Returns:
+        The selected contracts, in :data:`INVOICE_FIELD_CONTRACTS` order.
+
+    Raises:
+        ValueError: When ``fields`` is empty, or names a field the contract
+            declaration does not carry. Refusing is the point. A silently
+            dropped name still renders -- just shorter -- and a measurement
+            taken against a prompt missing a contract nobody noticed is worse
+            than no measurement. An empty selection is refused on the same
+            terms the period path fails closed on an empty rate set: a prompt
+            asking for nothing is not a smaller prompt, it is a broken one.
+    """
+    if fields is None:
+        return INVOICE_FIELD_CONTRACTS
+    requested = frozenset(fields)
+    declared = _declared_field_names()
+    if not requested:
+        raise ValueError(
+            "an invoice extraction prompt must ask for at least one field; "
+            f"pass None for the full set, or name any of: {', '.join(declared)}",
+        )
+    unknown = sorted(requested - set(declared))
+    if unknown:
+        raise ValueError(
+            f"no invoice field contract is declared for {', '.join(unknown)}; "
+            f"accepted fields are: {', '.join(declared)}",
+        )
+    return tuple(contract for contract in INVOICE_FIELD_CONTRACTS if contract.field_name in requested)
+
+
+def _declared_field_names() -> tuple[str, ...]:
+    """Return every declared field name, in declaration order."""
+    return tuple(contract.field_name for contract in INVOICE_FIELD_CONTRACTS)
+
+
+def _field_lines(contracts: tuple[InvoiceFieldContract, ...]) -> str:
     return "\n".join(
-        f"- {contract.field_name}: {contract.concept}; {contract.form_instruction}."
-        for contract in INVOICE_FIELD_CONTRACTS
+        f"- {contract.field_name}: {contract.concept}; {contract.form_instruction}." for contract in contracts
     )
 
 
-def _role_evidence_lines() -> str:
+def _role_evidence_lines(contracts: tuple[InvoiceFieldContract, ...]) -> str:
     """Return the per-identity-field role-evidence guidance, one line each.
 
     Derived from the contract declaration like :func:`_field_lines`, so the set
@@ -399,12 +453,12 @@ def _role_evidence_lines() -> str:
     """
     return "\n".join(
         f"- {role_evidence_key_for_field(contract.field_name)}: {contract.role_evidence_instruction}."
-        for contract in INVOICE_FIELD_CONTRACTS
+        for contract in contracts
         if contract.carries_role_evidence
     )
 
 
-def _json_skeleton() -> str:
+def _json_skeleton(contracts: tuple[InvoiceFieldContract, ...]) -> str:
     # Terse by design: every field's meaning and form is already stated once in
     # the Fields block above, and restating it inside the skeleton doubles the
     # prompt for a model whose context budget is the binding constraint.
@@ -430,13 +484,14 @@ def _json_skeleton() -> str:
             lines.append(f'  "{role_evidence_key_for_field(contract.field_name)}": <string or null>')
         return ",\n".join(lines)
 
-    body = ",\n".join(_keys(contract) for contract in INVOICE_FIELD_CONTRACTS)
+    body = ",\n".join(_keys(contract) for contract in contracts)
     return "{\n" + body + "\n}"
 
 
 def render_invoice_extraction_prompt(
     *,
     values: InvoiceExtractionAuthorityValues,
+    fields: Collection[str] | None = None,
 ) -> CompiledInvoiceExtractionPrompt:
     """Render the extraction prompt from already-resolved authority ``values``.
 
@@ -449,22 +504,28 @@ def render_invoice_extraction_prompt(
         values: The regulatory values to substitute, resolved by
             :func:`~application.ledger.resolve_invoice_extraction_authority_values`
             against a law-determined period.
+        fields: The field names the prompt should ask for, or ``None`` for
+            every declared field. A named field the contract declaration does
+            not carry refuses rather than being dropped, because a silently
+            shorter prompt still renders and a measurement taken against one
+            missing a contract nobody noticed is worse than no measurement.
 
     Returns:
         :class:`CompiledInvoiceExtractionPrompt`: The prompt text plus the
         values that produced it.
     """
+    contracts = selected_invoice_field_contracts(fields)
     definition = invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID)
     text = definition.template.format(
         anchor_suffix=ANCHOR_KEY_SUFFIX,
-        field_lines=_field_lines(),
+        field_lines=_field_lines(contracts),
         role_evidence_suffix=ROLE_EVIDENCE_KEY_SUFFIX,
-        role_evidence_lines=_role_evidence_lines(),
+        role_evidence_lines=_role_evidence_lines(contracts),
         iva_rates=_join_pcts(values.iva_rate_pcts),
         retencion_rates=_join_pcts(values.retencion_rate_pcts),
         zero_cuota_reasons=_zero_cuota_reasons(values.no_printed_tax_categories),
         regime_legends=_regime_legends(values.regime_legend_phrases),
-        json_skeleton=_json_skeleton(),
+        json_skeleton=_json_skeleton(contracts),
     )
     return CompiledInvoiceExtractionPrompt(
         text=text,
@@ -476,7 +537,11 @@ def render_invoice_extraction_prompt(
     )
 
 
-def build_invoice_extraction_prompt(*, period: Period) -> CompiledInvoiceExtractionPrompt:
+def build_invoice_extraction_prompt(
+    *,
+    period: Period,
+    fields: Collection[str] | None = None,
+) -> CompiledInvoiceExtractionPrompt:
     """Resolve ``period``'s authority values and render the prompt from them.
 
     The convenience shape for a caller holding only a period. It resolves through
@@ -490,6 +555,11 @@ def build_invoice_extraction_prompt(*, period: Period) -> CompiledInvoiceExtract
             period is the caller's law-determined coordinate, never a stored
             revision id fed back into resolution
             (``aeat-registry-authority-flow``).
+        fields: The field names the prompt should ask for, or ``None`` for
+            every declared field. Passed through to
+            :func:`render_invoice_extraction_prompt` unchanged, so both entry
+            points accept a selection on identical terms -- one accepting it
+            while the other ignored it would be worse than neither.
 
     Returns:
         :class:`CompiledInvoiceExtractionPrompt`: The prompt text plus the
@@ -501,4 +571,7 @@ def build_invoice_extraction_prompt(*, period: Period) -> CompiledInvoiceExtract
     """
     from ..application.ledger import resolve_invoice_extraction_authority_values
 
-    return render_invoice_extraction_prompt(values=resolve_invoice_extraction_authority_values(period=period))
+    return render_invoice_extraction_prompt(
+        values=resolve_invoice_extraction_authority_values(period=period),
+        fields=fields,
+    )

@@ -50,7 +50,7 @@ def test_provenance_dimension_is_not_vacuous() -> None:
     # Prove the provenance dimension actually inspects real registry grounding:
     # the modelo-130 revision must carry casillas with legal_refs/source_refs, so a
     # pass is grounded, not an empty-set tautology.
-    from ....core.resources import resources
+    from cadrumo.core.resources import resources
 
     scenario = load_scenario(_SCENARIO)
     snapshot = resources().modelos.authority.snapshot(
@@ -109,7 +109,7 @@ def test_runner_accepts_one_declaration_per_lifecycle_stage() -> None:
 def test_verification_dimension_is_grounded_and_not_vacuous() -> None:
     # The modelo-130 revision must declare an AEAT-grounded verification contract
     # (computed_casilla_ids with source_refs), so a pass is grounded.
-    from ....core.resources import resources
+    from cadrumo.core.resources import resources
 
     scenario = load_scenario(_SCENARIO)
     revision = (

@@ -204,8 +204,8 @@ def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
             # operator-facing envelope resolves ``translated_message`` first
             # (``core.errors._registry.resolve_error_message``), so this
             # ``message`` changes nothing an operator sees -- it changes only
-            # ``str(exc)``, which is what a traceback and a pytest failure line
-            # show.
+            # ``str(exc)``, which is what a traceback and a failing test's own
+            # summary line show.
             #
             # Without it the failure line is the bare key, identical for every
             # non-resumable reason, with the discriminating one reachable only

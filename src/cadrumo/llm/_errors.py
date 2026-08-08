@@ -71,6 +71,24 @@ class LLMConfigError(LLMError):
     """Raised when :class:`~adapters.outbound.llm.LLMClient` configuration is invalid."""
 
 
+class LLMContentionError(LLMError):
+    """Raised when this machine has no measured headroom to load the model.
+
+    The other half of admission control, and a different question from
+    :exc:`LLMBusyError`. Occupancy asks how many loads are already running;
+    this asks whether ONE load fits right now, measured against free memory
+    rather than counted. Both can refuse while the other would admit.
+
+    Fails closed on an unreadable figure, because "could not tell" is not
+    evidence of headroom and is precisely the state that destroys running work
+    on a machine with no spare device memory.
+
+    Never retryable. The condition does not decay on a timer -- it decays when
+    the load on the machine changes -- so re-sending on a schedule turns one
+    refusal into several while the memory it is waiting for is still held.
+    """
+
+
 class LLMBusyError(LLMError):
     """Raised when an on-host inference slot is not free and the request is refused.
 

@@ -57,7 +57,13 @@ from ...domain.invoices import (
     validate_country_code,
     validate_iva_number,
 )
-from ...domain.iva import InvoiceKind, IvaCategory
+from ...domain.iva import (
+    EUMemberState,
+    InvoiceKind,
+    IvaCategory,
+    domestic_categories_by_rate_kind,
+    rate_kinds_for_declared_rate,
+)
 from ._creation import build_catalogue_invoice, create_catalogue_invoice
 
 __all__ = [
@@ -281,6 +287,48 @@ def _validate_currency(raw: str) -> str:
         raise _WizardFieldError(field="currency", reason=resolve_error_message(exc)) from exc
 
 
+#: The one country code that establishes domesticity. Named rather than inlined
+#: because the Modelo 303 invoice screen decides the same fact the same way, and
+#: two spellings of one discriminator is how they drift apart.
+_DOMESTIC_COUNTRY = "ES"
+
+
+def _derived_domestic_category(
+    *,
+    country_code: str,
+    iva_rate: Decimal | None,
+    on_date: date,
+) -> IvaCategory | None:
+    """Return the domestic category the rate denotes, or ``None`` to leave it unset.
+
+    The rate-to-category mapping is DOMESTIC-ONLY, so deriving from the rate
+    slot alone would stamp a domestic category on an export or an
+    intra-community supply. Domesticity is therefore established first, on
+    ``counterparty_country``, which is the same discriminator the Modelo 303
+    invoice screen already uses -- adopting the incumbent leaves one
+    discriminator where a second would have to agree with it.
+
+    Returns ``None`` -- leaving the category unset -- in every case where
+    domesticity or the tier is not affirmatively established. That is the safe
+    direction and not a shortfall: an absent category is refused downstream,
+    while a wrong one is believed.
+
+    Three distinct silences, none of them a guess:
+
+    * the counterparty is not domestic, or its country was never stated;
+    * the line carries no rate at all;
+    * the rate resolves to no tier, or to more than one, on that date. A rate
+      outside its force window resolves to none, and an ambiguous rate must not
+      be collapsed by picking the first.
+    """
+    if country_code != _DOMESTIC_COUNTRY or iva_rate is None:
+        return None
+    tiers = rate_kinds_for_declared_rate(EUMemberState.ES, iva_rate / Decimal("100"), on_date)
+    if len(tiers) != 1:
+        return None
+    return domestic_categories_by_rate_kind().get(tiers[0])
+
+
 def create_invoice_via_wizard(
     *,
     bucket_id: str,
@@ -293,7 +341,14 @@ def create_invoice_via_wizard(
     iva_rate: str | None,
     currency: str,
     operation_date: str | None = None,
-    country_code: str = "ES",
+    # Required, never defaulted. The country routes both informativas and
+    # decides domesticity for the Modelo 303 invoice screen, so assuming Spain
+    # for an unstated counterparty would silently widen the domestic population
+    # -- an undeclared fact resolving to the value that declares more. The CLI
+    # option that feeds this is already required and says so in its own help;
+    # this closes the same door on the application entry point, where a default
+    # would have been reachable by any future caller that simply omitted it.
+    country_code: str,
     notes: str = "",
     iva_category: IvaCategory | None = None,
     operation_type: IntracomOperationType | None = None,
@@ -438,6 +493,14 @@ def create_invoice_via_wizard(
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
 
     try:
+        # Derived once, before both construction sites, so the built candidate
+        # and the persisted record cannot disagree about the category. An
+        # operator-supplied value always wins: this only fills a silence.
+        effective_category = iva_category or _derived_domestic_category(
+            country_code=resolved_country,
+            iva_rate=resolved_rate,
+            on_date=resolved_operation_date or resolved_date,
+        )
         candidate = build_catalogue_invoice(
             bucket_id=bucket_id,
             kind=kind,
@@ -450,7 +513,7 @@ def create_invoice_via_wizard(
             iva_rate=resolved_rate,
             currency=resolved_currency,
             notes=notes,
-            iva_category=iva_category,
+            iva_category=effective_category,
             operation_type=operation_type,
             retention_rate=resolved_retention_rate,
             retention_amount=resolved_retention_amount,
@@ -484,7 +547,7 @@ def create_invoice_via_wizard(
         iva_rate=resolved_rate,
         currency=resolved_currency,
         notes=notes,
-        iva_category=iva_category,
+        iva_category=effective_category,
         operation_type=operation_type,
         operation_date=resolved_operation_date,
         retention_rate=resolved_retention_rate,

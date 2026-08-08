@@ -1330,6 +1330,11 @@ def _filed_pull_all_notices(run: FiledHistoryOnboardingRun) -> list[Notice]:
     # separately readable -- collapsing them into one "evidence not enrolled"
     # notice would rebuild, one layer up, the uniform silence they exist to undo.
     notices.extend(run.evidence_notices)
+    # A re-capture is an unconditional upsert, so a corrected filing replaces
+    # values the operator may already have calculated against. These were read
+    # before each write, while the prior values still existed; without them the
+    # sweep changes history silently.
+    notices.extend(run.recapture_notices)
     if not run.carries_a_taxpayer_specific_denominator:
         notices.append(
             Notice(

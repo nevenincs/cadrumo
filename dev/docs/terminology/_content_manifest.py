@@ -28,6 +28,7 @@ __all__ = [
 ]
 
 RAW_BYTE_MANIFEST_SCHEMA_VERSION: Final[int] = 1
+_UTF_8: Final[str] = "utf-8"
 _SHA256 = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 _REVISION = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{40}$")]
 _ROLE = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
@@ -70,7 +71,7 @@ class RawByteManifest(BaseModel):
     @model_validator(mode="after")
     def _validate_manifest(self) -> RawByteManifest:
         paths = tuple(entry.relative_path for entry in self.entries)
-        if paths != tuple(sorted(paths, key=lambda path: path.encode("utf-8"))):
+        if paths != tuple(sorted(paths, key=lambda path: path.encode(_UTF_8))):
             raise ValueError("raw-byte manifest entries must be sorted by UTF-8 path bytes")
         _require_unique_paths(paths)
         expected = _manifest_sha256(
@@ -117,7 +118,7 @@ def build_raw_byte_manifest(
                 sha256=digest,
             ),
         )
-    entries.sort(key=lambda entry: entry.relative_path.encode("utf-8"))
+    entries.sort(key=lambda entry: entry.relative_path.encode(_UTF_8))
     manifest_sha256 = _manifest_sha256(
         schema_version=RAW_BYTE_MANIFEST_SCHEMA_VERSION,
         role=role,
@@ -263,7 +264,7 @@ def _hash_regular_file(path: Path) -> tuple[int, str]:
 
 
 def _walk_local_tree(root: Path) -> Iterable[Path]:
-    for path in sorted(root.rglob("*"), key=lambda candidate: candidate.relative_to(root).as_posix().encode("utf-8")):
+    for path in sorted(root.rglob("*"), key=lambda candidate: candidate.relative_to(root).as_posix().encode(_UTF_8)):
         if path.is_symlink():
             raise RawByteManifestError(f"symlinks are not admissible in manifest roots: {path}")
         if path.is_file():

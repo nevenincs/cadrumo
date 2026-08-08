@@ -69,7 +69,7 @@ _READER_REPLY: dict[str, str | None] = {
 }
 
 
-class _ReaderStub(BaseHTTPRequestHandler):
+class _LoopbackRequestHandler(BaseHTTPRequestHandler):
     """A real local endpoint speaking the runtime's ``/api/chat`` wire shape."""
 
     reply: ClassVar[str] = ""
@@ -108,9 +108,9 @@ def reader(secure_objects: object) -> Iterator[tuple[str, Queue[dict[str, object
     telemetry write to make the test pass.
     """
     requests: Queue[dict[str, object]] = Queue()
-    _ReaderStub.requests = requests
-    _ReaderStub.reply = json.dumps(_READER_REPLY)
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _ReaderStub)
+    _LoopbackRequestHandler.requests = requests
+    _LoopbackRequestHandler.reply = json.dumps(_READER_REPLY)
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _LoopbackRequestHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
@@ -263,7 +263,7 @@ def test_a_clean_document_extracts_without_findings_on_the_wired_path(
     arithmetic-closure finding.
     """
     chat_url, _ = reader
-    _ReaderStub.reply = json.dumps(
+    _LoopbackRequestHandler.reply = json.dumps(
         {
             "taxable_base": "766,30",
             "taxable_base_anchor": "766,30",
@@ -303,7 +303,7 @@ def test_a_short_figure_does_not_anchor_inside_a_longer_one_on_the_wired_path(
     shape cannot see the defect the hard shape produces.
     """
     chat_url, _ = reader
-    _ReaderStub.reply = json.dumps(
+    _LoopbackRequestHandler.reply = json.dumps(
         {
             "taxable_base": "766,30",
             "taxable_base_anchor": "766,30",

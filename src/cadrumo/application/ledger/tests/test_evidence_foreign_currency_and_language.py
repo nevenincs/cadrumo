@@ -70,7 +70,7 @@ _PRINTED_LEGEND = "Steuerfreie innergemeinschaftliche Lieferung"
 _FREE_TEXT_ON_THE_DOCUMENT = (_PRINTED_LEGEND, "Hydraulikpumpe Ersatzteilsatz")
 
 
-class _StubbornlySilentRateProvider:
+class _AlwaysSilentRateProvider:
     """A rate source that resolves nothing, for the currency-carry proofs.
 
     Deliberately silent rather than absent. These tests are about the CURRENCY
@@ -118,7 +118,7 @@ def _confirm_the_foreign_document(
         operation_type=IntracomOperationType.E,
         settings=isolated_settings,
         invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
-        rate_provider=_StubbornlySilentRateProvider(),
+        rate_provider=_AlwaysSilentRateProvider(),
     )
 
 

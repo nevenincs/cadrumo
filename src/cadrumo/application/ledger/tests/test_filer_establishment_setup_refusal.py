@@ -100,7 +100,7 @@ def test_no_unresolvable_input_ever_returns_a_territory() -> None:
     """The anti-default property stated once over the whole refusing population.
 
     The case above proves each input raises. This one proves the stronger thing
-    the ADR actually rules: that no unresolvable input reaches a RETURN at all.
+    the design actually rules: that no unresolvable input reaches a RETURN at all.
     A future edit adding a fallback would satisfy "raises for None" while
     quietly answering for the malformed shapes, so the absence of any returned
     value is asserted over the set rather than per case.

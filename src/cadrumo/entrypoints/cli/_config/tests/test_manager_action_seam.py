@@ -67,6 +67,7 @@ _EXPECTED_KEY = {
     "certificate": "flows.manager.action.abandoned",
     "export": "flows.manager.action.abandoned",
     "filed-history-pull-all": "flows.manager.action.censal_pull_no_provider",
+    "google-export": "flows.manager.action.abandoned",
     "passphrase": "flows.manager.action.abandoned",
 }
 """What each action concludes on a freshly registered profile.
@@ -76,8 +77,15 @@ yet; the two form doors are abandoned because the test closes their page.
 The filed-history sweep shares the censal pull's own refusal wording
 because it reuses that exact gate function rather than a second opinion
 on auth-readiness (see ``_censal_pull_unavailable()`` in
-``_manager_actions.py``). Stated per action rather than as a shape, so a
-door that silently stops reaching its own conclusion fails here.
+``_manager_actions.py``). The Google export is a third form door rather
+than a capability refusal here: ``ServiceCapability.GOOGLE_EXPORT``
+resolves ENABLED by default on a freshly registered profile, so the
+action opens its modelo/period/year page and this test's own shared
+cancel-and-abandon path reaches it -- pinned by running this test rather
+than assumed from the capability's docstring, which reads as though the
+opposite default were the safer one. Stated per action rather than as a
+shape, so a door that silently stops reaching its own conclusion fails
+here.
 
 Held as catalogue KEYS and resolved beside the assertion, inside the
 profile context that produced the message: the page resolves its wording
@@ -199,7 +207,7 @@ async def test_an_action_that_starts_its_own_loop_is_carried_by_the_seam(tmp_pat
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("action_key", [action.key for action in manager_actions()])
+@pytest.mark.parametrize("action_key", [action.key for action in manager_actions() if action.key != "logout"])
 async def test_pressing_a_real_action_reports_the_outcome_it_actually_reached(tmp_path, action_key: str) -> None:
     """Every shipped action must run to its own conclusion when pressed.
 
@@ -217,6 +225,18 @@ async def test_pressing_a_real_action_reports_the_outcome_it_actually_reached(tm
     is that the press reaches the action and its answer reaches the page.
     That the answer carries the operator's values is proved separately, by
     committing one.
+
+    ``logout`` is deliberately excluded from this parametrization. Every
+    other action's conclusion is a notice line written into a page that is
+    still there to read it from; logout's conclusion is that the page
+    stops existing, by design (see ``ManagerActionOutcome.close_session``
+    and ``ProfileManagerApp._settle_action``), so there is no notice text
+    to assert equality against — reading one back would pin whatever the
+    page happened to say a moment before it closed, which is exactly the
+    flaky-instrument shape this test's own docstring warns against.
+    ``test_logout_closes_both_the_session_and_the_surface`` in
+    ``test_manager_screen.py`` covers logout's actual, differently-shaped
+    conclusion.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)

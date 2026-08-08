@@ -92,6 +92,15 @@ BATCH_ITEM_STATUSES: frozenset[BatchItemStatus] = frozenset(get_args(BatchItemSt
 #: awaiting review has not failed, and a no-op is the idempotent success.
 FAILING_BATCH_ITEM_STATUSES: frozenset[BatchItemStatus] = frozenset({"refused"})
 
+#: The statuses in which the document's work actually happened. Derived by
+#: SUBTRACTION from the full set rather than listed, so a status added to the
+#: alias must be classified as failing or paused to stay out of it -- a new
+#: success-shaped status is counted as progress by construction rather than
+#: silently omitted from the deterministic-progress figure.
+COMPLETED_BATCH_ITEM_STATUSES: frozenset[BatchItemStatus] = (
+    BATCH_ITEM_STATUSES - FAILING_BATCH_ITEM_STATUSES - {"paused"}
+)
+
 
 class BatchItemResult(BaseModel):
     """What happened to exactly one document in the run.
@@ -111,6 +120,13 @@ class BatchItemResult(BaseModel):
             refused.
         refusal_detail: The same reason in operator-facing terms, naming what
             was seen rather than only that something failed.
+        needed_inference: Whether this document required the inference lane at
+            all. Carried per item because the run-level counts cannot be
+            reconstructed afterwards: a completed row looks identical whether it
+            was read deterministically or through a model, so a pooled "N
+            completed" cannot say whether pacing worked or whether nothing was
+            ever paced. Defaults to True, the conservative direction -- a row
+            built without stating it is not counted as deterministic progress.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -122,6 +138,7 @@ class BatchItemResult(BaseModel):
     status: BatchItemStatus
     refusal_code: str | None = None
     refusal_detail: str | None = None
+    needed_inference: bool = True
 
     @override
     def model_post_init(self, _context: object) -> None:
@@ -228,6 +245,33 @@ class BatchRunResult(BaseModel):
     def count_of(self, status: BatchItemStatus) -> int:
         """Return how many items ended in ``status``."""
         return sum(1 for item in self.items if item.status == status)
+
+    @property
+    def deterministic_completed(self) -> int:
+        """Return how many items completed WITHOUT needing the inference lane.
+
+        Reported separately from the paced count because together they are the
+        evidence that pacing worked: deterministic progress continuing while
+        inference-bearing work parks is the whole property. Pooled into one
+        "completed" figure, a run that paced everything and a run that paced
+        nothing read identically.
+
+        "Completed" here is every ending that DID the work -- newly ingested,
+        held for review, or already present from an earlier run. A held item
+        was read; it is the finding that needs attention, not the reading.
+        """
+        return sum(
+            1 for item in self.items if not item.needed_inference and item.status in COMPLETED_BATCH_ITEM_STATUSES
+        )
+
+    @property
+    def paced(self) -> int:
+        """Return how many items were parked because the inference lane closed.
+
+        A zero here is only meaningful beside a non-zero elsewhere: a count that
+        has never been shown able to rise is not a measurement.
+        """
+        return self.count_of("paused")
 
     @property
     def summary(self) -> dict[str, int]:
@@ -579,7 +623,8 @@ def run_evidence_batch(
     rows: list[BatchItemResult] = []
     for content_address, source_name in order_batch_sources(addressed):
         path = addressed[(content_address, source_name)]
-        if not lane.admits(deterministic=content_address in deterministic):
+        reads_without_a_model = content_address in deterministic
+        if not lane.admits(deterministic=reads_without_a_model):
             # Paused, not refused: the document is fine and the work simply has
             # not happened. One run-level explanation carries the reason, rather
             # than stamping N identical refusals onto N innocent documents.
@@ -589,9 +634,11 @@ def run_evidence_batch(
                 direction=direction,
                 source_name=path.name,
                 status="paused",
+                needed_inference=True,
             )
         else:
             row = _ingest_one_batch_item(
+                needed_inference=not reads_without_a_model,
                 bucket_id=bucket_id,
                 path=path,
                 content_address=content_address,
@@ -627,8 +674,14 @@ def _ingest_one_batch_item(
     extract: Callable[..., InvoiceDraft],
     read_draft: Callable[..., StoredExtractionDraft | None],
     write_draft: Callable[..., object],
+    needed_inference: bool = True,
 ) -> BatchItemResult:
-    """Run one document all the way through, returning its row and never raising."""
+    """Run one document all the way through, returning its row and never raising.
+
+    ``needed_inference`` is passed in rather than re-derived here: the shape
+    probe already ran once over the bytes at planning time, and asking again
+    would re-read the document and risk the two answers disagreeing.
+    """
     identity = batch_item_identity(content_address=content_address, direction=direction)
 
     def refused(code: str, detail: str) -> BatchItemResult:
@@ -640,6 +693,7 @@ def _ingest_one_batch_item(
             status="refused",
             refusal_code=code,
             refusal_detail=detail,
+            needed_inference=needed_inference,
         )
 
     try:
@@ -660,6 +714,7 @@ def _ingest_one_batch_item(
             direction=direction,
             source_name=path.name,
             status="no_op",
+            needed_inference=needed_inference,
         )
 
     try:
@@ -689,4 +744,5 @@ def _ingest_one_batch_item(
         direction=direction,
         source_name=path.name,
         status="pending_review" if held else "ingested",
+        needed_inference=needed_inference,
     )

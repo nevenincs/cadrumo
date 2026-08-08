@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ...core import fold_diacritics
+from ...core import fold_diacritics as _fold_diacritics
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ._ccaa import CCAA
 from ._constants import ProfileName
@@ -195,7 +195,7 @@ def parse_tax_region(raw: str) -> CCAA:
 
 def _normalize_region_token(raw: str) -> str:
     stripped = raw.strip().casefold().replace(" ", "_").replace("-", "_")
-    return fold_diacritics(stripped)
+    return _fold_diacritics(stripped)
 
 
 __all__ = [

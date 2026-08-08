@@ -170,9 +170,6 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "AEAT-produced export XML, not operator text, and it already normalises "
         "separators explicitly for that machine format."
     ),
-    ("domain/calculations/registry/_export_parse.py", "_parse_decimal"): (
-        "Same AEAT-produced export payload as its sibling above."
-    ),
     ("domain/calculations/registry/_formula_runtime.py", "_m100_eo_agraria_read_indice"): (
         "Reads a registry-authored indice from the compiled snapshot's text "
         "values; the registry TOML is committed data, not typed input."

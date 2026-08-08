@@ -28,15 +28,25 @@ _TOKEN_SCALE = Decimal("1000000")
 _QUANTIZE = Decimal("0.000001")
 
 
-def estimate_cost_usd(provider: LLMProvider, model: str, input_tokens: int, output_tokens: int) -> Decimal:
-    """Estimate request cost in USD from known public pricing.
+def estimate_cost_usd(provider: LLMProvider, model: str, input_tokens: int, output_tokens: int) -> Decimal | None:
+    """Estimate request cost in USD from known public pricing, or refuse.
 
     Looks up the first pricing entry whose ``model`` field is a prefix of
     the lowercased ``model`` argument so model variants (versioned
     suffixes, dated minor releases) inherit their family's rates.
-    Unknown ``provider`` / ``model`` combinations evaluate to zero rather
-    than raising — the caller's downstream usage record always carries a
-    well-typed :class:`decimal.Decimal`.
+
+    **A model this table does not price returns ``None``, never zero.**
+    It used to return zero so every usage record carried a well-typed
+    ``Decimal``, and that is exactly how a cost surface reports an absence
+    as a positive answer: a caller budgeting from ``$0.0000`` concludes the
+    call was free rather than unpriced. The table is a snapshot of public
+    rates and goes stale by construction, so the models it does not carry
+    are a permanent, moving population -- widening it cannot fix this and
+    re-introduces the silent zero for whatever is added next.
+
+    **Free and unpriceable stay distinct.** The local provider genuinely
+    costs nothing and keeps returning ``Decimal('0')``. Collapsing the two
+    would put the defect back under a different name.
 
     Args:
         provider: The :class:`adapters.outbound.llm.LLMProvider`
@@ -48,9 +58,10 @@ def estimate_cost_usd(provider: LLMProvider, model: str, input_tokens: int, outp
 
     Returns:
         Estimated cost in USD, quantised to 6 decimal places using
-        banker-rounded :data:`decimal.ROUND_HALF_UP`. Returns
-        :data:`decimal.Decimal('0')` for the local provider and unknown
-        models.
+        banker-rounded :data:`decimal.ROUND_HALF_UP`;
+        :data:`decimal.Decimal('0')` for the local provider, which is free
+        rather than unpriced; and ``None`` when no table entry prices this
+        provider and model.
     """
     if provider is LLMProvider.LOCAL:
         return _ZERO
@@ -60,4 +71,4 @@ def estimate_cost_usd(provider: LLMProvider, model: str, input_tokens: int, outp
             input_cost = (Decimal(input_tokens) / _TOKEN_SCALE) * input_rate
             output_cost = (Decimal(output_tokens) / _TOKEN_SCALE) * output_rate
             return (input_cost + output_cost).quantize(_QUANTIZE, rounding=ROUND_HALF_UP)
-    return _ZERO
+    return None

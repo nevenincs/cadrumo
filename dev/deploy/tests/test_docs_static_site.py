@@ -10,6 +10,7 @@ import threading
 from collections.abc import Iterator
 from pathlib import Path
 
+import dev.deploy.docs_static_site as _docs_static_site
 import pytest
 from dev.deploy.docs_static_site import (
     _DOWNLOAD_LATEST_SCHEMA,
@@ -36,6 +37,17 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.tests.env_scope import scoped_env_var
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@contextlib.contextmanager
+def _replacing(target: object, name: str, value: object) -> Iterator[None]:
+    """Replace ``target.name`` for the scope, restoring the original on exit."""
+    original = getattr(target, name)
+    setattr(target, name, value)
+    try:
+        yield
+    finally:
+        setattr(target, name, original)
 
 
 def _materialise_language_root(html_root: Path, language: str) -> None:
@@ -196,7 +208,7 @@ def test_exactly_one_site_root_runs_the_cli_sequence_goldens_check() -> None:
             assert should_check_sequences() is (SEQUENCE_CHECK_SKIP_ENV not in env)
 
 
-def test_a_deploy_that_would_skip_the_goldens_check_everywhere_refuses(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_deploy_that_would_skip_the_goldens_check_everywhere_refuses() -> None:
     """Losing the check on every root must stop the publish, not pass quietly.
 
     Skipping the repeats is only sound because one root still runs it. A
@@ -204,12 +216,14 @@ def test_a_deploy_that_would_skip_the_goldens_check_everywhere_refuses(monkeypat
     whose CLI sequences were never checked against their goldens -- and would
     look exactly like a successful build.
     """
-    monkeypatch.setattr(
-        "dev.deploy.docs_static_site._language_build_environment",
-        lambda language, *, check_sequences: {SEQUENCE_CHECK_SKIP_ENV: "1"},
-    )
-
-    with pytest.raises(SystemExit) as refusal:
+    with (
+        _replacing(
+            _docs_static_site,
+            "_language_build_environment",
+            lambda language, *, check_sequences: {SEQUENCE_CHECK_SKIP_ENV: "1"},
+        ),
+        pytest.raises(SystemExit) as refusal,
+    ):
         _language_build_environments()
 
     assert "exactly one site root" in str(refusal.value)

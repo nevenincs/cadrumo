@@ -52,6 +52,7 @@ class EvidenceBatchItemPayload(OutputSchema):
     status: str
     refusal_code: str | None = None
     refusal_detail: str | None = None
+    needed_inference: bool = True
 
 
 class EvidenceBatchUnresolvedPayload(OutputSchema):
@@ -100,6 +101,13 @@ class EvidenceBatchResult(OutputSchema):
     ``summary`` carries every status at its tally including zero, because a
     status missing from a summary reads as "not applicable" rather than "none
     occurred".
+
+    ``deterministic_completed`` and ``paced`` are carried beside the per-status
+    summary rather than derived from it, because the summary cannot express
+    them: a completed row looks identical whether it was read by a parser or
+    through a model, so a consumer reading only the tally cannot tell a run that
+    paced its whole inference half from one that paced nothing. Together the two
+    figures are what makes pacing observable at all.
     """
 
     bucket_id: str
@@ -108,5 +116,7 @@ class EvidenceBatchResult(OutputSchema):
     unresolved: list[EvidenceBatchUnresolvedPayload] = []
     inference_pause: EvidenceBatchPausePayload | None = None
     summary: dict[str, int] = {}
+    deterministic_completed: int = 0
+    paced: int = 0
     any_failed: bool
     any_deferred: bool

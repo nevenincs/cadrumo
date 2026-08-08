@@ -1344,7 +1344,7 @@ key = "iban"
 type = "string"
 required = false
 sensitivity = "financial"
-description = "Payment account when required by filing context."
+description = "Your bank account IBAN. AEAT pays a refund INTO this account, and CHARGES this account when a filing elects domiciliacion del ingreso (direct debit). One account serves both directions because the official record carries one IBAN field for both (DR303 position 23, \"Domiciliacion/Devolucion - IBAN\"). Read transiently at export from encrypted secure storage; never logged."
 export_headers = ["iban"]
 
 [[sections.fields]]

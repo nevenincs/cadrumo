@@ -47,7 +47,7 @@ from ..domain.currency import (
     CurrencyNormalizationStatus,
     MonetaryAmount,
 )
-from ..domain.iva import IvaCategory, IvaFlowDirection
+from ..domain.iva import EUMemberState, IvaCategory, IvaFlowDirection
 from ..domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -160,6 +160,13 @@ def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
 
             iva_category = rule.get("iva_category")
             eu_member_state = rule.get("eu_member_state")
+            # A non-EU counterparty (export) has no eu_member_state at all, but the
+            # export exemption still turns on where the counterparty is ESTABLISHED,
+            # so those rules state their own counterparty_country explicitly rather
+            # than leaving establishment unset.
+            counterparty_country = rule.get("counterparty_country") or (
+                eu_member_state.upper() if eu_member_state else None
+            )
             payload: dict[str, Any] = {
                 "raw": raw,
                 "direction": TransactionDirection(rule["direction"]),
@@ -169,7 +176,10 @@ def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
                 "iva_amount": iva_amount,
                 "category_id": rule.get("category_id"),
                 "iva_category": IvaCategory(iva_category) if iva_category else None,
-                "counterparty_country": (eu_member_state.upper() if eu_member_state else None),
+                "counterparty_country": counterparty_country,
+                "counterparty_identification_state": (
+                    EUMemberState(eu_member_state.lower()) if eu_member_state else None
+                ),
                 "irpf_category": rule.get("irpf_category"),
                 "source_jurisdiction": "ES",
                 "group_label": None,

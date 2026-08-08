@@ -88,9 +88,8 @@ def test_a_refused_pair_is_named_rather_than_silently_folded_into_the_count() ->
     as zero rows; a summary that only reported the aggregate capture count
     would make that refusal indistinguishable from a genuine empty answer.
     """
-    from .....application.live import FiledHistoryOnboardingRun
+    from .....application.live import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
     from .....core import FiledHistoryDiscoverySignal
-    from .....application.live import FiledHistoryPairOutcome
 
     refused_pair = FiledHistoryPairOutcome(
         modelo="303",

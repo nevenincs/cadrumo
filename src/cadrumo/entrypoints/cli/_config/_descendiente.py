@@ -306,6 +306,7 @@ def _emit_descendiente_list(
                 prorrata_minimo=descendant.prorrata_minimo,
                 meses_madre_trabajo=descendant.meses_madre_trabajo,
                 alta_posterior_nacimiento_mes=descendant.alta_posterior_nacimiento_mes,
+                segundo_ciclo_infantil_inicio_mes=descendant.segundo_ciclo_infantil_inicio_mes,
                 gastos_guarderia_euros=descendant.gastos_guarderia_euros,
                 gastos_guarderia_mensuales=tuple(
                     GuarderiaMonthSpendPayload(month=entry.month, amount_euros=entry.amount_euros)

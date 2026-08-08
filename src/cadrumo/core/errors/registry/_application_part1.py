@@ -779,7 +779,9 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_WIZARD_MISSING_FLAG",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_wizard_missing_flag",
-            default_suggestion=None,
+            # The message already names the missing flags; the next step an
+            # operator needs is the full flag set for the scripted create.
+            default_suggestion="aeat config profile create --help",
             retryable=False,
             runbook_id=None,
         ),

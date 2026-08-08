@@ -188,7 +188,10 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
                         "input_tokens": row.input_tokens,
                         "output_tokens": row.output_tokens,
                         "total_tokens": row.total_tokens,
-                        "cost_estimate_usd": format(row.cost_estimate_usd, "f"),
+                        "cost_estimate_usd": (
+                            None if row.cost_estimate_usd is None else format(row.cost_estimate_usd, "f")
+                        ),
+                        "unpriced_calls": row.unpriced_calls,
                     }
                     for row in report.usage_providers
                 ],
@@ -196,7 +199,10 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
                 "total_cache_hits": report.total_cache_hits,
                 "total_input_tokens": report.total_input_tokens,
                 "total_output_tokens": report.total_output_tokens,
-                "total_cost_estimate_usd": format(report.total_cost_estimate_usd, "f"),
+                "total_cost_estimate_usd": (
+                    None if report.total_cost_estimate_usd is None else format(report.total_cost_estimate_usd, "f")
+                ),
+                "total_unpriced_calls": report.total_unpriced_calls,
                 "confidence_providers": [
                     {
                         "provider": row.provider,
@@ -219,7 +225,10 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
         for row in report.usage_providers:
             lines.append(
                 f"{row.provider}\tcalls={row.calls}\tcache_hits={row.cache_hits}"
-                f"\ttokens={row.total_tokens}\tcost_usd={format(row.cost_estimate_usd, 'f')}",
+                # "unpriced" rather than a number: this line is what an operator
+                # budgets from, and a blank or a zero here would read as free.
+                f"\ttokens={row.total_tokens}\tcost_usd="
+                f"{'unpriced' if row.cost_estimate_usd is None else format(row.cost_estimate_usd, 'f')}",
             )
         for row in report.confidence_providers:
             mean_text = optional_decimal_text(row.mean_confidence) or "-"

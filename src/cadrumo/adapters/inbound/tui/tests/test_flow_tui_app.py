@@ -84,6 +84,7 @@ _COPY_CATALOGUE: dict[str, object] = {
         # provenance is observable in the rendered label under the fixture root.
         "compare_select": {"candidate": "{label} :: {provenance}"},
     },
+    "wizard": {"section": {"one": "SECTION-ONE", "two": "SECTION-TWO"}},
 }
 
 _TERMINAL_SIZE = (140, 60)
@@ -336,6 +337,74 @@ async def test_review_row_selection_jumps_the_cursor_to_that_page() -> None:
 
         assert app.state.cursor == "p_note"
         assert not _on_review(app)
+
+
+def _two_section_definition() -> FlowDefinition:
+    """Two named sections, one page each -- the shape a heading actually groups."""
+    return FlowDefinition(
+        id="flows.test.tui.two-sections",
+        title=_copy(),
+        description=_copy(),
+        sections=(
+            FlowSection(
+                id="s1",
+                title=_copy("wizard.section.one"),
+                items=(FlowPage(id="p_first", widget=FlowWidgetKind.TEXT, prompt=_copy(), answer_type=str),),
+            ),
+            FlowSection(
+                id="s2",
+                title=_copy("wizard.section.two"),
+                items=(
+                    FlowPage(id="p_second", widget=FlowWidgetKind.TEXT, prompt=_copy(), answer_type=str, required=False),
+                ),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.AVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+def _heading_rows(app: FlowTuiApp) -> list[str]:
+    """The section-heading rows' rendered titles, in table order."""
+    table = app.screen.query_one("#review-table", DataTable)
+    return [
+        str(table.get_row(row_key)[1])
+        for row_key in table.rows
+        if row_key.value is not None and str(row_key.value).startswith("\x00section\x00")
+    ]
+
+
+@pytest.mark.asyncio
+async def test_review_table_omits_the_heading_row_when_the_flow_has_one_section() -> None:
+    """A single-section flow's review table opens directly on its first question.
+
+    The heading exists to distinguish one section's rows from another's;
+    with exactly one section there is nothing to distinguish, and
+    rendering it anyway means the table's very first row is whatever that
+    lone section happens to be titled with -- for the live modelo-work and
+    amend wizards, their own multi-sentence help copy, landing in the
+    table looking exactly like a question row with no status glyph.
+    """
+    app = _app()
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press("f2")
+
+        assert _heading_rows(app) == []
+        table = app.screen.query_one("#review-table", DataTable)
+        assert table.row_count == 3, "every real page must still be a row; only the heading is omitted"
+
+
+@pytest.mark.asyncio
+async def test_review_table_still_groups_multiple_sections_by_heading() -> None:
+    """A genuinely multi-section flow keeps its per-section heading rows."""
+    app = FlowTuiApp(_two_section_definition(), mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.press("f2")
+
+        assert _heading_rows(app) == [tr("wizard.section.one"), tr("wizard.section.two")]
 
 
 # ── submit gating ───────────────────────────────────────────────────────────

@@ -25,6 +25,7 @@ rendered here rather than re-modelled as a bespoke TUI-only advisory.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import override
 
 from textual.app import App, ComposeResult
@@ -34,7 +35,14 @@ from textual.widgets import DataTable, Footer, Static
 
 from ....core.i18n import tr
 from ....core.json_contract import Notice
-from ._theme import BASE_CSS, ContentScroll, NoticeBand, install_cadrumo_themes, toggle_appearance
+from ._theme import (
+    BASE_CSS,
+    NOTICE_BAND_CSS,
+    ContentScroll,
+    NoticeBand,
+    install_cadrumo_themes,
+    toggle_appearance,
+)
 
 # Copyable custody / recovery next-step lines. These are literal CLI
 # invocations (command tokens, not operator prose), rendered verbatim so an
@@ -75,12 +83,24 @@ class StatusProfileRow:
 
 @dataclass(frozen=True, slots=True)
 class StatusAuthView:
-    """Local AEAT access readiness projected from the workflow auth state."""
+    """Local AEAT access readiness projected from the workflow auth state.
+
+    ``idle_deadline`` and ``absolute_deadline`` are a second, unrelated
+    fact carried on this same panel: not AEAT auth readiness, but how long
+    the operator's own unlocked PROFILE session — the one ``aeat config
+    login`` opened — has left before it locks again. They share this zone
+    because it is the one place on the page an operator already looks to
+    ask "am I authenticated right now", and "for how much longer" is the
+    same question. ``None`` for either means no live profile session could
+    be read (never logged in, or the session artefacts are unreadable).
+    """
 
     provider: str | None = None
     login_ready: bool = False
     subject: str | None = None
     certificate_source: str | None = None
+    idle_deadline: datetime | None = None
+    absolute_deadline: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,6 +148,7 @@ class StatusApp(App[None]):
 
     CSS = (
         BASE_CSS
+        + NOTICE_BAND_CSS
         + """
     .status-panel DataTable { height: auto; width: 100%; background: $surface; }
     .status-empty { color: $text-muted; text-style: italic; }
@@ -261,6 +282,12 @@ class StatusApp(App[None]):
             lines.append(f"{tr('flows.status.auth.subject')}\t{auth.subject}")
         if auth.certificate_source:
             lines.append(f"{tr('flows.status.auth.certificate_source')}\t{auth.certificate_source}")
+        if auth.idle_deadline is not None:
+            lines.append(f"{tr('flows.status.auth.idle_deadline')}\t{auth.idle_deadline.isoformat(timespec='minutes')}")
+        if auth.absolute_deadline is not None:
+            lines.append(
+                f"{tr('flows.status.auth.absolute_deadline')}\t{auth.absolute_deadline.isoformat(timespec='minutes')}",
+            )
         panel.mount(Static("\n".join(lines), id="auth-lines"))
 
     # ── zone (d): recovery / custody pointers ───────────────────────────

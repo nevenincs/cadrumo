@@ -480,6 +480,38 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         pattern_names=frozenset({"year-qualified quarterly token"}),
         text=_text(r"name="),
     ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/adapters/inbound/declaracion/tests/test_result_disposition_channel_evidence\.py$"),
+        reason="bundled M303 manual-annex facsimile filenames name the AEAT worked example's four quarters",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+    ),
+    AllowlistRule(
+        path=_path(
+            r"^src/cadrumo/(?:"
+            r"adapters/inbound/financial/providers/tests/test_(?:mapped_tabular_fallback|tabular_projection)|"
+            r"core/tests/test_tabular_dialect"
+            r")\.py$"
+        ),
+        reason="bundled bank/ledger/erp tabular-dialect export fixtures carry the captured export's own filename",
+        pattern_names=frozenset({"calendar quarter token"}),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/application/live/tests/test_filed_history_discovery\.py$"),
+        reason="synthetic response body names a representative filed-declaration artefact filename, not a period input",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"submitted-file"),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/core/tests/test_redaction_recorded_sequence_output\.py$"),
+        reason="the redaction arm's admission rule is proven against representative filename specimens, not period input",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/domain/calculations/registry/tests/test_rate_box_unscreened_groups\.py$"),
+        reason="descriptive per-revision label paired with a typed filing_year/period kwarg pair; no string parsing",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"authority\.snapshot"),
+    ),
 )
 
 

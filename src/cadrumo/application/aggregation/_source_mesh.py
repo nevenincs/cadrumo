@@ -177,6 +177,9 @@ CalculationSourceDiagnosticReason = Literal[
     # is correct; refusing silently would file a quietly short return, which is
     # what this reason prevents.
     "invoice_reverse_charge_cuota_not_derivable",
+    # The recorded recargo departs from the rate art. 161 publishes for that
+    # slot. A cross-check beside the declared figure, never a replacement of it.
+    "invoice_recargo_departs_from_published_rate",
     "official_box_unpopulated",
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",

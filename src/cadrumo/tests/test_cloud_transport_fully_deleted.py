@@ -60,11 +60,11 @@ import pytest
 
 from . import SRC_CADRUMO, non_test_package_python_files, repo_relative
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
 if TYPE_CHECKING:
     from ..application.ledger import InvoiceExtractionAuthorityValues
     from ..core.config import LLMProvider
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _DELETED_CLOUD_SYMBOL_FAMILIES: dict[str, tuple[str, ...]] = {
     "transport and provider builders": (

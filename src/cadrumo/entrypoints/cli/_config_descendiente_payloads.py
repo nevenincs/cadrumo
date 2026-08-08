@@ -88,6 +88,7 @@ class ProfileDescendientePayload(OutputSchema):
     prorrata_minimo: bool | None = None
     meses_madre_trabajo: tuple[int, ...] = ()
     alta_posterior_nacimiento_mes: int | None = Field(default=None, ge=1, le=12)
+    segundo_ciclo_infantil_inicio_mes: int | None = Field(default=None, ge=1, le=12)
     gastos_guarderia_euros: int = Field(default=0, ge=0)
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpendPayload, ...] = ()
     nif: DescendantNif | None = None

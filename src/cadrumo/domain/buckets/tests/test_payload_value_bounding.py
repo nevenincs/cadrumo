@@ -55,6 +55,7 @@ _BOUNDED_CALLS = frozenset(
         "_source_provenance_trace_sha256",
         # Explicitly shortens to the cap; that is its whole purpose.
         "_bounded_payload_reference",
+        "_bounded_transport_label",
     }
 )
 """Calls whose result cannot outgrow a payload slot.

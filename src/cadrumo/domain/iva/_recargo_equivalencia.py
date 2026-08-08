@@ -41,6 +41,8 @@ from typing import Final, TypeGuard
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.decimal import coerce_decimal_strict
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError, IvaValidationError
@@ -220,7 +222,7 @@ def _load_recargo_rate_table_cached(path: str, byte_count: int, modified_ns: int
     del byte_count, modified_ns
     target = Path(path)
     try:
-        payload = tomllib.loads(target.read_text(encoding="utf-8"))
+        payload = tomllib.loads(target.read_text(encoding=UTF_8_ENCODING))
     except OSError as exc:
         raise IvaCatalogueError(f"{target}: cannot read recargo rate registry: {exc}") from exc
     except tomllib.TOMLDecodeError as exc:
@@ -250,7 +252,11 @@ def _hydrate_row(row: Mapping[str, object]) -> dict[str, object]:
     for field in ("iva_rate", "recargo_rate"):
         raw = hydrated.get(field)
         if isinstance(raw, str):
-            hydrated[field] = Decimal(raw)
+            # DECIMAL-TEXT-RATIONALE-RECARGO-TOML-RATE: authored TOML scalar, not
+            # operator text -- the separator convention is Python/TOML decimal-point
+            # literal syntax, fixed by the authoring format rather than chosen by a
+            # human typist, so there is no European/American thousands ambiguity here.
+            hydrated[field] = coerce_decimal_strict(raw)
     raw_refs = hydrated.get("legal_refs")
     if _is_object_list(raw_refs):
         hydrated["legal_refs"] = _coerce_legal_refs(raw_refs)

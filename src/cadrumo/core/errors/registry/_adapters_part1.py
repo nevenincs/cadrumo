@@ -68,7 +68,11 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="AUTH_AUTH_CERTIFICATE_LOAD",
             category=ErrorCategory.AUTH,
             message_key="errors.auth.auth_auth_certificate_load",
-            default_suggestion=None,
+            # Names the provider actually configured rather than assuming the
+            # certificate one: this refusal is reachable when the live path
+            # selected a certificate the operator never chose, and a suggestion
+            # naming a certificate remedy misdirects exactly then.
+            default_suggestion="aeat config auth status",
             retryable=False,
             runbook_id=None,
         ),

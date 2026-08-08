@@ -1456,6 +1456,38 @@ def _export_active_profile_to_google_sheets(*, modelo: str, period: str, year: i
     return snapshot.modelo.id, result.spreadsheet_url
 
 
+def logout_action() -> ManagerAction:
+    """End the operator's session and close the manager.
+
+    The only action here whose outcome the operator cannot keep looking
+    at: a logout that merely repainted would leave the just-closed
+    profile's fields on screen as though they were still live. It drives
+    :func:`~cadrumo.application.user_profile.logout_active_profile` --
+    the same strong-close teardown ``aeat config logout`` runs on the CLI
+    (session zeroised, both persisted-session halves deleted, the
+    per-bucket lock released, the active-profile pointer cleared) -- and
+    reports the outcome through ``close_session=True`` rather than a
+    rebuilt overview, so :meth:`~cadrumo.adapters.inbound.tui._manager_screen.ProfileManagerApp._settle_action`
+    exits the surface instead of redrawing it.
+    """
+    from ....adapters.inbound.tui import ManagerAction
+
+    return ManagerAction(
+        key="logout",
+        label=tr("flows.manager.action.logout"),
+        label_key="flows.manager.action.logout",
+        run=_run_logout,
+    )
+
+
+def _run_logout() -> ManagerActionOutcome:
+    from ....adapters.inbound.tui import ManagerActionOutcome
+    from ....application.user_profile import logout_active_profile
+
+    logout_active_profile()
+    return ManagerActionOutcome(message=tr("flows.manager.action.logout_done"), close_session=True)
+
+
 def manager_actions() -> tuple[ManagerAction, ...]:
     """Every action the manager offers, in the order it offers them."""
     return (
@@ -1466,6 +1498,7 @@ def manager_actions() -> tuple[ManagerAction, ...]:
         add_row_action(),
         google_export_action(),
         export_action(),
+        logout_action(),
     )
 
 
@@ -1476,6 +1509,7 @@ __all__ = [
     "export_action",
     "filed_history_pull_all_action",
     "google_export_action",
+    "logout_action",
     "manager_actions",
     "passphrase_action",
 ]

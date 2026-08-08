@@ -355,3 +355,29 @@ def test_the_spanish_path_still_rejects_a_bad_control_character() -> None:
     """Positive control for the Spanish path."""
     assert canonical_identity_token(_SUPPLIER_CIF_FAILING_CHECKSUM) is None
     assert canonical_identity_token(_UNRELATED_VALID_CIF) == _UNRELATED_VALID_CIF
+
+
+def test_an_absent_country_does_not_verify_a_foreign_identifier_as_spanish() -> None:
+    """The country parameter is nullable here, so absence must not become Spain.
+
+    The ledger transaction's counterparty country is itself optional, so this
+    helper genuinely receives ``None``. The documented fallback to the Spanish
+    path is safe only because the Spanish algorithm then REFUSES an identifier
+    that is not Spanish: a bare foreign number with no prefix to speak for it
+    comes back unverified rather than canonicalised into a Spanish identity.
+
+    Without this, the fallback could be loosened to accept what it cannot
+    verify and nothing would notice, because the two identifiers that do carry
+    their own evidence -- a valid Spanish CIF, and a foreign number wearing its
+    country prefix -- resolve identically whether or not a country is stated.
+    """
+    bare_foreign_number = "811907980"
+
+    assert canonical_identity_token(bare_foreign_number, country_code=None) is None
+    assert canonical_identity_token(bare_foreign_number) is None
+
+    # Positive controls: an absent country must not break the two cases that
+    # can answer for themselves, or the assertion above would hold for a helper
+    # that simply verifies nothing.
+    assert canonical_identity_token("A58818501", country_code=None) == "A58818501"
+    assert canonical_identity_token("DE811907980", country_code=None) == "DE811907980"

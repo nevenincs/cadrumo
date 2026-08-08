@@ -50,6 +50,8 @@ from .._diagnostics import (
 )
 from .._import import import_ledger_with_diagnostics
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 
 def _diagnose(**kwargs: object):
     """Call the helper with fingerprints derived for the supplied rows.
@@ -71,9 +73,6 @@ def _diagnose(**kwargs: object):
         import_fingerprints=fingerprints,  # type: ignore[arg-type]
         **kwargs,  # type: ignore[arg-type]
     )
-
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _raw_transaction(

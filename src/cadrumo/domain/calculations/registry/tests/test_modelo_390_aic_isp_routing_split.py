@@ -87,8 +87,8 @@ def test_box_26_and_box_28_are_distinct_casillas_at_their_official_positions() -
     assert field_28.casilla_id == _CASILLA_BOX_28
 
     # The rate-blind AIC total layer keeps aggregating (for the annual total)
-    # but no longer owns any export position -- the two-layer shape mandated
-    # by the rate-box ADR.
+    # but no longer owns any export position -- the two-layer shape the
+    # rate-box design mandates.
     assert blind.export_refs == ()
 
 

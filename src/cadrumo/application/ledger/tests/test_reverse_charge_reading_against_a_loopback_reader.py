@@ -10,9 +10,9 @@ code: the real provider client, the real router, the real grounding stage.
 and the repercutido line are printed on the page and come back through the
 transcription, so the reply reports what its document actually says. A pair of
 hand-built drafts would exercise the finding while proving nothing about
-whether a document reaches it -- the failure shape this campaign has paid for
-repeatedly, where a guard is correct in logic and unreachable in wiring because
-its tests supplied the derived value directly.
+whether a document reaches it -- a recurring failure shape in this codebase,
+where a guard is correct in logic and unreachable in wiring because its tests
+supplied the derived value directly.
 
 **Why reverse charge specifically.** A domestic reverse charge prints no cuota
 and *obliges the recipient to self-assess* output IVA, so mis-honouring it
@@ -98,7 +98,7 @@ _RETENCION_REPLY = _LAWFUL_REPLY | {
 }
 
 
-class _ReaderStub(BaseHTTPRequestHandler):
+class _LoopbackRequestHandler(BaseHTTPRequestHandler):
     """A real endpoint speaking the runtime's ``/api/chat`` shape."""
 
     reply: ClassVar[str]
@@ -137,14 +137,14 @@ def serve(secure_objects: object) -> Iterator[object]:
     rather than disabling the telemetry write to make the test pass.
     """
     requests: Queue[dict[str, object]] = Queue()
-    _ReaderStub.requests = requests
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _ReaderStub)
+    _LoopbackRequestHandler.requests = requests
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _LoopbackRequestHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     url = f"http://127.0.0.1:{server.server_port}/api/chat"
 
     def read(document: Path, reply: dict[str, str | None]):
-        _ReaderStub.reply = json.dumps(reply)
+        _LoopbackRequestHandler.reply = json.dumps(reply)
         payload = document.read_bytes()
         evidence = EvidenceInput(
             mime_type="application/pdf",

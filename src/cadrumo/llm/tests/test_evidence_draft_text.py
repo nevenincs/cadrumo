@@ -184,7 +184,7 @@ class TestTextExtractionPrompt:
             build_text_field_extraction_prompt("   \n\t ")
 
 
-class TestCannedResponseParsesAndGrounds:
+class TestAuthoredResponseParsesAndGrounds:
     """A real model response string, through the real parser and grounder."""
 
     def test_a_full_response_grounds_into_the_expected_draft(self) -> None:

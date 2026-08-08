@@ -52,7 +52,7 @@ from ....core.hashing import canonical_json_bytes
 from ....core.time import UtcInstant, now
 from ....llm import LLMConsentError
 
-__all__ = ["EvidenceConsentLedger", "EvidenceConsentLedgerEntry"]
+__all__ = ["EvidenceConsentLedger", "EvidenceConsentLedgerEntry", "evidence_consent_ledger_entry_object_key"]
 
 _NAMESPACE = LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE.namespace
 _VERSION = LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE.schema_version
@@ -81,6 +81,16 @@ class EvidenceConsentLedgerEntry(BaseModel):
     model: str = Field(min_length=1, description="Resolved model identifier the request dispatched at.")
     surface: str = Field(min_length=1, description="Operator surface that took the acknowledgement.")
     recorded_at: UtcInstant = Field(description="UTC timestamp the consent was honoured.")
+
+
+def evidence_consent_ledger_entry_object_key(entry: EvidenceConsentLedgerEntry) -> str:
+    """Return the unique natural key one consent entry is saved under.
+
+    Public so the custody-carry natural-key resolver can recover the same
+    key a decrypted row was written under, without re-deriving the grammar
+    a second time.
+    """
+    return "|".join((entry.recorded_at.isoformat(), entry.evidence_content_address, entry.entry_id))
 
 
 class EvidenceConsentLedger:
@@ -138,7 +148,7 @@ class EvidenceConsentLedger:
         try:
             secure_object_repository_for_active_bucket().save(
                 namespace=_NAMESPACE,
-                object_key=self._object_key_for(entry),
+                object_key=evidence_consent_ledger_entry_object_key(entry),
                 classification=_SENSITIVITY,
                 schema_version=_VERSION,
                 written_at=entry.recorded_at,
@@ -172,8 +182,3 @@ class EvidenceConsentLedger:
             )
         ]
         return tuple(sorted(entries, key=lambda entry: (entry.recorded_at, entry.entry_id)))
-
-    @staticmethod
-    def _object_key_for(entry: EvidenceConsentLedgerEntry) -> str:
-        """Return the unique natural key one consent entry is saved under."""
-        return "|".join((entry.recorded_at.isoformat(), entry.evidence_content_address, entry.entry_id))

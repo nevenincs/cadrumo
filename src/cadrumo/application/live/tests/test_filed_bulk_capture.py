@@ -119,10 +119,10 @@ def test_bulk_capture_reports_registry_unsupported_modelos_as_local_boundaries(t
     assert set(failures) == {"151", "721"}
     assert failures["151"].year == 2024
     assert failures["151"].error_type == "LiveApplicationInputError"
-    assert "declares no filed-declarations live read surface" in failures["151"].message
+    assert "declares no authenticated filed-declarations read surface" in failures["151"].message
     assert failures["721"].year == 2024
     assert failures["721"].error_type == "LiveApplicationInputError"
-    assert "does not offer modelo '721'" in failures["721"].message
+    assert "declares no authenticated filed-declarations read surface" in failures["721"].message
 
 
 def test_bulk_capture_report_exposes_its_evidence_notices_channel(tmp_path: Path) -> None:
@@ -166,7 +166,7 @@ def test_bulk_capture_accepts_limit_for_locally_bounded_unsupported_modelos(tmp_
     assert report.captured_count == 0
     assert report.failed_count == 1
     assert report.failures[0].modelo == "151"
-    assert "declares no filed-declarations live read surface" in report.failures[0].message
+    assert "declares no authenticated filed-declarations read surface" in report.failures[0].message
 
 
 def test_bulk_listing_reports_registry_unsupported_modelos_as_local_boundaries() -> None:
@@ -185,10 +185,10 @@ def test_bulk_listing_reports_registry_unsupported_modelos_as_local_boundaries()
     assert set(failures) == {"151", "721"}
     assert failures["151"].year == 2024
     assert failures["151"].error_type == "LiveApplicationInputError"
-    assert "declares no filed-declarations live read surface" in failures["151"].message
+    assert "declares no authenticated filed-declarations read surface" in failures["151"].message
     assert failures["721"].year == 2024
     assert failures["721"].error_type == "LiveApplicationInputError"
-    assert "does not offer modelo '721'" in failures["721"].message
+    assert "declares no authenticated filed-declarations read surface" in failures["721"].message
 
 
 def test_truncated_register_read_reuses_the_per_pair_failure_taxonomy() -> None:

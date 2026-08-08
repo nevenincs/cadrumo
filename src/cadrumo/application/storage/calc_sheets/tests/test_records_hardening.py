@@ -23,7 +23,7 @@ from .._records import (
     SheetProtectedRange,
     SheetValueCell,
     TabName,
-    _column_letters_to_index,
+    column_letters_to_index,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -61,7 +61,7 @@ def test_invalid_column_letters_raise_typed_record_error_without_raw_value() -> 
     sensitive_letters = "PRIVATE_TOKEN"
 
     with pytest.raises(CalcSheetsRecordError) as raised:
-        _column_letters_to_index(sensitive_letters)
+        column_letters_to_index(sensitive_letters)
 
     error = raised.value
     assert str(error) == "invalid Sheets column letters"

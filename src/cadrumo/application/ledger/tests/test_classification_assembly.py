@@ -361,8 +361,8 @@ def test_complete_evidence_assembles_and_reaches_the_rule_table() -> None:
     """The positive control for the whole file: the table is genuinely reachable.
 
     Without this, every refusal above would pass equally against a producer that
-    could never assemble anything — which is exactly the state this Step exists
-    to end, since the criteria record was constructed nowhere in production.
+    could never assemble anything — which is exactly the failure mode this test
+    guards against, since the criteria record was constructed nowhere in production.
     """
     assembly = _complete()
 
@@ -448,7 +448,7 @@ def test_the_domestic_rate_tier_axis_is_carried_through() -> None:
 
 
 def test_a_spanish_postal_code_settles_the_territory_the_country_code_cannot() -> None:
-    """The join this Step exists to make: the sub-national half of establishment.
+    """The join that resolves the sub-national half of establishment.
 
     A country code names Spain and stops there, because the three Spanish IVA
     territories are treated differently by law. The postal code's first two
@@ -654,7 +654,7 @@ def test_a_malformed_country_code_is_not_reported_as_naming_spain() -> None:
     a Spanish one alike, so a refusal that branched on the code merely being
     present told the operator that a malformed code named Spain. It becomes
     load-bearing the moment anything gates the postal join on whether the
-    country evidence named Spain, which is what this Step does.
+    country evidence named Spain, which is what this test does.
 
     ``ESP`` rather than ``XX``: a well-formed but unlisted alpha-2 code resolves
     to THIRD_COUNTRY and never reaches this branch, so it would prove nothing.

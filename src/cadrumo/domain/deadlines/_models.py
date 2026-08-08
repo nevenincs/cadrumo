@@ -307,6 +307,14 @@ class ModeloEnrollment(BaseModel):
 class RefundAccount(BaseModel):
     """The cuenta-devolución refund account AEAT pays a Modelo 303 refund into.
 
+    Refund-only. AEAT's DR303 position 23 is a single dual-purpose field
+    labelled ``Domiciliación/Devolución - IBAN``, so the record has somewhere to
+    state a charge account too -- but this profile carries no separate charge
+    account, and the export path must not infer one by reusing this account for
+    a domiciliación del ingreso: nominating an account to RECEIVE a refund is
+    not an authorisation to DEBIT it. The export path refuses that election
+    unconditionally rather than make the inference.
+
     Groups the IBAN with the foreign-bank block used for a non-SEPA
     account. Every field is sensitive financial identity data: per the
     ``sensitive-financial-data-secure-storage-only`` invariant it lives

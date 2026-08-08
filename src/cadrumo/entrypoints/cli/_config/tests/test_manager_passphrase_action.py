@@ -30,12 +30,12 @@ from .._manager_actions import (
     _run_passphrase_change,
 )
 
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from .....adapters.inbound.tui import FormPage
-
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _LABEL = "Passphrase Action Subject"
 _ORIGINAL_PASSPHRASE = "passphrase-action-original-secret"  # noqa: S105 - synthetic test fixture

@@ -238,11 +238,11 @@ def test_a_draft_with_no_recorded_transport_is_surfaced_not_assumed_local(
     assert survey.cloud_derived_artefacts[0].transport is None
 
 
-# ── Re-derivation: the Step's gate ───────────────────────────────────────────
+# ── Re-derivation: the re-stamp gate ─────────────────────────────────────────
 
 
 def test_re_derivation_re_stamps_the_artefact_without_rewriting_its_history(profile: TestRuntimeProfile) -> None:
-    """The Step's gate: a new local derivation, with the prior stamp preserved.
+    """The re-stamp gate: a new local derivation, with the prior stamp preserved.
 
     Three things are asserted together because the value of the operation is
     exactly their conjunction: the stored artefact now carries a LOCAL stamp

@@ -13,7 +13,7 @@ from cadrumo.core.i18n import extract_placeholders
 from cadrumo.core.product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY
 from cadrumo.tests.cli_runner import invoke_typer_app
 
-from .._paths import LOCALES_DIR, SRC_DIR
+from .._paths import DOCS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ..cli import app
 from ..manager import LocaleError, LocaleManager, _flatten_leaf_values
 
@@ -44,6 +44,8 @@ _PROSE_KEYS = {
         "cli.ledger.classify.system_state_not_assignable",
         "mcp.elicitation.refusal.no_channel",
         "provisioning.model.licence.non_commercial_advisory",
+        "docs.legal.index.intro",
+        "docs.legal.page.intro",
     },
     "en": {
         "errors.auth.auth_former_product_session_state",
@@ -60,6 +62,8 @@ _PROSE_KEYS = {
         "cli.config.google.profile_help",
         "mcp.elicitation.refusal.no_channel",
         "provisioning.model.licence.non_commercial_advisory",
+        "docs.legal.index.intro",
+        "docs.legal.page.intro",
     },
     "es": {
         "errors.auth.auth_former_product_session_state",
@@ -74,6 +78,8 @@ _PROSE_KEYS = {
         "cli.ledger.classify.system_state_not_assignable",
         "mcp.elicitation.refusal.no_channel",
         "provisioning.model.licence.non_commercial_advisory",
+        "docs.legal.index.intro",
+        "docs.legal.page.intro",
     },
     "hu": {
         "errors.auth.auth_former_product_session_state",
@@ -88,6 +94,8 @@ _PROSE_KEYS = {
         "cli.ledger.classify.system_state_not_assignable",
         "mcp.elicitation.refusal.no_channel",
         "provisioning.model.licence.non_commercial_advisory",
+        "docs.legal.index.intro",
+        "docs.legal.page.intro",
     },
 }
 _CLI_KEYS = {
@@ -286,7 +294,22 @@ def test_audit_reports_root_and_nested_format_field_drift(tmp_path: Path) -> Non
 
 
 def test_audit_accepts_matching_conversions_escaped_and_literal_braces(tmp_path: Path) -> None:
-    """Equivalent names pass despite conversion and harmless brace differences."""
+    """Equivalent names pass despite conversion and harmless brace differences.
+
+    Asserted on ``placeholder_mismatches`` rather than on ``result.ok``, and the
+    change is a ruling rather than a weakening. ``ok`` also requires catalogue
+    COMPLETENESS, and a fixture holding one authored key cannot be complete now
+    that the scaffold no longer fabricates a value for every codebase key it
+    finds. It used to audit clean only because the scaffold wrote each missing
+    key's own dotted path as its value -- a placeholder the honesty ratchet and
+    three coverage gates all refuse, so this case passed on the strength of the
+    very thing those gates exist to catch.
+
+    The property under test never involved completeness: it is that two
+    spellings of one placeholder set are recognised as equivalent. That is what
+    is asserted, and it fails for its own reason now rather than for a reason
+    the fixture happened to satisfy.
+    """
     values = {
         locale: f"{locale} %{{amount}} {{subject!r}} {{{{escaped}}}} {{not a placeholder}}" for locale in _LOCALES
     }
@@ -297,12 +320,12 @@ def test_audit_accepts_matching_conversions_escaped_and_literal_braces(tmp_path:
 
     result = manager.audit()
 
-    assert result.ok, result
+    assert result.placeholder_mismatches == (), result.placeholder_mismatches
 
 
 def test_committed_catalogues_pass_production_audit() -> None:
     """The shipped four-language catalogue is accepted by the real validator."""
-    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR)
+    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR,))
 
     result = manager.audit()
 
@@ -311,7 +334,7 @@ def test_committed_catalogues_pass_production_audit() -> None:
 
 def test_committed_catalogues_follow_contextual_product_identity_contract() -> None:
     """Shipped locale values preserve prose, identity, CLI, machine, and authority referents."""
-    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR)
+    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR, extra_src_dirs=(DOCS_SRC_DIR,))
 
     assert PRODUCT_IDENTITY.prose_name == "Cadrumo"
     assert PRODUCT_IDENTITY.display_name == "CADRUMO"

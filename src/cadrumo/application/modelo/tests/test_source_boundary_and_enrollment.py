@@ -82,11 +82,13 @@ _ATTRIBUTION_PROFILE_FACTS = (
     UserProfileFact(path="attribution_entity_socios.0.name", value="Member Two"),
     UserProfileFact(path="attribution_entity_socios.0.share_pct", value=Decimal("40")),
     UserProfileFact(path="attribution_entity_socios.0.base_imponible_assigned", value=Decimal("4000")),
+    UserProfileFact(path="attribution_entity_socios.0.participe_clave", value="1"),
     UserProfileFact(path="attribution_entity_socios.0.role", value="comunero"),
     UserProfileFact(path="attribution_entity_socios.1.nif", value="11111111A"),
     UserProfileFact(path="attribution_entity_socios.1.name", value="Member One"),
     UserProfileFact(path="attribution_entity_socios.1.share_pct", value=Decimal("60")),
     UserProfileFact(path="attribution_entity_socios.1.base_imponible_assigned", value=Decimal("6000")),
+    UserProfileFact(path="attribution_entity_socios.1.participe_clave", value="1"),
     UserProfileFact(path="attribution_entity_socios.1.role", value="comunero"),
     UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
 )

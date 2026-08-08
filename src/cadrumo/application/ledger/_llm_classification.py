@@ -48,11 +48,16 @@ from uuid import uuid4
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-from ...core import PDF_CONTAINER_SHAPES, ImageMediaType, detect_image_media_type
+from ...core import PDF_CONTAINER_SHAPES, ImageMediaType, detect_image_media_type, provenance_stamp_transport
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware, now
-from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
+from ...domain.buckets import (
+    BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH,
+    BucketEventHistoryRepositoryProtocol,
+    BucketEventObjectType,
+    BucketEventType,
+)
 from ...domain.categories import SpendingCategory
 from ...domain.iva import IvaCategory, resolve_category_rate, split_gross_at_rate
 from ...domain.transactions import (
@@ -157,9 +162,44 @@ def _transport_from_provenance(provenance: str) -> str:
     true: off-host reading was re-sanctioned behind a per-invocation consent
     gate, so this value is again the thing that says whether a document left the
     host.
+
+    **Delegated rather than parsed here.** The stamp's middle segment is
+    ``<transport>-<reader>``, so a colon split alone returned both glued
+    together -- ``local-text`` where the field means ``local``. That was
+    invisible while every read was on-host and one label was as good as another;
+    with off-host reading back it would have published ``openai-text`` as the
+    provider, which is wrong in a way a reader believes rather than questions.
+
+    The fix is convergence, not a second split. Two implementations of one
+    grammar agree only while somebody maintains both, and this pair had already
+    stopped agreeing.
+
+    Falls back to the whole stamp when the grammar does not recognise it, so a
+    malformed provenance surfaces in the payload rather than being blanked --
+    and deliberately NOT to a transport label, because an unreadable stamp is a
+    question this cannot answer and answering it optimistically would hide the
+    artefact a withdrawal most needs to surface.
     """
-    parts = provenance.split(":")
-    return parts[1] if len(parts) >= 3 else provenance
+    return provenance_stamp_transport(provenance) or provenance
+
+
+_PROVENANCE_ELISION = "..."
+
+
+def _bounded_transport_label(label: str) -> str:
+    """Shorten a transport label to fit one bucket-event payload value.
+
+    The recognised transport segment is always short, but the malformed-stamp
+    fallback in :func:`_transport_from_provenance` echoes the whole,
+    operator-supplied provenance stamp, which carries no length bound of its
+    own. Truncating silently would misreport a malformed stamp as a
+    recognised one, so the elision marker keeps a shortened value
+    self-evidently shortened.
+    """
+    if len(label) <= BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH:
+        return label
+    keep = BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH - len(_PROVENANCE_ELISION)
+    return label[:keep] + _PROVENANCE_ELISION
 
 
 def _bytes_bearing_evidence_input(
@@ -462,18 +502,17 @@ def suggest_llm_classification(
 ) -> LLMClassificationSuggestion:
     """Run the LLM classifier for one transaction and return a suggestion.
 
-    Loads the transaction, runs the injected classifier (default-resolved from
-    ``provider`` with the category-enabled prompt spec), and returns the typed
-    suggestion. **Persists nothing** — this is the suggest step of the
+    Loads the transaction, runs the injected classifier (default-resolved with
+    the category-enabled prompt spec), and returns the typed suggestion.
+    **Persists nothing** — this is the suggest step of the
     suggest / review / confirm / reject loop.
 
     Args:
         bucket_id: Active profile bucket id.
         transaction_id: Stable id of the transaction to classify.
-        provider: Subprocess provider to resolve when ``classifier`` is None.
-        classifier: Injected classifier (dependency injection for tests). When
-            None. With the cloud transports deleted the on-host reader is the
-            default, so an injected classifier is the only non-default case.
+        classifier: Injected classifier (dependency injection for tests). With
+            the cloud transports deleted the on-host reader is the default, so
+            an injected classifier is the only non-default case.
         vision_classifier: Injected on-host vision classifier used when the
             evidence is a scan-only PDF or image; default-resolved otherwise.
         vision_model: Overrides the settings default local vision model (e.g.
@@ -649,7 +688,7 @@ def apply_llm_classification(
             "classification": classification.value,
             "category_id": category_id or "",
             "classified_by": suggestion.provenance,
-            "provider": _transport_from_provenance(suggestion.provenance),
+            "provider": _bounded_transport_label(_transport_from_provenance(suggestion.provenance)),
             "confidence": format(suggestion.confidence, "f"),
             "mutation_kind": "llm_classification",
         },
@@ -712,21 +751,18 @@ def saturate_llm_classification(
 ) -> LLMSaturatedSuggestion:
     """Run the saturating LLM classifier for one transaction and return a suggestion.
 
-    Loads the transaction, runs the injected classifier (default-resolved from
-    ``provider`` with the saturation prompt spec), then DERIVES the regulated
-    tax substrate from the model's selected :class:`~domain.iva.IvaCategory`
-    using the registry rate and a deterministic inverse split. **Persists
-    nothing** — this is the suggest step; rejecting a suggestion is simply not
-    applying it.
+    Loads the transaction, runs the injected classifier (default-resolved with
+    the saturation prompt spec), then DERIVES the regulated tax substrate from
+    the model's selected :class:`~domain.iva.IvaCategory` using the registry
+    rate and a deterministic inverse split. **Persists nothing** — this is the
+    suggest step; rejecting a suggestion is simply not applying it.
 
     Args:
         bucket_id: Active profile bucket id.
         transaction_id: Stable id of the transaction to classify.
-        provider: Subprocess provider to resolve when ``classifier`` is None.
-        classifier: Injected classifier (dependency injection for tests). When
-            None. With the cloud transports deleted the on-host reader is the
-            default; an injected classifier overrides it, with
-            the saturation prompt spec.
+        classifier: Injected classifier (dependency injection for tests). With
+            the cloud transports deleted the on-host reader is the default; an
+            injected classifier overrides it, with the saturation prompt spec.
         vision_classifier: Injected on-host vision classifier used when the
             evidence is a scan-only PDF or image; default-resolved otherwise.
         vision_model: Overrides the settings default local vision model (e.g.
@@ -1051,20 +1087,19 @@ def suggest_evidence_split(
 ) -> LLMSplitSuggestion:
     """Propose an evidence-driven N-way split for one transaction.
 
-    Loads the transaction, runs the injected proposer (default-resolved from
-    ``provider`` with the saturation prompt spec) over the optional on-host
-    evidence text, DERIVES each child's euro amount from the parent gross and the
-    model's proportion (summing exactly to the parent), and DERIVES each child's
+    Loads the transaction, runs the injected proposer (default-resolved with
+    the saturation prompt spec) over the optional on-host evidence text,
+    DERIVES each child's euro amount from the parent gross and the model's
+    proportion (summing exactly to the parent), and DERIVES each child's
     regulated tax substrate from the registry rate for the model-selected IVA
     category. **Persists nothing** — this is the suggest step.
 
     Args:
         bucket_id: Active profile bucket id.
         transaction_id: Stable id of the transaction to split.
-        provider: Subprocess provider to resolve when ``proposer`` is None.
-        proposer: Injected split proposer (dependency injection for tests). When
-            None. With the cloud transports deleted the on-host reader is the
-            default, so an injected proposer is the only non-default case.
+        proposer: Injected split proposer (dependency injection for tests). With
+            the cloud transports deleted the on-host reader is the default, so
+            an injected proposer is the only non-default case.
         vision_classifier: Injected on-host vision classifier used when the
             evidence is a scan-only PDF or image; default-resolved otherwise.
         vision_model: Overrides the settings default local vision model (e.g.

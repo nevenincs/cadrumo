@@ -170,9 +170,32 @@ _IDENTITY_SEPARATOR = r"[.\-]?"
 _PREFIXED_IDENTITY_SEPARATOR = r"[ .\-]?"
 
 # NIF / NIE — Spanish personal identity numbers. Eight digits + check letter
-# with optional leading X / Y / Z for foreigners. Matched on shape alone: a
-# digit-led run this long rarely collides with ordinary text, so the rule errs
-# wide and hashes a lookalike rather than risk missing a mistyped identity.
+# with optional leading X / Y / Z for foreigners.
+#
+# **The personal identity is TWO rules, split by whether the span is broken by
+# a separator, because the err-wide justification holds for one population and
+# was falsified for the other.**
+#
+# The unbroken arm below is matched on shape alone and hashes a lookalike
+# rather than risk missing a mistyped identity. That is bought by a specific
+# claim: a digit-led run this long rarely collides with ordinary text. The
+# claim is true of unbroken runs.
+#
+# Separators falsified it. This app's own canonical work-unit name is
+# ``<modelo>-<year>-<period>``, so ``390-2026-0A`` normalises to ``39020260A``
+# -- eight digits and a trailing letter, the personal-identity shape exactly.
+# Every modelo id and every period token, quarterly and annual alike, lands on
+# it, and an operator was handed ``modelo-sha256:44bc266f.boe`` where an export
+# filename should be: a path they cannot use. Measured over the recorded
+# sequence outputs, the separator-bearing population was more over-redaction
+# than redaction.
+#
+# So the separated arm asks. ``validate_identity`` separates the two
+# populations exactly -- it refuses every work-unit name and accepts every real
+# printed identity -- and a rule that CAN refuse belongs behind :func:`_gated_sub`
+# like the other gated arms. Err-wide is not weakened where its claim still
+# holds; it is withdrawn only from the population that disproved it.
+#
 # The separator after the optional X/Y/Z sits INSIDE the optional group, and
 # that placement is load-bearing rather than stylistic. Written outside it, the
 # group can match empty and the separator then stands at the START of the
@@ -180,7 +203,13 @@ _PREFIXED_IDENTITY_SEPARATOR = r"[ .\-]?"
 # 12345678Z" was redacted to "for examplesha256:..." and the operator's sentence
 # lost a word boundary. Found by running the shipped locale catalogues through
 # the funnel, not by reading the regex.
-_NIF_PATTERN = (
+_NIF_PATTERN = r"\b(?:[XYZxyz])?\d{7,8}[A-Za-z]\b"
+
+# The separator-bearing spelling, which a printed invoice and an OCR reading
+# both produce. It also matches the unbroken form, harmlessly: the ungated arm
+# above runs first and has already hashed anything of that shape, so what
+# actually reaches this rule is the broken spelling.
+_SEPARATED_NIF_PATTERN = (
     rf"\b(?:[XYZxyz]{_IDENTITY_SEPARATOR})?\d(?:{_IDENTITY_SEPARATOR}\d){{6,7}}{_IDENTITY_SEPARATOR}[A-Za-z]\b"
 )
 
@@ -362,6 +391,11 @@ _DEFAULT_RULES: Mapping[str, _RedactionRule] = MappingProxyType(
             name="nif-hash",
             pattern=_NIF_PATTERN,
             strategy=_RedactionStrategy.SHA256_PREFIX,
+        ),
+        "nif-separated-hash": _RedactionRule(
+            name="nif-separated-hash",
+            pattern=_SEPARATED_NIF_PATTERN,
+            strategy=_RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
         ),
         "cif-hash": _RedactionRule(
             name="cif-hash",

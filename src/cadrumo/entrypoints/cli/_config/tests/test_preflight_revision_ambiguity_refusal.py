@@ -5,8 +5,8 @@ revision, so the year-only selector refuses rather than picking one. This surfac
 already handled that refusal before the split campaign began, and this module
 EXERCISES it rather than asserting it from a reading of the code.
 
-That distinction is the point. A surface that looks handled is what this campaign
-repeatedly found was not: a notice that read as wired had no caller, a box-number
+That distinction is the point. A surface that looks handled is repeatedly what
+turned out not to be: a notice that read as wired had no caller, a box-number
 marker that read as matching covered under one percent of a modelo, and a record
 declared required was never written by the writer. Read-then-conclude is how all
 three survived. So this asserts the refusal by raising the domain error through the
@@ -14,6 +14,8 @@ real resolver seam and observing what the surface does with it.
 """
 
 from __future__ import annotations
+
+from contextlib import contextmanager
 
 import pytest
 
@@ -25,9 +27,18 @@ from .._profile_inspect import _resolve_preflight_revision_id
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def test_an_ambiguous_filing_year_refuses_and_names_both_candidate_revisions(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+@contextmanager
+def _replacing(target: object, name: str, value: object):
+    """Replace ``target.name`` for the scope, restoring the original on exit."""
+    original = getattr(target, name)
+    setattr(target, name, value)
+    try:
+        yield
+    finally:
+        setattr(target, name, original)
+
+
+def test_an_ambiguous_filing_year_refuses_and_names_both_candidate_revisions() -> None:
     """The refusal must name the candidates, not emit a bare error.
 
     The candidate ids ride on the typed ``candidate_ids`` field, so the surface lists
@@ -46,9 +57,10 @@ def test_an_ambiguous_filing_year_refuses_and_names_both_candidate_revisions(
             suggestion="supply the filing period, or an as-of date",
         )
 
-    monkeypatch.setattr(_modelo_module, "resolve_registry_revision_for_work_target", _ambiguous)
-
-    with pytest.raises(_profile_inspect._CliRefusedBoundaryError) as raised:
+    with (
+        _replacing(_modelo_module, "resolve_registry_revision_for_work_target", _ambiguous),
+        pytest.raises(_profile_inspect._CliRefusedBoundaryError) as raised,
+    ):
         _resolve_preflight_revision_id(modelo="303", period=Period.from_year_and_code(2024, "3T"), revision_id=None)
 
     refusal = raised.value
@@ -65,9 +77,7 @@ def test_an_ambiguous_filing_year_refuses_and_names_both_candidate_revisions(
         )
 
 
-def test_the_ambiguity_refusal_is_distinguishable_from_the_no_revision_refusal(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_the_ambiguity_refusal_is_distinguishable_from_the_no_revision_refusal() -> None:
     """POSITIVE CONTROL for the assertion above.
 
     Without this, the previous test passes for a surface that raises the ambiguity key
@@ -82,9 +92,10 @@ def test_the_ambiguity_refusal_is_distinguishable_from_the_no_revision_refusal(
     def _unresolved(**_kwargs: object) -> str:
         raise NoRevisionForPeriodError(modelo_id="303", filing_year=1999, period="3T", revision_id=None)
 
-    monkeypatch.setattr(_modelo_module, "resolve_registry_revision_for_work_target", _unresolved)
-
-    with pytest.raises(_profile_inspect._CliRefusedBoundaryError) as raised:
+    with (
+        _replacing(_modelo_module, "resolve_registry_revision_for_work_target", _unresolved),
+        pytest.raises(_profile_inspect._CliRefusedBoundaryError) as raised,
+    ):
         _resolve_preflight_revision_id(modelo="303", period=Period.from_year_and_code(1999, "3T"), revision_id=None)
 
     assert raised.value.translated_message == "cli.config.profile.preflight_revision_unresolved", (

@@ -402,7 +402,7 @@ def test_the_motivating_machine_state_refuses() -> None:
 # ---------------------------------------------------------------------------
 
 
-class _RuntimeStub(BaseHTTPRequestHandler):
+class _RuntimeLoopbackHandler(BaseHTTPRequestHandler):
     """A real local endpoint speaking the model runtime's ``/api/ps`` and release wire shape."""
 
     residents: ClassVar[list[dict[str, object]]] = []
@@ -434,9 +434,9 @@ class _RuntimeStub(BaseHTTPRequestHandler):
 def runtime() -> object:
     """Serve a real runtime endpoint on a loopback port and yield its chat URL and event queue."""
     events: Queue[dict[str, object]] = Queue()
-    _RuntimeStub.events = events
-    _RuntimeStub.residents = []
-    server = ThreadingHTTPServer(("127.0.0.1", 0), _RuntimeStub)
+    _RuntimeLoopbackHandler.events = events
+    _RuntimeLoopbackHandler.residents = []
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _RuntimeLoopbackHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
@@ -450,7 +450,7 @@ def runtime() -> object:
 def test_resident_set_is_read_from_the_runtime_ps_endpoint(runtime: tuple[str, Queue[dict[str, object]]]) -> None:
     """The read hits ``/api/ps`` and parses the runtime's own attribution figures."""
     chat_url, events = runtime
-    _RuntimeStub.residents = [{"name": "qwen2.5vl:3b", "size": 4 * GIB, "size_vram": 3 * GIB}]
+    _RuntimeLoopbackHandler.residents = [{"name": "qwen2.5vl:3b", "size": 4 * GIB, "size_vram": 3 * GIB}]
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
         residents = read_runtime_residents()
     assert residents == (RuntimeResident(name="qwen2.5vl:3b", size_bytes=4 * GIB, size_vram_bytes=3 * GIB),)
@@ -681,7 +681,7 @@ def test_a_readiness_check_reports_ready_when_the_runtime_answers(
     "refuses always".
     """
     chat_url, events = runtime
-    _RuntimeStub.residents = [{"name": "small-model:1b", "size": 1 * GIB, "size_vram": 1 * GIB}]
+    _RuntimeLoopbackHandler.residents = [{"name": "small-model:1b", "size": 1 * GIB, "size_vram": 1 * GIB}]
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
         outcome = verify_model_ready("small-model:1b")
 

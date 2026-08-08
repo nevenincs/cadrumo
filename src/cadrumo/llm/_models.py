@@ -187,7 +187,13 @@ class LLMResponse(BaseModel):
     model: str = Field(description="Resolved model identifier.")
     input_tokens: int = Field(ge=0, description="Prompt-side token count.")
     output_tokens: int = Field(ge=0, description="Completion-side token count.")
-    cost_estimate_usd: Decimal = Field(description="Estimated call cost in USD.")
+    cost_estimate_usd: Decimal | None = Field(
+        description=(
+            "Estimated call cost in USD, or None when no pricing entry covers this "
+            "provider and model. None is UNPRICED and Decimal('0') is FREE; a surface "
+            "that renders them alike reports an absence as a positive answer."
+        ),
+    )
     cache_hit: bool = Field(description="Whether the response came from the local cache.")
     created_at: datetime = Field(description="Creation timestamp in UTC.")
     request_id: str = Field(description="Stable hash of the public request.")
@@ -313,7 +319,9 @@ class UsageRecord(BaseModel):
     model: str = Field(description="Resolved model identifier.")
     input_tokens: int = Field(ge=0, description="Prompt-side token count.")
     output_tokens: int = Field(ge=0, description="Completion-side token count.")
-    cost_estimate_usd: Decimal = Field(description="Estimated call cost in USD.")
+    cost_estimate_usd: Decimal | None = Field(
+        description="Estimated call cost in USD, or None when the model carries no pricing entry.",
+    )
     cache_hit: bool = Field(description="Whether the response came from cache.")
     created_at: datetime = Field(description="Timestamp when the record was written.")
     request_id: str = Field(description="Stable request hash.")
@@ -368,6 +376,13 @@ class UsageSummary(BaseModel):
     entries: int = Field(ge=0, description="Number of usage records included.")
     total_input_tokens: int = Field(ge=0, description="Sum of input tokens.")
     total_output_tokens: int = Field(ge=0, description="Sum of output tokens.")
-    total_cost_estimate_usd: Decimal = Field(description="Sum of estimated cost in USD.")
+    total_cost_estimate_usd: Decimal | None = Field(
+        description=(
+            "Sum of estimated cost in USD, or None when ANY included record is unpriced. "
+            "A total that silently skipped unpriced rows would understate the bill while "
+            "looking complete, which is the same defect one layer along."
+        ),
+    )
+    unpriced_entries: int = Field(ge=0, default=0, description="Records carrying no cost estimate.")
     since: date | None = Field(default=None, description="Inclusive lower date bound.")
     until: date | None = Field(default=None, description="Inclusive upper date bound.")

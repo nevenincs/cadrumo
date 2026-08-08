@@ -64,7 +64,18 @@ def _cloud_recorder() -> Iterator[tuple[str, list[str]]]:
         def do_POST(self) -> None:
             self.rfile.read(int(self.headers.get("content-length", "0")))
             arrivals.append(self.path)
-            body = json.dumps({"error": "this endpoint should never be reached"}).encode("utf-8")
+            # A well-formed vendor answer, so a request that legitimately
+            # reaches here COMPLETES. The recorder has to be able to serve a
+            # real dispatch, or every case asserting it stayed empty would be
+            # satisfied by a recorder nothing could ever reach.
+            body = json.dumps(
+                {
+                    "id": "probe-response",
+                    "model": "gpt-4.1",
+                    "choices": [{"message": {"content": "cloud completion"}}],
+                    "usage": {"prompt_tokens": 3, "completion_tokens": 2},
+                }
+            ).encode("utf-8")
             self.send_response(HTTPStatus.OK)
             self.send_header("content-type", "application/json")
             self.send_header("content-length", str(len(body)))
@@ -157,13 +168,50 @@ def test_an_unmarked_request_does_not_reach_the_cloud_either(tmp_path: Path) -> 
         assert arrivals == []
 
 
-def test_an_evidence_request_pinned_at_the_cloud_still_needs_consent(tmp_path: Path) -> None:
-    """The positive control on the recorder: reaching the cloud is gated, not impossible.
+def test_a_permitted_request_pinned_at_the_cloud_does_reach_the_recorder(tmp_path: Path) -> None:
+    """The recorder's own control: it CAN record, so an empty one is a fact about the client.
 
-    Without this case, "the recorder saw nothing" is consistent with a cloud
-    route that could never have worked -- a broken endpoint proves nothing about
-    a fallback. Here the SAME endpoint is targeted deliberately, and the refusal
-    is the consent gate rather than a transport failure.
+    Every other case here asserts the recorder stayed empty, and an empty
+    recorder is exactly what a recorder nothing could reach also produces -- a
+    drifted settings key, a changed endpoint path, a client that never wired the
+    URL. Each of those would satisfy all three refusal cases identically while
+    proving nothing about fallback.
+
+    This is the same argument the file already makes one level up: asserting on
+    the exception alone cannot distinguish "no fallback exists" from "a fallback
+    exists and also failed". Asserting zero arrivals cannot distinguish "nothing
+    was sent" from "nothing could have been recorded".
+
+    Unmarked and deliberately pinned, so no gate stands between the request and
+    the transport. Nothing about this makes a fallback reachable: the request
+    NAMES its provider, which is the operator choosing, not a degradation
+    choosing for them.
+    """
+    with _cloud_recorder() as (cloud_url, arrivals):
+        request = LLMRequest(
+            prompt="a routine unmarked prompt",
+            evidence_derived=False,
+            provider_override=LLMProvider.OPENAI,
+        )
+        with override_settings(
+            cadrumo_llm_ollama_chat_url=_dead_local_endpoint(),
+            cadrumo_llm_openai_chat_completions_url=cloud_url,
+        ):
+            response = asyncio.run(_client(tmp_path).complete(request))
+
+        assert arrivals == ["/v1/chat/completions"]
+
+    assert response.text == "cloud completion"
+
+
+def test_an_evidence_request_pinned_at_the_cloud_is_refused_before_dispatch(tmp_path: Path) -> None:
+    """The consent gate refuses an evidence read off-host, and refuses it EARLY.
+
+    Asserted at the recorder rather than only on the exception type, because
+    "refused before dispatch" and "dispatched, then refused" are different
+    facts and only one of them keeps the document on this host. The case above
+    is what makes this empty recorder meaningful: the same endpoint, reached by
+    a permitted request, does record.
     """
     with _cloud_recorder() as (cloud_url, arrivals):
         request = LLMRequest(

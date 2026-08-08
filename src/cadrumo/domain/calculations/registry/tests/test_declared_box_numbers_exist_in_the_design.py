@@ -39,6 +39,7 @@ import pytest
 
 from .....core.resources import resources
 from .. import ModeloRevision
+from .._record_design_coverage import _CASILLA_TAG_RE
 from .test_revision_span_matches_published_designs import _designs_by_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -53,11 +54,20 @@ _PERIOD = "0A"
 #: accents, and an accent that does not survive a round trip would yield a bare
 #: zero that reads as "this box is not in the design" -- a false finding in the
 #: direction that gets believed.
-_BOX_MARKER = re.compile(r"\[(\d{1,4})\]")
+#: IMPORTED from the registry's canonical definition rather than re-declared. This
+#: module held its own copy capped at four digits while production used five, and
+#: Modelo 200 numbers its boxes with five. This gate is scoped to Modelo 390, whose
+#: boxes are two and three digits, so the cap changed no verdict here -- but a third
+#: definition of one concept is how the four-digit reading survived long enough to
+#: read 23 of Modelo 200's 3,440 boxes elsewhere.
+_BOX_MARKER = _CASILLA_TAG_RE
 
 #: Fields that can carry an official box number today. Derived, never assumed:
-#: see ``_declared_box_numbers``.
-_BOX_SHAPED = re.compile(r"^\d{1,4}$")
+#: see ``_declared_box_numbers``. Kept as its own pattern because it matches a BARE
+#: registry number rather than a bracketed one in design text, so the canonical marker
+#: cannot be reused directly -- and pinned to agree with it by the assertion below,
+#: which is what stops the two drifting apart the way the four-digit copies did.
+_BOX_SHAPED = re.compile(r"^\d{1,5}$")
 
 
 def _revision() -> ModeloRevision:
@@ -176,3 +186,28 @@ def test_both_box_number_carriers_are_read() -> None:
         "if that stops being true the carrier derivation still stands, but this assertion is stale"
     )
     assert _declared_box_numbers(revision).keys() >= (numbers | form_numbers)
+
+
+def test_the_bare_number_shape_agrees_with_the_canonical_bracketed_marker() -> None:
+    """The two patterns in this module must accept the same numbers.
+
+    ``_BOX_MARKER`` matches a bracketed box in design text and is the registry's
+    canonical definition; ``_BOX_SHAPED`` matches a bare registry number and cannot reuse
+    it directly. Two patterns for one notion of "a box number" is exactly the shape that
+    let a four-digit cap read 23 of Modelo 200's 3,440 boxes, so their agreement is
+    asserted rather than maintained by habit.
+
+    Gated on agreement, not on a digit count: it takes whatever width the canonical
+    marker accepts and requires the bare-number pattern to accept the same, so widening
+    the canonical one later cannot silently leave this module behind.
+    """
+    for width in range(1, 9):
+        number = "1" * width
+        bracketed = _BOX_MARKER.fullmatch(f"[{number}]") is not None
+        bare = _BOX_SHAPED.fullmatch(number) is not None
+        assert bracketed == bare, (
+            f"a {width}-digit number is "
+            f"{'accepted' if bracketed else 'rejected'} by the canonical bracketed marker but "
+            f"{'accepted' if bare else 'rejected'} by this module's bare-number shape, so the two "
+            "disagree about what a box number is"
+        )

@@ -29,13 +29,17 @@ pytestmark = [
 
 _QUESTIONS = tuple(question for section in SETUP_FLOW.sections for question in section.questions)
 
-_TABLE_ONLY_FIELDS = frozenset({"professional_income_withholding_ge_70pct"})
+_TABLE_ONLY_FIELDS = frozenset({"professional_income_withholding_ge_70pct", "irpf_activity_kind"})
 """Table rows the wizard deliberately never asked for.
 
 The Modelo 130 exemption flag has a declared schema path and a declared
 model selector, but no setup question ever collected it, so the engine
 read the model default and could not see a taxpayer who had recorded the
 fact by any other route. The table reads it; the retired wizard did not.
+
+``irpf_activity_kind`` is derived from a taxpayer's declared ledger
+``tipo_actividad`` rows (see :func:`domain.transactions.irpf_activity_kind_for`),
+never from an interactive answer, so no wizard question exists for it either.
 """
 
 

@@ -48,7 +48,6 @@ from __future__ import annotations
 
 import json
 import logging
-import sys
 import os
 import re
 import shutil
@@ -739,40 +738,36 @@ def _drop_handlers_bound_to_a_dead_stream() -> None:
     its ``--- Logging error ---`` block to the real stderr, where it lands in the
     NEXT frame's captured output and diverges that frame's golden.
 
-    This is exactly why the fault reads as intermittent and why sharding hides
-    it: whether it fires depends on whether the process's first configure
-    happened inside a capture, and a sharded run gives each child a fresh
-    process that configures cleanly. A green from the fast path is therefore
-    not evidence the fault is gone.
+    This eviction is NOT what kept the goldens non-deterministic, and the
+    paragraph above is not the whole account of that fault. The observed
+    ``--- Logging error ---`` blocks came, every one of them, from the ROTATING
+    FILE handler: it was bound at import time to the workstation's shared
+    ``cadrumo.log``, and its rollover ``os.rename`` failed with WinError 32
+    whenever a peer process held that file open. Widening this eviction to drop
+    any handler not on the live ``sys.stderr`` therefore could not help — it
+    detached the file handler, then the reconfigure immediately rebound it to
+    the same contended path. That fault is fixed at its source, by giving the
+    docs engine a per-process private log directory
+    (:func:`~dev.docs.build.ensure_private_diagnostic_log`).
 
-    Detaching is narrow on purpose. Only handlers whose own stream reports
-    itself closed are removed, so a handler on the real stderr, or on a live
-    capture, is untouched; the next ``configure_logging`` in a fresh process
-    installs its own.
+    Detaching here stays narrow on purpose, as a genuine dead-stream guard only:
+    handlers whose own stream reports itself CLOSED are removed, so a handler on
+    the real stderr, or on a live capture, is untouched. Eviction alone would
+    leave the configure-once latch set and the root logger bare, so a rebind
+    follows it.
     """
-    from cadrumo.core.logging import allow_logging_reconfiguration
+    from cadrumo.core.logging import allow_logging_reconfiguration, configure_logging
 
     evicted = False
     for handler in list(logging.getLogger().handlers):
         stream = getattr(handler, "stream", None)
-        if stream is None:
-            continue
-        # A CliRunner capture buffer is SWAPPED OUT, not closed, so asking
-        # `stream.closed` misses the case this eviction exists for: the handler
-        # keeps writing into a buffer nobody will read, and the stdlib reports
-        # the failure by printing its own stack and object reprs to the real
-        # stderr, where they land in an unrelated frame's captured output and
-        # can never be normalised away.
-        if getattr(stream, "closed", False) or stream is not sys.stderr:
+        if stream is not None and getattr(stream, "closed", False):
             logging.getLogger().removeHandler(handler)
             evicted = True
 
-    # Detaching alone leaves the configure-once latch set, so the next frame
-    # installs nothing and the root logger is left bare. Clearing it lets the
-    # next CLI invocation bind to ITS own live stream, which is the state a real
-    # operator's fresh process would have.
     if evicted:
         allow_logging_reconfiguration()
+        configure_logging()
 
 
 def _invoke_frame(args: tuple[str, ...]) -> Result:

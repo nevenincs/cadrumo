@@ -41,10 +41,12 @@ import ast
 import re
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Final
 
 from cadrumo.core.logging import get_logger
 
 _log = get_logger(__name__)
+_UTF_8: Final[str] = "utf-8"
 
 _KEY_PATTERN_PREFIX_MIN_PARTS = 2
 """A discovered f-string key prefix must carry at least two dotted
@@ -419,7 +421,7 @@ def _iter_parseable_python_modules(root: Path) -> Iterator[tuple[Path, ast.Modul
         if module.name.startswith("test_") or module.name.startswith("_test_") or "/tests/" in module.as_posix():
             continue
         try:
-            source = module.read_text(encoding="utf-8", errors="ignore")
+            source = module.read_text(encoding=_UTF_8, errors="ignore")
         except OSError as exc:
             _log.debug("locale ast scan: skipping %s (%s)", module, exc)
             continue

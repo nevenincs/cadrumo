@@ -87,7 +87,8 @@ class LlmUsageProviderMetrics(BaseModel):
     input_tokens: int = Field(ge=0)
     output_tokens: int = Field(ge=0)
     total_tokens: int = Field(ge=0)
-    cost_estimate_usd: Decimal
+    cost_estimate_usd: Decimal | None
+    unpriced_calls: int = 0
 
 
 class LlmConfidenceProviderMetrics(BaseModel):
@@ -134,7 +135,8 @@ class LlmDiagnosticsReport(BaseModel):
     total_cache_hits: int = Field(default=0, ge=0)
     total_input_tokens: int = Field(default=0, ge=0)
     total_output_tokens: int = Field(default=0, ge=0)
-    total_cost_estimate_usd: Decimal = Decimal("0")
+    total_cost_estimate_usd: Decimal | None = Decimal("0")
+    total_unpriced_calls: int = 0
     confidence_providers: tuple[LlmConfidenceProviderMetrics, ...] = ()
     total_classified: int = Field(default=0, ge=0)
     total_low_confidence: int = Field(default=0, ge=0)
@@ -189,7 +191,12 @@ def build_llm_diagnostics_report(
         total_cache_hits=sum(row.cache_hits for row in usage_providers),
         total_input_tokens=sum(row.input_tokens for row in usage_providers),
         total_output_tokens=sum(row.output_tokens for row in usage_providers),
-        total_cost_estimate_usd=sum((row.cost_estimate_usd for row in usage_providers), start=Decimal("0")),
+        total_cost_estimate_usd=(
+            None
+            if any(row.cost_estimate_usd is None for row in usage_providers)
+            else sum((row.cost_estimate_usd or Decimal("0") for row in usage_providers), start=Decimal("0"))
+        ),
+        total_unpriced_calls=sum(row.unpriced_calls for row in usage_providers),
         confidence_providers=confidence_providers,
         total_classified=sum(row.classified_count for row in confidence_providers),
         total_low_confidence=sum(row.low_confidence_count for row in confidence_providers),
@@ -212,13 +219,20 @@ def _aggregate_usage(records: Sequence[UsageRecord]) -> tuple[LlmUsageProviderMe
     input_tokens: dict[str, int] = {}
     output_tokens: dict[str, int] = {}
     cost: dict[str, Decimal] = {}
+    # A provider with ANY unpriced record reports no cost at all, rather than
+    # the sum of the rows that happened to be priced. Skipping the unpriced ones
+    # would hand the operator a smaller number wearing the shape of a total.
+    unpriced: dict[str, int] = {}
     for record in records:
         provider = record.provider.value
         calls[provider] = calls.get(provider, 0) + 1
         cache_hits[provider] = cache_hits.get(provider, 0) + (1 if record.cache_hit else 0)
         input_tokens[provider] = input_tokens.get(provider, 0) + record.input_tokens
         output_tokens[provider] = output_tokens.get(provider, 0) + record.output_tokens
-        cost[provider] = cost.get(provider, Decimal("0")) + record.cost_estimate_usd
+        if record.cost_estimate_usd is None:
+            unpriced[provider] = unpriced.get(provider, 0) + 1
+        else:
+            cost[provider] = cost.get(provider, Decimal("0")) + record.cost_estimate_usd
     return tuple(
         LlmUsageProviderMetrics(
             provider=provider,
@@ -227,7 +241,8 @@ def _aggregate_usage(records: Sequence[UsageRecord]) -> tuple[LlmUsageProviderMe
             input_tokens=input_tokens[provider],
             output_tokens=output_tokens[provider],
             total_tokens=input_tokens[provider] + output_tokens[provider],
-            cost_estimate_usd=cost[provider],
+            cost_estimate_usd=None if unpriced.get(provider) else cost.get(provider, Decimal("0")),
+            unpriced_calls=unpriced.get(provider, 0),
         )
         for provider in sorted(calls)
     )

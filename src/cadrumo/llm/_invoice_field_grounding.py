@@ -57,6 +57,7 @@ from ..core.identity import (
     validate_spanish_tax_id,
 )
 from ..core.parsing import normalise_iso_4217_currency, parse_date
+from ..domain.iva import country_code_for_printed_country_name
 from ._invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,
     INVOICE_FIELD_CONTRACTS,
@@ -265,11 +266,11 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
     values: dict[str, object] = {}
     anchors: dict[str, object] = {}
     role_evidence: dict[str, object] = {}
-    # A stdlib boundary: `json.loads` returns `Any`, so the `isinstance` narrow
-    # above yields a mapping of unknowns and the suffix tests below would be
-    # unchecked. The cast asserts only what the JSON grammar already guarantees
-    # -- an object's keys are strings -- and leaves the values opaque for the
-    # strict models to validate.
+    # CAST-RATIONALE-INVOICE-RESPONSE-KEYED: a stdlib boundary: `json.loads`
+    # returns `Any`, so the `isinstance` narrow above yields a mapping of
+    # unknowns and the suffix tests below would be unchecked. The cast asserts
+    # only what the JSON grammar already guarantees -- an object's keys are
+    # strings -- and leaves the values opaque for the strict models to validate.
     keyed = cast("dict[str, object]", raw)
     for key, value in keyed.items():
         # Role evidence is tested FIRST because the two suffixes are independent
@@ -735,10 +736,20 @@ def ground_extracted_fields(
         supplier_name=supplier_name,
         supplier_postal_code=supplier_postal_code,
         supplier_country=supplier_country,
+        # The printed name ABOVE is the evidence; the code here is a derivation
+        # of it, and both are kept for the same reason the numeric fields keep
+        # what the document printed beside what it parsed to. The resolver is
+        # the one the structured e-invoice lane already uses, so a name and a
+        # machine-readable country element resolve through a single vocabulary.
+        # A name the vocabulary does not carry stays absent rather than becoming
+        # the nearest match: every consumer of this field branches domestic
+        # versus not, and none can express that the question went unanswered.
+        supplier_country_code=country_code_for_printed_country_name(supplier_country),
         customer_tax_id=customer_tax_id,
         customer_name=customer_name,
         customer_postal_code=customer_postal_code,
         customer_country=customer_country,
+        customer_country_code=country_code_for_printed_country_name(customer_country),
         invoice_number=invoice_number,
         invoice_date=invoice_date,
         taxable_base=taxable_base,

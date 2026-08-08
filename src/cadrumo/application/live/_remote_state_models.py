@@ -113,6 +113,9 @@ class BulkFiledDataCaptureReport(FiledCaptureEvidenceTally):
     failures: tuple[FiledDataCaptureFailureRow, ...] = ()
     skipped_casillas: tuple[FiledCasillaSkipRow, ...] = ()
     evidence_notices: tuple[Notice, ...] = ()
+    #: One advisory per re-captured filing whose casilla values this sweep
+    #: changed, read before each upsert while the prior values still existed.
+    recapture_notices: tuple[Notice, ...] = ()
     """Per-artefact evidence advisories raised while enrolling justificantes.
 
     Additive and defaulted, so every existing caller is unchanged. These are the

@@ -56,7 +56,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, Final
 
 from pydantic import BaseModel, ConfigDict
 
@@ -68,6 +68,8 @@ from cadrumo.application.ledger import (
     party_regions,
 )
 from cadrumo.core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
+
+_UTF_8: Final[str] = "utf-8"
 
 __all__ = [
     "ColumnSegmentationSize",
@@ -228,5 +230,5 @@ def geometry_payload_ratio(words: Sequence[Mapping[str, Any]], *, text: str) -> 
         [[round(float(w["x0"]), 1), round(float(w["x1"]), 1), round(float(w["top"]), 1)] for w in words],
         separators=(",", ":"),
     )
-    text_bytes = len(text.encode("utf-8"))
-    return len(payload.encode("utf-8")) / text_bytes if text_bytes else 0.0
+    text_bytes = len(text.encode(_UTF_8))
+    return len(payload.encode(_UTF_8)) / text_bytes if text_bytes else 0.0

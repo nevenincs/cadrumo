@@ -46,6 +46,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ....core.errors import CadrumoError
+from ....core.external_constants import UTF_8_ENCODING
 from ....core.time import now
 from ..storage import (
     ClassificationError,
@@ -284,7 +285,7 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
             classification=self._namespace_definition.sensitivity,
             schema_version=self._namespace_definition.schema_version,
             written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
 
     def save_with_secure_object_writes(
@@ -311,7 +312,7 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         record: SecureObjectRecord,
         requested_snapshot_id: str | None = None,
     ) -> TPayload:
-        envelope = self._envelope_cls().model_validate_json(record.payload.decode("utf-8"))
+        envelope = self._envelope_cls().model_validate_json(record.payload.decode(UTF_8_ENCODING))
         if not inner_envelope_classification_is_expected(
             envelope.classification,
             self._namespace_definition.sensitivity,

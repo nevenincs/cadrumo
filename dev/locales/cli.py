@@ -8,7 +8,7 @@ from typing import Annotated
 
 import typer
 
-from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 
 from ._paths import DOCS_SRC_DIR, LOCALES_DIR, SRC_DIR
 from ._status import CatalogueStatusRecord, catalogue_status
@@ -153,7 +153,7 @@ def set_batch(
 ) -> None:
     """Apply a generated locale migration manifest through the catalogue authority."""
     try:
-        payload = json.loads(manifest.read_text(encoding="utf-8"))
+        payload = json.loads(manifest.read_text(encoding=UTF_8_ENCODING))
     except (OSError, json.JSONDecodeError) as exc:
         raise typer.BadParameter(f"Cannot read locale batch manifest: {exc}", param_hint="manifest") from exc
     if not isinstance(payload, dict):

@@ -108,15 +108,22 @@ def test_establishment_fact_roundtrips_through_encrypted_storage(
     assert loaded.canonical_tax_identifier == "B12345674"
 
 
-def test_persisted_fact_stripped_of_its_territory_is_refused_at_load(
+def test_persisted_fact_answering_neither_question_is_refused_at_load(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """Anti-tautology proof: delete the territory from the stored payload and reload.
+    """Anti-tautology proof: strip the record of every answer and reload.
 
-    ``territorial_scope`` is the whole content of the record, so a persisted fact
-    without it must not load. If this ever passed with the field absent, the
-    required-field contract would be unenforced at the encrypted boundary and the
-    roundtrip above would prove nothing.
+    The territory alone is no longer the whole content: the two confirmed facts
+    are independent, either may stand alone, and a record answering only the
+    identification is legitimate. So deleting the territory is a NARROWER record
+    rather than a corrupt one and must still load.
+
+    What must not load is a record answering NEITHER question. That is the
+    invariant this proof now stands on, and it is the sharper one: an empty
+    record addresses a counterparty, occupies the key, and answers every later
+    question with a silence that reads as a confirmed absence. If this ever
+    passed with both fields gone, the model guard would be unenforced at the
+    encrypted boundary and the roundtrip above would prove nothing.
     """
     original = _fully_populated_fact()
     repository = ConfirmedCounterpartyFactsRepository(objects=secure_objects)
@@ -151,7 +158,16 @@ def test_persisted_fact_stripped_of_its_territory_is_refused_at_load(
     _rewrite(envelope)
     assert ConfirmedCounterpartyFactsRepository(objects=secure_objects).load(original.counterparty_key) is not None
 
+    # A record narrowed to its identification is legitimate and must survive.
     del stored["territorial_scope"]
+    _rewrite(envelope)
+    narrowed = ConfirmedCounterpartyFactsRepository(objects=secure_objects).load(original.counterparty_key)
+    assert narrowed is not None, "a record answering only the identification is legitimate"
+    assert narrowed.territorial_scope is None
+    assert narrowed.identification_state is not None
+
+    # A record answering nothing is not.
+    del stored["identification_state"]
     _rewrite(envelope)
 
     with pytest.raises(ValidationError):
