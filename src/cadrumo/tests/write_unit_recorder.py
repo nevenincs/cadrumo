@@ -30,6 +30,16 @@ unsatisfiable. Resolution can narrow silently underneath a proof that only
 checks for a pulse. When something changes how many statements a write costs,
 re-ask what every count here MEANS, not merely whether it still moves.
 
+Standing hazard, unguarded on purpose. This recorder and
+``test_secure_object_write_batching`` now encode OPPOSITE expectations of one
+funnel: that test asserts a batch collapses to a single ``INSERT``, while this
+counts the rows inside it. Both are correct today. If the funnel changes again --
+back to per-row, or chunked above some size -- that test fails LOUDLY while this
+recorder silently changes what every atomicity assertion in the suite means, and
+the silent one is the dangerous one. No guard is offered because any guard would
+be another tally with the same exposure; the note is here instead, where a
+reader meets it at the moment they would change the funnel.
+
 See Also:
     :func:`~cadrumo.tests.secure_sql.isolated_runtime_profile`:
         Yields the encrypted-SQLite profile whose ``repository.engine`` this
