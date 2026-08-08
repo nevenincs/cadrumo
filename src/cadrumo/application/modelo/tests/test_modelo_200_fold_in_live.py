@@ -418,7 +418,7 @@ def test_m200_self_carries_resolve_zero_with_no_prior_filing_on_live_calculate(
         for diagnostic in result.source_diagnostics
         if diagnostic.source_kind == _RELATION_PREFILL_SOURCE
     }
-    assert _M200_SELF_CARRY_RELATIONS <= advised, (
+    assert advised >= _M200_SELF_CARRY_RELATIONS, (
         f"each absent self-carry must be advised; missing {_M200_SELF_CARRY_RELATIONS - advised}"
     )
     for diagnostic in result.source_diagnostics:

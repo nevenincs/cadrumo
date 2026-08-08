@@ -596,9 +596,7 @@ def test_m200_0a_folds_m202_pagos_fraccionados_into_cuota_diferencial_live(
     # the filer was entitled to, and each is advised. That is correct for this
     # persona and orthogonal to the pagos fold under test; the sibling M200 module
     # covers the advisory's own behaviour and its first-ejercicio silence.
-    advised = {
-        diag.relation_id for diag in result.source_diagnostics if diag.source_kind == _RELATION_PREFILL_SOURCE
-    }
+    advised = {diag.relation_id for diag in result.source_diagnostics if diag.source_kind == _RELATION_PREFILL_SOURCE}
     assert advised == _M200_SELF_CARRY_RELATIONS, (
         f"only the three absent self-carries may be advised here; got {advised}"
     )
