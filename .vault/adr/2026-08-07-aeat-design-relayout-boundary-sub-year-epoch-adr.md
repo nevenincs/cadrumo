@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:f61d45de739bcfe761a2d5bb0fd1583e596259896b9046b56336fa34a7b7db38'
+body_hash: 'sha256:b983a9a5548066d48c076f08a4a1a36e090e3c99a753bf07e2ae2c9748fcc3c8'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
   - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
@@ -43,13 +43,29 @@ No offset check, length check or digest detects either.
   on the bracketed AEAT box number at each sheet, offset and length slot rather
   than on positional index or on free-text description. Across the five designs
   `2023-y-siguientes` claims: 2023 to 2024-H1 is identical (0 slot meaning flips,
-  0 boxes moved, 0 boxes added, every sheet total unchanged); 2024-H1 to 2024-H2
+  0 boxes moved, 0 boxes added, every sheet total unchanged) -- **REFUTED, see the
+  amendment below**; 2024-H1 to 2024-H2
   adds 8 numbered boxes (108, 111, 165 through 170) with 0 flips and 0 moves and
   every sheet total unchanged; 2024-H2 to 2025 shows 0 numbered-box movement but
   grows sheet DP30302 from 1706 to 1900 positions; 2025 to 2026 flips 4 slots,
   moves 128 boxes and grows sheet DP30305 from 1523 to 1528. Three boundaries,
   so `2023-y-siguientes` spans FOUR design epochs: 2023 through 2024 period 08
   and 2T, then 2024 period 09 and 3T, then 2025, then 2026 onward.
+- **AMENDMENT (measured 2026-08-08): the 2023-to-2024-H1 identity above is FALSE
+  and the epoch count is FIVE, not four.** Four real fields are RETIRED into
+  reserved space between those two designs, all on sheet DP30302 in the Régimen
+  Simplificado block: the employee-count and maximum-employee-count slots for
+  Actividad 1 at offsets 1110 and 1116, and the same pair for Actividad 2 at
+  offsets 1236 and 1242. Each reads as a live field in the 2023 design and as
+  `Reservado para la AEAT` in the early-2024 one.
+  The two passes this record ran are **structurally incapable** of seeing that
+  class, which is why the reading was honest and still wrong: the reserved block
+  absorbs the freed bytes exactly, so no offset shifts and no sheet total grows.
+  Re-running both passes reproduces this record's figures exactly -- 0 of 174
+  shared boxes moved, 0 added, 0 removed, every sheet total unchanged. The error
+  was not a mismeasurement but inferring layout identity from two signals blind to
+  the change that occurred; the occupancy pass this record never ran is the only
+  one that reports it. That pass is now a shipped signal in the span gate.
 - No single signal finds all three boundaries, and this record initially got that
   wrong. The box-number key alone reports 2024-H2 and 2025 as one epoch, because
   DP30302's growth is entirely in unnumbered modulos fields; the page-length
@@ -197,10 +213,32 @@ cross product of years and tokens, an epoch spanning a whole year plus part of t
 next needs two revisions, so Modelo 303's four design epochs are authored as five
 revisions: 2023 full and 2024-early (the same layout, split only because the
 selector cannot express one epoch crossing the year boundary), then 2024-late,
-2025 full, and 2026 onward. Exactly one pair carries an identical export layout by
-construction, which is the accepted cost of not adding a schema axis; the pair is
-a duplicate of layout, not of decision, and each revision still declares its own
-`source_refs` naming the specific AEAT design it encodes.
+2025 full, and 2026 onward.
+
+**AMENDED: the claim this paragraph originally made -- "Exactly one pair carries an
+identical export layout by construction, which is the accepted cost of not adding
+a schema axis" -- is REFUTED.** No pair shares a layout. The 2023 and early-2024
+designs differ by the four retired Régimen Simplificado slots recorded in the
+Considerations amendment, so the five revisions cover five distinct design epochs
+and each must parse its OWN design. The revision count of five is unchanged; the
+pairing behind it is not, and a reader must not conclude from the stable count
+that the correction was cosmetic. Copying one revision's export fragment tree into
+its neighbour -- which the original wording invited, since a duplicate layout "by
+construction" reads as licence to copy -- would write declared values into space
+AEAT marks reserved.
+
+Each revision still declares its own `source_refs` naming the specific AEAT design
+it encodes, which is unchanged.
+
+**The MECHANISM this record decides is untouched and still governs.** The
+period-token partition, its rejection of date-only discrimination, and its
+rejection of a within-year schema axis all stand; only the layout-identity
+observation falls. This amendment rules on code and is not self-executing: it is
+implemented by Steps `S15` and `S16` of
+`2026-08-08-aeat-design-relayout-boundary-plan`, which author the 2023 and
+early-2024 revisions from their own designs, and by `S64`, which re-derives each
+revision's total-formula operand lists rather than copying the newest backwards.
+`S66` records the divergence in the campaign audit.
 
 The revision count of five is unchanged from this record's first, wrong
 three-epoch pass, and that is a coincidence rather than corroboration. Under three
@@ -264,10 +302,13 @@ from a year to a period changes that reasoning.
 
 ## Consequences
 
-- Modelo 303 gains five revisions where one exists, covering four design epochs,
-  one pair of which carries an identical export layout. Anything treating revision
-  count as a proxy for design count, or assuming distinct revisions imply distinct
-  layouts, is now wrong and must be swept.
+- Modelo 303 gains five revisions where one exists, covering **five** design
+  epochs, **no pair of which carries an identical export layout** -- the original
+  wording of this entry, "covering four design epochs, one pair of which carries an
+  identical export layout", is withdrawn per the amendments above. Anything
+  treating revision count as a proxy for design count is still wrong and must be
+  swept; the companion warning against assuming distinct revisions imply distinct
+  layouts no longer applies to this modelo, because here they do.
 - The year-only selector becomes a refusing surface for split years. That is a
   behaviour change for binding-readiness discovery, the registry describe and
   bindings query, and the revision diff command; the readiness helper's existing
