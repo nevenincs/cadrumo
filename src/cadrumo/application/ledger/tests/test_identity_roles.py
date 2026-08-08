@@ -271,9 +271,9 @@ def test_a_checksum_invalid_filer_identifier_still_excludes_the_filer() -> None:
     )
 
     assert resolution.resolved is None
-    assert not any(
-        f.kind is DraftDiscrepancyKind.IDENTITY_UNVERIFIED for f in resolution.findings
-    ), "the filer's own identifier was reported as an unverifiable counterparty"
+    assert not any(f.kind is DraftDiscrepancyKind.IDENTITY_UNVERIFIED for f in resolution.findings), (
+        "the filer's own identifier was reported as an unverifiable counterparty"
+    )
 
 
 def test_the_exclusion_note_reports_the_actual_exclusion_not_the_arguments_presence() -> None:

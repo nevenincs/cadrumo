@@ -61,9 +61,7 @@ _BROKEN_TOTAL = "<InvoiceTotal>999.00</InvoiceTotal>"
 # Facturae carries the statutory mention in LegalLiterals, and the parser reads
 # it into the draft, so a reverse-charge declaration beside the document's real
 # 42.00 cuota is a genuine self-contradiction rather than a manufactured one.
-_LEGAL_LITERALS = (
-    "<LegalLiterals><LegalReference>inversión del sujeto pasivo</LegalReference></LegalLiterals>"
-)
+_LEGAL_LITERALS = "<LegalLiterals><LegalReference>inversión del sujeto pasivo</LegalReference></LegalLiterals>"
 
 
 def _stored(

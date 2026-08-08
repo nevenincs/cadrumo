@@ -135,9 +135,7 @@ def _design_slot(workbook_path: Path, sheet_label: str, box_marker: str) -> tupl
 def _modelo_390_fichero_boe_layout() -> ExportLayoutDefinition:
     modelo = next(item for item in resources().modelos.authority.modelos if item.id == "390")
     revision = modelo.revisions["2010-y-siguientes"]
-    return next(
-        item for item in derive_export_layouts_from_bindings(revision) if item.id == "modelo-390-fichero-boe"
-    )
+    return next(item for item in derive_export_layouts_from_bindings(revision) if item.id == "modelo-390-fichero-boe")
 
 
 def test_registry_fixed_width_export_layout_surface_is_not_empty() -> None:

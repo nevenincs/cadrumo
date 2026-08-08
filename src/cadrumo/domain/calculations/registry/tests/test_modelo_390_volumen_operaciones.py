@@ -234,9 +234,7 @@ def test_a_b2b_eu_service_supply_never_reaches_the_intracomunitarias_box() -> No
     """
     resolved = _resolve()
     assert resolved["modelo-390-volumen-entregas-intracomunitarias-base"] == _ENTREGAS_BASE
-    assert resolved["modelo-390-volumen-entregas-intracomunitarias-base"] != (
-        _ENTREGAS_BASE + _SERVICE_SUPPLY_BASE
-    )
+    assert resolved["modelo-390-volumen-entregas-intracomunitarias-base"] != (_ENTREGAS_BASE + _SERVICE_SUPPLY_BASE)
 
 
 def test_neither_volumen_box_feeds_any_total() -> None:

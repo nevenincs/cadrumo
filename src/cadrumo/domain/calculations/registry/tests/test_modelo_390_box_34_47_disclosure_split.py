@@ -133,7 +133,16 @@ def test_mutation_repointing_offset_1628_to_the_recargo_inclusive_total_reds_the
     scratch_root = tmp_path / "registry-mutant" / "aeat"
     (scratch_root / "modelos").mkdir(parents=True)
     shutil.copytree(bundled_root / "modelos" / "390", scratch_root / "modelos" / "390")
-    for catalogue_dir in ("apoderamientos", "authorization.d", "calendars", "categories", "iva", "legal", "topics", "treaties"):
+    for catalogue_dir in (
+        "apoderamientos",
+        "authorization.d",
+        "calendars",
+        "categories",
+        "iva",
+        "legal",
+        "topics",
+        "treaties",
+    ):
         source = bundled_root / catalogue_dir
         if source.is_dir():
             shutil.copytree(source, scratch_root / catalogue_dir)
@@ -141,13 +150,7 @@ def test_mutation_repointing_offset_1628_to_the_recargo_inclusive_total_reds_the
             shutil.copy2(source, scratch_root / catalogue_dir)
 
     export_layout_path = (
-        scratch_root
-        / "modelos"
-        / "390"
-        / "revisions"
-        / _REVISION_ID
-        / "export_layouts"
-        / "0001-export_layouts.toml"
+        scratch_root / "modelos" / "390" / "revisions" / _REVISION_ID / "export_layouts" / "0001-export_layouts.toml"
     )
     original = export_layout_path.read_text(encoding="utf-8")
     mutated = original.replace(

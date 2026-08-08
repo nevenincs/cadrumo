@@ -44,6 +44,7 @@ def _is_image(data: bytes) -> bool:
         return False
     return True
 
+
 EMBEDDED_XML_SUFFIXES: tuple[str, ...] = (
     "factur-x.xml",
     "zugferd-invoice.xml",

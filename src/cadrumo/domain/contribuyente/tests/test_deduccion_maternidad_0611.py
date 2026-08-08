@@ -228,14 +228,18 @@ class TestMaternidadAltaPosteriorIncrementApplies:
 
     def test_applies_from_2023_when_declared(self) -> None:
         child = DescendantInfo(
-            birth_date=date(2023, 1, 1), meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12), alta_posterior_nacimiento_mes=5
+            birth_date=date(2023, 1, 1),
+            meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12),
+            alta_posterior_nacimiento_mes=5,
         )
         assert child.maternidad_alta_posterior_increment_applies(2023) is True
 
     def test_does_not_apply_before_2023_even_when_declared(self) -> None:
         """Same descendant, one filing year earlier: the route does not exist yet."""
         child = DescendantInfo(
-            birth_date=date(2020, 1, 1), meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12), alta_posterior_nacimiento_mes=5
+            birth_date=date(2020, 1, 1),
+            meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12),
+            alta_posterior_nacimiento_mes=5,
         )
         assert child.maternidad_alta_posterior_increment_applies(2022) is False
 

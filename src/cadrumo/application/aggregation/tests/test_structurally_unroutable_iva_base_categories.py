@@ -255,7 +255,16 @@ def test_mutation_stripping_the_intra_community_supply_binding_reds_the_negative
     scratch_root = tmp_path / "registry-mutant" / "aeat"
     (scratch_root / "modelos").mkdir(parents=True)
     shutil.copytree(bundled_root / "modelos" / "303", scratch_root / "modelos" / "303")
-    for catalogue_dir in ("apoderamientos", "authorization.d", "calendars", "categories", "iva", "legal", "topics", "treaties"):
+    for catalogue_dir in (
+        "apoderamientos",
+        "authorization.d",
+        "calendars",
+        "categories",
+        "iva",
+        "legal",
+        "topics",
+        "treaties",
+    ):
         source = bundled_root / catalogue_dir
         if source.is_dir():
             shutil.copytree(source, scratch_root / catalogue_dir)

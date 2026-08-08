@@ -219,11 +219,7 @@ def test_the_draft_split_lives_inside_the_reject_branch_not_beside_it() -> None:
     function = tree.body[0]
     assert isinstance(function, ast.FunctionDef)
 
-    reject_branches = [
-        node
-        for node in function.body
-        if isinstance(node, ast.If) and "REJECT" in ast.dump(node.test)
-    ]
+    reject_branches = [node for node in function.body if isinstance(node, ast.If) and "REJECT" in ast.dump(node.test)]
     assert len(reject_branches) == 1, "the reject terminal should be one branch, not several"
 
     nested = [

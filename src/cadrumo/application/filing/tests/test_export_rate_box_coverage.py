@@ -59,6 +59,7 @@ _REDUCIDO_TOTAL = _cid("iva.anual.repercutido.reducido")
 _BOX_10 = _cid("iva.anual.repercutido.tipo-10.cuota")
 _BOX_5 = _cid("iva.anual.repercutido.tipo-5.cuota")
 
+
 def _real_provider() -> RegistrySchemaAccessor:
     """Build the real Modelo 390 provider for the annual period.
 

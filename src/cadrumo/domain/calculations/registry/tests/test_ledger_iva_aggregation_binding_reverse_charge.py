@@ -70,13 +70,15 @@ def test_resolve_aic_official_box_parity_routes_devengado_and_deducible_net_zero
         _binding("modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"),
     )
     observations = [
-        _observation(applied_rate=Decimal("0.21"), 
+        _observation(
+            applied_rate=Decimal("0.21"),
             ledger_id="aic-isp",
             category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
             flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             iva=Decimal("84.00"),
         ),
-        _observation(applied_rate=Decimal("0.21"), 
+        _observation(
+            applied_rate=Decimal("0.21"),
             ledger_id="aic-stray-soportado",
             category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
             flow=IvaFlowDirection.SOPORTADO,
@@ -111,14 +113,21 @@ def test_calculate_303_aic_official_box_parity_books_boxes_and_leaves_resultado_
     domestic_only = _calculate_303_from_observations(
         filing_year=2025,
         period="1T",
-        observations=(_observation(applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),),
+        observations=(
+            _observation(
+                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")
+            ),
+        ),
     )
     with_aic = _calculate_303_from_observations(
         filing_year=2025,
         period="1T",
         observations=(
-            _observation(applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")),
-            _observation(applied_rate=Decimal("0.21"), 
+            _observation(
+                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("21.00")
+            ),
+            _observation(
+                applied_rate=Decimal("0.21"),
                 ledger_id="aic-isp",
                 txn_date=date(2025, 3, 1),
                 category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
@@ -197,13 +206,15 @@ def test_intracom_goods_and_services_share_the_combined_official_casilla_10_11()
         _binding("modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"),
     )
     observations = [
-        _observation(applied_rate=Decimal("0.21"), 
+        _observation(
+            applied_rate=Decimal("0.21"),
             ledger_id="aic-goods-leg",
             category=goods.category,
             flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             iva=goods_cuota,
         ),
-        _observation(applied_rate=Decimal("0.21"), 
+        _observation(
+            applied_rate=Decimal("0.21"),
             ledger_id="aic-services-leg",
             category=services.category,
             flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
@@ -229,7 +240,8 @@ def test_resolve_import_third_country_routes_deducible_only() -> None:
     """
     revision = _revision_with_bindings(_binding("modelo-303-iva-soportado-importaciones-cuota"))
     observations = [
-        _observation(applied_rate=Decimal("0.21"), 
+        _observation(
+            applied_rate=Decimal("0.21"),
             ledger_id="import",
             category=IvaCategory.IMPORT_THIRD_COUNTRY,
             flow=IvaFlowDirection.SOPORTADO,
@@ -253,14 +265,21 @@ def test_calculate_303_import_deducible_reduces_resultado_by_its_cuota() -> None
     without_import = _calculate_303_from_observations(
         filing_year=2025,
         period="1T",
-        observations=(_observation(applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")),),
+        observations=(
+            _observation(
+                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")
+            ),
+        ),
     )
     with_import = _calculate_303_from_observations(
         filing_year=2025,
         period="1T",
         observations=(
-            _observation(applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")),
-            _observation(applied_rate=Decimal("0.21"), 
+            _observation(
+                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")
+            ),
+            _observation(
+                applied_rate=Decimal("0.21"),
                 ledger_id="import",
                 txn_date=date(2025, 3, 1),
                 category=IvaCategory.IMPORT_THIRD_COUNTRY,
@@ -291,13 +310,15 @@ def test_64_advisory_no_longer_fires_on_aic_or_import() -> None:
     so neither appears in the unconsumed-declarable advisory's flagged set.
     """
     revision = _modelo_303_revision()
-    aic = _observation(applied_rate=Decimal("0.21"), 
+    aic = _observation(
+        applied_rate=Decimal("0.21"),
         ledger_id="aic",
         category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
         flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
         iva=Decimal("84.00"),
     )
-    import_row = _observation(applied_rate=Decimal("0.21"), 
+    import_row = _observation(
+        applied_rate=Decimal("0.21"),
         ledger_id="import",
         category=IvaCategory.IMPORT_THIRD_COUNTRY,
         flow=IvaFlowDirection.SOPORTADO,
@@ -364,9 +385,7 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
         # skipping it would leave the reverse-charge tail probed on NEITHER side,
         # which is the coverage this module exists to assert.
         if category_cuota_is_zero_by_law(category, invoice_direction):
-            invoice_direction = (
-                InvoiceKind.RECEIVED if invoice_direction is InvoiceKind.ISSUED else InvoiceKind.ISSUED
-            )
+            invoice_direction = InvoiceKind.RECEIVED if invoice_direction is InvoiceKind.ISSUED else InvoiceKind.ISSUED
             if category_cuota_is_zero_by_law(category, invoice_direction):
                 continue
         flow = derive_flow_for_classification(category=category, invoice_direction=invoice_direction)
@@ -406,7 +425,9 @@ def test_eu_service_acquisition_books_official_boxes_11_and_37_and_nets_to_zero(
     comparing two calculates, never by summing literals.
     """
     service_cuota = Decimal("21.00")
-    sale = _observation(applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00"))
+    sale = _observation(
+        applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")
+    )
     without_service = _calculate_303_from_observations(
         filing_year=2025,
         period="1T",
@@ -417,7 +438,8 @@ def test_eu_service_acquisition_books_official_boxes_11_and_37_and_nets_to_zero(
         period="1T",
         observations=(
             sale,
-            _observation(applied_rate=Decimal("0.21"), 
+            _observation(
+                applied_rate=Decimal("0.21"),
                 ledger_id="eu-service",
                 txn_date=date(2025, 3, 1),
                 category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
@@ -470,15 +492,19 @@ def test_eu_service_and_goods_legs_sum_onto_the_one_official_intracom_line() -> 
         filing_year=2025,
         period="1T",
         observations=(
-            _observation(applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")),
-            _observation(applied_rate=Decimal("0.21"), 
+            _observation(
+                applied_rate=Decimal("0.21"), ledger_id="sale", txn_date=date(2025, 2, 15), iva=Decimal("210.00")
+            ),
+            _observation(
+                applied_rate=Decimal("0.21"),
                 ledger_id="eu-goods",
                 txn_date=date(2025, 3, 1),
                 category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
                 flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
                 iva=goods_cuota,
             ),
-            _observation(applied_rate=Decimal("0.21"), 
+            _observation(
+                applied_rate=Decimal("0.21"),
                 ledger_id="eu-service",
                 txn_date=date(2025, 3, 2),
                 category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,

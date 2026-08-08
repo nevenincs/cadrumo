@@ -139,7 +139,9 @@ def test_aic_and_domestic_isp_ledger_rows_resolve_to_different_bindings() -> Non
     assert resolved["modelo-390-iva-autorepercutido-interior-cuota"] == Decimal("105.00")
 
     # Neither binding leaks the other row's money.
-    assert resolved["modelo-390-iva-aic-bienes-tipo-21-base"] != resolved["modelo-390-iva-autorepercutido-interior-base"]
+    assert (
+        resolved["modelo-390-iva-aic-bienes-tipo-21-base"] != resolved["modelo-390-iva-autorepercutido-interior-base"]
+    )
     assert resolved["modelo-390-iva-autorepercutido-intracomunitaria-cuota"] == Decimal("210.00")
 
 
@@ -152,7 +154,16 @@ def test_mutation_repointing_box_28_to_the_aic_blind_casilla_reds_the_gate(tmp_p
     scratch_root = tmp_path / "registry-mutant" / "aeat"
     (scratch_root / "modelos").mkdir(parents=True)
     shutil.copytree(bundled_root / "modelos" / "390", scratch_root / "modelos" / "390")
-    for catalogue_dir in ("apoderamientos", "authorization.d", "calendars", "categories", "iva", "legal", "topics", "treaties"):
+    for catalogue_dir in (
+        "apoderamientos",
+        "authorization.d",
+        "calendars",
+        "categories",
+        "iva",
+        "legal",
+        "topics",
+        "treaties",
+    ):
         source = bundled_root / catalogue_dir
         if source.is_dir():
             shutil.copytree(source, scratch_root / catalogue_dir)

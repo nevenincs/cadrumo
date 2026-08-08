@@ -513,7 +513,9 @@ def test_the_import_base_residue_is_reported_on_both_modelos(modelo_id: str) -> 
     # on both modelos, so the screen must be silent there. Without this the
     # test would pass on a screen that reports every row of every category.
     assert unrouted_ledger_iva_quantities(revision, [_row(IvaCategory.DOMESTIC_GENERAL)]) == ()
-    assert unrouted_ledger_iva_quantities(revision, [_row(IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE)]) == ()
+    assert (
+        unrouted_ledger_iva_quantities(revision, [_row(IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE)]) == ()
+    )
     assert (
         unrouted_ledger_iva_quantities(revision, [_row(IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE)])
         == ()

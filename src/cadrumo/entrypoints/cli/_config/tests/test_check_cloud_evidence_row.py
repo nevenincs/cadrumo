@@ -89,9 +89,7 @@ def test_the_issue_branch_reads_the_capability_AND_the_deployment_flag() -> None
     tree = ast.parse(source)
 
     branches = [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.If) and "CLOUD_EVIDENCE_UPLOAD" in ast.dump(node.test)
+        node for node in ast.walk(tree) if isinstance(node, ast.If) and "CLOUD_EVIDENCE_UPLOAD" in ast.dump(node.test)
     ]
     assert branches, "no config-check branch reads the cloud-evidence eligibility bar at all"
     assert any("cadrumo_evidence_cloud_upload_permitted" in ast.dump(node.test) for node in branches), (

@@ -27,6 +27,7 @@ from .._providers.base import _ProviderAdapter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+
 def _request(
     *,
     model: str = "test-model",

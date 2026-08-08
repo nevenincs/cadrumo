@@ -99,12 +99,15 @@ def test_every_rate_pinned_binding_is_screened_or_explicitly_unscreened() -> Non
             for binding in revision.bindings
             if binding.id in pinned
             and any(
-                casilla.id in {c for partition in derive_rate_box_partitions(revision) for c in partition.box_casilla_ids}
+                casilla.id
+                in {c for partition in derive_rate_box_partitions(revision) for c in partition.box_casilla_ids}
                 for casilla in revision.casillas
                 if str(casilla.binding) == binding.id
             )
         }
-        unscreened = {binding_id for group in rate_box_unscreened_groups(revision) for binding_id in group.rated_binding_ids}
+        unscreened = {
+            binding_id for group in rate_box_unscreened_groups(revision) for binding_id in group.rated_binding_ids
+        }
         unaccounted = sorted(pinned - screened - unscreened)
         assert not unaccounted, (
             f"M{modelo} {period}: {unaccounted} pin a rate but appear in neither a formed "
@@ -125,12 +128,7 @@ def test_the_m303_stranded_tiers_are_reported_as_unscreened_and_severe() -> None
     revision = next(rev for modelo, _, rev in _revisions() if modelo == "303")
     groups = rate_box_unscreened_groups(revision)
     assert groups, "M303 reported no unscreened groups; the control cannot pass vacuously"
-    severe = {
-        binding_id
-        for group in groups
-        if group.reason == _SEVERE
-        for binding_id in group.rated_binding_ids
-    }
+    severe = {binding_id for group in groups if group.reason == _SEVERE for binding_id in group.rated_binding_ids}
     missing = sorted(set(_M303_STRANDED_BINDINGS) - severe)
     assert not missing, f"M303: {missing} lost their rate-blind sibling but are not reported as {_SEVERE}"
 

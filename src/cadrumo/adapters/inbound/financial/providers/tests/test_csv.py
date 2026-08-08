@@ -270,9 +270,7 @@ def test_csv_provider_sniffs_delimiter_below_a_metadata_preamble(tmp_path: Path)
     source = tmp_path / "preamble-semicolon.csv"
     preamble = "\n".join(f"Extracto de cuenta,ES00 0000 0000 0000 0000 {index:04d}" for index in range(3))
     source.write_text(
-        preamble + "\n"
-        "Fecha;Concepto;Importe;Divisa;Saldo\n"
-        "17/04/2026;Pago cuota autonomos;-48,40;EUR;1000,00\n",
+        preamble + "\nFecha;Concepto;Importe;Divisa;Saldo\n17/04/2026;Pago cuota autonomos;-48,40;EUR;1000,00\n",
         encoding="utf-8",
     )
 

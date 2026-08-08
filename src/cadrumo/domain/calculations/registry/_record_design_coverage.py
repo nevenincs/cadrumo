@@ -637,9 +637,7 @@ def build_diseno_coverage_report(
         multi_segment: Whether the modelo uses segment-qualified casilla ids.
     """
     diseno = derive_diseno_coverage_casillas(path, multi_segment=multi_segment)
-    declared_metadata = {
-        (casilla.segmento, casilla.form_number or casilla.number) for casilla in revision.casillas
-    }
+    declared_metadata = {(casilla.segmento, casilla.form_number or casilla.number) for casilla in revision.casillas}
     covered: list[DerivedDisenoCasilla] = []
     gap: list[DerivedDisenoCasilla] = []
     for casilla in diseno:

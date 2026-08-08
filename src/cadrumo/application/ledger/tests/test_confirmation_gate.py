@@ -312,16 +312,19 @@ def test_choosing_a_value_the_document_never_offered_refuses() -> None:
 
     # Positive control on the same blocker: a listed candidate is accepted, so
     # the refusal above is attributable to the value and not to the action.
-    assert resolved_blockers(
-        draft=draft,
-        resolutions=(
-            FindingResolution(
-                blocker_id=blockers[0].blocker_id,
-                action=FindingResolutionAction.CHOOSE_CANDIDATE,
-                value="ESX1234567L",
+    assert (
+        resolved_blockers(
+            draft=draft,
+            resolutions=(
+                FindingResolution(
+                    blocker_id=blockers[0].blocker_id,
+                    action=FindingResolutionAction.CHOOSE_CANDIDATE,
+                    value="ESX1234567L",
+                ),
             ),
-        ),
-    ) == blockers
+        )
+        == blockers
+    )
 
 
 def test_an_attestation_with_no_stated_reason_is_refused_at_construction() -> None:
@@ -349,6 +352,9 @@ def test_blocker_ids_are_clock_free_and_stable_across_re_reads() -> None:
     second = confirmation_blockers(_draft_with_finding(DraftDiscrepancyKind.ARITHMETIC_CLOSURE))
 
     assert [blocker.blocker_id for blocker in first] == [blocker.blocker_id for blocker in second]
-    assert first[0].blocker_id != confirmation_blockers(
-        _draft_with_finding(DraftDiscrepancyKind.ROLE_UNRESOLVED),
-    )[0].blocker_id
+    assert (
+        first[0].blocker_id
+        != confirmation_blockers(
+            _draft_with_finding(DraftDiscrepancyKind.ROLE_UNRESOLVED),
+        )[0].blocker_id
+    )

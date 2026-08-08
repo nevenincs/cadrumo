@@ -106,10 +106,14 @@ def test_the_degraded_set_is_derived_from_the_vocabulary() -> None:
     vocabulary lands in the reported set until someone deliberately declares it
     intact. A hand-listed set would leave the new outcome invisible.
     """
-    assert frozenset(FieldGroundingOutcome) - {
-        FieldGroundingOutcome.RECONCILED,
-        FieldGroundingOutcome.ANCHORED,
-    } == DEGRADED_GROUNDING_OUTCOMES
+    assert (
+        frozenset(FieldGroundingOutcome)
+        - {
+            FieldGroundingOutcome.RECONCILED,
+            FieldGroundingOutcome.ANCHORED,
+        }
+        == DEGRADED_GROUNDING_OUTCOMES
+    )
     assert FieldGroundingOutcome.RECONCILED not in DEGRADED_GROUNDING_OUTCOMES
     assert FieldGroundingOutcome.ANCHORED not in DEGRADED_GROUNDING_OUTCOMES
 

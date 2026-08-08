@@ -230,9 +230,7 @@ def test_the_rate_blind_total_layer_retains_the_unrated_recargo() -> None:
     the declared annual total silently.
     """
     without = _resolve(_rated_rows())["modelo-390-iva-recargo-equivalencia-reducido-cuota"]
-    with_unrated = _resolve((*_rated_rows(), _unrated_row()))[
-        "modelo-390-iva-recargo-equivalencia-reducido-cuota"
-    ]
+    with_unrated = _resolve((*_rated_rows(), _unrated_row()))["modelo-390-iva-recargo-equivalencia-reducido-cuota"]
     assert with_unrated - without == _UNRATED_RECARGO
 
 

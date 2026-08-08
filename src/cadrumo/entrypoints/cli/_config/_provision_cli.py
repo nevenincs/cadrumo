@@ -150,10 +150,7 @@ def register_provision_commands(app: typer.Typer) -> None:
             f"accelerator\t{profile.accelerator.kind.value}",
             f"runtime\t{'reachable' if residents is not None else 'unreachable'}",
         ]
-        lines.extend(
-            f"model\t{row.role}\t{row.model or '-'}\t{'resident' if row.resident else '-'}"
-            for row in models
-        )
+        lines.extend(f"model\t{row.role}\t{row.model or '-'}\t{'resident' if row.resident else '-'}" for row in models)
         if contention is not None:
             lines.append(f"contention\t{'admitted' if contention.admitted else 'refused'}\t{contention.detail}")
         _emit_envelope(ctx, command="config.provision.report", result=result, lines=tuple(lines))

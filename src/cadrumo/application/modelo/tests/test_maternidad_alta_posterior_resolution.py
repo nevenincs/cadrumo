@@ -83,7 +83,9 @@ def test_a_declared_completion_month_is_carried_for_2023() -> None:
 
 def test_the_manual_worked_example_reproduces_through_the_real_resolver() -> None:
     """Two mellizos, oracle-anchored: 950 each, 1.900 together, through the real path."""
-    record = _record(_mellizo((5, 6, 7, 8, 9, 10, 11, 12), alta_mes=5), _mellizo((5, 6, 7, 8, 9, 10, 11, 12), alta_mes=5))
+    record = _record(
+        _mellizo((5, 6, 7, 8, 9, 10, 11, 12), alta_mes=5), _mellizo((5, 6, 7, 8, 9, 10, 11, 12), alta_mes=5)
+    )
 
     resolution = resolve_maternidad_meses(record, _snapshot(2023))
     deduccion = compute_deduccion_maternidad_0611(

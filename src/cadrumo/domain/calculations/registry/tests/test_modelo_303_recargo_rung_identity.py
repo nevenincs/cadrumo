@@ -81,8 +81,7 @@ def test_each_recargo_cuota_box_carries_the_binding_its_published_rate_requires(
     """The forward direction: the right rung carries the right cuota."""
     casilla = _casillas_by_number()[box]
     assert str(casilla.binding) == binding_id, (
-        f"casilla {box} carries {casilla.binding!r}; AEAT's published Tipo % for that "
-        f"rung requires {binding_id!r}"
+        f"casilla {box} carries {casilla.binding!r}; AEAT's published Tipo % for that rung requires {binding_id!r}"
     )
 
 
