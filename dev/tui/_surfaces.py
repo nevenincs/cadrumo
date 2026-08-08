@@ -8,6 +8,21 @@ about the one the operator meets.
 
 Surfaces that need a profile say so through ``needs_profile``; the runner
 enters the harness storage root and creates it before building.
+
+**Which surface is the setup wizard.** The interactive setup experience an
+operator actually meets is ``registration`` (create credentials) followed by
+``manager`` (fill and edit profile fields). The paged ``setup`` /
+``setup-modify`` flow is DELIBERATELY RETIRED as an interactive surface:
+``manager_is_the_right_frontend`` routes every interactive invocation on a
+capable host to the manager, because two interactive answers to "manage a
+profile" was the parallel-authority failure the architecture rules forbid.
+``setup_flow_definition`` survives in production only for the scripted /
+``--quiet`` headless path, which renders no screen at all.
+
+The retired surfaces stay registered here on purpose — evaluating what a dead
+path still paints is how you tell an orphan from a regression — but a finding
+against them is a DEAD-CODE finding, never an operator-facing one. Say which
+you mean.
 """
 
 from __future__ import annotations
@@ -129,9 +144,24 @@ def _form() -> App:
 SURFACES: dict[str, Surface] = {
     s.name: s
     for s in (
-        Surface("setup", "Setup wizard, CREATE (with descendants)", _setup(FlowMode.CREATE), needs_profile=True),
-        Surface("setup-modify", "Setup wizard, MODIFY", _setup(FlowMode.MODIFY), needs_profile=True),
-        Surface("registration", "Credential-first profile creation", _registration, needs_profile=False),
+        Surface(
+            "setup",
+            "RETIRED paged flow, CREATE — no interactive operator reaches this",
+            _setup(FlowMode.CREATE),
+            needs_profile=True,
+        ),
+        Surface(
+            "setup-modify",
+            "RETIRED paged flow, MODIFY — no interactive operator reaches this",
+            _setup(FlowMode.MODIFY),
+            needs_profile=True,
+        ),
+        Surface(
+            "registration",
+            "THE REAL setup wizard, step 1: credential-first profile creation",
+            _registration,
+            needs_profile=False,
+        ),
         Surface("login", "The way back into a locked profile", _login, needs_profile=True),
         Surface(
             "manager",
