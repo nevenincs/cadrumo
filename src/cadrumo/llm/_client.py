@@ -28,7 +28,14 @@ from ..core.i18n import tr
 from ..core.logging import get_logger
 from ..core.time import now
 from ._consent import EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY, provider_reads_off_host
-from ._errors import LLMBusyError, LLMCacheError, LLMConfigError, LLMConsentError, LLMError
+from ._errors import (
+    LLMBusyError,
+    LLMCacheError,
+    LLMConfigError,
+    LLMConsentError,
+    LLMContentionError,
+    LLMError,
+)
 
 if TYPE_CHECKING:
     # The three persistence-touching stores stay on the CORE side of the
@@ -44,6 +51,11 @@ if TYPE_CHECKING:
         LLMRunTelemetryRecorder,
         UsageRecorder,
     )
+
+    # The headroom measurements the contention authority consumes. Type-only
+    # for the same reason as the stores above: the runtime edge into the
+    # application package stays deferred to the one call site that needs it.
+    from ..application.provisioning import HardwareProfile, RuntimeResident
 from ._models import LLMProvider, LLMRequest, LLMResponse, PromptRegistry
 from ._pricing import estimate_cost_usd
 from ._providers import (
@@ -291,6 +303,19 @@ class LLMClient:
             often and how long a transient transport failure is re-sent. Which
             failures qualify is not tunable here -- that is the error taxonomy's
             answer, read through :func:`transport_retry_permitted`.
+        hardware_profile: Optional measured
+            :class:`~application.provisioning.HardwareProfile` used for the
+            headroom check instead of probing this machine. Injecting the
+            MEASUREMENT rather than the verdict keeps the real decision
+            function on the path: a post-quiesce reading exercises the same
+            comparison, margin and attribution production runs.
+        runtime_residents: Optional resident set standing in for a live read of
+            the runtime.
+        runtime_residents_measured: False states the resident set could not be
+            read, which is a different fact from a measured-empty one and
+            reaches the fail-closed arm rather than the shortfall arm. The two
+            are indistinguishable from the refusal alone, so a case that means
+            to prove one must say which.
         caller: Stable caller identifier recorded in usage logs.
         prompt_id: Stable prompt identifier recorded in usage logs.
     """
@@ -305,6 +330,9 @@ class LLMClient:
         consent_ledger: EvidenceConsentLedger | None = None,
         prompt_registry: PromptRegistry | None = None,
         retry_policy: LLMRetryPolicy | None = None,
+        hardware_profile: HardwareProfile | None = None,
+        runtime_residents: tuple[RuntimeResident, ...] | None = None,
+        runtime_residents_measured: bool = True,
         caller: str = "cadrumo.llm.client",
         prompt_id: str = "adhoc",
     ) -> None:
@@ -332,6 +360,9 @@ class LLMClient:
         self.consent_ledger = consent_ledger or EvidenceConsentLedger()
         self.prompt_registry = prompt_registry or PromptRegistry.seeded()
         self.retry_policy = retry_policy or LLMRetryPolicy()
+        self.hardware_profile = hardware_profile
+        self.runtime_residents = runtime_residents
+        self.runtime_residents_measured = runtime_residents_measured
         self.caller = caller
         self.prompt_id = prompt_id
         self._sweep_retention_stores()
@@ -401,6 +432,14 @@ class LLMClient:
         run_clock_start = time.monotonic()
         try:
             with self._on_host_admission(provider):
+                # Inside the slot and outside the retry loop, both load-bearing.
+                # Inside, because a headroom reading taken before the slot is
+                # held can be invalidated by another request loading a model
+                # between the measurement and this dispatch. Outside, because a
+                # refusal that the retry loop could see would be re-sent on a
+                # schedule, turning one refusal into several while the memory it
+                # waits for is still held.
+                self._require_load_headroom(provider, provider_request.model)
                 completion = await self._complete_with_retries(adapter, provider_request)
         except Exception as exc:  # LLM provider adapters surface heterogeneous exceptions; log+re-raise here
             self._attach_local_degradation_remediation(exc, provider=provider, model=model)
@@ -454,6 +493,68 @@ class LLMClient:
             completion.output_tokens,
         )
         return response
+
+    def _require_load_headroom(self, provider: LLMProvider, model: str) -> None:
+        """Refuse an on-host dispatch this machine has no measured room for.
+
+        **A wiring job, not a second detector.** The verdict comes from
+        :func:`~application.provisioning.assess_model_load_contention`, which
+        already owns the comparison, the safety margin, the fail-closed arm and
+        the attribution of a shortfall to the runtime's own residents versus a
+        peer process's device usage. That authority was deliberately
+        consolidated out of four call sites; re-deriving any part of it here
+        would undo the consolidation and give the dispatch point a second
+        opinion that could disagree with the doctor surface an operator just
+        read.
+
+        Resolved through the application package's public facade at call time
+        rather than at module load. The edge is downward and permitted, but this
+        package is imported BY application code, so an eager binding would risk
+        closing that loop at import time -- the same reason the stores above are
+        deferred.
+
+        **Assessed only where the catalogue makes a claim.** An uncatalogued
+        model has no declared requirement, and inventing one would be worse than
+        not checking: a requirement read as zero flows into the authority as the
+        amount the model needs, and the check then reports the load ADMITTED on
+        evidence nobody has. That is the reasoning
+        :attr:`~application.provisioning.ModelSelection.assessable_load` records
+        for every other caller, followed here rather than re-decided.
+
+        Args:
+            provider: The resolved provider this dispatch would run at.
+            model: The resolved model whose load is being judged.
+
+        Raises:
+            LLMContentionError: When the measured verdict is not admitted,
+                carrying the snapshot's own detail and its remediation --
+                which names unloading a model Cadrumo selected or closing a
+                peer application, because those are not interchangeable.
+        """
+        if provider_reads_off_host(provider):
+            return
+        from ..application.provisioning import assess_model_load_contention
+        from ..core import model_candidate
+
+        candidate = model_candidate(model)
+        requirement_bytes = None if candidate is None else candidate.memory_requirement_bytes
+        if requirement_bytes is None:
+            return
+        snapshot = assess_model_load_contention(
+            model,
+            requirement_bytes,
+            profile=self.hardware_profile,
+            residents=self.runtime_residents,
+            residents_measured=self.runtime_residents_measured,
+            settings=self.settings,
+        )
+        if snapshot.admitted:
+            return
+        raise LLMContentionError(
+            message=snapshot.detail or f"loading {model!r} was refused: this machine has no measured headroom",
+            suggestion=snapshot.remediation or None,
+            context={"model": model, "causes": ", ".join(cause.value for cause in snapshot.causes)},
+        )
 
     @staticmethod
     def _attach_local_degradation_remediation(

@@ -200,6 +200,23 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.llm._errors.LLMContentionError",
+        ErrorCode(
+            code="REFUSED_LLM_CONTENTION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_llm_contention",
+            # The check reports which remediation applies -- unload a model
+            # Cadrumo selected, or close a peer application holding the device --
+            # and the raised error carries that verdict verbatim. This default
+            # covers only the case where none reached the instance.
+            default_suggestion="aeat config check",
+            # Headroom does not return on a timer, so a scheduled re-send turns
+            # one refusal into several while the memory is still held.
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.llm._errors.LLMBusyError",
         ErrorCode(
             code="REFUSED_LLM_BUSY",
