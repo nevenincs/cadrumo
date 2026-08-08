@@ -338,24 +338,59 @@ class AmbiguousRevisionSelectionError(RegistrySnapshotError):
     operator refusal without re-parsing the message. Catchable as
     :class:`RegistrySnapshotError`.
 
-    Structured attributes: ``modelo_id``, ``candidate_ids``.
+    THE REMEDY IS RAISER-SUPPLIED, and deliberately not part of the shared
+    message. Two selectors raise this: the year-only one, where the fix is to
+    supply a period or an as-of date, and the period-scoped one, where the
+    caller has already supplied a period and that advice would send an operator
+    to redo what they just did. No single string is correct for both, so each
+    raiser passes its own ``suggestion`` through the standard channel while the
+    translated message stays shared and unchanged.
+
+    Structured attributes: ``modelo_id``, ``candidate_ids``, ``filing_year``.
     """
 
-    def __init__(self, *, modelo_id: str, candidate_ids: Iterable[str]) -> None:
+    def __init__(
+        self,
+        *,
+        modelo_id: str,
+        candidate_ids: Iterable[str],
+        filing_year: int | None = None,
+        reason: str | None = None,
+        suggestion: str | None = None,
+    ) -> None:
         """Construct the ambiguous-revision-selection error.
 
         Args:
             modelo_id: The modelo whose revisions were searched.
             candidate_ids: The matching revision ids; stored sorted as a
                 tuple on ``candidate_ids``.
+            filing_year: Optional filing year the ambiguity arose for. Named in
+                the fallback text and carried structurally, because "two
+                revisions match" is far more actionable once the reader knows
+                WHICH year is doubly covered.
+            reason: Optional raiser-supplied explanation of WHY the year is
+                ambiguous, appended to the fallback text.
+            suggestion: Optional raiser-supplied remedy. Passed through the
+                standard suggestion channel rather than folded into the shared
+                translated message, which two selectors with opposite remedies
+                use.
         """
         ids = tuple(sorted(candidate_ids))
         self.modelo_id: str = modelo_id
         self.candidate_ids: tuple[str, ...] = ids
+        self.filing_year: int | None = filing_year
+        scope = f"modelo {modelo_id}" if filing_year is None else f"modelo {modelo_id} filing year {filing_year}"
+        detail = f"{scope}: ambiguous revision selection: {', '.join(ids)}"
+        if reason:
+            detail = f"{detail} -- {reason}"
+        context: dict[str, object] = {"modelo_id": modelo_id, "candidate_ids": _csv(ids)}
+        if filing_year is not None:
+            context["filing_year"] = filing_year
         super().__init__(
-            f"modelo {modelo_id}: ambiguous revision selection: {', '.join(ids)}",
+            detail,
             translated_message="errors.snapshot.ambiguous_revision_selection",
-            context={"modelo_id": modelo_id, "candidate_ids": _csv(ids)},
+            context=context,
+            suggestion=suggestion,
         )
 
 
