@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:e1d76df14872eae69528b5db91a08543d72d38dc26fcdc11649d98e00d4e9a2a'
+body_hash: 'sha256:edac880f80c5a96b35cc0163872ad58019996bcdfadc5febed7a5b0abb34831c'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -517,6 +517,36 @@ repair: either Modelo 349 gains a ledger feed, or intra-community operations are
 declared to require an invoice, and choosing between those is not this sweep's
 call. Recorded with the measurement so whoever takes it does not have to
 rediscover that the source sets are disjoint.
+
+### rate-kind-cuota-correspondence-is-real-but-not-an-invariant | medium | A gate was built for it, failed honestly, and was withdrawn
+
+The correspondence a peer identified is real and it explains the difference this
+sweep had only observed: a binding admits the cuota-less tiers exactly where the
+component table declares that side's cuota zero by law, which is why the casilla
+122 base binding admits zero and exempt while every recipient-side binding
+refuses them. Read across Modelo 303, 390 and 322 it holds for seventy-seven of
+seventy-nine selector pairs.
+
+It is not an invariant, and the attempt to gate it is what established that. The
+first run failed on six Modelo 390 bindings. Every one of them is correct: the
+rate-BOX layer declares a per-rate line the official form actually has, so a
+tipo-0 binding must admit the zero tier to populate a box that exists, and each
+carries its own legal refs and form citation. Excluding that layer by its
+structural marker rather than by name left two more, and those are correct too --
+a deliberate rate-blind base capture, equally grounded.
+
+The gate was withdrawn rather than narrowed. Two carve-outs discovered by running
+it, each found because the assertion failed and then justified after the fact, is
+the shape where the judgement quietly moves into the allowlist: a third exception
+would have been added the same way. A property that needs exceptions found by
+failure is a description of the current tree, not a rule the tree must obey, and
+gating it would have frozen today's shape while reading as a law.
+
+The correspondence keeps its explanatory value and loses its claim to be a
+constraint. Recorded so a later reader does not re-derive it, believe it
+universal because it holds everywhere they happen to look, and gate it -- and so
+the two exception classes are already named when someone asks whether it could be
+gated with them declared as roles rather than discovered as failures.
 
 ## Recommendations
 
