@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:b8a70b94d1034f732b9db65d08a994e377d138b54d3161cac3d9e44ac362d835'
+body_hash: 'sha256:c74d402c24df0b1302f6d9cf977480239bd407d077681412190be33a9846e68e'
 step_id: 'S04'
 related:
   - "[[2026-08-07-m200-export-nif-misbinding-plan]]"
@@ -40,7 +40,9 @@ package already uses for exemption, previous-filing, and relation-source
 validation, and it keeps ONE authority: the section validator still calls the
 check on every field it already walks, so there is no second traversal and no
 second dispatch table. The two modules are 246 and 117 lines.
-Semantic discovery surfaced that module, which neither the decision record nor the
+
+Semantic discovery surfaced the section validator, which neither the decision
+record nor the
 reference names, as the only export-field surface dispatched from the per-revision
 validation dispatcher and therefore the only one that runs at registry BUILD over
 every revision. The overlap check in the scoped module runs inside layout
@@ -89,3 +91,10 @@ wide bound to a 4-character filing year. Gating that attribute would refuse the
 registry build until the declaration is restructured, which needs its own decision
 and byte-level verification, so the gate abstains there and the divergence is
 recorded rather than silently absorbed.
+
+That abstention was correct only for as long as the divergence stood. Follow-on
+work restructuring the page-000 envelope-open record into its published
+field-by-field composite has since tightened both remaining rulings to real
+widths, which is the outcome the abstention was holding the door open for. A
+reader comparing this record against the current mapping should expect to find
+the year and period-token attributes gated rather than abstaining.
