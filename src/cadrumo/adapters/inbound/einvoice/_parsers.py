@@ -87,6 +87,7 @@ class ParsedEInvoice:
 
     __slots__ = (
         "currency",
+        "customer_country_code",
         "customer_name",
         "customer_postal_code",
         "customer_tax_id",
@@ -101,6 +102,7 @@ class ParsedEInvoice:
         "recargo_amount",
         "regime_legend",
         "shape",
+        "supplier_country_code",
         "supplier_name",
         "supplier_postal_code",
         "supplier_tax_id",
@@ -123,6 +125,14 @@ class ParsedEInvoice:
         # Canarian and Ceutan parties outside the territory they belong to.
         self.supplier_postal_code: str | None = None
         self.customer_postal_code: str | None = None
+        # The country half, carried VERBATIM in whichever code system the format
+        # states it -- Facturae in ISO alpha-3, UBL in alpha-2. Left untranslated
+        # here on purpose: the correspondence between the two systems is registry
+        # data, and resolving it inside a syntax parser would make this module a
+        # second country authority. Absent stays None for the same reason the
+        # postal code does.
+        self.supplier_country_code: str | None = None
+        self.customer_country_code: str | None = None
         self.invoice_number: str | None = None
         self.invoice_series: str | None = None
         self.invoice_date: str | None = None
@@ -227,6 +237,54 @@ def _facturae_postal_code(party: Element) -> str | None:
         found = _direct_child_text(address, "PostCode")
         if found:
             return found
+    return None
+
+
+def _facturae_country_code(party: Element) -> str | None:
+    """Return a Facturae party's stated country code, VERBATIM and in ISO alpha-3.
+
+    Scoped to ``AddressInSpain/CountryCode``, the sibling of the ``PostCode``
+    element beside it, and read for the country half of the establishment
+    question the postal code answers only the sub-national half of.
+
+    **The value is carried exactly as stated, in the code system Facturae uses.**
+    That system is ISO 3166-1 alpha-3 -- ``ESP``, not ``ES`` -- and translating it
+    here would put a country authority inside a syntax parser. The
+    correspondence is registry data and the lookup belongs downstream; this is a
+    read.
+
+    ``OverseasAddress`` is deliberately not consulted, matching
+    :func:`_facturae_postal_code`: that block is how a foreign-established party
+    states its address, and its country is reached through the same element name
+    there, so widening this walk would silently change WHICH address a party's
+    country is read from.
+    """
+    for address in _find_all(party, "AddressInSpain"):
+        found = _direct_child_text(address, "CountryCode")
+        if found:
+            return found
+    return None
+
+
+def _ubl_country_code(party: Element) -> str | None:
+    """Return a UBL party's stated country code (EN16931 BT-40 / BT-55).
+
+    UBL carries it in ``cac:PostalAddress/cac:Country/cbc:IdentificationCode``,
+    beside the ``PostalZone`` :func:`_ubl_postal_code` already reads, and states
+    it in ISO 3166-1 alpha-2. Carried verbatim for the same reason the Facturae
+    code is: what a document states is a read, what a code MEANS is not the
+    parser's question.
+
+    Scoped to the ``Country`` element rather than taken from the first
+    ``IdentificationCode`` in the address subtree: UBL uses that local name for
+    other coded values, and a descendant walk would pick whichever the schema
+    happened to order first.
+    """
+    for address in _find_all(party, "PostalAddress"):
+        for country in _find_all(address, "Country"):
+            found = _direct_child_text(country, "IdentificationCode")
+            if found:
+                return found
     return None
 
 
@@ -400,6 +458,7 @@ def _parse_ubl(root: Element) -> ParsedEInvoice:
             setattr(parsed, f"{target}_tax_id", _vat_id(found[0]))
             setattr(parsed, f"{target}_name", _ubl_party_name(found[0]))
             setattr(parsed, f"{target}_postal_code", _ubl_postal_code(found[0]))
+            setattr(parsed, f"{target}_country_code", _ubl_country_code(found[0]))
     for total in _find_all(root, "LegalMonetaryTotal"):
         parsed.taxable_base = _decimal(_first_text(total, "TaxExclusiveAmount"))
         parsed.grand_total = _decimal(_first_text(total, "TaxInclusiveAmount"))
@@ -449,6 +508,7 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
             setattr(parsed, f"{target}_tax_id", _first_text(found[0], "TaxIdentificationNumber"))
             setattr(parsed, f"{target}_name", _facturae_party_name(found[0]))
             setattr(parsed, f"{target}_postal_code", _facturae_postal_code(found[0]))
+            setattr(parsed, f"{target}_country_code", _facturae_country_code(found[0]))
     invoices = _find_all(root, "Invoice")
     if not invoices:
         return parsed

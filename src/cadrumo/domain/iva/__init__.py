@@ -56,6 +56,7 @@ from ._classification import (
     IvaClassificationResult,
     IvaInvoiceClassificationCriteria,
     IvaTerritorialScope,
+    PartyFact,
     TransactionKind,
     classify_iva,
     domestic_categories_by_rate_kind,
@@ -92,6 +93,7 @@ from ._establishment import (
     SPAIN_COUNTRY_CODE,
     country_code_for_printed_country_name,
     country_code_for_printed_tax_identifier,
+    country_code_for_stated_country_code,
     territorial_scope_for_country,
     territorial_scope_for_printed_country_name,
     territorial_scope_for_printed_tax_identifier,
@@ -219,6 +221,7 @@ from ._supply_nature import (
     match_statutory_citations,
     supply_nature_is_required,
 )
+from ._vat_identification import vat_identification_state_for_printed_tax_identifier
 from ._verify import verify_catalogue
 
 __all__ = [
@@ -281,6 +284,7 @@ __all__ = [
     "LegendDerivationOutcome",
     "LivaArt161RecargoRates",
     "OssIossRegime",
+    "PartyFact",
     "ProrrataError",
     "ProrrataInputDeduction",
     "ProrrataInputError",
@@ -316,6 +320,7 @@ __all__ = [
     "compute_sectoral_prorrata",
     "country_code_for_printed_country_name",
     "country_code_for_printed_tax_identifier",
+    "country_code_for_stated_country_code",
     "cuota_less_m303_categories_from_table",
     "deductible_percentage_for",
     "derive_category_from_regime_legend",
@@ -365,5 +370,6 @@ __all__ = [
     "territorial_scope_for_printed_tax_identifier",
     "territorial_scope_for_spanish_postal_code",
     "validate_prorrata_reference",
+    "vat_identification_state_for_printed_tax_identifier",
     "verify_catalogue",
 ]

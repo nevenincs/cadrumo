@@ -191,9 +191,13 @@ def test_every_minting_surface_sources_eligibility_from_the_canonical_resolver()
 
     Passing a literal ``True`` -- or any value not read from the resolver --
     would reinstate a per-surface decision above a profile-scoped bar, which is
-    the failure this test exists to prevent. Vacuous today by design (nothing
-    mints yet); the signature test above is what holds the line until a surface
-    appears.
+    the failure this test exists to prevent.
+
+    **This is no longer vacuous: one production surface mints.** The sweep finds
+    ``entrypoints/cli/_ledger_evidence_cli.py``, the off-host evidence extract
+    verb, and it passes because that surface sources ``profile_eligible`` from
+    the canonical resolver rather than asserting its own. The signature test
+    above still holds the line for the next surface to appear.
     """
     offenders: list[str] = []
     for relative, lineno, call in _minting_call_sites():

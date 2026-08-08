@@ -90,6 +90,33 @@
 # by the Member State catalogue and the country resolver respectively. This
 # table answers only "which country did the issuer print", and it is recorded
 # here rather than inlined in code so that it is reviewable in one place.
+#
+# THE ALPHA-3 COLUMN, AND WHY IT SITS HERE RATHER THAN IN CODE. A printed
+# document states a country as a name; a STRUCTURED one states it as a code, and
+# the two syntaxes this reader accepts do not agree on which code system. UBL
+# states the alpha-2 form (EN16931 BT-40 / BT-55), and Facturae states the
+# alpha-3 form inside its AddressInSpain block -- "ESP" where every country
+# surface in this codebase is keyed "ES". Nothing downstream reads alpha-3, so
+# an alpha-3 code handed to the country resolver fails its length check and
+# yields nothing: the evidence is present, parsed, and silently establishes no
+# country. The correspondence closing that is recorded as a COLUMN here, beside
+# the alpha-2 code it names, so both code systems and the printed names all
+# resolve onto one code in one reviewable place. Written as a literal in the
+# feature module that needed it, it would be a third country authority.
+#
+# EVERY RECORD CARRIES ONE, AND THE LOADER REFUSES A TABLE THAT BREAKS THAT.
+# The column is required rather than optional, because an omission is
+# indistinguishable at the call site from a country that genuinely has no
+# alpha-3 form -- it degrades to "this document states no country", which is the
+# exact silent failure the column exists to close. The loader also refuses two
+# records claiming one alpha-3 code, and one alpha-2 claiming two alpha-3s, for
+# the same reason it refuses a name two countries claim: a code that cannot name
+# one country cannot establish one.
+#
+# NORTHERN IRELAND IS ABSENT HERE TOO, and consistently so. XI is a VAT
+# jurisdiction code rather than an ISO country, it has no alpha-3 form to state,
+# and no name in this table maps to it -- it is established by a printed NIF-IVA
+# prefix or not at all.
 
 # ---------------------------------------------------------------------------
 # EU Member States.
@@ -97,118 +124,145 @@
 
 [[country]]
 code = "AT"
+alpha3 = "AUT"
 names = ["Österreich", "Oesterreich", "Austria"]
 notes = "The German ASCII convention is 'Oesterreich', which accent folding does not produce, so it is listed as data. The Spanish and English names coincide."
 
 [[country]]
 code = "BE"
+alpha3 = "BEL"
 names = ["België", "Belgique", "Belgien", "Bélgica", "Belgium"]
 notes = "Three official languages, all three endonyms printed in practice."
 
 [[country]]
 code = "BG"
+alpha3 = "BGR"
 names = ["Bulgaria", "Bulgarien", "България"]
 notes = "The Cyrillic endonym is carried because a domestic Bulgarian invoice prints it; the Spanish and English names coincide."
 
 [[country]]
 code = "CY"
+alpha3 = "CYP"
 names = ["Cyprus", "Chipre", "Κύπρος", "Kibris", "Kıbrıs"]
 
 [[country]]
 code = "CZ"
+alpha3 = "CZE"
 names = ["Česko", "Česká republika", "Chequia", "República Checa", "Czechia", "Czech Republic"]
 
 [[country]]
 code = "DE"
+alpha3 = "DEU"
 names = ["Deutschland", "Alemania", "Germany"]
 
 [[country]]
 code = "DK"
+alpha3 = "DNK"
 names = ["Danmark", "Dinamarca", "Denmark"]
 
 [[country]]
 code = "EE"
+alpha3 = "EST"
 names = ["Eesti", "Estonia"]
 
 [[country]]
 code = "ES"
+alpha3 = "ESP"
 names = ["España", "Espanya", "Espanha", "Spain"]
 notes = "Carried so the name axis can establish the code, NOT so it can establish a scope: the country resolver returns nothing for ES by design, because ES names the Member State while the IVA territory inside it stays undetermined between the TAI, Canarias and Ceuta y Melilla. The Catalan and Portuguese forms appear on invoices issued inside and beside the peninsula."
 
 [[country]]
 code = "FI"
+alpha3 = "FIN"
 names = ["Suomi", "Finland", "Finlandia"]
 
 [[country]]
 code = "FR"
+alpha3 = "FRA"
 names = ["France", "Francia"]
 
 [[country]]
 code = "GR"
+alpha3 = "GRC"
 names = ["Ellada", "Ελλάδα", "Hellas", "Grecia", "Greece"]
 notes = "The IVA prefix catalogue keys Greece as GR rather than the EL used on Greek NIF-IVA numbers; the code emitted here matches the catalogue."
 
 [[country]]
 code = "HR"
+alpha3 = "HRV"
 names = ["Hrvatska", "Croacia", "Croatia"]
 
 [[country]]
 code = "HU"
+alpha3 = "HUN"
 names = ["Magyarország", "Hungría", "Hungary"]
 
 [[country]]
 code = "IE"
+alpha3 = "IRL"
 names = ["Ireland", "Éire", "Irlanda"]
 
 [[country]]
 code = "IT"
+alpha3 = "ITA"
 names = ["Italia", "Italy"]
 
 [[country]]
 code = "LT"
+alpha3 = "LTU"
 names = ["Lietuva", "Lituania", "Lithuania"]
 
 [[country]]
 code = "LU"
+alpha3 = "LUX"
 names = ["Luxembourg", "Lëtzebuerg", "Luxemburg", "Luxemburgo"]
 
 [[country]]
 code = "LV"
+alpha3 = "LVA"
 names = ["Latvija", "Letonia", "Latvia"]
 
 [[country]]
 code = "MT"
+alpha3 = "MLT"
 names = ["Malta"]
 notes = "The Maltese, Spanish and English names coincide."
 
 [[country]]
 code = "NL"
+alpha3 = "NLD"
 names = ["Nederland", "Países Bajos", "Netherlands", "The Netherlands", "Holanda", "Holland"]
 notes = "Holanda and Holland name two provinces rather than the state, but they are printed as the country on real invoices often enough that refusing them would lose a genuine population; unlike a sub-national name they are unambiguous about which state is meant."
 
 [[country]]
 code = "PL"
+alpha3 = "POL"
 names = ["Polska", "Polonia", "Poland"]
 
 [[country]]
 code = "PT"
+alpha3 = "PRT"
 names = ["Portugal"]
 notes = "The Portuguese, Spanish and English names coincide."
 
 [[country]]
 code = "RO"
+alpha3 = "ROU"
 names = ["România", "Rumanía"]
 
 [[country]]
 code = "SE"
+alpha3 = "SWE"
 names = ["Sverige", "Suecia", "Sweden"]
 
 [[country]]
 code = "SI"
+alpha3 = "SVN"
 names = ["Slovenija", "Eslovenia", "Slovenia"]
 
 [[country]]
 code = "SK"
+alpha3 = "SVK"
 names = ["Slovensko", "Eslovaquia", "Slovakia"]
 
 # ---------------------------------------------------------------------------
@@ -218,127 +272,158 @@ names = ["Slovensko", "Eslovaquia", "Slovakia"]
 
 [[country]]
 code = "GB"
+alpha3 = "GBR"
 names = ["United Kingdom", "Reino Unido", "Great Britain", "Gran Bretaña", "UK"]
 notes = "No constituent nation is listed: those are sub-national names, and Northern Ireland in particular is a separate VAT jurisdiction (XI) that only a printed NIF-IVA prefix can establish."
 
 [[country]]
 code = "US"
+alpha3 = "USA"
 names = ["United States", "United States of America", "USA", "U.S.A.", "Estados Unidos", "EEUU", "EE.UU."]
 notes = "The abbreviations are carried deliberately: they are what the documents actually print, and each names exactly one state."
 
 [[country]]
 code = "CH"
+alpha3 = "CHE"
 names = ["Schweiz", "Suisse", "Svizzera", "Svizra", "Suiza", "Switzerland"]
 
 [[country]]
 code = "NO"
+alpha3 = "NOR"
 names = ["Norge", "Noreg", "Noruega", "Norway"]
 
 [[country]]
 code = "IS"
+alpha3 = "ISL"
 names = ["Ísland", "Islandia", "Iceland"]
 
 [[country]]
 code = "AD"
+alpha3 = "AND"
 names = ["Andorra"]
 notes = "The Catalan, Spanish and English names coincide. Carried despite its size because it borders the peninsula and appears on real Spanish invoices out of proportion to it."
 
 [[country]]
 code = "TR"
+alpha3 = "TUR"
 names = ["Türkiye", "Turquía", "Turkey"]
 
 [[country]]
 code = "MA"
+alpha3 = "MAR"
 names = ["Maroc", "Marruecos", "Morocco", "Al Maghrib"]
 
 [[country]]
 code = "RU"
+alpha3 = "RUS"
 names = ["Rusia", "Russia", "Россия", "Rossiya"]
 
 [[country]]
 code = "UA"
+alpha3 = "UKR"
 names = ["Ucrania", "Ukraine", "Україна", "Ukraina"]
 
 [[country]]
 code = "RS"
+alpha3 = "SRB"
 names = ["Srbija", "Serbia", "Србија"]
 
 [[country]]
 code = "CN"
+alpha3 = "CHN"
 names = ["China", "People's Republic of China", "República Popular China", "中国"]
 
 [[country]]
 code = "JP"
+alpha3 = "JPN"
 names = ["Japón", "Japan", "Nippon", "日本"]
 
 [[country]]
 code = "KR"
+alpha3 = "KOR"
 names = ["Corea del Sur", "South Korea", "Republic of Korea", "República de Corea", "Daehan Minguk"]
 
 [[country]]
 code = "IN"
+alpha3 = "IND"
 names = ["India", "Bharat"]
 
 [[country]]
 code = "SG"
+alpha3 = "SGP"
 names = ["Singapur", "Singapore"]
 
 [[country]]
 code = "HK"
+alpha3 = "HKG"
 names = ["Hong Kong"]
 
 [[country]]
 code = "AE"
+alpha3 = "ARE"
 names = ["Emiratos Árabes Unidos", "United Arab Emirates"]
 
 [[country]]
 code = "IL"
+alpha3 = "ISR"
 names = ["Israel"]
 
 [[country]]
 code = "CA"
+alpha3 = "CAN"
 names = ["Canada"]
 
 [[country]]
 code = "MX"
+alpha3 = "MEX"
 names = ["México", "Méjico"]
 
 [[country]]
 code = "AR"
+alpha3 = "ARG"
 names = ["Argentina"]
 
 [[country]]
 code = "BR"
+alpha3 = "BRA"
 names = ["Brasil", "Brazil"]
 
 [[country]]
 code = "CL"
+alpha3 = "CHL"
 names = ["Chile"]
 
 [[country]]
 code = "CO"
+alpha3 = "COL"
 names = ["Colombia"]
 
 [[country]]
 code = "PE"
+alpha3 = "PER"
 names = ["Perú"]
 
 [[country]]
 code = "UY"
+alpha3 = "URY"
 names = ["Uruguay"]
 
 [[country]]
 code = "VE"
+alpha3 = "VEN"
 names = ["Venezuela"]
 
 [[country]]
 code = "AU"
+alpha3 = "AUS"
 names = ["Australia"]
 
 [[country]]
 code = "NZ"
+alpha3 = "NZL"
 names = ["Nueva Zelanda", "New Zealand", "Nueva Zelandia"]
 
 [[country]]
 code = "ZA"
+alpha3 = "ZAF"
 names = ["Sudáfrica", "South Africa"]

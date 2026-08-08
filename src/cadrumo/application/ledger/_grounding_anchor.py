@@ -388,6 +388,7 @@ def ground_structured_value(
     value: Decimal | str,
     element_path: str,
     source_text: str,
+    anchor: str | None = None,
 ) -> FieldProvenance:
     """Return the envelope for one value read from a document's own record.
 
@@ -421,11 +422,24 @@ def ground_structured_value(
         value: The typed value the parser produced.
         element_path: Where in the record it came from, for the operator's note.
         source_text: The record's own text, decoded from the source bytes.
+        anchor: The record's verbatim form of the value, where that DIFFERS from
+            the value itself. Defaults to the value's own rendering, which is
+            correct for every field copied straight out of the record and was the
+            only case until a value arrived normalised: a party's country is
+            stated ``ESP`` by Facturae and carried ``ES``, so grounding the
+            carried form would look for a string the document never states.
+
+            This is the same relation :attr:`FieldProvenance.anchor` already
+            documents for the printed lanes -- ``"1.234,56 €"`` anchoring the
+            value ``1234.56`` -- reaching the structured lane for the first time.
+            Passing it does not weaken the check: the anchor must still occur in
+            the record, so a normalisation with no stated source still fails.
 
     Returns:
         The envelope, stamped :attr:`~core.FieldOrigin.EXACT_STRUCTURED`.
     """
-    anchor = value if isinstance(value, str) else str(value)
+    if anchor is None:
+        anchor = value if isinstance(value, str) else str(value)
     evaluation = _evaluate_anchor_against(
         value=value,
         anchor=anchor,

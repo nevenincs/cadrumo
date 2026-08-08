@@ -24,6 +24,15 @@ eligibility bar, once the decision it was waiting on was taken. The move is only
 a symbol removed from the sweep and merely forgotten would leave this file
 reading like a decision while the tree lost a guarantee.
 
+**Those teeth are a mapping, not a filter.** Each reinstated symbol names the
+callable that proves it, and the mapping is asserted total over the declared set
+at import, so a fifth member added without a verifier stops this module rather
+than passing through it. The shape it replaces checked its members with a
+``cadrumo_`` name-prefix test, which verified two of the four and let an
+unprefixed name that existed nowhere in production pass -- rot that is latent,
+silent and misattributed, because the green looked like a statement about the
+tree when it was a statement about the filter.
+
 **The set is symbols, never the word ``subprocess``.** ``entrypoints/mcp/
 _call_runtime.py`` shells the deterministic CLI for every MCP tool call: it is
 a subprocess transport and it is NOT the cloud LLM transport. A word-sweep
@@ -33,6 +42,8 @@ this gate proves the deletion was scoped by meaning rather than by string.
 """
 
 from __future__ import annotations
+
+from collections.abc import Callable
 
 import pytest
 
@@ -61,17 +72,78 @@ _DELETED_CLOUD_SYMBOLS = (
     "evidence-acknowledged",
 )
 
-_REINSTATED_CONSENT_SYMBOLS = (
-    "cloud_evidence_read_permitted",
-    "cadrumo_evidence_cloud_upload_permitted",
-    "cadrumo_evidence_gestor_mode",
+def _verify_settings_field(symbol: str) -> None:
+    """Assert *symbol* is a live deployment setting the operator can reach."""
+    assert symbol in set(_settings_model_fields()), f"{symbol} is claimed reinstated but Settings does not declare it"
+
+
+def _verify_consent_predicate(symbol: str) -> None:
+    """Assert the consent predicate is importable from the package facade and callable."""
+    from ..llm import cloud_evidence_read_permitted
+
+    assert cloud_evidence_read_permitted.__name__ == symbol
+    assert callable(cloud_evidence_read_permitted)
+
+
+def _verify_capability_defaults_off(symbol: str) -> None:
+    """Assert the reinstated capability is a live member AND still defaults off.
+
+    The default is the property it was reinstated FOR. A member present but
+    defaulting on would satisfy a mere membership check while removing the bar
+    it names.
+    """
+    from ..core import ServiceCapability
+
+    capability = ServiceCapability[symbol]
+    assert capability.default_enabled is False
+
+
+# Every reinstated symbol is mapped to the callable that proves it, and the
+# mapping is asserted total at import (below). The previous shape was a bare
+# tuple whose loop filtered on a ``cadrumo_`` name prefix, so two of its four
+# members were checked by the loop and the other two by hand-written lines that
+# never read the set: appending an unprefixed fifth member passed while a
+# prefixed twin failed. Nothing was unguarded, but the set had stopped driving
+# its own verification, and a name added later would have been silently
+# unverified while the file still read like a decision. A mapping cannot rot
+# that way -- a member with no verifier is an import-time error.
+_REINSTATED_CONSENT_VERIFIERS: dict[str, Callable[[str], None]] = {
+    "cloud_evidence_read_permitted": _verify_consent_predicate,
+    "cadrumo_evidence_cloud_upload_permitted": _verify_settings_field,
+    "cadrumo_evidence_gestor_mode": _verify_settings_field,
     # The per-profile eligibility bar. It moved out of the deleted set when the
     # decision it was waiting on was taken: the standing bar now exists, is
     # default-off and gestor-locked-off, and every consent-minting surface must
     # read it. Its teeth are the dedicated eligibility gate under
     # application/user_profile/tests, plus the wiring assertion below.
+    "CLOUD_EVIDENCE_UPLOAD": _verify_capability_defaults_off,
+}
+
+_REINSTATED_CONSENT_SYMBOLS = (
+    "cloud_evidence_read_permitted",
+    "cadrumo_evidence_cloud_upload_permitted",
+    "cadrumo_evidence_gestor_mode",
     "CLOUD_EVIDENCE_UPLOAD",
 )
+
+_UNVERIFIED_CONSENT_SYMBOLS = tuple(
+    symbol for symbol in _REINSTATED_CONSENT_SYMBOLS if symbol not in _REINSTATED_CONSENT_VERIFIERS
+)
+if _UNVERIFIED_CONSENT_SYMBOLS:  # pragma: no cover - the failure is the collection error itself
+    raise AssertionError(
+        f"reinstated consent symbols declared with no verifier: {_UNVERIFIED_CONSENT_SYMBOLS}. Every "
+        "member of the reinstated set must be mapped to the callable that proves it exists and is "
+        "wired; a symbol asserted only by name is the dormancy this module was written against."
+    )
+
+_ORPHANED_CONSENT_VERIFIERS = tuple(
+    symbol for symbol in _REINSTATED_CONSENT_VERIFIERS if symbol not in _REINSTATED_CONSENT_SYMBOLS
+)
+if _ORPHANED_CONSENT_VERIFIERS:  # pragma: no cover - the failure is the collection error itself
+    raise AssertionError(
+        f"verifiers declared for symbols outside the reinstated set: {_ORPHANED_CONSENT_VERIFIERS}. A "
+        "verifier with no declared symbol runs against nothing."
+    )
 
 _NEIGHBOURING_TRANSPORTS_THAT_MUST_SURVIVE = (SRC_CADRUMO / "entrypoints" / "mcp" / "_call_runtime.py",)
 
@@ -134,13 +206,18 @@ def test_the_declared_symbol_set_is_not_silently_emptied() -> None:
 
 
 def test_the_reinstated_consent_apparatus_exists_and_is_wired_at_the_choke_point() -> None:
-    """The three consent symbols that RETURNED must exist and be reachable.
+    """The four consent symbols that RETURNED must exist and be reachable.
 
     The counterpart to the sweep above, and the reason this module's symbol set
     could be edited at all. Off-host reading of taxpayer evidence was
-    re-sanctioned behind a consent gate, so three names moved out of the deleted
+    re-sanctioned behind a consent gate, so four names moved out of the deleted
     set -- and a name moved out with nothing put back would leave the tree
     weaker than before while both this file and its diff read like a decision.
+
+    **Every declared symbol is verified by the callable the set maps it to**, so
+    the set drives its own verification rather than a name-prefix filter
+    driving part of it. A member with no verifier never reaches this test: it
+    stops the module at import.
 
     Presence alone is insufficient: a gate that exists and is never called is
     the dormancy this module was written against, pointed the other way. The
@@ -150,19 +227,10 @@ def test_the_reinstated_consent_apparatus_exists_and_is_wired_at_the_choke_point
     import inspect
     import textwrap
 
-    from ..core import ServiceCapability
-    from ..llm import LLMClient, cloud_evidence_read_permitted
+    from ..llm import LLMClient
 
-    settings_fields = set(_settings_model_fields())
     for symbol in _REINSTATED_CONSENT_SYMBOLS:
-        if symbol.startswith("cadrumo_"):
-            assert symbol in settings_fields, f"{symbol} is claimed reinstated but Settings does not declare it"
-    assert callable(cloud_evidence_read_permitted)
-    # The reinstated capability is a live enum member again, and it is the one
-    # that defaults OFF -- the property it was reinstated FOR. A member present
-    # but defaulting on would satisfy a mere membership check while removing the
-    # bar it names.
-    assert ServiceCapability.CLOUD_EVIDENCE_UPLOAD.default_enabled is False
+        _REINSTATED_CONSENT_VERIFIERS[symbol](symbol)
 
     tree = ast.parse(textwrap.dedent(inspect.getsource(LLMClient.complete)))
     called = {

@@ -32,7 +32,7 @@ Examples:
     ...     transaction_date=date(2025, 6, 15),
     ...     issuer_residency=IvaTerritorialScope.ES_MAINLAND,
     ...     customer_residency=IvaTerritorialScope.EU_MEMBER,
-    ...     customer_member_state=EUMemberState.DE,
+    ...     customer_identification_state=EUMemberState.DE,
     ...     customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
     ...     kind=TransactionKind.GOODS,
     ...     direction=InvoiceKind.ISSUED,
@@ -47,7 +47,7 @@ from collections.abc import Callable, Mapping
 from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
-from typing import NamedTuple
+from typing import Final, NamedTuple
 
 from pydantic import Field, model_validator
 
@@ -98,6 +98,40 @@ class IvaTerritorialScope(StrEnum):
     ES_CEUTA_MELILLA = "es_ceuta_melilla"
     EU_MEMBER = "eu_member"
     THIRD_COUNTRY = "third_country"
+
+
+class PartyFact(StrEnum):
+    """The two legally distinct facts a rule may need about a party.
+
+    They were one output before they were two, and the conflation had a
+    direction. A printed foreign VAT prefix was read as decisive EVIDENCE OF
+    PLACE, so a German-identified entity actually established in Spain resolved
+    silently to :attr:`IvaTerritorialScope.EU_MEMBER` and fed the table as
+    settled fact — while the mirror case, a non-resident holding a Spanish
+    registration, was correctly refused. Every Member State registers
+    non-residents on the same terms Spain does, so the two are one situation seen
+    from two sides; splitting the fact restores the symmetry at the principle
+    instead of patching it at one rung.
+
+    Naming them lets a branch DECLARE which it consumes, so an operator is asked
+    only for what the branch it lands on actually turns on. The intra-community
+    families need the identification and not the place; the domestic and
+    territorial rules need the place and not the identification.
+
+    Attributes:
+        VAT_IDENTIFICATION_STATE: The Member State under whose VAT
+            identification the party operates, carried as
+            :class:`cadrumo.domain.iva.EUMemberState`. Registration evidence
+            settles it decisively, because registration is precisely what it
+            asserts.
+        TERRITORIAL_ESTABLISHMENT: Where the party has its *sede de actividad
+            económica* or an *establecimiento permanente* (Ley 37/1992
+            arts. 69-70), carried as :class:`IvaTerritorialScope`. NO
+            registration evidences it, foreign or Spanish.
+    """
+
+    VAT_IDENTIFICATION_STATE = "vat_identification_state"
+    TERRITORIAL_ESTABLISHMENT = "territorial_establishment"
 
 
 class InvoiceKind(StrEnum):
@@ -219,35 +253,51 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
     Carries every axis the closed decision table inspects. The record is
     strict and frozen so it can be used as a dict key in upstream caches.
 
+    **The two party facts are carried separately and are never derived from each
+    other** (:class:`PartyFact`). The residency fields are the TERRITORIAL
+    ESTABLISHMENT fact; the identification-state fields are the VAT
+    IDENTIFICATION STATE fact. A party may hold a German identification while
+    being established in Spain, or a Spanish one while established abroad — both
+    are ordinary, and a model that could not express them forced the reader to
+    pick one meaning for a value that had two.
+
     Attributes:
         transaction_date: When the supply takes place.
-        issuer_residency: Issuer's tax residency.
-        customer_residency: Customer's tax residency.
+        issuer_residency: Where the issuer is ESTABLISHED — its sede or
+            establecimiento permanente under Ley 37/1992 arts. 69-70. Never a
+            statement about where it is registered. The field name keeps the
+            role label; the type carries the territorial framing.
+        customer_residency: The same for the customer.
         customer_tax_status: Customer's IVA status.
         kind: Kind of supply.
         direction: ``ISSUED`` or ``RECEIVED``.
-        issuer_member_state: Issuer's :class:`cadrumo.domain.iva.EUMemberState`,
-            required when :attr:`issuer_residency` is
-            :attr:`IvaTerritorialScope.EU_MEMBER`.
-        customer_member_state: Customer's
-            :class:`cadrumo.domain.iva.EUMemberState`, required when
-            :attr:`customer_residency` is :attr:`IvaTerritorialScope.EU_MEMBER`.
+        issuer_identification_state: The
+            :class:`cadrumo.domain.iva.EUMemberState` under whose VAT
+            identification the issuer operates, where established. Optional
+            independently of :attr:`issuer_residency`: an EU establishment does
+            not supply an identification and an identification does not supply
+            an establishment, so demanding one because of the other would be the
+            conflation :class:`PartyFact` exists to end. Branches that need it
+            declare so, and the producer demands it only for those.
+        customer_identification_state: The same for the customer.
         rate_tier: Explicit rate-tier axis for ES-to-ES domestic rules.
     """
 
     transaction_date: date = Field(description="When the supply takes place.")
-    issuer_residency: IvaTerritorialScope = Field(description="Issuer's tax residency.")
-    customer_residency: IvaTerritorialScope = Field(description="Customer's tax residency.")
+    issuer_residency: IvaTerritorialScope = Field(description="Where the issuer is established (LIVA arts. 69-70).")
+    customer_residency: IvaTerritorialScope = Field(
+        description="Where the customer is established (LIVA arts. 69-70).",
+    )
     customer_tax_status: CustomerTaxStatus = Field(description="Customer's IVA status.")
     kind: TransactionKind = Field(description="Kind of supply.")
     direction: InvoiceKind = Field(description="ISSUED or RECEIVED.")
-    issuer_member_state: EUMemberState | None = Field(
+    issuer_identification_state: EUMemberState | None = Field(
         default=None,
-        description="Issuer's :class:`EUMemberState` (required when EU_MEMBER).",
+        description="Member State of the issuer's VAT identification; independent of its establishment.",
     )
-    customer_member_state: EUMemberState | None = Field(
+    customer_identification_state: EUMemberState | None = Field(
         default=None,
-        description="Customer's :class:`EUMemberState` (required when EU_MEMBER).",
+        description="Member State of the customer's VAT identification; independent of its establishment.",
     )
     rate_tier: IvaRateKind | None = Field(
         default=None,
@@ -264,13 +314,22 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
 
     @model_validator(mode="after")
     def _validate_member_state_consistency(self) -> IvaInvoiceClassificationCriteria:
-        """Enforce residency and rate-tier invariants.
+        """Enforce the rate-tier invariant.
 
-        Three checks, each raising :exc:`IvaValidationError` on violation:
+        **An EU establishment no longer demands an identification state**, and
+        the removal is the substance of the split rather than a relaxation. That
+        check read "this party is established in another Member State, so name
+        the State it is registered in", which is only sound while the two facts
+        are one — it is exactly the inference that made a German prefix
+        establish a German place. Which branches genuinely need the
+        identification is now declared by the branches themselves
+        (:attr:`_IvaClassificationRule.consumes`), so the demand is made where
+        the law makes it and nowhere else. The field stays optional here because
+        an unestablished identification is a normal reading outcome, and the
+        producer refuses ahead of the table when a consuming branch needs one.
 
-        * ``issuer_residency == EU_MEMBER`` requires ``issuer_member_state``.
-        * ``customer_residency == EU_MEMBER`` requires
-          ``customer_member_state``.
+        One check remains, raising :exc:`IvaValidationError` on violation:
+
         * ES-to-ES domestic transactions (both residencies ``ES_MAINLAND``)
           that would fall through to the ``R05`` ``DOMESTIC_*`` rule require
           an explicit :attr:`rate_tier`. The classifier never silently
@@ -282,10 +341,6 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
           before ``R05`` runs, so their rate tier is a payload concern not a
           classification axis.
         """
-        if self.issuer_residency is IvaTerritorialScope.EU_MEMBER and self.issuer_member_state is None:
-            raise IvaValidationError("issuer_member_state is required when issuer_residency is EU_MEMBER")
-        if self.customer_residency is IvaTerritorialScope.EU_MEMBER and self.customer_member_state is None:
-            raise IvaValidationError("customer_member_state is required when customer_residency is EU_MEMBER")
         if (
             self.issuer_residency is IvaTerritorialScope.ES_MAINLAND
             and self.customer_residency is IvaTerritorialScope.ES_MAINLAND
@@ -322,6 +377,16 @@ class IvaClassificationResult(IvaStrictFrozen):
         matched_rule_id: Stable rule identifier (e.g.
             ``R10_intra_community_supply``).
         notes: Free-form explanatory note.
+        consumes_party_facts: Which :class:`PartyFact` values the matched branch
+            actually turns on. This is how a producer assembling the criteria
+            learns what to demand without holding a second copy of the law: it
+            asks the table which facts the branch consumes rather than
+            hand-writing a rule about the territorial scopes, which is the
+            duplication the lazy-requirement mechanism already refuses
+            elsewhere. Defaults to BOTH facts, so a row or result that forgets
+            to declare demands everything — the fail-toward-asking direction,
+            and the one where forgetting costs a question rather than a silent
+            classification on a fact nobody supplied.
     """
 
     category: IvaCategory = Field(description="Resolved IVA category.")
@@ -329,6 +394,10 @@ class IvaClassificationResult(IvaStrictFrozen):
     requires_reverse_charge: bool = Field(default=False, description="True ⇒ inversión del sujeto pasivo.")
     matched_rule_id: str = Field(description="Stable rule id (e.g. ``R10_intra_community_supply``).")
     notes: str = Field(default="", description="Free-form explanatory note.")
+    consumes_party_facts: frozenset[PartyFact] = Field(
+        default=frozenset(PartyFact),
+        description="Which :class:`PartyFact` values the matched branch turns on.",
+    )
     exemption_article: IvaExemptionArticle | None = Field(
         default=None,
         description=(
@@ -623,12 +692,39 @@ class _IvaClassificationRule(NamedTuple):
             match, or ``None`` when the resolver derives the category from
             other inputs (used by ``R05`` against
             :attr:`IvaInvoiceClassificationCriteria.rate_tier`).
+        consumes: The :class:`PartyFact` values this branch turns on, declared
+            per row so a producer can demand exactly them and nothing more.
+            Every row consumes :attr:`PartyFact.TERRITORIAL_ESTABLISHMENT`,
+            because every predicate reads the residencies. Only the
+            intra-community rows add
+            :attr:`PartyFact.VAT_IDENTIFICATION_STATE`: their categories are the
+            ones the declaración recapitulativa reports under a clave against
+            the counterparty's NIF-IVA, so the State that identifies the party
+            is operative there and is inert everywhere else.
     """
 
     rule_id: str
     description: str
     predicate: Callable[[IvaInvoiceClassificationCriteria], bool]
     category: IvaCategory | None  # None ⇒ rule resolves to a derived category
+    consumes: frozenset[PartyFact]
+
+
+_SPANISH_SCOPES: Final[frozenset[IvaTerritorialScope]] = frozenset(
+    {
+        IvaTerritorialScope.ES_MAINLAND,
+        IvaTerritorialScope.ES_CANARIAS,
+        IvaTerritorialScope.ES_CEUTA_MELILLA,
+    },
+)
+"""The establishments the Spanish rate schedule can price a supply for."""
+
+
+_ESTABLISHMENT_ONLY: Final[frozenset[PartyFact]] = frozenset({PartyFact.TERRITORIAL_ESTABLISHMENT})
+"""What a branch consumes when the identification State cannot change its outcome."""
+
+_ESTABLISHMENT_AND_IDENTIFICATION: Final[frozenset[PartyFact]] = frozenset(PartyFact)
+"""What an intra-community branch consumes: the place AND the identifying State."""
 
 
 _CLASSIFICATION_RULES: tuple[_IvaClassificationRule, ...] = (
@@ -637,48 +733,56 @@ _CLASSIFICATION_RULES: tuple[_IvaClassificationRule, ...] = (
         "ES-to-ES construction RC",
         _r01_construction_rc,
         IvaCategory.DOMESTIC_REVERSE_CHARGE,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R02_waste_reverse_charge",
         "ES-to-ES waste RC",
         _r02_waste_rc,
         IvaCategory.DOMESTIC_REVERSE_CHARGE,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R03_electronics_reverse_charge",
         "ES-to-ES B2B electronics RC",
         _r03_electronics_rc,
         IvaCategory.DOMESTIC_REVERSE_CHARGE,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R04_immovable_property_exempt",
         "ES-to-ES immovable B2C exempt",
         _r04_immovable_b2c_exempt,
         IvaCategory.DOMESTIC_EXEMPT,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R05_domestic_at_rate_tier",
         "ES-to-ES default by rate_tier",
         _r05_domestic_at_rate,
         None,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R10_intra_community_supply",
         "ES to EU_MEMBER B2B goods supply",
         _r10_ic_supply_goods,
         IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        consumes=_ESTABLISHMENT_AND_IDENTIFICATION,
     ),
     _IvaClassificationRule(
         "R11_intra_community_acquisition",
         "EU_MEMBER to ES B2B goods acquisition",
         _r11_ic_acquisition_goods,
         IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        consumes=_ESTABLISHMENT_AND_IDENTIFICATION,
     ),
     _IvaClassificationRule(
         "R12_services_b2b_eu_outbound",
         "ES to EU_MEMBER B2B services",
         _r12_services_b2b_eu_outbound,
         IvaCategory.DOMESTIC_NOT_SUBJECT,
+        consumes=_ESTABLISHMENT_AND_IDENTIFICATION,
     ),
     # A service received resolves to the SERVICES category, not the goods one,
     # because the two surfaces need different things from it. Modelo 303
@@ -699,66 +803,77 @@ _CLASSIFICATION_RULES: tuple[_IvaClassificationRule, ...] = (
         "EU_MEMBER to ES B2B services",
         _r13_services_b2b_eu_inbound,
         IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        consumes=_ESTABLISHMENT_AND_IDENTIFICATION,
     ),
     _IvaClassificationRule(
         "R15_distance_sales_b2c",
         "ES to EU_MEMBER B2C distance sales",
         _r15_distance_sales_b2c_outbound,
         IvaCategory.DOMESTIC_NOT_SUBJECT,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R16_external_scheme_services",
         "3rd-country to EU_MEMBER B2C services routed through Esquema Exterior",
         _r16_external_scheme_services,
         IvaCategory.OPERACION_NO_SUJETA,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R17_oss_union_goods_distance_sale",
         "ES to EU_MEMBER B2C OSS-Union goods distance sale",
         _r17_oss_union_goods_distance_sale,
         IvaCategory.DOMESTIC_NOT_SUBJECT,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R18_oss_union_goods_interface_facilitated",
         "ES to EU_MEMBER B2C OSS-Union interface-facilitated supply",
         _r18_oss_union_goods_interface_facilitated,
         IvaCategory.DOMESTIC_NOT_SUBJECT,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R19_oss_union_services",
         "ES to EU_MEMBER B2C OSS-Union services",
         _r19_oss_union_services,
         IvaCategory.DOMESTIC_NOT_SUBJECT,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R20_export_goods",
         "ES to 3rd-country goods export",
         _r20_export_goods,
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R21_import_goods",
         "3rd-country to ES goods import",
         _r21_import_goods,
         IvaCategory.IMPORT_THIRD_COUNTRY,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R22_services_outbound_third_country",
         "ES to 3rd-country services",
         _r22_services_outbound_third_country,
         IvaCategory.OPERACION_NO_SUJETA,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R23_ioss_distance_sale_low_value",
         "Low-value imported-goods distance sale routed through IOSS",
         _r23_ioss_distance_sale_low_value,
         IvaCategory.OPERACION_NO_SUJETA,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
         "R30_canarias_ceuta_melilla",
         "Issuer outside TAI",
         _r30_canarias_ceuta_melilla,
         IvaCategory.DOMESTIC_NOT_SUBJECT,
+        consumes=_ESTABLISHMENT_ONLY,
     ),
 )
 
@@ -824,6 +939,7 @@ def classify_iva(criteria: IvaInvoiceClassificationCriteria) -> IvaClassificatio
             requires_reverse_charge=requires_rc,
             matched_rule_id=rule.rule_id,
             notes=rule.description,
+            consumes_party_facts=rule.consumes,
         )
 
     _logger.debug(
@@ -839,6 +955,13 @@ def classify_iva(criteria: IvaInvoiceClassificationCriteria) -> IvaClassificatio
         requires_reverse_charge=False,
         matched_rule_id=_R99_FALLTHROUGH_ID,
         notes="No classification rule matched the supplied criteria.",
+        # An operation no rule placed declares BOTH facts consumed, and this is
+        # the same guard the lazy-requirement probe applies to its own axes: an
+        # unplaced operation agrees with itself about everything, so reading its
+        # silence as "this fact could not have mattered" would certify
+        # indifference from the fact that nothing was decided. Demanding both is
+        # the only honest reading of a branch that does not exist.
+        consumes_party_facts=frozenset(PartyFact),
     )
 
 
@@ -854,20 +977,38 @@ def _resolve_rate_for_category(
     from a downstream invoice line). For ``DOMESTIC_*`` categories the rate
     is looked up against the issuer's residency on the transaction date.
 
+    **The schedule is selected by where the issuer is ESTABLISHED, never by
+    which State identifies it** — this branch consumes
+    :attr:`PartyFact.TERRITORIAL_ESTABLISHMENT` and nothing else. The rate a
+    supply bears is fixed by the territory that taxes it, so an issuer
+    established in the peninsula charges Spanish rates whichever Member State
+    registered it. Reading the identification field here would have been the
+    conflation reappearing at the money: after the split a Spanish-established
+    party may legitimately carry a German identification, and the previous
+    ``issuer_member_state or ES`` would then have priced a domestic Spanish
+    supply off the German schedule.
+
     Args:
-        criteria: The classification criteria; used for the issuer's member
-            state and the transaction date.
+        criteria: The classification criteria; used for the issuer's
+            establishment and the transaction date.
         category: The category whose rate to resolve.
 
     Returns:
         The matched :class:`cadrumo.domain.iva.IvaRateRecord`, or ``None`` when the
-        category does not carry a directly-derivable rate or when
+        category does not carry a directly-derivable rate, when the issuer is not
+        established in Spain, or when
         :func:`cadrumo.domain.iva.lookup_rate` cannot find one.
     """
     tier = _CATEGORY_TO_RATE_TIER.get(category)
     if tier is None:
         return None
-    member_state = criteria.issuer_member_state if criteria.issuer_member_state is not None else EUMemberState.ES
+    if criteria.issuer_residency not in _SPANISH_SCOPES:
+        # Every tiered category above is a DOMESTIC_* one, which only an issuer
+        # inside Spain can reach. Returning nothing rather than defaulting to the
+        # Spanish schedule keeps an unreachable combination unpriced instead of
+        # priced wrongly.
+        return None
+    member_state = EUMemberState.ES
     try:
         return lookup_rate(member_state, tier, criteria.transaction_date)
     except IvaRateNotFoundError:
@@ -886,6 +1027,7 @@ __all__ = [
     "IvaClassificationResult",
     "IvaInvoiceClassificationCriteria",
     "IvaTerritorialScope",
+    "PartyFact",
     "TransactionKind",
     "classify_iva",
 ]

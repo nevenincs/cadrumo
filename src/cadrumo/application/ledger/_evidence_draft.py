@@ -99,7 +99,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final, NoReturn, Self
@@ -142,6 +142,7 @@ from ...domain.iva import (
     EUMemberState,
     InvoiceKind,
     IvaCategory,
+    country_code_for_stated_country_code,
     domestic_categories_by_rate_kind,
     rate_kinds_for_declared_rate,
 )
@@ -497,6 +498,34 @@ class InvoiceDraft(BaseModel):
             separately for the reason the postal codes are: an issuer in Las
             Palmas billing a customer in Berlin cannot be expressed by one
             shared field.
+        supplier_country_code: The country code the issuing party's address
+            states, as an ISO 3166-1 alpha-2 code, or ``None``. Populated only
+            by the structured reader: a machine-readable record states the
+            country as a CODE, where a printed document states it as a name and
+            asking a reader for the code would be asking it to translate.
+            Carried beside the postal code because the two answer different
+            halves of one question -- the country says which State, the postal
+            code separates the three Spanish IVA territories inside it.
+
+            **Alpha-2 even where the document stated alpha-3.** Facturae states
+            ``ESP`` and UBL states ``ES``; both arrive here in the single form
+            every country surface downstream is keyed by, resolved through the
+            registry correspondence in
+            :func:`~domain.iva.country_code_for_stated_country_code`. Normalising
+            at the boundary rather than downstream is what keeps a Facturae
+            document from failing an alpha-2 shape check in silence, with its
+            country element present, read, and establishing nothing.
+
+            The translated form is deliberately NOT anchorable in a Facturae
+            record, and that falls out rather than being asserted: the anchor
+            check looks for the value as a whole token in the document's own
+            text, and ``ES`` is not a token in a record that states ``ESP``. So
+            a stated alpha-2 arrives ANCHORED and a translated one UNANCHORED,
+            which is the honest distinction between what a document said and
+            what was derived from it.
+        customer_country_code: The same for the party billed by the invoice,
+            carried separately for the reason the postal codes are: a supplier
+            in Barcelona invoicing a customer in Lisbon states two countries.
         invoice_number: Invoice number recovered from a labelled line, or
             ``None``.
         invoice_series: The series half of the invoice's identity, stated
@@ -569,6 +598,8 @@ class InvoiceDraft(BaseModel):
     customer_postal_code: str | None = None
     supplier_country: str | None = None
     customer_country: str | None = None
+    supplier_country_code: str | None = None
+    customer_country_code: str | None = None
     invoice_number: str | None = None
     invoice_series: str | None = None
     invoice_date: str | None = None
@@ -951,6 +982,18 @@ _STRUCTURED_ELEMENT_PATHS: Final[dict[str, dict[DocumentShape, str]]] = {
         DocumentShape.XML_UBL: "cac:AccountingSupplierParty/cac:PostalAddress/cbc:PostalZone",
         DocumentShape.XML_CII: "ram:SellerTradeParty/ram:PostalTradeAddress/ram:PostcodeCode",
     },
+    "supplier_country_code": {
+        DocumentShape.XML_FACTURAE: "SellerParty/AddressInSpain/CountryCode",
+        DocumentShape.XML_UBL: (
+            "cac:AccountingSupplierParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode"
+        ),
+    },
+    "customer_country_code": {
+        DocumentShape.XML_FACTURAE: "BuyerParty/AddressInSpain/CountryCode",
+        DocumentShape.XML_UBL: (
+            "cac:AccountingCustomerParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode"
+        ),
+    },
     "customer_postal_code": {
         DocumentShape.XML_FACTURAE: "BuyerParty/AddressInSpain/PostCode",
         DocumentShape.XML_UBL: "cac:AccountingCustomerParty/cac:PostalAddress/cbc:PostalZone",
@@ -965,7 +1008,12 @@ def _structured_element_path(field: str, *, shape: DocumentShape) -> str:
     return known if known is not None else f"the {shape.value} record's {field}"
 
 
-def _structured_provenance(*, parsed: ParsedEInvoice, evidence: EvidenceInput) -> tuple[FieldProvenance, ...]:
+def _structured_provenance(
+    *,
+    parsed: ParsedEInvoice,
+    evidence: EvidenceInput,
+    derived: Mapping[str, tuple[str, str] | None],
+) -> tuple[FieldProvenance, ...]:
     """Return one provenance envelope per value the record actually stated.
 
     Built for the same reason the reading lanes build theirs: provenance travels
@@ -1001,7 +1049,48 @@ def _structured_provenance(*, parsed: ParsedEInvoice, evidence: EvidenceInput) -
                 source_text=source_text,
             ),
         )
+    # A derived value is grounded against the form the RECORD states, not against
+    # itself. Facturae states `ESP` and the draft carries `ES`, so looking for the
+    # carried form would search for a string the document never states -- and
+    # would find it anyway, since the anchor search is boundary-aware only at
+    # NUMERIC edges and `ES` is an ordinary substring of `ESP`. That accidental
+    # hit is the failure this pairing removes: the operator is pointed at the
+    # element the value actually came from, and the anchor differing from the
+    # value is what records that a lookup happened.
+    for field, pair in derived.items():
+        if pair is None:
+            continue
+        value, stated = pair
+        envelopes.append(
+            ground_structured_value(
+                field=field,
+                value=value,
+                anchor=stated,
+                element_path=_structured_element_path(field, shape=parsed.shape),
+                source_text=source_text,
+            ),
+        )
     return tuple(envelopes)
+
+
+def _resolved_country_code(stated: str | None) -> tuple[str, str] | None:
+    """Return a record's country code as (resolved alpha-2, the form it stated).
+
+    Both halves travel together because both are needed and they are not the same
+    string: the draft carries the resolved code, and its provenance envelope has
+    to point at the form the document actually states. Returns ``None`` where the
+    record stated nothing, or stated a code the bundled vocabulary does not
+    carry -- which never degrades to a country, and above all never to Spain.
+    """
+    resolved = country_code_for_stated_country_code(stated)
+    if resolved is None or stated is None:
+        return None
+    return resolved, stated
+
+
+def _country_code_value(pair: tuple[str, str] | None) -> str | None:
+    """Return the resolved half of a country-code pair, or nothing."""
+    return None if pair is None else pair[0]
 
 
 def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> InvoiceDraft:
@@ -1019,6 +1108,13 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
     from ._deterministic_findings import deterministic_findings
 
     parsed = parse_einvoice_document(evidence.data)
+    # Resolved once and used twice: the draft carries these values and their
+    # provenance envelopes describe them, so grounding the parser's verbatim
+    # string instead would attach an envelope to a value the draft does not hold.
+    country_codes: dict[str, tuple[str, str] | None] = {
+        f"{side}_country_code": _resolved_country_code(getattr(parsed, f"{side}_country_code"))
+        for side in ("supplier", "customer")
+    }
     draft = InvoiceDraft(
         supplier_tax_id=parsed.supplier_tax_id,
         supplier_name=parsed.supplier_name,
@@ -1032,6 +1128,15 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
         # the corpus unable to answer a question a text-read document could.
         supplier_postal_code=parsed.supplier_postal_code,
         customer_postal_code=parsed.customer_postal_code,
+        # The country half of the same question, resolved to the one code system
+        # everything downstream is keyed by. The formats disagree about which
+        # system they state: UBL states alpha-2 and Facturae states alpha-3, so
+        # carrying the record's own string through would hand `ESP` to a resolver
+        # that shape-checks for two letters and returns nothing -- the country
+        # element present, read, and establishing nothing, with the postal rung
+        # it gates staying shut for the entire Spanish national format.
+        supplier_country_code=_country_code_value(country_codes["supplier_country_code"]),
+        customer_country_code=_country_code_value(country_codes["customer_country_code"]),
         invoice_number=parsed.invoice_number,
         invoice_series=parsed.invoice_series,
         invoice_date=parsed.invoice_date,
@@ -1062,7 +1167,7 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
             for rate, base, cuota in parsed.iva_breakdown
         ),
         raw_text_length=len(evidence.data),
-        provenance=_structured_provenance(parsed=parsed, evidence=evidence),
+        provenance=_structured_provenance(parsed=parsed, evidence=evidence, derived=country_codes),
     )
 
     # Exactness is not correctness, and conflating the two is what left this path
@@ -1208,6 +1313,11 @@ class CounterpartyDraftSide(BaseModel):
             ``None``. A name rather than a code, because that is what an address
             block prints; the match against the bounded vocabulary is the
             establishment ladder's own second rung.
+        country_code: The ISO 3166-1 alpha-2 country code a structured record
+            stated for the counterparty, or ``None``. Carried beside the printed
+            NAME rather than instead of it: the two are the same ladder rung
+            reached from different readers, and a document states one or the
+            other, never both.
         tax_id_field: Which draft field ``tax_id`` was taken from. Carried so an
             operator override is recorded against the reading it displaced
             rather than against whichever field shares the option's name.
@@ -1220,6 +1330,7 @@ class CounterpartyDraftSide(BaseModel):
     name: str | None = None
     postal_code: str | None = None
     country: str | None = None
+    country_code: str | None = None
     tax_id_field: str = Field(min_length=1)
     name_field: str = Field(min_length=1)
 
@@ -1260,6 +1371,7 @@ def counterparty_draft_side(draft: InvoiceDraft, *, kind: InvoiceKind) -> Counte
         return CounterpartyDraftSide(
             tax_id=draft.customer_tax_id,
             name=draft.customer_name,
+            country_code=draft.customer_country_code,
             postal_code=draft.customer_postal_code,
             country=draft.customer_country,
             tax_id_field="customer_tax_id",
@@ -1268,6 +1380,7 @@ def counterparty_draft_side(draft: InvoiceDraft, *, kind: InvoiceKind) -> Counte
     return CounterpartyDraftSide(
         tax_id=draft.supplier_tax_id,
         name=draft.supplier_name,
+        country_code=draft.supplier_country_code,
         postal_code=draft.supplier_postal_code,
         country=draft.supplier_country,
         tax_id_field="supplier_tax_id",

@@ -272,6 +272,17 @@ def resolve_counterparty_establishment_scope(
             countries claim. Deliberately propagated: a broken bundled data file
             is a defect, and quietly reporting it as an unestablished party
             would send an operator to answer a question that is not theirs.
+        Exception: Whatever the confirmed-fact store raises, on the same terms
+            and for a sharper reason. A store that cannot be read is not a
+            counterparty nobody has confirmed -- and the operator may have
+            confirmed this one already, so swallowing the failure would retract
+            their own earlier answer and ask them for it again, against a store
+            that would refuse to record it. The secure repository takes the same
+            position on the tier below, raising rather than returning ``None``
+            when a row exists but is inconsistent, precisely so an inconsistency
+            cannot hide behind an ordinary miss. No error type is named here
+            because none is caught: the store owns its own vocabulary and this
+            function is transparent to it.
     """
     country_code = _printed_country_code(
         printed_country_name=printed_country_name,
@@ -364,6 +375,7 @@ def resolve_draft_counterparty_establishment(
     return resolve_counterparty_establishment_scope(
         bucket_id=bucket_id,
         tax_identifier=side.tax_id,
+        printed_country_code=side.country_code,
         printed_country_name=side.country,
         postal_code=side.postal_code,
         repository=repository,

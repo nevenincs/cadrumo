@@ -35,7 +35,8 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.inbound.einvoice import ParsedEInvoice
+from ....adapters.inbound.einvoice import ParsedEInvoice, parse_einvoice_document
+from ....adapters.persistence.storage import SecureObjectRowIdentityError
 from ....core import ClassifierInputSource
 from ....domain.iva import (
     InvoiceKind,
@@ -50,6 +51,7 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import _establishment_ladder as ladder_module
 from .._counterparty_establishment import (
     CounterpartyEstablishmentRepository,
+    CounterpartyEstablishmentResolution,
     record_counterparty_establishment,
 )
 from .._establishment_ladder import (
@@ -256,16 +258,26 @@ def test_a_prefix_on_arbitrary_text_is_not_a_country(
     assert resolved.rung is None
 
 
+@pytest.mark.parametrize("printed_identifier", [_SPANISH_CIF, f"ES{_SPANISH_CIF}"])
 def test_the_bare_domestic_invoice_exhausts_to_nothing(
     repository: CounterpartyEstablishmentRepository,
+    printed_identifier: str,
 ) -> None:
-    """The ruling's own fixture: a bare CIF, no country, no gated postal evidence.
+    """The ruling's own fixture: a Spanish identifier, no country, a Spanish postal code.
 
     This is the commonest ingested document there is, and the mainland is its
     commonest true answer -- which is exactly why a default here would be
     invisible.
+
+    **Both spellings are driven, and the prefixed one is the composed claim the
+    ruling actually makes.** A Spanish VAT prefix beside a Spanish postal code is
+    the shape a fiscal representative's address takes for an entidad no
+    residente: registration in Spain, establishment elsewhere. Each half is
+    refused at its own rung, but "refused at the rung" and "refused by the
+    assembled ladder" are different statements, and it is the second one the
+    ruling makes. Driving only the bare CIF gated the easier half.
     """
-    resolved = _resolve(repository, tax_identifier=_SPANISH_CIF, postal_code=_MADRID)
+    resolved = _resolve(repository, tax_identifier=printed_identifier, postal_code=_MADRID)
 
     assert resolved.scope is None
     assert resolved.rung is None
@@ -467,6 +479,39 @@ def test_a_corrupt_country_rung_refuses_from_between_the_covered_depths(
         _resolve(repository, country_name="France")
 
 
+def test_a_store_that_cannot_be_read_refuses_rather_than_reporting_no_confirmed_fact(
+    repository: CounterpartyEstablishmentRepository,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The confirmed-fact rung propagates on the same terms as the document rungs.
+
+    Decided rather than merely covered, because this rung sits differently from
+    the other three: a corrupt bundled registry is unambiguously a defect, while
+    "the store did not answer" could defensibly have been folded into "nothing is
+    confirmed". It is not, and the reason is sharper than for the others -- the
+    operator may have confirmed this very counterparty already, so swallowing the
+    failure would retract their own earlier answer and ask them for it again,
+    against a store that would refuse to record it.
+
+    The tier below takes the same position: the secure repository raises rather
+    than returning ``None`` when a row exists but its identity is inconsistent,
+    so that an inconsistency cannot hide behind an ordinary miss. Folding the
+    store's refusal into an empty resolution here would undo that one layer up.
+    """
+
+    def _unreadable_store(**_kwargs: object) -> CounterpartyEstablishmentResolution:
+        raise SecureObjectRowIdentityError(
+            CounterpartyEstablishmentRepository.namespace,
+            expected_identifier="0" * 64,
+            payload_identifier="1" * 64,
+        )
+
+    monkeypatch.setattr(ladder_module, "resolve_counterparty_establishment", _unreadable_store)
+
+    with pytest.raises(SecureObjectRowIdentityError):
+        _resolve(repository, tax_identifier=_SPANISH_CIF)
+
+
 def test_the_same_call_reports_an_unestablished_party_against_the_real_registry(
     repository: CounterpartyEstablishmentRepository,
 ) -> None:
@@ -666,15 +711,61 @@ class TestRungReachabilityFromADraft:
         assert resolved.rung is None
         assert territorial_scope_for_spanish_postal_code(_LAS_PALMAS) is IvaTerritorialScope.ES_CANARIAS
 
-    def test_the_structured_parsers_still_supply_no_party_country(self) -> None:
-        """The structured path reaches two rungs, and this is why.
+    def test_the_structured_parsers_supply_a_party_country(self) -> None:
+        """The structured path has a country source now, which is what opens its postal rung.
 
         Asserted against the parser's own fields rather than against a parsed
         document, so it holds for every format the reader accepts rather than for
-        whichever specimen happens to be in the corpus. Expected to fail when the
-        structured country source lands, and that failure is the notification.
+        whichever specimen happens to be in the corpus. This replaces the
+        assertion that no such field existed: that one failed the day the source
+        landed, which is what it was for.
+
+        What each format actually STATES is a separate question this cannot see,
+        and it is covered end to end against real documents in
+        ``test_structured_path_country_codes.py``.
         """
         parsed_fields = set(ParsedEInvoice.__slots__)
 
-        assert not {field for field in parsed_fields if "country" in field}
+        assert {"supplier_country_code", "customer_country_code"} <= parsed_fields
         assert {"supplier_postal_code", "customer_postal_code"} <= parsed_fields
+
+    def test_the_cross_industry_invoice_branch_still_states_no_country(self) -> None:
+        """The one structured syntax whose country is still unread, kept visible.
+
+        Facturae and UBL now state a country the ladder can use; CII does not,
+        because no Cross Industry Invoice is bundled anywhere in the corpus and
+        lighting that branch means authoring the first specimen for an
+        unexercised syntax rather than reading an element already sitting in a
+        real document. So the gap is narrower than it was and it is not closed,
+        and the difference is recorded here rather than in anyone's memory.
+
+        **This asserts a gap, not a contract**, and it belongs to the same class
+        for the same reason its predecessor did: it is expected to fail when the
+        CII country source lands, and that failure is the notification. A lane
+        finding it red should replace it with a gate asserting the rung now
+        fires, never relax it.
+        """
+        specimen = b"""<?xml version="1.0" encoding="UTF-8"?>
+<rsm:CrossIndustryInvoice
+    xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
+    xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100">
+  <rsm:ExchangedDocument><ram:ID>CII-2026-0001</ram:ID></rsm:ExchangedDocument>
+  <rsm:SupplyChainTradeTransaction>
+    <ram:ApplicableHeaderTradeAgreement>
+      <ram:SellerTradeParty>
+        <ram:Name>Vendedor Insular SL</ram:Name>
+        <ram:PostalTradeAddress>
+          <ram:PostcodeCode>38001</ram:PostcodeCode>
+          <ram:CountryID>ES</ram:CountryID>
+        </ram:PostalTradeAddress>
+      </ram:SellerTradeParty>
+    </ram:ApplicableHeaderTradeAgreement>
+  </rsm:SupplyChainTradeTransaction>
+</rsm:CrossIndustryInvoice>
+"""
+        parsed = parse_einvoice_document(specimen)
+
+        # The postal code IS read, so this is a statement about the country
+        # element rather than about the CII branch being unreached.
+        assert parsed.supplier_postal_code == "38001"
+        assert parsed.supplier_country_code is None
