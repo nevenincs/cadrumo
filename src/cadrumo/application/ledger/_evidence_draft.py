@@ -172,6 +172,7 @@ from ._evidence_textlayer import transcribe_text_layer
 
 if TYPE_CHECKING:
     from ...llm import EvidenceConsentToken, LLMProvider
+    from ._confirm_establishment import ConfirmedEstablishment
     from ._confirmation_gate import FindingResolution
 
 __all__ = [
@@ -1514,6 +1515,14 @@ class InvoiceConfirmationResult(BaseModel):
             itself: the record is the durable answer and lives in the encrypted
             store, and a copy riding a transient result is a second account of
             one decision that can disagree with the first.
+        establishment: Both parties' IVA territories as this confirm resolved
+            them -- the counterparty's through the evidence ladder, the filer's
+            own from their profile -- beside the classification criteria they
+            were carried into and every territorial question left open. ``None``
+            only where the resolution was not attempted. A resolved territory
+            rides the RESULT rather than being recomputed per consumer for the
+            same reason the printed-total discrepancy does: a second derivation
+            is a second answer, and the two can disagree about a filing.
         confirmed_provenance: The draft's envelopes with every operator-asserted
             field re-stamped :attr:`~core.FieldOrigin.OPERATOR`. Carried BESIDE
             ``draft`` rather than replacing its envelopes, because a correction
@@ -1530,6 +1539,7 @@ class InvoiceConfirmationResult(BaseModel):
     total_discrepancy: PrintedTotalDiscrepancy | None = None
     confirmation_id: str | None = Field(default=None, min_length=16, max_length=16)
     confirmed_provenance: tuple[FieldProvenance, ...] = ()
+    establishment: ConfirmedEstablishment | None = None
 
 
 def _agreed_counterparty_tax_id(*, supplied: str | None, extracted: str | None) -> str | None:
@@ -1956,8 +1966,16 @@ def confirm_invoice_draft_from_evidence(
     # confirmation record are both built ON the draft models declared here, so a
     # module-level import would close a cycle. The direction is one-way at
     # import time and the runtime edge is deliberate.
+    from ._confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
     from ._confirmation_gate import resolved_blockers
     from ._confirmation_record import build_confirmation_record, re_stamped_provenance, write_confirmation_record
+
+    # The result's `establishment` annotation is a forward reference: the module
+    # that owns the type reaches the review gate, which imports this one, so it
+    # cannot be imported at module scope. Completing the model here -- inside the
+    # block that already defers the same cycle -- is what lets the field be
+    # typed rather than widened to a bare object. A no-op after the first call.
+    InvoiceConfirmationResult.model_rebuild(_types_namespace={"ConfirmedEstablishment": ConfirmedEstablishment})
 
     resolved_settings = settings or _load_settings()
     draft = extract_invoice_draft_from_evidence(
@@ -1982,6 +2000,15 @@ def confirm_invoice_draft_from_evidence(
     # selection -- the same one the establishment ladder is routed through, so a
     # document cannot be read as having one counterparty here and another there.
     counterparty_side = counterparty_draft_side(draft, kind=kind)
+    # Both parties' IVA territories, resolved through the authorities that own
+    # them: the ladder for the counterparty, the profile for the filer. This is
+    # the confirm path's only reach into that apparatus, and before it the whole
+    # of it -- every rung, the fact split, the country vocabulary and the postal
+    # derivation -- was reachable from nothing a person could run.
+    #
+    # Placed AFTER the blocking gate and before any resolution work, so a draft
+    # whose findings are unanswered never reaches the ladder or the fact store.
+    establishment = resolve_confirmed_establishment(bucket_id=bucket_id, draft=draft, kind=kind)
     extracted_counterparty_tax_id = counterparty_side.tax_id
     extracted_counterparty_name = counterparty_side.name
     counterparty_tax_id_field = counterparty_side.tax_id_field
@@ -2197,6 +2224,10 @@ def confirm_invoice_draft_from_evidence(
             # link is: a retry must not silently drop a discrepancy the first
             # confirm surfaced, or the alert becomes something a re-run clears.
             total_discrepancy=printed_total_discrepancy(draft=draft, invoice=existing),
+            # Carried on the guarded no-op for the same reason the discrepancy
+            # is: a retry must not drop a territorial question the first confirm
+            # surfaced, or re-running becomes the way to clear it.
+            establishment=establishment,
         )
 
     result = create_catalogue_invoice(
@@ -2262,6 +2293,7 @@ def confirm_invoice_draft_from_evidence(
         total_discrepancy=printed_total_discrepancy(draft=draft, invoice=result.invoice),
         confirmation_id=confirmation_record.confirmation_id,
         confirmed_provenance=re_stamped_provenance(draft=draft, assertions=confirmation_record.assertions),
+        establishment=establishment,
     )
 
 

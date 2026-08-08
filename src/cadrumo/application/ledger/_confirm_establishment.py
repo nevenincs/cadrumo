@@ -1,0 +1,317 @@
+"""Where the establishment ladder is actually reached: the confirm path.
+
+The ladder, its four rungs, the identification and establishment split, the
+country vocabulary, the alpha-3 correspondence and the Spanish postal derivation
+were each built and each gated. None of them was called from a live path. This
+module is the call: it takes the document an operator is confirming and the
+direction they settled it under, resolves BOTH parties' territories through the
+authorities that own them, and hands the answers to the criteria assembly in the
+one channel that carries who established what.
+
+**Two parties, two authorities, and they are not interchangeable.** The filer's
+own territory is a profile fact -- system-authoritative, declared once, and
+identical whichever document is being confirmed -- so it is read from the profile
+and never from the paper. Only the counterparty's territory is a document
+question, and it is answered by the ladder. Resolving the filer from their
+printed address block would ask a probabilistic reader for something already
+known with certainty, and resolving the counterparty from the profile would
+answer a question about one entity with a fact about another.
+
+**Neither authority is doubled by the assembly.** The criteria assembly can
+derive a scope from a printed country and postal code itself, and this module
+deliberately hands it NEITHER for the parties it has already resolved. A scope
+supplied as a declared fact and a scope re-derived from the same printed values
+are two answers to one question, and the second one is reached exactly when the
+first refused -- so the duplication would not merely be redundant, it would
+resurrect every answer the ladder declined to give. The ladder's refusals are
+the reason it exists.
+
+**An exhausted ladder yields no territory and says so.** There is no branch here
+that answers without evidence. The peninsula is the majority population, so a
+default there is invisible in testing while silently placing Canarian and Ceutan
+counterparties inside a territory their operations are not subject to. What an
+exhausted ladder produces instead is a review item naming the counterparty, so
+the question reaches a person.
+
+**The review items are surfaced, not yet refused, and that is a stated
+interim.** The fourth amendment's design is one question per new counterparty
+whose paper is non-decisive, deduped by an operator answer persisted at
+counterparty level. The persisting verb has no operator-facing surface yet, so
+refusing here would make every domestic invoice permanently unconfirmable rather
+than asking once -- a refusal nobody can answer is not a review gate. The items
+are therefore carried onto the confirmation result, where the review surface
+reads them, and the refusal follows the answer channel rather than preceding it.
+
+See Also:
+    :func:`~application.ledger.resolve_draft_counterparty_establishment`
+        The ladder this module routes the counterparty into.
+    :func:`~application.ledger.resolve_filer_territorial_scope`
+        The profile authority for the filer's own side.
+    :func:`~application.ledger.assemble_classification_criteria`
+        What the resolved scopes are carried into.
+    :class:`~application.ledger.DeclaredFacts`
+        The one channel a resolved scope reaches the assembly through.
+    :class:`~domain.iva.IvaTerritorialScope`
+        The closed territory axis both authorities resolve into.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from pydantic import BaseModel
+
+from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource, ConfirmationBlockReason
+from ...core.parsing import parse_iso8601_date
+from ...domain.iva import InvoiceKind, IvaTerritorialScope
+from ._classification_assembly import (
+    ClassificationAssembly,
+    DeclaredFact,
+    DeclaredFacts,
+    assemble_classification_criteria,
+)
+from ._classifier_inputs import collect_classifier_inputs
+from ._confirmation_gate import ConfirmationBlocker, _blocker_id
+from ._counterparty_establishment import CounterpartyEstablishmentRepository
+from ._establishment_ladder import CounterpartyEstablishment, resolve_draft_counterparty_establishment
+from ._filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
+
+if TYPE_CHECKING:
+    from ...domain.user_profile import UserProfileRecord
+    from ._evidence_draft import InvoiceDraft
+
+__all__ = ["ConfirmedEstablishment", "resolve_confirmed_establishment"]
+
+
+class ConfirmedEstablishment(BaseModel):
+    """Both parties' territories as one confirm resolved them, and what is still open.
+
+    Attributes:
+        counterparty: What the ladder settled about the counterparty, including
+            the rung that settled it, any contradiction against a remembered
+            fact, and the registration conflict that marks a foreign-registered
+            entity operating establishedly in Spain. Carried whole rather than
+            flattened to its scope: an auditor asking why a record says what it
+            says needs the rung, and a caller told only the territory cannot
+            distinguish an exhausted ladder from a conflicted one.
+        filer_scope: The taxpayer's own territory, from their profile.
+            ``None`` when the profile could not establish it, which is a setup
+            gap surfaced as a review item rather than a value invented here.
+        declared: The scopes in the form the criteria assembly consumes, each
+            beside who established it, with the issuer and customer slots
+            filled by the DIRECTION the operator settled rather than by the
+            order the document printed its parties in.
+        assembly: The criteria the rule table consumes, or every input that
+            stopped them. Present whether or not the scopes resolved: the
+            missing-input list is what tells an operator all their gaps at once.
+        review_items: The resolvable questions this document leaves open, in the
+            review gate's own blocker shape so one surface reads them all.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    counterparty: CounterpartyEstablishment
+    filer_scope: IvaTerritorialScope | None = None
+    declared: DeclaredFacts = DeclaredFacts()
+    assembly: ClassificationAssembly = ClassificationAssembly()
+    review_items: tuple[ConfirmationBlocker, ...] = ()
+
+    @property
+    def resolved(self) -> bool:
+        """Return whether the counterparty's territory was settled."""
+        return self.counterparty.established
+
+
+def _review_item(*, field: str | None, detail: str) -> ConfirmationBlocker:
+    """Return one establishment question in the review gate's own shape.
+
+    Built with the gate's own id derivation rather than a second one, so an
+    item raised here addresses identically to one raised by a deterministic
+    check and an operator cannot meet two id schemes for one class of question.
+    """
+    reason = ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT
+    return ConfirmationBlocker(
+        blocker_id=_blocker_id(reason=reason, field=field, detail=detail),
+        reason=reason,
+        field=field,
+        detail=detail,
+    )
+
+
+def _filer_scope(
+    profile_record: UserProfileRecord | None,
+) -> tuple[IvaTerritorialScope | None, ConfirmationBlocker | None]:
+    """Resolve the filer's own territory, or surface why it could not be.
+
+    The resolver refuses rather than defaulting, and refusing is right: an
+    incomplete profile is a setup gap. It is caught HERE rather than propagated
+    because the gap belongs to the profile and not to the document -- letting it
+    abort the confirm would refuse a document that is perfectly readable, and
+    send the operator to re-read a page that was never the problem.
+    """
+    # Imported at call time: the refusal type lives in the draft module, which
+    # reaches the parsers and the reading package. The sanctioned cycle break.
+    from ._evidence_draft import PurchaseInvoiceEvidenceInputError
+
+    if profile_record is None:
+        return None, _review_item(
+            field=FILER_POSTCODE_FACT_PATH,
+            detail=(
+                "no taxpayer profile was resolvable, so the filer's own IVA territory could not be "
+                f"established; it is a profile fact ({FILER_POSTCODE_FACT_PATH}) and is never read "
+                "off an invoice"
+            ),
+        )
+    try:
+        return resolve_filer_territorial_scope(profile_record=profile_record), None
+    except PurchaseInvoiceEvidenceInputError as refusal:
+        return None, _review_item(field=FILER_POSTCODE_FACT_PATH, detail=str(refusal))
+
+
+def _counterparty_review_items(
+    counterparty: CounterpartyEstablishment,
+    *,
+    tax_identifier: str | None,
+    field: str,
+) -> tuple[ConfirmationBlocker, ...]:
+    """Return the questions the ladder's outcome leaves for a person.
+
+    Three outcomes reach a person and they are different questions, so they are
+    not folded into one item. A contradiction is an operator's remembered claim
+    against this document's printed one; a registration conflict is the issuer's
+    own two statements disagreeing, which is the characteristic face of a
+    foreign-registered entity established in Spain; an exhausted ladder is
+    nobody disagreeing with anybody and simply nothing having been said.
+    """
+    naming = tax_identifier or "the counterparty (no identifier was printed)"
+    if counterparty.contradiction is not None:
+        return (_review_item(field=field, detail=f"{naming}: {counterparty.contradiction.detail}"),)
+    if counterparty.registration_conflict is not None:
+        return (_review_item(field=field, detail=f"{naming}: {counterparty.registration_conflict.detail}"),)
+    if counterparty.established:
+        return ()
+    return (
+        _review_item(
+            field=field,
+            detail=(
+                f"{naming}: this document establishes no IVA territory for the counterparty. The "
+                "country and postal evidence settled nothing and no confirmed fact is on record, so "
+                "the territory is unknown rather than the mainland"
+            ),
+        ),
+    )
+
+
+def _declared_facts(
+    *,
+    kind: InvoiceKind,
+    counterparty: CounterpartyEstablishment,
+    filer_scope: IvaTerritorialScope | None,
+) -> DeclaredFacts:
+    """Place each resolved fact on the party it belongs to, by direction.
+
+    The draft is pre-direction data and the criteria are not: they name an
+    issuer and a customer. On a RECEIVED document the counterparty issued it, so
+    the ladder's answer is the issuer's territory and the profile's is the
+    customer's; ISSUED is the mirror. Filling both slots from one resolution --
+    or filling them in the printed order -- would place every operation inside a
+    single territory, which classifies as domestic whatever the document said.
+    """
+    counterparty_scope = counterparty.declared_fact
+    counterparty_identification = (
+        None
+        if counterparty.identification_state is None
+        else DeclaredFact(value=counterparty.identification_state, source=ClassifierInputSource.DOCUMENT_EVIDENCE)
+    )
+    filer = (
+        None if filer_scope is None else DeclaredFact(value=filer_scope, source=ClassifierInputSource.PROFILE_AUTHORITY)
+    )
+    if kind is InvoiceKind.RECEIVED:
+        return DeclaredFacts(
+            issuer_scope=counterparty_scope,
+            customer_scope=filer,
+            issuer_identification_state=counterparty_identification,
+        )
+    return DeclaredFacts(
+        issuer_scope=filer,
+        customer_scope=counterparty_scope,
+        customer_identification_state=counterparty_identification,
+    )
+
+
+def resolve_confirmed_establishment(
+    *,
+    bucket_id: str,
+    draft: InvoiceDraft,
+    kind: InvoiceKind,
+    repository: CounterpartyEstablishmentRepository | None = None,
+) -> ConfirmedEstablishment:
+    """Resolve both parties' territories for one confirm, and assemble the criteria.
+
+    The confirm path's single call into the establishment apparatus. Everything
+    it reaches -- the ladder, the profile authority, the declared-facts channel
+    and the criteria assembly -- had no production caller before this function,
+    so this is the whole of what makes them reachable.
+
+    Args:
+        bucket_id: Active profile bucket, for the ladder's confirmed-fact rung.
+        draft: The pre-direction reading of the document being confirmed.
+        kind: Which side of the invoice the filer is on, as the operator settled
+            it at confirm. Never the reader's suggestion, and never inferred
+            here: it decides which party the ladder is even asked about.
+        repository: Injected counterparty-fact store.
+
+    Returns:
+        :class:`ConfirmedEstablishment`: both territories where they resolved,
+        the criteria or the inputs that stopped them, and every question left
+        for a person.
+    """
+    # Call-time imports: the side selector and the refusal type live in the
+    # draft module, which imports this one's neighbours; the workflow reach is
+    # deferred for the same reason the confirm path defers its own.
+    from ..wizard import WizardStatusError, load_active_taxpayer_profile
+    from ..workflow import workflow_state_repository
+    from ._evidence_draft import counterparty_draft_side
+
+    counterparty = resolve_draft_counterparty_establishment(
+        bucket_id=bucket_id,
+        draft=draft,
+        kind=kind,
+        repository=repository,
+    )
+
+    state = workflow_state_repository().load()
+    filer_scope, filer_item = _filer_scope(state.active_profile_record())
+    try:
+        profile = load_active_taxpayer_profile(state)
+    except WizardStatusError:
+        profile = None
+
+    declared = _declared_facts(kind=kind, counterparty=counterparty, filer_scope=filer_scope)
+    assembly = assemble_classification_criteria(
+        # Parsed through the shipped date authority, never re-read here. An
+        # unparseable date is an ordinary outcome of reading a page, so it
+        # arrives as ``None`` and the assembly reports it as a missing input
+        # beside the others rather than aborting the confirm.
+        transaction_date=parse_iso8601_date(draft.invoice_date),
+        direction=kind,
+        inputs=collect_classifier_inputs(draft, profile=profile),
+        declared=declared,
+        # No printed country, postal code or identifier is handed through. Both
+        # parties have already been resolved by the authority that owns them,
+        # and the assembly's own derivation would answer the same questions a
+        # second time -- reaching exactly the values the ladder refused.
+    )
+
+    side = counterparty_draft_side(draft, kind=kind)
+    items = _counterparty_review_items(counterparty, tax_identifier=side.tax_id, field=side.tax_id_field)
+    if filer_item is not None:
+        items = (*items, filer_item)
+
+    return ConfirmedEstablishment(
+        counterparty=counterparty,
+        filer_scope=filer_scope,
+        declared=declared,
+        assembly=assembly,
+        review_items=items,
+    )
