@@ -104,7 +104,7 @@ msgid ""
 "transaction with `aeat app ledger link`, and a calculation reads it "
 "directly -- for example the Modelo 349 recapitulative declaration of "
 "intra-community operations."
-msgstr ""
+msgstr "Minden rögzített számla összekapcsolható és számítható. Kapcsolja banki tranzakcióhoz az `aeat app ledger link` paranccsal, és a számítás közvetlenül olvassa: például a Modelo 349, a Közösségen belüli ügyletek összesítő nyilatkozata."
 
 #: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:38
 msgid ""

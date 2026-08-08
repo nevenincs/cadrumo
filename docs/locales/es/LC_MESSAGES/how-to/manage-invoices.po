@@ -107,7 +107,7 @@ msgid ""
 "transaction with `aeat app ledger link`, and a calculation reads it "
 "directly -- for example the Modelo 349 recapitulative declaration of "
 "intra-community operations."
-msgstr ""
+msgstr "Cada factura que registra es enlazable y calculable. Vincúlela a un movimiento bancario con `aeat app ledger link`, y un cálculo la lee directamente: por ejemplo, el Modelo 349, declaración recapitulativa de operaciones intracomunitarias."
 
 #: Y:/code/aeat-worktrees/main/docs/how-to/manage-invoices.md:38
 msgid ""
