@@ -147,11 +147,16 @@ def _transport_from_provenance(provenance: str) -> str:
     """Return the transport segment of an ``llm:<transport>:<model>`` stamp.
 
     The suggestion used to carry a separate ``provider`` enum field, redundant
-    with the stamp even before the cloud providers were deleted and meaningless
-    once the axis collapsed to the local runtime. The audit payload keeps its
+    with the stamp and able to disagree with it. The audit payload keeps its
     ``provider`` key -- consumers read it -- but derives the value from the one
     place that records which transport actually read the document, so the two
     can no longer disagree.
+
+    The rationale recorded here once added that the field had become meaningless
+    when the transport axis collapsed to the local runtime. That is no longer
+    true: off-host reading was re-sanctioned behind a per-invocation consent
+    gate, so this value is again the thing that says whether a document left the
+    host.
     """
     parts = provenance.split(":")
     return parts[1] if len(parts) >= 3 else provenance

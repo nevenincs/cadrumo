@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-08-07'
-body_hash: 'sha256:6185cce18998871c1d1fd577f7228cdef1e0a7e0aa4f04a50a3f4c802b8f6326'
+modified: '2026-08-08'
+body_hash: 'sha256:9933216766f8786e986004f47d5430b4bf33ef655ba25b95254a70efc4bd3a96'
 related:
   - "[[2026-06-10-llm-evidence-classification-research]]"
   - "[[2026-06-04-llm-ledger-classification-adr]]"
@@ -381,3 +381,30 @@ a local transport. The stamp's SHAPE is unchanged and no persisted record is
 rewritten — pre-existing records keep the provider they were stamped with, which
 is the honest history — but a reader who assumes the axis is still multi-valued
 would be wrong.
+## Follow-up: the supersession above is itself partly reversed (2026-08-08)
+
+**The section above is stale, and this note corrects it rather than rewriting it.** It
+records that `2026-08-06-llm-package-split-adr` D5 deleted the consent gate outright, so
+this record's ruling-2 cloud exception "no longer exists in the tree". That was true of D5
+alone. It stopped being true when `2026-08-07-unstructured-document-ingestion-adr` D8a
+partially superseded D5 under an operator ruling and reinstated the consent apparatus over
+the in-memory HTTP providers.
+
+**So ruling 2 is un-superseded in part, and this record's headline is back in force as
+written.** On-host/local-first reading with a cloud read only behind a consent gate is
+again the posture the tree implements: `cloud_evidence_read_permitted`,
+`ServiceCapability.CLOUD_EVIDENCE_UPLOAD`, the two deployment settings and a
+per-invocation off-host acknowledgement all exist again, and the gestor bar applies. What
+does NOT return is the subprocess CLI-agent family and every file-writing transport, which
+stay deleted permanently — so the exception is narrower than this record originally
+sanctioned, not identical to it.
+
+**The one consequence recorded above that did not survive** is the provenance-stamp
+claim: the provider axis did not stay collapsed to the local runtime. Readers that accept
+a provider stamp the transport they actually ran at, so a stamp may again name an off-host
+transport, and anything surveying cloud-derived artefacts by that segment must assume the
+axis is multi-valued.
+
+The reversal is left as a dated follow-up because the prior section was true when written
+and reading it as an error would misdescribe the corpus. Both notes together are the
+history; either alone is wrong about HEAD.

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:41f174e329b912c40ab83b7bacdb9c8a6ede6824855d54876b38e6b00c8d1ac5'
+body_hash: 'sha256:feb293a7080f93d61812e2ff16671a5e04f9c054cae01aa8c80b93abe55eb599'
 related:
   - "[[2026-08-06-llm-package-split-research]]"
   - "[[2026-08-06-llm-package-split-enforcement-and-disposition-audit]]"
@@ -927,6 +927,50 @@ which is shape-neutral. Two obligations are recorded for whoever does build it: 
 the custody tripwires, and it is a **single typed record rather than a tagged union** — the
 discovery names the current `_ResolvedEvidence` union as the thing to replace, and rebuilding
 a union under a new name would carry the defect across.
+
+## Partial supersession of D5 (2026-08-08)
+
+**D5's deletion of the consent apparatus is superseded in part by
+`2026-08-07-unstructured-document-ingestion-adr` (D8a), under an operator ruling.**
+Recorded here rather than left to be inferred, and in the same change as the gate that
+makes it true of the tree: D5 is `accepted` AND was executed, so a reader arriving at
+this record without this note sees a ruling in force while HEAD carries its reversal.
+The window in which the corpus carries both is exactly as long as the gap between
+landing the code and amending the record.
+
+**What returns**, over the in-memory HTTP providers only: `cloud_evidence_read_permitted`,
+`ServiceCapability.CLOUD_EVIDENCE_UPLOAD`, `cadrumo_evidence_cloud_upload_permitted`,
+`cadrumo_evidence_gestor_mode`, and a per-invocation off-host acknowledgement at the CLI
+boundary. **What stands from D5, permanently:** the subprocess CLI-agent family, its
+provider probe and its builder set are deleted and are not coming back; no file-writing
+transport is sanctioned; and no sticky enablement exists. **What is unchanged:**
+production defaults on-host, the gestor bar, per-invocation acknowledgement rather than a
+stored grant, and provenance recording.
+
+**The stamp consequence D5 authorised is the half that did NOT survive.** D5 ruled that
+"the provider axis collapses to the local runtime, so every stamp a classification writes
+after D5 names a local provider". That was true when D5 executed and is false at HEAD.
+Three readers accept a provider and stamp the transport they actually ran at -- the text
+extractor, the vision transcriber and the column-role mapper -- so a persisted stamp may
+name an off-host transport again. The reader who assumes the axis is single-valued is now
+the one who would be wrong, and that is not cosmetic: a consent withdrawal enumerates
+cloud-derived artefacts BY the transport segment, so an apparatus built on the collapsed
+axis would survey for a value that can no longer be assumed.
+
+**This note is not self-executing, and the code it rules on has landed with it.** The
+minting-side gate in `src/cadrumo/tests/test_cloud_transport_fully_deleted.py` no longer
+asserts that every reader stamps on-host. It partitions the readers instead: those whose
+constructor declares no provider parameter -- reachable with no consent token -- must stamp
+on-host, and those that accept one must stamp the transport the read actually used, never
+`local`. The partition is checked against the stamp producers discovered in source, so a
+reader added later is covered rather than silently outside the set. The assertion this
+replaced claimed to run over the readers that exist while naming two of five.
+
+**A sibling record was stale by the same reinstatement and is corrected in this change.**
+`2026-06-10-llm-evidence-classification-adr`'s own "Partial supersession (2026-08-07)"
+section states that D5 removed the consent exception so it "no longer exists in the tree",
+which was true of D5 alone and stopped being true when D8a landed. Amending only this
+record would have left the corpus self-contradictory in the opposite direction.
 
 ## Status note
 

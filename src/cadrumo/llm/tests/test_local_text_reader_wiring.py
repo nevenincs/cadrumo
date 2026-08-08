@@ -75,10 +75,14 @@ def test_the_local_text_reader_requests_the_local_provider_and_carries_no_images
 def test_the_provenance_stamp_names_the_local_text_transport() -> None:
     """A persisted record can say which on-host transport read it.
 
-    Distinct from both the vision stamp and the retired cloud stamps. Once the
-    cloud providers are gone the provider axis collapses to the local runtime,
-    and a reader who assumed it was still multi-valued would be wrong -- so the
-    two on-host transports must remain distinguishable from each other.
+    Distinct from both the vision stamp and the retired subprocess stamps, so
+    the two on-host transports remain distinguishable from each other.
+
+    This reader is on-host by CONSTRUCTION rather than by the axis having
+    collapsed: its constructor declares no provider parameter, so no call site
+    can ask it for an off-host read. The axis itself did not stay collapsed --
+    off-host reading returned behind a consent gate -- and the readers that took
+    a provider back are held to stamping the transport they actually used.
     """
     from ...domain.transactions import prompt_spec_with_every_spending_category
 

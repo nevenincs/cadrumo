@@ -33,6 +33,16 @@ unprefixed name that existed nowhere in production pass -- rot that is latent,
 silent and misattributed, because the green looked like a statement about the
 tree when it was a statement about the filter.
 
+**The minting side is now a partition, not a sweep.** Every stamp a reader could
+mint once named an on-host transport, because the provider axis had collapsed
+with the deletion. It has not stayed collapsed: three readers took a provider
+back when off-host evidence reading was re-sanctioned. So the readers are
+partitioned by whether a caller can reach them off-host at all -- those with no
+provider parameter must stamp on-host, and those with one must stamp the
+transport they actually ran at. The partition is checked against the readers
+discovered in source, because the assertion this replaced said it ran over the
+readers that exist while naming two of five.
+
 **The set is symbols, never the word ``subprocess``.** ``entrypoints/mcp/
 _call_runtime.py`` shells the deterministic CLI for every MCP tool call: it is
 a subprocess transport and it is NOT the cloud LLM transport. A word-sweep
@@ -44,10 +54,15 @@ this gate proves the deletion was scoped by meaning rather than by string.
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import pytest
 
 from . import SRC_CADRUMO, non_test_package_python_files, repo_relative
+
+if TYPE_CHECKING:
+    from ..application.ledger import InvoiceExtractionAuthorityValues
+    from ..core.config import LLMProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -66,8 +81,11 @@ _DELETED_CLOUD_SYMBOLS = (
     "is_llm_provider_available",
     "LLMProviderAvailability",
     "probe_subprocess_providers",
-    # The operator-facing surfaces. Still deleted: nothing mints a token yet, so
-    # no CLI surface asks the operator for one.
+    # The operator-facing surfaces of the DELETED transport. Still deleted, and
+    # the reason changed: a CLI surface does now ask the operator for a consent
+    # token, but it asks through `--off-host-provider` and
+    # `--acknowledge-off-host`. These two names belonged to the subprocess
+    # family and are not the reinstated spelling of anything.
     "evidence_acknowledged",
     "evidence-acknowledged",
 )
@@ -254,12 +272,137 @@ def _settings_model_fields() -> tuple[str, ...]:
     return tuple(Settings.model_fields)
 
 
-def test_every_provenance_stamp_a_reader_can_mint_names_a_local_transport() -> None:
-    """The provider axis collapsed, so no NEW stamp can name a cloud transport.
+def _transport_of(stamp: str) -> str:
+    """Return the transport a stamp names, through the canonical parser.
 
-    Asserted over the readers that actually exist rather than over a hand-kept
-    list of expected prefixes, so a reader added later is covered by
-    construction instead of needing this test updated.
+    Read with :func:`~core.provenance_stamp_transport` rather than by slicing on
+    ``:``, because the hand-rolled slice this replaces re-implemented the stamp
+    grammar inside the gate that checks it. A producer and a checker that each
+    carry their own copy of a grammar agree until the grammar changes, and then
+    the checker keeps passing on the shape nothing writes any more.
+    """
+    from ..core import provenance_stamp_transport
+
+    transport = provenance_stamp_transport(stamp)
+    assert transport is not None, f"{stamp!r} does not name a transport the canonical parser can read"
+    return transport
+
+
+def _text_classifier_transport() -> str:
+    from ..domain.transactions import prompt_spec_with_every_spending_category
+    from ..llm import LocalTextLLMClassifier
+
+    spec = prompt_spec_with_every_spending_category()
+    return _transport_of(LocalTextLLMClassifier(spec=spec, model="qwen2.5:3b").decided_by)
+
+
+def _vision_classifier_transport() -> str:
+    from ..domain.transactions import prompt_spec_with_every_spending_category
+    from ..llm import LocalVisionLLMClassifier
+
+    spec = prompt_spec_with_every_spending_category()
+    return _transport_of(LocalVisionLLMClassifier(spec=spec, model="qwen2.5vl:3b").decided_by)
+
+
+def _pinned_authority_values() -> InvoiceExtractionAuthorityValues:
+    """Return injected regulatory values for the text extractor's compiled prompt.
+
+    Injected rather than resolved through the registry because this gate asks
+    only what TRANSPORT a stamp names; resolving real rates would couple a
+    transport assertion to registry load, which in this tree fails under
+    concurrent writes and would red this gate for a reason that has nothing to
+    do with the property it pins.
+    """
+    from decimal import Decimal
+
+    from ..application.ledger import InvoiceExtractionAuthorityValues, default_invoice_extraction_period
+    from ..domain.iva import IvaCategory
+
+    return InvoiceExtractionAuthorityValues(
+        period=default_invoice_extraction_period(),
+        iva_rate_pcts=(Decimal("21"),),
+        retencion_rate_pcts=(Decimal("15"),),
+        no_printed_tax_categories=(IvaCategory.DOMESTIC_ZERO,),
+        regime_legend_phrases=("operación exenta",),
+    )
+
+
+def _text_extractor_transport(provider: LLMProvider | None = None) -> str:
+    from ..core.config import LLMProvider
+    from ..llm._evidence_draft_text import TextInvoiceFieldExtractor
+
+    resolved = provider if provider is not None else LLMProvider.LOCAL
+    model = "qwen3:1.7b" if resolved is LLMProvider.LOCAL else "gpt-4.1"
+    reader = TextInvoiceFieldExtractor(
+        model=model,
+        provider=resolved,
+        authority_values=_pinned_authority_values(),
+    )
+    return _transport_of(reader.decided_by)
+
+
+def _vision_transcriber_transport(provider: LLMProvider | None = None) -> str:
+    from ..core.config import LLMProvider
+    from ..llm._evidence_draft_vision import LocalVisionDocumentTranscriber
+
+    resolved = provider if provider is not None else LLMProvider.LOCAL
+    model = "qwen2.5vl:3b" if resolved is LLMProvider.LOCAL else "claude-haiku-4-5-20251001"
+    return LocalVisionDocumentTranscriber(model=model, provider=resolved).transcriber_identity.transport
+
+
+def _column_role_mapper_transport(provider: LLMProvider | None = None) -> str:
+    from ..core.config import LLMProvider
+    from ..llm._column_role_mapping import SemanticColumnRoleMapper
+
+    resolved = provider if provider is not None else LLMProvider.LOCAL
+    model = "qwen3:1.7b" if resolved is LLMProvider.LOCAL else "gpt-4.1"
+    # The model is pinned rather than left to resolve, because resolution runs
+    # the on-host hardware admission check and would make this gate's result a
+    # property of the machine it ran on.
+    return _transport_of(SemanticColumnRoleMapper(model=model, provider=resolved).decided_by)
+
+
+_READERS_WITH_NO_PROVIDER_AXIS: dict[str, Callable[[], str]] = {
+    "LocalTextLLMClassifier": _text_classifier_transport,
+    "LocalVisionLLMClassifier": _vision_classifier_transport,
+}
+"""Readers a caller can reach with no consent token, keyed to their transport.
+
+Their constructors declare no ``provider`` parameter at all, so no call site can
+ask them for an off-host read. That structural claim is asserted below rather
+than trusted: it is what makes their on-host transport a property of the class
+instead of an observation about the one instance this module builds.
+"""
+
+_READERS_WITH_A_PROVIDER_AXIS: dict[str, Callable[[LLMProvider | None], str]] = {
+    "TextInvoiceFieldExtractor": _text_extractor_transport,
+    "LocalVisionDocumentTranscriber": _vision_transcriber_transport,
+    "SemanticColumnRoleMapper": _column_role_mapper_transport,
+}
+"""Readers that accept a provider, keyed to a builder taking the provider.
+
+Reaching one of these off-host with a taxpayer's document requires a
+per-invocation consent token at the dispatch choke point. What this module pins
+about them is not that they refuse -- the consent suite owns that -- but that
+when they do run off-host they SAY SO. A stamp reading ``local`` for a read
+served off-host is the artefact a consent withdrawal enumerates by transport and
+therefore cannot see, which is precisely the artefact most needing
+re-derivation.
+"""
+
+
+def test_every_transport_mintable_without_a_consent_token_is_on_host() -> None:
+    """A reader with no provider axis can only ever stamp an on-host transport.
+
+    This is the narrowed descendant of an assertion that once swept every
+    reader. It was true when the cloud transport had just been deleted and the
+    provider axis really had collapsed; it is not true now, because off-host
+    evidence reading was re-sanctioned behind the consent gate and three readers
+    took a provider back. Left unnarrowed it would have been a gate asserting a
+    property the tree no longer has -- and the honest narrowing is by the
+    property that still holds, not by dropping the readers that stopped
+    satisfying it. Those move to the honesty assertion below rather than out of
+    the module.
 
     The complementary half is deliberately NOT asserted: pre-existing persisted
     records keep the cloud transport they were stamped with, because that is the
@@ -267,24 +410,113 @@ def test_every_provenance_stamp_a_reader_can_mint_names_a_local_transport() -> N
     would erase the fact that some data did once leave the host. What this pins
     is the minting side.
     """
-    from ..domain.transactions import prompt_spec_with_every_spending_category
+    import inspect
+
+    from ..core import LOCAL_TRANSPORT_LABEL
     from ..llm import LocalTextLLMClassifier, LocalVisionLLMClassifier
 
-    spec = prompt_spec_with_every_spending_category()
-    stamps = [
-        LocalTextLLMClassifier(spec=spec, model="qwen2.5:3b").decided_by,
-        LocalVisionLLMClassifier(spec=spec, model="qwen2.5vl:3b").decided_by,
-    ]
+    classes = {
+        "LocalTextLLMClassifier": LocalTextLLMClassifier,
+        "LocalVisionLLMClassifier": LocalVisionLLMClassifier,
+    }
+    assert set(classes) == set(_READERS_WITH_NO_PROVIDER_AXIS)
 
-    for stamp in stamps:
-        transport = stamp.split(":")[1]
-        assert stamp.startswith("llm:"), f"{stamp!r} must keep the llm:<transport>:<model> shape"
-        assert transport.startswith("local-"), (
-            f"{stamp!r} names transport {transport!r}; every mintable transport is on-host now"
+    transports: dict[str, str] = {}
+    for name, build in _READERS_WITH_NO_PROVIDER_AXIS.items():
+        parameters = inspect.signature(classes[name].__init__).parameters
+        assert "provider" not in parameters, (
+            f"{name} now declares a provider parameter, so it is no longer mintable on-host by "
+            "construction; move it to the provider-axis set, where its off-host stamp is checked "
+            "for honesty instead of asserted absent"
         )
-        assert transport not in {"claude", "codex", "antigravity"}
+        transport = build()
+        assert transport == LOCAL_TRANSPORT_LABEL, (
+            f"{name} stamps transport {transport!r}; a reader reachable with no consent token must "
+            "never name an off-host transport"
+        )
+        transports[name] = transport
 
-    assert len({s.split(":")[1] for s in stamps}) == len(stamps), (
-        "the two on-host transports must stay distinguishable from each other, or a persisted "
-        "record cannot say whether it was read as text or as an image"
+    assert transports, "no reader was checked at all; this gate would pass over nothing"
+
+
+def test_a_reader_reachable_only_under_consent_stamps_the_transport_it_actually_used() -> None:
+    """Both directions, because either alone is indistinguishable from a broken reader.
+
+    The on-host direction is this test's positive control: without it, an
+    off-host reader that had stopped stamping anything meaningful -- or one whose
+    constructor silently ignored the provider -- could still satisfy "not local"
+    by accident. And the off-host direction is what stops the gate degrading into
+    a restatement of the on-host default, which every reader satisfies while
+    saying nothing about the case the consent apparatus exists for.
+
+    Asserted on the CONSTRUCTED stamp rather than on source text, because a
+    reader that assembled a hardcoded label would satisfy any source-level
+    pattern while storing the same lie.
+    """
+    from ..core import LOCAL_TRANSPORT_LABEL
+    from ..core.config import LLMProvider
+
+    off_host = {
+        "TextInvoiceFieldExtractor": LLMProvider.OPENAI,
+        "LocalVisionDocumentTranscriber": LLMProvider.ANTHROPIC,
+        "SemanticColumnRoleMapper": LLMProvider.OPENAI,
+    }
+    assert set(off_host) == set(_READERS_WITH_A_PROVIDER_AXIS)
+
+    for name, build in _READERS_WITH_A_PROVIDER_AXIS.items():
+        provider = off_host[name]
+        on_host_transport = build(LLMProvider.LOCAL)
+        assert on_host_transport == LOCAL_TRANSPORT_LABEL, (
+            f"{name} stamps {on_host_transport!r} for an on-host read; the positive control fails, so "
+            "its off-host result below proves nothing"
+        )
+
+        off_host_transport = build(provider)
+        assert off_host_transport == provider.value.lower(), (
+            f"{name} ran at {provider.value} and stamped transport {off_host_transport!r}; a consented "
+            "off-host read must record the transport it used or the withdrawal survey cannot find it"
+        )
+        assert off_host_transport != on_host_transport, (
+            f"{name} stamps the same transport whether or not a provider was named, so the provider it "
+            "was given reaches the stamp not at all"
+        )
+
+
+def test_every_stamp_producing_reader_is_declared_in_one_of_the_two_sets() -> None:
+    """The partition is total over the readers that exist, or this module stops.
+
+    The assertion this replaced claimed to run "over the readers that actually
+    exist rather than over a hand-kept list", and it did not: it built two
+    classifiers by name while three further stamp producers shipped in the same
+    package, one of which could already mint an off-host stamp. That is the
+    failure mode of a set that has stopped driving its own verification -- the
+    same one the reinstated-symbol mapping above was reshaped to remove -- so the
+    partition is checked against a discovered set rather than asserted by count.
+
+    Discovered from source rather than by importing the package, because a
+    reader class that fails to import would silently shrink the discovered set
+    to something the declaration still covers.
+    """
+    import ast
+
+    package = SRC_CADRUMO / "llm"
+    discovered: set[str] = set()
+    for path in sorted(package.glob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ClassDef):
+                continue
+            members = {
+                member.name for member in node.body if isinstance(member, ast.FunctionDef | ast.AsyncFunctionDef)
+            }
+            if members & {"decided_by", "transcriber_identity"}:
+                discovered.add(node.name)
+
+    assert discovered, "no stamp-producing reader was discovered; this gate is pointed at nothing"
+    declared = set(_READERS_WITH_NO_PROVIDER_AXIS) | set(_READERS_WITH_A_PROVIDER_AXIS)
+    assert discovered == declared, (
+        f"the declared reader partition does not cover the readers that exist. Undeclared: "
+        f"{sorted(discovered - declared)}. Declared but absent: {sorted(declared - discovered)}. Every "
+        "stamp producer belongs in exactly one set -- on-host by construction, or provider-bearing and "
+        "held to stamping the transport it actually used."
     )
