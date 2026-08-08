@@ -23,6 +23,10 @@ that:
 * ``EU``, ``EZ`` and ``UN`` are in CLDR's territory list and name a union, a
   currency area and an organisation. None is a country and none can establish
   where a party is.
+* ``GI`` is a territory rather than a state and levies no VAT at all, and
+  ``XK`` sits in the ISO user-assigned range, so admitting it would make one
+  code both catalogued and reserved. Both are named exclusions in the
+  vocabulary's own header, and this is what holds them to it.
 
 So this file is a tripwire rather than a description of current behaviour. Every
 code below resolves to nothing TODAY because it is simply absent from the
@@ -60,6 +64,8 @@ NEVER_THIRD_COUNTRY = (
     "EU",  # The Union itself. Not a country, and not somewhere a party is.
     "EZ",  # The euro area. A currency zone, not a jurisdiction.
     "UN",  # The United Nations. An organisation.
+    "GI",  # Gibraltar: a territory rather than a state, and it levies no VAT.
+    "XK",  # Kosovo: its code is user-assigned, so the axis reads it as denoting nothing.
 )
 
 

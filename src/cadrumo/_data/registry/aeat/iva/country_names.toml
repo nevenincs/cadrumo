@@ -105,15 +105,78 @@
 # while the loader refuses the WHOLE table on a single collision. The scarce
 # resource here is a reviewer's attention, and that is where it would be spent.
 #
+# HOW THE THIRD-COUNTRY SIDE WAS BOUNDED, AND WHY IT GREW ONCE. The criteria
+# below were declared before this table gated the code axis, and the data never
+# matched them: "Latin America" carried eight of nineteen states and "European
+# non-EU neighbours" nine of twenty. That is an incompleteness against the
+# table's OWN boundary, not a case for moving it -- which is why those two blocs
+# were completed and nothing else was. The Maghreb went the same way: Morocco
+# was carried on a proximity argument that says nothing about Morocco in
+# particular, so carrying one neighbour of three was drafting rather than a
+# decision.
+#
+# WHAT WAS DELIBERATELY NOT DONE IS THE COMPLETE ISO REGISTER. It is tempting
+# now, because the code axis costs less per entry than the name axis -- a code
+# needs no folding, collides with nothing, and is a lookup rather than a
+# judgement. But this is ONE table: every record admitted for its code also
+# carries names, and pays the full name-axis cost in reviewer attention and in
+# the two collision modes the loader refuses the whole table over. The lower
+# per-entry cost is a property of a code-only register that does not exist yet.
+# Until it does, the reviewability constraint binds here exactly as it binds the
+# exonym axis, and a bulk import would also admit the territory and non-country
+# codes enumerated in the exclusions above.
+#
 # WHICH COUNTRIES. Every EU Member State, because the Member State catalogue is
 # what the intra-community branch turns on and a missing State there is a real
 # gap. Plus the third countries that realistically appear on a Spanish
 # taxpayer's invoices: the European non-EU neighbours, the large trading
 # partners, and Latin America. DELIBERATELY EXCLUDED, with the reason:
-#   * The remaining ~140 sovereign states. This is a reviewable tax-facing
+#   * The remaining sovereign states. This is a reviewable tax-facing
 #     vocabulary, not a general i18n country database. An unreviewable table is
 #     exactly what putting it in data was meant to avoid, and a country absent
-#     here degrades safely to "not established" rather than to a wrong answer.
+#     here degrades to "not established" -- which is now a visible catalogue-gap
+#     report to the operator rather than a silent blank, and still never a wrong
+#     answer. Named exclusions, so the boundary is a decision rather than a
+#     backlog: Thailand, Vietnam, Malaysia, Indonesia and Taiwan, which are real
+#     manufacturing counterparties sitting one tier below the Asian partners
+#     already carried; the Gulf states beyond the Emirates; Egypt and Nigeria;
+#     and the Vatican, whose sovereignty is not in question and whose invoicing
+#     population is. Any of these is a defensible addition the day somebody
+#     measures the traffic rather than the plausibility -- which is the standard
+#     the entries below were held to and the one this list fails.
+#
+#   * ANY JURISDICTION WHOSE IVA TREATMENT IS NOT ORDINARY THIRD-COUNTRY
+#     TREATMENT, and this is the load-bearing exclusion rather than a footnote.
+#     Membership of this table is what makes the country rung FIRE, and the rung
+#     has exactly three outcomes: Spain, EU member, third country. There is no
+#     fourth, so listing a jurisdiction here ASSERTS that ordinary third-country
+#     handling is right for it. Three cases fail that test and are therefore
+#     absent by decision, not by oversight:
+#       - MONACO. Treated as FRANCE for VAT (Directive 2006/112/EC art. 7.1), so
+#         a Monegasque counterparty is an EU-member operation. Listed here it
+#         would resolve to a third country, and on the issued side that is
+#         export treatment -- exempt, on a supply that is not. It is the same
+#         silent under-declaration the country rung was narrowed to close,
+#         re-entered through the data instead of the code.
+#       - GIBRALTAR. Outside the EU VAT territory, so the third-country answer
+#         is arguably right, but it is a territory rather than a state and it
+#         levies no VAT at all; it belongs with the territory codes below rather
+#         than with the states here.
+#       - KOSOVO. Its code is in the ISO user-assigned range, which the resolver
+#         treats as denoting no country by construction. Listing it would make
+#         one code both catalogued and reserved, and the honest fix is to teach
+#         the status axis about codes that are reserved yet real -- not to
+#         special-case one row.
+#     A gate carries these, plus the territory codes below, as a tripwire: it is
+#     trivially green while they are absent and reds the moment a widening
+#     admits any of them as a third country.
+#
+#   * TERRITORY CODES A GENERAL REGISTER CARRIES AND A BULK IMPORT WOULD ADMIT.
+#     "IC" and "EA" are exceptionally reserved for the Canary Islands and for
+#     Ceuta y Melilla; both are SPANISH, and this axis never returns a Spanish
+#     scope from a country code because a code cannot tell the three Spanish
+#     territories apart. "EU", "EZ" and "UN" name a union, a currency area and
+#     an organisation, and none of them is anywhere a party is established.
 #   * SUB-NATIONAL names -- "England", "Scotland", "Northern Ireland",
 #     "Catalunya", "Bayern". A sub-national name is not a country name, and
 #     Northern Ireland is the case that proves the point: it is a distinct VAT
@@ -176,6 +239,28 @@
 # by the Member State catalogue and the country resolver respectively. This
 # table answers only "which country did the issuer print", and it is recorded
 # here rather than inlined in code so that it is reviewable in one place.
+#
+# WHAT IS GROUNDED IN A BUNDLED SOURCE, AND WHAT IS NOT. The alpha-2 code and
+# the Spanish name of every entry added when the third-country side was
+# completed were checked one by one against AEAT's own "Código ISO / Países y
+# Territorios" register, which ships in this repository inside the bundled
+# Manual práctico de Sociedades. That is the right authority for a tax-facing
+# table: it is what AEAT itself keys country declarations on.
+#
+# THE ALPHA-3 COLUMN HAS NO BUNDLED AUTHORITY, and saying so is more useful than
+# implying one. Nothing in this tree ships an alpha-2-to-alpha-3 correspondence:
+# not the corpus, and not any installed package. The column is therefore
+# author-supplied from the ISO register, and what actually defends it is
+# mechanical rather than documentary -- the loader refuses two records claiming
+# one alpha-3, one alpha-2 claiming two, and any record missing the column at
+# all. Those refusals catch a contradiction; they cannot catch a value that is
+# wrong and consistent. A bundled register would, and until one exists this is
+# the weakest column in the file.
+#
+# AND THE BUNDLED REGISTER IS NOT INFALLIBLE EITHER. It still spells North
+# Macedonia under its pre-2019 name. The current name is carried first and the
+# historical one kept beside it, because documents print both -- the corpus was
+# read and then judged rather than copied.
 #
 # THE ALPHA-3 COLUMN, AND WHY IT SITS HERE RATHER THAN IN CODE. A printed
 # document states a country as a name; a STRUCTURED one states it as a code, and
@@ -513,3 +598,132 @@ names = ["Nueva Zelanda", "New Zealand", "Nueva Zelandia"]
 code = "ZA"
 alpha3 = "ZAF"
 names = ["Sudáfrica", "South Africa"]
+
+# ---------------------------------------------------------------------------
+# Latin America, completed. The criterion above already named this bloc; the
+# table carried eight of its nineteen states, which is an incompleteness against
+# its OWN boundary rather than a widening of it. Spanish is the invoicing
+# language across the bloc, so a Spanish taxpayer's counterparty here prints the
+# Spanish name -- the exact case this vocabulary exists to match.
+# ---------------------------------------------------------------------------
+
+[[country]]
+code = "BO"
+alpha3 = "BOL"
+names = ["Bolivia"]
+
+[[country]]
+code = "CR"
+alpha3 = "CRI"
+names = ["Costa Rica"]
+
+[[country]]
+code = "CU"
+alpha3 = "CUB"
+names = ["Cuba"]
+
+[[country]]
+code = "DO"
+alpha3 = "DOM"
+names = ["República Dominicana", "Dominicana, República", "Dominican Republic"]
+notes = "The inverted form is how AEAT's own country register alphabetises it, and a document transcribed from an official listing prints it that way; the natural form is what an invoice prints. Neither folds onto the other, so both are carried."
+
+[[country]]
+code = "EC"
+alpha3 = "ECU"
+names = ["Ecuador"]
+
+[[country]]
+code = "GT"
+alpha3 = "GTM"
+names = ["Guatemala"]
+
+[[country]]
+code = "HN"
+alpha3 = "HND"
+names = ["Honduras"]
+
+[[country]]
+code = "NI"
+alpha3 = "NIC"
+names = ["Nicaragua"]
+
+[[country]]
+code = "PA"
+alpha3 = "PAN"
+names = ["Panamá"]
+notes = "The English spelling folds onto the Spanish one, so it is not listed beside it -- listing both would make the folding decorative and disarm the gate over it."
+
+[[country]]
+code = "PY"
+alpha3 = "PRY"
+names = ["Paraguay"]
+
+[[country]]
+code = "SV"
+alpha3 = "SLV"
+names = ["El Salvador", "Salvador, El"]
+notes = "The Spanish and English names coincide; the inverted form is AEAT's register spelling."
+
+# ---------------------------------------------------------------------------
+# European non-EU, completed for sovereign states. Same argument as the bloc
+# above: the criterion was already declared and the data did not meet it.
+# Monaco, Gibraltar and Kosovo are DELIBERATELY still absent -- see the
+# exclusion note in the header, which explains why each is a different problem.
+# ---------------------------------------------------------------------------
+
+[[country]]
+code = "AL"
+alpha3 = "ALB"
+names = ["Albania", "Shqipëria"]
+
+[[country]]
+code = "BA"
+alpha3 = "BIH"
+names = ["Bosnia y Herzegovina", "Bosnia-Herzegovina", "Bosna i Hercegovina", "Bosnia and Herzegovina"]
+notes = "The hyphenated Spanish form is AEAT's register spelling and is printed in practice; punctuation is not normalised away, so it needs its own entry."
+
+[[country]]
+code = "LI"
+alpha3 = "LIE"
+names = ["Liechtenstein"]
+notes = "The German endonym, the Spanish and the English names coincide."
+
+[[country]]
+code = "MD"
+alpha3 = "MDA"
+names = ["Moldavia", "Moldova"]
+
+[[country]]
+code = "ME"
+alpha3 = "MNE"
+names = ["Montenegro", "Crna Gora"]
+
+[[country]]
+code = "MK"
+alpha3 = "MKD"
+names = ["Macedonia del Norte", "North Macedonia", "Severna Makedonija", "Северна Македонија", "Macedonia"]
+notes = "The state renamed itself in 2019 and the bundled AEAT manual still carries the pre-rename form, so the current name is listed first and the bare historical one is kept because documents and address blocks still print it. This is the bundled corpus being stale rather than wrong, and it is recorded rather than followed."
+
+[[country]]
+code = "SM"
+alpha3 = "SMR"
+names = ["San Marino"]
+notes = "A third country for IVA despite its customs arrangement with the Union, so ordinary third-country treatment is the right answer and the entry is safe to carry."
+
+# ---------------------------------------------------------------------------
+# The Maghreb, completed. Morocco was already carried on the proximity
+# argument; carrying one of the three neighbours and not the other two was an
+# accident of drafting rather than a boundary anybody argued.
+# ---------------------------------------------------------------------------
+
+[[country]]
+code = "DZ"
+alpha3 = "DZA"
+names = ["Argelia", "Algérie", "Algeria", "الجزائر"]
+notes = "French is the commercial language of Maghreb invoicing beside Arabic, which is why both are carried here as they are for Morocco."
+
+[[country]]
+code = "TN"
+alpha3 = "TUN"
+names = ["Túnez", "Tunisie", "Tunisia", "تونس"]
