@@ -10,8 +10,6 @@ step_id: 'S02'
 related:
   - "[[2026-08-07-dehu-notification-legal-effect-plan]]"
 ---
-
-
 # Draft the candidate ley-39-2015-notificaciones.toml LegalReference entry (id, kind=ley, corpus_ref, required_text carrying the diez-dias-naturales phrase verbatim) as a proposal recorded only in this Step's execution record, and do NOT commit it to the registry, since LegalReference.review_status is typed Literal reviewed and cannot represent an unreviewed draft on disk
 
 ## Scope
