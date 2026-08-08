@@ -4,7 +4,7 @@ tags:
   - '#history-onboarding'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:0214461f0cb4600d2a66768fe109a73429457c94cfccec9e8822cfcf30b5e05d'
+body_hash: 'sha256:eb0b8716d61679f714368b65dd17d0705bffc8cb508f3298a375440d5c2514a2'
 tier: L2
 related:
   - '[[2026-08-07-history-onboarding-adr]]'
@@ -144,7 +144,7 @@ values in all four catalogues.
 
 - [x] `P04.S11` - add the overview INFO Notice naming aeat app live filed pull-all when a workable profile has zero observations carrying an official ObservationSourceKind, verified by a calendar-overview test asserting the Notice fires for a zero-observation profile and is absent once one official observation exists; `src/cadrumo/application/overview/_calendar_evidence.py`.
 - [x] `P04.S12` - land real es, en, ca and hu values for every new help string, Notice message key and result-field label the P01 through P03 verbs introduce, verified by dev.locales scaffold --check, gated on the shared locale catalogues being free of unrelated in-flight writes before landing; `src/cadrumo/locales`.
-- [ ] `P04.S13` - add the error-registry default_suggestion entries for the new discover and pull-all verb refusals, verified by the existing suggestion-command conformance test; `src/cadrumo/core/errors/registry`.
+- [x] `P04.S13` - add the error-registry default_suggestion entries for the new discover and pull-all verb refusals, verified by the existing suggestion-command conformance test; `src/cadrumo/core/errors/registry`.
 - [x] `P04.S14` - add the cross-period next_action builder cases pointing at the new discover and pull-all verbs, verified by the existing next-action conformance coverage; `src/cadrumo/application/modelo/_verification_cross_period.py`.
 - [x] `P04.S15` - update operator_surface/_help.py with the new discover and pull-all verb entries, verified by test_rule_surface_conformance.py; `src/cadrumo/application/operator_surface/_help.py`.
 - [x] `P04.S16` - update the agent-harness docs under src/cadrumo/_data/agent that name the filed verb group to cite the new discover and pull-all verbs, verified by the harness-citation conformance check confirming every named verb resolves against the live operator-surface manifest; `src/cadrumo/_data/agent`.
