@@ -381,30 +381,118 @@ def _spain_indicating(
     return tuple(signals)
 
 
-def _treatment_concurs_with_non_establishment(
-    *,
-    regime_legend: str | None,
-    spanish_iva_charged: bool,
-) -> bool:
-    """Whether the printed treatment independently agrees the party is not here.
+def _mention_declares_no_spanish_tax(regime_legend: str | None) -> bool:
+    """Whether the printed mention itself declares the issuer charged nothing here.
 
-    The one non-address signal that can corroborate a foreign registration. A
-    reverse-charge mention shifts the tax to the recipient, and LIVA art.
+    A reverse-charge mention shifts the tax to the recipient, and LIVA art.
     84.Uno.2 makes the recipient the sujeto pasivo precisely when the supplier is
     NOT established in the territory -- so an issuer printing it has stated, in a
     mention the regulation fixes the wording of, that it did not have to charge
     here.
 
-    **Both halves are required.** The mention with Spanish IVA charged beside it
-    is a document disagreeing with itself, not a corroboration, and the shipped
-    legend record says so directly: this is the one mention declaring it expects
-    no repercutido line. Accepting the phrase while ignoring the charged tax
-    would read the issuer's words and discard the issuer's arithmetic.
+    Asked of the shipped legend record rather than by comparing the phrase,
+    because which mentions expect a repercutido line is already declared there;
+    a second list here would be a second authority on the statutory vocabulary.
     """
     legend = match_regime_legend(regime_legend)
-    if legend is None or legend.expects_repercutido_line:
+    return legend is not None and not legend.expects_repercutido_line
+
+
+def _taxed_under_the_registration_state(
+    charged_iva_rates: tuple[Decimal, ...],
+    *,
+    identification: EUMemberState,
+    on_date: date | None,
+) -> bool:
+    """Whether the document charges tax at the registration State own rate.
+
+    The second corroborating treatment, and a POSITIVE signal rather than an
+    absence. A supplier not established here charges under the law it IS
+    established under, so a document printing a rate that its own Member State
+    schedule carries has done exactly that -- and it has done it in arithmetic,
+    which is harder to print by accident than a phrase.
+
+    **The rate must be one Spain does NOT also carry, or it corroborates
+    nothing.** Twenty-one per cent is the general rate in Spain and in the
+    Netherlands alike, so a Dutch-identified issuer charging it has stated
+    something both readings explain equally. Nineteen is German and not Spanish,
+    so it discriminates. That exclusion is not spelled here: the walk reaches
+    this point only when no Spain-indicating signal fired, and a charged Spanish
+    registry rate IS such a signal, so any rate still standing is already one the
+    Spanish schedule does not carry on this date.
+
+    **Both schedules are asked of the registry, never compared to literals.** A
+    rate the schedule stops carrying stops corroborating, and a State whose rate
+    changes moves here with it.
+
+    Args:
+        charged_iva_rates: The rates as the document PRINTS them, whole-number
+            percentages, converted to the fraction the registry keys on.
+        identification: The Member State whose VAT identification the party
+            printed -- the only State whose schedule is relevant, because the
+            claim being corroborated is that the party is established THERE.
+        on_date: The date the rate must have been in force.
+
+    Returns:
+        Whether some charged rate is one that State schedule carries.
+
+        ``False`` without a date, on the terms the Spanish check states: a rate
+        nobody could verify is not a second signal, and inconclusive contributes
+        nothing in either direction rather than being read as agreement.
+    """
+    if on_date is None:
         return False
-    return not spanish_iva_charged
+    return any(
+        rate_kinds_for_declared_rate(identification, rate / _PERCENT, on_date)
+        for rate in charged_iva_rates
+        # Zero is excluded for the reason it is excluded on the Spanish side: a
+        # zero-rated line charges no tax under anybody law, so it places the
+        # party nowhere rather than in the State whose schedule happens to carry
+        # a zero tier.
+        if rate > 0
+    )
+
+
+def _treatment_concurs_with_non_establishment(
+    *,
+    regime_legend: str | None,
+    spanish_iva_charged: bool,
+    charged_iva_rates: tuple[Decimal, ...],
+    identification: EUMemberState,
+    on_date: date | None,
+) -> bool:
+    """Whether the printed treatment independently agrees the party is not here.
+
+    Two signals, either of which corroborates, and they are independent kinds of
+    evidence rather than two spellings of one: the mention is what the issuer
+    SAID about the operation, and the charged rate is what the issuer DID about
+    it. A document carrying either has stated, in the regulation own words or in
+    its own arithmetic, that it did not tax here.
+
+    **The single-source version was safe but incomplete, and it was recorded as
+    such rather than left to be found.** Only the reverse-charge mention was
+    recognised, so a foreign-registered issuer that simply charged its own
+    country VAT -- the ordinary shape of a cross-border invoice that is not a
+    reverse charge -- corroborated nothing and fell to a question. That is the
+    safe direction: an unanswered question, never a wrong territory. It was still
+    a gap.
+
+    **Spanish tax charged defeats both limbs**, and that is checked once here
+    rather than inside each. A document charging at a Spanish registry rate is
+    the Spain-indicating signal the walk has already tested, so reaching this
+    point with one would mean the walk contradicted itself; the check is repeated
+    rather than assumed, because relying on a caller ordering for a safety
+    property is how the ordering becomes load-bearing without saying so.
+    """
+    if spanish_iva_charged:
+        return False
+    if _mention_declares_no_spanish_tax(regime_legend):
+        return True
+    return _taxed_under_the_registration_state(
+        charged_iva_rates,
+        identification=identification,
+        on_date=on_date,
+    )
 
 
 def _printed_evidence(
@@ -470,6 +558,9 @@ def _printed_evidence(
     if identification is not None and _treatment_concurs_with_non_establishment(
         regime_legend=regime_legend,
         spanish_iva_charged=spanish_iva_charged,
+        charged_iva_rates=charged_iva_rates,
+        identification=identification,
+        on_date=on_date,
     ):
         # The registration's OWN State, and only because something else agreed.
         # `None` here is not a failure to look up a country: Northern Ireland

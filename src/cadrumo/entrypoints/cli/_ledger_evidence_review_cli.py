@@ -29,8 +29,9 @@ from ...application.ledger import (
     country_vocabulary_advisory,
     load_extraction_drafts,
     party_attribution_advisory,
+    review_advisory_kinds,
 )
-from ...core import ConfirmationBlockReason, DraftDiscrepancyKind, FindingResolutionAction
+from ...core import ConfirmationBlockReason, DraftDiscrepancyKind, FindingResolutionAction, ReviewAdvisoryKind
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -302,6 +303,17 @@ def _register_review_list_command() -> None:
                 default="Show only drafts whose document failed this deterministic check.",
             ),
         ),
+        advisory: ReviewAdvisoryKind | None = typer.Option(
+            None,
+            "--advisory",
+            help=tr(
+                "cli.app.ledger.evidence.review.advisory_help",
+                default=(
+                    "Show only drafts carrying this non-blocking advisory. These stop nothing, so "
+                    "they are otherwise met only by opening each document."
+                ),
+            ),
+        ),
         blocking_only: bool = typer.Option(
             False,
             "--blocking",
@@ -311,7 +323,7 @@ def _register_review_list_command() -> None:
             ),
         ),
     ) -> None:
-        """List the review queue, optionally narrowed to one blocking reason or check."""
+        """List the review queue, optionally narrowed to one blocking reason, check or advisory."""
         bucket_id = _tx_repo(_state()).bucket_id
         document = load_extraction_drafts(bucket_id, load_settings())
 
@@ -320,6 +332,8 @@ def _register_review_list_command() -> None:
             filters.append(f"reason={reason.value}")
         if finding is not None:
             filters.append(f"finding={finding.value}")
+        if advisory is not None:
+            filters.append(f"advisory={advisory.value}")
         if blocking_only:
             filters.append("blocking=true")
 
@@ -327,9 +341,15 @@ def _register_review_list_command() -> None:
         for stored in sorted(document.drafts, key=lambda row: row.evidence_reference):
             blockers = confirmation_blockers(stored.draft)
             reasons = sorted({blocker.reason.value for blocker in blockers})
+            # Read through the one projection the show surface's notices are
+            # built from, never re-classified here: a queue that disagrees with
+            # the document it sends the operator to is a queue they stop reading.
+            advisories = review_advisory_kinds(stored.draft)
             if reason is not None and reason.value not in reasons:
                 continue
             if finding is not None and all(item.kind is not finding for item in stored.draft.discrepancies):
+                continue
+            if advisory is not None and advisory not in advisories:
                 continue
             if blocking_only and not blockers:
                 continue
@@ -341,16 +361,46 @@ def _register_review_list_command() -> None:
                         "drafted_at": stored.drafted_at.isoformat(),
                         "blocking_count": len(blockers),
                         "reasons": reasons,
+                        "advisory_count": len(advisories),
+                        "advisories": [kind.value for kind in advisories],
                     },
                 ),
             )
 
         lines = [f"bucket_id\t{bucket_id}", f"pending\t{len(rows)}"]
         lines.extend(
-            f"{row.evidence_reference}\t{row.blocking_count}\t{','.join(row.reasons) or '-'}\t{row.extractor}"
+            f"{row.evidence_reference}\t{row.blocking_count}\t{','.join(row.reasons) or '-'}\t{row.extractor}\t"
+            f"{row.advisory_count}\t{','.join(row.advisories) or '-'}"
             for row in rows
         )
         notices: list[Notice] = []
+        advised = sum(1 for row in rows if row.advisory_count)
+        if advised:
+            # A count and a route, not a row per advisory. The per-document prose
+            # already exists on `show` and repeating it here once per affected
+            # draft is how a channel earns the reflex to skip it -- but a queue
+            # that never mentions them at all is why these fire into nothing.
+            notices.append(
+                Notice(
+                    severity=NoticeSeverity.WARNING,
+                    code="ledger.evidence.review.advised_pending",
+                    message=tr(
+                        "cli.app.ledger.evidence.review.advised_pending_message",
+                        default=(
+                            "Some pending documents carry advisories. These block nothing and will "
+                            "confirm as they are, so nothing else will raise them again. Narrow the "
+                            "queue with `--advisory` and read one with `review show`."
+                        ),
+                    ),
+                    suggestion="aeat app ledger evidence review list --advisory <kind>",
+                    context={
+                        "advised": str(advised),
+                        "kinds": ",".join(
+                            sorted({value for row in rows for value in row.advisories}),
+                        ),
+                    },
+                ),
+            )
         blocked = sum(1 for row in rows if row.blocking_count)
         if blocked:
             notices.append(

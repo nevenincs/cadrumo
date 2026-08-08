@@ -67,6 +67,13 @@ def _fully_populated_draft() -> InvoiceDraft:
         # match, so only a genuine carry survives.
         supplier_country_code="PT",
         customer_country_code="FR",
+        # The verbatim token each record stated, in a spelling the resolved code
+        # beside it could never be rebuilt from and never rebuild: an alpha-3 the
+        # vocabulary places, and an alpha-3 it does not. A projection that
+        # dropped either and re-derived it from its neighbour would satisfy a
+        # comparison against matching values, and none of these four match.
+        supplier_stated_country_code="PRT",
+        customer_stated_country_code="THA",
         invoice_number="0042",
         invoice_series="FA",
         invoice_date="2026-03-14",
@@ -131,6 +138,11 @@ def _fully_populated_draft() -> InvoiceDraft:
                 field="currency",
                 origin=FieldOrigin.OPERATOR,
                 grounding=FieldGroundingOutcome.UNANCHORED,
+                # Populated non-default for the same reason role_evidence above
+                # is: a refusal dropped on save and re-defaulted to ``None`` on
+                # load compares equal to a fixture that never carried one, and
+                # the round trip would agree that two absences match.
+                refused_anchor="EUROS",
                 note="supplied at review; the document prints no code",
             ),
         ),

@@ -110,7 +110,7 @@ from ._config_state_root import (
     live_state_root_inputs,
     platform_user_data_root,
 )
-from ._confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
+from ._confirmation_gate import ConfirmationBlockReason, FindingResolutionAction, ReviewAdvisoryKind
 from ._credentials import (
     LENGTH_ALONE_IS_STRONG,
     LENGTH_FAIR_FLOOR,
@@ -497,6 +497,7 @@ __all__: list[str] = [
     "RegistrySelectorPeriodCode",
     "RescateType",
     "ResultDisposition",
+    "ReviewAdvisoryKind",
     "RevisionReviewStatus",
     "SectorDiferenciadoLetra",
     "SecureObjectWrite",

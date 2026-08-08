@@ -172,6 +172,51 @@ def test_a_fabricated_anchor_is_not_upgraded() -> None:
     assert fabricated.anchor is None
 
 
+def test_a_refused_anchor_stays_distinguishable_from_one_never_offered() -> None:
+    """Clearing the anchor must not erase that a printed form was OFFERED.
+
+    Both directions in one case, because either alone passes over the confusion
+    it is meant to catch. A reader that pointed at a figure the document does
+    not carry may have misread the page or been handed the wrong document; a
+    reader that pointed at nothing simply could not find a printed form. The
+    operator acts differently on the two, and downstream every trace of the
+    first is gone the moment the anchor is cleared without recording it.
+    """
+    offered_nothing = FieldProvenance(
+        field="currency",
+        origin=FieldOrigin.TEXT_LAYER,
+        grounding=FieldGroundingOutcome.UNANCHORED,
+        note="the reading model reported no printed form",
+    )
+    draft = _reader_output().model_copy(
+        update={"currency": "EUR", "provenance": (*_reader_output().provenance, offered_nothing)},
+    )
+
+    grounded = ground_draft_against_transcription(draft=draft, transcription=_control_transcription())
+    by_field = {envelope.field: envelope for envelope in grounded.provenance}
+
+    refused = by_field["iva_amount"]
+    assert refused.anchor is None, "a form the document does not carry must not read as evidence"
+    assert refused.refused_anchor == "9.999,99", "the offered form is the only trace a claim was made"
+    assert "9.999,99" in refused.note
+
+    absent = by_field["currency"]
+    assert absent.anchor is None
+    assert absent.refused_anchor is None, "nothing was offered, so nothing was refused"
+
+
+def test_a_located_anchor_records_no_refusal() -> None:
+    """The negative leg: a passing check must not stamp a refusal it did not reach."""
+    grounded = ground_draft_against_transcription(
+        draft=_reader_output(),
+        transcription=_control_transcription(),
+    )
+
+    anchored = next(e for e in grounded.provenance if e.field == "taxable_base")
+    assert anchored.grounding is FieldGroundingOutcome.ANCHORED
+    assert anchored.refused_anchor is None
+
+
 def test_grounding_attaches_the_closure_finding() -> None:
     """The second leg runs on the wired path, not only in its own suite."""
     grounded = ground_draft_against_transcription(

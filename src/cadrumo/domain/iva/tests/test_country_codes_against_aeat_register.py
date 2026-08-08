@@ -20,12 +20,21 @@ code names the country written beside it: ``PY`` and ``PE`` are both recognised,
 and swapping them would pass. That narrower claim is what the printed register
 grounds, and the two together are stronger than either.
 
-**The alpha-3 column is still ungrounded and this gate does not pretend
-otherwise.** Nothing in this repository ships an alpha-2-to-alpha-3
-correspondence -- not the corpus, not the AEAT schemas, not any installed
-package -- so the column remains author-supplied. What is asserted here is only
-its structural integrity, which the loader also enforces and which cannot catch a
-value that is wrong and internally consistent.
+**The alpha-3 column is grounded elsewhere, and only for membership.** A sibling
+gate checks it against the Facturae CountryType enumeration, bundled under
+corpus/facturae/, which is the authority for what a Facturae document can state
+and therefore the authority for why the column exists at all. So the column is
+not author-supplied any more, and this file asserts only its structural
+integrity because the substantive check is not its job.
+
+**What no authority in this repository provides is the CORRESPONDENCE**, and
+that is the residual the two gates share rather than a gap in either. This one
+checks alpha-2 membership against the SII CountryType2; the sibling checks
+alpha-3 membership against the Facturae CountryType; the two enumerations have
+no overlap, so neither can say that the three-letter code names the same country
+as the two-letter one written beside it. A consistent swap of two real pairs
+survives both. Only the hand-check against AEAT's printed register speaks to
+that, and it is an attestation rather than a check.
 
 See Also:
     :func:`~domain.iva.country_code_for_stated_country_code`

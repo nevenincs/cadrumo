@@ -39,6 +39,14 @@ from ._caveats import (
     caveats_for_document,
     normalise_whitespace,
 )
+from ._colocation_ceiling import (
+    AUTHORED_LABEL_PAIRS,
+    CeilingOutcome,
+    CeilingReport,
+    CeilingRow,
+    colocation_ceiling,
+    documents_with_authored_transcription,
+)
 from ._key import (
     CORPUS_ROOT,
     EXPECTED_KEY_BYTES,
@@ -77,12 +85,16 @@ from ._runner import (
 )
 
 __all__ = [
+    "AUTHORED_LABEL_PAIRS",
     "CORPUS_ROOT",
     "EXPECTED_KEY_BYTES",
     "EXPECTED_KEY_SHA256",
     "SONNET_4_6_REC_DOM_IMG_008",
     "SPANISH_OPTIMISM_BIAS_CAVEAT",
     "TWIN_LINK_IS_PROSE",
+    "CeilingOutcome",
+    "CeilingReport",
+    "CeilingRow",
     "CorpusDocument",
     "CorpusKey",
     "CorpusKeyError",
@@ -101,6 +113,8 @@ __all__ = [
     "amounts_match",
     "build_result_row",
     "caveats_for_document",
+    "colocation_ceiling",
+    "documents_with_authored_transcription",
     "emitted_or_scored",
     "format_report",
     "load_corpus_key",

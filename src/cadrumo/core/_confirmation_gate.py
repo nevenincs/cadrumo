@@ -8,6 +8,10 @@ one that admits a free-text resolution is a gate an operator can satisfy by
 typing anything.
 
 :class:`ConfirmationBlockReason` says WHY a draft cannot be confirmed.
+:class:`ReviewAdvisoryKind` says what a draft carries that a person should see
+even though it refuses nothing --- the non-blocking axis, closed for the same
+reason, because a queue whose only vocabulary is refusal cannot describe the
+documents it lets through.
 :class:`FindingResolutionAction` says HOW the operator settled it. A resolution
 carries one of these actions and nothing else, so "the operator looked and
 attests the document prints this" stays distinguishable from "the operator

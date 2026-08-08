@@ -148,7 +148,7 @@ def _transaction(
     # contract.)
     iva_rate: Decimal | None = Decimal("0.21"),
     iva_category: IvaCategory | None = None,
-    counterparty_eu_member_state: EUMemberState | None = None,
+    counterparty_country: str | None = None,
     counterparty_identification_state: EUMemberState | None = None,
 ) -> Transaction:
     fields: dict[str, object] = {
@@ -166,8 +166,8 @@ def _transaction(
     }
     if iva_category is not None:
         fields["iva_category"] = iva_category
-    if counterparty_eu_member_state is not None:
-        fields["counterparty_country"] = counterparty_eu_member_state.value.upper()
+    if counterparty_country is not None:
+        fields["counterparty_country"] = counterparty_country
     if counterparty_identification_state is not None:
         fields["counterparty_identification_state"] = counterparty_identification_state
     return Transaction.model_validate(fields)

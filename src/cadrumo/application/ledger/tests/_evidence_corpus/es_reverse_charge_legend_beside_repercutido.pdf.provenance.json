@@ -1,0 +1,8 @@
+{
+  "provenance": "synthetic_generated",
+  "kind": "es_reverse_charge",
+  "source": "aeat-test-generator",
+  "notes": "The same invoice contradicting itself: the reverse-charge mention printed beside a 21% repercutido line.",
+  "sha256": "d825d25aa0c2fdfd537c84039855f0d9b0a4ddcfcd2d1423aa1cb9852c87cbe1",
+  "bytes": 1887
+}

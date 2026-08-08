@@ -1850,6 +1850,7 @@ cli:
         tax_identifier_help: The counterparty's tax identifier as printed on the document.
         withdraw_help: Withdraw a confirmed establishment, stating the earlier answer
           was wrong.
+        evidenced_scope_help: 'Territory a document in hand places this party in. Supply it to ask what the ladder will answer for that document, which is the only way to see a disagreement with what you confirmed before a confirm refuses on it.'
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
         batch_directory_help: Directory whose files are ingested. Combine with or
@@ -1992,6 +1993,8 @@ cli:
           show_help: Show one pending draft field by field, with its findings and
             blockers.
           unknown_reference: No pending draft for that reference.
+          advisory_help: 'Show only drafts carrying this non-blocking advisory. These stop nothing, so they are otherwise met only by opening each document.'
+          advised_pending_message: 'Some pending documents carry advisories. These block nothing and will confirm as they are, so nothing else will raise them again. Narrow the queue with `--advisory` and read one with `review show`.'
         source_path_help: Path to the invoice PDF or image
         supplier_help: Supplier name
         taxable_base_help: Invoice taxable base
@@ -1999,6 +2002,12 @@ cli:
         view_help: Show purchase invoice evidence
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence
+        confirm_category_rate_inferred_message: 'This invoice''s IVA treatment was settled by the tax rate its lines charged, because the rule table could not place the operation -- usually because a party''s IVA territory is unestablished. The treatment recorded is the ordinary domestic one for that rate. Check it if this supply was not a domestic one.'
+        confirm_category_unsupported_relief_message: 'The document claims a relief from Spanish output IVA that rests entirely on where the counterparty is established, and nothing established it. The treatment is withheld rather than the document called wrong, so this invoice is on record with no IVA treatment and will not decompose into a declaration until the counterparty''s country or establishment is settled.'
+        confirm_category_contradicted_message: 'The regime this document states and the tax it charged cannot both be true, so no IVA treatment could be taken from either side and none was recorded. Re-read the document: one of the two was misread, or the document itself is wrong.'
+        confirm_category_unresolved_message: 'Nothing established an IVA treatment for this invoice: the document declared none and the operation''s own facts did not reach one. The invoice is on record and will not decompose into a declaration until a treatment is established.'
+        confirm_review_undetermined_establishment_message: 'Where a party to this invoice is established was left undecided by the document as read. IVA territory decides the treatment, and it is not assumed to be the mainland. The detail below names the party and what was missing.'
+        confirm_review_contradicted_regime_message: 'This document contradicts itself about how it is taxed. The detail below names what disagreed with what.'
       inventory:
         actividad_id_help: Economic activity identifier
         create_help: Create an inventory ledger for one activity and tax year
@@ -2148,11 +2157,11 @@ cli:
         state_help: 'Snapshot state filter: active, superseded, discarded, or all'
         view_help: Show one Modelo 100 borrador snapshot
       deudas:
-        app_help: cli.app.live.deudas.app_help
-        latest_help: cli.app.live.deudas.latest_help
-        list_help: cli.app.live.deudas.list_help
-        snapshot_id_help: cli.app.live.deudas.snapshot_id_help
-        view_help: cli.app.live.deudas.view_help
+        app_help: Read-only AEAT deudas snapshots
+        latest_help: Show the most recent deudas snapshot
+        list_help: List saved deudas snapshots
+        snapshot_id_help: Snapshot id (or unambiguous prefix)
+        view_help: Show one deudas snapshot and every outstanding liability it holds
       expediente_help: AEAT expediente identifier
       expedientes:
         app_help: Read-only AEAT expediente snapshots
@@ -4332,10 +4341,6 @@ cli:
       counterparty_country_help: Country where the counterparty is established (ISO
         3166-1 alpha-2, e.g. US, DE). Establishment only; use --counterparty-identification-state
         for VAT identification.
-      counterparty_eu_member_state_help: EU member state or Northern Ireland IVA prefix
-        of the counterparty (ISO 3166-1 alpha-2 lowercase, e.g. de or xi); required
-        with --iva-category intra_community_supply, prohibited with export_third_country_zero_rated
-        or export_assimilated_zero_rated
       counterparty_identification_state_help: Member State whose VAT number the counterparty
         trades under (Ley 37/1992 art. 25 exempts on this, not on where it is established)
       file_exclusive: --file cannot be combined with a transaction id or --classification.
@@ -4435,6 +4440,7 @@ cli:
         nothing_to_withdraw: No confirmed establishment was held for '{identifier}',
           so nothing was withdrawn and the store is already in the state you asked
           for.
+        evidence_contradicts_confirmation: '''{identifier}'' was confirmed as established in {confirmed}, but the evidence you supplied places the same party in {evidenced}. The ladder will settle no territory for this counterparty until one of the two is withdrawn.'
     doclink:
       actor_help: Operator label.
       help: Fetch a Drive document link and store its bytes as encrypted evidence
@@ -4532,7 +4538,6 @@ cli:
       classified_by: Classified by
       counterparty: Counterparty
       counterparty_country: Established in
-      counterparty_eu_member_state: EU counterparty
       counterparty_identification_state: VAT identified in
       created_event_id: Created bucket event
       currency: Currency

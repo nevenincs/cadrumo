@@ -1791,13 +1791,15 @@ def _agreed_counterparty_tax_id(*, supplied: str | None, extracted: str | None) 
 def _refuse_a_counterparty_that_is_the_filer(counterparty_tax_id: str) -> None:
     """Refuse an invoice recording the taxpayer as their own counterparty.
 
-    The reader identifies a counterparty as the first checksum-valid tax id in
-    the document, and the vision prompt asks for "the supplier's" identifier.
-    On a RECEIVED invoice that lands on the supplier. On an ISSUED one the
-    issuer IS the filer, so the same scan returns the filer's own identifier --
-    checksum-valid, so every downstream identity check passes it, and bound for
-    the Modelo 347 / 349 counterparty totals AEAT reconciles against what the
-    counterparty declared.
+    The reader no longer scans for the first checksum-valid tax id, and the
+    field contract now asks for both parties separately by role, so the
+    mechanism that first exposed this is gone. The exposure is not. On an ISSUED
+    invoice the issuer IS the filer, so the supplier slot legitimately holds the
+    filer's own identifier -- the document is right and the reading is right --
+    and any path taking that side as the counterparty records the taxpayer
+    against themselves. The value is checksum-valid, so every downstream
+    identity check passes it, and it is bound for the Modelo 347 / 349
+    counterparty totals AEAT reconciles against what the counterparty declared.
 
     Refusing is right rather than advisory: unlike an amount that is merely
     doubtful, a self-naming counterparty is wrong under every reading this
@@ -1849,6 +1851,59 @@ def _require_confirmed_field(value: Decimal | str | None, *, field: str) -> Deci
             ),
         )
     return value
+
+
+def _with_direction_contradiction(draft: InvoiceDraft, *, kind: InvoiceKind) -> InvoiceDraft:
+    """Return *draft* carrying a finding when the document contradicts *kind*.
+
+    The consuming half of :func:`derive_invoice_kind_from_filer_role`. The
+    reading stage asks which party's block prints the filer's own identifier and
+    stamps the answer as a SUGGESTION; the operator states the direction on the
+    confirm verb. Only here are both in hand, which is why the comparison lives
+    at this boundary rather than on the reading path.
+
+    Stamped as an ordinary :class:`DraftDiscrepancyFinding` rather than raised,
+    and that is the ruling rather than an implementation convenience. Every
+    discrepancy kind maps to a
+    :class:`~core.ConfirmationBlockReason`, so the disagreement becomes a
+    resolvable blocker the operator answers per-document with a stated reason --
+    which is the right shape for a conflict between two honest readings. A
+    refusal would leave an operator who is RIGHT, and a document whose layout
+    misleads the derivation, with no way through at all.
+
+    Silent when the document settled nothing. A derivation that reports
+    ``None`` did not disagree with the operator; it declined to answer, and
+    treating that as agreement or as conflict would both be inventions.
+
+    Args:
+        draft: The re-read draft, carrying the derivation's suggestion.
+        kind: The direction the operator stated on the verb.
+
+    Returns:
+        The draft unchanged when the document settled nothing or agrees, or a
+        copy carrying one additional
+        :attr:`~core.DraftDiscrepancyKind.DIRECTION_CONTRADICTED` finding.
+    """
+    suggested = draft.suggested_kind
+    if suggested is None or suggested is kind:
+        return draft
+    return draft.model_copy(
+        update={
+            "discrepancies": (
+                *draft.discrepancies,
+                DraftDiscrepancyFinding(
+                    kind=DraftDiscrepancyKind.DIRECTION_CONTRADICTED,
+                    field="suggested_kind",
+                    detail=(
+                        f"this document places the filer on the side that makes it {suggested.value}, but it "
+                        f"is being confirmed as {kind.value}. Direction decides which informativa the record "
+                        f"feeds and on which side, and AEAT reconciles the two counterparties' declarations "
+                        f"against each other"
+                    ),
+                ),
+            ),
+        },
+    )
 
 
 def _refuse_an_issued_document_the_filer_did_not_issue(
@@ -2067,8 +2122,13 @@ def confirm_invoice_draft_from_evidence(
 
     Args:
         bucket_id: Active ledger bucket the evidence belongs to.
-        kind: Invoice direction (``issued`` or ``received``) — extraction
-            cannot infer this; the operator must state it.
+        kind: Invoice direction (``issued`` or ``received``). The operator's
+            statement is the decision. The document is also asked -- the reading
+            stage derives which party's block prints the filer's own identifier
+            and stamps a suggestion -- and a document that settles a direction
+            contradicting this one raises a resolvable
+            :attr:`~core.DraftDiscrepancyKind.DIRECTION_CONTRADICTED` blocker
+            rather than being overridden or silently accepted.
         counterparty_country: ISO 3166-1 alpha-2 counterparty country code.
             Defaults to ``"ES"``; override for a non-Spanish counterparty.
         evidence_id: A ``purchase_invoice_evidence`` record id, or ``None``.
@@ -2166,6 +2226,11 @@ def confirm_invoice_draft_from_evidence(
         attachment_id=attachment_id,
         settings=resolved_settings,
     )
+    # Stamped BEFORE the gate, so a document whose layout contradicts the
+    # operator's stated direction becomes an ordinary resolvable blocker rather
+    # than a separate refusal path. The reading stage could not run this: it
+    # holds the document's suggestion and not the operator's answer.
+    draft = _with_direction_contradiction(draft, kind=kind)
     # The gate runs BEFORE any resolution work and before the writer is
     # reached: a draft whose findings are unanswered must not have produced a
     # partially-resolved identity, an attachment link, or a catalogue lookup.

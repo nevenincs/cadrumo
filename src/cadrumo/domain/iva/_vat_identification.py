@@ -26,7 +26,16 @@ the prefix vocabulary rather than a judgement made in this module: Spanish
 identifiers are checksum identifiers routed through the Spanish tax-id validator
 and ``ES`` is absent from :class:`~core.identity.NifIvaPrefix`. A Spanish
 identification is therefore established from the Spanish identifier authority or
-declared, never inferred from a prefix that is never printed.
+declared, never inferred here.
+
+**That absence is an implementation boundary, not a statement that the evidence
+does not exist.** This path recognises a prefix by matching the number's body
+against the structural pattern its own prefix claims, and a Spanish identifier is
+validated by the AEAT control-letter checksum instead -- so ``ES`` could not join
+the vocabulary as a pattern the way its siblings did. Whether it SHOULD join,
+through the checksum validator this codebase already ships, is an open scope
+question about the axis rather than a settled refusal, and the earlier wording
+here read as the latter.
 
 See Also:
     :class:`~domain.iva.IvaTerritorialScope`

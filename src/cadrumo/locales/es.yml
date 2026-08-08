@@ -2001,6 +2001,7 @@ cli:
           aparece impreso en el documento.
         withdraw_help: Retira un establecimiento confirmado, declarando que la respuesta
           anterior era incorrecta.
+        evidenced_scope_help: 'Territorio en el que un documento en su poder sitúa a esta parte. Indíquelo para preguntar qué responderá la escalera para ese documento, que es la única forma de ver una discrepancia con lo que usted confirmó antes de que una confirmación la rechace.'
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
         batch_directory_help: Directorio cuyos ficheros se ingresan. Combínalo con
@@ -2153,6 +2154,8 @@ cli:
           show_help: Muestre un borrador pendiente campo por campo, con sus hallazgos
             y bloqueos.
           unknown_reference: No hay ningun borrador pendiente para esa referencia.
+          advisory_help: 'Muestra solo los borradores que llevan este aviso no bloqueante. No impiden nada, por lo que de otro modo solo se descubren abriendo cada documento.'
+          advised_pending_message: 'Algunos documentos pendientes llevan avisos. No bloquean nada y se confirmarán tal como están, así que nada más volverá a plantearlos. Acota la cola con `--advisory` y lee uno con `review show`.'
         source_path_help: Ruta al PDF o imagen de la factura
         supplier_help: Nombre del proveedor
         taxable_base_help: Base imponible de la factura
@@ -2160,6 +2163,12 @@ cli:
         view_help: Muestra un justificante de factura de compra
         yes_help: Confirma la eliminación del justificante
         yes_required: Debes pasar --yes para eliminar un justificante
+        confirm_category_rate_inferred_message: 'El tratamiento de IVA de esta factura lo ha determinado el tipo impositivo que aplican sus líneas, porque la tabla de reglas no ha podido situar la operación, normalmente porque el territorio de IVA de una de las partes no está establecido. El tratamiento registrado es el interior ordinario para ese tipo. Compruébalo si esta entrega no era interior.'
+        confirm_category_unsupported_relief_message: 'El documento invoca una exención del IVA repercutido español que depende por completo de dónde está establecida la contraparte, y nada lo ha establecido. El tratamiento se retiene en lugar de dar el documento por erróneo, de modo que esta factura queda registrada sin tratamiento de IVA y no se desglosará en una declaración hasta que se resuelva el país o el establecimiento de la contraparte.'
+        confirm_category_contradicted_message: 'El régimen que declara este documento y el impuesto que aplica no pueden ser ciertos a la vez, así que no se ha podido tomar el tratamiento de IVA de ninguno de los dos lados y no se ha registrado ninguno. Vuelve a leer el documento: se ha leído mal uno de los dos, o el propio documento es incorrecto.'
+        confirm_category_unresolved_message: 'Nada ha establecido un tratamiento de IVA para esta factura: el documento no ha declarado ninguno y los hechos de la propia operación no han llegado a uno. La factura queda registrada y no se desglosará en una declaración hasta que se establezca un tratamiento.'
+        confirm_review_undetermined_establishment_message: 'El documento, tal como se ha leído, ha dejado sin decidir dónde está establecida una de las partes de esta factura. El territorio de IVA determina el tratamiento y no se da por supuesto que sea la península. El detalle siguiente nombra la parte y lo que faltaba.'
+        confirm_review_contradicted_regime_message: 'Este documento se contradice a sí mismo sobre cómo tributa. El detalle siguiente nombra qué discrepaba con qué.'
       inventory:
         actividad_id_help: Identificador de la actividad económica
         create_help: Crea un libro de existencias para una actividad y ejercicio
@@ -2324,11 +2333,11 @@ cli:
           o all'
         view_help: Mostrar un snapshot del borrador del modelo 100
       deudas:
-        app_help: cli.app.live.deudas.app_help
-        latest_help: cli.app.live.deudas.latest_help
-        list_help: cli.app.live.deudas.list_help
-        snapshot_id_help: cli.app.live.deudas.snapshot_id_help
-        view_help: cli.app.live.deudas.view_help
+        app_help: Snapshots de deudas AEAT de solo lectura
+        latest_help: Muestra el snapshot de deudas más reciente
+        list_help: Lista los snapshots de deudas guardados
+        snapshot_id_help: Id del snapshot (o prefijo inequívoco)
+        view_help: Muestra un snapshot de deudas y cada deuda pendiente que contiene
       expediente_help: Identificador de expediente AEAT
       expedientes:
         app_help: Snapshots de expedientes AEAT de solo lectura
@@ -4686,10 +4695,6 @@ cli:
       counterparty_country_help: País de establecimiento de la contraparte (ISO 3166-1
         alfa-2, p. ej. US, DE). Solo establecimiento; para la identificación a efectos
         de IVA use --counterparty-identification-state.
-      counterparty_eu_member_state_help: Estado miembro de la UE o prefijo IVA de
-        Irlanda del Norte de la contraparte (ISO 3166-1 alfa-2 minúsculas, p. ej.
-        de o xi); obligatorio con --iva-category intra_community_supply, prohibido
-        con export_third_country_zero_rated o export_assimilated_zero_rated
       counterparty_identification_state_help: Estado miembro cuyo NIF-IVA utiliza
         la contraparte (la Ley 37/1992 art. 25 exime por este dato, no por dónde esté
         establecida)
@@ -4795,6 +4800,7 @@ cli:
           concluyente planteará la pregunta.
         nothing_to_withdraw: No había ningún establecimiento confirmado para '{identifier}',
           por lo que no se ha retirado nada y el almacén ya está en el estado solicitado.
+        evidence_contradicts_confirmation: '''{identifier}'' se confirmó como establecido en {confirmed}, pero la evidencia que ha aportado sitúa a la misma parte en {evidenced}. La escalera no fijará ningún territorio para esta contraparte hasta que se retire uno de los dos.'
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia
@@ -4899,7 +4905,6 @@ cli:
       classified_by: Clasificado por
       counterparty: Contraparte
       counterparty_country: Establecido en
-      counterparty_eu_member_state: Contraparte UE
       counterparty_identification_state: Identificada a efectos de IVA en
       created_event_id: Evento bucket de creación
       currency: Moneda
