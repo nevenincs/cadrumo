@@ -2082,6 +2082,8 @@ cli:
           show_help: Jelenitsen meg egy fuggo piszkozatot mezonkent, eszrevetelekkel
             es akadalyokkal.
           unknown_reference: Nincs fuggo piszkozat ehhez az azonositohoz.
+          advisory_help: 'Csak azokat a piszkozatokat mutatja, amelyek ezt a nem blokkoló figyelmeztetést hordozzák. Semmit sem akadályoznak meg, ezért egyébként csak az egyes dokumentumok megnyitásával derülnek ki.'
+          advised_pending_message: 'Néhány függőben lévő dokumentum figyelmeztetéseket hordoz. Ezek semmit sem blokkolnak, és a jelenlegi állapotukban megerősítésre kerülnek, így semmi más nem veti fel őket újra. Szűkítsd a sort az `--advisory` kapcsolóval, és nyiss meg egyet a `review show` paranccsal.'
         source_path_help: A számla PDF- vagy képfájljának elérési útja.
         supplier_help: Szállító neve.
         taxable_base_help: Számla adóköteles alapja.
@@ -2089,6 +2091,12 @@ cli:
         view_help: Vásárlásiszámla-bizonyíték megjelenítése.
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót a bizonyíték törléséhez.
+        confirm_category_rate_inferred_message: 'Ennek a számlának az áfakezelését a tételein felszámított adókulcs döntötte el, mert a szabálytábla nem tudta elhelyezni az ügyletet -- rendszerint azért, mert az egyik fél áfaterülete nincs megállapítva. A rögzített kezelés az adott kulcshoz tartozó szokásos belföldi kezelés. Ellenőrizd, ha ez a teljesítés nem belföldi volt.'
+        confirm_category_unsupported_relief_message: 'A dokumentum olyan spanyol fizetendő áfa alóli mentességre hivatkozik, amely teljes egészében azon múlik, hol telepedett le a partner, és ezt semmi sem állapította meg. A kezelés visszatartásra kerül ahelyett, hogy a dokumentumot hibásnak mondanánk, így ez a számla áfakezelés nélkül kerül nyilvántartásba, és nem bontható be bevallásba, amíg a partner országa vagy letelepedése nem tisztázódik.'
+        confirm_category_contradicted_message: 'A dokumentumban megjelölt adózási mód és a felszámított adó nem lehet egyszerre igaz, ezért egyik oldalról sem volt átvehető áfakezelés, és nem került rögzítésre. Olvasd újra a dokumentumot: a kettő egyikét félreolvasták, vagy maga a dokumentum hibás.'
+        confirm_category_unresolved_message: 'Semmi sem állapított meg áfakezelést ehhez a számlához: a dokumentum nem jelölt meg egyet sem, és magának az ügyletnek a tényei sem vezettek egyre. A számla nyilvántartásba kerül, és nem bontható be bevallásba, amíg egy kezelés meg nem állapítható.'
+        confirm_review_undetermined_establishment_message: 'A dokumentum a beolvasott formájában eldöntetlenül hagyta, hogy a számla egyik fele hol telepedett le. Az áfaterület dönti el a kezelést, és nem feltételezzük, hogy a félsziget. Az alábbi részlet megnevezi a felet és azt, ami hiányzott.'
+        confirm_review_contradicted_regime_message: 'Ez a dokumentum ellentmond önmagának abban, hogyan adózik. Az alábbi részlet megnevezi, mi mivel volt ellentmondásban.'
       inventory:
         actividad_id_help: Gazdasági tevékenység azonosítója.
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.

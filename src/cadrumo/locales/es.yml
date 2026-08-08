@@ -2154,6 +2154,8 @@ cli:
           show_help: Muestre un borrador pendiente campo por campo, con sus hallazgos
             y bloqueos.
           unknown_reference: No hay ningun borrador pendiente para esa referencia.
+          advisory_help: 'Muestra solo los borradores que llevan este aviso no bloqueante. No impiden nada, por lo que de otro modo solo se descubren abriendo cada documento.'
+          advised_pending_message: 'Algunos documentos pendientes llevan avisos. No bloquean nada y se confirmarán tal como están, así que nada más volverá a plantearlos. Acota la cola con `--advisory` y lee uno con `review show`.'
         source_path_help: Ruta al PDF o imagen de la factura
         supplier_help: Nombre del proveedor
         taxable_base_help: Base imponible de la factura
@@ -2161,6 +2163,12 @@ cli:
         view_help: Muestra un justificante de factura de compra
         yes_help: Confirma la eliminación del justificante
         yes_required: Debes pasar --yes para eliminar un justificante
+        confirm_category_rate_inferred_message: 'El tratamiento de IVA de esta factura lo ha determinado el tipo impositivo que aplican sus líneas, porque la tabla de reglas no ha podido situar la operación, normalmente porque el territorio de IVA de una de las partes no está establecido. El tratamiento registrado es el interior ordinario para ese tipo. Compruébalo si esta entrega no era interior.'
+        confirm_category_unsupported_relief_message: 'El documento invoca una exención del IVA repercutido español que depende por completo de dónde está establecida la contraparte, y nada lo ha establecido. El tratamiento se retiene en lugar de dar el documento por erróneo, de modo que esta factura queda registrada sin tratamiento de IVA y no se desglosará en una declaración hasta que se resuelva el país o el establecimiento de la contraparte.'
+        confirm_category_contradicted_message: 'El régimen que declara este documento y el impuesto que aplica no pueden ser ciertos a la vez, así que no se ha podido tomar el tratamiento de IVA de ninguno de los dos lados y no se ha registrado ninguno. Vuelve a leer el documento: se ha leído mal uno de los dos, o el propio documento es incorrecto.'
+        confirm_category_unresolved_message: 'Nada ha establecido un tratamiento de IVA para esta factura: el documento no ha declarado ninguno y los hechos de la propia operación no han llegado a uno. La factura queda registrada y no se desglosará en una declaración hasta que se establezca un tratamiento.'
+        confirm_review_undetermined_establishment_message: 'El documento, tal como se ha leído, ha dejado sin decidir dónde está establecida una de las partes de esta factura. El territorio de IVA determina el tratamiento y no se da por supuesto que sea la península. El detalle siguiente nombra la parte y lo que faltaba.'
+        confirm_review_contradicted_regime_message: 'Este documento se contradice a sí mismo sobre cómo tributa. El detalle siguiente nombra qué discrepaba con qué.'
       inventory:
         actividad_id_help: Identificador de la actividad económica
         create_help: Crea un libro de existencias para una actividad y ejercicio

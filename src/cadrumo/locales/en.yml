@@ -1993,6 +1993,8 @@ cli:
           show_help: Show one pending draft field by field, with its findings and
             blockers.
           unknown_reference: No pending draft for that reference.
+          advisory_help: 'Show only drafts carrying this non-blocking advisory. These stop nothing, so they are otherwise met only by opening each document.'
+          advised_pending_message: 'Some pending documents carry advisories. These block nothing and will confirm as they are, so nothing else will raise them again. Narrow the queue with `--advisory` and read one with `review show`.'
         source_path_help: Path to the invoice PDF or image
         supplier_help: Supplier name
         taxable_base_help: Invoice taxable base
@@ -2000,6 +2002,12 @@ cli:
         view_help: Show purchase invoice evidence
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence
+        confirm_category_rate_inferred_message: 'This invoice''s IVA treatment was settled by the tax rate its lines charged, because the rule table could not place the operation -- usually because a party''s IVA territory is unestablished. The treatment recorded is the ordinary domestic one for that rate. Check it if this supply was not a domestic one.'
+        confirm_category_unsupported_relief_message: 'The document claims a relief from Spanish output IVA that rests entirely on where the counterparty is established, and nothing established it. The treatment is withheld rather than the document called wrong, so this invoice is on record with no IVA treatment and will not decompose into a declaration until the counterparty''s country or establishment is settled.'
+        confirm_category_contradicted_message: 'The regime this document states and the tax it charged cannot both be true, so no IVA treatment could be taken from either side and none was recorded. Re-read the document: one of the two was misread, or the document itself is wrong.'
+        confirm_category_unresolved_message: 'Nothing established an IVA treatment for this invoice: the document declared none and the operation''s own facts did not reach one. The invoice is on record and will not decompose into a declaration until a treatment is established.'
+        confirm_review_undetermined_establishment_message: 'Where a party to this invoice is established was left undecided by the document as read. IVA territory decides the treatment, and it is not assumed to be the mainland. The detail below names the party and what was missing.'
+        confirm_review_contradicted_regime_message: 'This document contradicts itself about how it is taxed. The detail below names what disagreed with what.'
       inventory:
         actividad_id_help: Economic activity identifier
         create_help: Create an inventory ledger for one activity and tax year
