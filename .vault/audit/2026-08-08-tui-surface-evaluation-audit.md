@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:f2440840378dafad49f98de20855ae94664882eecc52751e247ce41cd07a8ffd'
+body_hash: 'sha256:771cb0350c4e60c276c72d48a4225bc3983e3f8531cad1b7fa536f10f590d403'
 related: []
 ---
 
@@ -34,10 +34,14 @@ window. Third, some axes were not reached: conditional-page gating on the paged
 flow, submit-gating visibility on an unanswered required page, a deep walk of
 the real multi-page wizard content, and vertical behaviour at heights below
 twenty-four rows. Absence of a finding on those is absence of evidence. Note
-also that the shared question and review screens were driven through the
-retired paged surface rather than through the live modelo wizards; the widget
-tree is identical, so the findings transfer, but that is an inference and no
-harness entry exists for the live wizard entrypoint.
+The shared question and review screens were initially driven through the
+retired paged surface, which made every finding about them an inference. That
+inference has since been discharged: a harness surface for the live
+modelo-work wizard was built, composing the flow through the same
+`select_flow_frontend` sequence the wizard entrypoint uses over a real work
+unit, and driven at the floor width under both appearances. The widget tree is
+identical and the geometry results reproduce, so the findings do transfer. They
+are now measured rather than inferred.
 
 Every surface was driven at eighty by twenty-four, one hundred by thirty, one
 hundred and twenty by forty and two hundred by fifty, under both appearances.
