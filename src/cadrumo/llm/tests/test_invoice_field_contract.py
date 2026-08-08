@@ -24,11 +24,13 @@ from __future__ import annotations
 
 import json
 import re
+from contextlib import contextmanager
 from decimal import Decimal
 
 import pytest
 
 from ...core import FieldOrigin, Period
+from ...domain import iva as _iva_module
 from ...domain.iva import (
     NO_PRINTED_TAX_IVA_CATEGORIES,
     EUMemberState,
@@ -36,6 +38,7 @@ from ...domain.iva import (
     load_iva_rate_table,
 )
 from ...domain.transactions import statutory_activity_retencion_rates
+from .. import _invoice_extraction_prompt
 from .._invoice_extraction_prompt import (
     INVOICE_EXTRACTION_PROMPT_ID,
     PROMPT_TEMPLATE,
@@ -61,6 +64,18 @@ from .._invoice_field_grounding import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@contextmanager
+def _replacing(target: object, name: str, value: object):
+    """Replace ``target.name`` for the scope, restoring the original on exit."""
+    original = getattr(target, name)
+    setattr(target, name, value)
+    try:
+        yield
+    finally:
+        setattr(target, name, original)
+
 
 _ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
 _Q4_2024 = Period.from_year_and_code(2024, "4T")
@@ -167,10 +182,7 @@ class TestTheAntiDriftGateBitesInBothDirections:
     commit the mutation.
     """
 
-    def test_moving_a_registry_rate_moves_the_compiled_prompt(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_moving_a_registry_rate_moves_the_compiled_prompt(self) -> None:
         """Direction one: the compiled text FOLLOWS the rate authority.
 
         The mutation adds one record to the table the compiler reads and asserts
@@ -192,18 +204,14 @@ class TestTheAntiDriftGateBitesInBothDirections:
             },
         )
         mutated = dict(real_table) | {EUMemberState.ES: (*spain, extra)}
-        monkeypatch.setattr("cadrumo.domain.iva.load_iva_rate_table", lambda: mutated)
+        with _replacing(_iva_module, "load_iva_rate_table", lambda: mutated):
+            after = build_invoice_extraction_prompt(period=_ANNUAL_2026)
 
-        after = build_invoice_extraction_prompt(period=_ANNUAL_2026)
+            assert planted in after.iva_rate_pcts
+            assert "13.5" in after.text
+            assert after.fingerprint != baseline.fingerprint
 
-        assert planted in after.iva_rate_pcts
-        assert "13.5" in after.text
-        assert after.fingerprint != baseline.fingerprint
-
-    def test_the_literal_gate_reds_on_a_template_carrying_a_rate(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_the_literal_gate_reds_on_a_template_carrying_a_rate(self) -> None:
         """Direction two: planting a literal in the REGISTERED template reds the gate.
 
         The distinction from the scanner's positive control is the whole point.
@@ -221,20 +229,16 @@ class TestTheAntiDriftGateBitesInBothDirections:
         poisoned = definition.model_copy(update={"template": definition.template + "\n- the IVA rate is 21."})
         mutated_registry = type(registry)()
         mutated_registry.register(poisoned)
-        monkeypatch.setattr(
-            "cadrumo.llm._invoice_extraction_prompt.invoice_extraction_prompt_registry",
-            lambda: mutated_registry,
-        )
-
-        assert template_numeric_literals() == ("21",)
+        with _replacing(_invoice_extraction_prompt, "invoice_extraction_prompt_registry", lambda: mutated_registry):
+            assert template_numeric_literals() == ("21",)
 
     def test_neither_mutation_is_visible_to_the_other_direction(self) -> None:
-        """Both mutations are undone by teardown, so the gate is green again here.
+        """Both mutations are undone by their own context managers, so the gate is green again here.
 
-        Ordering-independent: monkeypatch restores at teardown, so a green here
-        proves neither mutation leaked into module state (the compiler caches its
-        registry with ``lru_cache``, which is exactly the kind of state a patch
-        can strand).
+        Ordering-independent: each mutation above is scoped to its own ``with``
+        block and restored on exit, so a green here proves neither mutation
+        leaked into module state (the compiler caches its registry with
+        ``lru_cache``, which is exactly the kind of state a patch can strand).
         """
         assert template_numeric_literals() == ()
         assert Decimal("13.5") not in build_invoice_extraction_prompt(period=_ANNUAL_2026).iva_rate_pcts

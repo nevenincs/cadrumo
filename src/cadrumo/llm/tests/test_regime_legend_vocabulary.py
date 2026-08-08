@@ -37,12 +37,14 @@ import html
 import json
 import pathlib
 import re
+from contextlib import contextmanager
 from typing import Final
 
 import pytest
 
 from ...core import FieldOrigin
 from ...domain.iva import REGIME_LEGENDS, IvaCategory, RegimeLegend, regime_legend_phrases
+from .. import _invoice_extraction_prompt
 from .._invoice_extraction_prompt import (
     INVOICE_EXTRACTION_PROMPT_ID,
     build_invoice_extraction_prompt,
@@ -60,6 +62,18 @@ from .._invoice_field_grounding import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@contextmanager
+def _replacing(target: object, name: str, value: object):
+    """Replace ``target.name`` for the scope, restoring the original on exit."""
+    original = getattr(target, name)
+    setattr(target, name, value)
+    try:
+        yield
+    finally:
+        setattr(target, name, original)
+
 
 #: The bundled consolidated text of the invoicing regulation's art. 6.
 _REGULATION: Final[pathlib.Path] = (
@@ -166,10 +180,7 @@ class TestTheProseScanCatchesARestatedVocabulary:
         assert template_numeric_literals(planted) == ()
         assert template_unsourced_legend_phrases(planted) == (regime_legend_phrases()[0],)
 
-    def test_the_scan_reds_on_a_phrase_planted_in_the_registered_template(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_the_scan_reds_on_a_phrase_planted_in_the_registered_template(self) -> None:
         """Aimed at the artefact that ships, not at a module constant.
 
         This is the distinction the numeric gate's own control missed: proving a
@@ -184,12 +195,8 @@ class TestTheProseScanCatchesARestatedVocabulary:
         poisoned = definition.model_copy(update={"template": f"{definition.template}\n- {phrase}"})
         mutated = type(registry)()
         mutated.register(poisoned)
-        monkeypatch.setattr(
-            "cadrumo.llm._invoice_extraction_prompt.invoice_extraction_prompt_registry",
-            lambda: mutated,
-        )
-
-        assert template_unsourced_legend_phrases() == (phrase,)
+        with _replacing(_invoice_extraction_prompt, "invoice_extraction_prompt_registry", lambda: mutated):
+            assert template_unsourced_legend_phrases() == (phrase,)
 
     def test_the_scan_is_case_folded_rather_than_variant_listed(self) -> None:
         """A document shouting the mention is the same mention.

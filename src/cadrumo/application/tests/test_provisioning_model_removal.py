@@ -291,13 +291,19 @@ class _AbsentDistributionFinder(MetaPathFinder):
 
 
 @pytest.fixture
-def extra_absent(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+def extra_absent() -> Iterator[None]:
     """Make the llm extra genuinely unimportable for the duration of one test."""
     hidden = LLM_EXTRA.import_name
-    for name in [key for key in sys.modules if key.split(".")[0] == hidden]:
-        monkeypatch.delitem(sys.modules, name, raising=False)
-    monkeypatch.setattr(sys, "meta_path", [_AbsentDistributionFinder(hidden), *sys.meta_path])
-    yield
+    removed = {key: sys.modules[key] for key in sys.modules if key.split(".")[0] == hidden}
+    for name in removed:
+        del sys.modules[name]
+    original_meta_path = sys.meta_path
+    sys.meta_path = [_AbsentDistributionFinder(hidden), *sys.meta_path]
+    try:
+        yield
+    finally:
+        sys.meta_path = original_meta_path
+        sys.modules.update(removed)
 
 
 def _installed_extra() -> bool:

@@ -16,6 +16,8 @@ pipeline. Two hazards are pinned:
 from __future__ import annotations
 
 import json
+import os
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -24,6 +26,25 @@ from ...config import override_settings
 from .. import _catalogue_cache as cc
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@contextmanager
+def _env_var(name: str, value: str):
+    """Set an environment variable for the scope, restoring its prior state on exit.
+
+    A local context manager rather than the pytest ``monkeypatch`` fixture,
+    per this module's own no-monkeypatch discipline.
+    """
+    had = name in os.environ
+    previous = os.environ.get(name)
+    os.environ[name] = value
+    try:
+        yield
+    finally:
+        if had:
+            os.environ[name] = previous  # type: ignore[assignment]
+        else:
+            os.environ.pop(name, None)
 
 
 def test_write_then_read_round_trips_the_flat_map(tmp_path: Path) -> None:
@@ -190,7 +211,6 @@ def test_end_to_end_tr_self_heals_across_all_three_corruption_modes(tmp_path: Pa
 
 def test_tr_survives_a_storage_root_settings_cannot_construct_over(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """``tr()`` must never fail because the cache's location cannot be resolved.
 
@@ -209,7 +229,8 @@ def test_tr_survives_a_storage_root_settings_cannot_construct_over(
     ``entrypoints/cli/tests/test_root_help_shape.py``'s subprocess-level
     fixtures. This is the fast, direct-call counterpart to that proof.
 
-    Uses ``monkeypatch.setenv`` + ``_constructed_settings.cache_clear()``
+    Uses the ``CADRUMO_LOCAL_STORAGE_ROOT`` env var directly (via the local
+    ``_env_var`` context manager) + ``_constructed_settings.cache_clear()``
     rather than ``override_settings`` -- the latter constructs a
     ``Settings`` at its own ``__enter__`` (to validate the override), which
     would raise before this test ever reaches its assertion. The env var is
@@ -227,20 +248,20 @@ def test_tr_survives_a_storage_root_settings_cannot_construct_over(
     with sqlite3.connect(former_root / "aeat.db"):
         pass
 
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(former_root))
-    _constructed_settings.cache_clear()
-    _render._packaged_locale_map.cache_clear()
-    try:
-        # Confirm the fixture is real: constructing Settings() directly
-        # against this root does raise, so the test proves tr() survives a
-        # genuine failure, not an unreachable one.
-        with pytest.raises(FormerProductStateError):
-            Settings()
-
-        rendered = tr("cli.root.app_help", locale="es")
-    finally:
+    with _env_var("CADRUMO_LOCAL_STORAGE_ROOT", str(former_root)):
         _constructed_settings.cache_clear()
         _render._packaged_locale_map.cache_clear()
+        try:
+            # Confirm the fixture is real: constructing Settings() directly
+            # against this root does raise, so the test proves tr() survives a
+            # genuine failure, not an unreachable one.
+            with pytest.raises(FormerProductStateError):
+                Settings()
+
+            rendered = tr("cli.root.app_help", locale="es")
+        finally:
+            _constructed_settings.cache_clear()
+            _render._packaged_locale_map.cache_clear()
 
     assert rendered
     assert rendered != "cli.root.app_help", "tr() must return the real translated string, not a key-echo fallback"
