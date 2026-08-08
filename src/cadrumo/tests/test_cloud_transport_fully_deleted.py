@@ -406,7 +406,7 @@ def _pinned_authority_values() -> InvoiceExtractionAuthorityValues:
 
 def _text_extractor_transport(provider: LLMProvider | None = None) -> str:
     from ..core.config import LLMProvider
-    from ..llm._evidence_draft_text import TextInvoiceFieldExtractor
+    from ..llm import TextInvoiceFieldExtractor
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
     model = "qwen3:1.7b" if resolved is LLMProvider.LOCAL else "gpt-4.1"
@@ -420,7 +420,7 @@ def _text_extractor_transport(provider: LLMProvider | None = None) -> str:
 
 def _vision_transcriber_transport(provider: LLMProvider | None = None) -> str:
     from ..core.config import LLMProvider
-    from ..llm._evidence_draft_vision import LocalVisionDocumentTranscriber
+    from ..llm import LocalVisionDocumentTranscriber
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
     model = "qwen2.5vl:3b" if resolved is LLMProvider.LOCAL else "claude-haiku-4-5-20251001"
@@ -429,7 +429,7 @@ def _vision_transcriber_transport(provider: LLMProvider | None = None) -> str:
 
 def _column_role_mapper_transport(provider: LLMProvider | None = None) -> str:
     from ..core.config import LLMProvider
-    from ..llm._column_role_mapping import SemanticColumnRoleMapper
+    from ..llm import SemanticColumnRoleMapper
 
     resolved = provider if provider is not None else LLMProvider.LOCAL
     model = "qwen3:1.7b" if resolved is LLMProvider.LOCAL else "gpt-4.1"
