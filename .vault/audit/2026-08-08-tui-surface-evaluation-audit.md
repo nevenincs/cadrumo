@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:53d8f6dbc87a2ce33dba06b797c875b3e6da5ac85ab39d2e92dbdfb7ca89bbbf'
+body_hash: 'sha256:82c9c74f2b1393cd25c27c4ee308ce2bd9a11434cf00dc7dcb15b5ca358cf3ca'
 related: []
 ---
 
@@ -24,12 +24,17 @@ the focus chain, the active key bindings, the flow engine's own state, and
 geometry advisories. Findings were verified against source before acceptance;
 where a reviewer's conclusion and the code disagreed, the code won.
 
-Two limits on this audit, stated so the coverage is not overread. First, no
+Three limits on this audit, stated so the coverage is not overread. First, no
 live AEAT session was exercised: every reading is against real local storage,
 real encryption and the real application doors, but offline. Second, the
-harness itself proved unfaithful in two of its six surface builders midway
-through (see the harness-fidelity finding), so findings read off those two
-surfaces before their repair were discarded rather than carried.
+harness itself proved unfaithful in two of its six surface builders (see the
+harness-fidelity finding), and although the findings initially blamed on that
+turned out to be sound, the instrument was not trustworthy for part of the
+window. Third, several axes were not reached: conditional-page gating on the
+paged flow, submit-gating visibility on an unanswered required page, and
+styled-frame legibility of focus states were all left undriven, and the
+rendering axis did not report at all. Absence of a finding on those axes is
+absence of evidence.
 
 ## Findings
 
@@ -70,6 +75,70 @@ gate's reach, which is the same gate-hole shape as the profile manager sitting
 outside the appearance gates. Remediation beyond the fix: extend the
 never-paint-a-secret gate to every surface that can collect one, rather than
 naming surfaces individually.
+
+### restart-wiped-the-flow-unconfirmed | high | one mis-struck chord destroyed every answer, and a test called it the contract
+
+`ctrl+n` on the question and review screens called the engine's restart
+transition directly, with no confirmation of any kind: every committed answer
+was wiped and the cursor returned to the first page, with no undo. The engine's
+own docstring states that restart wipes the whole state and that "the
+confirmation is a frontend responsibility" — a responsibility the frontend
+never discharged. On a long flow this is dozens of pages of operator input
+destroyed by a single chord adjacent to other bound chords. The surface is
+live: the paged flow application is reached by the modelo amend and modelo work
+wizards, so this was reachable by a real operator mid-wizard.
+
+The aggravating detail is the test. `test_ctrl_n_restarts_the_flow_from_the_first_page`
+asserted precisely this behaviour, so the defect was encoded as the contract
+and every run confirmed it — the failure mode the quality rules name as worse
+than no test at all. Fixed during this campaign: a modal confirmation opening
+focused on Cancel, escape and cancel declining, only an explicit accept
+carrying out the wipe, with the old test rewritten to assert state survives
+while the dialog is open and a cancel-preserves-state test added alongside.
+Single-page reset was deliberately left unguarded — its blast radius is one
+answer the operator can re-enter in seconds, and guarding it would train the
+reflex that makes the real confirmation worthless.
+
+### manager-tables-are-anonymous-tab-stops | medium | twenty-five focus stops nothing can tell apart
+
+The profile manager renders one table per profile schema section — twenty-five
+of them — and each is a genuine, operable tab stop with a row cursor and an
+edit action, so the cycle is not broken. What is missing is identity: no stop
+could be named. Nothing — not the harness, not an accessibility tool, not a
+screen reader — could report which of the twenty-five held focus without
+cross-referencing scroll position. This is an observability and accessibility
+gap rather than a navigation break. Fixed by giving each table a stable
+section-derived identifier. Unconfirmed and left open: whether the focused
+table's cursor row is legible enough against the unfocused state in a real
+styled frame, which was reasoned from framework defaults rather than seen.
+
+### hungarian-carried-an-english-stem | medium | "census" appeared inside Hungarian compounds on a live surface
+
+Three manager action strings glued the raw English word "census" into Hungarian
+compounds — rendering as "Kitöltés az AEAT **census**adataiból" — a
+mixed-language screen on a live operator surface. Fixed using the Hungarian
+equivalent this catalogue already uses around twenty times for the same
+concept, so the correction follows established usage rather than inventing
+vocabulary. The other five action labels were clean in Hungarian and all six
+clean in Catalan.
+
+### credential-recovery-has-no-terminal-surface | medium | a TUI-only operator cannot manage recovery codes at all
+
+Recovery code creation, rotation and verification, and the forgotten-passphrase
+recovery path, all exist in the application layer with working command-line
+verbs, and none has any full-screen surface. The asymmetry is total in one
+direction: a headless operator can do everything, and an operator working in
+the terminal application can do nothing about a lost or rotated recovery code
+without dropping to a shell. Passphrase change previously shared this gap and
+was closed during this campaign. Recovery deliberately was not, and the reason
+is sound: enrolment requires displaying a twenty-four word mnemonic once and
+demanding a full retype with echo suppressed, and the existing form primitive
+has no show-once semantics and no way to stop a displayed value round-tripping
+back into a collected field. Building it quickly would have risked the one
+thing that door exists to protect. Named under Recommendations as an ADR
+question, because the governing custody decision requires a one-shot display on
+"the terminal device" and no decision rules on whether a rendered modal
+satisfies that.
 
 ### m036-sequence-unenforced | high | a baja before an alta is accepted and persisted
 
@@ -302,6 +371,20 @@ collect a secret**, expressed as a property over collecting surfaces rather
 than a list naming the registration screen. Ties to the painted-secrets
 finding: the defect survived two weeks because the gate existed and its reach
 was enumerated by hand.
+
+**A follow-on ADR must decide whether secret-mnemonic recovery enrolment
+belongs on a full-screen surface at all.** The governing custody decision
+requires the candidate words to be displayed once on the terminal device and
+fully retyped with echo suppressed; no decision rules on whether a rendered
+modal satisfies "the terminal device", nor on what primitive can hold a
+show-once value that must never round-trip back into a collected field. Ties to
+the recovery finding. Until that is settled, recovery stays command-line only
+and the terminal application should say so rather than appear to omit it.
+
+**Audit every destructive transition on every surface for a confirmation**, not
+only the one found. Restart was unguarded and its test asserted the unguarded
+behaviour; the same pair of failures can exist wherever a chord reaches an
+irreversible engine transition. Ties to the restart finding.
 
 **Enrol the profile manager in the visual-verification gates.** Ties to the
 outside-the-gates finding, and it is the only recommendation here that would
