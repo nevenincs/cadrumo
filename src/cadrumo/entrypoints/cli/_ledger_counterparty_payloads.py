@@ -123,6 +123,20 @@ class CounterpartyShowResult(OutputSchema):
     remedies are opposite, one asking for a first answer and the other asking
     which of two existing claims to withdraw.
 
+    **Both confirmed facts are reported, because both are settable.** The verb
+    emitted the territorial side alone while ``--identification-state`` was
+    already accepted, so an operator could write a fact and never read it back.
+    A write-only value at the operator boundary is worse than an absent one: it
+    cannot be reviewed, corrected with confidence, or told apart from a value
+    nobody ever supplied.
+
+    ``confirmed`` stays the TERRITORIAL answer rather than becoming a summary of
+    both, because it is what the establishment rung fires on and what callers
+    branch on. A record carrying only an identification therefore reports
+    ``confirmed = false`` beside a populated ``identification_state``, which is
+    the honest shape: the ladder settles nothing and the operator has still told
+    us something.
+
     Attributes:
         tax_identifier: Whom the question was asked about, as supplied.
         confirmed: Whether the rung will answer. ``False`` is the ordinary state
@@ -151,6 +165,8 @@ class CounterpartyShowResult(OutputSchema):
     confirmed: bool
     territorial_scope: IvaTerritorialScope | None = None
     source: ClassifierInputSource | None = None
+    identification_state: EUMemberState | None = None
+    identification_source: ClassifierInputSource | None = None
     evidenced_scope: IvaTerritorialScope | None = None
     contradicted: bool = False
     confirmed_scope: IvaTerritorialScope | None = None

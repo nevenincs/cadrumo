@@ -393,6 +393,7 @@ def counterparty_show(
         evidenced_scope=evidenced_scope,
     )
     fact = resolution.fact
+    identification = resolution.identification
     contradiction = resolution.contradiction
     notices: list[Notice] = []
     if contradiction is not None:
@@ -448,6 +449,13 @@ def counterparty_show(
             confirmed=fact is not None,
             territorial_scope=fact.value if fact is not None else None,
             source=fact.source if fact is not None else None,
+            # Read from the resolution rather than from the stored record, so
+            # what an operator is shown and what a later document consumes
+            # cannot drift: the resolver withholds a fact the evidence
+            # contradicts, and a payload read straight from the repository would
+            # show a value no document will actually use.
+            identification_state=identification.value if identification is not None else None,
+            identification_source=identification.source if identification is not None else None,
             evidenced_scope=evidenced_scope,
             contradicted=contradiction is not None,
             # Carried only here and deliberately NOT in `territorial_scope`:

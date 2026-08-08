@@ -211,3 +211,76 @@ def test_an_unknown_territory_is_refused_with_the_accepted_set(tmp_path: Path) -
 
     assert result.exit_code != 0
     assert "es_canarias" in result.output, result.output
+
+
+def test_the_identification_an_operator_confirmed_is_readable(tmp_path: Path) -> None:
+    """A settable fact must be readable, or it cannot be reviewed or corrected.
+
+    ``--identification-state`` was accepted by confirm while show emitted the
+    territorial side alone, so the value could be written and never read back.
+    A write-only fact at the operator boundary is worse than an absent one: it
+    cannot be told apart from a value nobody supplied.
+    """
+    with _open_ledger_ux_session(tmp_path):
+        recorded = _invoke(
+            [
+                "app",
+                "ledger",
+                "counterparty",
+                "confirm",
+                _COUNTERPARTY_CIF,
+                "--scope",
+                _CONFIRMED,
+                "--identification-state",
+                "de",
+            ],
+        )
+        assert recorded.exit_code == 0, recorded.output
+        shown = _show(_COUNTERPARTY_CIF)
+
+    assert shown["identification_state"] == "de"
+    assert shown["identification_source"] is not None
+
+
+def test_an_unconfirmed_identification_reads_as_absent_not_as_a_default(tmp_path: Path) -> None:
+    """The control. Without it the field could be reporting a constant.
+
+    Confirming only a territory must leave the identification empty rather than
+    inventing one, which is the same refusal every rung on this axis makes: an
+    unstated fact is absent, never a default.
+    """
+    with _open_ledger_ux_session(tmp_path):
+        _confirm_canarias()
+        shown = _show(_COUNTERPARTY_CIF)
+
+    assert shown["identification_state"] is None
+    assert shown["territorial_scope"] == _CONFIRMED
+
+
+def test_an_identification_cannot_be_confirmed_without_a_territory(tmp_path: Path) -> None:
+    """Measured, and recorded because it is a limit rather than a design.
+
+    ``--scope`` is required while ``--identification-state`` is optional, so an
+    operator who knows which State VAT-identifies a counterparty and NOT where it
+    is established cannot record the half they know. That is a real asymmetry on
+    an axis the fifth amendment split precisely because the two facts are
+    independent, and it is asserted here so the constraint is visible rather than
+    discovered by an operator.
+
+    Read-back is what this row delivers; making the territory optional is a
+    behaviour change and belongs in its own row.
+    """
+    with _open_ledger_ux_session(tmp_path):
+        refused = _invoke(
+            [
+                "app",
+                "ledger",
+                "counterparty",
+                "confirm",
+                _COUNTERPARTY_CIF,
+                "--identification-state",
+                "fr",
+            ],
+        )
+
+    assert refused.exit_code != 0
