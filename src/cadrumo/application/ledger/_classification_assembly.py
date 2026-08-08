@@ -1040,10 +1040,11 @@ def _unsupported_relief_claim(
     **A country our own vocabulary does not carry is exempted, and that
     exemption is the difference between a guard and a trap.** The scope resolver
     answers from a closed vocabulary, so a well-formed code naming a real
-    jurisdiction it does not list resolves to nothing -- measured, ``TH`` is
-    exactly this -- and the establishment is then a gap in OUR data rather than
-    in the document. Refusing there would reject a legitimate Thai export
-    because of a row we have not written, which is the false-positive direction
+    jurisdiction it does not list resolves to nothing, and such jurisdictions
+    exist at any moment because the vocabulary is a bounded subset that grows.
+    The establishment is then a gap in OUR data rather than in the document.
+    Refusing there would reject a legitimate export because of a row we have not
+    written, which is the false-positive direction
     that makes an operator stop reading refusals. Only an absent, malformed or
     ISO-unassigned code reaches the refusal, and each of those genuinely
     established nothing about where the party is.

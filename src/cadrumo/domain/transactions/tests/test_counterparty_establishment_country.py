@@ -123,9 +123,12 @@ def test_the_four_ways_a_row_can_fail_to_name_a_third_country_stay_distinct(
     """Every one of these used to be the same value: ``None``.
 
     ``XX`` is a reserved ISO pair that denotes nothing by construction, so it is
-    the operator's typo. ``TH`` is a REAL third country the bundled vocabulary
-    does not carry, so it is this codebase's catalogue gap -- and it is the case
-    that stops "does not resolve" from being read as "not a third country".
+    the operator's typo. The derived specimen is a REAL third country the bundled
+    vocabulary does not carry, so it is this codebase's catalogue gap -- and it
+    is the case that stops "does not resolve" from being read as "not a third
+    country". Derived rather than named, because which country is outside the
+    vocabulary changes as rows are written and the property is what is under
+    test.
     ``None`` is an unrecorded fact. Only ``US`` may license export treatment.
     """
     transaction = _transaction(counterparty_country=country)
@@ -139,9 +142,9 @@ def test_the_four_ways_a_row_can_fail_to_name_a_third_country_stay_distinct(
 def test_a_code_that_is_not_a_well_formed_alpha_2_pair_is_refused(malformed: str) -> None:
     """Shape is refused at construction; MEMBERSHIP deliberately is not.
 
-    ``TH`` above proves why: a membership check here would make a genuine third
-    country unrecordable the moment the bundled vocabulary lagged reality, which
-    trades a silent wrong answer for a silent missing one.
+    The uncatalogued case above proves why: a membership check here would make a
+    genuine third country unrecordable the moment the bundled vocabulary lagged
+    reality, which trades a silent wrong answer for a silent missing one.
     """
     with pytest.raises(ValidationError):
         _transaction(counterparty_country=malformed)
