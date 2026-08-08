@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:25b913e4650cfb711416ccafef1972f60042bd0c5d2e9baaa524e92ef31308fd'
+body_hash: 'sha256:4ef8fc57b6de5873b84997e0690956a024253d8120e50d681f4095e359de67e1'
 step_id: 'S232'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -29,7 +29,9 @@ related:
 
 **The recommendation is to consume the geometry at extraction time and preserve none of it.** That was not one of the shapes the row proposed, and it is the measurement that produced it rather than a preference.
 
-**The scope is much smaller than the row's framing.** A structured record answers attribution by its ORIGIN: `EXACT_STRUCTURED` is a member of the establishing-origins set, so a document whose elements name its parties is never stamped and co-location is never consulted for it. Only prose is in scope. Within prose only one of the two transports can carry coordinates at all, because the vision path returns a model's text and has no geometry to give. Of 302 corpus documents, 88 are XML and out of scope entirely, 121 are images that can never be reached by any amount of geometry work, and 78 are PDFs — of which 69 carry a text layer and 9 are scan-only and therefore route to vision. So the largest single population in the corpus is permanently outside this remedy, and that should be read before any size.
+**The scope is much smaller than the row's framing.** Co-location is never consulted for a structured record, and the reason is structural rather than the one first reported here. The draft path RETURNS on a structured shape before grounding is reached, at `src/cadrumo/application/ledger/_evidence_draft.py:836`, and the structured builder `_extract_invoice_fields_from_structured_record` calls neither `ground_draft_against_transcription`, nor `resolve_party_attribution_by_colocation`, nor `stamp_unverified_party_attribution` — measured on the source, not read off the prose. There is also nothing to co-locate against, because the four structured shapes are read exactly and never transcribed. A second, independent guard would clear the stamp if such an envelope arrived by another route: `ATTRIBUTION_ESTABLISHING_ORIGINS` at `src/cadrumo/application/ledger/_party_attribution.py:127`, exported on the package facade and consumed once at line 235, carries `EXACT_STRUCTURED`.
+
+**The first version of this record cited only that second guard, and a reviewer could not reconcile it.** That was a real imprecision: the set governs whether a value is STAMPED, which is a different question from whether co-location is CONSULTED. The scope arithmetic is unchanged — the 88 XML documents stay out of scope — but it now rests on the mechanism that actually produces it rather than on the one that would only matter if the first had failed. Only prose is in scope. Within prose only one of the two transports can carry coordinates at all, because the vision path returns a model's text and has no geometry to give. Of 302 corpus documents, 88 are XML and out of scope entirely, 121 are images that can never be reached by any amount of geometry work, and 78 are PDFs — of which 69 carry a text layer and 9 are scan-only and therefore route to vision. So the largest single population in the corpus is permanently outside this remedy, and that should be read before any size.
 
 **The coordinates exist and they separate the parties.** Measured on a real two-column invoice rather than inferred from the API: pdfplumber reports `EMISOR` at x0=40 and `DESTINATARIO` at x0=320 on a 595-point page, on the same baseline. Sixteen corpus PDFs carry a detectable two-column header, and the gap between the columns is 0.421 of the page width in every one of them.
 
