@@ -80,7 +80,15 @@ async def _apply(pilot: Pilot, session: Session) -> None:
                 for char in gesture.text:
                     await pilot.press(char)
             case Fill():
-                pilot.app.query_one(gesture.selector).value = gesture.value
+                # Scoped to the TOP screen, not ``pilot.app``: a modal (the
+                # field-edit dialog, a confirm prompt) is a pushed
+                # ``Screen``, and ``App.query_one`` does not reach into it —
+                # ``fill`` raised ``NoMatches`` against every selector that
+                # lived inside one, which is most of them. ``pilot.click``
+                # a few lines below never had this problem because
+                # ``Pilot`` already resolves a selector against the current
+                # screen.
+                pilot.app.screen.query_one(gesture.selector).value = gesture.value
             case Click():
                 await pilot.click(gesture.selector)
         await pilot.pause()
