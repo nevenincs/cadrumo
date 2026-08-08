@@ -382,7 +382,7 @@ names = ["Hong Kong"]
 [[country]]
 code = "AE"
 alpha3 = "ARE"
-names = ["Emiratos Árabes Unidos", "United Arab Emirates"]
+names = ["Emiratos Árabes Unidos", "United Arab Emirates", "UAE"]
 
 [[country]]
 code = "IL"
