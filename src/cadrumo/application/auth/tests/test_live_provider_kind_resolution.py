@@ -17,6 +17,10 @@ repository - no test doubles - because the resolution under test opens a
 witnessed active-profile storage span to read that state.
 """
 
+# INTENTIONAL: unit because "live" here names the live-session provider
+# resolution this module tests, not a network call; every case drives real
+# local profile storage and touches no AEAT surface.
+
 from __future__ import annotations
 
 from collections.abc import Iterator
