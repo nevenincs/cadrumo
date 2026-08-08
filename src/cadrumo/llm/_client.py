@@ -236,7 +236,9 @@ class LLMClient:
         return response
 
     def _require_evidence_consent(self, provider: LLMProvider, model: str, request: LLMRequest) -> None:
-        """Refuse an off-host dispatch of taxpayer evidence without per-invocation consent, and record the ones it permits.
+        """Refuse an off-host dispatch of taxpayer evidence without consent.
+
+        Per-invocation consent is required; permitted dispatches are recorded.
 
         The confidentiality boundary, enforced at the client's single dispatch
         point for the reason the image boundary is: which requests may leave the

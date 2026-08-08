@@ -71,7 +71,7 @@ def test_the_bar_being_off_raises_no_issue() -> None:
     assert [issue for issue in payload["issues"] if "cloud_evidence_upload" in issue] == []
 
 
-def test_the_issue_branch_reads_the_capability_AND_the_deployment_flag() -> None:
+def test_the_issue_branch_reads_both_the_capability_and_the_deployment_flag() -> None:
     """Structural, and the limitation is stated rather than papered over.
 
     NOT COVERED END TO END: making the issue fire needs a registered, unlocked

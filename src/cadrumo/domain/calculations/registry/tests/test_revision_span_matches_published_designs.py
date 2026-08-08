@@ -113,6 +113,7 @@ makes the coverage guard refuse instead of passing on an empty parse.
 from __future__ import annotations
 
 import re
+from itertools import pairwise
 from pathlib import Path
 
 import pytest
@@ -512,7 +513,7 @@ def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]
 
     designs, _ = _designs_for(modelo_id)
     box_years = sorted(_claimed_years(revision, set(designs)))
-    for earlier, later in zip(box_years, box_years[1:]):
+    for earlier, later in pairwise(box_years):
         before_boxes, after_boxes = designs[earlier], designs[later]
         shared = set(before_boxes) & set(after_boxes)
         moved = sorted(box for box in shared if before_boxes[box] != after_boxes[box])
@@ -529,7 +530,7 @@ def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]
             boundaries.setdefault((earlier, later), []).append(note)
 
     page_years = sorted(_claimed_years(revision, set(lengths)))
-    for earlier, later in zip(page_years, page_years[1:]):
+    for earlier, later in pairwise(page_years):
         if lengths[earlier] == lengths[later]:
             continue
         delta = _record_count_delta(earlier, later)
@@ -561,7 +562,7 @@ def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]
     # which is the honest shape for a signal with no positive case to prove it.
     occupancy_years = sorted(_claimed_years(revision, {year for year, _ in _sources_by_year(modelo_id)}))
     sources = dict(_sources_by_year(modelo_id))
-    for earlier, later in zip(occupancy_years, occupancy_years[1:]):
+    for earlier, later in pairwise(occupancy_years):
         before, after = _occupancy(sources[earlier]), _occupancy(sources[later])
         shared = set(before) & set(after)
         retired = sorted(slot for slot in shared if not before[slot] and after[slot])

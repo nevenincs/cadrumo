@@ -473,7 +473,7 @@ def test_related_party_observation_refuses_off_catalogue_codes() -> None:
     reach it as free-form registry text, so without the catalogue an operation
     kind or valuation method AEAT never published would resolve into a casilla.
     """
-    for case_id, overrides in (
+    for _case_id, overrides in (
         # DR23200 Tabla C stops at clave 11.
         ("operation-kind-above-catalogue", {"operation_kind_code": "99"}),
         ("operation-kind-unpadded", {"operation_kind_code": "1"}),
