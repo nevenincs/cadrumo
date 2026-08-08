@@ -169,12 +169,17 @@ _BASE_BINDINGS_2024 = {
 
 _ORACLE_PAYLOAD_NAME = "modelo-100-2024-capital-inmobiliario-arrendamiento-vivienda-tensionada.json"
 
-#: The reducción flag, kept local because the manual never prints its value.
+#: The reducción flag: scenario scaffolding, and local because that is what it is.
 #:
 #: Casilla 0100 is "marque con una X si el arrendamiento tiene derecho a reducción".
-#: The example establishes the entitlement in prose; the ``1`` is this application's
-#: encoding of the mark, not a figure the corpus carries. Declaring it would attach a
-#: locator to a number the page does not state.
+#: The example establishes the ENTITLEMENT in prose; the ``1`` is this application's
+#: encoding of the mark. So the value here is ours, not the page's, and it belongs
+#: beside the scenario that supplies it — where a reader can see both the encoding
+#: and what it stands for.
+#:
+#: The payload declares what the corpus PRINTS. A locator's job is to put a reviewer
+#: in front of the figure it claims, and this figure exists only in our encoding, so
+#: there is nothing on the page for one to point at.
 _REDUCCION_FLAG_INPUT: dict[CasillaId, Decimal] = {
     validated_casilla_id("0100", surface="0100"): Decimal("1"),
 }

@@ -63,7 +63,10 @@ The rest:
   handed, which :func:`test_no_declared_input_is_also_an_expected_output` refuses.
 * One casilla COMBINES several printed items. The registry lumps intereses and
   reparación into a single box; the declared figure is their sum, so the locator
-  spans every item it is made of rather than whichever appears first.
+  spans every item it is made of rather than whichever appears first. This one
+  arises from the REGISTRY's shape, not the extraction's — the page-break case
+  below looks identical and is an artefact of how the corpus was extracted, so a
+  reader who has met only that one will expect a contiguous range and miss this.
 
 Migrating a payload: where the locator points
 ----------------------------------------------
@@ -134,10 +137,6 @@ def _payload(name: str) -> ManualWorkedExamplePayload:
 #: is stated here for the same reason none is asserted: it would be wrong the moment a
 #: payload migrates, and the entries themselves are the inventory.
 _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
-    "modelo-100-2024-integracion-compensacion-ganancias-patrimoniales.json": (
-        "scenario facts still hand-written in "
-        "test_m100_2024_integracion_compensacion_ganancias_patrimoniales_manual_worked_example.py"
-    ),
     "modelo-100-2024-minimo-descendientes-adopcion-mayor-de-tres-rioja.json": (
         "scenario facts still hand-written in test_minimo_descendientes_manual_oracles.py; that surface is "
         "under independent verification after the meses_madre_trabajo month-set migration and must not be "
