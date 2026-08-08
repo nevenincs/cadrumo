@@ -12,6 +12,12 @@ live process) is reclaimed lazily by the acquiring process so an abnormal
 process exit (SIGKILL, OS crash, container OOM) does not permanently
 strand the bucket; the lazy reclaim is documented under the plan's
 "Lockfile staleness detection" open question.
+
+Every removal goes through :func:`~core.unlink_lockfile`, because a
+waiting acquirer that opens the lockfile to read its PID blocks the holder's
+unlink on Windows. On the release path that is a wedge rather than a delay --
+the record names a live process, so the lock is never reclaimed as stale -- so
+release retries to a deadline while a stale reclaim stays single-attempt.
 """
 
 from __future__ import annotations
@@ -25,7 +31,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .....core import pid_is_alive
+from .....core import LOCKFILE_UNLINK_RETRY_SECONDS, pid_is_alive, unlink_lockfile
 from .....core.config import load_settings as _load_settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
@@ -104,12 +110,45 @@ def _holding_pid_for_error(pid: _PidReadResult) -> int:
     return 0
 
 
-def _unlink_lockfile_if_present(target: Path, *, reason: str) -> None:
-    """Remove a lockfile and log if a race already removed it."""
-    try:
-        target.unlink()
-    except FileNotFoundError:
-        _log.debug("bucket lockfile unlink skipped missing file reason=%s", reason)
+def _unlink_lockfile_if_present(target: Path, *, reason: str) -> bool:
+    """Remove a lockfile best-effort; report whether it is gone.
+
+    Delegates to :func:`~core.unlink_lockfile` so this lock and the
+    auth-acquisition lock handle a waiter's open read handle identically. A
+    single attempt is right for every caller except the release itself: losing
+    the race on a stale reclaim or an interpreter-exit sweep costs one more
+    poll, whereas losing it on release strands the lock.
+    """
+    removed = unlink_lockfile(target, reason=reason)
+    if not removed:
+        _log.debug("bucket lockfile unlink deferred; a peer holds the file open reason=%s", reason)
+    return removed
+
+
+def _unlink_released_lockfile(target: Path, paths: BucketPaths) -> None:
+    """Remove the lockfile this process holds, waiting out a peer's open handle.
+
+    A waiter that opens the lockfile to read the holder PID blocks this unlink
+    on Windows. Failing here is a wedge rather than a delay: the record names
+    this live process, so the lock is never reclaimed as stale and every later
+    acquirer blocks to its own timeout.
+
+    Raises:
+        BucketValidationError: When the removal is still refused after
+            :data:`~core.LOCKFILE_UNLINK_RETRY_SECONDS`, so the operator is told
+            the bucket needs the stale lockfile cleared by hand.
+    """
+    if unlink_lockfile(target, retry_seconds=LOCKFILE_UNLINK_RETRY_SECONDS, reason="release"):
+        return
+    raise BucketValidationError(
+        "bucket lockfile could not be released; another process holds it open",
+        context={
+            "reason": "lockfile_release_blocked",
+            "surface": _LOCKFILE_VALIDATION_SURFACE,
+            "bucket_id": paths.bucket_id,
+            "lockfile": str(target),
+        },
+    )
 
 
 def _cleanup_created_lockfile(target: Path, *, reason: str) -> None:
@@ -359,6 +398,7 @@ def _release_owned_slot(
     target: Path,
     ownership_key: Path,
     ownership: _LocalLockOwnership,
+    paths: BucketPaths,
     *,
     current_pid: int,
     thread_id: int,
@@ -375,6 +415,11 @@ def _release_owned_slot(
     Keeping it would leave this process holding an ownership record for a lock
     it demonstrably no longer holds, which a later same-thread acquire would
     read as a live re-entry.
+
+    When the removal is refused outright the slot and the atexit registration
+    are deliberately NOT cleared: this process really does still hold the lock,
+    and leaving it registered means interpreter exit sweeps the file even if the
+    operator ignores the refusal.
     """
     if ownership.thread_id != thread_id:
         return
@@ -386,7 +431,7 @@ def _release_owned_slot(
         _log.debug("bucket lockfile release skipped unreadable lockfile")
         return
     if pid == current_pid:
-        _unlink_lockfile_if_present(target, reason="release")
+        _unlink_released_lockfile(target, paths)
     elif pid is not _PidReadState.MISSING:
         _log.debug(
             "bucket lockfile release found a foreign holder; leaving the lockfile and clearing local ownership",
@@ -412,6 +457,12 @@ def release_lock(paths: BucketPaths) -> None:
     Removes the lockfile only when the recorded PID matches this process;
     a foreign lockfile is left alone so a stale-reclaim race cannot delete
     another process's lock.
+
+    Raises:
+        BucketValidationError: When the lockfile is owned by this process but
+            a peer's open handle keeps the removal refused past the retry
+            window, so the bucket would otherwise be wedged behind a lock
+            stamped with a live PID.
     """
     target = lock_path(paths)
     ownership_key = target.expanduser().resolve(strict=False)
@@ -428,6 +479,7 @@ def release_lock(paths: BucketPaths) -> None:
                 target,
                 ownership_key,
                 ownership,
+                paths,
                 current_pid=current_pid,
                 thread_id=thread_id,
             )

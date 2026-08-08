@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 import textwrap
+import threading
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
@@ -485,3 +486,71 @@ def test_reentrant_acquire_still_succeeds_while_this_process_holds_the_lockfile(
 
     release_lock(paths)
     assert not target.exists()
+
+
+def test_release_survives_a_peer_holding_the_lockfile_open_for_inspection(
+    tmp_path: Path,
+) -> None:
+    """Releasing must wait out an inspector's handle instead of stranding the lock.
+
+    Every waiting acquirer opens the lockfile to read the holder PID, and on
+    Windows that open refuses the holder's unlink with a sharing violation. An
+    abandoned release is a wedge, not a delay: the surviving record names a live
+    process, so no peer ever reclaims it as stale and the bucket is unusable
+    until the holder exits.
+
+    The open handle here is the same OS condition a cross-process waiter
+    creates -- the in-process ownership registry is bypassed precisely because a
+    real waiter lives in another process and does open the file. On POSIX the
+    unlink is never refused, so only the outcome both platforms owe the caller
+    is asserted: the release returns and the lockfile is gone.
+    """
+
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    target = lock_path(paths)
+    acquire_lock(paths)
+
+    inspector = target.open("r", encoding=UTF_8_ENCODING)
+    releaser = threading.Timer(0.3, inspector.close)
+    releaser.start()
+    try:
+        release_lock(paths)
+    finally:
+        releaser.cancel()
+        inspector.close()
+
+    assert not target.exists(), "the lockfile survived the release and would wedge the bucket"
+
+
+def test_acquire_does_not_surface_a_sharing_violation_from_a_stale_reclaim(
+    tmp_path: Path,
+) -> None:
+    """A blocked stale reclaim costs one more poll, never an escaping OS error.
+
+    The lockfile's atomic create and its PID write are separate syscalls, so a
+    peer can read the file in between and judge the empty record stale. That
+    reclaim's unlink races the same inspector handles, and letting the refusal
+    escape turns an ordinary poll into a crash out of ``acquire_lock``.
+
+    A ``BucketBusyError`` is an acceptable outcome -- the reclaim legitimately
+    lost the race within the wait window. A ``PermissionError`` is not.
+    """
+
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    target = lock_path(paths)
+    # An empty record reads as stale, which is what puts the reclaim unlink on
+    # the acquisition path at all.
+    target.write_text("", encoding=UTF_8_ENCODING)
+
+    inspector = target.open("r", encoding=UTF_8_ENCODING)
+    try:
+        try:
+            acquire_lock(paths, wait_seconds=0.2)
+        except BucketBusyError:
+            pass
+        except PermissionError as exc:  # pragma: no cover - the regression under test
+            pytest.fail(f"a sharing violation escaped acquire_lock: {exc!r}")
+    finally:
+        inspector.close()
+        if lock_path(paths).exists():
+            release_lock(paths)

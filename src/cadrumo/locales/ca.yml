@@ -1978,6 +1978,9 @@ cli:
           espanyol.
         group_help: Confirma on està establerta una contrapart, una sola vegada, per
           a tots els documents posteriors.
+        identification_state_help: 'Estat membre que identifica a efectes d''IVA la
+          contrapart. És una dada diferent de --scope: l''art. 25 exempta per aquesta,
+          no per on estigui establerta.'
         note_help: En què es basa la resposta, amb les vostres paraules. Es registra,
           mai no es consulta.
         scope_help: El territori a efectes d'IVA on està establerta la contrapart.
@@ -1986,7 +1989,6 @@ cli:
           imprès al document.
         withdraw_help: Retira un establiment confirmat, declarant que la resposta
           anterior era incorrecta.
-        identification_state_help: 'Estat membre que identifica a efectes d''IVA la contrapart. És una dada diferent de --scope: l''art. 25 exempta per aquesta, no per on estigui establerta.'
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
         batch_directory_help: Directori els fitxers del qual s'ingressen. Combina'l
@@ -2085,7 +2087,7 @@ cli:
         field_anchor_not_found: '{field}: el lector assenyala ''{anchor}'', que no
           apareix en la transcripció del document. Un valor normalitzat pot fallar
           aquesta cerca legítimament, així que reviseu el camp en lloc de suposar
-          que va ser corroborat.'
+          que va ser corroborat. {detail}'
         field_anchor_self_reported: '{field}: el lector afirma haver-ho llegit de
           ''{anchor}'', però aquesta afirmació prové del mateix lector que va produir
           el valor, així que res independent no ho ha confirmat.'
@@ -4645,6 +4647,9 @@ cli:
         els ingressos no necessiten categoria)
       classification_help: Estat de classificació professional del moviment
       classification_required: --classification és obligatori quan no s'usa --file.
+      counterparty_country_help: País d'establiment de la contrapart (ISO 3166-1 alfa-2,
+        p. ex. US, DE). Només establiment; per a la identificació a efectes d'IVA
+        feu servir --counterparty-identification-state.
       counterparty_eu_member_state_help: Estat membre de la UE o prefix IVA d'Irlanda
         del Nord de la contrapart (ISO 3166-1 alfa-2 minúscules, p. ex. de o xi);
         obligatori amb --iva-category intra_community_supply, prohibit amb export_third_country_zero_rated
@@ -4737,7 +4742,6 @@ cli:
       vision_model_help: Substitueix el model de visió local d'Ollama per llegir una
         factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir
         el model configurat.
-      counterparty_country_help: 'País d''establiment de la contrapart (ISO 3166-1 alfa-2, p. ex. US, DE). Només establiment; per a la identificació a efectes d''IVA feu servir --counterparty-identification-state.'
     counterparty:
       errors:
         scope_conflict: Ja hi ha confirmat un territori diferent per a '{identifier}',
@@ -4858,6 +4862,7 @@ cli:
       classified_at: Classificat el
       classified_by: Classificat per
       counterparty: Contrapart
+      counterparty_country: Establert a
       counterparty_eu_member_state: Contrapart UE
       counterparty_identification_state: Identificada a efectes d'IVA a
       created_event_id: Esdeveniment bucket de creació
@@ -4905,7 +4910,6 @@ cli:
       warning: Avís
       warnings: Avisos
       'yes': Sí
-      counterparty_country: 'Establert a'
     link:
       actor_help: Etiqueta de l'operador registrada als esdeveniments del bucket.
       errors:

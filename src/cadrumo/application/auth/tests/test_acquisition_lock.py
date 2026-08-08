@@ -5,7 +5,9 @@ from __future__ import annotations
 import os
 import pathlib
 import socket
+import threading
 from collections.abc import Iterator
+from contextlib import ExitStack
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -354,3 +356,35 @@ class TestStaleRemovalIsCompareAndDelete:
         ) as record:
             assert record.operation == "auth-login"
             assert path.exists()
+
+
+def test_release_survives_a_peer_holding_the_lock_file_open(tmp_path: Path) -> None:
+    """Exiting the lock must wait out an inspector's handle, not strand the record.
+
+    Every process that finds the lock taken opens it to read the record and
+    decide whether the owner is alive. On Windows that open refuses the owner's
+    delete with a sharing violation, and an abandoned delete leaves a record
+    naming a live process: Cl@ve and certificate acquisition are then blocked
+    until the recorded TTL expires, and the refusal escapes the context
+    manager's ``finally`` as an untyped OS error rather than a typed refusal.
+
+    The handle here is the same OS condition a real cross-process inspector
+    creates. On POSIX the delete is never refused, so the assertion is the
+    outcome both platforms owe the caller: no error, and no surviving record.
+    """
+    settings = _settings(tmp_path)
+    path = auth_acquisition_lock_path(settings, AuthProviderKind.CERTIFICATE)
+
+    with ExitStack() as stack:
+        with acquire_auth_acquisition_lock(
+            settings,
+            AuthProviderKind.CERTIFICATE,
+            ttl_seconds=60,
+            operation="test-release-under-inspection",
+        ):
+            handle = stack.enter_context(path.open("r", encoding=UTF_8_ENCODING))
+            releaser = threading.Timer(0.3, handle.close)
+            stack.callback(releaser.cancel)
+            releaser.start()
+
+    assert not path.exists(), "the lock file survived the release and would block acquisition"

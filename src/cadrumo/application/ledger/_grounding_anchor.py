@@ -99,6 +99,7 @@ __all__ = [
     "normalise_for_anchor_search",
     "printed_excerpt_occurs",
     "printed_excerpt_occurs_in_text",
+    "refused_anchor_of",
     "strip_printed_unit",
 ]
 
@@ -305,6 +306,32 @@ class AnchorEvaluation(BaseModel):
     parsed_anchor: Decimal | None = None
     parse_was_vacuous: bool = False
     detail: str = ""
+
+
+def refused_anchor_of(anchor: str | None, evaluation: AnchorEvaluation) -> str | None:
+    """Return the printed form the check looked for and did not find, or ``None``.
+
+    The one place the refusal is derived, so every producer that clears the
+    anchor on a miss records the same discrimination rather than each deciding
+    for itself. Clearing alone loses the fact that a form was OFFERED, and an
+    operator told "the reader offered nothing to point at" when the reader
+    offered something the document does not carry is being sent to investigate
+    the wrong thing.
+
+    A blank or absent anchor returns ``None`` on purpose: there was nothing to
+    refuse, and recording an empty refusal would manufacture exactly the false
+    distinction this closes, in the other direction.
+
+    Args:
+        anchor: The form the reader offered, if any.
+        evaluation: The verdict the check reached on it.
+
+    Returns:
+        The offered form, when a check ran and did not locate it.
+    """
+    if anchor is None or evaluation.anchor_found or not anchor.strip():
+        return None
+    return anchor
 
 
 def evaluate_anchor(
@@ -530,6 +557,7 @@ def ground_structured_value(
         origin=FieldOrigin.EXACT_STRUCTURED,
         grounding=evaluation.outcome,
         anchor=anchor if evaluation.anchor_found else None,
+        refused_anchor=refused_anchor_of(anchor, evaluation),
         note=f"read from {element_path}; {evaluation.detail}",
     )
 
@@ -568,6 +596,7 @@ def ground_anchored_value(
         # CONTRADICTED outcome: the operator resolving a disagreement needs to see
         # the printed form the reader misread, not merely be told it disagreed.
         anchor=anchor if evaluation.anchor_found else None,
+        refused_anchor=refused_anchor_of(anchor, evaluation),
         note=evaluation.detail,
     )
 

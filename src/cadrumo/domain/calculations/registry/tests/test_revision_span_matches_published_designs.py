@@ -263,6 +263,37 @@ def _coverage_start_period(name: str) -> int | None:
     return 1 if kind == "hasta" else period
 
 
+def _design_fingerprint(path: Path) -> tuple[object, ...]:
+    """Format-independent identity of a design: what it DECLARES, not how it is packaged.
+
+    A raw byte hash is the obvious identity and it is the wrong one. AEAT bundles the
+    same design twice in two container formats, and an ``.xls`` and an ``.xlsx`` of one
+    document are different bytes while being the same design. Measured: Modelo 200
+    carries such a twin for every ejercicio from 2015 to 2025, and a byte-keyed
+    deduplication reported all ELEVEN of those years as carrying two designs -- which
+    reads as eleven mid-course splits on a modelo that has none. Fingerprinting the
+    parsed declaration collapses the twins and leaves genuine splits standing: on
+    Modelo 303 the 2018, 2021 and 2024 pairs survive, because those really are two
+    different designs.
+
+    Byte-keying also has to stay dead rather than merely unused, because it looks
+    correct: it DOES collapse the corpus's other duplicate shape, the same file bundled
+    twice under a truncated filename, so a reader checking it against that case
+    concludes it works.
+    """
+    return tuple(
+        (
+            sheet.name,
+            sheet.total_positions,
+            tuple(
+                (field.offset, field.length, field.type_code, " ".join(field.description.split()))
+                for field in sheet.fields
+            ),
+        )
+        for sheet in _design_sheets(path)
+    )
+
+
 def _designs_in_publication_order(modelo_id: str) -> tuple[tuple[Path, ...], tuple[int, ...]]:
     """``(designs oldest-first, years whose designs could not be ordered)``.
 
@@ -275,17 +306,17 @@ def _designs_in_publication_order(modelo_id: str) -> tuple[tuple[Path, ...], tup
     UNASSERTED order, so a consumer can refuse rather than trust it.
     """
     by_year: dict[int, list[Path]] = {}
-    seen: set[bytes] = set()
+    seen: set[object] = set()
     for path in _design_sources(modelo_id):
         if not _design_sheets(path):
             continue
         years = _design_years(path.name)
         if not years:
             continue
-        payload = path.read_bytes()
-        if payload in seen:
+        marker = _design_fingerprint(path)
+        if marker in seen:
             continue
-        seen.add(payload)
+        seen.add(marker)
         by_year.setdefault(min(years), []).append(path)
 
     ordered: list[Path] = []
@@ -576,28 +607,59 @@ def test_the_design_parser_reads_every_markdown_design_it_claims() -> None:
     )
 
 
+def _designs_claimed_by(modelo_id: str, revision: object) -> tuple[Path, ...]:
+    """The designs a revision's span claims, in publication order.
+
+    KEYED ON THE DESIGN FILE, NOT ON THE PARSED YEAR, and that is the whole point. The
+    per-signal inventories this replaced each kept ONE design per year through a
+    ``setdefault`` over a filename sort, so where AEAT split an ejercicio mid-course the
+    second half was silently discarded and the boundary INSIDE that year could not be
+    seen by any signal. Modelo 303 does it three times, in 2018, 2021 and 2024, and the
+    mid-2024 boundary is inside the reachable filing window.
+
+    One walk feeds all three signals, rather than each rebuilding its own inventory.
+    Three separate walks is how they came to disagree about which designs existed: a
+    year readable by one signal and not another entered one map and not the others, so
+    the same boundary was keyed differently per signal and the evidence for it split
+    across keys that never met.
+    """
+    ordered, _unorderable = _designs_in_publication_order(modelo_id)
+    every_year = {year for path in ordered for year in _design_years(path.name)}
+    claimed = _claimed_years(revision, every_year)
+    return tuple(path for path in ordered if set(_design_years(path.name)) & claimed)
+
+
+def _boundary_label(earlier: Path, later: Path) -> tuple[int, int]:
+    """``(left year, right year)``; the two are EQUAL for a mid-course split."""
+    return max(_design_years(earlier.name)), min(_design_years(later.name))
+
+
 def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]]:
     """Every re-layout boundary inside one revision's span, keyed year-pair to evidence.
 
     Both signals contribute to ONE verdict rather than reporting separately,
     because they see overlapping-but-different boundary sets and a reader
     unioning two lists by hand will miss the ones only the weaker signal saw.
+
+    A key whose two years are EQUAL is a mid-course split, where AEAT re-laid out a
+    form partway through one ejercicio.
     """
     boundaries: dict[tuple[int, int], list[str]] = {}
+    claimed_designs = _designs_claimed_by(modelo_id, revision)
 
-    lengths = _page_lengths_for(modelo_id)
+    for earlier, later in pairwise(claimed_designs):
+        key = _boundary_label(earlier, later)
+        before_lengths, after_lengths = _page_lengths(earlier), _page_lengths(later)
 
-    def _record_count_delta(earlier: int, later: int) -> str | None:
-        """``'9 -> 10 records'`` when the design's record SET changed, else None."""
-        if earlier not in lengths or later not in lengths:
-            return None
-        before, after = len(lengths[earlier]), len(lengths[later])
-        return None if before == after else f"{before} -> {after} records"
+        def _record_count_delta(
+            before: tuple[str, ...] = before_lengths, after: tuple[str, ...] = after_lengths
+        ) -> str | None:
+            """``'9 -> 10 records'`` when the design's record SET changed, else None."""
+            if not before or not after or len(before) == len(after):
+                return None
+            return f"{len(before)} -> {len(after)} records"
 
-    designs, _ = _designs_for(modelo_id)
-    box_years = sorted(_claimed_years(revision, set(designs)))
-    for earlier, later in pairwise(box_years):
-        before_boxes, after_boxes = designs[earlier], designs[later]
+        before_boxes, after_boxes = _parse_design(earlier), _parse_design(later)
         shared = set(before_boxes) & set(after_boxes)
         moved = sorted(box for box in shared if before_boxes[box] != after_boxes[box])
         if moved:
@@ -608,78 +670,82 @@ def _boundaries_for(modelo_id: str, revision) -> dict[tuple[int, int], list[str]
             # as "moved" alongside one that shifted within its own. Both are real
             # movement, but comparing the magnitude against a same-record
             # boundary's is comparing different quantities.
-            if _record_count_delta(earlier, later):
+            if _record_count_delta():
                 note += " -- NOT a clean in-record displacement: the record set also changed"
-            boundaries.setdefault((earlier, later), []).append(note)
+            boundaries.setdefault(key, []).append(note)
 
-    page_years = sorted(_claimed_years(revision, set(lengths)))
-    for earlier, later in pairwise(page_years):
-        if lengths[earlier] == lengths[later]:
-            continue
-        delta = _record_count_delta(earlier, later)
-        # Say what a page-length change MEANS before showing the raw tuples. A
-        # record-count change is a different and larger event than a page growing,
-        # and stated as bare tuples it was under-read for hours by everyone
-        # looking at it, including its author.
-        headline = (
-            f"RECORD SET CHANGED ({delta}) -- the design's record decomposition differs, so this is not an offset shift"
-            if delta
-            else "page byte-lengths differ, so something moved inside a record"
-        )
-        boundaries.setdefault((earlier, later), []).append(f"{headline}: {lengths[earlier]} vs {lengths[later]}")
-
-    # THIRD SIGNAL: a slot RETIRED into reserved space. It moves no box and
-    # changes no page length -- the reserved block absorbs the freed bytes
-    # exactly -- so neither signal above can see it, and a digest cannot either.
-    # It is still a re-layout: a field present in one design and absent in the
-    # next means a filing written under the older layout puts declared values
-    # into space AEAT now marks reserved.
-    #
-    # Measured live on Modelo 390, where three `Reg. Simplificado - Reducción
-    # aplicable` slots were retired between the 2024 and 2025 designs while both
-    # signals above reported the years identical.
-    #
-    # BOTH DIRECTIONS are asserted, and the reverse one was withheld on a claim
-    # that was never checked against the corpus it described. This module used to
-    # record that reserved -> real "measures zero across the whole bundled corpus,
-    # so an assertion for it would ship vacuous and pass silently forever."
-    # Measured through these very helpers, it is 32 transitions across four
-    # modelos and twelve boundaries -- twice the 16 retirements the direction that
-    # WAS asserted finds. A rationale for withholding an assertion is itself a
-    # measurement, and this one was reasoned rather than run.
-    #
-    # Nor is it the lesser half. A slot revived OUT of reserved space is a field
-    # the later design declares and the earlier one does not, so a filing written
-    # under the earlier layout cannot declare that quantity at all while the
-    # later one can -- the same harm as a retirement with the two sides
-    # exchanged, and equally invisible to an offset check, a length check and a
-    # digest. On Modelo 303 it is the only signal in this module that names a
-    # boundary at 2017/2018.
-    occupancy_years = sorted(_claimed_years(revision, {year for year, _ in _sources_by_year(modelo_id)}))
-    sources = dict(_sources_by_year(modelo_id))
-    for earlier, later in pairwise(occupancy_years):
-        before, after = _occupancy(sources[earlier]), _occupancy(sources[later])
-        shared = set(before) & set(after)
-        for slots, headline in (
-            (
-                sorted(slot for slot in shared if not before[slot] and after[slot]),
-                "RETIRED into reserved space",
-            ),
-            (
-                sorted(slot for slot in shared if before[slot] and not after[slot]),
-                "REVIVED out of reserved space",
-            ),
-        ):
-            if not slots:
-                continue
-            sample = ", ".join(f"{sheet} offset {offset}" for sheet, offset in slots[:3])
-            boundaries.setdefault((earlier, later), []).append(
-                f"{len(slots)} slot(s) {headline} (e.g. {sample}) -- no box moved and no page "
-                "length changed, so one side of this boundary declares a quantity at a position "
-                "the other side marks reserved"
+        if before_lengths and after_lengths and before_lengths != after_lengths:
+            delta = _record_count_delta()
+            # Say what a page-length change MEANS before showing the raw tuples. A
+            # record-count change is a different and larger event than a page growing,
+            # and stated as bare tuples it was under-read for hours by everyone
+            # looking at it, including its author.
+            headline = (
+                f"RECORD SET CHANGED ({delta}) -- the design's record decomposition differs, "
+                "so this is not an offset shift"
+                if delta
+                else "page byte-lengths differ, so something moved inside a record"
             )
+            boundaries.setdefault(key, []).append(f"{headline}: {before_lengths} vs {after_lengths}")
+
+        _append_occupancy_evidence(boundaries, key, earlier, later)
 
     return boundaries
+
+
+def _append_occupancy_evidence(
+    boundaries: dict[tuple[int, int], list[str]],
+    key: tuple[int, int],
+    earlier: Path,
+    later: Path,
+) -> None:
+    """THIRD SIGNAL: a slot moving into or out of reserved space.
+
+    It moves no box and changes no page length -- the reserved block absorbs the freed
+    bytes exactly -- so neither signal above can see it, and a digest cannot either. It
+    is still a re-layout: a field present in one design and absent in the next means a
+    filing written under the older layout puts declared values into space AEAT now marks
+    reserved.
+
+    Measured live on Modelo 390, where three ``Reg. Simplificado - Reducción aplicable``
+    slots were retired between the 2024 and 2025 designs while both signals above
+    reported the years identical.
+
+    BOTH DIRECTIONS are asserted, and the reverse one was withheld on a claim that was
+    never checked against the corpus it described. This module used to record that
+    reserved -> real "measures zero across the whole bundled corpus, so an assertion for
+    it would ship vacuous and pass silently forever." Measured through these very
+    helpers, it is 32 transitions across four modelos and twelve boundaries -- twice the
+    16 retirements the direction that WAS asserted finds. A rationale for withholding an
+    assertion is itself a measurement, and this one was reasoned rather than run.
+
+    Nor is it the lesser half. A slot revived OUT of reserved space is a field the later
+    design declares and the earlier one does not, so a filing written under the earlier
+    layout cannot declare that quantity at all while the later one can -- the same harm
+    as a retirement with the two sides exchanged, and equally invisible to an offset
+    check, a length check and a digest. On Modelo 303 it is the only signal in this
+    module that names a boundary at 2017/2018.
+    """
+    before, after = _occupancy(earlier), _occupancy(later)
+    shared = set(before) & set(after)
+    for slots, headline in (
+        (
+            sorted(slot for slot in shared if not before[slot] and after[slot]),
+            "RETIRED into reserved space",
+        ),
+        (
+            sorted(slot for slot in shared if before[slot] and not after[slot]),
+            "REVIVED out of reserved space",
+        ),
+    ):
+        if not slots:
+            continue
+        sample = ", ".join(f"{sheet} offset {offset}" for sheet, offset in slots[:3])
+        boundaries.setdefault(key, []).append(
+            f"{len(slots)} slot(s) {headline} (e.g. {sample}) -- no box moved and no page "
+            "length changed, so one side of this boundary declares a quantity at a position "
+            "the other side marks reserved"
+        )
 
 
 def test_no_revision_spans_a_design_relayout() -> None:
@@ -703,7 +769,11 @@ def test_no_revision_spans_a_design_relayout() -> None:
         if not boundaries:
             continue
         detail = "; ".join(
-            f"{earlier}/{later} ({' + '.join(evidence)})" for (earlier, later), evidence in sorted(boundaries.items())
+            # A key whose years are EQUAL is a mid-course split. Rendering it as
+            # "2024/2024" reads as a typo and hides the finding the design-file keying
+            # exists to surface, so it is named for what it is.
+            f"{f'{earlier} mid-year' if earlier == later else f'{earlier}/{later}'} ({' + '.join(evidence)})"
+            for (earlier, later), evidence in sorted(boundaries.items())
         )
         violations.append(
             f"modelo {modelo.id} revision {revision_id!r} spans {len(boundaries)} re-layout(s) "
@@ -805,6 +875,64 @@ def test_a_year_aeat_split_mid_course_keeps_both_of_its_designs() -> None:
             f"{year} should carry two distinct Modelo 303 designs (AEAT split it mid-course) "
             f"but {len(distinct)} distinct payload(s) survived enumeration"
         )
+
+
+def test_the_verdict_names_a_mid_course_boundary_where_aeat_split_an_ejercicio() -> None:
+    """A boundary INSIDE one ejercicio must reach the verdict, not just the ones between years.
+
+    This is what the design-file keying buys, and it is the assertion that makes the
+    keying provable. The per-signal inventories this replaced kept ONE design per year
+    through a ``setdefault`` over a filename sort, so the second half of a mid-course
+    ejercicio was discarded before any comparison ran and a boundary inside that year
+    could not be reported by any signal. The gate's silence about it was therefore not
+    evidence of anything -- and silence that looks like a clean result is this
+    instrument's worst failure mode, because a split authored on it would leave the
+    boundary live.
+
+    GATED ON THE PROPERTY: the verdict must contain at least one boundary whose two
+    years are EQUAL, which is what a mid-course split looks like once the inventory can
+    see both halves. It pins no year, no modelo and no count, so it survives AEAT
+    splitting a different ejercicio and it cannot be satisfied by a stale constant.
+
+    Guarded against vacuity from the other side too: it first confirms the corpus
+    actually HOLDS a mid-split ejercicio inside a gated span, so a corpus that lost one
+    fails loudly here instead of passing by having nothing to find.
+    """
+    mid_split_available: list[str] = []
+    mid_course_reported: list[str] = []
+    for modelo, revision_id, revision in _exporting_revisions():
+        # The availability side is derived from the raw publication-order enumeration
+        # rather than from the span helper the verdict uses. Deriving both sides from one
+        # function makes this test notice only that the function changed, so a defect in
+        # it would red the vacuity guard and never reach the assertion that matters.
+        ordered, _unorderable = _designs_in_publication_order(modelo.id)
+        claimed_years = _claimed_years(revision, {year for path in ordered for year in _design_years(path.name)})
+        by_year: dict[int, int] = {}
+        for path in ordered:
+            opening = min(_design_years(path.name))
+            if set(_design_years(path.name)) & claimed_years:
+                by_year[opening] = by_year.get(opening, 0) + 1
+        mid_split_available.extend(
+            f"modelo {modelo.id} revision {revision_id!r} ejercicio {year}"
+            for year, count in sorted(by_year.items())
+            if count > 1
+        )
+        mid_course_reported.extend(
+            f"modelo {modelo.id} revision {revision_id!r} ejercicio {earlier}"
+            for earlier, later in _boundaries_for(modelo.id, revision)
+            if earlier == later
+        )
+
+    assert mid_split_available, (
+        "no gated revision claims an ejercicio carrying two designs, so this assertion would be "
+        "vacuous -- the corpus that made the design-file keying necessary has changed"
+    )
+    assert mid_course_reported, (
+        "the corpus holds a mid-course split inside a gated span "
+        f"({sorted(set(mid_split_available))}) but the verdict names no boundary inside a single "
+        "ejercicio, so an inventory is back to keeping one design per year and its silence about "
+        "that boundary means nothing"
+    )
 
 
 def test_a_mid_split_ejercicio_orders_its_halves_by_declared_coverage_not_by_filename() -> None:

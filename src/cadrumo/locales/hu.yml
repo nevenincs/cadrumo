@@ -1914,6 +1914,9 @@ cli:
         country_code_help: Az ország, amely alatt az azonosítót megadták, ha nem spanyol.
         group_help: Erősítse meg, hol letelepedett az ügyfél – egyszer, minden későbbi
           bizonylathoz.
+        identification_state_help: 'Az a tagállam, amely a partnert ÁFA szempontjából
+          azonosítja. Ez más adat, mint a --scope: a 25. cikk ez alapján mentesít,
+          nem a letelepedés helye alapján.'
         note_help: Mire alapozza a választ, saját szavaival. Rögzítjük, de soha nem
           használjuk fel.
         scope_help: Az áfa szempontjából irányadó terület, ahol az ügyfél letelepedett.
@@ -1921,7 +1924,6 @@ cli:
         tax_identifier_help: Az ügyfél adóazonosítója a bizonylaton nyomtatott formában.
         withdraw_help: Vonja vissza a megerősített letelepedést, kijelentve, hogy
           a korábbi válasz téves volt.
-        identification_state_help: 'Az a tagállam, amely a partnert ÁFA szempontjából azonosítja. Ez más adat, mint a --scope: a 25. cikk ez alapján mentesít, nem a letelepedés helye alapján.'
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
         batch_directory_help: A könyvtár, amelynek fájljait feldolgozza. Kombinálható
@@ -2024,7 +2026,7 @@ cli:
         field_anchor_not_found: '{field}: az olvasó a(z) ''{anchor}'' elemre mutat,
           amely nem szerepel a dokumentum átiratában. Egy normalizált érték jogosan
           megbukhat ezen a keresésen, ezért ellenőrizze a mezőt ahelyett, hogy megerősítettnek
-          tekintené.'
+          tekintené. {detail}'
         field_anchor_self_reported: '{field}: az olvasó szerint ezt a(z) ''{anchor}''
           helyről olvasta, de ezt az állítást ugyanaz az olvasó tette, amely az értéket
           előállította, így semmi független nem erősítette meg.'
@@ -4596,6 +4598,9 @@ cli:
       classification_help: A tranzakció üzleti besorolási állapota.
       classification_required: A --classification megadása kötelező, ha a --file nincs
         megadva.
+      counterparty_country_help: Az ügyfél letelepedési országa (ISO 3166-1 alfa-2,
+        például US, DE). Csak letelepedés; az áfa-azonosításhoz használja a --counterparty-identification-state
+        kapcsolót.
       counterparty_eu_member_state_help: A szerződő fél EU-tagállama vagy észak-írországi
         IVA-előtagja (ISO 3166-1 alpha-2 kisbetűs, pl. de vagy xi); kötelező --iva-category
         intra_community_supply esetén, tiltott export_third_country_zero_rated vagy
@@ -4687,7 +4692,6 @@ cli:
       vision_model_help: Felülírja a helyi Ollama látómodellt egy beszkennelt vagy
         képi számla olvasásához (pl. qwen2.5vl:7b); alapértelmezetten a beállított
         modellt használja.
-      counterparty_country_help: 'Az ügyfél letelepedési országa (ISO 3166-1 alfa-2, például US, DE). Csak letelepedés; az áfa-azonosításhoz használja a --counterparty-identification-state kapcsolót.'
     counterparty:
       errors:
         scope_conflict: A(z) '{identifier}' esetében már más terület van megerősítve,
@@ -4807,6 +4811,7 @@ cli:
       classified_at: Osztályozás időpontja
       classified_by: Osztályozta
       counterparty: Szerződő fél
+      counterparty_country: Letelepedés helye
       counterparty_eu_member_state: EU-s szerződő fél
       counterparty_identification_state: ÁFA-azonosítás helye
       created_event_id: Létrehozó bucket-esemény
@@ -4854,7 +4859,6 @@ cli:
       warning: Figyelmeztetés
       warnings: Figyelmeztetések
       'yes': Igen
-      counterparty_country: 'Letelepedés helye'
     link:
       actor_help: A bucket eseményekhez rögzített operátori címke.
       errors:

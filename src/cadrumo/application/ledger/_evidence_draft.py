@@ -309,6 +309,19 @@ class FieldProvenance(BaseModel):
             the operator sees both.
         candidates: Competing readings, when the grounding outcome is
             ``AMBIGUOUS``. Empty otherwise.
+        refused_anchor: The printed form the reader DID offer, kept here when the
+            check looked for it and the document does not carry it. The anchor
+            field is cleared on that outcome, deliberately -- a form the document
+            does not print is not evidence, and every consumer reading
+            :attr:`anchor` reads it as evidence. Clearing it alone, though,
+            leaves a refused claim indistinguishable from an absent one, and the
+            two are different operator situations: a reader that offered nothing
+            is a reader limitation, while a reader that offered something the
+            document does not carry is a possible misread or the wrong document
+            entirely. So the refused form is preserved HERE, where nothing can
+            mistake it for a corroborated one, and the operator surface can say
+            which of the two happened. ``None`` whenever no check ran or the
+            anchor was found.
         anchor_self_reported: ``True`` when the anchor was asserted by the same
             reader that produced the value, with nothing independent to check it
             against -- the vision lane, which reads image to fields in one call
@@ -352,6 +365,7 @@ class FieldProvenance(BaseModel):
     origin: FieldOrigin
     grounding: FieldGroundingOutcome
     anchor: str | None = None
+    refused_anchor: str | None = None
     candidates: tuple[FieldAmbiguityCandidate, ...] = ()
     anchor_self_reported: bool = False
     derived_from: tuple[str, ...] = ()
@@ -441,6 +455,32 @@ class FieldProvenance(BaseModel):
         """Refuse an ``ANCHORED`` claim with no anchor to show for it."""
         if self.grounding is FieldGroundingOutcome.ANCHORED and self.anchor is None:
             raise ValueError("an anchored field must carry the verbatim anchor it was anchored to")
+        return self
+
+    @model_validator(mode="after")
+    def _a_refused_anchor_is_never_also_a_carried_one(self) -> Self:
+        """Keep the refused form out of every slot a consumer reads as evidence.
+
+        Both directions, for the reason the sibling rules are two-directional. An
+        envelope carrying the same claim in both slots would let a consumer that
+        reads :attr:`anchor` treat a refused form as a located one, which is the
+        laundering clearing the anchor exists to prevent. And a refused anchor
+        under a grounding outcome that means the check PASSED describes a
+        verdict that did not happen: the check cannot both locate the form and
+        report it absent.
+        """
+        if self.refused_anchor is None:
+            return self
+        if self.anchor is not None:
+            raise ValueError(
+                "an anchor cannot be both carried and refused: the refused form is recorded only "
+                "because the check did not locate it, so nothing may read it as evidence",
+            )
+        if self.grounding in {FieldGroundingOutcome.ANCHORED, FieldGroundingOutcome.RECONCILED}:
+            raise ValueError(
+                f"a refused anchor cannot sit under grounding={self.grounding.value!r}: the check "
+                "reported the printed form absent, so it did not corroborate the value",
+            )
         return self
 
 
@@ -543,6 +583,31 @@ class InvoiceDraft(BaseModel):
         customer_country_code: The same for the party billed by the invoice,
             carried separately for the reason the postal codes are: a supplier
             in Barcelona invoicing a customer in Lisbon states two countries.
+        supplier_stated_country_code: The country token the issuing party's
+            address element carries, EXACTLY as the record states it -- ``ESP``
+            from Facturae, ``ES`` from UBL, ``THA`` from a Thai supplier's
+            Facturae invoice -- or ``None`` where the record's country element
+            was absent or empty.
+
+            **This is the field that keeps "stated something we cannot place"
+            distinguishable from "stated nothing".** The resolved code beside it
+            is contracted alpha-2 and resolves only through the bundled
+            vocabulary, so a token that vocabulary does not carry leaves it
+            ``None`` -- byte-identical to a document with no country element at
+            all. That collapse reached the operator: no value, no provenance
+            envelope, and the country advisory reading an empty field and
+            staying silent. A genuine Thai export therefore arrived carrying no
+            country and nothing said so.
+
+            Carried verbatim rather than normalised, and never coerced towards
+            the alpha-2 contract: ``THA`` is not an alpha-2 code and putting it
+            in a field typed as one would trade a silent absence for a silent
+            lie. Consumers that need a country ask the resolved field; consumers
+            that need to know what the DOCUMENT said ask this one.
+        customer_stated_country_code: The same for the party billed by the
+            invoice, carried separately for the reason every other party field
+            is: each side states its own country and either may be the one the
+            vocabulary cannot place.
         invoice_number: Invoice number recovered from a labelled line, or
             ``None``.
         invoice_series: The series half of the invoice's identity, stated
@@ -617,6 +682,8 @@ class InvoiceDraft(BaseModel):
     customer_country: str | None = None
     supplier_country_code: str | None = None
     customer_country_code: str | None = None
+    supplier_stated_country_code: str | None = None
+    customer_stated_country_code: str | None = None
     invoice_number: str | None = None
     invoice_series: str | None = None
     invoice_date: str | None = None
@@ -1055,10 +1122,12 @@ _STRUCTURED_ELEMENT_PATHS: Final[dict[str, dict[DocumentShape, str]]] = {
     "supplier_country_code": {
         DocumentShape.XML_FACTURAE: "SellerParty/AddressInSpain/CountryCode",
         DocumentShape.XML_UBL: ("cac:AccountingSupplierParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode"),
+        DocumentShape.XML_CII: "ram:SellerTradeParty/ram:PostalTradeAddress/ram:CountryID",
     },
     "customer_country_code": {
         DocumentShape.XML_FACTURAE: "BuyerParty/AddressInSpain/CountryCode",
         DocumentShape.XML_UBL: ("cac:AccountingCustomerParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode"),
+        DocumentShape.XML_CII: "ram:BuyerTradeParty/ram:PostalTradeAddress/ram:CountryID",
     },
     "customer_postal_code": {
         DocumentShape.XML_FACTURAE: "BuyerParty/AddressInSpain/PostCode",
@@ -1066,6 +1135,17 @@ _STRUCTURED_ELEMENT_PATHS: Final[dict[str, dict[DocumentShape, str]]] = {
         DocumentShape.XML_CII: "ram:BuyerTradeParty/ram:PostalTradeAddress/ram:PostcodeCode",
     },
 }
+
+
+#: The draft field carrying a party's verbatim stated country token, paired with
+#: the resolved field it sits beside. The second name doubles as the parsed
+#: record's own attribute and as the element-path key, so a syntax whose country
+#: element is added to the path table above serves both fields at once and the
+#: two cannot drift into naming different elements.
+_STATED_COUNTRY_FIELDS: Final[tuple[tuple[str, str], ...]] = (
+    ("supplier_stated_country_code", "supplier_country_code"),
+    ("customer_stated_country_code", "customer_country_code"),
+)
 
 
 def _structured_element_path(field: str, *, shape: DocumentShape) -> str:
@@ -1121,6 +1201,24 @@ def _structured_provenance(
                 source_text=source_text,
             ),
         )
+    # The stated token itself, whether or not the vocabulary could place it. It
+    # is a value copied straight out of the record, so it earns an envelope on
+    # the same terms every other copied field does -- and it is the one envelope
+    # a document stating `THA` produces at all, because the resolved field below
+    # has no value to describe. Without it an unplaceable country reaches the
+    # operator as an absence, indistinguishable from a record that stated none.
+    for stated_field, resolved_field in _STATED_COUNTRY_FIELDS:
+        stated = getattr(parsed, resolved_field, None)
+        if stated is None or not stated.strip():
+            continue
+        envelopes.append(
+            ground_structured_value(
+                field=stated_field,
+                value=stated,
+                element_path=_structured_element_path(resolved_field, shape=parsed.shape),
+                source_text=source_text,
+            ),
+        )
     # A derived value is grounded against the form the RECORD states, not against
     # itself. Facturae states `ESP` and the draft carries `ES`, so looking for the
     # carried form would search for a string the document never states -- and
@@ -1158,6 +1256,13 @@ def _resolved_country_code(stated: str | None) -> tuple[str, str] | None:
     to point at the form the document actually states. Returns ``None`` where the
     record stated nothing, or stated a code the bundled vocabulary does not
     carry -- which never degrades to a country, and above all never to Spain.
+
+    **Both of those return ``None`` and they are not the same event**, so this
+    function is deliberately not the only thing the reader records. The stated
+    token is carried verbatim on
+    :attr:`InvoiceDraft.supplier_stated_country_code` and its sibling whatever
+    this returns, because a caller handed only the resolved half cannot tell a
+    Thai supplier's ``THA`` from an invoice with no address block at all.
     """
     resolved = country_code_for_stated_country_code(stated)
     if resolved is None or stated is None:
@@ -1168,6 +1273,19 @@ def _resolved_country_code(stated: str | None) -> tuple[str, str] | None:
 def _country_code_value(pair: tuple[str, str] | None) -> str | None:
     """Return the resolved half of a country-code pair, or nothing."""
     return None if pair is None else pair[0]
+
+
+def _stated_country_code(stated: str | None) -> str | None:
+    """Return the record's country token verbatim, or nothing where it stated none.
+
+    A blank element is an absence rather than a statement, so it collapses to
+    ``None`` here: carrying an empty string would make "the element is present
+    and empty" report as a stated country nothing can place, which is a document
+    defect the record did not commit. Anything else is returned untouched --
+    unstripped, uncased, untranslated -- because the point of this field is to
+    say what the document says.
+    """
+    return None if stated is None or not stated.strip() else stated
 
 
 def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> InvoiceDraft:
@@ -1214,6 +1332,15 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
         # it gates staying shut for the entire Spanish national format.
         supplier_country_code=_country_code_value(country_codes["supplier_country_code"]),
         customer_country_code=_country_code_value(country_codes["customer_country_code"]),
+        # The record's own token, carried whether or not the line above could
+        # place it. This is what keeps an unplaceable country visible: the
+        # resolved field goes empty for `THA` exactly as it does for a document
+        # with no address block, and every surface downstream -- the review row,
+        # the provenance envelope, the country advisory -- read that emptiness
+        # and said nothing. A Thai export is an ordinary document, not a
+        # malformed one, and it must not arrive looking like a silent absence.
+        supplier_stated_country_code=_stated_country_code(parsed.supplier_country_code),
+        customer_stated_country_code=_stated_country_code(parsed.customer_country_code),
         invoice_number=parsed.invoice_number,
         invoice_series=parsed.invoice_series,
         invoice_date=parsed.invoice_date,

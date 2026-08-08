@@ -22,7 +22,9 @@ plus :func:`pointer_path`, :func:`read_pointer`, :func:`capture_pointer`,
 :func:`resolve_active_bucket_id`, :func:`require_active_bucket_id`, and
 :func:`resolve_repository_bucket_id`. :func:`pid_is_alive` is the shared
 cross-platform PID-liveness probe consumed by every crash-recoverable
-lockfile (bucket lockfile, auth-acquisition lock). TOML and option utilities expose
+lockfile (bucket lockfile, auth-acquisition lock), and :func:`unlink_lockfile`
+is the matching shared removal primitive those same locks use to survive the
+Windows sharing violation a waiter's open handle causes. TOML and option utilities expose
 :func:`read_toml`, :func:`parse_toml_text`, :func:`freeze_toml`,
 :class:`OptionalExtra`, and :func:`require_optional_extra`. Filing-result
 helpers expose the codified :class:`ResultDisposition` mapping and its
@@ -342,6 +344,7 @@ if TYPE_CHECKING:
         foreign_asset_obligation_group,
     )
     from ._fsync import fsync_parent_dir
+    from ._lockfile_unlink import LOCKFILE_UNLINK_RETRY_SECONDS, unlink_lockfile
     from ._pid_liveness import pid_is_alive
     from .aggregation import BindingSourceKind, IntracomOperationType
     from .locks import exclusive_file_lock
@@ -382,6 +385,7 @@ __all__: list[str] = [
     "LENGTH_FAIR_FLOOR",
     "LLM_EXTRA",
     "LOCAL_TRANSPORT_LABEL",
+    "LOCKFILE_UNLINK_RETRY_SECONDS",
     "M210_TIPO_RENTA_CODE_PROJECTION",
     "M347_THRESHOLD_EUR",
     "MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX",
@@ -582,6 +586,7 @@ __all__: list[str] = [
     "undeclared_persisted_formats",
     "unfloored_durable_formats",
     "unknown_floor_keys",
+    "unlink_lockfile",
     "validated_casilla_id",
     "validated_casilla_id_map",
     "write_pointer",
@@ -609,6 +614,10 @@ def __getattr__(name: str) -> object:
         from ._pid_liveness import pid_is_alive
 
         return pid_is_alive
+    if name in ("LOCKFILE_UNLINK_RETRY_SECONDS", "unlink_lockfile"):
+        from . import _lockfile_unlink
+
+        return getattr(_lockfile_unlink, name)
     if name in (
         "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
         "MODELO_720_FOREIGN_ASSET_CLASS_CODES",

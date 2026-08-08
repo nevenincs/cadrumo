@@ -5,6 +5,13 @@ especially Cl@ve Movil push petitions. It is intentionally
 filesystem-backed so separate CLI processes share the same guard.
 The lock file stores an :class:`AuthAcquisitionLockRecord` and reports
 operator-safe state through :class:`AuthAcquisitionLockStatus`.
+
+Removal goes through :func:`~core.unlink_lockfile`: every peer that finds
+the lock taken opens the file to read the record, and on Windows that open
+refuses the owner's delete. An abandoned delete would leave a record naming a
+live process, blocking acquisition until the record's TTL expires, so the
+removal retries. It never raises -- the release runs in a ``finally`` where a
+raise would mask the auth flow's own outcome, and the TTL is the backstop.
 """
 
 from __future__ import annotations
@@ -20,7 +27,13 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind, pid_is_alive
+from ...core import (
+    LOCKFILE_UNLINK_RETRY_SECONDS,
+    STRICT_FROZEN_CONFIG,
+    AuthProviderKind,
+    pid_is_alive,
+    unlink_lockfile,
+)
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
@@ -268,7 +281,7 @@ def acquire_auth_acquisition_lock(
                 file.write(record.model_dump_json(indent=2))
                 file.write("\n")
         except Exception:  # BROAD-EXCEPT-RATIONALE-ACQUISITION-LOCK-TEARDOWN
-            _remove_lock_file(path)
+            _remove_lock_file(path, reason="write_failure_teardown")
             raise
         acquired = True
         break
@@ -329,14 +342,31 @@ def _release_if_owner(path: Path, expected: AuthAcquisitionLockRecord) -> None:
         )
         return
     if observed == expected:
-        _remove_lock_file(path)
+        _remove_lock_file(path, reason="release")
 
 
-def _remove_lock_file(path: Path) -> None:
-    try:
-        path.unlink()
-    except FileNotFoundError:
-        return
+def _remove_lock_file(path: Path, *, reason: str) -> bool:
+    """Delete the lock file, waiting out a peer that holds it open for inspection.
+
+    Every caller that finds the lock taken opens it to read the record, and on
+    Windows that open blocks this delete. Failing to delete strands a lock whose
+    recorded PID is a live process, which blocks every later Cl@ve or
+    certificate acquisition until the TTL in the record expires -- so the
+    removal retries rather than giving up on the first refusal.
+
+    Returns:
+        ``True`` when the file is gone, ``False`` when a peer's handle outlasted
+        the retry window and the record was left on disk.
+    """
+    if unlink_lockfile(path, retry_seconds=LOCKFILE_UNLINK_RETRY_SECONDS, reason=reason):
+        return True
+    _log.warning(
+        "auth acquisition lock file could not be removed; it is held open by another process "
+        "and will block acquisition until its recorded TTL expires (reason=%s path=%s)",
+        reason,
+        path,
+    )
+    return False
 
 
 def _remove_lock_file_if_unchanged(path: Path, expected: str | None) -> bool:
@@ -351,7 +381,8 @@ def _remove_lock_file_if_unchanged(path: Path, expected: str | None) -> bool:
 
     Returns:
         ``True`` when the file was removed or was already gone, ``False`` when
-        the content changed and the file was therefore left in place.
+        it was left in place -- either because the content changed under the
+        verdict, or because a peer's open handle kept the removal refused.
     """
     try:
         current = path.read_text(encoding=UTF_8_ENCODING)
@@ -360,13 +391,11 @@ def _remove_lock_file_if_unchanged(path: Path, expected: str | None) -> bool:
     except OSError:
         # Unreadable now as well: the bytes cannot have been replaced by a
         # record a live owner is relying on, so removal stays authorised.
-        _remove_lock_file(path)
-        return True
+        return _remove_lock_file(path, reason="unreadable_reclaim")
     if expected is not None and current != expected:
         _log.debug("auth acquisition lock changed between inspection and removal; leaving it in place")
         return False
-    _remove_lock_file(path)
-    return True
+    return _remove_lock_file(path, reason="stale_reclaim")
 
 
 def _same_host(hostname: str) -> bool:

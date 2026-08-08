@@ -1989,6 +1989,9 @@ cli:
           es español.
         group_help: Confirma dónde está establecida una contraparte, una sola vez,
           para todos los documentos posteriores.
+        identification_state_help: 'Estado miembro que identifica a efectos de IVA
+          a la contraparte. Es un dato distinto de --scope: el art. 25 exime por este,
+          no por dónde esté establecida.'
         note_help: En qué se basa la respuesta, con sus propias palabras. Se registra,
           nunca se consulta.
         scope_help: El territorio a efectos de IVA en el que está establecida la contraparte.
@@ -1998,7 +2001,6 @@ cli:
           aparece impreso en el documento.
         withdraw_help: Retira un establecimiento confirmado, declarando que la respuesta
           anterior era incorrecta.
-        identification_state_help: 'Estado miembro que identifica a efectos de IVA a la contraparte. Es un dato distinto de --scope: el art. 25 exime por este, no por dónde esté establecida.'
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
         batch_directory_help: Directorio cuyos ficheros se ingresan. Combínalo con
@@ -2096,7 +2098,7 @@ cli:
         field_anchor_not_found: '{field}: el lector señala ''{anchor}'', que no aparece
           en la transcripción del documento. Un valor normalizado puede fallar esta
           búsqueda legítimamente, así que revise el campo en lugar de suponer que
-          fue corroborado.'
+          fue corroborado. {detail}'
         field_anchor_self_reported: '{field}: el lector afirma haberlo leído de ''{anchor}'',
           pero esa afirmación proviene del mismo lector que produjo el valor, así
           que nada independiente lo ha confirmado.'
@@ -4681,6 +4683,9 @@ cli:
         los ingresos no necesitan categoría)
       classification_help: Estado de clasificación profesional del movimiento
       classification_required: --classification es obligatorio cuando no se usa --file.
+      counterparty_country_help: País de establecimiento de la contraparte (ISO 3166-1
+        alfa-2, p. ej. US, DE). Solo establecimiento; para la identificación a efectos
+        de IVA use --counterparty-identification-state.
       counterparty_eu_member_state_help: Estado miembro de la UE o prefijo IVA de
         Irlanda del Norte de la contraparte (ISO 3166-1 alfa-2 minúsculas, p. ej.
         de o xi); obligatorio con --iva-category intra_community_supply, prohibido
@@ -4774,7 +4779,6 @@ cli:
       vision_model_help: Sustituye el modelo de visión local de Ollama para leer una
         factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo
         configurado.
-      counterparty_country_help: 'País de establecimiento de la contraparte (ISO 3166-1 alfa-2, p. ej. US, DE). Solo establecimiento; para la identificación a efectos de IVA use --counterparty-identification-state.'
     counterparty:
       errors:
         scope_conflict: Ya hay confirmado un territorio distinto para '{identifier}',
@@ -4894,6 +4898,7 @@ cli:
       classified_at: Clasificado el
       classified_by: Clasificado por
       counterparty: Contraparte
+      counterparty_country: Establecido en
       counterparty_eu_member_state: Contraparte UE
       counterparty_identification_state: Identificada a efectos de IVA en
       created_event_id: Evento bucket de creación
@@ -4941,7 +4946,6 @@ cli:
       warning: Aviso
       warnings: Avisos
       'yes': Sí
-      counterparty_country: 'Establecido en'
     link:
       actor_help: Etiqueta del operador registrada en los eventos del bucket.
       errors:

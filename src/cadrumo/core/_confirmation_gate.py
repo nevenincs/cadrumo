@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-__all__ = ["ConfirmationBlockReason", "FindingResolutionAction"]
+__all__ = ["ConfirmationBlockReason", "FindingResolutionAction", "ReviewAdvisoryKind"]
 
 
 class ConfirmationBlockReason(StrEnum):
@@ -77,6 +77,45 @@ class ConfirmationBlockReason(StrEnum):
 
     Territory decides the IVA treatment, so the resolution is to supply the
     value rather than to attest that a disagreement is acceptable.
+    """
+
+
+class ReviewAdvisoryKind(StrEnum):
+    """What a draft carries that is worth an operator's attention but blocks nothing.
+
+    The queue's non-blocking axis. A blocking reason answers "why can this not be
+    confirmed"; a kind here answers "what would a person want to know before they
+    confirm it anyway". Closed for the reason the blocking axis is: a queue that
+    can only count its refusals shows an operator nothing at all about the
+    documents it is willing to let through, and the conditions on this axis are
+    precisely the ones that reach the record silently.
+
+    Enumerable rather than a flag, because the kinds have different owners and
+    different fixes. An operator narrowing the queue to the codes only a registry
+    commit can close is asking a different question from one narrowing it to the
+    typos they can fix off the page, and a single "has advisories" boolean makes
+    both queries impossible.
+    """
+
+    PARTY_ATTRIBUTION = "party_attribution"
+    """Nothing verified which party this document's address values belong to.
+
+    Read the wrong way round, both parties land in an IVA territory neither is
+    established in and no check downstream catches it.
+    """
+
+    COUNTRY_CODE_UNASSIGNED = "country_code_unassigned"
+    """A party's country code is one ISO 3166-1 reserves so no country holds it.
+
+    The operator's own fix: the document states a string rather than a country,
+    so the code is corrected against the page.
+    """
+
+    COUNTRY_CODE_UNCATALOGUED = "country_code_uncatalogued"
+    """A party's country code may name a country the bundled vocabulary lacks.
+
+    Not the operator's fix: re-reading the document settles nothing, and the
+    country has to be added to the vocabulary before the party can be placed.
     """
 
 
