@@ -4,7 +4,7 @@ tags:
   - '#aeat-design-relayout-boundary'
 date: '2026-08-08'
 modified: '2026-08-08'
-body_hash: 'sha256:0e5e2fcfb10d72a0b6b85ba32a462ea79757d290bd557cd2a17106de1eca23d1'
+body_hash: 'sha256:62f280a7997e0463ff9ffff05be6c7a961ff39627c50eb6b0a41a697c730a9a3'
 tier: L3
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
