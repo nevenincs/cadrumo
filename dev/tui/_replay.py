@@ -132,7 +132,9 @@ def _run[T](session: Session, read: Callable[[App, float], Awaitable[T] | T]) ->
         return result
 
     with ExitStack() as stack:
-        if surface.needs_profile:
+        if surface.provision is not None:
+            stack.enter_context(surface.provision())
+        elif surface.needs_profile:
             stack.enter_context(harness_storage())
             ensure_session() if surface.needs_session else ensure_profile()
         return asyncio.run(_drive())

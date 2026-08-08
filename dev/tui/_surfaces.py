@@ -35,6 +35,8 @@ from textual.app import App
 
 from cadrumo.core.flows import FlowMode
 
+from ._modelo_work_fixture import harness_modelo_work_storage
+
 
 @dataclass(frozen=True)
 class Surface:
@@ -177,6 +179,58 @@ def _form() -> App:
     )
 
 
+def _modelo_work_wizard() -> App:
+    from uuid import uuid4
+
+    from cadrumo.adapters.inbound.tui import FlowTuiApp, select_flow_frontend
+    from cadrumo.core import resolve_active_bucket_id
+    from cadrumo.core.flows import FrontendCapability
+    from cadrumo.entrypoints.cli._modelo import _resolve_work_unit_for_cli
+    from cadrumo.entrypoints.cli._modelo_work_wizard_cli import (
+        _ACTIVE_RUNS,
+        _definition_from_steps,
+        _outstanding_wizard_steps,
+    )
+
+    from ._modelo_work_fixture import ensure_modelo_work_unit
+
+    # ``harness_modelo_work_storage`` (this surface's ``provision``) already
+    # holds a real ``profile_storage_session`` open around this call.
+    bucket_id = resolve_active_bucket_id()
+    if bucket_id is None:
+        message = "modelo-work-wizard surface built outside its provisioned session"
+        raise RuntimeError(message)
+    work_unit_id = ensure_modelo_work_unit(bucket_id)
+
+    # These three calls, in this order, are exactly what
+    # ``run_modelo_work_wizard`` -> ``_run_wizard_steps`` makes before
+    # handing the definition to ``select_flow_frontend``: resolve the same
+    # work unit, discover its outstanding manual steps against the live
+    # registry, and project them into a flow definition through the
+    # production copy-table assembler. Reproducing the call sequence rather
+    # than hand-building a ``FlowDefinition`` is what makes this surface a
+    # reading of the live wizard rather than another zero-actions stand-in.
+    unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+    steps = _outstanding_wizard_steps(unit)
+    run_token = uuid4().hex
+    _ACTIVE_RUNS[run_token] = {}
+    definition = _definition_from_steps(steps, run_token=run_token)
+
+    # ``select_flow_frontend`` at FULL_SCREEN capability is the identical
+    # primitive ``_run_wizard_steps`` calls -- no ``checkpoint_store``, no
+    # ``resume_state``, no ``registered_values`` override, because the
+    # production call passes none either.
+    frontend = select_flow_frontend(
+        definition,
+        mode=FlowMode.CREATE,
+        capability=FrontendCapability.FULL_SCREEN,
+    )
+    if not isinstance(frontend, FlowTuiApp):
+        message = f"select_flow_frontend returned {type(frontend).__name__}, not the full-screen app"
+        raise RuntimeError(message)
+    return frontend
+
+
 SURFACES: dict[str, Surface] = {
     s.name: s
     for s in (
@@ -212,6 +266,16 @@ SURFACES: dict[str, Surface] = {
             "SYNTHETIC — no single production caller; do not read findings off its field content",
             _form,
             needs_profile=False,
+        ),
+        Surface(
+            "modelo-work-wizard",
+            (
+                "THE LIVE modelo-work wizard — the question/review screens an operator running "
+                "`aeat app modelo work wizard` actually meets, over a real M130 1T work unit, built "
+                "through select_flow_frontend exactly as _modelo_work_wizard_cli.py composes it"
+            ),
+            _modelo_work_wizard,
+            provision=harness_modelo_work_storage,
         ),
     )
 }
