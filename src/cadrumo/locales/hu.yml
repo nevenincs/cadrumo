@@ -1909,13 +1909,14 @@ cli:
         unknown_disposal_regime: 'Ismeretlen átruházási rezsim {regime!r}; elfogadott:
           {accepted}'
       counterparty:
-        actor_help: cli.app.ledger.counterparty.actor_help
+        actor_help: A kijelentést tevő kezelő azonosítója, amelyet rögzítünk.
         confirm_help: Erősítse meg, mely területen letelepedett az ügyfél.
-        country_code_help: cli.app.ledger.counterparty.country_code_help
+        country_code_help: Az ország, amely alatt az azonosítót megadták, ha nem spanyol.
         group_help: Erősítse meg, hol letelepedett az ügyfél – egyszer, minden későbbi
           bizonylathoz.
-        note_help: cli.app.ledger.counterparty.note_help
-        scope_help: cli.app.ledger.counterparty.scope_help
+        note_help: Mire alapozza a választ, saját szavaival. Rögzítjük, de soha nem
+          használjuk fel.
+        scope_help: Az áfa szempontjából irányadó terület, ahol az ügyfél letelepedett.
         tax_identifier_help: Az ügyfél adóazonosítója a bizonylaton nyomtatott formában.
         withdraw_help: Vonja vissza a megerősített letelepedést, kijelentve, hogy
           a korábbi válasz téves volt.
@@ -4683,11 +4684,18 @@ cli:
         modellt használja.
     counterparty:
       errors:
-        scope_conflict: cli.ledger.counterparty.errors.scope_conflict
-        unverifiable_identifier: cli.ledger.counterparty.errors.unverifiable_identifier
+        scope_conflict: A(z) '{identifier}' esetében már más terület van megerősítve,
+          ezért a(z) '{asserted}' megerősítése eldobná a korábbi választ. Előbb vonja
+          vissza az 'aeat app ledger counterparty withdraw' paranccsal. {detail}
+        unverifiable_identifier: A(z) '{identifier}' nem ellenőrizhető adóazonosító,
+          ezért nincs olyan ügyfél, amelynek letelepedését meg lehetne erősíteni.
       notices:
-        already_confirmed: cli.ledger.counterparty.notices.already_confirmed
-        nothing_to_withdraw: cli.ledger.counterparty.notices.nothing_to_withdraw
+        already_confirmed: 'A(z) ''{identifier}'' letelepedését ''{asserted_by}''
+          már megerősítette itt: ''{scope}''; ez a hívás nem hozott létre új megerősítést,
+          és az eredeti forrásadat marad érvényben.'
+        nothing_to_withdraw: A(z) '{identifier}' esetében nem volt megerősített letelepedés,
+          ezért semmi nem került visszavonásra, és a tároló már a kért állapotban
+          van.
     doclink:
       actor_help: Operátor címke.
       help: Letölt egy Drive dokumentumhivatkozást, és a bájtjait titkosított bizonyítékként

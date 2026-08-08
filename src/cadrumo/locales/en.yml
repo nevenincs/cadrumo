@@ -1835,12 +1835,13 @@ cli:
           year (0-100).
         unknown_disposal_regime: 'Unknown disposal regime {regime!r}; accepted: {accepted}'
       counterparty:
-        actor_help: cli.app.ledger.counterparty.actor_help
+        actor_help: Operator identifier recorded as having made the assertion.
         confirm_help: Confirm the territory a counterparty is established in.
-        country_code_help: cli.app.ledger.counterparty.country_code_help
+        country_code_help: Country the identifier is stated under, when it is not
+          Spanish.
         group_help: Confirm where a counterparty is established, once, for every later
           document.
-        note_help: cli.app.ledger.counterparty.note_help
+        note_help: What the answer rests on, in your own words. Recorded, never consulted.
         scope_help: The IVA territory the counterparty is established in.
         tax_identifier_help: The counterparty's tax identifier as printed on the document.
         withdraw_help: Withdraw a confirmed establishment, stating the earlier answer
@@ -4410,11 +4411,18 @@ cli:
         read (e.g. qwen2.5vl:7b); defaults to the configured model.
     counterparty:
       errors:
-        scope_conflict: cli.ledger.counterparty.errors.scope_conflict
-        unverifiable_identifier: cli.ledger.counterparty.errors.unverifiable_identifier
+        scope_conflict: A different territory is already confirmed for '{identifier}',
+          so confirming '{asserted}' would discard the earlier answer. Withdraw it
+          first with 'aeat app ledger counterparty withdraw'. {detail}
+        unverifiable_identifier: '''{identifier}'' is not a verifiable tax identifier,
+          so there is no counterparty to confirm an establishment for.'
       notices:
-        already_confirmed: cli.ledger.counterparty.notices.already_confirmed
-        nothing_to_withdraw: cli.ledger.counterparty.notices.nothing_to_withdraw
+        already_confirmed: '''{identifier}'' was already confirmed as established
+          in ''{scope}'' by ''{asserted_by}''; this call created no new confirmation
+          and the original provenance stands.'
+        nothing_to_withdraw: No confirmed establishment was held for '{identifier}',
+          so nothing was withdrawn and the store is already in the state you asked
+          for.
     doclink:
       actor_help: Operator label.
       help: Fetch a Drive document link and store its bytes as encrypted evidence

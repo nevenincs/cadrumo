@@ -1983,13 +1983,15 @@ cli:
         unknown_disposal_regime: 'Régimen de transmisión desconocido {regime!r}; aceptados:
           {accepted}'
       counterparty:
-        actor_help: cli.app.ledger.counterparty.actor_help
+        actor_help: Identificador del operador que se registra como autor de la afirmación.
         confirm_help: Confirma el territorio en el que está establecida una contraparte.
-        country_code_help: cli.app.ledger.counterparty.country_code_help
+        country_code_help: País bajo el que se declara el identificador, cuando no
+          es español.
         group_help: Confirma dónde está establecida una contraparte, una sola vez,
           para todos los documentos posteriores.
-        note_help: cli.app.ledger.counterparty.note_help
-        scope_help: cli.app.ledger.counterparty.scope_help
+        note_help: En qué se basa la respuesta, con sus propias palabras. Se registra,
+          nunca se consulta.
+        scope_help: El territorio a efectos de IVA en el que está establecida la contraparte.
         tax_identifier_help: El identificador fiscal de la contraparte tal y como
           aparece impreso en el documento.
         withdraw_help: Retira un establecimiento confirmado, declarando que la respuesta
@@ -4768,11 +4770,17 @@ cli:
         configurado.
     counterparty:
       errors:
-        scope_conflict: cli.ledger.counterparty.errors.scope_conflict
-        unverifiable_identifier: cli.ledger.counterparty.errors.unverifiable_identifier
+        scope_conflict: Ya hay confirmado un territorio distinto para '{identifier}',
+          por lo que confirmar '{asserted}' descartaría la respuesta anterior. Retírela
+          primero con 'aeat app ledger counterparty withdraw'. {detail}
+        unverifiable_identifier: '''{identifier}'' no es un identificador fiscal verificable,
+          por lo que no hay ninguna contraparte cuyo establecimiento se pueda confirmar.'
       notices:
-        already_confirmed: cli.ledger.counterparty.notices.already_confirmed
-        nothing_to_withdraw: cli.ledger.counterparty.notices.nothing_to_withdraw
+        already_confirmed: '''{identifier}'' ya estaba confirmada como establecida
+          en ''{scope}'' por ''{asserted_by}''; esta llamada no ha creado ninguna
+          confirmación nueva y se mantiene la procedencia original.'
+        nothing_to_withdraw: No había ningún establecimiento confirmado para '{identifier}',
+          por lo que no se ha retirado nada y el almacén ya está en el estado solicitado.
     doclink:
       actor_help: Etiqueta del operador.
       help: Descarga un enlace de documento de Drive y guarda sus bytes como evidencia
