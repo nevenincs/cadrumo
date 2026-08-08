@@ -104,7 +104,7 @@ def _as_bank_transaction(*, category: IvaCategory, member_state: EUMemberState |
             "iva_rate": Decimal("0"),
             "iva_amount": Decimal("0"),
             "iva_category": category,
-            "counterparty_eu_member_state": member_state,
+            "counterparty_country": (member_state.value.upper() if member_state is not None else None),
             # Where the acquirer is established and where it is VAT-identified
             # agree in this scenario. They are still supplied separately: the
             # art. 25 gate reads only the second, and the parity this module

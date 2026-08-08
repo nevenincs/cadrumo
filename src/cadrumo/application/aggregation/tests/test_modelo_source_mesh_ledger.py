@@ -120,7 +120,7 @@ def _iva_transaction(
     iva_amount: Decimal,
     booked_date: date = date(2026, 2, 10),
     iva_category: IvaCategory | None = None,
-    counterparty_eu_member_state: EUMemberState | None = None,
+    counterparty_country: str | None = None,
 ) -> Transaction:
     fields: dict[str, object] = {
         "raw": _raw_transaction(provider_id, booked_date=booked_date, amount=amount),
@@ -137,8 +137,8 @@ def _iva_transaction(
     }
     if iva_category is not None:
         fields["iva_category"] = iva_category
-    if counterparty_eu_member_state is not None:
-        fields["counterparty_eu_member_state"] = counterparty_eu_member_state
+    if counterparty_country is not None:
+        fields["counterparty_country"] = counterparty_country
     return Transaction.model_validate(fields)
 
 
@@ -677,7 +677,7 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation(
         taxable_base=Decimal("200.00"),
         iva_amount=Decimal("42.00"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        counterparty_eu_member_state=EUMemberState.DE,
+        counterparty_country="DE",
     )
     tx_repo.save(TransactionCatalogue.from_transactions((domestic_sale, exempt_supply)))
 

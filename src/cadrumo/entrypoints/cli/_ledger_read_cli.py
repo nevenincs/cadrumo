@@ -869,8 +869,8 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
             f"{tr('cli.ledger.labels.iva_rate', default='IVA rate')}\t{_field(transaction_payload.iva_rate)}",
             f"{tr('cli.ledger.labels.iva_amount', default='IVA amount')}\t{_field(transaction_payload.iva_amount)}",
             f"{tr('cli.ledger.labels.iva_category')}\t{_field(transaction_payload.iva_category)}",
-            f"{tr('cli.ledger.labels.counterparty_eu_member_state', default='EU counterparty')}"
-            f"\t{_field(transaction_payload.counterparty_eu_member_state)}",
+            f"{tr('cli.ledger.labels.counterparty_country', default='Established in')}"
+            f"\t{_field(transaction_payload.counterparty_country)}",
             f"{tr('cli.ledger.labels.counterparty_identification_state', default='VAT identified in')}"
             f"\t{_field(transaction_payload.counterparty_identification_state)}",
             f"{tr('cli.ledger.labels.irpf_category', default='IRPF category')}"

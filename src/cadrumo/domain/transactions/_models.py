@@ -726,12 +726,38 @@ class Transaction(BaseModel):
             discriminator. Valid only when ``iva_category`` is
             :attr:`IvaCategory.DOMESTIC_EXEMPT`; ``None`` preserves
             the broad exempt category with no sub-article distinction.
-        counterparty_eu_member_state: Where the counterparty is
-            ESTABLISHED -- an address fact, ISO 3166-1 alpha-2. It
-            answers establishment-flavoured questions only (the export
-            families must carry none, because an export leaves the
-            Union) and is barred from identification-keyed gates.
-            ``None`` otherwise.
+        counterparty_country: Where the counterparty is ESTABLISHED --
+            an address fact, ISO 3166-1 alpha-2. It answers
+            establishment-flavoured questions only and is barred from
+            identification-keyed gates. ``None`` means establishment
+            was not recorded, never that the party is established
+            nowhere and above all never that it is outside the Union.
+
+            Stored as the raw code rather than as a Member State enum,
+            which is the whole point of the field: an enum closed over
+            the Member States can say "established in Germany" and
+            cannot say "established in the United States", so absence
+            was the only representation a third country had. A gate
+            reading that absence as third-country establishment was
+            reading "not recorded" as "outside the Union" -- and on the
+            issued side outside the Union is export treatment,
+            zero-rated, so an unrecorded establishment silently
+            exempted a supply. The code is handed to
+            :func:`~domain.iva.territorial_scope_for_country`, which
+            answers from the closed vocabulary and refuses a code that
+            names no country, so ``XX`` establishes nothing rather than
+            establishing an export.
+
+            This mirrors :class:`~domain.invoices.Invoice`, which has
+            always stored the country and derived the Member State.
+            The two models disagreeing about how one fact is held is
+            what let the ledger path lose a distinction the invoice
+            path kept.
+        counterparty_eu_member_state: The Member State the counterparty
+            is established in, DERIVED from ``counterparty_country``
+            and ``None`` for every country outside the Union. Not a
+            stored fact: one establishment cannot be recorded twice
+            without the two copies eventually disagreeing.
         counterparty_identification_state: Which Member State
             VAT-IDENTIFIES the counterparty, read from the prefix of
             the VAT number it trades under. A different fact from
@@ -843,7 +869,7 @@ class Transaction(BaseModel):
     classification_history: tuple[ClassificationHistoryEntry, ...] = ()
     iva_category: IvaCategory | None = None
     exemption_article: IvaExemptionArticle | None = None
-    counterparty_eu_member_state: EUMemberState | None = None
+    counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
     cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE
     operation_date: date | None = None
@@ -897,7 +923,6 @@ class Transaction(BaseModel):
         "lifecycle_state",
         "iva_category",
         "exemption_article",
-        "counterparty_eu_member_state",
         "counterparty_identification_state",
         "cash_accounting_treatment",
         "art_104_tres_exclusion",
@@ -923,7 +948,6 @@ class Transaction(BaseModel):
             "lifecycle_state": TransactionLifecycleState,
             "iva_category": IvaCategory,
             "exemption_article": IvaExemptionArticle,
-            "counterparty_eu_member_state": EUMemberState,
             "counterparty_identification_state": EUMemberState,
             "cash_accounting_treatment": IvaCashAccountingTreatment,
             "art_104_tres_exclusion": Art104TresExclusion,
@@ -1083,6 +1107,55 @@ class Transaction(BaseModel):
             return normalise_iso_3166_alpha2_jurisdiction(value)
         except CoreValidationError as exc:
             raise TransactionValidationError(str(exc)) from exc
+
+    @field_validator("counterparty_country")
+    @classmethod
+    def _validate_counterparty_country(cls, value: str | None) -> str | None:
+        """Restrict counterparty_country to an ISO 3166-1 alpha-2 uppercase code.
+
+        Shape only, and deliberately not membership. Whether a code names a
+        country this codebase can place is a separate question with a separate
+        authority -- :func:`~domain.iva.territorial_scope_for_country` and
+        :func:`~domain.iva.stated_country_code_status` -- and asking it here
+        would refuse a real jurisdiction the bundled vocabulary has simply not
+        catalogued yet. Thailand is the live example: ``TH`` names a genuine
+        third country the vocabulary omits, so a membership check at
+        construction would make a true establishment unrecordable while a
+        shape check records it and lets the gate report the catalogue gap.
+
+        The shape policy is the same
+        :func:`~core.parsing.normalise_iso_3166_alpha2_jurisdiction` that owns
+        ``source_jurisdiction`` above, so one model does not accept two
+        different spellings of a country code.
+        """
+        try:
+            return normalise_iso_3166_alpha2_jurisdiction(value)
+        except CoreValidationError as exc:
+            raise TransactionValidationError(str(exc)) from exc
+
+    @property
+    def counterparty_eu_member_state(self) -> EUMemberState | None:
+        """Return the Member State the counterparty is established in, or ``None``.
+
+        Derived from :attr:`counterparty_country` rather than stored beside it,
+        matching :class:`~domain.invoices.Invoice`. Two stored copies of one
+        establishment fact can disagree, and the disagreement is silent.
+
+        ``None`` covers three different situations and deliberately does not
+        distinguish them, because a Member State accessor is the wrong place to:
+        no country was recorded, the country is outside the Union, or the code
+        names no country at all. A caller that must tell those apart asks
+        :func:`~domain.iva.territorial_scope_for_country` for the territory and
+        :func:`~domain.iva.stated_country_code_status` for why nothing resolved.
+        Reading this ``None`` as "outside the Union" is exactly the inference
+        that let an unrecorded establishment zero-rate a supply.
+        """
+        if self.counterparty_country is None:
+            return None
+        try:
+            return EUMemberState(self.counterparty_country.lower())
+        except ValueError:
+            return None
 
     @model_validator(mode="after")
     def _enforce_business_pct(self) -> Self:

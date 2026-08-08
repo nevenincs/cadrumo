@@ -69,8 +69,8 @@ def test_single_classify_intracommunity_with_eu_state() -> None:
             "BUSINESS",
             "--iva-category",
             "intra_community_supply",
-            "--counterparty-eu-member-state",
-            "de",
+            "--counterparty-country",
+            "DE",
         ],
     )
     assert result.exit_code == 0, result.output
@@ -78,6 +78,7 @@ def test_single_classify_intracommunity_with_eu_state() -> None:
     assert txn is not None
     assert txn.business_classification is BusinessClassification.BUSINESS
     assert txn.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert txn.counterparty_country == "DE"
     assert txn.counterparty_eu_member_state is EUMemberState.DE
 
 

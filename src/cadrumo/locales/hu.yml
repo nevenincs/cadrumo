@@ -4686,6 +4686,7 @@ cli:
       vision_model_help: Felülírja a helyi Ollama látómodellt egy beszkennelt vagy
         képi számla olvasásához (pl. qwen2.5vl:7b); alapértelmezetten a beállított
         modellt használja.
+      counterparty_country_help: 'Az ügyfél letelepedési országa (ISO 3166-1 alfa-2, például US, DE). Csak letelepedés; az áfa-azonosításhoz használja a --counterparty-identification-state kapcsolót.'
     counterparty:
       errors:
         scope_conflict: A(z) '{identifier}' esetében már más terület van megerősítve,
@@ -4852,6 +4853,7 @@ cli:
       warning: Figyelmeztetés
       warnings: Figyelmeztetések
       'yes': Igen
+      counterparty_country: 'Letelepedés helye'
     link:
       actor_help: A bucket eseményekhez rögzített operátori címke.
       errors:

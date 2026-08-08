@@ -475,11 +475,7 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         iva_rate=_display_decimal(transaction.iva_rate) if transaction.iva_rate is not None else None,
         iva_amount=_display_decimal(transaction.iva_amount) if transaction.iva_amount is not None else None,
         iva_category=transaction.iva_category.value if transaction.iva_category is not None else None,
-        counterparty_eu_member_state=(
-            transaction.counterparty_eu_member_state.value
-            if transaction.counterparty_eu_member_state is not None
-            else None
-        ),
+        counterparty_country=transaction.counterparty_country,
         counterparty_identification_state=(
             transaction.counterparty_identification_state.value
             if transaction.counterparty_identification_state is not None
@@ -993,11 +989,11 @@ def _command_from_patch(
     notes = _required_patched(patch, patch_fields, "notes", current.notes)
     attachment_ids = _required_patched(patch, patch_fields, "attachment_ids", current.attachment_ids)
     iva_category = _optional_patched(patch, patch_fields, "iva_category", current.iva_category)
-    counterparty_eu_member_state = _optional_patched(
+    counterparty_country = _optional_patched(
         patch,
         patch_fields,
-        "counterparty_eu_member_state",
-        current.counterparty_eu_member_state,
+        "counterparty_country",
+        current.counterparty_country,
     )
     counterparty_identification_state = _optional_patched(
         patch,
@@ -1034,7 +1030,7 @@ def _command_from_patch(
         attachment_ids=attachment_ids,
         notes=notes,
         iva_category=iva_category,
-        counterparty_eu_member_state=counterparty_eu_member_state,
+        counterparty_country=counterparty_country,
         counterparty_identification_state=counterparty_identification_state,
         source_jurisdiction=(
             patch.source_jurisdiction if "source_jurisdiction" in patch_fields else current.source_jurisdiction
@@ -1301,7 +1297,7 @@ def _transaction_from_command(
         ),
         "notes": command.notes,
         "iva_category": command.iva_category,
-        "counterparty_eu_member_state": command.counterparty_eu_member_state,
+        "counterparty_country": command.counterparty_country,
         "counterparty_identification_state": command.counterparty_identification_state,
         "source_jurisdiction": command.source_jurisdiction,
         "group_label": command.group_label,

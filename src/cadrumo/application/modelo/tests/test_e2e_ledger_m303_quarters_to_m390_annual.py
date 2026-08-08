@@ -256,7 +256,7 @@ def _iva_transaction(
     if iva_category is not None:
         payload["iva_category"] = iva_category
     if counterparty_eu_member_state is not None:
-        payload["counterparty_eu_member_state"] = counterparty_eu_member_state
+        payload["counterparty_country"] = counterparty_eu_member_state.value.upper()
     if purchase_invoice_evidence_id is not None:
         payload["purchase_invoice_evidence_id"] = purchase_invoice_evidence_id
     return Transaction.model_validate(payload)
@@ -329,7 +329,7 @@ def _persist_year_of_invoices(
                     period=period,
                     filing_year=filing_year,
                     iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-                    counterparty_eu_member_state=EUMemberState.DE,
+                    counterparty_country="DE",
                 ),
             )
         if facts["reverse_charge_base"] > Decimal("0"):

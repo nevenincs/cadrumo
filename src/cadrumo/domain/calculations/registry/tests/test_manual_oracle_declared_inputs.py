@@ -158,6 +158,43 @@ def _payload(name: str) -> ManualWorkedExamplePayload:
 #: fixture is itself the first step of migrating them; their reasons say so. No count
 #: is stated here for the same reason none is asserted: it would be wrong the moment a
 #: payload migrates, and the entries themselves are the inventory.
+#: The one reason six payloads are excluded, ruled once rather than six times.
+#:
+#: BY DESIGN, NOT A GAP. These payloads' consumed figures never reach a casilla: five
+#: drive the registry through IvaLedgerObservation rows the manual does not print, and
+#: the M202 scenario's figure arrives as a binding value. The manual states only the
+#: outcome aggregates, which are already those payloads' own expected_by_casilla_id, so
+#: declaring them would trip
+#: :func:`test_no_declared_input_is_also_an_expected_output` -- correctly.
+#:
+#: :class:`DeclaredScenarioInputs` was NOT widened to admit them, and that is the
+#: decision rather than an omission. The contract's whole guarantee is reviewability
+#: against a printed page: a locator lets a reviewer hold the declaration beside the
+#: manual and check it. A ledger row the manual never prints has nothing to point at,
+#: and neither does a binding value. Admitting them would mean declarations carrying no
+#: locator, or one aimed at the aggregate they roll into -- a reference that looks
+#: reviewable and is not. That would not extend the guarantee to six more payloads; it
+#: would weaken it for all twenty-one, because a reader could no longer assume a
+#: declared input is a printed fact. The contract meaning one thing is worth more than
+#: the coverage.
+#:
+#: WHAT THIS RULING DOES NOT SETTLE: these six still have the two-independent-
+#: transcriptions problem -- test and payload as separate copies of one truth with
+#: nothing checking they agree. That risk is real and is explicitly NOT addressed for
+#: them. Closing it needs a mechanism other than a locator-bearing declaration, which
+#: is a separate question and not a reason to reopen this one.
+#:
+#: The boundary is a property of individual INPUTS, not of whole payloads: the 2025
+#: prorrata payload migrated with two casilla-keyed givens declared while its
+#: prior-year volumes, which reach a domain function directly, stayed local.
+_NO_PRINTED_CASILLA_INPUT = (
+    "ruled out of scope by design, not pending: its consumed figures never reach a "
+    "casilla, so there is no printed input DeclaredScenarioInputs.by_casilla_id can key "
+    "and no page a locator could point at. Consumed by {test}. See "
+    "_NO_PRINTED_CASILLA_INPUT for the full rationale and for what this ruling does not "
+    "settle"
+)
+
 _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
     "modelo-100-2024-minimo-descendientes-adopcion-mayor-de-tres-rioja.json": (
         "scenario facts still hand-written in test_minimo_descendientes_manual_oracles.py; that surface is "
@@ -173,22 +210,22 @@ _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
         "mid-verification hold as the Rioja payload"
     ),
     "modelo-202-2025-primer-pago-modalidad-40-2.json": (
-        "consumed by test_modelo_202_2025_pago_fraccionado_manual_worked_example.py, whose one manual figure reaches the engine as a BINDING value rather than a casilla input: the example prints cuota integra 12.000 and retenciones 2.000 and works them into a base of 10.000, which the scenario supplies through modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior. DeclaredScenarioInputs.by_casilla_id is casilla-keyed and cannot express a binding value. Its only actual casilla input is a 0,00 resultado-declaracion-anterior standing for 'no earlier complementary declaration', which the manual implies and never prints. Needs a binding-valued declaration shape, or a ruling that a payload whose inputs are all bindings stays out of scope -- the corpus and the locators are both available here, so this is a contract-shape gap and not a corpus one"
+        _NO_PRINTED_CASILLA_INPUT.format(test="test_modelo_202_2025_pago_fraccionado_manual_worked_example.py")
     ),
     "modelo-303-2024-regimen-general-recargo-intracomunitaria-importacion.json": (
-        "consumed by test_m303_2024_regimen_general_manual_worked_example.py, which drives the registry through constructed IvaLedgerObservation rows rather than casilla inputs: the manual prints only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare and DeclaredScenarioInputs.by_casilla_id could not express one if there were. A CONTRACT-shape gap, not a corpus one -- the IVA manuals now carry extracted text, so locators are constructible once that extraction has been read back against the pdf for the pages this payload cites"
+        _NO_PRINTED_CASILLA_INPUT.format(test="test_m303_2024_regimen_general_manual_worked_example.py")
     ),
     "modelo-322-2024-grupo-entidades-delta.json": (
-        "consumed by test_m322_2024_grupo_entidades_manual_worked_example.py, which drives the registry through constructed IvaLedgerObservation rows rather than casilla inputs: the manual prints only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare and DeclaredScenarioInputs.by_casilla_id could not express one if there were. A CONTRACT-shape gap, not a corpus one -- the IVA manuals now carry extracted text, so locators are constructible once that extraction has been read back against the pdf for the pages this payload cites"
+        _NO_PRINTED_CASILLA_INPUT.format(test="test_m322_2024_grupo_entidades_manual_worked_example.py")
     ),
     "modelo-322-2024-grupo-entidades-omega.json": (
-        "consumed by test_m322_2024_grupo_entidades_manual_worked_example.py, which drives the registry through constructed IvaLedgerObservation rows rather than casilla inputs: the manual prints only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare and DeclaredScenarioInputs.by_casilla_id could not express one if there were. A CONTRACT-shape gap, not a corpus one -- the IVA manuals now carry extracted text, so locators are constructible once that extraction has been read back against the pdf for the pages this payload cites"
+        _NO_PRINTED_CASILLA_INPUT.format(test="test_m322_2024_grupo_entidades_manual_worked_example.py")
     ),
     "modelo-353-2024-grupo-entidades-agregado.json": (
-        "consumed by test_m353_2024_grupo_entidades_manual_worked_example.py, which drives the registry through constructed IvaLedgerObservation rows rather than casilla inputs: the manual prints only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare and DeclaredScenarioInputs.by_casilla_id could not express one if there were. A CONTRACT-shape gap, not a corpus one -- the IVA manuals now carry extracted text, so locators are constructible once that extraction has been read back against the pdf for the pages this payload cites"
+        _NO_PRINTED_CASILLA_INPUT.format(test="test_m353_2024_grupo_entidades_manual_worked_example.py")
     ),
     "modelo-390-2024-resumen-anual-cuatro-trimestres.json": (
-        "consumed by test_m390_2024_annual_manual_worked_example.py, which drives the registry through constructed IvaLedgerObservation rows rather than casilla inputs: the manual prints only the outcome aggregates, which are already this payload's expected_by_casilla_id, so there is no printed INPUT to declare and DeclaredScenarioInputs.by_casilla_id could not express one if there were. A CONTRACT-shape gap, not a corpus one -- the IVA manuals now carry extracted text, so locators are constructible once that extraction has been read back against the pdf for the pages this payload cites"
+        _NO_PRINTED_CASILLA_INPUT.format(test="test_m390_2024_annual_manual_worked_example.py")
     ),
 }
 

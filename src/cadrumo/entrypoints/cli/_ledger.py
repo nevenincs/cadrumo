@@ -287,10 +287,10 @@ def ledger_add(
         "--iva-category",
         help=tr("cli.ledger.classify.iva_category_help"),
     ),
-    counterparty_eu_member_state: EUMemberState | None = typer.Option(
+    counterparty_country: str | None = typer.Option(
         None,
-        "--counterparty-eu-member-state",
-        help=tr("cli.ledger.classify.counterparty_eu_member_state_help"),
+        "--counterparty-country",
+        help=tr("cli.ledger.classify.counterparty_country_help"),
     ),
     counterparty_identification_state: EUMemberState | None = typer.Option(
         None,
@@ -401,7 +401,7 @@ def ledger_add(
             iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
             iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
             iva_category=iva_category,
-            counterparty_eu_member_state=counterparty_eu_member_state,
+            counterparty_country=counterparty_country,
             counterparty_identification_state=counterparty_identification_state,
             recargo_amount=_parse_decimal(recargo_amount, label="recargo-amount"),
             irpf_category=irpf_category,
@@ -620,10 +620,10 @@ def ledger_classify(
         "--iva-category",
         help=tr("cli.ledger.classify.iva_category_help"),
     ),
-    counterparty_eu_member_state: EUMemberState | None = typer.Option(
+    counterparty_country: str | None = typer.Option(
         None,
-        "--counterparty-eu-member-state",
-        help=tr("cli.ledger.classify.counterparty_eu_member_state_help"),
+        "--counterparty-country",
+        help=tr("cli.ledger.classify.counterparty_country_help"),
     ),
     counterparty_identification_state: EUMemberState | None = typer.Option(
         None,
@@ -760,7 +760,7 @@ def ledger_classify(
             irpf_category=irpf_category,
             m210_income_classification=m210_income_classification,
             iva_category=iva_category,
-            counterparty_eu_member_state=counterparty_eu_member_state,
+            counterparty_country=counterparty_country,
             counterparty_identification_state=counterparty_identification_state,
             notes=reason,
         )

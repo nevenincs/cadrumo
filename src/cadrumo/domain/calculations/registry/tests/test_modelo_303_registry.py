@@ -398,6 +398,11 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
         # fixture has no export rows, so casillas 59/60 resolve to zero.
         "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
         "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
+        # Casilla 122 is deliberately ABSENT here. This test resolves against
+        # 2009-y-siguientes, and the supplier-side inversión binding exists only
+        # on 2023-y-siguientes -- so listing it would assert a resolution this
+        # revision cannot produce. The three fixtures that DO carry it are the
+        # ones resolving against 2023.
         # No third-country import rows in this observation set, so the import
         # deducible binding resolves to zero.
         "modelo-303-iva-soportado-importaciones-cuota": Decimal("0"),
@@ -661,6 +666,11 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
         "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
         "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
+        # No issued domestic reverse charge in this fixture either, so the
+        # supplier-side base for casilla 122 resolves to zero. Supplied for the
+        # same reason 59 and 60 are: a bound casilla demands its fact, and the
+        # absence of contributing rows is stated rather than left missing.
+        "modelo-303-casilla-122-inversion-sujeto-pasivo-base": Decimal("0"),
         "modelo-303-iva-repercutido-general-base": Decimal("0"),
         "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
         "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
@@ -829,6 +839,11 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
         "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
         "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
+        # No issued domestic reverse charge in this fixture either, so the
+        # supplier-side base for casilla 122 resolves to zero. Supplied for the
+        # same reason 59 and 60 are: a bound casilla demands its fact, and the
+        # absence of contributing rows is stated rather than left missing.
+        "modelo-303-casilla-122-inversion-sujeto-pasivo-base": Decimal("0"),
         "modelo-303-iva-repercutido-general-base": Decimal("0"),
         "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
         "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),
@@ -900,6 +915,11 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
         "modelo-303-iva-autorepercutido-interior-deducible-cuota": Decimal("0.00"),
         "modelo-303-casilla-59-entregas-intracomunitarias-base": Decimal("0"),
         "modelo-303-casilla-60-exportaciones-base": Decimal("0"),
+        # No issued domestic reverse charge in this fixture either, so the
+        # supplier-side base for casilla 122 resolves to zero. Supplied for the
+        # same reason 59 and 60 are: a bound casilla demands its fact, and the
+        # absence of contributing rows is stated rather than left missing.
+        "modelo-303-casilla-122-inversion-sujeto-pasivo-base": Decimal("0"),
         "modelo-303-iva-repercutido-general-base": Decimal("0"),
         "modelo-303-iva-repercutido-reducido-base": Decimal("0"),
         "modelo-303-iva-repercutido-super-reducido-base": Decimal("0"),

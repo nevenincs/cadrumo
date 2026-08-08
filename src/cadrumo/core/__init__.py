@@ -215,6 +215,10 @@ from ._period import (
     is_administrative_period_token,
     registry_period_kind,
 )
+from ._notificacion_estado_servicio import (
+    NotificacionEstadoServicio,
+    resolve_notificacion_estado_servicio,
+)
 from ._post_filing_event import (
     ACTIONABLE_POST_FILING_EVENT_KINDS,
     PostFilingEventKind,
@@ -469,6 +473,7 @@ __all__: list[str] = [
     "ModelRuntime",
     "ModelSelectionAdvisory",
     "Modelo",
+    "NotificacionEstadoServicio",
     "ObjetoTributario",
     "OfficialTipoRentaCode",
     "OptionalExtra",
@@ -564,6 +569,7 @@ __all__: list[str] = [
     "resolve_active_bucket_id",
     "resolve_amendment_kind_regime",
     "resolve_anchored_extracted_unit",
+    "resolve_notificacion_estado_servicio",
     "resolve_repository_bucket_id",
     "restore_pointer",
     "result_disposition_casilla_ids",

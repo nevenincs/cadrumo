@@ -256,7 +256,7 @@ def test_preflight_blocks_export_sale_with_eu_member_state_before_aggregation() 
         iva_rate=Decimal("0"),
         iva_amount=Decimal("0"),
         iva_category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-        counterparty_eu_member_state=EUMemberState.DE,
+        counterparty_country="DE",
     )
 
     report = preflight_transaction_catalogue(

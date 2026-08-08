@@ -47,7 +47,7 @@ from ..domain.currency import (
     CurrencyNormalizationStatus,
     MonetaryAmount,
 )
-from ..domain.iva import EUMemberState, IvaCategory, IvaFlowDirection
+from ..domain.iva import IvaCategory, IvaFlowDirection
 from ..domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -169,7 +169,7 @@ def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
                 "iva_amount": iva_amount,
                 "category_id": rule.get("category_id"),
                 "iva_category": IvaCategory(iva_category) if iva_category else None,
-                "counterparty_eu_member_state": (EUMemberState(eu_member_state.lower()) if eu_member_state else None),
+                "counterparty_country": (eu_member_state.upper() if eu_member_state else None),
                 "irpf_category": rule.get("irpf_category"),
                 "source_jurisdiction": "ES",
                 "group_label": None,

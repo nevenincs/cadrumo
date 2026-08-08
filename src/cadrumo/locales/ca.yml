@@ -4736,6 +4736,7 @@ cli:
       vision_model_help: Substitueix el model de visió local d'Ollama per llegir una
         factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir
         el model configurat.
+      counterparty_country_help: 'País d''establiment de la contrapart (ISO 3166-1 alfa-2, p. ex. US, DE). Només establiment; per a la identificació a efectes d''IVA feu servir --counterparty-identification-state.'
     counterparty:
       errors:
         scope_conflict: Ja hi ha confirmat un territori diferent per a '{identifier}',
@@ -4903,6 +4904,7 @@ cli:
       warning: Avís
       warnings: Avisos
       'yes': Sí
+      counterparty_country: 'Establert a'
     link:
       actor_help: Etiqueta de l'operador registrada als esdeveniments del bucket.
       errors:

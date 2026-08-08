@@ -167,7 +167,7 @@ def _transaction(
     if iva_category is not None:
         fields["iva_category"] = iva_category
     if counterparty_eu_member_state is not None:
-        fields["counterparty_eu_member_state"] = counterparty_eu_member_state
+        fields["counterparty_country"] = counterparty_eu_member_state.value.upper()
     if counterparty_identification_state is not None:
         fields["counterparty_identification_state"] = counterparty_identification_state
     return Transaction.model_validate(fields)
@@ -855,7 +855,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
         iva_rate=Decimal("0"),
         iva_amount=Decimal("0"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        counterparty_eu_member_state=EUMemberState.DE,
+        counterparty_country="DE",
         # Established AND VAT-identified in Germany, which is the ordinary case.
         # Art. 25 exempts on the IDENTIFICATION, so the supply is refused at
         # preflight without it however clear the establishment is; declaring

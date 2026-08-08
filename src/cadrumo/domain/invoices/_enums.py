@@ -322,17 +322,19 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
     effective_date = on_date or today_madrid()
     if kind not in rate_kinds_for_declared_rate(EUMemberState.ES, fraction, effective_date):
         # Coverage and legality are different facts and must not share a
-        # message. The registry is a current-rates table with no record before
-        # 2024, so a 2023 line fails on OUR reach, not on the law -- Spain's
-        # 21 % has stood since 2012. Saying "not in force" there sends a filer
-        # to correct a figure that was right, and invites widening the table
-        # with a guessed value rather than an authored, corpus-backed one.
+        # message. The registry's reach differs PER TIER -- the general and
+        # reducido records run from 2012, the super-reducido ones only from
+        # 2024 -- so a line can fail on OUR reach while the table carries other
+        # tiers that same day. Saying "not in force" there sends a filer to
+        # correct a figure that was right, and invites widening the table with
+        # a guessed value rather than an authored, corpus-backed one.
         if not rate_table_covers(EUMemberState.ES, effective_date, kind):
             raise IvaRateNotFoundError(
                 f"no IVA rate is on record for {effective_date.isoformat()}: the rate registry "
-                f"carries no rates for Spain on that date, so IVA rate slot {rate.name} "
-                f"({fraction * Decimal('100')}%) cannot be confirmed. This is a limit of the "
-                "bundled registry, not a statement that the rate was unlawful.",
+                f"carries no {kind.value!r} rate for Spain on that date, so IVA rate slot "
+                f"{rate.name} ({fraction * Decimal('100')}%) cannot be confirmed. Other tiers may "
+                "reach that date; this is a limit of the bundled registry, not a statement that "
+                "the rate was unlawful.",
             )
         raise IvaRateNotFoundError(
             f"IVA rate slot {rate.name} ({fraction * Decimal('100')}%) was not in force for "

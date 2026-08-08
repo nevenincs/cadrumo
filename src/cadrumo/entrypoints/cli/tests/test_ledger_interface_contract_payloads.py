@@ -337,7 +337,7 @@ def test_export_payload_accepts_application_intracommunity_rows() -> None:
         row_count=1,
         byte_size=86,
         sha256="8be63b9a5518ec747a470d0a2a8bb79cdd2892f2aa99c87376991d801dc43477",
-        fieldnames=("transaction_id", "iva_category", "counterparty_eu_member_state"),
+        fieldnames=("transaction_id", "iva_category", "counterparty_country"),
         rows=(
             LedgerExportRow(
                 bucket_id="default",
@@ -351,7 +351,7 @@ def test_export_payload_accepts_application_intracommunity_rows() -> None:
                 description="EU B2B supply",
                 business_classification="BUSINESS",
                 iva_category="intra_community_supply",
-                counterparty_eu_member_state="de",
+                counterparty_country="DE",
             ),
         ),
         payload=b'{"transaction_id":"%s"}\n' % (b"a" * 64),
@@ -360,7 +360,7 @@ def test_export_payload_accepts_application_intracommunity_rows() -> None:
     export = LedgerExportPayload.from_result(app_result, output_path="ledger.jsonl")
 
     assert export.rows[0].iva_category == "intra_community_supply"
-    assert export.rows[0].counterparty_eu_member_state == "de"
+    assert export.rows[0].counterparty_country == "DE"
 
 
 def test_ratios_payloads_use_typed_rows_and_findings() -> None:

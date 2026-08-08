@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from ....domain.iva import EUMemberState, IvaCategory
+from ....domain.iva import IvaCategory
 from ._action_test_support import (
     _BUCKET_ID,
     UTC,
@@ -100,7 +100,7 @@ def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_even
 
 
 @pytest.mark.parametrize("export_format", [ExportSerializationFormat.CSV, ExportSerializationFormat.JSONL])
-def test_export_ledger_transactions_serializes_iva_category_and_counterparty_eu_member_state(
+def test_export_ledger_transactions_serializes_iva_category_and_counterparty_country(
     secure_objects: SecureObjectRepository,
     export_format: ExportSerializationFormat,
 ) -> None:
@@ -117,7 +117,7 @@ def test_export_ledger_transactions_serializes_iva_category_and_counterparty_eu_
             iva_rate=Decimal("0.00"),
             iva_amount=Decimal("0.00"),
             iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-            counterparty_eu_member_state=EUMemberState.DE,
+            counterparty_country="DE",
             idempotency_key="export-intracommunity",
         ),
         transaction_repository=transaction_repository,
@@ -135,15 +135,15 @@ def test_export_ledger_transactions_serializes_iva_category_and_counterparty_eu_
     if export_format is ExportSerializationFormat.CSV:
         reader = csv.DictReader(StringIO(text))
         assert "iva_category" in (reader.fieldnames or ())
-        assert "counterparty_eu_member_state" in (reader.fieldnames or ())
+        assert "counterparty_country" in (reader.fieldnames or ())
         rows = tuple(reader)
     else:
         rows = tuple(json.loads(line) for line in text.splitlines() if line.strip())
         assert rows
         assert "iva_category" in rows[0]
-        assert "counterparty_eu_member_state" in rows[0]
+        assert "counterparty_country" in rows[0]
 
     assert len(rows) == 1
     assert rows[0]["transaction_id"] == created.ref.transaction_id
     assert rows[0]["iva_category"] == IvaCategory.INTRA_COMMUNITY_SUPPLY.value
-    assert rows[0]["counterparty_eu_member_state"] == EUMemberState.DE.value
+    assert rows[0]["counterparty_country"] == "DE"

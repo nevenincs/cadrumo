@@ -56,7 +56,13 @@ _TRANSFER_ALLOWED_STATES = frozenset(
 
 
 def _validate_iso_3166_jurisdiction(value: str | None) -> str | None:
-    """Validate and normalise a ``source_jurisdiction`` field value.
+    """Validate and normalise an ISO 3166-1 alpha-2 field value.
+
+    Shared by ``source_jurisdiction`` and ``counterparty_country``, which are
+    different FACTS -- where income arises, and where the counterparty is
+    established -- that happen to share one shape. They are validated together
+    only so a single model cannot accept two spellings of a country code; no
+    call site may read either as the other.
 
     Accepts ``None`` (no jurisdiction declared) or a two-letter
     ISO 3166-1 alpha-2 uppercase country code such as ``"ES"`` or ``"DE"``.
@@ -106,7 +112,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     attachment_ids: tuple[str, ...] = ()
     notes: str = ""
     iva_category: IvaCategory | None = None
-    counterparty_eu_member_state: EUMemberState | None = None
+    counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
     art_104_tres_exclusion: Art104TresExclusion | None = None
     input_classification: InputClassification | None = None
@@ -118,7 +124,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     source_jurisdiction: str | None = None
     group_label: str | None = Field(default=None, max_length=64)
 
-    @field_validator("source_jurisdiction")
+    @field_validator("source_jurisdiction", "counterparty_country")
     @classmethod
     def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
         return _validate_iso_3166_jurisdiction(value)
@@ -255,12 +261,12 @@ class ManualLedgerTransactionPatch(BaseModel):
     attachment_ids: tuple[str, ...] | None = None
     notes: str | None = None
     iva_category: IvaCategory | None = None
-    counterparty_eu_member_state: EUMemberState | None = None
+    counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
     source_jurisdiction: str | None = None
     group_label: str | None = None
 
-    @field_validator("source_jurisdiction")
+    @field_validator("source_jurisdiction", "counterparty_country")
     @classmethod
     def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
         return _validate_iso_3166_jurisdiction(value)
@@ -344,7 +350,7 @@ class LedgerTransactionPayload(BaseModel):
     iva_rate: str | None = None
     iva_amount: str | None = None
     iva_category: str | None = None
-    counterparty_eu_member_state: str | None = None
+    counterparty_country: str | None = None
     counterparty_identification_state: str | None = None
     irpf_category: str | None = None
     m210_income_classification: M210IncomeClassification | None = None
@@ -372,7 +378,7 @@ class LedgerTransactionPayload(BaseModel):
     created_at: str
     modified_at: str
 
-    @field_validator("source_jurisdiction")
+    @field_validator("source_jurisdiction", "counterparty_country")
     @classmethod
     def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
         return _validate_iso_3166_jurisdiction(value)
@@ -869,7 +875,7 @@ class LedgerExportRow(BaseModel):
     iva_rate: str = ""
     iva_amount: str = ""
     iva_category: str = ""
-    counterparty_eu_member_state: str = ""
+    counterparty_country: str = ""
     counterparty_identification_state: str = ""
     irpf_category: str = ""
     usage_ratio_id: str = ""

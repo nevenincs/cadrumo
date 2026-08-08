@@ -138,6 +138,10 @@ def _modelo_390_without_recargo_revision() -> ModeloRevision:
 
 _Q2_2023 = _period(2023, "2T")
 _Q2_2026 = _period(2026, "2T")
+# Before RDL 20/2012 art. 23 took effect on 1 September 2012, so genuinely
+# outside the rate table's coverage. 2T 2023 used to serve that purpose and no
+# longer does -- the table's earliest ES windows now start in 2012.
+_Q2_2012 = _period(2012, "2T")
 _BUCKET_ID = "14141414-1414-4414-8414-141414141414"
 _OTHER_BUCKET_ID = "15151515-1515-4515-8515-151515151515"
 
@@ -803,24 +807,34 @@ def test_missing_base_and_amount_are_reported_as_distinct_tax_fact_issues() -> N
 
 
 def test_a_date_outside_the_rate_table_blames_the_year_not_the_rate() -> None:
-    """21 % in 2023 is a correct rate; only the date is unsupported.
+    """21 % before September 2012 is a correct rate; only the date is unsupported.
 
-    The rate table holds CURRENT rates -- no member state has a record before
-    2024 -- so a 2023 row cannot be classified whatever rate it carries. This
-    previously reported ``UNSUPPORTED_IVA_RATE``, which told the filer that the
-    one figure they had right was wrong and sent them to correct it. The two
-    conditions now carry separate reasons.
+    A row outside the table's coverage cannot be classified whatever rate it
+    carries. This previously reported ``UNSUPPORTED_IVA_RATE``, which told the
+    filer that the one figure they had right was wrong and sent them to correct
+    it. The two conditions carry separate reasons, and that is what is asserted.
+
+    THE PROBE MOVED FROM 2023 TO 2012, and the docstring's old premise -- "the
+    rate table holds CURRENT rates, no member state has a record before 2024" --
+    was not a fact about the law but a defect in the table. ``effective_from``
+    carried a bulk-refresh boundary, so 2022 and 2023 refused despite sitting
+    inside prescripción. Both years now classify correctly, which is the point
+    of that correction.
+
+    The distinction under test is untouched and still worth a gate. It has moved
+    to where coverage genuinely ends: 21 % was fixed by RDL 20/2012 art. 23.Dos
+    with effect from 1 September 2012, and the table carries nothing before it.
     """
     transaction = _transaction(
         "row-pre-registry",
-        booked_date=date(2023, 4, 5),
-        value_date=date(2023, 4, 5),
+        booked_date=date(2012, 4, 5),
+        value_date=date(2012, 4, 5),
         iva_rate=Decimal("0.21"),
     )
 
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
-        period=_Q2_2023,
+        period=_Q2_2012,
     )
 
     assert result.observations == ()
