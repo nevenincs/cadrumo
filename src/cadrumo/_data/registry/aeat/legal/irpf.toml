@@ -2609,7 +2609,12 @@ reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#dtnovena; operator to re-stamp"
 notes = "LIRPF disposición transitoria 9ª: régimen transitorio (coeficientes de abatimiento) de las ganancias patrimoniales derivadas de elementos patrimoniales adquiridos antes del 31-12-1994, con el límite acumulado de 400.000 € de valor de transmisión. Base legal de la reducción DT-9ª en las casillas de ganancia patrimonial por transmisión de inmuebles en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#dtnovena; operator to confirm and re-stamp."
 required_text = [
-    "adquiridos con anterioridad a 31 de diciembre de 1994",
+    "adquiridos con anterioridad a 31 de diciembre de 1994",    # The three-year desafectación rule, at 97% and above the amendment
+    # block. The phrase above is a date fragment that appears throughout the
+    # law, so it identified neither this disposición nor its completeness.
+    # Verified against live BOE apartado by apartado: 1 and 2 on both sides,
+    # 3 on neither.
+    "la desafectación de estas actividades se haya producido con más de tres años",
 ]
 
 [legal."ley-35-2006:art-82"]
