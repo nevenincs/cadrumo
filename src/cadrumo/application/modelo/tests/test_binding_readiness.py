@@ -11,7 +11,6 @@ import pytest
 
 from ....core import Period
 from ....domain.calculations.registry import (
-    AmbiguousRevisionSelectionError,
     RegistryQueryService,
     RegistryValidationError,
     ValidatedRegistryAuthority,
@@ -242,17 +241,28 @@ def test_typed_period_scope_must_match_filing_year() -> None:
         )
 
 
-def test_year_only_binding_readiness_refuses_multiple_covering_revisions(tmp_path: Path) -> None:
-    """A year-only readiness query must not silently select one period-specific revision."""
+def test_year_only_binding_readiness_refuses_multiple_covering_revisions(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A year-only readiness query must not silently select one period-specific revision.
+
+    ``_annual_period_for_year`` is a read-only discovery helper whose contract
+    is "None means undetermined"; it CATCHES the selector's
+    ``AmbiguousRevisionSelectionError`` rather than propagating it, so a
+    mid-year AEAT design boundary degrades to unresolved bindings instead of
+    turning a readiness query into an operator-facing error.
+    """
+    caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo._binding_readiness")
 
     registry_root = _write_year_ambiguous_registry(tmp_path)
     authority = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)
 
-    with pytest.raises(AmbiguousRevisionSelectionError) as exc_info:
-        _annual_period_for_year(authority, modelo="999", filing_year=2025)
-
-    assert exc_info.value.modelo_id == "999"
-    assert exc_info.value.candidate_ids == ("2025-1t", "2025-2t")
+    assert _annual_period_for_year(authority, modelo="999", filing_year=2025) is None
+    assert any(
+        "binding-readiness: filing_year=2025 for modelo=999 is covered by revisions 2025-1t, 2025-2t" in record.message
+        for record in caplog.records
+    )
 
 
 def test_year_only_report_and_readiness_share_effective_revision_selection(tmp_path: Path) -> None:
