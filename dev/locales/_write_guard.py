@@ -39,7 +39,7 @@ import hashlib
 import os
 import time
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
 
 from cadrumo.core import pid_is_alive
@@ -56,6 +56,7 @@ LOCK_FILENAME = ".catalogue-write.lock"
 
 _DEFAULT_WAIT_SECONDS = 60.0
 _POLL_SECONDS = 0.02
+_UNLINK_RETRY_SECONDS = 10.0
 _ABSENT_DIGEST = ""
 
 
@@ -169,12 +170,18 @@ def catalogue_write_guard(
 
 
 def _try_create(lock: Path) -> bool:
-    """Atomically create ``lock`` stamped with this PID, or report it held."""
+    """Atomically create ``lock`` stamped with this PID, or report it held.
+
+    A ``PermissionError`` counts as held rather than propagating: on Windows a
+    lockfile whose delete is still pending, or one a peer has open to read the
+    holder PID, refuses the open with ``ERROR_ACCESS_DENIED``. Both clear on
+    their own, so the caller should keep polling.
+    """
     flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY
     flags |= getattr(os, "O_NOINHERIT", 0) | getattr(os, "O_CLOEXEC", 0)
     try:
         descriptor = os.open(lock, flags, 0o600)
-    except FileExistsError:
+    except (FileExistsError, PermissionError):
         return False
     try:
         os.write(descriptor, str(os.getpid()).encode("ascii"))
@@ -211,7 +218,10 @@ def _reclaim_if_stale(lock: Path) -> None:
         _log.debug("locale catalogue lock reclaim aborted; holder changed under reclaim")
         return
     _log.debug("reclaiming locale catalogue lock stamped with dead pid=%s", holder)
-    lock.unlink(missing_ok=True)
+    # Best effort: a peer reclaiming the same stale lock, or reading its stamp,
+    # can block the unlink briefly. Losing the race just means another poll.
+    with suppress(PermissionError):
+        lock.unlink(missing_ok=True)
 
 
 def _acquire(lock: Path, *, wait_seconds: float) -> None:
@@ -235,11 +245,32 @@ def _acquire(lock: Path, *, wait_seconds: float) -> None:
 
 
 def _release(lock: Path) -> None:
-    """Drop the catalogue lock, never removing one stamped by another process."""
+    """Drop the catalogue lock, never removing one stamped by another process.
+
+    The unlink is retried because Windows refuses to delete a file while any
+    handle is open, and every waiting writer opens the lockfile to read its
+    holder PID. Failing to release would be worse than slow: the stamped holder
+    is this live process, so no peer would ever reclaim the lock as stale and
+    every later writer would block until its own timeout.
+
+    Raises:
+        LocaleError: When the lock could not be removed within the retry window.
+    """
     if _read_holder(lock) != os.getpid():
         _log.debug("locale catalogue lock not released; it is no longer stamped with this pid")
         return
-    lock.unlink(missing_ok=True)
+    deadline = time.monotonic() + _UNLINK_RETRY_SECONDS
+    while True:
+        try:
+            lock.unlink(missing_ok=True)
+            return
+        except PermissionError:
+            if time.monotonic() >= deadline:
+                raise LocaleError(
+                    f"Could not release the locale catalogue lock at {lock} within "
+                    f"{_UNLINK_RETRY_SECONDS:g}s. Delete it by hand once no catalogue edit is running."
+                ) from None
+            time.sleep(_POLL_SECONDS)
 
 
 __all__ = ["LOCK_FILENAME", "CatalogueWriteGuard", "catalogue_write_guard"]
