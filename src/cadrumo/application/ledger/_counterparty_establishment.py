@@ -67,7 +67,7 @@ from ...core import STRICT_FROZEN_CONFIG, ClassifierInputSource
 from ...core.errors import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.time import now
-from ...domain.iva import IvaTerritorialScope
+from ...domain.iva import EUMemberState, IvaTerritorialScope
 from ._classification_assembly import DeclaredFact
 
 if TYPE_CHECKING:
@@ -166,6 +166,16 @@ class CounterpartyEstablishmentFact(BaseModel):
         asserted_by: The operator identity that confirmed it.
         asserted_at: When it was confirmed. A last-seen body field, never folded
             into the key.
+        identification_state: The Member State that VAT-identifies this
+            counterparty, when the operator has confirmed one. A DIFFERENT fact
+            from :attr:`territorial_scope`, which is where the party is: Ley
+            37/1992 art. 25 exempts on the registration, arts. 69-70 govern the
+            place, and the two diverge in real trade. Neither is ever read for
+            the other.
+
+            ``None`` means unanswered, never "identified nowhere" and above all
+            never "identified in Spain". A decision needing it refuses with a
+            review item rather than reading the territory beside it.
         note: What the operator relied on, in their own words. Empty when they
             said nothing.
     """
@@ -175,6 +185,7 @@ class CounterpartyEstablishmentFact(BaseModel):
     counterparty_key: str = Field(min_length=_COUNTERPARTY_KEY_LENGTH, max_length=_COUNTERPARTY_KEY_LENGTH)
     canonical_tax_identifier: str = Field(min_length=1)
     territorial_scope: IvaTerritorialScope
+    identification_state: EUMemberState | None = None
     source: ClassifierInputSource
     asserted_by: str = Field(min_length=1)
     asserted_at: datetime
@@ -186,7 +197,14 @@ class CounterpartyEstablishmentFact(BaseModel):
 
         ``source`` is required rather than defaulted so a persisted record
         states its provenance explicitly, and it is constrained rather than free
-        so the store cannot quietly become a cache of document readings. A
+        so the store cannot quietly become a cache of document readings.
+
+        This binds the identification axis at least as tightly as the territory.
+        Ingestion reads identification TERMINALLY from a printed VAT prefix, per
+        document, so a document-read identification is exactly the value that
+        must not be remembered here: cached, it would answer a later document as
+        though an operator had confirmed the registration, which is the claim
+        art. 25 turns on. A
         document-sourced territory is rung one or two of the ladder, re-read
         from each document's own page; remembering one here would answer later
         documents as though an operator had confirmed it, and would take the
@@ -206,6 +224,7 @@ class CounterpartyEstablishmentFact(BaseModel):
         tax_identifier: str,
         territorial_scope: IvaTerritorialScope,
         asserted_by: str,
+        identification_state: EUMemberState | None = None,
         country_code: str | None = None,
         note: str = "",
         asserted_at: datetime | None = None,
@@ -227,6 +246,7 @@ class CounterpartyEstablishmentFact(BaseModel):
             counterparty_key=sha256_hex(token.encode()),
             canonical_tax_identifier=token,
             territorial_scope=territorial_scope,
+            identification_state=identification_state,
             source=ClassifierInputSource.OPERATOR_ASSERTION,
             asserted_by=asserted_by,
             asserted_at=asserted_at or now(),
@@ -242,6 +262,17 @@ class CounterpartyEstablishmentFact(BaseModel):
         not that a document did.
         """
         return DeclaredFact[IvaTerritorialScope](value=self.territorial_scope, source=self.source)
+
+    @property
+    def declared_identification(self) -> DeclaredFact[EUMemberState] | None:
+        """Return the confirmed identification in the assembly's channel, or ``None``.
+
+        ``None`` when the operator has not answered it. A caller must not read
+        that as an answer -- it is the absence the review item exists for.
+        """
+        if self.identification_state is None:
+            return None
+        return DeclaredFact[EUMemberState](value=self.identification_state, source=self.source)
 
 
 class CounterpartyEstablishmentRepository(SecureBoundRepository[CounterpartyEstablishmentFact]):
@@ -305,12 +336,18 @@ class CounterpartyEstablishmentResolution(BaseModel):
         fact: The remembered assertion, in the channel the assembly consumes.
             ``None`` when nothing was confirmed for this counterparty, when the
             identifier had no identity, or when the evidence contradicts it.
+        identification: The confirmed Member State of VAT identification, in the
+            same channel. ``None`` when the operator has not answered it, which
+            is independent of whether the territory was answered -- the two are
+            different questions about the same entity and either may stand
+            alone. A caller must not read this ``None`` as "identified nowhere".
         contradiction: The disagreement, when there is one.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     fact: DeclaredFact[IvaTerritorialScope] | None = None
+    identification: DeclaredFact[EUMemberState] | None = None
     contradiction: CounterpartyEstablishmentContradiction | None = None
 
     @property
@@ -336,6 +373,7 @@ def record_counterparty_establishment(
     tax_identifier: str,
     territorial_scope: IvaTerritorialScope,
     asserted_by: str,
+    identification_state: EUMemberState | None = None,
     country_code: str | None = None,
     note: str = "",
     asserted_at: datetime | None = None,
@@ -351,6 +389,15 @@ def record_counterparty_establishment(
     the operator gave, and quietly reclassify every invoice already derived
     under it.
 
+    The identification axis takes the same conflict rule, with one asymmetry
+    that is not a softening. Supplying an identification where NONE is stored is
+    an ADDITION -- the operator is answering a second question about the same
+    entity, not replacing an answer -- so it is written through. Supplying a
+    DIFFERENT one refuses exactly as a territory would. Supplying none leaves a
+    stored answer standing, because ``None`` is an unasked question and reading
+    it as "identified nowhere" would let a partial retry silently withdraw a
+    fact art. 25 turns on.
+
     A same-key call differing only in ``note`` is a genuine correction of free
     prose and is written through, since no classification stands on it.
 
@@ -359,6 +406,9 @@ def record_counterparty_establishment(
         tax_identifier: The counterparty's identifier as printed.
         territorial_scope: The territory the operator confirms.
         asserted_by: Operator identity making the claim.
+        identification_state: The Member State that VAT-identifies the
+            counterparty, when the operator answers it. ``None`` does not
+            answer the question and never erases a stored answer.
         country_code: The country the identifier is stated under, if any.
         note: What the operator relied on. Free prose, never consulted.
         asserted_at: Override clock, for deterministic tests.
@@ -369,13 +419,15 @@ def record_counterparty_establishment(
 
     Raises:
         CounterpartyEstablishmentInputError: When the identifier does not verify.
-        CounterpartyEstablishmentConflictError: When a different territory is
-            already confirmed for this counterparty.
+        CounterpartyEstablishmentConflictError: When a different territory, or
+            a different identification, is already confirmed for this
+            counterparty.
     """
     fact = CounterpartyEstablishmentFact.create(
         tax_identifier=tax_identifier,
         territorial_scope=territorial_scope,
         asserted_by=asserted_by,
+        identification_state=identification_state,
         country_code=country_code,
         note=note,
         asserted_at=asserted_at,
@@ -394,9 +446,33 @@ def record_counterparty_establishment(
                     "asserted_scope": fact.territorial_scope.value,
                 },
             )
-        if existing.note == fact.note:
+        if (
+            fact.identification_state is not None
+            and existing.identification_state is not None
+            and existing.identification_state is not fact.identification_state
+        ):
+            raise CounterpartyEstablishmentConflictError(
+                f"{existing.canonical_tax_identifier} is already confirmed as VAT-identified in "
+                f"{existing.identification_state.value}, and this assertion says "
+                f"{fact.identification_state.value}; withdraw the confirmed fact before replacing it",
+                context={
+                    "canonical_tax_identifier": existing.canonical_tax_identifier,
+                    "confirmed_identification_state": existing.identification_state.value,
+                    "asserted_identification_state": fact.identification_state.value,
+                },
+            )
+        # An identification arriving where none was stored ANSWERS a question
+        # rather than replacing an answer, so it is written through. A call that
+        # supplies none leaves the stored one standing: `None` is an unasked
+        # question, and treating it as an answer would let a retry that only
+        # meant to correct a note silently withdraw the registration fact.
+        added_identification = fact.identification_state is not None and existing.identification_state is None
+        if existing.note == fact.note and not added_identification:
             return existing
-        corrected = existing.model_copy(update={"note": fact.note})
+        update: dict[str, object] = {"note": fact.note}
+        if added_identification:
+            update["identification_state"] = fact.identification_state
+        corrected = existing.model_copy(update=update)
         repo.save(corrected)
         return corrected
     repo.save(fact)
@@ -482,4 +558,7 @@ def resolve_counterparty_establishment(
             ),
         )
 
-    return CounterpartyEstablishmentResolution(fact=stored.declared_fact)
+    return CounterpartyEstablishmentResolution(
+        fact=stored.declared_fact,
+        identification=stored.declared_identification,
+    )

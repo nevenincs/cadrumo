@@ -1921,6 +1921,7 @@ cli:
         tax_identifier_help: Az ügyfél adóazonosítója a bizonylaton nyomtatott formában.
         withdraw_help: Vonja vissza a megerősített letelepedést, kijelentve, hogy
           a korábbi válasz téves volt.
+        identification_state_help: 'Az a tagállam, amely a partnert ÁFA szempontjából azonosítja. Ez más adat, mint a --scope: a 25. cikk ez alapján mentesít, nem a letelepedés helye alapján.'
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
         batch_directory_help: A könyvtár, amelynek fájljait feldolgozza. Kombinálható

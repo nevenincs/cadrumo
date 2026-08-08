@@ -1986,6 +1986,7 @@ cli:
           imprès al document.
         withdraw_help: Retira un establiment confirmat, declarant que la resposta
           anterior era incorrecta.
+        identification_state_help: 'Estat membre que identifica a efectes d''IVA la contrapart. És una dada diferent de --scope: l''art. 25 exempta per aquesta, no per on estigui establerta.'
       evidence:
         add_help: Registra un justificant de factura de compra des de PDF o imatge
         batch_directory_help: Directori els fitxers del qual s'ingressen. Combina'l

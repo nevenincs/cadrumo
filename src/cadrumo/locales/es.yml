@@ -1998,6 +1998,7 @@ cli:
           aparece impreso en el documento.
         withdraw_help: Retira un establecimiento confirmado, declarando que la respuesta
           anterior era incorrecta.
+        identification_state_help: 'Estado miembro que identifica a efectos de IVA a la contraparte. Es un dato distinto de --scope: el art. 25 exime por este, no por dónde esté establecida.'
       evidence:
         add_help: Registra un justificante de factura de compra desde PDF o imagen
         batch_directory_help: Directorio cuyos ficheros se ingresan. Combínalo con

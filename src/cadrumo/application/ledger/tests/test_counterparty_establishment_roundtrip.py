@@ -30,7 +30,7 @@ from ....adapters.persistence.storage import (
 )
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import ClassifierInputSource
-from ....domain.iva import IvaTerritorialScope
+from ....domain.iva import EUMemberState, IvaTerritorialScope
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._counterparty_establishment import (
     CounterpartyEstablishmentFact,
@@ -55,12 +55,20 @@ def secure_objects(runtime_profile: TestRuntimeProfile) -> SecureObjectRepositor
 
 
 def _fully_populated_fact() -> CounterpartyEstablishmentFact:
-    """Build a fact whose one defaultable field carries a non-default value.
+    """Build a fact whose defaultable fields all carry non-default values.
 
     ``note`` defaults to the empty string, and it is the field a
     save-drops / load-re-defaults regression would hide behind: an operator's
     stated reason for the confirmation would vanish while the territory still
     round-tripped, so the record would keep answering without keeping why.
+
+    ``identification_state`` defaults to ``None`` and is the same hazard with
+    money behind it: dropped on the way to disk it reloads as "unanswered",
+    which withholds an art. 25 exemption the operator already confirmed. It is
+    set to a Member State that DIFFERS from the territory, so a load that
+    re-derived it from the establishment beside it would not reproduce this
+    value and the strict comparison would fail -- which is the only reason the
+    field is worth round-tripping.
 
     ``source`` is deliberately not defaultable on the model, so there is no
     default here to leave in place -- the fixture states it, and the persisted
@@ -70,6 +78,7 @@ def _fully_populated_fact() -> CounterpartyEstablishmentFact:
         tax_identifier="B12345674",
         territorial_scope=IvaTerritorialScope.ES_CANARIAS,
         asserted_by="operator@example.test",
+        identification_state=EUMemberState.FR,
         note="supplier confirmed established in Las Palmas by telephone on 2026-04-17",
         asserted_at=_ASSERTED_AT,
     )
@@ -90,6 +99,10 @@ def test_establishment_fact_roundtrips_through_encrypted_storage(
     assert loaded is not None
     assert loaded.territorial_scope is IvaTerritorialScope.ES_CANARIAS
     assert loaded.source is ClassifierInputSource.OPERATOR_ASSERTION
+    assert loaded.identification_state is EUMemberState.FR
+    # The two axes survived as the DIFFERENT facts they are: nothing collapsed
+    # the registration onto the territory beside it.
+    assert loaded.territorial_scope is not IvaTerritorialScope.EU_MEMBER
     assert loaded.note == "supplier confirmed established in Las Palmas by telephone on 2026-04-17"
     assert loaded.asserted_at == _ASSERTED_AT
     assert loaded.canonical_tax_identifier == "B12345674"

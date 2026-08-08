@@ -1847,6 +1847,7 @@ cli:
         tax_identifier_help: The counterparty's tax identifier as printed on the document.
         withdraw_help: Withdraw a confirmed establishment, stating the earlier answer
           was wrong.
+        identification_state_help: 'Member State that VAT-identifies the counterparty. A different fact from --scope: art. 25 exempts on this, not on where the party is established.'
       evidence:
         add_help: Register purchase invoice evidence from a PDF or image
         batch_directory_help: Directory whose files are ingested. Combine with or
