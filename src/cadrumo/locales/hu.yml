@@ -2176,7 +2176,9 @@ cli:
           {detail}'
         import_country_help: A partner országa (ISO 3166-1 alfa-2) a teljes importáláshoz.
           Csak akkor kötelező, ha a fájlban nincs country_code oszlop; a saját országot
-          megadó soroknál figyelmen kívül marad.
+          megadó soroknál figyelmen kívül marad. MINDEN ilyen sorra ezt az országot
+          állítja, ezért a belföldi és külföldi partnereket vegyesen tartalmazó könyvhöz
+          az oszlop kell.
         import_file_help: Elérési út egy CSV vagy XLSX fájlhoz, amely számlasorokat
           tartalmaz (counterparty_nif, counterparty_name, invoice_number, invoice_date,
           taxable_base, valamint opcionálisan iva_rate/currency/country_code/notes).
@@ -7253,12 +7255,12 @@ flows:
         ÁFA-egyenleg: {iva_wallet_status}; értesítések: {notificaciones_status}.'
       filed_history_pull_all_refused: 'Ezeket a párokat nem sikerült beolvasni, és
         NEM lettek üresként jelentve: {pairs}. Az újbóli próbálkozáshoz futtassa újra.'
-      google_export: flows.manager.action.google_export
-      google_export_done: flows.manager.action.google_export_done
-      google_export_modelo: flows.manager.action.google_export_modelo
-      google_export_period: flows.manager.action.google_export_period
-      google_export_year: flows.manager.action.google_export_year
-      google_export_year_invalid: flows.manager.action.google_export_year_invalid
+      google_export: Exportálás Google Sheetsbe
+      google_export_done: 'A(z) %{modelo} modelo exportálva ide: %{spreadsheet_url}.'
+      google_export_modelo: Modelo
+      google_export_period: Időszak
+      google_export_year: Év
+      google_export_year_invalid: Adjon meg egy 2000 és 2099 közötti évet.
       passphrase: Jelmondat módosítása
       passphrase_confirm: Új jelmondat megerősítése
       passphrase_current: Jelenlegi jelmondat
@@ -7375,7 +7377,9 @@ flows:
       folyamatot egy ülésben.
   status:
     auth:
+      absolute_deadline: A munkamenet abszolút határideje
       certificate_source: Tanúsítvány forrása
+      idle_deadline: A munkamenet inaktivitási határideje
       login_not_ready: nem ellenőrzött
       login_ready: kész
       provider: Szolgáltató

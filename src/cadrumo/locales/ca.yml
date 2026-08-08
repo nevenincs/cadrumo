@@ -2240,7 +2240,9 @@ cli:
           {detail}'
         import_country_help: País de la contrapart (ISO 3166-1 alfa-2) per a tota
           la importació. Només és obligatori quan el fitxer no té columna country_code;
-          s'ignora a les files que indiquen el seu.
+          s'ignora a les files que indiquen el seu. Declara aquest país per a TOTES
+          aquestes files, així que un llibre que barregi contraparts nacionals i estrangeres
+          necessita la columna.
         import_file_help: Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, i opcionalment
           iva_rate/currency/country_code/notes).
@@ -7370,12 +7372,12 @@ flows:
         rebutjada(es); cartera d''IVA: {iva_wallet_status}; notificacions: {notificaciones_status}.'
       filed_history_pull_all_refused: 'No s''han pogut llegir aquests parells i NO
         s''han declarat buits: {pairs}. Torneu a executar per reintentar-ho.'
-      google_export: flows.manager.action.google_export
-      google_export_done: flows.manager.action.google_export_done
-      google_export_modelo: flows.manager.action.google_export_modelo
-      google_export_period: flows.manager.action.google_export_period
-      google_export_year: flows.manager.action.google_export_year
-      google_export_year_invalid: flows.manager.action.google_export_year_invalid
+      google_export: Exportar a Google Sheets
+      google_export_done: Model %{modelo} exportat a %{spreadsheet_url}.
+      google_export_modelo: Model
+      google_export_period: Període
+      google_export_year: Any
+      google_export_year_invalid: Introdueix un any entre 2000 i 2099.
       passphrase: Canviar la contrasenya
       passphrase_confirm: Confirma la nova contrasenya
       passphrase_current: Contrasenya actual
@@ -7490,7 +7492,9 @@ flows:
       el flux d'una sola vegada.
   status:
     auth:
+      absolute_deadline: Límit absolut de la sessió
       certificate_source: Origen del certificat
+      idle_deadline: Límit d'inactivitat de la sessió
       login_not_ready: sense verificar
       login_ready: a punt
       provider: Proveïdor

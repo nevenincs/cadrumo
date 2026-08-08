@@ -2082,7 +2082,8 @@ cli:
         import_column_role_not_applied: 'a proposed column role was not applied: {detail}'
         import_country_help: Counterparty country (ISO 3166-1 alpha-2) for the whole
           import. Required only when the file carries no country_code column; ignored
-          for rows that state their own.
+          for rows that state their own. It asserts this country for EVERY such row,
+          so a book mixing domestic and foreign counterparties needs the column instead.
         import_file_help: Path to a CSV or XLSX file of invoice rows (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, and optional
           iva_rate/currency/country_code/notes).
@@ -7023,7 +7024,9 @@ flows:
       in one sitting.
   status:
     auth:
+      absolute_deadline: Session absolute deadline
       certificate_source: Certificate source
+      idle_deadline: Session idle deadline
       login_not_ready: not verified
       login_ready: ready
       provider: Provider

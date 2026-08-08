@@ -2253,7 +2253,9 @@ cli:
           {detail}'
         import_country_help: País de la contraparte (ISO 3166-1 alfa-2) para toda
           la importación. Solo es obligatorio cuando el fichero no tiene columna country_code;
-          se ignora en las filas que indican el suyo.
+          se ignora en las filas que indican el suyo. Declara ese país para TODAS
+          esas filas, así que un libro que mezcle contrapartes nacionales y extranjeras
+          necesita la columna.
         import_file_help: Ruta a un archivo CSV o XLSX con filas de facturas (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, y opcionalmente
           iva_rate/currency/country_code/notes).
@@ -7420,11 +7422,11 @@ flows:
       filed_history_pull_all_refused: 'No se pudieron leer estos pares y NO se declararon
         vacíos: {pairs}. Repita la operación para reintentarlo.'
       google_export: Exportar a Google Sheets
-      google_export_done: flows.manager.action.google_export_done
+      google_export_done: Modelo %{modelo} exportado a %{spreadsheet_url}.
       google_export_modelo: Modelo
       google_export_period: Periodo
       google_export_year: Año
-      google_export_year_invalid: flows.manager.action.google_export_year_invalid
+      google_export_year_invalid: Introduce un año entre 2000 y 2099.
       passphrase: Cambiar la contraseña
       passphrase_confirm: Confirme la nueva contraseña
       passphrase_current: Contraseña actual
@@ -7539,7 +7541,9 @@ flows:
       el flujo de una sola vez.
   status:
     auth:
+      absolute_deadline: Límite absoluto de la sesión
       certificate_source: Origen del certificado
+      idle_deadline: Límite de inactividad de la sesión
       login_not_ready: sin verificar
       login_ready: listo
       provider: Proveedor
