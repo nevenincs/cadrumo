@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:50aa699f7479a777841ab01a47f876c6a03df97501d18f9c6db170e3f4d100d4'
+body_hash: 'sha256:c9b8a3b1a988dc7b01884b7017c2228981d96ebbf242681207c07bf122bc49b4'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -398,6 +398,63 @@ be satisfied by updating a constant to match a regression, and the agreed figure
 is then checked against the operation itself so two feeds agreeing on a wrong
 number fails too. Proven against the original defect: reverting the invoice feed
 to rate-slot classification reds all three assertions.
+
+### received-reverse-charge-invoice-loses-its-category | critical | Not fixed: the declared category is overwritten and no self-assessed cuota is produced
+
+The third consequence of the root cause the routing fix closed, in a case that
+fix deliberately did not cover. A received domestic reverse charge (LIVA art.
+84.Uno.2) obliges the RECIPIENT to self-assess the output cuota, and Axis-A says
+so: on the received side the pair is base required, cuota REQUIRED, not
+zero-by-law. The supplier charges nothing, so the invoice line carries an exempt
+slot and no cuota.
+
+Measured on both feeds for one operation, a 2.000,00 construction supply the
+recipient must self-assess:
+
+    bank feed:    category=domestic_reverse_charge  rate_kind=general
+                  flow=inversion_sujeto_pasivo      base=2000.00  cuota=420.00
+    invoice feed: category=domestic_exempt          rate_kind=exempt
+                  flow=soportado                    base=2000.00  cuota=0.00
+
+Every field except the base disagrees. The invoice DECLARED
+domestic_reverse_charge and the projection threw it away in favour of a
+rate-derived domestic_exempt, so the self-assessed devengada entry is never
+produced. Net-zero for a taxpayer deducting in full, a real underpayment under
+prorrata, and wrong on its face in either case.
+
+Two halves, and only one is contained. Preserving the declared category rather
+than overwriting it is a small change on the projection this sweep now owns.
+Producing the self-assessed cuota is not: the invoice line as recorded carries an
+exempt slot, so the underlying rate the self-assessment needs is not on the
+record at all, and deriving it would mean asserting which rate the supply bore.
+The bank row in the measurement above carried its own rate and cuota because the
+operator stated them; the invoice did not. Whether an invoice line may carry a
+real rate slot with a zero cuota, which would make the cuota derivable rather
+than invented, is the decision that half waits on.
+
+### m349-and-m303-draw-intra-community-volume-from-different-sources | high | Not fixed: a bank-recorded supply is declared on one modelo and not the other
+
+Found by asking which other destination has more than one feed. Modelo 349's
+bindings are entirely invoice-sourced -- thirty-four of them, split between the
+collectible and payable invoice families, with no ledger source at all -- while
+Modelo 303 casilla 59 is fed by the ledger aggregation, which draws from the bank
+transactions AND, since the routing fix, from invoices.
+
+So the two modelos declare the same intra-community operations from different
+places. A supply recorded only as a bank transaction reaches casilla 59 and never
+reaches Modelo 349, which is the return AEAT reconciles the 303 against. The
+reverse case, an invoice-only supply, was the one the routing fix closed.
+
+There is a detector and it is honest about being one: a non-blocking WARNING
+compares the 303 intra-community total against the 349 resumen beyond a
+de-minimis. It surfaces the divergence rather than preventing it, which satisfies
+the minimum but leaves the operator to reconcile two returns by hand.
+
+Not fixed because the remedy is a modelling decision rather than a defect
+repair: either Modelo 349 gains a ledger feed, or intra-community operations are
+declared to require an invoice, and choosing between those is not this sweep's
+call. Recorded with the measurement so whoever takes it does not have to
+rediscover that the source sets are disjoint.
 
 ## Recommendations
 
