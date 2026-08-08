@@ -27,7 +27,7 @@ from .._bindings import (
     RefundOperationObservation,
     RelatedPartyOperationObservation,
 )
-from .._detail_record_bindings import RelatedPartyOperationObservation, _build_related_party_rows
+from .._detail_record_bindings import _build_related_party_rows
 from .._donativo_bindings import _build_donativo_rows
 from .._withholding_bindings import (
     WithholdingObservation,
