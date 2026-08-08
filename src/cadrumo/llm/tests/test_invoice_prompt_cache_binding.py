@@ -29,12 +29,12 @@ from __future__ import annotations
 import pytest
 
 from ...adapters.outbound.llm import LLMCache
+from ...application.ledger import resolve_invoice_extraction_authority_values
 from ...core import Period
 from ...core.time import now
 from ...domain.transactions import DecisionProvenance
 from .._evidence_draft_text import TextInvoiceFieldExtractor
 from .._evidence_draft_vision import LocalVisionDocumentTranscriber
-from ...application.ledger import resolve_invoice_extraction_authority_values
 from .._invoice_extraction_prompt import build_invoice_extraction_prompt
 from .._models import LLMProvider, LLMRequest
 
