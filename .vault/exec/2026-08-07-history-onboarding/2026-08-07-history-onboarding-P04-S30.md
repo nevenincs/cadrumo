@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:5c734126fef32dbe630330bc2dbd50a5a6c8eb4ffe40f8fad2b02b209deb7430'
+body_hash: 'sha256:a7ea0d54d24a46f0db31f9f91c049944d8fdf2a0a5ce213f8596effe6868e549'
 step_id: 'S30'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-
-
 
 # Enroll the app.* payload modules into the JSON-schema conformance parametrisation in staged per-family batches, since SCHEMA_REGISTRY is populated at collection time from the config payload modules only, so every parametrised case was a config or root key and no app command was inside the gate at all. That is not something a passing run could reveal, because a gate can only check what is registered when it collects. LIVE FAMILY LANDED at commit 71a7cc3ba2, measured from outside the repository first with a probe that refuses rather than passes if the import adds no key: enrolling _app_live_payloads adds 33 schema keys and takes the gate from 163 to 229 cases, all green, so no conformance violation was hiding behind the absence. FOUR FAMILIES REMAIN and are the outstanding batches, named in the test module's own comment so the staging is visible rather than implied: agent-workspace, contract, maintenance and quickfile. Gate for each remaining batch. Measure the delta before landing, land only if green, and if a batch reds then that is a real conformance finding to report rather than a reason to leave the family unenrolled
 

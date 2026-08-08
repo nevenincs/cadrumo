@@ -5,44 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:55b292e1e6241a34d406088ae232bc61c326b98e4911d118e79fa5bf2e04572e'
+body_hash: 'sha256:63c100e6ba569b7c5e8013b9d6b8152d07d59a9f12db8f636cf381aabd9eb096'
 step_id: 'S257'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S257 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Close the separator-bearing tax identity that passes the redaction funnel raw, which PREDATES the EU VAT rule rather than being introduced by it. Verified at HEAD: SE556677889901 ESB12345674 and B12345674 all redact while SE-space-556677889901, ESB-1234567-4 and B-1234567-4 all pass RAW, the last being a plain Spanish CIF with nothing to do with the EU arm, so the shipped CIF pattern has always had this limitation. Not theoretical: the application itself normalises separators, so normalise_nif_iva of the hyphenated form returns the unspaced one and a shipped gate asserts the spaced form yields the same establishment key, meaning the app treats these as one identity while the funnel sees only one of them. And FieldProvenance.anchor is documented as the verbatim printed form exactly as it appears, so the spelling reaching an operator surface is precisely the one the funnel cannot see. A curiosity that bounds it: ES-space-B12345674 IS redacted because the body token stands alone, so the leak is specifically separators INSIDE the body, which is the common printed rendering. NOT a regex widening: a separator-tolerant scan would start matching ordinary hyphenated output, and SE-2026-000412 survives today precisely because the hyphen breaks the token, so the honest shape is normalise-then-match rather than a wider pattern, which changes the rule's form and needs its over-firing evidence rebuilt from scratch and ## Scope
-
-- `src/cadrumo/core` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Close the separator-bearing tax identity that passes the redaction funnel raw, which PREDATES the EU VAT rule rather than being introduced by it. Verified at HEAD: SE556677889901 ESB12345674 and B12345674 all redact while SE-space-556677889901, ESB-1234567-4 and B-1234567-4 all pass RAW, the last being a plain Spanish CIF with nothing to do with the EU arm, so the shipped CIF pattern has always had this limitation. Not theoretical: the application itself normalises separators, so normalise_nif_iva of the hyphenated form returns the unspaced one and a shipped gate asserts the spaced form yields the same establishment key, meaning the app treats these as one identity while the funnel sees only one of them. And FieldProvenance.anchor is documented as the verbatim printed form exactly as it appears, so the spelling reaching an operator surface is precisely the one the funnel cannot see. A curiosity that bounds it: ES-space-B12345674 IS redacted because the body token stands alone, so the leak is specifically separators INSIDE the body, which is the common printed rendering. NOT a regex widening: a separator-tolerant scan would start matching ordinary hyphenated output, and SE-2026-000412 survives today precisely because the hyphen breaks the token, so the honest shape is normalise-then-match rather than a wider pattern, which changes the rule's form and needs its over-firing evidence rebuilt from scratch
 
