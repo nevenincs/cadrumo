@@ -501,9 +501,18 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
     prorated wrongly cannot drag the expectation along with it
     (`aeat-quality-gates`).
 
-    The mother qualified in four months and the guardería was paid in two, so
-    Art. 81.3's simultaneity intersection is two months and the annual ceiling
-    is prorated to two twelfths.
+    The manual's REAL facts, which are a PARTIAL overlap: the mother does not
+    work before May and is entitled "de mayo a agosto ambos incluidos", while
+    the nursery's complete months are January to June. The two sets share
+    exactly May and June, so Art. 81.3's simultaneity intersection is two months
+    and the annual ceiling is prorated to two twelfths.
+
+    The facts are the point and must not be substituted for convenient ones.
+    This case previously declared four mother-months against two nursery months
+    and reached 166,67 as the smaller of two COUNTS, never intersecting
+    anything — so it passed both before and after the count-based defect while
+    testing none of it. On the manual's actual facts that same code returned
+    333,33, twice what AEAT prints.
 
     This is the assertion the whole change exists for. The previous formula
     capped at a flat ``hijos x 1.000`` with no month rule anywhere in it, so
@@ -517,7 +526,7 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=5:1145;6:1145,MESES_TRABAJO=1-4",
+            "--descendiente", "NACIMIENTO=2021-09-02,GASTOS_GUARDERIA_MENSUAL=1-6:500,MESES_TRABAJO=5-8",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -544,7 +553,7 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
     assert (_registry_guarderia_cap_anual() / 12 * 2).quantize(Decimal("0.01")) == Decimal("166.67")
     # The spend on record is far above it, so the ceiling is what bound — not
     # the spend happening to be small.
-    assert Decimal("2290") > Decimal("166.67")
+    assert Decimal("3000") > Decimal("166.67")
 
 
 def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(

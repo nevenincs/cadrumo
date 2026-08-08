@@ -224,7 +224,7 @@ def test_a_corrupted_stored_month_set_refuses_rather_than_emptying(
         descendant_list_from_facts(stored)
 
 
-def test_a_bare_number_reads_as_that_MONTH_and_not_as_a_count() -> None:
+def test_a_bare_number_reads_as_that_month_and_not_as_a_count() -> None:
     """The retired count text is not detectable as corruption, and that is safe here.
 
     ``"4"`` was what the previous count-based shape stored to mean "four months
