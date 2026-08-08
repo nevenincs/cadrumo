@@ -4,7 +4,7 @@ tags:
   - '#declarations-register-pagination'
 date: '2026-08-07'
 modified: '2026-08-08'
-body_hash: 'sha256:fb2b3bd0044fc769fddfbed19a2fb0887ba360349b461d0058c93a979ac0ec5c'
+body_hash: 'sha256:c4b317036e5a3261c4ec74e8eaa915f90f57513cd6bfaf47d48d1656b9a3776f'
 tier: L1
 related:
   - '[[2026-08-07-declarations-register-pagination-adr]]'
@@ -35,7 +35,7 @@ the new refusal in the same change that implements it, per its own
 docstring's stated reversal condition, and adds a companion non-regression
 test for the untruncated, no-pager-label case. S05 proves the S04 gate
 actually bites: break the detector via an outside-the-repo runtime
-monkeypatch, confirm the test reds, restore, confirm green — a gate is
+monkeypatch, confirm the test reds, restore, confirm green. A gate is
 unproven until it has failed on demand.
 
 ## Steps
