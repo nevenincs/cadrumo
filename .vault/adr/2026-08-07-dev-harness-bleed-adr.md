@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#dev-harness-bleed'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:b31bf89afbdb9c0a20c33f51ffcf95e56b94cfbcbb09baccd1a75df899fd5f4b'
+body_hash: 'sha256:e449d4712c9c044e8a6bc106c9ea6fd8ba22a4d135ff2238db79f0d4cb4ea121'
 related:
   - '[[2026-08-07-dev-harness-bleed-research]]'
   - '[[2026-06-14-docs-tooling-separation-adr]]'
@@ -344,11 +344,28 @@ mis-read as open questions before the prior rulings were searched for.
   under `src`; only the reverse direction, a shipped module importing `dev.`, is
   enforced. Closing the class would need either such a gate or a standing sweep;
   this record neither builds one nor pretends the need away.
-- A candidate duplication is surfaced and left open: the strict catalogue reader
-  in `LocaleManager` overlaps the private loader helpers in the renderer, and
-  three unrelated domains reach for the tooling only for that capability. If it
-  is deduplicated later, the cross-domain consumers stop needing the dev package
-  at all.
+- The candidate duplication surfaced here is now **closed as not-a-duplicate**.
+  The strict catalogue reader in `LocaleManager` and the renderer's private
+  loader helpers agree on every well-formed catalogue - measured, the key sets
+  are identical at 38382 keys across all four shipped files - but they diverge
+  on exactly the two inputs each exists to handle, and in opposite directions.
+  On a duplicate key the strict loader refuses (`Duplicate key 'a' found at line
+  3`) while the renderer silently keeps the last value; the renderer sits on the
+  live `tr()` render path, so refusing there would crash any command that
+  renders a string, and its permissiveness is load-bearing rather than lax. On a
+  non-string scalar the tooling's flattener preserves the raw type, which is the
+  sole input to the audit's scalar-violation finding, while the renderer's
+  coerces to `str` - a collapse would leave `scalar_violations` permanently
+  empty and the gate vacuous. The renderer helpers are also private to
+  `core/i18n/_render.py`, and its public surface (`lookup_translation`,
+  `lookup_translation_entry`) is per-key, so it offers no key-set enumeration
+  the three consumers could adopt without a cross-package private import.
+  Both separating constraints are already enforced - the duplicate-key refusal
+  by `test_locale_integrity`, the scalar-type fidelity by
+  `test_audit_rejects_boolean_and_null_leaves` - so a future collapse reds two
+  existing gates rather than passing silently. The three cross-domain consumers
+  therefore keep their dependency on the dev package, and the hoped-for
+  consequence (they stop needing it) does not follow.
 
 ### Same-commit carry list
 
