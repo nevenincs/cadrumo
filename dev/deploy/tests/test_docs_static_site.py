@@ -12,6 +12,8 @@ from pathlib import Path
 
 import pytest
 from dev.deploy.docs_static_site import (
+    _validate_language_entry,
+    _write_language_entry,
     _DOWNLOAD_LATEST_SCHEMA,
     _DOWNLOAD_LATEST_STATIC_PATH,
     _REQUIRED_ARTIFACTS,
@@ -25,7 +27,7 @@ from dev.deploy.docs_static_site import (
     _validate_language_roots,
 )
 from dev.docs.build import pagefind_index_mode
-from dev.docs.i18n import TARGET_LANGUAGES
+from dev.docs.i18n import DEFAULT_SITE_LANGUAGE, TARGET_LANGUAGES
 from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
 
 from cadrumo.core.external_constants import OutputLanguage
@@ -78,12 +80,48 @@ def _materialise_language_root(html_root: Path, language: str) -> None:
         (fragment_dir / f"en_{kind}.pf_fragment").write_bytes(gzip.compress(f"pagefind_dcd{payload}".encode()))
 
 
-def test_localized_languages_are_the_translation_targets_not_english() -> None:
-    """The deploy roots are exactly the docs translation targets; English is the default root."""
+def test_every_language_is_a_published_root_including_english() -> None:
+    """No language holds the apex path; English is a root like the rest.
+
+    The deploy roots deliberately are NOT the translation targets. English is
+    absent from ``TARGET_LANGUAGES`` because it is the msgid source and needs no
+    catalogue -- a translation fact. Reusing that set as the publish matrix is
+    what put English at ``/`` and left readers of a Spanish-tax site landing in
+    English, so the two concepts are now separate constants.
+    """
     languages = _localized_languages()
-    assert languages == TARGET_LANGUAGES
-    assert set(languages) == {member.value for member in OutputLanguage} - {OutputLanguage.EN.value}
-    assert OutputLanguage.EN.value not in languages
+    assert set(languages) == {member.value for member in OutputLanguage}
+    assert OutputLanguage.EN.value in languages
+    assert languages != TARGET_LANGUAGES, "deploy roots must not be re-derived from the catalogue set"
+    assert languages[0] == DEFAULT_SITE_LANGUAGE
+
+
+def test_default_site_language_is_spanish() -> None:
+    """A reader who has expressed no preference is sent to Spanish, not English."""
+    assert DEFAULT_SITE_LANGUAGE == OutputLanguage.ES.value
+
+
+def test_language_entry_routes_to_every_root_and_declares_the_spanish_floor(tmp_path: Path) -> None:
+    """The apex entry reaches every built language and names the fallback."""
+    _write_language_entry(tmp_path)
+    body = (tmp_path / "index.html").read_text(encoding="utf-8")
+    for language in _localized_languages():
+        assert f'"{language}"' in body
+    assert DEFAULT_SITE_LANGUAGE in body
+    _validate_language_entry(tmp_path)
+
+
+def test_language_entry_validation_refuses_a_root_it_cannot_reach(tmp_path: Path) -> None:
+    """A language that builds but is missing from the entry is invisible; refuse it.
+
+    Nothing else in the pipeline notices an unreachable root: it uploads, it
+    responds on its own URL, and no reader without that URL ever finds it.
+    """
+    _write_language_entry(tmp_path)
+    entry = tmp_path / "index.html"
+    entry.write_text(entry.read_text(encoding="utf-8").replace('"hu"', '"xx"'), encoding="utf-8")
+    with pytest.raises(SystemExit, match="hu"):
+        _validate_language_entry(tmp_path)
 
 
 def test_language_site_url_is_a_subroot_of_the_canonical_docs_url() -> None:
