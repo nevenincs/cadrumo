@@ -5,14 +5,11 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:13013bbc6cc8ca8ab8153c2f2994964a63829de11c4472df22d7e9ad70ff2568'
+body_hash: 'sha256:391961411c3fd5b04d41dc0c6592661b6d901319b82369efb839ba97f17f47ec'
 step_id: 'S11'
 related:
   - "[[2026-08-07-m303-carry-reconciliation-plan]]"
 ---
-
-
-
 # Establish a sound channel for recovering the filed result disposition before S05 through S08 are attempted, and record the two mis-readings that would otherwise satisfy their precondition falsely. FIRST trap. The persisted source metadata key aeat_tipo_solicitud is NOT the disposition. Its own docstring states it distinguishes an original filing from an amendment, so it is the original-versus-complementaria axis. The Spanish nouns tipo de solicitud and tipo de declaracion are near-identical and that confusion is the likely failure. SECOND trap. The justificante parser extracts only the two printed amounts, total_a_ingresar and total_a_devolver, and carries no disposition code at all. A present devolver amount identifies DEVOLUCION, but COMPENSACION and NEGATIVA both present with neither amount, and suppressing compensacion carry-forward turns on exactly that distinction, so an amounts-based inference cannot decide the case the refund gate exists to decide. Gate. The row names the channel that actually carries the code, or records that none does and that parsing the printed Tipo de declaracion is required, and a test proves COMPENSACION and NEGATIVA stay distinguishable through whichever channel is chosen rather than collapsing to one reading
 
 ## Scope
@@ -98,11 +95,23 @@ declaración extraction profile matches values by label-anchored regex, and it i
 the insertion point. It does not target the election sections today.
 
 **What is NOT yet available, stated as the specific named thing the deferred rows
-now wait on.** The register exposes whether a filing has a declaración copy, and
-that flag reaches the CLI listing, but no capture path fetches the copy and no
-parse of it is wired. So the four deferred rows are no longer waiting on "a sound
-channel"; they are waiting on the declaración-copy capture, plus two label
-patterns added to the extraction profile.
+now wait on.** CORRECTED after re-measuring: an earlier reading of this record
+said no capture path fetches the copy and no parse of it is wired. Both halves
+of that are wrong. The sede capture already downloads the copy as a
+``declaration_pdf`` artefact and stores it through the artefact sink, and the
+modelo's declaración extraction profile already declares that artefact kind as
+accepted and names the declaración parser. The pipeline is built.
+
+What is missing is narrower and further upstream than a capture. Casillas 72
+and 73 -- the compensación and devolución election amounts -- do not exist in
+the modelo revision at all. Loaded through the registry authority rather than
+grepped from a fragment, the revision carries 129 casillas including 70, 71,
+74, 109 and 111, and neither 72 nor 73. So the extraction profile has nothing
+to target: the two label patterns cannot be added until the two casillas
+exist.
+
+The deferred rows therefore wait on a registry-authority change -- two new
+grounded casillas -- and then the two label patterns. Not on a capture.
 
 ## Verification
 
