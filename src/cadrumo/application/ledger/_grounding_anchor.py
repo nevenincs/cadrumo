@@ -78,13 +78,12 @@ See Also:
 from __future__ import annotations
 
 import re
-import unicodedata
 from collections.abc import Callable
 from decimal import Decimal
 
 from pydantic import BaseModel
 
-from ...core import STRICT_FROZEN_CONFIG, FieldGroundingOutcome, FieldOrigin
+from ...core import STRICT_FROZEN_CONFIG, FieldGroundingOutcome, FieldOrigin, unicode_compose
 from ...core.decimal import coerce_finite_european_decimal
 from ._document_transcription import DocumentTranscription
 from ._evidence_draft import FieldAmbiguityCandidate, FieldProvenance
@@ -261,7 +260,7 @@ def normalise_for_anchor_search(text: str) -> str:
         The regularised form, for anchor comparison only. Never stored as the
         anchor itself: the envelope keeps what the document actually printed.
     """
-    composed = unicodedata.normalize("NFKC", text)
+    composed = unicode_compose(text)
     return _WHITESPACE_RUN.sub(" ", composed).strip()
 
 

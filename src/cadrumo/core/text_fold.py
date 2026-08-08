@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import unicodedata
 
-__all__ = ["fold_diacritics"]
+__all__ = ["fold_diacritics", "unicode_compose"]
 
 
 def fold_diacritics(text: str) -> str:
@@ -42,3 +42,23 @@ def fold_diacritics(text: str) -> str:
     """
     decomposed = unicodedata.normalize("NFKD", text)
     return "".join(char for char in decomposed if unicodedata.category(char) != "Mn")
+
+
+def unicode_compose(text: str) -> str:
+    """Return *text* NFKC-composed, every diacritic and printed character kept.
+
+    A DIFFERENT normalization form from :func:`fold_diacritics`, for a
+    different job: two documents printing the same figure can differ in
+    whether a composed character (``"ó"``) arrived pre-composed or as a base
+    letter plus a combining accent, with no difference in what was printed.
+    NFKC folds that representational gap closed without touching accents,
+    case, digits, or punctuation — unlike :func:`fold_diacritics`, this must
+    never be used where the accent itself is evidence to preserve.
+
+    Args:
+        text: The text to compose.
+
+    Returns:
+        *text* in NFKC normal form.
+    """
+    return unicodedata.normalize("NFKC", text)

@@ -321,7 +321,7 @@ from .secure_object_write import (
     DEFAULT_WRITE_PROVENANCE,
     SecureObjectWrite,
 )
-from .text_fold import fold_diacritics
+from .text_fold import fold_diacritics, unicode_compose
 
 if TYPE_CHECKING:
     # Static bindings for the lazily-exposed surface below. At runtime these
@@ -591,6 +591,7 @@ __all__: list[str] = [
     "to_str_keyed_dict",
     "undeclared_persisted_formats",
     "unfloored_durable_formats",
+    "unicode_compose",
     "unknown_floor_keys",
     "unlink_lockfile",
     "validated_casilla_id",
