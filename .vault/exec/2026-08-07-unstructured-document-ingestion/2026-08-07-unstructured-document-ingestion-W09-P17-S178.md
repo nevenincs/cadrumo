@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:cf5aea256bf3d86ad2af4be700d3b724a33c5c532f9252f801892afd9a11cedf'
+body_hash: 'sha256:c1054c4287f13e68ae2c1e9dd9d47166968b0848584b0fe9f2e4cbfd84b8adf8'
 step_id: 'S178'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -23,54 +23,64 @@ related:
   resolved alpha-2 the bundled vocabulary produces.
 - Ground the stated token as a copied structured value, so an unplaceable
   country earns a provenance envelope naming the element it was read from.
-- Read the country advisory from the stated field, and classify a three-letter
-  token the alpha-2 status authority declines to judge.
+- Add the record-token status authority to the domain, admitting both ISO
+  spellings, and route the country advisory through it.
+- Carry the stated token onto the counterparty side and classify it at confirm,
+  which is what makes the declared-relief guard's sparing reachable.
+- Route the ISO user-assigned alpha-3 ranges to the unassigned kind.
 - Project both stated fields onto the extract payload.
 - Repoint the advisory fixtures at the field a document can actually populate.
-- Add the end-to-end gate for the distinction, in both spellings and both
-  directions.
+- Add the end-to-end gate, in both spellings and both directions, with its probe
+  selected from the vocabulary rather than pinned to one country.
 
 ## Outcome
 
 The structured reader's country lookup returned nothing for two different
 events -- the record stated no country, and the record stated a token the
 bundled vocabulary does not carry -- and both left the resolved alpha-2 field
-empty. Downstream, empty meant no provenance envelope and no advisory, so
-`XX`, `ZZ`, `THA` and `TH` were byte-identical to a document with no address
-block. Every channel silent, on the reading path handling the most reliable
-country evidence in the system.
+empty. Downstream, empty meant no provenance envelope and no advisory, so an
+unplaceable country was byte-identical to a document with no address block.
 
-`TH` is why that mattered rather than merely being untidy. Thailand is absent
-from the vocabulary, so it resolves as uncatalogued and not as a third
-country: a genuine Thai export arrived carrying no country, its territory
-unresolved, and nothing told the operator the document had stated one.
+That was the visible half. The larger half was a correctness guard being
+silently disabled. A guard withholds a declared export or intra-community
+relief whose counterparty residency was not established, and it spares the case
+where a well-formed code names a jurisdiction our own vocabulary merely lacks --
+our gap, not the document's. Its own docstring calls that sparing the difference
+between a guard and a trap. Production classified the counterparty's code off
+the resolved draft field, which is empty for precisely the codes the exemption
+exists for, so the sparing could never fire and every legitimate export naming
+an uncatalogued country was refused. The guard's tests supplied the status
+directly, so the logic was proven and the wiring was not.
 
-The record's own token is now carried verbatim on the draft, on a field
-separate from the resolved one rather than inside it. Putting `THA` into a
-field contracted as alpha-2 would have traded a silent absence for a silent
-lie, and every consumer keyed on the resolved form would have inherited it.
-The stated token earns an ordinary structured envelope -- it really does occur
-in the record's text, so it grounds honestly -- and the advisory reads that
-field instead of the resolved sibling it could never be populated on.
+The record's own token is now carried verbatim on the draft, on a field separate
+from the resolved one. Putting a three-letter token into a field contracted as
+alpha-2 would have traded a silent absence for a silent lie, and every consumer
+keyed on the resolved form would have inherited it. The token earns an ordinary
+structured envelope, the advisory reads it, and the confirm path classifies it
+into the guard.
 
-That last part is the reason the advisory had never fired from a real
-document. It read the resolved field, which is empty for precisely the codes
-it exists to report, while its own tests set that field by hand. The
-classification is unchanged for alpha-2 and borrowed from the domain
-authority; the one addition is that a three-letter alphabetic token nothing
-places is reported as a catalogue gap, which the alpha-2 authority
-structurally cannot answer. That is the route that reaches Facturae, the
-Spanish national format, which states the country in alpha-3.
+The classification lives in the domain rather than in the ledger layer, as one
+function two consumers share. The printed-value status axis answers only about
+alpha-2 and correctly declines to call an address line a bad country code; a
+structured record's country element is schema-typed, so the record-token sibling
+admits the alpha-3 spelling Facturae states. Its alpha-3 user-assigned ranges
+are judged from a reserved-range set rather than from length, because the
+catch-all otherwise reported a reserved code as a gap in our data -- the
+opposite operator instruction, and one that ends in ungrounded registry data.
 
-Visibility is not placement. The stated token does not reach the
-establishment ladder, so an unplaceable country still resolves no territory --
-naming it to the operator must not become a way of settling a third country
-from a string with no referent, which on the issued side is zero-rated export
-treatment.
+Visibility is not placement. The stated token does not reach the establishment
+ladder, so an unplaceable country still resolves no territory. The side
+attribute carrying it is named a token rather than a code precisely because the
+ladder takes a same-named parameter wanting the resolved form: two same-shaped
+attributes on one object, one safe in that slot and one not, is a swap that
+type-checks.
 
 Modified files:
 
+- `src/cadrumo/domain/iva/_establishment.py`
+- `src/cadrumo/domain/iva/__init__.py`
 - `src/cadrumo/application/ledger/_evidence_draft.py`
+- `src/cadrumo/application/ledger/_confirm_establishment.py`
 - `src/cadrumo/application/ledger/_country_vocabulary_advisory.py`
 - `src/cadrumo/entrypoints/cli/_ledger_business_payloads.py`
 - `src/cadrumo/application/ledger/tests/test_structured_country_degradation.py` (new)
@@ -80,16 +90,11 @@ Modified files:
 
 ## Verification
 
-    uv run --no-sync pytest src/cadrumo/application/ledger/tests -n0 -q -m unit
-    1 failed, 1199 passed, 26 deselected, 16 warnings in 215.91s (0:03:35)
-
-The single failure is `test_identity_roles.py::test_a_document_stating_no_identifier_resolves_to_an_unresolved_role`, whose implementation module carries another lane's uncommitted work; it asserts a role-resolution finding on a draft with no identifiers and no country, and is untouched by this surface.
-
-    uv run --no-sync pytest src/cadrumo/adapters/inbound/einvoice -n0 -q -m unit
-    29 passed in 1.49s
+    uv run --no-sync pytest src/cadrumo/application/ledger/tests src/cadrumo/domain/iva src/cadrumo/adapters/inbound/einvoice -n0 -q -m unit
+    1954 passed, 26 deselected, 16 warnings in 160.67s (0:02:40)
 
     uv run --no-sync pytest src/cadrumo/application/ledger/tests/test_structured_country_degradation.py -n0 -q -m unit
-    13 passed in 7.05s
+    21 passed in 10.88s
 
     uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py -n0 -q -m integration
     163 passed in 48.71s
@@ -97,28 +102,70 @@ The single failure is `test_identity_roles.py::test_a_document_stating_no_identi
     uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_review_country_cli.py -n0 -q -m integration
     5 passed in 8.61s
 
-Two mutation probes, both loaded from outside the repository as pytest plugins so nothing under the source tree changed. Each prints a banner, counts its own invocations, and is judged on the gate going red rather than on the patch landing.
+Four mutation probes, each loaded from outside the repository as a pytest plugin
+so nothing under the source tree changed, each rebinding the name in the
+CONSUMING module because a definition-site patch would print APPLIED and reach
+nothing, and each judged on the gate going red rather than on the banner.
 
-Neutering the advisory's status classifier:
+Neutering the status the confirm path's relief exemption is keyed on:
 
-    [MUTATION APPLIED] _stated_code_status neutered
-    4 failed, 9 passed in 8.82s
-    [MUTATION] neutered classifier called 14 times
+    [MUTATION APPLIED] confirm-path record_country_code_status neutered
+    2 failed, 19 passed in 11.20s
+    [MUTATION] neutered status called 5 times
 
-Dropping the record's stated token on the way to the draft, which restores the measured defect exactly:
+Neutering the status the country advisory is keyed on:
+
+    [MUTATION APPLIED] advisory-path record_country_code_status neutered
+    4 failed, 17 passed in 13.03s
+    [MUTATION] neutered advisory status called 14 times
+
+Dropping the record's stated token on the way to the draft, which restores the
+original defect end to end:
 
     [MUTATION APPLIED] _stated_country_code dropped
-    7 failed, 6 passed in 9.57s
-    [MUTATION] dropping reader called 28 times
+    9 failed, 12 passed in 10.90s
+    [MUTATION] dropping reader called 38 times
 
-Under both probes the stated-no-country cases stay green, which is what makes the red an observable change in the distinction rather than a broadly broken run.
+Emptying the ISO alpha-3 user-assigned ranges, which restores the misrouting a
+reserved code took before this change:
+
+    [MUTATION APPLIED] _USER_ASSIGNED_ALPHA3 emptied (was 1092 codes)
+    1 failed, 20 passed in 11.21s
+
+Under every probe the stated-no-country cases stay green, which is what makes
+each red an observable change in the distinction rather than a broadly broken
+run.
 
 ## Notes
 
-`_evidence_draft.py`, `_ledger_business_payloads.py` and `test_evidence_draft_provenance.py` all carried other lanes' uncommitted work while this landed, so each edit was rebuilt from `git show HEAD:<path>` and staged through an own-only patch; the working copies keep the peer content untouched.
+The gate was first written against Thailand, which was measured uncatalogued.
+Another lane enrolled Thailand while this row was in flight and the country
+vocabulary was observed changing size twice inside one session, at which point
+eight cases failed for a reason unrelated to the behaviour under test. The probe
+is now selected from the vocabulary at run time by the property it needs --
+carried in neither spelling -- and an anchor class asserts the selection still
+means what it says, so a future enrolment produces one named red pointing at the
+candidate list rather than a suite that quietly stops exercising its subject.
 
-The advisory's classification of a three-letter token as a catalogue gap is answered in the application layer rather than by widening `stated_country_code_status`. That authority is handed printed values and correctly declines to call an address line a bad country code; a structured record's country ELEMENT is schema-typed, so this layer knows the token is a country-code claim and the domain cannot. If the domain later gains an alpha-3 status answer, this local rung should defer to it.
+Two findings were raised in review and both are closed here: the ISO alpha-3
+user-assigned ranges misrouting to the catalogue-gap kind, and the counterparty
+side attribute colliding by name with an establishment-ladder parameter that
+wants the resolved form. A third review finding reported the domain classifier
+as a duplicate of a peer's uncommitted work; it was this row's own in-flight
+promotion, seen mid-session, and there is one definition.
 
-No new operator string was introduced: the two existing country notice codes and their four locale catalogues carry the report unchanged.
+Two things are reported rather than changed. The declared-relief guard's
+exemption is keyed on the counterparty's country status but suppresses the
+refusal even when the FILER's residency is the missing one, so an uncatalogued
+counterparty spares a filer-side gap; that is the guard's own scoping and
+predates this row. And the establishment ladder's own parameter is named for a
+stated code while receiving the resolved one, which is confusing at its
+definition site as well as at the call site renamed here.
 
-Nothing in this change makes an unplaceable country placeable, and the confirm remains non-blocking on both country conditions.
+Three-letter tokens that are plainly not countries -- a currency code, a totals
+marker -- classify as a catalogue gap. That is deliberate and documented: the
+element is schema-typed as a country code, so a token that is not one is a
+document defect worth naming rather than silence.
+
+No new operator string was introduced: the two existing country notice codes and
+their four locale catalogues carry the report unchanged.
