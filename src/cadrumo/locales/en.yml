@@ -2157,11 +2157,11 @@ cli:
         state_help: 'Snapshot state filter: active, superseded, discarded, or all'
         view_help: Show one Modelo 100 borrador snapshot
       deudas:
-        app_help: cli.app.live.deudas.app_help
-        latest_help: cli.app.live.deudas.latest_help
-        list_help: cli.app.live.deudas.list_help
-        snapshot_id_help: cli.app.live.deudas.snapshot_id_help
-        view_help: cli.app.live.deudas.view_help
+        app_help: Read-only AEAT deudas snapshots
+        latest_help: Show the most recent deudas snapshot
+        list_help: List saved deudas snapshots
+        snapshot_id_help: Snapshot id (or unambiguous prefix)
+        view_help: Show one deudas snapshot and every outstanding liability it holds
       expediente_help: AEAT expediente identifier
       expedientes:
         app_help: Read-only AEAT expediente snapshots

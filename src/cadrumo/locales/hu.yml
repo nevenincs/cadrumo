@@ -2265,11 +2265,11 @@ cli:
           all.'
         view_help: Egyetlen Modelo 100 borrador pillanatkép megjelenítése.
       deudas:
-        app_help: cli.app.live.deudas.app_help
-        latest_help: cli.app.live.deudas.latest_help
-        list_help: cli.app.live.deudas.list_help
-        snapshot_id_help: cli.app.live.deudas.snapshot_id_help
-        view_help: cli.app.live.deudas.view_help
+        app_help: Csak olvasható AEAT tartozás-pillanatképek.
+        latest_help: A legfrissebb tartozás-pillanatkép megjelenítése.
+        list_help: Mentett tartozás-pillanatképek listázása.
+        snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
+        view_help: Egy tartozás-pillanatkép és a benne szereplő összes tartozás megjelenítése.
       expediente_help: AEAT expediente azonosító.
       expedientes:
         app_help: Csak olvasható AEAT expediente pillanatképek.

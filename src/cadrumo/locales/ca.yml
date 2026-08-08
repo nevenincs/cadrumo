@@ -2322,11 +2322,11 @@ cli:
           all'
         view_help: Mostrar un snapshot del borrador del model 100
       deudas:
-        app_help: cli.app.live.deudas.app_help
-        latest_help: cli.app.live.deudas.latest_help
-        list_help: cli.app.live.deudas.list_help
-        snapshot_id_help: cli.app.live.deudas.snapshot_id_help
-        view_help: cli.app.live.deudas.view_help
+        app_help: Snapshots de deutes AEAT de només lectura
+        latest_help: Mostra el snapshot de deutes més recent
+        list_help: Llista els snapshots de deutes desats
+        snapshot_id_help: Id del snapshot (o prefix no ambigu)
+        view_help: Mostra un snapshot de deutes i cada deute pendent que conté
       expediente_help: Identificador d'expedient AEAT
       expedientes:
         app_help: Snapshots d'expedients AEAT de només lectura
