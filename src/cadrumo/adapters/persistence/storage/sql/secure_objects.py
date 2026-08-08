@@ -1403,16 +1403,46 @@ class SecureObjectRepository:
                 )
                 .values(**values)
             )
-            # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-UPDATE:
-            # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``; a DML
-            # UPDATE always yields a rowcount-bearing result, and pysqlite
-            # accumulates executemany rowcounts across parameter sets.
-            result = cast(_RowcountResult, session.execute(stmt, guarded))
+            try:
+                # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-UPDATE:
+                # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``; a DML
+                # UPDATE always yields a rowcount-bearing result, and pysqlite
+                # accumulates executemany rowcounts across parameter sets.
+                result = cast(_RowcountResult, session.execute(stmt, guarded))
+            except IntegrityError as exc:
+                raise self._update_integrity_error(guarded, exc) from exc
             if result.rowcount != len(guarded):
                 self._raise_stale_guarded_update(session, guarded)
         if unguarded:
             stmt = update(table).where(table.c.id == bindparam("b_id")).values(**values)
-            session.execute(stmt, unguarded)
+            try:
+                session.execute(stmt, unguarded)
+            except IntegrityError as exc:
+                raise self._update_integrity_error(unguarded, exc) from exc
+
+    def _update_integrity_error(
+        self,
+        rows: Sequence[dict[str, object]],
+        exc: IntegrityError,
+    ) -> RepositoryError:
+        """Translate an UPDATE-path IntegrityError into the shared repository error.
+
+        Mirrors :meth:`_execute_insert_rows`'s translation so both DML halves
+        of the batch funnel uphold the same ``RepositoryError`` contract on a
+        SQL integrity failure, rather than leaking a raw
+        :exc:`~sqlalchemy.exc.IntegrityError` to the caller.
+        """
+        # CAST-RATIONALE-SECURE-OBJECTS-UPDATE-NAMESPACE-STR: rows is this
+        # method's own batch-constructed dict[str, object]; "v_namespace" is
+        # always written as str by the caller that built the row.
+        namespaces = ", ".join(sorted({cast(str, row["v_namespace"]) for row in rows}))
+        return RepositoryError(
+            context={
+                "namespace": namespaces,
+                "error_type": type(exc.orig).__name__,
+            },
+            translated_message="errors.fail.fail_storage_secure_object_upsert",
+        )
 
     def _raise_stale_guarded_update(
         self,
