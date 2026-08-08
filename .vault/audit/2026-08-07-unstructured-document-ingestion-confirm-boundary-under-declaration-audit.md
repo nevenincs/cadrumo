@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:5e13d032cc6f28c4aafb94836f8316458be67c3268bc50671e49213af070c2de'
+body_hash: 'sha256:e1d76df14872eae69528b5db91a08543d72d38dc26fcdc11649d98e00d4e9a2a'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -453,9 +453,29 @@ Enumerating every binding on the self-assessment flow: the domestic recipient
 side has two, both cuota. The intra-community recipient side has four, and one of
 them IS a base binding. All six admit only the general, reduced and
 super-reduced tiers, so a cuota-less line reaches none of them either way -- the
-conclusion survives, but for a different reason per family, and with a different
-remedy. Widening the rate kinds on the intra-community base binding is at least
-on the table; for the domestic family there is no binding to widen.
+conclusion survives, but for a different reason per family.
+
+The remedy, however, is the SAME for both, and the one option that looked
+family-specific should be taken off the table. Widening the intra-community base
+binding to admit the zero and exempt tiers was the obvious asymmetric fix, since
+that family has a base binding and the domestic one does not. It is the wrong
+fix. The component table declares cuota REQUIRED on the received side of all
+three reverse-charge categories: a domestic reverse charge, an intra-community
+acquisition and an intra-community service acquisition. None of them is ever
+legitimately cuota-less.
+
+So a cuota-less line in any of them is an INCOMPLETE RECORD, not a zero-rated
+operation, and the two cases are not alike. Widening the binding would declare a
+base with no matching cuota for an operation the law says always bears one --
+making the return internally inconsistent and hiding the incomplete record behind
+a partially-populated one. That is a worse failure than the current silence,
+because a half-populated return looks answered.
+
+The correct remedy for both families is therefore to complete the record rather
+than loosen the binding: state the rate the supply bore, keeping the cuota at
+zero if it was never charged. That is exactly what the advisory this sweep added
+asks the operator to do, which makes the advisory the fix rather than a
+placeholder for one.
 
 The structural reason the SUPPLIER half was closable is the same axis read the
 other way: the casilla 122 base binding admits the zero and exempt tiers, which
