@@ -442,6 +442,31 @@ def normalize_display_text(text: str) -> str:
     return " ".join(text.replace("\xa0", " ").split())
 
 
+def cell_text(cells: list[str], index: int | None) -> str | None:
+    """Return the cell at ``index``, or ``None`` when it is absent or empty.
+
+    One concept that was implemented twice, five lines apart in shape: the
+    declaraciones listbox parser's ``_cell_text`` and the notifications table
+    parser's ``_safe_cell``. They read as divergent because one stripped and one
+    did not, but both callers build their cell lists with
+    ``get_text(" ", strip=True)``, so the strip was a no-op and the two were
+    functionally identical on every real input.
+
+    The strip is KEPT rather than dropped as dead. "Absent or empty" is this
+    helper's contract, and an implementation that only satisfies it while every
+    caller happens to pre-strip is coupled to an invariant stated nowhere. It
+    costs nothing and it means the contract holds for a caller that arrives
+    later without that habit.
+
+    A missing index and an empty cell collapse to the same ``None`` on purpose:
+    AEAT tables omit a column and blank it interchangeably, and no caller
+    distinguishes them.
+    """
+    if index is None or index >= len(cells):
+        return None
+    return cells[index].strip() or None
+
+
 def bounded_text(value: object, *, max_length: int = 120) -> str:
     """Return ``value`` as tidy text, truncated to at most ``max_length`` characters.
 
@@ -668,6 +693,7 @@ __all__ = [
     "assert_read_http_for",
     "assert_read_landing",
     "bounded_text",
+    "cell_text",
     "extract_marker_verdict",
     "first_visible_locator",
     "landed_origin",

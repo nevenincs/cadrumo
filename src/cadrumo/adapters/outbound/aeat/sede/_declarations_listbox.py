@@ -13,7 +13,7 @@ from .....core import Period
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .._html import parse_html
-from ._adapter_utils import normalize_response_text
+from ._adapter_utils import cell_text, normalize_response_text
 from ._declarations_schema import Declaracion
 from ._errors import SedeFailureMode, SedeParseError, SedeValidationError
 
@@ -148,9 +148,9 @@ def _parse_listbox(
                 tipo_solicitud=cell_texts[1] or None,
                 observaciones=cell_texts[2] or None,
                 presented_at=presented_at,
-                justificante_link_text=_cell_text(cell_texts, justificante_index),
-                archive_link_text=_cell_text(cell_texts, archive_index),
-                declaration_copy_link_text=_cell_text(cell_texts, declaration_copy_index),
+                justificante_link_text=cell_text(cell_texts, justificante_index),
+                archive_link_text=cell_text(cell_texts, archive_index),
+                declaration_copy_link_text=cell_text(cell_texts, declaration_copy_index),
                 justificante_cell_index=justificante_index,
                 archive_cell_index=archive_index,
                 declaration_copy_cell_index=declaration_copy_index,
@@ -204,12 +204,6 @@ def _listbox_action_indexes(listbox) -> _ListboxActionIndexes | None:
         submitted_file=submitted_file,
         declaration_pdf=declaration_pdf,
     )
-
-
-def _cell_text(cell_texts: list[str], index: int | None) -> str | None:
-    if index is None or index >= len(cell_texts):
-        return None
-    return cell_texts[index] or None
 
 
 def _parse_presented_at(value: str) -> datetime:

@@ -47,7 +47,7 @@ from .....domain.calculations.registry import (
 from .._html import parse_html
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
-from ._adapter_utils import assert_read_http_for
+from ._adapter_utils import assert_read_http_for, cell_text
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
@@ -308,14 +308,14 @@ def _row_from_cells(
     if not _CERT_RE.match(certificado_id):
         return None
 
-    concepto_raw = _safe_cell(cells, header_index.get("concepto")) or ""
-    titular_raw = _safe_cell(cells, header_index.get("titular")) or ""
-    destinatario_raw = _safe_cell(cells, header_index.get("destinatario")) or ""
-    tipo_raw = _safe_cell(cells, header_index.get("tipo")) or ""
-    modo_raw = _safe_cell(cells, header_index.get("modo"))
-    leida_raw = _safe_cell(cells, header_index.get("leida"))
-    emision_raw = _safe_cell(cells, header_index.get("fecha_emision"))
-    notif_raw = _safe_cell(cells, header_index.get("fecha_notificacion"))
+    concepto_raw = cell_text(cells, header_index.get("concepto")) or ""
+    titular_raw = cell_text(cells, header_index.get("titular")) or ""
+    destinatario_raw = cell_text(cells, header_index.get("destinatario")) or ""
+    tipo_raw = cell_text(cells, header_index.get("tipo")) or ""
+    modo_raw = cell_text(cells, header_index.get("modo"))
+    leida_raw = cell_text(cells, header_index.get("leida"))
+    emision_raw = cell_text(cells, header_index.get("fecha_emision"))
+    notif_raw = cell_text(cells, header_index.get("fecha_notificacion"))
 
     fecha_emision = _parse_date_local(emision_raw)
     if fecha_emision is None:
@@ -352,14 +352,6 @@ def _row_from_cells(
     except Exception as exc:  # pragma: no cover — schema drift guard
         log.debug("notifications: skipped row id=%r: %s", certificado_id, exc, exc_info=True)
         return None
-
-
-def _safe_cell(cells: list[str], idx: int | None) -> str | None:
-    """Return ``cells[idx]`` stripped, or ``None`` if absent / empty."""
-    if idx is None or idx >= len(cells):
-        return None
-    value = cells[idx].strip()
-    return value or None
 
 
 def _parse_date_local(raw: str | None) -> date | None:
