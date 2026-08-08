@@ -3621,7 +3621,11 @@ reviewed_at = 2026-06-15
 reviewed_by = "agent-authored from bundled ley-35-2006.html#da-11; operator to re-stamp"
 notes = "LIRPF disposición adicional 58ª: deducción por la adquisición de vehículos eléctricos enchufables y de pila de combustible y por la instalación de puntos de recarga (15% sobre el valor de adquisición, con límites). Base legal de las casillas de deducción por vehículos eléctricos y puntos de recarga en Modelo 100. AGENT-AUTHORED, grounded in the bundled authoritative ley-35-2006.html#da-11 (DA quincuagésima octava); operator to confirm and re-stamp."
 required_text = [
-    "Deducción por la adquisición de vehículos eléctricos",
+    "Deducción por la adquisición de vehículos eléctricos",    # Apartado 6 (reglamentary reporting duty on the vendor), the last
+    # operative provision, at 74% and above the amendment block -- 18% of
+    # this excerpt is amendment chrome. The title alone previously grounded
+    # it. Verified complete against live BOE: apartados 1-6 on both sides.
+    "reglamentariamente se regularán las obligaciones de información a cumplir por los concesionarios",
 ]
 
 [legal."ley-35-2006:da-60"]
