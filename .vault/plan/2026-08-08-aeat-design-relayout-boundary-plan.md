@@ -4,7 +4,7 @@ tags:
   - '#aeat-design-relayout-boundary'
 date: '2026-08-08'
 modified: '2026-08-08'
-body_hash: 'sha256:3cdbbbfd2ef9582dfd4d3d07f32b6e7b95d5b78f571059ed77c8991f0296ba26'
+body_hash: 'sha256:6b3c342f1efca0311c6da7f1197f860719f481c70b655a43ca8b43d2c1da83c0'
 tier: L3
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
@@ -62,9 +62,9 @@ Produce the three facts every later Wave consumes: the boundary set, the reachab
 
 Re-key every per-signal design inventory on the design file rather than the parsed year, and add the companion check for unnumbered slots that flip meaning at a fixed offset.
 
-- [ ] `W01.P02.S06` - Re-key the box-offset design inventory on the design file rather than the year parsed from its filename, so a year carrying two incompatible AEAT designs contributes both to the comparison instead of whichever sorts first; `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`.
-- [ ] `W01.P02.S07` - Re-key the per-sheet page-length inventory on the design file rather than the parsed year, for the same reason and independently, since this signal is the only one that sees growth landing in unnumbered fields; `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`.
-- [ ] `W01.P02.S08` - Re-key the slot-occupancy inventory on the design file rather than the parsed year, since this is the only signal that sees a slot retired into reserved space with no box moved and no page length changed; `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`.
+- [x] `W01.P02.S06` - Re-key the box-offset design inventory on the design file rather than the year parsed from its filename, so a year carrying two incompatible AEAT designs contributes both to the comparison instead of whichever sorts first; `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`.
+- [x] `W01.P02.S07` - Re-key the per-sheet page-length inventory on the design file rather than the parsed year, for the same reason and independently, since this signal is the only one that sees growth landing in unnumbered fields; `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`.
+- [x] `W01.P02.S08` - Re-key the slot-occupancy inventory on the design file rather than the parsed year, since this is the only signal that sees a slot retired into reserved space with no box moved and no page length changed; `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`.
 - [ ] `W01.P02.S09` - Add the description-keyed companion check for unnumbered slots whose meaning changes at a fixed offset and length, so the complementaria to rectificativa flip the box-number key structurally cannot see becomes a named boundary; `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`.
 - [ ] `W01.P02.S10` - Prove the hardened gate by mutation from outside the repository - confirm it now names the mid-2024 Modelo 303 boundary that the one-design-per-year inventory hid, and confirm it reds when a design file is withheld from the inventory; `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`.
 - [x] `W01.P02.S65` - Assert the reserved-to-real occupancy transition alongside the retirement direction, since the gate's recorded rationale that such an assertion would ship vacuous was never checked against the corpus it describes - measured through the gate's own helpers under the inventory as it ships today, the reverse direction has 32 transitions across four modelos and twelve boundaries against 16 for the retirement direction - so this row does not depend on the design-file re-keying landing first; `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`.
