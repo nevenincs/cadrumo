@@ -40,11 +40,16 @@ loses a measurement each time:
     slots, and :func:`expand_document_slots` is the only place that denominator
     is computed.
 
-:attr:`MappingKind.UNMAPPED`
-    The key declares it and the draft has nowhere to put it. **Never scored, never
-    pooled into ``missed``.** A product that cannot represent a field and a model
-    that failed to read one are different findings, and averaging them together
-    hides both. :func:`unmapped_slot_census` enumerates them for the record.
+:attr:`MappingKind.OUT_OF_SCOPE` and :attr:`MappingKind.PRODUCT_GAP`
+    Two reasons a key field is never scored, kept apart because they are two
+    different findings. Out-of-scope is a corpus assertion ABOUT the document, so
+    a reader declining to emit it is not wrong. A product gap is a real field of
+    the document the draft cannot hold, so a reader cannot be scored on it and
+    the absence is a fact about the PRODUCT.
+
+    **Never pooled -- with each other, or into ``missed``.** One headline number
+    over all three would hide a coverage gap inside a reading score.
+    :func:`unmapped_slot_census` reports them separately.
 
 See Also:
     :func:`~dev.ingest_harness.score_emission`
@@ -105,15 +110,36 @@ class MappingKind(StrEnum):
     COMPOSITE = "composite"
     """A dict in the key; separate flat draft fields, each scored as its own slot."""
 
-    UNMAPPED = "unmapped"
-    """The draft cannot represent it. Reported, never scored."""
+    OUT_OF_SCOPE = "out_of_scope"
+    """A corpus assertion ABOUT the document, not a field printed on it.
+
+    Excluded from the reading denominator and NAMED in the record. A reader is
+    not wrong for failing to emit the corpus's own annotation, and a denominator
+    that shrinks without saying so is the shape that has misled this campaign
+    before.
+    """
+
+    PRODUCT_GAP = "product_gap"
+    """A real field of the document that the draft has nowhere to hold.
+
+    Excluded from the reading denominator and reported as a COVERAGE finding: a
+    reader cannot be scored on a slot the product cannot represent, and the
+    absence is a fact about the product rather than about the model.
+    """
+
+
+#: Kinds enumerated in the record but never entering a reading denominator. A
+#: named set rather than a literal at each site: three places branch on it, and a
+#: later non-scored kind added to only two of them would silently start counting
+#: as a miss.
+_NON_SCORED_KINDS: Final = frozenset({MappingKind.OUT_OF_SCOPE, MappingKind.PRODUCT_GAP})
 
 
 class FieldMapping(BaseModel):
     """One key field's route to the draft, or its declared absence.
 
     Attributes:
-        rationale: Required on :attr:`MappingKind.UNMAPPED` only, where it states
+        rationale: Required on the non-scored kinds only, where it states
             what the absence means. An unmapped field with no stated reason is
             indistinguishable from one nobody has looked at yet.
     """
@@ -140,8 +166,8 @@ class FieldMapping(BaseModel):
             raise ValueError("a role-dependent mapping must name both supplier_field and customer_field")
         if self.kind is MappingKind.COMPOSITE and not self.leaves:
             raise ValueError("a composite mapping must name its leaves")
-        if self.kind is MappingKind.UNMAPPED and not self.rationale.strip():
-            raise ValueError("an unmapped field must state why it is unmapped")
+        if self.kind in _NON_SCORED_KINDS and not self.rationale.strip():
+            raise ValueError("an unscored field must state why it is not scored")
         if self.kind is not MappingKind.DIRECT and self.draft_field:
             raise ValueError(f"draft_field is only read for a direct mapping, not {self.kind.value}")
         return self
@@ -161,8 +187,12 @@ def _direct(draft_field: str) -> FieldMapping:
     return FieldMapping(kind=MappingKind.DIRECT, draft_field=draft_field)
 
 
-def _unmapped(rationale: str) -> FieldMapping:
-    return FieldMapping(kind=MappingKind.UNMAPPED, rationale=rationale)
+def _out_of_scope(rationale: str) -> FieldMapping:
+    return FieldMapping(kind=MappingKind.OUT_OF_SCOPE, rationale=rationale)
+
+
+def _product_gap(rationale: str) -> FieldMapping:
+    return FieldMapping(kind=MappingKind.PRODUCT_GAP, rationale=rationale)
 
 
 KEY_FIELD_MAPPINGS: Final[Mapping[str, FieldMapping]] = MappingProxyType(
@@ -213,19 +243,33 @@ KEY_FIELD_MAPPINGS: Final[Mapping[str, FieldMapping]] = MappingProxyType(
         # ── No draft counterpart. Each states what its absence means; whether a
         # given one is a product gap or out of scope is a ruling recorded
         # elsewhere, not a judgement this table makes silently.
-        "counterparty_role": _unmapped("drives role resolution here; not itself an extraction target"),
-        "line_count_exact": _unmapped("corpus assertion ABOUT the document, not a field printed on it"),
-        "known_defects": _unmapped("corpus annotation listing planted defects; not a field on any invoice"),
-        "doc_type_code": _unmapped("corpus taxonomy code; the draft carries no document-code field"),
-        "document_type": _unmapped("document classification; no draft counterpart distinct from suggested_kind"),
-        "printed_total": _unmapped("printed-versus-computed total; the draft has no printed-total field"),
-        "issuer_address": _unmapped("issuer postal address; the draft carries only postal_code and country"),
-        "amount_due": _unmapped("amount outstanding after prior payment; no draft counterpart"),
-        "operation_date": _unmapped("date of operation where it differs from the invoice date; no draft field"),
-        "reverse_charge": _unmapped("reverse-charge flag; the draft carries regime_legend, not a boolean"),
-        "recargo_rate_pct": _unmapped("recargo rate; the draft carries recargo_amount but no rate field"),
-        "other_withholding_amount": _unmapped("non-IRPF withholding amount; no draft counterpart"),
-        "other_withholding_type_code": _unmapped("non-IRPF withholding type; no draft counterpart"),
+        # Corpus assertions ABOUT the document. A reader is not wrong for
+        # declining to emit the corpus's own annotation.
+        "known_defects": _out_of_scope("corpus annotation listing planted defects; not a field on any invoice"),
+        "line_count_exact": _out_of_scope("corpus assertion that the line count is exact; not printed on the document"),
+        "doc_type_code": _out_of_scope("corpus taxonomy code; not a figure a reader recovers from the page"),
+        "counterparty_role": _out_of_scope(
+            "consumed HERE as the role-resolution input; the product takes the counterparty side from the "
+            "ledger's direction rather than reading it off the page, so scoring a reader on it would score "
+            "it on an input the harness itself supplied",
+        ),
+        # Real fields of the document with nowhere on the draft to hold them.
+        "issuer_address": _product_gap("issuer postal address; the draft carries only postal_code and country"),
+        "amount_due": _product_gap("amount outstanding after prior payment; no draft counterpart"),
+        "printed_total": _product_gap(
+            "the total as PRINTED, which the corpus checks against the computed grand_total to catch a "
+            "document whose printed total does not match its own arithmetic. The draft has nowhere to put "
+            "the printed figure, so that disagreement cannot be surfaced at all",
+        ),
+        "reverse_charge": _product_gap("reverse-charge flag; the draft carries regime_legend, not a boolean"),
+        "document_type": _product_gap(
+            "factura / simplificada / rectificativa / nota_de_adeudo -- a different axis from suggested_kind, "
+            "which carries the purchase-versus-issued distinction. No product derivation produces it",
+        ),
+        "operation_date": _product_gap("date of operation where it differs from the invoice date; no draft field"),
+        "recargo_rate_pct": _product_gap("recargo rate; the draft carries recargo_amount but no rate field"),
+        "other_withholding_amount": _product_gap("non-IRPF withholding amount; no draft counterpart"),
+        "other_withholding_type_code": _product_gap("non-IRPF withholding type; no draft counterpart"),
     },
 )
 """Every field name the pinned key authors anywhere, mapped or declared unmapped.
@@ -294,7 +338,7 @@ def expand_document_slots(document: CorpusDocument) -> CorpusDocument:
     slots: dict[str, Any] = {}
     for key_field, truth in document.ground_truth.items():
         mapping = KEY_FIELD_MAPPINGS.get(key_field)
-        if mapping is None or mapping.kind is MappingKind.UNMAPPED:
+        if mapping is None or mapping.kind in _NON_SCORED_KINDS:
             continue
         if mapping.kind is MappingKind.COMPOSITE:
             if not isinstance(truth, Mapping):
@@ -318,7 +362,7 @@ def project_emission(document: CorpusDocument, draft_payload: Mapping[str, Any])
     """
     projected: dict[str, Any] = {}
     for key_field, mapping in KEY_FIELD_MAPPINGS.items():
-        if mapping.kind is MappingKind.UNMAPPED:
+        if mapping.kind in _NON_SCORED_KINDS:
             continue
         if mapping.kind is MappingKind.DIRECT:
             direct = mapping.draft_field
@@ -335,7 +379,7 @@ def project_emission(document: CorpusDocument, draft_payload: Mapping[str, Any])
     return projected
 
 
-def unmapped_slot_census(key: CorpusKey) -> tuple[tuple[str, int, str], ...]:
+def unmapped_slot_census(key: CorpusKey) -> tuple[tuple[MappingKind, str, int, str], ...]:
     """Enumerate every unmapped key field with the truth it carries corpus-wide.
 
     The report the ruling is taken over: each row is a field the product cannot
@@ -343,13 +387,17 @@ def unmapped_slot_census(key: CorpusKey) -> tuple[tuple[str, int, str], ...]:
     stated reason. Ordered by weight, because a field with 220 authored values and
     one with a single value are not the same finding.
 
+    Carries the KIND, so a caller cannot render one total over both groups: a
+    coverage gap and a corpus annotation are different findings, and a single
+    "excluded" figure would hide the first inside the second.
+
     Returns:
-        ``(field_name, non_null_truth_count, rationale)`` per unmapped field.
+        ``(kind, field_name, non_null_truth_count, rationale)`` per unscored field.
     """
-    rows: list[tuple[str, int, str]] = []
+    rows: list[tuple[MappingKind, str, int, str]] = []
     for key_field, mapping in KEY_FIELD_MAPPINGS.items():
-        if mapping.kind is not MappingKind.UNMAPPED:
+        if mapping.kind not in _NON_SCORED_KINDS:
             continue
         count = sum(1 for document in key.documents if document.ground_truth.get(key_field) is not None)
-        rows.append((key_field, count, mapping.rationale))
-    return tuple(sorted(rows, key=lambda row: (-row[1], row[0])))
+        rows.append((mapping.kind, key_field, count, mapping.rationale))
+    return tuple(sorted(rows, key=lambda row: (row[0].value, -row[2], row[1])))

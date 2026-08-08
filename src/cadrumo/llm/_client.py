@@ -173,6 +173,79 @@ class LLMRetryPolicy(BaseModel):
         return jittered
 
 
+class _ProviderPacing:
+    """The process-wide "not before" instant each provider is paced to.
+
+    **A rate limit is a property of the ACCOUNT, not of the request that
+    happened to meet it.** One request's retry schedule paces that request and
+    nothing else, so a run of N documents each discovers the same limit
+    independently and issues N calls into a window that already refused the
+    first -- which is not a rate limit being respected, it is N of them being
+    ignored in parallel. Arming a shared instant when one dispatch is limited
+    makes every LATER dispatch at that provider wait out the same window
+    without having to be told about it.
+
+    Process-wide and keyed by provider, for the reason the inference arena is:
+    the constraint belongs to the vendor account, which two clients and two
+    batch runs share, so per-client state would pace neither. Off-host only in
+    practice, because nothing local issues a rate limit.
+
+    Monotonic instants rather than wall-clock, so a clock adjustment mid-run
+    cannot arm a wait measured in hours.
+    """
+
+    def __init__(self) -> None:
+        self._resume_at: dict[LLMProvider, float] = {}
+        self._lock = threading.Lock()
+
+    def arm(self, provider: LLMProvider, delay_s: float) -> None:
+        """Pace ``provider`` for at least ``delay_s`` from now.
+
+        Never shortens an existing pause: two limits arriving together mean the
+        window is at least the longer of the two, and taking the shorter would
+        release the run early into the same refusal.
+        """
+        if delay_s <= 0:
+            return
+        resume_at = time.monotonic() + delay_s
+        with self._lock:
+            self._resume_at[provider] = max(self._resume_at.get(provider, 0.0), resume_at)
+
+    def remaining_s(self, provider: LLMProvider) -> float:
+        """Return the seconds still owed before ``provider`` may be dispatched at."""
+        with self._lock:
+            resume_at = self._resume_at.get(provider)
+        return 0.0 if resume_at is None else max(0.0, resume_at - time.monotonic())
+
+    def clear(self) -> None:
+        """Forget every armed pause."""
+        with self._lock:
+            self._resume_at.clear()
+
+
+_PROVIDER_PACING = _ProviderPacing()
+
+
+def provider_pacing_remaining_s(provider: LLMProvider) -> float:
+    """Return how long ``provider`` is still paced for, in seconds.
+
+    Exposed so a batch surface can REPORT that it is waiting on a shared rate
+    limit rather than appearing to hang, and so a gate can observe the window
+    was armed rather than inferring it from elapsed time alone.
+    """
+    return _PROVIDER_PACING.remaining_s(provider)
+
+
+def reset_provider_pacing() -> None:
+    """Forget every armed rate-limit pause.
+
+    The pacing outlives a single client by design, so a test (or a genuinely
+    new run after an operator resolved a quota) would otherwise inherit a
+    window armed elsewhere.
+    """
+    _PROVIDER_PACING.clear()
+
+
 class _OnHostInferenceArena:
     """The process-wide occupancy bound on concurrent on-host inference.
 

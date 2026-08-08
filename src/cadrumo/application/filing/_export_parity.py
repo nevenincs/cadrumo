@@ -57,7 +57,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 
-from ...core import ExportLayoutFormat, ResultDisposition, result_disposition_is_refund
+from ...core import ExportLayoutFormat, ResultDisposition, result_disposition_requires_bank_account
 from ...domain.calculations.registry import (
     CalculationCompletenessManifest,
     CasillaId,
@@ -71,26 +71,42 @@ from ...domain.calculations.registry import (
 from ...domain.filing import CasillaCollection, FilingExportError, ModeloDraft
 from .runtime import CasillaRecordMetadata, RegistrySchemaAccessor
 
-#: ``record_type`` of the cuenta-devolución (DID) page in the DR303 export
-#: layout. The DID page carries the refund-account block (IBAN / SWIFT-BIC /
-#: bank block) AEAT pays into and is emitted ONLY for a refund disposition — a
-#: non-refund filing has no refund account to declare, so emitting the page
-#: would write an empty 823-byte record the Diseño intends only for a refund.
+#: ``record_type`` of the bank-account (DID) page in the DR303 export layout.
+#: The page is emitted for any disposition whose fichero must carry an account,
+#: which is NOT the same as "a refund". Its IBAN field is the one dual-purpose
+#: field on the page -- the Diseño names it ``Domiciliación/Devolución - IBAN``
+#: -- while the SWIFT-BIC, bank name, address, city, country and marca SEPA
+#: fields are each prefixed ``Devolución -`` and apply to a refund only. So a
+#: domiciliación filing needs this page for its IBAN alone, and suppressing it
+#: there filed a direct-debit election with no account for AEAT to charge.
 _DID_PAGE_RECORD_TYPE = "page_did"
 
 
 def _did_page_suppressed(record: ExportRecordDefinition, *, headers: dict[str, str]) -> bool:
-    """Return whether a DID (cuenta-devolución) page record must be suppressed.
+    """Return whether a DID (bank-account) page record must be suppressed.
 
-    The DID page is emitted only when the determined disposition (carried on the
-    ``declaration_type`` header) is a refund (``D`` / ``V`` / ``X``). A
-    non-refund filing suppresses the page rather than emitting an empty refund
-    block. Non-DID records are never suppressed by this guard.
+    The page is emitted when the determined disposition (carried on the
+    ``declaration_type`` header) requires a bank account: the three refund codes
+    (``D`` / ``V`` / ``X``, AEAT pays in) and ``U``, domiciliación del ingreso
+    (AEAT charges). Every other disposition suppresses it rather than emitting an
+    empty account block. Non-DID records are never suppressed by this guard.
+
+    Keyed on :func:`~core.result_disposition_requires_bank_account` rather than on
+    refund-ness, and the distinction is load-bearing: refund-ness also drives the
+    compensación carry decision, so reusing it here made "does AEAT need an
+    account" and "does this period carry forward" one answer to two questions.
+    ``U`` is where they diverge, and it diverged silently in the direction of
+    omitting required data.
+
+    ``G`` (cuenta corriente tributaria) is NOT emitted, and that is an unsettled
+    question rather than a ruling -- see the predicate's own note.
 
     This is the single disposition predicate shared by the renderer (which skips
     the record) and this module's parity assertions (which must not require a
     casilla the disposition never files), so the two cannot disagree about what
-    reaches disk.
+    reaches disk. Any future input this predicate needs -- Nota 3's rectificativa
+    case wants casilla 111 and the page-3 domiciliación-cancellation marker,
+    neither of which is in scope here -- must reach BOTH sides for that reason.
     """
     if record.record_type != _DID_PAGE_RECORD_TYPE:
         return False
@@ -99,7 +115,7 @@ def _did_page_suppressed(record: ExportRecordDefinition, *, headers: dict[str, s
         disposition = ResultDisposition(declaration_type)
     except ValueError:
         return True
-    return not result_disposition_is_refund(disposition)
+    return not result_disposition_requires_bank_account(disposition)
 
 
 def boe_representable_casilla_ids(

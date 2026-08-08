@@ -39,6 +39,7 @@ from ...core.time import now, validate_utc_aware
 from ...domain.user_profile import UserProfileStatus
 from ..auth_credentials import ActiveCertificateCredentials
 from . import select_provider
+from ._credential_resolution import resolve_active_provider_kind
 from ._acquisition_lock import (
     AuthAcquisitionLockRecord,
     AuthAcquisitionLockStatus,
@@ -334,7 +335,7 @@ async def require_verified_aeat_session(
     """Return a verified active :class:`AeatSession` without exposing provider mechanics."""
     provider_kind = _resolve_provider_kind(settings, kind)
     settings, expected_identity = _prepare_clave_auth(settings, provider_kind)
-    persisted = load_persisted_session(settings, kind)
+    persisted = load_persisted_session(settings, provider_kind)
     if persisted is None:
         raise AuthSessionUnavailableError(
             translated_message="application.auth.sessions.errors.no_session",
@@ -596,11 +597,21 @@ def _session_metadata_datetime(value: object, *, field: str) -> datetime:
 
 
 def _resolve_provider_kind(settings: Settings, kind: AuthProviderKind | None) -> AuthProviderKind:
+    """Resolve the provider this session should authenticate through.
+
+    Delegates to :func:`resolve_active_provider_kind` so the live-read
+    bring-up reads the SAME selection ``aeat config auth configure``
+    persisted that ``aeat config auth login`` reads. Reading only
+    :class:`Settings` here made the live path default to the certificate
+    provider while the operator had configured another one, so the refusal
+    named a certificate the operator had never chosen to use.
+    """
     if kind is not None:
         return kind
-    if settings.cadrumo_auth_provider is not None:
-        return settings.cadrumo_auth_provider
-    return AuthProviderKind.CERTIFICATE
+    fallback = (settings.cadrumo_auth_provider or AuthProviderKind.CERTIFICATE).value
+    return resolve_active_provider_kind(settings=settings, fallback_provider=fallback) or (
+        AuthProviderKind.CERTIFICATE
+    )
 
 
 def _normalise_tax_identity(value: object) -> str:

@@ -6958,6 +6958,9 @@ flows:
     language:
       unavailable: This profile does not offer a language setting.
     progress: '{present} of {total} fields filled in, {missing} still needed for filing'
+    recovery_boundary: 'Recovery-code creation and rotation are terminal-only: aeat
+      config recovery create / aeat config recovery rotate. The 24 words are shown
+      once and cannot be shown again.'
     section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'
   progress:

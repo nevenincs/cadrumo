@@ -185,6 +185,7 @@ class _RelationGrounding(TypedDict):
 
     source_modelo: ModeloId
     source_casilla_ids: tuple[CasillaId, ...]
+    dependency_treatment: str
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
 
@@ -199,6 +200,9 @@ def _relation_value_grounding(
         "source_casilla_ids": (
             requirement.source_casilla_ids if requirement is not None else (relation.source_casilla_id,)
         ),
+        # Carried from the requirement, which already holds the registry's declared
+        # treatment. Empty when no requirement resolved it, which is not a treatment.
+        "dependency_treatment": requirement.dependency_treatment if requirement is not None else "",
         "legal_refs": tuple(relation.legal_refs),
         "source_refs": tuple(relation.source_refs),
     }

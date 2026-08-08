@@ -691,6 +691,15 @@ class RelationValue(BaseModel):
 
     relation: RelationId
     value: Decimal | None = None
+    #: The registry's declared dependency treatment for this carry, empty when the
+    #: revision declares none. A ``factual_evidence`` carry is a fact to reconcile
+    #: against rather than a figure that settles the return, and a consumer must be
+    #: able to tell it from a ``direct_annual_settlement`` one. Carried here rather
+    #: than gated here: the value is NOT withheld, because a taxpayer is entitled to
+    #: a suffered retención and dropping it silently is an over-declaration. Empty
+    #: means the revision declared no treatment, which is not the same as any
+    #: particular one and must never be read as one.
+    dependency_treatment: str = ""
     provenance: Literal["local_filing", "aeat_live", "operator_manual"] = "operator_manual"
     source_modelo: ModeloId | None = None
     source_filing_year: int | None = Field(default=None, ge=2000, le=2099)

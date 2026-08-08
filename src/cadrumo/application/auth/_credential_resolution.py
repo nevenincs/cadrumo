@@ -141,6 +141,36 @@ def active_auth_projection_span(
             )
 
 
+def resolve_active_provider_kind(
+    *,
+    settings: Settings | None = None,
+    requested_provider: str | None = None,
+    fallback_provider: str | None = None,
+) -> AuthProviderKind | None:
+    """Resolve the provider kind the operator's persisted selection names.
+
+    This is the one reader of "which provider is configured", shared by the
+    operator login surface and the live-read session bring-up so the two
+    cannot disagree: the precedence is an explicit ``requested_provider``,
+    then the selection persisted by ``aeat config auth configure`` in the
+    witnessed :class:`application.workflow.WorkflowState`, then
+    ``fallback_provider``. :class:`Settings` is a fallback, never an
+    override, because the persisted selection is the operator's recorded
+    decision while a settings value is only a deployment default.
+
+    Failures are not swallowed: a locked or unreadable bucket propagates
+    rather than falling through to the fallback, because silently resolving
+    a provider the operator did not choose is the defect this reader exists
+    to remove.
+    """
+    with active_auth_projection_span(
+        settings=settings or load_settings(),
+        requested_provider=requested_provider,
+        fallback_provider=fallback_provider,
+    ) as snapshot:
+        return snapshot.provider
+
+
 def resolve_active_certificate_credentials(
     *,
     settings: Settings | None = None,
@@ -192,5 +222,6 @@ __all__ = [
     "active_auth_projection_span",
     "project_active_certificate_credentials",
     "resolve_active_certificate_credentials",
+    "resolve_active_provider_kind",
     "resolve_certificate_source_secret",
 ]

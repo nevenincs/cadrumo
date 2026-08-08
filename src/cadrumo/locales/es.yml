@@ -7475,6 +7475,9 @@ flows:
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
     progress: '{present} de {total} campos rellenados, faltan {missing} para presentar'
+    recovery_boundary: 'El código de recuperación se crea y se rota solo desde la
+      terminal: aeat config recovery create / aeat config recovery rotate. Las 24
+      palabras se muestran una sola vez y no se pueden volver a mostrar.'
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   progress:

@@ -28,6 +28,7 @@ from .._scoring import score_emission
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _DRAFT_FIELDS = frozenset(InvoiceDraft.model_fields)
+_NON_SCORED = (MappingKind.OUT_OF_SCOPE, MappingKind.PRODUCT_GAP)
 
 
 @pytest.fixture(scope="module")
@@ -65,7 +66,7 @@ def test_the_table_covers_every_field_the_key_authors(key: CorpusKey) -> None:
 
 def test_every_unmapped_entry_states_why(key: CorpusKey) -> None:
     """An unmapped field with no reason is one nobody has looked at yet."""
-    for field_name, count, rationale in unmapped_slot_census(key):
+    for _kind, field_name, count, rationale in unmapped_slot_census(key):
         assert rationale.strip(), f"{field_name} ({count} authored) is unmapped with no stated reason"
 
 
@@ -178,14 +179,33 @@ def test_an_unmapped_field_never_becomes_a_miss(key: CorpusKey) -> None:
     assert "known_defects" not in slots
 
 
-def test_the_unmapped_census_is_ordered_by_weight_and_non_empty(key: CorpusKey) -> None:
-    """The ruling is taken over this list, so it must carry its counts."""
+def test_the_unmapped_census_reports_both_groups_separately(key: CorpusKey) -> None:
+    """The ruling is taken over this list, so it must carry counts AND kinds.
+
+    Both groups must be non-empty: a census reporting one kind would let a
+    coverage gap be read as a corpus annotation, or hide it entirely.
+    """
     census = unmapped_slot_census(key)
 
-    assert census, "no unmapped fields enumerated; the census would be a vacuous report"
-    counts = [count for _, count, _ in census]
-    assert counts == sorted(counts, reverse=True)
-    assert dict((name, count) for name, count, _ in census)["counterparty_role"] == 220
+    assert census, "no unscored fields enumerated; the census would be a vacuous report"
+    by_kind = {kind: [name for k, name, _, _ in census if k is kind] for kind in _NON_SCORED}
+    assert by_kind[MappingKind.OUT_OF_SCOPE], "no out-of-scope fields; that group is unproved"
+    assert by_kind[MappingKind.PRODUCT_GAP], "no product-gap fields; that group is unproved"
+    assert {name: count for _, name, count, _ in census}["counterparty_role"] == 220
+
+
+def test_a_product_gap_is_never_reported_as_out_of_scope(key: CorpusKey) -> None:
+    """The two groups must not pool: they are different findings.
+
+    ``printed_total`` is the sharp case -- the corpus checks it against the
+    computed total to catch a document whose printed figure disagrees with its
+    own arithmetic, and the draft cannot hold it. Filing that under "corpus
+    annotation" would bury a capability gap.
+    """
+    kinds = {name: kind for kind, name, _, _ in unmapped_slot_census(key)}
+
+    assert kinds["printed_total"] is MappingKind.PRODUCT_GAP
+    assert kinds["known_defects"] is MappingKind.OUT_OF_SCOPE
 
 
 # ----------------------------------------------------------------------------
@@ -232,10 +252,15 @@ def test_a_composite_mapping_without_leaves_is_refused() -> None:
         FieldMapping(kind=MappingKind.COMPOSITE)
 
 
-def test_an_unmapped_entry_without_a_reason_is_refused() -> None:
-    """An unmapped field with no reason is one nobody has looked at yet."""
+@pytest.mark.parametrize("kind", _NON_SCORED)
+def test_an_unscored_entry_without_a_reason_is_refused(kind: MappingKind) -> None:
+    """An unscored field with no reason is one nobody has looked at yet.
+
+    Both kinds, because an exclusion is only reviewable if it says why, and a
+    guard covering one of the two would leave the other free to be silent.
+    """
     with pytest.raises(ValueError, match=r"must state why"):
-        FieldMapping(kind=MappingKind.UNMAPPED)
+        FieldMapping(kind=kind)
 
 
 def test_a_non_direct_mapping_naming_draft_field_is_refused() -> None:

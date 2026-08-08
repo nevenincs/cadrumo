@@ -303,6 +303,7 @@ _DIAGNOSTIC_RETENTION = timedelta(days=7)
 
 _AUDIT_REDACTION_RULES = (
     "nif-hash",
+    "nif-separated-hash",
     "cif-hash",
     "nif-iva-hash",
     "iban-hash",
@@ -333,13 +334,13 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
             sensitivity=SensitivityClass.IDENTITY,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
-            redaction_rules=("nif-hash", "cif-hash", "nif-iva-hash", "iban-hash"),
+            redaction_rules=("nif-hash", "nif-separated-hash", "cif-hash", "nif-iva-hash", "iban-hash"),
         ),
         SensitivityClass.FINANCIAL: ClassificationPolicy(
             sensitivity=SensitivityClass.FINANCIAL,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
-            redaction_rules=("nif-hash", "cif-hash", "nif-iva-hash", "iban-hash"),
+            redaction_rules=("nif-hash", "nif-separated-hash", "cif-hash", "nif-iva-hash", "iban-hash"),
         ),
         SensitivityClass.AUDIT: ClassificationPolicy(
             sensitivity=SensitivityClass.AUDIT,

@@ -7426,6 +7426,9 @@ flows:
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     progress: '{present} de {total} camps emplenats, en falten {missing} per presentar'
+    recovery_boundary: 'La creació i la rotació del codi de recuperació només es fan
+      des del terminal: aeat config recovery create / aeat config recovery rotate.
+      Les 24 paraules es mostren una sola vegada i no es poden tornar a mostrar.'
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   progress:

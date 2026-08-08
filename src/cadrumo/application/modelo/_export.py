@@ -513,6 +513,44 @@ def _ddmmaaaa(value: date) -> str:
     return f"{value.day:02d}{value.month:02d}{value.year:04d}"
 
 
+def _compose_domiciliacion_account_block(account: RefundAccount | None) -> dict[str, str]:
+    """Build the DID header fields for a domiciliación del ingreso (``U``).
+
+    A domiciliación is an INGRESO the taxpayer pays by direct debit, so AEAT
+    CHARGES this account rather than paying into it. Emits the IBAN and nothing
+    else, because the Diseño labels only position 23 as
+    ``Domiciliación/Devolución - IBAN`` while the SWIFT-BIC, bank name, address,
+    city, country code and marca SEPA fields are each prefixed ``Devolución -``
+    and have no meaning for a charge.
+
+    That field labelling is also why one stored account legitimately serves both
+    directions rather than this being a substitution of two concepts: AEAT's own
+    record design carries ONE IBAN field for the refund and the charge alike.
+
+    An IBAN is required, not merely some account: a SWIFT-only account is the
+    non-SEPA foreign-bank shape, whose fields this page files for a refund only,
+    so there is nowhere on the record to state it for a charge. Refusing is the
+    honest outcome -- a domiciliación with no debit account is an instruction AEAT
+    cannot execute, and emitting the page blank would file exactly that.
+
+    Raises:
+        ModeloRefundAccountMissingError: When no account is on file, or the
+            account carries no IBAN.
+    """
+    if account is None or not account.iban:
+        raise ModeloRefundAccountMissingError(
+            "a domiciliación disposition requires an account with an IBAN for AEAT to charge, "
+            "but the profile carries none",
+            suggestion=(
+                "Configure an account with an IBAN on the profile, or file this period as a plain "
+                "ingreso instead of electing domiciliación. A SWIFT-only foreign account cannot be "
+                "stated on this page for a charge -- the official record files those fields for a "
+                "refund only."
+            ),
+        )
+    return {"iban": account.iban}
+
+
 def _compose_refund_account_block(refund_account: RefundAccount | None) -> dict[str, str]:
     """Build the DR303 cuenta-devolución (DID) header fields for a refund.
 
@@ -661,13 +699,26 @@ def _compose_export_headers(
     # a refund.
     headers["redeme"] = "1" if workflow_profile.iva.redeme_enrolled else "2"
 
-    # Cuenta-devolución (DID) block — ONLY for a refund disposition (D / V / X).
-    # The refund-account financial fields (IBAN / SWIFT-BIC / bank block) live in
-    # the encrypted secure-object store on the transiently-loaded profile; they
-    # are read into memory here and emitted into the header dict, never logged or
-    # written to a plaintext side store. A non-refund filing emits no DID fields
-    # (the DID page itself is suppressed downstream by the render-layer guard).
-    if result_disposition_is_refund(ResultDisposition(declaration_type)):
+    # Bank-account (DID) block. Emitted for every disposition whose fichero must
+    # carry an account, which is NOT the same as "a refund": the three refund
+    # codes (D / V / X, AEAT pays in) AND U, domiciliación del ingreso, where AEAT
+    # CHARGES the account. Gating this on refund-ness alone emitted no account for
+    # a direct-debit election, and the render guard suppressed the page to match,
+    # so the filing went out with nothing for AEAT to debit.
+    #
+    # The two blocks are NOT the same fields, and the Diseño is what says so: the
+    # IBAN at position 23 is the single dual-purpose field
+    # ("Domiciliación/Devolución - IBAN") while the SWIFT-BIC, bank name, address,
+    # city, country code and marca SEPA are each labelled "Devolución -". So a
+    # domiciliación carries its IBAN and nothing else from this page.
+    #
+    # The account fields live in the encrypted secure-object store on the
+    # transiently-loaded profile; they are read into memory here and emitted into
+    # the header dict, never logged or written to a plaintext side store.
+    disposition = ResultDisposition(declaration_type)
+    if disposition is ResultDisposition.DOMICILIACION:
+        headers.update(_compose_domiciliacion_account_block(workflow_profile.iva.refund_account))
+    elif result_disposition_is_refund(disposition):
         headers.update(_compose_refund_account_block(workflow_profile.iva.refund_account))
 
     if revision.amendment_kind is CalculationRevisionAmendmentKind.RECTIFICATIVA:
