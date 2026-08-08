@@ -72,6 +72,7 @@ _DELETED_CLOUD_SYMBOLS = (
     "evidence-acknowledged",
 )
 
+
 def _verify_settings_field(symbol: str) -> None:
     """Assert *symbol* is a live deployment setting the operator can reach."""
     assert symbol in set(_settings_model_fields()), f"{symbol} is claimed reinstated but Settings does not declare it"

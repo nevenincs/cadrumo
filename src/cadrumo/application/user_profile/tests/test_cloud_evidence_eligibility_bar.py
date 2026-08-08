@@ -20,11 +20,17 @@ The sweep walks the production AST for those call sites and requires each to
 source ``profile_eligible`` from
 :func:`~application.user_profile.cloud_evidence_upload_eligible_for_active_profile`.
 
-The sweep is non-vacuous at zero call sites -- which is where it stands today,
-since no CLI verb mints yet -- because it also pins the MECHANISM that makes the
-zero-site case safe: ``profile_eligible`` is keyword-only with no default, so a
-future minting surface cannot omit it (that is a ``TypeError``, not an open
-door), and the gate returns ``False`` whenever it is ``False``.
+**One production surface mints today**, and the sweep finds it: the off-host
+evidence extract verb in ``entrypoints/cli/_ledger_evidence_cli.py``. It passes
+because it sources ``profile_eligible`` from the canonical resolver rather than
+asserting its own eligibility, so what follows is a statement about a live
+surface and not about an empty set.
+
+The sweep would still be non-vacuous at zero call sites, because it also pins
+the MECHANISM that makes the zero-site case safe: ``profile_eligible`` is
+keyword-only with no default, so a minting surface cannot omit it (that is a
+``TypeError``, not an open door), and the gate returns ``False`` whenever it is
+``False``.
 """
 
 from __future__ import annotations
@@ -205,8 +211,10 @@ def test_every_minting_surface_sources_eligibility_from_the_canonical_resolver()
         if argument is None:
             offenders.append(f"{relative}:{lineno} passes no profile_eligible")
             continue
-        source = argument.func.attr if isinstance(argument, ast.Call) and isinstance(argument.func, ast.Attribute) else (
-            argument.func.id if isinstance(argument, ast.Call) and isinstance(argument.func, ast.Name) else None
+        source = (
+            argument.func.attr
+            if isinstance(argument, ast.Call) and isinstance(argument.func, ast.Attribute)
+            else (argument.func.id if isinstance(argument, ast.Call) and isinstance(argument.func, ast.Name) else None)
         )
         if source != _RESOLVER:
             offenders.append(f"{relative}:{lineno} sources profile_eligible from {ast.dump(argument)[:80]}")
