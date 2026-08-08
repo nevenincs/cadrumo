@@ -26,7 +26,7 @@ from ...user_profile import profile_storage_session, record_to_path_values
 from ...workflow import workflow_state_repository
 from .. import ProfileFactsCheckpointStore, checkpoint_answers_from_record, checkpoint_facts_from_answers
 from .._catalogue import SETUP_FLOW
-from .._commands import _SETUP_CHECKPOINT, _setup_flow_definition
+from .._commands import _SETUP_CHECKPOINT, setup_flow_definition
 from .._descendant_group import DESCENDANTS_GROUP_ID
 from .test_setup_runtime import _scripted_answers_for_individual_declaration
 
@@ -246,7 +246,7 @@ def test_resume_seeding_reinstantiates_the_group_and_round_trips(_backend: Path)
 
     # resume_flow re-instantiates the group from the seed: the count commits
     # first, the instances seed against the current definition, none go stale.
-    definition = _setup_flow_definition(SETUP_FLOW)
+    definition = setup_flow_definition(SETUP_FLOW)
     state = resume_flow(definition, seeded, mode=FlowMode.CREATE)
     assert state.instance_counts.get(DESCENDANTS_GROUP_ID) == 2
     assert state.answers["descendientes#0.birth-date"] == "2023-05-10"
@@ -306,7 +306,7 @@ def test_resume_seeding_round_trips_a_maximal_descendant_fixture(_backend: Path)
 
     # resume_flow re-instantiates every instance against the current
     # definition, none stale, and re-completing rebuilds an identical fact set.
-    definition = _setup_flow_definition(SETUP_FLOW)
+    definition = setup_flow_definition(SETUP_FLOW)
     state = resume_flow(definition, seeded, mode=FlowMode.CREATE)
     assert state.instance_counts.get(DESCENDANTS_GROUP_ID) == 3
     assert not any(key.startswith("descendientes") for key in state.stale)
@@ -330,7 +330,7 @@ def test_resume_then_immediate_save_exit_leaves_the_record_identical(_backend: P
     # Resume is offered only while SETUP_INCOMPLETE (the save-exit left it so).
     seeded = store.load(SETUP_FLOW.id)
     assert seeded is not None
-    definition = _setup_flow_definition(SETUP_FLOW)
+    definition = setup_flow_definition(SETUP_FLOW)
     state = resume_flow(definition, dict(seeded), mode=FlowMode.CREATE)
 
     # Immediate save-and-exit with no further answers.

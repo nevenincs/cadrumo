@@ -59,7 +59,7 @@ from .._commands import (
     _MODIFY_NO_RESUME_CODE,
     _SETUP_CHECKPOINT,
     _emit_wizard_success,
-    _setup_flow_definition,
+    setup_flow_definition,
 )
 from .._descendant_group import DESCENDANT_ENTRY_EVENT_VALIDATOR_ID, DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID
 
@@ -184,8 +184,8 @@ def test_modify_definition_carries_no_descendant_pages() -> None:
     definition carries the count page, the group, and the adoption cross-field
     validator; the MODIFY definition carries none of them.
     """
-    create_definition = _setup_flow_definition(SETUP_FLOW, attach_descendants=True)
-    modify_definition = _setup_flow_definition(SETUP_FLOW, attach_descendants=False)
+    create_definition = setup_flow_definition(SETUP_FLOW, attach_descendants=True)
+    modify_definition = setup_flow_definition(SETUP_FLOW, attach_descendants=False)
 
     create_familia = next(section for section in create_definition.sections if section.id == "familia")
     modify_familia = next(section for section in modify_definition.sections if section.id == "familia")

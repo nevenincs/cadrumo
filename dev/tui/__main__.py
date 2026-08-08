@@ -40,6 +40,7 @@ def _advance(session: Session) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Parse one command, apply it to the session, and print the frame."""
     parser = argparse.ArgumentParser(prog="python -m dev.tui", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
 

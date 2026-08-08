@@ -26,7 +26,7 @@ from cadrumo.tests.secure_sql import isolated_profile_storage_root
 STATE_DIR = Path(__file__).resolve().parent / ".state"
 """Where the harness keeps its root and its sessions. Gitignored."""
 
-PASSPHRASE_ENV_VAR = "CADRUMO_TUI_HARNESS_PASSPHRASE"
+PASSPHRASE_ENV_VAR = "CADRUMO_TUI_HARNESS_PASSPHRASE"  # noqa: S105 - the variable NAME, not a secret
 
 _DEFAULT_PASSPHRASE = "tui-harness-operator-secret"  # noqa: S105 - synthetic harness fixture
 

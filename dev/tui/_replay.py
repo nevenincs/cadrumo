@@ -13,7 +13,6 @@ import asyncio
 import time
 from collections.abc import Awaitable, Callable
 from contextlib import ExitStack
-from typing import TypeVar
 
 from textual.app import App
 from textual.pilot import Pilot
@@ -22,8 +21,6 @@ from ._fixture import ensure_profile, ensure_session, harness_storage
 from ._frame import Frame, capture
 from ._journal import Click, Fill, Press, Session, Type
 from ._surfaces import resolve
-
-T = TypeVar("T")
 
 
 def _theme_name(appearance: str) -> str:
@@ -62,7 +59,7 @@ async def _apply(pilot: Pilot, session: Session) -> None:
     await pilot.pause()
 
 
-def _run(session: Session, read: Callable[[App, float], Awaitable[T] | T]) -> T:
+def _run[T](session: Session, read: Callable[[App, float], Awaitable[T] | T]) -> T:
     """Build, drive and hand the settled app to ``read``.
 
     The one place a surface is constructed and walked. Both the frame

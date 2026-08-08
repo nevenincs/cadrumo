@@ -47,7 +47,8 @@ def screen_text(app: App, width: int, height: int) -> str:
         file=io.StringIO(),
         legacy_windows=False,
     )
-    console.print(app.screen._compositor, end="")  # noqa: SLF001 - the compositor is the frame
+    # The compositor IS the frame: the same object export_screenshot renders.
+    console.print(app.screen._compositor, end="")
     return console.export_text(styles=False).rstrip("\n")
 
 
@@ -99,8 +100,7 @@ def engine_band(app: App) -> list[str]:
         status = page_status(state, cursor.key)
         required = getattr(cursor.page, "required", None)
         lines.append(
-            f"page={cursor.key} widget={getattr(cursor.page, 'widget', '?')} "
-            f"status={status} required={required}",
+            f"page={cursor.key} widget={getattr(cursor.page, 'widget', '?')} status={status} required={required}",
         )
     if state.verdicts:
         for key, verdict in state.verdicts.items():
