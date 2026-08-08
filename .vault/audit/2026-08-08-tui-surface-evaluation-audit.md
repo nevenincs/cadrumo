@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:824b107ddd754640df012d4f51f6a9e8323d526ea045208bd39fbed311a5b291'
+body_hash: 'sha256:b2fba4a54c1911d573a3cc50f303336b18b1bb7ebd5f7ec97d1fe827ac35c0e1'
 related: []
 ---
 
@@ -37,6 +37,12 @@ content. Absence of a finding on those is absence of evidence.
 
 Every surface was driven at eighty by twenty-four, one hundred by thirty, one
 hundred and twenty by forty and two hundred by fifty, under both appearances.
+That sweep was read off the harness geometry band, which checks widget
+positions — so it is evidence about overflow and unreachability, and not about
+legibility. A defect found later on the same surfaces at the same widths, where
+a table silently drops a column, is invisible to that band and was found by
+reading the painted text instead. Treat the clean geometry result as bounded
+accordingly.
 
 ## Findings
 
@@ -100,6 +106,45 @@ while the dialog is open and a cancel-preserves-state test added alongside.
 Single-page reset was deliberately left unguarded — its blast radius is one
 answer the operator can re-enter in seconds, and guarding it would train the
 reflex that makes the real confirmation worthless.
+
+### censo-divergences-were-illegible | high | the reconciliation worked and the screen hid the result
+
+A cotejo persists each disagreement between AEAT and the operator's own record
+as typed divergence rows. Both surfaces rendered them as raw internals. On the
+manager, each divergence produced three rows whose labels ended in the
+untranslated internal leaf names — `axis`, `artefact_value`, `source` — leaking
+English field names onto a Spanish screen, and the row meant to say WHICH field
+disagrees printed the raw dotted schema path instead, truncated to three
+characters at a hundred columns. The read-only status page was worse: label and
+value were both raw identifiers, with no operator-facing text on the row at
+all, a behaviour its own docstring documented.
+
+So the mechanism designed to tell an operator that AEAT disagrees with them
+completed successfully and then presented the result in a form only someone
+holding the internal data model could read. Confirmed by seeding two real
+divergences through the production apply door and driving both surfaces, not by
+reasoning about the code. Fixed by resolving the disputed field's real label
+and translating the three leaf suffixes, in all four catalogues; both surfaces
+consume the same promoted facade symbol, so they cannot drift apart on what a
+divergence axis is called. Deliberately scoped to this one namespace rather
+than generalised into an indexed-leaf translator, because sibling namespaces
+are repeatable sections with their own declared labels — a different shape.
+
+### manager-value-column-vanishes-at-the-floor | medium | a whole column disappears at eighty columns, and the geometry check cannot see it
+
+At eighty columns the profile manager's tables drop the value column entirely,
+leaving only status and field name — every row on the page, not just
+divergences. The operator sees which facts exist and none of their values.
+
+The instrument note matters as much as the defect. The harness geometry band
+reports `ok` for this surface at that width, and correctly so: nothing is
+painted past an edge, no scroll host overflows, the screen does not scroll. A
+table that silently drops a column is a rendering defect the band is
+structurally blind to, because it checks positions rather than content. The
+rendering sweep that cleared every surface at four widths under both
+appearances was reading that band. Its clean result is therefore evidence about
+overflow and not about legibility, and this finding is the proof that the two
+are different questions.
 
 ### manager-tables-are-anonymous-tab-stops | medium | twenty-five focus stops nothing can tell apart
 
