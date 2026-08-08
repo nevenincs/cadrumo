@@ -7396,7 +7396,7 @@ flows:
       filed_history_pull_all_refused: 'No se pudieron leer estos pares y NO se declararon
         vacíos: {pairs}. Repita la operación para reintentarlo.'
       passphrase: Cambiar la contraseña
-      passphrase_confirm: flows.manager.action.passphrase_confirm
+      passphrase_confirm: Confirme la nueva contraseña
       passphrase_current: Contraseña actual
       passphrase_done: Contraseña cambiada.
       passphrase_mismatch: La nueva contraseña y su confirmación no coinciden.
