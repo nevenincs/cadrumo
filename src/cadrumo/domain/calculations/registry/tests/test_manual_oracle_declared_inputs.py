@@ -23,6 +23,12 @@ detect nothing. The property is what is gated — every payload is in exactly on
 the two states, and every entry here names a payload that really exists and really
 has not migrated.
 
+**Not every entry is pending work.** Some are ruled permanently out of scope, and
+their reasons say so — see :data:`_NO_PRINTED_CASILLA_INPUT`, which covers the six
+whose consumed figures never reach a casilla. Read an entry's reason before
+treating it as a backlog item: the map holds both "not yet" and "not ever", and
+the difference is the whole reason each entry carries prose rather than a flag.
+
 What a declaration proves, and what it does not
 -----------------------------------------------
 
