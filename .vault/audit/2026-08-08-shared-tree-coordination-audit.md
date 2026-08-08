@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:0bc7e051df72dbd0c736be802b8cdf17e15f0f4c4b381bbca18b314b8c6a5225'
+body_hash: 'sha256:7ac71a7d323e1dc69cd8e6dad8345828dfb124833ee4f96108e2bf79e2db0d46'
 related: []
 ---
 
@@ -40,6 +40,12 @@ A second, independently reported instance: the whole-vault `check all --fix` dir
 **One claim in this class was reported and then withdrawn by its own author, and the withdrawal is recorded rather than the claim quietly dropped.** A third verb, the modified-stamp check, was reported as writing even without `--fix`. Its author retested and found it reports only: their file stayed flagged after the run and needed a round-trip through the owning edit verb to re-attest. So whatever re-stamped two execution records in another feature earlier, it was not that verb, and the likeliest explanation is an ordinary peer edit. Recorded because a withdrawn finding left unrecorded gets re-derived by the next reader, and because the withdrawal itself is the useful part: the author distinguished "my file changed after I ran X" from "X changed my file", which are not the same observation.
 
 The `--feature` scoping advice survives the withdrawal on its own merits, since two verbs in this class do write tree-wide.
+
+**The withdrawal above was itself too broad, and the corrected position is narrower than either the original claim or its retraction.** The re-stamping phenomenon is real and reproducible: six execution records across two features now sit dirty with body-hash-only changes, bodies byte-identical to their committed versions. What remains unsupported is attributing it to the modified-stamp check specifically, since that verb demonstrably only reports — its own author's file stayed flagged after running it and needed a round-trip through the owning edit verb to re-attest.
+
+So some feature-scoped vault verb re-stamps the feature's sibling documents, and which one has not been isolated. The operative caution is therefore about the class rather than the member: **treat any feature-scoped vault verb as potentially re-stamping the other documents in that feature.** Leaving the affected records dirty and untouched for their owners remains the right response, exactly as with the tree-wide case.
+
+This correction is recorded rather than folded into the paragraph above because the sequence matters. A claim was made, retracted on evidence, and then partially reinstated on better evidence — and a reader who sees only the final position cannot tell which parts were measured and which inferred. The measured facts are the six records and the reporting-only behaviour of the one verb tested; the unmeasured part is which verb is responsible.
 
 ### Why this is recorded rather than codified
 
