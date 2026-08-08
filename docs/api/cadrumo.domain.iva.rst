@@ -20,6 +20,7 @@ Submodules
    cadrumo.domain.iva._errors
    cadrumo.domain.iva._establishment
    cadrumo.domain.iva._flow
+   cadrumo.domain.iva._grounding
    cadrumo.domain.iva._invoice_classification
    cadrumo.domain.iva._legend_derivation
    cadrumo.domain.iva._lookup
@@ -35,4 +36,5 @@ Submodules
    cadrumo.domain.iva._schema
    cadrumo.domain.iva._sepa_marca
    cadrumo.domain.iva._supply_nature
+   cadrumo.domain.iva._vat_identification
    cadrumo.domain.iva._verify

@@ -107,7 +107,7 @@ _CLASSIFICATION_CASES = (
         "r10-intra-community-supply-goods",
         {
             "customer_residency": IvaTerritorialScope.EU_MEMBER,
-            "customer_member_state": EUMemberState.DE,
+            "customer_identification_state": EUMemberState.DE,
             "kind": TransactionKind.GOODS,
             "direction": InvoiceKind.ISSUED,
         },
@@ -120,7 +120,7 @@ _CLASSIFICATION_CASES = (
         "r11-intra-community-acquisition-goods",
         {
             "issuer_residency": IvaTerritorialScope.EU_MEMBER,
-            "issuer_member_state": EUMemberState.DE,
+            "issuer_identification_state": EUMemberState.DE,
             "customer_residency": IvaTerritorialScope.ES_MAINLAND,
             "kind": TransactionKind.GOODS,
             "direction": InvoiceKind.RECEIVED,
@@ -134,7 +134,7 @@ _CLASSIFICATION_CASES = (
         "r12-services-b2b-eu-outbound",
         {
             "customer_residency": IvaTerritorialScope.EU_MEMBER,
-            "customer_member_state": EUMemberState.FR,
+            "customer_identification_state": EUMemberState.FR,
             "kind": TransactionKind.SERVICES_GENERAL,
             "direction": InvoiceKind.ISSUED,
         },
@@ -147,7 +147,7 @@ _CLASSIFICATION_CASES = (
         "r13-services-b2b-eu-inbound",
         {
             "issuer_residency": IvaTerritorialScope.EU_MEMBER,
-            "issuer_member_state": EUMemberState.FR,
+            "issuer_identification_state": EUMemberState.FR,
             "customer_residency": IvaTerritorialScope.ES_MAINLAND,
             "kind": TransactionKind.SERVICES_GENERAL,
             "direction": InvoiceKind.RECEIVED,
@@ -161,7 +161,7 @@ _CLASSIFICATION_CASES = (
         "r19-oss-union-services",
         {
             "customer_residency": IvaTerritorialScope.EU_MEMBER,
-            "customer_member_state": EUMemberState.IT,
+            "customer_identification_state": EUMemberState.IT,
             "customer_tax_status": CustomerTaxStatus.B2C_CONSUMER,
             "kind": TransactionKind.OSS_UNION_SERVICES,
             "direction": InvoiceKind.ISSUED,
@@ -220,9 +220,9 @@ _CLASSIFICATION_CASES = (
         "r99-fallthrough",
         {
             "issuer_residency": IvaTerritorialScope.EU_MEMBER,
-            "issuer_member_state": EUMemberState.DE,
+            "issuer_identification_state": EUMemberState.DE,
             "customer_residency": IvaTerritorialScope.EU_MEMBER,
-            "customer_member_state": EUMemberState.FR,
+            "customer_identification_state": EUMemberState.FR,
             "kind": TransactionKind.GOODS,
             "direction": InvoiceKind.ISSUED,
         },
@@ -275,18 +275,26 @@ def test_classify_iva_is_deterministic() -> None:
         assert repeat.category is first.category
 
 
-def test_eu_member_residency_requires_member_state() -> None:
-    """Constructing a criteria with EU_MEMBER but no state is a ValidationError."""
-    with pytest.raises(ValueError, match=r"member_state|EU_MEMBER|residency"):
-        IvaInvoiceClassificationCriteria(
-            transaction_date=date(2025, 6, 15),
-            issuer_residency=IvaTerritorialScope.EU_MEMBER,
-            customer_residency=IvaTerritorialScope.ES_MAINLAND,
-            customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-            kind=TransactionKind.GOODS,
-            direction=InvoiceKind.RECEIVED,
-            issuer_member_state=None,
-        )
+def test_eu_member_residency_does_not_require_an_identification_state() -> None:
+    """An establishment abroad is not a claim about where the party is registered.
+
+    This construction used to raise, and the requirement was the conflation:
+    "established in another Member State" was read as "name the State that
+    registered it", which is the same inference that made a German prefix
+    establish a German place. Which branches genuinely need the identifying
+    State is declared by the branches, and the producer demands it there.
+    """
+    criteria = IvaInvoiceClassificationCriteria(
+        transaction_date=date(2025, 6, 15),
+        issuer_residency=IvaTerritorialScope.EU_MEMBER,
+        customer_residency=IvaTerritorialScope.ES_MAINLAND,
+        customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+        kind=TransactionKind.GOODS,
+        direction=InvoiceKind.RECEIVED,
+        issuer_identification_state=None,
+    )
+    assert criteria.issuer_identification_state is None
+    assert criteria.issuer_residency is IvaTerritorialScope.EU_MEMBER
 
 
 def test_es_to_es_domestic_criteria_require_rate_tier() -> None:
@@ -341,7 +349,7 @@ def test_cross_border_criteria_do_not_require_rate_tier() -> None:
         transaction_date=date(2025, 6, 15),
         issuer_residency=IvaTerritorialScope.ES_MAINLAND,
         customer_residency=IvaTerritorialScope.EU_MEMBER,
-        customer_member_state=EUMemberState.DE,
+        customer_identification_state=EUMemberState.DE,
         customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
         kind=TransactionKind.GOODS,
         direction=InvoiceKind.ISSUED,

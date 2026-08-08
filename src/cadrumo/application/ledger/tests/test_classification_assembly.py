@@ -35,6 +35,11 @@ from .._evidence_draft import InvoiceDraft
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CUSTOMER_NIF = "12345678Z"
+#: A structurally valid French VAT number. A document whose customer is
+#: VAT-identified in France prints one, and it is what establishes the
+#: identification: the printed country code beside it says where the party
+#: IS, which is a different fact and settles nothing here.
+_FRENCH_VAT_NUMBER = "FR40303265045"
 _DATE = date(2026, 4, 2)
 
 
@@ -51,6 +56,7 @@ def _assemble_with_declared(
     asserted_customer_tax_status=None,
     asserted_issuer_scope=None,
     asserted_customer_scope=None,
+    asserted_customer_identification_state=None,
     **kwargs,
 ):
     """Call the real assembly, building the declared-facts channel from flat facts.
@@ -75,6 +81,7 @@ def _assemble_with_declared(
             customer_tax_status=wrap(asserted_customer_tax_status),
             issuer_scope=wrap(asserted_issuer_scope),
             customer_scope=wrap(asserted_customer_scope),
+            customer_identification_state=wrap(asserted_customer_identification_state),
         ),
         **kwargs,
     )
@@ -87,10 +94,14 @@ def _complete(**overrides: object):
         "direction": InvoiceKind.ISSUED,
         "inputs": _inputs(),
         "supply_nature": SupplyNature.GOODS,
-        # The customer's country code carries BOTH the EU scope and the Member
-        # State; the issuer's Spanish territory has no country-code answer and
-        # is asserted, which is the only sanctioned way to supply it.
+        # The country code establishes WHERE the customer is; the printed VAT
+        # number establishes WHICH State identifies it. They are two facts and
+        # neither supplies the other, so a case meaning a French taxable
+        # customer carries both. The issuer's Spanish territory has no
+        # country-code answer and is asserted, which is the only sanctioned way
+        # to supply it.
         "customer_country_code": "FR",
+        "customer_identifier": _FRENCH_VAT_NUMBER,
         "asserted_customer_tax_status": CustomerTaxStatus.B2B_IVA_REGISTERED,
         "asserted_issuer_scope": IvaTerritorialScope.ES_MAINLAND,
     }
@@ -163,6 +174,12 @@ def test_a_foreign_country_code_does_settle_the_territory() -> None:
         supply_nature=SupplyNature.GOODS,
         issuer_country_code="DE",
         customer_country_code="FR",
+        # This pair reaches no rule, so the fallthrough declares both party
+        # facts consumed and the counterparty's identification is demanded --
+        # an unplaced operation is asked rather than certified indifferent. The
+        # printed number settles it, leaving the country resolver as the only
+        # thing this case is testing.
+        customer_identifier=_FRENCH_VAT_NUMBER,
         asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
     )
 
@@ -391,6 +408,7 @@ def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
         declared=DeclaredFacts(supply_nature=goods),
         issuer_country_code="DE",
         customer_country_code="FR",
+        customer_identifier=_FRENCH_VAT_NUMBER,
     )
     with_assertion = assemble_classification_criteria(
         transaction_date=_DATE,
@@ -405,6 +423,7 @@ def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
         ),
         issuer_country_code="DE",
         customer_country_code="FR",
+        customer_identifier=_FRENCH_VAT_NUMBER,
     )
 
     assert not without.assembled
@@ -833,8 +852,8 @@ def test_the_undetermined_status_can_only_ride_status_blind_rules() -> None:
                 customer_tax_status=status,
                 kind=kind,
                 direction=direction,
-                issuer_member_state=EUMemberState.DE if issuer is IvaTerritorialScope.EU_MEMBER else None,
-                customer_member_state=EUMemberState.FR if customer is IvaTerritorialScope.EU_MEMBER else None,
+                issuer_identification_state=EUMemberState.DE if issuer is IvaTerritorialScope.EU_MEMBER else None,
+                customer_identification_state=EUMemberState.FR if customer is IvaTerritorialScope.EU_MEMBER else None,
                 rate_tier=IvaRateKind.GENERAL,
             ),
         ).matched_rule_id

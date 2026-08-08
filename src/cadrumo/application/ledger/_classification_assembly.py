@@ -89,6 +89,7 @@ from ...domain.iva import (
     SPAIN_COUNTRY_CODE,
     CustomerTaxStatus,
     EUMemberState,
+    InvoiceKind,
     IvaCategory,
     IvaInvoiceClassificationCriteria,
     IvaTerritorialScope,
@@ -104,7 +105,7 @@ from ...domain.iva import (
 if TYPE_CHECKING:
     from datetime import date
 
-    from ...domain.iva import InvoiceKind, IvaClassificationResult, IvaRateKind
+    from ...domain.iva import IvaClassificationResult, IvaRateKind
     from ._classifier_inputs import ClassifierInputs
 
 __all__ = [
@@ -322,6 +323,33 @@ def _identification_state(
     if asserted is not None:
         return asserted
     return vat_identification_state_for_printed_tax_identifier(printed_identifier)
+
+
+def _counterparty_identification_field(direction: InvoiceKind) -> str:
+    """Return whose identification a reporting branch actually needs settling.
+
+    **The counterparty's, and never the filer's.** The declaración recapitulativa
+    reports the OTHER party's NIF-IVA against the operation; the filer's own
+    registration is a profile and censo fact, system-authoritative and declared
+    once, exactly as its own establishment is. Demanding both would put a
+    per-document question on a fact the profile already carries — the shape the
+    territorial ruling rejected one axis over — and it would fall on the
+    commonest intra-community document there is.
+
+    Which role the counterparty occupies is the direction: on an issued invoice
+    the filer is the issuer, on a received one the customer.
+    """
+    return "customer_identification_state" if direction is InvoiceKind.ISSUED else "issuer_identification_state"
+
+
+def _state_for_field(
+    field: str,
+    *,
+    issuer: EUMemberState | None,
+    customer: EUMemberState | None,
+) -> EUMemberState | None:
+    """Return whichever party's identification the named criteria field carries."""
+    return issuer if field == "issuer_identification_state" else customer
 
 
 def _identification_gap(field: str) -> MissingClassifierInput:
@@ -644,14 +672,16 @@ def assemble_classification_criteria(
                     ),
                 ),
             )
-        # Reported on the same terms and for the same reason: an operation this
-        # incompletely placed may still reach a branch reported against a
-        # NIF-IVA, and an operator who resolves the gaps above should not then
-        # meet a new one.
-        if issuer_state is None:
-            missing.append(_identification_gap("issuer_identification_state"))
-        if customer_state is None:
-            missing.append(_identification_gap("customer_identification_state"))
+        # The identification is deliberately NOT reported here, and it is the one
+        # place this function does not accumulate. The status and the nature are
+        # reported because the table can be asked about them the moment the
+        # scopes resolve, so naming them early costs nothing. Whether an
+        # identification is needed is decided by the BRANCH, and no branch is
+        # known yet -- so reporting it would put a NIF-IVA question on every
+        # domestic invoice that merely lacks a country code, which is the exact
+        # noise the per-branch demand exists to remove. The cost is one extra
+        # round for the intra-community population, whose paper carries the
+        # printed number that settles it anyway.
         return ClassificationAssembly(missing=tuple(missing))
 
     assert issuer_scope is not None  # narrowed: a gap would have been recorded
@@ -718,15 +748,17 @@ def assemble_classification_criteria(
             ),
         )
 
-    if (issuer_state is None or customer_state is None) and PartyFact.VAT_IDENTIFICATION_STATE in _facts_consumed(
+    counterparty_field = _counterparty_identification_field(direction)
+    if _state_for_field(
+        counterparty_field,
+        issuer=issuer_state,
+        customer=customer_state,
+    ) is None and PartyFact.VAT_IDENTIFICATION_STATE in _facts_consumed(
         _consumption_probe,
         status_candidates=status_candidates,
         kind_candidates=kind_candidates,
     ):
-        if issuer_state is None:
-            missing.append(_identification_gap("issuer_identification_state"))
-        if customer_state is None:
-            missing.append(_identification_gap("customer_identification_state"))
+        missing.append(_identification_gap(counterparty_field))
 
     if missing:
         return ClassificationAssembly(missing=tuple(missing))
