@@ -478,18 +478,17 @@ def suggest_llm_classification(
 ) -> LLMClassificationSuggestion:
     """Run the LLM classifier for one transaction and return a suggestion.
 
-    Loads the transaction, runs the injected classifier (default-resolved from
-    ``provider`` with the category-enabled prompt spec), and returns the typed
-    suggestion. **Persists nothing** — this is the suggest step of the
+    Loads the transaction, runs the injected classifier (default-resolved with
+    the category-enabled prompt spec), and returns the typed suggestion.
+    **Persists nothing** — this is the suggest step of the
     suggest / review / confirm / reject loop.
 
     Args:
         bucket_id: Active profile bucket id.
         transaction_id: Stable id of the transaction to classify.
-        provider: Subprocess provider to resolve when ``classifier`` is None.
-        classifier: Injected classifier (dependency injection for tests). When
-            None. With the cloud transports deleted the on-host reader is the
-            default, so an injected classifier is the only non-default case.
+        classifier: Injected classifier (dependency injection for tests). With
+            the cloud transports deleted the on-host reader is the default, so
+            an injected classifier is the only non-default case.
         vision_classifier: Injected on-host vision classifier used when the
             evidence is a scan-only PDF or image; default-resolved otherwise.
         vision_model: Overrides the settings default local vision model (e.g.
@@ -728,21 +727,18 @@ def saturate_llm_classification(
 ) -> LLMSaturatedSuggestion:
     """Run the saturating LLM classifier for one transaction and return a suggestion.
 
-    Loads the transaction, runs the injected classifier (default-resolved from
-    ``provider`` with the saturation prompt spec), then DERIVES the regulated
-    tax substrate from the model's selected :class:`~domain.iva.IvaCategory`
-    using the registry rate and a deterministic inverse split. **Persists
-    nothing** — this is the suggest step; rejecting a suggestion is simply not
-    applying it.
+    Loads the transaction, runs the injected classifier (default-resolved with
+    the saturation prompt spec), then DERIVES the regulated tax substrate from
+    the model's selected :class:`~domain.iva.IvaCategory` using the registry
+    rate and a deterministic inverse split. **Persists nothing** — this is the
+    suggest step; rejecting a suggestion is simply not applying it.
 
     Args:
         bucket_id: Active profile bucket id.
         transaction_id: Stable id of the transaction to classify.
-        provider: Subprocess provider to resolve when ``classifier`` is None.
-        classifier: Injected classifier (dependency injection for tests). When
-            None. With the cloud transports deleted the on-host reader is the
-            default; an injected classifier overrides it, with
-            the saturation prompt spec.
+        classifier: Injected classifier (dependency injection for tests). With
+            the cloud transports deleted the on-host reader is the default; an
+            injected classifier overrides it, with the saturation prompt spec.
         vision_classifier: Injected on-host vision classifier used when the
             evidence is a scan-only PDF or image; default-resolved otherwise.
         vision_model: Overrides the settings default local vision model (e.g.
@@ -1067,20 +1063,19 @@ def suggest_evidence_split(
 ) -> LLMSplitSuggestion:
     """Propose an evidence-driven N-way split for one transaction.
 
-    Loads the transaction, runs the injected proposer (default-resolved from
-    ``provider`` with the saturation prompt spec) over the optional on-host
-    evidence text, DERIVES each child's euro amount from the parent gross and the
-    model's proportion (summing exactly to the parent), and DERIVES each child's
+    Loads the transaction, runs the injected proposer (default-resolved with
+    the saturation prompt spec) over the optional on-host evidence text,
+    DERIVES each child's euro amount from the parent gross and the model's
+    proportion (summing exactly to the parent), and DERIVES each child's
     regulated tax substrate from the registry rate for the model-selected IVA
     category. **Persists nothing** — this is the suggest step.
 
     Args:
         bucket_id: Active profile bucket id.
         transaction_id: Stable id of the transaction to split.
-        provider: Subprocess provider to resolve when ``proposer`` is None.
-        proposer: Injected split proposer (dependency injection for tests). When
-            None. With the cloud transports deleted the on-host reader is the
-            default, so an injected proposer is the only non-default case.
+        proposer: Injected split proposer (dependency injection for tests). With
+            the cloud transports deleted the on-host reader is the default, so
+            an injected proposer is the only non-default case.
         vision_classifier: Injected on-host vision classifier used when the
             evidence is a scan-only PDF or image; default-resolved otherwise.
         vision_model: Overrides the settings default local vision model (e.g.
