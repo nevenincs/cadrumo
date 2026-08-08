@@ -1354,6 +1354,9 @@ class SecureObjectRepository:
                     ) from exc
                 namespaces = namespace
             else:
+                # CAST-RATIONALE-SECURE-OBJECTS-NAMESPACE-STR: insert_rows is this
+                # method's own batch-constructed dict[str, object]; "namespace" is
+                # always written as str by the caller that built the row.
                 namespaces = ", ".join(sorted({cast(str, row["namespace"]) for row in insert_rows}))
             raise RepositoryError(
                 context={
@@ -1417,6 +1420,9 @@ class SecureObjectRepository:
         guarded: Sequence[dict[str, object]],
     ) -> None:
         """Name the row whose stored revision moved under a guarded update."""
+        # CAST-RATIONALE-SECURE-OBJECTS-ROW-ID-INT: guarded is this method's own
+        # batch-constructed dict[str, object]; "b_id" is always the row's int
+        # primary key, stamped by the same funnel that built the row.
         row_ids = [cast(int, row["b_id"]) for row in guarded]
         stored: dict[int, str | None] = {}
         for stored_id, stored_revision_id in session.execute(
@@ -1426,18 +1432,25 @@ class SecureObjectRepository:
         ):
             stored[int(stored_id)] = stored_revision_id
         for row in guarded:
+            # CAST-RATIONALE-SECURE-OBJECTS-ROW-ID-INT: see the identical cast above.
             row_id = cast(int, row["b_id"])
             current = stored.get(row_id)
             if current != row["v_revision_id"]:
+                # CAST-RATIONALE-SECURE-OBJECTS-ROW-STR-FIELD: guarded rows are this
+                # method's own batch-constructed dict[str, object]; "v_namespace" and
+                # "b_guard_revision_id" are always written as str by the caller.
                 raise self._revision_conflict(
-                    namespace=cast(str, row["v_namespace"]),
-                    expected_revision_id=cast(str, row["b_guard_revision_id"]),
+                    namespace=cast(str, row["v_namespace"]),  # CAST-RATIONALE-SECURE-OBJECTS-ROW-STR-FIELD
+                    expected_revision_id=cast(
+                        str, row["b_guard_revision_id"]
+                    ),  # CAST-RATIONALE-SECURE-OBJECTS-ROW-STR-FIELD
                     current_revision_id=current,
                 )
         # The rowcount disagreed but every row now carries the revision this
         # batch wrote — an inconsistency this funnel cannot attribute.
         raise RepositoryError(
             context={
+                # CAST-RATIONALE-SECURE-OBJECTS-ROW-STR-FIELD: see the identical cast above.
                 "namespace": ", ".join(sorted({cast(str, row["v_namespace"]) for row in guarded})),
                 "error_type": "GuardedUpdateRowcountMismatch",
             },

@@ -1103,10 +1103,10 @@ def read_runtime_residents(settings: Settings | None = None) -> tuple[RuntimeRes
         entries = cast(dict[str, object], payload).get("models")
         if not isinstance(entries, list):
             return None
+        residents: list[RuntimeResident] = []
         # CAST-RATIONALE-OLLAMA-PS-MODELS: isinstance narrows to list but not its
         # element type; entries are validated individually below.
         # nosemgrep: no-cast-in-domain-application
-        residents: list[RuntimeResident] = []
         for entry in cast(list[object], entries):
             if not isinstance(entry, dict):
                 return None
@@ -1784,10 +1784,10 @@ def read_installed_models(settings: Settings | None = None) -> tuple[InstalledMo
         entries = cast(dict[str, object], payload).get("models")
         if not isinstance(entries, list):
             return None
+        installed: list[InstalledModel] = []
         # CAST-RATIONALE-OLLAMA-TAGS-MODELS: isinstance narrows to list but not
         # its element type; entries are validated individually below.
         # nosemgrep: no-cast-in-domain-application
-        installed: list[InstalledModel] = []
         for entry in cast(list[object], entries):
             if not isinstance(entry, dict):
                 return None
