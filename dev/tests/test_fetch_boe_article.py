@@ -149,3 +149,25 @@ def test_a_payload_with_no_version_element_is_refused() -> None:
 
     with pytest.raises(NormativeAcquisitionError, match=r"no <version> element"):
         assert_serves_the_article_in_force(stripped, document_id=_LIVA, block="a90")
+
+
+def test_a_tie_on_the_latest_vigencia_is_refused_not_guessed() -> None:
+    """Two redactions dated the same day is a real shape, and picking one can pick the older.
+
+    Not hypothetical. LIVA art. 91 carries two redactions both stamped
+    19950120: one reads "Dos. Se aplicara el tipo del 3 por 100" and the other
+    "del 4 por 100", because Ley 41/1994 art. 78.2 raised it. An arbitrary pick
+    between tied dates therefore has a real chance of returning the SUPERSEDED
+    text, which is precisely the defect this module exists to prevent, so the
+    tie refuses instead.
+
+    Built by duplicating the latest redaction's opening tag in the real art. 90
+    payload, so the tie is introduced into bytes that are otherwise exactly what
+    BOE sends.
+    """
+    payload = _payload(_ARTICLE)
+    latest = max(r.vigencia for r in article_redactions(payload))
+    tag = f'<version id_norma="{_LIVA}" fecha_publicacion="19921229" fecha_vigencia="{latest}">'
+
+    with pytest.raises(NormativeAcquisitionError, match=r"share the latest fecha_vigencia"):
+        assert_serves_the_article_in_force(payload + tag, document_id=_LIVA, block="a90")

@@ -305,7 +305,18 @@ def assert_serves_the_article_in_force(payload: str, *, document_id: str, block:
       the transport status is not guaranteed to track it;
     * the payload describes a different block than the one requested;
     * it carries no ``<version>`` at all, so nothing establishes which redaction
-      it is.
+      it is;
+    * two or more redactions TIE on the latest ``fecha_vigencia``. Art. 91
+      carries two dated ``19950120``, one reading 3 % and one 4 %, so picking
+      arbitrarily between tied dates can return the superseded text -- which is
+      the exact defect this module exists to prevent. Refused rather than
+      guessed.
+
+    ``fecha_vigencia`` is also NOT the effective date a citation should quote.
+    Those two art. 91 redactions are both stamped ``19950120`` while the norm
+    that produced them, Ley 41/1994 art. 78.2, states effects from 1 January
+    1995. Use the attribute to order redactions; read the date to cite off the
+    note.
 
     Args:
         payload: The decoded API response.
@@ -339,7 +350,16 @@ def assert_serves_the_article_in_force(payload: str, *, document_id: str, block:
             "payload carries no <version> element, so no redaction can be shown to be the one in force"
         )
 
-    return max(redactions, key=lambda redaction: redaction.vigencia)
+    latest = max(redaction.vigencia for redaction in redactions)
+    tied = [redaction for redaction in redactions if redaction.vigencia == latest]
+    if len(tied) > 1:
+        raise NormativeAcquisitionError(
+            f"{len(tied)} redactions share the latest fecha_vigencia {latest!r} "
+            f"({', '.join(r.amending_norm for r in tied)}), so the payload does not say which is in force. "
+            "Refused rather than picked: art. 91 carries two redactions dated 19950120, one reading 3 % and "
+            "one reading 4 %, so an arbitrary pick between tied dates can silently return the SUPERSEDED text"
+        )
+    return tied[0]
 
 
 def fetch_article(
