@@ -114,9 +114,13 @@ class PartyFact(StrEnum):
     instead of patching it at one rung.
 
     Naming them lets a branch DECLARE which it consumes, so an operator is asked
-    only for what the branch it lands on actually turns on. The intra-community
-    families need the identification and not the place; the domestic and
-    territorial rules need the place and not the identification.
+    only for what the branch it lands on actually turns on. The domestic and
+    territorial rules need the place and not the identification. The
+    intra-community families need the identification, and need the place only
+    narrowly beside it — not to say which Member State a party belongs to, which
+    is the conflation, but to place the supply in the peninsula and keep the
+    Spanish territories out of "otro Estado miembro". A row that reads a
+    residency is not thereby reading it as a registration.
 
     Attributes:
         VAT_IDENTIFICATION_STATE: The Member State under whose VAT
@@ -491,11 +495,43 @@ def _r05_domestic_at_rate(criteria: IvaInvoiceClassificationCriteria) -> bool:
     )
 
 
+def _identified_in_another_member_state(state: EUMemberState | None) -> bool:
+    """Whether a party holds a VAT identification assigned by a State other than Spain.
+
+    The literal condition art. 25.Uno places on the acquirer — "que disponga de un
+    número de identificación a efectos del Impuesto sobre el Valor Añadido
+    asignado por un Estado miembro distinto del Reino de España" — and the same
+    condition the received leg places on the transmitting party.
+
+    ``None`` is a refusal and not a permissive default: nothing established which
+    State identifies the party, and reading that silence as "somewhere in the
+    Union" would relieve a taxable supply on a condition the statute states
+    explicitly and nobody checked. :attr:`EUMemberState.ES` is refused because
+    the statute names Spain as the excluded State.
+    """
+    return state is not None and state is not EUMemberState.ES
+
+
 def _r10_ic_supply_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
-    """Match an ES to EU_MEMBER B2B goods supply (Art. 25 exempt)."""
+    """Match an intra-community B2B goods supply out of the peninsula (Art. 25 exempt).
+
+    **The acquirer's condition is its REGISTRATION, not its place.** Art. 25.Uno
+    exempts on the acquirer holding a VAT identification assigned by another
+    Member State, and says nothing about where it has its sede — which arts. 69-70
+    govern and which this row therefore does not read of the customer. Keyed on
+    establishment instead, this row silently dropped every acquirer buying under a
+    Member State's number from outside the Union, sending a legitimate entrega
+    intracomunitaria exenta to the export row and off the declaración
+    recapitulativa.
+
+    What the customer's establishment still does here is exclude the Spanish
+    territories, because art. 25 requires the goods be transported "al territorio
+    de otro Estado miembro" and Canarias, Ceuta and Melilla are not that.
+    """
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
-        and criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
+        and criteria.customer_residency not in _SPANISH_SCOPES
+        and _identified_in_another_member_state(criteria.customer_identification_state)
         and criteria.customer_tax_status is CustomerTaxStatus.B2B_IVA_REGISTERED
         and criteria.kind is TransactionKind.GOODS
         and criteria.direction is InvoiceKind.ISSUED
@@ -503,9 +539,18 @@ def _r10_ic_supply_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
 
 
 def _r11_ic_acquisition_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
-    """Match an EU_MEMBER to ES B2B goods acquisition (Art. 13 + reverse charge)."""
+    """Match an intra-community B2B goods acquisition into the peninsula (Art. 13 + reverse charge).
+
+    The mirror of :func:`_r10_ic_supply_goods`, and keyed the same way for the
+    same reason: what makes the operation an adquisición intracomunitaria is the
+    transmitting party supplying under another Member State's identification, not
+    where it keeps its sede. Its establishment is read only to exclude the
+    Spanish territories, which supply into the peninsula under IGIC or IPSI rules
+    rather than through art. 13.
+    """
     return (
-        criteria.issuer_residency is IvaTerritorialScope.EU_MEMBER
+        criteria.issuer_residency not in _SPANISH_SCOPES
+        and _identified_in_another_member_state(criteria.issuer_identification_state)
         and criteria.customer_residency is IvaTerritorialScope.ES_MAINLAND
         and criteria.customer_tax_status is CustomerTaxStatus.B2B_IVA_REGISTERED
         and criteria.kind is TransactionKind.GOODS
@@ -514,10 +559,22 @@ def _r11_ic_acquisition_goods(criteria: IvaInvoiceClassificationCriteria) -> boo
 
 
 def _r12_services_b2b_eu_outbound(criteria: IvaInvoiceClassificationCriteria) -> bool:
-    """Match an ES to EU_MEMBER B2B services supply (Art. 69, place of supply at destination)."""
+    """Match an ES to EU_MEMBER B2B services supply (Art. 69, place of supply at destination).
+
+    **The services pair keeps the establishment and ADDS the identification**,
+    which is the asymmetry against the goods pair above rather than an
+    inconsistency with it. Art. 69.Uno.1.o locates a B2B service where the
+    recipient has its sede or establecimiento permanente, so the place is the
+    statutory condition here and no registration can supply it. The
+    identification is what makes the located operation a REPORTABLE
+    intra-community service: the category this row assigns selects a Modelo 349
+    clave against the counterparty's NIF-IVA, so assigning it to a counterparty
+    with no identifying State would file a line VIES cannot match.
+    """
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
         and criteria.customer_residency is IvaTerritorialScope.EU_MEMBER
+        and _identified_in_another_member_state(criteria.customer_identification_state)
         and criteria.customer_tax_status is CustomerTaxStatus.B2B_IVA_REGISTERED
         and criteria.kind is TransactionKind.SERVICES_GENERAL
         and criteria.direction is InvoiceKind.ISSUED
@@ -525,9 +582,17 @@ def _r12_services_b2b_eu_outbound(criteria: IvaInvoiceClassificationCriteria) ->
 
 
 def _r13_services_b2b_eu_inbound(criteria: IvaInvoiceClassificationCriteria) -> bool:
-    """Match an EU_MEMBER to ES B2B services supply (Art. 84.Uno.2º.a reverse charge at ES)."""
+    """Match an EU_MEMBER to ES B2B services supply (Art. 84.Uno.2º.a reverse charge at ES).
+
+    Establishment and identification on the same split as
+    :func:`_r12_services_b2b_eu_outbound`: art. 84.Uno.2.o.a turns the recipient
+    into the sujeto pasivo because the supplier is not established in the TAI,
+    and the supplier's identifying State is what files the resulting operation
+    under the Modelo 349 services clave.
+    """
     return (
         criteria.issuer_residency is IvaTerritorialScope.EU_MEMBER
+        and _identified_in_another_member_state(criteria.issuer_identification_state)
         and criteria.customer_residency is IvaTerritorialScope.ES_MAINLAND
         and criteria.customer_tax_status is CustomerTaxStatus.B2B_IVA_REGISTERED
         and criteria.kind is TransactionKind.SERVICES_GENERAL
@@ -694,13 +759,21 @@ class _IvaClassificationRule(NamedTuple):
             :attr:`IvaInvoiceClassificationCriteria.rate_tier`).
         consumes: The :class:`PartyFact` values this branch turns on, declared
             per row so a producer can demand exactly them and nothing more.
+            **The declaration is a claim about the predicate, and the predicate
+            is what must honour it** — the two disagreed once, with all four
+            intra-community rows declaring the identification while no predicate
+            in the table read either identification field, so the declaration
+            read as evidence of a migration that had not happened.
+
             Every row consumes :attr:`PartyFact.TERRITORIAL_ESTABLISHMENT`,
-            because every predicate reads the residencies. Only the
+            because every predicate reads at least one residency. Only the
             intra-community rows add
-            :attr:`PartyFact.VAT_IDENTIFICATION_STATE`: their categories are the
-            ones the declaración recapitulativa reports under a clave against
-            the counterparty's NIF-IVA, so the State that identifies the party
-            is operative there and is inert everywhere else.
+            :attr:`PartyFact.VAT_IDENTIFICATION_STATE`, and they read it: the
+            goods pair because arts. 25 and 13 make the counterparty's
+            registration in another Member State the operative condition, the
+            services pair because their categories select a Modelo 349 clave
+            against that counterparty's NIF-IVA. Everywhere else the identifying
+            State cannot change the outcome and is not declared.
     """
 
     rule_id: str
