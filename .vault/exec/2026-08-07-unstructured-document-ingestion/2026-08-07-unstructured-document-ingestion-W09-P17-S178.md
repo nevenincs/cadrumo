@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:9db0de4d394568aa19b578afb9ff13cdae349cc1d15619ac5b6cdd698ed2b263'
+body_hash: 'sha256:82f1816e6e0f43e4258bfd58043fa3cb50bd6811ea1122562e44672468ea4efd'
 step_id: 'S178'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -188,6 +188,54 @@ the status alone:
 
 Four reds across two suites, which is what makes the scoping load-bearing rather
 than decorative.
+
+### Round four: the empty cell, and prose that had gone false
+
+Re-review found the spelling-by-kind matrix carried three cases and one hole.
+Uncatalogued alpha-2, uncatalogued alpha-3 and unassigned alpha-2 each had a
+case; unassigned alpha-3 had none, and that is the cell this row's own
+classifier change was about. It matters most on the relief path rather than the
+advisory: a reserved alpha-3 misread as a catalogue gap is FORGIVEN, which moves
+a declared zero-rated export claimed on a code with no referent towards being
+honoured, from the spelling Facturae states. Both siblings are now gated, and
+emptying the reserved alpha-3 set reds three cases for three distinct reasons
+instead of only the anchor -- so the mutation reports coverage rather than
+reporting its own probe.
+
+The file's argument rested on Thailand, and one sentence asserted Thailand had
+since been enrolled. That was written while it was momentarily true mid-session
+and it is false at HEAD, where the code still reports uncatalogued. A gate whose
+prose asserts a vocabulary state is the same hostage the derived specimens were
+introduced to remove, committed in prose instead of in a constant. The argument
+now rests on the property -- a country the vocabulary cannot place, whichever one
+that is today -- while the ISO reserved ranges stay pinned and say why, since no
+enrolment can turn one of those into a country.
+
+One anchor docstring claimed more than the code does. The status axis asks the
+same resolver the specimen was selected through, so the assertion is not an
+independent second opinion; what it genuinely discriminates is that the specimen
+is outside the reserved ranges and that the alpha-3 branch fires. It now says
+that.
+
+    uv run --no-sync pytest src/cadrumo/application/ledger/tests src/cadrumo/domain/iva src/cadrumo/adapters/inbound/einvoice -n0 -q -m unit
+    1976 passed, 26 deselected, 16 warnings in 218.43s (0:03:38)
+
+    uv run --no-sync pytest src/cadrumo/application/ledger/tests/test_structured_country_degradation.py -n0 -q -m unit
+    25 passed in 13.33s
+
+    [MUTATION APPLIED] _USER_ASSIGNED_ALPHA3 emptied (was 1092 codes)
+    3 failed, 22 passed in 12.53s
+
+Re-review also reported both relief cases failing whenever anything imports the
+IVA domain at session start, with the filer residency unresolved. That was a
+valid measurement against the tree it was taken from -- the round-two cases
+asserted the relief STANDS, which needs the filer's territory to resolve. The
+round-three rewrite removed the dependency for an unrelated reason: those cases
+now assert the refusal and its narrowed reason, and the single case asserting the
+claim stands supplies the filer's scope explicitly rather than reading a profile.
+A no-op control importing the domain at session start and mutating nothing was
+run twice against the current file and passed 25 both times, so the sensitivity
+is structurally gone rather than accidentally quiet, and no marker is warranted.
 
 ## Notes
 
