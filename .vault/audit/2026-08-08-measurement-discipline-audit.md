@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:1d75929fcba2e7d8a16d1b71a435dff05e1123c3fc948960a25ae5d58ea78365'
+body_hash: 'sha256:53d988a055500a4a790291a4960ef7b729541ad829aa9ba2cc1946ad5a8cd875'
 related: []
 ---
 
@@ -24,6 +24,14 @@ A key-echo census was written with a pattern anchored to four known value prefix
 A registry gate matched box numbers with a four-digit pattern against a modelo that numbers its boxes with five digits. It keyed twenty-three boxes out of three thousand four hundred and forty and reported no gap. An independently written union derivation agreed with it, because that derivation carried the same four-digit cap. **The agreement was the evidence, and it was worth nothing.**
 
 A fichero parse was verified against one result disposition. It passed. Parametrised over four, only the refund disposition parsed at all, because the layout required a bank-details record the writer correctly omits for the other three. For those, no field of a real submitted file could be read back, and the casilla projection substituted a positional guess with no signal that the layout had refused.
+
+A fifth instance, with a mechanism distinct from the other four and the cleanest statement of the shape.
+
+An investigation established that a registry revision declared no income total to serve as a predicate's antecedent, which made twelve carries inexpressible and raised a design question about whether AEAT models such a total at all. The search had been over **localized labels**. Labels resolve through the locale catalogues; the registry's identity for a semantic concept is its `semantic_role`. Searching that returns all three of the scheme's totals, declared as computed numbered casillas, plus total gross income. The antecedent had existed throughout, the twelve were expressible all along, and the design question never needed answering.
+
+**A negative result from a label search is not evidence of absence.** The search was competently executed and correctly reported what it found; it was asked in a vocabulary the registry does not use for identity. Same shape as the four above — and note the cost was not only the wrong conclusion but a whole dispatch spent answering a question that did not exist.
+
+Worth pairing with a corollary the same work produced. The fix that followed had to choose an antecedent between a gross-income total and a post-deductions one. The post-deductions figure can be **legitimately zero for a filer who did suffer withholding**, so keying on it would have suppressed the advisory in precisely the cases it exists for. An antecedent that is zero for the population you are trying to warn is an instrument narrower than its question, one layer down from the search that found it.
 
 ## Why this shape is expensive
 
