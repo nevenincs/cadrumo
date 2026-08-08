@@ -23,9 +23,13 @@ zero-rated export category is unreachable. The refusal that matters is the
 assembly's, and it is untouched by this module's severity.
 
 **Two kinds, because the two failures have different owners.** A code in an ISO
-3166-1 user-assigned range -- ``AA``, ``QM``-``QZ``, ``XA``-``XZ``, ``ZZ`` --
-denotes no country by construction, so the document is wrong and the operator
-can fix it off the page. A code outside those ranges that the bundled vocabulary
+3166-1 user-assigned range -- ``AA``, ``QM``-``QZ``, ``XA``-``XZ`` and ``ZZ`` in
+alpha-2, and their alpha-3 counterparts ``AAA``-``AAZ``, ``QMA``-``QZZ``,
+``XAA``-``XZZ`` and ``ZZA``-``ZZZ`` -- denotes no country by construction, so
+the document is wrong and the operator can fix it off the page. Both spellings,
+because a structured record states either and this module is asked about the
+record's own token: naming only the alpha-2 pairs described the axis as half of
+what it judges, on the spelling Facturae states. A code outside those ranges that the bundled vocabulary
 simply does not carry may name a real jurisdiction, so the data is ours to fix
 and re-reading the document will settle nothing. Reporting both as "unrecognised
 country" would send the operator to look for a typo that is not there, on
