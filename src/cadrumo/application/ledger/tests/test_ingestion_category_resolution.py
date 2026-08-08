@@ -39,6 +39,7 @@ from ....domain.iva import (
     SupplyNature,
     stated_country_code_status,
 )
+from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from .._classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
@@ -428,17 +429,19 @@ def test_a_resolved_export_to_a_genuine_third_country_is_honoured() -> None:
 def test_a_country_our_vocabulary_does_not_carry_is_spared() -> None:
     """Our data gap must not be charged to the taxpayer.
 
-    ``TH`` is measured, not hypothetical: the shipped country vocabulary
-    classifies it UNCATALOGUED, so the scope resolver answers nothing and the
-    establishment is recorded as a gap -- while the document printed a
-    well-formed code naming a real third country. Refusing there would reject a
-    legitimate Thai export over a row we have not written.
+    The specimen is measured, not hypothetical, and it is DERIVED rather than
+    named: the shipped country vocabulary classifies it UNCATALOGUED, so the
+    scope resolver answers nothing and the establishment is recorded as a gap --
+    while the document printed a well-formed code naming a real third country.
+    Refusing there would reject a legitimate export over a row we have not
+    written. Deriving it means this case follows the vocabulary's boundary
+    instead of reddening the day the country it named is admitted.
 
     The control below is what makes this attributable to the STATUS rather than
     to the guard being inert: the identical claim with no country printed at all
     is refused.
     """
-    spared = _relief(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country_code="TH")
+    spared = _relief(IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED, country_code=an_uncatalogued_alpha2())
 
     assert spared.outcome is IvaCategoryOutcome.DECLARED
     assert spared.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED

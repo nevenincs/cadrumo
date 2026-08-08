@@ -38,6 +38,7 @@ from ....domain.transactions import (
     Transaction,
     TransactionDirection,
 )
+from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from .._iva_ledger import (
     IVA_LEDGER_COUNTERPARTY_GATE_REASONS,
     IvaLedgerAggregationIssueReason,
@@ -145,12 +146,18 @@ def test_an_eu_vat_number_does_not_disqualify_a_third_country_export(category: I
 def test_a_country_our_own_vocabulary_omits_is_spared(category: IvaCategory) -> None:
     """The carve-out that separates a guard from a trap.
 
-    ``TH`` is a real third country the bundled vocabulary does not carry, so it
-    resolves to no scope. Refusing there would reject a legitimate Thai export
+    The specimen is a real third country the bundled vocabulary does not carry,
+    so it resolves to no scope. Refusing there would reject a legitimate export
     over a row nobody has written yet -- a false positive that teaches an
     operator to skip refusals, which costs more than the case it catches.
+
+    It is DERIVED rather than named, so the case follows the vocabulary's
+    boundary rather than reddening the day that country is admitted, which would
+    report a fixture change as a behaviour change.
     """
-    assert validate_iva_ledger_counterparty_category(_row(category=category, counterparty_country="TH")) is None
+    row = _row(category=category, counterparty_country=an_uncatalogued_alpha2())
+
+    assert validate_iva_ledger_counterparty_category(row) is None
 
 
 @pytest.mark.parametrize("category", _EXPORT_FAMILIES)
