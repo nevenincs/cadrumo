@@ -34,6 +34,7 @@ import tomllib
 import pytest
 
 from ....core.resources import bundled_path
+from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha3
 from .. import country_code_for_stated_country_code
 from .._errors import IvaCatalogueError
 from .._establishment import _index_country_alpha3
@@ -89,22 +90,18 @@ class TestTheLookup:
     def test_an_alpha3_outside_the_vocabulary_establishes_nothing(self) -> None:
         """The table is bounded, so an unlisted country degrades safely.
 
-        ``THA`` is a real ISO code the vocabulary deliberately does not carry --
-        the table is a reviewable tax-facing vocabulary rather than a general
-        country database -- so this proves the bound rather than a malformed
-        input.
+        The specimen is DERIVED from the vocabulary rather than named, so the
+        case proves the bound rather than a particular country's absence. The
+        table is a reviewable tax-facing vocabulary rather than a general country
+        database, and which codes sit outside it is a decision that moves.
 
-        The fixture anchor below is what makes that claim survive the table
-        changing, and it has already earned its keep: this case was written over
-        ``BOL`` and reddened the day Bolivia was added, which is exactly the
-        service it exists to perform. Thailand is the better anchor for the same
-        reason it is the better example: it is a NAMED exclusion in the
-        vocabulary's own header rather than a country nobody had got to yet, so
-        admitting it would be a decision somebody argued and this case would be
-        right to red again.
+        This case has twice been reddened by its own fixture: written over
+        ``BOL`` it broke when Bolivia was added, and rewritten over ``THA`` it
+        would have broken again on the next argued widening. Both times the
+        behaviour was fine and only the pin had gone stale, which is the argument
+        for deriving it.
         """
-        assert "THA" not in {str(record["alpha3"]) for record in _bundled()["country"]}  # type: ignore[index]
-        assert country_code_for_stated_country_code("THA") is None
+        assert country_code_for_stated_country_code(an_uncatalogued_alpha3()) is None
 
     def test_no_stated_code_resolves_to_spain_by_accident(self) -> None:
         """Only Spain's own codes name Spain, which is the rung's whole trigger.

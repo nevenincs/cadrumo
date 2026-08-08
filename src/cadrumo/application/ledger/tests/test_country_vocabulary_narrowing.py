@@ -64,6 +64,7 @@ from ....domain.iva import (
     StatedCountryCodeStatus,
     SupplyNature,
 )
+from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
 from .._classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
@@ -158,10 +159,16 @@ def test_the_refusal_names_the_string_the_document_stated(code: str) -> None:
 
 
 def test_a_catalogued_code_the_vocabulary_omits_refuses_as_a_gap() -> None:
-    """A real jurisdiction we do not carry refuses, and says whose fault it is."""
-    missing = next(m for m in _issued_goods_to("TH").missing if m.field == "customer_residency")
+    """A real jurisdiction we do not carry refuses, and says whose fault it is.
 
-    assert "'TH'" in missing.reason
+    The specimen is derived from the vocabulary, so this follows the boundary
+    instead of pinning it: a named country reds this case the day it is admitted,
+    which reports a fixture change as a behaviour change.
+    """
+    specimen = an_uncatalogued_alpha2()
+    missing = next(m for m in _issued_goods_to(specimen).missing if m.field == "customer_residency")
+
+    assert repr(specimen) in missing.reason
     assert "country vocabulary" in missing.reason
 
 
@@ -192,12 +199,13 @@ def test_an_unassigned_code_raises_the_typo_advisory(code: str) -> None:
 
 def test_an_assigned_uncatalogued_code_raises_the_catalogue_gap_advisory() -> None:
     """The two kinds must be distinguishable, or the operator hunts a typo we caused."""
-    advisory = country_vocabulary_advisory(InvoiceDraft(customer_stated_country_code="TH"))
+    specimen = an_uncatalogued_alpha2()
+    advisory = country_vocabulary_advisory(InvoiceDraft(customer_stated_country_code=specimen))
 
     assert advisory is not None
     warning = next(party for party in advisory.parties if party.field == "customer_stated_country_code")
     assert warning.status is StatedCountryCodeStatus.UNCATALOGUED
-    assert "'TH'" in warning.detail
+    assert repr(specimen) in warning.detail
     assert "vocabulary" in warning.detail
     assert advisory.by_status(StatedCountryCodeStatus.UNASSIGNED) == ()
 
@@ -236,7 +244,7 @@ def test_a_resolved_printed_name_suppresses_the_advisory() -> None:
     assert advisory is None
 
 
-@pytest.mark.parametrize("code", [*UNASSIGNED_PROBES, "TH"])
+@pytest.mark.parametrize("code", [*UNASSIGNED_PROBES, an_uncatalogued_alpha2()])
 def test_a_country_code_outside_the_vocabulary_does_not_block_the_confirm(code: str) -> None:
     """The deliverable. An advised draft is still confirmable.
 
@@ -252,7 +260,7 @@ def test_a_country_code_outside_the_vocabulary_does_not_block_the_confirm(code: 
     assert confirmation_blockers(draft) == ()
 
 
-@pytest.mark.parametrize("code", [*UNASSIGNED_PROBES, "TH"])
+@pytest.mark.parametrize("code", [*UNASSIGNED_PROBES, an_uncatalogued_alpha2()])
 def test_an_unreadable_postal_code_on_the_same_draft_still_blocks(code: str) -> None:
     """The positive control on the property above.
 
