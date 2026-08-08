@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#llm-invoice-read-reconciliation'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:2de8a4e3e0dc5795dbeb7b0d623f525660ecf620e0cce75dcee98647880074d2'
+body_hash: 'sha256:b68ede770b425ad29ff15c7005f7bcc030faa538d9e8f4fdda1859c919740f0c'
 related:
   - "[[2026-08-06-llm-invoice-read-reconciliation-research]]"
 ---

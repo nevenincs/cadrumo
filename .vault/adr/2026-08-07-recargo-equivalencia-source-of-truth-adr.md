@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#recargo-equivalencia-source-of-truth'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:a2c28ca221bba03230266c64c597995b79f5d925fdd2280089da1768e66ea14f'
+body_hash: 'sha256:6f6c43786823dc7167b385c65e179a73a3c839f67c7d8337b9f430a77591811a'
 related:
   - "[[2026-08-07-recargo-equivalencia-source-of-truth-research]]"
 ---
