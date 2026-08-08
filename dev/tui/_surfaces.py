@@ -84,15 +84,32 @@ def _registration() -> App:
 
 
 def _login() -> App:
-    from cadrumo.adapters.inbound.tui import LoginApp, LoginChoice
-    from cadrumo.application.workflow import list_profile_buckets
-    from cadrumo.entrypoints.cli._config._login_frontend import attempt_login
+    from cadrumo.adapters.inbound.tui import LoginApp
+    from cadrumo.entrypoints.cli._config._login_frontend import (
+        _login_choices,
+        attempt_login,
+        preselected_profile_id,
+    )
 
-    choices = [
-        LoginChoice(profile_id=bucket_id, label=pointer.label)
-        for bucket_id, pointer in sorted(list_profile_buckets().items())
-    ]
-    return LoginApp(choices=choices, authenticate=attempt_login)
+    # ``present_login`` is the real production entry point and always
+    # supplies BOTH of these -- neither is a defaulted convenience the
+    # screen invents for itself. ``_login_choices()`` sorts by the
+    # operator's own casefolded LABEL; this used to sort by dict-item
+    # tuple, which orders by the opaque bucket-id UUID first -- a reading
+    # over that order describes a screen no operator meets. And
+    # ``preselected_profile_id(None)`` resolves to the ACTIVE bucket,
+    # never ``None`` for an unnamed invocation (``present_login``'s own
+    # docstring: leaving it defaulted "silently drops the operator's named
+    # target and lands on the active profile instead" -- and un-set
+    # entirely drops even that, opening on the screen's arbitrary first
+    # row). Building the app without either is the same shape as the
+    # manager's zero-actions bug: it renders cleanly and shows less than
+    # the real thing.
+    return LoginApp(
+        choices=_login_choices(),
+        authenticate=attempt_login,
+        preselected=preselected_profile_id(None),
+    )
 
 
 def _manager() -> App:
@@ -127,11 +144,23 @@ def _status() -> App:
 
 
 def _form() -> App:
+    # UNLIKE every other builder here, this one is LEGITIMATELY SYNTHETIC and
+    # not a stand-in for a missed real door. ``FormApp``/``FormPage`` are a
+    # generic substrate a dozen unrelated callers each configure for
+    # themselves -- the export destination/passphrase pair, the add-row
+    # section chooser, the descendant door, the apoderado scope picker, the
+    # certificate/auth form -- with no single production view-model this
+    # surface could compose instead. The two fields below ("First",
+    # "Second") are made up for this harness and correspond to no real
+    # operator-facing copy; a finding read off THIS surface's field labels,
+    # layout of two plain text fields, or wording is a finding about the
+    # harness, never about the application. Drive one of the real callers
+    # above instead when the thing under evaluation is an actual form.
     from cadrumo.adapters.inbound.tui import FormApp, FormField, FormPage
 
     return FormApp(
         FormPage(
-            title="Harness form",
+            title="Harness form (synthetic — no real caller uses this exact shape)",
             section="Section",
             fields=(
                 FormField(key="a", label="First"),
@@ -171,7 +200,12 @@ SURFACES: dict[str, Surface] = {
             needs_session=True,
         ),
         Surface("status", "Read-only status page", _status, needs_profile=True),
-        Surface("form", "Generic form surface", _form, needs_profile=False),
+        Surface(
+            "form",
+            "SYNTHETIC — no single production caller; do not read findings off its field content",
+            _form,
+            needs_profile=False,
+        ),
     )
 }
 
