@@ -5,70 +5,102 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:eeff1219056cd05a231250f793ab653ac293c1c42cb12a5bf7c530cd924a454a'
+body_hash: 'sha256:13ef577ce8aa6d0e80af007015d7a3028b4d3e706d4d2f2153603862ae61bcd5'
 step_id: 'S40'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
+# `unstructured-document-ingestion` exec: `W05-P11-S40`
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
+## What was already true at HEAD, and what was not
 
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+Two of this Step's three parts had already landed and were verified against HEAD
+by reading the code rather than the checkbox.
 
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S40 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
+The subprocess symbols are still asserted deleted, and the MCP positive control
+survives: `test_no_deleted_cloud_symbol_survives_in_production` sweeps the whole
+non-test package, and
+`test_the_neighbouring_mcp_subprocess_transport_survived_the_deletion` asserts
+`entrypoints/mcp/_call_runtime.py` both exists AND still spawns a process, so a
+deletion scoped by the word rather than by symbol reds.
 
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
+The four consent symbols are presence-asserted AND wired, not merely present.
+`test_the_reinstated_consent_apparatus_exists_and_is_wired_at_the_choke_point`
+walks the abstract syntax tree of `LLMClient.complete` for the consent call, so a
+gate that exists and is never reached fails -- which is the dominant defect of
+this campaign pointed the other way.
 
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
+The third part had landed in the forbidden shape.
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
+## The floor was a tally, and it guarded the wrong thing
 
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Re-scope the cloud-deletion gate and reinstate the consent apparatus in one atomic commit: subprocess symbols stay asserted deleted with the MCP positive control, the four consent symbols move to a presence assertion wired at the dispatch choke point, the non-vacuity floor re-bases, proven by mutation and ## Scope
+`test_the_declared_symbol_set_is_not_silently_emptied` asserted
+`len(_DELETED_CLOUD_SYMBOLS) >= 12`. Two independent problems.
 
-- `src/cadrumo/tests/test_cloud_transport_fully_deleted.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
+It is a tally, which encodes the moment it was written and trains the next
+person to raise the constant. And it is satisfiable by exactly the failure it
+names: emptying the two-name operator-surface family leaves twelve symbols, so
+the floor passes while a whole family has stopped being swept.
 
-# Re-scope the cloud-deletion gate and reinstate the consent apparatus in one atomic commit: subprocess symbols stay asserted deleted with the MCP positive control, the four consent symbols move to a presence assertion wired at the dispatch choke point, the non-vacuity floor re-bases, proven by mutation
+The deeper problem is that it measured the declaration and never the
+instrument. The sweep reports clean when it finds nothing, and finding nothing
+is also what a broken scanner reports -- an empty file list, a changed helper, a
+read that yields no text. A full symbol tuple scanned over zero files passes.
 
-## Scope
+## The re-base
 
-- `src/cadrumo/tests/test_cloud_transport_fully_deleted.py`
+`_DELETED_CLOUD_SYMBOL_FAMILIES` groups the deleted names by the family each
+belonged to, and the flat tuple is derived from it. Grouped because the
+property -- no family silently gutted -- cannot be expressed over a flat tuple,
+which admits only a length.
 
-## Description
+`test_the_scanner_finds_a_symbol_that_is_actually_present` is the real
+non-vacuity floor. It drives `_production_sites_naming`, the same helper the
+sweep uses, over the same file set, looking for `build_provenance_stamp`, which
+is present. The scan was factored out of the sweep specifically so the control
+cannot re-implement the walk: a control with its own copy proves that copy
+works and says nothing about the one that reports clean.
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+`test_no_declared_family_is_silently_gutted` asserts every family non-empty and
+no symbol declared twice -- a borrowed name would make a family look populated.
+It also asserts the reinstated consent set is non-empty, closing a vacuity in
+the two totality checks above it: each only asserts the declared set and its
+verifier mapping AGREE, so emptying both together satisfies both.
 
-## Outcome
+## Proof
 
-## Verification
+Seven mutations from a plugin outside the repository; no tracked file touched.
+Baseline 8 collected, 8 passed. Every mutation reddened exactly one assertion.
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+Two carry the argument. Gutting the smallest family leaves twelve symbols, so
+the retired floor would have PASSED, and the family property reds -- the
+discriminating case, not a restatement. And emptying the scanner's file walk
+reds the new control while **the sweep itself still passes**: seven tests green
+over a walk of nothing. That is the vacuity made concrete rather than argued,
+and it is the reason the floor had to move from the declaration to the
+instrument.
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+The rest: emptying the reinstated set and its verifier map together, unwiring
+`LLMClient.complete` from the consent gate, declaring one symbol in two
+families, pointing the MCP control at a missing file, and adding a live
+production symbol to the deleted set each reddened the assertion that owns it.
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+## The live consent path was not disturbed
 
-## Notes
+Consent is in production use this session, so the surfaces were run rather than
+reasoned about. The change is confined to one test module and touches no
+production code.
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+    uv run --no-sync pytest src/cadrumo/llm/tests -n0 -q -m unit
+    409 passed, 4 deselected
+
+    uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_evidence_extract_consent_verb.py \
+      -n0 -q -m integration
+    7 passed
+
+The second is the one that matters: its positive control mints a real token
+through the sole constructor and drives a real request into a loopback
+endpoint, so it fails if the minting path stops working rather than only if it
+stops refusing.
+
+`ruff check`, `ruff format --check` and `ty check` clean.
