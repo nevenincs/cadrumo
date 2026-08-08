@@ -57,12 +57,18 @@ __all__ = [
     "resolve_filer_territorial_scope",
 ]
 
-FILER_TAX_ID_FACT_PATH: Final[str] = "tax.id"
+FILER_TAX_ID_FACT_PATH: Final[str] = "identity.tax_id"
 """Profile fact path carrying the taxpayer's own tax identifier.
 
 Declared beside the postcode path for the same reason it is: the reading path
 reads it, and spelling it at each use site is how a fact comes to be read at a
 path nothing writes.
+
+**Not ``tax.id``.** That spelling exists and is load-bearing elsewhere -- it is
+the registry SELECTOR key a binding names, projected FROM this fact -- so it
+reads as the obvious answer and the profile schema rejects it. A fact read at a
+path nothing writes is indistinguishable from a profile that declares none, and
+the difference between the two spellings is invisible at every call site.
 """
 
 FILER_POSTCODE_FACT_PATH: Final[str] = "contact.postcode"
