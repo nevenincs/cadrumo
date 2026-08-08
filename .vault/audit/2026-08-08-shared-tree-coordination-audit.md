@@ -5,7 +5,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:e79a745565109271e0a510470dc4e8990120575c038004c85934ddf633b8f9b3'
+body_hash: 'sha256:7860b5db4e5df9670b9d57d5a57cb16099763e18e9f0b459c1f18dff7879b4a9'
 related: []
 ---
 
@@ -38,3 +38,15 @@ Leaving them uncommitted for their owners was the right call: committing another
 ### Why this is recorded rather than codified
 
 The standing worktree-safety rule already forbids the destructive verbs and already prescribes the explicit-pathspec commit and the apply-cached drive. Nothing here contradicts it. What these occurrences add is the observation that **following the rule is not sufficient protection when a peer does not**, and that the resulting damage lands on the compliant agent. That is a coordination fact about this tree at this moment, not a new mandate, and the always-on rule corpus is already load-bearing on every session.
+
+### Consequence observed: a red tree-wide gate whose owner is unrecoverable
+
+The combined-period-string gate and the AEAT-route-literal centralisation gate are both red, and have been for the whole session. The combined-period gate names fourteen offending lines, twelve of them bank-statement fixture filenames of the shape `bank_bbva_2026Q1.csv` across the financial tabular providers and the core tabular-dialect tests, one an AEAT-grammar token `130-2026-1T-...` in a live discovery fixture, and the route gate names six more sites.
+
+Those fixtures entered under `feat(cadrumo): land the in-flight source and packaging work` — another bare whole-index sweep. So the change has no attributable author: the sweeping agent did not write the fixtures, and the writing agent's identity is not in the history. The surface belongs to the tabular column-role mapping lane of the document-ingestion campaign, which is active and mid-flight, but that is an inference from surface ownership rather than an attribution.
+
+This is the compounding form of the sweep hazard. Misattribution and a briefly-broken HEAD are recoverable within minutes. A red tree-wide gate with no recoverable owner persists, because the standing rule that a red full-tree gate needs an owner cannot be satisfied: there is nobody to route it to, and any agent who fixes it is patching another campaign's files to green a gate, which is separately forbidden.
+
+**The two offender classes are not the same defect and must not be closed as one.** A bank export's filename containing a calendar quarter is external-world naming that the period grammar never parses; an AEAT-grammar token in a fixture is the thing the gate exists to catch. Whoever takes this must classify before allowlisting, and each allowlist entry must state its reason, or the allowlist becomes the honour-system list the gate was built to remove.
+
+Recorded here rather than opened as a row in the owning campaign's plan, because that plan is mid-flight under other executors and inserting a row into a peer campaign's tracking document on an inference about ownership would create exactly the false attribution this document is about.
