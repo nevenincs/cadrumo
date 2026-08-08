@@ -26,6 +26,16 @@ the checks by hand is the same defect one refactor later: the next check lands o
 whichever path its author had in mind, and the other silently keeps confirming
 clean. One list means adding a check reaches every reader by construction.
 
+**Every check here BLOCKS.** A finding raised by this list carries a
+:class:`~core.DraftDiscrepancyKind`, and every member of that axis maps to a
+confirmation block reason, so enrolling a check here is deciding the operator
+must answer it individually before confirming. A deterministic condition worth
+reporting but not worth refusing on therefore belongs on the advisory channel
+instead -- :func:`~application.ledger.country_vocabulary_advisory` is the worked
+example, and it left this list for exactly that reason: the bundled country
+vocabulary carries a bounded subset of jurisdictions, so blocking on a code it
+does not carry refuses correct documents for a gap in our own data.
+
 Anchor verification is deliberately NOT here. It needs an independently produced
 transcription to check a claimed printed form against, which a structured record
 does not have and does not need -- its values are read from the document's own
@@ -47,7 +57,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, NamedTuple
 
 from ._closure_findings import closure_findings
-from ._country_vocabulary_finding import country_vocabulary_findings
 from ._postal_shape_finding import postal_shape_findings
 from ._regime_contradiction import regime_contradiction_finding
 
@@ -91,15 +100,10 @@ def _postal_code_shape(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ..
     return postal_shape_findings(draft)
 
 
-def _country_vocabulary(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ...]:
-    return country_vocabulary_findings(draft)
-
-
 DETERMINISTIC_CHECKS: tuple[DeterministicCheck, ...] = (
     DeterministicCheck("closure_identities", _closure_identities),
     DeterministicCheck("regime_contradiction", _regime_contradiction),
     DeterministicCheck("postal_code_shape", _postal_code_shape),
-    DeterministicCheck("country_vocabulary", _country_vocabulary),
 )
 """Every draft-only check, as data rather than as a sequence of calls.
 

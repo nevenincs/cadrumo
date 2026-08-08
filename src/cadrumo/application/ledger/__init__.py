@@ -198,6 +198,12 @@ if TYPE_CHECKING:
         rederive_artefact_on_host,
         survey_cloud_consent,
     )
+    from ._country_vocabulary_advisory import (
+        COUNTRY_VOCABULARY_ADVISED_STATUSES,
+        CountryVocabularyAdvisory,
+        CountryVocabularyWarning,
+        country_vocabulary_advisory,
+    )
     from ._counterparty_establishment import (
         CounterpartyEstablishmentConflictError,
         CounterpartyEstablishmentContradiction,
@@ -441,6 +447,10 @@ _LAZY_EXPORTS: dict[str, str] = {
     "resolve_counterparty_establishment_scope": "._establishment_ladder",
     "resolve_draft_counterparty_establishment": "._establishment_ladder",
     "scope_printed_evidence_would_establish": "._establishment_ladder",
+    "COUNTRY_VOCABULARY_ADVISED_STATUSES": "._country_vocabulary_advisory",
+    "CountryVocabularyAdvisory": "._country_vocabulary_advisory",
+    "CountryVocabularyWarning": "._country_vocabulary_advisory",
+    "country_vocabulary_advisory": "._country_vocabulary_advisory",
     "ATTRIBUTION_ESTABLISHING_ORIGINS": "._party_attribution",
     "PARTY_ATTRIBUTED_ADDRESS_FIELDS": "._party_attribution",
     "PartyAddress": "._party_attribution",
@@ -689,6 +699,7 @@ __all__ = [
     "IDENTITY_FIELDS",
     "MINIMUM_DISPLAY_ID_WIDTH",
     "PARTY_ATTRIBUTED_ADDRESS_FIELDS",
+    "COUNTRY_VOCABULARY_ADVISED_STATUSES",
     "ROUNDING_ALLOWANCE_PER_TERM",
     "AeatRecordProjectionError",
     "AnchorEvaluation",
@@ -717,6 +728,8 @@ __all__ = [
     "CounterpartyEstablishmentInputError",
     "CounterpartyEstablishmentRepository",
     "CounterpartyEstablishmentResolution",
+    "CountryVocabularyAdvisory",
+    "CountryVocabularyWarning",
     "DeclaredFact",
     "DeclaredFacts",
     "DeterministicCheck",
@@ -831,6 +844,7 @@ __all__ = [
     "confirmation_blockers",
     "counterparty_draft_side",
     "counterparty_establishment_key",
+    "country_vocabulary_advisory",
     "create_manual_transaction",
     "derive_confirmation_id",
     "derive_operator_iva_substrate",

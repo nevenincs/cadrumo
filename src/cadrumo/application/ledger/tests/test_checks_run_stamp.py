@@ -47,7 +47,6 @@ def test_the_stamp_names_every_declared_check() -> None:
         "closure_identities",
         "regime_contradiction",
         "postal_code_shape",
-        "country_vocabulary",
     )
 
 

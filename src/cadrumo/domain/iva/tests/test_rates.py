@@ -70,11 +70,15 @@ def test_lookup_rate_raises_for_unknown_kind() -> None:
 def test_lookup_rate_respects_effective_from() -> None:
     """Rates dated before the earliest registered window must not match.
 
-    The 2024 baseline ES window means ``2024-12-31`` resolves successfully;
-    the pre-2024 range still has no registered record and must raise.
+    The probe moved from 2023 to 2012-08-31 when the ES general window was
+    corrected: 2023 refused because ``effective_from`` carried a bulk-refresh
+    boundary rather than the legal one, so asserting it pinned an artefact. The
+    property under test is unchanged -- a date before the earliest window
+    refuses -- and it now sits on the boundary the statute actually sets, the
+    day before RDL 20/2012 art. 23.Dos took effect.
     """
-    with pytest.raises(IvaRateNotFoundError, match=r"ES|GENERAL|2023|rate"):
-        lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2023, 12, 31))
+    with pytest.raises(IvaRateNotFoundError, match=r"ES|GENERAL|2012|rate"):
+        lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2012, 8, 31))
 
 
 def test_every_rate_window_is_well_ordered() -> None:

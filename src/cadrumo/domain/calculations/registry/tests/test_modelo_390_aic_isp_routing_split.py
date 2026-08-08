@@ -37,6 +37,7 @@ import pytest
 from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from .. import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 from .._loader import load_registry_tree
+from ._gate_support import fragment_declaring
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -170,8 +171,9 @@ def test_mutation_repointing_box_28_to_the_aic_blind_casilla_reds_the_gate(tmp_p
         elif source.exists():
             shutil.copy2(source, scratch_root / catalogue_dir)
 
-    export_layout_path = (
-        scratch_root / "modelos" / "390" / "revisions" / _REVISION_ID / "export_layouts" / "0001-export_layouts.toml"
+    export_layout_path = fragment_declaring(
+        scratch_root / "modelos" / "390" / "revisions" / _REVISION_ID / "export_layouts",
+        'casilla_id = "iva.anual.autorepercutido.interior.cuota"',
     )
     original = export_layout_path.read_text(encoding="utf-8")
     mutated = original.replace(

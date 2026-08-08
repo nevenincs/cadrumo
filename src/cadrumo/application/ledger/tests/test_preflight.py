@@ -17,7 +17,14 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ...aggregation import IvaLedgerAggregationIssueReason
 from .. import LedgerPreflightIssueReason, preflight_transaction_catalogue
+from .._preflight import (
+    _PREFLIGHT_DETAIL_BY_IVA_ISSUE,
+    _PREFLIGHT_REASON_BY_IVA_ISSUE,
+    _preflight_detail_for_iva_issue,
+    _preflight_reason_for_iva_issue,
+)
 from ._preflight_test_support import (
     _AD_HOC_2026,
     _BUCKET_ID,
@@ -194,7 +201,7 @@ def test_preflight_blocks_intracom_sale_with_domestic_counterparty_before_aggreg
         iva_rate=Decimal("0"),
         iva_amount=Decimal("0"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        counterparty_eu_member_state=EUMemberState.ES,
+        counterparty_identification_state=EUMemberState.ES,
     )
 
     report = preflight_transaction_catalogue(
@@ -210,7 +217,7 @@ def test_preflight_blocks_intracom_sale_with_domestic_counterparty_before_aggreg
     assert not report.issues[0].detail.startswith("aggregation.")
 
 
-def test_preflight_renders_intracom_domestic_counterparty_detail_in_hungarian() -> None:
+def test_preflight_renders_intracom_domestic_identification_detail_in_hungarian() -> None:
     transaction = _transaction(
         "row-intracom-es-hu",
         direction=TransactionDirection.INCOMING,
@@ -219,7 +226,7 @@ def test_preflight_renders_intracom_domestic_counterparty_detail_in_hungarian() 
         iva_rate=Decimal("0"),
         iva_amount=Decimal("0"),
         iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        counterparty_eu_member_state=EUMemberState.ES,
+        counterparty_identification_state=EUMemberState.ES,
     )
 
     with override_settings(cadrumo_output_language="hu"):
@@ -234,7 +241,9 @@ def test_preflight_renders_intracom_domestic_counterparty_detail_in_hungarian() 
     assert [issue.reason for issue in report.issues] == [
         LedgerPreflightIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION,
     ]
-    assert "Spanyol partner" in report.issues[0].detail
+    # The narrowed concept, in the operator's own language: the refusal names the
+    # VAT IDENTIFICATION, not where the counterparty is established.
+    assert "héa-azonosító" in report.issues[0].detail
     assert not report.issues[0].detail.startswith("aggregation.")
 
 
@@ -261,3 +270,36 @@ def test_preflight_blocks_export_sale_with_eu_member_state_before_aggregation() 
         LedgerPreflightIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
     ]
     assert EUMemberState.DE.value in report.issues[0].detail
+
+
+class TestEveryMappedIvaReasonResolves:
+    """The reason mapping is a dict LITERAL, so every key evaluates on every call.
+
+    That is the whole failure class and it is why this needs covering by
+    exhaustion rather than by example. A single stale member name does not break
+    the branch that names it -- it raises ``AttributeError`` while the literal is
+    being built, so EVERY reason crashes, including ones with nothing to do with
+    it. A missing taxable base took down the whole preflight surface once, and
+    the outage read as an exotic intra-community bug because the only tests
+    reaching this mapping went through the intra-community branch.
+    """
+
+    def test_every_mapped_reason_resolves_without_raising(self) -> None:
+        """Exhaustive over the mapping's own keys, so a stale member cannot hide."""
+        for reason in _PREFLIGHT_REASON_BY_IVA_ISSUE:
+            resolved = _preflight_reason_for_iva_issue(reason)
+
+            assert isinstance(resolved, LedgerPreflightIssueReason), reason
+
+    def test_a_missing_taxable_base_resolves(self) -> None:
+        """The non-intra-community case whose absence let a whole-surface outage hide."""
+        resolved = _preflight_reason_for_iva_issue(IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE)
+
+        assert resolved is LedgerPreflightIssueReason.MISSING_TAXABLE_BASE
+
+    def test_every_missing_fact_reason_has_a_detail_sentence(self) -> None:
+        """The detail map is a second literal with the same exposure."""
+        for reason in _PREFLIGHT_DETAIL_BY_IVA_ISSUE:
+            detail = _preflight_detail_for_iva_issue(reason)
+
+            assert detail and not detail.startswith("aggregation."), reason

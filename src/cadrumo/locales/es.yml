@@ -372,8 +372,6 @@ aggregation:
         bucket de agregación solicitado.
       candidate_outside_period: 'Error interno: el candidato IVA cae fuera del periodo
         de agregación.'
-      domestic_counterparty_on_intra_community_transaction: Los terceros españoles
-        no son válidos para operaciones intracomunitarias.
       eu_member_state_on_export_transaction: Las operaciones de exportación o asimiladas
         no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
       unsupported_iva_category: 'Error interno: categoría IVA no admitida para la
@@ -2120,6 +2118,8 @@ cli:
           show_help: Muestre un borrador pendiente campo por campo, con sus hallazgos
             y bloqueos.
           unknown_reference: No hay ningun borrador pendiente para esa referencia.
+          country_code_unassigned_message: 'El código de país de una de las partes pertenece a los rangos que la norma ISO 3166-1 reserva para que nunca se asigne ningún país, así que el documento indica una cadena y no un país, y nada sitúa a esa parte. Corrija el código contrastándolo con el documento. Este borrador se puede confirmar igualmente; la parte simplemente queda sin establecer hasta entonces.'
+          country_code_uncatalogued_message: 'El código de país de una de las partes puede designar un país real que el vocabulario incorporado de este sistema todavía no recoge, así que no se puede decir nada sobre dónde está establecida esa parte. Volver a leer el documento no lo resolverá: hay que añadir el país. Este borrador se puede confirmar igualmente; la parte simplemente queda sin establecer hasta entonces.'
         source_path_help: Ruta al PDF o imagen de la factura
         supplier_help: Nombre del proveedor
         taxable_base_help: Base imponible de la factura

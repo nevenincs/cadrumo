@@ -79,18 +79,12 @@ def _payload(name: str) -> ManualWorkedExamplePayload:
 #: is stated here for the same reason none is asserted: it would be wrong the moment a
 #: payload migrates, and the entries themselves are the inventory.
 _UNMIGRATED_PAYLOADS: Mapping[str, str] = {
-    "modelo-100-2020-estimacion-directa-simplificada.json": (
-        "scenario facts still hand-written in test_m100_2020_estimacion_directa_manual_worked_example.py"
-    ),
     "modelo-100-2020-rendimientos-trabajo-despido-improcedente.json": (
         "scenario facts still hand-written in test_m100_2020_rendimientos_trabajo_despido_manual_worked_example.py"
     ),
     "modelo-100-2024-capital-inmobiliario-arrendamiento-vivienda-tensionada.json": (
         "scenario facts still hand-written in "
         "test_m100_2024_capital_inmobiliario_arrendamiento_vivienda_manual_worked_example.py"
-    ),
-    "modelo-100-2024-cuotas-integras-escala-aragon.json": (
-        "scenario facts still hand-written in test_m100_2024_cuotas_integras_escala_aragon_manual_worked_example.py"
     ),
     "modelo-100-2024-ganancias-patrimoniales-transmision-inmueble.json": (
         "scenario facts still hand-written in "

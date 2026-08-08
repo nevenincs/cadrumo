@@ -7,5 +7,42 @@
   "notes": "AEAT Manual practico de Renta 2020, Parte 1, Capitulo 7 (Rendimientos de actividades economicas. Metodo de estimacion directa), caso practico de determinacion del rendimiento neto derivado de actividad profesional en estimacion directa, modalidad simplificada -- the identical medico radiologo scenario the 2024 manual reuses verbatim. Table rows 'Rendimiento neto' (58.300 registrado / 58.100 fiscal, L16090), 'Rendimiento neto reducido' (58.100, L16091) and 'Rendimiento neto reducido total' (58.100, L16092) all agree on 58.100; the value is independently re-derivable bottom-up from every raw ingreso/gasto line item quoted in the manual via the registry's own 0180/0218/0221/0222/0223/0224 formula chain (see test_m100_2020_estimacion_directa_manual_worked_example.py). Notas (10)/(11) at L16137-L16145 restate the coinciding amount as '61.400 euros' instead of '58.100' -- the same extraction/erratum anomaly documented for the 2024 manual's identical caso practico; the table's own three explicit rows and the independent bottom-up re-derivation both agree on 58.100, so 58.100 is the grounded figure, not 61.400.",
   "expected_by_casilla_id": {
     "0226": "58100.00"
+  },
+  "declared_inputs": {
+    "corpus_locator": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16003-L16030",
+    "by_casilla_id": {
+      "0171": "134800.00",
+      "0175": "600.00",
+      "0177": "3000.00",
+      "0181": "19000.00",
+      "0184": "17700.00",
+      "0185": "5900.00",
+      "0186": "3300.00",
+      "0193": "3800.00",
+      "0194": "7800.00",
+      "0202": "6200.00",
+      "0203": "1100.00",
+      "0205": "1600.00",
+      "0206": "1700.00",
+      "0208": "7900.00",
+      "0217": "2300.00"
+    },
+    "locator_by_casilla_id": {
+      "0171": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16004-L16005",
+      "0175": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16094-L16095",
+      "0177": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16098-L16100",
+      "0181": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16011",
+      "0184": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16007,#L16101",
+      "0185": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16008",
+      "0186": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16009-L16010",
+      "0193": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16029",
+      "0194": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16019-L16020,#L16026-L16027",
+      "0202": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16028,#L16030",
+      "0203": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16012",
+      "0205": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16015",
+      "0206": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16016",
+      "0208": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16013-L16014",
+      "0217": "corpus/manuals/renta/2020/part1/source.pdf.extracted.md#L16017,#L16018"
+    }
   }
 }

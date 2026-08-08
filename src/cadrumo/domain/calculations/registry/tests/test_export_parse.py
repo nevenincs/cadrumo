@@ -186,6 +186,10 @@ def _decimal_field(field_id: str = "casilla.0501") -> ExportFieldDefinition:
             "kind": "literal",
             "literal": "0",
             "data_type": "decimal",
+            # A decimal slot carries digits only and declares the scale the
+            # reader shifts by; a field omitting it cannot be rendered and is
+            # refused at validation.
+            "decimals": 2,
             "required": False,
             "padding": "right_space",
             "justification": "left",
@@ -197,13 +201,20 @@ def _decimal_field(field_id: str = "casilla.0501") -> ExportFieldDefinition:
 
 
 def test_parse_decimal_raw_first_yields_correct_value() -> None:
-    """_parse_decimal(raw, field) parses a comma-decimal BOE string correctly.
+    """_parse_decimal(raw, field) reads an implicit-decimal slot at the declared scale.
 
     Verifies that raw is treated as the numeric string and field is used only
     for error context.  The canonical argument order is (raw, field).
+
+    The slot is DIGITS ONLY and the decimal point is restored by shifting, which
+    is the fichero-BOE convention the writer emits: ``300506`` at ``decimals =
+    2`` is 3.005,06 €. This case previously passed ``"3005,06"``, which the
+    reader now refuses as non-digit data -- the punctuated form was the older
+    contract, not a second accepted spelling, so asserting it would pin a
+    behaviour the format does not have.
     """
     field = _decimal_field()
-    assert _parse_decimal("3005,06", field) == Decimal("3005.06")
+    assert _parse_decimal("300506", field) == Decimal("3005.06")
 
 
 def test_parse_decimal_invalid_raw_includes_field_id_in_error() -> None:

@@ -21,9 +21,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_es_general_2024_rate() -> None:
+    """A 2024 date resolves the 21 % general rate.
+
+    ``effective_from`` is 2012-09-01, not 2024-01-01. The earlier value was a
+    bulk-refresh boundary sitting in a field defined as "First date the rate
+    applies", so the table asserted the general rate began in 2024 -- and this
+    test asserted it back. RDL 20/2012 art. 23.Dos fixed 21 % from 1 September
+    2012 and nothing has changed it since.
+    """
     rate = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2024, 6, 15))
     assert rate.pct == Decimal("21")
-    assert rate.effective_from == date(2024, 1, 1)
+    assert rate.effective_from == date(2012, 9, 1)
     assert rate.effective_until == date(2024, 12, 31)
 
 
@@ -62,10 +70,36 @@ def test_es_reduced_2024_and_2025_both_resolve() -> None:
     assert rate_2025.pct == Decimal("10")
 
 
-def test_es_pre_2024_lookup_raises() -> None:
-    """Dates before the 2024 baseline have no registered rate."""
-    with pytest.raises(IvaRateNotFoundError, match=r"ES|GENERAL|2023|rate"):
-        lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2023, 6, 1))
+def test_es_lookup_before_the_general_rate_existed_raises() -> None:
+    """A date before 1 September 2012 has no registered general rate, and must refuse.
+
+    This replaces an assertion that 2023 raises. That was true of the table and
+    false of the law: the boundary it pinned was a refresh artefact, so the test
+    encoded the defect as the contract and would have kept the correction out.
+
+    The boundary is still real and still worth a gate -- it has simply moved to
+    where the statute puts it. Before RDL 20/2012 took effect the general rate
+    was 18 %, which this table does not carry, so 2012-08-31 must refuse while
+    2012-09-01 resolves. Both directions are asserted, because a refusal test
+    with no matching acceptance cannot tell a boundary from a blanket gap.
+    """
+    with pytest.raises(IvaRateNotFoundError, match=r"ES|GENERAL|2012|rate"):
+        lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2012, 8, 31))
+
+    assert lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2012, 9, 1)).pct == Decimal("21")
+
+
+def test_es_pre_2024_years_inside_prescripcion_now_resolve() -> None:
+    """2022 and 2023 price correctly, which is the point of the correction.
+
+    Both years sit inside the four-year prescripción window, and the registry
+    declares pre-2024 revisions on more than thirty modelos, so a taxpayer
+    amending either year needs the rate. Before the correction every tier
+    refused for both.
+    """
+    for year in (2022, 2023):
+        assert lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(year, 6, 1)).pct == Decimal("21")
+        assert lookup_rate(EUMemberState.ES, IvaRateKind.REDUCED, date(year, 6, 1)).pct == Decimal("10")
 
 
 def test_committed_registry_has_no_overlapping_windows() -> None:

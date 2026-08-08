@@ -14,15 +14,19 @@ whole value of the gate is the per-document attention it forces.
 
 from __future__ import annotations
 
+from typing import Final, NamedTuple
+
 import typer
 
 from ...application.ledger import (
     ConfirmationBlocker,
+    CountryVocabularyAdvisory,
     FindingResolution,
     InvoiceDraft,
     PartyAttributionAdvisory,
     StoredExtractionDraft,
     confirmation_blockers,
+    country_vocabulary_advisory,
     load_extraction_drafts,
     party_attribution_advisory,
 )
@@ -30,6 +34,7 @@ from ...core import ConfirmationBlockReason, DraftDiscrepancyKind, FindingResolu
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.iva import StatedCountryCodeStatus
 from ._common import _bad, _emit_envelope, _state, _tx_repo
 from ._ledger_business_payloads import (
     EvidenceReviewBlockerPayload,
@@ -176,6 +181,94 @@ def _party_attribution_lines(notice: Notice) -> list[str]:
         f"{context.get(key.removesuffix('_fields') + '_territory_if_attributed', '-')}"
         for key, value in context.items()
         if key.endswith("_fields") and key != "fields"
+    )
+    return lines
+
+
+class _CountryNoticeWording(NamedTuple):
+    """The one notice code and one message a country-vocabulary kind is told under."""
+
+    code: str
+    locale_key: str
+    default: str
+
+
+_COUNTRY_NOTICE_WORDING: Final[dict[StatedCountryCodeStatus, _CountryNoticeWording]] = {
+    StatedCountryCodeStatus.UNASSIGNED: _CountryNoticeWording(
+        code="ledger.evidence.review.country_code_unassigned",
+        locale_key="cli.app.ledger.evidence.review.country_code_unassigned_message",
+        default=(
+            "A party's country code is one ISO 3166-1 reserves so that no country is ever "
+            "allocated to it, so the document states a string rather than a country and nothing "
+            "places that party. Correct the code against the document. This draft can still be "
+            "confirmed; the party simply stays unestablished until it is."
+        ),
+    ),
+    StatedCountryCodeStatus.UNCATALOGUED: _CountryNoticeWording(
+        code="ledger.evidence.review.country_code_uncatalogued",
+        locale_key="cli.app.ledger.evidence.review.country_code_uncatalogued_message",
+        default=(
+            "A party's country code may name a real country this system's bundled vocabulary "
+            "does not yet carry, so nothing can be said about where that party is established. "
+            "Re-reading the document will not settle it: the country has to be added. This "
+            "draft can still be confirmed; the party simply stays unestablished until it is."
+        ),
+    ),
+}
+"""One code and one sentence per kind, because the kinds have different OWNERS.
+
+Both are non-blocking and both name the stated code, so a single notice carrying
+every affected party would read identically for a typo the operator fixes off the
+page and a gap only a registry commit closes. Splitting on the status keeps that
+distinction machine-readable in the notice ``code``, which is what a JSON
+consumer routes on, rather than only in the prose.
+"""
+
+
+def _country_vocabulary_notices(advisory: CountryVocabularyAdvisory) -> list[Notice]:
+    """Project the country-vocabulary advisory into one notice per kind.
+
+    Non-blocking on purpose. The bundled vocabulary carries a bounded subset of
+    the world's jurisdictions, so a code outside it is an ordinary event for a
+    real foreign counterparty; refusing the confirm would make those documents
+    unfileable until the registry caught up, and an operator who meets that often
+    enough learns to ignore the channel it arrives on. The under-declaration this
+    axis was narrowed to close is shut elsewhere and stays shut: an unresolved
+    country yields no residency, so the classification criteria do not assemble
+    and the zero-rated export category is unreachable whatever this notice says.
+    """
+    notices: list[Notice] = []
+    for status, wording in _COUNTRY_NOTICE_WORDING.items():
+        affected = advisory.by_status(status)
+        if not affected:
+            continue
+        context: dict[str, str] = {"fields": ",".join(party.field for party in affected)}
+        for party in affected:
+            context[f"{party.role}_country_code"] = party.stated_code
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code=wording.code,
+                message=tr(wording.locale_key, default=wording.default),
+                context=context,
+            ),
+        )
+    return notices
+
+
+def _country_vocabulary_lines(notice: Notice) -> list[str]:
+    """Rebuild one country notice's text-mode lines from the notice itself.
+
+    Read off the notice rather than the advisory for the reason the sibling
+    projection is: a JSON consumer and a terminal operator are told the same
+    thing because the same object produced both.
+    """
+    context = notice.context or {}
+    lines = [f"advisory\t{notice.code}\t{notice.message}"]
+    lines.extend(
+        f"country_code_unresolved\t{key.removesuffix('_country_code')}\t{value}"
+        for key, value in context.items()
+        if key.endswith("_country_code")
     )
     return lines
 
@@ -353,6 +446,11 @@ def _register_review_show_command() -> None:
             attribution_notice = _party_attribution_notice(advisory)
             notices.append(attribution_notice)
             lines.extend(_party_attribution_lines(attribution_notice))
+        country_advisory = country_vocabulary_advisory(draft)
+        if country_advisory is not None:
+            for country_notice in _country_vocabulary_notices(country_advisory):
+                notices.append(country_notice)
+                lines.extend(_country_vocabulary_lines(country_notice))
         if blockers:
             notices.append(
                 Notice(

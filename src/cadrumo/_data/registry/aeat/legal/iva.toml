@@ -2084,3 +2084,39 @@ required_text = [
     "será del 0,62 por ciento",
     "Se aplicará el tipo del 0 por ciento del Impuesto sobre el Valor Añadido",
 ]
+
+[legal."real-decreto-ley-20-2012:art-23-dos"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/boe-a-2012-9364-rdl-20-2012-art-23.html#a23"
+document_id = "BOE-A-2012-9364"
+article = "23.Dos"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2012-9364"
+published_at = 2012-07-14
+effective_from = 2012-09-01
+review_status = "reviewed"
+reviewed_at = 2026-08-08
+reviewed_by = "agent-prepared-pending-operator"
+notes = "RDL 20/2012 art. 23, apartado Dos: da nueva redaccion al art. 90 Uno LIVA y fija el tipo general en el 21 por ciento, con efectos desde el 1 de septiembre de 2012. Esta es la provision que ESTABLECE el valor; el art. 90 LIVA es el articulo marco que lo aloja, y citarlo solo no basta cuando una norma modificativa fija la cifra. El texto consolidado del art. 90 lo confirma en su nota de modificacion: 'Se modifica el apartado 1, con efectos desde el 1 de septiembre de 2012, por el art. 23.2 del Real Decreto-ley 20/2012, de 13 de julio. Ref. BOE-A-2012-9364'. DOS TRAMPAS DE CITA, ambas verificadas sobre el fichero empaquetado. Primera: el documento contiene TRES cadenas 'Articulo 23' y la primera pertenece a otra ley -- el articulo 23 sobre el Servicio de Ayuda a Domicilio -- de modo que anclar por la cadena sola selecciona el articulo equivocado; el de IVA es la segunda aparicion. Segunda: los apartados difieren por tipo. El 21 por ciento lo fija el apartado Dos y el 10 por ciento el apartado Tres, por lo que citar 23.2 para el tipo reducido seria erroneo en un apartado. El tipo super-reducido del 4 por ciento es ANTERIOR a esta norma y NO puede heredarla por proximidad: necesita su propia provision. PROVENANCIA. Documento adquirido con dev/corpus/fetch_boe_normative.py, 26 bloques servidos cada uno en su ultima version, sha256 d0ef2bae3d07e5a2fed52315c29808306f0a3ec197b1bc0501186ce16181c9df, 733051 bytes. Entrada preparada por agente y fundamentada en el texto empaquetado leido directamente; no la ha revisado un operador humano, y reviewed_by lo declara asi."
+required_text = [
+    "se exigirá al tipo del 21 por ciento",
+]
+
+[legal."real-decreto-ley-20-2012:art-23-tres"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/boe-a-2012-9364-rdl-20-2012-art-23.html#a23"
+document_id = "BOE-A-2012-9364"
+article = "23.Tres"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2012-9364"
+published_at = 2012-07-14
+effective_from = 2012-09-01
+review_status = "reviewed"
+reviewed_at = 2026-08-08
+reviewed_by = "agent-prepared-pending-operator"
+notes = "RDL 20/2012 art. 23, apartado Tres: da nueva redaccion al art. 91 LIVA y fija el tipo reducido en el 10 por ciento, con efectos desde el 1 de septiembre de 2012. Entrada SEPARADA de la del apartado Dos deliberadamente: el mismo articulo fija dos tipos en dos apartados distintos, y una sola entrada obligaria a cada tipo a citar una provision que no es exactamente la suya. La nota de modificacion del art. 90 consolidado cita 23.2, que es correcta para el 21 por ciento y NO para este tipo. El tipo super-reducido del 4 por ciento es anterior a esta norma y necesita su propia provision. PROVENANCIA. Mismo documento y mismo sha256 que la entrada del apartado Dos, d0ef2bae3d07e5a2fed52315c29808306f0a3ec197b1bc0501186ce16181c9df; adquirido con dev/corpus/fetch_boe_normative.py. Entrada preparada por agente, no revisada por un operador humano."
+required_text = [
+    "Se aplicará el tipo del 10 por ciento",
+]
