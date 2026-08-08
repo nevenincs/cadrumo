@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#aeat-design-relayout-boundary'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:7f300a405896881d96c11096aa803d48e9ccab7abab65a4d336fedf45dad590a'
+body_hash: 'sha256:7eea83f88394473b9e2a3dd94752928deefafe3f987f23ed3c31d0981664c8a9'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
 ---
@@ -178,10 +178,34 @@ refusal, not a crash: the mechanism already exists in the resolver and needs
 no new code, only the registry no longer claiming a year it cannot correctly
 serve.
 
-For Modelo 200: no implementation action. Its current two-design span is
-offset-identical, and the same generic gate already covers its forward risk —
-recorded here so a future author does not duplicate the mechanism when AEAT
-eventually publishes a 2026 Modelo 200 design.
+For Modelo 200: **this record's original ruling of no implementation action is
+REFUTED by measurement and no longer governs.** It read: "no implementation
+action. Its current two-design span is offset-identical, and the same generic
+gate already covers its forward risk." The offset-identical premise is false.
+
+Measured on 2026-08-08 against the bundled designs: **1140 of 3194 shared boxes
+relocate across Modelo 200's 2024/2025 boundary, with 246 boxes added and 145
+removed**, alongside a record decomposition changing from 75 records to 77. The
+span is one of the largest re-layouts in the bundled corpus, not an
+offset-identical pair.
+
+The premise survived this long because the instrument could not see it. The span
+gate keyed its box numbers with a pattern capped at four digits while Modelo 200
+numbers its boxes with five, so it read **23 of that modelo's 3440 boxes** and
+reported no offset evidence at all — and an independently derived boundary union
+agreed with it, because that instrument carried the same four-digit cap.
+Agreement between two instruments sharing one blind spot is worth nothing, and
+unlike a wrong answer it presents as everything being correct. The gate now
+consumes the registry's canonical five-digit marker.
+
+Modelo 200 therefore requires the same split as Modelo 303 and Modelo 390: one
+revision per design, each with its own export fragment tree and its own declared
+`source_refs`. That work is not left to a future author — it is carried by Steps
+`S42` and `S43` of `2026-08-08-aeat-design-relayout-boundary-plan`, which author
+the 2024 and 2025-onward revisions respectively, by `S44` which retires the
+spanning revision, and by `S45` and `S46` which land and byte-prove it. This
+amendment rules on code and is not self-executing; those rows are its
+implementation and they are open.
 
 Land the split as one plan per modelo (Modelo 303, then Modelo 390), each its
 own atomic multi-file commit, verified green against
@@ -230,8 +254,15 @@ not invention.
   way; a change to that file during implementation that is not itself
   reddened first by a genuine new boundary is a signal the split missed
   something.
-- Modelo 200 is deliberately left unchanged in this pass; its coverage is a
-  standing claim of the existing gate, not a new commitment this record makes.
+- Modelo 200 was originally left unchanged in this pass on the strength of an
+  offset-identical span. **That consequence is withdrawn:** the span is not
+  offset-identical, Modelo 200 is in scope for the split, and its coverage is a
+  commitment this record now makes rather than a standing claim of the gate. See
+  the amendment in Implementation.
+- The forward-coverage claim this record rests on the gate was, for Modelo 200,
+  resting on an instrument that read under one percent of that modelo's boxes. A
+  gate's silence is only evidence to the extent its marker matches the corpus,
+  which is a property no reader of this record could have checked from here.
 - This record's forward-coverage claim rests entirely on the gate, and the
   gate's trustworthiness rests on having been built by two independently
   authored measurement instruments that were cross-checked against each
