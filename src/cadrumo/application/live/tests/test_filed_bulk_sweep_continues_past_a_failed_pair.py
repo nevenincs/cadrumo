@@ -34,8 +34,8 @@ from ....adapters.outbound.aeat.auth import AeatSession, CertificateSessionDetai
 from ....adapters.outbound.aeat.sede import DeclaracionesRegisterSession
 from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
+from .._filed_data import BulkFiledDataListingReport
 from .._filed_data_capture import list_filed_data_bulk
-from .._remote_state_models import BulkFiledDataListingReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
