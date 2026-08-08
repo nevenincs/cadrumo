@@ -188,7 +188,21 @@ _EXPECTED_SETUP_QUESTION_IDS = frozenset(
         "address-postcode",
         "art109-activity-income-withholding-ge-70pct",
         "bienes-extranjero-above-threshold",
-        "cloud-evidence-upload",
+        # NOT "cloud-evidence-upload". It was a setup question and was deliberately
+        # retired with the off-host read path (04561ef0f6, which names "the setup-wizard
+        # question that asked the operator to opt in" among what it deleted). That commit
+        # did not update this pin, so the entry outlived the question it named and this
+        # gate has been red ever since -- reported as a moved COUNT rather than a named
+        # id until the tally was removed.
+        #
+        # The capability's later return (069e0f5a96, 1ba2eb3633) did not reverse that.
+        # Both are scoped to the ELIGIBILITY BAR and say so: the enum member and its
+        # profile-schema field, restored because the enum/schema parity gate was red, and
+        # a per-locale label because the translation-honesty ratchet refuses a
+        # placeholder. Neither touches the wizard catalogue or this file. The operator
+        # sets it through --cloud-evidence-upload/--no-cloud-evidence-upload, which is a
+        # deliberate posture for a capability governing off-host transmission: settable,
+        # but not offered in the interactive walk-through.
         "country-of-fiscal-residence",
         "does-intracomunitario",
         "enrollment-large-company",
@@ -261,6 +275,8 @@ _EXPECTED_SETUP_QUESTION_IDS = frozenset(
         "third-party-transactions-above-347-threshold",
     }
 )
+
+
 def test_profile_create_prompted_question_inventory_is_pinned() -> None:
     """A silent add, drop, or rename of a setup-flow question fails loudly.
 
