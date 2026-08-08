@@ -6,7 +6,7 @@ tags:
 date: '2026-08-08'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:058f9461bc297a510458bbbd4c8fd24290abee45c2730a64102f2c354957a52a'
+body_hash: 'sha256:a27d9fa08603cef92b8ed916746fa98cda4ad86d263fe6f736f63c486c26f1fd'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -26,6 +26,9 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S69]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S71]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S72]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S73]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S79]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S80]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S11]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S12]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S13]]'
@@ -67,6 +70,9 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S69` - Reconcile the hardened gate's verdict against the re-derived boundary union
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S71` - Add a box-set MEMBERSHIP signal alongside the movement signal
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S72` - Widen the bracketed box-number marker beyond four digits
+- `2026-08-08-aeat-design-relayout-boundary-W01-P02-S73` - Point the two sibling gates at the registry's canonical box-number marker
+- `2026-08-08-aeat-design-relayout-boundary-W01-P02-S79` - Validate every export layout against its own declared structure
+- `2026-08-08-aeat-design-relayout-boundary-W01-P02-S80` - Check that a revision's declared layout design applies to the years it claims
 - `2026-08-08-aeat-design-relayout-boundary-W01-P03-S11` - Make the year-only revision selector refuse instructively
 - `2026-08-08-aeat-design-relayout-boundary-W01-P03-S12` - Widen the binding-readiness helper's refusal handling
 - `2026-08-08-aeat-design-relayout-boundary-W01-P03-S13` - Handle the ambiguity refusal in the registry revision diff surface
