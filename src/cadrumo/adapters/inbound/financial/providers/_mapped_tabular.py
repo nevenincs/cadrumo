@@ -33,7 +33,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import override
 
-from .....core import FieldRole
+from .....core import FieldRole, MissingOptionalExtraError
 from .....core.errors import CadrumoError, CoreValidationError, resolve_error_message
 from .....core.logging import get_logger
 from .....core.parsing import normalise_iso_4217_currency
@@ -93,25 +93,35 @@ def _resolve_roles_semantically(table: NormalizedTable) -> ColumnRoleMapping | N
     actually arrived at this lane, keeps a host without the extra able to
     detect and parse every exact-layout file as before.
 
-    A host that cannot map resolves to ``None``, which the lane already reports
-    as "column roles could not be established". That is the same
-    operator-facing outcome as before this binding existed, so installing it
-    can only add capability.
+    A host that cannot map resolves to ``None``, which the lane reports as
+    "column roles could not be established". That is the right answer when the
+    mapper is installed and declined: reaching a model is not the only way this
+    can go, because the client consults its profile-bound response cache first,
+    so an operator who has not unlocked a profile gets a storage refusal well
+    before any request is built. Detecting a file must not depend on being
+    logged in, and a genuine programming fault still raises.
 
-    The guard is the project error base rather than the LLM family alone,
-    because reaching a model is not the only way this can decline: the client
-    consults its response cache first, and the cache is profile-bound, so an
-    operator who has not unlocked a profile gets a storage refusal well before
-    any request is built. Detecting a file must not depend on being logged in.
-    A genuine programming fault still raises.
+    **A missing extra is not that case, and must not resolve to ``None``.**
+    ``MissingOptionalExtraError`` is both a :class:`CadrumoError` and an
+    :class:`ImportError`, so the broad guards below would otherwise swallow it
+    and report the operator's FILE as unreadable when what is actually absent is
+    a capability of their INSTALL -- pointing them at a CSV they cannot fix
+    instead of the one command that resolves it. It is re-raised so the lane
+    surfaces the install hint, which is what the governing decision requires of
+    the tabular split: a known fixed-layout file imports with no extra, and an
+    unknown header vocabulary refuses here, naming ``pip install cadrumo[llm]``.
     """
     try:
         from .....llm import SemanticColumnRoleMapper
+    except MissingOptionalExtraError:
+        raise
     except ImportError:
         _logger.debug("semantic column-role mapping is unavailable: the llm extra is not installed")
         return None
     try:
         proposal = SemanticColumnRoleMapper().map(table.headers)
+    except MissingOptionalExtraError:
+        raise
     except CadrumoError:
         _logger.warning("semantic column-role mapping could not establish roles for this table", exc_info=True)
         return None
