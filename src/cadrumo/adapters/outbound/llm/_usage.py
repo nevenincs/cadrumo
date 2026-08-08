@@ -227,12 +227,23 @@ class UsageRecorder:
             estimated cost.
         """
         records = self.load_records(since=since, until=until)
-        total_cost = sum((record.cost_estimate_usd for record in records), start=Decimal("0"))
+        # An unpriced record poisons the total rather than being skipped. Summing
+        # only the priced rows would return a smaller number that still reads as
+        # the bill, which is the reported defect moved one layer up: the caller
+        # cannot see that anything was left out. The count travels beside it so
+        # the absence is attributable rather than merely total.
+        unpriced = sum(1 for record in records if record.cost_estimate_usd is None)
+        total_cost = (
+            None
+            if unpriced
+            else sum((record.cost_estimate_usd or Decimal("0") for record in records), start=Decimal("0"))
+        )
         return UsageSummary(
             entries=len(records),
             total_input_tokens=sum(record.input_tokens for record in records),
             total_output_tokens=sum(record.output_tokens for record in records),
             total_cost_estimate_usd=total_cost,
+            unpriced_entries=unpriced,
             since=since,
             until=until,
         )
