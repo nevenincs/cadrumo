@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:b983a9a5548066d48c076f08a4a1a36e090e3c99a753bf07e2ae2c9748fcc3c8'
+body_hash: 'sha256:cfabe00da84f5324d9b9017739e978191f4b494ed6f9678382299a45b6874739'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
   - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
@@ -240,13 +240,16 @@ early-2024 revisions from their own designs, and by `S64`, which re-derives each
 revision's total-formula operand lists rather than copying the newest backwards.
 `S66` records the divergence in the campaign audit.
 
-The revision count of five is unchanged from this record's first, wrong
-three-epoch pass, and that is a coincidence rather than corroboration. Under three
-epochs the five arose as two layout-identical pairs; under four it arises as one
-pair plus a distinct 2024-late epoch. A reader who re-derives four epochs and
-expects the count to have moved should not read its stability as a sign the
-correction was cosmetic, and a reader comparing this record against its own
-earlier revision should not read the unchanged number as a sign nothing changed.
+The revision count of five has now survived TWO corrections of the epoch count,
+and that is coincidence twice over rather than corroboration. Under this record's
+first, wrong three-epoch pass the five arose as two layout-identical pairs; under
+four it was described as one pair plus a distinct 2024-late epoch; under the
+measured five it arises as five distinct epochs and no pair at all. A reader who
+re-derives the epochs and expects the count to have moved should not read its
+stability as a sign the correction was cosmetic, and a reader comparing this
+record against its own earlier revisions should not read the unchanged number as a
+sign nothing changed. A count that holds while the structure under it changes
+three times is the clearest possible warning not to use it as a check.
 
 Selection then needs no code change on the period-scoped path, since the
 production selector already resolves each token to exactly one revision. The
