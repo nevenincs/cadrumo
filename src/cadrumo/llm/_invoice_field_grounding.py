@@ -48,7 +48,6 @@ from ..application.ledger import (
     PurchaseInvoiceEvidenceInputError,
 )
 from ..core import STRICT_FROZEN_CONFIG, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
-from ..domain.iva import country_code_for_printed_country_name
 from ..core.decimal import coerce_finite_european_decimal, european_thousands_reading_is_ambiguous
 from ..core.errors import CoreValidationError
 from ..core.identity import (
@@ -58,6 +57,7 @@ from ..core.identity import (
     validate_spanish_tax_id,
 )
 from ..core.parsing import normalise_iso_4217_currency, parse_date
+from ..domain.iva import country_code_for_printed_country_name
 from ._invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,
     INVOICE_FIELD_CONTRACTS,

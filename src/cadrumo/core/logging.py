@@ -33,6 +33,7 @@ log records and plaintext diagnostic log files rooted by settings.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import logging.config
 import logging.handlers
@@ -692,6 +693,35 @@ def configure_logging() -> None:
             log_file.parent,
             log_directory_failure,
         )
+
+
+def allow_logging_reconfiguration() -> None:
+    """Detach the installed handlers and release the configure-once latch.
+
+    :func:`configure_logging` is idempotent behind a module-global latch, so the
+    FIRST call in a process fixes both handlers for the process lifetime: the
+    stream handler to whatever ``sys.stderr`` then was, and the rotating file
+    handler to whatever the storage taxonomy then resolved. A long-lived host
+    that legitimately re-points either axis mid-process — the documentation
+    engine, which imports the application and only afterwards pins its isolated
+    scratch storage — otherwise keeps writing to the pre-pin destination.
+
+    Handlers are CLOSED, not merely detached. The rotating file handler holds an
+    open OS handle on its log file, and on Windows an unclosed handle keeps that
+    file locked against the rename its own rollover later attempts.
+
+    This is not a compatibility path: it re-derives the CURRENT configuration
+    from the CURRENT environment. Callers that change a logging-relevant setting
+    must reset the settings cache before calling :func:`configure_logging` again.
+    """
+    global _CONFIGURED
+
+    root_logger = logging.getLogger()
+    for handler in list(root_logger.handlers):
+        root_logger.removeHandler(handler)
+        with contextlib.suppress(OSError, ValueError):
+            handler.close()
+    _CONFIGURED = False
 
 
 def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:

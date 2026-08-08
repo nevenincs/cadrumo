@@ -42,6 +42,7 @@ from ...adapters.persistence.storage import (
     StorageValidationError,
 )
 from ...core import BindingSourceKind, M210GrossIncomeSourceMode, Modelo, Period, PeriodError, StandardPeriodCode
+from ...core.money import round_to_cents
 from ...domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
@@ -74,10 +75,9 @@ from ...domain.invoices import (
     InvoicePersistenceError,
     IvaRate,
     invoice_line_to_iva_observation,
-    iva_rate_slot_percentage,
     iva_rate_kind,
+    iva_rate_slot_percentage,
 )
-from ...core.money import round_to_cents
 from ...domain.iva import (
     EUMemberState,
     InvoiceKind,
@@ -1262,6 +1262,7 @@ def _raise_if_invoice_iva_would_be_silent(
             category_counterparty_mismatches=screened.category_counterparty_mismatches,
             reverse_charge_underivable=screened.reverse_charge_underivable,
             recargo_rate_divergences=screened.recargo_rate_divergences,
+            storage_degraded=screened.storage_degraded,
         )
     invoice_binding_values = resolve_iva_ledger_binding_values(
         context.revision,
@@ -1912,6 +1913,10 @@ class _ScreenedInvoiceIva:
     category_counterparty_mismatches: tuple[Invoice, ...] = ()
     reverse_charge_underivable: tuple[Invoice, ...] = ()
     recargo_rate_divergences: tuple[_RecargoRateDivergence, ...] = ()
+    #: The catalogue could not be READ, as distinct from holding no invoices.
+    #: Without this the two are the same value downstream, and the silence guard
+    #: returns as though it had compared a catalogue it never saw.
+    storage_degraded: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -1933,6 +1938,10 @@ class _InvoiceIvaSilenceReport:
     #: to build an observation, so dropping it when the screen returns early
     #: would silence the advisory exactly when the invoice is least examined.
     recargo_rate_divergences: tuple[_RecargoRateDivergence, ...] = ()
+    #: The screen could not read the invoice catalogue, so it reached NO verdict
+    #: about whether invoice IVA is absent from the ledger totals. Distinct from
+    #: a clean pass, which is what a silent empty return looked like.
+    storage_degraded: bool = False
 
 
 def _screened_invoice_iva_observations(
@@ -1945,7 +1954,14 @@ def _screened_invoice_iva_observations(
         repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=context.bucket_id)
         catalogue = repository.load()
     except _STORAGE_DEGRADATION_ERRORS:
-        return _ScreenedInvoiceIva()
+        # Degrading is right: a bucket whose invoice catalogue is temporarily
+        # unreadable should not hard-fail every calculation, and the five
+        # sibling catches in this module degrade too. What they also do, and
+        # this one did not, is SAY SO -- they bind the error and return a
+        # resolution carrying a storage_degraded diagnostic. Returning an empty
+        # result here made an unreadable catalogue indistinguishable from an
+        # empty one, which switched the silence guard off without a signal.
+        return _ScreenedInvoiceIva(storage_degraded=True)
     observations: list[IvaLedgerObservation] = []
     invoice_ids: set[str] = set()
     compared_invoices: list[Invoice] = []

@@ -513,48 +513,39 @@ def _ddmmaaaa(value: date) -> str:
     return f"{value.day:02d}{value.month:02d}{value.year:04d}"
 
 
-def _refuse_domiciliacion_without_charge_account(account: RefundAccount | None) -> dict[str, str]:
-    """Refuse a domiciliación del ingreso (``U``) export: no charge account exists.
+def _compose_domiciliacion_account_block(account: RefundAccount | None) -> dict[str, str]:
+    """Build the DID header fields for a domiciliación del ingreso (``U``).
 
-    A domiciliación is an INGRESO the taxpayer pays by direct debit, so the
-    account on the fichero is the one AEAT **charges**. This profile has no such
-    account. It carries exactly one, :class:`~domain.deadlines.RefundAccount`,
-    documented as the account AEAT pays a refund INTO, and no charge or cargo
-    account concept exists anywhere on the export path.
+    Emits the IBAN and nothing else. The Diseño labels position 23
+    ``Domiciliación/Devolución - IBAN`` -- one field for both directions -- while
+    the SWIFT-BIC, bank name, address, city, country code and marca SEPA fields
+    are each prefixed ``Devolución -`` and have no meaning for a charge.
 
-    So this refuses unconditionally, and the unconditionality is the decision
-    rather than an oversight. Reusing the refund account would read as harmless --
-    AEAT's record design even carries a single dual-purpose IBAN field at position
-    23, labelled ``Domiciliación/Devolución - IBAN`` -- but one shared FIELD on the
-    record says only that a filing is a refund or a charge and never both. It says
-    nothing about whether the account the taxpayer nominated for receiving money
-    is the account they intend to be DEBITED. Emitting it would turn an
-    application inference into a debit instruction that nothing downstream
-    contradicts, which is the shape where a plausible substitution is worse than a
-    refusal.
+    Emitting it is authorised rather than inferred: the profile collects this
+    account as the account AEAT pays into AND debits, so the operator has
+    consented to both directions. That consent is what makes this safe, NOT the
+    fact that AEAT's record has one slot -- a shared slot says a filing is a
+    refund or a charge, never which account the taxpayer authorised.
 
-    The alternative of emitting the page blank is worse still: that writes the
-    empty 823-byte record the render guard exists to prevent, and files a
-    direct-debit election with no account at all.
-
-    Nothing is lost by refusing, because this application never files -- a human
-    files outside it. A blocked export costs a step; a wrong debit instruction
-    reaching AEAT does not announce itself.
+    An IBAN is required rather than any account: a SWIFT-only account is the
+    non-SEPA foreign-bank shape, whose fields this page files for a refund only,
+    so there is nowhere on the record to state it for a charge.
 
     Raises:
-        ModeloRefundAccountMissingError: Always.
+        ModeloRefundAccountMissingError: When no account is on file, or the
+            account carries no IBAN.
     """
-    del account  # No account on this profile can answer a charge instruction.
-    raise ModeloRefundAccountMissingError(
-        "this modelo elects domiciliación del ingreso, so AEAT requires the account it will CHARGE, "
-        "and no charge account is on file; the profile records only a refund account, which is the "
-        "account AEAT pays into and is not an authorisation to debit",
-        suggestion=(
-            "Recording a charge account is not supported yet, so this election cannot be exported. "
-            "File this period as a plain ingreso and pay by another means, or elect domiciliación "
-            "directly with AEAT outside this application."
-        ),
-    )
+    if account is None or not account.iban:
+        raise ModeloRefundAccountMissingError(
+            "this modelo elects domiciliación del ingreso, so AEAT requires the IBAN it will CHARGE, "
+            "and the profile carries no IBAN",
+            suggestion=(
+                "Record an IBAN on the profile, or file this period as a plain ingreso instead of "
+                "electing domiciliación. A SWIFT-only foreign account cannot be stated for a charge -- "
+                "the official record files those fields for a refund only."
+            ),
+        )
+    return {"iban": account.iban}
 
 
 def _compose_refund_account_block(refund_account: RefundAccount | None) -> dict[str, str]:
@@ -712,19 +703,18 @@ def _compose_export_headers(
     # a direct-debit election, and the render guard suppressed the page to match,
     # so the filing went out with nothing for AEAT to debit.
     #
-    # A domiciliación is REFUSED rather than composed. AEAT's record design does
-    # carry a single dual-purpose IBAN at position 23
-    # ("Domiciliación/Devolución - IBAN"), so the page has somewhere to put a
-    # charge account -- but this profile has no charge account to put there, only
-    # the refund account AEAT pays INTO, and reusing that as a debit instruction
-    # is an inference this code must not make. See the refusal's own docstring.
+    # A domiciliación emits its IBAN and nothing else from this page: position 23
+    # is the single dual-purpose field ("Domiciliación/Devolución - IBAN") while
+    # every other DID field is labelled "Devolución -". Emitting it is authorised
+    # rather than inferred, because the profile collects this account as the one
+    # AEAT pays into AND debits. No IBAN on file still refuses.
     #
     # The account fields live in the encrypted secure-object store on the
     # transiently-loaded profile; they are read into memory here and emitted into
     # the header dict, never logged or written to a plaintext side store.
     disposition = ResultDisposition(declaration_type)
     if disposition is ResultDisposition.DOMICILIACION:
-        headers.update(_refuse_domiciliacion_without_charge_account(workflow_profile.iva.refund_account))
+        headers.update(_compose_domiciliacion_account_block(workflow_profile.iva.refund_account))
     elif result_disposition_is_refund(disposition):
         headers.update(_compose_refund_account_block(workflow_profile.iva.refund_account))
 

@@ -365,6 +365,12 @@ dev = [
   "playwright-stealth>=2.0.3,<3",
   "anthropic>=0.74.1,<1",
   "ofxtools>=1.1,<2",
+  # The `llm` extra's exclusive requirement, and therefore the module the
+  # extra's probe resolves against. Without it here the probe reads ABSENT in
+  # the dev environment, every `require_optional_extra(LLM_EXTRA)` guard fires,
+  # and the inference test suite refuses instead of running. A pure-Python
+  # `py3-none-any` wheel: importable with no NVIDIA driver and no accelerator.
+  "nvidia-ml-py>=13,<14",
   "prek>=0.2.0",
   "pytest>=9.0.3",
   "pytest-asyncio>=1.0.0",
@@ -771,9 +777,10 @@ convention = "google"
 "src/cadrumo/domain/calculations/registry/_workbook_parity.py" = ["S603"]
 "src/cadrumo/domain/deadlines/_festivos.py" = ["S105"]
 "src/cadrumo/application/ledger/tests/_subprocess_classifier_support.py" = ["S603"]
-# Spawns a fresh interpreter to make Pillow genuinely unimportable before any
-# product module loads; the absent state cannot be reached in-process because
-# the test session has already imported it. Argv is this repo's own literal.
+# Spawns a fresh interpreter to make the `llm` extra's probe module genuinely
+# unresolvable before any product module loads; the absent state cannot be
+# reached in-process because the dev environment installs the extra's
+# requirements so the rest of the suite runs. Argv is this repo's own literal.
 "src/cadrumo/llm/tests/test_missing_llm_extra_refuses_instructively.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_language_flag_help_honesty.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py" = ["S603"]
@@ -1074,14 +1081,13 @@ ignore_decorators = [
 [tool.deptry.package_module_name_map]
 "PyYAML" = ["yaml"]
 "pyyaml" = ["yaml"]
-# The NVML binding's distribution name and its import name differ, and deptry
-# cannot bridge them here: it derives the module name from the distribution's
-# installed metadata, and this distribution is declared in an extra that the dev
-# environment does not install. Its fallback guess is `nvidia_ml_py`, so the
-# accelerator probe's `import pynvml` reads as an undeclared dependency (DEP001)
-# while the declaration itself reads as unused (DEP002) — one mapping closes
-# both. Verified against the published wheel rather than asserted from memory:
-# `nvidia_ml_py-13.610.43-py3-none-any.whl` ships a top-level `pynvml.py`.
+# The NVML binding's distribution name and its import name differ, so the
+# mapping is stated rather than guessed: deptry's fallback would be
+# `nvidia_ml_py`, making the accelerator probe's `import pynvml` read as an
+# undeclared dependency (DEP001) while the declaration itself reads as unused
+# (DEP002) — one mapping closes both. Verified against the published wheel
+# rather than asserted from memory: `nvidia_ml_py-13.610.43-py3-none-any.whl`
+# ships a top-level `pynvml.py`.
 "nvidia-ml-py" = ["pynvml"]
 [tool.deptry.per_rule_ignores]
 # `cadrumo`: the `all` convenience extra self-references the capability extras

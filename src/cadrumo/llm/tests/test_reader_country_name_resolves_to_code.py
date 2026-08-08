@@ -85,7 +85,7 @@ def _reply(*, supplier_country: str | None, customer_country: str | None) -> str
     return json.dumps(payload)
 
 
-def _draft(*, supplier_country: str | None, customer_country: str | None):  # noqa: ANN202
+def _draft(*, supplier_country: str | None, customer_country: str | None):
     return ground_extracted_fields(
         parse_invoice_extraction_response(
             _reply(supplier_country=supplier_country, customer_country=customer_country),

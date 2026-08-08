@@ -39,7 +39,6 @@ from ...core.time import now, validate_utc_aware
 from ...domain.user_profile import UserProfileStatus
 from ..auth_credentials import ActiveCertificateCredentials
 from . import select_provider
-from ._credential_resolution import resolve_active_provider_kind
 from ._acquisition_lock import (
     AuthAcquisitionLockRecord,
     AuthAcquisitionLockStatus,
@@ -47,6 +46,7 @@ from ._acquisition_lock import (
     auth_lock_ttl_seconds,
     clear_auth_acquisition_lock,
 )
+from ._credential_resolution import resolve_active_provider_kind
 from ._operator_scope import (
     active_profile_storage_span,
     assert_auth_recovery_not_in_progress,

@@ -294,6 +294,50 @@ def ensure_isolated_storage_root() -> None:
     scratch = Path(tempfile.gettempdir()) / "cadrumo-docs-build-storage"
     os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(scratch))
     Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
+    ensure_private_diagnostic_log()
+
+
+def ensure_private_diagnostic_log() -> None:
+    """Re-point diagnostic file logging at a per-PROCESS scratch directory.
+
+    The storage-root pin above lands too late to move the diagnostic log on its
+    own: importing the application already resolved the rotating file handler
+    against the workstation's real log directory, and
+    :func:`~cadrumo.core.logging.configure_logging` is latched, so nothing
+    rebinds it. The docs engine therefore writes into the operator's shared
+    ``cadrumo.log`` — and that is not merely untidy, it is the source of a
+    non-deterministic diagnostic block in captured CLI output.
+
+    ``RotatingFileHandler`` rolls the log over by RENAMING it. On Windows a
+    rename fails with ``PermissionError`` (WinError 32) while any other process
+    holds the file open, and every concurrent ``aeat`` command, pytest worker,
+    and docs build on the box holds exactly that one shared file. The stdlib
+    reports the failed emit by printing its own ``--- Logging error ---`` block
+    — traceback, walked call stack, and ``repr`` of the record arguments — to
+    whatever ``sys.stderr`` is at that instant. Inside a sequence frame that is
+    Click's per-invocation capture buffer, so the block is recorded as CLI
+    output. It carries the runner's own stack frame (``check_sequences`` versus
+    ``refresh_sequences``) and object memory addresses, so no golden written by
+    one verb can ever match the other's run.
+
+    A directory keyed by PID removes the contention rather than masking its
+    symptom: nothing outside this process writes the file, so the rollover
+    rename always succeeds and there is no block to normalise.
+    """
+    from cadrumo.core.config import reset_settings_cache
+    from cadrumo.core.logging import allow_logging_reconfiguration, configure_logging
+
+    private_log_dir = Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"]) / "logs" / f"pid-{os.getpid()}"
+    if os.environ.get("CADRUMO_LOG_DIR") == str(private_log_dir):
+        return
+    private_log_dir.mkdir(parents=True, exist_ok=True)
+    os.environ["CADRUMO_LOG_DIR"] = str(private_log_dir)
+    # The settings snapshot the latched configuration was derived from is
+    # cached; without dropping it the reconfigure below re-reads the OLD log
+    # directory and rebinds to the very file this function exists to leave.
+    reset_settings_cache()
+    allow_logging_reconfiguration()
+    configure_logging()
 
 
 #: Builder-owned pages with no corresponding source document.

@@ -33,7 +33,6 @@ from decimal import Decimal
 
 import pytest
 
-from .. import IvaRate, iva_rate_percentage
 from ...iva import (
     EUMemberState,
     IvaRateKind,
@@ -41,6 +40,7 @@ from ...iva import (
     rate_table_covers,
     rate_table_covers_any_positive_tier,
 )
+from .. import IvaRate, iva_rate_percentage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

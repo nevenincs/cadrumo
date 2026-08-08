@@ -87,7 +87,7 @@ def test_the_normaliser_forwards_an_unvalidated_tax_id_when_no_country_is_stated
     assert normalised["counterparty_tax_id"] == "NOTAVALIDNIF"
 
     # And with a country stated, the same input is held to that country's rules.
-    with pytest.raises(Exception):  # noqa: B017, PT011  -- identity errors vary by country
+    with pytest.raises(Exception):  # noqa: B017  -- identity errors vary by country
         _normalise_invoice_counterparty(
             {"counterparty_country": "ES", "counterparty_tax_id": " notavalidnif "},
         )

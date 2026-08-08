@@ -36,7 +36,7 @@ import pytest
 
 from ..manager import _MODELO_SCHEMA_PREFIX, _collect_required_leaves
 
-pytestmark = [pytest.mark.unit]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _EXISTING = {"cli": {"known": "a real translation", "namespace": {"child": "another"}}}
 
