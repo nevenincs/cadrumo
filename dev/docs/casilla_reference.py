@@ -895,6 +895,22 @@ def _render_entry(
 # ── Page rendering ───────────────────────────────────────────────────────────
 
 
+def _box_sort_key(box_number: str) -> tuple[int, int, str]:
+    """Order boxes the way the printed form does, and name the two kinds apart.
+
+    Box numbers are strings in the schema and have to be: leading zeros are
+    significant and some boxes carry no number at all. Sorting them as strings
+    puts 150 between 15 and 16, so a reader scanning for box 16 finds it six
+    entries late. This reads a leading integer run where there is one and falls
+    back to the string, which also separates numbered boxes from named ones -
+    the first element of the key is the group.
+    """
+    leading = re.match(r"^(\d+)", box_number)
+    if leading is not None:
+        return (0, int(leading.group(1)), box_number)
+    return (1, 0, box_number)
+
+
 def _casilla_index(
     grouped: OrderedDict[tuple[str, ...], list[CasillaSearchRecord]],
     schema: CompiledSchema,
@@ -925,17 +941,31 @@ def _casilla_index(
             f'<a class="casilla-index__section" href="#{html.escape(_section_anchor(section), quote=True)}">'
             f"{html.escape(_section_display(section, language))}</a>",
         )
-        lines.append('<div class="casilla-index__chips">')
+        numbered: list[str] = []
+        named: list[str] = []
         for record in section_records:
             facts = schema.casillas.get((modelo, str(record.casilla_id)))
             label, _help = _localised(record, language)
             anchor = casilla_page_anchor(record.modelo, record.casilla_id)
             title = html.escape(label or str(record.casilla_id), quote=True)
-            lines.append(
+            box = _box_number(record, facts)
+            chip = (
                 f'<a class="casilla-index__chip" href="#{html.escape(anchor, quote=True)}" title="{title}">'
-                f"{html.escape(_box_number(record, facts))}</a>",
+                f"{html.escape(box)}</a>"
             )
-        lines.extend(["</div>", "</div>"])
+            # A casilla with no printed number falls back to its id, which is
+            # five times the width of a number and would tear the grid apart.
+            # The two kinds get two affordances rather than one clamped chip.
+            (numbered if _box_sort_key(box)[0] == 0 else named).append(chip)
+        if numbered:
+            lines.append('<div class="casilla-index__chips">')
+            lines.extend(numbered)
+            lines.append("</div>")
+        if named:
+            lines.append('<div class="casilla-index__named">')
+            lines.extend(named)
+            lines.append("</div>")
+        lines.append("</div>")
     lines.extend(["</div>", "</nav>"])
     return lines
 
@@ -1008,6 +1038,17 @@ def _render_modelo_page(
     grouped: OrderedDict[tuple[str, ...], list[CasillaSearchRecord]] = OrderedDict()
     for record in records:
         grouped.setdefault(record.section, []).append(record)
+
+    # Within a section, read in the order the printed form numbers its boxes.
+    # Sorting here rather than in the index keeps the cards and the index in ONE
+    # order: sorting only the index would send a reader clicking 16 to a card
+    # sitting after 155. Section order itself is the registry's, which is the
+    # official structure.
+    def _order(record: CasillaSearchRecord) -> tuple[int, int, str]:
+        return _box_sort_key(_box_number(record, schema.casillas.get((modelo, str(record.casilla_id)))))
+
+    for items in grouped.values():
+        items.sort(key=_order)
     section_counts = [(section, len(items)) for section, items in grouped.items()]
 
     # Two distinct registry section paths can fold to one anchor slug (``a_b``

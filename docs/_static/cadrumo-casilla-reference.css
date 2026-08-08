@@ -120,26 +120,41 @@
   gap: 0.25rem;
 }
 
-/* Most box numbers are two or three digits, but a modelo whose record design
- * has no printed number falls back to the casilla id, which can be forty
- * characters. Capping the chip keeps the grid on its rhythm; the full id stays
- * in the title attribute and on the card itself. */
 .casilla-index__chip {
   display: inline-block;
-  max-width: 9rem;
-  min-width: 2.1rem;
+  min-width: 2.2rem;
   padding: 0.1rem 0.35rem;
-  overflow: hidden;
   font-size: 0.76rem;
   line-height: 1.45;
   text-align: center;
   text-decoration: none;
-  text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--color-foreground-secondary);
   background: var(--color-background-primary);
   border: 1px solid var(--color-background-border);
   border-radius: var(--cadrumo-radius-s, 6px);
+}
+
+/* A casilla whose record design prints no number falls back to its id, which
+ * runs five times the width of a number. Clamping those into the number grid
+ * tore its rhythm apart and truncated them mid-word, so they get their own
+ * band below it: full text, free to wrap, no grid to break. */
+.casilla-index__named {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.3rem;
+}
+
+.casilla-index__named .casilla-index__chip {
+  min-width: 0;
+  font-family: var(--font-stack--monospace);
+  font-size: 0.7rem;
+  text-align: left;
+  white-space: normal;
+  background: none;
+  border-style: dashed;
+  overflow-wrap: anywhere;
 }
 
 .casilla-index__chip:hover,
