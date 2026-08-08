@@ -53,13 +53,17 @@ from ...schema_surface import (
 # The CLI loads these lazily at dispatch time, so without an explicit
 # import here the registry is empty when this test module collects.
 #
-# The ``app.*`` families are enrolled in batches rather than all at once. Only
-# the live family is enrolled so far: before it, every parametrised case was a
-# ``config`` or root key and no ``app`` command was inside this gate at all,
-# which is not something a passing run could reveal. Enrolling it adds 33 schema
-# keys and 66 cases. The agent-workspace, contract, maintenance and quickfile
-# payload modules remain unenrolled and are the outstanding batches.
+# Every ``app.*`` family is enrolled. Before any of them were, every
+# parametrised case was a ``config`` or root key and no ``app`` command was
+# inside this gate at all -- which is not something a passing run could reveal,
+# since a gate only checks what is registered when it collects. The families
+# were enrolled in two measured batches: live first (33 keys), then the
+# remaining four together (52 keys, of which quickfile contributes 49).
+from .. import _app_agent_workspace_payloads as _app_agent_workspace_payloads
+from .. import _app_contract_payloads as _app_contract_payloads
 from .. import _app_live_payloads as _app_live_payloads
+from .. import _app_maintenance_payloads as _app_maintenance_payloads
+from .. import _app_quickfile_payloads as _app_quickfile_payloads
 from .. import _config_bucket_history_payloads as _config_bucket_history_payloads
 from .. import _config_descendiente_payloads as _config_descendiente_payloads
 from .. import _config_payloads as _config_payloads
